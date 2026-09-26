@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-pollution-class/schema.json",
+  "title": "ChangeZonePollutionClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newPollutionClass"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newPollutionClass": {
+      "type": "string"
+    }
+  }
+}

@@ -3,5 +3,5 @@
   "emoji": "🚫️",
   "status": "closed",
   "description": "Ensure no compiled code (WASM, jco transpiled JS/d.ts, build outputs) is checked in, and update gitignore and git index accordingly.",
-  "goal": "🎯aioptimizedrepo"
+  "goal": "🎯runningframework🎯runningproducts🎯runningrepo"
 }

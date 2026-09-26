@@ -1,26 +1,99 @@
-# 🧬️ En1994 artifact schema — every field with its state class.
+# 🧬️ En1994 snapshot — hierarchical SI subject.
 
+type CharacteristicAction {
+  id: String!
+  kind: String!
+  category: String!
+  stage: String!
+  qAreaPa: Float!
+  mKNm: Float!
+  vKN: Float!
+  nKN: Float!
+  deltaSigmaKPa: Float!
+  deltaTauKPa: Float!
+}
+type SteelSection {
+  designation: String!
+  heightM: Float!
+  widthM: Float!
+  twM: Float!
+  tfM: Float!
+  aM2: Float!
+  wPlYM3: Float!
+  iYM4: Float!
+  aVM2: Float!
+}
+type ProfiledSheeting {
+  profile: String!
+  heightM: Float!
+  ribWidthM: Float!
+  thicknessM: Float!
+  ribsParallelToBeam: Boolean!
+}
+type HeadedStuds {
+  diameterM: Float!
+  heightM: Float!
+  fUPa: Float!
+  countPerRib: Int!
+  spacingM: Float!
+  totalCount: Int!
+}
+type CompositeBeam {
+  id: String!
+  spanM: Float!
+  spacingM: Float!
+  support: String!
+  construction: String!
+  steel: SteelSection!
+  slabThicknessM: Float!
+  concreteFCkPa: Float!
+  concreteECmPa: Float!
+  sheeting: ProfiledSheeting!
+  studs: HeadedStuds!
+  transverseAsM2PerM: Float!
+  ltbLengthM: Float!
+  asHoggingM2PerM: Float!
+  barSpacingM: Float!
+  wkLimitM: Float!
+  nCycles: Float!
+  actions: [CharacteristicAction!]!
+}
+type CompositeColumn {
+  id: String!
+  kind: String!
+  lengthM: Float!
+  outerSizeM: Float!
+  wallThicknessM: Float!
+  steelAM2: Float!
+  steelFYPa: Float!
+  concreteAM2: Float!
+  concreteFCkPa: Float!
+  reinforcementAsM2: Float!
+  reinforcementFYkPa: Float!
+  iM4: Float!
+  bucklingCurve: String!
+  actions: [CharacteristicAction!]!
+}
+type CompositeSlab {
+  id: String!
+  spanM: Float!
+  support: String!
+  sheeting: ProfiledSheeting!
+  concreteThicknessM: Float!
+  fCkPa: Float!
+  mFactor: Float!
+  kFactor: Float!
+  asM2PerM: Float!
+  actions: [CharacteristicAction!]!
+}
 type En1994Artifact {
-  annex: String! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  mPla: Float! @state(class: ARTIFACT)
-  mPlRd: Float! @state(class: ARTIFACT)
-  eta: Float! @state(class: ARTIFACT)
-  vLRd: Float! @state(class: ARTIFACT)
-  insulationThicknessMm: Float! @state(class: ARTIFACT)
-  fireRating: String! @state(class: ARTIFACT)
-  deckType: String! @state(class: ARTIFACT)
-  deltaSigmaMpa: Float! @state(class: ARTIFACT)
-  fatigueDetail: String! @state(class: ARTIFACT)
-  dMm: Float! @state(class: ARTIFACT)
-  hScMm: Float! @state(class: ARTIFACT)
-  fCkMpa: Float! @state(class: ARTIFACT)
-  fUMpa: Float! @state(class: ARTIFACT)
-  eCmMpa: Float! @state(class: ARTIFACT)
-  vEdPerStudKn: Float! @state(class: ARTIFACT)
-  spanM: Float! @state(class: ARTIFACT)
-  fYMpa: Float! @state(class: ARTIFACT)
-  nCyclesStud: Float! @state(class: ARTIFACT)
-  deltaTauStudMpa: Float! @state(class: ARTIFACT)
+  annex: String!
+  structureKind: String!
+  steelFYPa: Float!
+  beams: [CompositeBeam!]!
+  columns: [CompositeColumn!]!
+  slabs: [CompositeSlab!]!
+  fireRating: String!
+  insulationThicknessM: Float!
+  fatigueDetail: String!
 }

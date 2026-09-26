@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeMemberEffectiveDepth {
+  string memberId = 1;
+  double newValue = 2;
+}

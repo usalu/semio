@@ -1,19 +1,17 @@
-//! 🪞 `update-stainless-inputs` — atomically updates the stainless-inputs facet (stainless_m_ed_knm, stainless_w_pl_mm3, stainless_f_y_mpa are validated together for one EN 1993 check, never one-field-at-a-time).
+//! `upsert-material` — upsert a `SteelMaterial` by id into `materials`.
 
-use crate::{En1993Mutation, En1993Snapshot};
+use crate::{SteelMaterial, En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdateStainlessInputs {
-    pub new_stainless_m_ed_knm: f64,
-    pub new_stainless_w_pl_mm3: f64,
-    pub new_stainless_f_y_mpa: f64,
+    pub material: SteelMaterial,
 }
 
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateStainlessInputs {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "stainless-inputs", kind: "update-stainless-inputs", record: "UpdatedStainlessInputs" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "material", kind: "update-stainless-inputs", record: "UpdatedMaterial" };
 
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -22,7 +20,13 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateStainlessI
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-4 stainless steel inputs", "EN 1993-1-4 Eingaben für nichtrostenden Stahl aktualisieren")
+        protocol::LocalizedLabel::native(
+            &format!("Upsert material {}", self.material.id),
+            &format!("Werkstoff setzen {}", self.material.id),
+        )
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.material.id.clone()]
     }
 }
 //#endregion 🔖️Payload

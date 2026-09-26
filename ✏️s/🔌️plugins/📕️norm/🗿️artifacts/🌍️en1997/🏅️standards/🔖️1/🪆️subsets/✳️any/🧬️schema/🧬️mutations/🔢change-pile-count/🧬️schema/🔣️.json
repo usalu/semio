@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-count/schema.json",
+  "title": "ChangePileCount",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCount"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newCount": {
+      "type": "integer"
+    }
+  }
+}

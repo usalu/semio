@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-plated-panel/schema.json",
+  "title": "InsertPlatedPanel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "plated_panel"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "plated_panel": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+semio norm.en1997.dsl v1
+structure-id=geo-demo-failing geotechnical-category=2 design-situation=bsP design-approach=da2 annex=de groundwater-level=4m investigation-depth=3m
+layers [id:TEXT soil-type:TEXT depth-top:QTY depth-bottom:QTY gamma:NUM gamma-prime:NUM phi-prime-deg:NUM cohesion-effective:QTY cohesion-undrained:QTY oedometric-modulus:QTY poisson-ratio:NUM cpt-qc:QTY spt-n:NUM] {
+  layer-sand sand 0m 8m 19000 10000 28 0Pa 0Pa 5000000Pa 0.3 8000000Pa 18
+  layer-gravel gravel 8m 20m 20000 11000 35 0Pa 0Pa 60000000Pa 0.28 12000000Pa 28
+}
+footings [id:TEXT width:QTY length:QTY embedment:QTY base-inclination-deg:NUM settlement-limit:QTY load-cases:TABLE] {
+  footing-F1 1.2m 1.2m 1.5m 0 0.01m [ {id=lc-bsP design-situation=bsP vertical-permanent=1200000N vertical-variable=400000N horizontal-permanent=150000N horizontal-variable=100000N moment-permanent=200000J moment-variable=150000J} ]
+}
+piles [id:TEXT pile-type:TEXT diameter:QTY length:QTY count:UINT alpha-s:NUM unit-shaft-resistance:QTY unit-base-resistance:QTY compression-permanent:QTY compression-variable:QTY tension-permanent:QTY tension-variable:QTY test-profiles:TABLE] {
+  pile-P1 bored 0.6m 6m 1 0.7 90000Pa 3000000Pa 1200000N 400000N 200000N 50000N [ {id=test-1 shaft-resistance=400000N base-resistance=200000N} ]
+}
+retaining-walls [id:TEXT height:QTY embedment:QTY base-width:QTY stem-thickness:QTY backfill-phi-deg:NUM backfill-gamma:NUM wall-friction-deg:NUM earth-pressure-mode:TEXT wall-movement:TEXT ocr:NUM concrete-gamma:NUM surcharge:QTY vertical-permanent:QTY horizontal-permanent:QTY] {
+  wall-W1 5.5m 1.2m 0.8m 0.35m 30 18000 20 active free 1 25000 40000Pa 320000N 40000N
+}
+slopes [id:TEXT angle-deg:NUM height:QTY length:QTY governing-layer-id:TEXT] {
+  slope-S1 42 6m 14m layer-sand
+}
+uplift-cases [id:TEXT permanent-stabilizing:QTY permanent-destabilizing:QTY variable-destabilizing:QTY pore-pressure:QTY total-stress:QTY] {
+  upl-U1 400000N 600000N 200000N 100000Pa 90000Pa
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-terrain-category/schema.json",
+  "title": "ChangeTerrainCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTerrainCategory"
+  ],
+  "properties": {
+    "newTerrainCategory": {
+      "type": "integer"
+    }
+  }
+}

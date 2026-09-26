@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-height/schema.json",
+  "title": "ChangeWallHeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newHeightM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newHeightM": {
+      "type": "number"
+    }
+  }
+}

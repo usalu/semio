@@ -1,46 +1,560 @@
-// 🧬️ EN 1995 mutation schema.
+// 🧬️ EN 1995 mutation schema — hierarchical timber subject (members ⊃ actions, connections ⊃ actions).
 syntax = "proto3";
 package semio.s.norm.en1995.mutation;
 
+message ChangeAnnex {
+  // @state artifact
+  string new_annex = 1;
+}
+
+message InsertMember {
+  // @state artifact
+  uint32 index = 1;
+  // @state artifact
+  bytes member = 2;
+}
+
+message RemoveMember {
+  // @state artifact
+  uint32 index = 1;
+}
+
+message ChangeMemberLabelEn {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeMemberLabelDe {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeMemberRole {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeMemberStrengthClass {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeMemberServiceClass {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  uint32 new_value = 2;
+}
+
+message ChangeMemberSupport {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeMemberB {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberH {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberSpan {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberSupportLength {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBearingLength {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBucklingY {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBucklingZ {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberLateralRestraint {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberNotchDepth {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberNotchDistance {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberMCrit {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberMassPerM {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberMassPerM2 {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberDamping {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberFireDuration {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBridgeNObs {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBridgeTLYears {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBridgeBeta {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBridgeA {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBridgeB {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeMemberBridgeCrowd {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message InsertMemberAction {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  uint32 index = 2;
+  // @state artifact
+  bytes action = 3;
+}
+
+message RemoveMemberAction {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  uint32 index = 2;
+}
+
+message ChangeMemberActionKind {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  string new_value = 3;
+}
+
+message ChangeMemberActionCategory {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  string new_value = 3;
+}
+
+message ChangeMemberActionLoadDuration {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  string new_value = 3;
+}
+
+message ChangeMemberActionQLine {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  double new_value = 3;
+}
+
+message ChangeMemberActionFPoint {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  double new_value = 3;
+}
+
+message ChangeMemberActionMK {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  double new_value = 3;
+}
+
+message ChangeMemberActionVK {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  double new_value = 3;
+}
+
+message ChangeMemberActionNK {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  double new_value = 3;
+}
+
+message ChangeMemberActionNTK {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  double new_value = 3;
+}
+
+message ChangeMemberActionFC90K {
+  // @state artifact
+  string member_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  double new_value = 3;
+}
+
+message InsertConnection {
+  // @state artifact
+  uint32 index = 1;
+  // @state artifact
+  bytes connection = 2;
+}
+
+message RemoveConnection {
+  // @state artifact
+  uint32 index = 1;
+}
+
+message ChangeConnectionLabelEn {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeConnectionLabelDe {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeConnectionFastenerType {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeConnectionStrengthClass {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  string new_value = 2;
+}
+
+message ChangeConnectionServiceClass {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  uint32 new_value = 2;
+}
+
+message ChangeConnectionDiameter {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeConnectionNumber {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  uint32 new_value = 2;
+}
+
+message ChangeConnectionRows {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  uint32 new_value = 2;
+}
+
+message ChangeConnectionSpacing {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeConnectionEdgeDistance {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeConnectionEndDistance {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeConnectionT1 {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeConnectionT2 {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeConnectionSteelPlate {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  bool new_value = 2;
+}
+
+message ChangeConnectionSteelPlateThickness {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message ChangeConnectionShearPlanes {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  uint32 new_value = 2;
+}
+
+message ChangeConnectionFUK {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  double new_value = 2;
+}
+
+message InsertConnectionAction {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  uint32 index = 2;
+  // @state artifact
+  bytes action = 3;
+}
+
+message RemoveConnectionAction {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  uint32 index = 2;
+}
+
+message ChangeConnectionActionKind {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  string new_value = 3;
+}
+
+message ChangeConnectionActionLoadDuration {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  string new_value = 3;
+}
+
+message ChangeConnectionActionFK {
+  // @state artifact
+  string connection_id = 1;
+  // @state artifact
+  string action_id = 2;
+  // @state artifact
+  double new_value = 3;
+}
+
 message En1995Mutation {
-  // @state artifact
-  double annex = 1;
-  // @state artifact
-  double m_ed_knm = 2;
-  // @state artifact
-  double n_ed_kn = 3;
-  // @state artifact
-  double v_ed_kn = 4;
-  // @state artifact
-  double w_mm3 = 5;
-  // @state artifact
-  double a_mm2 = 6;
-  // @state artifact
-  double b_mm = 7;
-  // @state artifact
-  double h_mm = 8;
-  // @state artifact
-  double f_m_k = 9;
-  // @state artifact
-  double f_c_0_k = 10;
-  // @state artifact
-  double service_class = 11;
-  // @state artifact
-  double load_duration = 12;
-  // @state artifact
-  double m_crit_knm = 13;
-  // @state artifact
-  double f_ed_kn = 14;
-  // @state artifact
-  double a_ef_mm2 = 15;
-  // @state artifact
-  double f_v_k = 16;
-  // @state artifact
-  double fire_duration_min = 17;
-  // @state artifact
-  double section_depth_mm = 18;
-  // @state artifact
-  double a_vert_m_s2 = 19;
-  // @state artifact
-  double n_cycles_bridge = 20;
+  oneof payload {
+    ChangeAnnex change_annex = 1;
+    InsertMember insert_member = 2;
+    RemoveMember remove_member = 3;
+    ChangeMemberLabelEn change_member_label_en = 4;
+    ChangeMemberLabelDe change_member_label_de = 5;
+    ChangeMemberRole change_member_role = 6;
+    ChangeMemberStrengthClass change_member_strength_class = 7;
+    ChangeMemberServiceClass change_member_service_class = 8;
+    ChangeMemberSupport change_member_support = 9;
+    ChangeMemberB change_member_b = 10;
+    ChangeMemberH change_member_h = 11;
+    ChangeMemberSpan change_member_span = 12;
+    ChangeMemberSupportLength change_member_support_length = 13;
+    ChangeMemberBearingLength change_member_bearing_length = 14;
+    ChangeMemberBucklingY change_member_buckling_y = 15;
+    ChangeMemberBucklingZ change_member_buckling_z = 16;
+    ChangeMemberLateralRestraint change_member_lateral_restraint = 17;
+    ChangeMemberNotchDepth change_member_notch_depth = 18;
+    ChangeMemberNotchDistance change_member_notch_distance = 19;
+    ChangeMemberMCrit change_member_m_crit = 20;
+    ChangeMemberMassPerM change_member_mass_per_m = 21;
+    ChangeMemberMassPerM2 change_member_mass_per_m2 = 22;
+    ChangeMemberDamping change_member_damping = 23;
+    ChangeMemberFireDuration change_member_fire_duration = 24;
+    ChangeMemberBridgeNObs change_member_bridge_n_obs = 25;
+    ChangeMemberBridgeTLYears change_member_bridge_tl_years = 26;
+    ChangeMemberBridgeBeta change_member_bridge_beta = 27;
+    ChangeMemberBridgeA change_member_bridge_a = 28;
+    ChangeMemberBridgeB change_member_bridge_b = 29;
+    ChangeMemberBridgeCrowd change_member_bridge_crowd = 30;
+    InsertMemberAction insert_member_action = 31;
+    RemoveMemberAction remove_member_action = 32;
+    ChangeMemberActionKind change_member_action_kind = 33;
+    ChangeMemberActionCategory change_member_action_category = 34;
+    ChangeMemberActionLoadDuration change_member_action_load_duration = 35;
+    ChangeMemberActionQLine change_member_action_q_line = 36;
+    ChangeMemberActionFPoint change_member_action_f_point = 37;
+    ChangeMemberActionMK change_member_action_mk = 38;
+    ChangeMemberActionVK change_member_action_vk = 39;
+    ChangeMemberActionNK change_member_action_nk = 40;
+    ChangeMemberActionNTK change_member_action_ntk = 41;
+    ChangeMemberActionFC90K change_member_action_fc90_k = 42;
+    InsertConnection insert_connection = 43;
+    RemoveConnection remove_connection = 44;
+    ChangeConnectionLabelEn change_connection_label_en = 45;
+    ChangeConnectionLabelDe change_connection_label_de = 46;
+    ChangeConnectionFastenerType change_connection_fastener_type = 47;
+    ChangeConnectionStrengthClass change_connection_strength_class = 48;
+    ChangeConnectionServiceClass change_connection_service_class = 49;
+    ChangeConnectionDiameter change_connection_diameter = 50;
+    ChangeConnectionNumber change_connection_number = 51;
+    ChangeConnectionRows change_connection_rows = 52;
+    ChangeConnectionSpacing change_connection_spacing = 53;
+    ChangeConnectionEdgeDistance change_connection_edge_distance = 54;
+    ChangeConnectionEndDistance change_connection_end_distance = 55;
+    ChangeConnectionT1 change_connection_t1 = 56;
+    ChangeConnectionT2 change_connection_t2 = 57;
+    ChangeConnectionSteelPlate change_connection_steel_plate = 58;
+    ChangeConnectionSteelPlateThickness change_connection_steel_plate_thickness = 59;
+    ChangeConnectionShearPlanes change_connection_shear_planes = 60;
+    ChangeConnectionFUK change_connection_fuk = 61;
+    InsertConnectionAction insert_connection_action = 62;
+    RemoveConnectionAction remove_connection_action = 63;
+    ChangeConnectionActionKind change_connection_action_kind = 64;
+    ChangeConnectionActionLoadDuration change_connection_action_load_duration = 65;
+    ChangeConnectionActionFK change_connection_action_fk = 66;
+  }
 }

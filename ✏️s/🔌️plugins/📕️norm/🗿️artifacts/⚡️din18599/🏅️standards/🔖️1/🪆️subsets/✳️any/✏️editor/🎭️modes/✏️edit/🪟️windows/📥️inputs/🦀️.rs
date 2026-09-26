@@ -1,7 +1,7 @@
-//! 📥️ DIN V 18599 play app — the inputs window: the raw compliance document, rendered as JSON.
+//! 📥️ DIN V 18599 play app — structured property editor over the compliance document.
 
 use crate::Din18599Snapshot;
-use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-din18599-inputs";
@@ -16,8 +16,19 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Din18599Snapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_document_json(document)
+pub fn render(
+    document: &Din18599Snapshot,
+    locale: semio_framework_plugin::Locale,
+    controller_id: &'static str,
+    windows: &TreeWindows<'_>,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    crate::app_surface::render_document_editor(
+        document,
+        locale,
+        controller_id,
+        Some(crate::editor::din18599::modes::edit::field_meta::field_meta),
+        windows,
+    )
 }
 //#endregion 🔖️Render
 

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeCPe",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallIndex",
+    "index",
+    "newCPe"
+  ],
+  "properties": {
+    "wallIndex": {
+      "type": "integer"
+    },
+    "index": {
+      "type": "integer"
+    },
+    "newCPe": {
+      "type": "number"
+    }
+  }
+}

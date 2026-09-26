@@ -5,107 +5,142 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "areaM2",
-    "category",
     "annex",
-    "selfWeightMaterial",
-    "selfWeightThicknessM",
-    "assumedGKKnM2",
-    "fireCurve",
-    "fireResistanceMin",
-    "fireMemberCapacityC",
     "snowZone",
-    "snowAltitudeM",
-    "enSKKnM2",
+    "altitude",
+    "enSk",
+    "exceptionalSnowNorthGermanLowlands",
     "windZone",
-    "enVBMS",
-    "deltaTK",
+    "enVb",
+    "terrainCategory",
+    "mixedTerrainUpwind",
+    "mixedTerrainDistance",
+    "orographyFactor",
+    "coastOrIsland",
+    "airDensity",
+    "height",
+    "width",
+    "depth",
+    "assumedDeltaT",
+    "requiredDeltaT",
     "constructionActivity",
-    "accidentalMassT",
-    "accidentalSpeedKmH",
+    "assumedConstructionQk",
+    "structureKind",
     "bridgeLane",
-    "bridgeSpanM",
-    "bridgeLaneWidthM",
-    "bridgeMomentResistanceKnm",
+    "bridgeSpan",
+    "bridgeLaneWidth",
+    "assumedBridgeTandem",
+    "assumedBridgeUdl",
+    "assumedBridgeLm2",
+    "assumedBridgeFootway",
+    "craneClaimed",
     "craneClass",
     "hoistClass",
-    "hoistingSpeedMS",
-    "siloBulkDensityKnM3",
-    "siloHeightM",
-    "siloHydraulicRadiusM",
+    "hoistingSpeed",
+    "assumedCraneWheel",
+    "assumedCraneHorizontal",
+    "siloClaimed",
+    "siloKind",
+    "siloBulkDensity",
+    "siloHeight",
+    "siloHydraulicRadius",
     "siloMu",
     "siloK",
-    "cS",
-    "cD"
+    "assumedSiloPressure",
+    "assumedSiloPatch",
+    "assumedSiloWallFriction",
+    "floors",
+    "selfWeightElements",
+    "roofs",
+    "windFaces",
+    "accidentalCases"
   ],
   "properties": {
-    "areaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "category": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "selfWeightMaterial": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "selfWeightThicknessM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "assumedGKKnM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fireCurve": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "fireResistanceMin": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fireMemberCapacityC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
     "snowZone": {
-      "type": "integer",
-      "format": "uint32",
+      "type": "string",
       "x-semio-state": "artifact"
     },
-    "snowAltitudeM": {
+    "altitude": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "enSKKnM2": {
+    "enSk": {
       "type": "number",
       "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "exceptionalSnowNorthGermanLowlands": {
+      "type": "boolean",
       "x-semio-state": "artifact"
     },
     "windZone": {
       "type": "integer",
-      "format": "uint32",
+      "minimum": 0,
+      "maximum": 255,
       "x-semio-state": "artifact"
     },
-    "enVBMS": {
+    "enVb": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "deltaTK": {
+    "terrainCategory": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-state": "artifact"
+    },
+    "mixedTerrainUpwind": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-state": "artifact"
+    },
+    "mixedTerrainDistance": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "orographyFactor": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "coastOrIsland": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
+    "airDensity": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "height": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "width": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "depth": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "assumedDeltaT": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "requiredDeltaT": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
@@ -114,34 +149,53 @@
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "accidentalMassT": {
+    "assumedConstructionQk": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "accidentalSpeedKmH": {
-      "type": "number",
-      "format": "double",
+    "structureKind": {
+      "type": "boolean",
       "x-semio-state": "artifact"
     },
     "bridgeLane": {
       "type": "integer",
-      "format": "uint32",
+      "minimum": 0,
+      "maximum": 255,
       "x-semio-state": "artifact"
     },
-    "bridgeSpanM": {
+    "bridgeSpan": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "bridgeLaneWidthM": {
+    "bridgeLaneWidth": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "bridgeMomentResistanceKnm": {
+    "assumedBridgeTandem": {
       "type": "number",
       "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "assumedBridgeUdl": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "assumedBridgeLm2": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "assumedBridgeFootway": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "craneClaimed": {
+      "type": "boolean",
       "x-semio-state": "artifact"
     },
     "craneClass": {
@@ -152,22 +206,40 @@
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "hoistingSpeedMS": {
+    "hoistingSpeed": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "siloBulkDensityKnM3": {
+    "assumedCraneWheel": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "siloHeightM": {
+    "assumedCraneHorizontal": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "siloHydraulicRadiusM": {
+    "siloClaimed": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
+    "siloKind": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "siloBulkDensity": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "siloHeight": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "siloHydraulicRadius": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
@@ -182,15 +254,251 @@
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "cS": {
+    "assumedSiloPressure": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "cD": {
+    "assumedSiloPatch": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
+    },
+    "assumedSiloWallFriction": {
+      "type": "number",
+      "format": "double",
+      "x-semio-state": "artifact"
+    },
+    "floors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FloorArea"
+      },
+      "x-semio-state": "artifact"
+    },
+    "selfWeightElements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SelfWeightElement"
+      },
+      "x-semio-state": "artifact"
+    },
+    "roofs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/RoofArea"
+      },
+      "x-semio-state": "artifact"
+    },
+    "windFaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/WindFace"
+      },
+      "x-semio-state": "artifact"
+    },
+    "accidentalCases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/AccidentalCase"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
+    "FloorArea": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "area",
+        "assumedQk",
+        "assumedQkConcentrated",
+        "assumedPartitions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "area": {
+          "type": "number",
+          "format": "double"
+        },
+        "assumedQk": {
+          "type": "number",
+          "format": "double"
+        },
+        "assumedQkConcentrated": {
+          "type": "number",
+          "format": "double"
+        },
+        "assumedPartitions": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "SelfWeightElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "material",
+        "thickness",
+        "assumedGk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "material": {
+          "type": "string"
+        },
+        "thickness": {
+          "type": "number",
+          "format": "double"
+        },
+        "assumedGk": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "RoofArea": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "roofType",
+        "pitchDeg",
+        "cE",
+        "cT",
+        "hasParapet",
+        "parapetHeight",
+        "driftObstructionHeight",
+        "multiSpan",
+        "assumedSk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "roofType": {
+          "type": "string"
+        },
+        "pitchDeg": {
+          "type": "number"
+        },
+        "cE": {
+          "type": "number"
+        },
+        "cT": {
+          "type": "number"
+        },
+        "hasParapet": {
+          "type": "boolean"
+        },
+        "parapetHeight": {
+          "type": "number"
+        },
+        "driftObstructionHeight": {
+          "type": "number"
+        },
+        "multiSpan": {
+          "type": "boolean"
+        },
+        "assumedSk": {
+          "type": "number"
+        }
+      }
+    },
+    "WindFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone",
+        "z",
+        "cPe10",
+        "cPe1",
+        "cPi",
+        "cS",
+        "cD",
+        "assumedWp"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "zone": {
+          "type": "string"
+        },
+        "z": {
+          "type": "number"
+        },
+        "cPe10": {
+          "type": "number"
+        },
+        "cPe1": {
+          "type": "number"
+        },
+        "cPi": {
+          "type": "number"
+        },
+        "cS": {
+          "type": "number"
+        },
+        "cD": {
+          "type": "number"
+        },
+        "assumedWp": {
+          "type": "number"
+        }
+      }
+    },
+    "AccidentalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "vehicleMass",
+        "vehicleSpeed",
+        "explosionMass",
+        "standoff",
+        "assumedForce",
+        "assumedPressure"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "vehicleMass": {
+          "type": "number"
+        },
+        "vehicleSpeed": {
+          "type": "number"
+        },
+        "explosionMass": {
+          "type": "number"
+        },
+        "standoff": {
+          "type": "number"
+        },
+        "assumedForce": {
+          "type": "number"
+        },
+        "assumedPressure": {
+          "type": "number"
+        }
+      }
     }
   }
 }

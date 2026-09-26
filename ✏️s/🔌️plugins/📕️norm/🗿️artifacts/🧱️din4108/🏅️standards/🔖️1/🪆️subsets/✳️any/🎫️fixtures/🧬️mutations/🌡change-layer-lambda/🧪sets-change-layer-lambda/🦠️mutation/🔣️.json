@@ -1,0 +1,7 @@
+{
+  "ChangeLayerLambda": {
+    "element_id": "wall-north",
+    "index": 2,
+    "new_lambda": 0.04
+  }
+}

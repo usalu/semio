@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeMemberCover {
+  string memberId = 1;
+  double newValue = 2;
+}

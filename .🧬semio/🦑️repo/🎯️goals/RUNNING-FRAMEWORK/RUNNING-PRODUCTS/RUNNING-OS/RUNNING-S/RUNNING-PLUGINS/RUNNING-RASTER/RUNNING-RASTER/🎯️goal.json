@@ -1,0 +1,15 @@
+{
+  "title": "Running Raster",
+  "description": "The raster engine and surface run inside Raster.",
+  "prompt": "The raster engine and surface run inside Raster.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningraster",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2689"
+  }
+}

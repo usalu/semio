@@ -178,15 +178,35 @@
       ],
       "kinds": [
         "change-annex",
-        "change-permanent-action",
-        "change-resistance",
+        "change-project-id",
+        "change-altitude-m",
         "change-consequence-class",
-        "change-seismic-action",
-        "insert-variable-action",
-        "remove-variable-action",
-        "change-variable-action-category",
-        "change-variable-action-value",
-        "reorder-variable-actions"
+        "change-reliability-class",
+        "change-design-working-life-category",
+        "change-design-working-life-years",
+        "change-reference-period-years",
+        "change-supervision-level",
+        "change-inspection-level",
+        "change-beta-computed",
+        "change-permanents",
+        "change-variables",
+        "change-accidentals",
+        "change-seismics",
+        "change-members",
+        "change-bridge-sls",
+        "change-effects",
+        "remove-effect",
+        "remove-member",
+        "remove-seismic",
+        "remove-accidental",
+        "remove-variable",
+        "remove-permanent",
+        "insert-effect",
+        "insert-member",
+        "insert-seismic",
+        "insert-accidental",
+        "insert-variable",
+        "insert-permanent"
       ]
     }
   ],
@@ -199,6 +219,49 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
       "mutations": [
+        {
+          "id": "change-annex",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-annex",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-project-id",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-project-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeProjectId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
         {
           "id": "change-consequence-class",
           "capability": "en1990-1-mutate",
@@ -222,18 +285,18 @@
           "subset": "combination"
         },
         {
-          "id": "change-permanent-action",
+          "id": "change-reliability-class",
           "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-permanent-action",
+            "operation": "change-reliability-class",
             "bridgeVersion": 1,
-            "variant": "ChangePermanentAction"
+            "variant": "ChangeReliabilityClass"
           },
           "oracleRequirements": [
             {
@@ -244,18 +307,18 @@
           "subset": "combination"
         },
         {
-          "id": "change-resistance",
+          "id": "change-design-working-life-category",
           "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-resistance",
+            "operation": "change-design-working-life-category",
             "bridgeVersion": 1,
-            "variant": "ChangeResistance"
+            "variant": "ChangeDesignWorkingLifeCategory"
           },
           "oracleRequirements": [
             {
@@ -266,18 +329,18 @@
           "subset": "combination"
         },
         {
-          "id": "change-seismic-action",
+          "id": "change-design-working-life-years",
           "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-seismic-action",
+            "operation": "change-design-working-life-years",
             "bridgeVersion": 1,
-            "variant": "ChangeSeismicAction"
+            "variant": "ChangeDesignWorkingLifeYears"
           },
           "oracleRequirements": [
             {
@@ -288,18 +351,18 @@
           "subset": "combination"
         },
         {
-          "id": "change-variable-action-category",
+          "id": "change-reference-period-years",
           "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-variable-action-category",
+            "operation": "change-reference-period-years",
             "bridgeVersion": 1,
-            "variant": "ChangeVariableActionCategory"
+            "variant": "ChangeReferencePeriodYears"
           },
           "oracleRequirements": [
             {
@@ -307,21 +370,21 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "variable-actions"
+          "subset": "combination"
         },
         {
-          "id": "change-variable-action-value",
+          "id": "change-supervision-level",
           "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-variable-action-value",
+            "operation": "change-supervision-level",
             "bridgeVersion": 1,
-            "variant": "ChangeVariableActionValue"
+            "variant": "ChangeSupervisionLevel"
           },
           "oracleRequirements": [
             {
@@ -329,63 +392,21 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "variable-actions"
+          "subset": "combination"
         },
         {
-          "id": "insert-variable-action",
+          "id": "change-inspection-level",
           "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "insert-variable-action",
-            "bridgeVersion": 1,
-            "variant": "InsertVariableAction"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1990-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "variable-actions"
-        },
-        {
-          "id": "remove-variable-action",
-          "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "rejected",
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "remove-variable-action",
-            "bridgeVersion": 1,
-            "variant": "RemoveVariableAction"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1990-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ],
-          "subset": "variable-actions"
-        },
-        {
-          "id": "reorder-variable-actions",
-          "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🔣️.json",
           "outcomes": [
             "applied",
             "no-op",
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "reorder-variable-actions",
+            "operation": "change-inspection-level",
             "bridgeVersion": 1,
-            "variant": "ReorderVariableActions"
+            "variant": "ChangeInspectionLevel"
           },
           "oracleRequirements": [
             {
@@ -393,20 +414,459 @@
               "qualifyingKind": "verified-native-second-implementation"
             }
           ],
-          "subset": "variable-actions"
+          "subset": "combination"
         },
         {
-          "id": "change-annex",
+          "id": "change-beta-computed",
           "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-beta-computed",
+            "bridgeVersion": 1,
+            "variant": "ChangeBetaComputed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-permanents",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-permanents",
+            "bridgeVersion": 1,
+            "variant": "ChangePermanents"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-variables",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-variables",
+            "bridgeVersion": 1,
+            "variant": "ChangeVariables"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-accidentals",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-accidentals",
+            "bridgeVersion": 1,
+            "variant": "ChangeAccidentals"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-seismics",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-seismics",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeismics"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-members",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-members",
+            "bridgeVersion": 1,
+            "variant": "ChangeMembers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-effects",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-effects",
+            "bridgeVersion": 1,
+            "variant": "ChangeEffects"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "remove-effect",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-effect",
+            "bridgeVersion": 1,
+            "variant": "RemoveEffect"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "remove-member",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-member",
+            "bridgeVersion": 1,
+            "variant": "RemoveMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "remove-seismic",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-seismic",
+            "bridgeVersion": 1,
+            "variant": "RemoveSeismic"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "remove-accidental",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-accidental",
+            "bridgeVersion": 1,
+            "variant": "RemoveAccidental"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "remove-variable",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-variable",
+            "bridgeVersion": 1,
+            "variant": "RemoveVariable"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "remove-permanent",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-permanent",
+            "bridgeVersion": 1,
+            "variant": "RemovePermanent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "insert-effect",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-effect",
+            "bridgeVersion": 1,
+            "variant": "InsertEffect"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "insert-member",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-member",
+            "bridgeVersion": 1,
+            "variant": "InsertMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "insert-seismic",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-seismic",
+            "bridgeVersion": 1,
+            "variant": "InsertSeismic"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "insert-accidental",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-accidental",
+            "bridgeVersion": 1,
+            "variant": "InsertAccidental"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "insert-variable",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-variable",
+            "bridgeVersion": 1,
+            "variant": "InsertVariable"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "insert-permanent",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-permanent",
+            "bridgeVersion": 1,
+            "variant": "InsertPermanent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-altitude-m",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
           "outcomes": [
             "applied",
             "no-op"
           ],
           "productionDispatch": {
-            "operation": "change-annex",
+            "operation": "change-altitude-m",
             "bridgeVersion": 1,
-            "variant": "ChangeAnnex"
+            "variant": "ChangeAltitudeM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "combination"
+        },
+        {
+          "id": "change-bridge-sls",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-sls",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeSls"
           },
           "oracleRequirements": [
             {
@@ -418,5 +878,35 @@
         }
       ]
     }
+  ],
+  "semanticKinds": [
+    "change-annex",
+    "change-project-id",
+    "change-consequence-class",
+    "change-reliability-class",
+    "change-design-working-life-category",
+    "change-design-working-life-years",
+    "change-reference-period-years",
+    "change-supervision-level",
+    "change-inspection-level",
+    "change-beta-computed",
+    "change-permanents",
+    "change-variables",
+    "change-accidentals",
+    "change-seismics",
+    "change-members",
+    "change-effects",
+    "remove-effect",
+    "remove-member",
+    "remove-seismic",
+    "remove-accidental",
+    "remove-variable",
+    "remove-permanent",
+    "insert-effect",
+    "insert-member",
+    "insert-seismic",
+    "insert-accidental",
+    "insert-variable",
+    "insert-permanent"
   ]
 }

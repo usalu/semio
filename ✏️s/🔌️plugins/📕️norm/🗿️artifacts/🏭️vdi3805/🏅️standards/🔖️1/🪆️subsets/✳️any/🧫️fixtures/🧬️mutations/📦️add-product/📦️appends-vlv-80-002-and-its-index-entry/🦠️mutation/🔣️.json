@@ -1,0 +1,44 @@
+{
+  "AddProduct": {
+    "product": {
+      "identity": {
+        "manufacturer_code": "DEMO",
+        "product_group": "HV",
+        "article_number": "VLV-80-002"
+      },
+      "title": [
+        {
+          "locale": "de",
+          "text": "Stellventil DN80"
+        },
+        {
+          "locale": "en",
+          "text": "Control valve DN80"
+        }
+      ],
+      "sheet": 2,
+      "records": [],
+      "configuration": {
+        "id": "cfg.VLV-80-002",
+        "geometry_ref": null,
+        "function_refs": [],
+        "attributes": {
+          "kind": "valveHeating",
+          "dn": 80,
+          "kvsM3S": 0.00125,
+          "pressureClass": "PN16",
+          "connectionType": "flange",
+          "authorityMin": 0.3,
+          "authorityMax": 0.7
+        }
+      },
+      "accessories": [],
+      "components": [],
+      "extensions": {
+        "fields": {}
+      },
+      "id": "VLV-80-002"
+    },
+    "index": null
+  }
+}

@@ -1,9 +1,10 @@
 use super::*;
-use crate::mutations::change_v_ed_kn;
+use crate::document::AnnexChoice;
+use crate::mutations::change_annex;
 use crate::En1997Snapshot;
 
 fn sample_mutation() -> En1997Mutation {
-    En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 })
+    En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::De })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -17,9 +18,6 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_through_store() {
     let envelope = store::create_document_envelope("norm.en1997/v1", "en1997", En1997Snapshot::default(), None);
-    // 🏪️ A bare `ArtifactStore::new` installs NO document-store owners: the first `Apply` is refused
-    // with `edit history insertion requires its exact mutation retirement factory`, and a store that
-    // survived would then trip the terminal-empty shallow-shell witness in `Drop`.
     let mut store = store::os_store::test_support::plain_test_store(envelope).await;
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![sample_mutation()], description: None }).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;

@@ -1,44 +1,50 @@
-#[path = "../../🌍️change-annex/🧪️tests/🌐️switches-national-annex-to-en/🦀️.rs"]
-mod tests_change_annex_switches_national_annex_to_en;
-#[path = "../../⭕️change-d-mm/🧪️tests/⭕️thickens-stud-shank-to-22-mm/🦀️.rs"]
-mod tests_change_d_mm_thickens_stud_shank_to_22_mm;
-#[path = "../../🪜️change-deck-type/🧪️tests/↩️switches-deck-to-re-entrant/🦀️.rs"]
-mod tests_change_deck_type_switches_deck_to_re_entrant;
-#[path = "../../📊️change-delta-sigma-mpa/🧪️tests/📈️raises-steel-stress-range-to-96-mpa/🦀️.rs"]
-mod tests_change_delta_sigma_mpa_raises_steel_stress_range_to_96_mpa;
-#[path = "../../🔩️change-delta-tau-stud-mpa/🧪️tests/🔩️raises-stud-shear-stress-range-to-110-mpa/🦀️.rs"]
-mod tests_change_delta_tau_stud_mpa_raises_stud_shear_stress_range_to_110_mpa;
-#[path = "../../🪨️change-e-cm-mpa/🧪️tests/🪨️raises-concrete-modulus-to-35000-mpa/🦀️.rs"]
-mod tests_change_e_cm_mpa_raises_concrete_modulus_to_35000_mpa;
-#[path = "../../🤝️change-eta/🧪️tests/🤝️raises-shear-connection-degree-to-0-875/🦀️.rs"]
-mod tests_change_eta_raises_shear_connection_degree_to_0_875;
-#[path = "../../🧱️change-f-ck-mpa/🧪️tests/🧱️upgrades-concrete-cylinder-strength-to-40-mpa/🦀️.rs"]
-mod tests_change_f_ck_mpa_upgrades_concrete_cylinder_strength_to_40_mpa;
-#[path = "../../🔁️change-fatigue-detail/🧪️tests/🪡️switches-fatigue-detail-to-flange-butt-weld/🦀️.rs"]
-mod tests_change_fatigue_detail_switches_fatigue_detail_to_flange_butt_weld;
-#[path = "../../🔥️change-fire-rating/🧪️tests/🧯️upgrades-fire-rating-to-r90/🦀️.rs"]
-mod tests_change_fire_rating_upgrades_fire_rating_to_r90;
-#[path = "../../💪️change-fu-mpa/🧪️tests/💪️upgrades-stud-ultimate-strength-to-500-mpa/🦀️.rs"]
-mod tests_change_fu_mpa_upgrades_stud_ultimate_strength_to_500_mpa;
-#[path = "../../🏋️change-fy-mpa/🧪️tests/🏋️upgrades-steel-yield-to-460-mpa/🦀️.rs"]
-mod tests_change_fy_mpa_upgrades_steel_yield_to_460_mpa;
-#[path = "../../↕️change-h-sc-mm/🧪️tests/📏️lengthens-stud-to-125-mm/🦀️.rs"]
-mod tests_change_h_sc_mm_lengthens_stud_to_125_mm;
-#[path = "../../🧯️change-insulation-thickness-mm/🧪️tests/🧣️thickens-fire-insulation-to-40-mm/🦀️.rs"]
-mod tests_change_insulation_thickness_mm_thickens_fire_insulation_to_40_mm;
-#[path = "../../🌀️change-m-ed-knm/🧪️tests/🌀️raises-design-moment-to-320-knm/🦀️.rs"]
-mod tests_change_m_ed_knm_raises_design_moment_to_320_knm;
-#[path = "../../🛡️change-m-pl-rd/🧪️tests/🛡️raises-plastic-moment-resistance-to-375-knm/🦀️.rs"]
-mod tests_change_m_pl_rd_raises_plastic_moment_resistance_to_375_knm;
-#[path = "../../🦾️change-m-pla/🧪️tests/🦾️raises-steel-plastic-moment-to-128-knm/🦀️.rs"]
-mod tests_change_m_pla_raises_steel_plastic_moment_to_128_knm;
-#[path = "../../🔄️change-n-cycles-stud/🧪️tests/🔢️raises-stud-cycle-count-to-5000000/🦀️.rs"]
-mod tests_change_n_cycles_stud_raises_stud_cycle_count_to_5000000;
-#[path = "../../📏️change-span-m/🧪️tests/📏️lengthens-span-to-12-m/🦀️.rs"]
-mod tests_change_span_m_lengthens_span_to_12_m;
-#[path = "../../✂️change-v-ed-kn/🧪️tests/⬆️raises-design-shear-to-225-kn/🦀️.rs"]
-mod tests_change_v_ed_kn_raises_design_shear_to_225_kn;
-#[path = "../../📌️change-v-ed-per-stud-kn/🧪️tests/📌️raises-per-stud-shear-to-62-5-kn/🦀️.rs"]
-mod tests_change_v_ed_per_stud_kn_raises_per_stud_shear_to_62_5_kn;
-#[path = "../../↔️change-vl-rd/🧪️tests/↔️raises-longitudinal-shear-resistance-to-240-kn/🦀️.rs"]
-mod tests_change_vl_rd_raises_longitudinal_shear_resistance_to_240_kn;
+#[path = "../../#️⃣change-beam-stud-count/🧪️tests/#️⃣applies-change-beam-stud-count/🦀️.rs"]
+mod tests____applies_change_beam_stud_count;
+#[path = "../../↔️change-beam-transverse-as/🧪️tests/↔️applies-change-beam-transverse-as/🦀️.rs"]
+mod tests___applies_change_beam_transverse_as;
+#[path = "../../↪️change-column-kind/🧪️tests/↪️applies-change-column-kind/🦀️.rs"]
+mod tests___applies_change_column_kind;
+#[path = "../../⛔️remove-column/🧪️tests/⛔️applies-remove-column/🦀️.rs"]
+mod tests___applies_remove_column;
+#[path = "../../✂️change-beam-stud-spacing-m/🧪️tests/✂️applies-change-beam-stud-spacing-m/🦀️.rs"]
+mod tests___applies_change_beam_stud_spacing_m;
+#[path = "../../➕insert-slab/🧪️tests/➕applies-insert-slab/🦀️.rs"]
+mod tests__applies_insert_slab;
+#[path = "../../➕️insert-beam/🧪️tests/➕️applies-insert-beam/🦀️.rs"]
+mod tests___applies_insert_beam;
+#[path = "../../➖remove-slab/🧪️tests/➖applies-remove-slab/🦀️.rs"]
+mod tests__applies_remove_slab;
+#[path = "../../➖️remove-beam/🧪️tests/➖️applies-remove-beam/🦀️.rs"]
+mod tests___applies_remove_beam;
+#[path = "../../➗️insert-column/🧪️tests/➗️applies-insert-column/🦀️.rs"]
+mod tests___applies_insert_column;
+#[path = "../../⬇️change-column-action-force-n/🧪️tests/⬇️applies-change-column-action-force-n/🦀️.rs"]
+mod tests___applies_change_column_action_force_n;
+#[path = "../../⭕️change-beam-stud-diameter-m/🧪️tests/⭕️applies-change-beam-stud-diameter-m/🦀️.rs"]
+mod tests___applies_change_beam_stud_diameter_m;
+#[path = "../../🌀️change-beam-action-q-area-pa/🧪️tests/🌀️applies-change-beam-action-q-area-pa/🦀️.rs"]
+mod tests___applies_change_beam_action_q_area_pa;
+#[path = "../../🌍️change-annex/🧪️tests/🌍️applies-change-annex/🦀️.rs"]
+mod tests___applies_change_annex;
+#[path = "../../🏋️change-steel-fy-pa/🧪️tests/🏋️applies-change-steel-fy-pa/🦀️.rs"]
+mod tests___applies_change_steel_fy_pa;
+#[path = "../../🏗️change-structure-kind/🧪️tests/🏗️applies-change-structure-kind/🦀️.rs"]
+mod tests___applies_change_structure_kind;
+#[path = "../../💪️change-beam-stud-fu-pa/🧪️tests/💪️applies-change-beam-stud-fu-pa/🦀️.rs"]
+mod tests___applies_change_beam_stud_fu_pa;
+#[path = "../../📏change-slab-thickness-m/🧪️tests/📏️applies-change-slab-thickness-m/🦀️.rs"]
+mod tests___applies_change_slab_thickness_m;
+#[path = "../../📏️change-beam-span-m/🧪️tests/📏️applies-change-beam-span-m/🦀️.rs"]
+mod tests___applies_change_beam_span_m;
+#[path = "../../📐️change-slab-action-q-area-pa/🧪️tests/📐️applies-change-slab-action-q-area-pa/🦀️.rs"]
+mod tests___applies_change_slab_action_q_area_pa;
+#[path = "../../🔁️change-fatigue-detail/🧪️tests/🔁️applies-change-fatigue-detail/🦀️.rs"]
+mod tests___applies_change_fatigue_detail;
+#[path = "../../🔥️change-fire-rating/🧪️tests/🔥️applies-change-fire-rating/🦀️.rs"]
+mod tests___applies_change_fire_rating;
+#[path = "../../🛠️change-beam-construction/🧪️tests/🏗️applies-change-beam-construction/🦀️.rs"]
+mod tests___applies_change_beam_construction;
+#[path = "../../🧯️change-insulation-thickness-m/🧪️tests/🧯️applies-change-insulation-thickness-m/🦀️.rs"]
+mod tests___applies_change_insulation_thickness_m;
+#[path = "../../🧱change-beam-slab-thickness-m/🧪️tests/🧱applies-change-beam-slab-thickness-m/🦀️.rs"]
+mod tests__applies_change_beam_slab_thickness_m;

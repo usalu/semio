@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeMemberSpan {
+  string memberId = 1;
+  double newValue = 2;
+}

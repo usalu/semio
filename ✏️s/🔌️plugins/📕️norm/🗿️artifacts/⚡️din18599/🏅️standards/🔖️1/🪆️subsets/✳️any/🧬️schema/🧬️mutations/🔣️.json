@@ -4,40 +4,58 @@
   "title": "Din18599Mutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-annual-limit-kwh/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-building-category/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-energy-carrier/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-heated-area-m2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-ht/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-hv/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-internal-gains-wm2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-occupants/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-reference-qp-kwh/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-renewable-kwh/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-solar-gains-kwh/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-system-losses-kwh/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-attachment/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-use-class/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-method/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-net-floor-area-m2/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-heated-volume-m3/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-geg-qp-factor/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-delta-u-wb/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-automation-class/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/specify-heating-system/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/specify-dhw-system/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-ventilation/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-cooling/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-lighting/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-renewables/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-zones/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-elements/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-element-u/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/update-climate/schema.json"

@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-member-action/schema.json",
+  "title": "RemoveMemberAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "index"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

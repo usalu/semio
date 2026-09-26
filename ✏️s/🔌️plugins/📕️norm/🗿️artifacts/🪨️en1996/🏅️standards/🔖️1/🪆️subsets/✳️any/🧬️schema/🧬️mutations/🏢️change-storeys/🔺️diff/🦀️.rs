@@ -1,14 +1,7 @@
-//! 🔺️ `change-storeys` sparse diff construction — writes only `En1996Diff.storeys` from the payload.
-
-use crate::diff::En1996Diff;
-use crate::mutations::change_storeys::ChangeStoreys;
-use crate::En1996Snapshot;
-
-//#region 🔖️Diff
+use super::ChangeStoreys;
+use crate::diff::En1996WallList;
+use crate::{En1996Diff, En1996Snapshot};
 pub fn diff(payload: &ChangeStoreys, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
-    if base.storeys == payload.new_storeys {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Storeys already has this value.");
-    }
-    protocol::MutationOutcome::new(En1996Diff { storeys: Some(payload.new_storeys), ..Default::default() })
+    let diff = En1996Diff { storeys: Some(payload.new_storeys), ..Default::default() };
+    protocol::MutationOutcome::new(diff)
 }
-//#endregion 🔖️Diff

@@ -1,0 +1,10 @@
+🏠️ P8 post-publish patch set: `renameSpace` of `s.space.home@1/*#editor` becomes reachable.
+
+It was `BatchOnlyPendingRewrite` (blocker "catalog mutation and filesystem rename still execute in one direct handler"),
+so the shell and every agent got `interactive-job.not-ui-safe` before any handler ran. The blocker is stale: the handler
+only opens the `renameSpace` dialog (empty name) or relays `os.directory.rename-space` to the hub — pure effects, like
+its HostOnly siblings `shareSpace`/`manageSpace`. It moves onto `HomeRetainedCommandJobFactory` with the HostOnly lane
+and the public-invocation scalar budget; the language-neutral fixture row and its JSON Schema row say Migrated/HostOnly.
+Routed to the space owner (report § routed): `bindSpaceFile`, `importSpace`, `deleteVirtualFileSystemNode` do backbone
+and catalog IO inside `handle`, swallow its errors (`let _ =`) and answer an empty success — `bindSpaceFile` is a no-op
+on wasm32 — so they need an IO-owning job, not a reclassification.

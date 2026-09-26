@@ -4,6 +4,6 @@
   "status": "closed",
   "description": "Fix Duplicate declaration parseFormSpec in playground index.tsx",
   "summary": "Removed duplicate import of parseFormSpec from @semio-tech/forms-core in playground index.tsx.",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": ["⚪️d0a2bba6ffb5495e985d34900f57c4bb"]
 }

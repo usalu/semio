@@ -4,10 +4,11 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import Ajv, { type ValidateFunction } from "ajv";
+import { type ValidateFunction } from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runProbe, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../🧪️tests/🧬️schema-oracle/🟦️.ts";
 
 /** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
 type SchemaCheck = ((data: unknown) => boolean) & Pick<ValidateFunction, "errors">;
@@ -26,7 +27,7 @@ const OS_MODULE_SCHEMAS = {
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 function ownedExport(repoRoot: string, scope: keyof typeof OS_MODULE_SCHEMAS, exportId: string): SchemaCheck {
   const doc = JSON.parse(readFileSync(join(repoRoot, OS_MODULE_SCHEMAS[scope]), "utf8")) as { $id: string };
-  const compiled = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
+  const compiled = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
   return compiled as ValidateFunction;
 }
@@ -1765,7 +1766,7 @@ export async function directorySessionAuthorityOracle(repoRoot: string): Promise
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1");
   const schema = JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8"));
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const validate: SchemaCheck = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const validate: SchemaCheck = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(schema);
   const contract = await import("../../🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts");
   for (const row of fixture.rows) {
     assert.equal(validate(row.value), row.accepted, `${row.id}: ${JSON.stringify(validate.errors)}`);
@@ -1839,7 +1840,7 @@ class DirectorySessionAuthorityCheckScript extends BundleScript {
 export async function directoryEventPageContractOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
-  const validator: SchemaCheck = new Ajv({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
+  const validator: SchemaCheck = semioSchemaAjvV1({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
   assert(validator(fixture.valid), JSON.stringify(validator.errors));
   assert.equal(new TextEncoder().encode(fixture.canonicalUnsigned).length, 474);
   assert.equal(createHash("sha256").update(fixture.canonicalUnsigned).digest("hex"), fixture.expectedReceiptSha256);
@@ -1867,7 +1868,7 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
 export async function directoryEventPageClientOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/📃️event-page-v1.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json"), "utf8"));
-  const validator: SchemaCheck = new Ajv({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
+  const validator: SchemaCheck = semioSchemaAjvV1({ strict: false, allErrors: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/DirectoryEventPageV1" });
   const canonical = JSON.stringify(fixture.valid);
   const accept = (raw: string, after: number) => {
     if (!Number.isSafeInteger(after) || after < 0 || new TextEncoder().encode(raw).byteLength > 65_536) throw new Error("client admission");

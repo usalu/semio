@@ -9,7 +9,7 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
   implement design-code FORMULAE and speak no interchange format at all, so not one of them could be
   authoritative over this subset's `Din4108Mutation` vocabulary. The second producer a differential
   comparison needs is therefore a second IMPLEMENTATION, and `🐍️component.py` beside this file is
-  it: all 22 kinds of this vocabulary, written in Python from the repository's own written
+  it: all 43 kinds of this vocabulary, written in Python from the repository's own written
   specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics
   ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from
   `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape

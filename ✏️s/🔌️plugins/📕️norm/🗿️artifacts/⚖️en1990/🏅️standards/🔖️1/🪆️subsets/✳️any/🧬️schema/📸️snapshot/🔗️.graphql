@@ -1,10 +1,57 @@
-# 🪪️ En1990Snapshot uses the canonical Store child identity.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# 📸️ En1990Snapshot GraphQL mirror
+enum AnnexChoice { En De }
+
+type PermanentAction { id: String! kind: String! gk: Float! }
+type VariableAction { id: String! category: String! qk: Float! }
+type AccidentalAction { id: String! ad: Float! }
+enum ImportanceClass { I II III IV }
+type SeismicAction { id: String! aEk: Float! importanceClass: ImportanceClass! }
+type Member {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  rdStr: Float!
+  rdGeo: Float!
+  rdEquStab: Float!
+  rdEquDestab: Float!
+  rdFat: Float!
+  span: Float!
+  deflectionW: Float!
+  deflectionLimitRatio: Float!
+  vibrationFrequency: Float!
+  vibrationFrequencyMin: Float!
+}
+type BridgeSls {
+  id: String!
+  memberId: String!
+  deckAcceleration: Float!
+  deckAccelerationLimit: Float!
+  deckTwist: Float!
+  deckTwistLimit: Float!
+  bridgeDeflection: Float!
+  bridgeDeflectionLimit: Float!
+}
+type MemberEffect { memberId: String! actionId: String! influence: Float! }
+
 type En1990Snapshot {
-  gK: Float! @state(class: ARTIFACT)
-  qK: ArtifactChild! @state(class: ARTIFACT)
-  resistanceKn: Float! @state(class: ARTIFACT)
-  consequenceClass: Int! @state(class: ARTIFACT)
-  annex: String! @state(class: ARTIFACT)
-  seismicAEdKn: Float! @state(class: ARTIFACT)
+  annex: AnnexChoice!
+  projectId: String!
+  structureKind: String!
+  altitudeM: Float!
+  consequenceClass: Int!
+  reliabilityClass: Int!
+  designWorkingLifeCategory: Int!
+  designWorkingLifeYears: Float!
+  referencePeriodYears: Float!
+  supervisionLevel: String!
+  inspectionLevel: String!
+  kFiDeclared: Float!
+  betaComputed: Float!
+  permanents: [PermanentAction!]!
+  variables: [VariableAction!]!
+  accidentals: [AccidentalAction!]!
+  seismics: [SeismicAction!]!
+  members: [Member!]!
+  bridgeSls: [BridgeSls!]!
+  effects: [MemberEffect!]!
 }

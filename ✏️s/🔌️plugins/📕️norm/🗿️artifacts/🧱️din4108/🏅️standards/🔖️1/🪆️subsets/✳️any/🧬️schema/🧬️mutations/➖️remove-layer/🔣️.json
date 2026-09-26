@@ -7,11 +7,12 @@
   "aggregateVariant": "RemoveLayer",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 18,
+  "binaryTag": 7,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied",
+    "no-op",
     "rejected"
   ],
   "composition": "atomic",

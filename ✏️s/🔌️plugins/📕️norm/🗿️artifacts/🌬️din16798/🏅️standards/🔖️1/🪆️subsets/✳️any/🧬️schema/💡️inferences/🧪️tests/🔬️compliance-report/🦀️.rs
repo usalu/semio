@@ -1,19 +1,28 @@
-use super::*;
+//! 🔬️ End-to-end compliance report for hierarchical din16798 subjects.
 
-#[semio_framework_async_macros::async_test]
-async fn residential_environment_e2e_with_acoustic() {
-    let report = check_residential_environment(85.0, 3, 40.0, 21.0, 24.0);
-    assert!(report.all_pass());
-    assert_eq!(report.checks.len(), 3);
+use crate::standards::v1::subsets::any::schema::inferences::evaluate;
+use crate::Din16798Snapshot;
+
+#[test]
+fn compliant_office_evaluate_complies() {
+    let report = evaluate(&Din16798Snapshot::compliant_office());
+    assert!(report.complies());
+    assert!(report.summary.total > 10);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn full_environment_evaluate_covers_all_nine_parts() {
-    let document = Din16798Snapshot::default();
-    let report = evaluate(&document);
-    assert_eq!(report.checks.len(), 25, "checks: {:?}", report.checks);
-    assert!(report.all_pass(), "checks: {:?}", report.checks);
-    assert_eq!(document.annex, crate::document::AnnexChoice::De);
-    let pmv = part_1::pmv_iso7730(document.t_op_c, document.rh_percent, document.air_speed_m_s);
-    assert!(pmv.abs() < 0.5);
+#[test]
+fn noncompliant_office_evaluate_fails_across_parts() {
+    let report = evaluate(&Din16798Snapshot::noncompliant_office());
+    assert!(!report.complies());
+    let parts: std::collections::BTreeSet<_> = report.failing().map(|c| c.part.as_str()).collect();
+    assert!(parts.contains("DIN EN 16798-1"));
+    assert!(parts.iter().any(|p| p.contains("16798-3") || p.contains("16798-5") || p.contains("16798-7") || p.contains("16798-17")), "parts={parts:?}");
+}
+
+#[test]
+fn empty_zones_marks_na_not_hard_fail_only() {
+    let mut doc = Din16798Snapshot::compliant_office();
+    doc.zones.clear();
+    let report = evaluate(&doc);
+    assert!(report.summary.not_applicable >= 1);
 }

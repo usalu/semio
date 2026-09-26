@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChangeUseClass",
+  "type": "object",
+  "properties": {
+    "newUseClass": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-use-class/schema.json"
+}

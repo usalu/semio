@@ -1,178 +1,27 @@
-/** 🧬️ En1992 document mutations — discriminated union mirroring `En1992Mutation` (WASM wiring). */
-
-export interface ChangeAnnex {
-  newAnnex: "En" | "De";
+/** 🧬️ En1992 hierarchical mutations (no flat mEd stubs). */
+export interface En1992ActionMutation {
+  id: string; kind?: string; category?: string; source?: string;
+  gKLine?: number; qKLine?: number; pointForce?: number;
+  mK?: number; nK?: number; vK?: number; tK?: number; vKPunch?: number;
 }
-
-export interface ChangeMEdKnm {
-  newMEdKnm: number;
+export interface En1992BarMutation { id: string; diameter?: number; count?: number; anchorageLength?: number; lapLength?: number; }
+export interface En1992PunchingMutation { columnWidth?: number; columnDepth?: number; columnPosition?: string; asw?: number; }
+export interface En1992PrestressMutation { force?: number; area?: number; eccentricity?: number; lossRatio?: number; }
+export interface En1992MemberMutation {
+  id: string; cover?: number; width?: number; height?: number; effectiveDepth?: number; span?: number;
+  exposure?: string; fireAxisDistance?: number; fireRating?: string; stirrupSpacing?: number;
+  useFem?: boolean; udl?: number; deflectionSensitive?: boolean;
+  actions?: En1992ActionMutation[]; longitudinal?: En1992BarMutation[];
+  punching?: En1992PunchingMutation; prestress?: En1992PrestressMutation;
 }
-
-export interface ChangeVEdKn {
-  newVEdKn: number;
+export interface En1992AnchorMutation { id: string; hEf?: number; aS?: number; }
+export interface En1992ConcreteMutation { id: string; fCk?: number; }
+export interface En1992ReinfMutation { id: string; fYk?: number; }
+export interface En1992Mutation {
+  annex?: string; title?: string; designWorkingLifeYears?: number; deltaCDev?: number; cementType?: string;
+  members?: En1992MemberMutation[]; anchors?: En1992AnchorMutation[];
+  concreteGrades?: En1992ConcreteMutation[]; reinforcementGrades?: En1992ReinfMutation[];
 }
-
-export interface ChangeFCk {
-  newFCk: number;
-}
-
-export interface ChangeBMm {
-  newBMm: number;
-}
-
-export interface ChangeDMm {
-  newDMm: number;
-}
-
-export interface ChangeASMm2 {
-  newASMm2: number;
-}
-
-export interface ChangeFYk {
-  newFYk: number;
-}
-
-export interface ChangeRhoL {
-  newRhoL: number;
-}
-
-export interface ChangeNEdKn {
-  newNEdKn: number;
-}
-
-export interface ChangePKn {
-  newPKn: number;
-}
-
-export interface ChangeACMm2 {
-  newACMm2: number;
-}
-
-export interface ChangeUseFem {
-  newUseFem: boolean;
-}
-
-export interface ChangeSpanM {
-  newSpanM: number;
-}
-
-export interface ChangeUdlKnM {
-  newUdlKnM: number;
-}
-
-export interface ChangeFireRating {
-  newFireRating: "R30" | "R60" | "R90" | "R120";
-}
-
-export interface ChangeProvidedAxisDistanceMm {
-  newProvidedAxisDistanceMm: number;
-}
-
-export interface ChangeBridgeSigmaCMpa {
-  newBridgeSigmaCMpa: number;
-}
-
-export interface ChangeBridgeDeltaSigmaSMpa {
-  newBridgeDeltaSigmaSMpa: number;
-}
-
-export interface ChangeTightnessClass {
-  newTightnessClass: "Tc0" | "Tc1" | "Tc2";
-}
-
-export interface ChangeHdOverH {
-  newHdOverH: number;
-}
-
-export interface ChangeLiquidSigmaSMpa {
-  newLiquidSigmaSMpa: number;
-}
-
-export interface ChangeLiquidRhoPEff {
-  newLiquidRhoPEff: number;
-}
-
-export interface ChangeLiquidFCtEffMpa {
-  newLiquidFCtEffMpa: number;
-}
-
-export interface ChangeLiquidESMpa {
-  newLiquidESMpa: number;
-}
-
-export interface ChangeLiquidSRMaxMm {
-  newLiquidSRMaxMm: number;
-}
-
-export interface ChangeAnchorHEfMm {
-  newAnchorHEfMm: number;
-}
-
-export interface ChangeAnchorCracked {
-  newAnchorCracked: boolean;
-}
-
-export interface ChangeAnchorFUkMpa {
-  newAnchorFUkMpa: number;
-}
-
-export interface ChangeAnchorFYkMpa {
-  newAnchorFYkMpa: number;
-}
-
-export interface ChangeAnchorASMm2 {
-  newAnchorASMm2: number;
-}
-
-export interface ChangeAnchorDMm {
-  newAnchorDMm: number;
-}
-
-export interface ChangeAnchorC1Mm {
-  newAnchorC1Mm: number;
-}
-
-export interface ChangeAnchorNEdKn {
-  newAnchorNEdKn: number;
-}
-
-export interface ChangeAnchorVEdKn {
-  newAnchorVEdKn: number;
-}
-
-export type En1992Mutation =
-  | { ChangeAnnex: ChangeAnnex }
-  | { ChangeMEdKnm: ChangeMEdKnm }
-  | { ChangeVEdKn: ChangeVEdKn }
-  | { ChangeFCk: ChangeFCk }
-  | { ChangeBMm: ChangeBMm }
-  | { ChangeDMm: ChangeDMm }
-  | { ChangeASMm2: ChangeASMm2 }
-  | { ChangeFYk: ChangeFYk }
-  | { ChangeRhoL: ChangeRhoL }
-  | { ChangeNEdKn: ChangeNEdKn }
-  | { ChangePKn: ChangePKn }
-  | { ChangeACMm2: ChangeACMm2 }
-  | { ChangeUseFem: ChangeUseFem }
-  | { ChangeSpanM: ChangeSpanM }
-  | { ChangeUdlKnM: ChangeUdlKnM }
-  | { ChangeFireRating: ChangeFireRating }
-  | { ChangeProvidedAxisDistanceMm: ChangeProvidedAxisDistanceMm }
-  | { ChangeBridgeSigmaCMpa: ChangeBridgeSigmaCMpa }
-  | { ChangeBridgeDeltaSigmaSMpa: ChangeBridgeDeltaSigmaSMpa }
-  | { ChangeTightnessClass: ChangeTightnessClass }
-  | { ChangeHdOverH: ChangeHdOverH }
-  | { ChangeLiquidSigmaSMpa: ChangeLiquidSigmaSMpa }
-  | { ChangeLiquidRhoPEff: ChangeLiquidRhoPEff }
-  | { ChangeLiquidFCtEffMpa: ChangeLiquidFCtEffMpa }
-  | { ChangeLiquidESMpa: ChangeLiquidESMpa }
-  | { ChangeLiquidSRMaxMm: ChangeLiquidSRMaxMm }
-  | { ChangeAnchorHEfMm: ChangeAnchorHEfMm }
-  | { ChangeAnchorCracked: ChangeAnchorCracked }
-  | { ChangeAnchorFUkMpa: ChangeAnchorFUkMpa }
-  | { ChangeAnchorFYkMpa: ChangeAnchorFYkMpa }
-  | { ChangeAnchorASMm2: ChangeAnchorASMm2 }
-  | { ChangeAnchorDMm: ChangeAnchorDMm }
-  | { ChangeAnchorC1Mm: ChangeAnchorC1Mm }
-  | { ChangeAnchorNEdKn: ChangeAnchorNEdKn }
-  | { ChangeAnchorVEdKn: ChangeAnchorVEdKn };
+export type ChangeActionMk = { memberId: string; actionId: string; newValue: number };
+export type ChangeActionVEd = { memberId: string; actionId: string; newValue: number };
+export type ChangeActionNEd = { memberId: string; actionId: string; newValue: number };

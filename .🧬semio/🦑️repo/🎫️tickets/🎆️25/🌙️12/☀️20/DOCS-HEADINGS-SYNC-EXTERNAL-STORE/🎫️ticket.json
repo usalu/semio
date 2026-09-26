@@ -3,5 +3,5 @@
   "emoji": "♻️",
   "status": "closed",
   "description": "Refactor Docs.tsx useHeadings hook to use useSyncExternalStore instead of useState + useEffect + manual subscribe pattern",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps"
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings"
 }

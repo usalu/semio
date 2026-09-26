@@ -14,12 +14,12 @@ pub struct SetActiveExample {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-/// 🎨️ Replaces the live document with the named example's `PRIMARY_TEXT`, or clears it when the id is empty.
+/// 🎨️ Replaces the live document with the named example subject.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, En1991Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1991Mutation, NoConfigMutation>, Fault> {
     let snapshot = match payload.example_id.trim() {
         "" => En1991Snapshot::default(),
-        id if id == crate::retail_hydrocarbon_fire::ID => <En1991Snapshot as store::ArtifactDsl>::parse_dsl(crate::retail_hydrocarbon_fire::PRIMARY_TEXT)
-            .map_err(|error| Fault::from(format!("set-active-example: invalid example text: {error:?}")))?,
+        id if id == crate::de_office_compliant::ID => crate::example_subjects::de_office_compliant(),
+        id if id == crate::multi_fail_noncompliant::ID => crate::example_subjects::multi_fail_noncompliant(),
         _ => return Ok(Emit::default()),
     };
     set_snapshot::handle(&set_snapshot::ReplaceSnapshot { snapshot }, doc, cfg)

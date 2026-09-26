@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-construction/schema.json",
+  "title": "ChangeBeamConstruction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newConstruction"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newConstruction": {
+      "type": "string"
+    }
+  }
+}

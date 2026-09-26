@@ -1,3 +1,4 @@
+export * as compliance_check_report from "../../⚖️compliance/🧬️schema/🟦️.ts";
 /** heavy plugin facet WASM facades */
 export * as iso16757_schema from "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
 export * as iso16757_snapshot from "../../🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";

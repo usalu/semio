@@ -1,27 +1,72 @@
-# 🧬️ Din4108 artifact schema — every field with its state class.
+# 🧬️ Din4108 snapshot schema — complete envelope subject.
 
-type Din4108Artifact {
-  category: String! @state(class: ARTIFACT)
-  layers: [String!]! @state(class: ARTIFACT)
-  climate: String! @state(class: ARTIFACT)
-  airtightnessN50: Float! @state(class: ARTIFACT)
-  psiTimesLSum: Float! @state(class: ARTIFACT)
-  rhInt: Float! @state(class: ARTIFACT)
-  catalogId: String! @state(class: ARTIFACT)
-  materialId: String! @state(class: ARTIFACT)
-  airtightnessClass: String! @state(class: ARTIFACT)
-  tIntC: Float! @state(class: ARTIFACT)
-  solarAbsorptance: Float! @state(class: ARTIFACT)
-  irradianceWM2: Float! @state(class: ARTIFACT)
-  moistureMuExterior: Float! @state(class: ARTIFACT)
-  moistureMuInterior: Float! @state(class: ARTIFACT)
-  envelopeAreaM2: Float! @state(class: ARTIFACT)
-  bb2DetailsConform: Boolean! @state(class: ARTIFACT)
-  applicationType: String! @state(class: ARTIFACT)
-  declaredApplicationClass: String! @state(class: ARTIFACT)
+type Din4108LayerSegment {
+  id: String!
+  materialId: String!
+  fraction: Float!
+  lambda: Float!
+  mu: Float!
+  density: Float!
 }
 
 type Din4108LayerDocument {
+  id: String!
+  materialId: String!
   thicknessM: Float!
-  lambdaWMk: Float!
+  lambda: Float!
+  mu: Float!
+  density: Float!
+  applicationType: String!
+  compressiveClass: String!
+  waterClass: String!
+  tensileClass: String!
+  acousticClass: String!
+  segments: [Din4108LayerSegment!]!
+}
+
+type Din4108ZoneWindow {
+  id: String!
+  orientation: String!
+  areaM2: Float!
+  gValue: Float!
+  shadingFc: Float!
+}
+
+type Din4108ThermalZone {
+  id: String!
+  floorAreaM2: Float!
+  heaviness: String!
+  nightVentilation: String!
+  windows: [Din4108ZoneWindow!]!
+}
+
+type Din4108EnvelopeElement {
+  id: String!
+  kind: String!
+  zoneId: String!
+  orientationDeg: Float!
+  inclinationDeg: Float!
+  adjacent: String!
+  areaM2: Float!
+  layers: [Din4108LayerDocument!]!
+}
+
+type Din4108ThermalBridge {
+  id: String!
+  psi: Float!
+  lengthM: Float!
+  bb2Type: String!
+}
+
+type Din4108Artifact {
+  climateZone: String! @state(class: ARTIFACT)
+  usage: String! @state(class: ARTIFACT)
+  tIntC: Float! @state(class: ARTIFACT)
+  rhInt: Float! @state(class: ARTIFACT)
+  hasMechanicalVentilation: Boolean! @state(class: ARTIFACT)
+  airtightnessN50: Float! @state(class: ARTIFACT)
+  bb2DetailsConform: Boolean! @state(class: ARTIFACT)
+  zones: [Din4108ThermalZone!]! @state(class: ARTIFACT)
+  elements: [Din4108EnvelopeElement!]! @state(class: ARTIFACT)
+  thermalBridges: [Din4108ThermalBridge!]! @state(class: ARTIFACT)
 }

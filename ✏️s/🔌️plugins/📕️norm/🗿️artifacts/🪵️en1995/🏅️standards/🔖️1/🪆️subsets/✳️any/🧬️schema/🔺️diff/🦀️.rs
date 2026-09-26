@@ -14,42 +14,26 @@ pub struct En1995Diff {
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
-    pub m_ed_knm: Option<f64>,
+    pub members: Option<En1995MemberList>,
     #[state(artifact)]
-    pub n_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub v_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub w_mm3: Option<f64>,
-    #[state(artifact)]
-    pub a_mm2: Option<f64>,
-    #[state(artifact)]
-    pub b_mm: Option<f64>,
-    #[state(artifact)]
-    pub h_mm: Option<f64>,
-    #[state(artifact)]
-    pub f_m_k: Option<f64>,
-    #[state(artifact)]
-    pub f_c_0_k: Option<f64>,
-    #[state(artifact)]
-    pub service_class: Option<String>,
-    #[state(artifact)]
-    pub load_duration: Option<String>,
-    #[state(artifact)]
-    pub m_crit_knm: Option<f64>,
-    #[state(artifact)]
-    pub f_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub a_ef_mm2: Option<f64>,
-    #[state(artifact)]
-    pub f_v_k: Option<f64>,
-    #[state(artifact)]
-    pub fire_duration_min: Option<f64>,
-    #[state(artifact)]
-    pub section_depth_mm: Option<f64>,
-    #[state(artifact)]
-    pub a_vert_m_s2: Option<f64>,
-    #[state(artifact)]
-    pub n_cycles_bridge: Option<f64>,
+    pub connections: Option<En1995ConnectionList>,
 }
 //#endregion 🔖️Diff
+
+//#region 🔖️DeltaHelpers
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1995MemberList {
+    pub values: Vec<crate::TimberMember>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1995ConnectionList {
+    pub values: Vec<crate::TimberConnection>,
+}
+//#endregion 🔖️DeltaHelpers

@@ -1,294 +1,108 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/artifact/schema.json",
   "title": "En1998Artifact",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "seismicZone",
-    "groundType",
-    "importanceClass",
-    "structuralSystem",
-    "t1S",
-    "massT",
-    "vRdKn",
-    "driftMm",
-    "heightM",
-    "multipleResistingSystems",
-    "annex",
-    "enAGr",
-    "enGroundType",
-    "enSpectrumType",
-    "periodRatio",
-    "bridgeVRdKn",
-    "bearingDEdMm",
-    "bearingDRdMm",
-    "retrofitKnowledgeLevel",
-    "retrofitLimitState",
-    "retrofitEDKn",
-    "retrofitRKKn",
-    "retrofitGammaEl",
-    "siloHeightM",
-    "siloRadiusM",
-    "siloNRdKn",
-    "siloVEdKn",
-    "siloVRdKn",
-    "siloQNominal",
-    "tankHeightM",
-    "tankRadiusM",
-    "tankMassT",
-    "tankVRdKn",
-    "towerMEdKnm",
-    "towerMRdKnm",
-    "towerIsChimney",
-    "towerQNominal",
-    "towerMassT",
-    "foundationAreaM2",
-    "foundationPRdKpa",
-    "foundationHEdKn",
-    "foundationHRdKn",
-    "kFoundation",
-    "kSoil",
-    "wallHeightM",
-    "wallPhiDeg",
-    "wallSoilGammaKnM3",
-    "wallR",
-    "wallHRdKn"
-  ],
   "properties": {
-    "seismicZone": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "groundType": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "importanceClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "structuralSystem": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "t1S": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "massT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "vRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "driftMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "heightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "multipleResistingSystems": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
     "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "type": "string"
     },
-    "enAGr": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seismicZone",
+        "aGr",
+        "geologicalSubsoil",
+        "groundClass",
+        "enGroundType",
+        "enSpectrumType",
+        "importanceClass"
+      ],
+      "properties": {
+        "seismicZone": {
+          "type": "integer"
+        },
+        "aGr": {
+          "type": "number"
+        },
+        "geologicalSubsoil": {
+          "type": "string"
+        },
+        "groundClass": {
+          "type": "string"
+        },
+        "enGroundType": {
+          "type": "string"
+        },
+        "enSpectrumType": {
+          "type": "string"
+        },
+        "importanceClass": {
+          "type": "string"
+        }
+      }
     },
-    "enGroundType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "buildings": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
-    "enSpectrumType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "bridges": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
-    "periodRatio": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "assessments": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
-    "bridgeVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "silos": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
-    "bearingDEdMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "tanks": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
-    "bearingDRdMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "foundations": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
-    "retrofitKnowledgeLevel": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "retainingWalls": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     },
-    "retrofitLimitState": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "retrofitEDKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "retrofitRKKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "retrofitGammaEl": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloRadiusM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloNRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloVEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloQNominal": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tankHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tankRadiusM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tankMassT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tankVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerMEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerMRdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerIsChimney": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
-    "towerQNominal": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerMassT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "foundationAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "foundationPRdKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "foundationHEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "foundationHRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "kFoundation": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "kSoil": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallPhiDeg": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallSoilGammaKnM3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallR": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallHRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "towers": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
     }
-  }
+  },
+  "required": [
+    "annex",
+    "site",
+    "buildings",
+    "bridges",
+    "assessments",
+    "silos",
+    "tanks",
+    "foundations",
+    "retainingWalls",
+    "towers"
+  ]
 }

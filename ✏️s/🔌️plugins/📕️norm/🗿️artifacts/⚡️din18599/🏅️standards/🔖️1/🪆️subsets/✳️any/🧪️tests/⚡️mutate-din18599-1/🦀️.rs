@@ -57,17 +57,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 #[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
     "change-use-class",
-    "change-heated-area-m2",
-    "change-occupants",
-    "change-ht",
-    "change-hv",
-    "change-internal-gains-wm2",
-    "change-solar-gains-kwh",
-    "change-system-losses-kwh",
-    "change-renewable-kwh",
-    "change-annual-limit-kwh",
-    "change-energy-carrier",
-    "change-reference-qp-kwh",
+    "change-net-floor-area-m2",
     "update-climate",
 ];
 
@@ -85,76 +75,16 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
         "change-use-class" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-use-class/🏢️reclassifies-the-building-as-an-office/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-use-class/🏢️reclassifies-the-building-as-an-office/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-use-class/🏢️reclassifies-the-building-as-an-office/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-use-class/🏢️reclassifies-the-building-as-an-office/🎯️outcome/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️use-class/🏢️reclassifies-the-building-as-an-office/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️use-class/🏢️reclassifies-the-building-as-an-office/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️use-class/🏢️reclassifies-the-building-as-an-office/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️use-class/🏢️reclassifies-the-building-as-an-office/🎯️outcome/🔣️.json"),
         ),
-        "change-heated-area-m2" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-heated-area-m2/📏️extends-the-heated-area-to-160-m2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-heated-area-m2/📏️extends-the-heated-area-to-160-m2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-heated-area-m2/📏️extends-the-heated-area-to-160-m2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-heated-area-m2/📏️extends-the-heated-area-to-160-m2/🎯️outcome/🔣️.json"),
-        ),
-        "change-occupants" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/👥️change-occupants/👥️raises-the-occupancy-to-six-people/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/👥️change-occupants/👥️raises-the-occupancy-to-six-people/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/👥️change-occupants/👥️raises-the-occupancy-to-six-people/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/👥️change-occupants/👥️raises-the-occupancy-to-six-people/🎯️outcome/🔣️.json"),
-        ),
-        "change-ht" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱️change-ht/🧱️raises-the-transmission-loss-coefficient-to-118-w-per-k/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱️change-ht/🧱️raises-the-transmission-loss-coefficient-to-118-w-per-k/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱️change-ht/🧱️raises-the-transmission-loss-coefficient-to-118-w-per-k/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧱️change-ht/🧱️raises-the-transmission-loss-coefficient-to-118-w-per-k/🎯️outcome/🔣️.json"),
-        ),
-        "change-hv" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌬️change-hv/🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌬️change-hv/🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌬️change-hv/🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌬️change-hv/🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/🎯️outcome/🔣️.json"),
-        ),
-        "change-internal-gains-wm2" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-internal-gains-wm2/🌡️raises-the-internal-gains-to-5-w-per-m2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-internal-gains-wm2/🌡️raises-the-internal-gains-to-5-w-per-m2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-internal-gains-wm2/🌡️raises-the-internal-gains-to-5-w-per-m2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-internal-gains-wm2/🌡️raises-the-internal-gains-to-5-w-per-m2/🎯️outcome/🔣️.json"),
-        ),
-        "change-solar-gains-kwh" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/☀️change-solar-gains-kwh/🌞️raises-the-annual-solar-gains-to-132-kwh/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/☀️change-solar-gains-kwh/🌞️raises-the-annual-solar-gains-to-132-kwh/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/☀️change-solar-gains-kwh/🌞️raises-the-annual-solar-gains-to-132-kwh/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/☀️change-solar-gains-kwh/🌞️raises-the-annual-solar-gains-to-132-kwh/🎯️outcome/🔣️.json"),
-        ),
-        "change-system-losses-kwh" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️change-system-losses-kwh/🛠️cuts-the-system-losses-to-450-kwh/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️change-system-losses-kwh/🛠️cuts-the-system-losses-to-450-kwh/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️change-system-losses-kwh/🛠️cuts-the-system-losses-to-450-kwh/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️change-system-losses-kwh/🛠️cuts-the-system-losses-to-450-kwh/🎯️outcome/🔣️.json"),
-        ),
-        "change-renewable-kwh" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/♻️change-renewable-kwh/🔆️raises-the-on-site-renewable-yield-to-2250-kwh/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/♻️change-renewable-kwh/🔆️raises-the-on-site-renewable-yield-to-2250-kwh/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/♻️change-renewable-kwh/🔆️raises-the-on-site-renewable-yield-to-2250-kwh/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/♻️change-renewable-kwh/🔆️raises-the-on-site-renewable-yield-to-2250-kwh/🎯️outcome/🔣️.json"),
-        ),
-        "change-annual-limit-kwh" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-annual-limit-kwh/🎯️tightens-the-annual-primary-energy-limit-to-6000-kwh/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-annual-limit-kwh/🎯️tightens-the-annual-primary-energy-limit-to-6000-kwh/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-annual-limit-kwh/🎯️tightens-the-annual-primary-energy-limit-to-6000-kwh/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-annual-limit-kwh/🎯️tightens-the-annual-primary-energy-limit-to-6000-kwh/🎯️outcome/🔣️.json"),
-        ),
-        "change-energy-carrier" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔋️change-energy-carrier/⚡️switches-the-energy-carrier-to-an-electric-heat-pump/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔋️change-energy-carrier/⚡️switches-the-energy-carrier-to-an-electric-heat-pump/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔋️change-energy-carrier/⚡️switches-the-energy-carrier-to-an-electric-heat-pump/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔋️change-energy-carrier/⚡️switches-the-energy-carrier-to-an-electric-heat-pump/🎯️outcome/🔣️.json"),
-        ),
-        "change-reference-qp-kwh" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏢️change-reference-qp-kwh/📉️lowers-the-reference-building-primary-energy-to-8750-kwh/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏢️change-reference-qp-kwh/📉️lowers-the-reference-building-primary-energy-to-8750-kwh/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏢️change-reference-qp-kwh/📉️lowers-the-reference-building-primary-energy-to-8750-kwh/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏢️change-reference-qp-kwh/📉️lowers-the-reference-building-primary-energy-to-8750-kwh/🎯️outcome/🔣️.json"),
+        "change-net-floor-area-m2" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/🎯️outcome/🔣️.json"),
         ),
         "update-climate" => (
             include_str!("../../🧫️fixtures/🧬️mutations/🌦️update-climate/🌧️refuses-a-negative-january-irradiance/📸️snapshot/⬅️before/🔣️.json"),
@@ -162,7 +92,7 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🌦️update-climate/🌧️refuses-a-negative-january-irradiance/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🌦️update-climate/🌧️refuses-a-negative-january-irradiance/🎯️outcome/🔣️.json"),
         ),
-        other => panic!("mutate-din18599-1: no committed fixture is registered for kind {other:?}"),
+        other => panic!("unknown din18599 mutation fixture kind: {other}"),
     }
 }
 

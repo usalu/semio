@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-night-ventilation/schema.json",
+  "title": "ChangeZoneNightVentilation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newNightVentilation"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newNightVentilation": {
+      "type": "string"
+    }
+  }
+}

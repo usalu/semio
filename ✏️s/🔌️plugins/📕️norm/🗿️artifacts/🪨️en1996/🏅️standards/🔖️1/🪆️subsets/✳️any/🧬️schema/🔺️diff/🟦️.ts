@@ -1,52 +1,10 @@
-/** 🧬️ EN 1996 diff schema. */
+/** 🔺️ Sparse En1996Diff — typed field deltas over the EN 1996 snapshot. */
+import type { MasonryWall } from "../📸️snapshot/🟦️.ts";
 
-import type { En1996Artifact } from "../🟦️.ts";
-
-export interface En1996Diff {
-  /** @state artifact */
-  artifact?: En1996Artifact;
-  /** @state artifact */
-  mEdKnm?: number;
-  /** @state artifact */
-  nEdKn?: number;
-  /** @state artifact */
-  vEdKn?: number;
-  /** @state artifact */
-  hEdKn?: number;
-  /** @state artifact */
-  zMm3?: number;
-  /** @state artifact */
-  areaMm2?: number;
-  /** @state artifact */
-  shearAreaMm2?: number;
-  /** @state artifact */
-  fKMpa?: number;
-  /** @state artifact */
-  fVkMpa?: number;
-  /** @state artifact */
-  annex?: number;
-  /** @state artifact */
-  masonryClass?: number;
-  /** @state artifact */
-  designSituation?: number;
-  /** @state artifact */
-  mu?: number;
-  /** @state artifact */
-  wallThicknessMm?: number;
-  /** @state artifact */
-  fireResistanceMin?: number;
-  /** @state artifact */
-  unit?: number;
-  /** @state artifact */
-  exposure?: number;
-  /** @state artifact */
-  mortar?: number;
-  /** @state artifact */
-  bedJointThicknessMm?: number;
-  /** @state artifact */
+export type En1996Diff = {
+  annex?: string;
+  masonryClass?: string;
+  designSituation?: string;
   storeys?: number;
-  /** @state artifact */
-  hEfMm?: number;
-  /** @state artifact */
-  tEfMm?: number;
-}
+  walls?: { values: MasonryWall[] };
+};

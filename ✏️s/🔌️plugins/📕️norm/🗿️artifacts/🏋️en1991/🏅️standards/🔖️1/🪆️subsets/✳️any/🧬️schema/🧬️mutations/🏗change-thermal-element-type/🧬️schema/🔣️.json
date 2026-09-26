@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "new_thermal_element_type"
+  ],
+  "properties": {
+    "new_thermal_element_type": {
+      "type": "string"
+    }
+  }
+}

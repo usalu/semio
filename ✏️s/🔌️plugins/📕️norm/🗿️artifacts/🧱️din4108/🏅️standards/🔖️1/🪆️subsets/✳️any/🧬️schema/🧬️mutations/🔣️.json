@@ -1,73 +1,48 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutations.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Din4108Mutation",
-  "oneOf": [
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-airtightness-class/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-airtightness-n50/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-application-type/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-bb2-details-conform/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-catalog-id/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-category/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-climate/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-declared-application-class/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-envelope-area-m2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-irradiance-wm2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-lambda/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-thickness/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-material-id/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-moisture-mu-exterior/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-moisture-mu-interior/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-psi-times-l-sum/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-rh-int/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-solar-absorptance/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-t-int-c/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/insert-layer/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/remove-layer/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/reorder-layers/schema.json"
+  "type": "object",
+  "required": [
+    "kind"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "change-climate-zone",
+        "change-usage",
+        "change-t-int-c",
+        "change-rh-int",
+        "change-airtightness-n50",
+        "change-has-mechanical-ventilation",
+        "change-bb2-details-conform",
+        "insert-zone",
+        "remove-zone",
+        "change-zone-floor-area",
+        "change-zone-heaviness",
+        "change-zone-night-ventilation",
+        "insert-zone-window",
+        "remove-zone-window",
+        "change-zone-window-area",
+        "change-zone-window-g-value",
+        "change-zone-window-shading-fc",
+        "insert-element",
+        "remove-element",
+        "change-element-area",
+        "change-element-adjacent",
+        "change-element-kind",
+        "insert-layer",
+        "remove-layer",
+        "reorder-layers",
+        "change-layer-thickness",
+        "change-layer-lambda",
+        "change-layer-mu",
+        "change-layer-material-id",
+        "insert-thermal-bridge",
+        "remove-thermal-bridge",
+        "change-thermal-bridge-psi",
+        "change-thermal-bridge-length"
+      ]
     }
-  ]
+  }
 }

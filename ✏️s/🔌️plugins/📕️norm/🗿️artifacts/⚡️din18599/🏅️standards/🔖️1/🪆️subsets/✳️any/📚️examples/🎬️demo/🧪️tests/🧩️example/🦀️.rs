@@ -1,7 +1,11 @@
 #[semio_framework_async_macros::async_test]
-async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    assert!(text.len() > 8);
+async fn primary_asset_decodes_and_evaluates_claimed_verdict() {
+    use crate::standards::v1::subsets::any::schema::evaluate_document;
+    use store::ArtifactDsl;
+    let text = crate::examples::demo::PRIMARY_TEXT;
+    let doc = <crate::Din18599Snapshot as ArtifactDsl>::parse_dsl(text).expect("parse demo");
+    let report = evaluate_document(&doc);
+    assert!(report.complies(), "fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
 }
 
 #[semio_framework_async_macros::async_test]

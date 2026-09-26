@@ -1,48 +1,83 @@
 syntax = "proto3";
 package semio.s.norm.din4108.artifact;
 
-// 🧬️ Din4108 artifact schema — every field with its state class.
-
-message Din4108Artifact {
-  // @state artifact
-  string category = 1;
-  // @state artifact
-  repeated string layers = 2;
-  // @state artifact
-  string climate = 3;
-  // @state artifact
-  double airtightness_n50 = 4;
-  // @state artifact
-  double psi_times_l_sum = 5;
-  // @state artifact
-  double rh_int = 6;
-  // @state artifact
-  string catalog_id = 7;
-  // @state artifact
-  string material_id = 8;
-  // @state artifact
-  string airtightness_class = 9;
-  // @state artifact
-  double t_int_c = 10;
-  // @state artifact
-  double solar_absorptance = 11;
-  // @state artifact
-  double irradiance_w_m2 = 12;
-  // @state artifact
-  double moisture_mu_exterior = 13;
-  // @state artifact
-  double moisture_mu_interior = 14;
-  // @state artifact
-  double envelope_area_m2 = 15;
-  // @state artifact
-  bool bb2_details_conform = 16;
-  // @state artifact
-  string application_type = 17;
-  // @state artifact
-  string declared_application_class = 18;
+message Din4108LayerSegment {
+  string id = 1;
+  string material_id = 2;
+  double fraction = 3;
+  double lambda = 4;
+  double mu = 5;
+  double density = 6;
 }
 
 message Din4108LayerDocument {
-  double thickness_m = 1;
-  double lambda_w_mk = 2;
+  string id = 1;
+  string material_id = 2;
+  double thickness_m = 3;
+  double lambda = 4;
+  double mu = 5;
+  double density = 6;
+  string application_type = 7;
+  string compressive_class = 8;
+  string water_class = 9;
+  string tensile_class = 10;
+  string acoustic_class = 11;
+  repeated Din4108LayerSegment segments = 12;
+}
+
+message Din4108ZoneWindow {
+  string id = 1;
+  string orientation = 2;
+  double area_m2 = 3;
+  double g_value = 4;
+  double shading_fc = 5;
+}
+
+message Din4108ThermalZone {
+  string id = 1;
+  double floor_area_m2 = 2;
+  string heaviness = 3;
+  string night_ventilation = 4;
+  repeated Din4108ZoneWindow windows = 5;
+}
+
+message Din4108EnvelopeElement {
+  string id = 1;
+  string kind = 2;
+  string zone_id = 3;
+  double orientation_deg = 4;
+  double inclination_deg = 5;
+  string adjacent = 6;
+  double area_m2 = 7;
+  repeated Din4108LayerDocument layers = 8;
+}
+
+message Din4108ThermalBridge {
+  string id = 1;
+  double psi = 2;
+  double length_m = 3;
+  string bb2_type = 4;
+}
+
+message Din4108Artifact {
+  // @state artifact
+  string climate_zone = 1;
+  // @state artifact
+  string usage = 2;
+  // @state artifact
+  double t_int_c = 3;
+  // @state artifact
+  double rh_int = 4;
+  // @state artifact
+  bool has_mechanical_ventilation = 5;
+  // @state artifact
+  double airtightness_n50 = 6;
+  // @state artifact
+  bool bb2_details_conform = 7;
+  // @state artifact
+  repeated Din4108ThermalZone zones = 8;
+  // @state artifact
+  repeated Din4108EnvelopeElement elements = 9;
+  // @state artifact
+  repeated Din4108ThermalBridge thermal_bridges = 10;
 }

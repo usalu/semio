@@ -1,0 +1,5 @@
+type ChangeBarLayerCount {
+  memberId: String!
+  layerId: String!
+  newCount: Int!
+}

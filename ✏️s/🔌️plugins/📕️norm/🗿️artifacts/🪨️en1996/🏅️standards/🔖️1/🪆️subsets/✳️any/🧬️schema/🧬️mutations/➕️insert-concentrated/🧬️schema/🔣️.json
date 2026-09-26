@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/insert-concentrated/schema.json",
+  "title": "InsertConcentrated",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallIndex",
+    "loadCaseIndex",
+    "index",
+    "load"
+  ],
+  "properties": {
+    "wallIndex": {
+      "type": "integer"
+    },
+    "loadCaseIndex": {
+      "type": "integer"
+    },
+    "index": {
+      "type": "integer"
+    },
+    "load": {
+      "type": "object"
+    }
+  }
+}

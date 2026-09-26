@@ -1,0 +1,6 @@
+{
+  "ChangeElementDeltaUg": {
+    "element_id": "wall-north",
+    "new_delta_u_g": 0.02
+  }
+}

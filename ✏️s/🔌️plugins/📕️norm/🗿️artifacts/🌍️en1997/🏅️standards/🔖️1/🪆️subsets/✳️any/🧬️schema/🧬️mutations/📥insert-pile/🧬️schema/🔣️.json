@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/insert-pile/schema.json",
+  "title": "InsertPile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "pile"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "pile": {
+      "type": "object"
+    }
+  }
+}

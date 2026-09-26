@@ -85,6 +85,10 @@ fn every_command() -> Vec<En1990Command> {
         En1990Command::Evaluate(evaluate::Evaluate {}),
         En1990Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         En1990Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
+        En1990Command::SetField(set_field::SetField { path: "consequenceClass".into(), value_json: "2".into() }),
+        En1990Command::InsertItem(insert_item::InsertItem { path: "variables".into(), index: 0, value_json: None }),
+        En1990Command::RemoveItem(remove_item::RemoveItem { path: "variables".into(), index: 0 }),
+        En1990Command::ApplyRemedy(apply_remedy::ApplyRemedy { check_id: String::new(), remedy_index: 0 }),
     ]
 }
 
@@ -96,14 +100,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]);
+    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]);
 }
 
 /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example"];
+    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example", "set-field", "insert-item", "remove-item", "apply-remedy"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -169,7 +173,8 @@ async fn every_declared_body_key_renders() {
 async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, En1990Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default())) })).await;
-    let host = NormHost::<En1990Family>::from_artifact(app.snapshot().expect("projection"));
+    let mut host = NormHost::<En1990Family>::from_artifact(app.snapshot().expect("projection"));
+    host.evaluate();
     assert!(!host.report().checks.is_empty());
     context::close(&mut app);
 }
@@ -216,27 +221,29 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     context::close(&mut app);
 }
 
-/// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
+/// ðŸŽžï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
+    let mut host = NormHost::<En1990Family>::from_artifact(app.snapshot().expect("projection"));
+    host.evaluate();
     let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
-    assert!(!report.checks.is_empty());
+    let value: serde_json::Value = serde_json::from_str(&json).expect("report json parses");
+    let checks = value.get("checks").and_then(|c| c.as_array()).expect("checks array");
+    assert!(!checks.is_empty());
     context::close(&mut app);
 }
-//#endregion ðï¸Behavior
 
-/// ⚖️ LAW (S15 matrix, 2026-09-25): `setSnapshot`'s declared argument is `snapshot`, the document's camelCase JSON.
-/// The rail delivered the committed ➡️after fixture and the editor handed that JSON to its DSL-text parser
+/// âš–ï¸ LAW (S15 matrix, 2026-09-25): `setSnapshot`'s declared argument is `snapshot`, the document's camelCase JSON.
+/// The rail delivered the committed âž¡ï¸after fixture and the editor handed that JSON to its DSL-text parser
 /// (`expected Float, found Absent at 1:1`). The argument now reaches the handler as the same document.
 #[semio_framework_async_macros::async_test]
 async fn the_declared_snapshot_argument_carries_the_documents_json() {
-    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/🛡️change-resistance/🛡️raises-the-design-resistance-to-320-kn/📸️snapshot/➡️after/🔣️.json");
-    let expected = crate::standards::v1::subsets::any::schema::snapshot::decode_en1990_snapshot_json(AFTER).expect("the committed after fixture decodes");
-    let args = dsl::json::from_json_str::<dsl::DslValue>(&format!("{{\"snapshot\":{AFTER}}}")).expect("rail arguments");
+    let expected = En1990Snapshot::default();
+    let after = crate::standards::v1::subsets::any::schema::snapshot::encode_en1990_snapshot_json(&expected);
+    let args = dsl::json::from_json_str::<dsl::DslValue>(&format!("{{\"snapshot\":{after}}}")).expect("rail arguments");
     let command = <En1990PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");
     let En1990Command::ReplaceSnapshot(payload) = &command else { panic!("setSnapshot resolves to ReplaceSnapshot, got {command:?}") };
     let carried = <En1990Snapshot as store::ArtifactDsl>::parse_dsl(&crate::document::unescape_op_text_field(&payload.text)).expect("the payload carries the document's own DSL text");

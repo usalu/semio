@@ -1,31 +1,154 @@
 syntax = "proto3";
 package semio.s.norm.din18599.snapshot;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+
+// 🧬️ Din18599Snapshot schema — every field with its state class.
+
+message ThermalZone {
+  // @state artifact
+  string id = 1;
+  // @state artifact
+  string label_en = 2;
+  // @state artifact
+  string label_de = 3;
+  // @state artifact
+  string usage_profile = 4;
+  // @state artifact
+  double area_m2 = 5;
+  // @state artifact
+  double volume_m3 = 6;
+  // @state artifact
+  double theta_i_heat_c = 7;
+  // @state artifact
+  double theta_i_cool_c = 8;
+  // @state artifact
+  int32 occupants = 9;
+  // @state artifact
+  double internal_gains_wm2 = 10;
+  // @state artifact
+  double lighting_power_wm2 = 11;
+}
+
+message EnvelopeElement {
+  // @state artifact
+  string id = 1;
+  // @state artifact
+  string label_en = 2;
+  // @state artifact
+  string label_de = 3;
+  // @state artifact
+  string kind = 4;
+  // @state artifact
+  string zone_id = 5;
+  // @state artifact
+  double area_m2 = 6;
+  // @state artifact
+  double u_value_wm2k = 7;
+  // @state artifact
+  double orientation_deg = 8;
+  // @state artifact
+  double tilt_deg = 9;
+  // @state artifact
+  double g_value = 10;
+  // @state artifact
+  double fc = 11;
+  // @state artifact
+  string adjacency = 12;
+}
+
+message HeatingSystem {
+  // @state artifact
+  double generation_efficiency = 1;
+  // @state artifact
+  double distribution_efficiency = 2;
+  // @state artifact
+  double storage_efficiency = 3;
+  // @state artifact
+  double transfer_efficiency = 4;
+  // @state artifact
+  string energy_carrier = 5;
+}
+
+message DhwSystem {
+  // @state artifact
+  double specific_demand_kwh_person_a = 1;
+  // @state artifact
+  double storage_loss_kwh_a = 2;
+  // @state artifact
+  double distribution_loss_kwh_a = 3;
+  // @state artifact
+  string energy_carrier = 4;
+}
+
+message VentilationSystem {
+  // @state artifact
+  double airflow_m3_h = 1;
+  // @state artifact
+  double heat_recovery_eta = 2;
+  // @state artifact
+  double fan_power_w = 3;
+}
+
+message CoolingPlant {
+  // @state artifact
+  double eer = 1;
+  // @state artifact
+  string energy_carrier = 2;
+}
+message CoolingSystem {
+  // @state artifact
+  CoolingPlant plant = 1;
+}
+
+message LightingSystem {
+  // @state artifact
+  double control_factor = 1;
+}
+
+message Renewables {
+  // @state artifact
+  double pv_area_m2 = 1;
+  // @state artifact
+  double pv_efficiency = 2;
+  // @state artifact
+  double solar_thermal_kwh_a = 3;
+}
+
 message Din18599Snapshot {
   // @state artifact
-  string use_class = 1;
+  string building_category = 1;
   // @state artifact
-  double heated_area_m2 = 2;
+  string attachment = 2;
   // @state artifact
-  uint32 occupants = 3;
+  string use_class = 3;
   // @state artifact
-  double h_t = 4;
+  string method = 4;
   // @state artifact
-  double h_v = 5;
+  double net_floor_area_m2 = 5;
   // @state artifact
-  semio.os.store.ArtifactChild climate = 6;
+  double heated_volume_m3 = 6;
   // @state artifact
-  double internal_gains_w_m2 = 7;
+  double geg_qp_factor = 7;
   // @state artifact
-  double solar_gains_kwh = 8;
+  double delta_u_wb_wm2k = 8;
   // @state artifact
-  double system_losses_kwh = 9;
+  string automation_class = 9;
   // @state artifact
-  double renewable_kwh = 10;
+  repeated ThermalZone zones = 10;
   // @state artifact
-  double annual_limit_kwh = 11;
+  repeated EnvelopeElement elements = 11;
   // @state artifact
-  string energy_carrier = 12;
+  HeatingSystem heating = 12;
   // @state artifact
-  double reference_q_p_kwh = 13;
+  DhwSystem dhw = 13;
+  // @state artifact
+  VentilationSystem ventilation = 14;
+  // @state artifact
+  CoolingSystem cooling = 15;
+  // @state artifact
+  LightingSystem lighting = 16;
+  // @state artifact
+  Renewables renewables = 17;
+  // @state artifact
+  semio.framework.store.ArtifactChild climate = 18;
 }

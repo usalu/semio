@@ -1,0 +1,61 @@
+semio norm.en1993.dsl v1
+annex=de
+materials [id:TEXT grade:TEXT fy:NUM fu:NUM e-modulus:NUM g-modulus:NUM subgrade:TEXT kind:TEXT] {
+  mat-s355 S355 355000000.0 510000000.0 210000000000.0 81000000000.0 J2 carbon
+}
+sections [id:TEXT designation:TEXT kind:TEXT h:NUM b:NUM tw:NUM tf:NUM r:NUM area:NUM shear-area-y:NUM shear-area-z:NUM iy:NUM iz:NUM it:NUM iw:NUM w-el-y:NUM w-el-z:NUM w-pl-y:NUM w-pl-z:NUM area-net:NUM] {
+  sec-heb240 "HEB 240" rolledI 0.24 0.24 0.01 0.017 0.021 0.0106 0.00512 0.0024 0.0001126 3.923e-05 6.53e-07 4.87e-06 0.000938 0.000327 0.001053 0.000501 0.0095
+}
+members [id:TEXT label:TEXT member-type:TEXT section-id:TEXT material-id:TEXT length:NUM buckling-length-y:NUM buckling-length-z:NUM ltb-length:NUM ltb-restraint-spacing:NUM load-application:TEXT end-moment-ratio-psi:NUM moment-diagram:TEXT deflection-limit-ratio:NUM analysis:TEXT] {
+  member-b1 "Beam-column B1" beamColumn sec-heb240 mat-s355 4.0 4.0 4.0 4.0 2.0 shearCenter -1.0 linear 300.0 elastic
+}
+load-cases [id:TEXT name:TEXT kind:TEXT category:TEXT] {
+  g-permanent "Permanent G" permanent self
+  q-imposed "Imposed Q" imposed office
+  w-wind Wind wind wind
+}
+member-actions [id:TEXT member-id:TEXT load-case-id:TEXT action:REC] {
+  act-b1-g member-b1 g-permanent {n=100000.0 vy=0.0 vz=20000.0 my=40000.0 mz=0.0 t=0.0}
+  act-b1-q member-b1 q-imposed {n=43333.0 vy=0.0 vz=15333.0 my=17333.0 mz=0.0 t=0.0}
+}
+joints [id:TEXT kind:TEXT member-id:TEXT bolt-class:TEXT bolt-diameter:NUM bolt-rows:UINT bolts-per-row:UINT pitch:NUM gauge:NUM end-distance:NUM edge-distance:NUM shear-planes:UINT plate-thickness:NUM plate-fu:NUM weld-throat:NUM weld-length:NUM weld-fu:NUM weld-grade:TEXT category:TEXT friction-mu:NUM preload-force:NUM slip-factor-ks:NUM friction-surfaces:UINT] {
+  joint-j1 bolted member-b1 "8.8" 0.02 2 2 0.06 0.06 0.04 0.04 1 0.01 510000000.0 0.0 0.0 510000000.0 S355 A 0.5 0.0 1.0 1
+}
+joint-actions [id:TEXT joint-id:TEXT load-case-id:TEXT shear:NUM tension:NUM] {
+  jf-g joint-j1 g-permanent 30000.0 0.0
+  jf-q joint-j1 q-imposed 23333.0 0.0
+}
+fatigue-details [id:TEXT member-id:TEXT category:UINT method:TEXT] {
+  fat-1 member-b1 71 damage_tolerant
+}
+fatigue-bands [id:TEXT fatigue-id:TEXT delta-sigma:NUM cycles:NUM] {
+  fb-1 fat-1 50000000.0 1000000.0
+  fb-2 fat-1 40000000.0 1000000.0
+}
+fire-exposures [id:TEXT member-id:TEXT rating:TEXT protection-thickness:NUM section-factor:NUM mu0:NUM protection-conductivity:NUM protection-density:NUM protection-specific-heat:NUM] {
+  fire-1 member-b1 r60 0.02 150.0 0.5 0.2 800.0 1700.0
+}
+cold-formed-members [id:TEXT b-bar:NUM thickness:NUM k-sigma:NUM psi:NUM fy:NUM gross-resistance:NUM] {
+  cf-1 0.08 0.003 4.0 1.0 350000000.0 80000.0
+}
+plated-panels [id:TEXT a:NUM b:NUM thickness:NUM fy:NUM k-sigma:NUM] {
+  pp-1 1.2 0.6 0.012 355000000.0 4.0
+}
+silo-shells [id:TEXT thickness:NUM radius:NUM depth:NUM k:NUM gamma:NUM fy:NUM] {
+  silo-1 0.008 3.0 6.0 0.5 9000.0 355000000.0
+}
+tension-components [id:TEXT f-uk:NUM f-k:NUM] {
+  ten-1 500000.0 400000.0
+}
+bridge-fatigue [id:TEXT member-id:TEXT lambda:NUM phi2:NUM delta-sigma-p:NUM category:UINT method:TEXT] {
+  br-1 member-b1 0.8 1.0 40000000.0 71 damage_tolerant
+}
+tower-legs [id:TEXT member-id:TEXT force-coefficient:NUM dynamic-factor:NUM] {
+  tw-1 member-b1 1.0 1.0
+}
+piles [id:TEXT section-id:TEXT material-id:TEXT driving-stress:NUM embedded-length:NUM shaft-perimeter:NUM] {
+  pile-1 sec-heb240 mat-s355 200000000.0 8.0 0.96
+}
+crane-runways [id:TEXT member-id:TEXT wheel-contact-length:NUM dispersion:NUM web-thickness:NUM fy:NUM phi:NUM] {
+  crane-1 member-b1 0.1 0.05 0.01 355000000.0 1.25
+}

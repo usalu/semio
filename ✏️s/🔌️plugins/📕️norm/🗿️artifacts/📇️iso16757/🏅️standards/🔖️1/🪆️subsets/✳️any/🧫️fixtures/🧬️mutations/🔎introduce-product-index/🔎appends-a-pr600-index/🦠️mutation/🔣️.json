@@ -1,0 +1,14 @@
+{
+  "IntroduceProductIndex": {
+    "index": null,
+    "product_index": {
+      "id": "index-pr600",
+      "product_id": "product.pr600",
+      "search_tags": [
+        "pr600",
+        "panel"
+      ],
+      "variant_id": null
+    }
+  }
+}

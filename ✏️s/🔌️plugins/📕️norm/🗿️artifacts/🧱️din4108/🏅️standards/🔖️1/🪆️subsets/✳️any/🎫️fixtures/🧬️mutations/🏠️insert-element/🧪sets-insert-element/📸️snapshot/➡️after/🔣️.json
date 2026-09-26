@@ -1,0 +1,246 @@
+{
+  "climateZone": "Zone2",
+  "usage": "residential",
+  "tIntC": 20.0,
+  "rhInt": 0.5,
+  "hasMechanicalVentilation": true,
+  "airtightnessN50": 1.5,
+  "bb2DetailsConform": true,
+  "zones": [
+    {
+      "id": "zone-living",
+      "floorAreaM2": 80.0,
+      "heaviness": "heavy",
+      "nightVentilation": "moderate",
+      "windows": [
+        {
+          "id": "win-south",
+          "orientation": "S",
+          "inclinationDeg": 90.0,
+          "areaM2": 8.0,
+          "gValue": 0.5,
+          "shadingFc": 0.5
+        },
+        {
+          "id": "win-east",
+          "orientation": "E",
+          "inclinationDeg": 90.0,
+          "areaM2": 4.0,
+          "gValue": 0.5,
+          "shadingFc": 0.7
+        }
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "id": "wall-north",
+      "kind": "wall",
+      "zoneId": "zone-living",
+      "orientationDeg": 0.0,
+      "inclinationDeg": 90.0,
+      "adjacent": "exterior",
+      "areaM2": 40.0,
+      "deltaUG": 0.0,
+      "deltaUF": 0.0,
+      "deltaUR": 0.0,
+      "layers": [
+        {
+          "id": "plaster-int",
+          "materialId": "gypsum_plaster",
+          "thicknessM": 0.015,
+          "lambda": 0.7,
+          "mu": 10.0,
+          "density": 1400.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        },
+        {
+          "id": "masonry",
+          "materialId": "brick",
+          "thicknessM": 0.24,
+          "lambda": 0.81,
+          "mu": 10.0,
+          "density": 1800.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        },
+        {
+          "id": "eps",
+          "materialId": "eps",
+          "thicknessM": 0.14,
+          "lambda": 0.035,
+          "mu": 40.0,
+          "density": 20.0,
+          "applicationType": "WAP",
+          "compressiveClass": "dm",
+          "waterClass": "wf",
+          "tensileClass": "tf",
+          "acousticClass": "sm",
+          "segments": []
+        },
+        {
+          "id": "render",
+          "materialId": "mineral_render",
+          "thicknessM": 0.008,
+          "lambda": 0.7,
+          "mu": 20.0,
+          "density": 1600.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        }
+      ]
+    },
+    {
+      "id": "roof",
+      "kind": "roof",
+      "zoneId": "zone-living",
+      "orientationDeg": 180.0,
+      "inclinationDeg": 0.0,
+      "adjacent": "exterior",
+      "areaM2": 80.0,
+      "deltaUG": 0.0,
+      "deltaUF": 0.0,
+      "deltaUR": 0.0,
+      "layers": [
+        {
+          "id": "gypsum",
+          "materialId": "gypsum_plaster",
+          "thicknessM": 0.0125,
+          "lambda": 0.25,
+          "mu": 8.0,
+          "density": 900.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        },
+        {
+          "id": "mineral-wool",
+          "materialId": "mineral_wool",
+          "thicknessM": 0.2,
+          "lambda": 0.035,
+          "mu": 1.3,
+          "density": 30.0,
+          "applicationType": "DAD",
+          "compressiveClass": "dm",
+          "waterClass": "wk",
+          "tensileClass": "tk",
+          "acousticClass": "sh",
+          "segments": []
+        },
+        {
+          "id": "concrete",
+          "materialId": "concrete",
+          "thicknessM": 0.16,
+          "lambda": 2.1,
+          "mu": 80.0,
+          "density": 2300.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        }
+      ]
+    },
+    {
+      "id": "floor-ground",
+      "kind": "floor",
+      "zoneId": "zone-living",
+      "orientationDeg": 0.0,
+      "inclinationDeg": 0.0,
+      "adjacent": "ground",
+      "areaM2": 80.0,
+      "deltaUG": 0.0,
+      "deltaUF": 0.0,
+      "deltaUR": 0.0,
+      "layers": [
+        {
+          "id": "screed",
+          "materialId": "screed",
+          "thicknessM": 0.05,
+          "lambda": 1.4,
+          "mu": 50.0,
+          "density": 2000.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        },
+        {
+          "id": "xps",
+          "materialId": "xps",
+          "thicknessM": 0.1,
+          "lambda": 0.035,
+          "mu": 100.0,
+          "density": 35.0,
+          "applicationType": "DEO",
+          "compressiveClass": "dk",
+          "waterClass": "wd",
+          "tensileClass": "tf",
+          "acousticClass": "sm",
+          "segments": []
+        },
+        {
+          "id": "slab",
+          "materialId": "concrete",
+          "thicknessM": 0.2,
+          "lambda": 2.1,
+          "mu": 80.0,
+          "density": 2300.0,
+          "applicationType": "",
+          "compressiveClass": "",
+          "waterClass": "",
+          "tensileClass": "",
+          "acousticClass": "",
+          "segments": []
+        }
+      ]
+    },
+    {
+      "id": "wall-extra",
+      "kind": "wall",
+      "zoneId": "zone-living",
+      "orientationDeg": 90.0,
+      "inclinationDeg": 90.0,
+      "adjacent": "exterior",
+      "areaM2": 10.0,
+      "deltaUG": 0.0,
+      "deltaUF": 0.0,
+      "deltaUR": 0.0,
+      "layers": []
+    }
+  ],
+  "thermalBridges": [
+    {
+      "id": "tb-window-reveal",
+      "psi": 0.05,
+      "lengthM": 24.0,
+      "bb2Type": "categoryA"
+    },
+    {
+      "id": "tb-eaves",
+      "psi": 0.1,
+      "lengthM": 20.0,
+      "bb2Type": "categoryA"
+    }
+  ]
+}

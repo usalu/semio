@@ -1,2 +1,18 @@
 semio norm.en1992.dsl v1
-annex=en m-ed-knm=185 v-ed-kn=95 f-ck=35 b-mm=350 d-mm=500 a-s-mm2=1450 f-yk=500 rho-l=0.012 n-ed-kn=50 p-kn=300 a-c-mm2=175000 use-fem=true span-m=7.5 udl-kn-m=24 fire-rating=r90 provided-axis-distance-mm=40 bridge-sigma-c-mpa=14.5 bridge-delta-sigma-s-mpa=120 tightness-class=tc2 hd-over-h=8 liquid-sigma-s-mpa=180 liquid-rho-p-eff=0.014 liquid-f-ct-eff-mpa=3.2 liquid-e-s-mpa=200000 liquid-s-r-max-mm=220 anchor-h-ef-mm=100 anchor-cracked=true anchor-f-uk-mpa=900 anchor-f-yk-mpa=720 anchor-a-s-mm2=115 anchor-d-mm=14 anchor-c1-mm=120 anchor-n-ed-kn=14 anchor-v-ed-kn=8
+annex=de title="Liquid-retaining tank with FEM and anchor" design-working-life-years=50 delta-c-dev=0.01 cement-type=N
+concrete-grades [id:TEXT name:TEXT f-ck:NUM] {
+  c35 C35/45 35000000
+}
+reinforcement-grades [id:TEXT name:TEXT f-yk:NUM e-s:NUM ductility:ENUM k:NUM eps-uk:NUM] {
+  b500 B500B 500000000 200000000000 b 1.08 0.05
+  b500a B500A 500000000 200000000000 a 1.05 0.025
+}
+prestress-steels [id:TEXT name:TEXT f-pk:NUM f-p0-1k:NUM] {
+  yp1860 Y1860S7 1860000000 1640000000
+}
+members [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM concrete-grade-id:TEXT reinforcement-grade-id:TEXT prestress-steel-id:TEXT exposure:ENUM width:NUM height:NUM effective-depth:NUM cover:NUM span:NUM support:ENUM buckling-length:NUM longitudinal:TABLE stirrups:REC punching:REC prestress:REC fire:REC actions:TABLE use-fem:BOOL udl:NUM deflection-sensitive:BOOL tightness:ENUM hd-over-h:NUM liquid-sigma-s:NUM liquid-rho-p-eff:NUM liquid-f-ct-eff:NUM liquid-s-r-max:NUM bridge-sigma-c:NUM bridge-delta-sigma-s:NUM] {
+  wall-W1 "Tank wall W1" "Behälterwand W1" liquid-retaining c35 b500 "" xc4 0.35 0.5 0.45 0.04 7.5 continuous 0 [ {id=vert diameter=0.016 count=6 position=bottom anchorage-length=0.7 lap-length=0.85 bond-condition=good aggregate-size=0.016} ] {diameter=0.008 spacing=0.15 legs=2} _ _ {rating=r90 axis-distance=0.04 column-method="" slab-system=""} [ {id=G kind=permanent category=self source=external g-k-line=0 q-k-line=0 point-force=0 m-k=100000 n-k=30000 v-k=50000 t-k=0 v-k-punch=0} {id=Q-office kind=imposed category=office source=external g-k-line=0 q-k-line=0 point-force=0 m-k=50000 n-k=15000 v-k=30000 t-k=0 v-k-punch=0} ] true 24000 false tc2 8 180000000 0.014 3200000 0.22 0 0
+}
+anchors [id:TEXT h-ef:NUM cracked:BOOL f-uk:NUM f-yk:NUM a-s:NUM d:NUM c1:NUM f-ck:NUM actions:TABLE] {
+  anc-1 0.1 true 900000000 720000000 0.0001 0.012 0.12 35000000 [ {id=G kind=permanent category=self source=external g-k-line=0 q-k-line=0 point-force=0 m-k=0 n-k=8000 v-k=4000 t-k=0 v-k-punch=0} {id=Q-office kind=imposed category=office source=external g-k-line=0 q-k-line=0 point-force=0 m-k=0 n-k=5000 v-k=3000 t-k=0 v-k-punch=0} ]
+}

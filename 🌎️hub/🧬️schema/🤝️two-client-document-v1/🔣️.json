@@ -170,7 +170,9 @@
             "closeCode",
             "refusedStatus",
             "reexchangeStatus",
-            "reexchangeError"
+            "reexchangeError",
+            "executionTargetWithinMs",
+            "diffValue"
           ],
           "x-semio-note": "a delegated agent on the same document: revoking its delegation closes its open socket, drops it from the other client's roster and refuses its next request (401), all within revocationWithinMs; the revoked delegation itself is refused 403 delegation-revoked, the cause a holder of its secret is entitled to know",
           "properties": {
@@ -211,6 +213,17 @@
             },
             "reexchangeError": {
               "const": "delegation-revoked"
+            },
+            "executionTargetWithinMs": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 10000,
+              "x-semio-note": "after the agent's own commit, with its socket still open, the agent's execution-target manifest and descriptor answer 200 within this bound (G10: 503 deadline-exceeded for minutes on the exclusive-gate hub)"
+            },
+            "diffValue": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 8
             }
           }
         },

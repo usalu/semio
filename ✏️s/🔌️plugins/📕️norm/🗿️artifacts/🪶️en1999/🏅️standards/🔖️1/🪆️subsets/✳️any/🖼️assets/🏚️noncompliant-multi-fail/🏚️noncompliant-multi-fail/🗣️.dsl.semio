@@ -1,0 +1,27 @@
+semio norm.en1999.dsl v1
+annex=de
+materials [id:TEXT designation:TEXT] {
+  mat-6060 aw6060-t6
+}
+sections [id:TEXT kind:TEXT height:NUM width:NUM flange-thickness:NUM web-thickness:NUM outer-diameter:NUM elements:TABLE] {
+  sec-weak extrudedI 0.08 0.05 0.003 0.003 0 [ {id=flange-top width=0.0235 thickness=0.003 outstand=true welded=true weld-position=0.005} {id=flange-bot width=0.0235 thickness=0.003 outstand=true welded=true weld-position=0.005} {id=web width=0.074 thickness=0.003 outstand=false welded=true weld-position=0.005} ]
+}
+members [id:TEXT section-id:TEXT material-id:TEXT length:NUM support:TEXT buckling-length-y:NUM buckling-length-z:NUM buckling-length-t:NUM ltb-length:NUM c1:NUM restrained-ltb:BOOL actions:TABLE] {
+  beam-fail sec-weak mat-6060 8 simplySupported 8 8 8 8 1 false [ {id=G kind=permanent category=self source=external g-k-line=0 q-k-line=0 n-k=20000 v-y-k=0 v-z-k=8000 m-y-k=4000 m-z-k=500} {id=Q-imposed kind=imposed category=office source=external g-k-line=0 q-k-line=0 n-k=40000 v-y-k=5000 v-z-k=12000 m-y-k=6000 m-z-k=1000} ]
+}
+connections [id:TEXT member-id:TEXT material-id:TEXT kind:TEXT actions:TABLE bolts:REC welds:REC] {
+  weld-thin beam-fail mat-6060 combined [ {id=Q-weld kind=imposed category=office source=external g-k-line=0 q-k-line=0 n-k=0 v-y-k=0 v-z-k=40000 m-y-k=0 m-z-k=0} ] {material="8.8" diameter=0.012 rows=2 bolts-per-row=2 edge-distance=0.024 pitch=0.036 gauge=0.016 plate-thickness=0.008} {filler-alloy="4043" throat=0.002 length=0.06 beta-w=0.63 haz-extent=0.025}
+  bolt-short beam-fail mat-6060 combined [ {id=G-bolt kind=permanent category=self source=external g-k-line=0 q-k-line=0 n-k=10000 v-y-k=0 v-z-k=5000 m-y-k=0 m-z-k=0} {id=Q-bolt kind=imposed category=office source=external g-k-line=0 q-k-line=0 n-k=20000 v-y-k=0 v-z-k=15000 m-y-k=0 m-z-k=0} ] {material="8.8" diameter=0.01 rows=1 bolts-per-row=2 edge-distance=0.012 pitch=0.03 gauge=0.014 plate-thickness=0.004} {filler-alloy="4043" throat=0.004 length=0.12 beta-w=0.63 haz-extent=0.025}
+}
+fire-scenarios [id:TEXT member-id:TEXT theta-a:NUM duration-s:NUM] {
+  fire-hot beam-fail 320 3600
+}
+fatigue-details [id:TEXT member-id:TEXT detail-category:TEXT delta-sigma-c:NUM delta-sigma-ed:NUM n-cycles:NUM m1:NUM m2:NUM] {
+  fat-hot beam-fail "40-weld" 40000000 70000000 800000 3.4 5.4
+}
+cold-formed [id:TEXT material-id:TEXT thickness:NUM width:NUM span:NUM m-ed:NUM n-ed:NUM welded:BOOL] {
+  sheet-fail mat-6060 0.0012 0.25 1.5 2500 5000 true
+}
+shells [id:TEXT material-id:TEXT radius:NUM thickness:NUM length:NUM sigma-x-ed:NUM sigma-theta-ed:NUM] {
+  shell-fail mat-6060 0.8 0.003 3 180000000 120000000
+}

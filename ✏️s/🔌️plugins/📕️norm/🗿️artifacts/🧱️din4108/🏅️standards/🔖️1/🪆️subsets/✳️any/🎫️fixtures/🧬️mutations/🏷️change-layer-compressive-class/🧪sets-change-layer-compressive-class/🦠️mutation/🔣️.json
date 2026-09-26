@@ -1,0 +1,7 @@
+{
+  "ChangeLayerCompressiveClass": {
+    "element_id": "wall-north",
+    "index": 2,
+    "new_compressive_class": "dk"
+  }
+}

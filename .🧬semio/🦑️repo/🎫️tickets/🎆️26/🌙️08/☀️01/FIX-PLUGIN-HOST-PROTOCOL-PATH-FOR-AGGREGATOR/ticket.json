@@ -3,7 +3,7 @@
   "emoji": "\ud83d\udc1b",
   "status": "closed",
   "description": "semio-framework-plugin-host Cargo.toml pointed at os/\ud83d\udce1\ufe0fprotocol instead of os/\ud83d\udd28\ufe0fmodule/\ud83d\udce1\ufe0fprotocol after layout depth drift; cargo/workspace load fails and aggregator cannot rebuild puzzle.",
-  "goal": "\ud83c\udfafr2602/\ud83c\udfafrunningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [],
   "closedAt": "2026-08-01T13:13:30Z",
   "summary": "Fixed semio-framework-plugin-host protocol path (../../../../../ \u2192 ../../../../ under \ud83d\udd28\ufe0fmodule). Aggregator up on :6023.",

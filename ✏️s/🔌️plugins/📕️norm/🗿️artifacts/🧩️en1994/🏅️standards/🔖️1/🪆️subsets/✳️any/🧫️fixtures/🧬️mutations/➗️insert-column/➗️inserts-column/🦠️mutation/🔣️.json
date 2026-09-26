@@ -1,0 +1,46 @@
+{
+  "InsertColumn": {
+    "index": 0,
+    "column": {
+      "id": "col-new",
+      "kind": "concrete_filled",
+      "lengthM": 3.5,
+      "steelAM2": 0.0084,
+      "steelFYPa": 355000000.0,
+      "concreteAM2": 0.072,
+      "concreteFCkPa": 30000000.0,
+      "reinforcementAsM2": 0.0012,
+      "reinforcementFYkPa": 500000000.0,
+      "iM4": 0.00021,
+      "bucklingCurve": "a",
+      "outerSizeM": 0.3,
+      "wallThicknessM": 0.01,
+      "actions": [
+        {
+          "id": "G-col",
+          "kind": "permanent",
+          "category": "self",
+          "stage": "composite",
+          "qAreaPa": 0.0,
+          "mKNm": 20000.0,
+          "vKN": 0.0,
+          "nKN": 1200000.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0
+        },
+        {
+          "id": "Q-col",
+          "kind": "imposed",
+          "category": "B",
+          "stage": "composite",
+          "qAreaPa": 0.0,
+          "mKNm": 15000.0,
+          "vKN": 0.0,
+          "nKN": 400000.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-connection/schema.json",
+  "title": "RemoveConnection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

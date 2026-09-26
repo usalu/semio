@@ -5,53 +5,57 @@ schema norm.en1994.mutations
 start record
 framing record
 
-# Real `En1994Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
-# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
-# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
+# Real En1994Mutation op frame: format u8 then tag u8, then kind payload.
 header fixed 2
 field format u8
 field tag u8
 record change-annex tag=0
 field payload bytes
-record change-m-ed-knm tag=1
+record change-structure-kind tag=1
 field payload bytes
-record change-v-ed-kn tag=2
+record change-steel-fy-pa tag=2
 field payload bytes
-record change-m-pla tag=3
+record change-fire-rating tag=3
 field payload bytes
-record change-m-pl-rd tag=4
+record change-insulation-thickness-m tag=4
 field payload bytes
-record change-eta tag=5
+record change-fatigue-detail tag=5
 field payload bytes
-record change-vl-rd tag=6
+record insert-beam tag=6
 field payload bytes
-record change-insulation-thickness-mm tag=7
+record remove-beam tag=7
 field payload bytes
-record change-fire-rating tag=8
+record change-beam-action-q-area-pa tag=8
 field payload bytes
-record change-deck-type tag=9
+record change-beam-stud-spacing-m tag=9
 field payload bytes
-record change-delta-sigma-mpa tag=10
+record change-beam-span-m tag=10
 field payload bytes
-record change-fatigue-detail tag=11
+record change-beam-slab-thickness-m tag=11
 field payload bytes
-record change-d-mm tag=12
+record change-beam-stud-diameter-m tag=12
 field payload bytes
-record change-h-sc-mm tag=13
+record change-beam-stud-count tag=13
 field payload bytes
-record change-f-ck-mpa tag=14
+record change-beam-stud-fu-pa tag=14
 field payload bytes
-record change-fu-mpa tag=15
+record change-beam-transverse-as tag=15
 field payload bytes
-record change-e-cm-mpa tag=16
+record change-beam-construction tag=16
 field payload bytes
-record change-v-ed-per-stud-kn tag=17
+record insert-column tag=17
 field payload bytes
-record change-span-m tag=18
+record remove-column tag=18
 field payload bytes
-record change-fy-mpa tag=19
+record change-column-action-force-n tag=19
 field payload bytes
-record change-n-cycles-stud tag=20
+record change-column-kind tag=20
 field payload bytes
-record change-delta-tau-stud-mpa tag=21
+record insert-slab tag=21
+field payload bytes
+record remove-slab tag=22
+field payload bytes
+record change-slab-action-q-area-pa tag=23
+field payload bytes
+record change-slab-thickness-m tag=24
 field payload bytes

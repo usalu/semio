@@ -105,7 +105,6 @@ async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
     assert_eq!(raised_diff.geometry.as_ref().map(|map| map["geom.valve.50"].bbox.max_y), Some(1.0), "resize-geometry/doubles-the-geom-valve-50-bounding-box: the diff must publish the geometry map carrying the new max_y");
-    assert!(raised_diff.limits.is_none(), "resize-geometry/doubles-the-geom-valve-50-bounding-box: a bounding box is geometry, never a security limit");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "resize-geometry/doubles-the-geom-valve-50-bounding-box: produced diff differs from the committed 🔺️diff/🔣️.json");

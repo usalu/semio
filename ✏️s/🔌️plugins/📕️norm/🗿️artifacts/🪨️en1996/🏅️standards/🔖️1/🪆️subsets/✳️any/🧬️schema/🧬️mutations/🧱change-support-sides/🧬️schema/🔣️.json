@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-support-sides/schema.json",
+  "title": "ChangeSupportSides",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newSupportSides"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newSupportSides": {
+      "type": "integer"
+    }
+  }
+}

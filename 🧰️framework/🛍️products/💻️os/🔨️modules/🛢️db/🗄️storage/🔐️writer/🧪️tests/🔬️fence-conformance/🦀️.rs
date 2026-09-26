@@ -6,6 +6,8 @@
 //! server's own client (`psql`, `cypher-shell`), so they are `#[ignore]`d outside
 //! `wal-writer-fence-live`.
 use crate::db_ids::{ArtifactId, DbError};
+#[cfg(any(feature = "postgres", feature = "neo4j"))]
+use crate::db_storage::docker_server::{docker, free_port, Container};
 use crate::db_storage::{db_io_copy_pages, db_io_test_pool, DbIoPages, WalStorage, WalWriterPermit};
 use std::process::Command;
 
@@ -19,27 +21,6 @@ fn fixture() -> serde_json::Value {
 
 async fn pages(bytes: &[u8]) -> DbIoPages {
     db_io_copy_pages(bytes).unwrap().await.unwrap()
-}
-
-fn docker(args: &[&str]) -> String {
-    let output = Command::new("docker").args(args).output().expect("docker CLI");
-    assert!(output.status.success(), "docker {args:?}: {}", String::from_utf8_lossy(&output.stderr));
-    String::from_utf8_lossy(&output.stdout).trim().to_string()
-}
-
-fn free_port() -> u16 {
-    std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap().local_addr().unwrap().port()
-}
-
-/// 🐳️ A disposable server container, removed when the law ends.
-struct Container {
-    name: String,
-}
-
-impl Drop for Container {
-    fn drop(&mut self) {
-        let _ = Command::new("docker").args(["rm", "--force", &self.name]).output();
-    }
 }
 
 /// 🎯️ Where the laws run; serialised into the child process's environment.

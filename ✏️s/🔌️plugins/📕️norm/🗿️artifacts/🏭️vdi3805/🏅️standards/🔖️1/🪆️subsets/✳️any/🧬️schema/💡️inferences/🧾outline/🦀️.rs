@@ -7,7 +7,7 @@
 use crate::Vdi3805Snapshot;
 
 //#region 🔖️Outline
-const SECTION_FIELDS: &[&str] = &["manufacturer_file", "catalog", "edition_profile", "correction_as_of", "strict_mode", "index", "geometry", "curves", "limits"];
+const SECTION_FIELDS: &[&str] = &["catalog", "edition_profile", "correction_as_of", "strict_mode", "index", "geometry", "curves"];
 
 /// 🧾️ `Vdi3805` document outline.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]

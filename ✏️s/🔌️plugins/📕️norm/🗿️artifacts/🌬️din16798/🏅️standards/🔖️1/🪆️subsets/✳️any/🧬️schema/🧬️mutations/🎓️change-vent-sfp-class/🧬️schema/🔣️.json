@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-sfp-class/schema.json",
+  "title": "ChangeVentSfpClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newSfpRequiredClass"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string"
+    },
+    "newSfpRequiredClass": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

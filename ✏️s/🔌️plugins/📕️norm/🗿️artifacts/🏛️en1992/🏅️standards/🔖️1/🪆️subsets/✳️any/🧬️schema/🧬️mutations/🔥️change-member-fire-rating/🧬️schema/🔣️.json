@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-fire-rating/schema.json",
+  "title": "ChangeMemberFireRating",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newRating"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "newRating": {
+      "type": "string"
+    }
+  }
+}

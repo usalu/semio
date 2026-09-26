@@ -17,8 +17,8 @@ type normDin16798DiffTextGuardTextBounds = { readonly minLength?: number; readon
 type normDin16798DiffTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normDin16798DiffTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normDin16798DiffTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normDin16798DiffTextGuardReject(at, "value is not an object");
+export const normDin16798DiffTextGuardObject = (value: unknown, at: string): object =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as object) : normDin16798DiffTextGuardReject(at, "value is not an object");
 export const normDin16798DiffTextGuardArray = (value: unknown, at: string, bounds: normDin16798DiffTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normDin16798DiffTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normDin16798DiffTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);

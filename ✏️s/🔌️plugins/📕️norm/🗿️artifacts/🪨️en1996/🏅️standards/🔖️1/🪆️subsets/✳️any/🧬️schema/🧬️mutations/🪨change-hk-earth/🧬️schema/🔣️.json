@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHKEarth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallIndex",
+    "index",
+    "newHKEarthN"
+  ],
+  "properties": {
+    "wallIndex": {
+      "type": "integer"
+    },
+    "index": {
+      "type": "integer"
+    },
+    "newHKEarthN": {
+      "type": "number"
+    }
+  }
+}

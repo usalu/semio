@@ -1,0 +1,14 @@
+{
+  "title": "Running Goal Tree Migration Map",
+  "emoji": "🎯",
+  "status": "closed",
+  "description": "Record where the existing open goals land in the new running goal tree. Do not close, reopen, retarget, or edit any existing goal or ticket.",
+  "summary": "Opened the 144-goal running tree under Running Framework, with every s plugin and artifact, and Hub under Running Server. Existing goals were left open. The later landing places are recorded in the ticket migration map.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2761"
+  },
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪24939f01106a4a738b17e325b9ce1eaf"
+  ]
+}

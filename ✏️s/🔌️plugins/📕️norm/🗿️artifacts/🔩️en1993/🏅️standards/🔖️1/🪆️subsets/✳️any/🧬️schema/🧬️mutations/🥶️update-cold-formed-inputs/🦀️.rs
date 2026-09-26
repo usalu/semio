@@ -1,22 +1,17 @@
-//! 📐 `update-cold-formed-inputs` — atomically updates the cold-formed-inputs facet (cf_b_bar_mm, cf_t_mm, cf_k_sigma, cf_psi, cf_n_ed_kn, cf_gross_resistance_kn are validated together for one EN 1993 check, never one-field-at-a-time).
+//! `upsert-cold-formed-member` — upsert a `ColdFormedMember` by id into `cold_formed_members`.
 
-use crate::{En1993Mutation, En1993Snapshot};
+use crate::{ColdFormedMember, En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdateColdFormedInputs {
-    pub new_cf_b_bar_mm: f64,
-    pub new_cf_t_mm: f64,
-    pub new_cf_k_sigma: f64,
-    pub new_cf_psi: f64,
-    pub new_cf_n_ed_kn: f64,
-    pub new_cf_gross_resistance_kn: f64,
+    pub cold_formed_member: ColdFormedMember,
 }
 
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateColdFormedInputs {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "cold-formed-inputs", kind: "update-cold-formed-inputs", record: "UpdatedColdFormedInputs" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "coldFormedMember", kind: "update-cold-formed-inputs", record: "UpdatedColdFormedMember" };
 
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -25,7 +20,13 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateColdFormed
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-3 cold-formed section inputs", "EN 1993-1-3 Eingaben für kaltgeformte Querschnitte aktualisieren")
+        protocol::LocalizedLabel::native(
+            &format!("Upsert cold-formed member {}", self.cold_formed_member.id),
+            &format!("Kaltprofil setzen {}", self.cold_formed_member.id),
+        )
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.cold_formed_member.id.clone()]
     }
 }
 //#endregion 🔖️Payload

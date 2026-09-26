@@ -5,10 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "elementId",
     "from",
     "to"
   ],
   "properties": {
+    "elementId": {
+      "type": "string"
+    },
     "from": {
       "type": "integer",
       "minimum": 0

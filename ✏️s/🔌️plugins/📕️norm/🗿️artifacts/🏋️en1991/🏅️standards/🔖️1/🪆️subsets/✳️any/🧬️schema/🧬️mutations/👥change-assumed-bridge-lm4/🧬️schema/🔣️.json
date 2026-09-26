@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "new_assumed_bridge_lm4"
+  ],
+  "properties": {
+    "new_assumed_bridge_lm4": {
+      "type": "number"
+    }
+  }
+}

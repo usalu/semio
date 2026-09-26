@@ -2,17 +2,18 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-fatigue-detail",
   "semanticKind": "change-fatigue-detail",
-  "displayName": "Change Fatigue Detail",
+  "displayName": "ChangeFatigueDetail",
   "emoji": "🔁️",
   "aggregateVariant": "ChangeFatigueDetail",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 11,
+  "binaryTag": 5,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied",
-    "no-op"
+    "no-op",
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

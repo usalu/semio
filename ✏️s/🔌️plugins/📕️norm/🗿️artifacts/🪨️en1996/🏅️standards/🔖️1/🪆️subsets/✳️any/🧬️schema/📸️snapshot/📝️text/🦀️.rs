@@ -34,3 +34,19 @@ mod tests;
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type En1996SnapshotText = String;
 //#endregion 🚚️Carrier
+
+/// 🖼️ Write committed DSL + pack assets for the catalogue examples (invoked by 📜️script.ts).
+pub fn write_committed_example_assets(assets_root: &std::path::Path) -> std::io::Result<()> {
+    use crate::En1996Snapshot;
+    for (folder, doc) in [
+        ("🧱️loadbearing-wall", En1996Snapshot::compliant_clay_wall()),
+        ("❌️multi-fail-masonry", En1996Snapshot::noncompliant_multi_fail()),
+    ] {
+        let dir = assets_root.join(folder).join(folder);
+        std::fs::create_dir_all(&dir)?;
+        std::fs::write(dir.join("🗣️.dsl.semio"), print_dsl(&doc))?;
+        let pack = <En1996Snapshot as store::ArtifactPack>::encode_pack(&doc);
+        std::fs::write(dir.join("🎒️.pack.semio"), pack)?;
+    }
+    Ok(())
+}

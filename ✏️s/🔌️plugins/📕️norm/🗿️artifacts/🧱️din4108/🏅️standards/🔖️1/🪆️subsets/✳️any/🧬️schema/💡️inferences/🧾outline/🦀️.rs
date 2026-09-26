@@ -1,34 +1,20 @@
-//! 🧾 `outline` — one named inference: this document's own field/section structure. A norm
-//! compliance record IS the document it describes, so its "outline" is its top-level field list
-//! (`sectionOutline`/`fieldCount`, fixed by the snapshot's own schema shape) plus a real
-//! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
-//! no collection-typed top-level field).
+//! 🧾 Document outline for the DIN 4108 envelope subject.
 
 use crate::Din4108Snapshot;
 
-//#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[
-    "category",
-    "layers",
-    "climate",
-    "airtightness_n50",
-    "psi_times_l_sum",
-    "rh_int",
-    "catalog_id",
-    "material_id",
-    "airtightness_class",
-    "t_int_c",
-    "solar_absorptance",
-    "irradiance_w_m2",
-    "moisture_mu_exterior",
-    "moisture_mu_interior",
-    "envelope_area_m2",
-    "bb2_details_conform",
-    "application_type",
-    "declared_application_class",
+    "climateZone",
+    "usage",
+    "tIntC",
+    "rhInt",
+    "hasMechanicalVentilation",
+    "airtightnessN50",
+    "bb2DetailsConform",
+    "zones",
+    "elements",
+    "thermalBridges",
 ];
 
-/// 🧾️ `Din4108` document outline.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -43,7 +29,7 @@ impl Din4108Outline {
     pub fn compute(snapshot: &Din4108Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
-        let entry_count = snapshot.layers.len() as u32;
+        let entry_count = (snapshot.zones.len() + snapshot.elements.len() + snapshot.thermal_bridges.len()) as u32;
         Self { section_outline, field_count, entry_count }
     }
 }
@@ -53,10 +39,7 @@ impl Default for Din4108Outline {
         Self::compute(&Din4108Snapshot::default())
     }
 }
-//#endregion 🔖️Outline
 
 #[cfg(test)]
-//#region 🧪️Tests
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

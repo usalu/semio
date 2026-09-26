@@ -1,103 +1,413 @@
-/** 🧬️ En1995 document mutations — discriminated union mirroring `En1995Mutation` (WASM wiring). */
+/** 🧬️ En1995 document mutations — externally tagged union mirroring `En1995Mutation` (WASM wiring). */
+
+import type { CharacteristicAction, ConnectionAction, TimberConnection, TimberMember } from "../📸️snapshot/🟦️.ts";
 
 export interface ChangeAnnex {
   newAnnex: "En" | "De";
 }
 
-export interface ChangeMEdKnm {
-  newMEdKnm: number;
+export interface InsertMember {
+  index: number;
+  member: TimberMember;
 }
 
-export interface ChangeNEdKn {
-  newNEdKn: number;
+export interface RemoveMember {
+  index: number;
 }
 
-export interface ChangeVEdKn {
-  newVEdKn: number;
+export interface ChangeMemberLabelEn {
+  memberId: string;
+  newValue: string;
 }
 
-export interface ChangeWMm3 {
-  newWMm3: number;
+export interface ChangeMemberLabelDe {
+  memberId: string;
+  newValue: string;
 }
 
-export interface ChangeAMm2 {
-  newAMm2: number;
+export interface ChangeMemberRole {
+  memberId: string;
+  newValue: "beam" | "column" | "floor" | "bridge";
 }
 
-export interface ChangeBMm {
-  newBMm: number;
+export interface ChangeMemberStrengthClass {
+  memberId: string;
+  newValue: string;
 }
 
-export interface ChangeHMm {
-  newHMm: number;
+export interface ChangeMemberServiceClass {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeFMK {
-  newFMK: number;
+export interface ChangeMemberSupport {
+  memberId: string;
+  newValue: "simplySupported" | "cantilever" | "continuousTwoSpan";
 }
 
-export interface ChangeFC0K {
-  newFC0K: number;
+export interface ChangeMemberB {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeServiceClass {
-  newServiceClass: string;
+export interface ChangeMemberH {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeLoadDuration {
-  newLoadDuration: string;
+export interface ChangeMemberSpan {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeMCritKnm {
-  newMCritKnm: number;
+export interface ChangeMemberSupportLength {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeFEdKn {
-  newFEdKn: number;
+export interface ChangeMemberBearingLength {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeAEfMm2 {
-  newAEfMm2: number;
+export interface ChangeMemberBucklingY {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeFVK {
-  newFVK: number;
+export interface ChangeMemberBucklingZ {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeFireDurationMin {
-  newFireDurationMin: number;
+export interface ChangeMemberLateralRestraint {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeSectionDepthMm {
-  newSectionDepthMm: number;
+export interface ChangeMemberNotchDepth {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeAVertMS2 {
-  newAVertMS2: number;
+export interface ChangeMemberNotchDistance {
+  memberId: string;
+  newValue: number;
 }
 
-export interface ChangeNCyclesBridge {
-  newNCyclesBridge: number;
+export interface ChangeMemberMCrit {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberMassPerM {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberMassPerM2 {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberDamping {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberFireDuration {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberBridgeNObs {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberBridgeTLYears {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberBridgeBeta {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberBridgeA {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberBridgeB {
+  memberId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberBridgeCrowd {
+  memberId: string;
+  newValue: number;
+}
+
+export interface InsertMemberAction {
+  memberId: string;
+  index: number;
+  action: CharacteristicAction;
+}
+
+export interface RemoveMemberAction {
+  memberId: string;
+  index: number;
+}
+
+export interface ChangeMemberActionKind {
+  memberId: string;
+  actionId: string;
+  newValue: string;
+}
+
+export interface ChangeMemberActionCategory {
+  memberId: string;
+  actionId: string;
+  newValue: string;
+}
+
+export interface ChangeMemberActionLoadDuration {
+  memberId: string;
+  actionId: string;
+  newValue: string;
+}
+
+export interface ChangeMemberActionQLine {
+  memberId: string;
+  actionId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberActionFPoint {
+  memberId: string;
+  actionId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberActionMK {
+  memberId: string;
+  actionId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberActionVK {
+  memberId: string;
+  actionId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberActionNK {
+  memberId: string;
+  actionId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberActionNTK {
+  memberId: string;
+  actionId: string;
+  newValue: number;
+}
+
+export interface ChangeMemberActionFC90K {
+  memberId: string;
+  actionId: string;
+  newValue: number;
+}
+
+export interface InsertConnection {
+  index: number;
+  connection: TimberConnection;
+}
+
+export interface RemoveConnection {
+  index: number;
+}
+
+export interface ChangeConnectionLabelEn {
+  connectionId: string;
+  newValue: string;
+}
+
+export interface ChangeConnectionLabelDe {
+  connectionId: string;
+  newValue: string;
+}
+
+export interface ChangeConnectionFastenerType {
+  connectionId: string;
+  newValue: string;
+}
+
+export interface ChangeConnectionStrengthClass {
+  connectionId: string;
+  newValue: string;
+}
+
+export interface ChangeConnectionServiceClass {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionDiameter {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionNumber {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionRows {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionSpacing {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionEdgeDistance {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionEndDistance {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionT1 {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionT2 {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionSteelPlate {
+  connectionId: string;
+  newValue: boolean;
+}
+
+export interface ChangeConnectionSteelPlateThickness {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionShearPlanes {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface ChangeConnectionFUK {
+  connectionId: string;
+  newValue: number;
+}
+
+export interface InsertConnectionAction {
+  connectionId: string;
+  index: number;
+  action: ConnectionAction;
+}
+
+export interface RemoveConnectionAction {
+  connectionId: string;
+  index: number;
+}
+
+export interface ChangeConnectionActionKind {
+  connectionId: string;
+  actionId: string;
+  newValue: string;
+}
+
+export interface ChangeConnectionActionLoadDuration {
+  connectionId: string;
+  actionId: string;
+  newValue: string;
+}
+
+export interface ChangeConnectionActionFK {
+  connectionId: string;
+  actionId: string;
+  newValue: number;
 }
 
 export type En1995Mutation =
   | { ChangeAnnex: ChangeAnnex }
-  | { ChangeMEdKnm: ChangeMEdKnm }
-  | { ChangeNEdKn: ChangeNEdKn }
-  | { ChangeVEdKn: ChangeVEdKn }
-  | { ChangeWMm3: ChangeWMm3 }
-  | { ChangeAMm2: ChangeAMm2 }
-  | { ChangeBMm: ChangeBMm }
-  | { ChangeHMm: ChangeHMm }
-  | { ChangeFMK: ChangeFMK }
-  | { ChangeFC0K: ChangeFC0K }
-  | { ChangeServiceClass: ChangeServiceClass }
-  | { ChangeLoadDuration: ChangeLoadDuration }
-  | { ChangeMCritKnm: ChangeMCritKnm }
-  | { ChangeFEdKn: ChangeFEdKn }
-  | { ChangeAEfMm2: ChangeAEfMm2 }
-  | { ChangeFVK: ChangeFVK }
-  | { ChangeFireDurationMin: ChangeFireDurationMin }
-  | { ChangeSectionDepthMm: ChangeSectionDepthMm }
-  | { ChangeAVertMS2: ChangeAVertMS2 }
-  | { ChangeNCyclesBridge: ChangeNCyclesBridge };
+  | { InsertMember: InsertMember }
+  | { RemoveMember: RemoveMember }
+  | { ChangeMemberLabelEn: ChangeMemberLabelEn }
+  | { ChangeMemberLabelDe: ChangeMemberLabelDe }
+  | { ChangeMemberRole: ChangeMemberRole }
+  | { ChangeMemberStrengthClass: ChangeMemberStrengthClass }
+  | { ChangeMemberServiceClass: ChangeMemberServiceClass }
+  | { ChangeMemberSupport: ChangeMemberSupport }
+  | { ChangeMemberB: ChangeMemberB }
+  | { ChangeMemberH: ChangeMemberH }
+  | { ChangeMemberSpan: ChangeMemberSpan }
+  | { ChangeMemberSupportLength: ChangeMemberSupportLength }
+  | { ChangeMemberBearingLength: ChangeMemberBearingLength }
+  | { ChangeMemberBucklingY: ChangeMemberBucklingY }
+  | { ChangeMemberBucklingZ: ChangeMemberBucklingZ }
+  | { ChangeMemberLateralRestraint: ChangeMemberLateralRestraint }
+  | { ChangeMemberNotchDepth: ChangeMemberNotchDepth }
+  | { ChangeMemberNotchDistance: ChangeMemberNotchDistance }
+  | { ChangeMemberMCrit: ChangeMemberMCrit }
+  | { ChangeMemberMassPerM: ChangeMemberMassPerM }
+  | { ChangeMemberMassPerM2: ChangeMemberMassPerM2 }
+  | { ChangeMemberDamping: ChangeMemberDamping }
+  | { ChangeMemberFireDuration: ChangeMemberFireDuration }
+  | { ChangeMemberBridgeNObs: ChangeMemberBridgeNObs }
+  | { ChangeMemberBridgeTLYears: ChangeMemberBridgeTLYears }
+  | { ChangeMemberBridgeBeta: ChangeMemberBridgeBeta }
+  | { ChangeMemberBridgeA: ChangeMemberBridgeA }
+  | { ChangeMemberBridgeB: ChangeMemberBridgeB }
+  | { ChangeMemberBridgeCrowd: ChangeMemberBridgeCrowd }
+  | { InsertMemberAction: InsertMemberAction }
+  | { RemoveMemberAction: RemoveMemberAction }
+  | { ChangeMemberActionKind: ChangeMemberActionKind }
+  | { ChangeMemberActionCategory: ChangeMemberActionCategory }
+  | { ChangeMemberActionLoadDuration: ChangeMemberActionLoadDuration }
+  | { ChangeMemberActionQLine: ChangeMemberActionQLine }
+  | { ChangeMemberActionFPoint: ChangeMemberActionFPoint }
+  | { ChangeMemberActionMK: ChangeMemberActionMK }
+  | { ChangeMemberActionVK: ChangeMemberActionVK }
+  | { ChangeMemberActionNK: ChangeMemberActionNK }
+  | { ChangeMemberActionNTK: ChangeMemberActionNTK }
+  | { ChangeMemberActionFC90K: ChangeMemberActionFC90K }
+  | { InsertConnection: InsertConnection }
+  | { RemoveConnection: RemoveConnection }
+  | { ChangeConnectionLabelEn: ChangeConnectionLabelEn }
+  | { ChangeConnectionLabelDe: ChangeConnectionLabelDe }
+  | { ChangeConnectionFastenerType: ChangeConnectionFastenerType }
+  | { ChangeConnectionStrengthClass: ChangeConnectionStrengthClass }
+  | { ChangeConnectionServiceClass: ChangeConnectionServiceClass }
+  | { ChangeConnectionDiameter: ChangeConnectionDiameter }
+  | { ChangeConnectionNumber: ChangeConnectionNumber }
+  | { ChangeConnectionRows: ChangeConnectionRows }
+  | { ChangeConnectionSpacing: ChangeConnectionSpacing }
+  | { ChangeConnectionEdgeDistance: ChangeConnectionEdgeDistance }
+  | { ChangeConnectionEndDistance: ChangeConnectionEndDistance }
+  | { ChangeConnectionT1: ChangeConnectionT1 }
+  | { ChangeConnectionT2: ChangeConnectionT2 }
+  | { ChangeConnectionSteelPlate: ChangeConnectionSteelPlate }
+  | { ChangeConnectionSteelPlateThickness: ChangeConnectionSteelPlateThickness }
+  | { ChangeConnectionShearPlanes: ChangeConnectionShearPlanes }
+  | { ChangeConnectionFUK: ChangeConnectionFUK }
+  | { InsertConnectionAction: InsertConnectionAction }
+  | { RemoveConnectionAction: RemoveConnectionAction }
+  | { ChangeConnectionActionKind: ChangeConnectionActionKind }
+  | { ChangeConnectionActionLoadDuration: ChangeConnectionActionLoadDuration }
+  | { ChangeConnectionActionFK: ChangeConnectionActionFK };

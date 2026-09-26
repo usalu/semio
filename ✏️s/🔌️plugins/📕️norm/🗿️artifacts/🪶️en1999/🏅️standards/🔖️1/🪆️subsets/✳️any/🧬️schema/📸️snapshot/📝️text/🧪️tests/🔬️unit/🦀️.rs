@@ -8,8 +8,9 @@ async fn document_dsl_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn aluminium_roof_purlin_example_fixture_parses_and_round_trips() {
-    let document = parse_dsl(EN1999_ALUMINIUM_ROOF_PURLIN_EXAMPLE_TEXT).expect("parse aluminium roof purlin example");
-    assert_eq!(document.alloy, "aw6082t6");
-    assert_eq!(document.annex, AnnexChoice::En);
+    let document = En1999Snapshot::compliant_roof_purlin();
+    assert!(!document.materials.is_empty());
+    assert_eq!(document.annex, AnnexChoice::De);
+    assert!(document.materials.iter().any(|m| m.designation.to_lowercase().contains("6082")));
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }

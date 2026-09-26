@@ -1,0 +1,7 @@
+{
+  "ChangeZoneWindowArea": {
+    "zone_id": "zone-living",
+    "window_id": "win-south",
+    "new_area_m2": 10.0
+  }
+}

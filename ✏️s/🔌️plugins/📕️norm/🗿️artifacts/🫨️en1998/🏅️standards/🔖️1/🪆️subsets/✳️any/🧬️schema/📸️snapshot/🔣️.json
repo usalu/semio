@@ -1,294 +1,663 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.norm.en1998",
   "title": "En1998Snapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "seismicZone",
-    "groundType",
-    "importanceClass",
-    "structuralSystem",
-    "t1S",
-    "massT",
-    "vRdKn",
-    "driftMm",
-    "heightM",
-    "multipleResistingSystems",
     "annex",
-    "enAGr",
-    "enGroundType",
-    "enSpectrumType",
-    "periodRatio",
-    "bridgeVRdKn",
-    "bearingDEdMm",
-    "bearingDRdMm",
-    "retrofitKnowledgeLevel",
-    "retrofitLimitState",
-    "retrofitEDKn",
-    "retrofitRKKn",
-    "retrofitGammaEl",
-    "siloHeightM",
-    "siloRadiusM",
-    "siloNRdKn",
-    "siloVEdKn",
-    "siloVRdKn",
-    "siloQNominal",
-    "tankHeightM",
-    "tankRadiusM",
-    "tankMassT",
-    "tankVRdKn",
-    "towerMEdKnm",
-    "towerMRdKnm",
-    "towerIsChimney",
-    "towerQNominal",
-    "towerMassT",
-    "foundationAreaM2",
-    "foundationPRdKpa",
-    "foundationHEdKn",
-    "foundationHRdKn",
-    "kFoundation",
-    "kSoil",
-    "wallHeightM",
-    "wallPhiDeg",
-    "wallSoilGammaKnM3",
-    "wallR",
-    "wallHRdKn"
+    "site",
+    "buildings",
+    "bridges",
+    "assessments",
+    "silos",
+    "tanks",
+    "foundations",
+    "retainingWalls",
+    "towers"
   ],
   "properties": {
-    "seismicZone": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "groundType": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "importanceClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "structuralSystem": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "t1S": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "massT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "vRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "driftMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "heightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "multipleResistingSystems": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "enum": [
+        "de",
+        "en"
+      ]
     },
-    "enAGr": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "site": {
+      "$ref": "#/$defs/En1998Site"
     },
-    "enGroundType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "buildings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998Building"
+      }
     },
-    "enSpectrumType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "bridges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998Bridge"
+      }
     },
-    "periodRatio": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "assessments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998Assessment"
+      }
     },
-    "bridgeVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "silos": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998Silo"
+      }
     },
-    "bearingDEdMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "tanks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998Tank"
+      }
     },
-    "bearingDRdMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "foundations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998Foundation"
+      }
     },
-    "retrofitKnowledgeLevel": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "retainingWalls": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998RetainingWall"
+      }
     },
-    "retrofitLimitState": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "towers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/En1998Tower"
+      }
+    }
+  },
+  "$defs": {
+    "En1998Site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "seismicZone",
+        "aGr",
+        "deGroundCombo",
+        "importanceClass"
+      ],
+      "properties": {
+        "seismicZone": {
+          "type": "string",
+          "enum": [
+            "zone0",
+            "zone1",
+            "zone2",
+            "zone3"
+          ]
+        },
+        "aGr": {
+          "type": "number"
+        },
+        "deGroundCombo": {
+          "type": "string",
+          "enum": [
+            "A-R",
+            "B-R",
+            "C-R",
+            "B-T",
+            "C-T",
+            "C-S"
+          ]
+        },
+        "enGroundType": {
+          "type": "string"
+        },
+        "enSpectrumType": {
+          "type": "string"
+        },
+        "importanceClass": {
+          "type": "string"
+        }
+      }
     },
-    "retrofitEDKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998System": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "direction",
+        "systemType",
+        "material",
+        "ductilityClass",
+        "q0",
+        "alphaUOverAlpha1",
+        "kW",
+        "baseShearResistanceN"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "direction": {
+          "type": "string"
+        },
+        "systemType": {
+          "type": "string"
+        },
+        "material": {
+          "type": "string"
+        },
+        "ductilityClass": {
+          "type": "string"
+        },
+        "q0": {
+          "type": "number"
+        },
+        "alphaUOverAlpha1": {
+          "type": "number"
+        },
+        "kW": {
+          "type": "number"
+        },
+        "baseShearResistanceN": {
+          "type": "number"
+        }
+      }
     },
-    "retrofitRKKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Storey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "heightM",
+        "permanentGkN",
+        "correlatedOccupancy",
+        "variables",
+        "stiffnessX",
+        "stiffnessY",
+        "centreOfMassXM",
+        "centreOfMassYM",
+        "centreOfStiffnessXM",
+        "centreOfStiffnessYM",
+        "driftXM",
+        "driftYM",
+        "shearResistanceN"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "permanentGkN": {
+          "type": "number"
+        },
+        "correlatedOccupancy": {
+          "type": "boolean"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998VariableAction"
+          }
+        },
+        "stiffnessX": {
+          "type": "number"
+        },
+        "stiffnessY": {
+          "type": "number"
+        },
+        "centreOfMassXM": {
+          "type": "number"
+        },
+        "centreOfMassYM": {
+          "type": "number"
+        },
+        "centreOfStiffnessXM": {
+          "type": "number"
+        },
+        "centreOfStiffnessYM": {
+          "type": "number"
+        },
+        "driftXM": {
+          "type": "number"
+        },
+        "driftYM": {
+          "type": "number"
+        },
+        "shearResistanceN": {
+          "type": "number"
+        }
+      }
     },
-    "retrofitGammaEl": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "material",
+        "role",
+        "detailingCompatibleWithQ",
+        "minDimensionM",
+        "rho",
+        "rhoPrime",
+        "omegaWd",
+        "steelSectionClass"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "material": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "detailingCompatibleWithQ": {
+          "type": "boolean"
+        },
+        "minDimensionM": {
+          "type": "number"
+        },
+        "rho": {
+          "type": "number"
+        },
+        "rhoPrime": {
+          "type": "number"
+        },
+        "omegaWd": {
+          "type": "number"
+        },
+        "steelSectionClass": {
+          "type": "integer"
+        }
+      }
     },
-    "siloHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Building": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "planWidthM",
+        "planLengthM",
+        "systems",
+        "storeys",
+        "members",
+        "planRegular",
+        "elevationRegular",
+        "t1Method",
+        "t1GivenS",
+        "ct",
+        "driftLimitClass",
+        "nu",
+        "multipleResistingSystems",
+        "claimsSimpleMasonry",
+        "masonryWallAreaRatio",
+        "accidentalEccentricityRatio"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "planWidthM": {
+          "type": "number"
+        },
+        "planLengthM": {
+          "type": "number"
+        },
+        "systems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998System"
+          }
+        },
+        "storeys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998Storey"
+          }
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998Member"
+          }
+        },
+        "planRegular": {
+          "type": "boolean"
+        },
+        "elevationRegular": {
+          "type": "boolean"
+        },
+        "t1Method": {
+          "type": "string"
+        },
+        "t1GivenS": {
+          "type": "number"
+        },
+        "ct": {
+          "type": "number"
+        },
+        "driftLimitClass": {
+          "type": "string"
+        },
+        "nu": {
+          "type": "number"
+        },
+        "multipleResistingSystems": {
+          "type": "boolean"
+        },
+        "claimsSimpleMasonry": {
+          "type": "boolean"
+        },
+        "masonryWallAreaRatio": {
+          "type": "number"
+        },
+        "accidentalEccentricityRatio": {
+          "type": "number"
+        }
+      }
     },
-    "siloRadiusM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Bridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "periodRatio",
+        "fundamentalPeriodS",
+        "vRdN",
+        "bearingDRdM",
+        "permanentGkN",
+        "correlatedOccupancy",
+        "variables"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "periodRatio": {
+          "type": "number"
+        },
+        "fundamentalPeriodS": {
+          "type": "number"
+        },
+        "vRdN": {
+          "type": "number"
+        },
+        "bearingDRdM": {
+          "type": "number"
+        },
+        "permanentGkN": {
+          "type": "number"
+        },
+        "correlatedOccupancy": {
+          "type": "boolean"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998VariableAction"
+          }
+        }
+      }
     },
-    "siloNRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "knowledgeLevel",
+        "limitState",
+        "supportedBuildingId",
+        "rKN",
+        "gammaEl"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "knowledgeLevel": {
+          "type": "string"
+        },
+        "limitState": {
+          "type": "string"
+        },
+        "supportedBuildingId": {
+          "type": "string"
+        },
+        "rKN": {
+          "type": "number"
+        },
+        "gammaEl": {
+          "type": "number"
+        }
+      }
     },
-    "siloVEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Silo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "heightM",
+        "radiusM",
+        "permanentGkN",
+        "contentQkN",
+        "contentCategory",
+        "fillingRatio",
+        "nRdN",
+        "vRdN",
+        "qNominal"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "radiusM": {
+          "type": "number"
+        },
+        "permanentGkN": {
+          "type": "number"
+        },
+        "contentQkN": {
+          "type": "number"
+        },
+        "contentCategory": {
+          "type": "string"
+        },
+        "fillingRatio": {
+          "type": "number"
+        },
+        "nRdN": {
+          "type": "number"
+        },
+        "vRdN": {
+          "type": "number"
+        },
+        "qNominal": {
+          "type": "number"
+        }
+      }
     },
-    "siloVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Tank": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "heightM",
+        "radiusM",
+        "permanentGkN",
+        "contentQkN",
+        "contentCategory",
+        "fillingRatio",
+        "vRdN"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "radiusM": {
+          "type": "number"
+        },
+        "permanentGkN": {
+          "type": "number"
+        },
+        "contentQkN": {
+          "type": "number"
+        },
+        "contentCategory": {
+          "type": "string"
+        },
+        "fillingRatio": {
+          "type": "number"
+        },
+        "vRdN": {
+          "type": "number"
+        }
+      }
     },
-    "siloQNominal": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Foundation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "supportedBuildingId",
+        "areaM2",
+        "pRdPa",
+        "hRdN",
+        "kFoundation",
+        "kSoil"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "supportedBuildingId": {
+          "type": "string"
+        },
+        "areaM2": {
+          "type": "number"
+        },
+        "pRdPa": {
+          "type": "number"
+        },
+        "hRdN": {
+          "type": "number"
+        },
+        "kFoundation": {
+          "type": "number"
+        },
+        "kSoil": {
+          "type": "number"
+        }
+      }
     },
-    "tankHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998RetainingWall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "heightM",
+        "phiDeg",
+        "soilGamma",
+        "r",
+        "hRdNPerM"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "phiDeg": {
+          "type": "number"
+        },
+        "soilGamma": {
+          "type": "number"
+        },
+        "r": {
+          "type": "number"
+        },
+        "hRdNPerM": {
+          "type": "number"
+        }
+      }
     },
-    "tankRadiusM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998Tower": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "heightM",
+        "mRdNm",
+        "isChimney",
+        "qNominal",
+        "permanentGkN",
+        "correlatedOccupancy",
+        "variables"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "mRdNm": {
+          "type": "number"
+        },
+        "isChimney": {
+          "type": "boolean"
+        },
+        "qNominal": {
+          "type": "number"
+        },
+        "permanentGkN": {
+          "type": "number"
+        },
+        "correlatedOccupancy": {
+          "type": "boolean"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1998VariableAction"
+          }
+        }
+      }
     },
-    "tankMassT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tankVRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerMEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerMRdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerIsChimney": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
-    "towerQNominal": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerMassT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "foundationAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "foundationPRdKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "foundationHEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "foundationHRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "kFoundation": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "kSoil": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallHeightM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallPhiDeg": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallSoilGammaKnM3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallR": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallHRdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "En1998VariableAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "qkN"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "qkN": {
+          "type": "number"
+        }
+      }
     }
   }
 }

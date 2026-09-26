@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-bolt-count/schema.json",
+  "title": "ChangeBoltCount",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "connectionId",
+    "newRows",
+    "newBoltsPerRow"
+  ],
+  "properties": {
+    "connectionId": {
+      "type": "string"
+    },
+    "newRows": {
+      "type": "integer"
+    },
+    "newBoltsPerRow": {
+      "type": "integer"
+    }
+  }
+}

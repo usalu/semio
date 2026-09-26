@@ -1,0 +1,29 @@
+{
+  "kind": "change-member-cover",
+  "before": {
+    "annex": "De",
+    "title": "Office frame RC assessment",
+    "members": [
+      {
+        "id": "beam-B1",
+        "cover": 0.035,
+        "width": 0.3
+      }
+    ]
+  },
+  "mutation": {
+    "kind": "change-member-cover"
+  },
+  "after": {
+    "annex": "De",
+    "title": "Office frame RC assessment",
+    "members": [
+      {
+        "id": "beam-B1",
+        "cover": 0.035,
+        "width": 0.3
+      }
+    ]
+  },
+  "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+}

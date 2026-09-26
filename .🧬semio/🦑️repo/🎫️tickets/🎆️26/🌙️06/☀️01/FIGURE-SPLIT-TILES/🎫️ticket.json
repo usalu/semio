@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "Add a general mechanism so a figure disposition can split into many crop-tiles with independent positions across arrangements (reveal.js auto-animate). Demonstrate in projektetage: catalogue figure splits into 3x5 grid, taken apart/scaled down, partial focus.",
   "summary": "Fixed Bauteilkatalog → Bauteilarten tiles popping instead of morphing.\n\nRoot cause: reveal.js `data-id` was on the inner `.presentation-figure-tile-frame` (always 100% of its parent) while slide position lived on the canvas-framed `.presentation-interactive-disposition` wrapper. Auto-animate had nothing to interpolate for layout — tiles vanished and reappeared.\n\nFix: per-tile interactive placements set `revealMorphId` (`tileMorphId`) on the wrapper; inner tile frames omit `data-id` when the wrapper owns the anchor. CSS `overflow: hidden` on morph wrappers. Regression test asserts four wrapper pairs across catalogue→focus slides. Renderer: 56 tests pass.",
-  "goal": "🎯️framework",
+  "goal": "🎯runningframework",
   "sessions": [
     "⚪️b9f5d20ffbf54da39143e48f69536ff4",
     "⚪️319cd4206a644386941e55520c9e0dd7",

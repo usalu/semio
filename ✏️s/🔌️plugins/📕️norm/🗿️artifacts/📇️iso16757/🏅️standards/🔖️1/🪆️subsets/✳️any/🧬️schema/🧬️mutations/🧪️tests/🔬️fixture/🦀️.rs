@@ -9,22 +9,22 @@ mod tests_change_part_number_input_raises_the_height_part_number_input_to_750;
 mod tests_change_selection_class_retargets_the_selection_at_the_towel_radiator_class;
 #[path = "../../🧵️change-selection-series/🧪️tests/🧵️narrows-the-selection-to-the-pr-plus-series/🦀️.rs"]
 mod tests_change_selection_series_narrows_the_selection_to_the_pr_plus_series;
-#[path = "../../📦️create-product/🧪️tests/📦️appends-a-pr900-product-to-the-existing-series/🦀️.rs"]
-mod tests_create_product_appends_a_pr900_product_to_the_existing_series;
-#[path = "../../🧺️create-product-group/🧪️tests/🧺️appends-a-towel-radiators-group/🦀️.rs"]
-mod tests_create_product_group_appends_a_towel_radiators_group;
-#[path = "../../📐️create-property-definition/🧪️tests/📏️appends-a-selection-scoped-length-property/🦀️.rs"]
-mod tests_create_property_definition_appends_a_selection_scoped_length_property;
-#[path = "../../🌳️create-subject/🧪️tests/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🦀️.rs"]
-mod tests_create_subject_appends_a_towel_radiator_subject_under_the_radiator_parent;
-#[path = "../../🧹️delete-product-group/🧪️tests/🚫️removes-the-radiators-group-and-strands-its-class/🦀️.rs"]
-mod tests_delete_product_group_removes_the_radiators_group_and_strands_its_class;
-#[path = "../../🚫️delete-product/🧪️tests/🚫️removes-the-pr600-product-from-the-catalogue/🦀️.rs"]
-mod tests_delete_product_removes_the_pr600_product_from_the_catalogue;
-#[path = "../../🧽️delete-property-definition/🧪️tests/🚫️removes-the-height-property-definition/🦀️.rs"]
-mod tests_delete_property_definition_removes_the_height_property_definition;
-#[path = "../../✂️delete-subject/🧪️tests/🚫️removes-the-radiator-subject-from-the-dictionary/🦀️.rs"]
-mod tests_delete_subject_removes_the_radiator_subject_from_the_dictionary;
+#[path = "../../📦️introduce-product/🧪️tests/📦️appends-a-pr900-product-to-the-existing-series/🦀️.rs"]
+mod tests_introduce_product_appends_a_pr900_product_to_the_existing_series;
+#[path = "../../🧺️introduce-product-group/🧪️tests/🧺️appends-a-towel-radiators-group/🦀️.rs"]
+mod tests_introduce_product_group_appends_a_towel_radiators_group;
+#[path = "../../📐️introduce-property-definition/🧪️tests/📏️appends-a-selection-scoped-length-property/🦀️.rs"]
+mod tests_introduce_property_definition_appends_a_selection_scoped_length_property;
+#[path = "../../🌳️introduce-subject/🧪️tests/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🦀️.rs"]
+mod tests_introduce_subject_appends_a_towel_radiator_subject_under_the_radiator_parent;
+#[path = "../../🧹️retire-product-group/🧪️tests/🚫️removes-the-radiators-group-and-strands-its-class/🦀️.rs"]
+mod tests_retire_product_group_removes_the_radiators_group_and_strands_its_class;
+#[path = "../../🚫️retire-product/🧪️tests/🚫️removes-the-pr600-product-from-the-catalogue/🦀️.rs"]
+mod tests_retire_product_removes_the_pr600_product_from_the_catalogue;
+#[path = "../../🧽️retire-property-definition/🧪️tests/🚫️removes-the-height-property-definition/🦀️.rs"]
+mod tests_retire_property_definition_removes_the_height_property_definition;
+#[path = "../../✂️retire-subject/🧪️tests/🚫️removes-the-radiator-subject-from-the-dictionary/🦀️.rs"]
+mod tests_retire_subject_removes_the_radiator_subject_from_the_dictionary;
 #[path = "../../🔌️remove-part-number-input/🧪️tests/🔢️drops-the-length-part-number-input/🦀️.rs"]
 mod tests_remove_part_number_input_drops_the_length_part_number_input;
 #[path = "../../🔓️remove-selection-constraint/🧪️tests/🔓️drops-the-trailing-length-constraint/🦀️.rs"]
@@ -39,5 +39,22 @@ mod tests_rename_product_group_renames_the_radiators_group_to_panel_radiators;
 mod tests_rename_product_renames_pr600_to_the_compact_variant_name;
 #[path = "../../🧮️replace-part-number-rule/🧪️tests/🧮️swaps-the-literal-rule-for-a-height-driven-script/🦀️.rs"]
 mod tests_replace_part_number_rule_swaps_the_literal_rule_for_a_height_driven_script;
-#[path = "../../🚦️update-script-limits/🧪️tests/🚦️doubles-the-step-budget-and-quintuples-the-timeout/🦀️.rs"]
-mod tests_update_script_limits_doubles_the_step_budget_and_quintuples_the_timeout;
+#[path = "../../🚦️change-script-limits/🧪️tests/🚦️doubles-the-step-budget-and-quintuples-the-timeout/🦀️.rs"]
+mod tests_change_script_limits_doubles_the_step_budget_and_quintuples_the_timeout;
+
+#[path = "../../🏷️introduce-product-class/🧪️tests/🏷️appends-a-towel-radiator-class/🦀️.rs"]
+mod tests_introduce_product_class_appends_a_towel_radiator_class;
+#[path = "../../🗑️retire-product-class/🧪️tests/🗑️removes-the-panel-radiator-class/🦀️.rs"]
+mod tests_retire_product_class_removes_the_panel_radiator_class;
+#[path = "../../📚introduce-product-series/🧪️tests/📚appends-a-pr-plus-series/🦀️.rs"]
+mod tests_introduce_product_series_appends_a_pr_plus_series;
+#[path = "../../🗑️retire-product-series/🧪️tests/🗑️removes-the-pr-series/🦀️.rs"]
+mod tests_retire_product_series_removes_the_pr_series;
+#[path = "../../🔎introduce-product-index/🧪️tests/🔎appends-a-pr600-index/🦀️.rs"]
+mod tests_introduce_product_index_appends_a_pr600_index;
+#[path = "../../🗑️retire-product-index/🧪️tests/🗑️removes-the-pr600-index/🦀️.rs"]
+mod tests_retire_product_index_removes_the_pr600_index;
+#[path = "../../📐introduce-geometry-object/🧪️tests/📐appends-a-pr600-geometry/🦀️.rs"]
+mod tests_introduce_geometry_object_appends_a_pr600_geometry;
+#[path = "../../🗑️retire-geometry-object/🧪️tests/🗑️removes-the-pr600-geometry/🦀️.rs"]
+mod tests_retire_geometry_object_removes_the_pr600_geometry;

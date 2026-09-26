@@ -1,0 +1,5 @@
+syntax = "proto3";
+message InsertAnchor {
+  uint32 index = 1;
+  string anchor = 2;
+}

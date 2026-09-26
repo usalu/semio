@@ -13,7 +13,7 @@
     "serverName": "repo",
     "serverVersion": "1.0.0",
     "capabilities": ["prompts", "resources", "tools"],
-    "tools": ["file_integrate", "goal_close", "goal_open", "goal_reopen", "section_extract", "section_move", "ticket_close", "ticket_open", "ticket_reopen"],
+    "tools": ["goal_close", "goal_open", "goal_reopen", "ticket_close", "ticket_open", "ticket_reopen"],
     "resources": ["repo://", "repo://bundles", "repo://contributors", "repo://files", "repo://folders", "repo://goals", "repo://policies", "repo://tickets"]
   }
 }

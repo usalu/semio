@@ -21,8 +21,118 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 }
 
 // #region 🔖️Types
+/// 🚪 Assessed room/zone for DIN EN 16798-1 indoor environment.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ZoneDocument {
+    pub id: String,
+    pub name: String,
+    pub usage_type: String,
+    #[dsl(unit = "m2")]
+    pub floor_area_m2: f64,
+    pub occupants: u32,
+    pub comfort_category: String,
+    pub pollution_class: String,
+    pub comfort_model: String,
+    pub t_op_winter_c: f64,
+    pub t_op_summer_c: f64,
+    #[dsl(unit = "m/s")]
+    pub air_speed_m_s: f64,
+    pub clothing_clo: f64,
+    pub metabolic_rate_met: f64,
+    #[dsl(unit = "pct")]
+    pub rh_percent: f64,
+    pub outdoor_air_supplied_m3_h: f64,
+    pub co2_ppm: f64,
+    pub illuminance_lx: f64,
+    pub noise_db: f64,
+    pub turbulence_intensity_percent: f64,
+    pub vent_method: String,
+    pub vent_system_id: String,
+}
 
+impl Default for ZoneDocument {
+    fn default() -> Self {
+        Self {
+            id: "zone-office".into(),
+            name: "Open office".into(),
+            usage_type: "office".into(),
+            floor_area_m2: 200.0,
+            occupants: 20,
+            comfort_category: "II".into(),
+            pollution_class: "low".into(),
+            comfort_model: "fixed_hvac".into(),
+            t_op_winter_c: 22.0,
+            t_op_summer_c: 24.5,
+            air_speed_m_s: 0.1,
+            clothing_clo: 0.5,
+            metabolic_rate_met: 1.2,
+            rh_percent: 45.0,
+            outdoor_air_supplied_m3_h: 1008.0,
+            co2_ppm: 900.0,
+            illuminance_lx: 500.0,
+            noise_db: 34.0,
+            turbulence_intensity_percent: 40.0,
+            vent_method: "method_1_perceived_air_quality".into(),
+            vent_system_id: "vent-central".into(),
+        }
+    }
+}
+
+/// 🌬️ Mechanical ventilation system serving zones (DIN EN 16798-3).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct VentSystemDocument {
+    pub id: String,
+    pub name: String,
+    pub system_type: String,
+    pub sfp_w_m3_s: f64,
+    pub sfp_required_class: u8,
+    pub heat_recovery_eta: f64,
+    pub oda_class: String,
+    pub filter_sup_class: String,
+    pub years_since_inspection: u32,
+    pub humidification_required_kg_h: f64,
+    pub humidification_provided_kg_h: f64,
+    pub fan_q_v_m3_s: f64,
+    #[dsl(unit = "h")]
+    pub fan_t_run_h: f64,
+    pub duct_class: String,
+    #[dsl(unit = "Pa")]
+    pub duct_test_pressure_pa: f64,
+    pub duct_leakage_m3_s_m2: f64,
+    pub design_airflow_m3_h: f64,
+}
+
+impl Default for VentSystemDocument {
+    fn default() -> Self {
+        Self {
+            id: "vent-central".into(),
+            name: "Central AHU".into(),
+            system_type: "central_mech".into(),
+            sfp_w_m3_s: 950.0,
+            sfp_required_class: 3,
+            heat_recovery_eta: 0.75,
+            oda_class: "ODA2".into(),
+            filter_sup_class: "ePM1_55".into(),
+            years_since_inspection: 1,
+            humidification_required_kg_h: 0.0,
+            humidification_provided_kg_h: 0.0,
+            fan_q_v_m3_s: 1008.0 / 3600.0,
+            fan_t_run_h: 2500.0,
+            duct_class: "C".into(),
+            duct_test_pressure_pa: 400.0,
+            duct_leakage_m3_s_m2: 0.08,
+            design_airflow_m3_h: 1008.0,
+        }
+    }
+}
 //#endregion 🔖️Types
+
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
@@ -208,622 +318,415 @@ pub mod standards {
                         pub mod change_annex {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
                             mod component;
+                            pub use component::*;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_occupancy {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-occupancy/🦀️.rs"]
+                        pub mod change_theta_rm {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-theta-rm/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-occupancy/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-occupancy/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-theta-rm/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-theta-rm/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_comfort_category {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-comfort-category/🦀️.rs"]
+                        pub mod change_outdoor_co2 {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-outdoor-co2/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-comfort-category/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-comfort-category/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-outdoor-co2/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-outdoor-co2/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_t_op_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-t-op-c/🦀️.rs"]
+                        pub mod change_envelope_n50 {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-envelope-n50/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-t-op-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-t-op-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-envelope-n50/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-envelope-n50/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_rh_percent {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-rh-percent/🦀️.rs"]
+                        pub mod change_envelope_volume {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-envelope-volume/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-rh-percent/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-rh-percent/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-envelope-volume/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-envelope-volume/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_air_speed_m_s {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪁️change-air-speed-ms/🦀️.rs"]
+                        pub mod change_cellar_area {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏚️change-cellar-area/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪁️change-air-speed-ms/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪁️change-air-speed-ms/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏚️change-cellar-area/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏚️change-cellar-area/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_theta_rm_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-theta-rm-c/🦀️.rs"]
+                        pub mod change_cellar_ventilation {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀change-cellar-ventilation/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-theta-rm-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-theta-rm-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀change-cellar-ventilation/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀change-cellar-ventilation/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_co2_ppm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-co2-ppm/🦀️.rs"]
+                        pub mod change_night_setback {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌙️change-night-setback/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-co2-ppm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-co2-ppm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌙️change-night-setback/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌙️change-night-setback/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_df_percent {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-df-percent/🦀️.rs"]
+                        pub mod insert_zone {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-zone/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-df-percent/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-df-percent/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-zone/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-zone/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_l_aeq_db {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔊️change-l-aeq-db/🦀️.rs"]
+                        pub mod remove_zone {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-zone/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔊️change-l-aeq-db/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔊️change-l-aeq-db/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-zone/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-zone/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_persons {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-persons/🦀️.rs"]
+                        pub mod change_zone_usage_type {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-zone-usage-type/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-persons/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-persons/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-zone-usage-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-zone-usage-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_ida_class {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫁️change-ida-class/🦀️.rs"]
+                        pub mod change_zone_floor_area {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫁️change-ida-class/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫁️change-ida-class/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_ventilation_m3_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-ventilation-m3-h/🦀️.rs"]
+                        pub mod change_zone_occupants {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-zone-occupants/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-ventilation-m3-h/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-ventilation-m3-h/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-zone-occupants/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-zone-occupants/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_floor_area_m2 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-floor-area-m2/🦀️.rs"]
+                        pub mod change_zone_comfort_category {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-zone-comfort-category/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-floor-area-m2/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-floor-area-m2/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-zone-comfort-category/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛋️change-zone-comfort-category/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_bedrooms {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-bedrooms/🦀️.rs"]
+                        pub mod change_zone_pollution_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-zone-pollution-class/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-bedrooms/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️change-bedrooms/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-zone-pollution-class/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-zone-pollution-class/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_dwelling_ventilation_m3_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️change-dwelling-ventilation-m3-h/🦀️.rs"]
+                        pub mod change_zone_comfort_model {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-zone-comfort-model/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️change-dwelling-ventilation-m3-h/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏡️change-dwelling-ventilation-m3-h/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-zone-comfort-model/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-zone-comfort-model/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_occupants {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👪️change-occupants/🦀️.rs"]
+                        pub mod change_zone_t_op_winter {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-zone-t-op-winter/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👪️change-occupants/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👪️change-occupants/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-zone-t-op-winter/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-zone-t-op-winter/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_residential_ventilation_m3_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏘️change-residential-ventilation-m3-h/🦀️.rs"]
+                        pub mod change_zone_t_op_summer {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-zone-t-op-summer/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏘️change-residential-ventilation-m3-h/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏘️change-residential-ventilation-m3-h/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-zone-t-op-summer/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-zone-t-op-summer/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_sfp_w_m3_s {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-sfp-wm3-s/🦀️.rs"]
+                        pub mod change_zone_air_speed {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨change-zone-air-speed/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-sfp-wm3-s/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-sfp-wm3-s/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨change-zone-air-speed/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨change-zone-air-speed/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_sfp_required_class {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-sfp-required-class/🦀️.rs"]
+                        pub mod change_zone_clothing {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👔change-zone-clothing/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-sfp-required-class/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-sfp-required-class/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👔change-zone-clothing/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👔change-zone-clothing/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_heat_recovery_eta {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-heat-recovery-eta/🦀️.rs"]
+                        pub mod change_zone_metabolic_rate {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-zone-metabolic-rate/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-heat-recovery-eta/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-heat-recovery-eta/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-zone-metabolic-rate/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-zone-metabolic-rate/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_heat_recovery_eta_min {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-heat-recovery-eta-min/🦀️.rs"]
+                        pub mod change_zone_rh {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-zone-rh/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-heat-recovery-eta-min/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-heat-recovery-eta-min/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-zone-rh/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-zone-rh/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_system_type {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-system-type/🦀️.rs"]
+                        pub mod change_zone_outdoor_air {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-zone-outdoor-air/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-system-type/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-system-type/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-zone-outdoor-air/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨️change-zone-outdoor-air/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_years_since_inspection {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-years-since-inspection/🦀️.rs"]
+                        pub mod change_zone_co2 {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧change-zone-co2/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-years-since-inspection/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-years-since-inspection/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧change-zone-co2/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧change-zone-co2/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_humidification_required_kg_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️change-humidification-required-kg-h/🦀️.rs"]
+                        pub mod change_zone_illuminance {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡change-zone-illuminance/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️change-humidification-required-kg-h/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☁️change-humidification-required-kg-h/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡change-zone-illuminance/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡change-zone-illuminance/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_humidification_provided_kg_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-humidification-provided-kg-h/🦀️.rs"]
+                        pub mod change_zone_noise {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔊️change-zone-noise/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-humidification-provided-kg-h/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-humidification-provided-kg-h/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔊️change-zone-noise/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔊️change-zone-noise/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_fan_q_v_m3_s {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪭️change-fan-qvm3-s/🦀️.rs"]
+                        pub mod change_zone_vent_system_id {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-zone-vent-system-id/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪭️change-fan-qvm3-s/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪭️change-fan-qvm3-s/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-zone-vent-system-id/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-zone-vent-system-id/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_fan_t_run_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏰️change-fan-t-run-h/🦀️.rs"]
+                        pub mod change_zone_turbulence {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨change-zone-turbulence/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏰️change-fan-t-run-h/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏰️change-fan-t-run-h/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨change-zone-turbulence/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💨change-zone-turbulence/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_fan_energy_reference_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-fan-energy-reference-kwh/🦀️.rs"]
+                        pub mod change_zone_vent_method {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-vent-method/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-fan-energy-reference-kwh/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-fan-energy-reference-kwh/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-vent-method/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-vent-method/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_night_setback_k {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌙️change-night-setback-k/🦀️.rs"]
+                        pub mod insert_vent_system {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕️insert-vent-system/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌙️change-night-setback-k/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌙️change-night-setback-k/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕️insert-vent-system/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕️insert-vent-system/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_hr_m_dot_kg_s {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-hr-m-dot-kg-s/🦀️.rs"]
+                        pub mod remove_vent_system {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-vent-system/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-hr-m-dot-kg-s/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-hr-m-dot-kg-s/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-vent-system/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-vent-system/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_hr_cp_j_kgk {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-hr-cp-j-kgk/🦀️.rs"]
+                        pub mod change_vent_system_type {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-vent-system-type/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-hr-cp-j-kgk/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-hr-cp-j-kgk/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-vent-system-type/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-vent-system-type/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_hr_delta_t_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-hr-delta-tc/🦀️.rs"]
+                        pub mod change_vent_sfp {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-vent-sfp/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-hr-delta-tc/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-hr-delta-tc/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-vent-sfp/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-vent-sfp/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_hr_t_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-hr-th/🦀️.rs"]
+                        pub mod change_vent_sfp_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎓️change-vent-sfp-class/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-hr-th/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-hr-th/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎓️change-vent-sfp-class/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎓️change-vent-sfp-class/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_hr_savings_reference_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-hr-savings-reference-kwh/🦀️.rs"]
+                        pub mod change_vent_heat_recovery {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-vent-heat-recovery/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-hr-savings-reference-kwh/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-hr-savings-reference-kwh/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-vent-heat-recovery/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-vent-heat-recovery/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_n50_h_inv {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-n50-h-inv/🦀️.rs"]
+                        pub mod change_vent_oda_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️change-vent-oda-class/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-n50-h-inv/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️change-n50-h-inv/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️change-vent-oda-class/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏞️change-vent-oda-class/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_volume_m3 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-volume-m3/🦀️.rs"]
+                        pub mod change_vent_filter_sup {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-vent-filter-sup/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-volume-m3/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-volume-m3/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-vent-filter-sup/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽change-vent-filter-sup/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_infiltration_allowance_m3_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚪️change-infiltration-allowance-m3-h/🦀️.rs"]
+                        pub mod change_vent_inspection {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-vent-inspection/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚪️change-infiltration-allowance-m3-h/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚪️change-infiltration-allowance-m3-h/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-vent-inspection/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️change-vent-inspection/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_cellar_area_m2 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏚️change-cellar-area-m2/🦀️.rs"]
+                        pub mod change_vent_duct_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-vent-duct-class/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏚️change-cellar-area-m2/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏚️change-cellar-area-m2/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-vent-duct-class/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-vent-duct-class/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_cellar_ventilation_m3_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️change-cellar-ventilation-m3-h/🦀️.rs"]
+                        pub mod change_vent_duct_leakage {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-vent-duct-leakage/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️change-cellar-ventilation-m3-h/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️change-cellar-ventilation-m3-h/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-vent-duct-leakage/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-vent-duct-leakage/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
                         }
                         #[path = "."]
-                        pub mod change_h_tr_w_k {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-h-tr-wk/🦀️.rs"]
+                        pub mod change_vent_design_airflow {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-vent-design-airflow/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-h-tr-wk/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-h-tr-wk/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
                             pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_h_ve_w_k {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️change-h-ve-wk/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️change-h-ve-wk/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-vent-design-airflow/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️change-h-ve-wk/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-vent-design-airflow/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            pub use component::*;
                         }
-                        #[path = "."]
-                        pub mod change_theta_e_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️change-theta-ec/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️change-theta-ec/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️change-theta-ec/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_theta_set_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-theta-set-c/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-theta-set-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️change-theta-set-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_cooling_delta_t_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-cooling-delta-th/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-cooling-delta-th/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-cooling-delta-th/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_cooling_gains_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️change-cooling-gains-kwh/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️change-cooling-gains-kwh/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️change-cooling-gains-kwh/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_cooling_utilization_factor {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-cooling-utilization-factor/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-cooling-utilization-factor/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-cooling-utilization-factor/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_cooling_reference_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-cooling-reference-kwh/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-cooling-reference-kwh/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-cooling-reference-kwh/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_chiller_type {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥶️change-chiller-type/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥶️change-chiller-type/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥶️change-chiller-type/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_eer_actual {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️change-eer-actual/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️change-eer-actual/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✅️change-eer-actual/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_q_c_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-qc-kwh/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-qc-kwh/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-qc-kwh/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_generation_reference_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-generation-reference-kwh/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-generation-reference-kwh/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-generation-reference-kwh/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_data_center_supply_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️change-data-center-supply-c/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️change-data-center-supply-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖥️change-data-center-supply-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_h_st_w_k {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-h-st-wk/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-h-st-wk/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-h-st-wk/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_theta_st_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️change-theta-st-c/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️change-theta-st-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️change-theta-st-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_theta_amb_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-theta-amb-c/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-theta-amb-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-theta-amb-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_storage_t_h {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-storage-th/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-storage-th/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-storage-th/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_storage_allowance_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-storage-allowance-kwh/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-storage-allowance-kwh/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-storage-allowance-kwh/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_dhw_delivery_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-dhw-delivery-c/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-dhw-delivery-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-dhw-delivery-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_duct_class {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-duct-class/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-duct-class/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️change-duct-class/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_duct_test_pressure_pa {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-duct-test-pressure-pa/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-duct-test-pressure-pa/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-duct-test-pressure-pa/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_duct_leakage_m3_s_m2 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-duct-leakage-m3-sm2/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-duct-leakage-m3-sm2/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-duct-leakage-m3-sm2/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
+                        #[cfg(test)]
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
+                        mod mutation_leaf_tests;
                     }
                 }
                 #[path = "."]
@@ -910,7 +813,28 @@ pub mod examples {
         mod component;
         pub use component::*;
     }
+    #[path = "."]
+    pub mod compliant_office {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️compliant-office/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod noncompliant_office {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/⚠️noncompliant-office/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod residential_method3 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏠residential-method3/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
 }
+
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
 
 #[path = "."]
 pub mod editor {
@@ -940,6 +864,14 @@ pub mod editor {
             pub mod set_snapshot;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-field/🦀️.rs"]
+            pub mod set_field;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕insert-item/🦀️.rs"]
+            pub mod insert_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖remove-item/🦀️.rs"]
+            pub mod remove_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹apply-remedy/🦀️.rs"]
+            pub mod apply_remedy;
         }
 
         #[path = "."]

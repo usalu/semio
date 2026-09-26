@@ -40,7 +40,11 @@
     "closeCode": 4401,
     "refusedStatus": 401,
     "reexchangeStatus": 403,
-    "reexchangeError": "delegation-revoked"
+    "reexchangeError": "delegation-revoked",
+    "executionTargetWithinMs": 2000,
+    "diffValue": {
+      "agentValue": "two-client-agent"
+    }
   },
   "shutdown": {
     "closeCode": 1012,

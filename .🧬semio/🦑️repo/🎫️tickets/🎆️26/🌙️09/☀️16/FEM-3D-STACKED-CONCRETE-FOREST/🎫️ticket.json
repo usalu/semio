@@ -3,7 +3,7 @@
   "emoji": "🌲️",
   "status": "closed",
   "description": "Add a `concrete-forest` example to the fem3d artifact (✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d): two Hexagonal Cut Concrete Forest Left pieces stacked on top of each other, modelled with nodes and line (frame) elements only. Member topology follows the CAD structure-classic representation (two hexagonal columns, seven cantilever beams, one spine beam, slab as tributary member loads); node coordinates are the puzzle3d Concrete Forest vortex (connection point) coordinates so the upper piece's c-b vortices land exactly on the lower piece's c-t vortices. Solve the deformation (self weight + slab dead + live, ULS/SLS combinations) and prove it with the engine, an independent numpy oracle, and the React lane. Bookkeeping is manual on disk because the repo MCP failed to connect.",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [
     "⚪abd1b692-459a-4de1-8be3-898938ab6e8c"
   ],

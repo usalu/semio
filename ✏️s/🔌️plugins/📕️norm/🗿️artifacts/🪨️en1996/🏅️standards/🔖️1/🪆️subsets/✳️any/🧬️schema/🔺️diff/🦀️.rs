@@ -1,4 +1,4 @@
-//! 🧬️ EN 1996 diff schema — sparse field delta.
+//! 🧬️ EN 1996 diff schema — sparse field delta for masonry building subject.
 
 use framework_schema::ArtifactSchema;
 
@@ -12,48 +12,22 @@ pub struct En1996Diff {
     #[state(artifact)]
     pub artifact: Option<Box<crate::artifact_schema::En1996Artifact>>,
     #[state(artifact)]
-    pub m_ed_knm: Option<f64>,
-    #[state(artifact)]
-    pub n_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub v_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub h_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub z_mm3: Option<f64>,
-    #[state(artifact)]
-    pub area_mm2: Option<f64>,
-    #[state(artifact)]
-    pub shear_area_mm2: Option<f64>,
-    #[state(artifact)]
-    pub f_k_mpa: Option<f64>,
-    #[state(artifact)]
-    pub f_vk_mpa: Option<f64>,
-    #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
     pub masonry_class: Option<crate::MasonryClass>,
     #[state(artifact)]
     pub design_situation: Option<crate::document::DesignSituation>,
     #[state(artifact)]
-    pub mu: Option<f64>,
-    #[state(artifact)]
-    pub wall_thickness_mm: Option<f64>,
-    #[state(artifact)]
-    pub fire_resistance_min: Option<u32>,
-    #[state(artifact)]
-    pub unit: Option<String>,
-    #[state(artifact)]
-    pub exposure: Option<crate::part_2::ExposureClass>,
-    #[state(artifact)]
-    pub mortar: Option<crate::part_2::MortarClass>,
-    #[state(artifact)]
-    pub bed_joint_thickness_mm: Option<f64>,
-    #[state(artifact)]
     pub storeys: Option<u32>,
     #[state(artifact)]
-    pub h_ef_mm: Option<f64>,
-    #[state(artifact)]
-    pub t_ef_mm: Option<f64>,
+    pub walls: Option<En1996WallList>,
 }
 //#endregion 🔖️Diff
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1996WallList {
+    pub values: Vec<crate::MasonryWall>,
+}

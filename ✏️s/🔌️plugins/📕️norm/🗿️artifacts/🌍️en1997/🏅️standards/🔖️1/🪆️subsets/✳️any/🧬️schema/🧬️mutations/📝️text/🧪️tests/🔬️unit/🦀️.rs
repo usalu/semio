@@ -1,9 +1,5 @@
 use super::*;
-
-#[semio_framework_async_macros::async_test]
-async fn op_text_round_trips_change_v_ed_kn() {
-    store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 }));
-}
+use crate::standards::v1::subsets::any::schema::snapshot::compliant_demo;
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_change_annex() {
@@ -12,11 +8,20 @@ async fn op_text_round_trips_change_annex() {
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_change_design_approach() {
-    store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }));
+    store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach {
+        new_design_approach: "da2".to_string(),
+    }));
 }
 
-/// ⚖️ Every variant, not just the hand-picked ones above — full-coverage `OpText` round trip
-/// over the closed vocabulary, one sample value per field.
+#[semio_framework_async_macros::async_test]
+async fn op_text_round_trips_change_footing_width() {
+    store::os_store::test_support::assert_op_line_round_trip(&En1997Mutation::ChangeFootingWidth(change_footing_width::ChangeFootingWidth {
+        id: "f1".into(),
+        new_width: 2.4,
+    }));
+}
+
+/// ⚖️ Every variant — full-coverage `OpText` round trip over the closed vocabulary.
 #[semio_framework_async_macros::async_test]
 async fn every_variant_op_text_round_trips() {
     for mutation in every_mutation() {
@@ -25,28 +30,33 @@ async fn every_variant_op_text_round_trips() {
 }
 
 fn every_mutation() -> Vec<En1997Mutation> {
+    let demo = compliant_demo();
+    let layer = demo.layers[0].clone();
+    let footing = demo.footings[0].clone();
+    let pile = demo.piles[0].clone();
     vec![
-        En1997Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 620.0 }),
-        En1997Mutation::ChangeHEdKn(change_h_ed_kn::ChangeHEdKn { new_h_ed_kn: 95.0 }),
-        En1997Mutation::ChangeFootingAreaM2(change_footing_area_m2::ChangeFootingAreaM2 { new_footing_area_m2: 2.4 }),
-        En1997Mutation::ChangePhiDeg(change_phi_deg::ChangePhiDeg { new_phi_deg: 32.0 }),
-        En1997Mutation::ChangeCKpa(change_c_kpa::ChangeCKpa { new_c_kpa: 5.0 }),
-        En1997Mutation::ChangeGammaKnM3(change_gamma_kn_m3::ChangeGammaKnM3 { new_gamma_kn_m3: 19.0 }),
-        En1997Mutation::ChangeBM(change_b_m::ChangeBM { new_b_m: 2.2 }),
-        En1997Mutation::ChangeDFM(change_d_f_m::ChangeDFM { new_d_f_m: 1.8 }),
-        En1997Mutation::ChangeESMpa(change_e_s_mpa::ChangeESMpa { new_e_s_mpa: 32_000.0 }),
-        En1997Mutation::ChangeNu(change_nu::ChangeNu { new_nu: 0.32 }),
-        En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".to_string() }),
-        En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }),
-        En1997Mutation::ChangeSettlementLimitMm(change_settlement_limit_mm::ChangeSettlementLimitMm { new_settlement_limit_mm: 20.0 }),
-        En1997Mutation::ChangeNPileEdKn(change_n_pile_ed_kn::ChangeNPileEdKn { new_n_pile_ed_kn: 900.0 }),
-        En1997Mutation::ChangeAlphaS(change_alpha_s::ChangeAlphaS { new_alpha_s: 0.75 }),
-        En1997Mutation::ChangePileDM(change_pile_d_m::ChangePileDM { new_pile_d_m: 0.65 }),
-        En1997Mutation::ChangeQSKpa(change_q_s_kpa::ChangeQSKpa { new_q_s_kpa: 90.0 }),
-        En1997Mutation::ChangePileLM(change_pile_l_m::ChangePileLM { new_pile_l_m: 14.0 }),
-        En1997Mutation::ChangeQBKpa(change_q_b_kpa::ChangeQBKpa { new_q_b_kpa: 2700.0 }),
-        En1997Mutation::ChangePileBaseAreaM2(change_pile_base_area_m2::ChangePileBaseAreaM2 { new_pile_base_area_m2: 0.33 }),
-        En1997Mutation::ChangePileNProfiles(change_pile_n_profiles::ChangePileNProfiles { new_pile_n_profiles: 3 }),
-        En1997Mutation::ChangeZInvestigatedM(change_z_investigated_m::ChangeZInvestigatedM { new_z_investigated_m: 10.0 }),
+        En1997Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::De }),
+        En1997Mutation::ChangeGeotechnicalCategory(change_geotechnical_category::ChangeGeotechnicalCategory { new_geotechnical_category: 2 }),
+        En1997Mutation::ChangeDesignSituation(change_design_situation::ChangeDesignSituation { new_design_situation: "persistent".into() }),
+        En1997Mutation::ChangeDesignApproach(change_design_approach::ChangeDesignApproach { new_design_approach: "da2".into() }),
+        En1997Mutation::ChangeGroundwaterLevel(change_groundwater_level::ChangeGroundwaterLevel { new_groundwater_level: -2.0 }),
+        En1997Mutation::ChangeInvestigationDepth(change_investigation_depth::ChangeInvestigationDepth { new_investigation_depth: 12.0 }),
+        En1997Mutation::ChangeFootingWidth(change_footing_width::ChangeFootingWidth { id: "f1".into(), new_width: 2.5 }),
+        En1997Mutation::ChangeFootingEmbedment(change_footing_embedment::ChangeFootingEmbedment { id: "f1".into(), new_embedment: 1.2 }),
+        En1997Mutation::ChangePileLength(change_pile_length::ChangePileLength { id: "p1".into(), new_length: 14.0 }),
+        En1997Mutation::ChangePileCount(change_pile_count::ChangePileCount { id: "p1".into(), new_count: 4 }),
+        En1997Mutation::ChangeWallBaseWidth(change_wall_base_width::ChangeWallBaseWidth { id: "w1".into(), new_base_width: 2.0 }),
+        En1997Mutation::ChangeSlopeAngle(change_slope_angle::ChangeSlopeAngle { id: "s1".into(), new_angle_deg: 28.0 }),
+        En1997Mutation::ChangeLayerPhiPrime(change_layer_phi_prime::ChangeLayerPhiPrime { id: "L1".into(), new_phi_prime_deg: 32.0 }),
+        En1997Mutation::ChangeLayerOedometricModulus(change_layer_oedometric_modulus::ChangeLayerOedometricModulus {
+            id: "L1".into(),
+            new_oedometric_modulus: 40e6,
+        }),
+        En1997Mutation::InsertLayer(insert_layer::InsertLayer { index: 0, layer }),
+        En1997Mutation::RemoveLayer(remove_layer::RemoveLayer { index: 0 }),
+        En1997Mutation::InsertFooting(insert_footing::InsertFooting { index: 0, footing }),
+        En1997Mutation::RemoveFooting(remove_footing::RemoveFooting { index: 0 }),
+        En1997Mutation::InsertPile(insert_pile::InsertPile { index: 0, pile }),
+        En1997Mutation::RemovePile(remove_pile::RemovePile { index: 0 }),
     ]
 }

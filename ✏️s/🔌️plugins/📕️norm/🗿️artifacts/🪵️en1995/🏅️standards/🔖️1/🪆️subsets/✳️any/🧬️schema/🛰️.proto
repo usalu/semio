@@ -1,46 +1,7 @@
-// 🧬️ EN 1995 artifact schema.
 syntax = "proto3";
-package semio.s.norm.en1995.artifact;
-
+package semio.norm.en1995.artifact;
 message En1995Artifact {
-  // @state artifact
-  double annex = 1;
-  // @state artifact
-  double m_ed_knm = 2;
-  // @state artifact
-  double n_ed_kn = 3;
-  // @state artifact
-  double v_ed_kn = 4;
-  // @state artifact
-  double w_mm3 = 5;
-  // @state artifact
-  double a_mm2 = 6;
-  // @state artifact
-  double b_mm = 7;
-  // @state artifact
-  double h_mm = 8;
-  // @state artifact
-  double f_m_k = 9;
-  // @state artifact
-  double f_c_0_k = 10;
-  // @state artifact
-  double service_class = 11;
-  // @state artifact
-  double load_duration = 12;
-  // @state artifact
-  double m_crit_knm = 13;
-  // @state artifact
-  double f_ed_kn = 14;
-  // @state artifact
-  double a_ef_mm2 = 15;
-  // @state artifact
-  double f_v_k = 16;
-  // @state artifact
-  double fire_duration_min = 17;
-  // @state artifact
-  double section_depth_mm = 18;
-  // @state artifact
-  double a_vert_m_s2 = 19;
-  // @state artifact
-  double n_cycles_bridge = 20;
+  string annex = 1;
+  repeated bytes members = 2;
+  repeated bytes connections = 3;
 }

@@ -12,7 +12,7 @@ use semio_framework_plugin::ArtifactInferrer;
 /// 💡️ Everything inferable from a en1997 snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
 /// own field/section structure, since a norm compliance record IS the document it describes).
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -20,6 +20,13 @@ use semio_framework_plugin::ArtifactInferrer;
 pub struct En1997Inference {
     #[derived]
     pub outline: En1997Outline,
+}
+
+impl Default for En1997Inference {
+    fn default() -> Self {
+        use protocol::Inference;
+        Self::infer(&En1997Snapshot::default())
+    }
 }
 
 impl protocol::Inference<En1997Snapshot> for En1997Inference {
@@ -66,87 +73,18 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-/// 📋️ Full EN 1997 compliance-report conformance law (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
-/// `⚙️engine`. `evaluate` is the `En1997Snapshot -> CheckReport` projection; everything it composes
-/// is a pure helper living in the parent `🧬️schema`.
-use crate::document::{AnnexChoice, CheckReport};
-use crate::standards::v1::subsets::any::schema::{check_shallow_foundation, part_1, part_2, DesignApproach};
-/// 📋️ Full EN 1997 check across bearing, sliding, settlement, pile axial (part 1), and ground investigation adequacy (part 2).
-#[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-pub fn check_full_geotechnical(
-    v_ed_kn: f64,
-    h_ed_kn: f64,
-    footing_area_m2: f64,
-    phi_deg: f64,
-    c_kpa: f64,
-    gamma_kn_m3: f64,
-    b_m: f64,
-    d_f_m: f64,
-    e_s_mpa: f64,
-    nu: f64,
-    approach: DesignApproach,
-    annex: AnnexChoice,
-    settlement_limit_mm: f64,
-    n_pile_ed_kn: f64,
-    alpha_s: f64,
-    pile_d_m: f64,
-    q_s_kpa: f64,
-    pile_l_m: f64,
-    q_b_kpa: f64,
-    pile_base_area_m2: f64,
-    pile_n_profiles: u32,
-    z_investigated_m: f64,
-) -> CheckReport {
-    let mut report = check_shallow_foundation(v_ed_kn, h_ed_kn, footing_area_m2, phi_deg, c_kpa, gamma_kn_m3, b_m, d_f_m, e_s_mpa, nu, approach, annex, settlement_limit_mm);
-    let r_s_cal = part_1::shaft_resistance_kn(alpha_s, pile_d_m, q_s_kpa, pile_l_m);
-    let r_b_cal = part_1::base_resistance_kn(q_b_kpa, pile_base_area_m2);
-    let r_s_k = part_1::pile_characteristic_resistance_kn(r_s_cal, r_s_cal, pile_n_profiles);
-    let r_b_k = part_1::pile_characteristic_resistance_kn(r_b_cal, r_b_cal, pile_n_profiles);
-    let r_c_d = part_1::pile_design_resistance_kn(r_b_k, r_s_k, approach, annex);
-    report.push(part_1::check_pile_axial(n_pile_ed_kn, r_c_d, annex));
-    report.push(part_2::check_investigation_depth(z_investigated_m, b_m, annex));
-    report
-}
+use crate::document::CheckReport;
+use crate::standards::v1::subsets::any::schema::check_project;
 
-fn parse_design_approach(value: &str) -> DesignApproach {
-    match value.to_ascii_lowercase().as_str() {
-        "da1geo" => DesignApproach::Da1Geo,
-        "da2" => DesignApproach::Da2,
-        "da3" => DesignApproach::Da3,
-        _ => DesignApproach::Da1Str,
-    }
-}
-
-/// 🧮️ Headless per-document evaluation — the `NormFamily::evaluate` body for `En1997Family` (defined
-/// in the sibling `op` crate, which depends on this `engine` crate to call it).
+/// 🧮️ Headless per-document evaluation for EN 1997.
 pub fn evaluate(document: &En1997Snapshot) -> CheckReport {
-    check_full_geotechnical(
-        document.v_ed_kn,
-        document.h_ed_kn,
-        document.footing_area_m2,
-        document.phi_deg,
-        document.c_kpa,
-        document.gamma_kn_m3,
-        document.b_m,
-        document.d_f_m,
-        document.e_s_mpa,
-        document.nu,
-        parse_design_approach(&document.design_approach),
-        document.annex,
-        document.settlement_limit_mm,
-        document.n_pile_ed_kn,
-        document.alpha_s,
-        document.pile_d_m,
-        document.q_s_kpa,
-        document.pile_l_m,
-        document.q_b_kpa,
-        document.pile_base_area_m2,
-        document.pile_n_profiles,
-        document.z_investigated_m,
-    )
+    check_project(document)
 }
 
+/// 📋️ Compatibility alias used by older call sites.
+pub fn check_full_geotechnical(document: &En1997Snapshot) -> CheckReport {
+    check_project(document)
+}
 //#endregion 🔖️ComplianceReport
 
 //#region 🧪️ComplianceReportTests

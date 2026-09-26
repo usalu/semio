@@ -1,49 +1,99 @@
 syntax = "proto3";
-package semio.s.norm.en1994.snapshot;
 
+message CharacteristicAction {
+  string id = 1;
+  string kind = 2;
+  string category = 3;
+  string stage = 4;
+  double q_area_pa = 5;
+  double m_k_nm = 6;
+  double v_k_n = 7;
+  double n_k_n = 8;
+  double delta_sigma_k_pa = 9;
+  double delta_tau_k_pa = 10;
+}
+message SteelSection {
+  string designation = 1;
+  double height_m = 2;
+  double width_m = 3;
+  double tw_m = 4;
+  double tf_m = 5;
+  double a_m2 = 6;
+  double w_pl_y_m3 = 7;
+  double i_y_m4 = 8;
+  double a_v_m2 = 9;
+}
+message ProfiledSheeting {
+  string profile = 1;
+  double height_m = 2;
+  double rib_width_m = 3;
+  double thickness_m = 4;
+  bool ribs_parallel_to_beam = 5;
+}
+message HeadedStuds {
+  double diameter_m = 1;
+  double height_m = 2;
+  double f_u_pa = 3;
+  uint32 count_per_rib = 4;
+  double spacing_m = 5;
+  uint32 total_count = 6;
+}
+message CompositeBeam {
+  string id = 1;
+  double span_m = 2;
+  double spacing_m = 3;
+  string support = 4;
+  string construction = 5;
+  SteelSection steel = 6;
+  double slab_thickness_m = 7;
+  double concrete_f_ck_pa = 8;
+  double concrete_e_cm_pa = 9;
+  ProfiledSheeting sheeting = 10;
+  HeadedStuds studs = 11;
+  double transverse_as_m2_per_m = 12;
+  double ltb_length_m = 13;
+  double as_hogging_m2_per_m = 14;
+  double bar_spacing_m = 15;
+  double wk_limit_m = 16;
+  double n_cycles = 17;
+  repeated CharacteristicAction actions = 18;
+}
+message CompositeColumn {
+  string id = 1;
+  string kind = 2;
+  double length_m = 3;
+  double outer_size_m = 4;
+  double wall_thickness_m = 5;
+  double steel_a_m2 = 6;
+  double steel_f_y_pa = 7;
+  double concrete_a_m2 = 8;
+  double concrete_f_ck_pa = 9;
+  double reinforcement_as_m2 = 10;
+  double reinforcement_f_yk_pa = 11;
+  double i_m4 = 12;
+  string buckling_curve = 13;
+  repeated CharacteristicAction actions = 14;
+}
+message CompositeSlab {
+  string id = 1;
+  double span_m = 2;
+  string support = 3;
+  ProfiledSheeting sheeting = 4;
+  double concrete_thickness_m = 5;
+  double f_ck_pa = 6;
+  double m_factor = 7;
+  double k_factor = 8;
+  double as_m2_per_m = 9;
+  repeated CharacteristicAction actions = 10;
+}
 message En1994Snapshot {
-  // @state artifact
   string annex = 1;
-  // @state artifact
-  double m_ed_knm = 2;
-  // @state artifact
-  double v_ed_kn = 3;
-  // @state artifact
-  double m_pla = 4;
-  // @state artifact
-  double m_pl_rd = 5;
-  // @state artifact
-  double eta = 6;
-  // @state artifact
-  double v_l_rd = 7;
-  // @state artifact
-  double insulation_thickness_mm = 8;
-  // @state artifact
-  string fire_rating = 9;
-  // @state artifact
-  string deck_type = 10;
-  // @state artifact
-  double delta_sigma_mpa = 11;
-  // @state artifact
-  string fatigue_detail = 12;
-  // @state artifact
-  double d_mm = 13;
-  // @state artifact
-  double h_sc_mm = 14;
-  // @state artifact
-  double f_ck_mpa = 15;
-  // @state artifact
-  double f_u_mpa = 16;
-  // @state artifact
-  double e_cm_mpa = 17;
-  // @state artifact
-  double v_ed_per_stud_kn = 18;
-  // @state artifact
-  double span_m = 19;
-  // @state artifact
-  double f_y_mpa = 20;
-  // @state artifact
-  double n_cycles_stud = 21;
-  // @state artifact
-  double delta_tau_stud_mpa = 22;
+  string structure_kind = 2;
+  double steel_f_y_pa = 3;
+  repeated CompositeBeam beams = 4;
+  repeated CompositeColumn columns = 5;
+  repeated CompositeSlab slabs = 6;
+  string fire_rating = 7;
+  double insulation_thickness_m = 8;
+  string fatigue_detail = 9;
 }

@@ -1,2 +1,28 @@
 semio norm.en1999.dsl v1
-n-ed-kn=150 m-ed-knm=9.5 a-mm2=1850 w-el-mm3=42000 alloy=aw6082t6 chi=0.78 i-t-mm4=8200 l-cr-mm=4000 theta-c=230 delta-sigma-ed=50 delta-sigma-c=90 fatigue-m=5 n-cycles=1200000 v-weld-ed-kn=35 weld-throat-mm=5 weld-length-mm=150 beta-w=0.7 sheet-b-mm=250 sheet-t-mm=2.5 sheet-k-sigma=4 sheet-w-el-mm3=10000 sheet-m-ed-knm=0.8 shell-t-mm=5 shell-r-mm=600 sigma-ed-shell-mpa=180 annex=en
+annex=de
+materials [id:TEXT designation:TEXT] {
+  mat-6082 aw6082-t6
+}
+sections [id:TEXT kind:TEXT height:NUM width:NUM flange-thickness:NUM web-thickness:NUM outer-diameter:NUM elements:TABLE] {
+  sec-i120 extrudedI 0.14 0.07 0.01 0.008 0 [ {id=flange-top width=0.031000000000000003 thickness=0.01 outstand=true welded=true weld-position=0.005} {id=flange-bot width=0.031000000000000003 thickness=0.01 outstand=true welded=true weld-position=0.005} {id=web width=0.12000000000000001 thickness=0.008 outstand=false welded=true weld-position=0.005} ]
+  sec-chs168 tube 0 0 0 0.005 0.1683 [ ]
+}
+members [id:TEXT section-id:TEXT material-id:TEXT length:NUM support:TEXT buckling-length-y:NUM buckling-length-z:NUM buckling-length-t:NUM ltb-length:NUM c1:NUM restrained-ltb:BOOL actions:TABLE] {
+  purlin-1 sec-i120 mat-6082 6 simplySupported 1.5 1.5 1.5 1.5 1.132 false [ {id=G kind=permanent category=self source=udl g-k-line=400 q-k-line=0 n-k=2000 v-y-k=0 v-z-k=0 m-y-k=0 m-z-k=0} {id=Q-snow kind=snow category=snow source=udl g-k-line=0 q-k-line=900 n-k=1200 v-y-k=50 v-z-k=200 m-y-k=100 m-z-k=40} ]
+  post-chs sec-chs168 mat-6082 3 cantilever 3 3 3 3 1 false [ {id=G-post kind=permanent category=self source=external g-k-line=50 q-k-line=0 n-k=-8000 v-y-k=20 v-z-k=80 m-y-k=120 m-z-k=15} {id=Q-post kind=imposed category=office source=external g-k-line=0 q-k-line=40 n-k=-2000 v-y-k=15 v-z-k=40 m-y-k=50 m-z-k=10} ]
+}
+connections [id:TEXT member-id:TEXT material-id:TEXT kind:TEXT actions:TABLE bolts:REC welds:REC] {
+  support-weld purlin-1 mat-6082 combined [ {id=G-conn kind=permanent category=self source=external g-k-line=800 q-k-line=0 n-k=1500 v-y-k=200 v-z-k=3500 m-y-k=400 m-z-k=150} {id=Q-conn kind=snow category=snow source=external g-k-line=0 q-k-line=600 n-k=800 v-y-k=150 v-z-k=2500 m-y-k=250 m-z-k=100} ] {material="8.8" diameter=0.012 rows=2 bolts-per-row=2 edge-distance=0.024 pitch=0.036 gauge=0.016 plate-thickness=0.008} {filler-alloy="4043" throat=0.005 length=0.16 beta-w=0.63 haz-extent=0.025}
+}
+fire-scenarios [id:TEXT member-id:TEXT theta-a:NUM duration-s:NUM] {
+  fire-1 purlin-1 180 600
+}
+fatigue-details [id:TEXT member-id:TEXT detail-category:TEXT delta-sigma-c:NUM delta-sigma-ed:NUM n-cycles:NUM m1:NUM m2:NUM] {
+  fat-1 purlin-1 "71" 71000000 35000000 6000000 4.3 6.3
+}
+cold-formed [id:TEXT material-id:TEXT thickness:NUM width:NUM span:NUM m-ed:NUM n-ed:NUM welded:BOOL] {
+  sheet-pass mat-6082 0.005 0.08 1 40 8000 false
+}
+shells [id:TEXT material-id:TEXT radius:NUM thickness:NUM length:NUM sigma-x-ed:NUM sigma-theta-ed:NUM] {
+  shell-pass mat-6082 0.5 0.01 2 40000000 30000000
+}

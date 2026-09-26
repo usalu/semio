@@ -1,10 +1,13 @@
-//! 🪵️ EN 1995 snapshot schema — artifact-lane fields only.
+//! 🪵 EN 1995 snapshot — timber structure subject (members + connections).
 
 use crate::document::AnnexChoice;
+use crate::{
+    CharacteristicAction, ConnectionAction, MemberRole, SupportType, TimberConnection, TimberMember,
+};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted EN 1995 document snapshot.
+/// 📸️ Persisted EN 1995 timber-structure document.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -14,128 +17,356 @@ use framework_schema::ArtifactSchema;
 pub struct En1995Snapshot {
     #[state(artifact)]
     pub annex: AnnexChoice,
+    #[dsl(table)]
     #[state(artifact)]
-    pub m_ed_knm: f64,
+    pub members: Vec<TimberMember>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub n_ed_kn: f64,
-    #[state(artifact)]
-    pub v_ed_kn: f64,
-    #[state(artifact)]
-    pub w_mm3: f64,
-    #[state(artifact)]
-    pub a_mm2: f64,
-    #[state(artifact)]
-    pub b_mm: f64,
-    #[state(artifact)]
-    pub h_mm: f64,
-    #[state(artifact)]
-    pub f_m_k: f64,
-    #[state(artifact)]
-    pub f_c_0_k: f64,
-    #[state(artifact)]
-    pub service_class: String,
-    #[state(artifact)]
-    pub load_duration: String,
-    #[state(artifact)]
-    pub m_crit_knm: f64,
-    #[state(artifact)]
-    pub f_ed_kn: f64,
-    #[state(artifact)]
-    pub a_ef_mm2: f64,
-    #[state(artifact)]
-    pub f_v_k: f64,
-    #[state(artifact)]
-    pub fire_duration_min: f64,
-    #[state(artifact)]
-    pub section_depth_mm: f64,
-    #[state(artifact)]
-    pub a_vert_m_s2: f64,
-    #[state(artifact)]
-    pub n_cycles_bridge: f64,
+    pub connections: Vec<TimberConnection>,
 }
 //#endregion 🔖️Snapshot
 
 //#region 🔖️HandcraftedArtifactCodecs
-// 🧬️ Consolidated (W5a, ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT): the fifteen norm families' identical
-// ArtifactDsl/ArtifactPack envelope-wrap glue now lives once, in `crate::document`'s
-// `NormArtifactRecord`/`norm_{parse,print}_dsl`/`norm_{encode,decode}_pack` (see that
-// region's doc comment in `📄️artifact/🦀️.rs` for why it can't collapse further
-// than this one macro call — Rust's orphan rule still needs a concrete per-type impl).
 crate::impl_norm_artifact_record!(En1995Snapshot, extension = "en1995", envelope_id = "norm.en1995");
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1995Snapshot {
     fn default() -> Self {
+        Self::compliant_building_beam()
+    }
+}
+
+impl En1995Snapshot {
+    /// ✅️ Compliant DE glulam building beam (GL28h, Floor role) — default subject.
+    pub fn compliant_building_beam() -> Self {
         Self {
             annex: AnnexChoice::De,
-            m_ed_knm: 25.0,
-            n_ed_kn: 50.0,
-            v_ed_kn: 15.0,
-            w_mm3: 1_000_000.0,
-            a_mm2: 20_000.0,
-            b_mm: 200.0,
-            h_mm: 300.0,
-            f_m_k: 24.0,
-            f_c_0_k: 21.0,
-            service_class: "sc1".into(),
-            load_duration: "medium".into(),
-            m_crit_knm: 80.0,
-            f_ed_kn: 18.0,
-            a_ef_mm2: 12_000.0,
-            f_v_k: 4.0,
-            fire_duration_min: 30.0,
-            section_depth_mm: 300.0,
-            a_vert_m_s2: 0.3,
-            n_cycles_bridge: 500_000.0,
+            members: vec![TimberMember {
+                id: "beam-B1".into(),
+                label_en: "Main glulam floor beam B1".into(),
+                label_de: "Hauptträger BSH Decke B1".into(),
+                role: MemberRole::Floor,
+                strength_class: "GL28h".into(),
+                service_class: 1,
+                support: SupportType::SimplySupported,
+                b_m: 0.20,
+                h_m: 0.40,
+                span_m: 5.0,
+                support_length_m: 0.15,
+                bearing_length_m: 0.15,
+                buckling_length_y_m: 5.0,
+                buckling_length_z_m: 1.5,
+                lateral_restraint_spacing_m: 1.5,
+                notch_depth_m: 0.0,
+                notch_distance_m: 0.0,
+                m_crit_nm: 180_000.0,
+                mass_kg_per_m: 120.0,
+                mass_kg_per_m2: 0.0,
+                damping_xi: 0.015,
+                fire_duration_s: 0.0,
+                bridge_n_obs: 0.0,
+                bridge_t_l_years: 0.0,
+                bridge_beta: 0.0,
+                bridge_a: 0.0,
+                bridge_b: 0.0,
+                bridge_crowd_per_m2: 0.0,
+                actions: vec![
+                    CharacteristicAction {
+                        id: "g".into(),
+                        kind: "permanent".into(),
+                        category: "".into(),
+                        load_duration: "permanent".into(),
+                        q_line_n_per_m: 2_500.0,
+                        f_point_n: 0.0,
+                        m_k_nm: 0.0,
+                        v_k_n: 0.0,
+                        n_k_n: 0.0,
+                        n_t_k_n: 0.0,
+                        f_c90_k_n: 0.0,
+                    },
+                    CharacteristicAction {
+                        id: "q".into(),
+                        kind: "imposed".into(),
+                        category: "A".into(),
+                        load_duration: "medium".into(),
+                        q_line_n_per_m: 3_000.0,
+                        f_point_n: 0.0,
+                        m_k_nm: 0.0,
+                        v_k_n: 0.0,
+                        n_k_n: 0.0,
+                        n_t_k_n: 0.0,
+                        f_c90_k_n: 0.0,
+                    },
+                ],
+            }],
+            connections: vec![TimberConnection {
+                id: "conn-C1".into(),
+                label_en: "Bolt group at support".into(),
+                label_de: "Schraubverbund am Auflager".into(),
+                fastener_type: "bolt".into(),
+                strength_class: "GL28h".into(),
+                service_class: 1,
+                diameter_m: 0.012,
+                number: 8,
+                rows: 2,
+                spacing_m: 0.090,
+                edge_distance_m: 0.048,
+                end_distance_m: 0.096,
+                t1_m: 0.20,
+                t2_m: 0.20,
+                steel_plate: false,
+                steel_plate_thickness_m: 0.0,
+                shear_planes: 1,
+                f_u_k: 400_000_000.0,
+                actions: vec![
+                    ConnectionAction {
+                        id: "g".into(),
+                        kind: "permanent".into(),
+                        load_duration: "permanent".into(),
+                        f_k_n: 8_000.0,
+                    },
+                    ConnectionAction {
+                        id: "q".into(),
+                        kind: "imposed".into(),
+                        load_duration: "medium".into(),
+                        f_k_n: 10_000.0,
+                    },
+                ],
+            }],
+        }
+    }
+
+    /// ❌️ Non-compliant building subject (overloaded C24, column, weak nails, fire).
+    pub fn noncompliant_building() -> Self {
+        Self {
+            annex: AnnexChoice::De,
+            members: vec![
+                TimberMember {
+                    id: "beam-B2".into(),
+                    label_en: "Overloaded beam B2".into(),
+                    label_de: "Überlasteter Träger B2".into(),
+                    role: MemberRole::Beam,
+                    strength_class: "C24".into(),
+                    service_class: 1,
+                    support: SupportType::SimplySupported,
+                    b_m: 0.12,
+                    h_m: 0.24,
+                    span_m: 5.0,
+                    support_length_m: 0.08,
+                    bearing_length_m: 0.08,
+                    buckling_length_y_m: 5.0,
+                    buckling_length_z_m: 5.0,
+                    lateral_restraint_spacing_m: 2.5,
+                    notch_depth_m: 0.04,
+                    notch_distance_m: 0.10,
+                    m_crit_nm: 250_000.0,
+                    mass_kg_per_m: 0.0,
+                    mass_kg_per_m2: 0.0,
+                    damping_xi: 0.01,
+                    fire_duration_s: 3600.0,
+                    bridge_n_obs: 0.0,
+                    bridge_t_l_years: 0.0,
+                    bridge_beta: 0.0,
+                    bridge_a: 0.0,
+                    bridge_b: 0.0,
+                    bridge_crowd_per_m2: 0.0,
+                    actions: vec![
+                        CharacteristicAction {
+                            id: "g".into(),
+                            kind: "permanent".into(),
+                            category: "".into(),
+                            load_duration: "permanent".into(),
+                            q_line_n_per_m: 4_000.0,
+                            f_point_n: 0.0,
+                            m_k_nm: 0.0,
+                            v_k_n: 0.0,
+                            n_k_n: 0.0,
+                            n_t_k_n: 0.0,
+                            f_c90_k_n: 0.0,
+                        },
+                        CharacteristicAction {
+                            id: "q".into(),
+                            kind: "imposed".into(),
+                            category: "C".into(),
+                            load_duration: "medium".into(),
+                            q_line_n_per_m: 8_000.0,
+                            f_point_n: 5_000.0,
+                            m_k_nm: 0.0,
+                            v_k_n: 0.0,
+                            n_k_n: 0.0,
+                            n_t_k_n: 0.0,
+                            f_c90_k_n: 0.0,
+                        },
+                    ],
+                },
+                TimberMember {
+                    id: "col-C1".into(),
+                    label_en: "Slender column C1".into(),
+                    label_de: "Schlanker Stützpfosten C1".into(),
+                    role: MemberRole::Column,
+                    strength_class: "C24".into(),
+                    service_class: 2,
+                    support: SupportType::SimplySupported,
+                    b_m: 0.10,
+                    h_m: 0.10,
+                    span_m: 3.0,
+                    support_length_m: 0.10,
+                    bearing_length_m: 0.10,
+                    buckling_length_y_m: 3.0,
+                    buckling_length_z_m: 3.0,
+                    lateral_restraint_spacing_m: 3.0,
+                    notch_depth_m: 0.0,
+                    notch_distance_m: 0.0,
+                    m_crit_nm: 50_000.0,
+                    mass_kg_per_m: 0.0,
+                    mass_kg_per_m2: 0.0,
+                    damping_xi: 0.01,
+                    fire_duration_s: 0.0,
+                    bridge_n_obs: 0.0,
+                    bridge_t_l_years: 0.0,
+                    bridge_beta: 0.0,
+                    bridge_a: 0.0,
+                    bridge_b: 0.0,
+                    bridge_crowd_per_m2: 0.0,
+                    actions: vec![CharacteristicAction {
+                        id: "g".into(),
+                        kind: "permanent".into(),
+                        category: "".into(),
+                        load_duration: "medium".into(),
+                        q_line_n_per_m: 0.0,
+                        f_point_n: 80_000.0,
+                        m_k_nm: 0.0,
+                        v_k_n: 0.0,
+                        n_k_n: 0.0,
+                        n_t_k_n: 0.0,
+                        f_c90_k_n: 0.0,
+                    }],
+                },
+            ],
+            connections: vec![TimberConnection {
+                id: "conn-C2".into(),
+                label_en: "Underdesigned nail group".into(),
+                label_de: "Unterbemessene Nagelgruppe".into(),
+                fastener_type: "nail".into(),
+                strength_class: "C24".into(),
+                service_class: 1,
+                diameter_m: 0.0031,
+                number: 4,
+                rows: 1,
+                spacing_m: 0.012,
+                edge_distance_m: 0.010,
+                end_distance_m: 0.030,
+                t1_m: 0.04,
+                t2_m: 0.04,
+                steel_plate: false,
+                steel_plate_thickness_m: 0.0,
+                shear_planes: 1,
+                f_u_k: 600_000_000.0,
+                actions: vec![ConnectionAction {
+                    id: "q".into(),
+                    kind: "imposed".into(),
+                    load_duration: "medium".into(),
+                    f_k_n: 8_000.0,
+                }],
+            }],
+        }
+    }
+
+    /// ✅️ Compliant glulam footbridge (EN 1995-2 role Bridge).
+    pub fn compliant_bridge() -> Self {
+        Self {
+            annex: AnnexChoice::De,
+            members: vec![TimberMember {
+                id: "bridge-G1".into(),
+                label_en: "Glulam footbridge girder G1".into(),
+                label_de: "BSH-Fußgängersteg Träger G1".into(),
+                role: MemberRole::Bridge,
+                strength_class: "GL28h".into(),
+                service_class: 2,
+                support: SupportType::SimplySupported,
+                b_m: 0.24,
+                h_m: 0.72,
+                span_m: 12.0,
+                support_length_m: 0.30,
+                bearing_length_m: 0.30,
+                buckling_length_y_m: 12.0,
+                buckling_length_z_m: 3.0,
+                lateral_restraint_spacing_m: 3.0,
+                notch_depth_m: 0.0,
+                notch_distance_m: 0.0,
+                m_crit_nm: 800_000.0,
+                mass_kg_per_m: 180.0,
+                mass_kg_per_m2: 0.0,
+                damping_xi: 0.015,
+                fire_duration_s: 0.0,
+                bridge_n_obs: 2.0e5,
+                bridge_t_l_years: 50.0,
+                bridge_beta: 5.0,
+                bridge_a: 15.0,
+                bridge_b: 4.0,
+                bridge_crowd_per_m2: 1.0,
+                actions: vec![],
+            }],
+            connections: vec![],
+        }
+    }
+
+    /// ❌️ Non-compliant bridge — high crowd and high N_obs (fatigue / vibration fail).
+    pub fn noncompliant_bridge() -> Self {
+        Self {
+            annex: AnnexChoice::De,
+            members: vec![TimberMember {
+                id: "bridge-G2".into(),
+                label_en: "Overloaded footbridge girder G2".into(),
+                label_de: "Überlasteter Fußgängersteg G2".into(),
+                role: MemberRole::Bridge,
+                strength_class: "GL24h".into(),
+                service_class: 2,
+                support: SupportType::SimplySupported,
+                b_m: 0.16,
+                h_m: 0.40,
+                span_m: 14.0,
+                support_length_m: 0.20,
+                bearing_length_m: 0.20,
+                buckling_length_y_m: 14.0,
+                buckling_length_z_m: 7.0,
+                lateral_restraint_spacing_m: 7.0,
+                notch_depth_m: 0.0,
+                notch_distance_m: 0.0,
+                m_crit_nm: 80_000.0,
+                mass_kg_per_m: 60.0,
+                mass_kg_per_m2: 0.0,
+                damping_xi: 0.005,
+                fire_duration_s: 0.0,
+                bridge_n_obs: 2.0e7,
+                bridge_t_l_years: 100.0,
+                bridge_beta: 5.0,
+                bridge_a: 9.0,
+                bridge_b: 5.5,
+                bridge_crowd_per_m2: 5.0,
+                actions: vec![],
+            }],
+            connections: vec![],
         }
     }
 }
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ The canonical JSON projection of a [`En1995Snapshot`] — the surface
-/// `../../../../../🧪️tests/🪵️mutate-en1995-1` is compared through under `ordered-json-v1`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_en1995_snapshot_json(snapshot: &En1995Snapshot) -> String {
     pack::json::to_json_string(snapshot)
 }
-
-/// 📥️ The `serde_json` inverse of [`encode_en1995_snapshot_json`] — decodes the committed
-/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`En1995Snapshot`] values, so the case adapter reads the committed
-/// fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
-/// adapter is impossible — the generated test host links only this crate — which is why the bridge
-/// belongs here.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1995_snapshot_json(text: &str) -> Result<En1995Snapshot, String> {
     pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
-
-/// 📖️ Parses the committed `.dsl.semio` artifact into a [`En1995Snapshot`]. Calls the `ArtifactDsl`
-/// trait method directly rather than the `📝️text` facet's async wrapper, because a test host has no
-/// async runtime to drive one.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1995_dsl(text: &str) -> Result<En1995Snapshot, String> {
     <En1995Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
-
-/// 🖨️ Prints a [`En1995Snapshot`] back to its canonical `.dsl.semio` body. Canonical is the operative
-/// word: the committed example assets ARE this function's own output, which is why the identity
-/// scenario asserts byte-exactness rather than the no-byte-pass-through inequality.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_en1995_dsl(snapshot: &En1995Snapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
-
-/// 📦️ Decodes a [`En1995Snapshot`] from the binary `.pack.semio` envelope — an independently written
-/// codec from the DSL grammar above, which is what makes their agreement evidence that the document
-/// was parsed rather than copied.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1995_pack(bytes: &[u8]) -> Result<En1995Snapshot, String> {
     <En1995Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
 }
-
-/// 📦️ Encodes a [`En1995Snapshot`] to its binary `.pack.semio` envelope.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_en1995_pack(snapshot: &En1995Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(snapshot)
 }

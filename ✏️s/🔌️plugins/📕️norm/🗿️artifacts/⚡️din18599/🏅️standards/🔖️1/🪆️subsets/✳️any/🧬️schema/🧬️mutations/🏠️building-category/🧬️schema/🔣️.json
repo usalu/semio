@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChangeBuildingCategory",
+  "type": "object",
+  "properties": {
+    "newBuildingCategory": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-building-category/schema.json"
+}

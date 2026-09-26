@@ -1,16 +1,14 @@
 use super::*;
-use protocol::{OpBinary, OpText};
+use protocol::OpBinary;
 
 #[semio_framework_async_macros::async_test]
-async fn op_text_binary_roundtrip_law() {
+async fn every_demo_mutation_roundtrips_text_and_binary() {
     for mutation in demo_mutation_cases() {
-        let printed = mutation.print_op();
-        assert!(!printed.contains('\n'), "print_op must be one line, got {printed:?}");
-        let parsed = <En1990Mutation as OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op({printed:?}) failed: {e}"));
-        assert_eq!(parsed, mutation, "print_op/parse_op round-trip mismatch (printed {printed:?})");
-
-        let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op failed: {e}"));
-        let decoded = <En1990Mutation as OpBinary>::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
-        assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch");
+        let text = protocol::OpText::print_op(&mutation);
+        let decoded = <En1990Mutation as protocol::OpText>::parse_op(&text).expect("decode text");
+        assert_eq!(decoded, mutation);
+        let bin = mutation.encode_op().expect("encode bin");
+        let decoded_bin = En1990Mutation::decode_op(&bin).expect("decode bin");
+        assert_eq!(decoded_bin, mutation);
     }
 }

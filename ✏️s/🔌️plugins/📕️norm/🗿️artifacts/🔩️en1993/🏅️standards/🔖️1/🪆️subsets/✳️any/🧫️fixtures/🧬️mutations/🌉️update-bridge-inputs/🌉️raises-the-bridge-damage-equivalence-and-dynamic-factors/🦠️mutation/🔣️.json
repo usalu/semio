@@ -1,7 +1,13 @@
 {
   "UpdateBridgeInputs": {
-    "new_bridge_lambda": 1.5,
-    "new_bridge_phi_2": 1.25,
-    "new_bridge_delta_sigma_p_mpa": 45.0
+    "bridge_fatigue_item": {
+      "id": "br-1",
+      "memberId": "member-b1",
+      "lambda": 1.4,
+      "phi2": 1.2,
+      "deltaSigmaP": 30000000.0,
+      "category": 71,
+      "method": "damage_tolerant"
+    }
   }
 }

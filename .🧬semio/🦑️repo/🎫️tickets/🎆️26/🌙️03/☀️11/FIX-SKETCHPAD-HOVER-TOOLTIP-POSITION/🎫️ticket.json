@@ -3,7 +3,7 @@
   "status": "closed",
   "prompt": "The hover tooltip overlay in the sketchpad UI is showing at the top-left of the screen instead of at the corresponding position of the hovered element. Fix the tooltip positioning to appear correctly relative to the hovered element.",
   "summary": "Fixed tooltip positioning by removing 4 span.contents wrappers from TooltipTrigger children in elements.tsx. display:contents caused getBoundingClientRect() to return (0,0,0,0), making Radix position tooltips at top-left. Verified via Playwright across Home (22), Kit (34), Type (28) pages - all tooltips positioned correctly.",
-  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "started": "2026-03-11T09:46:01.291000943Z",
   "finished": "2026-03-11T11:06:06.464835078Z",
   "interactions": [

@@ -1,0 +1,4 @@
+type ChangeMemberAxisDistance {
+  memberId: String!
+  newAxisDistance: Float!
+}

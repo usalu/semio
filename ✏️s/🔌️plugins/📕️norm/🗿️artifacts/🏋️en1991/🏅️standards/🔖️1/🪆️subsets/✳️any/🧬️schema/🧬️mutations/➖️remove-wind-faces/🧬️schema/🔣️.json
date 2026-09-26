@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-wind-faces/schema.json",
+  "title": "RemoveWindFaces",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    }
+  }
+}

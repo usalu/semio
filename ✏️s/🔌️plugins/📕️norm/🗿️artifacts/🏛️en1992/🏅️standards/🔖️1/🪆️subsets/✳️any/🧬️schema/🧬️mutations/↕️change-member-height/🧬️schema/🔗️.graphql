@@ -1,0 +1,4 @@
+type ChangeMemberHeight {
+  memberId: String!
+  newValue: Float!
+}

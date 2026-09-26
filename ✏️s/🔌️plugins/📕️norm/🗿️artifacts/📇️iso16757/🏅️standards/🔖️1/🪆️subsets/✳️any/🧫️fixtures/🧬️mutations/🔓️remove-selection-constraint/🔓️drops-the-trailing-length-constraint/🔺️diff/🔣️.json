@@ -12,10 +12,11 @@
         "value": {
           "kind": "decimal",
           "value": 600.0
-        }
+        },
+        "id": "constraint-prop.height-0"
       }
     ],
-    "series_id": "series.pr"
+    "series_id": "series-pr"
   },
   "partNumberRule": null,
   "partNumberInputs": null,

@@ -1,78 +1,21 @@
-# 🧬️ En1992 diff schema — sparse field delta.
+# 🧬️ En1992 diff schema — sparse hierarchical field delta.
+
+type En1992ConcreteGradeList { values: [ConcreteGrade!]! }
+type En1992ReinforcementGradeList { values: [ReinforcementGrade!]! }
+type En1992PrestressSteelList { values: [PrestressSteel!]! }
+type En1992MemberList { values: [RcMember!]! }
+type En1992AnchorList { values: [Anchor!]! }
 
 type En1992Diff {
   artifact: En1992Artifact @state(class: ARTIFACT)
   annex: String @state(class: ARTIFACT)
-  mEdKnm: Float @state(class: ARTIFACT)
-  vEdKn: Float @state(class: ARTIFACT)
-  fCk: Float @state(class: ARTIFACT)
-  bMm: Float @state(class: ARTIFACT)
-  dMm: Float @state(class: ARTIFACT)
-  aSMm2: Float @state(class: ARTIFACT)
-  fYk: Float @state(class: ARTIFACT)
-  rhoL: Float @state(class: ARTIFACT)
-  nEdKn: Float @state(class: ARTIFACT)
-  pKn: Float @state(class: ARTIFACT)
-  aCMm2: Float @state(class: ARTIFACT)
-  useFem: Boolean @state(class: ARTIFACT)
-  spanM: Float @state(class: ARTIFACT)
-  udlKnM: Float @state(class: ARTIFACT)
-  fireRating: String @state(class: ARTIFACT)
-  providedAxisDistanceMm: Float @state(class: ARTIFACT)
-  bridgeSigmaCMpa: Float @state(class: ARTIFACT)
-  bridgeDeltaSigmaSMpa: Float @state(class: ARTIFACT)
-  tightnessClass: String @state(class: ARTIFACT)
-  hdOverH: Float @state(class: ARTIFACT)
-  liquidSigmaSMpa: Float @state(class: ARTIFACT)
-  liquidRhoPEff: Float @state(class: ARTIFACT)
-  liquidFCtEffMpa: Float @state(class: ARTIFACT)
-  liquidESMpa: Float @state(class: ARTIFACT)
-  liquidSRMaxMm: Float @state(class: ARTIFACT)
-  anchorHEfMm: Float @state(class: ARTIFACT)
-  anchorCracked: Boolean @state(class: ARTIFACT)
-  anchorFUkMpa: Float @state(class: ARTIFACT)
-  anchorFYkMpa: Float @state(class: ARTIFACT)
-  anchorASMm2: Float @state(class: ARTIFACT)
-  anchorDMm: Float @state(class: ARTIFACT)
-  anchorC1Mm: Float @state(class: ARTIFACT)
-  anchorNEdKn: Float @state(class: ARTIFACT)
-  anchorVEdKn: Float @state(class: ARTIFACT)
-}
-
-type En1992Artifact {
-  annex: String
-  mEdKnm: Float
-  vEdKn: Float
-  fCk: Float
-  bMm: Float
-  dMm: Float
-  aSMm2: Float
-  fYk: Float
-  rhoL: Float
-  nEdKn: Float
-  pKn: Float
-  aCMm2: Float
-  useFem: Boolean
-  spanM: Float
-  udlKnM: Float
-  fireRating: String
-  providedAxisDistanceMm: Float
-  bridgeSigmaCMpa: Float
-  bridgeDeltaSigmaSMpa: Float
-  tightnessClass: String
-  hdOverH: Float
-  liquidSigmaSMpa: Float
-  liquidRhoPEff: Float
-  liquidFCtEffMpa: Float
-  liquidESMpa: Float
-  liquidSRMaxMm: Float
-  anchorHEfMm: Float
-  anchorCracked: Boolean
-  anchorFUkMpa: Float
-  anchorFYkMpa: Float
-  anchorASMm2: Float
-  anchorDMm: Float
-  anchorC1Mm: Float
-  anchorNEdKn: Float
-  anchorVEdKn: Float
+  title: String @state(class: ARTIFACT)
+  designWorkingLifeYears: Float @state(class: ARTIFACT)
+  deltaCDev: Float @state(class: ARTIFACT)
+  cementType: String @state(class: ARTIFACT)
+  concreteGrades: En1992ConcreteGradeList @state(class: ARTIFACT)
+  reinforcementGrades: En1992ReinforcementGradeList @state(class: ARTIFACT)
+  prestressSteels: En1992PrestressSteelList @state(class: ARTIFACT)
+  members: En1992MemberList @state(class: ARTIFACT)
+  anchors: En1992AnchorList @state(class: ARTIFACT)
 }

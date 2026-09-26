@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-orientation-deg/schema.json",
+  "title": "ChangeElementOrientationDeg",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "elementId",
+    "newOrientationDeg"
+  ],
+  "properties": {
+    "elementId": {
+      "type": "string"
+    },
+    "newOrientationDeg": {
+      "type": "number"
+    }
+  }
+}

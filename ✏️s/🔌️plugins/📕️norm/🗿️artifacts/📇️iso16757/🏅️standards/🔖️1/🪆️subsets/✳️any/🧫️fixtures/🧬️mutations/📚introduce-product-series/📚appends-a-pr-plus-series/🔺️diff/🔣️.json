@@ -1,0 +1,172 @@
+{
+  "artifact": null,
+  "catalogue": {
+    "accessories": {},
+    "compositions": {},
+    "descriptive_objects": [],
+    "dictionary": {
+      "id": "bsdd.fixture",
+      "version": "2026-01"
+    },
+    "extensions": {
+      "fields": {}
+    },
+    "id": "cat.fixture",
+    "manufacturer": {
+      "id": "mfg.fixture",
+      "names": {
+        "alternatives": [],
+        "preferred": {
+          "locale": "en",
+          "text": "Fixture Heating Works"
+        },
+        "short_name": null
+      }
+    },
+    "metadata": {
+      "edition_profile": "FullPublished",
+      "lifecycle": {
+        "revision": "1",
+        "status": "published",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "names": {
+        "alternatives": [
+          {
+            "locale": "de",
+            "text": "Musterkatalog Heizkörper"
+          }
+        ],
+        "preferred": {
+          "locale": "en",
+          "text": "Fixture Radiator Catalogue"
+        },
+        "short_name": "Fixture"
+      }
+    },
+    "product_classes": [
+      {
+        "group_id": "group.radiators",
+        "id": "class.panel-radiator",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "Panel radiator"
+          },
+          "short_name": null
+        },
+        "optional_property_ids": [],
+        "parent_id": null,
+        "required_property_ids": [
+          "prop.height"
+        ]
+      }
+    ],
+    "product_groups": [
+      {
+        "dictionary_subject_id": "subject.radiator",
+        "id": "group.radiators",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "Radiators"
+          },
+          "short_name": null
+        }
+      }
+    ],
+    "product_indexes": [],
+    "product_series": [
+      {
+        "class_id": "class.panel-radiator",
+        "geometry_id": null,
+        "id": "series-pr",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "PR series"
+          },
+          "short_name": null
+        },
+        "shared_property_values": {}
+      },
+      {
+        "class_id": "class.panel-radiator",
+        "geometry_id": null,
+        "id": "series-pr-plus",
+        "names": {
+          "alternatives": [
+            {
+              "locale": "de",
+              "text": "PR Plus"
+            }
+          ],
+          "preferred": {
+            "locale": "en",
+            "text": "PR Plus"
+          },
+          "short_name": null
+        },
+        "shared_property_values": {}
+      }
+    ],
+    "products": [
+      {
+        "id": "product.pr600",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "PR-600"
+          },
+          "short_name": null
+        },
+        "parameter_domains": [],
+        "series_id": "series-pr",
+        "static_properties": [],
+        "variants": []
+      }
+    ],
+    "property_definitions": [
+      {
+        "cardinality": {
+          "max": 1,
+          "min": 1
+        },
+        "data_type": "decimal",
+        "dictionary_property_id": "prop.height",
+        "id": "prop.height",
+        "kind": "Static",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "Height"
+          },
+          "short_name": null
+        },
+        "unit": {
+          "dimension": {
+            "length": 1,
+            "mass": 0,
+            "temperature": 0,
+            "time": 0
+          },
+          "si_factor": 0.001,
+          "symbol": "mm"
+        }
+      }
+    ]
+  },
+  "dictionary": null,
+  "exchangeProcess": null,
+  "geometry": null,
+  "partNumberInputs": null,
+  "partNumberRule": null,
+  "scriptLimits": null,
+  "selection": null
+}

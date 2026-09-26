@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-material/schema.json",
+  "title": "InsertMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "material"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "material": {
+      "type": "object"
+    }
+  }
+}

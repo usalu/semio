@@ -1,16 +1,4 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-consequence-class/schema.json",
   "title": "ChangeConsequenceClass",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "newConsequenceClass"
-  ],
-  "properties": {
-    "newConsequenceClass": {
-      "type": "integer",
-      "minimum": 0
-    }
-  }
+  "type": "object"
 }

@@ -5,33 +5,28 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "gK",
-    "qK",
-    "resistanceKn",
-    "consequenceClass",
     "annex",
-    "seismicAEdKn"
+    "projectId",
+    "structureKind",
+    "altitudeM",
+    "consequenceClass",
+    "reliabilityClass",
+    "designWorkingLifeCategory",
+    "designWorkingLifeYears",
+    "referencePeriodYears",
+    "supervisionLevel",
+    "inspectionLevel",
+    "kFiDeclared",
+    "betaComputed",
+    "permanents",
+    "variables",
+    "accidentals",
+    "seismics",
+    "members",
+    "bridgeSls",
+    "effects"
   ],
   "properties": {
-    "gK": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "qK": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio"
-    },
-    "resistanceKn": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "consequenceClass": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 255,
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "type": "string",
       "enum": [
@@ -40,9 +35,317 @@
       ],
       "x-semio-state": "artifact"
     },
-    "seismicAEdKn": {
+    "projectId": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "structureKind": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "consequenceClass": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-state": "artifact"
+    },
+    "reliabilityClass": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-state": "artifact"
+    },
+    "designWorkingLifeCategory": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-state": "artifact"
+    },
+    "designWorkingLifeYears": {
       "type": "number",
       "x-semio-state": "artifact"
+    },
+    "referencePeriodYears": {
+      "type": "number",
+      "x-semio-state": "artifact"
+    },
+    "supervisionLevel": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "inspectionLevel": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "kFiDeclared": {
+      "type": "number",
+      "x-semio-state": "artifact"
+    },
+    "betaComputed": {
+      "type": "number",
+      "x-semio-state": "artifact"
+    },
+    "permanents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PermanentAction"
+      },
+      "x-semio-state": "artifact"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/VariableAction"
+      },
+      "x-semio-state": "artifact"
+    },
+    "accidentals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/AccidentalAction"
+      },
+      "x-semio-state": "artifact"
+    },
+    "seismics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SeismicAction"
+      },
+      "x-semio-state": "artifact"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Member"
+      },
+      "x-semio-state": "artifact"
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MemberEffect"
+      },
+      "x-semio-state": "artifact"
+    },
+    "altitudeM": {
+      "type": "number",
+      "x-semio-state": "artifact"
+    },
+    "bridgeSls": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/BridgeSls"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
+    "PermanentAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "gk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "g_sup",
+            "g_inf",
+            "prestress"
+          ]
+        },
+        "gk": {
+          "type": "number"
+        }
+      }
+    },
+    "VariableAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "qk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "qk": {
+          "type": "number"
+        }
+      }
+    },
+    "AccidentalAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ad"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ad": {
+          "type": "number"
+        }
+      }
+    },
+    "SeismicAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "aEk",
+        "importanceClass"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "aEk": {
+          "type": "number"
+        },
+        "importanceClass": {
+          "type": "string",
+          "enum": [
+            "I",
+            "II",
+            "III",
+            "IV"
+          ]
+        }
+      }
+    },
+    "Member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "rdStr",
+        "rdGeo",
+        "rdEquStab",
+        "rdEquDestab",
+        "rdFat",
+        "span",
+        "deflectionW",
+        "deflectionLimitRatio",
+        "vibrationFrequency",
+        "vibrationFrequencyMin"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string"
+        },
+        "labelDe": {
+          "type": "string"
+        },
+        "rdStr": {
+          "type": "number"
+        },
+        "rdGeo": {
+          "type": "number"
+        },
+        "rdEquStab": {
+          "type": "number"
+        },
+        "rdEquDestab": {
+          "type": "number"
+        },
+        "rdFat": {
+          "type": "number"
+        },
+        "span": {
+          "type": "number"
+        },
+        "deflectionW": {
+          "type": "number"
+        },
+        "deflectionLimitRatio": {
+          "type": "number"
+        },
+        "vibrationFrequency": {
+          "type": "number"
+        },
+        "vibrationFrequencyMin": {
+          "type": "number"
+        }
+      }
+    },
+    "MemberEffect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "memberId",
+        "actionId",
+        "influence"
+      ],
+      "properties": {
+        "memberId": {
+          "type": "string"
+        },
+        "actionId": {
+          "type": "string"
+        },
+        "influence": {
+          "type": "number"
+        }
+      }
+    },
+    "BridgeSls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memberId",
+        "deckAcceleration",
+        "deckAccelerationLimit",
+        "deckTwist",
+        "deckTwistLimit",
+        "bridgeDeflection",
+        "bridgeDeflectionLimit"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "deckAcceleration": {
+          "type": "number"
+        },
+        "deckAccelerationLimit": {
+          "type": "number"
+        },
+        "deckTwist": {
+          "type": "number"
+        },
+        "deckTwistLimit": {
+          "type": "number"
+        },
+        "bridgeDeflection": {
+          "type": "number"
+        },
+        "bridgeDeflectionLimit": {
+          "type": "number"
+        }
+      }
     }
   }
 }

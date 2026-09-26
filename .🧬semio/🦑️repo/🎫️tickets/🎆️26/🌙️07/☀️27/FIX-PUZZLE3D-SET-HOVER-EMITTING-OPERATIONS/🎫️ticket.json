@@ -2,7 +2,7 @@
   "title": "Fix Puzzle3d setHover Emitting Operations",
   "emoji": "🐛️",
   "status": "closed",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "client": "cursor-chat",
   "llm": "gpt-5-5",
   "prompt": "Fix bug: View-kind action setHover fails on puzzle.3d.play.viewport with error View-kind action setHover must not emit operations.",

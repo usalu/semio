@@ -1,0 +1,30 @@
+{
+  "schema": "semio.schema.vendor-annotation-vocabulary/v1",
+  "description": "Every `x-semio-*` vendor annotation keyword a semio JSON schema may carry, with the meta-schema of its value. They are annotations only: none changes what an instance validates to. A strict Ajv oracle registers exactly this vocabulary, so an undeclared or misspelled `x-semio-*` keyword still fails at compile time.",
+  "keywords": {
+    "x-semio-binary": { "type": "object" },
+    "x-semio-child": { "type": ["string", "object"] },
+    "x-semio-child-kind": { "type": "string" },
+    "x-semio-child-standard": { "type": "string" },
+    "x-semio-child-subset": { "type": "string" },
+    "x-semio-constants": { "type": "object" },
+    "x-semio-demo-tables": { "type": "array", "items": { "type": "object" } },
+    "x-semio-derived": { "type": "boolean" },
+    "x-semio-family-options": { "type": "object" },
+    "x-semio-formats": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "x-semio-invariant": { "type": "string" },
+    "x-semio-link": { "type": "string" },
+    "x-semio-link-roles": { "type": "array", "items": { "type": "string" } },
+    "x-semio-mutation": { "type": "string" },
+    "x-semio-mutationKinds": { "type": "array", "items": { "type": "string" } },
+    "x-semio-note": { "type": "string" },
+    "x-semio-owner": { "type": "string" },
+    "x-semio-persistence": { "type": "string" },
+    "x-semio-retained-discriminator": { "type": "string" },
+    "x-semio-state": { "type": "string" },
+    "x-semio-taxonomy-groups": { "type": "array", "items": { "type": "object" } },
+    "x-semio-taxonomy-sections": { "type": "array", "items": { "type": "object" } },
+    "x-semio-toolRun": { "type": "object" },
+    "x-semio-transfer-retry": { "type": "object" }
+  }
+}

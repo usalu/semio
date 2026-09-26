@@ -1,24 +1,73 @@
-/** 🧬️ Vdi3805 snapshot schema — artifact-lane fields only. */
+/** Sheet attribute payload — replaces untyped configuration.parameters. */
+export type SheetAttributes =
+  | { kind: "valveHeating"; dn: number; kvsM3S: number; pressureClass: string; connectionType: string; authorityMin: number; authorityMax: number }
+  | { kind: "radiator"; standardOutputW: number; heatExponentN: number; lengthM: number; heightM: number; depthM: number; connectionType: string }
+  | { kind: "pumpHeating"; dnSuction: number; dnDischarge: number; nominalFlowM3S: number; nominalHeadM: number; motorPowerW: number; hydraulicEfficiency: number; qhCurveRef?: string | null }
+  | { kind: "heatGenerator"; nominalHeatOutputW: number; fuelType: string; flowTempMaxC: number; returnTempMinC: number }
+  | { kind: "generic"; entries: Array<{ key: string; value: string; unit?: string | null }> };
 
+export interface LocalizedText { locale: string; text: string }
+export interface BuildingSystemNumber { systemCode: string; subsystem: string; sequence: number }
+export interface ExtensionFields { fields: Record<string, string> }
+export interface ManufacturerFile {
+  headerVersion: string;
+  manufacturer: string;
+  buildingSystemNumber: BuildingSystemNumber;
+  created: string;
+  charset: string;
+  recordCount: number;
+  extensions: ExtensionFields;
+}
+export interface NativeRecord { family: string; fields: string[]; extensions: ExtensionFields }
+export interface Configuration {
+  id: string;
+  attributes: SheetAttributes;
+  geometryRef?: string | null;
+  functionRefs: string[];
+}
+export interface ProductIdentity { manufacturerCode: string; productGroup: string; articleNumber: string }
+export interface Product {
+  id: string;
+  identity: ProductIdentity;
+  title: LocalizedText[];
+  sheet: number;
+  records: NativeRecord[];
+  configuration: Configuration;
+  accessories: string[];
+  components: string[];
+  extensions: ExtensionFields;
+}
+export interface ManufacturerCatalog { file: ManufacturerFile; products: Product[]; extensions: ExtensionFields }
+export interface EditionId { year: number; month: number }
+export interface CatalogIndexEntry { productId: string; sheet: number; tags: string[]; dn?: number | null }
+export interface CatalogIndex { entries: CatalogIndexEntry[] }
+export interface BoundingBox { minX: number; minY: number; minZ: number; maxX: number; maxY: number; maxZ: number }
+export interface GeometryConnection { id: string; x: number; y: number; z: number; nx: number; ny: number; nz: number }
+export interface ParametricGeometry { id: string; bbox: BoundingBox; connections: GeometryConnection[]; parameters: Record<string, number> }
+export interface CurvePoint { x: number; y: number }
+export interface CharacteristicCurve { id: string; points: CurvePoint[] }
+export interface SecurityLimits { maxFileBytes: number; maxRecords: number; maxFieldLength: number; maxNestingDepth: number }
+
+/** 🧬️ Vdi3805 snapshot schema — artifact-lane fields only. */
 export interface Vdi3805Snapshot {
   /** @state artifact */
-  manufacturerFile: string;
+  manufacturerFile: ManufacturerFile;
   /** @state artifact */
-  catalog: string;
+  catalog: ManufacturerCatalog;
   /** @state artifact */
   editionProfile: Record<string, string>;
   /** @state artifact */
-  correctionAsOf: string;
+  correctionAsOf: EditionId;
   /** @state artifact */
   strictMode: boolean;
   /** @state artifact */
-  index: string;
+  index: CatalogIndex;
   /** @state artifact */
-  geometry: Record<string, string>;
+  geometry: Record<string, ParametricGeometry>;
   /** @state artifact */
-  curves: Record<string, string>;
+  curves: Record<string, CharacteristicCurve>;
   /** @state artifact */
-  limits: string;
+  limits: SecurityLimits;
 }
 
 //#region 🚪️Parsers
@@ -71,14 +120,15 @@ export const normVdi3805SnapshotGuardConstant = <T extends string | number | boo
 export function parseVdi3805Snapshot(value: unknown, at = "$"): Vdi3805Snapshot {
   const row = normVdi3805SnapshotGuardObject(value, at);
   return {
-    manufacturerFile: normVdi3805SnapshotGuardString(row["manufacturerFile"], `${at}.manufacturerFile`),
-    catalog: normVdi3805SnapshotGuardString(row["catalog"], `${at}.catalog`),
-    editionProfile: normVdi3805SnapshotGuardObject(row["editionProfile"], `${at}.editionProfile`),
-    correctionAsOf: normVdi3805SnapshotGuardString(row["correctionAsOf"], `${at}.correctionAsOf`),
+    manufacturerFile: normVdi3805SnapshotGuardObject(row["manufacturerFile"], `${at}.manufacturerFile`) as unknown as ManufacturerFile,
+    catalog: normVdi3805SnapshotGuardObject(row["catalog"], `${at}.catalog`) as unknown as ManufacturerCatalog,
+    editionProfile: normVdi3805SnapshotGuardObject(row["editionProfile"], `${at}.editionProfile`) as Record<string, string>,
+    correctionAsOf: normVdi3805SnapshotGuardObject(row["correctionAsOf"], `${at}.correctionAsOf`) as unknown as EditionId,
     strictMode: normVdi3805SnapshotGuardBoolean(row["strictMode"], `${at}.strictMode`),
-    index: normVdi3805SnapshotGuardString(row["index"], `${at}.index`),
-    geometry: normVdi3805SnapshotGuardObject(row["geometry"], `${at}.geometry`),
-    curves: normVdi3805SnapshotGuardObject(row["curves"], `${at}.curves`),
-    limits: normVdi3805SnapshotGuardString(row["limits"], `${at}.limits`),
+    index: normVdi3805SnapshotGuardObject(row["index"], `${at}.index`) as unknown as CatalogIndex,
+    geometry: normVdi3805SnapshotGuardObject(row["geometry"], `${at}.geometry`) as Record<string, ParametricGeometry>,
+    curves: normVdi3805SnapshotGuardObject(row["curves"], `${at}.curves`) as Record<string, CharacteristicCurve>,
+    limits: normVdi3805SnapshotGuardObject(row["limits"], `${at}.limits`) as unknown as SecurityLimits,
   };
 }
+

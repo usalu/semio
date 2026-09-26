@@ -1,0 +1,210 @@
+pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
+    let annex = document.annex;
+    let mut report = CheckReport::default();
+    let storeys = document.storey_count;
+
+    // --- 1-1 imposed + partitions + self-weight ---
+    if document.floors.is_empty() {
+        report.push(
+            CheckResult::assess(
+                "en1991.1-1.imposed.none",
+                "DIN EN 1991-1-1",
+                ClauseId::new("EN 1991-1-1", "§6.3", "6.1"),
+                SubjectRef::whole(copy("Floors", "Geschosse")),
+                copy("Imposed floor loads", "Nutzlasten auf Decken"),
+            )
+            .not_applicable(copy("No floor areas defined.", "Keine Deckenflächen definiert."))
+            .annex(annex)
+            .build(),
+        );
+    }
+    for floor in &document.floors {
+        let required = part_1_1::imposed_qk_reduced_pa(&floor.category, annex, floor.area, storeys);
+        let path = format!("floors[id={}].assumedQk", floor.id);
+        let subject = SubjectRef::new(&floor.id, &path, copy(&format!("Floor {}", floor.id), &format!("Decke {}", floor.id)));
+        let alpha_a = part_1_1::alpha_a(&floor.category, floor.area, annex);
+        let alpha_n = part_1_1::alpha_n(&floor.category, storeys, annex);
+        let remedy = if floor.assumed_qk + 1e-9 < required {
+            Some(raise_pressure_remedy(&path, &floor.id, "imposed q_k", "Nutzlast q_k", floor.assumed_qk, required))
+        } else { None };
+        report.push(assess_covers(
+            &format!("en1991.1-1.imposed.{}", floor.id),
+            "DIN EN 1991-1-1",
+            ClauseId::new("EN 1991-1-1", "Table 6.1 / Eq. 6.1DE–6.2DE", "6.3.1"),
+            subject,
+            copy("Imposed characteristic load q_k (α_A·α_n)", "Charakteristische Nutzlast q_k (α_A·α_n)"),
+            pressure(floor.assumed_qk),
+            pressure(required),
+            copy(
+                &format!("Required q_k = {:.3} kN/m² (α_A={alpha_a:.3}, α_n={alpha_n:.3}, A={:.1} m², n={storeys}) for {}; assumed {:.3} kN/m².", required / 1000.0, floor.area, floor.category, floor.assumed_qk / 1000.0),
+                &format!("Erforderliches q_k = {:.3} kN/m² (α_A={alpha_a:.3}, α_n={alpha_n:.3}, A={:.1} m², n={storeys}) für {}; angenommen {:.3} kN/m².", required / 1000.0, floor.area, floor.category, floor.assumed_qk / 1000.0),
+            ),
+            annex,
+            remedy,
+        ));
+        let req_q = part_1_1::imposed_qk_concentrated_n(&floor.category, annex);
+        let path_q = format!("floors[id={}].assumedQkConcentrated", floor.id);
+        let remedy_q = if floor.assumed_qk_concentrated + 1e-9 < req_q {
+            Some(raise_force_remedy(&path_q, &floor.id, "concentrated Q_k", "Einzellast Q_k", floor.assumed_qk_concentrated, req_q))
+        } else { None };
+        report.push(assess_covers(
+            &format!("en1991.1-1.concentrated.{}", floor.id),
+            "DIN EN 1991-1-1",
+            ClauseId::new("EN 1991-1-1", "Table 6.2", "6.3.1"),
+            SubjectRef::new(&floor.id, &path_q, copy(&format!("Floor {}", floor.id), &format!("Decke {}", floor.id))),
+            copy("Concentrated imposed load Q_k", "Charakteristische Einzellast Q_k"),
+            force(floor.assumed_qk_concentrated),
+            force(req_q),
+            copy(
+                &format!("Required Q_k = {:.2} kN; assumed {:.2} kN.", req_q / 1000.0, floor.assumed_qk_concentrated / 1000.0),
+                &format!("Erforderliches Q_k = {:.2} kN; angenommen {:.2} kN.", req_q / 1000.0, floor.assumed_qk_concentrated / 1000.0),
+            ),
+            annex,
+            remedy_q,
+        ));
+        let req_p = part_1_1::partitions_allowance_pa(annex);
+        let path_p = format!("floors[id={}].assumedPartitions", floor.id);
+        let remedy_p = if floor.assumed_partitions + 1e-9 < req_p {
+            Some(raise_pressure_remedy(&path_p, &floor.id, "partition load", "Trennwandlast", floor.assumed_partitions, req_p))
+        } else { None };
+        report.push(assess_covers(
+            &format!("en1991.1-1.partitions.{}", floor.id),
+            "DIN EN 1991-1-1",
+            ClauseId::new("EN 1991-1-1", "§6.3.1.2", "6.3.1.2"),
+            SubjectRef::new(&floor.id, &path_p, copy(&format!("Floor {}", floor.id), &format!("Decke {}", floor.id))),
+            copy("Partition allowance", "Zuschlag für leichte Trennwände"),
+            pressure(floor.assumed_partitions),
+            pressure(req_p),
+            copy(
+                &format!("Required partition allowance = {:.2} kN/m²; assumed {:.2} kN/m².", req_p / 1000.0, floor.assumed_partitions / 1000.0),
+                &format!("Erforderlicher Trennwandzuschlag = {:.2} kN/m²; angenommen {:.2} kN/m².", req_p / 1000.0, floor.assumed_partitions / 1000.0),
+            ),
+            annex,
+            remedy_p,
+        ));
+    }
+
+    if document.self_weight_elements.is_empty() {
+        report.push(
+            CheckResult::assess(
+                "en1991.1-1.self-weight.none",
+                "DIN EN 1991-1-1",
+                ClauseId::new("EN 1991-1-1", "Annex A", "5.1"),
+                SubjectRef::whole(copy("Self-weight", "Eigengewicht")),
+                copy("Permanent self-weight", "Ständige Einwirkungen aus Eigengewicht"),
+            )
+            .not_applicable(copy("No self-weight elements defined.", "Keine Eigengewichtselemente definiert."))
+            .annex(annex)
+            .build(),
+        );
+    }
+    for el in &document.self_weight_elements {
+        let required = part_1_1::self_weight_pa(&el.material, el.thickness);
+        let path = format!("selfWeightElements[id={}].assumedGk", el.id);
+        let remedy = if el.assumed_gk + 1e-9 < required {
+            Some(raise_pressure_remedy(&path, &el.id, "self-weight g_k", "Eigengewicht g_k", el.assumed_gk, required))
+        } else { None };
+        report.push(assess_covers(
+            &format!("en1991.1-1.self-weight.{}", el.id),
+            "DIN EN 1991-1-1",
+            ClauseId::new("EN 1991-1-1", "Annex A", "5.1"),
+            SubjectRef::new(&el.id, &path, copy(&format!("Element {}", el.id), &format!("Element {}", el.id))),
+            copy("Permanent self-weight g_k", "Charakteristisches Eigengewicht g_k"),
+            pressure(el.assumed_gk),
+            pressure(required),
+            copy(
+                &format!("Required g_k = {:.2} kN/m² for {} @ {:.3} m; assumed {:.2} kN/m².", required / 1000.0, el.material, el.thickness, el.assumed_gk / 1000.0),
+                &format!("Erforderliches g_k = {:.2} kN/m² für {} @ {:.3} m; angenommen {:.2} kN/m².", required / 1000.0, el.material, el.thickness, el.assumed_gk / 1000.0),
+            ),
+            annex,
+            remedy,
+        ));
+    }
+
+    // --- 1-2 fire ---
+    if !document.fire_claimed {
+        report.push(
+            CheckResult::assess(
+                "en1991.1-2.fire.none",
+                "DIN EN 1991-1-2",
+                ClauseId::new("EN 1991-1-2", "§3", "3.1"),
+                SubjectRef::whole(copy("Fire", "Brand")),
+                copy("Fire thermal actions", "Thermische Einwirkungen im Brandfall"),
+            )
+            .not_applicable(copy("Fire scenario not claimed.", "Brandszenario nicht beansprucht."))
+            .annex(annex)
+            .build(),
+        );
+    } else {
+        let curve = document.fire_curve;
+        let theta_g = match curve {
+            crate::part_1_2::FireCurve::Parametric => part_1_2::parametric_gas_temp_k(
+                document.fire_duration,
+                document.fire_opening_factor,
+                document.fire_thermal_inertia,
+            ),
+            _ => part_1_2::nominal_gas_temp_k(curve, document.fire_duration),
+        };
+        let path_g = "assumedGasTemperature";
+        let remedy_g = if document.assumed_gas_temperature + 1e-9 < theta_g {
+            Some(raise_temp_remedy(path_g, "", "gas temperature", "Gas temperatur", document.assumed_gas_temperature, theta_g))
+        } else { None };
+        report.push(assess_covers(
+            "en1991.1-2.gas-temperature",
+            "DIN EN 1991-1-2",
+            ClauseId::new("EN 1991-1-2", "§3.2 / Annex A", "3.2"),
+            SubjectRef::new("", path_g, copy("Fire gas temperature", "Brandgastemperatur")),
+            copy("Fire gas temperature θ_g", "Brandgastemperatur θ_g"),
+            temp(document.assumed_gas_temperature),
+            temp(theta_g),
+            copy(
+                &format!("Required θ_g = {:.1} K at t = {:.0} s; assumed {:.1} K.", theta_g, document.fire_duration, document.assumed_gas_temperature),
+                &format!("Erforderliches θ_g = {:.1} K bei t = {:.0} s; angenommen {:.1} K.", theta_g, document.fire_duration, document.assumed_gas_temperature),
+            ),
+            annex,
+            remedy_g,
+        ));
+        let alpha_c = part_1_2::alpha_c_for_curve(curve);
+        let theta_m = 293.15;
+        let h_net = part_1_2::h_net_w_m2(theta_g, theta_m, alpha_c, 1.0, 0.8, 1.0);
+        let path_h = "assumedHNet";
+        let remedy_h = if document.assumed_h_net + 1e-9 < h_net {
+            Some(crate::standards::v1::subsets::any::schema::raise_power_remedy(path_h, "", "net heat flux", "Nettowärmestrom", document.assumed_h_net, h_net))
+        } else { None };
+        report.push(assess_covers(
+            "en1991.1-2.h-net",
+            "DIN EN 1991-1-2",
+            ClauseId::new("EN 1991-1-2", "Eq. (3.1)/(3.2)", "3.1"),
+            SubjectRef::new("", path_h, copy("Net heat flux", "Nettowärmestrom")),
+            copy("Net heat flux ĥ_net", "Nettowärmestrom ĥ_net"),
+            Quantity::new(QuantityKind::Power, document.assumed_h_net),
+            Quantity::new(QuantityKind::Power, h_net),
+            copy(
+                &format!("Required ĥ_net = {:.0} W/m² (α_c={alpha_c}); assumed {:.0} W/m².", h_net, document.assumed_h_net),
+                &format!("Erforderliches ĥ_net = {:.0} W/m² (α_c={alpha_c}); angenommen {:.0} W/m².", h_net, document.assumed_h_net),
+            ),
+            annex,
+            remedy_h,
+        ));
+        let qfd = part_1_2::design_fire_load_j_m2(document.fire_load_density_qf, annex, &document.fire_occupancy, 0.8);
+        let path_q = "assumedQfD";
+        let remedy_q = if document.assumed_qf_d + 1e-9 < qfd {
+            Some(crate::standards::v1::subsets::any::schema::raise_energy_remedy(path_q, "", "design fire load", "Bemessungsbrandlastdichte", document.assumed_qf_d, qfd))
+        } else { None };
+        report.push(assess_covers(
+            "en1991.1-2.fire-load",
+            "DIN EN 1991-1-2",
+            ClauseId::new("EN 1991-1-2", "Annex E / NA", "E.1"),
+            SubjectRef::new("", path_q, copy("Design fire load", "Bemessungsbrandlastdichte")),
+            copy("Design fire load density q_f,d", "Bemessungsbrandlastdichte q_f,d"),
+            Quantity::new(QuantityKind::Energy, document.assumed_qf_d),
+            Quantity::new(QuantityKind::Energy, qfd),
+            copy(
+                &format!("Required q_f,d = {:.0} MJ/m²; assumed {:.0} MJ/m².", qfd / 1e6, document.assumed_qf_d / 1e6),
+                &format!("Erforderliches q_f,d = {:.0} MJ/m²; angenommen {:.0} MJ/m².", qfd / 1e6, document.assumed_qf_d / 1e6),
+            ),
+            annex,
+            remedy_q,
+        ));
+    }
+

@@ -26,9 +26,6 @@ tools:
   web/fetch,
   browser,
   "repo/*",
-  "neo4j-compose/*",
-  "neo4j-metabolism/*",
-  "neo4j-extra/*",
   todo,
  ]
 ---

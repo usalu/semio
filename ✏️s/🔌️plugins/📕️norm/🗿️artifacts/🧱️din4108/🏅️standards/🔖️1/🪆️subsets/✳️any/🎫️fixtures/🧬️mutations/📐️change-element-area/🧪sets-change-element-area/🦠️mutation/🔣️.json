@@ -1,0 +1,6 @@
+{
+  "ChangeElementArea": {
+    "element_id": "wall-north",
+    "new_area_m2": 45.0
+  }
+}

@@ -1,32 +1,31 @@
-//! 🇪🇺 `change-annex` payload — changes the EN 1990 document's national annex.
+//! `change-annex` mutation for EN 1990.
 
-use crate::document::AnnexChoice;
-use crate::mutations::En1990Mutation;
-use crate::En1990Snapshot;
+use crate::{En1990Mutation, En1990Snapshot};
 
-//#region 🔖️ChangeAnnex
+//#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
 pub struct ChangeAnnex {
-    pub new_annex: AnnexChoice,
+    pub new_annex: crate::document::AnnexChoice,
 }
 
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeAnnex {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annex", kind: "change-annex", record: "ChangedAnnex" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "annex",
+        kind: "change-annex",
+        record: "ChangedAnnex",
+    };
 
     fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1990Snapshot) -> Vec<En1990Mutation> {
         super::inverse::inverse(self, base)
     }
-
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change national annex to {}", self.new_annex.label()), &format!("Nationalen Anhang auf {} ändern", self.new_annex.label()))
+        protocol::LocalizedLabel::native("Change annex", "Ändern: annex")
     }
 }
-//#endregion 🔖️ChangeAnnex
+//#endregion 🔖️Payload

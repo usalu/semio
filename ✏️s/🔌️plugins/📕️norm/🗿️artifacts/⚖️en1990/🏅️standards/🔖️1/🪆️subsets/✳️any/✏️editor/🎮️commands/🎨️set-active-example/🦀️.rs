@@ -19,6 +19,12 @@ pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, En1990Snapshot>
     let text = match payload.example_id.trim() {
         "" => <En1990Snapshot as store::ArtifactDsl>::print_dsl(&En1990Snapshot::default()),
         id if id == crate::standards::v1::subsets::any::examples::high_consequence_office::ID => crate::standards::v1::subsets::any::examples::high_consequence_office::PRIMARY_TEXT.to_string(),
+        id if id == crate::standards::v1::subsets::any::examples::road_bridge_compliant::ID => crate::standards::v1::subsets::any::examples::road_bridge_compliant::PRIMARY_TEXT.to_string(),
+        id if id == crate::standards::v1::subsets::any::examples::road_bridge_failing::ID => crate::standards::v1::subsets::any::examples::road_bridge_failing::PRIMARY_TEXT.to_string(),
+        id if id == crate::standards::v1::subsets::any::examples::accidental_seismic_compliant::ID => crate::standards::v1::subsets::any::examples::accidental_seismic_compliant::PRIMARY_TEXT.to_string(),
+        id if id == crate::standards::v1::subsets::any::examples::accidental_seismic_failing::ID => crate::standards::v1::subsets::any::examples::accidental_seismic_failing::PRIMARY_TEXT.to_string(),
+        id if id == crate::standards::v1::subsets::any::examples::fatigue_compliant::ID => crate::standards::v1::subsets::any::examples::fatigue_compliant::PRIMARY_TEXT.to_string(),
+        id if id == crate::standards::v1::subsets::any::examples::fatigue_failing::ID => crate::standards::v1::subsets::any::examples::fatigue_failing::PRIMARY_TEXT.to_string(),
         _ => return Ok(Emit::default()),
     };
     set_snapshot::handle(&set_snapshot::ReplaceSnapshot { text }, doc, cfg)

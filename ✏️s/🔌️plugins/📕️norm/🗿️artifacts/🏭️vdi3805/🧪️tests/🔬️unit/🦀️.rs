@@ -34,7 +34,7 @@ async fn security_limits_validate_text_accepts_within_bound() {
 #[semio_framework_async_macros::async_test]
 async fn characteristic_curve_interpolates() {
     let doc = Vdi3805Snapshot::default();
-    let curve = doc.curves.get("curve.kvs").expect("curve");
+    let curve = doc.curves.get("curve-kvs").expect("curve");
     let y = curve.interpolate(50.0);
     assert!((y - 2.25).abs() < 1e-6);
 }
@@ -45,7 +45,7 @@ async fn characteristic_curve_interpolate_handles_edges() {
     assert_eq!(empty.interpolate(10.0), 0.0);
 
     let doc = Vdi3805Snapshot::default();
-    let curve = doc.curves.get("curve.kvs").expect("curve");
+    let curve = doc.curves.get("curve-kvs").expect("curve");
     assert_eq!(curve.interpolate(-10.0), curve.points[0].y);
     assert_eq!(curve.interpolate(1000.0), curve.points[curve.points.len() - 1].y);
 }
@@ -71,15 +71,17 @@ async fn geometry_bbox_volume() {
 async fn catalog_index_filters_by_dn() {
     let doc = Vdi3805Snapshot::default();
     let matches = doc.index.filter_by_dn(50);
-    assert_eq!(matches.len(), 1);
-    assert_eq!(matches[0].product_id, "VLV-50-001");
+    assert_eq!(matches.len(), 2);
+    let ids: Vec<_> = matches.iter().map(|m| m.product_id.as_str()).collect();
+    assert!(ids.contains(&"VLV-50-001"));
+    assert!(ids.contains(&"ACT-01"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn catalog_index_filter_by_sheet_and_tag() {
     let doc = Vdi3805Snapshot::default();
     let by_sheet = doc.index.filter_by_sheet(SheetId(2));
-    assert_eq!(by_sheet.len(), 1);
+    assert_eq!(by_sheet.len(), 2);
     let by_tag = doc.index.filter_by_tag("control valve");
     assert_eq!(by_tag.len(), 1);
     assert!(doc.index.filter_by_tag("nonexistent-tag").is_empty());

@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bridge-v-rd-n/schema.json",
+  "title": "ChangeBridgeVRdN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newVRdN"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newVRdN": {
+      "type": "number"
+    }
+  }
+}

@@ -1,23 +1,6 @@
-/** 🪪️ En1990Diff contains document fields and canonical child identities. */
-import { type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
-import { parseEn1990Fields } from "../🟦️.ts";
-
-export interface En1990Diff {
-  /** 🗿️ @state artifact */
-  gK?: number | null;
-  /** 🗿️ @state artifact @child kind=s.stdio.semio */
-  qK?: ArtifactChild | null;
-  /** 🗿️ @state artifact */
-  resistanceKn?: number | null;
-  /** 🗿️ @state artifact */
-  consequenceClass?: number | null;
-  /** 🗿️ @state artifact */
-  annex?: "En" | "De" | null;
-  /** 🗿️ @state artifact */
-  seismicAEdKn?: number | null;
-}
-
-/** 📥️ Decodes the exact En1990Diff wire contract. */
+/** 🔺️ En1990Diff — sparse optional fields over En1990Artifact. */
+import { type En1990Artifact, parseEn1990Fields } from "../🟦️.ts";
+export type En1990Diff = { [K in keyof En1990Artifact]?: En1990Artifact[K] | null };
 export function parseEn1990Diff(value: unknown, at = "$"): En1990Diff {
   return parseEn1990Fields(value, true, at) as En1990Diff;
 }

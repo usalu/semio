@@ -4,64 +4,202 @@
   "title": "En1995Mutation",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-a-ef-mm2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-a-mm2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-a-vert-ms2/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-b-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-member/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-f-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-member/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-fc0-k/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-label-en/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-fire-duration-min/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-label-de/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-fmk/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-role/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-fvk/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-strength-class/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-h-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-service-class/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-load-duration/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-support/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-m-crit-knm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-b/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-m-ed-knm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-h/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-n-cycles-bridge/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-span/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-n-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-support-length/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-section-depth-mm/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-bearing-length/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-service-class/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-buckling-y/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-v-ed-kn/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-buckling-z/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-w-mm3/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-lateral-restraint/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-notch-depth/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-notch-distance/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-m-crit/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-mass-per-m/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-mass-per-m2/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-damping/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-fire-duration/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-bridge-n-obs/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-bridge-tl-years/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-bridge-beta/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-bridge-a/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-bridge-b/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-bridge-crowd/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-member-action/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-member-action/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-kind/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-category/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-load-duration/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-q-line/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-f-point/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-mk/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-vk/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-nk/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-ntk/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-fc90-k/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-connection/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-connection/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-label-en/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-label-de/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-fastener-type/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-strength-class/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-service-class/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-diameter/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-number/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-rows/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-spacing/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-edge-distance/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-end-distance/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-t1/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-t2/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-steel-plate/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-steel-plate-thickness/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-shear-planes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-fuk/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-connection-action/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-connection-action/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-action-kind/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-action-load-duration/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-action-fk/schema.json"
     }
   ]
 }

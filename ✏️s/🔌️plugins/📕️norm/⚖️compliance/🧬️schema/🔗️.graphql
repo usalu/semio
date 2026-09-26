@@ -1,0 +1,113 @@
+enum QuantityKind {
+  Dimensionless
+  Length
+  Area
+  Volume
+  Mass
+  Time
+  Temperature
+  Force
+  Pressure
+  Stress
+  Moment
+  Energy
+  Power
+  ThermalConductivity
+  ThermalResistance
+  HeatTransferCoefficient
+  AirPermeability
+  VentilationRate
+  Acceleration
+}
+
+type Quantity {
+  kind: QuantityKind!
+  value: Float!
+}
+
+type ClauseId {
+  family: String!
+  part: String!
+  section: String!
+}
+
+type LocalizedCopy {
+  en: String!
+  de: String!
+}
+
+type SubjectRef {
+  entityId: String!
+  path: String!
+  label: LocalizedCopy!
+}
+
+enum CheckStatus {
+  Pass
+  Warning
+  Fail
+  NotApplicable
+}
+
+enum AnnexChoice {
+  En
+  De
+}
+
+enum RemedyBound {
+  AtLeast
+  AtMost
+  Exactly
+  OneOf
+}
+
+type Remedy {
+  target: SubjectRef!
+  current: Quantity!
+  required: Quantity!
+  bound: RemedyBound!
+  options: [String!]!
+  action: LocalizedCopy!
+  applicable: Boolean!
+}
+
+type CheckResult {
+  id: String!
+  part: String!
+  clause: ClauseId!
+  subject: SubjectRef!
+  status: CheckStatus!
+  title: LocalizedCopy!
+  explanation: LocalizedCopy!
+  computed: Quantity!
+  limit: Quantity!
+  utilization: Float!
+  annex: AnnexChoice!
+  remedies: [Remedy!]!
+}
+
+type PartVerdict {
+  part: String!
+  pass: Int!
+  warning: Int!
+  fail: Int!
+  notApplicable: Int!
+  worstUtilization: Float!
+  complies: Boolean!
+}
+
+type CheckReportSummary {
+  total: Int!
+  pass: Int!
+  warning: Int!
+  fail: Int!
+  notApplicable: Int!
+  worstUtilization: Float!
+  complies: Boolean!
+  parts: [PartVerdict!]!
+}
+
+type CheckReport {
+  summary: CheckReportSummary!
+  checks: [CheckResult!]!
+}

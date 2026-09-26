@@ -3,7 +3,7 @@
   "emoji": "🦀️",
   "status": "closed",
   "description": "Give the repo product a clean domain-driven, implementation-neutral taxonomy tree, implement the whole repo product in Rust next to the Go implementation so both fulfil the same language-agnostic tests, and make the terminal dashboard use the Rust implementation by default. Coordinated from Claude Fable 5.1 with Opus 5 implementers and Sonnet 5 read-only explorers working alongside other concurrent fleets.",
-  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary",
+  "goal": "🎯runningframework🎯runningproducts🎯runningrepo",
   "sessions": [
     "⚪5b49befacd0c465faf943d28e7c9ed64"
   ],

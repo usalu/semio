@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-delta-uf/schema.json",
+  "title": "ChangeElementDeltaUf",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "elementId",
+    "newDeltaUF"
+  ],
+  "properties": {
+    "elementId": {
+      "type": "string"
+    },
+    "newDeltaUF": {
+      "type": "number"
+    }
+  }
+}

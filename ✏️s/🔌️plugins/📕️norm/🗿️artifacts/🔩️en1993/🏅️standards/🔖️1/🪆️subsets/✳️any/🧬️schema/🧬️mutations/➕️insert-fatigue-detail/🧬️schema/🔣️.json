@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-fatigue-detail/schema.json",
+  "title": "InsertFatigueDetail",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "fatigue_detail"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "fatigue_detail": {
+      "type": "object"
+    }
+  }
+}

@@ -170,6 +170,7 @@ async fn every_declared_body_key_renders() {
 async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, En1994Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1994Snapshot::default() })).await;
+    context::dispatch(&mut app, En1994Command::Evaluate(evaluate::Evaluate {})).await;
     let host = NormHost::<En1994Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
     context::close(&mut app);
@@ -224,7 +225,7 @@ async fn report_out_exports_the_computed_check_report() {
     let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
+    let report: crate::document::CheckReport = pack::json::from_json_str(&json).expect("report json parses");
     assert!(!report.checks.is_empty());
     context::close(&mut app);
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-stud-spacing-m/schema.json",
+  "title": "ChangeBeamStudSpacingM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newSpacingM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newSpacingM": {
+      "type": "number"
+    }
+  }
+}

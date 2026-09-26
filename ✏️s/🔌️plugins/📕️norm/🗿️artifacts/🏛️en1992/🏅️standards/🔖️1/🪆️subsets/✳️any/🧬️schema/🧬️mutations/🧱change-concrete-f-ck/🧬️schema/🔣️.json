@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-concrete-f-ck/schema.json",
+  "title": "ChangeConcreteFCk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gradeId",
+    "newFCk"
+  ],
+  "properties": {
+    "gradeId": {
+      "type": "string"
+    },
+    "newFCk": {
+      "type": "number"
+    }
+  }
+}

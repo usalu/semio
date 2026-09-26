@@ -1,0 +1,15 @@
+{
+  "title": "Running Forms",
+  "description": "The forms engine and surface run inside Forms.",
+  "prompt": "The forms engine and surface run inside Forms.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningforms",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2674"
+  }
+}

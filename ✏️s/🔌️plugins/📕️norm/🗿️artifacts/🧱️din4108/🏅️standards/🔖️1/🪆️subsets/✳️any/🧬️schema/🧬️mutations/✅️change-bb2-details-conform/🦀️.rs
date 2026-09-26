@@ -1,8 +1,7 @@
-//! ✅ `change-bb2-details-conform` — sets the DIN 4108 `bb2_details_conform` scalar.
+//! ✅️ `change-bb2-details-conform`.
 
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-//#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
@@ -11,7 +10,12 @@ pub struct ChangeBb2DetailsConform {
 }
 
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeBb2DetailsConform {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "bb2-details-conform", kind: "change-bb2-details-conform", record: "ChangedBb2DetailsConform" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "bb2-details-conform",
+        kind: "change-bb2-details-conform",
+        record: "ChangedBb2DetailsConform",
+    };
 
     fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -20,7 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeBb2Detai
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change Supplement 2 detail conformity to {}", self.new_bb2_details_conform), &format!("Beiblatt-2-Konformität der Details auf {} ändern", self.new_bb2_details_conform))
+        protocol::LocalizedLabel::native("change-bb2-details-conform", "change-bb2-details-conform")
     }
 }
-//#endregion 🔖️Payload

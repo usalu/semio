@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-storey-stiffness-x/schema.json",
+  "title": "ChangeStoreyStiffnessX",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buildingIndex",
+    "storeyIndex",
+    "newStiffnessX"
+  ],
+  "properties": {
+    "buildingIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "storeyIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newStiffnessX": {
+      "type": "number"
+    }
+  }
+}

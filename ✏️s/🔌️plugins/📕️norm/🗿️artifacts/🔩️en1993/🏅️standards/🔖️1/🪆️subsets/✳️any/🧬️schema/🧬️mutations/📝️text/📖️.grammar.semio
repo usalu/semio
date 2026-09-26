@@ -1,9 +1,20 @@
-dialect grammar
-grammar en1993.mutations
-extension en1993
-start document
+grammar en1993.op
 
-document = header body
-header = "schema" SP "norm.en1993.mutations" NL
-body = payload NL?
-payload = OCTET+
+rule change-annex ::= "change-annex" "annex=" value
+rule update-member-properties ::= "update-member-properties" "member=" value
+rule update-fire-inputs ::= "update-fire-inputs" "fire-exposure=" value
+rule update-cold-formed-inputs ::= "update-cold-formed-inputs" "cold-formed-member=" value
+rule update-stainless-inputs ::= "update-stainless-inputs" "material=" value
+rule update-plated-inputs ::= "update-plated-inputs" "plated-panel=" value
+rule update-silo-shell-inputs ::= "update-silo-shell-inputs" "silo-shell=" value
+rule update-bolt-inputs ::= "update-bolt-inputs" "joint=" value
+rule update-weld-inputs ::= "update-weld-inputs" "member-action=" value
+rule update-fatigue-inputs ::= "update-fatigue-inputs" "fatigue-detail=" value
+rule update-through-thickness-inputs ::= "update-through-thickness-inputs" "section=" value
+rule update-tension-component-inputs ::= "update-tension-component-inputs" "tension-component=" value
+rule update-hss-inputs ::= "update-hss-inputs" "load-case=" value
+rule update-bridge-inputs ::= "update-bridge-inputs" "bridge-fatigue-item=" value
+rule update-tower-inputs ::= "update-tower-inputs" "tower-leg=" value
+rule update-pile-inputs ::= "update-pile-inputs" "pile=" value
+rule update-crane-inputs ::= "update-crane-inputs" "crane-runway=" value
+rule value ::= string

@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeMemberFireRating {
+  string memberId = 1;
+  string newRating = 2;
+}

@@ -6,211 +6,571 @@
   "additionalProperties": false,
   "required": [
     "annex",
-    "mEdKnm",
-    "vEdKn",
-    "fCk",
-    "bMm",
-    "dMm",
-    "aSMm2",
-    "fYk",
-    "rhoL",
-    "nEdKn",
-    "pKn",
-    "aCMm2",
-    "useFem",
-    "spanM",
-    "udlKnM",
-    "fireRating",
-    "providedAxisDistanceMm",
-    "bridgeSigmaCMpa",
-    "bridgeDeltaSigmaSMpa",
-    "tightnessClass",
-    "hdOverH",
-    "liquidSigmaSMpa",
-    "liquidRhoPEff",
-    "liquidFCtEffMpa",
-    "liquidESMpa",
-    "liquidSRMaxMm",
-    "anchorHEfMm",
-    "anchorCracked",
-    "anchorFUkMpa",
-    "anchorFYkMpa",
-    "anchorASMm2",
-    "anchorDMm",
-    "anchorC1Mm",
-    "anchorNEdKn",
-    "anchorVEdKn"
+    "title",
+    "designWorkingLifeYears",
+    "deltaCDev",
+    "cementType",
+    "concreteGrades",
+    "reinforcementGrades",
+    "prestressSteels",
+    "members",
+    "anchors"
   ],
   "properties": {
     "annex": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fCk": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "bMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "dMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "aSMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fYk": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "rhoL": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "nEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "pKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "aCMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "useFem": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
-    "spanM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "udlKnM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fireRating": {
+    "title": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "providedAxisDistanceMm": {
+    "designWorkingLifeYears": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
-    "bridgeSigmaCMpa": {
+    "deltaCDev": {
       "type": "number",
-      "format": "double",
       "x-semio-state": "artifact"
     },
-    "bridgeDeltaSigmaSMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tightnessClass": {
+    "cementType": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "hdOverH": {
-      "type": "number",
-      "format": "double",
+    "concreteGrades": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ConcreteGrade"
+      },
       "x-semio-state": "artifact"
     },
-    "liquidSigmaSMpa": {
-      "type": "number",
-      "format": "double",
+    "reinforcementGrades": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ReinforcementGrade"
+      },
       "x-semio-state": "artifact"
     },
-    "liquidRhoPEff": {
-      "type": "number",
-      "format": "double",
+    "prestressSteels": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PrestressSteel"
+      },
       "x-semio-state": "artifact"
     },
-    "liquidFCtEffMpa": {
-      "type": "number",
-      "format": "double",
+    "members": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/RcMember"
+      },
       "x-semio-state": "artifact"
     },
-    "liquidESMpa": {
-      "type": "number",
-      "format": "double",
+    "anchors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Anchor"
+      },
       "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
+    "ConcreteGrade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "fCk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "fCk": {
+          "type": "number"
+        }
+      }
     },
-    "liquidSRMaxMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "ReinforcementGrade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "fYk",
+        "eS",
+        "k",
+        "epsUk",
+        "ductility"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "fYk": {
+          "type": "number"
+        },
+        "eS": {
+          "type": "number"
+        },
+        "k": {
+          "type": "number"
+        },
+        "epsUk": {
+          "type": "number"
+        },
+        "ductility": {
+          "type": "string",
+          "enum": [
+            "A",
+            "B",
+            "C"
+          ]
+        }
+      }
     },
-    "anchorHEfMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "PrestressSteel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "fPk",
+        "fP01k"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "fPk": {
+          "type": "number"
+        },
+        "fP01k": {
+          "type": "number"
+        }
+      }
     },
-    "anchorCracked": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
+    "BarLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "diameter",
+        "count",
+        "position",
+        "anchorageLength",
+        "lapLength",
+        "bondCondition",
+        "aggregateSize"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "diameter": {
+          "type": "number"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "position": {
+          "type": "string"
+        },
+        "anchorageLength": {
+          "type": "number"
+        },
+        "lapLength": {
+          "type": "number"
+        },
+        "bondCondition": {
+          "type": "string"
+        },
+        "aggregateSize": {
+          "type": "number"
+        }
+      }
     },
-    "anchorFUkMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "Stirrups": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "diameter",
+        "spacing",
+        "legs"
+      ],
+      "properties": {
+        "diameter": {
+          "type": "number"
+        },
+        "spacing": {
+          "type": "number"
+        },
+        "legs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     },
-    "anchorFYkMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "PunchingSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "columnWidth",
+        "columnDepth",
+        "columnPosition",
+        "asw"
+      ],
+      "properties": {
+        "columnWidth": {
+          "type": "number"
+        },
+        "columnDepth": {
+          "type": "number"
+        },
+        "columnPosition": {
+          "type": "string"
+        },
+        "asw": {
+          "type": "number"
+        }
+      }
     },
-    "anchorASMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "PrestressSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "force",
+        "area",
+        "eccentricity",
+        "lossRatio"
+      ],
+      "properties": {
+        "force": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        },
+        "eccentricity": {
+          "type": "number"
+        },
+        "lossRatio": {
+          "type": "number"
+        }
+      }
     },
-    "anchorDMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "FireSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rating",
+        "axisDistance",
+        "columnMethod",
+        "slabSystem"
+      ],
+      "properties": {
+        "rating": {
+          "type": "string"
+        },
+        "axisDistance": {
+          "type": "number"
+        },
+        "columnMethod": {
+          "type": "string"
+        },
+        "slabSystem": {
+          "type": "string"
+        }
+      }
     },
-    "anchorC1Mm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "LoadCaseActions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "category",
+        "source",
+        "gKLine",
+        "qKLine",
+        "pointForce",
+        "mK",
+        "nK",
+        "vK",
+        "tK",
+        "vKPunch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "gKLine": {
+          "type": "number"
+        },
+        "qKLine": {
+          "type": "number"
+        },
+        "pointForce": {
+          "type": "number"
+        },
+        "mK": {
+          "type": "number"
+        },
+        "nK": {
+          "type": "number"
+        },
+        "vK": {
+          "type": "number"
+        },
+        "tK": {
+          "type": "number"
+        },
+        "vKPunch": {
+          "type": "number"
+        }
+      }
     },
-    "anchorNEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "RcMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "kind",
+        "concreteGradeId",
+        "reinforcementGradeId",
+        "prestressSteelId",
+        "exposure",
+        "width",
+        "height",
+        "effectiveDepth",
+        "cover",
+        "span",
+        "support",
+        "bucklingLength",
+        "longitudinal",
+        "actions",
+        "useFem",
+        "udl",
+        "deflectionSensitive",
+        "hdOverH",
+        "liquidSigmaS",
+        "liquidRhoPEff",
+        "liquidFCtEff",
+        "liquidSRMax",
+        "bridgeSigmaC",
+        "bridgeDeltaSigmaS"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string"
+        },
+        "labelDe": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "concreteGradeId": {
+          "type": "string"
+        },
+        "reinforcementGradeId": {
+          "type": "string"
+        },
+        "prestressSteelId": {
+          "type": "string"
+        },
+        "exposure": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "effectiveDepth": {
+          "type": "number"
+        },
+        "cover": {
+          "type": "number"
+        },
+        "span": {
+          "type": "number"
+        },
+        "support": {
+          "type": "string"
+        },
+        "bucklingLength": {
+          "type": "number"
+        },
+        "longitudinal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BarLayer"
+          }
+        },
+        "stirrups": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Stirrups"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "punching": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PunchingSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prestress": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PrestressSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fire": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FireSpec"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LoadCaseActions"
+          }
+        },
+        "useFem": {
+          "type": "boolean"
+        },
+        "udl": {
+          "type": "number"
+        },
+        "tightness": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hdOverH": {
+          "type": "number"
+        },
+        "liquidSigmaS": {
+          "type": "number"
+        },
+        "liquidRhoPEff": {
+          "type": "number"
+        },
+        "liquidFCtEff": {
+          "type": "number"
+        },
+        "liquidSRMax": {
+          "type": "number"
+        },
+        "bridgeSigmaC": {
+          "type": "number"
+        },
+        "bridgeDeltaSigmaS": {
+          "type": "number"
+        },
+        "deflectionSensitive": {
+          "type": "boolean"
+        }
+      }
     },
-    "anchorVEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "Anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "hEf",
+        "cracked",
+        "fUk",
+        "fYk",
+        "aS",
+        "d",
+        "c1",
+        "fCk",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "hEf": {
+          "type": "number"
+        },
+        "cracked": {
+          "type": "boolean"
+        },
+        "fUk": {
+          "type": "number"
+        },
+        "fYk": {
+          "type": "number"
+        },
+        "aS": {
+          "type": "number"
+        },
+        "d": {
+          "type": "number"
+        },
+        "c1": {
+          "type": "number"
+        },
+        "fCk": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LoadCaseActions"
+          }
+        }
+      }
     }
   }
 }

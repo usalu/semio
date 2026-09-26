@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-connection/schema.json",
+  "title": "InsertConnection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "connection"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "connection": {
+      "type": "object"
+    }
+  }
+}

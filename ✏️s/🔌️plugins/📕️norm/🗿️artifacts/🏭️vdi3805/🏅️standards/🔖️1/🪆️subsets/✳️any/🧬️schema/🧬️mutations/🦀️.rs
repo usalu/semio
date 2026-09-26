@@ -9,33 +9,32 @@
 //! crate name directly) — never hand-written.
 //!
 //! `catalog.index` is persisted state that mirrors `catalog.products` one-to-one
-//! (`CatalogIndex::from_catalog`'s per-product mapping) — every product mutation (`create`/
-//! `rename`/`replace-configuration`/`delete`) keeps it in lockstep via the `🔖️IndexSync` helpers
+//! (`CatalogIndex::from_catalog`'s per-product mapping) — every product mutation (`register`/
+//! `rename`/`reconfigure`/`deregister`) keeps it in lockstep via the `🔖️IndexSync` helpers
 //! below, rather than letting it silently drift out of sync with the catalog it indexes.
 //!
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (this lane's
 //! agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here — the orphaned
 //! `🟤️set-snapshot` stub is deleted along with its dangling glue mount).
 
-use crate::{CatalogIndexEntry, CatalogueProduct, Vdi3805Diff, Vdi3805Snapshot, VdiValue};
-use std::collections::BTreeMap;
+use crate::{CatalogIndexEntry, CatalogueProduct, SheetAttributes, Vdi3805Diff, Vdi3805Snapshot};
 
 //#region 🔖️IndexSync
 /// 🧮️ Mirrors `CatalogIndex::from_catalog`'s per-product mapping — kept here so every product
-/// mutation (`create`/`rename`/`replace-configuration`) can update the persisted `index` field
+/// mutation (`register`/`rename`/`reconfigure`) can update the persisted `index` field
 /// directly from the payload instead of rebuilding the whole index from the whole catalog.
 pub fn catalog_index_entry_for(product: &CatalogueProduct) -> CatalogIndexEntry {
-    CatalogIndexEntry { product_id: product.identity.article_number.clone(), sheet: product.sheet, tags: product.title.iter().map(|t| t.text.clone()).collect(), dn: extract_dn(&product.configuration.parameters) }
+    CatalogIndexEntry {
+        product_id: product.identity.article_number.clone(),
+        sheet: product.sheet,
+        tags: product.title.iter().map(|t| t.text.clone()).collect(),
+        dn: product.configuration.attributes.dn(),
+    }
 }
 
-/// 🔢️ Extracts a `CatalogIndexEntry.dn` value from a configuration's parameter bag, mirroring
-/// `CatalogIndex::from_catalog`'s own extraction exactly.
-pub fn extract_dn(parameters: &BTreeMap<String, VdiValue>) -> Option<u16> {
-    parameters.get("dn").and_then(|v| match v {
-        VdiValue::Integer { value } => Some(*value as u16),
-        VdiValue::Decimal { value, .. } => Some(*value as u16),
-        _ => None,
-    })
+/// 🔢️ Extracts DN from typed sheet attributes for index sync.
+pub fn extract_dn(attributes: &SheetAttributes) -> Option<u16> {
+    attributes.dn()
 }
 //#endregion 🔖️IndexSync
 
@@ -44,49 +43,47 @@ use super::add_geometry_connection;
 use super::change_correction_as_of;
 use super::change_edition_profile;
 use super::change_strict_mode;
-use super::create_curve;
-use super::create_geometry;
-use super::create_product;
-use super::delete_curve;
-use super::delete_geometry;
-use super::delete_product;
+use super::add_curve;
+use super::add_geometry;
+use super::add_product;
+use super::remove_curve;
+use super::remove_geometry;
+use super::remove_product;
 use super::remove_edition_profile;
 use super::remove_geometry_connection;
 use super::rename_product;
-use super::replace_curve_points;
-use super::replace_geometry_parameters;
-use super::replace_product_configuration;
+use super::change_curve_points;
+use super::change_geometry_parameters;
+use super::change_product_configuration;
 use super::resize_geometry;
-use super::update_limits;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
 //#region 🔖️Leaves
-use super::update_manufacturer_file;
+use super::change_manufacturer_file;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = Vdi3805Snapshot, diff = Vdi3805Diff, schema = "s.norm.vdi3805")]
 pub enum Vdi3805Mutation {
-    UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile),
+    ChangeManufacturerFile(change_manufacturer_file::ChangeManufacturerFile),
     ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf),
     ChangeStrictMode(change_strict_mode::ChangeStrictMode),
-    UpdateLimits(update_limits::UpdateLimits),
     ChangeEditionProfile(change_edition_profile::ChangeEditionProfile),
     RemoveEditionProfile(remove_edition_profile::RemoveEditionProfile),
-    CreateProduct(create_product::CreateProduct),
-    DeleteProduct(delete_product::DeleteProduct),
+    AddProduct(add_product::AddProduct),
+    RemoveProduct(remove_product::RemoveProduct),
     RenameProduct(rename_product::RenameProduct),
-    ReplaceProductConfiguration(replace_product_configuration::ReplaceProductConfiguration),
-    CreateGeometry(create_geometry::CreateGeometry),
-    DeleteGeometry(delete_geometry::DeleteGeometry),
+    ChangeProductConfiguration(change_product_configuration::ChangeProductConfiguration),
+    AddGeometry(add_geometry::AddGeometry),
+    RemoveGeometry(remove_geometry::RemoveGeometry),
     ResizeGeometry(resize_geometry::ResizeGeometry),
     AddGeometryConnection(add_geometry_connection::AddGeometryConnection),
     RemoveGeometryConnection(remove_geometry_connection::RemoveGeometryConnection),
-    ReplaceGeometryParameters(replace_geometry_parameters::ReplaceGeometryParameters),
-    CreateCurve(create_curve::CreateCurve),
-    DeleteCurve(delete_curve::DeleteCurve),
-    ReplaceCurvePoints(replace_curve_points::ReplaceCurvePoints),
+    ChangeGeometryParameters(change_geometry_parameters::ChangeGeometryParameters),
+    AddCurve(add_curve::AddCurve),
+    RemoveCurve(remove_curve::RemoveCurve),
+    ChangeCurvePoints(change_curve_points::ChangeCurvePoints),
 }
 
 /// 🏷️ Every declared kind of [`Vdi3805Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -95,25 +92,24 @@ pub enum Vdi3805Mutation {
 /// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
 /// is what keeps the enum, this const and the committed manifest from drifting apart.
 pub const KINDS: &[&str] = &[
-    "update-manufacturer-file",
+    "change-manufacturer-file",
     "change-correction-as-of",
     "change-strict-mode",
-    "update-limits",
     "change-edition-profile",
     "remove-edition-profile",
-    "create-product",
-    "delete-product",
+    "add-product",
+    "remove-product",
     "rename-product",
-    "replace-product-configuration",
-    "create-geometry",
-    "delete-geometry",
+    "change-product-configuration",
+    "add-geometry",
+    "remove-geometry",
     "resize-geometry",
     "add-geometry-connection",
     "remove-geometry-connection",
-    "replace-geometry-parameters",
-    "create-curve",
-    "delete-curve",
-    "replace-curve-points",
+    "change-geometry-parameters",
+    "add-curve",
+    "remove-curve",
+    "change-curve-points",
 ];
 //#endregion 🔖️Mutations
 
@@ -122,16 +118,15 @@ impl Vdi3805Mutation {
     /// 📤️ Decomposes a whole-document replacement into the closed semantic vocabulary — the
     /// replacement for the banned whole-document-replace variant, used by `import_media`'s
     /// `"model:in"` port and the `set-snapshot` app command. `catalog.index` needs no explicit
-    /// mutation of its own: `create-product`/`delete-product` already keep it in lockstep (see
+    /// mutation of its own: `add-product`/`remove-product` already keep it in lockstep (see
     /// `🔖️IndexSync` above), so recreating every product from `target` rebuilds it for free. `base`
     /// is required because `products`/`geometry`/`curves` are real id-keyed collections needing full
     /// remove/re-insert, and `edition_profile` is a real map needing a key-diff.
     pub fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         let mut mutations = vec![
-            Vdi3805Mutation::UpdateManufacturerFile(update_manufacturer_file::UpdateManufacturerFile { new_manufacturer_file: target.manufacturer_file.clone() }),
+            Vdi3805Mutation::ChangeManufacturerFile(change_manufacturer_file::ChangeManufacturerFile { new_manufacturer_file: target.catalog.file.clone() }),
             Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of }),
             Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: target.strict_mode }),
-            Vdi3805Mutation::UpdateLimits(update_limits::UpdateLimits { new_limits: target.limits }),
         ];
 
         for sheet in base.edition_profile.keys() {
@@ -144,24 +139,24 @@ impl Vdi3805Mutation {
         }
 
         for product in base.catalog.products.iter() {
-            mutations.push(Vdi3805Mutation::DeleteProduct(delete_product::DeleteProduct { id: product.identity.article_number.clone() }));
+            mutations.push(Vdi3805Mutation::RemoveProduct(remove_product::RemoveProduct { id: product.identity.article_number.clone() }));
         }
         for (index, product) in target.catalog.products.iter().enumerate() {
-            mutations.push(Vdi3805Mutation::CreateProduct(create_product::CreateProduct { product: product.clone(), index: Some(index) }));
+            mutations.push(Vdi3805Mutation::AddProduct(add_product::AddProduct { product: product.clone(), index: Some(index) }));
         }
 
         for id in base.geometry.keys() {
-            mutations.push(Vdi3805Mutation::DeleteGeometry(delete_geometry::DeleteGeometry { id: id.clone() }));
+            mutations.push(Vdi3805Mutation::RemoveGeometry(remove_geometry::RemoveGeometry { id: id.clone() }));
         }
         for geometry in target.geometry.values() {
-            mutations.push(Vdi3805Mutation::CreateGeometry(create_geometry::CreateGeometry { geometry: geometry.clone() }));
+            mutations.push(Vdi3805Mutation::AddGeometry(add_geometry::AddGeometry { geometry: geometry.clone() }));
         }
 
         for id in base.curves.keys() {
-            mutations.push(Vdi3805Mutation::DeleteCurve(delete_curve::DeleteCurve { id: id.clone() }));
+            mutations.push(Vdi3805Mutation::RemoveCurve(remove_curve::RemoveCurve { id: id.clone() }));
         }
         for curve in target.curves.values() {
-            mutations.push(Vdi3805Mutation::CreateCurve(create_curve::CreateCurve { curve: curve.clone() }));
+            mutations.push(Vdi3805Mutation::AddCurve(add_curve::AddCurve { curve: curve.clone() }));
         }
 
         mutations

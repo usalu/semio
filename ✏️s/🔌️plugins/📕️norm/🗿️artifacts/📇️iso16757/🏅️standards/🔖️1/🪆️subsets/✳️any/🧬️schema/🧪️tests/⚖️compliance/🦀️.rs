@@ -14,7 +14,7 @@ async fn reference_fixture_selects_one_product() {
 #[semio_framework_async_macros::async_test]
 async fn geometry_bbox_volume_for_box_primitive() {
     let doc = Iso16757Snapshot::default();
-    let geom = doc.geometry.objects.get("geom.valve.50").expect("geometry");
+    let geom = doc.geometry.objects.get("geom-valve-50").expect("geometry");
     let bbox = part_2::evaluate_bounding_box(geom.shape.as_ref().expect("shape"), &doc.geometry).expect("bbox");
     assert!((bbox.volume_m3() - 0.003).abs() < 1e-6);
 }
@@ -23,7 +23,7 @@ async fn geometry_bbox_volume_for_box_primitive() {
 async fn dictionary_controlled_values_filter_by_subject() {
     let doc = Iso16757Snapshot::default();
     let list = doc.dictionary.controlled_lists.first().expect("list");
-    let allowed = part_4::filter_controlled_values(list, "subject.valve", &doc.dictionary);
+    let allowed = part_4::filter_controlled_values(list, "subject-valve", &doc.dictionary);
     assert_eq!(allowed, vec!["50", "80", "100"]);
 }
 
@@ -48,9 +48,9 @@ async fn ifc_step_export_contains_data_section() {
 #[semio_framework_async_macros::async_test]
 async fn composition_cycle_detected() {
     let mut doc = Iso16757Snapshot::default();
-    doc.catalogue.compositions.insert("product.a".into(), vec![crate::part_1::CompositionRelationship { component_product_id: "product.b".into(), quantity: 1 }]);
-    doc.catalogue.compositions.insert("product.b".into(), vec![crate::part_1::CompositionRelationship { component_product_id: "product.a".into(), quantity: 1 }]);
-    assert!(part_1::detect_composition_cycle(&doc.catalogue, "product.a"));
+    doc.catalogue.compositions.insert("product-a".into(), vec![crate::part_1::CompositionRelationship { component_product_id: "product-b".into(), quantity: 1 }]);
+    doc.catalogue.compositions.insert("product-b".into(), vec![crate::part_1::CompositionRelationship { component_product_id: "product-a".into(), quantity: 1 }]);
+    assert!(part_1::detect_composition_cycle(&doc.catalogue, "product-a"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -63,7 +63,7 @@ async fn script_rejects_forbidden_import() {
 #[semio_framework_async_macros::async_test]
 async fn evaluate_constraint_operators() {
     let dec = |v: f64| CatalogueValue::Decimal { value: v };
-    let mk = |op, value| crate::part_1::SelectionConstraint { property_id: "p".into(), operator: op, value };
+    let mk = |op, value| crate::part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "p".into(), operator: op, value };
     assert!(part_1::evaluate_constraint(&dec(5.0), &mk(crate::part_1::ConstraintOperator::NotEqual, dec(6.0))));
     assert!(!part_1::evaluate_constraint(&dec(5.0), &mk(crate::part_1::ConstraintOperator::NotEqual, dec(5.0))));
     assert!(part_1::evaluate_constraint(&dec(5.0), &mk(crate::part_1::ConstraintOperator::LessThan, dec(6.0))));
@@ -77,23 +77,23 @@ async fn evaluate_constraint_operators() {
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_constraint_type_mismatch_returns_false() {
-    let constraint = crate::part_1::SelectionConstraint { property_id: "p".into(), operator: crate::part_1::ConstraintOperator::LessThan, value: CatalogueValue::Text { value: "x".into() } };
+    let constraint = crate::part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "p".into(), operator: crate::part_1::ConstraintOperator::LessThan, value: CatalogueValue::Text { value: "x".into() } };
     assert!(!part_1::evaluate_constraint(&CatalogueValue::Decimal { value: 1.0 }, &constraint));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn select_products_filters_by_series_id() {
     let mut doc = Iso16757Snapshot::default();
-    let other_series = crate::part_1::ProductSeries { id: "series.other".into(), class_id: "class.valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: BTreeMap::new(), geometry_id: None };
+    let other_series = crate::part_1::ProductSeries { id: "series-other".into(), class_id: "class-valve".into(), names: doc.catalogue.product_series[0].names.clone(), shared_property_values: BTreeMap::new(), geometry_id: None };
     let other_product = crate::part_1::Product {
-        id: "product.other".into(),
-        series_id: "series.other".into(),
+        id: "product-other".into(),
+        series_id: "series-other".into(),
         names: other_series.names.clone(),
         parameter_domains: Vec::new(),
         variants: vec![crate::part_1::ProductVariant {
-            id: "variant.other".into(),
+            id: "variant-other".into(),
             parameter_values: BTreeMap::new(),
-            property_values: vec![crate::part_1::PropertyValue { definition_id: "prop.dn".into(), value: CatalogueValue::Decimal { value: 50.0 }, function_id: None }],
+            property_values: vec![crate::part_1::PropertyValue { definition_id: "prop-dn".into(), value: CatalogueValue::Decimal { value: 50.0 }, function_id: None }],
             article_number: None,
             geometry_id: None,
         }],
@@ -101,22 +101,22 @@ async fn select_products_filters_by_series_id() {
     };
     doc.catalogue.product_series.push(other_series);
     doc.catalogue.products.push(other_product);
-    doc.catalogue.product_indexes.push(crate::part_1::ProductIndex { id: "index.other".into(), product_id: "product.other".into(), variant_id: Some("variant.other".into()), search_tags: Vec::new() });
+    doc.catalogue.product_indexes.push(crate::part_1::ProductIndex { id: "index-other".into(), product_id: "product-other".into(), variant_id: Some("variant-other".into()), search_tags: Vec::new() });
     let selection = part_1::select_products(&doc.catalogue, &doc.selection);
     assert_eq!(selection.matches.len(), 1);
-    assert_eq!(selection.matches[0].id, "index.cv50");
+    assert_eq!(selection.matches[0].id, "index-cv50");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn select_products_records_missing_property_and_constraint_failures() {
     let mut doc = Iso16757Snapshot::default();
-    doc.selection.constraints.push(crate::part_1::SelectionConstraint { property_id: "prop.missing".into(), operator: crate::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 1.0 } });
+    doc.selection.constraints.push(crate::part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "prop-missing".into(), operator: crate::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 1.0 } });
     let selection = part_1::select_products(&doc.catalogue, &doc.selection);
     assert!(selection.matches.is_empty());
     assert!(selection.explanations.iter().any(|e| e.contains("missing property")));
 
     doc.selection.constraints.clear();
-    doc.selection.constraints.push(crate::part_1::SelectionConstraint { property_id: "prop.dn".into(), operator: crate::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 999.0 } });
+    doc.selection.constraints.push(crate::part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "prop-dn".into(), operator: crate::part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 999.0 } });
     let selection = part_1::select_products(&doc.catalogue, &doc.selection);
     assert!(selection.matches.is_empty());
     assert!(selection.explanations.iter().any(|e| e.contains("constraint failed")));
@@ -125,7 +125,7 @@ async fn select_products_records_missing_property_and_constraint_failures() {
 #[semio_framework_async_macros::async_test]
 async fn select_products_flags_ambiguity_with_multiple_matches() {
     let mut doc = Iso16757Snapshot::default();
-    doc.catalogue.product_indexes.push(crate::part_1::ProductIndex { id: "index.cv50.dup".into(), product_id: "product.cv".into(), variant_id: Some("variant.50".into()), search_tags: Vec::new() });
+    doc.catalogue.product_indexes.push(crate::part_1::ProductIndex { id: "index-cv50-dup".into(), product_id: "product-cv".into(), variant_id: Some("variant-50".into()), search_tags: Vec::new() });
     let selection = part_1::select_products(&doc.catalogue, &doc.selection);
     assert_eq!(selection.matches.len(), 2);
     assert!(selection.ambiguity);
@@ -139,15 +139,15 @@ async fn resolve_bim_embedding_error_paths() {
 
     let mut catalogue_no_product = doc.catalogue.clone();
     catalogue_no_product.product_indexes[0].product_id = "product.unknown".into();
-    let unknown_product = part_1::resolve_bim_embedding(&catalogue_no_product, "index.cv50", HashMap::new());
+    let unknown_product = part_1::resolve_bim_embedding(&catalogue_no_product, "index-cv50", HashMap::new());
     assert!(matches!(unknown_product, Err(NormError::InvalidValue { field, .. }) if field == "product_id"));
 
     let mut catalogue_no_variant = doc.catalogue.clone();
     catalogue_no_variant.product_indexes[0].variant_id = None;
-    let missing_variant = part_1::resolve_bim_embedding(&catalogue_no_variant, "index.cv50", HashMap::new());
+    let missing_variant = part_1::resolve_bim_embedding(&catalogue_no_variant, "index-cv50", HashMap::new());
     assert!(matches!(missing_variant, Err(NormError::IncompleteInput { field }) if field == "variant_id"));
 
-    let out_of_domain = part_1::resolve_bim_embedding(&doc.catalogue, "index.cv50", HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 12345.0 })]));
+    let out_of_domain = part_1::resolve_bim_embedding(&doc.catalogue, "index-cv50", HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 12345.0 })]));
     assert!(matches!(out_of_domain, Err(NormError::InvalidValue { field, .. }) if field == "dn"));
 }
 
@@ -155,7 +155,7 @@ async fn resolve_bim_embedding_error_paths() {
 async fn resolve_bim_embedding_falls_back_to_series_geometry() {
     let mut doc = Iso16757Snapshot::default();
     doc.catalogue.products[0].variants[0].geometry_id = None;
-    let embedding = part_1::resolve_bim_embedding(&doc.catalogue, "index.cv50", HashMap::new()).expect("embedding");
+    let embedding = part_1::resolve_bim_embedding(&doc.catalogue, "index-cv50", HashMap::new()).expect("embedding");
     assert_eq!(embedding.resolved_geometry_id, doc.catalogue.product_series[0].geometry_id);
 }
 
@@ -176,7 +176,7 @@ async fn validate_catalogue_structure_flags_issues() {
     assert!(issues.iter().any(|i| i.contains("empty property definition id")));
 
     let mut doc = Iso16757Snapshot::default();
-    doc.catalogue.compositions.insert("product.cv".into(), vec![crate::part_1::CompositionRelationship { component_product_id: "product.cv".into(), quantity: 1 }]);
+    doc.catalogue.compositions.insert("product-cv".into(), vec![crate::part_1::CompositionRelationship { component_product_id: "product-cv".into(), quantity: 1 }]);
     let issues = part_1::validate_catalogue_structure(&doc.catalogue);
     assert!(issues.iter().any(|i| i.contains("composition cycle")));
 }
@@ -186,7 +186,7 @@ async fn substitute_parameters_recurses_through_node_kinds() {
     let primitive = crate::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0)]) };
     let transform = crate::part_2::GeometryNode::Transform { translation: [1.0, 0.0, 0.0], rotation_deg: [0.0, 0.0, 0.0], child: Box::new(primitive.clone()) };
     let boolean = crate::part_2::GeometryNode::Boolean { operator: crate::part_2::BooleanOperator::Union, children: vec![primitive.clone(), transform.clone()] };
-    let reference = crate::part_2::GeometryNode::Reference { geometry_id: "geom.x".into() };
+    let reference = crate::part_2::GeometryNode::Reference { geometry_id: "geom-x".into() };
 
     let values = HashMap::from([("width".into(), 2.0)]);
     match part_2::substitute_parameters(&primitive, &values) {
@@ -205,7 +205,7 @@ async fn substitute_parameters_recurses_through_node_kinds() {
         _ => panic!("expected boolean"),
     }
     match part_2::substitute_parameters(&reference, &values) {
-        crate::part_2::GeometryNode::Reference { geometry_id } => assert_eq!(geometry_id, "geom.x"),
+        crate::part_2::GeometryNode::Reference { geometry_id } => assert_eq!(geometry_id, "geom-x"),
         _ => panic!("expected reference"),
     }
 }
@@ -250,9 +250,9 @@ async fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
 
     let mut objects = BTreeMap::new();
     objects.insert(
-        "geom.ref".to_string(),
+        "geom-ref".to_string(),
         crate::part_2::GeometryObject {
-            id: "geom.ref".into(),
+            id: "geom-ref".into(),
             shape: Some(crate::part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
             symbolic: None,
             spaces: Vec::new(),
@@ -262,7 +262,7 @@ async fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
         },
     );
     let ref_catalogue = crate::part_2::GeometryCatalogue { objects, primitive_registry: Vec::new() };
-    let reference = crate::part_2::GeometryNode::Reference { geometry_id: "geom.ref".into() };
+    let reference = crate::part_2::GeometryNode::Reference { geometry_id: "geom-ref".into() };
     let bbox = part_2::evaluate_bounding_box(&reference, &ref_catalogue).expect("resolved reference bbox");
     assert_eq!(bbox.max, [1.0, 1.0, 1.0]);
 }
@@ -271,15 +271,15 @@ async fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
 async fn validate_geometry_graph_self_reference_and_cycle() {
     let mut objects = BTreeMap::new();
     let self_ref = crate::part_2::GeometryObject {
-        id: "geom.self".into(),
-        shape: Some(crate::part_2::GeometryNode::Reference { geometry_id: "geom.self".into() }),
+        id: "geom-self".into(),
+        shape: Some(crate::part_2::GeometryNode::Reference { geometry_id: "geom-self".into() }),
         symbolic: None,
         spaces: Vec::new(),
         surfaces: Vec::new(),
         ports: Vec::new(),
         parameter_bindings: BTreeMap::new(),
     };
-    objects.insert("geom.self".to_string(), self_ref.clone());
+    objects.insert("geom-self".to_string(), self_ref.clone());
     let catalogue = crate::part_2::GeometryCatalogue { objects, primitive_registry: Vec::new() };
     let mut visited = HashSet::new();
     let issues = part_2::validate_geometry_graph(&self_ref, &catalogue, &mut visited);
@@ -288,8 +288,8 @@ async fn validate_geometry_graph_self_reference_and_cycle() {
 
     let mut objects = BTreeMap::new();
     let a = crate::part_2::GeometryObject {
-        id: "geom.a".into(),
-        shape: Some(crate::part_2::GeometryNode::Reference { geometry_id: "geom.b".into() }),
+        id: "geom-a".into(),
+        shape: Some(crate::part_2::GeometryNode::Reference { geometry_id: "geom-b".into() }),
         symbolic: None,
         spaces: Vec::new(),
         surfaces: Vec::new(),
@@ -297,16 +297,16 @@ async fn validate_geometry_graph_self_reference_and_cycle() {
         parameter_bindings: BTreeMap::new(),
     };
     let b = crate::part_2::GeometryObject {
-        id: "geom.b".into(),
-        shape: Some(crate::part_2::GeometryNode::Reference { geometry_id: "geom.a".into() }),
+        id: "geom-b".into(),
+        shape: Some(crate::part_2::GeometryNode::Reference { geometry_id: "geom-a".into() }),
         symbolic: None,
         spaces: Vec::new(),
         surfaces: Vec::new(),
         ports: Vec::new(),
         parameter_bindings: BTreeMap::new(),
     };
-    objects.insert("geom.a".to_string(), a.clone());
-    objects.insert("geom.b".to_string(), b);
+    objects.insert("geom-a".to_string(), a.clone());
+    objects.insert("geom-b".to_string(), b);
     let catalogue = crate::part_2::GeometryCatalogue { objects, primitive_registry: Vec::new() };
     let mut visited = HashSet::new();
     let issues = part_2::validate_geometry_graph(&a, &catalogue, &mut visited);
@@ -315,7 +315,7 @@ async fn validate_geometry_graph_self_reference_and_cycle() {
 
 #[semio_framework_async_macros::async_test]
 async fn validate_geometry_graph_empty_parameter_binding() {
-    let object = crate::part_2::GeometryObject { id: "geom.bind".into(), shape: None, symbolic: None, spaces: Vec::new(), surfaces: Vec::new(), ports: Vec::new(), parameter_bindings: BTreeMap::from([("width".into(), String::new())]) };
+    let object = crate::part_2::GeometryObject { id: "geom-bind".into(), shape: None, symbolic: None, spaces: Vec::new(), surfaces: Vec::new(), ports: Vec::new(), parameter_bindings: BTreeMap::from([("width".into(), String::new())]) };
     let catalogue = crate::part_2::GeometryCatalogue::default();
     let mut visited = HashSet::new();
     let issues = part_2::validate_geometry_graph(&object, &catalogue, &mut visited);
@@ -365,7 +365,7 @@ async fn detect_subtype_cycle_true() {
 #[semio_framework_async_macros::async_test]
 async fn resolve_property_found_and_missing() {
     let doc = Iso16757Snapshot::default();
-    assert!(part_4::resolve_property(&doc.dictionary, "prop.dn").is_some());
+    assert!(part_4::resolve_property(&doc.dictionary, "prop-dn").is_some());
     assert!(part_4::resolve_property(&doc.dictionary, "prop.unknown").is_none());
 }
 
@@ -373,17 +373,17 @@ async fn resolve_property_found_and_missing() {
 async fn validate_dictionary_flags_dangling_and_cardinality_review() {
     let mut doc = Iso16757Snapshot::default();
     doc.dictionary.relationships.push(crate::part_4::Relationship {
-        id: "r.dangling".into(),
+        id: "r-dangling".into(),
         kind: crate::part_4::RelationshipKind::IsDependentOn,
-        source_id: "subject.valve".into(),
-        target_id: "subject.unknown".into(),
+        source_id: "subject-valve".into(),
+        target_id: "subject-unknown".into(),
         cardinality: crate::Cardinality::optional(),
     });
     doc.dictionary.relationships.push(crate::part_4::Relationship {
-        id: "r.cardinality".into(),
+        id: "r-cardinality".into(),
         kind: crate::part_4::RelationshipKind::HasPart,
-        source_id: "subject.valve".into(),
-        target_id: "subject.valve".into(),
+        source_id: "subject-valve".into(),
+        target_id: "subject-valve".into(),
         cardinality: crate::Cardinality { min: 2, max: Some(3) },
     });
     let issues = part_4::validate_dictionary(&doc.dictionary);
@@ -400,7 +400,7 @@ async fn filter_controlled_values_context_rules() {
 
     let mut unrelated_list = doc.dictionary.controlled_lists[0].clone();
     unrelated_list.context_subject_ids = vec!["subject.other".into()];
-    assert!(part_4::filter_controlled_values(&unrelated_list, "subject.valve", &doc.dictionary).is_empty());
+    assert!(part_4::filter_controlled_values(&unrelated_list, "subject-valve", &doc.dictionary).is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -408,7 +408,7 @@ async fn to_iso12006_mappings_basic() {
     let doc = Iso16757Snapshot::default();
     let mappings = part_4::to_iso12006_mappings(&doc.dictionary);
     assert_eq!(mappings.len(), doc.dictionary.subjects.len());
-    assert_eq!(mappings[0].iso12006_uri, "iso12006://subject/subject.valve");
+    assert_eq!(mappings[0].iso12006_uri, "iso12006://subject/subject-valve");
     assert_eq!(mappings[0].object_kind, "ProductClass");
 }
 

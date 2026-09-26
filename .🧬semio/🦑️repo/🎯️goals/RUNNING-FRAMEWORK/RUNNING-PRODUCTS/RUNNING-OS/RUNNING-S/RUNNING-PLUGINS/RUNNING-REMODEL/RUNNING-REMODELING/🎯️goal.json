@@ -1,0 +1,15 @@
+{
+  "title": "Running Remodeling",
+  "description": "The remodeling engine and surface run inside Remodel.",
+  "prompt": "The remodeling engine and surface run inside Remodel.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningremodel",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2691"
+  }
+}

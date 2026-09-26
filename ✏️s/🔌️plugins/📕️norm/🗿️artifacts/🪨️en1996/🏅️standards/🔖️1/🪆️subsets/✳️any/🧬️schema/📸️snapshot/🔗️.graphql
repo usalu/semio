@@ -1,26 +1,40 @@
-# 🧬️ EN 1996 snapshot schema.
+type En1996Wall {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  wallType: String!
+  thicknessM: Float!
+  heightM: Float!
+  lengthM: Float!
+  supportSides: Int!
+  openings: [JSON!]!
+  slabBearingDepthM: Float!
+  eccentricityTopM: Float!
+  eccentricityBottomM: Float!
+  unitGroup: String!
+  unitMaterial: String!
+  fBPa: Float!
+  unitLengthM: Float!
+  unitWidthM: Float!
+  unitHeightM: Float!
+  mortarType: String!
+  mortarClass: String!
+  fMPa: Float!
+  bedJointThicknessM: Float!
+  reinforced: Boolean!
+  asVerticalM2: Float!
+  asHorizontalM2: Float!
+  fYdPa: Float!
+  fireReiMin: Int!
+  exposure: String!
+  mu: Float!
+  loadCases: [JSON!]!
+}
 
-type En1996Snapshot {
-  mEdKnm: Float! @state(class: ARTIFACT)
-  nEdKn: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  hEdKn: Float! @state(class: ARTIFACT)
-  zMm3: Float! @state(class: ARTIFACT)
-  areaMm2: Float! @state(class: ARTIFACT)
-  shearAreaMm2: Float! @state(class: ARTIFACT)
-  fKMpa: Float! @state(class: ARTIFACT)
-  fVkMpa: Float! @state(class: ARTIFACT)
-  annex: Float! @state(class: ARTIFACT)
-  masonryClass: Float! @state(class: ARTIFACT)
-  designSituation: Float! @state(class: ARTIFACT)
-  mu: Float! @state(class: ARTIFACT)
-  wallThicknessMm: Float! @state(class: ARTIFACT)
-  fireResistanceMin: Int! @state(class: ARTIFACT)
-  unit: Float! @state(class: ARTIFACT)
-  exposure: Float! @state(class: ARTIFACT)
-  mortar: Float! @state(class: ARTIFACT)
-  bedJointThicknessMm: Float! @state(class: ARTIFACT)
-  storeys: Int! @state(class: ARTIFACT)
-  hEfMm: Float! @state(class: ARTIFACT)
-  tEfMm: Float! @state(class: ARTIFACT)
+type En1996Snapshot @state {
+  annex: String! @state(lane: ARTIFACT)
+  masonryClass: String! @state(lane: ARTIFACT)
+  designSituation: String! @state(lane: ARTIFACT)
+  storeys: Int! @state(lane: ARTIFACT)
+  walls: [En1996Wall!]! @state(lane: ARTIFACT)
 }

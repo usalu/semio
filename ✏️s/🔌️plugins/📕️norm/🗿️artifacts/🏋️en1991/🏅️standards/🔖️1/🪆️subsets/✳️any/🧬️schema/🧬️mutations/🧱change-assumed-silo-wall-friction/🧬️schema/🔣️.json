@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-silo-wall-friction/schema.json",
+  "title": "ChangeAssumedSiloWallFriction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAssumedSiloWallFriction"
+  ],
+  "properties": {
+    "newAssumedSiloWallFriction": {
+      "type": "number"
+    }
+  }
+}

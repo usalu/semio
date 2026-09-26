@@ -7,12 +7,13 @@
   "aggregateVariant": "ChangeBb2DetailsConform",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 14,
+  "binaryTag": 4,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied",
-    "no-op"
+    "no-op",
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

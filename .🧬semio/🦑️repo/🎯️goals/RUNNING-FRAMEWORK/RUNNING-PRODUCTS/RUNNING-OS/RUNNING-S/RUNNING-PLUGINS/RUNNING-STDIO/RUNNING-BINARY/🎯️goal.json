@@ -1,0 +1,15 @@
+{
+  "title": "Running Binary",
+  "description": "The binary engine and surface run inside Stdio.",
+  "prompt": "The binary engine and surface run inside Stdio.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningstdio",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2723"
+  }
+}

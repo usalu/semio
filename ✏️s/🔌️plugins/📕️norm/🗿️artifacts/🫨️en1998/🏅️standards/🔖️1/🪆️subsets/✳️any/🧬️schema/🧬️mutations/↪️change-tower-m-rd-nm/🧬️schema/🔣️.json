@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tower-m-rd-nm/schema.json",
+  "title": "ChangeTowerMRdNm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newMRdNm"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newMRdNm": {
+      "type": "number"
+    }
+  }
+}

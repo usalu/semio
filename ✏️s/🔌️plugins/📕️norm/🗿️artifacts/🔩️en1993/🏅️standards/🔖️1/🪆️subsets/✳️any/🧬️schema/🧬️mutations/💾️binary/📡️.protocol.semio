@@ -1,47 +1,51 @@
-dialect protocol
-protocol en1993.mutations
-version 1
-schema norm.en1993.mutations
-start record
-framing record
+protocol en1993.mutation
 
-# Real `En1993Mutation` op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload.
-# Each record is one mutation kind at its wire tag. This file is the only source of those tags: the codec
-# derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
-header fixed 2
-field format u8
-field tag u8
-record change-annex tag=0
-field payload bytes
-record update-member-properties tag=1
-field payload bytes
-record update-fire-inputs tag=2
-field payload bytes
-record update-cold-formed-inputs tag=3
-field payload bytes
-record update-stainless-inputs tag=4
-field payload bytes
-record update-plated-inputs tag=5
-field payload bytes
-record update-silo-shell-inputs tag=6
-field payload bytes
-record update-bolt-inputs tag=7
-field payload bytes
-record update-weld-inputs tag=8
-field payload bytes
-record update-fatigue-inputs tag=9
-field payload bytes
-record update-through-thickness-inputs tag=10
-field payload bytes
-record update-tension-component-inputs tag=11
-field payload bytes
-record update-hss-inputs tag=12
-field payload bytes
-record update-bridge-inputs tag=13
-field payload bytes
-record update-tower-inputs tag=14
-field payload bytes
-record update-pile-inputs tag=15
-field payload bytes
-record update-crane-inputs tag=16
-field payload bytes
+record change-annex tag=1
+record update-member-properties tag=2
+record update-fire-inputs tag=3
+record update-cold-formed-inputs tag=4
+record update-stainless-inputs tag=5
+record update-plated-inputs tag=6
+record update-silo-shell-inputs tag=7
+record update-bolt-inputs tag=8
+record update-weld-inputs tag=9
+record update-fatigue-inputs tag=10
+record update-through-thickness-inputs tag=11
+record update-tension-component-inputs tag=12
+record update-hss-inputs tag=13
+record update-bridge-inputs tag=14
+record update-tower-inputs tag=15
+record update-pile-inputs tag=16
+record update-crane-inputs tag=17
+record insert-material tag=18
+record remove-material tag=19
+record insert-section tag=20
+record remove-section tag=21
+record insert-member tag=22
+record remove-member tag=23
+record insert-load-case tag=24
+record remove-load-case tag=25
+record insert-member-action tag=26
+record remove-member-action tag=27
+record insert-joint tag=28
+record remove-joint tag=29
+record insert-fatigue-detail tag=30
+record remove-fatigue-detail tag=31
+record insert-fire-exposure tag=32
+record remove-fire-exposure tag=33
+record insert-cold-formed-member tag=34
+record remove-cold-formed-member tag=35
+record insert-plated-panel tag=36
+record remove-plated-panel tag=37
+record insert-silo-shell tag=38
+record remove-silo-shell tag=39
+record insert-tension-component tag=40
+record remove-tension-component tag=41
+record insert-bridge-fatigue tag=42
+record remove-bridge-fatigue tag=43
+record insert-tower-leg tag=44
+record remove-tower-leg tag=45
+record insert-pile tag=46
+record remove-pile tag=47
+record insert-crane-runway tag=48
+record remove-crane-runway tag=49

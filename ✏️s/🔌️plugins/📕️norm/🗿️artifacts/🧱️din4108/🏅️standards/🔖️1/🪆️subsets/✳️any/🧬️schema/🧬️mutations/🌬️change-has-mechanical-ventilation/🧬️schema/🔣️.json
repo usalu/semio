@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-has-mechanical-ventilation/schema.json",
+  "title": "ChangeHasMechanicalVentilation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newHasMechanicalVentilation"
+  ],
+  "properties": {
+    "newHasMechanicalVentilation": {
+      "type": "boolean"
+    }
+  }
+}

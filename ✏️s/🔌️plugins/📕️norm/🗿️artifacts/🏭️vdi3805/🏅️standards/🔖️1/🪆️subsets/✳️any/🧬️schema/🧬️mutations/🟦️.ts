@@ -1,3 +1,11 @@
+
+export type SheetAttributes =
+  | { kind: "valveHeating"; dn: number; kvsM3S: number; pressureClass: string; connectionType: string; authorityMin: number; authorityMax: number }
+  | { kind: "radiator"; standardOutputW: number; heatExponentN: number; lengthM: number; heightM: number; depthM: number; connectionType: string }
+  | { kind: "pumpHeating"; dnSuction: number; dnDischarge: number; nominalFlowM3S: number; nominalHeadM: number; motorPowerW: number; hydraulicEfficiency: number; qhCurveRef?: string | null }
+  | { kind: "heatGenerator"; nominalHeatOutputW: number; fuelType: string; flowTempMaxC: number; returnTempMinC: number }
+  | { kind: "generic" };
+
 /** 🧬️ Vdi3805Mutation — mirrors `Vdi3805Mutation` in `🦀️.rs` (19 variants over the
  * manufacturer-file header, correction/strict-mode/limits scalars, edition profile overrides, and
  * full create/delete(+rename/replace) coverage of catalogue products, parametric geometry and
@@ -67,7 +75,7 @@ export type VdiValue =
   | { kind: "null" };
 
 export interface ExtensionBag {
-  fields: Record<string, unknown>;
+  fields: Record<string, string>;
 }
 
 export interface BuildingSystemNumber {
@@ -125,7 +133,7 @@ export interface CompositionLink {
 
 export interface Configuration {
   id: string;
-  parameters: Record<string, VdiValue>;
+  attributes: SheetAttributes;
   geometry_ref?: string;
   function_refs: string[];
 }
@@ -177,7 +185,7 @@ export interface CharacteristicCurve {
   points: CurvePoint[];
 }
 
-export interface UpdateManufacturerFile {
+export interface ChangeManufacturerFile {
   new_manufacturer_file: ManufacturerFile;
 }
 
@@ -189,9 +197,6 @@ export interface ChangeStrictMode {
   new_strict_mode: boolean;
 }
 
-export interface UpdateLimits {
-  new_limits: SecurityLimits;
-}
 
 export interface ChangeEditionProfile {
   sheet: string;
@@ -202,12 +207,12 @@ export interface RemoveEditionProfile {
   sheet: string;
 }
 
-export interface CreateProduct {
+export interface AddProduct {
   product: CatalogueProduct;
   index?: number;
 }
 
-export interface DeleteProduct {
+export interface RemoveProduct {
   id: string;
 }
 
@@ -216,16 +221,16 @@ export interface RenameProduct {
   new_title: LocalizedText[];
 }
 
-export interface ReplaceProductConfiguration {
+export interface ChangeProductConfiguration {
   id: string;
   new_configuration: Configuration;
 }
 
-export interface CreateGeometry {
+export interface AddGeometry {
   geometry: ParametricGeometry;
 }
 
-export interface DeleteGeometry {
+export interface RemoveGeometry {
   id: string;
 }
 
@@ -244,41 +249,40 @@ export interface RemoveGeometryConnection {
   connection_id: string;
 }
 
-export interface ReplaceGeometryParameters {
+export interface ChangeGeometryParameters {
   id: string;
   new_parameters: Record<string, number>;
 }
 
-export interface CreateCurve {
+export interface AddCurve {
   curve: CharacteristicCurve;
 }
 
-export interface DeleteCurve {
+export interface RemoveCurve {
   id: string;
 }
 
-export interface ReplaceCurvePoints {
+export interface ChangeCurvePoints {
   id: string;
   new_points: CurvePoint[];
 }
 
 export type Vdi3805Mutation =
-  | { UpdateManufacturerFile: UpdateManufacturerFile }
+  | { ChangeManufacturerFile: ChangeManufacturerFile }
   | { ChangeCorrectionAsOf: ChangeCorrectionAsOf }
   | { ChangeStrictMode: ChangeStrictMode }
-  | { UpdateLimits: UpdateLimits }
   | { ChangeEditionProfile: ChangeEditionProfile }
   | { RemoveEditionProfile: RemoveEditionProfile }
-  | { CreateProduct: CreateProduct }
-  | { DeleteProduct: DeleteProduct }
+  | { AddProduct: AddProduct }
+  | { RemoveProduct: RemoveProduct }
   | { RenameProduct: RenameProduct }
-  | { ReplaceProductConfiguration: ReplaceProductConfiguration }
-  | { CreateGeometry: CreateGeometry }
-  | { DeleteGeometry: DeleteGeometry }
+  | { ChangeProductConfiguration: ChangeProductConfiguration }
+  | { AddGeometry: AddGeometry }
+  | { RemoveGeometry: RemoveGeometry }
   | { ResizeGeometry: ResizeGeometry }
   | { AddGeometryConnection: AddGeometryConnection }
   | { RemoveGeometryConnection: RemoveGeometryConnection }
-  | { ReplaceGeometryParameters: ReplaceGeometryParameters }
-  | { CreateCurve: CreateCurve }
-  | { DeleteCurve: DeleteCurve }
-  | { ReplaceCurvePoints: ReplaceCurvePoints };
+  | { ChangeGeometryParameters: ChangeGeometryParameters }
+  | { AddCurve: AddCurve }
+  | { RemoveCurve: RemoveCurve }
+  | { ChangeCurvePoints: ChangeCurvePoints };

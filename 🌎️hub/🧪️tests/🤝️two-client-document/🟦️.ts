@@ -412,11 +412,47 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         const exchangedText = await exchanged.text();
         expect(exchanged.status, exchangedText.slice(0, 200)).toBe(200);
         const agentToken = (JSON.parse(exchangedText) as { token: string }).token;
+        const agentExecutionTargetMs: number[] = [];
         const agent = await openSocket(await mint("agent", agentToken));
         expect(agent.actor).not.toBe(a.actor);
         await waitFrame(agent, (f) => "Session" in f, "agent Session");
         beat(agent);
         await waitFrame(b, rosterWith(agent.actor), "presence of the agent");
+        const agentBatch = fixture.command.batchId + 7;
+        agent.socket.send(
+          encodeClientFrame(
+            {
+              Commands: {
+                batch_id: agentBatch,
+                envelopes: [
+                  {
+                    mutation_id: `${fixture.command.mutationIdPrefix}agent-1`,
+                    document_id: documentId,
+                    actor: agent.actor,
+                    dependencies: [],
+                    diff: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(fixture.agent.diffValue)) },
+                    inverse: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(fixture.command.inverseValue)) },
+                    timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
+                  },
+                ],
+              },
+            },
+            "command",
+          ),
+        );
+        const agentAck = await waitFrame(agent, (f) => "Ack" in f && f.Ack.batch_id === agentBatch, "agent Ack");
+        expect(JSON.stringify(agentAck.Ack.stages), "the delegated agent's own edit commits").toContain("Accepted");
+        const agentTargetHeaders = { "content-type": "application/json", authorization: `Bearer ${agentToken}` };
+        const agentTargetIntent = JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId }, requestedSurfaceId: surfaceId, clientInstanceId: "tc-agent-target" });
+        for (const part of ["manifest", "descriptor"]) {
+          const askedAt = Date.now();
+          const answered = await fetchTimed(`${origin}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/execution-target/${part}`, { method: "POST", headers: agentTargetHeaders, body: agentTargetIntent });
+          const answeredText = part === "manifest" ? await answered.text() : `${(await answered.arrayBuffer()).byteLength} bytes`;
+          const answeredMs = Date.now() - askedAt;
+          expect(answered.status, `the agent's execution-target ${part} after its own commit: ${answeredText.slice(0, 200)}`).toBe(200);
+          expect(answeredMs, `the agent's execution-target ${part} answered within the bound`).toBeLessThanOrEqual(fixture.agent.executionTargetWithinMs);
+          agentExecutionTargetMs.push(answeredMs);
+        }
         const afterRevocation = since(b);
         const revokedAt = Date.now();
         const revoked = await fetchTimed(`${origin}/auth/agent-delegations/${encodeURIComponent(delegation.delegationId)}`, { method: "DELETE", headers: humanHeaders });
@@ -508,6 +544,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         note("growthEditsAcceptedBeforeRestart", fixture.growth.editsBeforeRestart);
         note("growthMsBeforeRestart", growthMsBeforeRestart);
         note("agentRevocationMs", agentRevocationMs);
+        note("agentExecutionTargetMs", agentExecutionTargetMs);
         const fenceRelease = writerFence.backends.find((row: any) => row.backend === backend)?.crashRelease as string | undefined;
         const exitOf = (hubRun: typeof run, ms: number) =>
           new Promise<{ code: number | null; signal: string | null }>((resolve, reject) => {

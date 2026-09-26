@@ -1,4 +1,4 @@
-//! 🚒 `change-fire-rating` — sets the En 1994 fire resistance rating, e.g. r60 scalar.
+//! 🔥️ `change-fire-rating` mutation leaf.
 
 use crate::{En1994Mutation, En1994Snapshot};
 
@@ -20,7 +20,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeFireRating
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change fire rating to \"{}\"", self.new_fire_rating), &format!("Feuerwiderstandsklasse auf \"{}\" ändern", self.new_fire_rating))
+        protocol::LocalizedLabel::native("change-fire-rating", "change-fire-rating")
     }
 }
 //#endregion 🔖️Payload

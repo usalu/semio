@@ -3,7 +3,7 @@
   "emoji": "🗒️",
   "status": "done",
   "description": "Get the 🗒️note plugin working end to end: native check, guest wasm restage (activate-note-react-dev), react dev serve on 6080 (?plugin=note), proven boot (editor windows + panels) and persisted document mutations (addBlock/patchBlocks/ink) through the shell.",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [
     "⚪d574ffab-f28b-4b80-982a-7f4f82b5f0da"
   ],

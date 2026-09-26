@@ -5,23 +5,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "manufacturerFile",
     "catalog",
     "editionProfile",
     "correctionAsOf",
     "strictMode",
     "index",
     "geometry",
-    "curves",
-    "limits"
+    "curves"
   ],
   "properties": {
-    "manufacturerFile": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
     "catalog": {
-      "type": "string",
+      "$ref": "#/$defs/ManufacturerCatalog",
       "x-semio-state": "artifact"
     },
     "editionProfile": {
@@ -32,7 +26,7 @@
       "x-semio-state": "artifact"
     },
     "correctionAsOf": {
-      "type": "string",
+      "$ref": "#/$defs/EditionId",
       "x-semio-state": "artifact"
     },
     "strictMode": {
@@ -40,26 +34,734 @@
       "x-semio-state": "artifact"
     },
     "index": {
-      "type": "string",
+      "$ref": "#/$defs/CatalogIndex",
       "x-semio-state": "artifact"
     },
     "geometry": {
       "type": "object",
       "additionalProperties": {
-        "type": "string"
+        "$ref": "#/$defs/ParametricGeometry"
       },
       "x-semio-state": "artifact"
     },
     "curves": {
       "type": "object",
       "additionalProperties": {
-        "type": "string"
+        "$ref": "#/$defs/CharacteristicCurve"
       },
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "LocalizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locale",
+        "text"
+      ],
+      "properties": {
+        "locale": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      }
     },
-    "limits": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "BuildingSystemNumber": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "systemCode",
+        "subsystem",
+        "sequence"
+      ],
+      "properties": {
+        "systemCode": {
+          "type": "string"
+        },
+        "subsystem": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer"
+        }
+      }
+    },
+    "ExtensionFields": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ManufacturerFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "headerVersion",
+        "manufacturer",
+        "buildingSystemNumber",
+        "created",
+        "charset",
+        "recordCount",
+        "extensions"
+      ],
+      "properties": {
+        "headerVersion": {
+          "type": "string"
+        },
+        "manufacturer": {
+          "type": "string"
+        },
+        "buildingSystemNumber": {
+          "$ref": "#/$defs/BuildingSystemNumber"
+        },
+        "created": {
+          "type": "string"
+        },
+        "charset": {
+          "type": "string"
+        },
+        "recordCount": {
+          "type": "integer"
+        },
+        "extensions": {
+          "$ref": "#/$defs/ExtensionFields"
+        }
+      }
+    },
+    "NativeRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "fields",
+        "extensions"
+      ],
+      "properties": {
+        "family": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/ExtensionFields"
+        }
+      }
+    },
+    "SheetAttributes": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "dn",
+            "kvsM3S",
+            "pressureClass",
+            "connectionType",
+            "authorityMin",
+            "authorityMax"
+          ],
+          "properties": {
+            "kind": {
+              "const": "valveHeating"
+            },
+            "dn": {
+              "type": "integer"
+            },
+            "kvsM3S": {
+              "type": "number"
+            },
+            "pressureClass": {
+              "type": "string"
+            },
+            "connectionType": {
+              "type": "string"
+            },
+            "authorityMin": {
+              "type": "number"
+            },
+            "authorityMax": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "standardOutputW",
+            "heatExponentN",
+            "lengthM",
+            "heightM",
+            "depthM",
+            "connectionType"
+          ],
+          "properties": {
+            "kind": {
+              "const": "radiator"
+            },
+            "standardOutputW": {
+              "type": "number"
+            },
+            "heatExponentN": {
+              "type": "number"
+            },
+            "lengthM": {
+              "type": "number"
+            },
+            "heightM": {
+              "type": "number"
+            },
+            "depthM": {
+              "type": "number"
+            },
+            "connectionType": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "dnSuction",
+            "dnDischarge",
+            "nominalFlowM3S",
+            "nominalHeadM",
+            "motorPowerW",
+            "hydraulicEfficiency"
+          ],
+          "properties": {
+            "kind": {
+              "const": "pumpHeating"
+            },
+            "dnSuction": {
+              "type": "integer"
+            },
+            "dnDischarge": {
+              "type": "integer"
+            },
+            "nominalFlowM3S": {
+              "type": "number"
+            },
+            "nominalHeadM": {
+              "type": "number"
+            },
+            "motorPowerW": {
+              "type": "number"
+            },
+            "hydraulicEfficiency": {
+              "type": "number"
+            },
+            "qhCurveRef": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "nominalHeatOutputW",
+            "fuelType",
+            "flowTempMaxC",
+            "returnTempMinC"
+          ],
+          "properties": {
+            "kind": {
+              "const": "heatGenerator"
+            },
+            "nominalHeatOutputW": {
+              "type": "number"
+            },
+            "fuelType": {
+              "type": "string"
+            },
+            "flowTempMaxC": {
+              "type": "number"
+            },
+            "returnTempMinC": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "generic"
+            }
+          }
+        }
+      ]
+    },
+    "Configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "attributes",
+        "functionRefs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "attributes": {
+          "$ref": "#/$defs/SheetAttributes"
+        },
+        "geometryRef": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "functionRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ProductIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manufacturerCode",
+        "productGroup",
+        "articleNumber"
+      ],
+      "properties": {
+        "manufacturerCode": {
+          "type": "string"
+        },
+        "productGroup": {
+          "type": "string"
+        },
+        "articleNumber": {
+          "type": "string"
+        }
+      }
+    },
+    "Product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "identity",
+        "title",
+        "sheet",
+        "records",
+        "configuration",
+        "accessories",
+        "components",
+        "extensions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "identity": {
+          "$ref": "#/$defs/ProductIdentity"
+        },
+        "title": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LocalizedText"
+          }
+        },
+        "sheet": {
+          "type": "integer"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NativeRecord"
+          }
+        },
+        "configuration": {
+          "$ref": "#/$defs/Configuration"
+        },
+        "accessories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AccessoryLink"
+          }
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompositionLink"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/ExtensionFields"
+        }
+      }
+    },
+    "ManufacturerCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "products",
+        "extensions"
+      ],
+      "properties": {
+        "file": {
+          "$ref": "#/$defs/ManufacturerFile"
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Product"
+          }
+        },
+        "extensions": {
+          "$ref": "#/$defs/ExtensionFields"
+        }
+      }
+    },
+    "EditionId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "year",
+        "month"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer"
+        }
+      }
+    },
+    "CatalogIndexEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "productId",
+        "sheet",
+        "tags"
+      ],
+      "properties": {
+        "productId": {
+          "type": "string"
+        },
+        "sheet": {
+          "type": "integer"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dn": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "CatalogIndex": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CatalogIndexEntry"
+          }
+        }
+      }
+    },
+    "BoundingBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minX",
+        "minY",
+        "minZ",
+        "maxX",
+        "maxY",
+        "maxZ"
+      ],
+      "properties": {
+        "minX": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        },
+        "minZ": {
+          "type": "number"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "maxY": {
+          "type": "number"
+        },
+        "maxZ": {
+          "type": "number"
+        }
+      }
+    },
+    "GeometryConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "x",
+        "y",
+        "z",
+        "nx",
+        "ny",
+        "nz"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "nx": {
+          "type": "number"
+        },
+        "ny": {
+          "type": "number"
+        },
+        "nz": {
+          "type": "number"
+        }
+      }
+    },
+    "ParametricGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bbox",
+        "connections",
+        "parameters"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bbox": {
+          "$ref": "#/$defs/BoundingBox"
+        },
+        "connections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GeometryConnection"
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "CurvePoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      }
+    },
+    "CharacteristicCurve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "points"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CurvePoint"
+          }
+        },
+        "xUnit": {
+          "$ref": "#/$defs/VdiUnit"
+        },
+        "yUnit": {
+          "$ref": "#/$defs/VdiUnit"
+        }
+      }
+    },
+    "SecurityLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxFileBytes",
+        "maxRecords",
+        "maxFieldLength",
+        "maxNestingDepth"
+      ],
+      "properties": {
+        "maxFileBytes": {
+          "type": "integer"
+        },
+        "maxRecords": {
+          "type": "integer"
+        },
+        "maxFieldLength": {
+          "type": "integer"
+        },
+        "maxNestingDepth": {
+          "type": "integer"
+        }
+      }
+    },
+    "VdiUnit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "symbol",
+        "kind",
+        "si_factor",
+        "delta"
+      ],
+      "properties": {
+        "symbol": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "si_factor": {
+          "type": "number"
+        },
+        "delta": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AccessoryLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accessoryId",
+        "required",
+        "quantity"
+      ],
+      "properties": {
+        "accessoryId": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CompositionLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "componentId",
+        "quantity"
+      ],
+      "properties": {
+        "componentId": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "GenericAttribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      }
+    },
+    "GenericAttributes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GenericAttribute"
+          }
+        }
+      }
     }
   }
 }

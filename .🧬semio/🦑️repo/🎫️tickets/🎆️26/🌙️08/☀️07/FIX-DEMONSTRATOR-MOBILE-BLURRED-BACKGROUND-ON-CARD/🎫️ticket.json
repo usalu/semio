@@ -4,6 +4,6 @@
   "status": "closed",
   "description": "On touch/mobile demonstrator overview, the live app behind each card must stay behind a full ui-veil blur instead of going clear when the section snaps settled. Desktop hover must still reveal the pinned pane (no full-screen veil when the cutout covers the viewport).",
   "summary": "## Summary\nTouch demonstrator overview sections keep a full `ui-veil` over each live pane. Desktop hover-reveal works again when the pinned pane fills the viewport.\n\n### Root causes\n1. Mobile: `demonstratorListVeilOpacity(0)` cleared the veil on settled sections.\n2. Desktop: `demonstratorTintSegmentsPx` treated a full-viewport reveal hole as “no segments” and fell back to a full-screen veil — visible once scroll pins the hovered pane to one viewport (cursor on card).\n\n### Fixes\n- Mobile: `DEMONSTRATOR_MOBILE_OVERVIEW_VEIL_OPACITY = 1` while overview layer is shown.\n- Desktop: return an empty segment list when the hole covers the viewport (no veil), instead of repainting the full scrim.\n\n### Files\n- `♻️mit-bestand/🧺️demonstrator/📦️index.tsx`\n",
-  "goal": "🎯r2602🎯runningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": []
 }

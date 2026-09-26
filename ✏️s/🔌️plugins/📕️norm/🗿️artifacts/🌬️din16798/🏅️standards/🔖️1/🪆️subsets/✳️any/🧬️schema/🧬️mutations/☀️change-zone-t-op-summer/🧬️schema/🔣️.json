@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-t-op-summer/schema.json",
+  "title": "ChangeZoneTOpSummer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newTOpSummerC"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newTOpSummerC": {
+      "type": "number"
+    }
+  }
+}

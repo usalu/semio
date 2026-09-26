@@ -1,0 +1,251 @@
+{
+  "catalogue": {
+    "accessories": {},
+    "compositions": {},
+    "descriptive_objects": [],
+    "dictionary": {
+      "id": "bsdd.fixture",
+      "version": "2026-01"
+    },
+    "extensions": {
+      "fields": {}
+    },
+    "id": "cat.fixture",
+    "manufacturer": {
+      "id": "mfg.fixture",
+      "names": {
+        "alternatives": [],
+        "preferred": {
+          "locale": "en",
+          "text": "Fixture Heating Works"
+        },
+        "short_name": null
+      }
+    },
+    "metadata": {
+      "edition_profile": "FullPublished",
+      "lifecycle": {
+        "revision": "1",
+        "status": "published",
+        "valid_from": null,
+        "valid_to": null
+      },
+      "names": {
+        "alternatives": [
+          {
+            "locale": "de",
+            "text": "Musterkatalog Heizkörper"
+          }
+        ],
+        "preferred": {
+          "locale": "en",
+          "text": "Fixture Radiator Catalogue"
+        },
+        "short_name": "Fixture"
+      }
+    },
+    "product_classes": [
+      {
+        "group_id": "group.radiators",
+        "id": "class.panel-radiator",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "Panel radiator"
+          },
+          "short_name": null
+        },
+        "optional_property_ids": [],
+        "parent_id": null,
+        "required_property_ids": [
+          "prop.height"
+        ]
+      },
+      {
+        "group_id": "group.radiators",
+        "id": "class-towel-radiator",
+        "names": {
+          "alternatives": [
+            {
+              "locale": "de",
+              "text": "Badheizkörper"
+            }
+          ],
+          "preferred": {
+            "locale": "en",
+            "text": "Towel radiator"
+          },
+          "short_name": null
+        },
+        "optional_property_ids": [],
+        "parent_id": "class.panel-radiator",
+        "required_property_ids": []
+      }
+    ],
+    "product_groups": [
+      {
+        "dictionary_subject_id": "subject.radiator",
+        "id": "group.radiators",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "Radiators"
+          },
+          "short_name": null
+        }
+      }
+    ],
+    "product_indexes": [],
+    "product_series": [
+      {
+        "class_id": "class.panel-radiator",
+        "geometry_id": null,
+        "id": "series-pr",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "PR series"
+          },
+          "short_name": null
+        },
+        "shared_property_values": {}
+      }
+    ],
+    "products": [
+      {
+        "id": "product.pr600",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "PR-600"
+          },
+          "short_name": null
+        },
+        "parameter_domains": [],
+        "series_id": "series-pr",
+        "static_properties": [],
+        "variants": []
+      }
+    ],
+    "property_definitions": [
+      {
+        "cardinality": {
+          "max": 1,
+          "min": 1
+        },
+        "data_type": "decimal",
+        "dictionary_property_id": "prop.height",
+        "id": "prop.height",
+        "kind": "Static",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "Height"
+          },
+          "short_name": null
+        },
+        "unit": {
+          "dimension": {
+            "length": 1,
+            "mass": 0,
+            "temperature": 0,
+            "time": 0
+          },
+          "si_factor": 0.001,
+          "symbol": "mm"
+        }
+      }
+    ]
+  },
+  "dictionary": {
+    "controlled_lists": [],
+    "meta_subjects": [],
+    "properties": [],
+    "reference": {
+      "id": "bsdd.fixture",
+      "version": "2026-01"
+    },
+    "relationships": [],
+    "subjects": [
+      {
+        "definition": {
+          "locale": "en",
+          "text": "Space heating emitter"
+        },
+        "id": "subject.radiator",
+        "kind": "ProductClass",
+        "names": {
+          "alternatives": [],
+          "preferred": {
+            "locale": "en",
+            "text": "Radiator"
+          },
+          "short_name": null
+        },
+        "parent_id": null
+      }
+    ]
+  },
+  "exchangeProcess": "ProvideCatalogue",
+  "geometry": {
+    "objects": {},
+    "primitive_registry": [
+      {
+        "id": "box",
+        "parameters": [
+          "width",
+          "height",
+          "depth"
+        ]
+      }
+    ]
+  },
+  "partNumberInputs": {
+    "height": {
+      "kind": "decimal",
+      "value": 600.0
+    },
+    "length": {
+      "kind": "decimal",
+      "value": 1200.0
+    }
+  },
+  "partNumberRule": {
+    "kind": "literal",
+    "value": "PR-600"
+  },
+  "scriptLimits": {
+    "max_recursion": 64,
+    "max_steps": 10000,
+    "timeout_ms": 50
+  },
+  "selection": {
+    "class_id": "class.panel-radiator",
+    "constraints": [
+      {
+        "operator": "Equal",
+        "property_id": "prop.height",
+        "value": {
+          "kind": "decimal",
+          "value": 600.0
+        },
+        "id": "constraint-prop.height-0"
+      },
+      {
+        "operator": "GreaterThan",
+        "property_id": "prop.length",
+        "value": {
+          "kind": "decimal",
+          "value": 1000.0
+        },
+        "id": "constraint-prop.length-1"
+      }
+    ],
+    "series_id": "series-pr"
+  }
+}

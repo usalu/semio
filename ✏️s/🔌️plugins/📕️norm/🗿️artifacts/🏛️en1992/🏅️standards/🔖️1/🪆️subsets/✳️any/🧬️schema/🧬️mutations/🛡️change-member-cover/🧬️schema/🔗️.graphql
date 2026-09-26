@@ -1,0 +1,4 @@
+type ChangeMemberCover {
+  memberId: String!
+  newValue: Float!
+}

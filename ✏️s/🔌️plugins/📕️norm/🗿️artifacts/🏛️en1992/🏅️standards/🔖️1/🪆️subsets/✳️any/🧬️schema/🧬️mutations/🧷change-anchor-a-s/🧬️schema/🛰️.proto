@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeAnchorAs {
+  string anchorId = 1;
+  double newValue = 2;
+}

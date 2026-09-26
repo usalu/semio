@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-area/schema.json",
+  "title": "ChangeElementArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "elementId",
+    "newAreaM2"
+  ],
+  "properties": {
+    "elementId": {
+      "type": "string"
+    },
+    "newAreaM2": {
+      "type": "number"
+    }
+  }
+}

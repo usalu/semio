@@ -1,0 +1,32 @@
+//! `introduce-product-class` — insert into catalogue.product_classes.
+
+use crate::{part_1::ProductClass, Iso16757Mutation, Iso16757Snapshot};
+
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[mutation_leaf(contract = ::protocol)]
+pub struct IntroduceProductClass {
+    pub product_class: ProductClass,
+    pub index: Option<usize>,
+}
+
+impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for IntroduceProductClass {
+    const SEMANTICS: protocol::SemanticDescriptor =
+        protocol::SemanticDescriptor { verb: "insert", entity: "productClass", kind: "introduce-product-class", record: "IntroducedProductClass" };
+
+    fn diff(&self, base: &Iso16757Snapshot) -> protocol::MutationOutcome<<Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::Diff> {
+        super::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+        super::inverse::inverse(self, base)
+    }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native(
+            &format!("Introduce productClass \"{}\"", self.product_class.id),
+            &format!("productClass \"{}\" erstellen", self.product_class.id),
+        )
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.product_class.id.clone()]
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-opening-width/schema.json",
+  "title": "ChangeOpeningWidth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallIndex",
+    "index",
+    "newWidthM"
+  ],
+  "properties": {
+    "wallIndex": {
+      "type": "integer"
+    },
+    "index": {
+      "type": "integer"
+    },
+    "newWidthM": {
+      "type": "number"
+    }
+  }
+}

@@ -1,9 +1,17 @@
 {
   "UpdateWeldInputs": {
-    "new_weld_a_mm": 7.0,
-    "new_weld_l_mm": 160.0,
-    "new_weld_f_u_mpa": 540.0,
-    "new_weld_steel_grade": "S460",
-    "new_weld_f_ed_kn": 140.0
+    "member_action": {
+      "id": "act-b1-uls",
+      "memberId": "member-b1",
+      "loadCaseId": "uls-1",
+      "action": {
+        "n": 200000,
+        "vy": 0,
+        "vz": 50000,
+        "my": 120000.0,
+        "mz": 0,
+        "t": 0
+      }
+    }
   }
 }

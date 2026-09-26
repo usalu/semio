@@ -1,0 +1,4 @@
+type ReorderMembers {
+  fromIndex: Int!
+  toIndex: Int!
+}

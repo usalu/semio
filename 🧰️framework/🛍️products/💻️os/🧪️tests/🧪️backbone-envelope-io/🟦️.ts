@@ -1,3 +1,4 @@
+import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "BACKBONE_ENVELOPE_RETRY_WINDOW_MS" | "readBackboneEnvelope" | "writeBackboneEnvelope">, source: TestSource): Promise<void> {
@@ -355,9 +356,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     it("validates the neutral corpus against its own schema", async () => {
-      const { default: Ajv } = await import("ajv");
       const [{ default: corpus }, { default: schema }] = await Promise.all([import("../../🧫️fixtures/🎒️pack-dynamic-integer-v1/🔣️.json"), import("../../🔨️modules/🎒️pack/🌱️value/🧬️schema/🔣️.json")]);
-      const packValueExport = new Ajv({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${(schema as { $id: string }).$id}#/$defs/PackDynamicIntegerV1`)!;
+      const packValueExport = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(schema).getSchema(`${(schema as { $id: string }).$id}#/$defs/PackDynamicIntegerV1`)!;
       expect(packValueExport(corpus)).toBe(true);
       expect(corpus.accept).toHaveLength(6);
       expect(corpus.reject.map((row: { id: string }) => row.id)).toEqual(["truncated-u64", "u64-overflow", "nonminimal-u64", "nonminimal-zigzag-i64"]);
@@ -886,7 +886,6 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("@semio-tech/framework-os AppChannelClient", () => {
     it("local interaction outer wire matches strict fixtures and the independent LEB128 oracle", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const oracleModule = "@webassemblyjs/leb128/lib/leb.js";
       const imported: unknown = await import(oracleModule);
       if (!imported || typeof imported !== "object") throw new Error("invalid LEB128 oracle module");
@@ -896,7 +895,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       if (typeof encodeUnsigned !== "function") throw new Error("missing LEB128 oracle encoder");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🏠️local-interaction/🧪️query/🔣️.json", source.url), "utf8"));
       const module = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
-      const validate = new Ajv({ strict: true }).addSchema(module).getSchema(`${module.$id}#/$defs/LocalInteractionV1`)!;
+      const validate = semioSchemaAjvV1({ strict: true }).addSchema(module).getSchema(`${module.$id}#/$defs/LocalInteractionV1`)!;
       expect(validate(fixture)).toBe(true);
       expect(validate({ ...fixture, lateTokenAccepted: true })).toBe(false);
       expect(validate({ ...fixture, terminalBeforeClosed: true })).toBe(false);
@@ -1308,10 +1307,9 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("publishes only accepted document cache candidates and owns both byte arrays", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📦️document-cache/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
-      const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/DocumentCacheAcceptanceV1`)!;
+      const validate = semioSchemaAjvV1({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/DocumentCacheAcceptanceV1`)!;
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       expect(validate({ ...fixture, optimistic: true })).toBe(false);
       const pair = (value: { pack: number[]; spr: number[] }) => ({ pack: Uint8Array.from(value.pack), spr: Uint8Array.from(value.spr) });
@@ -1886,11 +1884,10 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("document backbone worker wire", () => {
     it("admits inference opening only after its exact worker receipt", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json", source.url), "utf8"));
-      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
       const { InferencePortOpeningMailboxV1, parseInferencePortClosedV1, parseInferencePortOpeningResultV1 } = await import("../../🔨️modules/💡️inference/🚪️opening/🟦️.ts");
       expect(equal(parseInferencePortClosedV1(fixture.closed), fixture.closed)).toBe(true);
       expect(equal(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(fixture.closed)), fixture.closed)).toBe(true);
@@ -1917,7 +1914,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(mailbox.settle(fixture.opened)).toBe(false);
         expect(equal(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(fixture.opened)), fixture.opened)).toBe(true);
         for (const extra of [{ code: "inference.capacity" }, { authority: "forged" }, { operationEpoch: 0 }]) expect(() => parseInferencePortOpeningResultV1({ ...fixture.opened, ...extra })).toThrow();
-        const valid = new Ajv({ strict: true }).compile(schema);
+        const valid = semioSchemaAjvV1({ strict: true }).compile(schema);
         for (const [field, code] of [["indeterminate", "inference.capacity"], ["refused", "inference.transport"]]) {
           const hostile = { ...fixture[field!], code };
           expect(() => parseInferencePortOpeningResultV1(hostile)).toThrow();
@@ -1928,11 +1925,10 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("projects real browser intent publications and preserves bounded owned inference effects", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json", source.url), "utf8"));
-      const valid = new Ajv({ strict: true }).compile(schema);
+      const valid = semioSchemaAjvV1({ strict: true }).compile(schema);
       expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
       const { decodeBrowserActorCommandPublicationV1, decodeBrowserActorIntentPublicationV1, encodeBrowserActorHostEffectV1, decodeBrowserActorHostEffectsV1, publishBrowserActorHostEffectsV1, requireBrowserActorCommandBackboneProjectionV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts");
       const { encodeAppFrame, encodePackValue } = await import("../../🟦️.ts");
@@ -2193,11 +2189,10 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("preserves the complete browser UI intent and its unsigned sequence above JSON precision", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧬️schema/🔣️.json", source.url), "utf8"));
-      const valid = new Ajv({ strict: true }).compile(schema);
+      const valid = semioSchemaAjvV1({ strict: true }).compile(schema);
       expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
       const { createBrowserActorUiIntentRequestV1 } = await import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts");
       const { decodePackValue, packUInt } = await import("../../🟦️.ts");
@@ -2233,7 +2228,6 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("admits only closed semantically valid directory administration requests", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️directory/🏛️administration-worker-wire-v1.json", source.url), "utf8")) as {
         valid: readonly BackboneWorkerRequest[];
@@ -2245,7 +2239,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         malformed: readonly unknown[];
       };
       const directorySchema = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🔣️.json", source.url), "utf8"));
-      const commandOracle = new Ajv({ strict: true }).addKeyword("x-semio-note").addSchema(directorySchema).getSchema(`${directorySchema.$id}#/$defs/DirectoryCommand`)!;
+      const commandOracle = semioSchemaAjvV1({ strict: true }).addSchema(directorySchema).getSchema(`${directorySchema.$id}#/$defs/DirectoryCommand`)!;
       const wire = (request: unknown): Uint8Array => new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue(request)]);
 
       for (const request of fixture.valid) expect(equal(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request)), request)).toBe(true);
@@ -2471,11 +2465,10 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("withholds creation authority and document coordinates until an exact ready status", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️directory/🌱️space-artifact-creation-generation-v1.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🌱️space-artifact-creation-generation-v1/🔣️.json", source.url), "utf8"));
-      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
       const requestId = "1".repeat(32);
       const catalogGenerationId = "3".repeat(64);
       const clientInstanceId = "12345678-1234-4123-8123-123456789abc";

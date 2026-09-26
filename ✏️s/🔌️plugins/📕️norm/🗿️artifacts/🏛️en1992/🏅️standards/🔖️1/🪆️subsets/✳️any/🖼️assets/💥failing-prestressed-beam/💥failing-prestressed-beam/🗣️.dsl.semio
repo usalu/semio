@@ -1,0 +1,20 @@
+semio norm.en1992.dsl v1
+annex=de title="Failing prestressed beam" design-working-life-years=50 delta-c-dev=0.01 cement-type=N
+concrete-grades [id:TEXT name:TEXT f-ck:NUM] {
+  c30 C30/37 30000000
+  c12 C12/15 12000000
+  c50 C50/60 50000000
+  c100 C100/115 100000000
+}
+reinforcement-grades [id:TEXT name:TEXT f-yk:NUM e-s:NUM ductility:ENUM k:NUM eps-uk:NUM] {
+  b500 B500B 500000000 200000000000 b 1.08 0.05
+  b500a B500A 500000000 200000000000 a 1.05 0.025
+}
+prestress-steels [id:TEXT name:TEXT f-pk:NUM f-p0-1k:NUM] {
+  yp1860 Y1860S7 1860000000 1640000000
+}
+members [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM concrete-grade-id:TEXT reinforcement-grade-id:TEXT prestress-steel-id:TEXT exposure:ENUM width:NUM height:NUM effective-depth:NUM cover:NUM span:NUM support:ENUM buckling-length:NUM longitudinal:TABLE stirrups:REC punching:REC prestress:REC fire:REC actions:TABLE use-fem:BOOL udl:NUM deflection-sensitive:BOOL tightness:ENUM hd-over-h:NUM liquid-sigma-s:NUM liquid-rho-p-eff:NUM liquid-f-ct-eff:NUM liquid-s-r-max:NUM bridge-sigma-c:NUM bridge-delta-sigma-s:NUM] {
+  beam-PS1 "Prestressed beam PS1" "Vorgespannter Träger PS1" beam c50 b500 yp1860 xc1 0.35 0.7 0.62 0.015 12 simply-supported 0 [ {id=bot diameter=0.016 count=4 position=bottom anchorage-length=0.8 lap-length=1 bond-condition=good aggregate-size=0.016} ] {diameter=0.01 spacing=0.2 legs=2} _ {force=4000000 area=0.0015 eccentricity=0.3 loss-ratio=0.02} {rating=r90 axis-distance=0.055 column-method="" slab-system=""} [ {id=G kind=permanent category=self source=udl g-k-line=15000 q-k-line=0 point-force=0 m-k=0 n-k=0 v-k=0 t-k=0 v-k-punch=0} {id=Q-office kind=imposed category=office source=udl g-k-line=0 q-k-line=8000 point-force=0 m-k=0 n-k=0 v-k=0 t-k=0 v-k-punch=0} ] false 0 false _ 0 0 0 0 0 0 0
+}
+anchors [id:TEXT h-ef:NUM cracked:BOOL f-uk:NUM f-yk:NUM a-s:NUM d:NUM c1:NUM f-ck:NUM actions:TABLE] {
+}

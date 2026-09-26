@@ -1,104 +1,151 @@
-// 🧬️ EN 1998 snapshot schema.
 syntax = "proto3";
-package semio.s.norm.en1998.snapshot;
-
+message En1998Site {
+  string seismic_zone = 1;
+  double a_gr = 2;
+  string de_ground_combo = 3;
+  string en_ground_type = 4;
+  string en_spectrum_type = 5;
+  string importance_class = 6;
+}
+message En1998System {
+  string id = 1;
+  string direction = 2;
+  string system_type = 3;
+  string material = 4;
+  string ductility_class = 5;
+  double q0 = 6;
+  double alpha_u_over_alpha_1 = 7;
+  double k_w = 8;
+  double base_shear_resistance_n = 9;
+}
+message En1998VariableAction {
+  string id = 1;
+  string category = 2;
+  double qk_n = 3;
+}
+message En1998Storey {
+  string id = 1;
+  double height_m = 2;
+  double permanent_gk_n = 3;
+  bool correlated_occupancy = 4;
+  repeated En1998VariableAction variables = 5;
+  double stiffness_x = 6;
+  double stiffness_y = 7;
+  double centre_of_mass_x_m = 8;
+  double centre_of_mass_y_m = 9;
+  double centre_of_stiffness_x_m = 10;
+  double centre_of_stiffness_y_m = 11;
+  double drift_x_m = 12;
+  double drift_y_m = 13;
+  double shear_resistance_n = 14;
+}
+message En1998Member {
+  string id = 1;
+  string material = 2;
+  string role = 3;
+  bool detailing_compatible_with_q = 4;
+  double min_dimension_m = 5;
+  double rho = 6;
+  double rho_prime = 7;
+  double omega_wd = 8;
+  int32 steel_section_class = 9;
+}
+message En1998Building {
+  string id = 1;
+  string name = 2;
+  double plan_width_m = 3;
+  double plan_length_m = 4;
+  repeated En1998System systems = 5;
+  repeated En1998Storey storeys = 6;
+  repeated En1998Member members = 7;
+  bool plan_regular = 8;
+  bool elevation_regular = 9;
+  string t1_method = 10;
+  double t1_given_s = 11;
+  double ct = 12;
+  string drift_limit_class = 13;
+  double nu = 14;
+  bool multiple_resisting_systems = 15;
+  bool claims_simple_masonry = 16;
+  double masonry_wall_area_ratio = 17;
+  double accidental_eccentricity_ratio = 18;
+}
+message En1998Bridge {
+  string id = 1;
+  double period_ratio = 2;
+  double fundamental_period_s = 3;
+  double v_rd_n = 4;
+  double bearing_d_rd_m = 5;
+  double permanent_gk_n = 6;
+  bool correlated_occupancy = 7;
+  repeated En1998VariableAction variables = 8;
+}
+message En1998Assessment {
+  string id = 1;
+  string knowledge_level = 2;
+  string limit_state = 3;
+  string supported_building_id = 4;
+  double r_k_n = 5;
+  double gamma_el = 6;
+}
+message En1998Silo {
+  string id = 1;
+  double height_m = 2;
+  double radius_m = 3;
+  double permanent_gk_n = 4;
+  double content_qk_n = 5;
+  string content_category = 6;
+  double filling_ratio = 7;
+  double n_rd_n = 8;
+  double v_rd_n = 9;
+  double q_nominal = 10;
+}
+message En1998Tank {
+  string id = 1;
+  double height_m = 2;
+  double radius_m = 3;
+  double permanent_gk_n = 4;
+  double content_qk_n = 5;
+  string content_category = 6;
+  double filling_ratio = 7;
+  double v_rd_n = 8;
+}
+message En1998Foundation {
+  string id = 1;
+  string supported_building_id = 2;
+  double area_m2 = 3;
+  double p_rd_pa = 4;
+  double h_rd_n = 5;
+  double k_foundation = 6;
+  double k_soil = 7;
+}
+message En1998RetainingWall {
+  string id = 1;
+  double height_m = 2;
+  double phi_deg = 3;
+  double soil_gamma = 4;
+  double r = 5;
+  double h_rd_n_per_m = 6;
+}
+message En1998Tower {
+  string id = 1;
+  double height_m = 2;
+  double m_rd_nm = 3;
+  bool is_chimney = 4;
+  double q_nominal = 5;
+  double permanent_gk_n = 6;
+  bool correlated_occupancy = 7;
+  repeated En1998VariableAction variables = 8;
+}
 message En1998Snapshot {
-  // @state artifact
-  uint32 seismic_zone = 1;
-  // @state artifact
-  double ground_type = 2;
-  // @state artifact
-  double importance_class = 3;
-  // @state artifact
-  double structural_system = 4;
-  // @state artifact
-  double t1_s = 5;
-  // @state artifact
-  double mass_t = 6;
-  // @state artifact
-  double v_rd_kn = 7;
-  // @state artifact
-  double drift_mm = 8;
-  // @state artifact
-  double height_m = 9;
-  // @state artifact
-  bool multiple_resisting_systems = 10;
-  // @state artifact
-  double annex = 11;
-  // @state artifact
-  double en_a_gr = 12;
-  // @state artifact
-  double en_ground_type = 13;
-  // @state artifact
-  double en_spectrum_type = 14;
-  // @state artifact
-  double period_ratio = 15;
-  // @state artifact
-  double bridge_v_rd_kn = 16;
-  // @state artifact
-  double bearing_d_ed_mm = 17;
-  // @state artifact
-  double bearing_d_rd_mm = 18;
-  // @state artifact
-  double retrofit_knowledge_level = 19;
-  // @state artifact
-  double retrofit_limit_state = 20;
-  // @state artifact
-  double retrofit_e_d_kn = 21;
-  // @state artifact
-  double retrofit_r_k_kn = 22;
-  // @state artifact
-  double retrofit_gamma_el = 23;
-  // @state artifact
-  double silo_height_m = 24;
-  // @state artifact
-  double silo_radius_m = 25;
-  // @state artifact
-  double silo_n_rd_kn = 26;
-  // @state artifact
-  double silo_v_ed_kn = 27;
-  // @state artifact
-  double silo_v_rd_kn = 28;
-  // @state artifact
-  double silo_q_nominal = 29;
-  // @state artifact
-  double tank_height_m = 30;
-  // @state artifact
-  double tank_radius_m = 31;
-  // @state artifact
-  double tank_mass_t = 32;
-  // @state artifact
-  double tank_v_rd_kn = 33;
-  // @state artifact
-  double tower_m_ed_knm = 34;
-  // @state artifact
-  double tower_m_rd_knm = 35;
-  // @state artifact
-  bool tower_is_chimney = 36;
-  // @state artifact
-  double tower_q_nominal = 37;
-  // @state artifact
-  double tower_mass_t = 38;
-  // @state artifact
-  double foundation_area_m2 = 39;
-  // @state artifact
-  double foundation_p_rd_kpa = 40;
-  // @state artifact
-  double foundation_h_ed_kn = 41;
-  // @state artifact
-  double foundation_h_rd_kn = 42;
-  // @state artifact
-  double k_foundation = 43;
-  // @state artifact
-  double k_soil = 44;
-  // @state artifact
-  double wall_height_m = 45;
-  // @state artifact
-  double wall_phi_deg = 46;
-  // @state artifact
-  double wall_soil_gamma_kn_m3 = 47;
-  // @state artifact
-  double wall_r = 48;
-  // @state artifact
-  double wall_h_rd_kn = 49;
+  string annex = 1;
+  En1998Site site = 2;
+  repeated En1998Building buildings = 3;
+  repeated En1998Bridge bridges = 4;
+  repeated En1998Assessment assessments = 5;
+  repeated En1998Silo silos = 6;
+  repeated En1998Tank tanks = 7;
+  repeated En1998Foundation foundations = 8;
+  repeated En1998RetainingWall retaining_walls = 9;
+  repeated En1998Tower towers = 10;
 }

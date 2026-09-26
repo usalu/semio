@@ -1,0 +1,4 @@
+type ChangeConcreteFCk {
+  gradeId: String!
+  newFCk: Float!
+}

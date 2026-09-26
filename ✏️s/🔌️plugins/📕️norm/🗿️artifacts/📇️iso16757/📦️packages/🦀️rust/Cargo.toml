@@ -28,7 +28,6 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 pack = { workspace = true }
-semio-s-artifact-norm-en1999 = { workspace = true }
 
 
 [dev-dependencies]

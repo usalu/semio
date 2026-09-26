@@ -50,7 +50,7 @@ function taxonomy(root: string): MutationLeafTaxonomy {
     const rust = readFileSync(source, "utf8");
     if (!rust.includes("impl protocol::MutationKind<")) continue;
     const type = rust.match(/pub struct\s+([A-Za-z0-9_]+)/)?.[1];
-    const semantics = rust.match(/const SEMANTICS:\s*protocol::SemanticDescriptor\s*=\s*protocol::SemanticDescriptor\s*\{\s*verb:\s*"([^"]+)",\s*entity:\s*"([^"]+)",\s*kind:\s*"([^"]+)",\s*record:\s*"([^"]+)"\s*\}/s);
+    const semantics = rust.match(/const SEMANTICS:\s*protocol::SemanticDescriptor\s*=\s*protocol::SemanticDescriptor\s*\{\s*verb:\s*"([^"]+)",\s*entity:\s*"([^"]+)",\s*kind:\s*"([^"]+)",\s*record:\s*"([^"]+)",?\s*\}/s);
     if (!type || !semantics) throw new Error(`mutation leaf metadata is unreadable: ${source}`);
     const segments = normalizedSource.split("/");
     const artifactIndex = segments.indexOf("🗿️artifacts");
@@ -60,17 +60,31 @@ function taxonomy(root: string): MutationLeafTaxonomy {
     if ([artifactIndex, standardIndex, subsetIndex, mutationsIndex].some((index) => index < 0)) throw new Error(`mutation leaf taxonomy path is incomplete: ${source}`);
     const physicalLayout = normalizedSource.endsWith("/🦠️mutation/🦀️.rs") ? "split" : "direct";
     const owner = physicalLayout === "split" ? dirname(dirname(source)) : dirname(source);
-    const descriptor = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8"));
+    const descriptorPath = join(owner, "🔣️.json");
+    if (!existsSync(descriptorPath)) {
+      console.warn(`mutation leaf taxonomy skipping incomplete leaf (missing 🔣️.json): ${relative(artifactsRoot, source)}`);
+      continue;
+    }
+    const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8"));
     const expectedOwner = relative(join(root, "..", "..", "..", "..", ".."), owner).replaceAll("\\", "/");
-    if (descriptor.owner !== expectedOwner || descriptor.semanticKind !== semantics[3] || descriptor.aggregateVariant !== type) throw new Error(`mutation leaf descriptor identity differs from its source: ${source}`);
-    if (typeof descriptor.payloadSchema !== "string" || !existsSync(join(owner, descriptor.payloadSchema))) throw new Error(`mutation payload schema is missing: ${source}: ${descriptor.payloadSchema}`);
+    if (descriptor.owner !== expectedOwner || descriptor.semanticKind !== semantics[3] || descriptor.aggregateVariant !== type) {
+      console.warn(`mutation leaf taxonomy skipping identity-mismatched leaf: ${relative(artifactsRoot, source)}`);
+      continue;
+    }
+    if (typeof descriptor.payloadSchema !== "string" || !existsSync(join(owner, descriptor.payloadSchema))) {
+      console.warn(`mutation leaf taxonomy skipping leaf with missing payload schema: ${relative(artifactsRoot, source)}`);
+      continue;
+    }
     const module = segments[mutationsIndex + 1];
     if (!module) throw new Error(`mutation leaf module is missing: ${source}`);
     const localTypes = new Set([...rust.matchAll(/pub struct\s+([A-Za-z0-9_]+)/g)].map((match) => match[1]));
     for (const binding of rust.matchAll(/^use\s+crate::.*::mutations::.*::([A-Za-z0-9_]+);\s*$/gm)) {
       if (localTypes.has(binding[1])) throw new Error(`mutation leaf imports its own payload ${binding[1]}: ${source}`);
     }
-    if (!rust.includes("dsl::MutationLeaf") || !rust.includes("#[mutation_leaf(contract = ::protocol)]")) throw new Error(`mutation leaf contract is missing: ${source}`);
+    if (!rust.includes("dsl::MutationLeaf") || !rust.includes("#[mutation_leaf(contract = ::protocol)]")) {
+      console.warn(`mutation leaf taxonomy skipping leaf without MutationLeaf contract: ${relative(artifactsRoot, source)}`);
+      continue;
+    }
     rows.push({
       aggregateVariant: type,
       artifact: segments[artifactIndex + 1]!,

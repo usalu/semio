@@ -19,72 +19,15 @@ impl En1994Diff {
                 return Ok((**replacement).clone());
             }
             let mut next = artifact.clone();
-            if let Some(value) = &self.annex {
-                next.annex = *value;
-            }
-            if let Some(value) = &self.m_ed_knm {
-                next.m_ed_knm = *value;
-            }
-            if let Some(value) = &self.v_ed_kn {
-                next.v_ed_kn = *value;
-            }
-            if let Some(value) = &self.m_pla {
-                next.m_pla = *value;
-            }
-            if let Some(value) = &self.m_pl_rd {
-                next.m_pl_rd = *value;
-            }
-            if let Some(value) = &self.eta {
-                next.eta = *value;
-            }
-            if let Some(value) = &self.v_l_rd {
-                next.v_l_rd = *value;
-            }
-            if let Some(value) = &self.insulation_thickness_mm {
-                next.insulation_thickness_mm = *value;
-            }
-            if let Some(value) = &self.fire_rating {
-                next.fire_rating = value.clone();
-            }
-            if let Some(value) = &self.deck_type {
-                next.deck_type = value.clone();
-            }
-            if let Some(value) = &self.delta_sigma_mpa {
-                next.delta_sigma_mpa = *value;
-            }
-            if let Some(value) = &self.fatigue_detail {
-                next.fatigue_detail = value.clone();
-            }
-            if let Some(value) = &self.d_mm {
-                next.d_mm = *value;
-            }
-            if let Some(value) = &self.h_sc_mm {
-                next.h_sc_mm = *value;
-            }
-            if let Some(value) = &self.f_ck_mpa {
-                next.f_ck_mpa = *value;
-            }
-            if let Some(value) = &self.f_u_mpa {
-                next.f_u_mpa = *value;
-            }
-            if let Some(value) = &self.e_cm_mpa {
-                next.e_cm_mpa = *value;
-            }
-            if let Some(value) = &self.v_ed_per_stud_kn {
-                next.v_ed_per_stud_kn = *value;
-            }
-            if let Some(value) = &self.span_m {
-                next.span_m = *value;
-            }
-            if let Some(value) = &self.f_y_mpa {
-                next.f_y_mpa = *value;
-            }
-            if let Some(value) = &self.n_cycles_stud {
-                next.n_cycles_stud = *value;
-            }
-            if let Some(value) = &self.delta_tau_stud_mpa {
-                next.delta_tau_stud_mpa = *value;
-            }
+            if let Some(value) = &self.annex { next.annex = *value; }
+            if let Some(value) = &self.structure_kind { next.structure_kind = value.clone(); }
+            if let Some(value) = &self.steel_f_y_pa { next.steel_f_y_pa = *value; }
+            if let Some(list) = &self.beams { next.beams = list.values.clone(); }
+            if let Some(list) = &self.columns { next.columns = list.values.clone(); }
+            if let Some(list) = &self.slabs { next.slabs = list.values.clone(); }
+            if let Some(value) = &self.fire_rating { next.fire_rating = value.clone(); }
+            if let Some(value) = &self.insulation_thickness_m { next.insulation_thickness_m = *value; }
+            if let Some(value) = &self.fatigue_detail { next.fatigue_detail = value.clone(); }
             next
         })
     }
@@ -97,72 +40,15 @@ impl MutationDiff<En1994Snapshot> for En1994Diff {
                 return Ok(replacement.to_snapshot());
             }
             let mut next = snapshot.clone();
-            if let Some(value) = &self.annex {
-                next.annex = *value;
-            }
-            if let Some(value) = &self.m_ed_knm {
-                next.m_ed_knm = *value;
-            }
-            if let Some(value) = &self.v_ed_kn {
-                next.v_ed_kn = *value;
-            }
-            if let Some(value) = &self.m_pla {
-                next.m_pla = *value;
-            }
-            if let Some(value) = &self.m_pl_rd {
-                next.m_pl_rd = *value;
-            }
-            if let Some(value) = &self.eta {
-                next.eta = *value;
-            }
-            if let Some(value) = &self.v_l_rd {
-                next.v_l_rd = *value;
-            }
-            if let Some(value) = &self.insulation_thickness_mm {
-                next.insulation_thickness_mm = *value;
-            }
-            if let Some(value) = &self.fire_rating {
-                next.fire_rating = value.clone();
-            }
-            if let Some(value) = &self.deck_type {
-                next.deck_type = value.clone();
-            }
-            if let Some(value) = &self.delta_sigma_mpa {
-                next.delta_sigma_mpa = *value;
-            }
-            if let Some(value) = &self.fatigue_detail {
-                next.fatigue_detail = value.clone();
-            }
-            if let Some(value) = &self.d_mm {
-                next.d_mm = *value;
-            }
-            if let Some(value) = &self.h_sc_mm {
-                next.h_sc_mm = *value;
-            }
-            if let Some(value) = &self.f_ck_mpa {
-                next.f_ck_mpa = *value;
-            }
-            if let Some(value) = &self.f_u_mpa {
-                next.f_u_mpa = *value;
-            }
-            if let Some(value) = &self.e_cm_mpa {
-                next.e_cm_mpa = *value;
-            }
-            if let Some(value) = &self.v_ed_per_stud_kn {
-                next.v_ed_per_stud_kn = *value;
-            }
-            if let Some(value) = &self.span_m {
-                next.span_m = *value;
-            }
-            if let Some(value) = &self.f_y_mpa {
-                next.f_y_mpa = *value;
-            }
-            if let Some(value) = &self.n_cycles_stud {
-                next.n_cycles_stud = *value;
-            }
-            if let Some(value) = &self.delta_tau_stud_mpa {
-                next.delta_tau_stud_mpa = *value;
-            }
+            if let Some(value) = &self.annex { next.annex = *value; }
+            if let Some(value) = &self.structure_kind { next.structure_kind = value.clone(); }
+            if let Some(value) = &self.steel_f_y_pa { next.steel_f_y_pa = *value; }
+            if let Some(list) = &self.beams { next.beams = list.values.clone(); }
+            if let Some(list) = &self.columns { next.columns = list.values.clone(); }
+            if let Some(list) = &self.slabs { next.slabs = list.values.clone(); }
+            if let Some(value) = &self.fire_rating { next.fire_rating = value.clone(); }
+            if let Some(value) = &self.insulation_thickness_m { next.insulation_thickness_m = *value; }
+            if let Some(value) = &self.fatigue_detail { next.fatigue_detail = value.clone(); }
             next
         })
     }
@@ -179,27 +65,14 @@ impl MutationDiff<En1994Snapshot> for En1994Diff {
             };
         }
         take!(annex);
-        take!(m_ed_knm);
-        take!(v_ed_kn);
-        take!(m_pla);
-        take!(m_pl_rd);
-        take!(eta);
-        take!(v_l_rd);
-        take!(insulation_thickness_mm);
+        take!(structure_kind);
+        take!(steel_f_y_pa);
+        take!(beams);
+        take!(columns);
+        take!(slabs);
         take!(fire_rating);
-        take!(deck_type);
-        take!(delta_sigma_mpa);
+        take!(insulation_thickness_m);
         take!(fatigue_detail);
-        take!(d_mm);
-        take!(h_sc_mm);
-        take!(f_ck_mpa);
-        take!(f_u_mpa);
-        take!(e_cm_mpa);
-        take!(v_ed_per_stud_kn);
-        take!(span_m);
-        take!(f_y_mpa);
-        take!(n_cycles_stud);
-        take!(delta_tau_stud_mpa);
     }
 }
 //#endregion 🔖️Apply
@@ -211,6 +84,5 @@ pub fn diff_set_snapshot(snapshot: &En1994Snapshot) -> En1994Diff {
 //#endregion 🔖️Helpers
 
 //#region 🚚️Carrier
-/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type En1994DiffText = String;
 //#endregion 🚚️Carrier

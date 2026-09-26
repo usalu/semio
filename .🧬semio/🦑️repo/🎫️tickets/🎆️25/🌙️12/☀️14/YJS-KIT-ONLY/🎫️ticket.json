@@ -3,5 +3,5 @@
   "emoji": "🎨️",
   "status": "closed",
   "description": "\"Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE → {\\\\navigation\\\\:\\\\design\\\\}\"",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps"
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings"
 }

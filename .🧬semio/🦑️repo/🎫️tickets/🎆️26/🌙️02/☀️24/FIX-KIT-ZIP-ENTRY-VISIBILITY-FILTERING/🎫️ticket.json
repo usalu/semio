@@ -3,7 +3,7 @@
   "status": "closed",
   "prompt": "Fix Kit table folder/file rows so only physical zip entries from imported metabolism payload are rendered; hide metadata-only entries and preserve table interactions.",
   "summary": "Placed Kit zip-entry assertions into existing sketchpad test structure using shared helpers and sectioned block, keeping behavior unchanged.",
-  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "started": "2026-02-24T09:36:33.911669029Z",
   "finished": "2026-02-24T10:22:27.417274803Z",
   "interactions": [

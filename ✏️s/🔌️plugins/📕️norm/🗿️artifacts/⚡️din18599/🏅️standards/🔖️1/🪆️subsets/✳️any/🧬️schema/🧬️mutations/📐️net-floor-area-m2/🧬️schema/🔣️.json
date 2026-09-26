@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChangeNetFloorAreaM2",
+  "type": "object",
+  "properties": {
+    "newNetFloorAreaM2": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-net-floor-area-m2/schema.json"
+}

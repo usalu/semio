@@ -3,7 +3,7 @@
   "status": "closed",
   "prompt": "Create selection tests within the existing sketchpad test structure for cross-scene sync, replace-on-select, canvas deselect, additive, subtractive, and rectangular selection in the Design app; refactor as needed so the new tests pass.",
   "summary": "Expanded Design node hit testing from stroke-only to full-node clicks and revalidated the focused Design suite.",
-  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "started": "2026-03-03T08:25:29.887328848Z",
   "finished": "2026-03-03T13:39:27.717695798Z",
   "interactions": [

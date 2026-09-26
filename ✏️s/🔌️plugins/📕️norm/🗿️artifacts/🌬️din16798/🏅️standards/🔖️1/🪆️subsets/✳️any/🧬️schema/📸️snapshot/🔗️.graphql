@@ -1,66 +1,56 @@
-# 🧬️ Din16798 snapshot schema — artifact-lane fields only.
+type Din16798Zone {
+  id: String!
+  name: String!
+  usageType: String!
+  floorAreaM2: Float!
+  occupants: Int!
+  comfortCategory: String!
+  pollutionClass: String!
+  comfortModel: String!
+  tOpWinterC: Float!
+  tOpSummerC: Float!
+  airSpeedMS: Float!
+  clothingClo: Float!
+  metabolicRateMet: Float!
+  rhPercent: Float!
+  outdoorAirSuppliedM3H: Float!
+  co2Ppm: Float!
+  illuminanceLx: Float!
+  noiseDb: Float!
+  turbulenceIntensityPercent: Float!
+  ventMethod: String!
+  ventSystemId: String!
+}
+
+type Din16798VentSystem {
+  id: String!
+  name: String!
+  systemType: String!
+  sfpWM3S: Float!
+  sfpRequiredClass: Int!
+  heatRecoveryEta: Float!
+  odaClass: String!
+  filterSupClass: String!
+  yearsSinceInspection: Int!
+  humidificationRequiredKgH: Float!
+  humidificationProvidedKgH: Float!
+  fanQVM3S: Float!
+  fanTRunH: Float!
+  ductClass: String!
+  ductTestPressurePa: Float!
+  ductLeakageM3SM2: Float!
+  designAirflowM3H: Float!
+}
 
 type Din16798Snapshot {
-  annex: String! @state(class: ARTIFACT)
-  occupancy: String! @state(class: ARTIFACT)
-  comfortCategory: String! @state(class: ARTIFACT)
-  tOpC: Float! @state(class: ARTIFACT)
-  rhPercent: Float! @state(class: ARTIFACT)
-  airSpeedMS: Float! @state(class: ARTIFACT)
-  thetaRmC: Float! @state(class: ARTIFACT)
-  co2Ppm: Float! @state(class: ARTIFACT)
-  dfPercent: Float! @state(class: ARTIFACT)
-  lAeqDb: Float! @state(class: ARTIFACT)
-  persons: Int! @state(class: ARTIFACT)
-  idaClass: String! @state(class: ARTIFACT)
-  ventilationM3H: Float! @state(class: ARTIFACT)
-  floorAreaM2: Float! @state(class: ARTIFACT)
-  bedrooms: Int! @state(class: ARTIFACT)
-  dwellingVentilationM3H: Float! @state(class: ARTIFACT)
-  occupants: Int! @state(class: ARTIFACT)
-  residentialVentilationM3H: Float! @state(class: ARTIFACT)
-  sfpWM3S: Float! @state(class: ARTIFACT)
-  sfpRequiredClass: Int! @state(class: ARTIFACT)
-  heatRecoveryEta: Float! @state(class: ARTIFACT)
-  heatRecoveryEtaMin: Float! @state(class: ARTIFACT)
-  systemType: String! @state(class: ARTIFACT)
-  yearsSinceInspection: Int! @state(class: ARTIFACT)
-  humidificationRequiredKgH: Float! @state(class: ARTIFACT)
-  humidificationProvidedKgH: Float! @state(class: ARTIFACT)
-  fanQVM3S: Float! @state(class: ARTIFACT)
-  fanTRunH: Float! @state(class: ARTIFACT)
-  fanEnergyReferenceKwh: Float! @state(class: ARTIFACT)
-  nightSetbackK: Float! @state(class: ARTIFACT)
-  hrMDotKgS: Float! @state(class: ARTIFACT)
-  hrCpJKgk: Float! @state(class: ARTIFACT)
-  hrDeltaTC: Float! @state(class: ARTIFACT)
-  hrTH: Float! @state(class: ARTIFACT)
-  hrSavingsReferenceKwh: Float! @state(class: ARTIFACT)
-  n50HInv: Float! @state(class: ARTIFACT)
-  volumeM3: Float! @state(class: ARTIFACT)
-  infiltrationAllowanceM3H: Float! @state(class: ARTIFACT)
-  cellarAreaM2: Float! @state(class: ARTIFACT)
-  cellarVentilationM3H: Float! @state(class: ARTIFACT)
-  hTrWK: Float! @state(class: ARTIFACT)
-  hVeWK: Float! @state(class: ARTIFACT)
-  thetaEC: Float! @state(class: ARTIFACT)
-  thetaSetC: Float! @state(class: ARTIFACT)
-  coolingDeltaTH: Float! @state(class: ARTIFACT)
-  coolingGainsKwh: Float! @state(class: ARTIFACT)
-  coolingUtilizationFactor: Float! @state(class: ARTIFACT)
-  coolingReferenceKwh: Float! @state(class: ARTIFACT)
-  chillerType: String! @state(class: ARTIFACT)
-  eerActual: Float! @state(class: ARTIFACT)
-  qCKwh: Float! @state(class: ARTIFACT)
-  generationReferenceKwh: Float! @state(class: ARTIFACT)
-  dataCenterSupplyC: Float! @state(class: ARTIFACT)
-  hStWK: Float! @state(class: ARTIFACT)
-  thetaStC: Float! @state(class: ARTIFACT)
-  thetaAmbC: Float! @state(class: ARTIFACT)
-  storageTH: Float! @state(class: ARTIFACT)
-  storageAllowanceKwh: Float! @state(class: ARTIFACT)
-  dhwDeliveryC: Float! @state(class: ARTIFACT)
-  ductClass: String! @state(class: ARTIFACT)
-  ductTestPressurePa: Float! @state(class: ARTIFACT)
-  ductLeakageM3SM2: Float! @state(class: ARTIFACT)
+  annex: String!
+  thetaRmC: Float!
+  outdoorCo2Ppm: Float!
+  zones: [Din16798Zone!]!
+  ventSystems: [Din16798VentSystem!]!
+  envelopeN50HInv: Float!
+  envelopeVolumeM3: Float!
+  cellarAreaM2: Float!
+  cellarVentilationM3H: Float!
+  nightSetbackK: Float!
 }

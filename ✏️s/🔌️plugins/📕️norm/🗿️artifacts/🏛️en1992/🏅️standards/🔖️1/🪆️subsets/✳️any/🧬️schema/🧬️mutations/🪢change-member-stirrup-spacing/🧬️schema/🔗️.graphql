@@ -1,0 +1,4 @@
+type ChangeMemberStirrupSpacing {
+  memberId: String!
+  newSpacing: Float!
+}

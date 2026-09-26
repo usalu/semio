@@ -16,22 +16,22 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-strict-mode/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/create-curve/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-curve/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/create-geometry/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-geometry/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/create-product/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/add-product/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/delete-curve/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-curve/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/delete-geometry/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-geometry/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/delete-product/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-product/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/remove-edition-profile/schema.json"
@@ -43,22 +43,22 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/rename-product/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/replace-curve-points/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-curve-points/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/replace-geometry-parameters/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-geometry-parameters/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/replace-product-configuration/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-product-configuration/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/resize-geometry/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/update-limits/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-limits/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/update-manufacturer-file/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-manufacturer-file/schema.json"
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/insert-footing/schema.json",
+  "title": "InsertFooting",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "footing"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "footing": {
+      "type": "object"
+    }
+  }
+}

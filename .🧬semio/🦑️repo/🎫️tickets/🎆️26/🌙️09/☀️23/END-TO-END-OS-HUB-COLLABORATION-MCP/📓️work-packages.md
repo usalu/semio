@@ -289,3 +289,8 @@ changed since; hub 7800 down. Session-11 executors had been cut ~18:0x by the ac
   prepared; F9 DefaultHasher ids, F10 dead differential rows). C10 paused at 4/14 collab-e2e on 7800 (load 57–62; guest store
   re-announce blocks typing steps). W2 publish 2 restarted closure builds twice (root Cargo.toml profile edit 04:34 → new unit
   identity; taxonomy.json 10:44 → kernel via derive macro): rule 21. H10: cold boot 484 → 154 s, warm restart 14.5 s.
+- ~11:40 third usage cut (reset 13:40); ~14:59 desktop app restart killed every process (7800, holds, serves, guards). Publish 2 had been
+  SIGTERMed at 11:43 (exit 143, 160 min) when W2 was cut. 15:01 coordinator: disk guard + renice watch restarted; 7800 resumed on
+  its B2 root (`w2-hub-resume.sh`, hold 28673); **publish 3 relaunched detached by the coordinator** (chain 28685, preflight PASS
+  969 ms, publish from 15:01:51). Preamble rule 22: long chains are coordinator-owned. Resumed W2 (monitor + post-publish script),
+  U5, H9, H10, G10, S15, WG7, WG8, P8. Finished and parked: R8, D1, F1, T12, C10.

@@ -1,19 +1,18 @@
-use super::*;
+//! 🔬️ KINDS catalog parity for EN 1999 mutations.
 
-/// 🏷️ [`KINDS`] must name every declared variant, in the exact order and spelling
-/// `#[derive(dsl::Mutations)]` assigns, and every one of those spellings must also appear in the
-/// committed `en1999-1-any` catalog. The framework never parses Rust, so this is the only thing
-/// standing between a renamed variant and a completeness gate that silently measures the wrong
-/// set.
+use crate::mutations::KINDS;
+use crate::mutations::En1999Mutation;
+use crate::En1999Snapshot;
+
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
     let descriptors = <En1999Mutation as protocol::SemanticMutation<En1999Snapshot>>::kinds();
     assert_eq!(KINDS.len(), descriptors.len(), "KINDS must name exactly one entry per declared En1999Mutation variant");
     for (kind, descriptor) in KINDS.iter().zip(descriptors.iter()) {
-        assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)]'s own declaration order and spelling");
+        assert_eq!(*kind, descriptor.kind, "KINDS must match #[derive(dsl::Mutations)] declaration order");
     }
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
-        assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+        assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must appear in oracle manifest");
     }
 }

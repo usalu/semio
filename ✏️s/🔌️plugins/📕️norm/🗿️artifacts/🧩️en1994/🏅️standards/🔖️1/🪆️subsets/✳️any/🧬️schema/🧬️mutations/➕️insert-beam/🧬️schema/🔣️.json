@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/insert-beam/schema.json",
+  "title": "InsertBeam",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "beam"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "beam": {
+      "type": "object"
+    }
+  }
+}

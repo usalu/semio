@@ -1,20 +1,8 @@
-//! ⚖️ EN 1991 actions on structures — binary command protocol surface + laws (constitutional: protocol).
+//! 💾️ En1991 mutation binary — delegates to JSON OpBinary in text facet.
 
-//#region 📡️SemioProtocol
-/// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
+pub use crate::artifact_schema::mutations::text::*;
+
+//#region 📡️Protocol
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
-//#endregion 📡️SemioProtocol
-
-use crate::artifact_schema::mutations::text::En1991Mutation;
-use protocol::OpBinary;
-
-/// 📦️ Encodes a document mutation to its binary op form.
-pub fn encode_op(mutation: &En1991Mutation) -> Result<Vec<u8>, protocol::ProtocolError> {
-    mutation.encode_op()
-}
-
-/// 📖️ Decodes a document mutation from its binary op form.
-pub fn decode_op(bytes: &[u8]) -> Result<En1991Mutation, protocol::ProtocolError> {
-    En1991Mutation::decode_op(bytes)
-}
+//#endregion 📡️Protocol

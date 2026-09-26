@@ -1,17 +1,14 @@
-//! 🔺️ `change-mu` sparse diff construction — writes only `En1996Diff.mu` from the payload.
-
-use crate::diff::En1996Diff;
-use crate::mutations::change_mu::ChangeMu;
-use crate::En1996Snapshot;
-
-//#region 🔖️Diff
+use super::ChangeMu;
+use crate::diff::En1996WallList;
+use crate::{En1996Diff, En1996Snapshot};
 pub fn diff(payload: &ChangeMu, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
-    if !payload.new_mu.is_finite() {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "Mu must be a finite number.", Vec::<String>::new());
-    }
-    if base.mu == payload.new_mu {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Mu already has this value.");
-    }
-    protocol::MutationOutcome::new(En1996Diff { mu: Some(payload.new_mu), ..Default::default() })
+    let diff = {
+        if payload.index >= base.walls.len() {
+            return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid wall index."), Vec::<String>::new());
+        }
+        let mut walls = base.walls.clone();
+        walls[payload.index].mu = payload.new_mu;
+        En1996Diff { walls: Some(En1996WallList { values: walls }), ..Default::default() }
+    };
+    protocol::MutationOutcome::new(diff)
 }
-//#endregion 🔖️Diff

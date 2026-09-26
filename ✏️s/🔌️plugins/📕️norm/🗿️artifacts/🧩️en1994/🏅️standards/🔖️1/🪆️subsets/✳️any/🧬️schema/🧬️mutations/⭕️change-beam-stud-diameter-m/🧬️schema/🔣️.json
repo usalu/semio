@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-stud-diameter-m/schema.json",
+  "title": "ChangeBeamStudDiameterM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newDiameterM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newDiameterM": {
+      "type": "number"
+    }
+  }
+}

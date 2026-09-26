@@ -85,6 +85,10 @@ fn every_command() -> Vec<Din4108Command> {
         Din4108Command::Evaluate(evaluate::Evaluate {}),
         Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         Din4108Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
+        Din4108Command::SetField(set_field::SetField { path: "airtightnessN50".into(), value_json: "1.5".into() }),
+        Din4108Command::InsertItem(insert_item::InsertItem { path: "zones".into(), index: 0, value_json: None }),
+        Din4108Command::RemoveItem(remove_item::RemoveItem { path: "zones".into(), index: 0 }),
+        Din4108Command::ApplyRemedy(apply_remedy::ApplyRemedy { check_id: String::new(), remedy_index: 0 }),
     ]
 }
 
@@ -96,14 +100,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]);
+    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]);
 }
 
 /// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example"];
+    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example", "set-field", "insert-item", "remove-item", "apply-remedy"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -170,7 +174,8 @@ async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din4108Snapshot::default() })).await;
     context::settle(&mut app).await;
-    let host = NormHost::<Din4108Family>::from_artifact(app.snapshot().expect("projection"));
+    let mut host = NormHost::<Din4108Family>::from_artifact(app.snapshot().expect("projection"));
+    host.evaluate();
     assert!(!host.report().checks.is_empty());
     context::close(&mut app);
 }
@@ -178,11 +183,13 @@ async fn set_snapshot_commits_a_host_backed_report() {
 #[semio_framework_async_macros::async_test]
 async fn host_updates_report_after_document_replace() {
     let mut host = Host::default();
-    assert!(host.report().all_pass());
+    host.evaluate();
+    assert!(host.report().complies());
     let mut document = Din4108Snapshot::default();
-    document.layers.clear();
+    document.elements.clear(); document.zones.clear();
     host.replace_document(document);
-    assert!(!host.report().all_pass());
+    host.evaluate();
+    assert!(!host.report().complies());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -204,7 +211,7 @@ async fn evaluate_recommits_the_current_projection_without_changing_it() {
 async fn set_snapshot_dispatches_through_the_tool_job_path_and_publishes_the_payload_document() {
     let mut app = context::app_with_registry().await;
     let mut target = Din4108Snapshot::default();
-    target.layers.clear();
+    target.elements.clear(); target.zones.clear();
     assert_ne!(target, app.snapshot().expect("projection"));
     context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: target.clone() })).await;
     context::settle(&mut app).await;
@@ -294,11 +301,14 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
+    let mut host = NormHost::<Din4108Family>::from_artifact(app.snapshot().expect("projection"));
+    host.evaluate();
     let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
-    assert!(!report.checks.is_empty());
+    let value: serde_json::Value = serde_json::from_str(&json).expect("report json parses");
+    let checks = value.get("checks").and_then(|c| c.as_array()).expect("checks array");
+    assert!(!checks.is_empty(), "exported report must contain computed checks");
     context::close(&mut app);
 }
 //#endregion ðï¸Behavior

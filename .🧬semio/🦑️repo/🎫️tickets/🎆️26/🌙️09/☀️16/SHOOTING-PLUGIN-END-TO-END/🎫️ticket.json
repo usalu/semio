@@ -3,7 +3,7 @@
   "emoji": "📸",
   "status": "done",
   "description": "Get the 🎥️shooting plugin working end to end: native check + tests, guest wasm restage on the react dev lane, react dev serve (?plugin=shooting), proven boot (scene + shot windows, panels) and at least one persisted document mutation via the shell. Pattern follows 26/09/16/FORMS-PLUGIN-END-TO-END.",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [
     "⚪b903f03d-2c25-49e7-bde7-26f68b23d6a5"
   ],

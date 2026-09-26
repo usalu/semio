@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-cover/schema.json",
+  "title": "ChangeMemberCover",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newValue"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "newValue": {
+      "type": "number"
+    }
+  }
+}

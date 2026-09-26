@@ -3,7 +3,7 @@
   "emoji": "📖️",
   "status": "open",
   "description": "Turn 📖️pdf (crate semio-s-artifact-stdio-pdf at ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf) into a full-blown, feature-complete, ISO 32000-1 compliant artifact: typed page content (vector paths, graphics state, colour spaces, shadings, patterns, images/XObjects, text objects with real fonts incl. standard-14 metrics and embedded TrueType/CID fonts with ToUnicode), annotations, outlines, metadata; importable (content-stream parser into the typed model, resources resolved), exportable (writer emits fonts/images/resources and valid xref), editable over mutations (page/content/font/image/annotation/outline/info mutations with diff + inverse), and consumed by every plugin that produces PDF (draw, layout, …) instead of hand-painted bytes.",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": ["⚪10d19a4e-19b5-4630-ae6e-345759adf986"],
   "note": "Ticket bookkeeping manual on disk: repo MCP timed out at session start (2026-09-18). Related: 26/09/05/DRAW-PLUGIN-END-TO-END (draw paints its own PDF), 26/09/18/LAYOUT-PDF-EXPORT-END-TO-END (layout paints its own PDF)."
 }

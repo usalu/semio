@@ -1,7 +1,17 @@
 {
   "UpdateFatigueInputs": {
-    "new_delta_sigma_mpa": 90.0,
-    "new_fatigue_category": 56,
-    "new_fatigue_method": "safe_life"
+    "fatigue_detail": {
+      "id": "fat-1",
+      "memberId": "member-b1",
+      "category": 56,
+      "method": "safe_life",
+      "spectrum": [
+        {
+          "id": "fb-1",
+          "deltaSigma": 50000000.0,
+          "cycles": 2000000.0
+        }
+      ]
+    }
   }
 }

@@ -36,13 +36,13 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 async fn narrows_the_selection_to_the_pr_plus_series() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-selection-series applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.selection.series_id.as_deref(), Some("series.pr-plus"), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the selection series must be narrowed");
+    assert_eq!(applied.selection.series_id.as_deref(), Some("series-pr-plus"), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the selection series must be narrowed");
     assert_eq!(applied.selection.class_id, before().selection.class_id, "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the class id is a sibling field of the same request and must not move");
     assert_eq!(applied.selection.constraints.len(), 2, "change-selection-series/narrows-the-selection-to-the-pr-plus-series: narrowing by series must not drop property constraints");
 }
 
 /// ↩️ `change-selection-series`'s inverse reads the OLD `Option<String>` out of BASE and replays it wholesale,
-/// so a `Some("series.pr")` goes back exactly as it was — the same code path that would restore a `None`.
+/// so a `Some("series-pr")` goes back exactly as it was — the same code path that would restore a `None`.
 #[semio_framework_async_macros::async_test]
 async fn widening_back_to_the_pr_series_restores_before() {
     let base = before();
@@ -54,12 +54,12 @@ async fn widening_back_to_the_pr_series_restores_before() {
         let undo = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(step, &snapshot);
         snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("the change-selection-series inverse step applies");
     }
-    assert_eq!(snapshot, base, "change-selection-series/narrows-the-selection-to-the-pr-plus-series: widening back to `series.pr` did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "change-selection-series/narrows-the-selection-to-the-pr-plus-series: widening back to `series-pr` did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots and the committed `change-selection-series` payload are already canonical: decode
 /// → encode is a fixed point. The committed payload is spelled `{"ChangeSelectionSeries": {"new_series_id":
-/// "series.pr-plus"}}` — the payload field is an `Option<String>` with no `skip_serializing_if`, so a cleared
+/// "series-pr-plus"}}` — the payload field is an `Option<String>` with no `skip_serializing_if`, so a cleared
 /// series would encode as an explicit `null` here.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
@@ -74,7 +74,7 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the committed change-selection-series JSON is not canonical");
 }
 
-/// 🎯️ `Some("series.pr-plus")` differs from the committed `Some("series.pr")`, so the `Option`-level equality
+/// 🎯️ `Some("series-pr-plus")` differs from the committed `Some("series-pr")`, so the `Option`-level equality
 /// guard stays shut.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
@@ -105,7 +105,7 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed change-selection-series diff decodes");
     let selection = decoded.selection.as_ref().expect("the committed change-selection-series diff carries the selection request");
-    assert_eq!(selection.series_id.as_deref(), Some("series.pr-plus"), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the diff must carry the new series id");
+    assert_eq!(selection.series_id.as_deref(), Some("series-pr-plus"), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the diff must carry the new series id");
     assert_eq!(selection.class_id, "class.panel-radiator", "change-selection-series/narrows-the-selection-to-the-pr-plus-series: the class id rides through the whole-container delta unchanged");
     assert!(decoded.catalogue.is_none(), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: change-selection-series writes `selection` and must leave `catalogue` untouched");
     assert!(decoded.dictionary.is_none(), "change-selection-series/narrows-the-selection-to-the-pr-plus-series: change-selection-series writes `selection` and must leave `dictionary` untouched");

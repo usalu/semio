@@ -1,14 +1,9 @@
-//! 🔺️ `change-design-approach` sparse diff construction — writes only `En1997Diff.design_approach` from the payload.
-
+use super::ChangeDesignApproach;
 use crate::diff::En1997Diff;
-use crate::mutations::change_design_approach::ChangeDesignApproach;
 use crate::En1997Snapshot;
-
-//#region 🔖️Diff
 pub fn diff(payload: &ChangeDesignApproach, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
     if base.design_approach == payload.new_design_approach {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Design approach is already \"{}\".", payload.new_design_approach));
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", "approach unchanged");
     }
     protocol::MutationOutcome::new(En1997Diff { design_approach: Some(payload.new_design_approach.clone()), ..Default::default() })
 }
-//#endregion 🔖️Diff

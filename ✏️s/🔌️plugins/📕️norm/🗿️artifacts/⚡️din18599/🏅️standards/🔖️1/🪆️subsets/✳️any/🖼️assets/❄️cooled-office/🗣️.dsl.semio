@@ -1,0 +1,16 @@
+semio norm.din18599.dsl v1
+building-category=residential attachment=detached use-class=office method=detailed-monthly net-floor-area-m2=140 heated-volume-m3=364 geg-qp-factor=0.55 delta-u-wb-w-m2k=0.03 automation-class=b heating=generation-efficiency=0.98 distribution-efficiency=0.96 storage-efficiency=0.98 transfer-efficiency=0.96 energy-carrier=natural_gas dhw=specific-demand-kwh-person-a=100 storage-loss-kwh-a=40 distribution-loss-kwh-a=30 energy-carrier=natural_gas ventilation=airflow-m3-h=140 heat-recovery-eta=0.8 fan-power-w=60 cooling=plant=eer=3.2 energy-carrier=electricity lighting=control-factor=0.8 renewables=pv-area-m2=80 pv-efficiency=0.18 solar-thermal-kwh-a=1200 climate=child_id=din18599-climate-5e913c6dbbe501b5 target="din18599-climate-5e913c6dbbe501b5!s.stdio.semio@v1/table"
+zones [id:TEXT label-en:TEXT label-de:TEXT usage-profile:ENUM area-m2:NUM volume-m3:NUM theta-i-heat-c:NUM theta-i-cool-c:NUM occupants:UINT internal-gains-w-m2:NUM lighting-power-w-m2:NUM] {
+  zone-living Living Wohnen office 140 364 20 26 4 6 10
+}
+elements [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM zone-id:TEXT area-m2:NUM u-value-w-m2k:NUM orientation-deg:NUM tilt-deg:NUM g-value:NUM fc:NUM adjacency:ENUM] {
+  wall-n "North wall" Nordwand wall zone-living 42 0.2 0 90 0.6 1 outdoor
+  wall-e "East wall" Ostwand wall zone-living 36 0.2 90 90 0.6 1 outdoor
+  wall-s "South wall" Südwand wall zone-living 42 0.2 180 90 0.6 1 outdoor
+  wall-w "West wall" Westwand wall zone-living 36 0.2 270 90 0.6 1 outdoor
+  roof Roof Dach roof zone-living 150 0.14 180 35 0.6 1 outdoor
+  floor "Ground floor" Bodenplatte floor zone-living 140 0.25 0 0 0.6 1 ground
+  win-s "South windows" Südfenster window zone-living 18 0.95 180 90 0.55 0.7 outdoor
+  win-n "North windows" Nordfenster window zone-living 6 0.95 0 90 0.55 1 outdoor
+  door "Entrance door" Haustür door zone-living 2.1 1.3 0 90 0.6 1 outdoor
+}

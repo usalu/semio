@@ -25,7 +25,7 @@ pub struct ReplaceSnapshot {
 
 //#region 🔖️Handler
 pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, En1992Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1992Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::commit_snapshot_fields(En1992Mutation::from_snapshot(&payload.snapshot), "setSnapshot")
+    crate::app_surface::commit_snapshot_fields(En1992Mutation::from_snapshot(&En1992Snapshot::default(), &payload.snapshot), "setSnapshot")
 }
 //#endregion 🔖️Handler
 

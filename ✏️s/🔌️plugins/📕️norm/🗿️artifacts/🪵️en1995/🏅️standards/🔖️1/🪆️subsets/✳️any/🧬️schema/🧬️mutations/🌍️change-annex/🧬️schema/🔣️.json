@@ -9,11 +9,7 @@
   ],
   "properties": {
     "newAnnex": {
-      "type": "string",
-      "enum": [
-        "En",
-        "De"
-      ]
+      "type": "string"
     }
   }
 }

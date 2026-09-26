@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-as/schema.json",
+  "title": "ChangeAnchorAs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "anchorId",
+    "newValue"
+  ],
+  "properties": {
+    "anchorId": {
+      "type": "string"
+    },
+    "newValue": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeZoneNightVentilation": {
+    "zone_id": "zone-living",
+    "new_night_ventilation": "high"
+  }
+}

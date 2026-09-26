@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-stirrup-spacing/schema.json",
+  "title": "ChangeMemberStirrupSpacing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newSpacing"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "newSpacing": {
+      "type": "number"
+    }
+  }
+}

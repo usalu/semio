@@ -1,85 +1,21 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutations.json",
   "title": "En1999Mutation",
-  "oneOf": [
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-a-mm2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-alloy/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-annex/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-beta-w/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-chi/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-delta-sigma-c/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-delta-sigma-ed/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fatigue-m/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-it-mm4/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-l-cr-mm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-m-ed-knm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-n-cycles/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-n-ed-kn/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-b-mm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-k-sigma/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-m-ed-knm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-t-mm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-w-el-mm3/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-shell-r-mm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-shell-t-mm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sigma-ed-shell-mpa/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-theta-c/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-v-weld-ed-kn/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-w-el-mm3/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-weld-length-mm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-weld-throat-mm/schema.json"
-    }
+  "kinds": [
+    "change-annex",
+    "change-materials",
+    "change-sections",
+    "change-members",
+    "change-connections",
+    "change-fire-scenarios",
+    "change-fatigue-details",
+    "add-member",
+    "remove-member",
+    "change-member-n-ed",
+    "change-member-my-ed",
+    "change-member-buckling-length",
+    "change-material-designation",
+    "change-plate-thickness",
+    "change-weld-throat",
+    "change-bolt-count"
   ]
 }

@@ -1,5 +1,6 @@
-//! 🧬️ EN 1997 diff schema — sparse field delta.
+//! 🧬️ EN 1997 diff schema — sparse field delta over the geotechnical project.
 
+use crate::{Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -12,48 +13,68 @@ pub struct En1997Diff {
     #[state(artifact)]
     pub artifact: Option<Box<crate::artifact_schema::En1997Artifact>>,
     #[state(artifact)]
-    pub v_ed_kn: Option<f64>,
+    pub structure_id: Option<String>,
     #[state(artifact)]
-    pub h_ed_kn: Option<f64>,
+    pub geotechnical_category: Option<u8>,
     #[state(artifact)]
-    pub footing_area_m2: Option<f64>,
-    #[state(artifact)]
-    pub phi_deg: Option<f64>,
-    #[state(artifact)]
-    pub c_kpa: Option<f64>,
-    #[state(artifact)]
-    pub gamma_kn_m3: Option<f64>,
-    #[state(artifact)]
-    pub b_m: Option<f64>,
-    #[state(artifact)]
-    pub d_f_m: Option<f64>,
-    #[state(artifact)]
-    pub e_s_mpa: Option<f64>,
-    #[state(artifact)]
-    pub nu: Option<f64>,
+    pub design_situation: Option<String>,
     #[state(artifact)]
     pub design_approach: Option<String>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
-    pub settlement_limit_mm: Option<f64>,
+    pub groundwater_level: Option<f64>,
     #[state(artifact)]
-    pub n_pile_ed_kn: Option<f64>,
+    pub investigation_depth: Option<f64>,
     #[state(artifact)]
-    pub alpha_s: Option<f64>,
+    pub layers: Option<En1997SoilLayerList>,
     #[state(artifact)]
-    pub pile_d_m: Option<f64>,
+    pub footings: Option<En1997FootingList>,
     #[state(artifact)]
-    pub q_s_kpa: Option<f64>,
+    pub piles: Option<En1997PileList>,
     #[state(artifact)]
-    pub pile_l_m: Option<f64>,
+    pub retaining_walls: Option<En1997WallList>,
     #[state(artifact)]
-    pub q_b_kpa: Option<f64>,
+    pub slopes: Option<En1997SlopeList>,
     #[state(artifact)]
-    pub pile_base_area_m2: Option<f64>,
-    #[state(artifact)]
-    pub pile_n_profiles: Option<u32>,
-    #[state(artifact)]
-    pub z_investigated_m: Option<f64>,
+    pub uplift_cases: Option<En1997UpliftList>,
 }
 //#endregion 🔖️Diff
+
+//#region 🔖️DeltaHelpers
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1997SoilLayerList { pub values: Vec<SoilLayer> }
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1997FootingList { pub values: Vec<SpreadFoundation> }
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1997PileList { pub values: Vec<Pile> }
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1997WallList { pub values: Vec<RetainingWall> }
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1997SlopeList { pub values: Vec<Slope> }
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1997UpliftList { pub values: Vec<UpliftCase> }
+//#endregion 🔖️DeltaHelpers

@@ -1,153 +1,41 @@
+// 🧬️ En1993 snapshot
 syntax = "proto3";
 package semio.s.norm.en1993.snapshot;
 
+message SteelMaterial { string id = 1; string grade = 2; double fy = 3; double fu = 4; double e_modulus = 5; double g_modulus = 6; string subgrade = 7; string kind = 8; }
+message SteelSection { string id = 1; string designation = 2; string kind = 3; double h = 4; double b = 5; double tw = 6; double tf = 7; double r = 8; double area = 9; double shear_area_y = 10; double shear_area_z = 11; double iy = 12; double iz = 13; double it = 14; double iw = 15; double w_el_y = 16; double w_el_z = 17; double w_pl_y = 18; double w_pl_z = 19; double area_net = 20; }
+message SteelMember { string id = 1; string label = 2; string member_type = 3; string section_id = 4; string material_id = 5; double length = 6; double buckling_length_y = 7; double buckling_length_z = 8; double ltb_length = 9; double ltb_restraint_spacing = 10; string load_application = 11; double end_moment_ratio_psi = 12; string moment_diagram = 13; double deflection_limit_ratio = 14; }
+message DesignAction { double n = 1; double vy = 2; double vz = 3; double my = 4; double mz = 5; double t = 6; }
+message LoadCase { string id = 1; string name = 2; string kind = 3; string category = 4; }
+message MemberAction { string id = 1; string member_id = 2; string load_case_id = 3; DesignAction action = 4; }
+message SteelJoint { string id = 1; string kind = 2; string member_id = 3; string bolt_class = 4; double bolt_diameter = 5; uint32 bolt_rows = 6; uint32 bolts_per_row = 7; double pitch = 8; double end_distance = 9; double edge_distance = 10; uint32 shear_planes = 11; double plate_thickness = 12; double plate_fu = 13; double weld_throat = 14; double weld_length = 15; double weld_fu = 16; string weld_grade = 17; double shear_force = 18; double tension_force = 19; string category = 20; double friction_mu = 21; double preload_force = 22; double slip_factor_ks = 23; uint32 friction_surfaces = 24; }
+message FatigueDetail { string id = 1; string member_id = 2; uint32 category = 3; double delta_sigma = 4; double cycles = 5; string method = 6; }
+message FireExposure { string id = 1; string member_id = 2; string rating = 3; double protection_thickness = 4; double section_factor = 5; double mu0 = 6; double design_temperature = 7; double protection_conductivity = 8; double protection_density = 9; double protection_specific_heat = 10; }
+message ColdFormedMember { string id = 1; double b_bar = 2; double thickness = 3; double k_sigma = 4; double psi = 5; double n_k = 6; double fy = 7; double gross_resistance = 8; }
+message PlatedPanel { string id = 1; double a = 2; double b = 3; double thickness = 4; double sigma_k = 5; double fy = 6; double k_sigma = 7; }
+message SiloShell { string id = 1; double thickness = 2; double radius = 3; double depth = 4; double k = 5; double gamma = 6; double fy = 7; }
+message TensionComponent { string id = 1; double f_uk = 2; double f_k = 3; double n_k = 4; }
+message BridgeFatigue { string id = 1; string member_id = 2; double lambda = 3; double phi2 = 4; double delta_sigma_p = 5; uint32 category = 6; string method = 7; }
+message TowerLeg { string id = 1; string member_id = 2; double force_coefficient = 3; double dynamic_factor = 4; double n_k = 5; }
+message SteelPile { string id = 1; string section_id = 2; string material_id = 3; double driving_stress = 4; double soil_reduction = 5; double embedded_length = 6; double shaft_perimeter = 7; double n_k = 8; }
+message CraneRunway { string id = 1; string member_id = 2; double wheel_force_k = 3; double wheel_contact_length = 4; double dispersion = 5; double web_thickness = 6; double fy = 7; }
+
 message En1993Snapshot {
-  // @state artifact
   string annex = 1;
-  // @state artifact
-  double n_ed_kn = 2;
-  // @state artifact
-  double m_ed_knm = 3;
-  // @state artifact
-  double v_ed_kn = 4;
-  // @state artifact
-  double a_mm2 = 5;
-  // @state artifact
-  double a_v_mm2 = 6;
-  // @state artifact
-  double w_pl_mm3 = 7;
-  // @state artifact
-  double f_y_mpa = 8;
-  // @state artifact
-  double f_u_mpa = 9;
-  // @state artifact
-  double chi = 10;
-  // @state artifact
-  double a_net_mm2 = 11;
-  // @state artifact
-  double tension_n_ed_kn = 12;
-  // @state artifact
-  double fire_thickness_mm = 13;
-  // @state artifact
-  string fire_rating = 14;
-  // @state artifact
-  double fire_massivity = 15;
-  // @state artifact
-  double fire_mu_0 = 16;
-  // @state artifact
-  double fire_design_temperature_c = 17;
-  // @state artifact
-  double cf_b_bar_mm = 18;
-  // @state artifact
-  double cf_t_mm = 19;
-  // @state artifact
-  double cf_k_sigma = 20;
-  // @state artifact
-  double cf_psi = 21;
-  // @state artifact
-  double cf_n_ed_kn = 22;
-  // @state artifact
-  double cf_gross_resistance_kn = 23;
-  // @state artifact
-  double stainless_m_ed_knm = 24;
-  // @state artifact
-  double stainless_w_pl_mm3 = 25;
-  // @state artifact
-  double stainless_f_y_mpa = 26;
-  // @state artifact
-  double plated_lambda_p = 27;
-  // @state artifact
-  double plated_sigma_ed_mpa = 28;
-  // @state artifact
-  double silo_t_mm = 29;
-  // @state artifact
-  double silo_r_mm = 30;
-  // @state artifact
-  double shell_sigma_x_ed_mpa = 31;
-  // @state artifact
-  double silo_k = 32;
-  // @state artifact
-  double silo_gamma_kn_m3 = 33;
-  // @state artifact
-  double silo_depth_m = 34;
-  // @state artifact
-  double bolt_f_ed_kn = 35;
-  // @state artifact
-  uint32 bolt_n_bolts = 36;
-  // @state artifact
-  double bolt_a_s_mm2 = 37;
-  // @state artifact
-  double bolt_e1_mm = 38;
-  // @state artifact
-  double bolt_e2_mm = 39;
-  // @state artifact
-  double bolt_d0_mm = 40;
-  // @state artifact
-  double bolt_d_mm = 41;
-  // @state artifact
-  double bolt_t_mm = 42;
-  // @state artifact
-  double bolt_f_u_mpa = 43;
-  // @state artifact
-  double bolt_f_ub_mpa = 44;
-  // @state artifact
-  double weld_a_mm = 45;
-  // @state artifact
-  double weld_l_mm = 46;
-  // @state artifact
-  double weld_f_u_mpa = 47;
-  // @state artifact
-  string weld_steel_grade = 48;
-  // @state artifact
-  double weld_f_ed_kn = 49;
-  // @state artifact
-  double delta_sigma_mpa = 50;
-  // @state artifact
-  uint32 fatigue_category = 51;
-  // @state artifact
-  string fatigue_method = 52;
-  // @state artifact
-  string t10_steel_subgrade = 53;
-  // @state artifact
-  double t10_actual_thickness_mm = 54;
-  // @state artifact
-  double t10_t_ed_c = 55;
-  // @state artifact
-  double tension_component_f_uk_kn = 56;
-  // @state artifact
-  double tension_component_f_k_kn = 57;
-  // @state artifact
-  double tension_component_n_ed_kn = 58;
-  // @state artifact
-  double hss_w_el_mm3 = 59;
-  // @state artifact
-  double hss_f_y_mpa = 60;
-  // @state artifact
-  uint32 hss_section_class = 61;
-  // @state artifact
-  double hss_m_ed_knm = 62;
-  // @state artifact
-  double bridge_lambda = 63;
-  // @state artifact
-  double bridge_phi_2 = 64;
-  // @state artifact
-  double bridge_delta_sigma_p_mpa = 65;
-  // @state artifact
-  double tower_wind_factor = 66;
-  // @state artifact
-  double tower_n_ed_kn = 67;
-  // @state artifact
-  double pile_sigma_mpa = 68;
-  // @state artifact
-  double pile_k_red = 69;
-  // @state artifact
-  double pile_n_ed_kn = 70;
-  // @state artifact
-  double crane_f_z_ed_kn = 71;
-  // @state artifact
-  double crane_wheel_contact_length_mm = 72;
-  // @state artifact
-  double crane_dispersion_mm = 73;
-  // @state artifact
-  double crane_t_w_mm = 74;
+  repeated SteelMaterial materials = 2;
+  repeated SteelSection sections = 3;
+  repeated SteelMember members = 4;
+  repeated LoadCase load_cases = 5;
+  repeated MemberAction member_actions = 6;
+  repeated SteelJoint joints = 7;
+  repeated FatigueDetail fatigue_details = 8;
+  repeated FireExposure fire_exposures = 9;
+  repeated ColdFormedMember cold_formed_members = 10;
+  repeated PlatedPanel plated_panels = 11;
+  repeated SiloShell silo_shells = 12;
+  repeated TensionComponent tension_components = 13;
+  repeated BridgeFatigue bridge_fatigue = 14;
+  repeated TowerLeg tower_legs = 15;
+  repeated SteelPile piles = 16;
+  repeated CraneRunway crane_runways = 17;
 }

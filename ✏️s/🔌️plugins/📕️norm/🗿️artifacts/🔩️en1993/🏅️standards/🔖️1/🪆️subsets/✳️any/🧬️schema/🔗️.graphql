@@ -1,78 +1,22 @@
-# 🧬️ En1993 artifact schema — every field with its state class.
-
-type En1993Artifact {
-  annex: String! @state(class: ARTIFACT)
-  nEdKn: Float! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  aMm2: Float! @state(class: ARTIFACT)
-  aVMm2: Float! @state(class: ARTIFACT)
-  wPlMm3: Float! @state(class: ARTIFACT)
-  fYMpa: Float! @state(class: ARTIFACT)
-  fUMpa: Float! @state(class: ARTIFACT)
-  chi: Float! @state(class: ARTIFACT)
-  aNetMm2: Float! @state(class: ARTIFACT)
-  tensionNEdKn: Float! @state(class: ARTIFACT)
-  fireThicknessMm: Float! @state(class: ARTIFACT)
-  fireRating: String! @state(class: ARTIFACT)
-  fireMassivity: Float! @state(class: ARTIFACT)
-  fireMu0: Float! @state(class: ARTIFACT)
-  fireDesignTemperatureC: Float! @state(class: ARTIFACT)
-  cfBBarMm: Float! @state(class: ARTIFACT)
-  cfTMm: Float! @state(class: ARTIFACT)
-  cfKSigma: Float! @state(class: ARTIFACT)
-  cfPsi: Float! @state(class: ARTIFACT)
-  cfNEdKn: Float! @state(class: ARTIFACT)
-  cfGrossResistanceKn: Float! @state(class: ARTIFACT)
-  stainlessMEdKnm: Float! @state(class: ARTIFACT)
-  stainlessWPlMm3: Float! @state(class: ARTIFACT)
-  stainlessFYMpa: Float! @state(class: ARTIFACT)
-  platedLambdaP: Float! @state(class: ARTIFACT)
-  platedSigmaEdMpa: Float! @state(class: ARTIFACT)
-  siloTMm: Float! @state(class: ARTIFACT)
-  siloRMm: Float! @state(class: ARTIFACT)
-  shellSigmaXEdMpa: Float! @state(class: ARTIFACT)
-  siloK: Float! @state(class: ARTIFACT)
-  siloGammaKnM3: Float! @state(class: ARTIFACT)
-  siloDepthM: Float! @state(class: ARTIFACT)
-  boltFEdKn: Float! @state(class: ARTIFACT)
-  boltNBolts: Int! @state(class: ARTIFACT)
-  boltASMm2: Float! @state(class: ARTIFACT)
-  boltE1Mm: Float! @state(class: ARTIFACT)
-  boltE2Mm: Float! @state(class: ARTIFACT)
-  boltD0Mm: Float! @state(class: ARTIFACT)
-  boltDMm: Float! @state(class: ARTIFACT)
-  boltTMm: Float! @state(class: ARTIFACT)
-  boltFUMpa: Float! @state(class: ARTIFACT)
-  boltFUbMpa: Float! @state(class: ARTIFACT)
-  weldAMm: Float! @state(class: ARTIFACT)
-  weldLMm: Float! @state(class: ARTIFACT)
-  weldFUMpa: Float! @state(class: ARTIFACT)
-  weldSteelGrade: String! @state(class: ARTIFACT)
-  weldFEdKn: Float! @state(class: ARTIFACT)
-  deltaSigmaMpa: Float! @state(class: ARTIFACT)
-  fatigueCategory: Int! @state(class: ARTIFACT)
-  fatigueMethod: String! @state(class: ARTIFACT)
-  t10SteelSubgrade: String! @state(class: ARTIFACT)
-  t10ActualThicknessMm: Float! @state(class: ARTIFACT)
-  t10TEdC: Float! @state(class: ARTIFACT)
-  tensionComponentFUkKn: Float! @state(class: ARTIFACT)
-  tensionComponentFKKn: Float! @state(class: ARTIFACT)
-  tensionComponentNEdKn: Float! @state(class: ARTIFACT)
-  hssWElMm3: Float! @state(class: ARTIFACT)
-  hssFYMpa: Float! @state(class: ARTIFACT)
-  hssSectionClass: Int! @state(class: ARTIFACT)
-  hssMEdKnm: Float! @state(class: ARTIFACT)
-  bridgeLambda: Float! @state(class: ARTIFACT)
-  bridgePhi2: Float! @state(class: ARTIFACT)
-  bridgeDeltaSigmaPMpa: Float! @state(class: ARTIFACT)
-  towerWindFactor: Float! @state(class: ARTIFACT)
-  towerNEdKn: Float! @state(class: ARTIFACT)
-  pileSigmaMpa: Float! @state(class: ARTIFACT)
-  pileKRed: Float! @state(class: ARTIFACT)
-  pileNEdKn: Float! @state(class: ARTIFACT)
-  craneFZEdKn: Float! @state(class: ARTIFACT)
-  craneWheelContactLengthMm: Float! @state(class: ARTIFACT)
-  craneDispersionMm: Float! @state(class: ARTIFACT)
-  craneTWMm: Float! @state(class: ARTIFACT)
-}
+# 🧬 EN 1993 snapshot GraphQL (handcrafted SI schema).
+type DesignAction { n: Float! vy: Float! vz: Float! my: Float! mz: Float! t: Float! }
+type LoadCase { id: String! name: String! kind: String! category: String! }
+type MemberAction { id: String! memberId: String! loadCaseId: String! action: DesignAction! }
+type ForceAction { id: String! loadCaseId: String! force: Float! }
+type JointForceAction { id: String! loadCaseId: String! shear: Float! tension: Float! }
+type FatigueBand { id: String! deltaSigma: Float! cycles: Float! }
+type SteelMaterial { id: String! grade: String! fy: Float! fu: Float! eModulus: Float! gModulus: Float! subgrade: String! kind: String! }
+type SteelSection { id: String! designation: String! kind: String! h: Float! b: Float! tw: Float! tf: Float! r: Float! area: Float! shearAreaY: Float! shearAreaZ: Float! iy: Float! iz: Float! it: Float! iw: Float! wElY: Float! wElZ: Float! wPlY: Float! wPlZ: Float! areaNet: Float! }
+type SteelMember { id: String! label: String! memberType: String! sectionId: String! materialId: String! length: Float! bucklingLengthY: Float! bucklingLengthZ: Float! ltbLength: Float! ltbRestraintSpacing: Float! loadApplication: String! endMomentRatioPsi: Float! momentDiagram: String! deflectionLimitRatio: Float! analysis: String! }
+type SteelJoint { id: String! kind: String! memberId: String! boltClass: String! boltDiameter: Float! boltRows: Int! boltsPerRow: Int! pitch: Float! gauge: Float! endDistance: Float! edgeDistance: Float! shearPlanes: Int! plateThickness: Float! plateFu: Float! weldThroat: Float! weldLength: Float! weldFu: Float! weldGrade: String! actions: [JointForceAction!]! category: String! frictionMu: Float! preloadForce: Float! slipFactorKs: Float! frictionSurfaces: Int! }
+type FatigueDetail { id: String! memberId: String! category: Int! method: String! spectrum: [FatigueBand!]! }
+type FireExposure { id: String! memberId: String! rating: String! protectionThickness: Float! sectionFactor: Float! mu0: Float! protectionConductivity: Float! protectionDensity: Float! protectionSpecificHeat: Float! }
+type ColdFormedMember { id: String! bBar: Float! thickness: Float! kSigma: Float! psi: Float! fy: Float! grossResistance: Float! actions: [ForceAction!]! }
+type PlatedPanel { id: String! a: Float! b: Float! thickness: Float! fy: Float! kSigma: Float! actions: [ForceAction!]! }
+type SiloShell { id: String! thickness: Float! radius: Float! depth: Float! k: Float! gamma: Float! fy: Float! }
+type TensionComponent { id: String! fUk: Float! fK: Float! actions: [ForceAction!]! }
+type BridgeFatigue { id: String! memberId: String! lambda: Float! phi2: Float! deltaSigmaP: Float! category: Int! method: String! }
+type TowerLeg { id: String! memberId: String! forceCoefficient: Float! dynamicFactor: Float! actions: [ForceAction!]! }
+type SteelPile { id: String! sectionId: String! materialId: String! drivingStress: Float! embeddedLength: Float! shaftPerimeter: Float! actions: [ForceAction!]! }
+type CraneRunway { id: String! memberId: String! wheelContactLength: Float! dispersion: Float! webThickness: Float! fy: Float! phi: Float! actions: [ForceAction!]! }
+type En1993Snapshot { annex: String! materials: [SteelMaterial!]! sections: [SteelSection!]! members: [SteelMember!]! loadCases: [LoadCase!]! memberActions: [MemberAction!]! joints: [SteelJoint!]! fatigueDetails: [FatigueDetail!]! fireExposures: [FireExposure!]! coldFormedMembers: [ColdFormedMember!]! platedPanels: [PlatedPanel!]! siloShells: [SiloShell!]! tensionComponents: [TensionComponent!]! bridgeFatigue: [BridgeFatigue!]! towerLegs: [TowerLeg!]! piles: [SteelPile!]! craneRunways: [CraneRunway!]! }

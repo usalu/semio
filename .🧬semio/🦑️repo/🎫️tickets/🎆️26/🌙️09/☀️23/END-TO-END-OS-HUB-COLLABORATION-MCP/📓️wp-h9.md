@@ -296,6 +296,18 @@ What H9 landed in H10's areas before the split (all compile-checked; laws as sta
   0 refused opens. **`tc19` postgres FAILED**: agent leg PASS, then growth edit 105's frame exceeded the 30 s frame
   deadline (`socket=closed 1013 frame-deadline`) — the same postgres-only stall session 11 saw at edit 79. `tc20`
   (postgres) running with a `sample` capture every 8 s (`wp-h9/hub-stall-sampler.sh`, `s12-h9-logs/stall-tc20/`).
+- 10:5x–11:3x **postgres "stall" root-caused** (`tc20`–`tc22`, `sample` + `pg_stat_activity` every 5 s via
+  `wp-h9/hub-stall-sampler.sh`): the hub was idle (every pool worker parked, both driver threads in `kevent`) while
+  postgres ran `SELECT run_id FROM db_index_run WHERE document_id = $1 AND run_id > $2 ORDER BY run_id ASC LIMIT 1`
+  back to back — `db_index_run` showed 27 000 scans for 16 live runs. `PostgresDbIoExecutor::list_runs` (and
+  `list_segments`, `list_generations`) cost ONE ROUND TRIP PER ROW, the index lists its runs several times per edit
+  (`kind_run_ids` per kind, per put/merge), so each edit paid hundreds of round trips; under load 60–110 one edit
+  outgrew the 30 s frame deadline (`1013 frame-deadline` at edits 30, 105, 256; session 11's edit 79; also the slow
+  first Welcome). sqlite runs the same calls in-process (µs), neo4j lists in one streamed query (passed, slowly).
+  **Fix:** `postgres_ascending_ids` — one bounded query (`… ORDER BY … LIMIT $2`, `$2` = `DB_IO_LIST_ITEMS` + 1, now
+  `pub`), used by all three lists; db compile-checked with every driver. Law: pending (live-docker law, like the
+  fence conformance). Binary built 11:38, then the app restart (14:59) deleted my private target dir and my rm+cp found
+  no binary — cold rebuild `build-12` started 15:02 (load 110).
 
 ## Landing (guest ABI, 00:56 → 01:13)
 

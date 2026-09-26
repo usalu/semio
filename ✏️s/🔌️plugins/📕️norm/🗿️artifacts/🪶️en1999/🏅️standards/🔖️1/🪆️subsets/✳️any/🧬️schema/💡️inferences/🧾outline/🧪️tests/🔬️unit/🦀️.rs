@@ -1,13 +1,12 @@
-use super::*;
+//! 🔬️ Outline inference for hierarchical subject.
 
-#[semio_framework_async_macros::async_test]
-async fn outline_field_count_matches_section_outline_length() {
-    let outline = En1999Outline::compute(&En1999Snapshot::default());
-    assert_eq!(outline.field_count as usize, outline.section_outline.len());
-}
+use crate::En1999Snapshot;
+use crate::standards::v1::subsets::any::schema::inferences::outline::En1999Outline;
 
-#[semio_framework_async_macros::async_test]
-async fn outline_is_deterministic() {
-    let snapshot = En1999Snapshot::default();
-    assert_eq!(En1999Outline::compute(&snapshot), En1999Outline::compute(&snapshot));
+#[test]
+fn outline_counts_entities() {
+    let o = En1999Outline::compute(&En1999Snapshot::default());
+    assert!(o.member_count >= 1);
+    assert!(o.section_count >= 1);
+    assert_eq!(o.annex, "de");
 }

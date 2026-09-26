@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "elementId",
     "index"
   ],
   "properties": {
+    "elementId": {
+      "type": "string"
+    },
     "index": {
       "type": "integer",
       "minimum": 0

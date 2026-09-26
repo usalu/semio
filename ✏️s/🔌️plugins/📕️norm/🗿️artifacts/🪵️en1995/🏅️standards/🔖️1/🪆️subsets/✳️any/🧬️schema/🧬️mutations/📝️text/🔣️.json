@@ -1,10 +1,34 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutations/text.json",
-  "title": "En1995MutationsText",
-  "type": "object",
-  "x-semio-formats": [
-    "🔣️jsonschema",
-    "🟦️typescript"
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutations.json",
+  "title": "En1995Mutation",
+  "oneOf": [
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-annex/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-member/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-member/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-h/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-b/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-strength-class/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-connection-number/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-connection/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-connection/schema.json"
+    }
   ]
 }

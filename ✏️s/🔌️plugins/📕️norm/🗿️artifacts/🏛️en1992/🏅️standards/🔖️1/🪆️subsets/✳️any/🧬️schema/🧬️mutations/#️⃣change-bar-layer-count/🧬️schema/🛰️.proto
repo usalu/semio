@@ -1,0 +1,6 @@
+syntax = "proto3";
+message ChangeBarLayerCount {
+  string memberId = 1;
+  string layerId = 2;
+  uint32 newCount = 3;
+}

@@ -1,53 +1,22 @@
-/** 📝️ Text representation for `norm.en1993.snapshot`. */
-export type En1993SnapshotText = string;
-
-//#region 🚪️Parsers
-/** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
-export class normEn1993SnapshotTextGuardRefusal extends Error {
-  constructor(readonly at: string, readonly why: string) {
-    super(`${at}: ${why}`);
-  }
-}
-
-const normEn1993SnapshotTextGuardReject = (at: string, why: string): never => {
-  throw new normEn1993SnapshotTextGuardRefusal(at, why);
-};
-
-type normEn1993SnapshotTextGuardTextBounds = { readonly minLength?: number; readonly maxLength?: number; readonly pattern?: string };
-type normEn1993SnapshotTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
-type normEn1993SnapshotTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
-
-export const normEn1993SnapshotTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normEn1993SnapshotTextGuardReject(at, "value is not an object");
-export const normEn1993SnapshotTextGuardArray = (value: unknown, at: string, bounds: normEn1993SnapshotTextGuardSizeBounds = {}): readonly unknown[] => {
-  if (!Array.isArray(value)) return normEn1993SnapshotTextGuardReject(at, "value is not an array");
-  if (bounds.minItems !== undefined && value.length < bounds.minItems) normEn1993SnapshotTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);
-  if (bounds.maxItems !== undefined && value.length > bounds.maxItems) normEn1993SnapshotTextGuardReject(at, `array has more than ${bounds.maxItems} items`);
-  return value;
-};
-export const normEn1993SnapshotTextGuardString = (value: unknown, at: string, bounds: normEn1993SnapshotTextGuardTextBounds = {}): string => {
-  if (typeof value !== "string") return normEn1993SnapshotTextGuardReject(at, "value is not a string");
-  const length = [...value].length;
-  if (bounds.minLength !== undefined && length < bounds.minLength) normEn1993SnapshotTextGuardReject(at, `string is shorter than ${bounds.minLength}`);
-  if (bounds.maxLength !== undefined && length > bounds.maxLength) normEn1993SnapshotTextGuardReject(at, `string is longer than ${bounds.maxLength}`);
-  if (bounds.pattern !== undefined && !new RegExp(bounds.pattern, "u").test(value)) normEn1993SnapshotTextGuardReject(at, `string does not match ${bounds.pattern}`);
-  return value;
-};
-export const normEn1993SnapshotTextGuardBoolean = (value: unknown, at: string): boolean => (typeof value === "boolean" ? value : normEn1993SnapshotTextGuardReject(at, "value is not a boolean"));
-export const normEn1993SnapshotTextGuardNumber = (value: unknown, at: string, bounds: normEn1993SnapshotTextGuardRangeBounds = {}): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return normEn1993SnapshotTextGuardReject(at, "value is not a finite number");
-  if (bounds.minimum !== undefined && value < bounds.minimum) normEn1993SnapshotTextGuardReject(at, `number is below ${bounds.minimum}`);
-  if (bounds.maximum !== undefined && value > bounds.maximum) normEn1993SnapshotTextGuardReject(at, `number is above ${bounds.maximum}`);
-  return value;
-};
-export const normEn1993SnapshotTextGuardInteger = (value: unknown, at: string, bounds: normEn1993SnapshotTextGuardRangeBounds = {}): number =>
-  Number.isSafeInteger(value) ? normEn1993SnapshotTextGuardNumber(value, at, bounds) : normEn1993SnapshotTextGuardReject(at, "value is not an integer");
-export const normEn1993SnapshotTextGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
-  members.includes(value as T) ? (value as T) : normEn1993SnapshotTextGuardReject(at, `value is not one of ${members.join(", ")}`);
-export const normEn1993SnapshotTextGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
-  value === expected ? expected : normEn1993SnapshotTextGuardReject(at, `value is not ${String(expected)}`);
-//#endregion 🚪️Parsers
-
-export function parseEn1993SnapshotText(value: unknown, at = "$"): En1993SnapshotText {
-  return normEn1993SnapshotTextGuardObject(value, `${at}`);
-}
+/** 🧬 EN 1993 snapshot TypeScript interfaces (SI). */
+export interface DesignAction { n: number; vy: number; vz: number; my: number; mz: number; t: number; }
+export interface LoadCase { id: string; name: string; kind: string; category: string; }
+export interface MemberAction { id: string; memberId: string; loadCaseId: string; action: DesignAction; }
+export interface ForceAction { id: string; loadCaseId: string; force: number; }
+export interface JointForceAction { id: string; loadCaseId: string; shear: number; tension: number; }
+export interface FatigueBand { id: string; deltaSigma: number; cycles: number; }
+export interface SteelMaterial { id: string; grade: string; fy: number; fu: number; eModulus: number; gModulus: number; subgrade: string; kind: string; }
+export interface SteelSection { id: string; designation: string; kind: string; h: number; b: number; tw: number; tf: number; r: number; area: number; shearAreaY: number; shearAreaZ: number; iy: number; iz: number; it: number; iw: number; wElY: number; wElZ: number; wPlY: number; wPlZ: number; areaNet: number; }
+export interface SteelMember { id: string; label: string; memberType: string; sectionId: string; materialId: string; length: number; bucklingLengthY: number; bucklingLengthZ: number; ltbLength: number; ltbRestraintSpacing: number; loadApplication: string; endMomentRatioPsi: number; momentDiagram: string; deflectionLimitRatio: number; analysis: string; }
+export interface SteelJoint { id: string; kind: string; memberId: string; boltClass: string; boltDiameter: number; boltRows: number; boltsPerRow: number; pitch: number; gauge: number; endDistance: number; edgeDistance: number; shearPlanes: number; plateThickness: number; plateFu: number; weldThroat: number; weldLength: number; weldFu: number; weldGrade: string; actions: JointForceAction[]; category: string; frictionMu: number; preloadForce: number; slipFactorKs: number; frictionSurfaces: number; }
+export interface FatigueDetail { id: string; memberId: string; category: number; method: string; spectrum: FatigueBand[]; }
+export interface FireExposure { id: string; memberId: string; rating: string; protectionThickness: number; sectionFactor: number; mu0: number; protectionConductivity: number; protectionDensity: number; protectionSpecificHeat: number; }
+export interface ColdFormedMember { id: string; bBar: number; thickness: number; kSigma: number; psi: number; fy: number; grossResistance: number; actions: ForceAction[]; }
+export interface PlatedPanel { id: string; a: number; b: number; thickness: number; fy: number; kSigma: number; actions: ForceAction[]; }
+export interface SiloShell { id: string; thickness: number; radius: number; depth: number; k: number; gamma: number; fy: number; }
+export interface TensionComponent { id: string; fUk: number; fK: number; actions: ForceAction[]; }
+export interface BridgeFatigue { id: string; memberId: string; lambda: number; phi2: number; deltaSigmaP: number; category: number; method: string; }
+export interface TowerLeg { id: string; memberId: string; forceCoefficient: number; dynamicFactor: number; actions: ForceAction[]; }
+export interface SteelPile { id: string; sectionId: string; materialId: string; drivingStress: number; embeddedLength: number; shaftPerimeter: number; actions: ForceAction[]; }
+export interface CraneRunway { id: string; memberId: string; wheelContactLength: number; dispersion: number; webThickness: number; fy: number; phi: number; actions: ForceAction[]; }
+export interface En1993Snapshot { annex: string; materials: SteelMaterial[]; sections: SteelSection[]; members: SteelMember[]; loadCases: LoadCase[]; memberActions: MemberAction[]; joints: SteelJoint[]; fatigueDetails: FatigueDetail[]; fireExposures: FireExposure[]; coldFormedMembers: ColdFormedMember[]; platedPanels: PlatedPanel[]; siloShells: SiloShell[]; tensionComponents: TensionComponent[]; bridgeFatigue: BridgeFatigue[]; towerLegs: TowerLeg[]; piles: SteelPile[]; craneRunways: CraneRunway[]; }

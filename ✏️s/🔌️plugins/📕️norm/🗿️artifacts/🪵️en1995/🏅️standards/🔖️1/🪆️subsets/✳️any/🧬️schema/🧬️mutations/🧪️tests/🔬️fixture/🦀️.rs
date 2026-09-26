@@ -1,40 +1,133 @@
-#[path = "../../🧩️change-a-ef-mm2/🧪️tests/🧩️enlarges-the-effective-connection-area-to-16000-mm2/🦀️.rs"]
-mod tests_change_a_ef_mm2_enlarges_the_effective_connection_area_to_16000_mm2;
-#[path = "../../📐️change-a-mm2/🧪️tests/📐️enlarges-the-gross-area-to-72000-mm2/🦀️.rs"]
-mod tests_change_a_mm2_enlarges_the_gross_area_to_72000_mm2;
-#[path = "../../🦶️change-a-vert-ms2/🧪️tests/🦶️doubles-the-vertical-footfall-acceleration-to-0-5-m-s2/🦀️.rs"]
-mod tests_change_a_vert_ms2_doubles_the_vertical_footfall_acceleration_to_0_5_m_s2;
+//! 🧪️ Mounts every leaf's named scenario test so the whole vocabulary runs under `cargo test`.
 #[path = "../../🌍️change-annex/🧪️tests/🌍️switches-from-the-german-na-to-the-recommended-en-annex/🦀️.rs"]
-mod tests_change_annex_switches_from_the_german_na_to_the_recommended_en_annex;
-#[path = "../../↔️change-b-mm/🧪️tests/↔️widens-the-beam-to-240-mm/🦀️.rs"]
-mod tests_change_b_mm_widens_the_beam_to_240_mm;
-#[path = "../../🔩️change-f-ed-kn/🧪️tests/🔩️raises-the-design-fastener-force-to-24-kn/🦀️.rs"]
-mod tests_change_f_ed_kn_raises_the_design_fastener_force_to_24_kn;
-#[path = "../../🗜️change-fc0-k/🧪️tests/🗜️raises-the-parallel-compressive-strength-to-26-5-mpa/🦀️.rs"]
-mod tests_change_fc0_k_raises_the_parallel_compressive_strength_to_26_5_mpa;
-#[path = "../../🔥️change-fire-duration-min/🧪️tests/🔥️raises-the-fire-exposure-from-r30-to-r60/🦀️.rs"]
-mod tests_change_fire_duration_min_raises_the_fire_exposure_from_r30_to_r60;
-#[path = "../../🛡️change-fmk/🧪️tests/🛡️upgrades-the-bending-strength-class-to-28-mpa/🦀️.rs"]
-mod tests_change_fmk_upgrades_the_bending_strength_class_to_28_mpa;
-#[path = "../../✂️change-fvk/🧪️tests/✂️lowers-the-characteristic-shear-strength-to-3-5-mpa/🦀️.rs"]
-mod tests_change_fvk_lowers_the_characteristic_shear_strength_to_3_5_mpa;
-#[path = "../../↕️change-h-mm/🧪️tests/↕️deepens-the-beam-to-360-mm/🦀️.rs"]
-mod tests_change_h_mm_deepens_the_beam_to_360_mm;
-#[path = "../../⏳️change-load-duration/🧪️tests/⏳️shortens-the-load-duration-class-from-medium-to-short/🦀️.rs"]
-mod tests_change_load_duration_shortens_the_load_duration_class_from_medium_to_short;
-#[path = "../../⚠️change-m-crit-knm/🧪️tests/⚠️raises-the-critical-buckling-moment-to-96-knm/🦀️.rs"]
-mod tests_change_m_crit_knm_raises_the_critical_buckling_moment_to_96_knm;
-#[path = "../../⤴️change-m-ed-knm/🧪️tests/⤴️raises-the-design-bending-moment-to-32-knm/🦀️.rs"]
-mod tests_change_m_ed_knm_raises_the_design_bending_moment_to_32_knm;
-#[path = "../../🔁️change-n-cycles-bridge/🧪️tests/🌉️quadruples-the-bridge-fatigue-cycles-to-2000000/🦀️.rs"]
-mod tests_change_n_cycles_bridge_quadruples_the_bridge_fatigue_cycles_to_2000000;
-#[path = "../../🏋️change-n-ed-kn/🧪️tests/🏋️raises-the-design-axial-force-to-75-kn/🦀️.rs"]
-mod tests_change_n_ed_kn_raises_the_design_axial_force_to_75_kn;
-#[path = "../../📏️change-section-depth-mm/🧪️tests/📏️raises-the-size-effect-depth-to-360-mm/🦀️.rs"]
-mod tests_change_section_depth_mm_raises_the_size_effect_depth_to_360_mm;
-#[path = "../../🌧️change-service-class/🧪️tests/🌧️moves-the-beam-from-service-class-1-to-service-class-2/🦀️.rs"]
-mod tests_change_service_class_moves_the_beam_from_service_class_1_to_service_class_2;
-#[path = "../../🪚️change-v-ed-kn/🧪️tests/🪚️raises-the-design-shear-force-to-22-5-kn/🦀️.rs"]
-mod tests_change_v_ed_kn_raises_the_design_shear_force_to_22_5_kn;
-#[path = "../../📊️change-w-mm3/🧪️tests/📊️raises-the-section-modulus-to-4000000-mm3/🦀️.rs"]
-mod tests_change_w_mm3_raises_the_section_modulus_to_4000000_mm3;
+mod tests_set_snapshot_switches_from_the_german_na_to_the_recommended_en_annex;
+#[path = "../../➕️insert-member/🧪️tests/➕️inserts-a-member-at-end/🦀️.rs"]
+mod tests_insert_member_inserts_a_member_at_end;
+#[path = "../../➖️remove-member/🧪️tests/➖️removes-the-first-member/🦀️.rs"]
+mod tests_remove_member_removes_the_first_member;
+#[path = "../../🏷️change-member-label-en/🧪️tests/✏️sets-labelEn/🦀️.rs"]
+mod tests_change_member_label_en_sets_label_en;
+#[path = "../../🏷️change-member-label-de/🧪️tests/✏️sets-labelDe/🦀️.rs"]
+mod tests_change_member_label_de_sets_label_de;
+#[path = "../../🎯️change-member-role/🧪️tests/✏️sets-role/🦀️.rs"]
+mod tests_change_member_role_sets_role;
+#[path = "../../🛡️change-member-strength-class/🧪️tests/✏️sets-strengthClass/🦀️.rs"]
+mod tests_change_member_strength_class_sets_strength_class;
+#[path = "../../🌧️change-member-service-class/🧪️tests/✏️sets-serviceClass/🦀️.rs"]
+mod tests_change_member_service_class_sets_service_class;
+#[path = "../../📍️change-member-support/🧪️tests/✏️sets-support/🦀️.rs"]
+mod tests_change_member_support_sets_support;
+#[path = "../../↔️change-member-b/🧪️tests/✏️sets-bM/🦀️.rs"]
+mod tests_change_member_b_sets_b_m;
+#[path = "../../↕️change-member-h/🧪️tests/✏️sets-hM/🦀️.rs"]
+mod tests_change_member_h_sets_h_m;
+#[path = "../../↔️change-member-span/🧪️tests/✏️sets-spanM/🦀️.rs"]
+mod tests_change_member_span_sets_span_m;
+#[path = "../../↔️change-member-support-length/🧪️tests/✏️sets-supportLengthM/🦀️.rs"]
+mod tests_change_member_support_length_sets_support_length_m;
+#[path = "../../↔️change-member-bearing-length/🧪️tests/✏️sets-bearingLengthM/🦀️.rs"]
+mod tests_change_member_bearing_length_sets_bearing_length_m;
+#[path = "../../↔️change-member-buckling-y/🧪️tests/✏️sets-bucklingLengthYM/🦀️.rs"]
+mod tests_change_member_buckling_y_sets_buckling_length_ym;
+#[path = "../../↔️change-member-buckling-z/🧪️tests/✏️sets-bucklingLengthZM/🦀️.rs"]
+mod tests_change_member_buckling_z_sets_buckling_length_zm;
+#[path = "../../↔️change-member-lateral-restraint/🧪️tests/✏️sets-lateralRestraintSpacingM/🦀️.rs"]
+mod tests_change_member_lateral_restraint_sets_lateral_restraint_spacing_m;
+#[path = "../../↔️change-member-notch-depth/🧪️tests/✏️sets-notchDepthM/🦀️.rs"]
+mod tests_change_member_notch_depth_sets_notch_depth_m;
+#[path = "../../↔️change-member-notch-distance/🧪️tests/✏️sets-notchDistanceM/🦀️.rs"]
+mod tests_change_member_notch_distance_sets_notch_distance_m;
+#[path = "../../⚠️change-member-m-crit/🧪️tests/✏️sets-mCritNm/🦀️.rs"]
+mod tests_change_member_m_crit_sets_m_crit_nm;
+#[path = "../../⚖️change-member-mass-per-m/🧪️tests/✏️sets-massKgPerM/🦀️.rs"]
+mod tests_change_member_mass_per_m_sets_mass_kg_per_m;
+#[path = "../../⚖️change-member-mass-per-m2/🧪️tests/✏️sets-massKgPerM2/🦀️.rs"]
+mod tests_change_member_mass_per_m2_sets_mass_kg_per_m2;
+#[path = "../../🌊️change-member-damping/🧪️tests/✏️sets-dampingXi/🦀️.rs"]
+mod tests_change_member_damping_sets_damping_xi;
+#[path = "../../🔥️change-member-fire-duration/🧪️tests/✏️sets-fireDurationS/🦀️.rs"]
+mod tests_change_member_fire_duration_sets_fire_duration_s;
+#[path = "../../🌉️change-member-bridge-n-obs/🧪️tests/✏️sets-bridgeNObs/🦀️.rs"]
+mod tests_change_member_bridge_n_obs_sets_bridge_n_obs;
+#[path = "../../🌉️change-member-bridge-tl-years/🧪️tests/✏️sets-bridgeTLYears/🦀️.rs"]
+mod tests_change_member_bridge_tl_years_sets_bridge_tl_years;
+#[path = "../../🌉️change-member-bridge-beta/🧪️tests/✏️sets-bridgeBeta/🦀️.rs"]
+mod tests_change_member_bridge_beta_sets_bridge_beta;
+#[path = "../../🌉️change-member-bridge-a/🧪️tests/✏️sets-bridgeA/🦀️.rs"]
+mod tests_change_member_bridge_a_sets_bridge_a;
+#[path = "../../🌉️change-member-bridge-b/🧪️tests/✏️sets-bridgeB/🦀️.rs"]
+mod tests_change_member_bridge_b_sets_bridge_b;
+#[path = "../../🚶️change-member-bridge-crowd/🧪️tests/✏️sets-bridgeCrowdPerM2/🦀️.rs"]
+mod tests_change_member_bridge_crowd_sets_bridge_crowd_per_m2;
+#[path = "../../➕️insert-member-action/🧪️tests/➕️inserts-an-action-at-end-of-member/🦀️.rs"]
+mod tests_insert_member_action_inserts_an_action_at_end_of_member;
+#[path = "../../➖️remove-member-action/🧪️tests/➖️removes-the-first-action-of-member/🦀️.rs"]
+mod tests_remove_member_action_removes_the_first_action_of_member;
+#[path = "../../⚖️change-member-action-kind/🧪️tests/✏️sets-kind/🦀️.rs"]
+mod tests_change_member_action_kind_sets_kind;
+#[path = "../../🏢️change-member-action-category/🧪️tests/✏️sets-category/🦀️.rs"]
+mod tests_change_member_action_category_sets_category;
+#[path = "../../⏳️change-member-action-load-duration/🧪️tests/✏️sets-loadDuration/🦀️.rs"]
+mod tests_change_member_action_load_duration_sets_load_duration;
+#[path = "../../⬇️change-member-action-q-line/🧪️tests/✏️sets-qLineNPerM/🦀️.rs"]
+mod tests_change_member_action_q_line_sets_q_line_n_per_m;
+#[path = "../../⬇️change-member-action-f-point/🧪️tests/✏️sets-fPointN/🦀️.rs"]
+mod tests_change_member_action_f_point_sets_f_point_n;
+#[path = "../../⤴️change-member-action-mk/🧪️tests/✏️sets-mKNm/🦀️.rs"]
+mod tests_change_member_action_mk_sets_m_k_nm;
+#[path = "../../↕️change-member-action-vk/🧪️tests/✏️sets-vKN/🦀️.rs"]
+mod tests_change_member_action_vk_sets_v_kn;
+#[path = "../../🏋️change-member-action-nk/🧪️tests/✏️sets-nKN/🦀️.rs"]
+mod tests_change_member_action_nk_sets_n_kn;
+#[path = "../../🏋️change-member-action-ntk/🧪️tests/✏️sets-nTKN/🦀️.rs"]
+mod tests_change_member_action_ntk_sets_n_tkn;
+#[path = "../../🏋️change-member-action-fc90-k/🧪️tests/✏️sets-fC90KN/🦀️.rs"]
+mod tests_change_member_action_fc90_k_sets_f_c90_kn;
+#[path = "../../➕️insert-connection/🧪️tests/➕️inserts-a-connection-at-end/🦀️.rs"]
+mod tests_insert_connection_inserts_a_connection_at_end;
+#[path = "../../➖️remove-connection/🧪️tests/➖️removes-the-first-connection/🦀️.rs"]
+mod tests_remove_connection_removes_the_first_connection;
+#[path = "../../🏷️change-connection-label-en/🧪️tests/✏️sets-labelEn/🦀️.rs"]
+mod tests_change_connection_label_en_sets_label_en;
+#[path = "../../🏷️change-connection-label-de/🧪️tests/✏️sets-labelDe/🦀️.rs"]
+mod tests_change_connection_label_de_sets_label_de;
+#[path = "../../🔩️change-connection-fastener-type/🧪️tests/✏️sets-fastenerType/🦀️.rs"]
+mod tests_change_connection_fastener_type_sets_fastener_type;
+#[path = "../../🛡️change-connection-strength-class/🧪️tests/✏️sets-strengthClass/🦀️.rs"]
+mod tests_change_connection_strength_class_sets_strength_class;
+#[path = "../../🌧️change-connection-service-class/🧪️tests/✏️sets-serviceClass/🦀️.rs"]
+mod tests_change_connection_service_class_sets_service_class;
+#[path = "../../↔️change-connection-diameter/🧪️tests/✏️sets-diameterM/🦀️.rs"]
+mod tests_change_connection_diameter_sets_diameter_m;
+#[path = "../../🔢️change-connection-number/🧪️tests/✏️sets-number/🦀️.rs"]
+mod tests_change_connection_number_sets_number;
+#[path = "../../🔢️change-connection-rows/🧪️tests/✏️sets-rows/🦀️.rs"]
+mod tests_change_connection_rows_sets_rows;
+#[path = "../../↔️change-connection-spacing/🧪️tests/✏️sets-spacingM/🦀️.rs"]
+mod tests_change_connection_spacing_sets_spacing_m;
+#[path = "../../↔️change-connection-edge-distance/🧪️tests/✏️sets-edgeDistanceM/🦀️.rs"]
+mod tests_change_connection_edge_distance_sets_edge_distance_m;
+#[path = "../../↔️change-connection-end-distance/🧪️tests/✏️sets-endDistanceM/🦀️.rs"]
+mod tests_change_connection_end_distance_sets_end_distance_m;
+#[path = "../../↔️change-connection-t1/🧪️tests/✏️sets-t1M/🦀️.rs"]
+mod tests_change_connection_t1_sets_t1_m;
+#[path = "../../↔️change-connection-t2/🧪️tests/✏️sets-t2M/🦀️.rs"]
+mod tests_change_connection_t2_sets_t2_m;
+#[path = "../../🔩️change-connection-steel-plate/🧪️tests/✏️sets-steelPlate/🦀️.rs"]
+mod tests_change_connection_steel_plate_sets_steel_plate;
+#[path = "../../↔️change-connection-steel-plate-thickness/🧪️tests/✏️sets-steelPlateThicknessM/🦀️.rs"]
+mod tests_change_connection_steel_plate_thickness_sets_steel_plate_thickness_m;
+#[path = "../../🔢️change-connection-shear-planes/🧪️tests/✏️sets-shearPlanes/🦀️.rs"]
+mod tests_change_connection_shear_planes_sets_shear_planes;
+#[path = "../../🛡️change-connection-fuk/🧪️tests/✏️sets-fUK/🦀️.rs"]
+mod tests_change_connection_fuk_sets_f_uk;
+#[path = "../../➕️insert-connection-action/🧪️tests/➕️inserts-an-action-at-end-of-connection/🦀️.rs"]
+mod tests_insert_connection_action_inserts_an_action_at_end_of_connection;
+#[path = "../../➖️remove-connection-action/🧪️tests/➖️removes-the-first-action-of-connection/🦀️.rs"]
+mod tests_remove_connection_action_removes_the_first_action_of_connection;
+#[path = "../../⚖️change-connection-action-kind/🧪️tests/✏️sets-kind/🦀️.rs"]
+mod tests_change_connection_action_kind_sets_kind;
+#[path = "../../⏳️change-connection-action-load-duration/🧪️tests/✏️sets-loadDuration/🦀️.rs"]
+mod tests_change_connection_action_load_duration_sets_load_duration;
+#[path = "../../🔩️change-connection-action-fk/🧪️tests/✏️sets-fKN/🦀️.rs"]
+mod tests_change_connection_action_fk_sets_f_kn;

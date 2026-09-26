@@ -1,0 +1,20 @@
+{
+  "InsertLayer": {
+    "element_id": "wall-north",
+    "index": 0,
+    "layer": {
+      "id": "layer-extra",
+      "materialId": "eps",
+      "thicknessM": 0.05,
+      "lambda": 0.035,
+      "mu": 40.0,
+      "density": 20.0,
+      "applicationType": "WAP",
+      "compressiveClass": "dm",
+      "waterClass": "wf",
+      "tensileClass": "tf",
+      "acousticClass": "sm",
+      "segments": []
+    }
+  }
+}

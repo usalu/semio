@@ -15,3 +15,10 @@ p8 (landing window, patch set, NOT in the tree yet): flow — `wp-p8/patches/p8-
   connectMediaPorts/reorganize/renameFlowWidget/runExtensionAction/setActiveExample publication lane Artifact → Child
   (descriptor/publication-contract change; no WIT/codec/pack-schema change). Guest change in semio-s-artifact-flow-flow
   (+ semio-s-plugin-flow re-export). Clone: flow lib 257/257.
+p8 (landing window, all as ONE command: `python3 .tmp-ticket/wp-p8/p8-land.py --write --test`; dry run without flags):
+  SDK `🔌️plugin/🦀️.rs` + `🧵️retained-command` + action-bus (`p8-agent-lane`, `p8-law`) → EVERY guest relinks: MCP prepare
+  runs the same retained job as the shell; declared-verb law + orphan rule (test-only). cad (`p8-cad`, 5 verbs migrated,
+  stubs refuse by name), space studio (`p8-space-studio`, 24 verbs migrated), space home (`p8-space-home`, renameSpace
+  migrated HostOnly). Descriptor changes (interactiveJob dispositions, publication lanes) → `describe` regen in the restage.
+  Already in the tree since before rule 20 and still to restage: writer ([DEBUG] prints removed), procedural gen3d viewer
+  (setActiveExample not destructive).

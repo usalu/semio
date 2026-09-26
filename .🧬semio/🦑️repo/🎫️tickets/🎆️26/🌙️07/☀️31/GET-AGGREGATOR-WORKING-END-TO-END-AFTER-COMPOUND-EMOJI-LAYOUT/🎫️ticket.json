@@ -3,7 +3,7 @@
   "emoji": "\ud83d\udc1b",
   "status": "closed",
   "description": "Layout shifted to emoji+name compound folders (\ud83e\uddf0framework/\u2026). Aggregator fails on infinite-canvas include_bytes/include_str for fonts and metabolism SVGs. Get aggregator working end to end again. MCP unavailable; ticket on disk. Goal: \ud83c\udfafr2602/\ud83c\udfafrunningsketchpad. Reopened: another layout pass broke \ud83c\udfa8globals.css (react path) and likely vite aliases.",
-  "goal": "\ud83c\udfafr2602/\ud83c\udfafrunningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "summary": "Reopened after another layout pass moved ui-react under \u269b\ufe0freact/\u26a1\ufe0fimplementation. Fixed os-dev \ud83c\udfa8globals.css import/@source paths and regenerated-stale \ud83c\udfa8palette.css font URLs (/asset/\ud83d\udd24font/\u2026). Confirmed bun run dev:mit-bestand:aggregator on :6023; e2e ok:true (title, Abbau Aufbau, 2 canvases, GLB 86112, 0 console errors).",
   "files": [
     ".\ud83e\udd91repo/\ud83c\udfabtickets/26/07/31/GET-AGGREGATOR-WORKING-END-TO-END-AFTER-COMPOUND-EMOJI-LAYOUT/aggregator-viewport.png",

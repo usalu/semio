@@ -1,6 +1,10 @@
-//! 🧬️ En1993 snapshot schema — artifact-lane fields only.
+//! 🧬️ En1993 snapshot schema — complete steel-structure subject (SI base units).
 
 use crate::document::AnnexChoice;
+use crate::{
+    BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase,
+    MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg,
+};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
@@ -14,289 +18,437 @@ use framework_schema::ArtifactSchema;
 pub struct En1993Snapshot {
     #[state(artifact)]
     pub annex: AnnexChoice,
-    #[dsl(unit = "kN")]
+    #[dsl(table)]
     #[state(artifact)]
-    pub n_ed_kn: f64,
+    pub materials: Vec<SteelMaterial>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub m_ed_knm: f64,
-    #[dsl(unit = "kN")]
+    pub sections: Vec<SteelSection>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub v_ed_kn: f64,
-    #[dsl(unit = "mm2")]
+    pub members: Vec<SteelMember>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub a_mm2: f64,
-    #[dsl(unit = "mm2")]
+    pub load_cases: Vec<LoadCase>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub a_v_mm2: f64,
+    pub member_actions: Vec<MemberAction>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub w_pl_mm3: f64,
-    #[dsl(unit = "MPa")]
+    pub joints: Vec<SteelJoint>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub f_y_mpa: f64,
-    #[dsl(unit = "MPa")]
+    pub fatigue_details: Vec<FatigueDetail>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub f_u_mpa: f64,
+    pub fire_exposures: Vec<FireExposure>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub chi: f64,
-    #[dsl(unit = "mm2")]
+    pub cold_formed_members: Vec<ColdFormedMember>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub a_net_mm2: f64,
-    #[dsl(unit = "kN")]
+    pub plated_panels: Vec<PlatedPanel>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub tension_n_ed_kn: f64,
-    #[dsl(unit = "mm")]
+    pub silo_shells: Vec<SiloShell>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub fire_thickness_mm: f64,
+    pub tension_components: Vec<TensionComponent>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub fire_rating: String,
+    pub bridge_fatigue: Vec<BridgeFatigue>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub fire_massivity: f64,
+    pub tower_legs: Vec<TowerLeg>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub fire_mu_0: f64,
+    pub piles: Vec<SteelPile>,
+    #[dsl(table)]
     #[state(artifact)]
-    pub fire_design_temperature_c: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub cf_b_bar_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub cf_t_mm: f64,
-    #[state(artifact)]
-    pub cf_k_sigma: f64,
-    #[state(artifact)]
-    pub cf_psi: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub cf_n_ed_kn: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub cf_gross_resistance_kn: f64,
-    #[state(artifact)]
-    pub stainless_m_ed_knm: f64,
-    #[state(artifact)]
-    pub stainless_w_pl_mm3: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub stainless_f_y_mpa: f64,
-    #[state(artifact)]
-    pub plated_lambda_p: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub plated_sigma_ed_mpa: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub silo_t_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub silo_r_mm: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub shell_sigma_x_ed_mpa: f64,
-    #[state(artifact)]
-    pub silo_k: f64,
-    #[state(artifact)]
-    pub silo_gamma_kn_m3: f64,
-    #[dsl(unit = "m")]
-    #[state(artifact)]
-    pub silo_depth_m: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub bolt_f_ed_kn: f64,
-    #[state(artifact)]
-    pub bolt_n_bolts: u32,
-    #[dsl(unit = "mm2")]
-    #[state(artifact)]
-    pub bolt_a_s_mm2: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub bolt_e1_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub bolt_e2_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub bolt_d0_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub bolt_d_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub bolt_t_mm: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub bolt_f_u_mpa: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub bolt_f_ub_mpa: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub weld_a_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub weld_l_mm: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub weld_f_u_mpa: f64,
-    #[state(artifact)]
-    pub weld_steel_grade: String,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub weld_f_ed_kn: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub delta_sigma_mpa: f64,
-    #[state(artifact)]
-    pub fatigue_category: u8,
-    #[state(artifact)]
-    pub fatigue_method: String,
-    #[state(artifact)]
-    pub t10_steel_subgrade: String,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub t10_actual_thickness_mm: f64,
-    #[state(artifact)]
-    pub t10_t_ed_c: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub tension_component_f_uk_kn: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub tension_component_f_k_kn: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub tension_component_n_ed_kn: f64,
-    #[state(artifact)]
-    pub hss_w_el_mm3: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub hss_f_y_mpa: f64,
-    #[state(artifact)]
-    pub hss_section_class: u8,
-    #[state(artifact)]
-    pub hss_m_ed_knm: f64,
-    #[state(artifact)]
-    pub bridge_lambda: f64,
-    #[state(artifact)]
-    pub bridge_phi_2: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub bridge_delta_sigma_p_mpa: f64,
-    #[state(artifact)]
-    pub tower_wind_factor: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub tower_n_ed_kn: f64,
-    #[dsl(unit = "MPa")]
-    #[state(artifact)]
-    pub pile_sigma_mpa: f64,
-    #[state(artifact)]
-    pub pile_k_red: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub pile_n_ed_kn: f64,
-    #[dsl(unit = "kN")]
-    #[state(artifact)]
-    pub crane_f_z_ed_kn: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub crane_wheel_contact_length_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub crane_dispersion_mm: f64,
-    #[dsl(unit = "mm")]
-    #[state(artifact)]
-    pub crane_t_w_mm: f64,
+    pub crane_runways: Vec<CraneRunway>,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-// 🧬️ Consolidated (W5a, ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT): the fifteen norm families' identical
-// ArtifactDsl/ArtifactPack envelope-wrap glue now lives once, in `crate::document`'s
-// `NormArtifactRecord`/`norm_{parse,print}_dsl`/`norm_{encode,decode}_pack` (see that
-// region's doc comment in `📄️artifact/🦀️.rs` for why it can't collapse further
-// than this one macro call — Rust's orphan rule still needs a concrete per-type impl).
 crate::impl_norm_artifact_record!(En1993Snapshot, extension = "en1993", envelope_id = "norm.en1993");
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1993Snapshot {
     fn default() -> Self {
-        Self {
-            annex: AnnexChoice::De,
-            n_ed_kn: 500.0,
-            m_ed_knm: 150.0,
-            v_ed_kn: 80.0,
-            a_mm2: 5000.0,
-            a_v_mm2: 2500.0,
-            w_pl_mm3: 500_000.0,
-            f_y_mpa: 355.0,
-            f_u_mpa: 510.0,
-            chi: 0.75,
-            a_net_mm2: 4250.0,
-            tension_n_ed_kn: 400.0,
-            fire_thickness_mm: 20.0,
-            fire_rating: "r60".into(),
-            fire_massivity: 150.0,
-            fire_mu_0: 0.5,
-            fire_design_temperature_c: 550.0,
-            cf_b_bar_mm: 90.0,
-            cf_t_mm: 2.0,
-            cf_k_sigma: 4.0,
-            cf_psi: 1.0,
-            cf_n_ed_kn: 20.0,
-            cf_gross_resistance_kn: 50.0,
-            stainless_m_ed_knm: 40.0,
-            stainless_w_pl_mm3: 300_000.0,
-            stainless_f_y_mpa: 220.0,
-            plated_lambda_p: 0.8,
-            plated_sigma_ed_mpa: 200.0,
-            silo_t_mm: 8.0,
-            silo_r_mm: 3000.0,
-            shell_sigma_x_ed_mpa: 150.0,
-            silo_k: 0.4,
-            silo_gamma_kn_m3: 18.0,
-            silo_depth_m: 5.0,
-            bolt_f_ed_kn: 120.0,
-            bolt_n_bolts: 2,
-            bolt_a_s_mm2: 245.0,
-            bolt_e1_mm: 40.0,
-            bolt_e2_mm: 40.0,
-            bolt_d0_mm: 22.0,
-            bolt_d_mm: 20.0,
-            bolt_t_mm: 10.0,
-            bolt_f_u_mpa: 510.0,
-            bolt_f_ub_mpa: 800.0,
-            weld_a_mm: 5.0,
-            weld_l_mm: 100.0,
-            weld_f_u_mpa: 510.0,
-            weld_steel_grade: "S355".into(),
-            weld_f_ed_kn: 80.0,
-            delta_sigma_mpa: 50.0,
-            fatigue_category: 71,
-            fatigue_method: "damage_tolerant".into(),
-            t10_steel_subgrade: "J2".into(),
-            t10_actual_thickness_mm: 25.0,
-            t10_t_ed_c: 0.0,
-            tension_component_f_uk_kn: 500.0,
-            tension_component_f_k_kn: 350.0,
-            tension_component_n_ed_kn: 250.0,
-            hss_w_el_mm3: 400_000.0,
-            hss_f_y_mpa: 460.0,
-            hss_section_class: 2,
-            hss_m_ed_knm: 100.0,
-            bridge_lambda: 1.0,
-            bridge_phi_2: 1.0,
-            bridge_delta_sigma_p_mpa: 30.0,
-            tower_wind_factor: 1.1,
-            tower_n_ed_kn: 300.0,
-            pile_sigma_mpa: 280.0,
-            pile_k_red: 0.85,
-            pile_n_ed_kn: 400.0,
-            crane_f_z_ed_kn: 50.0,
-            crane_wheel_contact_length_mm: 100.0,
-            crane_dispersion_mm: 50.0,
-            crane_t_w_mm: 10.0,
-        }
+        Self::compliant_heb240_frame()
     }
 }
-//#endregion 🔖️Snapshot
+
+impl En1993Snapshot {
+    /// ✅️ Realistic multi-part compliant steel subject (DE-NA) exercising parts 1–6.
+    pub fn compliant_heb240_frame() -> Self {
+        Self {
+            annex: AnnexChoice::De,
+            materials: vec![SteelMaterial {
+                id: "mat-s355".into(),
+                grade: "S355".into(),
+                fy: 355.0e6,
+                fu: 510.0e6,
+                e_modulus: 210.0e9,
+                g_modulus: 81.0e9,
+                subgrade: "J2".into(),
+                kind: "carbon".into(),
+            }],
+            sections: vec![catalogue_heb240()],
+            members: vec![SteelMember {
+                id: "member-b1".into(),
+                label: "Beam-column B1".into(),
+                member_type: "beamColumn".into(),
+                section_id: "sec-heb240".into(),
+                material_id: "mat-s355".into(),
+                length: 4.0,
+                buckling_length_y: 4.0,
+                buckling_length_z: 4.0,
+                ltb_length: 4.0,
+                ltb_restraint_spacing: 2.0,
+                load_application: "shearCenter".into(),
+                end_moment_ratio_psi: -1.0,
+                moment_diagram: "linear".into(),
+                deflection_limit_ratio: 300.0,
+                analysis: "elastic".into(),
+            }],
+            load_cases: vec![
+                LoadCase { id: "g-permanent".into(), name: "Permanent G".into(), kind: "permanent".into(), category: "self".into() },
+                LoadCase { id: "q-imposed".into(), name: "Imposed Q".into(), kind: "imposed".into(), category: "office".into() },
+                LoadCase { id: "w-wind".into(), name: "Wind".into(), kind: "wind".into(), category: "wind".into() },
+            ],
+            member_actions: vec![
+                MemberAction {
+                    id: "act-b1-g".into(),
+                    member_id: "member-b1".into(),
+                    load_case_id: "g-permanent".into(),
+                    action: DesignAction { n: 100_000.0, vy: 0.0, vz: 20_000.0, my: 40_000.0, mz: 0.0, t: 0.0 },
+                },
+                MemberAction {
+                    id: "act-b1-q".into(),
+                    member_id: "member-b1".into(),
+                    load_case_id: "q-imposed".into(),
+                    action: DesignAction { n: 43_333.0, vy: 0.0, vz: 15_333.0, my: 17_333.0, mz: 0.0, t: 0.0 },
+                },
+            ],
+            joints: vec![SteelJoint {
+                id: "joint-j1".into(),
+                kind: "bolted".into(),
+                member_id: "member-b1".into(),
+                bolt_class: "8.8".into(),
+                bolt_diameter: 0.020,
+                bolt_rows: 2,
+                bolts_per_row: 2,
+                pitch: 0.060,
+                gauge: 0.060,
+                end_distance: 0.040,
+                edge_distance: 0.040,
+                shear_planes: 1,
+                plate_thickness: 0.010,
+                plate_fu: 510.0e6,
+                weld_throat: 0.0,
+                weld_length: 0.0,
+                weld_fu: 510.0e6,
+                weld_grade: "S355".into(),
+                actions: vec![
+                    JointForceAction { id: "jf-g".into(), load_case_id: "g-permanent".into(), shear: 30_000.0, tension: 0.0 },
+                    JointForceAction { id: "jf-q".into(), load_case_id: "q-imposed".into(), shear: 23_333.0, tension: 0.0 },
+                ],
+                category: "A".into(),
+                friction_mu: 0.50,
+                preload_force: 0.0,
+                slip_factor_ks: 1.0,
+                friction_surfaces: 1,
+            }],
+            fatigue_details: vec![FatigueDetail {
+                id: "fat-1".into(),
+                member_id: "member-b1".into(),
+                category: 71,
+                method: "damage_tolerant".into(),
+                spectrum: vec![
+                    FatigueBand { id: "fb-1".into(), delta_sigma: 50.0e6, cycles: 1.0e6 },
+                    FatigueBand { id: "fb-2".into(), delta_sigma: 40.0e6, cycles: 1.0e6 },
+                ],
+            }],
+            fire_exposures: vec![FireExposure {
+                id: "fire-1".into(),
+                member_id: "member-b1".into(),
+                rating: "r60".into(),
+                protection_thickness: 0.020,
+                section_factor: 150.0,
+                mu0: 0.50,
+                protection_conductivity: 0.20,
+                protection_density: 800.0,
+                protection_specific_heat: 1700.0,
+            }],
+            cold_formed_members: vec![ColdFormedMember {
+                id: "cf-1".into(),
+                b_bar: 0.080,
+                thickness: 0.003,
+                k_sigma: 4.0,
+                psi: 1.0,
+                fy: 350.0e6,
+                gross_resistance: 80_000.0,
+                actions: vec![
+                    ForceAction { id: "cf-g".into(), load_case_id: "g-permanent".into(), force: 15_000.0 },
+                    ForceAction { id: "cf-q".into(), load_case_id: "q-imposed".into(), force: 10_000.0 },
+                ],
+            }],
+            plated_panels: vec![PlatedPanel {
+                id: "pp-1".into(),
+                a: 1.2,
+                b: 0.6,
+                thickness: 0.012,
+                fy: 355.0e6,
+                k_sigma: 4.0,
+                actions: vec![
+                    ForceAction { id: "pp-g".into(), load_case_id: "g-permanent".into(), force: 80.0e6 },
+                    ForceAction { id: "pp-q".into(), load_case_id: "q-imposed".into(), force: 40.0e6 },
+                ],
+            }],
+            silo_shells: vec![SiloShell {
+                id: "silo-1".into(),
+                thickness: 0.008,
+                radius: 3.0,
+                depth: 6.0,
+                k: 0.5,
+                gamma: 9_000.0,
+                fy: 235.0e6,
+            }],
+            tension_components: vec![TensionComponent {
+                id: "ten-1".into(),
+                f_uk: 650_000.0,
+                f_k: 480_000.0,
+                actions: vec![
+                    ForceAction { id: "ten-g".into(), load_case_id: "g-permanent".into(), force: 120_000.0 },
+                    ForceAction { id: "ten-q".into(), load_case_id: "q-imposed".into(), force: 80_000.0 },
+                ],
+            }],
+            bridge_fatigue: vec![BridgeFatigue {
+                id: "br-1".into(),
+                member_id: "member-b1".into(),
+                lambda: 1.0,
+                phi2: 1.0,
+                delta_sigma_p: 35.0e6,
+                category: 71,
+                method: "damage_tolerant".into(),
+            }],
+            tower_legs: vec![TowerLeg {
+                id: "tw-1".into(),
+                member_id: "member-b1".into(),
+                force_coefficient: 1.2,
+                dynamic_factor: 1.0,
+                actions: vec![
+                    ForceAction { id: "tw-g".into(), load_case_id: "g-permanent".into(), force: 80_000.0 },
+                    ForceAction { id: "tw-w".into(), load_case_id: "w-wind".into(), force: 40_000.0 },
+                ],
+            }],
+            piles: vec![SteelPile {
+                id: "pile-1".into(),
+                section_id: "sec-heb240".into(),
+                material_id: "mat-s355".into(),
+                driving_stress: 200.0e6,
+                embedded_length: 8.0,
+                shaft_perimeter: 0.96,
+                actions: vec![
+                    ForceAction { id: "pile-g".into(), load_case_id: "g-permanent".into(), force: 200_000.0 },
+                    ForceAction { id: "pile-q".into(), load_case_id: "q-imposed".into(), force: 100_000.0 },
+                ],
+            }],
+            crane_runways: vec![CraneRunway {
+                id: "crane-1".into(),
+                member_id: "member-b1".into(),
+                wheel_contact_length: 0.10,
+                dispersion: 0.05,
+                web_thickness: 0.010,
+                fy: 355.0e6,
+                phi: 1.25,
+                actions: vec![
+                    ForceAction { id: "cr-g".into(), load_case_id: "g-permanent".into(), force: 20_000.0 },
+                    ForceAction { id: "cr-q".into(), load_case_id: "q-imposed".into(), force: 30_000.0 },
+                ],
+            }],
+        }
+    }
+
+    /// ❌️ Non-compliant multi-part subject with failures across parts.
+    pub fn noncompliant_overloaded_frame() -> Self {
+        let mut doc = Self::compliant_heb240_frame();
+        if let Some(m) = doc.members.iter_mut().find(|m| m.id == "member-b1") {
+            m.buckling_length_y = 12.0;
+            m.buckling_length_z = 12.0;
+            m.ltb_length = 12.0;
+            m.ltb_restraint_spacing = 12.0;
+            m.analysis = "plastic".into();
+        }
+        if let Some(act) = doc.member_actions.iter_mut().find(|a| a.id == "act-b1-g") {
+            act.action.n = 2_100_000.0;
+            act.action.my = 333_000.0;
+            act.action.vz = 296_000.0;
+        }
+        if let Some(act) = doc.member_actions.iter_mut().find(|a| a.id == "act-b1-q") {
+            act.action.n = 0.0;
+            act.action.my = 0.0;
+            act.action.vz = 0.0;
+        }
+        if let Some(j) = doc.joints.iter_mut().find(|j| j.id == "joint-j1") {
+            j.actions = vec![
+                JointForceAction { id: "jf-g".into(), load_case_id: "g-permanent".into(), shear: 100_000.0, tension: 0.0 },
+                JointForceAction { id: "jf-q".into(), load_case_id: "q-imposed".into(), shear: 66_667.0, tension: 0.0 },
+            ];
+            j.bolt_rows = 1;
+            j.end_distance = 0.025;
+        }
+        if let Some(f) = doc.fire_exposures.iter_mut().find(|f| f.id == "fire-1") {
+            f.mu0 = 0.85;
+            f.protection_thickness = 0.008;
+        }
+        if let Some(fat) = doc.fatigue_details.iter_mut().find(|f| f.id == "fat-1") {
+            fat.spectrum = vec![FatigueBand { id: "fb-1".into(), delta_sigma: 90.0e6, cycles: 2.0e6 }];
+        }
+        if let Some(cf) = doc.cold_formed_members.iter_mut().find(|c| c.id == "cf-1") {
+            cf.actions = vec![ForceAction { id: "cf-g".into(), load_case_id: "g-permanent".into(), force: 120_000.0 }];
+            cf.gross_resistance = 40_000.0;
+        }
+        if let Some(pp) = doc.plated_panels.iter_mut().find(|p| p.id == "pp-1") {
+            pp.actions = vec![ForceAction { id: "pp-g".into(), load_case_id: "g-permanent".into(), force: 300.0e6 }];
+            pp.thickness = 0.006;
+        }
+        if let Some(s) = doc.silo_shells.iter_mut().find(|s| s.id == "silo-1") {
+            s.thickness = 0.003;
+            s.depth = 20.0;
+        }
+        if let Some(t) = doc.tension_components.iter_mut().find(|t| t.id == "ten-1") {
+            t.actions = vec![ForceAction { id: "ten-g".into(), load_case_id: "g-permanent".into(), force: 500_000.0 }];
+            t.f_k = 200_000.0;
+        }
+        if let Some(b) = doc.bridge_fatigue.iter_mut().find(|b| b.id == "br-1") {
+            b.delta_sigma_p = 90.0e6;
+        }
+        if let Some(tw) = doc.tower_legs.iter_mut().find(|t| t.id == "tw-1") {
+            tw.actions = vec![
+                ForceAction { id: "tw-g".into(), load_case_id: "g-permanent".into(), force: 1_500_000.0 },
+                ForceAction { id: "tw-w".into(), load_case_id: "w-wind".into(), force: 800_000.0 },
+            ];
+        }
+        if let Some(p) = doc.piles.iter_mut().find(|p| p.id == "pile-1") {
+            p.driving_stress = 400.0e6;
+            p.actions = vec![ForceAction { id: "pile-g".into(), load_case_id: "g-permanent".into(), force: 3_000_000.0 }];
+        }
+        if let Some(c) = doc.crane_runways.iter_mut().find(|c| c.id == "crane-1") {
+            c.web_thickness = 0.004;
+            c.actions = vec![ForceAction { id: "cr-q".into(), load_case_id: "q-imposed".into(), force: 200_000.0 }];
+            c.phi = 1.35;
+        }
+        doc
+    }
+}
+
+pub fn catalogue_heb240() -> SteelSection {
+    SteelSection {
+        id: "sec-heb240".into(),
+        designation: "HEB 240".into(),
+        kind: "rolledI".into(),
+        h: 0.240,
+        b: 0.240,
+        tw: 0.010,
+        tf: 0.017,
+        r: 0.021,
+        area: 0.0106,
+        shear_area_y: 0.00512,
+        shear_area_z: 0.00240,
+        iy: 1.126e-4,
+        iz: 3.923e-5,
+        it: 6.53e-7,
+        iw: 4.87e-6,
+        w_el_y: 9.38e-4,
+        w_el_z: 3.27e-4,
+        w_pl_y: 1.053e-3,
+        w_pl_z: 5.01e-4,
+        area_net: 0.0095,
+    }
+}
+
+/// 📒 HEB 260 rolled I-section (next larger after HEB 240).
+pub fn catalogue_heb260() -> SteelSection {
+    SteelSection {
+        id: "sec-heb260".into(),
+        designation: "HEB 260".into(),
+        kind: "rolledI".into(),
+        h: 0.260,
+        b: 0.260,
+        tw: 0.010,
+        tf: 0.0175,
+        r: 0.024,
+        area: 0.0118,
+        shear_area_y: 0.00570,
+        shear_area_z: 0.00260,
+        iy: 1.492e-4,
+        iz: 5.135e-5,
+        it: 8.25e-7,
+        iw: 7.45e-6,
+        w_el_y: 1.148e-3,
+        w_el_z: 3.95e-4,
+        w_pl_y: 1.283e-3,
+        w_pl_z: 6.02e-4,
+        area_net: 0.0106,
+    }
+}
+
+/// 📒 HEB 280 rolled I-section.
+pub fn catalogue_heb280() -> SteelSection {
+    SteelSection {
+        id: "sec-heb280".into(),
+        designation: "HEB 280".into(),
+        kind: "rolledI".into(),
+        h: 0.280,
+        b: 0.280,
+        tw: 0.0105,
+        tf: 0.018,
+        r: 0.024,
+        area: 0.0131,
+        shear_area_y: 0.00635,
+        shear_area_z: 0.00294,
+        iy: 1.926e-4,
+        iz: 6.595e-5,
+        it: 1.02e-6,
+        iw: 1.10e-5,
+        w_el_y: 1.376e-3,
+        w_el_z: 4.71e-4,
+        w_pl_y: 1.532e-3,
+        w_pl_z: 7.17e-4,
+        area_net: 0.0118,
+    }
+}
+
+/// 📒 HEB 300 rolled I-section.
+pub fn catalogue_heb300() -> SteelSection {
+    SteelSection {
+        id: "sec-heb300".into(),
+        designation: "HEB 300".into(),
+        kind: "rolledI".into(),
+        h: 0.300,
+        b: 0.300,
+        tw: 0.011,
+        tf: 0.019,
+        r: 0.027,
+        area: 0.0149,
+        shear_area_y: 0.00720,
+        shear_area_z: 0.00330,
+        iy: 2.517e-4,
+        iz: 8.563e-5,
+        it: 1.37e-6,
+        iw: 1.64e-5,
+        w_el_y: 1.678e-3,
+        w_el_z: 5.71e-4,
+        w_pl_y: 1.869e-3,
+        w_pl_z: 8.70e-4,
+        area_net: 0.0134,
+    }
+}
+
+/// 📒 Ordered HEB catalogue for remediation section upsizing.
+pub fn rolled_heb_catalogue() -> Vec<SteelSection> {
+    vec![catalogue_heb240(), catalogue_heb260(), catalogue_heb280(), catalogue_heb300()]
+}
 
 //#region 🌉️ExternalCodecBridge
 /// 📤️ The canonical JSON projection of a [`En1993Snapshot`] — the surface

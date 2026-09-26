@@ -1,0 +1,9 @@
+semio norm.en1996.dsl v1
+annex=de masonry-class=class3 design-situation=persistent storeys=4
+walls [id:TEXT label-en:TEXT label-de:TEXT wall-type:ENUM thickness-m:QTY height-m:QTY length-m:QTY support-sides:UINT openings:TABLE slab-bearing-depth-m:QTY eccentricity-top-m:QTY eccentricity-bottom-m:QTY unit-group:ENUM unit-material:ENUM f-b-pa:QTY unit-length-m:QTY unit-width-m:QTY unit-height-m:QTY mortar-type:ENUM mortar-class:ENUM mortar-strength-pa:QTY bed-joint-thickness-m:QTY reinforced:BOOL as-vertical-m2:QTY as-horizontal-m2:QTY f-yd-pa:QTY fire-rei-min:UINT exposure:ENUM mu:NUM density-kg-m3:NUM phi-infinity:NUM is-basement:BOOL load-cases:TABLE] {
+  wall-weak "Undersized masonry wall" "Unterbemessene Mauerwerkswand" shear 0.09m 3.2m 2.5m 2 [ ] 0.05m 0.04m 0.03m group2 aerated 4000000Pa 0.5m 0.09m 0.25m general-purpose m2_5 2500000Pa 0.004m false 0m2 0m2 0Pa 90 mx4 0.4 600 1.5 false [ {id=uls-bad design-situation=persistent imposed-category=C g-k-slab-n=280000N q-k-imposed-pa=5000Pa tributary-area-m2=20m2 slab-span-m=7m q-k-snow-pa=1500Pa q-p-wind-pa=1200Pa c-pe=1 h-k-earth-n=0N
+  concentrated [id:TEXT force-n:QTY bearing-area-m2:QTY bearing-length-m:QTY] {
+    beam-A 80000N 0.01m2 0.1m
+  }
+  } ]
+}

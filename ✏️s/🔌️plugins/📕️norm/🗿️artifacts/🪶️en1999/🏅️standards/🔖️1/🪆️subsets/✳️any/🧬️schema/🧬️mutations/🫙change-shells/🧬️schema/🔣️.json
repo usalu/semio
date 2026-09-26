@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-shells/schema.json",
+  "title": "ChangeShells",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "shells"
+  ],
+  "properties": {
+    "shells": {}
+  },
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙change-shells",
+  "semanticKind": "change-shells",
+  "emoji": "🫙",
+  "aggregateVariant": "ChangeShells",
+  "displayName": "Change Shells"
+}

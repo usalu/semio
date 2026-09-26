@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "Introduction step info boxes should use the same highlighted pulsing border-thickness effect as introduced UI elements.",
   "summary": "Introduction step info boxes now force WindowChrome silhouette borderKind=introduced so they share the highlighted pulsing thickness stroke with data-introduced UI targets. Extended appearance vitest for data-kind, stroke token, and window-silhouette-border-introduced class.",
-  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [],
   "files": [
     "ui/js/react/index.tsx",

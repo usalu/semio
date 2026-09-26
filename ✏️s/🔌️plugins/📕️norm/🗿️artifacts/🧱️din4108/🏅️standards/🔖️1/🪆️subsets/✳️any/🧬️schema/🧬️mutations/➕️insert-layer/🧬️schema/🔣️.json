@@ -5,30 +5,20 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "elementId",
     "index",
     "layer"
   ],
   "properties": {
+    "elementId": {
+      "type": "string"
+    },
     "index": {
       "type": "integer",
       "minimum": 0
     },
     "layer": {
-      "title": "LayerDocument",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "lambdaWMk",
-        "thicknessM"
-      ],
-      "properties": {
-        "thicknessM": {
-          "type": "number"
-        },
-        "lambdaWMk": {
-          "type": "number"
-        }
-      }
+      "type": "object"
     }
   }
 }

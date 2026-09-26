@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-investigation-depth/schema.json",
+  "title": "ChangeInvestigationDepth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newInvestigationDepth"
+  ],
+  "properties": {
+    "newInvestigationDepth": {
+      "type": "number"
+    }
+  }
+}

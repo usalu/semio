@@ -1,3 +1,4 @@
+import { publishedPageUrl } from "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import delivery from "./📇️catalog.json" with { type: "json" };
 import metabolism from "../🌱️metabolism/🎨️representation/📇️catalog.json" with { type: "json" };
 
@@ -89,5 +90,5 @@ export function resolveMeshAsset(url: string, catalog: MeshDeliveryCatalog = MES
 
 /** 🌐️ Rewrites only the mesh namespace at the transport boundary; other asset domains retain ownership. */
 export function meshAssetTransportUrl(url: string, catalog: MeshDeliveryCatalog = MESH_DELIVERY_CATALOG): string {
-  return url.startsWith("/mesh/") ? `/mesh/${resolveMeshAsset(url, catalog).path}` : url;
+  return url.startsWith("/mesh/") ? publishedPageUrl(`/mesh/${resolveMeshAsset(url, catalog).path}`) : url;
 }

@@ -8,10 +8,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::En1995Snapshot;
 
-/// 🗄️ The glulam-footbridge example fixture, handcrafted in `en1995`'s DSL (`store::ArtifactDsl`):
-/// an EN-annex EN 1995-2 glulam pedestrian footbridge beam under service class 2 and long-duration
-/// traffic loading, distinct from `En1995Snapshot::default()`'s DE-annex/SC1/medium-duration values so the
-/// grammar's non-default branches (annex, service class, load duration) are exercised too.
+/// 🗄️ The glulam-footbridge example fixture in `en1995`'s DSL (`store::ArtifactDsl`): a DE-annex EN 1995-2
+/// glulam pedestrian footbridge girder (role `bridge`, service class 2, Annex A fatigue and Annex B comfort inputs,
+/// no connections) — distinct from `En1995Snapshot::default()`'s floor beam so the bridge branches are exercised.
 pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1995` DSL text into a `En1995Snapshot`.

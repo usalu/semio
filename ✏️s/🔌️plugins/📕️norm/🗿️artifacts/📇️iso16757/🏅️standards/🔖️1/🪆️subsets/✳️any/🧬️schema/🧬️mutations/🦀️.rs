@@ -29,14 +29,14 @@ use super::change_exchange_process;
 use super::change_part_number_input;
 use super::change_selection_class;
 use super::change_selection_series;
-use super::create_product;
-use super::create_product_group;
-use super::create_property_definition;
-use super::create_subject;
-use super::delete_product;
-use super::delete_product_group;
-use super::delete_property_definition;
-use super::delete_subject;
+use super::introduce_product;
+use super::introduce_product_group;
+use super::introduce_property_definition;
+use super::introduce_subject;
+use super::retire_product;
+use super::retire_product_group;
+use super::retire_property_definition;
+use super::retire_subject;
 use super::remove_part_number_input;
 use super::remove_selection_constraint;
 use super::rename_catalogue;
@@ -44,7 +44,15 @@ use super::rename_manufacturer;
 use super::rename_product;
 use super::rename_product_group;
 use super::replace_part_number_rule;
-use super::update_script_limits;
+use super::change_script_limits;
+use super::introduce_product_class;
+use super::retire_product_class;
+use super::introduce_product_series;
+use super::retire_product_series;
+use super::introduce_product_index;
+use super::retire_product_index;
+use super::introduce_geometry_object;
+use super::retire_geometry_object;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
@@ -52,7 +60,7 @@ use super::update_script_limits;
 #[mutations(snapshot = Iso16757Snapshot, diff = Iso16757Diff, schema = "s.norm.iso16757")]
 pub enum Iso16757Mutation {
     ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess),
-    UpdateScriptLimits(update_script_limits::mutation::UpdateScriptLimits),
+    ChangeScriptLimits(change_script_limits::mutation::ChangeScriptLimits),
     ReplacePartNumberRule(replace_part_number_rule::mutation::ReplacePartNumberRule),
     ChangePartNumberInput(change_part_number_input::mutation::ChangePartNumberInput),
     RemovePartNumberInput(remove_part_number_input::mutation::RemovePartNumberInput),
@@ -62,16 +70,24 @@ pub enum Iso16757Mutation {
     RemoveSelectionConstraint(remove_selection_constraint::mutation::RemoveSelectionConstraint),
     RenameCatalogue(rename_catalogue::mutation::RenameCatalogue),
     RenameManufacturer(rename_manufacturer::mutation::RenameManufacturer),
-    CreateProductGroup(create_product_group::mutation::CreateProductGroup),
-    DeleteProductGroup(delete_product_group::mutation::DeleteProductGroup),
+    IntroduceProductGroup(introduce_product_group::mutation::IntroduceProductGroup),
+    RetireProductGroup(retire_product_group::mutation::RetireProductGroup),
     RenameProductGroup(rename_product_group::mutation::RenameProductGroup),
-    CreateProduct(create_product::mutation::CreateProduct),
-    DeleteProduct(delete_product::mutation::DeleteProduct),
+    IntroduceProduct(introduce_product::mutation::IntroduceProduct),
+    RetireProduct(retire_product::mutation::RetireProduct),
     RenameProduct(rename_product::mutation::RenameProduct),
-    CreatePropertyDefinition(create_property_definition::mutation::CreatePropertyDefinition),
-    DeletePropertyDefinition(delete_property_definition::mutation::DeletePropertyDefinition),
-    CreateSubject(create_subject::mutation::CreateSubject),
-    DeleteSubject(delete_subject::mutation::DeleteSubject),
+    IntroducePropertyDefinition(introduce_property_definition::mutation::IntroducePropertyDefinition),
+    RetirePropertyDefinition(retire_property_definition::mutation::RetirePropertyDefinition),
+    IntroduceSubject(introduce_subject::mutation::IntroduceSubject),
+    RetireSubject(retire_subject::mutation::RetireSubject),
+    IntroduceProductClass(introduce_product_class::mutation::IntroduceProductClass),
+    RetireProductClass(retire_product_class::mutation::RetireProductClass),
+    IntroduceProductSeries(introduce_product_series::mutation::IntroduceProductSeries),
+    RetireProductSeries(retire_product_series::mutation::RetireProductSeries),
+    IntroduceProductIndex(introduce_product_index::mutation::IntroduceProductIndex),
+    RetireProductIndex(retire_product_index::mutation::RetireProductIndex),
+    IntroduceGeometryObject(introduce_geometry_object::mutation::IntroduceGeometryObject),
+    RetireGeometryObject(retire_geometry_object::mutation::RetireGeometryObject),
 }
 
 /// 🏷️ Every declared kind of [`Iso16757Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
@@ -81,7 +97,7 @@ pub enum Iso16757Mutation {
 /// is what keeps the enum, this const and the committed manifest from drifting apart.
 pub const KINDS: &[&str] = &[
     "change-exchange-process",
-    "update-script-limits",
+    "change-script-limits",
     "replace-part-number-rule",
     "change-part-number-input",
     "remove-part-number-input",
@@ -91,16 +107,24 @@ pub const KINDS: &[&str] = &[
     "remove-selection-constraint",
     "rename-catalogue",
     "rename-manufacturer",
-    "create-product-group",
-    "delete-product-group",
+    "introduce-product-group",
+    "retire-product-group",
     "rename-product-group",
-    "create-product",
-    "delete-product",
+    "introduce-product",
+    "retire-product",
     "rename-product",
-    "create-property-definition",
-    "delete-property-definition",
-    "create-subject",
-    "delete-subject",
+    "introduce-property-definition",
+    "retire-property-definition",
+    "introduce-subject",
+    "retire-subject",
+    "introduce-product-class",
+    "retire-product-class",
+    "introduce-product-series",
+    "retire-product-series",
+    "introduce-product-index",
+    "retire-product-index",
+    "introduce-geometry-object",
+    "retire-geometry-object",
 ];
 //#endregion 🔖️Mutations
 
@@ -123,7 +147,7 @@ impl Iso16757Mutation {
         mutations.push(Iso16757Mutation::RenameCatalogue(rename_catalogue::mutation::RenameCatalogue { new_name: target.catalogue.metadata.names.preferred.text.clone() }));
         mutations.push(Iso16757Mutation::RenameManufacturer(rename_manufacturer::mutation::RenameManufacturer { new_name: target.catalogue.manufacturer.names.preferred.text.clone() }));
         mutations.push(Iso16757Mutation::ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess { new_exchange_process: target.exchange_process }));
-        mutations.push(Iso16757Mutation::UpdateScriptLimits(update_script_limits::mutation::UpdateScriptLimits {
+        mutations.push(Iso16757Mutation::ChangeScriptLimits(change_script_limits::mutation::ChangeScriptLimits {
             new_max_steps: target.script_limits.max_steps,
             new_max_recursion: target.script_limits.max_recursion,
             new_timeout_ms: target.script_limits.timeout_ms,
@@ -149,31 +173,56 @@ impl Iso16757Mutation {
         }
 
         for group in base.catalogue.product_groups.iter() {
-            mutations.push(Iso16757Mutation::DeleteProductGroup(delete_product_group::mutation::DeleteProductGroup { id: group.id.clone() }));
+            mutations.push(Iso16757Mutation::RetireProductGroup(retire_product_group::mutation::RetireProductGroup { id: group.id.clone() }));
         }
         for (index, group) in target.catalogue.product_groups.iter().enumerate() {
-            mutations.push(Iso16757Mutation::CreateProductGroup(create_product_group::mutation::CreateProductGroup { product_group: group.clone(), index: Some(index) }));
+            mutations.push(Iso16757Mutation::IntroduceProductGroup(introduce_product_group::mutation::IntroduceProductGroup { product_group: group.clone(), index: Some(index) }));
         }
 
         for product in base.catalogue.products.iter() {
-            mutations.push(Iso16757Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: product.id.clone() }));
+            mutations.push(Iso16757Mutation::RetireProduct(retire_product::mutation::RetireProduct { id: product.id.clone() }));
         }
         for (index, product) in target.catalogue.products.iter().enumerate() {
-            mutations.push(Iso16757Mutation::CreateProduct(create_product::mutation::CreateProduct { product: product.clone(), index: Some(index) }));
+            mutations.push(Iso16757Mutation::IntroduceProduct(introduce_product::mutation::IntroduceProduct { product: product.clone(), index: Some(index) }));
         }
 
         for definition in base.catalogue.property_definitions.iter() {
-            mutations.push(Iso16757Mutation::DeletePropertyDefinition(delete_property_definition::mutation::DeletePropertyDefinition { id: definition.id.clone() }));
+            mutations.push(Iso16757Mutation::RetirePropertyDefinition(retire_property_definition::mutation::RetirePropertyDefinition { id: definition.id.clone() }));
         }
         for (index, definition) in target.catalogue.property_definitions.iter().enumerate() {
-            mutations.push(Iso16757Mutation::CreatePropertyDefinition(create_property_definition::mutation::CreatePropertyDefinition { property_definition: definition.clone(), index: Some(index) }));
+            mutations.push(Iso16757Mutation::IntroducePropertyDefinition(introduce_property_definition::mutation::IntroducePropertyDefinition { property_definition: definition.clone(), index: Some(index) }));
         }
 
         for subject in base.dictionary.subjects.iter() {
-            mutations.push(Iso16757Mutation::DeleteSubject(delete_subject::mutation::DeleteSubject { id: subject.id.clone() }));
+            mutations.push(Iso16757Mutation::RetireSubject(retire_subject::mutation::RetireSubject { id: subject.id.clone() }));
         }
         for (index, subject) in target.dictionary.subjects.iter().enumerate() {
-            mutations.push(Iso16757Mutation::CreateSubject(create_subject::mutation::CreateSubject { subject: subject.clone(), index: Some(index) }));
+            mutations.push(Iso16757Mutation::IntroduceSubject(introduce_subject::mutation::IntroduceSubject { subject: subject.clone(), index: Some(index) }));
+        }
+
+        for class in base.catalogue.product_classes.iter() {
+            mutations.push(Iso16757Mutation::RetireProductClass(retire_product_class::mutation::RetireProductClass { id: class.id.clone() }));
+        }
+        for (index, class) in target.catalogue.product_classes.iter().enumerate() {
+            mutations.push(Iso16757Mutation::IntroduceProductClass(introduce_product_class::mutation::IntroduceProductClass { product_class: class.clone(), index: Some(index) }));
+        }
+        for series in base.catalogue.product_series.iter() {
+            mutations.push(Iso16757Mutation::RetireProductSeries(retire_product_series::mutation::RetireProductSeries { id: series.id.clone() }));
+        }
+        for (index, series) in target.catalogue.product_series.iter().enumerate() {
+            mutations.push(Iso16757Mutation::IntroduceProductSeries(introduce_product_series::mutation::IntroduceProductSeries { product_series: series.clone(), index: Some(index) }));
+        }
+        for index_row in base.catalogue.product_indexes.iter() {
+            mutations.push(Iso16757Mutation::RetireProductIndex(retire_product_index::mutation::RetireProductIndex { id: index_row.id.clone() }));
+        }
+        for (index, index_row) in target.catalogue.product_indexes.iter().enumerate() {
+            mutations.push(Iso16757Mutation::IntroduceProductIndex(introduce_product_index::mutation::IntroduceProductIndex { product_index: index_row.clone(), index: Some(index) }));
+        }
+        for id in base.geometry.objects.keys() {
+            mutations.push(Iso16757Mutation::RetireGeometryObject(retire_geometry_object::mutation::RetireGeometryObject { id: id.clone() }));
+        }
+        for (_id, obj) in target.geometry.objects.iter() {
+            mutations.push(Iso16757Mutation::IntroduceGeometryObject(introduce_geometry_object::mutation::IntroduceGeometryObject { geometry_object: obj.clone() }));
         }
 
         mutations

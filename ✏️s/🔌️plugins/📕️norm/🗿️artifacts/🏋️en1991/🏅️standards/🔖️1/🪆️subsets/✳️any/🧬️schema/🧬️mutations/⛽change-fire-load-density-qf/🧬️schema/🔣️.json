@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "new_fire_load_density_qf"
+  ],
+  "properties": {
+    "new_fire_load_density_qf": {
+      "type": "number"
+    }
+  }
+}

@@ -1309,4 +1309,8 @@ impl PostgresStorage {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "🧪️tests/🔬️round-trips/🦀️.rs"]
+mod round_trips;
 //#endregion 🧪️Tests

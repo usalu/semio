@@ -3,7 +3,7 @@
   "emoji": "🎯️",
   "status": "open",
   "description": "Framework-wide input architecture: every host input (pointer gesture, utility/tool toggle, ribbon action) is a ledger entry with provenance and causal order; guest follow-ups apply before later inputs; gesture samples are batched not flooded; interaction registers are generation-stamped CAS, never wall-clock heuristics; every transport (direct actor, hub browser-actor, wgpu) is a bounded queue with one typed refusal vocabulary that is always surfaced. Replaces the 8 s setActiveUtility echo-off and the per-pointermove round-trip flood found while investigating fem2d marquee clicks.",
-  "goal": "FRAMEWORK",
+  "goal": "🎯runningframework",
   "sessions": ["⚪37cccb68-f9d5-4d96-9ce2-c6d46ff010f0"],
   "note": "Ticket bookkeeping manual on disk: repo MCP failed to connect (2026-09-16). Investigation evidence and design in 📓️design-input-causality-ledger.md; status in 📓️status.md."
 }

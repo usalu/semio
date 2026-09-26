@@ -12,7 +12,8 @@
         "value": {
           "kind": "decimal",
           "value": 600.0
-        }
+        },
+        "id": "constraint-prop.height-0"
       },
       {
         "property_id": "prop.length",
@@ -20,7 +21,8 @@
         "value": {
           "kind": "decimal",
           "value": 1000.0
-        }
+        },
+        "id": "constraint-prop.length-1"
       },
       {
         "property_id": "prop.width",
@@ -28,10 +30,11 @@
         "value": {
           "kind": "decimal",
           "value": 800.0
-        }
+        },
+        "id": "constraint-width-800"
       }
     ],
-    "series_id": "series.pr"
+    "series_id": "series-pr"
   },
   "partNumberRule": null,
   "partNumberInputs": null,

@@ -1,0 +1,146 @@
+{
+  "family": "en1999",
+  "siBase": true,
+  "fields": [
+    {
+      "path": "annex",
+      "label": {
+        "en": "National annex",
+        "de": "Nationaler Anhang"
+      },
+      "kind": "enum"
+    },
+    {
+      "path": "materials[].designation",
+      "label": {
+        "en": "Alloy / temper",
+        "de": "Legierung / Zustand"
+      },
+      "kind": "string",
+      "choices": [
+        "aw6060-t6",
+        "aw6061-t6",
+        "aw6063-t6",
+        "aw6082-t6",
+        "aw5083-o",
+        "aw5083-h111"
+      ]
+    },
+    {
+      "path": "sections[].elements[].thickness",
+      "label": {
+        "en": "Plate thickness t",
+        "de": "Blechdicke t"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "members[].bucklingLengthY",
+      "label": {
+        "en": "Buckling length L_cr,y",
+        "de": "Knickl\u00e4nge L_cr,y"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "members[].actions[].nEd",
+      "label": {
+        "en": "Axial force N_Ed",
+        "de": "Normalkraft N_Ed"
+      },
+      "unit": "N",
+      "kind": "force"
+    },
+    {
+      "path": "members[].actions[].mYEd",
+      "label": {
+        "en": "Bending moment M_y,Ed",
+        "de": "Biegemoment M_y,Ed"
+      },
+      "unit": "N\u00b7m",
+      "kind": "moment"
+    },
+    {
+      "path": "connections[].welds.throat",
+      "label": {
+        "en": "Weld throat a",
+        "de": "Kehlnahtdicke a"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "connections[].bolts.rows",
+      "label": {
+        "en": "Bolt rows",
+        "de": "Schraubenreihen"
+      },
+      "kind": "integer"
+    },
+    {
+      "path": "fireScenarios[].thetaA",
+      "label": {
+        "en": "Aluminium temperature \u03b8_a",
+        "de": "Aluminiumtemperatur \u03b8_a"
+      },
+      "unit": "\u00b0C",
+      "kind": "temperature"
+    },
+    {
+      "path": "fatigueDetails[].deltaSigmaEd",
+      "label": {
+        "en": "Stress range \u0394\u03c3_Ed",
+        "de": "Spannungsschwingbreite \u0394\u03c3_Ed"
+      },
+      "unit": "Pa",
+      "kind": "stress"
+    },
+    {
+      "path": "coldFormed[].thickness",
+      "label": {
+        "en": "Sheet thickness t",
+        "de": "Blechdicke t"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "coldFormed[].mEd",
+      "label": {
+        "en": "Sheet moment M_Ed",
+        "de": "Blechmoment M_Ed"
+      },
+      "unit": "N\u00b7m",
+      "kind": "moment"
+    },
+    {
+      "path": "shells[].thickness",
+      "label": {
+        "en": "Shell thickness t",
+        "de": "Schalendicke t"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "shells[].sigmaXEd",
+      "label": {
+        "en": "Meridional stress \u03c3_x,Ed",
+        "de": "Meridianspannung \u03c3_x,Ed"
+      },
+      "unit": "Pa",
+      "kind": "stress"
+    },
+    {
+      "path": "shells[].sigmaThetaEd",
+      "label": {
+        "en": "Circumferential stress \u03c3_\u03b8,Ed",
+        "de": "Umfangsspannung \u03c3_\u03b8,Ed"
+      },
+      "unit": "Pa",
+      "kind": "stress"
+    }
+  ]
+}

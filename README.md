@@ -693,21 +693,12 @@ keep the clone root short (for example `C:\src\semio`).
 The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
 
 - Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite
-- Microsoft OpenJDK 21 and native Neo4j Desktop integration
 - Node.js 24 LTS + npm 11.7, Go 1.26, Python 3.14, uv, rustup, .NET SDK 8/9/10
 - GitKraken Desktop + CLI, F3D, VS Code + `code`
 - Gemini CLI, TypeScript LSP, Pyright
 - repo hooks, MCP client config, Python/Rust/Playwright setup, npm/uv dependencies, and the local repo VSIX
 
 After the bootstrap completes, open a new terminal and use the same repo commands as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
-
-Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Instance** named `compose`, set the initial password to `password`, and start it. The repo setup then enables APOC on that DBMS, restarts it when needed, and configures/imports through Bolt without editing Desktop internals:
-
-- URL: `bolt://127.0.0.1:7687`
-- User: `neo4j`
-- Password: `password`
-- Browser: `http://127.0.0.1:7474`
-- Database: `neo4j`
 
 Native macOS and Linux bootstrap from a fresh clone with the checked-in shell script (no Bun needed yet); afterwards
 `bun ./📜️script.ts setup native` re-runs it:
@@ -725,14 +716,6 @@ Every `bun nx` call first publishes the declared bootstrap sources
 (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🌱️sources/🔣️.json`): generated files a fresh
 clone lacks but that Bun or the repository scripts need before Nx can run anything — the UI axis projections every script
 imports through `@semio-tech/framework`, and the `@semio-tech/flow-core` workspace manifest `bun install` requires.
-
-IDE startup runs `bun ./📜️script.ts start`, which checks the native Neo4j Desktop `compose` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `compose`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
-
-**Where “databases” show up:** In Neo4j Browser, open your DBMS at `http://127.0.0.1:7474`, sign in, then use the **database dropdown** (next to the query editor). Only editions that support multi-database list more than one user graph besides `system`. To confirm what the server supports, run `SHOW DATABASES` while connected (Community typically shows `system` and one user database).
-
-**Optional MCP graphs:** The **`neo4j-metabolism`** server runs `… mcp neo4j metabolism` (Bolt database `metabolism`, same argv pattern as the four product servers). For any other extra Bolt name without adding another MCP entry, set **`NEO4J_EXTRA_GRAPH_DATABASE`** and use **`neo4j-extra`** (it runs `… mcp neo4j` with no argv segments so `NEO4J_DATABASE` comes from that env). **`bun run generate`** uses **`NEO4J_EXTRA_GRAPH_DATABASES`** (plural, comma list) to include extra graphs in the APOC export loop alongside the four product graphs.
-
-**If you use Enterprise and an extra graph is missing:** Connect to the `system` database and run `CREATE DATABASE <name> IF NOT EXISTS;` then `START DATABASE <name> WAIT;` (use backticks around `<name>` if it contains `-` or other special characters), and refresh the database list.
 
 ## 🪄️ [AI](AGENTS.md) [↑](#-development-)
 

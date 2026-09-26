@@ -66,751 +66,456 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "change-air-speed-ms",
-          "sourceMutationDirectoryName": "🪁️change-air-speed-ms",
-          "mutationDirectoryName": "🪁️change-air-speed-ms",
-          "scenarios": [
-            {
-              "id": "doubles-the-draught-air-speed-to-0-point-25-ms",
-              "directoryName": "🪁️doubles-the-draught-air-speed-to-0-point-25-ms"
-            }
-          ]
-        },
-        {
           "mutationId": "change-annex",
           "sourceMutationDirectoryName": "🌍️change-annex",
           "mutationDirectoryName": "🌍️change-annex",
           "scenarios": [
             {
-              "id": "switches-the-check-to-the-en-annex",
-              "directoryName": "🌍️switches-the-check-to-the-en-annex"
+              "id": "smoke-change-annex",
+              "directoryName": "🌍️change-annex"
             }
           ]
         },
         {
-          "mutationId": "change-bedrooms",
-          "sourceMutationDirectoryName": "🛏️change-bedrooms",
-          "mutationDirectoryName": "🛏️change-bedrooms",
+          "mutationId": "change-theta-rm",
+          "sourceMutationDirectoryName": "🔄️change-theta-rm",
+          "mutationDirectoryName": "🔄️change-theta-rm",
           "scenarios": [
             {
-              "id": "adds-a-fourth-bedroom",
-              "directoryName": "🛏️adds-a-fourth-bedroom"
+              "id": "smoke-change-theta-rm",
+              "directoryName": "🔄️change-theta-rm"
             }
           ]
         },
         {
-          "mutationId": "change-cellar-area-m2",
-          "sourceMutationDirectoryName": "🏚️change-cellar-area-m2",
-          "mutationDirectoryName": "🏚️change-cellar-area-m2",
+          "mutationId": "change-outdoor-co2",
+          "sourceMutationDirectoryName": "🌫️change-outdoor-co2",
+          "mutationDirectoryName": "🌫️change-outdoor-co2",
           "scenarios": [
             {
-              "id": "grows-the-cellar-floor-area-to-62-point-5-m2",
-              "directoryName": "🏚️grows-the-cellar-floor-area-to-62-point-5-m2"
+              "id": "smoke-change-outdoor-co2",
+              "directoryName": "🌫️change-outdoor-co2"
             }
           ]
         },
         {
-          "mutationId": "change-cellar-ventilation-m3-h",
-          "sourceMutationDirectoryName": "🪟️change-cellar-ventilation-m3-h",
-          "mutationDirectoryName": "🪟️change-cellar-ventilation-m3-h",
+          "mutationId": "change-envelope-n50",
+          "sourceMutationDirectoryName": "🏠️change-envelope-n50",
+          "mutationDirectoryName": "🏠️change-envelope-n50",
           "scenarios": [
             {
-              "id": "raises-the-cellar-airflow-to-22-point-5-m3-per-hour",
-              "directoryName": "🪟️raises-the-cellar-airflow-to-22-point-5-m3-per-hour"
+              "id": "smoke-change-envelope-n50",
+              "directoryName": "🏠️change-envelope-n50"
             }
           ]
         },
         {
-          "mutationId": "change-chiller-type",
-          "sourceMutationDirectoryName": "🥶️change-chiller-type",
-          "mutationDirectoryName": "🥶️change-chiller-type",
+          "mutationId": "change-envelope-volume",
+          "sourceMutationDirectoryName": "📦️change-envelope-volume",
+          "mutationDirectoryName": "📦️change-envelope-volume",
           "scenarios": [
             {
-              "id": "switches-to-a-water-cooled-chiller",
-              "directoryName": "🥶️switches-to-a-water-cooled-chiller"
+              "id": "smoke-change-envelope-volume",
+              "directoryName": "📦️change-envelope-volume"
             }
           ]
         },
         {
-          "mutationId": "change-co2-ppm",
-          "sourceMutationDirectoryName": "🌫️change-co2-ppm",
-          "mutationDirectoryName": "🌫️change-co2-ppm",
+          "mutationId": "change-cellar-area",
+          "sourceMutationDirectoryName": "🏚️change-cellar-area",
+          "mutationDirectoryName": "🏚️change-cellar-area",
           "scenarios": [
             {
-              "id": "raises-the-measured-co2-to-950-ppm",
-              "directoryName": "🌫️raises-the-measured-co2-to-950-ppm"
+              "id": "smoke-change-cellar-area",
+              "directoryName": "🏚️change-cellar-area"
             }
           ]
         },
         {
-          "mutationId": "change-comfort-category",
-          "sourceMutationDirectoryName": "🛋️change-comfort-category",
-          "mutationDirectoryName": "🛋️change-comfort-category",
+          "mutationId": "change-cellar-ventilation",
+          "sourceMutationDirectoryName": "🌀change-cellar-ventilation",
+          "mutationDirectoryName": "🌀change-cellar-ventilation",
           "scenarios": [
             {
-              "id": "tightens-the-comfort-category-to-i",
-              "directoryName": "🛋️tightens-the-comfort-category-to-i"
+              "id": "smoke-change-cellar-ventilation",
+              "directoryName": "🌀change-cellar-ventilation"
             }
           ]
         },
         {
-          "mutationId": "change-cooling-delta-th",
-          "sourceMutationDirectoryName": "⌛️change-cooling-delta-th",
-          "mutationDirectoryName": "⌛️change-cooling-delta-th",
+          "mutationId": "change-night-setback",
+          "sourceMutationDirectoryName": "🌙️change-night-setback",
+          "mutationDirectoryName": "🌙️change-night-setback",
           "scenarios": [
             {
-              "id": "extends-the-cooling-period-to-12-point-5-hours",
-              "directoryName": "⌛️extends-the-cooling-period-to-12-point-5-hours"
+              "id": "smoke-change-night-setback",
+              "directoryName": "🌙️change-night-setback"
             }
           ]
         },
         {
-          "mutationId": "change-cooling-gains-kwh",
-          "sourceMutationDirectoryName": "📈️change-cooling-gains-kwh",
-          "mutationDirectoryName": "📈️change-cooling-gains-kwh",
+          "mutationId": "insert-zone",
+          "sourceMutationDirectoryName": "➕️insert-zone",
+          "mutationDirectoryName": "➕️insert-zone",
           "scenarios": [
             {
-              "id": "raises-the-internal-cooling-gains-to-7-point-5-kwh",
-              "directoryName": "📈️raises-the-internal-cooling-gains-to-7-point-5-kwh"
+              "id": "smoke-insert-zone",
+              "directoryName": "➕️insert-zone"
             }
           ]
         },
         {
-          "mutationId": "change-cooling-reference-kwh",
-          "sourceMutationDirectoryName": "📊️change-cooling-reference-kwh",
-          "mutationDirectoryName": "📊️change-cooling-reference-kwh",
+          "mutationId": "remove-zone",
+          "sourceMutationDirectoryName": "➖️remove-zone",
+          "mutationDirectoryName": "➖️remove-zone",
           "scenarios": [
             {
-              "id": "raises-the-cooling-reference-to-25-kwh",
-              "directoryName": "📊️raises-the-cooling-reference-to-25-kwh"
+              "id": "smoke-remove-zone",
+              "directoryName": "➖️remove-zone"
             }
           ]
         },
         {
-          "mutationId": "change-cooling-utilization-factor",
-          "sourceMutationDirectoryName": "🎚️change-cooling-utilization-factor",
-          "mutationDirectoryName": "🎚️change-cooling-utilization-factor",
+          "mutationId": "change-zone-usage-type",
+          "sourceMutationDirectoryName": "🏢️change-zone-usage-type",
+          "mutationDirectoryName": "🏢️change-zone-usage-type",
           "scenarios": [
             {
-              "id": "raises-the-cooling-utilization-factor-to-0-point-875",
-              "directoryName": "🎚️raises-the-cooling-utilization-factor-to-0-point-875"
+              "id": "smoke-change-zone-usage-type",
+              "directoryName": "🏢️change-zone-usage-type"
             }
           ]
         },
         {
-          "mutationId": "change-data-center-supply-c",
-          "sourceMutationDirectoryName": "🖥️change-data-center-supply-c",
-          "mutationDirectoryName": "🖥️change-data-center-supply-c",
+          "mutationId": "change-zone-floor-area",
+          "sourceMutationDirectoryName": "📐️change-zone-floor-area",
+          "mutationDirectoryName": "📐️change-zone-floor-area",
           "scenarios": [
             {
-              "id": "raises-the-data-centre-supply-air-to-27-c",
-              "directoryName": "🖥️raises-the-data-centre-supply-air-to-27-c"
+              "id": "smoke-change-zone-floor-area",
+              "directoryName": "📐️change-zone-floor-area"
             }
           ]
         },
         {
-          "mutationId": "change-df-percent",
-          "sourceMutationDirectoryName": "☀️change-df-percent",
-          "mutationDirectoryName": "☀️change-df-percent",
+          "mutationId": "change-zone-occupants",
+          "sourceMutationDirectoryName": "👥️change-zone-occupants",
+          "mutationDirectoryName": "👥️change-zone-occupants",
           "scenarios": [
             {
-              "id": "raises-the-daylight-factor-to-3-point-75-percent",
-              "directoryName": "☀️raises-the-daylight-factor-to-3-point-75-percent"
+              "id": "smoke-change-zone-occupants",
+              "directoryName": "👥️change-zone-occupants"
             }
           ]
         },
         {
-          "mutationId": "change-dhw-delivery-c",
-          "sourceMutationDirectoryName": "🚿️change-dhw-delivery-c",
-          "mutationDirectoryName": "🚿️change-dhw-delivery-c",
+          "mutationId": "change-zone-comfort-category",
+          "sourceMutationDirectoryName": "🛋️change-zone-comfort-category",
+          "mutationDirectoryName": "🛋️change-zone-comfort-category",
           "scenarios": [
             {
-              "id": "raises-the-dhw-delivery-temperature-to-60-c",
-              "directoryName": "🚿️raises-the-dhw-delivery-temperature-to-60-c"
+              "id": "smoke-change-zone-comfort-category",
+              "directoryName": "🛋️change-zone-comfort-category"
             }
           ]
         },
         {
-          "mutationId": "change-duct-class",
-          "sourceMutationDirectoryName": "🛡️change-duct-class",
-          "mutationDirectoryName": "🛡️change-duct-class",
+          "mutationId": "change-zone-pollution-class",
+          "sourceMutationDirectoryName": "🏭️change-zone-pollution-class",
+          "mutationDirectoryName": "🏭️change-zone-pollution-class",
           "scenarios": [
             {
-              "id": "upgrades-the-duct-tightness-class-to-d",
-              "directoryName": "🛡️upgrades-the-duct-tightness-class-to-d"
+              "id": "smoke-change-zone-pollution-class",
+              "directoryName": "🏭️change-zone-pollution-class"
             }
           ]
         },
         {
-          "mutationId": "change-duct-leakage-m3-sm2",
-          "sourceMutationDirectoryName": "🕳️change-duct-leakage-m3-sm2",
-          "mutationDirectoryName": "🕳️change-duct-leakage-m3-sm2",
+          "mutationId": "change-zone-comfort-model",
+          "sourceMutationDirectoryName": "🧭️change-zone-comfort-model",
+          "mutationDirectoryName": "🧭️change-zone-comfort-model",
           "scenarios": [
             {
-              "id": "halves-the-measured-duct-leakage-to-0-point-0625",
-              "directoryName": "🕳️halves-the-measured-duct-leakage-to-0-point-0625"
+              "id": "smoke-change-zone-comfort-model",
+              "directoryName": "🧭️change-zone-comfort-model"
             }
           ]
         },
         {
-          "mutationId": "change-duct-test-pressure-pa",
-          "sourceMutationDirectoryName": "🧭️change-duct-test-pressure-pa",
-          "mutationDirectoryName": "🧭️change-duct-test-pressure-pa",
+          "mutationId": "change-zone-t-op-winter",
+          "sourceMutationDirectoryName": "❄️change-zone-t-op-winter",
+          "mutationDirectoryName": "❄️change-zone-t-op-winter",
           "scenarios": [
             {
-              "id": "raises-the-duct-test-pressure-to-500-pa",
-              "directoryName": "🧭️raises-the-duct-test-pressure-to-500-pa"
+              "id": "smoke-change-zone-t-op-winter",
+              "directoryName": "❄️change-zone-t-op-winter"
             }
           ]
         },
         {
-          "mutationId": "change-dwelling-ventilation-m3-h",
-          "sourceMutationDirectoryName": "🏡️change-dwelling-ventilation-m3-h",
-          "mutationDirectoryName": "🏡️change-dwelling-ventilation-m3-h",
+          "mutationId": "change-zone-t-op-summer",
+          "sourceMutationDirectoryName": "☀️change-zone-t-op-summer",
+          "mutationDirectoryName": "☀️change-zone-t-op-summer",
           "scenarios": [
             {
-              "id": "raises-the-dwelling-airflow-to-96-m3-per-hour",
-              "directoryName": "🏡️raises-the-dwelling-airflow-to-96-m3-per-hour"
+              "id": "smoke-change-zone-t-op-summer",
+              "directoryName": "☀️change-zone-t-op-summer"
             }
           ]
         },
         {
-          "mutationId": "change-eer-actual",
-          "sourceMutationDirectoryName": "✅️change-eer-actual",
-          "mutationDirectoryName": "✅️change-eer-actual",
+          "mutationId": "change-zone-air-speed",
+          "sourceMutationDirectoryName": "💨change-zone-air-speed",
+          "mutationDirectoryName": "💨change-zone-air-speed",
           "scenarios": [
             {
-              "id": "raises-the-achieved-eer-to-3-point-5",
-              "directoryName": "✅️raises-the-achieved-eer-to-3-point-5"
+              "id": "smoke-change-zone-air-speed",
+              "directoryName": "💨change-zone-air-speed"
             }
           ]
         },
         {
-          "mutationId": "change-fan-energy-reference-kwh",
-          "sourceMutationDirectoryName": "🔌️change-fan-energy-reference-kwh",
-          "mutationDirectoryName": "🔌️change-fan-energy-reference-kwh",
+          "mutationId": "change-zone-clothing",
+          "sourceMutationDirectoryName": "👔change-zone-clothing",
+          "mutationDirectoryName": "👔change-zone-clothing",
           "scenarios": [
             {
-              "id": "raises-the-fan-energy-reference-to-18-kwh",
-              "directoryName": "🔌️raises-the-fan-energy-reference-to-18-kwh"
+              "id": "smoke-change-zone-clothing",
+              "directoryName": "👔change-zone-clothing"
             }
           ]
         },
         {
-          "mutationId": "change-fan-qvm3-s",
-          "sourceMutationDirectoryName": "🪭️change-fan-qvm3-s",
-          "mutationDirectoryName": "🪭️change-fan-qvm3-s",
+          "mutationId": "change-zone-metabolic-rate",
+          "sourceMutationDirectoryName": "🏃️change-zone-metabolic-rate",
+          "mutationDirectoryName": "🏃️change-zone-metabolic-rate",
           "scenarios": [
             {
-              "id": "raises-the-fan-volume-flow-to-1-point-5-m3-per-second",
-              "directoryName": "🪭️raises-the-fan-volume-flow-to-1-point-5-m3-per-second"
+              "id": "smoke-change-zone-metabolic-rate",
+              "directoryName": "🏃️change-zone-metabolic-rate"
             }
           ]
         },
         {
-          "mutationId": "change-fan-t-run-h",
-          "sourceMutationDirectoryName": "⏰️change-fan-t-run-h",
-          "mutationDirectoryName": "⏰️change-fan-t-run-h",
+          "mutationId": "change-zone-rh",
+          "sourceMutationDirectoryName": "💧️change-zone-rh",
+          "mutationDirectoryName": "💧️change-zone-rh",
           "scenarios": [
             {
-              "id": "extends-the-daily-fan-runtime-to-12-hours",
-              "directoryName": "⏰️extends-the-daily-fan-runtime-to-12-hours"
+              "id": "smoke-change-zone-rh",
+              "directoryName": "💧️change-zone-rh"
             }
           ]
         },
         {
-          "mutationId": "change-floor-area-m2",
-          "sourceMutationDirectoryName": "📐️change-floor-area-m2",
-          "mutationDirectoryName": "📐️change-floor-area-m2",
+          "mutationId": "change-zone-outdoor-air",
+          "sourceMutationDirectoryName": "💨️change-zone-outdoor-air",
+          "mutationDirectoryName": "💨️change-zone-outdoor-air",
           "scenarios": [
             {
-              "id": "grows-the-conditioned-floor-area-to-120-m2",
-              "directoryName": "📐️grows-the-conditioned-floor-area-to-120-m2"
+              "id": "smoke-change-zone-outdoor-air",
+              "directoryName": "💨️change-zone-outdoor-air"
             }
           ]
         },
         {
-          "mutationId": "change-generation-reference-kwh",
-          "sourceMutationDirectoryName": "⚡️change-generation-reference-kwh",
-          "mutationDirectoryName": "⚡️change-generation-reference-kwh",
+          "mutationId": "change-zone-co2",
+          "sourceMutationDirectoryName": "🫧change-zone-co2",
+          "mutationDirectoryName": "🫧change-zone-co2",
           "scenarios": [
             {
-              "id": "raises-the-generation-reference-to-450-kwh",
-              "directoryName": "⚡️raises-the-generation-reference-to-450-kwh"
+              "id": "smoke-change-zone-co2",
+              "directoryName": "🫧change-zone-co2"
             }
           ]
         },
         {
-          "mutationId": "change-h-st-wk",
-          "sourceMutationDirectoryName": "🧮️change-h-st-wk",
-          "mutationDirectoryName": "🧮️change-h-st-wk",
+          "mutationId": "change-zone-illuminance",
+          "sourceMutationDirectoryName": "💡change-zone-illuminance",
+          "mutationDirectoryName": "💡change-zone-illuminance",
           "scenarios": [
             {
-              "id": "raises-the-storage-loss-coefficient-to-6-point-5-w-per-k",
-              "directoryName": "🧮️raises-the-storage-loss-coefficient-to-6-point-5-w-per-k"
+              "id": "smoke-change-zone-illuminance",
+              "directoryName": "💡change-zone-illuminance"
             }
           ]
         },
         {
-          "mutationId": "change-h-tr-wk",
-          "sourceMutationDirectoryName": "🧱️change-h-tr-wk",
-          "mutationDirectoryName": "🧱️change-h-tr-wk",
+          "mutationId": "change-zone-noise",
+          "sourceMutationDirectoryName": "🔊️change-zone-noise",
+          "mutationDirectoryName": "🔊️change-zone-noise",
           "scenarios": [
             {
-              "id": "improves-the-transmission-heat-transfer-to-175-w-per-k",
-              "directoryName": "🧱️improves-the-transmission-heat-transfer-to-175-w-per-k"
+              "id": "smoke-change-zone-noise",
+              "directoryName": "🔊️change-zone-noise"
             }
           ]
         },
         {
-          "mutationId": "change-h-ve-wk",
-          "sourceMutationDirectoryName": "🔃️change-h-ve-wk",
-          "mutationDirectoryName": "🔃️change-h-ve-wk",
+          "mutationId": "change-zone-vent-system-id",
+          "sourceMutationDirectoryName": "🔗change-zone-vent-system-id",
+          "mutationDirectoryName": "🔗change-zone-vent-system-id",
           "scenarios": [
             {
-              "id": "raises-the-ventilation-heat-transfer-to-125-w-per-k",
-              "directoryName": "🔃️raises-the-ventilation-heat-transfer-to-125-w-per-k"
+              "id": "smoke-change-zone-vent-system-id",
+              "directoryName": "🔗change-zone-vent-system-id"
             }
           ]
         },
         {
-          "mutationId": "change-heat-recovery-eta",
-          "sourceMutationDirectoryName": "♻️change-heat-recovery-eta",
-          "mutationDirectoryName": "♻️change-heat-recovery-eta",
+          "mutationId": "change-zone-turbulence",
+          "sourceMutationDirectoryName": "💨change-zone-turbulence",
+          "mutationDirectoryName": "💨change-zone-turbulence",
           "scenarios": [
             {
-              "id": "raises-the-achieved-heat-recovery-to-0-point-875",
-              "directoryName": "♻️raises-the-achieved-heat-recovery-to-0-point-875"
+              "id": "smoke-change-zone-turbulence",
+              "directoryName": "💨change-zone-turbulence"
             }
           ]
         },
         {
-          "mutationId": "change-heat-recovery-eta-min",
-          "sourceMutationDirectoryName": "🚧️change-heat-recovery-eta-min",
-          "mutationDirectoryName": "🚧️change-heat-recovery-eta-min",
+          "mutationId": "change-zone-vent-method",
+          "sourceMutationDirectoryName": "📐️change-zone-vent-method",
+          "mutationDirectoryName": "📐️change-zone-vent-method",
           "scenarios": [
             {
-              "id": "raises-the-required-heat-recovery-minimum-to-0-point-625",
-              "directoryName": "🚧️raises-the-required-heat-recovery-minimum-to-0-point-625"
+              "id": "smoke-change-zone-vent-method",
+              "directoryName": "📐️change-zone-vent-method"
             }
           ]
         },
         {
-          "mutationId": "change-hr-cp-j-kgk",
-          "sourceMutationDirectoryName": "🥵️change-hr-cp-j-kgk",
-          "mutationDirectoryName": "🥵️change-hr-cp-j-kgk",
+          "mutationId": "insert-vent-system",
+          "sourceMutationDirectoryName": "🆕️insert-vent-system",
+          "mutationDirectoryName": "🆕️insert-vent-system",
           "scenarios": [
             {
-              "id": "corrects-the-air-specific-heat-to-1010-j-per-kgk",
-              "directoryName": "🥵️corrects-the-air-specific-heat-to-1010-j-per-kgk"
+              "id": "smoke-insert-vent-system",
+              "directoryName": "🆕️insert-vent-system"
             }
           ]
         },
         {
-          "mutationId": "change-hr-delta-tc",
-          "sourceMutationDirectoryName": "↕️change-hr-delta-tc",
-          "mutationDirectoryName": "↕️change-hr-delta-tc",
+          "mutationId": "remove-vent-system",
+          "sourceMutationDirectoryName": "🗑️remove-vent-system",
+          "mutationDirectoryName": "🗑️remove-vent-system",
           "scenarios": [
             {
-              "id": "drops-the-heat-recovery-temperature-lift-to-12-point-5-c",
-              "directoryName": "↕️drops-the-heat-recovery-temperature-lift-to-12-point-5-c"
+              "id": "smoke-remove-vent-system",
+              "directoryName": "🗑️remove-vent-system"
             }
           ]
         },
         {
-          "mutationId": "change-hr-m-dot-kg-s",
-          "sourceMutationDirectoryName": "⚖️change-hr-m-dot-kg-s",
-          "mutationDirectoryName": "⚖️change-hr-m-dot-kg-s",
+          "mutationId": "change-vent-system-type",
+          "sourceMutationDirectoryName": "⚙️change-vent-system-type",
+          "mutationDirectoryName": "⚙️change-vent-system-type",
           "scenarios": [
             {
-              "id": "raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second",
-              "directoryName": "⚖️raises-the-heat-recovery-mass-flow-to-0-point-75-kg-per-second"
+              "id": "smoke-change-vent-system-type",
+              "directoryName": "⚙️change-vent-system-type"
             }
           ]
         },
         {
-          "mutationId": "change-hr-savings-reference-kwh",
-          "sourceMutationDirectoryName": "💡️change-hr-savings-reference-kwh",
-          "mutationDirectoryName": "💡️change-hr-savings-reference-kwh",
+          "mutationId": "change-vent-sfp",
+          "sourceMutationDirectoryName": "🌀️change-vent-sfp",
+          "mutationDirectoryName": "🌀️change-vent-sfp",
           "scenarios": [
             {
-              "id": "raises-the-heat-recovery-savings-reference-to-65-kwh",
-              "directoryName": "💡️raises-the-heat-recovery-savings-reference-to-65-kwh"
+              "id": "smoke-change-vent-sfp",
+              "directoryName": "🌀️change-vent-sfp"
             }
           ]
         },
         {
-          "mutationId": "change-hr-th",
-          "sourceMutationDirectoryName": "⏳️change-hr-th",
-          "mutationDirectoryName": "⏳️change-hr-th",
+          "mutationId": "change-vent-sfp-class",
+          "sourceMutationDirectoryName": "🎓️change-vent-sfp-class",
+          "mutationDirectoryName": "🎓️change-vent-sfp-class",
           "scenarios": [
             {
-              "id": "extends-the-heat-recovery-operating-hours-to-14",
-              "directoryName": "⏳️extends-the-heat-recovery-operating-hours-to-14"
+              "id": "smoke-change-vent-sfp-class",
+              "directoryName": "🎓️change-vent-sfp-class"
             }
           ]
         },
         {
-          "mutationId": "change-humidification-provided-kg-h",
-          "sourceMutationDirectoryName": "💦️change-humidification-provided-kg-h",
-          "mutationDirectoryName": "💦️change-humidification-provided-kg-h",
+          "mutationId": "change-vent-heat-recovery",
+          "sourceMutationDirectoryName": "♻️change-vent-heat-recovery",
+          "mutationDirectoryName": "♻️change-vent-heat-recovery",
           "scenarios": [
             {
-              "id": "drops-the-provided-humidification-to-1-point-25-kg-per-hour",
-              "directoryName": "💦️drops-the-provided-humidification-to-1-point-25-kg-per-hour"
+              "id": "smoke-change-vent-heat-recovery",
+              "directoryName": "♻️change-vent-heat-recovery"
             }
           ]
         },
         {
-          "mutationId": "change-humidification-required-kg-h",
-          "sourceMutationDirectoryName": "☁️change-humidification-required-kg-h",
-          "mutationDirectoryName": "☁️change-humidification-required-kg-h",
+          "mutationId": "change-vent-oda-class",
+          "sourceMutationDirectoryName": "🏞️change-vent-oda-class",
+          "mutationDirectoryName": "🏞️change-vent-oda-class",
           "scenarios": [
             {
-              "id": "raises-the-required-humidification-to-3-point-5-kg-per-hour",
-              "directoryName": "☁️raises-the-required-humidification-to-3-point-5-kg-per-hour"
+              "id": "smoke-change-vent-oda-class",
+              "directoryName": "🏞️change-vent-oda-class"
             }
           ]
         },
         {
-          "mutationId": "change-ida-class",
-          "sourceMutationDirectoryName": "🫁️change-ida-class",
-          "mutationDirectoryName": "🫁️change-ida-class",
+          "mutationId": "change-vent-filter-sup",
+          "sourceMutationDirectoryName": "🧽change-vent-filter-sup",
+          "mutationDirectoryName": "🧽change-vent-filter-sup",
           "scenarios": [
             {
-              "id": "relaxes-the-indoor-air-class-to-ida-3",
-              "directoryName": "🫁️relaxes-the-indoor-air-class-to-ida-3"
+              "id": "smoke-change-vent-filter-sup",
+              "directoryName": "🧽change-vent-filter-sup"
             }
           ]
         },
         {
-          "mutationId": "change-infiltration-allowance-m3-h",
-          "sourceMutationDirectoryName": "🚪️change-infiltration-allowance-m3-h",
-          "mutationDirectoryName": "🚪️change-infiltration-allowance-m3-h",
+          "mutationId": "change-vent-inspection",
+          "sourceMutationDirectoryName": "📅️change-vent-inspection",
+          "mutationDirectoryName": "📅️change-vent-inspection",
           "scenarios": [
             {
-              "id": "raises-the-infiltration-allowance-to-52-point-5-m3-per-hour",
-              "directoryName": "🚪️raises-the-infiltration-allowance-to-52-point-5-m3-per-hour"
+              "id": "smoke-change-vent-inspection",
+              "directoryName": "📅️change-vent-inspection"
             }
           ]
         },
         {
-          "mutationId": "change-l-aeq-db",
-          "sourceMutationDirectoryName": "🔊️change-l-aeq-db",
-          "mutationDirectoryName": "🔊️change-l-aeq-db",
+          "mutationId": "change-vent-duct-class",
+          "sourceMutationDirectoryName": "🧱change-vent-duct-class",
+          "mutationDirectoryName": "🧱change-vent-duct-class",
           "scenarios": [
             {
-              "id": "raises-the-equivalent-sound-level-to-30-db",
-              "directoryName": "🔊️raises-the-equivalent-sound-level-to-30-db"
+              "id": "smoke-change-vent-duct-class",
+              "directoryName": "🧱change-vent-duct-class"
             }
           ]
         },
         {
-          "mutationId": "change-n50-h-inv",
-          "sourceMutationDirectoryName": "🏠️change-n50-h-inv",
-          "mutationDirectoryName": "🏠️change-n50-h-inv",
+          "mutationId": "change-vent-duct-leakage",
+          "sourceMutationDirectoryName": "🕳️change-vent-duct-leakage",
+          "mutationDirectoryName": "🕳️change-vent-duct-leakage",
           "scenarios": [
             {
-              "id": "loosens-the-blower-door-result-to-2-point-5-per-hour",
-              "directoryName": "🏠️loosens-the-blower-door-result-to-2-point-5-per-hour"
+              "id": "smoke-change-vent-duct-leakage",
+              "directoryName": "🕳️change-vent-duct-leakage"
             }
           ]
         },
         {
-          "mutationId": "change-night-setback-k",
-          "sourceMutationDirectoryName": "🌙️change-night-setback-k",
-          "mutationDirectoryName": "🌙️change-night-setback-k",
+          "mutationId": "change-vent-design-airflow",
+          "sourceMutationDirectoryName": "🌬️change-vent-design-airflow",
+          "mutationDirectoryName": "🌬️change-vent-design-airflow",
           "scenarios": [
             {
-              "id": "deepens-the-night-setback-to-5-kelvin",
-              "directoryName": "🌙️deepens-the-night-setback-to-5-kelvin"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-occupancy",
-          "sourceMutationDirectoryName": "🏢️change-occupancy",
-          "mutationDirectoryName": "🏢️change-occupancy",
-          "scenarios": [
-            {
-              "id": "reclassifies-the-space-as-office",
-              "directoryName": "🏢️reclassifies-the-space-as-office"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-occupants",
-          "sourceMutationDirectoryName": "👪️change-occupants",
-          "mutationDirectoryName": "👪️change-occupants",
-          "scenarios": [
-            {
-              "id": "raises-the-household-to-five-occupants",
-              "directoryName": "👪️raises-the-household-to-five-occupants"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-persons",
-          "sourceMutationDirectoryName": "👥️change-persons",
-          "mutationDirectoryName": "👥️change-persons",
-          "scenarios": [
-            {
-              "id": "raises-the-design-occupancy-to-16-people",
-              "directoryName": "👥️raises-the-design-occupancy-to-16-people"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-qc-kwh",
-          "sourceMutationDirectoryName": "❄️change-qc-kwh",
-          "mutationDirectoryName": "❄️change-qc-kwh",
-          "scenarios": [
-            {
-              "id": "raises-the-annual-cooling-demand-to-1250-kwh",
-              "directoryName": "❄️raises-the-annual-cooling-demand-to-1250-kwh"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-residential-ventilation-m3-h",
-          "sourceMutationDirectoryName": "🏘️change-residential-ventilation-m3-h",
-          "mutationDirectoryName": "🏘️change-residential-ventilation-m3-h",
-          "scenarios": [
-            {
-              "id": "raises-the-residential-airflow-to-110-m3-per-hour",
-              "directoryName": "🏘️raises-the-residential-airflow-to-110-m3-per-hour"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-rh-percent",
-          "sourceMutationDirectoryName": "💧️change-rh-percent",
-          "mutationDirectoryName": "💧️change-rh-percent",
-          "scenarios": [
-            {
-              "id": "drops-indoor-humidity-to-42-point-5-percent",
-              "directoryName": "💧️drops-indoor-humidity-to-42-point-5-percent"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-sfp-required-class",
-          "sourceMutationDirectoryName": "🏷️change-sfp-required-class",
-          "mutationDirectoryName": "🏷️change-sfp-required-class",
-          "scenarios": [
-            {
-              "id": "tightens-the-required-sfp-class-to-3",
-              "directoryName": "🏷️tightens-the-required-sfp-class-to-3"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-sfp-wm3-s",
-          "sourceMutationDirectoryName": "🌀️change-sfp-wm3-s",
-          "mutationDirectoryName": "🌀️change-sfp-wm3-s",
-          "scenarios": [
-            {
-              "id": "improves-the-specific-fan-power-to-1250-w-per-m3-s",
-              "directoryName": "🌀️improves-the-specific-fan-power-to-1250-w-per-m3-s"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-storage-allowance-kwh",
-          "sourceMutationDirectoryName": "📉️change-storage-allowance-kwh",
-          "mutationDirectoryName": "📉️change-storage-allowance-kwh",
-          "scenarios": [
-            {
-              "id": "tightens-the-storage-loss-allowance-to-4-point-5-kwh",
-              "directoryName": "📉️tightens-the-storage-loss-allowance-to-4-point-5-kwh"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-storage-th",
-          "sourceMutationDirectoryName": "🕒️change-storage-th",
-          "mutationDirectoryName": "🕒️change-storage-th",
-          "scenarios": [
-            {
-              "id": "shortens-the-storage-standby-period-to-18-hours",
-              "directoryName": "🕒️shortens-the-storage-standby-period-to-18-hours"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-system-type",
-          "sourceMutationDirectoryName": "⚙️change-system-type",
-          "mutationDirectoryName": "⚙️change-system-type",
-          "scenarios": [
-            {
-              "id": "switches-to-a-decentral-mechanical-system",
-              "directoryName": "⚙️switches-to-a-decentral-mechanical-system"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-t-op-c",
-          "sourceMutationDirectoryName": "🌡️change-t-op-c",
-          "mutationDirectoryName": "🌡️change-t-op-c",
-          "scenarios": [
-            {
-              "id": "raises-the-operative-temperature-to-24-point-5-c",
-              "directoryName": "🌡️raises-the-operative-temperature-to-24-point-5-c"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-theta-amb-c",
-          "sourceMutationDirectoryName": "🌬️change-theta-amb-c",
-          "mutationDirectoryName": "🌬️change-theta-amb-c",
-          "scenarios": [
-            {
-              "id": "lowers-the-storage-room-ambient-to-18-c",
-              "directoryName": "🌬️lowers-the-storage-room-ambient-to-18-c"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-theta-ec",
-          "sourceMutationDirectoryName": "🌤️change-theta-ec",
-          "mutationDirectoryName": "🌤️change-theta-ec",
-          "scenarios": [
-            {
-              "id": "raises-the-external-design-temperature-to-34-point-5-c",
-              "directoryName": "🌤️raises-the-external-design-temperature-to-34-point-5-c"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-theta-rm-c",
-          "sourceMutationDirectoryName": "🔄️change-theta-rm-c",
-          "mutationDirectoryName": "🔄️change-theta-rm-c",
-          "scenarios": [
-            {
-              "id": "raises-the-running-mean-outdoor-temperature-to-18-point-5-c",
-              "directoryName": "🔄️raises-the-running-mean-outdoor-temperature-to-18-point-5-c"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-theta-set-c",
-          "sourceMutationDirectoryName": "🎯️change-theta-set-c",
-          "mutationDirectoryName": "🎯️change-theta-set-c",
-          "scenarios": [
-            {
-              "id": "lowers-the-cooling-set-point-to-25-c",
-              "directoryName": "🎯️lowers-the-cooling-set-point-to-25-c"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-theta-st-c",
-          "sourceMutationDirectoryName": "🫙️change-theta-st-c",
-          "mutationDirectoryName": "🫙️change-theta-st-c",
-          "scenarios": [
-            {
-              "id": "lowers-the-storage-temperature-to-55-c",
-              "directoryName": "🫙️lowers-the-storage-temperature-to-55-c"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-ventilation-m3-h",
-          "sourceMutationDirectoryName": "💨️change-ventilation-m3-h",
-          "mutationDirectoryName": "💨️change-ventilation-m3-h",
-          "scenarios": [
-            {
-              "id": "raises-the-supply-airflow-to-360-m3-per-hour",
-              "directoryName": "💨️raises-the-supply-airflow-to-360-m3-per-hour"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-volume-m3",
-          "sourceMutationDirectoryName": "🧊️change-volume-m3",
-          "mutationDirectoryName": "🧊️change-volume-m3",
-          "scenarios": [
-            {
-              "id": "grows-the-air-volume-to-640-m3",
-              "directoryName": "🧊️grows-the-air-volume-to-640-m3"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-years-since-inspection",
-          "sourceMutationDirectoryName": "📅️change-years-since-inspection",
-          "mutationDirectoryName": "📅️change-years-since-inspection",
-          "scenarios": [
-            {
-              "id": "ages-the-last-inspection-to-six-years",
-              "directoryName": "📅️ages-the-last-inspection-to-six-years"
+              "id": "smoke-change-vent-design-airflow",
+              "directoryName": "🌬️change-vent-design-airflow"
             }
           ]
         }
-      ],
-      "kinds": [
-        "change-annex",
-        "change-occupancy",
-        "change-comfort-category",
-        "change-t-op-c",
-        "change-rh-percent",
-        "change-air-speed-ms",
-        "change-theta-rm-c",
-        "change-co2-ppm",
-        "change-df-percent",
-        "change-l-aeq-db",
-        "change-persons",
-        "change-ida-class",
-        "change-ventilation-m3-h",
-        "change-floor-area-m2",
-        "change-bedrooms",
-        "change-dwelling-ventilation-m3-h",
-        "change-occupants",
-        "change-residential-ventilation-m3-h",
-        "change-sfp-wm3-s",
-        "change-sfp-required-class",
-        "change-heat-recovery-eta",
-        "change-heat-recovery-eta-min",
-        "change-system-type",
-        "change-years-since-inspection",
-        "change-humidification-required-kg-h",
-        "change-humidification-provided-kg-h",
-        "change-fan-qvm3-s",
-        "change-fan-t-run-h",
-        "change-fan-energy-reference-kwh",
-        "change-night-setback-k",
-        "change-hr-m-dot-kg-s",
-        "change-hr-cp-j-kgk",
-        "change-hr-delta-tc",
-        "change-hr-th",
-        "change-hr-savings-reference-kwh",
-        "change-n50-h-inv",
-        "change-volume-m3",
-        "change-infiltration-allowance-m3-h",
-        "change-cellar-area-m2",
-        "change-cellar-ventilation-m3-h",
-        "change-h-tr-wk",
-        "change-h-ve-wk",
-        "change-theta-ec",
-        "change-theta-set-c",
-        "change-cooling-delta-th",
-        "change-cooling-gains-kwh",
-        "change-cooling-utilization-factor",
-        "change-cooling-reference-kwh",
-        "change-chiller-type",
-        "change-eer-actual",
-        "change-qc-kwh",
-        "change-generation-reference-kwh",
-        "change-data-center-supply-c",
-        "change-h-st-wk",
-        "change-theta-st-c",
-        "change-theta-amb-c",
-        "change-storage-th",
-        "change-storage-allowance-kwh",
-        "change-dhw-delivery-c",
-        "change-duct-class",
-        "change-duct-test-pressure-pa",
-        "change-duct-leakage-m3-sm2"
       ]
     }
   ],

@@ -1,14 +1,11 @@
-//! ↩️ `update-tension-component-inputs` — undo restores BASE's tension component inputs.
-
+//! ↩️ upsert inverse — restore prior entity or remove inserted one.
 use super::UpdateTensionComponentInputs;
+use crate::mutations::remove_tension_component;
 use crate::{En1993Mutation, En1993Snapshot};
-
-//#region 🔖️Inverse
-pub fn inverse(_payload: &UpdateTensionComponentInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
-    vec![En1993Mutation::UpdateTensionComponentInputs(UpdateTensionComponentInputs {
-        new_tension_component_f_uk_kn: base.tension_component_f_uk_kn,
-        new_tension_component_f_k_kn: base.tension_component_f_k_kn,
-        new_tension_component_n_ed_kn: base.tension_component_n_ed_kn,
-    })]
+pub fn inverse(payload: &UpdateTensionComponentInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+    if let Some(prior) = base.tension_components.iter().find(|x| x.id == payload.tension_component.id) {
+        vec![En1993Mutation::UpdateTensionComponentInputs(UpdateTensionComponentInputs { tension_component: prior.clone() })]
+    } else {
+        vec![En1993Mutation::RemoveTensionComponent(remove_tension_component::RemoveTensionComponent { index: base.tension_components.len() })]
+    }
 }
-//#endregion 🔖️Inverse

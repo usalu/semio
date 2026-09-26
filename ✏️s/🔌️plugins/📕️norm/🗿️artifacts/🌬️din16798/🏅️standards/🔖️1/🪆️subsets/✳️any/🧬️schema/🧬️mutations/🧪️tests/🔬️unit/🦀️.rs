@@ -1,133 +1,83 @@
-use super::*;
-use protocol::Mutation;
+//! 🧪 Every DIN EN 16798 mutation changes its intended leaf; inverse restores the fixture.
 
-/// ⚖️ One value per `Din16798Mutation` variant — the closed set the semantics/round-trip tests
-/// iterate, mirroring `process3d`'s own `every_mutation()` fixture.
-fn every_mutation() -> Vec<Din16798Mutation> {
+use crate::mutations::*;
+use crate::{Din16798Mutation, Din16798Snapshot};
+use protocol::MutationDiff;
+
+fn apply(mutation: &Din16798Mutation, base: &Din16798Snapshot) -> Din16798Snapshot {
+    let outcome = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::diff(mutation, base);
+    assert_eq!(outcome.worst_level(), None, "mutation should apply cleanly: {mutation:?}");
+    MutationDiff::apply(outcome.diff(), base).expect("applies")
+}
+
+fn assert_mutates_and_restores(label: &str, base: &Din16798Snapshot, mutation: Din16798Mutation) {
+    let after = apply(&mutation, base);
+    assert_ne!(&after, base, "{label} must change the snapshot");
+    let inverse = <Din16798Mutation as protocol::Mutation<Din16798Snapshot>>::inverse(&mutation, base);
+    let mut restored = after;
+    for step in &inverse {
+        restored = apply(step, &restored);
+    }
+    assert_eq!(&restored, base, "{label} inverse must restore the base snapshot");
+}
+
+fn all_sample_mutations(base: &Din16798Snapshot) -> Vec<(&'static str, Din16798Mutation)> {
     vec![
-        Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-        Din16798Mutation::ChangeOccupancy(change_occupancy::ChangeOccupancy { new_occupancy: "office".to_string() }),
-        Din16798Mutation::ChangeComfortCategory(change_comfort_category::ChangeComfortCategory { new_comfort_category: "I".to_string() }),
-        Din16798Mutation::ChangeTOpC(change_t_op_c::ChangeTOpC { new_t_op_c: 24.5 }),
-        Din16798Mutation::ChangeRhPercent(change_rh_percent::ChangeRhPercent { new_rh_percent: 45.0 }),
-        Din16798Mutation::ChangeAirSpeedMS(change_air_speed_m_s::ChangeAirSpeedMS { new_air_speed_m_s: 0.15 }),
-        Din16798Mutation::ChangeThetaRmC(change_theta_rm_c::ChangeThetaRmC { new_theta_rm_c: 18.0 }),
-        Din16798Mutation::ChangeCo2Ppm(change_co2_ppm::ChangeCo2Ppm { new_co2_ppm: 900.0 }),
-        Din16798Mutation::ChangeDfPercent(change_df_percent::ChangeDfPercent { new_df_percent: 3.0 }),
-        Din16798Mutation::ChangeLAeqDb(change_l_aeq_db::ChangeLAeqDb { new_l_aeq_db: 28.0 }),
-        Din16798Mutation::ChangePersons(change_persons::ChangePersons { new_persons: 12 }),
-        Din16798Mutation::ChangeIdaClass(change_ida_class::ChangeIdaClass { new_ida_class: "1".to_string() }),
-        Din16798Mutation::ChangeVentilationM3H(change_ventilation_m3_h::ChangeVentilationM3H { new_ventilation_m3_h: 320.0 }),
-        Din16798Mutation::ChangeFloorAreaM2(change_floor_area_m2::ChangeFloorAreaM2 { new_floor_area_m2: 110.0 }),
-        Din16798Mutation::ChangeBedrooms(change_bedrooms::ChangeBedrooms { new_bedrooms: 4 }),
-        Din16798Mutation::ChangeDwellingVentilationM3H(change_dwelling_ventilation_m3_h::ChangeDwellingVentilationM3H { new_dwelling_ventilation_m3_h: 70.0 }),
-        Din16798Mutation::ChangeOccupants(change_occupants::ChangeOccupants { new_occupants: 4 }),
-        Din16798Mutation::ChangeResidentialVentilationM3H(change_residential_ventilation_m3_h::ChangeResidentialVentilationM3H { new_residential_ventilation_m3_h: 90.0 }),
-        Din16798Mutation::ChangeSfpWM3S(change_sfp_w_m3_s::ChangeSfpWM3S { new_sfp_w_m3_s: 1600.0 }),
-        Din16798Mutation::ChangeSfpRequiredClass(change_sfp_required_class::ChangeSfpRequiredClass { new_sfp_required_class: 3 }),
-        Din16798Mutation::ChangeHeatRecoveryEta(change_heat_recovery_eta::ChangeHeatRecoveryEta { new_heat_recovery_eta: 0.8 }),
-        Din16798Mutation::ChangeHeatRecoveryEtaMin(change_heat_recovery_eta_min::ChangeHeatRecoveryEtaMin { new_heat_recovery_eta_min: 0.72 }),
-        Din16798Mutation::ChangeSystemType(change_system_type::ChangeSystemType { new_system_type: "decentral_mech".to_string() }),
-        Din16798Mutation::ChangeYearsSinceInspection(change_years_since_inspection::ChangeYearsSinceInspection { new_years_since_inspection: 2 }),
-        Din16798Mutation::ChangeHumidificationRequiredKgH(change_humidification_required_kg_h::ChangeHumidificationRequiredKgH { new_humidification_required_kg_h: 2.5 }),
-        Din16798Mutation::ChangeHumidificationProvidedKgH(change_humidification_provided_kg_h::ChangeHumidificationProvidedKgH { new_humidification_provided_kg_h: 2.5 }),
-        Din16798Mutation::ChangeFanQVM3S(change_fan_q_v_m3_s::ChangeFanQVM3S { new_fan_q_v_m3_s: 1.2 }),
-        Din16798Mutation::ChangeFanTRunH(change_fan_t_run_h::ChangeFanTRunH { new_fan_t_run_h: 10.0 }),
-        Din16798Mutation::ChangeFanEnergyReferenceKwh(change_fan_energy_reference_kwh::ChangeFanEnergyReferenceKwh { new_fan_energy_reference_kwh: 18.0 }),
-        Din16798Mutation::ChangeNightSetbackK(change_night_setback_k::ChangeNightSetbackK { new_night_setback_k: 4.0 }),
-        Din16798Mutation::ChangeHrMDotKgS(change_hr_m_dot_kg_s::ChangeHrMDotKgS { new_hr_m_dot_kg_s: 0.6 }),
-        Din16798Mutation::ChangeHrCpJKgk(change_hr_cp_j_kgk::ChangeHrCpJKgk { new_hr_cp_j_kgk: 1006.0 }),
-        Din16798Mutation::ChangeHrDeltaTC(change_hr_delta_t_c::ChangeHrDeltaTC { new_hr_delta_t_c: 16.0 }),
-        Din16798Mutation::ChangeHrTH(change_hr_t_h::ChangeHrTH { new_hr_t_h: 12.0 }),
-        Din16798Mutation::ChangeHrSavingsReferenceKwh(change_hr_savings_reference_kwh::ChangeHrSavingsReferenceKwh { new_hr_savings_reference_kwh: 55.0 }),
-        Din16798Mutation::ChangeN50HInv(change_n50_h_inv::ChangeN50HInv { new_n50_h_inv: 1.2 }),
-        Din16798Mutation::ChangeVolumeM3(change_volume_m3::ChangeVolumeM3 { new_volume_m3: 540.0 }),
-        Din16798Mutation::ChangeInfiltrationAllowanceM3H(change_infiltration_allowance_m3_h::ChangeInfiltrationAllowanceM3H { new_infiltration_allowance_m3_h: 50.0 }),
-        Din16798Mutation::ChangeCellarAreaM2(change_cellar_area_m2::ChangeCellarAreaM2 { new_cellar_area_m2: 55.0 }),
-        Din16798Mutation::ChangeCellarVentilationM3H(change_cellar_ventilation_m3_h::ChangeCellarVentilationM3H { new_cellar_ventilation_m3_h: 18.0 }),
-        Din16798Mutation::ChangeHTrWK(change_h_tr_w_k::ChangeHTrWK { new_h_tr_w_k: 220.0 }),
-        Din16798Mutation::ChangeHVeWK(change_h_ve_w_k::ChangeHVeWK { new_h_ve_w_k: 110.0 }),
-        Din16798Mutation::ChangeThetaEC(change_theta_e_c::ChangeThetaEC { new_theta_e_c: 33.0 }),
-        Din16798Mutation::ChangeThetaSetC(change_theta_set_c::ChangeThetaSetC { new_theta_set_c: 25.0 }),
-        Din16798Mutation::ChangeCoolingDeltaTH(change_cooling_delta_t_h::ChangeCoolingDeltaTH { new_cooling_delta_t_h: 12.0 }),
-        Din16798Mutation::ChangeCoolingGainsKwh(change_cooling_gains_kwh::ChangeCoolingGainsKwh { new_cooling_gains_kwh: 6.0 }),
-        Din16798Mutation::ChangeCoolingUtilizationFactor(change_cooling_utilization_factor::ChangeCoolingUtilizationFactor { new_cooling_utilization_factor: 0.85 }),
-        Din16798Mutation::ChangeCoolingReferenceKwh(change_cooling_reference_kwh::ChangeCoolingReferenceKwh { new_cooling_reference_kwh: 24.0 }),
-        Din16798Mutation::ChangeChillerType(change_chiller_type::ChangeChillerType { new_chiller_type: "water_cooled".to_string() }),
-        Din16798Mutation::ChangeEerActual(change_eer_actual::ChangeEerActual { new_eer_actual: 3.4 }),
-        Din16798Mutation::ChangeQCKwh(change_q_c_kwh::ChangeQCKwh { new_q_c_kwh: 1200.0 }),
-        Din16798Mutation::ChangeGenerationReferenceKwh(change_generation_reference_kwh::ChangeGenerationReferenceKwh { new_generation_reference_kwh: 420.0 }),
-        Din16798Mutation::ChangeDataCenterSupplyC(change_data_center_supply_c::ChangeDataCenterSupplyC { new_data_center_supply_c: 24.0 }),
-        Din16798Mutation::ChangeHStWK(change_h_st_w_k::ChangeHStWK { new_h_st_w_k: 6.0 }),
-        Din16798Mutation::ChangeThetaStC(change_theta_st_c::ChangeThetaStC { new_theta_st_c: 62.0 }),
-        Din16798Mutation::ChangeThetaAmbC(change_theta_amb_c::ChangeThetaAmbC { new_theta_amb_c: 21.0 }),
-        Din16798Mutation::ChangeStorageTH(change_storage_t_h::ChangeStorageTH { new_storage_t_h: 20.0 }),
-        Din16798Mutation::ChangeStorageAllowanceKwh(change_storage_allowance_kwh::ChangeStorageAllowanceKwh { new_storage_allowance_kwh: 7.0 }),
-        Din16798Mutation::ChangeDhwDeliveryC(change_dhw_delivery_c::ChangeDhwDeliveryC { new_dhw_delivery_c: 60.0 }),
-        Din16798Mutation::ChangeDuctClass(change_duct_class::ChangeDuctClass { new_duct_class: "B".to_string() }),
-        Din16798Mutation::ChangeDuctTestPressurePa(change_duct_test_pressure_pa::ChangeDuctTestPressurePa { new_duct_test_pressure_pa: 450.0 }),
-        Din16798Mutation::ChangeDuctLeakageM3SM2(change_duct_leakage_m3_s_m2::ChangeDuctLeakageM3SM2 { new_duct_leakage_m3_s_m2: 0.08 }),
+        ("change-annex", Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: if base.annex == crate::document::AnnexChoice::De { crate::document::AnnexChoice::En } else { crate::document::AnnexChoice::De } })),
+        ("change-theta-rm", Din16798Mutation::ChangeThetaRm(change_theta_rm::ChangeThetaRm { new_theta_rm_c: base.theta_rm_c + 1.0 })),
+        ("change-outdoor-co2", Din16798Mutation::ChangeOutdoorCo2(change_outdoor_co2::ChangeOutdoorCo2 { new_outdoor_co2_ppm: base.outdoor_co2_ppm + 10.0 })),
+        ("change-envelope-n50", Din16798Mutation::ChangeEnvelopeN50(change_envelope_n50::ChangeEnvelopeN50 { new_envelope_n50_h_inv: base.envelope_n50_h_inv + 0.1 })),
+        ("change-envelope-volume", Din16798Mutation::ChangeEnvelopeVolume(change_envelope_volume::ChangeEnvelopeVolume { new_envelope_volume_m3: base.envelope_volume_m3 + 1.0 })),
+        ("change-cellar-area", Din16798Mutation::ChangeCellarArea(change_cellar_area::ChangeCellarArea { new_cellar_area_m2: base.cellar_area_m2 + 1.0 })),
+        ("change-cellar-ventilation", Din16798Mutation::ChangeCellarVentilation(change_cellar_ventilation::ChangeCellarVentilation { new_cellar_ventilation_m3_h: base.cellar_ventilation_m3_h + 1.0 })),
+        ("change-night-setback", Din16798Mutation::ChangeNightSetback(change_night_setback::ChangeNightSetback { new_night_setback_k: base.night_setback_k + 0.5 })),
+        ("insert-zone", Din16798Mutation::InsertZone(insert_zone::InsertZone { index: base.zones.len(), zone: { let mut z = crate::ZoneDocument::default(); z.id = "zone-inserted".into(); z } })),
+        ("remove-zone", Din16798Mutation::RemoveZone(remove_zone::RemoveZone { zone_id: base.zones[0].id.clone() })),
+        ("change-zone-usage-type", Din16798Mutation::ChangeZoneUsageType(change_zone_usage_type::ChangeZoneUsageType { zone_id: base.zones[0].id.clone(), new_usage_type: "classroom".into() })),
+        ("change-zone-floor-area", Din16798Mutation::ChangeZoneFloorArea(change_zone_floor_area::ChangeZoneFloorArea { zone_id: base.zones[0].id.clone(), new_floor_area_m2: base.zones[0].floor_area_m2 + 1.0 })),
+        ("change-zone-occupants", Din16798Mutation::ChangeZoneOccupants(change_zone_occupants::ChangeZoneOccupants { zone_id: base.zones[0].id.clone(), new_occupants: base.zones[0].occupants + 1 })),
+        ("change-zone-comfort-category", Din16798Mutation::ChangeZoneComfortCategory(change_zone_comfort_category::ChangeZoneComfortCategory { zone_id: base.zones[0].id.clone(), new_comfort_category: "III".into() })),
+        ("change-zone-pollution-class", Din16798Mutation::ChangeZonePollutionClass(change_zone_pollution_class::ChangeZonePollutionClass { zone_id: base.zones[0].id.clone(), new_pollution_class: "non_low".into() })),
+        ("change-zone-comfort-model", Din16798Mutation::ChangeZoneComfortModel(change_zone_comfort_model::ChangeZoneComfortModel { zone_id: base.zones[0].id.clone(), new_comfort_model: "adaptive".into() })),
+        ("change-zone-t-op-winter", Din16798Mutation::ChangeZoneTOpWinter(change_zone_t_op_winter::ChangeZoneTOpWinter { zone_id: base.zones[0].id.clone(), new_t_op_winter_c: base.zones[0].t_op_winter_c + 0.5 })),
+        ("change-zone-t-op-summer", Din16798Mutation::ChangeZoneTOpSummer(change_zone_t_op_summer::ChangeZoneTOpSummer { zone_id: base.zones[0].id.clone(), new_t_op_summer_c: base.zones[0].t_op_summer_c + 0.5 })),
+        ("change-zone-air-speed", Din16798Mutation::ChangeZoneAirSpeed(change_zone_air_speed::ChangeZoneAirSpeed { zone_id: base.zones[0].id.clone(), new_air_speed_m_s: base.zones[0].air_speed_m_s + 0.05 })),
+        ("change-zone-clothing", Din16798Mutation::ChangeZoneClothing(change_zone_clothing::ChangeZoneClothing { zone_id: base.zones[0].id.clone(), new_clothing_clo: base.zones[0].clothing_clo + 0.1 })),
+        ("change-zone-metabolic-rate", Din16798Mutation::ChangeZoneMetabolicRate(change_zone_metabolic_rate::ChangeZoneMetabolicRate { zone_id: base.zones[0].id.clone(), new_metabolic_rate_met: base.zones[0].metabolic_rate_met + 0.1 })),
+        ("change-zone-rh", Din16798Mutation::ChangeZoneRh(change_zone_rh::ChangeZoneRh { zone_id: base.zones[0].id.clone(), new_rh_percent: base.zones[0].rh_percent + 1.0 })),
+        ("change-zone-outdoor-air", Din16798Mutation::ChangeZoneOutdoorAir(change_zone_outdoor_air::ChangeZoneOutdoorAir { zone_id: base.zones[0].id.clone(), new_outdoor_air_supplied_m3_h: base.zones[0].outdoor_air_supplied_m3_h + 10.0 })),
+        ("change-zone-co2", Din16798Mutation::ChangeZoneCo2(change_zone_co2::ChangeZoneCo2 { zone_id: base.zones[0].id.clone(), new_co2_ppm: base.zones[0].co2_ppm + 10.0 })),
+        ("change-zone-illuminance", Din16798Mutation::ChangeZoneIlluminance(change_zone_illuminance::ChangeZoneIlluminance { zone_id: base.zones[0].id.clone(), new_illuminance_lx: base.zones[0].illuminance_lx + 10.0 })),
+        ("change-zone-noise", Din16798Mutation::ChangeZoneNoise(change_zone_noise::ChangeZoneNoise { zone_id: base.zones[0].id.clone(), new_noise_db: base.zones[0].noise_db + 1.0 })),
+        ("change-zone-vent-system-id", Din16798Mutation::ChangeZoneVentSystemId(change_zone_vent_system_id::ChangeZoneVentSystemId { zone_id: base.zones[0].id.clone(), new_vent_system_id: "vent-other".into() })),
+        ("insert-vent-system", Din16798Mutation::InsertVentSystem(insert_vent_system::InsertVentSystem { index: base.vent_systems.len(), vent: { let mut v = crate::VentSystemDocument::default(); v.id = "vent-inserted".into(); v } })),
+        ("remove-vent-system", Din16798Mutation::RemoveVentSystem(remove_vent_system::RemoveVentSystem { vent_id: base.vent_systems[0].id.clone() })),
+        ("change-vent-system-type", Din16798Mutation::ChangeVentSystemType(change_vent_system_type::ChangeVentSystemType { vent_id: base.vent_systems[0].id.clone(), new_system_type: "decentral_mech".into() })),
+        ("change-vent-sfp", Din16798Mutation::ChangeVentSfp(change_vent_sfp::ChangeVentSfp { vent_id: base.vent_systems[0].id.clone(), new_sfp_w_m3_s: base.vent_systems[0].sfp_w_m3_s + 50.0 })),
+        ("change-vent-sfp-class", Din16798Mutation::ChangeVentSfpClass(change_vent_sfp_class::ChangeVentSfpClass { vent_id: base.vent_systems[0].id.clone(), new_sfp_required_class: 4 })),
+        ("change-vent-heat-recovery", Din16798Mutation::ChangeVentHeatRecovery(change_vent_heat_recovery::ChangeVentHeatRecovery { vent_id: base.vent_systems[0].id.clone(), new_heat_recovery_eta: (base.vent_systems[0].heat_recovery_eta - 0.05_f64).max(0.1) })),
+        ("change-vent-oda-class", Din16798Mutation::ChangeVentOdaClass(change_vent_oda_class::ChangeVentOdaClass { vent_id: base.vent_systems[0].id.clone(), new_oda_class: "ODA1".into() })),
+        ("change-vent-filter-sup", Din16798Mutation::ChangeVentFilterSup(change_vent_filter_sup::ChangeVentFilterSup { vent_id: base.vent_systems[0].id.clone(), new_filter_sup_class: "ePM1_80".into() })),
+        ("change-vent-inspection", Din16798Mutation::ChangeVentInspection(change_vent_inspection::ChangeVentInspection { vent_id: base.vent_systems[0].id.clone(), new_years_since_inspection: base.vent_systems[0].years_since_inspection + 1 })),
+        ("change-vent-duct-class", Din16798Mutation::ChangeVentDuctClass(change_vent_duct_class::ChangeVentDuctClass { vent_id: base.vent_systems[0].id.clone(), new_duct_class: "B".into() })),
+        ("change-vent-duct-leakage", Din16798Mutation::ChangeVentDuctLeakage(change_vent_duct_leakage::ChangeVentDuctLeakage { vent_id: base.vent_systems[0].id.clone(), new_duct_leakage_m3_s_m2: base.vent_systems[0].duct_leakage_m3_s_m2 + 0.01 })),
+        ("change-vent-design-airflow", Din16798Mutation::ChangeVentDesignAirflow(change_vent_design_airflow::ChangeVentDesignAirflow { vent_id: base.vent_systems[0].id.clone(), new_design_airflow_m3_h: base.vent_systems[0].design_airflow_m3_h + 50.0 })),
+        ("change-zone-turbulence", Din16798Mutation::ChangeZoneTurbulence(change_zone_turbulence::ChangeZoneTurbulence { zone_id: base.zones[0].id.clone(), new_turbulence_intensity_percent: base.zones[0].turbulence_intensity_percent + 5.0 })),
+        ("change-zone-vent-method", Din16798Mutation::ChangeZoneVentMethod(change_zone_vent_method::ChangeZoneVentMethod { zone_id: base.zones[0].id.clone(), new_vent_method: "method_3_predefined_rates".into() })),
     ]
 }
 
-fn round_trip(base: &Din16798Snapshot, mutation: &Din16798Mutation) -> Din16798Snapshot {
-    let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
-    let mut restored = forward.clone();
-    for back in mutation.inverse(base) {
-        restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
-    }
-    assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
-    forward
+#[semio_framework_async_macros::async_test]
+async fn kinds_nonempty() {
+    assert!(crate::artifact_schema::mutations::KINDS.len() >= 41);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn every_variant_registers_an_approved_semantic_descriptor() {
-    for mutation in every_mutation() {
-        let descriptor = protocol::SemanticMutation::semantics(&mutation);
-        assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
-    }
-    assert_eq!(<Din16798Mutation as protocol::SemanticMutation<Din16798Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn every_variant_round_trips_via_inverse() {
+async fn every_mutation_kind_changes_intended_leaf_and_inverse_restores() {
     let base = Din16798Snapshot::default();
-    for mutation in every_mutation() {
-        round_trip(&base, &mutation);
+    let cases = all_sample_mutations(&base);
+    assert_eq!(cases.len(), 41, "expected one sample per mutation kind");
+    for (label, mutation) in cases {
+        assert_mutates_and_restores(label, &base, mutation);
     }
 }
-
-//#region 🧪️MutationLaws
-/// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::os_spr::protocol_laws` — the bare `protocol::os_spr::protocol_laws` path is ambiguous crate-wide because `os_pack` also re-exports a `test context` module), exercised against the three most structurally
-/// distinct variants: the repurposed enum-typed slot (`change-annex`), a typical `f64` scalar
-/// (`change-t-op-c`), and a `String` scalar (`change-occupancy`).
-
-#[semio_framework_async_macros::async_test]
-async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
-    let base = Din16798Snapshot::default();
-    let mutation = Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = Din16798Mutation::ChangeOccupancy(change_occupancy::ChangeOccupancy { new_occupancy: "office".to_string() }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-#[semio_framework_async_macros::async_test]
-async fn change_t_op_c_satisfies_the_inverse_and_absorb_laws() {
-    let base = Din16798Snapshot::default();
-    let mutation = Din16798Mutation::ChangeTOpC(change_t_op_c::ChangeTOpC { new_t_op_c: 24.5 });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = Din16798Mutation::ChangeBedrooms(change_bedrooms::ChangeBedrooms { new_bedrooms: 4 }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-#[semio_framework_async_macros::async_test]
-async fn change_occupancy_satisfies_the_inverse_and_absorb_laws() {
-    let base = Din16798Snapshot::default();
-    let mutation = Din16798Mutation::ChangeOccupancy(change_occupancy::ChangeOccupancy { new_occupancy: "office".to_string() });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = Din16798Mutation::ChangeDuctClass(change_duct_class::ChangeDuctClass { new_duct_class: "B".to_string() }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-//#endregion 🧪️MutationLaws

@@ -1,12 +1,6 @@
-//! ↩️ `change-mu` inverse — restores the pre-change `mu` from BASE state; `change` is its own
-//! inverse partner (per `📓️taxonomy.md`).
-
-use crate::mutations::change_mu::ChangeMu;
+use super::ChangeMu;
 use crate::mutations::En1996Mutation;
 use crate::En1996Snapshot;
-
-//#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeMu, base: &En1996Snapshot) -> Vec<En1996Mutation> {
-    vec![En1996Mutation::ChangeMu(ChangeMu { new_mu: base.mu })]
+pub fn inverse(payload: &ChangeMu, base: &En1996Snapshot) -> Vec<En1996Mutation> {
+    if payload.index >= base.walls.len() { Vec::new() } else { vec![En1996Mutation::ChangeMu(ChangeMu { index: payload.index, new_mu: base.walls[payload.index].mu })] }
 }
-//#endregion 🔖️Inverse

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-section/schema.json",
+  "title": "InsertSection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "section"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "section": {
+      "type": "object"
+    }
+  }
+}

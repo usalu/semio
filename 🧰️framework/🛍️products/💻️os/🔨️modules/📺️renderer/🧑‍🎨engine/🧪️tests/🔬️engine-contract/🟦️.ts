@@ -47,7 +47,7 @@ import extensionEvaluateFaultFixture from "../../../../../../../../✏️s/🔌�
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import mountedGisMapProbeFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔬️mounted-gis-map-probe-v1/🔣️.json";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
-import Ajv, { type ValidateFunction } from "ajv";
+import { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020";
 import deepEqual from "fast-deep-equal";
 import viewport2dSchema from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
@@ -100,12 +100,13 @@ import { unresolvedActionArgs } from "@semio-tech/framework";
 import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "@semio-tech/framework";
 import choiceFixture from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧫️fixtures/🔽️choices/🔣️.json";
 import choiceSchema from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧬️schema/🔣️.json";
+import { semioSchemaAjvV1 } from "../../../../../🧪️tests/🧬️schema-oracle/🟦️.ts";
 
-const ownedExports = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(rendererSchema).addSchema(directorySchema);
+const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema).addSchema(directorySchema);
 /** 🧬️ Compiles one named export of the `os.renderer` schema module. */
 /** 🧬️ Compiles one named `$defs` export of a peer scope's `🧬️schema/` module. */
 const peerExport = (module: { $id: string }, exportId: string): ValidateFunction =>
-  new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(module)
+  semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(module)
     .getSchema(`${module.$id}#/$defs/${exportId}`) as ValidateFunction;
 const rendererExport = (exportId: string): ValidateFunction =>
   ownedExports.getSchema(`${rendererSchema.$id}#/$defs/${exportId}`) as ValidateFunction;
@@ -117,7 +118,7 @@ const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(impo
 
 describe("catalog-resolved artifact creation kinds", () => {
   it("matches the independent enum validator for unresolved required and host-resolved choices", () => {
-    const ajv = new Ajv({ strict: true });
+    const ajv = semioSchemaAjvV1({ strict: true });
     expect(ajv.compile(choiceSchema)(choiceFixture)).toBe(true);
     for (const row of choiceFixture.cases) {
       const def: ActionArgDef = { id: "kindChoice", label: "Kind", required: row.required, schema: { kind: "string", options: row.options.map(value => ({ value, label: value })), ...(row.format === "text" ? {} : { format: row.format === "artifactKind" ? { kind: "artifactKind", roles: ["editor"] } : { kind: "surfaceApp", roles: ["editor"], dialectArg: "dialect" } }) } };
@@ -1512,7 +1513,7 @@ describe("extension invocation completion ownership", () => {
 //#region 📇️DescriptorAdmission
 describe("descriptor load admission", () => {
   it("validates the language-neutral response cases with the JSON schema oracle", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(kernelFixtureSchema).compile({ $ref: `${kernelFixtureSchema.$id}#/$defs/DescriptorLoadFixture` });
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(kernelFixtureSchema).compile({ $ref: `${kernelFixtureSchema.$id}#/$defs/DescriptorLoadFixture` });
     expect(validate(descriptorLoadFixture)).toBe(true);
     expect(validate({ ...descriptorLoadFixture, pluginId: "" })).toBe(false);
   });
@@ -1549,7 +1550,7 @@ describe("descriptor load admission", () => {
 //#region 🎞️TutorialDocumentTrack
 describe("tutorial document wire contract", () => {
   it("keeps native document-track names and bidirectional event order", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/TutorialDocumentTrackFixture` });
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/TutorialDocumentTrackFixture` });
     expect(validate(tutorialDocumentFixture)).toBe(true);
     expect(validate({ ...tutorialDocumentFixture, artifact: [] })).toBe(false);
     const document = tutorialDocumentFixture.document.map(({ at, kind }) => ({ at, kind: { ...kind, kind: "load" as const } }));
@@ -1709,9 +1710,7 @@ describe("app-owned surface session factories", () => {
   });
 
   it("joins exact plugin and app ownership while keeping instance scopes distinct", () => {
-    const validate = new Ajv({ strict: true, allErrors: true })
-      .addKeyword({ keyword: "x-semio-state", schemaType: "string" })
-      .addKeyword({ keyword: "x-semio-formats", schemaType: "array" })
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true })
       .addFormat("double", true).addFormat("int64", true).addFormat("uint32", true)
       .addSchema(boardSessionSchema).compile({ $ref: `${boardSessionSchema.$id}#/$defs/Puzzle2dWasmSessionFactory` });
     expect(validate(boardSessionFixture)).toBe(true);
@@ -3134,8 +3133,8 @@ describe("shell store reducer", () => {
   });
 
   it("validates the language-neutral interaction recording vectors against the canonical schema", () => {
-    const ajv = new Ajv({ strict: true, allErrors: true });
-    ajv.addKeyword({ keyword: "x-semio-state", schemaType: "string" });
+    const ajv = semioSchemaAjvV1({ strict: true, allErrors: true });
+    ajv;
     ajv.addSchema(interactionSchema).addSchema(rendererSchema);
     const validate = ajv.getSchema(`${rendererSchema.$id}#/$defs/TutorialInteractionCaptureV1`)!;
     expect(validate(tutorialInteractionFixture), JSON.stringify(validate.errors)).toBe(true);
@@ -4075,7 +4074,7 @@ describe("framework plugin runtime", () => {
 
 describe("framework renderer types", () => {
   it("matches native action-semantics defaults without claiming migrated interactivity", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ActionSemanticsFixture` });
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ActionSemanticsFixture` });
     expect(validate(actionSemanticsFixture), JSON.stringify(validate.errors)).toBe(true);
     const actual = (["mutation", "view", "interaction", "history", "clipboard", "shell"] as const).map((kind) => ({ kind, semantics: actionSemanticsForKind(kind) }));
     expect(actual).toEqual(actionSemanticsFixture);
@@ -4408,7 +4407,7 @@ describe("declarative forms parity", () => {
     // 🧬️ One owner for this fixture: `framework.ui.contract`'s `ContractFixture` export (ticket
     // 26/09/08 `📋️cross-partition-requests.md` row 145). `framework.ui` no longer restates it as
     // `PresenceOverlayFixture`; this consumer compiles the owning scope's export by its `$id`.
-    const validate = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(uiContractSchema).compile({ $ref: `${uiContractSchema.$id}#/$defs/ContractFixture` });
+    const validate = semioSchemaAjvV1({ strict: true }).addSchema(uiContractSchema).compile({ $ref: `${uiContractSchema.$id}#/$defs/ContractFixture` });
     expect(validate(presenceOverlayFixture)).toBe(true);
     expect(validate({ cases: presenceOverlayFixture.cases.map((row) => ({ ...row, update: { ...row.update, selectionJson: "{}" } })) })).toBe(false);
     for (const update of [{ ...presenceOverlayFixture.cases[0]!.update, ttlMs: -1 }, { ...presenceOverlayFixture.cases[0]!.update, own: { selected: "true" } }]) {
@@ -9837,7 +9836,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   // `manifest::examples_for_dialect` answers the SAME rows in
   // `🛂️manifest/🧪️tests/🔬️example-picker/🦀️.rs` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
   it("resolves the example picker by dialect, so an editor and its viewer offer exactly the same examples", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ExamplePickerFixture` });
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(manifestFixtureSchema).compile({ $ref: `${manifestFixtureSchema.$id}#/$defs/ExamplePickerFixture` });
     expect(validate(examplePickerFixture), JSON.stringify(validate.errors)).toBe(true);
     for (const useCase of examplePickerFixture.cases) {
       expect(surfaceAppId(useCase.app.dialect, useCase.app.role as AppRole), useCase.name).toBe(useCase.app.id);
@@ -12353,7 +12352,7 @@ describe("🔌️ operator port sides", () => {
  * `resolveBootQueryExampleId`, the parser both entries spell the query with.
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
 describe("📚️ boot example contract", () => {
-  const ajv = new Ajv({ allErrors: true, strict: false });
+  const ajv = semioSchemaAjvV1({ allErrors: true, strict: false });
   const validate = ajv.compile({
     type: "object",
     required: ["note", "bootQueryParam", "rows", "bootQuery"],
@@ -12416,7 +12415,7 @@ describe("📚️ boot example contract", () => {
  * renderer can drift into offering a cancel the producer never authorised.
  * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
 describe("🛑️ world3d cancel contract", () => {
-  const ajv = new Ajv({ allErrors: true, strict: false });
+  const ajv = semioSchemaAjvV1({ allErrors: true, strict: false });
   const validate = ajv.compile({
     type: "object",
     required: ["note", "cancelContract", "surfaceControls", "controlHeightPx", "surfaceControlMinimum"],
@@ -12481,7 +12480,7 @@ describe("🛑️ world3d cancel contract", () => {
  * `📓️react-oracle-hardening-2026-09-14.md` §4.3: the `top-right` Tool runs panel at (1137, 3) 300×120
  * swallowing `Frame visible` and the preview `Cancel`. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END. */
 describe("🛟️ chrome panel safe area", () => {
-  const ajv = new Ajv({ allErrors: true, strict: false });
+  const ajv = semioSchemaAjvV1({ allErrors: true, strict: false });
   const validate = ajv.compile({
     type: "object",
     required: ["chromePanelSafeAreaNote", "chromePanelSafeArea"],
@@ -12846,7 +12845,7 @@ describe("🎫️ the shell says what it holds", () => {
   });
 
   it("the shared World3d lighting fixture builds React's actual light and standard-material values", async () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
       .getSchema(`${uiRenderSchema.$id}#/$defs/World3dLightingFixture`);
     expect(validate?.(world3dLightingFixture), JSON.stringify(validate?.errors)).toBe(true);
 
@@ -12921,7 +12920,7 @@ describe("🎫️ the shell says what it holds", () => {
 
   it("the shared scene-list transfer fixture matches React data transfer and dnd-kit geometry", async () => {
     const fixture = sceneListTransferFixture;
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
       .getSchema(`${uiRenderSchema.$id}#/$defs/SceneListTransferFixture`);
     expect(validate?.(fixture), JSON.stringify(validate?.errors)).toBe(true);
     await uiI18n.changeLanguage("en");
@@ -13030,7 +13029,7 @@ describe("🎫️ the shell says what it holds", () => {
   });
 
   it("the shared shadow fixture matches Three's directional camera and IconRender caster contract", async () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
       .getSchema(`${uiRenderSchema.$id}#/$defs/World3dShadowFixture`);
     expect(validate?.(world3dShadowFixture), JSON.stringify(validate?.errors)).toBe(true);
 
@@ -13057,7 +13056,7 @@ describe("🎫️ the shell says what it holds", () => {
 
   it("the neutral exact-shadow corpus matches React roles and current Three PCF", () => {
     const fixture = world3dShadowParityFixture;
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
       .getSchema(`${uiRenderSchema.$id}#/$defs/World3dShadowParityFixture`);
     expect(validate?.(fixture), JSON.stringify(validate?.errors)).toBe(true);
     const worldSun = new THREE.DirectionalLight();

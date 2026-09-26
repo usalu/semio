@@ -10,7 +10,7 @@
 //!
 //! Thirty-two document-root scalars, one `change-<field>` each, spanning the whole of Eurocode
 //! 1: loaded area and imposed-load category, national annex, self-weight (material and layer
-//! thickness, plus an assumed characteristic value), fire (curve, required resistance, member
+//! thickness, plus an assumed characteristic value), thermal / bridge / crane / silo (assumed loads,
 //! capacity), snow (zone, altitude, characteristic load), wind (zone, basic speed), thermal
 //! delta T, construction activity, accidental impact (vehicle mass and speed), bridge traffic
 //! (notional lanes, span, lane width, moment resistance), crane and hoist classes with hoisting
@@ -95,10 +95,10 @@ const KINDS: &[&str] = &[
 
 /// 🗣️ The real committed EN 1991 document, read where the domain already keeps it.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🔥️retail-hydrocarbon-fire/🔥️retail-hydrocarbon-fire/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio";
 /// 🎒️ The same document in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const PACK_ASSET: &str = "asset://🔥️retail-hydrocarbon-fire/🎒️.pack.semio";
+const PACK_ASSET: &str = "asset://🏢de-office-compliant/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures

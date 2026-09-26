@@ -1,0 +1,9 @@
+semio norm.en1995.dsl v1
+annex=de
+members [id:TEXT label-en:TEXT label-de:TEXT role:ENUM strength-class:TEXT service-class:UINT support:ENUM b-m:QTY h-m:QTY span-m:QTY support-length-m:QTY bearing-length-m:QTY buckling-length-y-m:QTY buckling-length-z-m:QTY lateral-restraint-spacing-m:QTY notch-depth-m:QTY notch-distance-m:QTY m-crit-nm:NUM mass-kg-per-m:NUM mass-kg-per-m2:NUM damping-xi:NUM fire-duration-s:QTY bridge-n-obs:NUM bridge-t-l-years:NUM bridge-beta:NUM bridge-a:NUM bridge-b:NUM bridge-crowd-per-m2:NUM actions:TABLE] {
+  beam-B2 "Overloaded beam B2" "Überlasteter Träger B2" beam C24 1 simply-supported 0.12m 0.24m 5m 0.08m 0.08m 5m 5m 2.5m 0.04m 0.1m 25000 0 0 0.01 3600s 0 0 0 0 0 0 [ {id=g kind=permanent category="" load-duration=permanent q-line-n-per-m=4000 f-point-n=0N m-k-nm=0 v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} {id=q kind=imposed category=C load-duration=medium q-line-n-per-m=8000 f-point-n=5000N m-k-nm=0 v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} ]
+  col-C1 "Slender column C1" "Schlanker Stützpfosten C1" column C24 2 simply-supported 0.1m 0.1m 3m 0.1m 0.1m 3m 3m 3m 0m 0m 50000 0 0 0.01 0s 0 0 0 0 0 0 [ {id=g kind=permanent category="" load-duration=medium q-line-n-per-m=0 f-point-n=80000N m-k-nm=0 v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} ]
+}
+connections [id:TEXT label-en:TEXT label-de:TEXT fastener-type:TEXT strength-class:TEXT service-class:UINT diameter-m:QTY number:UINT rows:UINT spacing-m:QTY edge-distance-m:QTY end-distance-m:QTY t1-m:QTY t2-m:QTY steel-plate:BOOL steel-plate-thickness-m:QTY shear-planes:UINT f-u-k:QTY actions:TABLE] {
+  conn-C2 "Underdesigned nail group" "Unterbemessene Nagelgruppe" nail C24 1 0.0031m 4 1 0.012m 0.01m 0.03m 0.04m 0.04m false 0m 1 600000000Pa [ {id=q kind=imposed load-duration=medium f-k-n=8000N} ]
+}

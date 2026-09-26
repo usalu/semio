@@ -169,6 +169,7 @@ async fn every_declared_body_key_renders() {
 async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, En1991Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1991Snapshot::default() })).await;
+    context::dispatch(&mut app, En1991Command::Evaluate(evaluate::Evaluate {})).await;
     let host = NormHost::<En1991Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
     context::close(&mut app);
@@ -223,8 +224,9 @@ async fn report_out_exports_the_computed_check_report() {
     let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
-    assert!(!report.checks.is_empty());
+    let value: serde_json::Value = serde_json::from_str(&json).expect("report json parses");
+    let checks = value.get("checks").and_then(|c| c.as_array()).expect("checks array");
+    assert!(!checks.is_empty());
     context::close(&mut app);
 }
 //#endregion ðï¸Behavior

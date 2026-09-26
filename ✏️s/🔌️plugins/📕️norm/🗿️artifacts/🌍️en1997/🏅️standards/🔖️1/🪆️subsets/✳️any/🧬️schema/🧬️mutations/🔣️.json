@@ -1,73 +1,39 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutations.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "En1997Mutation",
-  "oneOf": [
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-alpha-s/schema.json"
+  "type": "object",
+  "required": [
+    "kind"
+  ],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "change-annex",
+        "change-geotechnical-category",
+        "change-design-situation",
+        "change-design-approach",
+        "change-groundwater-level",
+        "change-investigation-depth",
+        "change-footing-width",
+        "change-footing-embedment",
+        "change-pile-length",
+        "change-pile-count",
+        "change-wall-base-width",
+        "change-slope-angle",
+        "change-layer-phi-prime",
+        "change-layer-oedometric-modulus",
+        "insert-layer",
+        "remove-layer",
+        "insert-footing",
+        "remove-footing",
+        "insert-pile",
+        "remove-pile"
+      ]
     },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-annex/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-bm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-c-kpa/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-design-approach/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-dfm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-es-mpa/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-footing-area-m2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-gamma-kn-m3/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-h-ed-kn/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-n-pile-ed-kn/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-nu/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-phi-deg/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-base-area-m2/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-dm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-lm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-n-profiles/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-qb-kpa/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-qs-kpa/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-settlement-limit-mm/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-v-ed-kn/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-z-investigated-m/schema.json"
+    "payload": {
+      "type": "object"
     }
-  ]
+  },
+  "additionalProperties": true
 }

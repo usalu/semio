@@ -1,0 +1,204 @@
+{
+  "annex": "en",
+  "materials": [
+    {
+      "id": "mat-s460",
+      "grade": "S460",
+      "fy": 460000000.0,
+      "fu": 550000000.0,
+      "eModulus": 210000000000.0,
+      "gModulus": 81000000000.0,
+      "subgrade": "K2",
+      "kind": "carbon"
+    }
+  ],
+  "sections": [
+    {
+      "id": "sec-heb260",
+      "designation": "HEB 260",
+      "kind": "rolledI",
+      "h": 0.26,
+      "b": 0.26,
+      "tw": 0.01,
+      "tf": 0.0175,
+      "r": 0.024,
+      "area": 0.0118,
+      "shearAreaY": 0.00589,
+      "shearAreaZ": 0.00276,
+      "iy": 0.0001492,
+      "iz": 5.135e-05,
+      "it": 8.53e-07,
+      "iw": 7.45e-06,
+      "wElY": 0.001149,
+      "wElZ": 0.000395,
+      "wPlY": 0.001288,
+      "wPlZ": 0.000602,
+      "areaNet": 0.0106
+    }
+  ],
+  "members": [
+    {
+      "id": "member-b1",
+      "label": "HSS beam-column B1",
+      "memberType": "beamColumn",
+      "sectionId": "sec-heb260",
+      "materialId": "mat-s460",
+      "length": 6,
+      "bucklingLengthY": 12,
+      "bucklingLengthZ": 12,
+      "ltbLength": 12,
+      "ltbRestraintSpacing": 12,
+      "loadApplication": "shearCenter",
+      "endMomentRatioPsi": -1,
+      "momentDiagram": "linear",
+      "deflectionLimitRatio": 300,
+      "analysis": "elastic"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "g-permanent",
+      "name": "Permanent G",
+      "kind": "permanent",
+      "category": "self"
+    },
+    {
+      "id": "q-imposed",
+      "name": "Imposed Q",
+      "kind": "imposed",
+      "category": "office"
+    }
+  ],
+  "memberActions": [
+    {
+      "id": "act-b1-g",
+      "memberId": "member-b1",
+      "loadCaseId": "g-permanent",
+      "action": {
+        "n": 2100000,
+        "vy": 0,
+        "vz": 296000,
+        "my": 333000,
+        "mz": 0,
+        "t": 0
+      }
+    },
+    {
+      "id": "act-b1-q",
+      "memberId": "member-b1",
+      "loadCaseId": "q-imposed",
+      "action": {
+        "n": 0,
+        "vy": 0,
+        "vz": 0,
+        "my": 0,
+        "mz": 0,
+        "t": 0
+      }
+    }
+  ],
+  "joints": [
+    {
+      "id": "joint-j1",
+      "kind": "bolted",
+      "memberId": "member-b1",
+      "boltClass": "10.9",
+      "boltDiameter": 0.024,
+      "boltRows": 2,
+      "boltsPerRow": 2,
+      "pitch": 0.07,
+      "endDistance": 0.03,
+      "edgeDistance": 0.04,
+      "shearPlanes": 1,
+      "plateThickness": 0.012,
+      "plateFu": 550000000.0,
+      "weldThroat": 0,
+      "weldLength": 0,
+      "weldFu": 550000000.0,
+      "weldGrade": "S460",
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0,
+      "slipFactorKs": 1,
+      "frictionSurfaces": 1,
+      "gauge": 0.07,
+      "actions": [
+        {
+          "id": "jf-1",
+          "loadCaseId": "g-permanent",
+          "shear": 213333,
+          "tension": 0
+        }
+      ]
+    },
+    {
+      "id": "joint-w1",
+      "kind": "welded",
+      "memberId": "member-b1",
+      "boltClass": "",
+      "boltDiameter": 0,
+      "boltRows": 0,
+      "boltsPerRow": 0,
+      "pitch": 0,
+      "endDistance": 0,
+      "edgeDistance": 0,
+      "shearPlanes": 0,
+      "plateThickness": 0,
+      "plateFu": 0,
+      "weldThroat": 0.003,
+      "weldLength": 0.08,
+      "weldFu": 550000000.0,
+      "weldGrade": "S460",
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0,
+      "slipFactorKs": 1,
+      "frictionSurfaces": 1,
+      "gauge": 0,
+      "actions": [
+        {
+          "id": "jf-1",
+          "loadCaseId": "g-permanent",
+          "shear": 100000,
+          "tension": 0
+        }
+      ]
+    }
+  ],
+  "fatigueDetails": [
+    {
+      "id": "fat-1",
+      "memberId": "member-b1",
+      "category": 90,
+      "method": "safe_life",
+      "spectrum": [
+        {
+          "id": "fb-1",
+          "deltaSigma": 95000000.0,
+          "cycles": 2000000.0
+        }
+      ]
+    }
+  ],
+  "fireExposures": [
+    {
+      "id": "fire-1",
+      "memberId": "member-b1",
+      "rating": "r30",
+      "protectionThickness": 0.008,
+      "sectionFactor": 180,
+      "mu0": 0.75,
+      "protectionConductivity": 0.2,
+      "protectionDensity": 800,
+      "protectionSpecificHeat": 1700
+    }
+  ],
+  "coldFormedMembers": [],
+  "platedPanels": [],
+  "siloShells": [],
+  "tensionComponents": [],
+  "bridgeFatigue": [],
+  "towerLegs": [],
+  "piles": [],
+  "craneRunways": []
+}

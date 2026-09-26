@@ -125,7 +125,7 @@
       "type": "object",
       "required": ["name", "inputSchema"],
       "properties": {
-        "name": { "type": "string", "enum": ["ticket_open", "ticket_close", "ticket_reopen", "section_move", "file_integrate", "section_extract", "goal_open", "goal_close", "goal_reopen"] },
+        "name": { "type": "string", "enum": ["ticket_open", "ticket_close", "ticket_reopen", "goal_open", "goal_close", "goal_reopen"] },
         "title": { "type": "string" },
         "description": { "type": "string" },
         "inputSchema": { "type": "object" }

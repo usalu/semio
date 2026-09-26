@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-plate-thickness/schema.json",
+  "title": "ChangePlateThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sectionId",
+    "elementId",
+    "newThickness"
+  ],
+  "properties": {
+    "sectionId": {
+      "type": "string"
+    },
+    "elementId": {
+      "type": "string"
+    },
+    "newThickness": {
+      "type": "number"
+    }
+  }
+}

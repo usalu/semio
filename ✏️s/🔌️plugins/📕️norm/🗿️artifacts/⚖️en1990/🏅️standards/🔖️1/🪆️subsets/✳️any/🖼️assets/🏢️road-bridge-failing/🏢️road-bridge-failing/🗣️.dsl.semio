@@ -1,0 +1,26 @@
+semio norm.en1990.dsl v1
+annex=de project-id=road-bridge-failing structure-kind=rail_bridge altitude-m=200 consequence-class=2 reliability-class=2 design-working-life-category=5 design-working-life-years=100 reference-period-years=100 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8
+permanents [id:TEXT kind:TEXT gk:NUM] {
+  G-sup g_sup 200000
+  G-inf g_inf 40000
+}
+variables [id:TEXT category:TEXT qk:NUM] {
+  Q-traffic rail_traffic 150000
+  Q-wind wind 30000
+}
+accidentals [id:TEXT ad:NUM] {
+}
+seismics [id:TEXT a-ek:NUM importance-class:TEXT] {
+}
+members [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {
+  deck-D1 "Main deck D1" "Hauptfahrbahn D1" 200000 200000 180000 150000 0 40 0.12 500 2 3
+}
+bridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {
+  sls-D1 deck-D1 0.8 0.5 0.002 0.001 0.12 0.05
+}
+effects [member-id:TEXT action-id:TEXT influence:NUM] {
+  deck-D1 G-sup 1
+  deck-D1 G-inf 1
+  deck-D1 Q-traffic 1
+  deck-D1 Q-wind 1
+}

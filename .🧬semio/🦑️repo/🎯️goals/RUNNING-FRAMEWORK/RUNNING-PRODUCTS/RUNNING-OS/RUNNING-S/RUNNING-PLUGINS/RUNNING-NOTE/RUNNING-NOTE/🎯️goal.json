@@ -1,0 +1,15 @@
+{
+  "title": "Running Note",
+  "description": "The note engine and surface run inside Note.",
+  "prompt": "The note engine and surface run inside Note.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningnote",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2681"
+  }
+}

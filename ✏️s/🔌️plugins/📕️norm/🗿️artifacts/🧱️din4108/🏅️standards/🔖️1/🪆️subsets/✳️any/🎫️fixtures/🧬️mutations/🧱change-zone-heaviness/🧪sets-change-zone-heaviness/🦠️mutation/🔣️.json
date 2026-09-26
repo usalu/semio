@@ -1,0 +1,6 @@
+{
+  "ChangeZoneHeaviness": {
+    "zone_id": "zone-living",
+    "new_heaviness": "light"
+  }
+}

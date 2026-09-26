@@ -4,7 +4,7 @@
   "status": "open",
   "description": "Create semio-tech at the root with play inside: the extended, general version of the mit-bestand demonstrator, showing every app of the playground registry in its grid, with English native terminology instead of German reuse terminology, running end to end. Follow-up (dev): \"Finish all plugins\" — close every open plugin follow-up and get every plugin's test suite green, re-verified by the play acceptance suite.",
   "summary": "Created 🏢️semio-tech/🎡️play: a general, English/native-terminology version of the mit-bestand demonstrator with all 58 playground apps in one live grid (26-lane activation union, schema-first catalog, dev/build/e2e targets). Acceptance 59/59; static release build verified. Fixed app boot defects in cad, shooting, procedural 2D, process3d, architect, writer, animate, raster, flow, block2d/5d, puzzle5d, gis3d; example pickers gated on declared setActiveExample. Details: 📓️status.md, 📓️app-boot-defects.md.",
-  "goal": "🎯️r2602/🎯️runningsketchpad/🎯️runningsketchpadapps",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [],
   "note": "Ticket bookkeeping manual on disk: repo MCP ticket_open and ticket_close returned 'invalid tool params' on 2026-09-19."
 }

@@ -5,133 +5,160 @@ schema norm.din16798.mutations
 start record
 framing record
 
-# Real op frame (`dsl::variants_binary::encode_tagged_op`): `format u8` (`OP_BINARY_FORMAT`) then `tag varint`,
-# then the kind's framework record body (`os_pack::encode_record_body`). Each record is one mutation kind at its
-# wire tag; this file is the only source of those tags, which the codec looks up by the kind's keyword.
+# Real Din16798Mutation op frame: format u8 then tag u8, then JSON-per-field payload.
 header fixed 2
 field format u8
-field tag varint
+field tag u8
 record change-annex tag=0
-field payload bytes
-record change-occupancy tag=1
-field payload bytes
-record change-comfort-category tag=2
-field payload bytes
-record change-t-op-c tag=3
-field payload bytes
-record change-rh-percent tag=4
-field payload bytes
-record change-air-speed-ms tag=5
-field payload bytes
-record change-theta-rm-c tag=6
-field payload bytes
-record change-co2-ppm tag=7
-field payload bytes
-record change-df-percent tag=8
-field payload bytes
-record change-l-aeq-db tag=9
-field payload bytes
-record change-persons tag=10
-field payload bytes
-record change-ida-class tag=11
-field payload bytes
-record change-ventilation-m3-h tag=12
-field payload bytes
-record change-floor-area-m2 tag=13
-field payload bytes
-record change-bedrooms tag=14
-field payload bytes
-record change-dwelling-ventilation-m3-h tag=15
-field payload bytes
-record change-occupants tag=16
-field payload bytes
-record change-residential-ventilation-m3-h tag=17
-field payload bytes
-record change-sfp-wm3-s tag=18
-field payload bytes
-record change-sfp-required-class tag=19
-field payload bytes
-record change-heat-recovery-eta tag=20
-field payload bytes
-record change-heat-recovery-eta-min tag=21
-field payload bytes
-record change-system-type tag=22
-field payload bytes
-record change-years-since-inspection tag=23
-field payload bytes
-record change-humidification-required-kg-h tag=24
-field payload bytes
-record change-humidification-provided-kg-h tag=25
-field payload bytes
-record change-fan-qvm3-s tag=26
-field payload bytes
-record change-fan-t-run-h tag=27
-field payload bytes
-record change-fan-energy-reference-kwh tag=28
-field payload bytes
-record change-night-setback-k tag=29
-field payload bytes
-record change-hr-m-dot-kg-s tag=30
-field payload bytes
-record change-hr-cp-j-kgk tag=31
-field payload bytes
-record change-hr-delta-tc tag=32
-field payload bytes
-record change-hr-th tag=33
-field payload bytes
-record change-hr-savings-reference-kwh tag=34
-field payload bytes
-record change-n50-h-inv tag=35
-field payload bytes
-record change-volume-m3 tag=36
-field payload bytes
-record change-infiltration-allowance-m3-h tag=37
-field payload bytes
-record change-cellar-area-m2 tag=38
-field payload bytes
-record change-cellar-ventilation-m3-h tag=39
-field payload bytes
-record change-h-tr-wk tag=40
-field payload bytes
-record change-h-ve-wk tag=41
-field payload bytes
-record change-theta-ec tag=42
-field payload bytes
-record change-theta-set-c tag=43
-field payload bytes
-record change-cooling-delta-th tag=44
-field payload bytes
-record change-cooling-gains-kwh tag=45
-field payload bytes
-record change-cooling-utilization-factor tag=46
-field payload bytes
-record change-cooling-reference-kwh tag=47
-field payload bytes
-record change-chiller-type tag=48
-field payload bytes
-record change-eer-actual tag=49
-field payload bytes
-record change-qc-kwh tag=50
-field payload bytes
-record change-generation-reference-kwh tag=51
-field payload bytes
-record change-data-center-supply-c tag=52
-field payload bytes
-record change-h-st-wk tag=53
-field payload bytes
-record change-theta-st-c tag=54
-field payload bytes
-record change-theta-amb-c tag=55
-field payload bytes
-record change-storage-th tag=56
-field payload bytes
-record change-storage-allowance-kwh tag=57
-field payload bytes
-record change-dhw-delivery-c tag=58
-field payload bytes
-record change-duct-class tag=59
-field payload bytes
-record change-duct-test-pressure-pa tag=60
-field payload bytes
-record change-duct-leakage-m3-sm2 tag=61
-field payload bytes
+field new-annex
+
+record change-theta-rm tag=1
+field new-theta-rm-c
+
+record change-outdoor-co2 tag=2
+field new-outdoor-co2-ppm
+
+record change-envelope-n50 tag=3
+field new-envelope-n50-h-inv
+
+record change-envelope-volume tag=4
+field new-envelope-volume-m3
+
+record change-cellar-area tag=5
+field new-cellar-area-m2
+
+record change-cellar-ventilation tag=6
+field new-cellar-ventilation-m3-h
+
+record change-night-setback tag=7
+field new-night-setback-k
+
+record insert-zone tag=8
+field index
+field zone
+
+record remove-zone tag=9
+field zone-id
+
+record change-zone-usage-type tag=10
+field zone-id
+field new-usage-type
+
+record change-zone-floor-area tag=11
+field zone-id
+field new-floor-area-m2
+
+record change-zone-occupants tag=12
+field zone-id
+field new-occupants
+
+record change-zone-comfort-category tag=13
+field zone-id
+field new-comfort-category
+
+record change-zone-pollution-class tag=14
+field zone-id
+field new-pollution-class
+
+record change-zone-comfort-model tag=15
+field zone-id
+field new-comfort-model
+
+record change-zone-t-op-winter tag=16
+field zone-id
+field new-t-op-winter-c
+
+record change-zone-t-op-summer tag=17
+field zone-id
+field new-t-op-summer-c
+
+record change-zone-air-speed tag=18
+field zone-id
+field new-air-speed-m-s
+
+record change-zone-clothing tag=19
+field zone-id
+field new-clothing-clo
+
+record change-zone-metabolic-rate tag=20
+field zone-id
+field new-metabolic-rate-met
+
+record change-zone-rh tag=21
+field zone-id
+field new-rh-percent
+
+record change-zone-outdoor-air tag=22
+field zone-id
+field new-outdoor-air-supplied-m3-h
+
+record change-zone-co2 tag=23
+field zone-id
+field new-co2-ppm
+
+record change-zone-illuminance tag=24
+field zone-id
+field new-illuminance-lx
+
+record change-zone-noise tag=25
+field zone-id
+field new-noise-db
+
+record change-zone-vent-system-id tag=26
+field zone-id
+field new-vent-system-id
+
+record insert-vent-system tag=27
+field index
+field vent
+
+record remove-vent-system tag=28
+field vent-id
+
+record change-vent-system-type tag=29
+field vent-id
+field new-system-type
+
+record change-vent-sfp tag=30
+field vent-id
+field new-sfp-w-m3-s
+
+record change-vent-sfp-class tag=31
+field vent-id
+field new-sfp-required-class
+
+record change-vent-heat-recovery tag=32
+field vent-id
+field new-heat-recovery-eta
+
+record change-vent-oda-class tag=33
+field vent-id
+field new-oda-class
+
+record change-vent-filter-sup tag=34
+field vent-id
+field new-filter-sup-class
+
+record change-vent-inspection tag=35
+field vent-id
+field new-years-since-inspection
+
+record change-vent-duct-class tag=36
+field vent-id
+field new-duct-class
+
+record change-vent-duct-leakage tag=37
+field vent-id
+field new-duct-leakage-m3-s-m2
+
+record change-zone-turbulence tag=38
+field zone-id
+field new-turbulence-intensity-percent
+
+record change-zone-vent-method tag=39
+field zone-id
+field new-vent-method
+
+record change-vent-design-airflow tag=40
+field vent-id
+field new-design-airflow-m3-h

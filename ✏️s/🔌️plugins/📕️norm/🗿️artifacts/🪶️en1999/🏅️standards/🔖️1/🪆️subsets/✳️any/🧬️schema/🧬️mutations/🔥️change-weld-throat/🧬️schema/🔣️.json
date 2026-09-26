@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-weld-throat/schema.json",
+  "title": "ChangeWeldThroat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "connectionId",
+    "newThroat"
+  ],
+  "properties": {
+    "connectionId": {
+      "type": "string"
+    },
+    "newThroat": {
+      "type": "number"
+    }
+  }
+}

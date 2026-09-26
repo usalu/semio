@@ -8,38 +8,60 @@ use crate::En1991Snapshot;
 
 //#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[
-    "area_m2",
-    "category",
     "annex",
-    "self_weight_material",
-    "self_weight_thickness_m",
-    "assumed_g_k_kn_m2",
-    "fire_curve",
-    "fire_resistance_min",
-    "fire_member_capacity_c",
     "snow_zone",
-    "snow_altitude_m",
-    "en_s_k_kn_m2",
+    "altitude",
+    "en_sk",
+    "exceptional_snow_north_german_lowlands",
     "wind_zone",
-    "en_v_b_m_s",
-    "delta_t_k",
+    "en_vb",
+    "terrain_category",
+    "mixed_terrain_upwind",
+    "mixed_terrain_distance",
+    "orography_factor",
+    "coast_or_island",
+    "air_density",
+    "height",
+    "width",
+    "depth",
+    "assumed_delta_t",
+    "t_max",
+    "t_min",
+    "t_0",
+    "thermal_element_type",
+    "storey_count",
+    "fire_mode",
     "construction_activity",
-    "accidental_mass_t",
-    "accidental_speed_km_h",
+    "assumed_construction_qk",
+    "structure_kind",
     "bridge_lane",
-    "bridge_span_m",
-    "bridge_lane_width_m",
-    "bridge_moment_resistance_knm",
+    "bridge_span",
+    "bridge_lane_width",
+    "assumed_bridge_tandem",
+    "assumed_bridge_footway",
+    "assumed_bridge_lm2",
+    "assumed_bridge_udl",
+    "crane_claimed",
     "crane_class",
     "hoist_class",
-    "hoisting_speed_m_s",
-    "silo_bulk_density_kn_m3",
-    "silo_height_m",
-    "silo_hydraulic_radius_m",
+    "hoisting_speed",
+    "assumed_crane_wheel",
+    "assumed_crane_horizontal",
+    "silo_claimed",
+    "silo_kind",
+    "silo_bulk_density",
+    "silo_height",
+    "silo_hydraulic_radius",
     "silo_mu",
     "silo_k",
-    "c_s",
-    "c_d",
+    "assumed_silo_pressure",
+    "assumed_silo_patch",
+    "assumed_silo_wall_friction",
+    "floors",
+    "self_weight_elements",
+    "roofs",
+    "wind_faces",
+    "accidental_cases",
 ];
 
 /// 🧾️ `En1991` document outline.
@@ -54,10 +76,14 @@ pub struct En1991Outline {
 }
 
 impl En1991Outline {
-    pub fn compute(_snapshot: &En1991Snapshot) -> Self {
+    pub fn compute(snapshot: &En1991Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
-        let entry_count = 0;
+        let entry_count = (snapshot.floors.len()
+            + snapshot.roofs.len()
+            + snapshot.wind_faces.len()
+            + snapshot.self_weight_elements.len()
+            + snapshot.accidental_cases.len()) as u32;
         Self { section_outline, field_count, entry_count }
     }
 }

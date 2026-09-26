@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sections/schema.json",
+  "title": "ChangeSections",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sections"
+  ],
+  "properties": {
+    "sections": {}
+  },
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-sections",
+  "semanticKind": "change-sections",
+  "emoji": "📐️",
+  "aggregateVariant": "ChangeSections",
+  "displayName": "Change Sections"
+}

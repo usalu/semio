@@ -12,7 +12,8 @@
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied",
-    "no-op"
+    "no-op",
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

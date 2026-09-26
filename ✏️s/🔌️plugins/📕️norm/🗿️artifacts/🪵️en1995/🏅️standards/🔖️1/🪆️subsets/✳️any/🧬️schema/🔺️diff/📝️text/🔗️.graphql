@@ -1,3 +1,7 @@
-# norm.en1995.diff text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+# 🧬️ EN 1995 sparse diff GraphQL mirror
+type En1995Diff {
+  artifact: JSON @state(class: ARTIFACT)
+  annex: String @state(class: ARTIFACT)
+  members: JSON @state(class: ARTIFACT)
+  connections: JSON @state(class: ARTIFACT)
+}

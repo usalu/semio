@@ -8,7 +8,7 @@
   },
   "llm": "opus-4-7",
   "client": "cursor-chat",
-  "goal": "🎯️r2602🎯️runningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [],
   "summary": "Added a global TextSelectionContextMenuHost so right-clicking a DOM text selection opens Cut/Copy/Paste/Select all with platform shortcuts (⌘️C / Ctrl+C). Mounted in the OS shell and Storybook surface host. Native menus stay suppressed. Also fixed ui-styling/ui-react package exports to local paths so vitest resolves workspace packages. ContextMenu vitest: 16 passed."
 }

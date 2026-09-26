@@ -25,11 +25,11 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)`
   path below is a declared `asset://` fixture, so neither side holds a transcription that could
   drift. This vocabulary is split three ways and no sibling subset is:
-  `create`/`delete`/`rename-product` and `replace-product-configuration` work an id-keyed catalogue;
-  `create`/`delete-geometry`, `resize-geometry`, `replace-geometry-parameters` and
-  `add`/`remove-geometry-connection` work a per-product geometry graph; `create`/`delete-curve` and
-  `replace-curve-points` work ordered point lists. Only `change-strict-mode`,
-  `change-correction-as-of`, `change-edition-profile` and `update-limits` are flat scalars. A second
+  `create`/`delete`/`rename-product` and `change-product-configuration` work an id-keyed catalogue;
+  `create`/`remove-geometry`, `resize-geometry`, `change-geometry-parameters` and
+  `add`/`remove-geometry-connection` work a per-product geometry graph; `create`/`remove-curve` and
+  `change-curve-points` work ordered point lists. Only `change-strict-mode`,
+  `change-correction-as-of`, `change-edition-profile` and `change-limits` are flat scalars. A second
   implementation therefore has to reproduce three different addressing conventions here, not one.
   Each side then asserts the same three laws in role — the applied document must BE the committed
   after-snapshot; an `applied` vector must move the document and a `rejected` one must leave it
@@ -90,25 +90,25 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id                            | dir                            | fixture                                                  |
-      | update-manufacturer-file      | 🏭️update-manufacturer-file     | ✏️renames-the-header-manufacturer-to-acme                  |
+      | change-manufacturer-file      | 🏭️change-manufacturer-file     | ✏️renames-the-header-manufacturer-to-acme                  |
       | change-correction-as-of       | 📅️change-correction-as-of      | 📅️advances-the-correction-cut-off-to-2025-03               |
       | change-strict-mode            | 🔒️change-strict-mode            | 🔒️turns-strict-mode-on                                     |
-      | update-limits                 | 🚧️update-limits                 | 🛡️tightens-every-untrusted-input-limit                     |
+      | change-limits                 | 🚧️change-limits                 | 🛡️tightens-every-untrusted-input-limit                     |
       | change-edition-profile        | 🔖️change-edition-profile        | 🆕️switches-sheet-8-from-legacy-to-current                  |
       | remove-edition-profile        | 🧹️remove-edition-profile       | 🧹️clears-the-sheet-8-legacy-override                       |
-      | create-product                | 📦️create-product                | 📦️appends-vlv-80-002-and-its-index-entry                   |
-      | delete-product                | 🗑️delete-product                | 🚫️removes-vlv-50-001-and-its-index-entry                   |
+      | add-product                | 📦️add-product                | 📦️appends-vlv-80-002-and-its-index-entry                   |
+      | remove-product                | 🗑️remove-product                | 🚫️removes-vlv-50-001-and-its-index-entry                   |
       | rename-product                | 🏷️rename-product               | 🏷️retitles-vlv-50-001-and-resyncs-its-index-tags           |
-      | replace-product-configuration | 🎛️replace-product-configuration | 📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn |
-      | create-geometry               | 🧊️create-geometry               | 🧊️adds-the-geom-valve-80-definition                        |
-      | delete-geometry               | 🚮️delete-geometry               | 🚫️removes-the-geom-valve-50-definition                     |
+      | change-product-configuration | 🎛️change-product-configuration | 📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn |
+      | add-geometry               | 🧊️add-geometry               | 🧊️adds-the-geom-valve-80-definition                        |
+      | remove-geometry               | 🚮️remove-geometry               | 🚫️removes-the-geom-valve-50-definition                     |
       | resize-geometry               | 📐️resize-geometry              | 📐️doubles-the-geom-valve-50-bounding-box                   |
       | add-geometry-connection       | 🔌️add-geometry-connection       | 🚰️attaches-the-drain-connection-to-geom-valve-50           |
       | remove-geometry-connection    | ✂️remove-geometry-connection   | 🔌️detaches-the-out-connection-from-geom-valve-50           |
-      | replace-geometry-parameters   | 🧮️replace-geometry-parameters   | ➗️rescales-geom-valve-50-to-half-and-adds-clearance        |
-      | create-curve                  | 📈️create-curve                 | 📈️adds-the-curve-dp-pressure-drop-curve                    |
-      | delete-curve                  | 📉️delete-curve                  | 🚫️removes-the-curve-kvs-flow-curve                         |
-      | replace-curve-points          | 📍️replace-curve-points         | 📍️resamples-curve-kvs-onto-three-points                    |
+      | change-geometry-parameters   | 🧮️change-geometry-parameters   | ➗️rescales-geom-valve-50-to-half-and-adds-clearance        |
+      | add-curve                  | 📈️add-curve                 | 📈️adds-the-curve-dp-pressure-drop-curve                    |
+      | remove-curve                  | 📉️remove-curve                  | 🚫️removes-the-curve-kvs-flow-curve                         |
+      | change-curve-points          | 📍️change-curve-points         | 📍️resamples-curve-kvs-onto-three-points                    |
 
   @id-inverse
   @level-exhaustive
@@ -122,25 +122,25 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id                            | dir                            | fixture                                                  |
-      | update-manufacturer-file      | 🏭️update-manufacturer-file     | ✏️renames-the-header-manufacturer-to-acme                  |
+      | change-manufacturer-file      | 🏭️change-manufacturer-file     | ✏️renames-the-header-manufacturer-to-acme                  |
       | change-correction-as-of       | 📅️change-correction-as-of      | 📅️advances-the-correction-cut-off-to-2025-03               |
       | change-strict-mode            | 🔒️change-strict-mode            | 🔒️turns-strict-mode-on                                     |
-      | update-limits                 | 🚧️update-limits                 | 🛡️tightens-every-untrusted-input-limit                     |
+      | change-limits                 | 🚧️change-limits                 | 🛡️tightens-every-untrusted-input-limit                     |
       | change-edition-profile        | 🔖️change-edition-profile        | 🆕️switches-sheet-8-from-legacy-to-current                  |
       | remove-edition-profile        | 🧹️remove-edition-profile       | 🧹️clears-the-sheet-8-legacy-override                       |
-      | create-product                | 📦️create-product                | 📦️appends-vlv-80-002-and-its-index-entry                   |
-      | delete-product                | 🗑️delete-product                | 🚫️removes-vlv-50-001-and-its-index-entry                   |
+      | add-product                | 📦️add-product                | 📦️appends-vlv-80-002-and-its-index-entry                   |
+      | remove-product                | 🗑️remove-product                | 🚫️removes-vlv-50-001-and-its-index-entry                   |
       | rename-product                | 🏷️rename-product               | 🏷️retitles-vlv-50-001-and-resyncs-its-index-tags           |
-      | replace-product-configuration | 🎛️replace-product-configuration | 📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn |
-      | create-geometry               | 🧊️create-geometry               | 🧊️adds-the-geom-valve-80-definition                        |
-      | delete-geometry               | 🚮️delete-geometry               | 🚫️removes-the-geom-valve-50-definition                     |
+      | change-product-configuration | 🎛️change-product-configuration | 📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn |
+      | add-geometry               | 🧊️add-geometry               | 🧊️adds-the-geom-valve-80-definition                        |
+      | remove-geometry               | 🚮️remove-geometry               | 🚫️removes-the-geom-valve-50-definition                     |
       | resize-geometry               | 📐️resize-geometry              | 📐️doubles-the-geom-valve-50-bounding-box                   |
       | add-geometry-connection       | 🔌️add-geometry-connection       | 🚰️attaches-the-drain-connection-to-geom-valve-50           |
       | remove-geometry-connection    | ✂️remove-geometry-connection   | 🔌️detaches-the-out-connection-from-geom-valve-50           |
-      | replace-geometry-parameters   | 🧮️replace-geometry-parameters   | ➗️rescales-geom-valve-50-to-half-and-adds-clearance        |
-      | create-curve                  | 📈️create-curve                 | 📈️adds-the-curve-dp-pressure-drop-curve                    |
-      | delete-curve                  | 📉️delete-curve                  | 🚫️removes-the-curve-kvs-flow-curve                         |
-      | replace-curve-points          | 📍️replace-curve-points         | 📍️resamples-curve-kvs-onto-three-points                    |
+      | change-geometry-parameters   | 🧮️change-geometry-parameters   | ➗️rescales-geom-valve-50-to-half-and-adds-clearance        |
+      | add-curve                  | 📈️add-curve                 | 📈️adds-the-curve-dp-pressure-drop-curve                    |
+      | remove-curve                  | 📉️remove-curve                  | 🚫️removes-the-curve-kvs-flow-curve                         |
+      | change-curve-points          | 📍️change-curve-points         | 📍️resamples-curve-kvs-onto-three-points                    |
 
   @id-identity-round-trip
   @level-long

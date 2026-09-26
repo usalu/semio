@@ -1,13 +1,9 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::outline::Din4108Outline;
+use crate::Din4108Snapshot;
 
 #[semio_framework_async_macros::async_test]
-async fn outline_field_count_matches_section_outline_length() {
-    let outline = Din4108Outline::compute(&Din4108Snapshot::default());
-    assert_eq!(outline.field_count as usize, outline.section_outline.len());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn outline_is_deterministic() {
-    let snapshot = Din4108Snapshot::default();
-    assert_eq!(Din4108Outline::compute(&snapshot), Din4108Outline::compute(&snapshot));
+async fn outline_counts_envelope_entities() {
+    let o = Din4108Outline::compute(&Din4108Snapshot::default());
+    assert_eq!(o.field_count, 10);
+    assert!(o.entry_count >= 3);
 }

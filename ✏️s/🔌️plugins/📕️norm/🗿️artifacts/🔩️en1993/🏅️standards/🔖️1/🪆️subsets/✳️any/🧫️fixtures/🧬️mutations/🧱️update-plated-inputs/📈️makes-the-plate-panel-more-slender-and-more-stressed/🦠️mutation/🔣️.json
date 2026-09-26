@@ -1,6 +1,19 @@
 {
   "UpdatePlatedInputs": {
-    "new_plated_lambda_p": 1.25,
-    "new_plated_sigma_ed_mpa": 275.0
+    "plated_panel": {
+      "id": "plate-1",
+      "a": 1.0,
+      "b": 0.8,
+      "thickness": 0.01,
+      "fy": 355000000.0,
+      "kSigma": 4.0,
+      "actions": [
+        {
+          "id": "fa-1",
+          "loadCaseId": "g-permanent",
+          "force": 280000000.0
+        }
+      ]
+    }
   }
 }

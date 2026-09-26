@@ -1,27 +1,17 @@
-//! 🏗️ `update-member-properties` — atomically updates the member-properties facet (n_ed_kn, m_ed_knm, v_ed_kn, a_mm2, a_v_mm2, w_pl_mm3, f_y_mpa, f_u_mpa, chi, a_net_mm2, tension_n_ed_kn are validated together for one EN 1993 check, never one-field-at-a-time).
+//! `upsert-member` — upsert a `SteelMember` by id into `members`.
 
-use crate::{En1993Mutation, En1993Snapshot};
+use crate::{SteelMember, En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdateMemberProperties {
-    pub new_n_ed_kn: f64,
-    pub new_m_ed_knm: f64,
-    pub new_v_ed_kn: f64,
-    pub new_a_mm2: f64,
-    pub new_a_v_mm2: f64,
-    pub new_w_pl_mm3: f64,
-    pub new_f_y_mpa: f64,
-    pub new_f_u_mpa: f64,
-    pub new_chi: f64,
-    pub new_a_net_mm2: f64,
-    pub new_tension_n_ed_kn: f64,
+    pub member: SteelMember,
 }
 
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateMemberProperties {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "member-properties", kind: "update-member-properties", record: "UpdatedMemberProperties" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "member", kind: "update-member-properties", record: "UpdatedMember" };
 
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -30,7 +20,13 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateMemberProp
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update member properties (forces, section, material)", "Bauteileigenschaften (Schnittgrößen, Querschnitt, Material) aktualisieren")
+        protocol::LocalizedLabel::native(
+            &format!("Upsert member {}", self.member.id),
+            &format!("Bauteil setzen {}", self.member.id),
+        )
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.member.id.clone()]
     }
 }
 //#endregion 🔖️Payload

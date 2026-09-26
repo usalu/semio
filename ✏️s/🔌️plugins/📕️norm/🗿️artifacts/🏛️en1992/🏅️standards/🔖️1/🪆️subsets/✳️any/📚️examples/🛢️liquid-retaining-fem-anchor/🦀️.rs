@@ -4,7 +4,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "liquid-retaining-fem-anchor";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Liquid Retaining Fem Anchor", "Liquid Retaining Fem Anchor")
+    LocalizedLabel::native("Liquid-retaining tank", "Flüssigkeitsbehälter")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🛢️liquid-retaining-fem-anchor/🛢️liquid-retaining-fem-anchor/🗣️.dsl.semio");

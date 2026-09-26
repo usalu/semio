@@ -4,11 +4,6 @@
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
 //! `.pack.semio`/`.patch.semio` encodings are derived from it by `fixtures generate`, not here.
 //!
-//! `En1995Diff.selected_check_index` is the artifact's one `Option<Option<u32>>` (presence lane).
-//! `change-annex` never writes it, so it stays `None` and rides the JSON round trip as a plain
-//! `null`; the two nested states `None` and `Some(None)` are NOT distinguishable in this file's
-//! committed diff, and nothing here asserts that they are.
-
 use crate::{En1995Diff, En1995Mutation, En1995Snapshot};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-from-the-german-na-to-the-recommended-en-annex/📸️snapshot/⬅️before/🔣️.json");
@@ -31,14 +26,14 @@ fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
 }
 
 /// ▶️ Switching the national annex from `De` to `En` rewrites `annex` alone. γ_M for glulam and the k_mod table
-/// are annex-dependent, but both are looked up in `💡️inferences`, so the service class and load duration that
-/// index k_mod ride through untouched.
+/// are annex-dependent, but both are looked up in `💡️inferences`, so members and connections ride through untouched.
 #[semio_framework_async_macros::async_test]
 async fn switches_from_the_german_na_to_the_recommended_en_annex() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-annex applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the applied state differs from the committed after-snapshot");
     assert_eq!(applied.annex, crate::document::AnnexChoice::En, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: annex must read `AnnexChoice::En` once the change lands");
-    assert_eq!(applied.service_class, before().service_class, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the service class is the other k_mod index and is a physical fact about the structure, not an annex choice");
+    assert_eq!(applied.members, before().members, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: members are physical facts about the structure and must ride through an annex switch");
+    assert_eq!(applied.connections, before().connections, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: connections must ride through an annex switch");
 }
 
 /// ↩️ `change-annex`'s inverse reads the OLD `AnnexChoice::De` out of BASE, so replaying it puts the German
@@ -105,8 +100,8 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-annex diff decodes");
     assert_eq!(decoded.annex, Some(crate::document::AnnexChoice::En), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the committed diff must carry annex = `AnnexChoice::En`");
-    assert!(decoded.service_class.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: change-annex writes annex and must leave `service_class` untouched");
-    assert!(decoded.load_duration.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: change-annex writes annex and must leave `load_duration` untouched");
+    assert!(decoded.members.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: change-annex writes annex and must leave `members` untouched");
+    assert!(decoded.connections.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: change-annex writes annex and must leave `connections` untouched");
     assert!(decoded.artifact.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: a field-scoped change must never fall back to a whole-artifact replacement");
     let reencoded = serde_json::to_value(&decoded).expect("the committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff reparses");

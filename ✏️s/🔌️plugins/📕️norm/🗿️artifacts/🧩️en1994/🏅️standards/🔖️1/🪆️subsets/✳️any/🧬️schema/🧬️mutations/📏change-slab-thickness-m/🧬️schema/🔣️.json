@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-slab-thickness-m/schema.json",
+  "title": "ChangeSlabThicknessM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newConcreteThicknessM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newConcreteThicknessM": {
+      "type": "number"
+    }
+  }
+}

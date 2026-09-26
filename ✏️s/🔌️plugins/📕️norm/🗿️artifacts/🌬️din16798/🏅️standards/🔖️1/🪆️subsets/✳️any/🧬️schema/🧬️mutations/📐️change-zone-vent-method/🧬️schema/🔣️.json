@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-vent-method/schema.json",
+  "title": "ChangeZoneVentMethod",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newVentMethod"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newVentMethod": {
+      "type": "string"
+    }
+  }
+}

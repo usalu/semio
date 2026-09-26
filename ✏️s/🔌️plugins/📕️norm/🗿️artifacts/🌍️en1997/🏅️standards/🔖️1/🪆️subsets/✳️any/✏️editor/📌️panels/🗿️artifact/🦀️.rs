@@ -15,8 +15,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host: &NormHost<En1997Family>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_summary(host)
+pub fn render(host: &NormHost<En1997Family>, locale: semio_framework_plugin::Locale) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    crate::app_surface::render_summary(host, locale)
 }
 //#endregion 🔖️Render
 

@@ -1,0 +1,24 @@
+semio norm.en1992.dsl v1
+annex=de title="Office frame RC assessment" design-working-life-years=50 delta-c-dev=0.01 cement-type=N
+concrete-grades [id:TEXT name:TEXT f-ck:NUM] {
+  c30 C30/37 30000000
+  c12 C12/15 12000000
+  c50 C50/60 50000000
+  c100 C100/115 100000000
+}
+reinforcement-grades [id:TEXT name:TEXT f-yk:NUM e-s:NUM ductility:ENUM k:NUM eps-uk:NUM] {
+  b500 B500B 500000000 200000000000 b 1.08 0.05
+  b500a B500A 500000000 200000000000 a 1.05 0.025
+}
+prestress-steels [id:TEXT name:TEXT f-pk:NUM f-p0-1k:NUM] {
+  yp1860 Y1860S7 1860000000 1640000000
+}
+members [id:TEXT label-en:TEXT label-de:TEXT kind:ENUM concrete-grade-id:TEXT reinforcement-grade-id:TEXT prestress-steel-id:TEXT exposure:ENUM width:NUM height:NUM effective-depth:NUM cover:NUM span:NUM support:ENUM buckling-length:NUM longitudinal:TABLE stirrups:REC punching:REC prestress:REC fire:REC actions:TABLE use-fem:BOOL udl:NUM deflection-sensitive:BOOL tightness:ENUM hd-over-h:NUM liquid-sigma-s:NUM liquid-rho-p-eff:NUM liquid-f-ct-eff:NUM liquid-s-r-max:NUM bridge-sigma-c:NUM bridge-delta-sigma-s:NUM] {
+  beam-B1 "Beam B1" "Träger B1" beam c30 b500 "" xc3 0.3 0.5 0.45 0.035 6 simply-supported 0 [ {id=bot diameter=0.02 count=4 position=bottom anchorage-length=0.7 lap-length=0.85 bond-condition=good aggregate-size=0.016} ] {diameter=0.008 spacing=0.15 legs=2} _ _ {rating=r60 axis-distance=0.04 column-method=A slab-system=one-way} [ {id=G kind=permanent category=self source=udl g-k-line=12000 q-k-line=0 point-force=0 m-k=0 n-k=0 v-k=0 t-k=0 v-k-punch=0} {id=Q-office kind=imposed category=office source=udl g-k-line=0 q-k-line=8000 point-force=25000 m-k=0 n-k=0 v-k=0 t-k=8000 v-k-punch=0} {id=W kind=wind category=wind source=udl g-k-line=0 q-k-line=2000 point-force=0 m-k=0 n-k=0 v-k=0 t-k=0 v-k-punch=0} {id=A-impact kind=accidental category=accidental source=external g-k-line=0 q-k-line=0 point-force=0 m-k=40000 n-k=0 v-k=20000 t-k=0 v-k-punch=0} ] false 0 true _ 0 0 0 0 0 0 0
+  col-C1 "Column C1" "Stütze C1" column c30 b500 "" xc1 0.3 0.3 0.26 0.03 3.5 fixed 2 [ {id=vert diameter=0.02 count=8 position=bottom anchorage-length=0.7 lap-length=0.85 bond-condition=good aggregate-size=0.016} ] {diameter=0.008 spacing=0.2 legs=2} _ _ {rating=r60 axis-distance=0.035 column-method=A slab-system=""} [ {id=G kind=permanent category=self source=external g-k-line=0 q-k-line=0 point-force=0 m-k=25000 n-k=-500000 v-k=20000 t-k=0 v-k-punch=0} {id=Q-office kind=imposed category=office source=external g-k-line=0 q-k-line=0 point-force=0 m-k=15000 n-k=-200000 v-k=15000 t-k=0 v-k-punch=0} ] true 0 false _ 0 0 0 0 0 0 0
+  slab-S1 "Flat slab S1 punching" "Flachdecke S1 Durchstanzen" flat-slab c30 b500 "" xc1 1 0.25 0.21 0.025 7 continuous 0 [ {id=bot diameter=0.012 count=8 position=bottom anchorage-length=0.55 lap-length=0.7 bond-condition=good aggregate-size=0.016} ] _ {column-width=0.3 column-depth=0.3 column-position=interior asw=0} _ {rating=r60 axis-distance=0.025 column-method="" slab-system=flat} [ {id=G kind=permanent category=self source=external g-k-line=0 q-k-line=0 point-force=0 m-k=25000 n-k=0 v-k=0 t-k=0 v-k-punch=80000} {id=Q-office kind=imposed category=office source=external g-k-line=0 q-k-line=0 point-force=0 m-k=15000 n-k=0 v-k=0 t-k=0 v-k-punch=45000} ] true 0 true _ 0 0 0 0 0 0 0
+  beam-PS1 "Prestressed beam PS1" "Vorgespannter Träger PS1" beam c50 b500 yp1860 xc1 0.35 0.7 0.62 0.04 12 simply-supported 0 [ {id=bot diameter=0.016 count=4 position=bottom anchorage-length=0.8 lap-length=1 bond-condition=good aggregate-size=0.016} ] {diameter=0.01 spacing=0.2 legs=2} _ {force=1200000 area=0.0015 eccentricity=0.18 loss-ratio=0.2} {rating=r90 axis-distance=0.055 column-method="" slab-system=""} [ {id=G kind=permanent category=self source=udl g-k-line=15000 q-k-line=0 point-force=0 m-k=0 n-k=0 v-k=0 t-k=0 v-k-punch=0} {id=Q-office kind=imposed category=office source=udl g-k-line=0 q-k-line=8000 point-force=0 m-k=0 n-k=0 v-k=0 t-k=0 v-k-punch=0} ] false 0 false _ 0 0 0 0 0 0 0
+}
+anchors [id:TEXT h-ef:NUM cracked:BOOL f-uk:NUM f-yk:NUM a-s:NUM d:NUM c1:NUM f-ck:NUM actions:TABLE] {
+  anc-1 0.08 false 800000000 640000000 0.0000843 0.012 0.1 30000000 [ {id=G kind=permanent category=self source=external g-k-line=0 q-k-line=0 point-force=0 m-k=0 n-k=6000 v-k=3000 t-k=0 v-k-punch=0} {id=Q-office kind=imposed category=office source=external g-k-line=0 q-k-line=0 point-force=0 m-k=0 n-k=4000 v-k=2000 t-k=0 v-k-punch=0} ]
+}

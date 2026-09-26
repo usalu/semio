@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-bridge-tandem/schema.json",
+  "title": "ChangeAssumedBridgeTandem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAssumedBridgeTandem"
+  ],
+  "properties": {
+    "newAssumedBridgeTandem": {
+      "type": "number"
+    }
+  }
+}

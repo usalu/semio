@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-metabolic-rate/schema.json",
+  "title": "ChangeZoneMetabolicRate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newMetabolicRateMet"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newMetabolicRateMet": {
+      "type": "number"
+    }
+  }
+}

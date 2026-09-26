@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeQKImposed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallIndex",
+    "index",
+    "newQKImposedPa"
+  ],
+  "properties": {
+    "wallIndex": {
+      "type": "integer"
+    },
+    "index": {
+      "type": "integer"
+    },
+    "newQKImposedPa": {
+      "type": "number"
+    }
+  }
+}

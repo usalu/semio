@@ -1,7 +1,16 @@
 {
   "UpdateTensionComponentInputs": {
-    "new_tension_component_f_uk_kn": 400.0,
-    "new_tension_component_f_k_kn": 280.0,
-    "new_tension_component_n_ed_kn": 190.0
+    "tension_component": {
+      "id": "ten-1",
+      "fUk": 500000.0,
+      "fK": 400000.0,
+      "actions": [
+        {
+          "id": "fa-1",
+          "loadCaseId": "g-permanent",
+          "force": 250000.0
+        }
+      ]
+    }
   }
 }

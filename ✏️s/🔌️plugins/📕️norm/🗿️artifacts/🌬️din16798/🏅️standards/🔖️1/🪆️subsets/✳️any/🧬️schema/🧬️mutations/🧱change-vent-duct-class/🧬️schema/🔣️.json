@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-duct-class/schema.json",
+  "title": "ChangeVentDuctClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newDuctClass"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string"
+    },
+    "newDuctClass": {
+      "type": "string"
+    }
+  }
+}

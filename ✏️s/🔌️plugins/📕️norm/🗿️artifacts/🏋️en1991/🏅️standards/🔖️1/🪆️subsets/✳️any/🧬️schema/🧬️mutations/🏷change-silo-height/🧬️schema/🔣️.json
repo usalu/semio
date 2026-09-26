@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-height/schema.json",
+  "title": "ChangeSiloHeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSiloHeight"
+  ],
+  "properties": {
+    "newSiloHeight": {
+      "type": "number"
+    }
+  }
+}

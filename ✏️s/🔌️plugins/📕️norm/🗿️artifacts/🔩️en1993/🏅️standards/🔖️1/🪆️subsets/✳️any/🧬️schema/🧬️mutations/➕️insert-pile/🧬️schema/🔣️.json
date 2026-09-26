@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-pile/schema.json",
+  "title": "InsertPile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "pile"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "pile": {
+      "type": "object",
+      "embeddedLength": 8.0,
+      "shaftPerimeter": 1.2,
+      "actions": [
+        {
+          "id": "fa-1",
+          "loadCaseId": "g-permanent",
+          "force": 0.0
+        }
+      ]
+    }
+  }
+}

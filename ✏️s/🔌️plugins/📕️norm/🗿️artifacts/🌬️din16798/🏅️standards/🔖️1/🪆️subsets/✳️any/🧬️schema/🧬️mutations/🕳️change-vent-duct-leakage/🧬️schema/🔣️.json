@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-duct-leakage/schema.json",
+  "title": "ChangeVentDuctLeakage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newDuctLeakageM3SM2"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string"
+    },
+    "newDuctLeakageM3SM2": {
+      "type": "number"
+    }
+  }
+}

@@ -1,17 +1,39 @@
 syntax = "proto3";
-package semio.s.norm.en1990.artifact;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+package semio.s.norm.en1990;
 message En1990Artifact {
-  // @state artifact
-  double g_k = 1;
-  // @state artifact
-  semio.os.store.ArtifactChild q_k = 2;
-  // @state artifact
-  double resistance_kn = 3;
-  // @state artifact
-  uint32 consequence_class = 4;
-  // @state artifact
-  string annex = 5;
-  // @state artifact
-  double seismic_a_ed_kn = 6;
+  string annex = 1;
+  string project_id = 2;
+  uint32 consequence_class = 3;
+  uint32 reliability_class = 4;
+  uint32 design_working_life_category = 5;
+  double design_working_life_years = 6;
+  double reference_period_years = 7;
+  string supervision_level = 8;
+  string inspection_level = 9;
+  double beta_computed = 10;
+  repeated PermanentAction permanents = 11;
+  repeated VariableAction variables = 12;
+  repeated AccidentalAction accidentals = 13;
+  repeated SeismicAction seismics = 14;
+  repeated Member members = 15;
+  repeated BridgeSls bridge_sls = 98;
+  repeated MemberEffect effects = 16;
 }
+message PermanentAction { string id = 1; string kind = 2; double gk = 3; }
+message VariableAction { string id = 1; string category = 2; double qk = 3; }
+message AccidentalAction { string id = 1; double ad = 2; }
+enum ImportanceClass { IMPORTANCE_CLASS_UNSPECIFIED = 0; I = 1; II = 2; III = 3; IV = 4; }
+message SeismicAction { string id = 1; double a_ek = 2; ImportanceClass importance_class = 3; }
+message Member {
+  string id = 1; string label_en = 2; string label_de = 3;
+  double rd_str = 4; double rd_geo = 5; double rd_equ_stab = 6; double rd_equ_destab = 7; double rd_fat = 8;
+  double span = 9; double deflection_w = 10; double deflection_limit_ratio = 11;
+  double vibration_frequency = 12; double vibration_frequency_min = 13;
+}
+message BridgeSls {
+  string id = 1; string member_id = 2;
+  double deck_acceleration = 3; double deck_acceleration_limit = 4;
+  double deck_twist = 5; double deck_twist_limit = 6;
+  double bridge_deflection = 7; double bridge_deflection_limit = 8;
+}
+message MemberEffect { string member_id = 1; string action_id = 2; double effect = 3; }

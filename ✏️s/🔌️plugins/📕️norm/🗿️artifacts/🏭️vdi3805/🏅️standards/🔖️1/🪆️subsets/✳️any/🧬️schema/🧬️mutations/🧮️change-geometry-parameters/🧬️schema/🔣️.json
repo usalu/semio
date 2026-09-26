@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-geometry-parameters/schema.json",
+  "title": "ChangeGeometryParameters",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newParameters"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newParameters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    }
+  }
+}

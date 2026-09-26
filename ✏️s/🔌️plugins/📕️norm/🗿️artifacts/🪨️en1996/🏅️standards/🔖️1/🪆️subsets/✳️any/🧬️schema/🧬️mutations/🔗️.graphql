@@ -1,26 +1,271 @@
-# 🧬️ EN 1996 mutation schema.
+union En1996Mutation = ChangeAnnex | ChangeMasonryClass | ChangeDesignSituation | ChangeStoreys | InsertWall | RemoveWall | ChangeWallThickness | ChangeWallHeight | ChangeWallLength | ChangeWallType | ChangeSupportSides | ChangeSlabBearingDepth | ChangeEccentricityTop | ChangeEccentricityBottom | ChangeUnitGroup | ChangeUnitMaterial | ChangeUnitFb | ChangeUnitLength | ChangeUnitWidth | ChangeUnitHeight | ChangeMortarType | ChangeMortarClass | ChangeFm | ChangeBedJointThickness | ChangeReinforced | ChangeAsVertical | ChangeAsHorizontal | ChangeFYd | ChangeFireRei | ChangeExposure | ChangeMu | ChangeLoadCaseSituation | ChangeWallLabelDe | ChangeWallLabelEn | InsertOpening | RemoveOpening | ChangeOpeningWidth | ChangeOpeningHeight | ChangeOpeningSill | InsertLoadCase | RemoveLoadCase | ChangeNEdTop | ChangeNEdMid | ChangeNEdBottom | ChangeVEd | ChangeWEd | InsertConcentrated | RemoveConcentrated | ChangeConcentratedForce | ChangeConcentratedBearingArea | ChangeConcentratedBearingLength
 
-type En1996Mutation {
-  mEdKnm: Float! @state(class: ARTIFACT)
-  nEdKn: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  hEdKn: Float! @state(class: ARTIFACT)
-  zMm3: Float! @state(class: ARTIFACT)
-  areaMm2: Float! @state(class: ARTIFACT)
-  shearAreaMm2: Float! @state(class: ARTIFACT)
-  fKMpa: Float! @state(class: ARTIFACT)
-  fVkMpa: Float! @state(class: ARTIFACT)
-  annex: Float! @state(class: ARTIFACT)
-  masonryClass: Float! @state(class: ARTIFACT)
-  designSituation: Float! @state(class: ARTIFACT)
-  mu: Float! @state(class: ARTIFACT)
-  wallThicknessMm: Float! @state(class: ARTIFACT)
-  fireResistanceMin: Int! @state(class: ARTIFACT)
-  unit: Float! @state(class: ARTIFACT)
-  exposure: Float! @state(class: ARTIFACT)
-  mortar: Float! @state(class: ARTIFACT)
-  bedJointThicknessMm: Float! @state(class: ARTIFACT)
-  storeys: Int! @state(class: ARTIFACT)
-  hEfMm: Float! @state(class: ARTIFACT)
-  tEfMm: Float! @state(class: ARTIFACT)
+type ChangeAnnex {
+  newAnnex: String
+}
+
+type ChangeMasonryClass {
+  newMasonryClass: String
+}
+
+type ChangeDesignSituation {
+  newDesignSituation: String
+}
+
+type ChangeStoreys {
+  newStoreys: Int
+}
+
+type InsertWall {
+  index: Int
+  wall: String
+}
+
+type RemoveWall {
+  index: Int
+}
+
+type ChangeWallThickness {
+  index: Int
+  newThicknessM: Float
+}
+
+type ChangeWallHeight {
+  index: Int
+  newHeightM: Float
+}
+
+type ChangeWallLength {
+  index: Int
+  newLengthM: Float
+}
+
+type ChangeWallType {
+  index: Int
+  newWallType: String
+}
+
+type ChangeSupportSides {
+  index: Int
+  newSupportSides: Int
+}
+
+type ChangeSlabBearingDepth {
+  index: Int
+  newSlabBearingDepthM: Float
+}
+
+type ChangeEccentricityTop {
+  index: Int
+  newEccentricityTopM: Float
+}
+
+type ChangeEccentricityBottom {
+  index: Int
+  newEccentricityBottomM: Float
+}
+
+type ChangeUnitGroup {
+  index: Int
+  newUnitGroup: String
+}
+
+type ChangeUnitMaterial {
+  index: Int
+  newUnitMaterial: String
+}
+
+type ChangeUnitFb {
+  index: Int
+  newFBPa: Float
+}
+
+type ChangeUnitLength {
+  index: Int
+  newUnitLengthM: Float
+}
+
+type ChangeUnitWidth {
+  index: Int
+  newUnitWidthM: Float
+}
+
+type ChangeUnitHeight {
+  index: Int
+  newUnitHeightM: Float
+}
+
+type ChangeMortarType {
+  index: Int
+  newMortarType: String
+}
+
+type ChangeMortarClass {
+  index: Int
+  newMortarClass: String
+}
+
+type ChangeFm {
+  index: Int
+  newFMPa: Float
+}
+
+type ChangeBedJointThickness {
+  index: Int
+  newBedJointThicknessM: Float
+}
+
+type ChangeReinforced {
+  index: Int
+  newReinforced: Boolean
+}
+
+type ChangeAsVertical {
+  index: Int
+  newAsVerticalM2: Float
+}
+
+type ChangeAsHorizontal {
+  index: Int
+  newAsHorizontalM2: Float
+}
+
+type ChangeFYd {
+  index: Int
+  newFYdPa: Float
+}
+
+type ChangeFireRei {
+  index: Int
+  newFireReiMin: Int
+}
+
+type ChangeExposure {
+  index: Int
+  newExposure: String
+}
+
+type ChangeMu {
+  index: Int
+  newMu: Float
+}
+
+type ChangeLoadCaseSituation {
+  wallIndex: Int
+  loadCaseIndex: Int
+  newDesignSituation: String
+}
+
+type ChangeWallLabelDe {
+  index: Int
+  newLabelDe: String
+}
+
+type ChangeWallLabelEn {
+  index: Int
+  newLabelEn: String
+}
+
+type InsertOpening {
+  wallIndex: Int
+  index: Int
+  opening: String
+}
+
+type RemoveOpening {
+  wallIndex: Int
+  index: Int
+}
+
+type ChangeOpeningWidth {
+  wallIndex: Int
+  index: Int
+  newWidthM: Float
+}
+
+type ChangeOpeningHeight {
+  wallIndex: Int
+  index: Int
+  newHeightM: Float
+}
+
+type ChangeOpeningSill {
+  wallIndex: Int
+  index: Int
+  newSillHeightM: Float
+}
+
+type InsertLoadCase {
+  wallIndex: Int
+  index: Int
+  loadCase: String
+}
+
+type RemoveLoadCase {
+  wallIndex: Int
+  index: Int
+}
+
+type ChangeNEdTop {
+  wallIndex: Int
+  index: Int
+  newNEdTopN: Float
+}
+
+type ChangeNEdMid {
+  wallIndex: Int
+  index: Int
+  newNEdMidN: Float
+}
+
+type ChangeNEdBottom {
+  wallIndex: Int
+  index: Int
+  newNEdBottomN: Float
+}
+
+type ChangeVEd {
+  wallIndex: Int
+  index: Int
+  newVEdN: Float
+}
+
+type ChangeWEd {
+  wallIndex: Int
+  index: Int
+  newWEdPa: Float
+}
+
+type InsertConcentrated {
+  wallIndex: Int
+  loadCaseIndex: Int
+  index: Int
+  load: String
+}
+
+type RemoveConcentrated {
+  wallIndex: Int
+  loadCaseIndex: Int
+  index: Int
+}
+
+type ChangeConcentratedForce {
+  wallIndex: Int
+  loadCaseIndex: Int
+  index: Int
+  newForceN: Float
+}
+
+type ChangeConcentratedBearingArea {
+  wallIndex: Int
+  loadCaseIndex: Int
+  index: Int
+  newBearingAreaM2: Float
+}
+
+type ChangeConcentratedBearingLength {
+  wallIndex: Int
+  loadCaseIndex: Int
+  index: Int
+  newBearingLengthM: Float
 }

@@ -4,7 +4,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import {
   decodeTrustedPluginModuleBundleV1,
   trustedPluginModuleBundleSha256V1,
@@ -13,12 +12,13 @@ import {
   verifyTrustedPluginModuleFileV1,
   type TrustedPluginModuleSourceV1,
 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 
 const root = "../../../../../🌎️hub/🗿️artifact-authority/🔏️trusted-catalog";
 const read = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(`${root}/${path}`, import.meta.url)), "utf8"));
 const fixture = read("🧫️fixtures/🧩️plugin-module/🔣️.json");
 const schema = read("🧬️schema/🔣️.json");
-const ajv = new Ajv({ strict: false, allErrors: true });
+const ajv = semioSchemaAjvV1({ strict: false, allErrors: true });
 ajv.addSchema({ ...schema, $ref: undefined, $id: "https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json" }, "trusted-catalog");
 const oracle = (definition: string) => ajv.getSchema(`trusted-catalog#/$defs/${definition}`)!;
 const source: TrustedPluginModuleSourceV1 = fixture.record;

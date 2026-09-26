@@ -1,17 +1,90 @@
-# 🪪️ Din18599Artifact uses the canonical Store child identity.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
-type Din18599Artifact {
-  useClass: String! @state(class: ARTIFACT)
-  heatedAreaM2: Float! @state(class: ARTIFACT)
+# 🧬️ Din18599Artifact schema — every field with its state class.
+
+type ThermalZone {
+  id: String! @state(class: ARTIFACT)
+  labelEn: String! @state(class: ARTIFACT)
+  labelDe: String! @state(class: ARTIFACT)
+  usageProfile: String! @state(class: ARTIFACT)
+  areaM2: Float! @state(class: ARTIFACT)
+  volumeM3: Float! @state(class: ARTIFACT)
+  thetaIHeatC: Float! @state(class: ARTIFACT)
+  thetaICoolC: Float! @state(class: ARTIFACT)
   occupants: Int! @state(class: ARTIFACT)
-  hT: Float! @state(class: ARTIFACT)
-  hV: Float! @state(class: ARTIFACT)
-  climate: ArtifactChild! @state(class: ARTIFACT)
   internalGainsWM2: Float! @state(class: ARTIFACT)
-  solarGainsKwh: Float! @state(class: ARTIFACT)
-  systemLossesKwh: Float! @state(class: ARTIFACT)
-  renewableKwh: Float! @state(class: ARTIFACT)
-  annualLimitKwh: Float! @state(class: ARTIFACT)
+  lightingPowerWM2: Float! @state(class: ARTIFACT)
+}
+
+type EnvelopeElement {
+  id: String! @state(class: ARTIFACT)
+  labelEn: String! @state(class: ARTIFACT)
+  labelDe: String! @state(class: ARTIFACT)
+  kind: String! @state(class: ARTIFACT)
+  zoneId: String! @state(class: ARTIFACT)
+  areaM2: Float! @state(class: ARTIFACT)
+  uValueWM2k: Float! @state(class: ARTIFACT)
+  orientationDeg: Float! @state(class: ARTIFACT)
+  tiltDeg: Float! @state(class: ARTIFACT)
+  gValue: Float! @state(class: ARTIFACT)
+  fc: Float! @state(class: ARTIFACT)
+  adjacency: String! @state(class: ARTIFACT)
+}
+
+type HeatingSystem {
+  generationEfficiency: Float! @state(class: ARTIFACT)
+  distributionEfficiency: Float! @state(class: ARTIFACT)
+  storageEfficiency: Float! @state(class: ARTIFACT)
+  transferEfficiency: Float! @state(class: ARTIFACT)
   energyCarrier: String! @state(class: ARTIFACT)
-  referenceQPKwh: Float! @state(class: ARTIFACT)
+}
+
+type DhwSystem {
+  specificDemandKwhPersonA: Float! @state(class: ARTIFACT)
+  storageLossKwhA: Float! @state(class: ARTIFACT)
+  distributionLossKwhA: Float! @state(class: ARTIFACT)
+  energyCarrier: String! @state(class: ARTIFACT)
+}
+
+type VentilationSystem {
+  airflowM3H: Float! @state(class: ARTIFACT)
+  heatRecoveryEta: Float! @state(class: ARTIFACT)
+  fanPowerW: Float! @state(class: ARTIFACT)
+}
+
+type CoolingPlant {
+  eer: Float! @state(class: ARTIFACT)
+  energyCarrier: String! @state(class: ARTIFACT)
+}
+type CoolingSystem {
+  plant: CoolingPlant @state(class: ARTIFACT)
+}
+
+type LightingSystem {
+  controlFactor: Float! @state(class: ARTIFACT)
+}
+
+type Renewables {
+  pvAreaM2: Float! @state(class: ARTIFACT)
+  pvEfficiency: Float! @state(class: ARTIFACT)
+  solarThermalKwhA: Float! @state(class: ARTIFACT)
+}
+
+type Din18599Artifact {
+  buildingCategory: String! @state(class: ARTIFACT)
+  attachment: String! @state(class: ARTIFACT)
+  useClass: String! @state(class: ARTIFACT)
+  method: String! @state(class: ARTIFACT)
+  netFloorAreaM2: Float! @state(class: ARTIFACT)
+  heatedVolumeM3: Float! @state(class: ARTIFACT)
+  gegQpFactor: Float! @state(class: ARTIFACT)
+  deltaUWbWM2k: Float! @state(class: ARTIFACT)
+  automationClass: String! @state(class: ARTIFACT)
+  zones: [ThermalZone!]! @state(class: ARTIFACT)
+  elements: [EnvelopeElement!]! @state(class: ARTIFACT)
+  heating: HeatingSystem! @state(class: ARTIFACT)
+  dhw: DhwSystem! @state(class: ARTIFACT)
+  ventilation: VentilationSystem! @state(class: ARTIFACT)
+  cooling: CoolingSystem! @state(class: ARTIFACT)
+  lighting: LightingSystem! @state(class: ARTIFACT)
+  renewables: Renewables! @state(class: ARTIFACT)
+  climate: ArtifactChild! @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
 }

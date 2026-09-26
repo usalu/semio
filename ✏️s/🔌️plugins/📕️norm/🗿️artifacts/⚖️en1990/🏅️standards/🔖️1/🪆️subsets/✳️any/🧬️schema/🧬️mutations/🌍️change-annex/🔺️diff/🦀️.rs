@@ -1,13 +1,16 @@
-//! 🔺️ `change-annex` sparse diff construction — writes only `En1990Diff.annex` from the payload.
+//! 🔺️ `change-annex` sparse diff.
 
-use crate::mutations::change_annex::ChangeAnnex;
-use crate::{En1990Diff, En1990Snapshot};
+use super::ChangeAnnex;
+use crate::diff::En1990Diff;
+use crate::En1990Snapshot;
+use protocol::MutationOutcome;
 
-//#region 🔖️Diff
-pub fn diff(payload: &ChangeAnnex, base: &En1990Snapshot) -> protocol::MutationOutcome<En1990Diff> {
-    if base.annex == payload.new_annex {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Annex already has this value.");
+pub fn diff(mutation: &ChangeAnnex, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {
+    if base.annex == mutation.new_annex {
+        return MutationOutcome::empty().warn("mutation.no-op", "annex already has this value.");
     }
-    protocol::MutationOutcome::new(En1990Diff { annex: Some(payload.new_annex), ..Default::default() })
+    MutationOutcome::new(En1990Diff {
+        annex: Some(mutation.new_annex),
+        ..En1990Diff::default()
+    })
 }
-//#endregion 🔖️Diff

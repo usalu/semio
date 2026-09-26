@@ -17,8 +17,8 @@ type normDin16798SnapshotTextGuardTextBounds = { readonly minLength?: number; re
 type normDin16798SnapshotTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normDin16798SnapshotTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normDin16798SnapshotTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normDin16798SnapshotTextGuardReject(at, "value is not an object");
+export const normDin16798SnapshotTextGuardObject = (value: unknown, at: string): object =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as object) : normDin16798SnapshotTextGuardReject(at, "value is not an object");
 export const normDin16798SnapshotTextGuardArray = (value: unknown, at: string, bounds: normDin16798SnapshotTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normDin16798SnapshotTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normDin16798SnapshotTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-comfort-model/schema.json",
+  "title": "ChangeZoneComfortModel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newComfortModel"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newComfortModel": {
+      "type": "string"
+    }
+  }
+}

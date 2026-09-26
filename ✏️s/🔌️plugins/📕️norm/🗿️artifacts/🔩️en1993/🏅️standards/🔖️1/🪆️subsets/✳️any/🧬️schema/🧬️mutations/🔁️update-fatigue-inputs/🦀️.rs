@@ -1,19 +1,17 @@
-//! 🔁 `update-fatigue-inputs` — atomically updates the fatigue-inputs facet (delta_sigma_mpa, fatigue_category, fatigue_method are validated together for one EN 1993 check, never one-field-at-a-time).
+//! `upsert-fatigue-detail` — upsert a `FatigueDetail` by id into `fatigue_details`.
 
-use crate::{En1993Mutation, En1993Snapshot};
+use crate::{FatigueDetail, En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdateFatigueInputs {
-    pub new_delta_sigma_mpa: f64,
-    pub new_fatigue_category: u8,
-    pub new_fatigue_method: String,
+    pub fatigue_detail: FatigueDetail,
 }
 
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateFatigueInputs {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "fatigue-inputs", kind: "update-fatigue-inputs", record: "UpdatedFatigueInputs" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "fatigueDetail", kind: "update-fatigue-inputs", record: "UpdatedFatigueDetail" };
 
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -22,7 +20,13 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateFatigueInp
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-9 fatigue inputs", "EN 1993-1-9 Eingaben zur Ermüdung aktualisieren")
+        protocol::LocalizedLabel::native(
+            &format!("Upsert fatigue detail {}", self.fatigue_detail.id),
+            &format!("Ermüdungsdetail setzen {}", self.fatigue_detail.id),
+        )
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.fatigue_detail.id.clone()]
     }
 }
 //#endregion 🔖️Payload

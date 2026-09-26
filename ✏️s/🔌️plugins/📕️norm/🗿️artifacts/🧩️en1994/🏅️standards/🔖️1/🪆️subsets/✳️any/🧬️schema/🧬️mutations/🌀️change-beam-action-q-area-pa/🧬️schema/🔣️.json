@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-action-q-area-pa/schema.json",
+  "title": "ChangeBeamActionQAreaPa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "actionIndex",
+    "newQAreaPa"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "actionIndex": {
+      "type": "integer"
+    },
+    "newQAreaPa": {
+      "type": "number"
+    }
+  }
+}

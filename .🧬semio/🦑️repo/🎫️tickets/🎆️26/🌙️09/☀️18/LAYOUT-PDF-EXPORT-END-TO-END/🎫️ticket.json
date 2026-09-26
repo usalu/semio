@@ -3,7 +3,7 @@
   "emoji": "📕️",
   "status": "done",
   "description": "Get the layout artifact's PDF export working fully end to end: the shell's Export Pdf action runs the resumable LayoutExportJob, the job renders every page (frames, text, images) into a valid PDF, the bytes reach the browser as a download, and the file opens with the expected page count and content.",
-  "goal": "LAYOUT",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runninglayout",
   "sessions": [
     "⚪88a59fa7-6895-41a0-ab94-127ac33b4a44"
   ],

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-design-airflow/schema.json",
+  "title": "ChangeVentDesignAirflow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newDesignAirflowM3H"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string"
+    },
+    "newDesignAirflowM3H": {
+      "type": "number"
+    }
+  }
+}

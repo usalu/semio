@@ -1,16 +1,11 @@
-//! ↩️ `update-weld-inputs` — undo restores BASE's weld inputs.
-
+//! ↩️ upsert inverse — restore prior entity or remove inserted one.
 use super::UpdateWeldInputs;
+use crate::mutations::remove_member_action;
 use crate::{En1993Mutation, En1993Snapshot};
-
-//#region 🔖️Inverse
-pub fn inverse(_payload: &UpdateWeldInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
-    vec![En1993Mutation::UpdateWeldInputs(UpdateWeldInputs {
-        new_weld_a_mm: base.weld_a_mm,
-        new_weld_l_mm: base.weld_l_mm,
-        new_weld_f_u_mpa: base.weld_f_u_mpa,
-        new_weld_steel_grade: base.weld_steel_grade.clone(),
-        new_weld_f_ed_kn: base.weld_f_ed_kn,
-    })]
+pub fn inverse(payload: &UpdateWeldInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+    if let Some(prior) = base.member_actions.iter().find(|x| x.id == payload.member_action.id) {
+        vec![En1993Mutation::UpdateWeldInputs(UpdateWeldInputs { member_action: prior.clone() })]
+    } else {
+        vec![En1993Mutation::RemoveMemberAction(remove_member_action::RemoveMemberAction { index: base.member_actions.len() })]
+    }
 }
-//#endregion 🔖️Inverse

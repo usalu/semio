@@ -6,77 +6,55 @@
   "additionalProperties": false,
   "required": [
     "annex",
-    "mEdKnm",
-    "vEdKn",
-    "mPla",
-    "mPlRd",
-    "eta",
-    "vLRd",
-    "insulationThicknessMm",
+    "structureKind",
+    "steelFYPa",
+    "beams",
+    "columns",
+    "slabs",
     "fireRating",
-    "deckType",
-    "deltaSigmaMpa",
-    "fatigueDetail",
-    "dMm",
-    "hScMm",
-    "fCkMpa",
-    "fUMpa",
-    "eCmMpa",
-    "vEdPerStudKn",
-    "spanM",
-    "fYMpa",
-    "nCyclesStud",
-    "deltaTauStudMpa"
+    "insulationThicknessM",
+    "fatigueDetail"
   ],
   "properties": {
     "annex": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "mEdKnm": {
+    "structureKind": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "steelFYPa": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
+    "beams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CompositeBeam"
+      },
       "x-semio-state": "artifact"
     },
-    "mPla": {
-      "type": "number",
-      "format": "double",
+    "columns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CompositeColumn"
+      },
       "x-semio-state": "artifact"
     },
-    "mPlRd": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "eta": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "vLRd": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "insulationThicknessMm": {
-      "type": "number",
-      "format": "double",
+    "slabs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CompositeSlab"
+      },
       "x-semio-state": "artifact"
     },
     "fireRating": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "deckType": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "deltaSigmaMpa": {
+    "insulationThicknessM": {
       "type": "number",
       "format": "double",
       "x-semio-state": "artifact"
@@ -84,56 +62,361 @@
     "fatigueDetail": {
       "type": "string",
       "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
+    "CharacteristicAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "category",
+        "stage",
+        "qAreaPa",
+        "mKNm",
+        "vKN",
+        "nKN",
+        "deltaSigmaKPa",
+        "deltaTauKPa"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "stage": {
+          "type": "string"
+        },
+        "qAreaPa": {
+          "type": "number"
+        },
+        "mKNm": {
+          "type": "number"
+        },
+        "vKN": {
+          "type": "number"
+        },
+        "nKN": {
+          "type": "number"
+        },
+        "deltaSigmaKPa": {
+          "type": "number"
+        },
+        "deltaTauKPa": {
+          "type": "number"
+        }
+      }
     },
-    "dMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "SteelSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "designation",
+        "heightM",
+        "widthM",
+        "twM",
+        "tfM",
+        "aM2",
+        "wPlYM3",
+        "iYM4",
+        "aVM2"
+      ],
+      "properties": {
+        "designation": {
+          "type": "string"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "widthM": {
+          "type": "number"
+        },
+        "twM": {
+          "type": "number"
+        },
+        "tfM": {
+          "type": "number"
+        },
+        "aM2": {
+          "type": "number"
+        },
+        "wPlYM3": {
+          "type": "number"
+        },
+        "iYM4": {
+          "type": "number"
+        },
+        "aVM2": {
+          "type": "number"
+        }
+      }
     },
-    "hScMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "ProfiledSheeting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "heightM",
+        "ribWidthM",
+        "thicknessM",
+        "ribsParallelToBeam"
+      ],
+      "properties": {
+        "profile": {
+          "type": "string"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "ribWidthM": {
+          "type": "number"
+        },
+        "thicknessM": {
+          "type": "number"
+        },
+        "ribsParallelToBeam": {
+          "type": "boolean"
+        }
+      }
     },
-    "fCkMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "HeadedStuds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "diameterM",
+        "heightM",
+        "fUPa",
+        "countPerRib",
+        "spacingM",
+        "totalCount"
+      ],
+      "properties": {
+        "diameterM": {
+          "type": "number"
+        },
+        "heightM": {
+          "type": "number"
+        },
+        "fUPa": {
+          "type": "number"
+        },
+        "countPerRib": {
+          "type": "integer"
+        },
+        "spacingM": {
+          "type": "number"
+        },
+        "totalCount": {
+          "type": "integer"
+        }
+      }
     },
-    "fUMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "CompositeBeam": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "spanM",
+        "spacingM",
+        "support",
+        "construction",
+        "steel",
+        "slabThicknessM",
+        "concreteFCkPa",
+        "concreteECmPa",
+        "sheeting",
+        "studs",
+        "transverseAsM2PerM",
+        "ltbLengthM",
+        "asHoggingM2PerM",
+        "barSpacingM",
+        "wkLimitM",
+        "nCycles",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "spanM": {
+          "type": "number"
+        },
+        "spacingM": {
+          "type": "number"
+        },
+        "support": {
+          "type": "string"
+        },
+        "construction": {
+          "type": "string"
+        },
+        "steel": {
+          "$ref": "#/definitions/SteelSection"
+        },
+        "slabThicknessM": {
+          "type": "number"
+        },
+        "concreteFCkPa": {
+          "type": "number"
+        },
+        "concreteECmPa": {
+          "type": "number"
+        },
+        "sheeting": {
+          "$ref": "#/definitions/ProfiledSheeting"
+        },
+        "studs": {
+          "$ref": "#/definitions/HeadedStuds"
+        },
+        "transverseAsM2PerM": {
+          "type": "number"
+        },
+        "ltbLengthM": {
+          "type": "number"
+        },
+        "asHoggingM2PerM": {
+          "type": "number"
+        },
+        "barSpacingM": {
+          "type": "number"
+        },
+        "wkLimitM": {
+          "type": "number"
+        },
+        "nCycles": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CharacteristicAction"
+          }
+        }
+      }
     },
-    "eCmMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "CompositeColumn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "lengthM",
+        "outerSizeM",
+        "wallThicknessM",
+        "steelAM2",
+        "steelFYPa",
+        "concreteAM2",
+        "concreteFCkPa",
+        "reinforcementAsM2",
+        "reinforcementFYkPa",
+        "iM4",
+        "bucklingCurve",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "lengthM": {
+          "type": "number"
+        },
+        "outerSizeM": {
+          "type": "number"
+        },
+        "wallThicknessM": {
+          "type": "number"
+        },
+        "steelAM2": {
+          "type": "number"
+        },
+        "steelFYPa": {
+          "type": "number"
+        },
+        "concreteAM2": {
+          "type": "number"
+        },
+        "concreteFCkPa": {
+          "type": "number"
+        },
+        "reinforcementAsM2": {
+          "type": "number"
+        },
+        "reinforcementFYkPa": {
+          "type": "number"
+        },
+        "iM4": {
+          "type": "number"
+        },
+        "bucklingCurve": {
+          "type": "string"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CharacteristicAction"
+          }
+        }
+      }
     },
-    "vEdPerStudKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "spanM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fYMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "nCyclesStud": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "deltaTauStudMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "CompositeSlab": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "spanM",
+        "support",
+        "sheeting",
+        "concreteThicknessM",
+        "fCkPa",
+        "mFactor",
+        "kFactor",
+        "asM2PerM",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "spanM": {
+          "type": "number"
+        },
+        "support": {
+          "type": "string"
+        },
+        "sheeting": {
+          "$ref": "#/definitions/ProfiledSheeting"
+        },
+        "concreteThicknessM": {
+          "type": "number"
+        },
+        "fCkPa": {
+          "type": "number"
+        },
+        "mFactor": {
+          "type": "number"
+        },
+        "kFactor": {
+          "type": "number"
+        },
+        "asM2PerM": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CharacteristicAction"
+          }
+        }
+      }
     }
   }
 }

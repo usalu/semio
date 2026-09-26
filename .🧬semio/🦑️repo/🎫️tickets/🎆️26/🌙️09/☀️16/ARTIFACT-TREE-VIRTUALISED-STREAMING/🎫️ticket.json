@@ -3,7 +3,7 @@
   "emoji": "🌳️",
   "status": "open",
   "description": "Artifact trees (and every other paged panel tree) must present the complete document with no +N continuation rows: children are loaded lazily when a node is expanded and only as many rows as fit the viewport are materialised, with further rows streamed in from the guest as the user scrolls. One general framework-owned mechanism (contract, SDK, React host, wgpu target) applied to every app.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "goal": "🎯runningframework🎯runningproducts🎯runningrepo",
   "sessions": [
     "⚪f7399588-9bfc-41bd-9df2-fa8aab3cddd0"
   ],

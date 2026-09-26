@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-connections/schema.json",
+  "title": "ChangeConnections",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "connections"
+  ],
+  "properties": {
+    "connections": {}
+  },
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-connections",
+  "semanticKind": "change-connections",
+  "emoji": "🔗",
+  "aggregateVariant": "ChangeConnections",
+  "displayName": "Change Connections"
+}

@@ -5,7 +5,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import Ajv from "ajv";
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
 import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
@@ -17,6 +16,7 @@ import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import bootSelectionFixture from "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
 import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../🧪️tests/🧬️schema-oracle/🟦️.ts";
 
 const browserBuildModule = new URL("../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts", import.meta.url).href;
 const frameWorkerModule = new URL("../../🎯️targets/🧊️wgpu/🎞️frame-worker/🏗️builder/🟦️.ts", import.meta.url).href;
@@ -217,7 +217,7 @@ describe("framework renderer wgpu plugin bridge", () => {
     const { DEFAULT_SHARD_BUDGET } = await import("../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts");
     const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
     const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts");
-    const validate = new Ajv({ strict: true }).addSchema(rendererSchema).getSchema(`${rendererSchema.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1`)!;
+    const validate = semioSchemaAjvV1({ strict: true }).addSchema(rendererSchema).getSchema(`${rendererSchema.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1`)!;
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     const sent: string[] = [];
     const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, coldPairIngress: { tag: "idle" } };
@@ -379,7 +379,7 @@ describe("framework renderer wgpu generated worker", () => {
   it("validates the current package catalog with Ajv and independent WebCrypto integrity vectors", async () => {
     const taxonomy = loadTaxonomy(), generation = taxonomy.generatorContracts["wgpu-frame-worker"]!.packageGeneration!;
     const bytes = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/🪪️package-catalog.json"), "utf8");
-    const catalogExport = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(rendererSchema)
+    const catalogExport = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema)
       .getSchema(`${rendererSchema.$id}#/$defs/RendererPackageCatalogV1`)!;
     expect(catalogExport(JSON.parse(bytes)), JSON.stringify(catalogExport.errors)).toBe(true);
     for (const scenario of browserAuthorityFixture.catalogCases) {
@@ -396,7 +396,7 @@ describe("framework renderer wgpu generated worker", () => {
   });
 
   it("validates explicit browser entry identities against neutral vectors and independent Ajv/emoji parsing", () => {
-    const validate = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(rendererSchema)
+    const validate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema)
       .getSchema(`${rendererSchema.$id}#/$defs/RendererPackageCatalogBrowserEntries`)!;
     const template = loadTaxonomy().generatorContracts["wgpu-frame-worker"]!.packageGeneration!.browserProfile;
     for (const scenario of browserAuthorityFixture.cases) {

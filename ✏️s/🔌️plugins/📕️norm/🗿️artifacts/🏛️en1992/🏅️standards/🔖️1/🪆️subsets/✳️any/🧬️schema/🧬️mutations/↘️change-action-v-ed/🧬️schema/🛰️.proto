@@ -1,0 +1,6 @@
+syntax = "proto3";
+message ChangeActionVEd {
+  string memberId = 1;
+  string actionId = 2;
+  double newValue = 3;
+}

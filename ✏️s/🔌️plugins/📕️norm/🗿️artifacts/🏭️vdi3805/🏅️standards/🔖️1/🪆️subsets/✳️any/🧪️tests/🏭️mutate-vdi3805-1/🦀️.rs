@@ -13,12 +13,11 @@
 //! edition-profile overrides per VDI sheet, a correction cut-off date, a strict-mode flag,
 //! parametric geometry definitions with named connections, characteristic curves, and security
 //! limits on untrusted input. The nineteen kinds cover the header and policy scalars
-//! (`update-manufacturer-file`, `change-correction-as-of`, `change-strict-mode`,
-//! `update-limits`, `change`/`remove-edition-profile`), the product lifecycle
-//! (`create`/`delete`/`rename-product`, `replace-product-configuration`), the geometry
+//! (`change-manufacturer-file`, `change-correction-as-of`, `change-strict-mode`,
+//! (`create`/`delete`/`rename-product`, `change-product-configuration`), the geometry
 //! lifecycle (`create`/`delete`/`resize-geometry`, `add`/`remove-geometry-connection`,
-//! `replace-geometry-parameters`) and the curve lifecycle (`create`/`delete-curve`,
-//! `replace-curve-points`).
+//! `change-geometry-parameters`) and the curve lifecycle (`create`/`remove-curve`,
+//! `change-curve-points`).
 //!
 //! ⚖️ WHERE THE ASSERTIONS LIVE. Every law this case claims is asserted IN ROLE inside the
 //! subject handlers as well as being compared against the oracle's answer, through the shared
@@ -62,25 +61,24 @@ use semio_s_plugin_stdio_test_oracle::law;
 /// `kinds_match_the_enum_and_the_catalog` in that production file keeps it honest against the enum.
 #[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
-    "update-manufacturer-file",
+    "change-manufacturer-file",
     "change-correction-as-of",
     "change-strict-mode",
-    "update-limits",
     "change-edition-profile",
     "remove-edition-profile",
-    "create-product",
-    "delete-product",
+    "add-product",
+    "remove-product",
     "rename-product",
-    "replace-product-configuration",
-    "create-geometry",
-    "delete-geometry",
+    "change-product-configuration",
+    "add-geometry",
+    "remove-geometry",
     "resize-geometry",
     "add-geometry-connection",
     "remove-geometry-connection",
-    "replace-geometry-parameters",
-    "create-curve",
-    "delete-curve",
-    "replace-curve-points",
+    "change-geometry-parameters",
+    "add-curve",
+    "remove-curve",
+    "change-curve-points",
 ];
 
 /// 🗣️ The real committed VDI 3805 document, read where the domain already keeps it.
@@ -96,11 +94,11 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 #[cfg(feature = "sut")]
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     match kind {
-        "update-manufacturer-file" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏭️update-manufacturer-file/✏️renames-the-header-manufacturer-to-acme/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏭️update-manufacturer-file/✏️renames-the-header-manufacturer-to-acme/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏭️update-manufacturer-file/✏️renames-the-header-manufacturer-to-acme/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏭️update-manufacturer-file/✏️renames-the-header-manufacturer-to-acme/🎯️outcome/🔣️.json"),
+        "change-manufacturer-file" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏭️change-manufacturer-file/✏️renames-the-header-manufacturer-to-acme/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏭️change-manufacturer-file/✏️renames-the-header-manufacturer-to-acme/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏭️change-manufacturer-file/✏️renames-the-header-manufacturer-to-acme/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏭️change-manufacturer-file/✏️renames-the-header-manufacturer-to-acme/🎯️outcome/🔣️.json"),
         ),
         "change-correction-as-of" => (
             include_str!("../../🧫️fixtures/🧬️mutations/📅️change-correction-as-of/📅️advances-the-correction-cut-off-to-2025-03/📸️snapshot/⬅️before/🔣️.json"),
@@ -114,12 +112,6 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🔒️change-strict-mode/🔒️turns-strict-mode-on/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔒️change-strict-mode/🔒️turns-strict-mode-on/🎯️outcome/🔣️.json"),
         ),
-        "update-limits" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🚧️update-limits/🛡️tightens-every-untrusted-input-limit/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚧️update-limits/🛡️tightens-every-untrusted-input-limit/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚧️update-limits/🛡️tightens-every-untrusted-input-limit/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚧️update-limits/🛡️tightens-every-untrusted-input-limit/🎯️outcome/🔣️.json"),
-        ),
         "change-edition-profile" => (
             include_str!("../../🧫️fixtures/🧬️mutations/🔖️change-edition-profile/🆕️switches-sheet-8-from-legacy-to-current/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔖️change-edition-profile/🆕️switches-sheet-8-from-legacy-to-current/🦠️mutation/🔣️.json"),
@@ -132,17 +124,17 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🧹️remove-edition-profile/🧹️clears-the-sheet-8-legacy-override/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🧹️remove-edition-profile/🧹️clears-the-sheet-8-legacy-override/🎯️outcome/🔣️.json"),
         ),
-        "create-product" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️create-product/📦️appends-vlv-80-002-and-its-index-entry/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️create-product/📦️appends-vlv-80-002-and-its-index-entry/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️create-product/📦️appends-vlv-80-002-and-its-index-entry/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️create-product/📦️appends-vlv-80-002-and-its-index-entry/🎯️outcome/🔣️.json"),
+        "add-product" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️add-product/📦️appends-vlv-80-002-and-its-index-entry/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️add-product/📦️appends-vlv-80-002-and-its-index-entry/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️add-product/📦️appends-vlv-80-002-and-its-index-entry/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️add-product/📦️appends-vlv-80-002-and-its-index-entry/🎯️outcome/🔣️.json"),
         ),
-        "delete-product" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-product/🚫️removes-vlv-50-001-and-its-index-entry/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-product/🚫️removes-vlv-50-001-and-its-index-entry/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-product/🚫️removes-vlv-50-001-and-its-index-entry/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-product/🚫️removes-vlv-50-001-and-its-index-entry/🎯️outcome/🔣️.json"),
+        "remove-product" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-product/🚫️removes-vlv-50-001-and-its-index-entry/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-product/🚫️removes-vlv-50-001-and-its-index-entry/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-product/🚫️removes-vlv-50-001-and-its-index-entry/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️remove-product/🚫️removes-vlv-50-001-and-its-index-entry/🎯️outcome/🔣️.json"),
         ),
         "rename-product" => (
             include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/🏷️retitles-vlv-50-001-and-resyncs-its-index-tags/📸️snapshot/⬅️before/🔣️.json"),
@@ -150,23 +142,23 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/🏷️retitles-vlv-50-001-and-resyncs-its-index-tags/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/🏷️retitles-vlv-50-001-and-resyncs-its-index-tags/🎯️outcome/🔣️.json"),
         ),
-        "replace-product-configuration" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🎛️replace-product-configuration/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎛️replace-product-configuration/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎛️replace-product-configuration/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🎛️replace-product-configuration/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/🎯️outcome/🔣️.json"),
+        "change-product-configuration" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-product-configuration/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-product-configuration/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-product-configuration/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎛️change-product-configuration/📏️reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn/🎯️outcome/🔣️.json"),
         ),
-        "create-geometry" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧊️create-geometry/🧊️adds-the-geom-valve-80-definition/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧊️create-geometry/🧊️adds-the-geom-valve-80-definition/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧊️create-geometry/🧊️adds-the-geom-valve-80-definition/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧊️create-geometry/🧊️adds-the-geom-valve-80-definition/🎯️outcome/🔣️.json"),
+        "add-geometry" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧊️add-geometry/🧊️adds-the-geom-valve-80-definition/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧊️add-geometry/🧊️adds-the-geom-valve-80-definition/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧊️add-geometry/🧊️adds-the-geom-valve-80-definition/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧊️add-geometry/🧊️adds-the-geom-valve-80-definition/🎯️outcome/🔣️.json"),
         ),
-        "delete-geometry" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🚮️delete-geometry/🚫️removes-the-geom-valve-50-definition/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚮️delete-geometry/🚫️removes-the-geom-valve-50-definition/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚮️delete-geometry/🚫️removes-the-geom-valve-50-definition/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚮️delete-geometry/🚫️removes-the-geom-valve-50-definition/🎯️outcome/🔣️.json"),
+        "remove-geometry" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🚮️remove-geometry/🚫️removes-the-geom-valve-50-definition/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚮️remove-geometry/🚫️removes-the-geom-valve-50-definition/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚮️remove-geometry/🚫️removes-the-geom-valve-50-definition/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚮️remove-geometry/🚫️removes-the-geom-valve-50-definition/🎯️outcome/🔣️.json"),
         ),
         "resize-geometry" => (
             include_str!("../../🧫️fixtures/🧬️mutations/📐️resize-geometry/📐️doubles-the-geom-valve-50-bounding-box/📸️snapshot/⬅️before/🔣️.json"),
@@ -186,29 +178,29 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-the-out-connection-from-geom-valve-50/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/✂️remove-geometry-connection/🔌️detaches-the-out-connection-from-geom-valve-50/🎯️outcome/🔣️.json"),
         ),
-        "replace-geometry-parameters" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-geometry-parameters/➗️rescales-geom-valve-50-to-half-and-adds-clearance/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-geometry-parameters/➗️rescales-geom-valve-50-to-half-and-adds-clearance/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-geometry-parameters/➗️rescales-geom-valve-50-to-half-and-adds-clearance/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-geometry-parameters/➗️rescales-geom-valve-50-to-half-and-adds-clearance/🎯️outcome/🔣️.json"),
+        "change-geometry-parameters" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-geometry-parameters/➗️rescales-geom-valve-50-to-half-and-adds-clearance/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-geometry-parameters/➗️rescales-geom-valve-50-to-half-and-adds-clearance/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-geometry-parameters/➗️rescales-geom-valve-50-to-half-and-adds-clearance/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧮️change-geometry-parameters/➗️rescales-geom-valve-50-to-half-and-adds-clearance/🎯️outcome/🔣️.json"),
         ),
-        "create-curve" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📈️create-curve/📈️adds-the-curve-dp-pressure-drop-curve/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📈️create-curve/📈️adds-the-curve-dp-pressure-drop-curve/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📈️create-curve/📈️adds-the-curve-dp-pressure-drop-curve/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📈️create-curve/📈️adds-the-curve-dp-pressure-drop-curve/🎯️outcome/🔣️.json"),
+        "add-curve" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📈️add-curve/📈️adds-the-curve-dp-pressure-drop-curve/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📈️add-curve/📈️adds-the-curve-dp-pressure-drop-curve/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📈️add-curve/📈️adds-the-curve-dp-pressure-drop-curve/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📈️add-curve/📈️adds-the-curve-dp-pressure-drop-curve/🎯️outcome/🔣️.json"),
         ),
-        "delete-curve" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️delete-curve/🚫️removes-the-curve-kvs-flow-curve/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️delete-curve/🚫️removes-the-curve-kvs-flow-curve/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️delete-curve/🚫️removes-the-curve-kvs-flow-curve/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📉️delete-curve/🚫️removes-the-curve-kvs-flow-curve/🎯️outcome/🔣️.json"),
+        "remove-curve" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📉️remove-curve/🚫️removes-the-curve-kvs-flow-curve/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📉️remove-curve/🚫️removes-the-curve-kvs-flow-curve/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📉️remove-curve/🚫️removes-the-curve-kvs-flow-curve/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📉️remove-curve/🚫️removes-the-curve-kvs-flow-curve/🎯️outcome/🔣️.json"),
         ),
-        "replace-curve-points" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📍️replace-curve-points/📍️resamples-curve-kvs-onto-three-points/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📍️replace-curve-points/📍️resamples-curve-kvs-onto-three-points/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📍️replace-curve-points/📍️resamples-curve-kvs-onto-three-points/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📍️replace-curve-points/📍️resamples-curve-kvs-onto-three-points/🎯️outcome/🔣️.json"),
+        "change-curve-points" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️change-curve-points/📍️resamples-curve-kvs-onto-three-points/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️change-curve-points/📍️resamples-curve-kvs-onto-three-points/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️change-curve-points/📍️resamples-curve-kvs-onto-three-points/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️change-curve-points/📍️resamples-curve-kvs-onto-three-points/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-vdi3805-1: no committed fixture is registered for kind {other:?}"),
     }

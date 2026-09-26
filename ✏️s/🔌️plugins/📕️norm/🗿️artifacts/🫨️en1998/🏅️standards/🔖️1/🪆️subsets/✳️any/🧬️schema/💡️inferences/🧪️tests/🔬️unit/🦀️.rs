@@ -1,13 +1,8 @@
-use super::*;
-use protocol::Inference;
+use crate::standards::v1::subsets::any::schema::inferences;
+use crate::En1998Snapshot;
 
 #[semio_framework_async_macros::async_test]
-async fn inference_determinism_law() {
-    let snapshot = En1998Snapshot::default();
-    assert_eq!(En1998Inference::infer(&snapshot), En1998Inference::infer(&snapshot));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn inference_default_law() {
-    assert_eq!(En1998Inference::infer(&En1998Snapshot::default()), En1998Inference::default());
+async fn evaluate_default_runs() {
+    let report = inferences::evaluate(&En1998Snapshot::default());
+    assert!(!report.checks.is_empty());
 }

@@ -15,18 +15,6 @@
       "descriptionKey": "tool_ticket_reopen"
     },
     {
-      "name": "section_move",
-      "descriptionKey": "tool_section_move"
-    },
-    {
-      "name": "file_integrate",
-      "descriptionKey": "tool_file_integrate"
-    },
-    {
-      "name": "section_extract",
-      "descriptionKey": "tool_section_extract"
-    },
-    {
       "name": "goal_open",
       "descriptionKey": "tool_goal_open"
     },

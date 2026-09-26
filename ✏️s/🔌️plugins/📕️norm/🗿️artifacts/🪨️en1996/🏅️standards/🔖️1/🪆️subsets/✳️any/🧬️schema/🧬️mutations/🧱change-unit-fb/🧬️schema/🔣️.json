@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-unit-fb/schema.json",
+  "title": "ChangeUnitFb",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newFBPa"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newFBPa": {
+      "type": "number"
+    }
+  }
+}

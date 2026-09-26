@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "Rename ProductRuntime to Platform; replace board/scene3d with table/puzzle2d/puzzle3d/puzzle5d/cad/panel component kinds; rewrite sketchpad as declarative Platform instance with home/kit table + kit diagram slice.",
   "summary": "Fixed StoreProvider crash when opening a type: navigation now calls applySketchpadUri synchronously before browser history updates, so type representation components and topology register before FiveD renders. Platform handleNavigate also applies uri before navigate. BuiltinPuzzle5dCanvas delegates to the puzzle5d kind renderer when a platform component exists, otherwise shows loading instead of mounting FiveD without StoreProvider.",
-  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [
     "⚪️cf127c05a58a49ee9af34eb7e31c47a5",
     "⚪️a111f9be56aa412f86a1a6b4bb3f0346",

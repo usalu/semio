@@ -196,6 +196,7 @@ pub struct ExtensionBag {
 /// 🆔️ Product identity within a manufacturer catalogue.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct ProductIdentity {
     pub manufacturer_code: String,
     pub product_group: String,
@@ -205,6 +206,7 @@ pub struct ProductIdentity {
 /// 🏭️ Manufacturer file header and payload references.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct ManufacturerFile {
     pub header_version: String,
     pub manufacturer: String,
@@ -235,6 +237,7 @@ pub struct CompositionLink {
 /// 🔒️ Security limits for untrusted manufacturer files.
 #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct SecurityLimits {
     pub max_file_bytes: usize,
     pub max_records: usize,
@@ -591,6 +594,7 @@ impl SchemaCatalog {
 /// 🏗️ Parsed building-system number (Anlagenkennzeichen).
 #[derive(Clone, Debug, PartialEq, Eq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct BuildingSystemNumber {
     pub system_code: String,
     pub subsystem: String,
@@ -841,18 +845,180 @@ impl RecordFamilyId {
 /// 📄️ One semicolon-delimited native record.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct NativeRecord {
     pub family: RecordFamilyId,
     pub fields: Vec<String>,
     pub extensions: ExtensionBag,
 }
 
+/// 🎛 Sheet-2 heating control valve attributes (VDI 3805 Blatt 2).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ValveHeatingAttributes {
+    pub dn: u16,
+    pub kvs_m3_s: f64,
+    pub pressure_class: String,
+    pub connection_type: String,
+    pub authority_min: f64,
+    pub authority_max: f64,
+}
+
+impl ValveHeatingAttributes {
+    pub fn kvs_m3_h(&self) -> f64 {
+        self.kvs_m3_s * 3600.0
+    }
+
+    pub fn from_kvs_m3_h(dn: u16, kvs_m3_h: f64, pressure_class: impl Into<String>, connection_type: impl Into<String>, authority_min: f64, authority_max: f64) -> Self {
+        Self { dn, kvs_m3_s: kvs_m3_h / 3600.0, pressure_class: pressure_class.into(), connection_type: connection_type.into(), authority_min, authority_max }
+    }
+}
+
+/// ♨️ Sheet-3 radiator / heating-surface attributes (VDI 3805 Blatt 3; Φ at 75/65/20 °C).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct RadiatorAttributes {
+    pub standard_output_w: f64,
+    pub heat_exponent_n: f64,
+    pub length_m: f64,
+    pub height_m: f64,
+    pub depth_m: f64,
+    pub connection_type: String,
+}
+
+/// 💧 Sheet-5 heating pump attributes (VDI 3805 Blatt 5).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct PumpHeatingAttributes {
+    pub dn_suction: u16,
+    pub dn_discharge: u16,
+    pub nominal_flow_m3_s: f64,
+    pub nominal_head_m: f64,
+    pub motor_power_w: f64,
+    pub hydraulic_efficiency: f64,
+    pub qh_curve_ref: Option<String>,
+}
+
+/// 🔥 Sheet-6 heat-generator attributes (VDI 3805 Blatt 6).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct HeatGeneratorAttributes {
+    pub nominal_heat_output_w: f64,
+    pub fuel_type: String,
+    pub flow_temp_max_c: f64,
+    pub return_temp_min_c: f64,
+}
+
+/// 🧩 Single generic Blatt attribute (mirrors a native 210 key/value[/unit] pair).
+#[derive(Clone, Debug, PartialEq, Default, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct GenericAttribute {
+    pub key: String,
+    pub value: String,
+    pub unit: Option<String>,
+}
+
+/// 📋 Generic sheet attributes as an ordered key/value/unit catalogue mirroring native records.
+#[derive(Clone, Debug, PartialEq, Default, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct GenericAttributes {
+    #[dsl(table)]
+    #[cfg_attr(test, serde(default))]
+    #[value(default)]
+    pub entries: Vec<GenericAttribute>,
+}
+
+impl GenericAttributes {
+    pub fn from_map(kv: &std::collections::BTreeMap<String, String>) -> Self {
+        Self {
+            entries: kv
+                .iter()
+                .map(|(k, v)| GenericAttribute {
+                    key: k.clone(),
+                    value: v.clone(),
+                    unit: None,
+                })
+                .collect(),
+        }
+    }
+
+    pub fn get(&self, key: &str) -> Option<&str> {
+        self.entries.iter().find(|e| e.key.eq_ignore_ascii_case(key)).map(|e| e.value.as_str())
+    }
+
+    pub fn ensure_keys(&mut self, keys: &[&str]) {
+        for key in keys {
+            if self.get(key).is_none() {
+                self.entries.push(GenericAttribute {
+                    key: (*key).to_string(),
+                    value: String::new(),
+                    unit: None,
+                });
+            }
+        }
+    }
+}
+
+/// 🎛 Typed per-sheet mandatory attribute payload — replaces the untyped parameters map.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+#[value(tag = "kind", rename_all = "camelCase")]
+pub enum SheetAttributes {
+    ValveHeating(ValveHeatingAttributes),
+    Radiator(RadiatorAttributes),
+    PumpHeating(PumpHeatingAttributes),
+    HeatGenerator(HeatGeneratorAttributes),
+    Generic(GenericAttributes),
+}
+
+impl SheetAttributes {
+    pub fn dn(&self) -> Option<u16> {
+        match self {
+            Self::ValveHeating(a) => Some(a.dn),
+            Self::PumpHeating(a) => Some(a.dn_discharge),
+            _ => None,
+        }
+    }
+}
+
+impl dsl::DslField for SheetAttributes {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Value
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("SheetAttributes always serializes to DslValue"))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Value(dsl_value) => {
+                let normalized = store::pack_rt::renormalize_whole_number_floats(dsl_value.clone());
+                dsl::from_dsl_value(normalized)
+            }
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+}
+
 /// ⚙️ Product configuration block.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct Configuration {
     pub id: String,
-    pub parameters: BTreeMap<String, VdiValue>,
+    pub attributes: SheetAttributes,
     pub geometry_ref: Option<String>,
     pub function_refs: Vec<String>,
 }
@@ -860,7 +1026,9 @@ pub struct Configuration {
 /// 📦️ Catalogue product in Part 1 hierarchy.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct CatalogueProduct {
+    pub id: String,
     pub identity: ProductIdentity,
     #[dsl(table)]
     pub title: Vec<LocalizedText>,
@@ -878,6 +1046,7 @@ pub struct CatalogueProduct {
 /// 📚️ Manufacturer catalogue document (Part 1).
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct ManufacturerCatalog {
     pub file: ManufacturerFile,
     #[dsl(table)]
@@ -896,6 +1065,7 @@ impl ManufacturerCatalog {
 /// 📦️ Axis-aligned bounding box [m].
 #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct BoundingBox {
     pub min_x: f64,
     pub min_y: f64,
@@ -922,6 +1092,7 @@ impl BoundingBox {
 /// 🔌️ Connection point on product geometry.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct ConnectionPoint {
     pub id: String,
     pub medium: String,
@@ -934,6 +1105,7 @@ pub struct ConnectionPoint {
 /// 🧊️ Parametric geometry definition.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct ParametricGeometry {
     pub id: String,
     pub bbox: BoundingBox,
@@ -966,6 +1138,7 @@ pub struct CurvePoint {
 /// 📉️ Characteristic curve with linear interpolation.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct CharacteristicCurve {
     pub id: String,
     pub x_unit: VdiUnit,
@@ -1001,6 +1174,7 @@ impl CharacteristicCurve {
 /// 🔍️ Product index entry.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct CatalogIndexEntry {
     pub product_id: String,
     pub sheet: SheetId,
@@ -1011,6 +1185,7 @@ pub struct CatalogIndexEntry {
 /// 📚️ Searchable catalogue index.
 #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct CatalogIndex {
     #[dsl(table)]
     pub entries: Vec<CatalogIndexEntry>,
@@ -1025,11 +1200,7 @@ impl CatalogIndex {
                 product_id: p.identity.article_number.clone(),
                 sheet: p.sheet,
                 tags: p.title.iter().map(|t| t.text.clone()).collect(),
-                dn: p.configuration.parameters.get("dn").and_then(|v| match v {
-                    VdiValue::Integer { value } => Some(*value as u16),
-                    VdiValue::Decimal { value, .. } => Some(*value as u16),
-                    _ => None,
-                }),
+                dn: p.configuration.attributes.dn(),
             })
             .collect();
         Self { entries }
@@ -1097,52 +1268,511 @@ pub enum EditionProfileChoice {
 /// 🏷️ Canonical DSL file extension for VDI 3805 documents.
 pub const VDI3805_EXTENSION: &str = "vdi3805";
 
-/// 📋️ VDI 3805 evaluation document.
-/// 🧪️ Minimal valid heating valve (sheet 2) reference fixture.
+/// 📕️ Conforming manufacturer dataset — sheet-2 DN50 control valve with closed Part 1 graph.
 pub fn reference_fixture() -> Vdi3805Snapshot {
+    conforming_valve_dataset()
+}
+
+/// ✅️ Fully conforming sheet-2 heating control valve dataset (Part 1 + Blatt 2).
+pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
     let bsn = BuildingSystemNumber { system_code: "420".into(), subsystem: "10".into(), sequence: 1 };
-    let file = ManufacturerFile { header_version: "3805".into(), manufacturer: "DEMO".into(), building_system_number: bsn, created: "2026-07-22".into(), charset: "UTF-8".into(), record_count: 3, extensions: ExtensionBag::default() };
-    let mut parameters = BTreeMap::new();
-    parameters.insert("dn".into(), VdiValue::Integer { value: 50 });
-    parameters.insert("kvs".into(), VdiValue::Decimal { value: 4.5, unit: Some(VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0)) });
+    let file = ManufacturerFile {
+        header_version: "3805".into(),
+        manufacturer: "DEMO".into(),
+        building_system_number: bsn,
+        created: "2023-06-01".into(),
+        charset: "UTF-8".into(),
+        record_count: 9,
+        extensions: ExtensionBag::default(),
+    };
+    let attributes = SheetAttributes::ValveHeating(ValveHeatingAttributes::from_kvs_m3_h(50, 4.5, "PN16", "flange", 0.3, 0.7));
     let product = CatalogueProduct {
+        id: "VLV-50-001".into(),
         identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HV".into(), article_number: "VLV-50-001".into() },
         title: bilingual("Stellventil DN50", "Control valve DN50"),
         sheet: SheetId(2),
         records: vec![
             NativeRecord { family: RecordFamilyId(RecordFamilyId::R100.to_string()), fields: vec!["100".into(), "DEMO".into(), "HV".into(), "VLV-50-001".into(), "2".into()], extensions: ExtensionBag::default() },
-            NativeRecord { family: RecordFamilyId(RecordFamilyId::R200.to_string()), fields: vec!["200".into(), "dn".into(), "50".into()], extensions: ExtensionBag::default() },
+            NativeRecord {
+                family: RecordFamilyId(RecordFamilyId::R110.to_string()),
+                fields: vec!["110".into(), "cfg.VLV-50-001".into(), "geom.valve.50".into(), "curve-kvs".into()],
+                extensions: ExtensionBag::default(),
+            },
+            NativeRecord {
+                family: RecordFamilyId(RecordFamilyId::R200.to_string()),
+                fields: vec!["200".into(), "geom.valve.50".into(), "0.15".into(), "0.20".into(), "0.10".into()],
+                extensions: ExtensionBag::default(),
+            },
+            NativeRecord {
+                family: RecordFamilyId(RecordFamilyId::R210.to_string()),
+                fields: vec![
+                    "210".into(),
+                    "dn".into(),
+                    "50".into(),
+                    "kvs".into(),
+                    "4.5".into(),
+                    "pressure_class".into(),
+                    "PN16".into(),
+                    "connection_type".into(),
+                    "flange".into(),
+                    "authority_min".into(),
+                    "0.3".into(),
+                    "authority_max".into(),
+                    "0.7".into(),
+                ],
+                extensions: ExtensionBag::default(),
+            },
+            NativeRecord {
+                family: RecordFamilyId(RecordFamilyId::R400.to_string()),
+                fields: vec!["400".into(), "curve-kvs".into(), "0".into(), "0".into(), "100".into(), "4.5".into()],
+                extensions: ExtensionBag::default(),
+            },
+            NativeRecord {
+                family: RecordFamilyId(RecordFamilyId::R700.to_string()),
+                fields: vec!["700".into(), "de".into(), "Stellventil DN50".into(), "en".into(), "Control valve DN50".into()],
+                extensions: ExtensionBag::default(),
+            },
         ],
-        configuration: Configuration { id: "cfg.VLV-50-001".into(), parameters, geometry_ref: Some("geom.valve.50".into()), function_refs: vec!["curve.kvs".into()] },
+        configuration: Configuration { id: "cfg.VLV-50-001".into(), attributes, geometry_ref: Some("geom.valve.50".into()), function_refs: vec!["curve-kvs".into()] },
         accessories: Vec::new(),
         components: Vec::new(),
         extensions: ExtensionBag::default(),
     };
-    let catalog = ManufacturerCatalog { file: file.clone(), products: vec![product], extensions: ExtensionBag::default() };
+    
+    let accessory = CatalogueProduct {
+        id: "ACT-01".into(),
+        identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "ACT".into(), article_number: "ACT-01".into() },
+        title: bilingual("Stellantrieb", "Actuator"),
+        sheet: SheetId(2),
+        records: vec![
+            NativeRecord {
+                family: RecordFamilyId(RecordFamilyId::R100.to_string()),
+                fields: vec!["100".into(), "DEMO".into(), "ACT".into(), "ACT-01".into(), "2".into()],
+                extensions: ExtensionBag::default(),
+            },
+            NativeRecord {
+                family: RecordFamilyId(RecordFamilyId::R210.to_string()),
+                fields: vec![
+                    "210".into(),
+                    "dn".into(),
+                    "50".into(),
+                    "kvs".into(),
+                    "4.5".into(),
+                    "pressure_class".into(),
+                    "PN16".into(),
+                    "connection_type".into(),
+                    "flange".into(),
+                    "authority_min".into(),
+                    "0.3".into(),
+                    "authority_max".into(),
+                    "0.7".into(),
+                ],
+                extensions: ExtensionBag::default(),
+            },
+            NativeRecord {
+                family: RecordFamilyId(RecordFamilyId::R700.to_string()),
+                fields: vec!["700".into(), "de".into(), "Stellantrieb".into(), "en".into(), "Actuator".into()],
+                extensions: ExtensionBag::default(),
+            },
+        ],
+        configuration: Configuration {
+            id: "cfg.ACT-01".into(),
+            attributes: SheetAttributes::ValveHeating(ValveHeatingAttributes::from_kvs_m3_h(50, 4.5, "PN16", "flange", 0.3, 0.7)),
+            geometry_ref: None,
+            function_refs: vec![],
+        },
+        accessories: Vec::new(),
+        components: Vec::new(),
+        extensions: ExtensionBag::default(),
+    };
+    let mut product = product;
+    product.accessories = vec![AccessoryLink { accessory_id: "ACT-01".into(), required: true, quantity: 1 }];
+    product.components = vec![CompositionLink { component_id: "ACT-01".into(), quantity: 1 }];
+    let catalog = ManufacturerCatalog { file: file.clone(), products: vec![product, accessory], extensions: ExtensionBag::default() };
+
     let index = CatalogIndex::from_catalog(&catalog);
     let geometry = BTreeMap::from([(
         "geom.valve.50".into(),
         ParametricGeometry {
             id: "geom.valve.50".into(),
             bbox: BoundingBox::from_size(0.15, 0.20, 0.10),
-            connections: vec![
-                ConnectionPoint { id: "in".into(), medium: "water".into(), position: [0.0, 0.1, 0.05], direction: [-1.0, 0.0, 0.0], diameter_mm: Some(50.0) },
-                ConnectionPoint { id: "out".into(), medium: "water".into(), position: [0.15, 0.1, 0.05], direction: [1.0, 0.0, 0.0], diameter_mm: Some(50.0) },
-            ],
-            parameters: BTreeMap::from([("scale".into(), 1.0)]),
+            connections: vec![ConnectionPoint {
+                id: "in".into(),
+                medium: "water".into(),
+                position: [0.0, 0.1, 0.05],
+                direction: [-1.0, 0.0, 0.0],
+                diameter_mm: Some(50.0),
+            }],
+            parameters: BTreeMap::from([("scale".into(), 1.0), ("clearance".into(), 0.01)]),
         },
     )]);
     let curves = BTreeMap::from([(
-        "curve.kvs".into(),
+        "curve-kvs".into(),
         CharacteristicCurve {
-            id: "curve.kvs".into(),
+            id: "curve-kvs".into(),
             x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01),
-            y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0),
+            y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0 / 3600.0),
             points: vec![CurvePoint { x: 0.0, y: 0.0 }, CurvePoint { x: 100.0, y: 4.5 }],
         },
     )]);
-    Vdi3805Snapshot { manufacturer_file: file, catalog, edition_profile: BTreeMap::new(), correction_as_of: EditionId::new(2024, 1), strict_mode: false, index, geometry, curves, limits: SecurityLimits::default() }
+    Vdi3805Snapshot {
+        catalog,
+        edition_profile: BTreeMap::new(),
+        correction_as_of: EditionId::new(2024, 1),
+        strict_mode: false,
+        index,
+        geometry,
+        curves,
+    }
 }
+
+/// ❌️ Non-conforming dataset with multiple Part 1 + Blatt 2 violations for remediation tests.
+pub fn nonconforming_valve_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_valve_dataset();
+    doc.catalog.file.record_count = 3;
+    doc.catalog.file.record_count = 3;
+    if let SheetAttributes::ValveHeating(ref mut attrs) = doc.catalog.products[0].configuration.attributes {
+        attrs.dn = 47;
+        attrs.kvs_m3_s = 0.5 / 3600.0;
+        attrs.authority_min = 0.8;
+        attrs.authority_max = 0.2;
+        attrs.pressure_class.clear();
+    }
+    if let Some(r210) = doc.catalog.products[0].records.iter_mut().find(|r| r.family.0 == RecordFamilyId::R210) {
+        r210.fields = vec![
+            "210".into(),
+            "dn".into(),
+            "47".into(),
+            "kvs".into(),
+            "0.5".into(),
+            "pressure_class".into(),
+            "".into(),
+            "connection_type".into(),
+            "flange".into(),
+            "authority_min".into(),
+            "0.8".into(),
+            "authority_max".into(),
+            "0.2".into(),
+        ];
+    }
+    doc.catalog.products[0].configuration.geometry_ref = Some("geom.missing".into());
+    doc.catalog.products[0].records.retain(|r| r.family.0 != RecordFamilyId::R700);
+    doc.catalog.products.push(CatalogueProduct {
+        id: "HIST-12".into(),
+        identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: "HX".into(), article_number: "HIST-12".into() },
+        title: bilingual("Historischer Vorschlag", "Historical proposal"),
+        sheet: SheetId(12),
+        records: vec![NativeRecord {
+            family: RecordFamilyId(RecordFamilyId::R100.to_string()),
+            fields: vec!["100".into(), "DEMO".into(), "HX".into(), "HIST-12".into(), "12".into()],
+            extensions: ExtensionBag::default(),
+        }],
+        configuration: Configuration { id: "cfg.HIST-12".into(), attributes: SheetAttributes::Generic(GenericAttributes::default()), geometry_ref: None, function_refs: Vec::new() },
+        accessories: Vec::new(),
+        components: Vec::new(),
+        extensions: ExtensionBag::default(),
+    });
+    doc.strict_mode = true;
+    doc.index = CatalogIndex::from_catalog(&doc.catalog);
+    doc
+}
+
+/// 📋 Assessed operative Blätter that require committed examples (CORRECTION 13:43 + Wave D Round 3).
+pub const ASSESSED_BLATT_SHEETS: &[u16] = &[2, 3, 4, 5, 6, 7, 8, 16, 19, 53, 60];
+
+fn base_header() -> ManufacturerFile {
+    ManufacturerFile {
+        header_version: "3805".into(),
+        manufacturer: "DEMO".into(),
+        building_system_number: BuildingSystemNumber { system_code: "420".into(), subsystem: "10".into(), sequence: 1 },
+        created: "2023-06-01".into(),
+        charset: "UTF-8".into(),
+        record_count: 0,
+        extensions: ExtensionBag::default(),
+    }
+}
+
+fn generic_product(article: &str, sheet: u16, group: &str, title_de: &str, title_en: &str, attrs: Vec<(&str, &str)>) -> CatalogueProduct {
+    let mut fields = vec!["210".into()];
+    let mut entries = Vec::new();
+    for (k, v) in &attrs {
+        fields.push((*k).into());
+        fields.push((*v).into());
+        entries.push(GenericAttribute { key: (*k).into(), value: (*v).into(), unit: None });
+    }
+    let mut records = vec![
+        NativeRecord {
+            family: RecordFamilyId(RecordFamilyId::R100.to_string()),
+            fields: vec!["100".into(), "DEMO".into(), group.into(), article.into(), sheet.to_string()],
+            extensions: ExtensionBag::default(),
+        },
+        NativeRecord { family: RecordFamilyId(RecordFamilyId::R210.to_string()), fields, extensions: ExtensionBag::default() },
+        NativeRecord {
+            family: RecordFamilyId(RecordFamilyId::R700.to_string()),
+            fields: vec!["700".into(), "de".into(), title_de.into(), "en".into(), title_en.into()],
+            extensions: ExtensionBag::default(),
+        },
+    ];
+    let _ = &mut records;
+    CatalogueProduct {
+        id: article.into(),
+        identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: group.into(), article_number: article.into() },
+        title: bilingual(title_de, title_en),
+        sheet: SheetId(sheet),
+        records,
+        configuration: Configuration {
+            id: format!("cfg.{article}"),
+            attributes: SheetAttributes::Generic(GenericAttributes { entries }),
+            geometry_ref: None,
+            function_refs: vec![],
+        },
+        accessories: Vec::new(),
+        components: Vec::new(),
+        extensions: ExtensionBag::default(),
+    }
+}
+
+fn snapshot_with_products(products: Vec<CatalogueProduct>) -> Vdi3805Snapshot {
+    let mut file = base_header();
+    file.record_count = products.iter().map(|p| p.records.len() as u32).sum();
+    let catalog = ManufacturerCatalog { file, products, extensions: ExtensionBag::default() };
+    let index = CatalogIndex::from_catalog(&catalog);
+    Vdi3805Snapshot {
+        catalog,
+        edition_profile: BTreeMap::new(),
+        correction_as_of: EditionId::new(2024, 1),
+        strict_mode: false,
+        index,
+        geometry: BTreeMap::new(),
+        curves: BTreeMap::new(),
+    }
+}
+
+/// ✅️ Conforming Blatt-3 radiator example.
+pub fn conforming_blatt_3_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_valve_dataset();
+    doc.catalog.products[0].id = "RAD-600".into();
+    doc.catalog.products[0].identity.article_number = "RAD-600".into();
+    doc.catalog.products[0].sheet = SheetId(3);
+    doc.catalog.products[0].title = bilingual("Heizkörper 600", "Radiator 600");
+    doc.catalog.products[0].configuration.attributes = SheetAttributes::Radiator(RadiatorAttributes {
+        standard_output_w: 1200.0,
+        heat_exponent_n: 1.3,
+        length_m: 0.6,
+        height_m: 0.6,
+        depth_m: 0.1,
+        connection_type: "flange".into(),
+    });
+    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    doc.catalog.products[0].configuration.geometry_ref = None;
+    doc.catalog.products[0].configuration.function_refs.clear();
+    doc.geometry.clear();
+    doc.curves.clear();
+    doc.catalog.file.record_count = doc.catalog.products.iter().map(|p| p.records.len() as u32).sum();
+    doc.index = CatalogIndex::from_catalog(&doc.catalog);
+    doc
+}
+
+/// ❌️ Non-conforming Blatt-3 radiator (≥2 fails).
+pub fn nonconforming_blatt_3_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_blatt_3_dataset();
+    if let SheetAttributes::Radiator(ref mut a) = doc.catalog.products[0].configuration.attributes {
+        a.heat_exponent_n = 0.2;
+        a.standard_output_w = 0.0;
+        a.connection_type.clear();
+    }
+    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    doc
+}
+
+/// ✅️ Conforming Blatt-5 pump example.
+pub fn conforming_blatt_5_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_valve_dataset();
+    doc.catalog.products[0].id = "PMP-50".into();
+    doc.catalog.products[0].identity.article_number = "PMP-50".into();
+    doc.catalog.products[0].sheet = SheetId(5);
+    doc.catalog.products[0].title = bilingual("Heizungspumpe DN50", "Heating pump DN50");
+    doc.catalog.products[0].configuration.attributes = SheetAttributes::PumpHeating(PumpHeatingAttributes {
+        dn_suction: 50,
+        dn_discharge: 50,
+        nominal_flow_m3_s: 0.0025,
+        nominal_head_m: 6.0,
+        motor_power_w: 750.0,
+        hydraulic_efficiency: 0.45,
+        qh_curve_ref: Some("curve-kvs".into()),
+    });
+    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    doc.catalog.file.record_count = doc.catalog.products.iter().map(|p| p.records.len() as u32).sum();
+    doc.index = CatalogIndex::from_catalog(&doc.catalog);
+    doc
+}
+
+/// ❌️ Non-conforming Blatt-5 pump.
+pub fn nonconforming_blatt_5_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_blatt_5_dataset();
+    if let SheetAttributes::PumpHeating(ref mut a) = doc.catalog.products[0].configuration.attributes {
+        a.nominal_flow_m3_s = 0.0;
+        a.hydraulic_efficiency = 1.5;
+    }
+    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    doc
+}
+
+/// ✅️ Conforming Blatt-6 heat generator.
+pub fn conforming_blatt_6_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_valve_dataset();
+    doc.catalog.products[0].id = "HG-24".into();
+    doc.catalog.products[0].identity.article_number = "HG-24".into();
+    doc.catalog.products[0].sheet = SheetId(6);
+    doc.catalog.products[0].title = bilingual("Wärmeerzeuger 24 kW", "Heat generator 24 kW");
+    doc.catalog.products[0].configuration.attributes = SheetAttributes::HeatGenerator(HeatGeneratorAttributes {
+        nominal_heat_output_w: 24000.0,
+        fuel_type: "gas".into(),
+        flow_temp_max_c: 80.0,
+        return_temp_min_c: 40.0,
+    });
+    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    doc.catalog.products[0].configuration.geometry_ref = None;
+    doc.catalog.products[0].configuration.function_refs.clear();
+    doc.geometry.clear();
+    doc.curves.clear();
+    doc.catalog.file.record_count = doc.catalog.products.iter().map(|p| p.records.len() as u32).sum();
+    doc.index = CatalogIndex::from_catalog(&doc.catalog);
+    doc
+}
+
+/// ❌️ Non-conforming Blatt-6 heat generator.
+pub fn nonconforming_blatt_6_dataset() -> Vdi3805Snapshot {
+    let mut doc = conforming_blatt_6_dataset();
+    if let SheetAttributes::HeatGenerator(ref mut a) = doc.catalog.products[0].configuration.attributes {
+        a.nominal_heat_output_w = 0.0;
+        a.fuel_type.clear();
+        a.return_temp_min_c = 95.0;
+    }
+    crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    doc
+}
+
+/// ✅️ Conforming operative Blatt snapshot for sheets that use GenericAttributes + Blatt code lists.
+pub fn conforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
+    match sheet {
+        2 => conforming_valve_dataset(),
+        3 => conforming_blatt_3_dataset(),
+        5 => conforming_blatt_5_dataset(),
+        6 => conforming_blatt_6_dataset(),
+        4 => snapshot_with_products(vec![generic_product(
+            "PIPE-DN50",
+            4,
+            "PIPE",
+            "Rohr DN50",
+            "Pipe DN50",
+            vec![("dn", "50"), ("pressure_class", "PN16"), ("connection_type", "weld"), ("outer_diameter_m", "0.0603"), ("wall_thickness_m", "0.0029")],
+        )]),
+        7 => snapshot_with_products(vec![generic_product(
+            "TANK-200",
+            7,
+            "TANK",
+            "Speicher 200 L",
+            "Storage 200 L",
+            vec![("dn", "50"), ("pressure_class", "PN10"), ("connection_type", "flange"), ("volume_m3", "0.2")],
+        )]),
+        8 => snapshot_with_products(vec![generic_product(
+            "FIT-80",
+            8,
+            "FIT",
+            "Armatur DN80",
+            "Fitting DN80",
+            vec![("product_group", "FIT"), ("type_code", "STD"), ("dn", "80"), ("pressure_class", "PN16")],
+        )]),
+        16 => snapshot_with_products(vec![generic_product(
+            "AT-100",
+            16,
+            "AT",
+            "Luftdurchlass",
+            "Air terminal",
+            vec![("product_group", "AT"), ("type_code", "TYPE-A"), ("airflow_m3_s", "0.15"), ("pressure_drop_pa", "25")],
+        )]),
+        19 => snapshot_with_products(vec![generic_product(
+            "FIL-F7",
+            19,
+            "FIL",
+            "Filter F7",
+            "Filter F7",
+            vec![("product_group", "FIL"), ("type_code", "STD"), ("airflow_m3_s", "0.5"), ("filter_class", "F7")],
+        )]),
+        53 => snapshot_with_products(vec![generic_product(
+            "HP-12",
+            53,
+            "HP",
+            "Wärmepumpe 12 kW",
+            "Heat pump 12 kW",
+            vec![("product_group", "HP"), ("type_code", "STD"), ("dn", "32"), ("nominal_heat_output_w", "12000"), ("cop", "3.5")],
+        )]),
+        60 => snapshot_with_products(vec![generic_product(
+            "COMP-50",
+            60,
+            "COMP",
+            "Kompensator DN50",
+            "Compensator DN50",
+            vec![("dn", "50"), ("pressure_class", "PN16"), ("connection_type", "flange"), ("axial_force_n", "5000")],
+        )]),
+        other => snapshot_with_products(vec![generic_product(
+            &format!("GEN-{other}"),
+            other,
+            "GEN",
+            &format!("Produkt Blatt {other}"),
+            &format!("Product sheet {other}"),
+            vec![("product_group", "GEN"), ("type_code", "DEFAULT"), ("dn", "50")],
+        )]),
+    }
+}
+
+/// ❌️ Non-conforming counterpart for an assessed Blatt (≥2 fails with remedies).
+pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
+    match sheet {
+        2 => nonconforming_valve_dataset(),
+        3 => nonconforming_blatt_3_dataset(),
+        5 => nonconforming_blatt_5_dataset(),
+        6 => nonconforming_blatt_6_dataset(),
+        _ => {
+            let mut doc = conforming_blatt_dataset(sheet);
+            // Corrupt mandatory enum + numeric domains.
+            if let Some(product) = doc.catalog.products.get_mut(0) {
+                if let SheetAttributes::Generic(ref mut g) = product.configuration.attributes {
+                    for e in &mut g.entries {
+                        if e.key == "connection_type" || e.key == "filter_class" || e.key == "type_code" || e.key == "pressure_class" {
+                            e.value = "INVALID".into();
+                        }
+                        if e.key == "dn" || e.key == "cop" || e.key == "airflow_m3_s" || e.key == "axial_force_n" || e.key == "volume_m3" {
+                            e.value = "-1".into();
+                        }
+                    }
+                }
+                // Resync 210 from generic entries
+                let kv: std::collections::BTreeMap<String, String> = match &product.configuration.attributes {
+                    SheetAttributes::Generic(g) => g.entries.iter().map(|e| (e.key.clone(), e.value.clone())).collect(),
+                    _ => Default::default(),
+                };
+                if let Some(r210) = product.records.iter_mut().find(|r| r.family.0 == RecordFamilyId::R210) {
+                    let mut fields = vec!["210".into()];
+                    for (k, v) in &kv {
+                        fields.push(k.clone());
+                        fields.push(v.clone());
+                    }
+                    r210.fields = fields;
+                }
+                doc.catalog.file.record_count = 0; // structure fail
+            }
+            doc
+        }
+    }
+}
+
+/// 📚 All conforming assessed-Blatt examples for oracle + perturbation subjects.
+pub fn all_conforming_blatt_examples() -> Vec<(u16, Vdi3805Snapshot)> {
+    ASSESSED_BLATT_SHEETS.iter().copied().map(|s| (s, conforming_blatt_dataset(s))).collect()
+}
+
 // #endregion Session
 
 //#region 🔖️ArtifactKind
@@ -1159,6 +1789,10 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// under the sibling `editor` module, so a viewer file can read it without ever importing through it.
 pub const VDI3805_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.vdi3805", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 pub const VDI3805_DOCUMENT_SCHEMA: &str = "semio.norm.vdi3805/v1";
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/⚖️compliance-vdi3805-1/🦀️.rs"]
+mod compliance_vdi3805_1;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -1331,12 +1965,12 @@ pub mod standards {
                         pub mod text;
 
                         #[path = "."]
-                        pub mod replace_product_configuration {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/🦀️.rs"]
+                        pub mod change_product_configuration {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-product-configuration/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-product-configuration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️replace-product-configuration/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-product-configuration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
@@ -1361,12 +1995,12 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod update_manufacturer_file {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/🦀️.rs"]
+                        pub mod change_manufacturer_file {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-manufacturer-file/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-manufacturer-file/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️update-manufacturer-file/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-manufacturer-file/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
@@ -1391,22 +2025,22 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod create_curve {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/🦀️.rs"]
+                        pub mod add_curve {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️add-curve/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️add-curve/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️create-curve/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️add-curve/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod replace_curve_points {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/🦀️.rs"]
+                        pub mod change_curve_points {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-curve-points/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-curve-points/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️replace-curve-points/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️change-curve-points/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
@@ -1421,12 +2055,12 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod create_product {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🦀️.rs"]
+                        pub mod add_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️add-product/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️add-product/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️add-product/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
@@ -1461,62 +2095,52 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod replace_geometry_parameters {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/🦀️.rs"]
+                        pub mod change_geometry_parameters {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-geometry-parameters/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-geometry-parameters/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️replace-geometry-parameters/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-geometry-parameters/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod delete_curve {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/🦀️.rs"]
+                        pub mod remove_curve {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-curve/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-curve/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️delete-curve/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-curve/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod delete_geometry {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/🦀️.rs"]
+                        pub mod remove_geometry {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️remove-geometry/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️remove-geometry/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️delete-geometry/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚮️remove-geometry/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod delete_product {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/🦀️.rs"]
+                        pub mod remove_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-product/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-product/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-product/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-product/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod update_limits {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/🦀️.rs"]
+                        pub mod add_geometry {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️add-geometry/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️add-geometry/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️update-limits/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod create_geometry {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️create-geometry/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️add-geometry/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
@@ -1605,10 +2229,22 @@ pub mod examples {
         mod component;
         pub use component::*;
     }
+    #[path = "."]
+    pub mod nonconforming {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌶️nonconforming/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
 }
+
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
 
 #[path = "."]
 pub mod editor {
+    pub mod field_meta {
+        pub use crate::field_meta::*;
+    }
     #[path = "."]
     pub mod vdi3805 {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
@@ -1635,6 +2271,14 @@ pub mod editor {
             pub mod set_snapshot;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-field/🦀️.rs"]
+            pub mod set_field;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕insert-item/🦀️.rs"]
+            pub mod insert_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖remove-item/🦀️.rs"]
+            pub mod remove_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹apply-remedy/🦀️.rs"]
+            pub mod apply_remedy;
         }
 
         #[path = "."]

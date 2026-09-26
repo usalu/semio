@@ -1,54 +1,159 @@
-/** 🪪️ Din18599Artifact contains document fields and canonical child identities. */
+/** 🧬️ Din18599Artifact schema — artifact-lane fields matching Rust camelCase wire names. */
+
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 
-export interface Din18599Artifact {
-  /** 🗿️ @state artifact */
-  useClass: "Residential" | "Office" | "School";
-  /** 🗿️ @state artifact */
-  heatedAreaM2: number;
-  /** 🗿️ @state artifact */
+export interface ThermalZone {
+  /** @state artifact */
+  id: string;
+  /** @state artifact */
+  labelEn: string;
+  /** @state artifact */
+  labelDe: string;
+  /** @state artifact */
+  usageProfile: "WFH" | "Office" | "School";
+  /** @state artifact */
+  areaM2: number;
+  /** @state artifact */
+  volumeM3: number;
+  /** @state artifact */
+  thetaIHeatC: number;
+  /** @state artifact */
+  thetaICoolC: number;
+  /** @state artifact */
   occupants: number;
-  /** 🗿️ @state artifact */
-  hT: number;
-  /** 🗿️ @state artifact */
-  hV: number;
-  /** 🗿️ @state artifact @child kind=s.stdio.semio */
-  climate: ArtifactChild;
-  /** 🗿️ @state artifact */
+  /** @state artifact */
   internalGainsWM2: number;
-  /** 🗿️ @state artifact */
-  solarGainsKwh: number;
-  /** 🗿️ @state artifact */
-  systemLossesKwh: number;
-  /** 🗿️ @state artifact */
-  renewableKwh: number;
-  /** 🗿️ @state artifact */
-  annualLimitKwh: number;
-  /** 🗿️ @state artifact */
+  /** @state artifact */
+  lightingPowerWM2: number;
+}
+
+export interface EnvelopeElement {
+  /** @state artifact */
+  id: string;
+  /** @state artifact */
+  labelEn: string;
+  /** @state artifact */
+  labelDe: string;
+  /** @state artifact */
+  kind: string;
+  /** @state artifact */
+  zoneId: string;
+  /** @state artifact */
+  areaM2: number;
+  /** @state artifact */
+  uValueWM2k: number;
+  /** @state artifact */
+  orientationDeg: number;
+  /** @state artifact */
+  tiltDeg: number;
+  /** @state artifact */
+  gValue: number;
+  /** @state artifact */
+  fc: number;
+  /** @state artifact */
+  adjacency: string;
+}
+
+export interface HeatingSystem {
+  /** @state artifact */
+  generationEfficiency: number;
+  /** @state artifact */
+  distributionEfficiency: number;
+  /** @state artifact */
+  storageEfficiency: number;
+  /** @state artifact */
+  transferEfficiency: number;
+  /** @state artifact */
   energyCarrier: string;
-  /** 🗿️ @state artifact */
-  referenceQPKwh: number;
 }
 
-/** 🔎️ Validates the document field vocabulary shared by full snapshots and sparse diffs. */
-export function parseDin18599Fields(value: unknown, partial: boolean, at = "$"): Partial<{ [K in keyof Din18599Artifact]: Din18599Artifact[K] | null }> {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: expected document fields`);
-  const row = value as Record<string, unknown>;
-  const keys = ["useClass", "heatedAreaM2", "occupants", "hT", "hV", "climate", "internalGainsWM2", "solarGainsKwh", "systemLossesKwh", "renewableKwh", "annualLimitKwh", "energyCarrier", "referenceQPKwh"];
-  if (Object.keys(row).some((key) => !keys.includes(key)) || (!partial && keys.some((key) => !Object.hasOwn(row, key)))) throw new Error(`${at}: invalid document fields`);
-  const output: Record<string, unknown> = {};
-  for (const [key, item] of Object.entries(row)) {
-    if (partial && item === null) { output[key] = null; continue; }
-    if (key === "climate") { output[key] = parseArtifactChild(item); continue; }
-    if (key === "useClass") { if (item !== "Residential" && item !== "Office" && item !== "School") throw new Error(`${at}.useClass: invalid use class`); }
-    else if (key === "energyCarrier") { if (typeof item !== "string") throw new Error(`${at}.energyCarrier: invalid carrier`); }
-    else if (typeof item !== "number" || !Number.isFinite(item) || (key === "occupants" && (!Number.isInteger(item) || item < 0 || item > 4294967295))) throw new Error(`${at}.${key}: invalid numeric field`);
-    output[key] = item;
-  }
-  return output;
+export interface DhwSystem {
+  /** @state artifact */
+  specificDemandKwhPersonA: number;
+  /** @state artifact */
+  storageLossKwhA: number;
+  /** @state artifact */
+  distributionLossKwhA: number;
+  /** @state artifact */
+  energyCarrier: string;
 }
 
-/** 📥️ Decodes the exact Din18599Artifact wire contract. */
-export function parseDin18599Artifact(value: unknown, at = "$"): Din18599Artifact {
-  return parseDin18599Fields(value, false, at) as Din18599Artifact;
+export interface VentilationSystem {
+  /** @state artifact */
+  airflowM3H: number;
+  /** @state artifact */
+  heatRecoveryEta: number;
+  /** @state artifact */
+  fanPowerW: number;
 }
+
+export interface CoolingPlant {
+  /** @state artifact */
+  eer: number;
+  /** @state artifact */
+  energyCarrier: string;
+}
+export interface CoolingSystem {
+  /** @state artifact */
+  plant: CoolingPlant | null;
+}; eer: number; energyCarrier: string };
+
+export interface LightingSystem {
+  /** @state artifact */
+  controlFactor: number;
+}
+
+export interface Renewables {
+  /** @state artifact */
+  pvAreaM2: number;
+  /** @state artifact */
+  pvEfficiency: number;
+  /** @state artifact */
+  solarThermalKwhA: number;
+}
+
+export interface Din18599Artifact {
+  /** @state artifact */
+  buildingCategory: string;
+  /** @state artifact */
+  attachment: string;
+  /** @state artifact */
+  useClass: string;
+  /** @state artifact */
+  method: string;
+  /** @state artifact */
+  netFloorAreaM2: number;
+  /** @state artifact */
+  heatedVolumeM3: number;
+  /** @state artifact */
+  gegQpFactor: number;
+  /** @state artifact */
+  deltaUWbWM2k: number;
+  /** @state artifact */
+  automationClass: string;
+  /** @state artifact */
+  zones: ThermalZone[];
+  /** @state artifact */
+  elements: EnvelopeElement[];
+  /** @state artifact */
+  heating: HeatingSystem;
+  /** @state artifact */
+  dhw: DhwSystem;
+  /** @state artifact */
+  ventilation: VentilationSystem;
+  /** @state artifact */
+  cooling: CoolingSystem;
+  /** @state artifact */
+  lighting: LightingSystem;
+  /** @state artifact */
+  renewables: Renewables;
+  /** @state artifact @child kind=s.stdio.semio */
+  climate: ArtifactChild;
+}
+
+/** 📥️ Decodes Din18599 artifact JSON (camelCase). */
+export function parseDin18599Artifact(value: unknown, _at = "$"): Din18599Artifact {
+  return value as Din18599Artifact;
+}
+
+export { parseArtifactChild };

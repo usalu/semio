@@ -1,2 +1,54 @@
 semio norm.en1993.dsl v1
-annex=en n-ed-kn=850 m-ed-knm=220 v-ed-kn=140 a-mm2=7500 a-v-mm2=3600 w-pl-mm3=750000 f-y-mpa=460 f-u-mpa=550 chi=0.68 a-net-mm2=6800 tension-n-ed-kn=600 fire-thickness-mm=15 fire-rating=r30 fire-massivity=180 fire-mu-0=0.6 fire-design-temperature-c=620 cf-b-bar-mm=110 cf-t-mm=3 cf-k-sigma=6 cf-psi=0.5 cf-n-ed-kn=35 cf-gross-resistance-kn=80 stainless-m-ed-knm=55 stainless-w-pl-mm3=350000 stainless-f-y-mpa=240 plated-lambda-p=1.1 plated-sigma-ed-mpa=240 silo-t-mm=10 silo-r-mm=4000 shell-sigma-x-ed-mpa=180 silo-k=0.5 silo-gamma-kn-m3=20 silo-depth-m=8 bolt-f-ed-kn=150 bolt-n-bolts=4 bolt-a-s-mm2=353 bolt-e1-mm=50 bolt-e2-mm=50 bolt-d0-mm=26 bolt-d-mm=24 bolt-t-mm=12 bolt-f-u-mpa=550 bolt-f-ub-mpa=1000 weld-a-mm=6 weld-l-mm=150 weld-f-u-mpa=550 weld-steel-grade=S460 weld-f-ed-kn=130 delta-sigma-mpa=71 fatigue-category=90 fatigue-method=safe_life t10-steel-subgrade=K2 t10-actual-thickness-mm=35 t10-t-ed-c=-10 tension-component-f-uk-kn=650 tension-component-f-k-kn=480 tension-component-n-ed-kn=320 hss-w-el-mm3=550000 hss-f-y-mpa=420 hss-section-class=3 hss-m-ed-knm=140 bridge-lambda=1.15 bridge-phi-2=1.4 bridge-delta-sigma-p-mpa=45 tower-wind-factor=1.25 tower-n-ed-kn=480 pile-sigma-mpa=310 pile-k-red=0.75 pile-n-ed-kn=520 crane-f-z-ed-kn=65 crane-wheel-contact-length-mm=120 crane-dispersion-mm=60 crane-t-w-mm=12
+annex=en
+materials [id:TEXT grade:TEXT fy:NUM fu:NUM e-modulus:NUM g-modulus:NUM subgrade:TEXT kind:TEXT] {
+  mat-s460 S460 460000000.0 550000000.0 210000000000.0 81000000000.0 K2 carbon
+}
+sections [id:TEXT designation:TEXT kind:TEXT h:NUM b:NUM tw:NUM tf:NUM r:NUM area:NUM shear-area-y:NUM shear-area-z:NUM iy:NUM iz:NUM it:NUM iw:NUM w-el-y:NUM w-el-z:NUM w-pl-y:NUM w-pl-z:NUM area-net:NUM] {
+  sec-heb260 "HEB 260" rolledI 0.26 0.26 0.01 0.0175 0.024 0.0118 0.00589 0.00276 0.0001492 5.135e-05 8.53e-07 7.45e-06 0.001149 0.000395 0.001288 0.000602 0.0106
+}
+members [id:TEXT label:TEXT member-type:TEXT section-id:TEXT material-id:TEXT length:NUM buckling-length-y:NUM buckling-length-z:NUM ltb-length:NUM ltb-restraint-spacing:NUM load-application:TEXT end-moment-ratio-psi:NUM moment-diagram:TEXT deflection-limit-ratio:NUM analysis:TEXT] {
+  member-b1 "HSS beam-column B1" beamColumn sec-heb260 mat-s460 6 12 12 12 12 shearCenter -1 linear 300 elastic
+}
+load-cases [id:TEXT name:TEXT kind:TEXT category:TEXT] {
+  g-permanent "Permanent G" permanent self
+  q-imposed "Imposed Q" imposed office
+}
+member-actions [id:TEXT member-id:TEXT load-case-id:TEXT action:REC] {
+  act-b1-g member-b1 g-permanent {n=2100000 vy=0 vz=296000 my=333000 mz=0 t=0}
+  act-b1-q member-b1 q-imposed {n=0 vy=0 vz=0 my=0 mz=0 t=0}
+}
+joints [id:TEXT kind:TEXT member-id:TEXT bolt-class:TEXT bolt-diameter:NUM bolt-rows:UINT bolts-per-row:UINT pitch:NUM gauge:NUM end-distance:NUM edge-distance:NUM shear-planes:UINT plate-thickness:NUM plate-fu:NUM weld-throat:NUM weld-length:NUM weld-fu:NUM weld-grade:TEXT category:TEXT friction-mu:NUM preload-force:NUM slip-factor-ks:NUM friction-surfaces:UINT] {
+  joint-j1 bolted member-b1 10.9 0.024 2 2 0.07 0.07 0.03 0.04 1 0.012 550000000.0 0 0 550000000.0 S460 A 0.5 0 1 1
+  actions [id:TEXT load-case-id:TEXT shear:NUM tension:NUM] {
+  jf-1 g-permanent 213333 0
+  }
+  joint-w1 welded member-b1 "" 0 0 0 0 0 0 0 0 0 0 0.003 0.08 550000000.0 S460 A 0.5 0 1 1
+  actions [id:TEXT load-case-id:TEXT shear:NUM tension:NUM] {
+  jf-1 g-permanent 100000 0
+  }
+}
+fatigue-details [id:TEXT member-id:TEXT category:UINT method:TEXT] {
+  fat-1 member-b1 90 safe_life
+  spectrum [id:TEXT delta-sigma:NUM cycles:NUM] {
+  fb-1 95000000.0 2000000.0
+  }
+}
+fire-exposures [id:TEXT member-id:TEXT rating:TEXT protection-thickness:NUM section-factor:NUM mu0:NUM protection-conductivity:NUM protection-density:NUM protection-specific-heat:NUM] {
+  fire-1 member-b1 r30 0.008 180 0.75 0.2 800 1700
+}
+cold-formed-members [id:TEXT b-bar:NUM thickness:NUM k-sigma:NUM psi:NUM fy:NUM gross-resistance:NUM] {
+}
+plated-panels [id:TEXT a:NUM b:NUM thickness:NUM fy:NUM k-sigma:NUM] {
+}
+silo-shells [id:TEXT thickness:NUM radius:NUM depth:NUM k:NUM gamma:NUM fy:NUM] {
+}
+tension-components [id:TEXT f-uk:NUM f-k:NUM] {
+}
+bridge-fatigue [id:TEXT member-id:TEXT lambda:NUM phi2:NUM delta-sigma-p:NUM category:UINT method:TEXT] {
+}
+tower-legs [id:TEXT member-id:TEXT force-coefficient:NUM dynamic-factor:NUM] {
+}
+piles [id:TEXT section-id:TEXT material-id:TEXT driving-stress:NUM embedded-length:NUM shaft-perimeter:NUM] {
+}
+crane-runways [id:TEXT member-id:TEXT wheel-contact-length:NUM dispersion:NUM web-thickness:NUM fy:NUM phi:NUM] {
+}

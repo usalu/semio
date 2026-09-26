@@ -2,7 +2,7 @@
 @oracle-modelcontextprotocol-sdk
 @comparison-ordered-json-v1
 Feature: Every profile advertises exactly one surface
-  The repo MCP server ships nine tools, eight resources and four prompts. The names, their order and
+  The repo MCP server ships six tools, eight resources and four prompts. The names, their order and
   their per-IDE descriptions come from one authored table, so every implementation and the reference
   SDK server built from that same table must list exactly the same surface.
 

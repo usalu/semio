@@ -1,22 +1,28 @@
-//! 🔺️ `reorder-layers` — sparse diff construction; an out-of-range BASE `from` is
-//! `mutation.target-missing`.
+//! 🔺️ `reorder-layers` diff — whole-list rewrite via Din4108Diff list wrappers.
 
 use super::ReorderLayers;
-use crate::diff::Din4108LayerList;
+use crate::standards::v1::subsets::any::schema::diff::{Din4108ElementList, Din4108ThermalBridgeList, Din4108ZoneList};
 use crate::{Din4108Diff, Din4108Snapshot};
 
-//#region 🔖️Diff
 pub fn diff(payload: &ReorderLayers, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
-    if payload.from >= base.layers.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("Layer #{} does not exist.", payload.from), [payload.from.to_string()]);
+    let mut next = base.clone();
+    if let Err(msg) = apply_in_place(payload, &mut next) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", msg, Vec::<String>::new());
     }
-    let mut layers = base.layers.clone();
-    let item = layers.remove(payload.from);
-    let at = payload.to.min(layers.len());
-    if at == payload.from {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Layer #{} is already at that position.", payload.from));
-    }
-    layers.insert(at, item);
-    protocol::MutationOutcome::new(Din4108Diff { layers: Some(Din4108LayerList { values: layers }), ..Default::default() })
+    protocol::MutationOutcome::new(Din4108Diff {
+        zones: Some(Din4108ZoneList { values: next.zones }),
+        elements: Some(Din4108ElementList { values: next.elements }),
+        thermal_bridges: Some(Din4108ThermalBridgeList { values: next.thermal_bridges }),
+        ..Default::default()
+    })
 }
-//#endregion 🔖️Diff
+
+fn apply_in_place(payload: &ReorderLayers, snap: &mut Din4108Snapshot) -> Result<(), String> {
+    
+    let e = snap.elements.iter_mut().find(|e| e.id == payload.element_id).ok_or("element not found")?;
+    if payload.from >= e.layers.len() || payload.to >= e.layers.len() { return Err("layer reorder out of range".into()); }
+    let layer = e.layers.remove(payload.from);
+    e.layers.insert(payload.to, layer);
+
+    Ok(())
+}

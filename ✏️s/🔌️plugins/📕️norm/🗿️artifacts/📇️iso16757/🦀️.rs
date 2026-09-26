@@ -28,6 +28,7 @@ use std::collections::BTreeMap;
 #[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(transparent)]
+#[value(rename_all = "camelCase")]
 pub struct CatalogueId(pub String);
 
 /// 🔗️ Hand `DslField` bridge for `CatalogueId`: a tuple ("newtype") struct has no named fields for
@@ -51,6 +52,7 @@ impl dsl::DslField for CatalogueId {
 /// 🆔️ Dictionary identifier with version.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct DictionaryRef {
     pub id: String,
     pub version: String,
@@ -64,6 +66,7 @@ pub use crate::document::LocalizedText;
 /// 📝️ Preferred and alternative names.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct Names {
     pub preferred: LocalizedText,
     pub short_name: Option<String>,
@@ -74,6 +77,7 @@ pub struct Names {
 /// 📊️ Physical dimension signature for unit compatibility.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct DimensionSignature {
     pub length: i8,
     pub mass: i8,
@@ -94,6 +98,7 @@ impl DimensionSignature {
 /// 📐️ Catalogue unit with canonical SI display.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct CatalogueUnit {
     pub symbol: String,
     pub dimension: DimensionSignature,
@@ -159,6 +164,7 @@ pub enum NullState {
 /// 🔢️ Cardinality constraint.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct Cardinality {
     pub min: u32,
     pub max: Option<u32>,
@@ -185,6 +191,7 @@ impl Cardinality {
 /// 🔗️ Internal or external reference.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct CatalogueReference {
     pub uri: String,
     pub label: Option<String>,
@@ -193,6 +200,7 @@ pub struct CatalogueReference {
 /// 🧩️ Lossless extension bag for unknown fields.
 #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct ExtensionBag {
     pub fields: BTreeMap<String, dsl::DslValue>,
 }
@@ -200,6 +208,7 @@ pub struct ExtensionBag {
 /// 📅️ Lifecycle metadata.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase")]
 pub struct Lifecycle {
     pub revision: String,
     pub status: String,
@@ -215,6 +224,7 @@ pub mod part_1 {
     /// 🏭️ Manufacturer metadata.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct Manufacturer {
         pub id: String,
         pub names: Names,
@@ -223,6 +233,7 @@ pub mod part_1 {
     /// 📦️ Product group declaration.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ProductGroup {
         pub id: String,
         pub names: Names,
@@ -232,6 +243,7 @@ pub mod part_1 {
     /// 🏷️ Product class in a hierarchy.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ProductClass {
         pub id: String,
         pub group_id: String,
@@ -244,6 +256,7 @@ pub mod part_1 {
     /// 📚️ Product series sharing geometry and properties.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ProductSeries {
         pub id: String,
         pub class_id: String,
@@ -255,6 +268,7 @@ pub mod part_1 {
     /// 🔧️ Variant parameter domain.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ParameterDomain {
         pub parameter_id: String,
         pub allowed_values: Vec<CatalogueValue>,
@@ -264,6 +278,7 @@ pub mod part_1 {
     /// 🧮️ Property definition.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct PropertyDefinition {
         pub id: String,
         pub names: Names,
@@ -287,6 +302,7 @@ pub mod part_1 {
     /// 📋️ Property value on a product or variant.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct PropertyValue {
         pub definition_id: String,
         pub value: CatalogueValue,
@@ -296,6 +312,7 @@ pub mod part_1 {
     /// 🧩️ Product variant with parameters.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ProductVariant {
         pub id: String,
         pub parameter_values: BTreeMap<String, CatalogueValue>,
@@ -307,6 +324,7 @@ pub mod part_1 {
     /// 📦️ Catalogue product (generic or resolved).
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct Product {
         pub id: String,
         pub series_id: String,
@@ -319,6 +337,7 @@ pub mod part_1 {
     /// 🔍️ Product index for selection.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ProductIndex {
         pub id: String,
         pub product_id: String,
@@ -329,6 +348,7 @@ pub mod part_1 {
     /// 🔗️ Accessory relationship.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct AccessoryRelationship {
         pub accessory_product_id: String,
         pub required: bool,
@@ -339,6 +359,7 @@ pub mod part_1 {
     /// 🧱️ Composition relationship (`hasPart`).
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct CompositionRelationship {
         pub component_product_id: String,
         pub quantity: u32,
@@ -347,6 +368,7 @@ pub mod part_1 {
     /// 🖼️ Geometry reference.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct GeometryReference {
         pub geometry_id: String,
         pub lod: Option<String>,
@@ -355,6 +377,7 @@ pub mod part_1 {
     /// 📄️ Descriptive media object.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct DescriptiveObject {
         pub id: String,
         pub media_type: String,
@@ -366,6 +389,7 @@ pub mod part_1 {
     /// 📚️ Full catalogue document.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct Catalogue {
         pub id: CatalogueId,
         pub metadata: CatalogueMetadata,
@@ -393,6 +417,7 @@ pub mod part_1 {
     /// 📋️ Catalogue metadata.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct CatalogueMetadata {
         pub names: Names,
         pub lifecycle: Lifecycle,
@@ -418,7 +443,10 @@ pub mod part_1 {
     /// 🎯️ Selection constraint on a property.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct SelectionConstraint {
+        #[cfg_attr(test, serde(default))]
+        pub id: String,
         pub property_id: String,
         pub operator: ConstraintOperator,
         pub value: CatalogueValue,
@@ -442,6 +470,7 @@ pub mod part_1 {
     /// 🔎️ Selection request.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct SelectionRequest {
         pub class_id: String,
         pub constraints: Vec<SelectionConstraint>,
@@ -451,6 +480,7 @@ pub mod part_1 {
     /// ✅️ Selection outcome.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct SelectionResult {
         pub matches: Vec<ProductIndex>,
         pub ambiguity: bool,
@@ -460,6 +490,7 @@ pub mod part_1 {
     /// 🏗️ BIM embedding workflow state.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct BimEmbedding {
         pub selected_index_id: String,
         pub frozen_parameters: std::collections::HashMap<String, CatalogueValue>,
@@ -491,6 +522,7 @@ pub mod part_2 {
     /// 🔌️ Port medium and direction.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct PortDefinition {
         pub id: String,
         pub medium: String,
@@ -502,6 +534,7 @@ pub mod part_2 {
     /// 📦️ Axis-aligned bounding box.
     #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct BoundingBox {
         pub min: [f64; 3],
         pub max: [f64; 3],
@@ -532,6 +565,7 @@ pub mod part_2 {
     /// 🧱️ CSG primitive kind registry entry.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct PrimitiveKind {
         pub id: String,
         pub parameters: Vec<String>,
@@ -578,6 +612,7 @@ pub mod part_2 {
     /// 🏗️ Complete geometry object.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct GeometryObject {
         pub id: String,
         #[dsl(statements, block)]
@@ -593,14 +628,22 @@ pub mod part_2 {
     /// 📦️ Space envelope with kind.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct SpaceEnvelope {
+        #[cfg_attr(test, serde(default = "default_installation_space_id"))]
+        pub id: String,
         pub kind: SpaceKind,
         pub bounds: BoundingBox,
+    }
+
+    fn default_installation_space_id() -> String {
+        "installation".into()
     }
 
     /// 🎨️ Semantic surface.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct SurfaceDefinition {
         pub id: String,
         pub purpose: String,
@@ -610,6 +653,7 @@ pub mod part_2 {
     /// 📚️ Geometry catalogue index.
     #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct GeometryCatalogue {
         pub objects: BTreeMap<String, GeometryObject>,
         #[dsl(table)]
@@ -658,6 +702,7 @@ pub mod part_4 {
     /// 📖️ Dictionary subject.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct Subject {
         pub id: String,
         pub kind: SubjectKind,
@@ -685,6 +730,7 @@ pub mod part_4 {
     /// 🔗️ Typed relationship.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct Relationship {
         pub id: String,
         pub kind: RelationshipKind,
@@ -696,6 +742,7 @@ pub mod part_4 {
     /// 📊️ Dictionary property definition.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct DictionaryProperty {
         pub id: String,
         pub names: Names,
@@ -709,6 +756,7 @@ pub mod part_4 {
     /// ✅️ Controlled value list.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ControlledValueList {
         pub id: String,
         pub values: Vec<String>,
@@ -718,6 +766,7 @@ pub mod part_4 {
     /// 🎯️ Value constraint on a property.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ValueConstraint {
         pub min: Option<f64>,
         pub max: Option<f64>,
@@ -727,6 +776,7 @@ pub mod part_4 {
     /// 📚️ Data dictionary snapshot.
     #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct Dictionary {
         pub reference: DictionaryRef,
         #[dsl(table)]
@@ -744,6 +794,7 @@ pub mod part_4 {
     /// 🗺️ ISO 12006-3 mapping record.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct Iso12006Mapping {
         pub dictionary_object_id: String,
         pub iso12006_uri: String,
@@ -805,6 +856,7 @@ pub mod part_5 {
     /// 📄️ External media reference.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ExternalMedia {
         pub id: String,
         pub uri: String,
@@ -816,6 +868,7 @@ pub mod part_5 {
     /// 🏛️ Minimal IFC catalogue node.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct IfcCatalogueNode {
         pub entity_type: String,
         pub global_id: String,
@@ -827,6 +880,7 @@ pub mod part_5 {
     /// 📦️ IFC catalogue root.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct IfcCatalogue {
         pub schema: String,
         pub metadata: IfcCatalogueNode,
@@ -838,6 +892,7 @@ pub mod part_5 {
     /// 🧮️ Script execution limits.
     #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ScriptLimits {
         pub max_steps: u32,
         pub max_recursion: u32,
@@ -853,6 +908,7 @@ pub mod part_5 {
     /// 📤️ Script execution result.
     #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+    #[value(rename_all = "camelCase")]
     pub struct ScriptResult {
         pub value: f64,
         pub diagnostics: Vec<String>,
@@ -894,7 +950,7 @@ impl Iso16757Snapshot {
         let dictionary = part_4::Dictionary {
             reference: DictionaryRef { id: "hvac-dict".into(), version: "2025-01".into() },
             subjects: vec![part_4::Subject {
-                id: "subject.valve".into(),
+                id: "subject-valve".into(),
                 kind: part_4::SubjectKind::ProductClass,
                 names: Names {
                     preferred: LocalizedText { locale: "en".into(), text: "Control valve".into() },
@@ -906,18 +962,18 @@ impl Iso16757Snapshot {
             }],
             relationships: Vec::new(),
             properties: vec![part_4::DictionaryProperty {
-                id: "prop.dn".into(),
-                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() }, short_name: None, alternatives: Vec::new() },
+                id: "prop-dn".into(),
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "Nennweite".into() }] },
                 kind: part_1::PropertyKind::Static,
                 data_type: "decimal".into(),
                 unit: Some(CatalogueUnit { symbol: "mm".into(), dimension: DimensionSignature::LENGTH, si_factor: 0.001 }),
-                applicable_subject_ids: vec!["subject.valve".into()],
+                applicable_subject_ids: vec!["subject-valve".into()],
                 value_constraints: vec![part_4::ValueConstraint { min: Some(15.0), max: Some(300.0), allowed_values: Vec::new() }],
             }],
-            controlled_lists: vec![part_4::ControlledValueList { id: "dn.list".into(), values: vec!["50".into(), "80".into(), "100".into()], context_subject_ids: vec!["subject.valve".into()] }],
+            controlled_lists: vec![part_4::ControlledValueList { id: "dn-list".into(), values: vec!["50".into(), "80".into(), "100".into()], context_subject_ids: vec!["subject-valve".into()] }],
             meta_subjects: Vec::new(),
         };
-        let geometry_id: String = "geom.valve.50".into();
+        let geometry_id: String = "geom-valve-50".into();
         let mut geometry_objects = BTreeMap::new();
         geometry_objects.insert(
             geometry_id.clone(),
@@ -925,67 +981,67 @@ impl Iso16757Snapshot {
                 id: geometry_id.clone(),
                 shape: Some(part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 0.15), ("height".into(), 0.20), ("depth".into(), 0.10)]) }),
                 symbolic: None,
-                spaces: vec![part_2::SpaceEnvelope { kind: part_2::SpaceKind::Installation, bounds: part_2::BoundingBox::from_size(0.30, 0.30, 0.30) }],
+                spaces: vec![part_2::SpaceEnvelope { id: "installation".into(), kind: part_2::SpaceKind::Installation, bounds: part_2::BoundingBox { min: [-0.05, -0.05, -0.05], max: [0.20, 0.25, 0.15] } }],
                 surfaces: Vec::new(),
-                ports: vec![part_2::PortDefinition { id: "port.in".into(), medium: "water".into(), position: [0.0, 0.1, 0.05], direction: [1.0, 0.0, 0.0], port_type: "inlet".into() }],
-                parameter_bindings: BTreeMap::from([("width".into(), "prop.dn".into())]),
+                ports: vec![part_2::PortDefinition { id: "port-in".into(), medium: "water".into(), position: [0.0, 0.1, 0.05], direction: [1.0, 0.0, 0.0], port_type: "inlet".into() }],
+                parameter_bindings: BTreeMap::from([("width".into(), "prop-dn".into())]),
             },
         );
         let catalogue = part_1::Catalogue {
             id: CatalogueId("cat.demo".into()),
             metadata: part_1::CatalogueMetadata {
-                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Demo HVAC catalogue".into() }, short_name: Some("Demo".into()), alternatives: Vec::new() },
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Demo HVAC catalogue".into() }, short_name: Some("Demo".into()), alternatives: vec![LocalizedText { locale: "de".into(), text: "Demo TGA-Katalog".into() }] },
                 lifecycle: Lifecycle { revision: "1".into(), status: "published".into(), valid_from: None, valid_to: None },
                 edition_profile: part_1::EditionProfile::FullPublished,
             },
             manufacturer: part_1::Manufacturer {
-                id: "mfg.demo".into(),
+                id: "mfg-demo".into(),
                 names: Names { preferred: LocalizedText { locale: "en".into(), text: "Demo Manufacturer".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "Demo Hersteller".into() }] },
             },
             dictionary: dictionary.reference.clone(),
             product_groups: vec![part_1::ProductGroup {
-                id: "group.valves".into(),
-                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Valves".into() }, short_name: None, alternatives: Vec::new() },
-                dictionary_subject_id: Some("subject.valve".into()),
+                id: "group-valves".into(),
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Valves".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "Ventile".into() }] },
+                dictionary_subject_id: Some("subject-valve".into()),
             }],
             product_classes: vec![part_1::ProductClass {
-                id: "class.valve".into(),
-                group_id: "group.valves".into(),
+                id: "class-valve".into(),
+                group_id: "group-valves".into(),
                 parent_id: None,
-                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Control valve".into() }, short_name: None, alternatives: Vec::new() },
-                required_property_ids: vec!["prop.dn".into()],
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Control valve".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "Regelventil".into() }] },
+                required_property_ids: vec!["prop-dn".into()],
                 optional_property_ids: Vec::new(),
             }],
             product_series: vec![part_1::ProductSeries {
-                id: "series.cv".into(),
-                class_id: "class.valve".into(),
-                names: Names { preferred: LocalizedText { locale: "en".into(), text: "CV series".into() }, short_name: None, alternatives: Vec::new() },
+                id: "series-cv".into(),
+                class_id: "class-valve".into(),
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "CV series".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "CV-Serie".into() }] },
                 shared_property_values: BTreeMap::new(),
                 geometry_id: Some(geometry_id.clone()),
             }],
             products: vec![part_1::Product {
-                id: "product.cv".into(),
-                series_id: "series.cv".into(),
-                names: Names { preferred: LocalizedText { locale: "en".into(), text: "CV-50".into() }, short_name: None, alternatives: Vec::new() },
+                id: "product-cv".into(),
+                series_id: "series-cv".into(),
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "CV-50".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "CV-50".into() }] },
                 parameter_domains: vec![part_1::ParameterDomain { parameter_id: "dn".into(), allowed_values: vec![CatalogueValue::Decimal { value: 50.0 }], default_value: Some(CatalogueValue::Decimal { value: 50.0 }) }],
                 variants: vec![part_1::ProductVariant {
-                    id: "variant.50".into(),
+                    id: "variant-50".into(),
                     parameter_values: BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
-                    property_values: vec![part_1::PropertyValue { definition_id: "prop.dn".into(), value: CatalogueValue::Decimal { value: 50.0 }, function_id: None }],
+                    property_values: vec![part_1::PropertyValue { definition_id: "prop-dn".into(), value: CatalogueValue::Decimal { value: 50.0 }, function_id: None }],
                     article_number: Some("CV-50".into()),
                     geometry_id: Some(geometry_id),
                 }],
                 static_properties: Vec::new(),
             }],
-            product_indexes: vec![part_1::ProductIndex { id: "index.cv50".into(), product_id: "product.cv".into(), variant_id: Some("variant.50".into()), search_tags: vec!["valve".into(), "dn50".into()] }],
+            product_indexes: vec![part_1::ProductIndex { id: "index-cv50".into(), product_id: "product-cv".into(), variant_id: Some("variant-50".into()), search_tags: vec!["valve".into(), "dn50".into()] }],
             property_definitions: vec![part_1::PropertyDefinition {
-                id: "prop.dn".into(),
-                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() }, short_name: None, alternatives: Vec::new() },
+                id: "prop-dn".into(),
+                names: Names { preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "Nennweite".into() }] },
                 data_type: "decimal".into(),
                 unit: Some(CatalogueUnit { symbol: "mm".into(), dimension: DimensionSignature::LENGTH, si_factor: 0.001 }),
                 cardinality: Cardinality::required(),
                 kind: part_1::PropertyKind::Static,
-                dictionary_property_id: Some("prop.dn".into()),
+                dictionary_property_id: Some("prop-dn".into()),
             }],
             accessories: BTreeMap::new(),
             compositions: BTreeMap::new(),
@@ -997,9 +1053,9 @@ impl Iso16757Snapshot {
             dictionary,
             geometry: part_2::GeometryCatalogue { objects: geometry_objects, primitive_registry: part_2::GeometryCatalogue::default_primitives() },
             selection: part_1::SelectionRequest {
-                class_id: "class.valve".into(),
-                constraints: vec![part_1::SelectionConstraint { property_id: "prop.dn".into(), operator: part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 50.0 } }],
-                series_id: Some("series.cv".into()),
+                class_id: "class-valve".into(),
+                constraints: vec![part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "prop-dn".into(), operator: part_1::ConstraintOperator::Equal, value: CatalogueValue::Decimal { value: 50.0 } }],
+                series_id: Some("series-cv".into()),
             },
             part_number_rule: part_5::PartNumberRule::Script { function_id: "partno".into(), source: "dn * 10 + 50".into() },
             part_number_inputs: BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
@@ -1007,6 +1063,56 @@ impl Iso16757Snapshot {
             exchange_process: part_5::ExchangeProcess::DetermineProduct,
         }
     }
+
+    /// 🚫️ Non-compliant catalogue exercising many ISO 16757 failures at once.
+    pub fn broken_fixture() -> Self {
+        let mut doc = Self::reference_fixture();
+        doc.catalogue.metadata.names.alternatives.clear();
+        doc.catalogue.metadata.names.alternatives.push(crate::LocalizedText { locale: "de".into(), text: "Demo TGA-Katalog".into() });
+        // Missing German product name while catalogue declares de
+        if let Some(product) = doc.catalogue.products.get_mut(0) {
+            product.names.alternatives.clear();
+            // Drop required property on variant
+            if let Some(variant) = product.variants.get_mut(0) {
+                variant.property_values.clear();
+                variant.geometry_id = Some("geom.missing".into());
+                variant.parameter_values.insert("dn".into(), CatalogueValue::Decimal { value: 999.0 });
+            }
+        }
+        // Duplicate index → selection ambiguity
+        doc.catalogue.product_indexes.push(part_1::ProductIndex {
+            id: "index-cv50-dup".into(),
+            product_id: "product-cv".into(),
+            variant_id: Some("variant-50".into()),
+            search_tags: vec!["dup".into()],
+        });
+        // Composition cycle
+        doc.catalogue.compositions.insert(
+            "product-cv".into(),
+            vec![part_1::CompositionRelationship { component_product_id: "product-cv".into(), quantity: 1 }],
+        );
+        // Tiny installation space
+        if let Some(obj) = doc.geometry.objects.values_mut().next() {
+            obj.spaces = vec![part_2::SpaceEnvelope { id: "installation".into(), kind: part_2::SpaceKind::Installation,
+                bounds: part_2::BoundingBox::from_size(0.01, 0.01, 0.01),
+            }];
+            obj.ports.clear();
+        }
+        // Broken part-number inputs + tiny script limits
+        doc.part_number_inputs.insert("dn".into(), CatalogueValue::Decimal { value: 40.0 });
+        doc.script_limits = part_5::ScriptLimits { max_steps: 0, max_recursion: 0, timeout_ms: 0 };
+        doc.exchange_process = part_5::ExchangeProcess::IntegrateIntoSystem;
+        // Dangling dictionary relationship
+        doc.dictionary.relationships.push(part_4::Relationship {
+            id: "rel-dangling".into(),
+            kind: part_4::RelationshipKind::HasPart,
+            source_id: "subject-valve".into(),
+            target_id: "subject-missing".into(),
+            cardinality: Cardinality::required(),
+        });
+        doc
+    }
+
 }
 // #endregion Session
 
@@ -1083,28 +1189,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "iso16757.document",
                     extension: Some("iso16757"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(semio_s_artifact_norm_en1999::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1999::document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(semio_s_artifact_norm_en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("iso16757.document"),
                 },
                 dsl::LanguageSpec {
                     id: "iso16757.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(semio_s_artifact_norm_en1999::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1999::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(semio_s_artifact_norm_en1999::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1999::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("iso16757.op"),
                 },
                 dsl::LanguageSpec {
                     id: "iso16757.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(semio_s_artifact_norm_en1999::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1999::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("iso16757.diff"),
@@ -1115,8 +1221,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(semio_s_artifact_norm_en1999::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1999::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("iso16757.pack"),
                 },
                 dsl::LanguageSpec {
@@ -1125,8 +1231,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(semio_s_artifact_norm_en1999::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1999::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("iso16757.spr"),
                 },
             ]
@@ -1241,30 +1347,30 @@ pub mod standards {
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod create_product_group {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/🔺️diff/🦀️.rs"]
+                        pub mod introduce_product_group {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️introduce-product-group/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️introduce-product-group/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️create-product-group/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️introduce-product-group/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod create_property_definition {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/🔺️diff/🦀️.rs"]
+                        pub mod introduce_property_definition {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️introduce-property-definition/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️introduce-property-definition/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️create-property-definition/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️introduce-property-definition/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod create_subject {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/🔺️diff/🦀️.rs"]
+                        pub mod introduce_subject {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️introduce-subject/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️introduce-subject/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-subject/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️introduce-subject/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
@@ -1295,12 +1401,84 @@ pub mod standards {
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod create_product {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🔺️diff/🦀️.rs"]
+                        pub mod introduce_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️introduce-product/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️introduce-product/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️create-product/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️introduce-product/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod introduce_product_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️introduce-product-class/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️introduce-product-class/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️introduce-product-class/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod retire_product_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-class/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-class/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-class/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod introduce_product_series {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚introduce-product-series/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚introduce-product-series/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚introduce-product-series/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod retire_product_series {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-series/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-series/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-series/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod introduce_product_index {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎introduce-product-index/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎introduce-product-index/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔎introduce-product-index/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod retire_product_index {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-index/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-index/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-product-index/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod introduce_geometry_object {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐introduce-geometry-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐introduce-geometry-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐introduce-geometry-object/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                        }
+                        #[path = "."]
+                        pub mod retire_geometry_object {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-geometry-object/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-geometry-object/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️retire-geometry-object/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
@@ -1331,48 +1509,48 @@ pub mod standards {
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod update_script_limits {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/🔺️diff/🦀️.rs"]
+                        pub mod change_script_limits {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-script-limits/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-script-limits/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️update-script-limits/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-script-limits/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod delete_product {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/🔺️diff/🦀️.rs"]
+                        pub mod retire_product {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️retire-product/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️retire-product/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-product/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️retire-product/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod delete_product_group {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/🔺️diff/🦀️.rs"]
+                        pub mod retire_product_group {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️retire-product-group/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️retire-product-group/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-product-group/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️retire-product-group/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod delete_property_definition {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/🔺️diff/🦀️.rs"]
+                        pub mod retire_property_definition {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️retire-property-definition/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️retire-property-definition/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️delete-property-definition/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️retire-property-definition/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
-                        pub mod delete_subject {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/🔺️diff/🦀️.rs"]
+                        pub mod retire_subject {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️retire-subject/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️retire-subject/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-subject/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️retire-subject/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                         }
                         #[path = "."]
@@ -1401,6 +1579,8 @@ pub mod standards {
 pub mod artifact_schema {
     pub use super::standards::v1::subsets::any::schema::*;
 }
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
 pub mod io {
     pub use super::standards::v1::subsets::any::io::*;
 }
@@ -1469,6 +1649,12 @@ pub mod examples {
         mod component;
         pub use component::*;
     }
+    #[path = "."]
+    pub mod broken {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚫️broken/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
 }
 
 #[path = "."]
@@ -1499,6 +1685,14 @@ pub mod editor {
             pub mod set_snapshot;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-field/🦀️.rs"]
+            pub mod set_field;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕insert-item/🦀️.rs"]
+            pub mod insert_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖remove-item/🦀️.rs"]
+            pub mod remove_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹apply-remedy/🦀️.rs"]
+            pub mod apply_remedy;
         }
 
         #[path = "."]

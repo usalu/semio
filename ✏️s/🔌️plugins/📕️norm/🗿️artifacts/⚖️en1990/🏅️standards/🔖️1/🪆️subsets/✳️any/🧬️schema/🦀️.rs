@@ -1,13 +1,10 @@
 //! 🧬️ En1990 artifact schema — every field of the artifact with its state class.
 
-use crate::En1990QkChild;
+use crate::document::AnnexChoice;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
-/// 🧬️ Full En1990 artifact state across the artifact and presence lanes. `q_k` mirrors
-/// `En1990Snapshot`'s composed `s.stdio.semio`/`table` child slot (ticket
-/// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — `to_snapshot`/`from_snapshot` copy the
-/// handle across verbatim, same as `➗️mathematical`'s `EquationArtifact`.
+/// 🧬️ Full En1990 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -15,19 +12,45 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Artifact {
     #[state(artifact)]
-    pub g_k: f64,
+    pub annex: AnnexChoice,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio")]
-    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
-    pub q_k: En1990QkChild,
+    pub project_id: String,
     #[state(artifact)]
-    pub resistance_kn: f64,
+    pub structure_kind: String,
+    #[state(artifact)]
+    pub altitude_m: f64,
     #[state(artifact)]
     pub consequence_class: u8,
     #[state(artifact)]
-    pub annex: AnnexChoice,
+    pub reliability_class: u8,
     #[state(artifact)]
-    pub seismic_a_ed_kn: f64,
+    pub design_working_life_category: u8,
+    #[state(artifact)]
+    pub design_working_life_years: f64,
+    #[state(artifact)]
+    pub reference_period_years: f64,
+    #[state(artifact)]
+    pub supervision_level: String,
+    #[state(artifact)]
+    pub inspection_level: String,
+    #[state(artifact)]
+    pub k_fi_declared: f64,
+    #[state(artifact)]
+    pub beta_computed: f64,
+    #[state(artifact)]
+    pub permanents: Vec<crate::PermanentAction>,
+    #[state(artifact)]
+    pub variables: Vec<crate::VariableAction>,
+    #[state(artifact)]
+    pub accidentals: Vec<crate::AccidentalAction>,
+    #[state(artifact)]
+    pub seismics: Vec<crate::SeismicAction>,
+    #[state(artifact)]
+    pub members: Vec<crate::Member>,
+    #[state(artifact)]
+    pub bridge_sls: Vec<crate::BridgeSls>,
+    #[state(artifact)]
+    pub effects: Vec<crate::MemberEffect>,
 }
 //#endregion 🔖️Artifact
 
@@ -35,20 +58,64 @@ pub struct En1990Artifact {
 impl En1990Artifact {
     /// 📸️ Persisted subset.
     pub fn to_snapshot(&self) -> crate::En1990Snapshot {
-        crate::En1990Snapshot { g_k: self.g_k, q_k: self.q_k.clone(), resistance_kn: self.resistance_kn, consequence_class: self.consequence_class, annex: self.annex, seismic_a_ed_kn: self.seismic_a_ed_kn }
+        crate::En1990Snapshot {
+            annex: self.annex,
+            project_id: self.project_id.clone(),
+            structure_kind: self.structure_kind.clone(),
+            altitude_m: self.altitude_m,
+            consequence_class: self.consequence_class,
+            reliability_class: self.reliability_class,
+            design_working_life_category: self.design_working_life_category,
+            design_working_life_years: self.design_working_life_years,
+            reference_period_years: self.reference_period_years,
+            supervision_level: self.supervision_level.clone(),
+            inspection_level: self.inspection_level.clone(),
+            k_fi_declared: self.k_fi_declared,
+            beta_computed: self.beta_computed,
+            permanents: self.permanents.clone(),
+            variables: self.variables.clone(),
+            accidentals: self.accidentals.clone(),
+            seismics: self.seismics.clone(),
+            members: self.members.clone(),
+            bridge_sls: self.bridge_sls.clone(),
+            effects: self.effects.clone(),
+        }
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: crate::En1990Snapshot) -> Self {
-        Self { g_k: snapshot.g_k, q_k: snapshot.q_k, resistance_kn: snapshot.resistance_kn, consequence_class: snapshot.consequence_class, annex: snapshot.annex, seismic_a_ed_kn: snapshot.seismic_a_ed_kn }
+        Self {
+            annex: snapshot.annex,
+            project_id: snapshot.project_id,
+            structure_kind: snapshot.structure_kind,
+            altitude_m: snapshot.altitude_m,
+            consequence_class: snapshot.consequence_class,
+            reliability_class: snapshot.reliability_class,
+            design_working_life_category: snapshot.design_working_life_category,
+            design_working_life_years: snapshot.design_working_life_years,
+            reference_period_years: snapshot.reference_period_years,
+            supervision_level: snapshot.supervision_level,
+            inspection_level: snapshot.inspection_level,
+            k_fi_declared: snapshot.k_fi_declared,
+            beta_computed: snapshot.beta_computed,
+            permanents: snapshot.permanents,
+            variables: snapshot.variables,
+            accidentals: snapshot.accidentals,
+            seismics: snapshot.seismics,
+            members: snapshot.members,
+            bridge_sls: snapshot.bridge_sls,
+            effects: snapshot.effects,
+        }
     }
+
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
     pub fn set_snapshot(&mut self, snapshot: crate::En1990Snapshot) {
         *self = Self::from_snapshot(snapshot);
     }
 }
-
 //#endregion 🔖️Conversions
+
+
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.norm.en1990` — twenty handcrafted schema leaves.
@@ -195,15 +262,12 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
-/// 📐️ Pure EN 1990 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// relocated verbatim from the deleted `⚙️engine`. Combinations, partial-factor tables and the
-/// national-annex implementations are all pure over `ActionSet`/`&impl NationalAnnex` (O1 de-dyn:
-/// generic over the closed `NationalAnnex` set — `NationalAnnexes` below for the runtime-chosen case),
-/// never over the
-/// whole `En1990Snapshot`; the snapshot-level composition (`evaluate`) lives in `💡️inferences`.
-/// `na_de`/`na_en` are depended on by several sibling EN 199x artifacts
-/// (`semio_s_artifact_norm_en199x::standards::v1::subsets::any::schema::na_de::NaDe`).
-use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory, LimitState, Quantity};
+/// 📐️ Pure EN 1990 compliance helpers — combinations, partial-factor tables and national-annex
+/// implementations are pure over `ActionSet`/`&impl NationalAnnex`. Snapshot-level `evaluate` lives
+/// in `💡️inferences`. `na_de`/`na_en` are depended on by sibling EN 199x artifacts.
+use crate::document::{
+    CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory, LimitState, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef,
+};
 
 pub use crate::document::NationalAnnex;
 
@@ -211,9 +275,9 @@ pub use crate::document::NationalAnnex;
 /// 📊️ ψ factors for one imposed-load category (EN 1990 Table A1.1 / DIN EN 1990/NA Table NA.A.1.1).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PsiRow {
-    psi_0: f64,
-    psi_1: f64,
-    psi_2: f64,
+    pub psi_0: f64,
+    pub psi_1: f64,
+    pub psi_2: f64,
 }
 
 fn psi_row_de(category: &str) -> PsiRow {
@@ -229,6 +293,9 @@ fn psi_row_de(category: &str) -> PsiRow {
         "snow" => PsiRow { psi_0: 0.5, psi_1: 0.2, psi_2: 0.0 },
         "snow_high" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.2 },
         "wind" => PsiRow { psi_0: 0.6, psi_1: 0.2, psi_2: 0.0 },
+        "road_traffic" => PsiRow { psi_0: 0.75, psi_1: 0.40, psi_2: 0.20 },
+        "footbridge_crowd" => PsiRow { psi_0: 0.40, psi_1: 0.40, psi_2: 0.0 },
+        "rail_traffic" => PsiRow { psi_0: 0.80, psi_1: 0.50, psi_2: 0.20 },
         "temperature" => PsiRow { psi_0: 0.6, psi_1: 0.5, psi_2: 0.0 },
         "settlement" => PsiRow { psi_0: 1.0, psi_1: 1.0, psi_2: 1.0 },
         "other" => PsiRow { psi_0: 0.8, psi_1: 0.7, psi_2: 0.5 },
@@ -248,9 +315,23 @@ fn psi_row_en(category: &str) -> PsiRow {
         "roof" | "H" => PsiRow { psi_0: 0.0, psi_1: 0.0, psi_2: 0.0 },
         "snow" => PsiRow { psi_0: 0.5, psi_1: 0.2, psi_2: 0.0 },
         "wind" => PsiRow { psi_0: 0.6, psi_1: 0.2, psi_2: 0.0 },
+        "road_traffic" => PsiRow { psi_0: 0.75, psi_1: 0.40, psi_2: 0.20 },
+        "footbridge_crowd" => PsiRow { psi_0: 0.40, psi_1: 0.40, psi_2: 0.0 },
+        "rail_traffic" => PsiRow { psi_0: 0.80, psi_1: 0.50, psi_2: 0.20 },
         "temperature" => PsiRow { psi_0: 0.6, psi_1: 0.5, psi_2: 0.0 },
         "settlement" => PsiRow { psi_0: 1.0, psi_1: 1.0, psi_2: 1.0 },
         _ => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
+    }
+}
+
+/// 🌨️ Resolve ψ category: DE-NA snow at altitude > 1000 m uses `snow_high`.
+pub fn resolve_psi_category(annex: AnnexChoice, category: &str, altitude_m: f64) -> String {
+    if annex == AnnexChoice::De && (category == "snow" || category == "snow_high") && altitude_m > 1000.0 {
+        "snow_high".into()
+    } else if category == "snow_high" && annex != AnnexChoice::De {
+        "snow".into()
+    } else {
+        category.into()
     }
 }
 
@@ -387,12 +468,73 @@ pub mod na_en {
     pub use super::NaEn;
 }
 
+// #region 🔖️KfiReliability
+/// ⚖️ K_FI consequence-class factor (EN 1990 Annex B / DIN EN 1990/NA).
+
+/// 📅 EN 1990 Table 2.1 indicative design working life [years] for category 1–5 (bridges → 100 a as cat. 5).
+pub fn design_working_life_indicative(category: u8) -> (f64, f64) {
+    match category {
+        1 => (10.0, 10.0),
+        2 => (10.0, 25.0),
+        3 => (15.0, 30.0),
+        4 => (50.0, 50.0),
+        5 => (100.0, 100.0),
+        _ => (50.0, 50.0),
+    }
+}
+
+/// 👷 Annex B recommended DSL/IL for reliability class (RC1→1, RC2→2, RC3→3).
+pub fn annex_b_dsl_il_for_rc(reliability_class: u8) -> (&'static str, &'static str) {
+    match reliability_class {
+        1 => ("DSL1", "IL1"),
+        3 => ("DSL3", "IL3"),
+        _ => ("DSL2", "IL2"),
+    }
+}
+
+pub fn k_fi(consequence_class: u8) -> f64 {
+    match consequence_class {
+        1 => 0.9,
+        3 => 1.1,
+        _ => 1.0,
+    }
+}
+
+/// 📐️ Target reliability index β from reliability class and reference period (EN 1990 Annex C Table C.2).
+pub fn target_reliability_index_for(reliability_class: u8, reference_period_years: f64) -> f64 {
+    let fifty = reference_period_years >= 25.0;
+    match (reliability_class, fifty) {
+        (1, true) => 3.3,
+        (1, false) => 4.2,
+        (3, true) => 4.3,
+        (3, false) => 5.2,
+        (_, true) => 3.8,
+        (_, false) => 4.7,
+    }
+}
+
+/// 📐️ Reliability index target β mapped from consequence class (legacy helper — prefer RC+period).
+pub fn target_reliability_index(consequence_class: u8) -> f64 {
+    target_reliability_index_for(consequence_class, 50.0)
+}
+// #endregion 🔖️KfiReliability
+
 // #region 🔖️Combinations
-/// 📊️ Permanent and variable action components for combination [kN].
-#[derive(Clone, Debug, PartialEq)]
+/// 📊️ Permanent and variable action components for combination (unit-agnostic: same unit in/out).
+#[derive(Clone, Debug, PartialEq, Default)]
 pub struct ActionSet {
     pub g_k: f64,
+    pub g_k_inf: f64,
+    pub p_k: f64,
     pub q_k: Vec<(String, f64)>,
+    pub a_d: f64,
+    pub a_ed: f64,
+}
+
+impl ActionSet {
+    pub fn new(g_k: f64, q_k: Vec<(String, f64)>) -> Self {
+        Self { g_k, q_k, ..Default::default() }
+    }
 }
 
 /// 🏷️ ULS/SLS combination rule identifier.
@@ -401,9 +543,81 @@ pub enum CombinationRule {
     Uls610,
     Uls610a,
     Uls610b,
+    Uls611,
+    Uls612,
+    Uls612b,
     SlsCharacteristic,
     SlsFrequent,
     SlsQuasiPermanent,
+}
+
+/// ⚖️ EQU vs STR/GEO partial-factor set (EN 1990 Tables A1.2(A)/(B)).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PartialFactorSet {
+    EquA12A,
+    StrGeoA12B,
+    EquA24A,
+    StrGeoA24B,
+    GeoA24C,
+}
+
+fn gamma_g_set(set: PartialFactorSet, favourable: bool) -> f64 {
+    match (set, favourable) {
+        (PartialFactorSet::EquA12A, false) => 1.10,
+        (PartialFactorSet::EquA12A, true) => 0.90,
+        (PartialFactorSet::StrGeoA12B, false) => 1.35,
+        (PartialFactorSet::StrGeoA12B, true) => 1.00,
+        (PartialFactorSet::EquA24A, false) => 1.05,
+        (PartialFactorSet::EquA24A, true) => 0.95,
+        (PartialFactorSet::StrGeoA24B, false) => 1.35,
+        (PartialFactorSet::StrGeoA24B, true) => 1.00,
+        (PartialFactorSet::GeoA24C, false) => 1.00,
+        (PartialFactorSet::GeoA24C, true) => 1.00,
+    }
+}
+
+fn gamma_q_set(set: PartialFactorSet) -> f64 {
+    match set {
+        PartialFactorSet::EquA12A => 1.50,
+        PartialFactorSet::StrGeoA12B => 1.50,
+        PartialFactorSet::EquA24A => 1.35,
+        PartialFactorSet::StrGeoA24B => 1.50,
+        PartialFactorSet::GeoA24C => 1.30,
+    }
+}
+
+/// 🌉 Annex A2.4(B)/(C) γ_Q for bridge traffic categories (DE NA vs EN recommended).
+pub fn gamma_q_bridge_traffic(annex: AnnexChoice, category: &str) -> f64 {
+    match (annex, category) {
+        (AnnexChoice::De, "road_traffic") => 1.35,
+        (AnnexChoice::En, "road_traffic") => 1.35,
+        (AnnexChoice::De, "footbridge_crowd") => 1.50,
+        (AnnexChoice::En, "footbridge_crowd") => 1.50,
+        (AnnexChoice::De, "rail_traffic") => 1.40,
+        (AnnexChoice::En, "rail_traffic") => 1.45,
+        (AnnexChoice::De, _) => 1.50,
+        (AnnexChoice::En, _) => 1.50,
+    }
+}
+
+fn is_bridge_kind(kind: &str) -> bool {
+    matches!(kind, "road_bridge" | "footbridge" | "rail_bridge")
+}
+
+fn str_geo_set(structure_kind: &str) -> PartialFactorSet {
+    if is_bridge_kind(structure_kind) { PartialFactorSet::StrGeoA24B } else { PartialFactorSet::StrGeoA12B }
+}
+
+fn equ_set(structure_kind: &str) -> PartialFactorSet {
+    if is_bridge_kind(structure_kind) { PartialFactorSet::EquA24A } else { PartialFactorSet::EquA12A }
+}
+
+fn gamma_q_for_action(annex: AnnexChoice, structure_kind: &str, set: PartialFactorSet, category: &str) -> f64 {
+    if is_bridge_kind(structure_kind) && matches!(category, "road_traffic" | "footbridge_crowd" | "rail_traffic") {
+        gamma_q_bridge_traffic(annex, category)
+    } else {
+        gamma_q_set(set)
+    }
 }
 
 fn gamma_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituation) -> (f64, f64) {
@@ -421,14 +635,18 @@ fn xi_for_situation<A: NationalAnnex>(annex: &A, situation: DesignSituation) -> 
     }
 }
 
-/// 🧮️ ULS combination per EN 1990 Eq. 6.10: max(6.10a, 6.10b) surrogate as 6.10a.
+fn permanent_unfav(actions: &ActionSet) -> f64 {
+    actions.g_k + actions.p_k
+}
+
+/// 🧮️ ULS combination per EN 1990 Eq. 6.10: max(6.10a, 6.10b).
 pub fn combination_6_10<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
-    combination_6_10a(annex, actions, leading)
+    combination_6_10a(annex, actions, leading).max(combination_6_10b(annex, actions, leading))
 }
 
 /// 🧮️ ULS combination per EN 1990 Eq. 6.10a: γ_G·G + γ_Q·Q + γ_Q·ψ_0·ΣQ.
 pub fn combination_6_10a<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
-    let mut sum = annex.gamma_g() * actions.g_k;
+    let mut sum = annex.gamma_g() * permanent_unfav(actions);
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { annex.gamma_q() } else { annex.gamma_q() * annex.psi_0(cat) };
         sum += factor * q;
@@ -439,7 +657,7 @@ pub fn combination_6_10a<A: NationalAnnex>(annex: &A, actions: &ActionSet, leadi
 /// 🧮️ ULS combination per EN 1990 Eq. 6.10b: ξ·γ_G·G + γ_Q·Q + γ_Q·ψ_0·ΣQ.
 pub fn combination_6_10b<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
     let xi = annex.xi("permanent");
-    let mut sum = xi * annex.gamma_g() * actions.g_k;
+    let mut sum = xi * annex.gamma_g() * permanent_unfav(actions);
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { annex.gamma_q() } else { annex.gamma_q() * annex.psi_0(cat) };
         sum += factor * q;
@@ -447,25 +665,127 @@ pub fn combination_6_10b<A: NationalAnnex>(annex: &A, actions: &ActionSet, leadi
     sum
 }
 
+/// 🧮️ ULS STR/GEO with K_FI on γ (Annex B) for set A1.2(B).
+pub fn combination_str_geo_610a<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, consequence_class: u8) -> f64 {
+    combination_str_geo_610a_for(annex, actions, leading, consequence_class, "building")
+}
+
+/// 🌉 STR/GEO 6.10a with Annex A1.2(B) or A2.4(B) action γ depending on structure kind.
+/// 📐 STR/GEO Eq. 6.10a. Governing STR/GEO uses max(6.10a, 6.10b) per DIN EN 1990/NA NDP A1.3.1(4).
+pub fn combination_str_geo_610a_for<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, consequence_class: u8, structure_kind: &str) -> f64 {
+    let k = k_fi(consequence_class);
+    let set = str_geo_set(structure_kind);
+    let gamma_g_sup = k * gamma_g_set(set, false);
+    let gamma_g_inf = k * gamma_g_set(set, true);
+    let mut sum = gamma_g_sup * permanent_unfav(actions) + gamma_g_inf * actions.g_k_inf;
+    for (i, (cat, q)) in actions.q_k.iter().enumerate() {
+        let gq = k * gamma_q_for_action(annex.choice(), structure_kind, set, cat);
+        let factor = if i == leading { gq } else { gq * annex.psi_0(cat) };
+        sum += factor * q;
+    }
+    sum
+}
+
+pub fn combination_str_geo_610b<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, consequence_class: u8) -> f64 {
+    combination_str_geo_610b_for(annex, actions, leading, consequence_class, "building")
+}
+
+/// 🌉 STR/GEO 6.10b with Annex A1.2(B) or A2.4(B) action γ depending on structure kind.
+pub fn combination_str_geo_610b_for<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, consequence_class: u8, structure_kind: &str) -> f64 {
+    let k = k_fi(consequence_class);
+    let xi = annex.xi("permanent");
+    let set = str_geo_set(structure_kind);
+    let gamma_g_sup = k * gamma_g_set(set, false);
+    let gamma_g_inf = k * gamma_g_set(set, true);
+    let mut sum = xi * gamma_g_sup * permanent_unfav(actions) + gamma_g_inf * actions.g_k_inf;
+    for (i, (cat, q)) in actions.q_k.iter().enumerate() {
+        let gq = k * gamma_q_for_action(annex.choice(), structure_kind, set, cat);
+        let factor = if i == leading { gq } else { gq * annex.psi_0(cat) };
+        sum += factor * q;
+    }
+    sum
+}
+
+/// 🌉 GEO set C (Table A2.4(C)): γ_G = 1.0, γ_Q from set C / traffic.
+pub fn combination_geo_a24c<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, consequence_class: u8, structure_kind: &str) -> f64 {
+    let k = k_fi(consequence_class);
+    let set = PartialFactorSet::GeoA24C;
+    let gamma_g = k * gamma_g_set(set, false);
+    let mut sum = gamma_g * (permanent_unfav(actions) + actions.g_k_inf);
+    for (i, (cat, q)) in actions.q_k.iter().enumerate() {
+        let gq = k * gamma_q_for_action(annex.choice(), structure_kind, set, cat);
+        let factor = if i == leading { gq } else { gq * annex.psi_0(cat) };
+        sum += factor * q;
+    }
+    sum
+}
+
+/// ⚖️ EQU A1.2(A): destabilising vs stabilising permanent with γ_G,dstab / γ_G,stab.
+pub fn combination_equ_a12a<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, consequence_class: u8) -> f64 {
+    combination_equ_for(annex, actions, leading, consequence_class, "building")
+}
+
+/// ⚖️ EQU with A1.2(A) or A2.4(A) action γ depending on structure kind.
+pub fn combination_equ_for<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, consequence_class: u8, structure_kind: &str) -> f64 {
+    let k = k_fi(consequence_class);
+    let set = equ_set(structure_kind);
+    let g_dstab = k * gamma_g_set(set, false) * permanent_unfav(actions);
+    let g_stab = k * gamma_g_set(set, true) * actions.g_k_inf;
+    let mut q_sum = 0.0;
+    for (i, (cat, q)) in actions.q_k.iter().enumerate() {
+        let gq = k * gamma_q_for_action(annex.choice(), structure_kind, set, cat);
+        let factor = if i == leading { gq } else { gq * annex.psi_0(cat) };
+        q_sum += factor * q;
+    }
+    g_dstab + q_sum - g_stab
+}
+
 /// 🧮️ ULS combination for a design situation with situation-specific γ factors.
 pub fn combination_uls<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
     let (gamma_g, gamma_q) = gamma_for_situation(annex, situation);
     let xi = xi_for_situation(annex, situation);
-    let g_factor = match rule {
-        CombinationRule::Uls610b => xi * gamma_g,
-        _ => gamma_g,
-    };
-    let mut sum = g_factor * actions.g_k;
+    match rule {
+        CombinationRule::Uls610 => combination_uls(annex, situation, CombinationRule::Uls610a, actions, leading)
+            .max(combination_uls(annex, situation, CombinationRule::Uls610b, actions, leading)),
+        CombinationRule::Uls611 => combination_6_11(annex, actions, leading),
+        CombinationRule::Uls612 | CombinationRule::Uls612b => combination_6_12b(annex, actions, actions.a_ed),
+        _ => {
+            let g_factor = match rule {
+                CombinationRule::Uls610b => xi * gamma_g,
+                _ => gamma_g,
+            };
+            let mut sum = g_factor * permanent_unfav(actions);
+            for (i, (cat, q)) in actions.q_k.iter().enumerate() {
+                let factor = if i == leading { gamma_q } else { gamma_q * annex.psi_0(cat) };
+                sum += factor * q;
+            }
+            sum
+        }
+    }
+}
+
+/// 💥 Accidental combination EN 1990 Eq. 6.11: ΣG + A_d + ψ_{1,1} Q_{k,1} + Σψ_{2,i} Q_{k,i}.
+pub fn combination_6_11<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
+    let mut sum = permanent_unfav(actions) + actions.a_d;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
-        let factor = if i == leading { gamma_q } else { gamma_q * annex.psi_0(cat) };
+        let factor = if i == leading { annex.psi_1(cat) } else { annex.psi_2(cat) };
         sum += factor * q;
+    }
+    sum
+}
+
+/// 🌋️ Seismic combination EN 1990 Eq. 6.12b: ΣG_k + A_Ed + Σψ_2·Q_k.
+pub fn combination_6_12b<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed: f64) -> f64 {
+    let mut sum = permanent_unfav(actions) + seismic_a_ed;
+    for (cat, q) in &actions.q_k {
+        sum += annex.psi_2(cat) * q;
     }
     sum
 }
 
 /// 🧮️ SLS characteristic combination: G + Q + ψ_0·ΣQ.
 pub fn combination_sls_char<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
-    let mut sum = actions.g_k;
+    let mut sum = permanent_unfav(actions) + actions.g_k_inf;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { 1.0 } else { annex.psi_0(cat) };
         sum += factor * q;
@@ -475,7 +795,7 @@ pub fn combination_sls_char<A: NationalAnnex>(annex: &A, actions: &ActionSet, le
 
 /// 🧮️ SLS frequent combination: G + ψ_1·Q_leading + ψ_2·ΣQ_accompanying.
 pub fn combination_sls_frequent<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize) -> f64 {
-    let mut sum = actions.g_k;
+    let mut sum = permanent_unfav(actions) + actions.g_k_inf;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
         let factor = if i == leading { annex.psi_1(cat) } else { annex.psi_2(cat) };
         sum += factor * q;
@@ -485,7 +805,7 @@ pub fn combination_sls_frequent<A: NationalAnnex>(annex: &A, actions: &ActionSet
 
 /// 🧮️ SLS quasi-permanent combination: G + ψ_2·ΣQ.
 pub fn combination_sls_quasi_permanent<A: NationalAnnex>(annex: &A, actions: &ActionSet) -> f64 {
-    let mut sum = actions.g_k;
+    let mut sum = permanent_unfav(actions) + actions.g_k_inf;
     for (cat, q) in &actions.q_k {
         sum += annex.psi_2(cat) * q;
     }
@@ -497,6 +817,8 @@ pub fn combination_value<A: NationalAnnex>(annex: &A, rule: CombinationRule, act
         CombinationRule::Uls610 => combination_6_10(annex, actions, leading),
         CombinationRule::Uls610a => combination_6_10a(annex, actions, leading),
         CombinationRule::Uls610b => combination_6_10b(annex, actions, leading),
+        CombinationRule::Uls611 => combination_6_11(annex, actions, leading),
+        CombinationRule::Uls612 | CombinationRule::Uls612b => combination_6_12b(annex, actions, actions.a_ed),
         CombinationRule::SlsCharacteristic => combination_sls_char(annex, actions, leading),
         CombinationRule::SlsFrequent => combination_sls_frequent(annex, actions, leading),
         CombinationRule::SlsQuasiPermanent => combination_sls_quasi_permanent(annex, actions),
@@ -509,11 +831,10 @@ pub fn rules_for_situation(situation: DesignSituation, limit_state: LimitState) 
         (DesignSituation::Persistent | DesignSituation::Transient, LimitState::Uls) => {
             vec![CombinationRule::Uls610, CombinationRule::Uls610a, CombinationRule::Uls610b]
         }
-        (DesignSituation::Accidental | DesignSituation::Seismic, LimitState::Uls) => {
-            vec![CombinationRule::Uls610a]
-        }
+        (DesignSituation::Accidental, LimitState::Uls) => vec![CombinationRule::Uls611],
+        (DesignSituation::Seismic, LimitState::Uls) => vec![CombinationRule::Uls612b],
         (_, LimitState::Sls) => vec![CombinationRule::SlsCharacteristic, CombinationRule::SlsFrequent, CombinationRule::SlsQuasiPermanent],
-        (_, LimitState::Als) => vec![CombinationRule::Uls610a],
+        (_, LimitState::Als) => vec![CombinationRule::Uls611],
         (_, LimitState::Fls) => vec![CombinationRule::Uls610a],
     }
 }
@@ -523,31 +844,79 @@ fn clause_for_rule(rule: CombinationRule) -> ClauseId {
         CombinationRule::Uls610 => ClauseId::new("EN 1990", "§6.4", "6.10"),
         CombinationRule::Uls610a => ClauseId::new("EN 1990", "§6.4", "6.10a"),
         CombinationRule::Uls610b => ClauseId::new("EN 1990", "§6.4", "6.10b"),
+        CombinationRule::Uls611 => ClauseId::new("EN 1990", "§6.4", "6.11"),
+        CombinationRule::Uls612 => ClauseId::new("EN 1990", "§6.4.3.4", "6.12"),
+        CombinationRule::Uls612b => ClauseId::new("EN 1990", "§6.4.3.4", "6.12b"),
         CombinationRule::SlsCharacteristic => ClauseId::new("EN 1990", "§6.5", "6.14"),
         CombinationRule::SlsFrequent => ClauseId::new("EN 1990", "§6.5", "6.16"),
         CombinationRule::SlsQuasiPermanent => ClauseId::new("EN 1990", "§6.5", "6.17"),
     }
 }
 
-fn message_for_rule(rule: CombinationRule, leading: usize) -> String {
+fn copy(en: impl Into<String>, de: impl Into<String>) -> LocalizedCopy {
+    LocalizedCopy::new(en, de)
+}
+
+fn q_force(n: f64) -> Quantity {
+    Quantity::new(QuantityKind::Force, n)
+}
+
+fn q_dim(v: f64) -> Quantity {
+    Quantity::new(QuantityKind::Dimensionless, v)
+}
+
+fn resistance_remedy(member_id: &str, path: &str, label: LocalizedCopy, current: f64, required: f64) -> Remedy {
+    let kn = required / 1000.0;
+    let cur_kn = current / 1000.0;
+    Remedy::at_least(
+        SubjectRef::new(member_id, path, label),
+        q_force(current),
+        q_force(required),
+        copy(
+            format!("Increase design resistance from {cur_kn:.1} kN to at least {kn:.1} kN."),
+            format!("Bemessungswiderstand von {cur_kn:.1} kN auf mindestens {kn:.1} kN erhöhen."),
+        ),
+    )
+}
+
+/// ✅️ Check one combination against a resistance limit (same unit as ActionSet).
+pub fn check_combination<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize, resistance: f64) -> CheckResult {
+    let ed = if matches!(rule, CombinationRule::Uls610 | CombinationRule::Uls610a | CombinationRule::Uls610b | CombinationRule::Uls611 | CombinationRule::Uls612 | CombinationRule::Uls612b) {
+        combination_uls(annex, situation, rule, actions, leading)
+    } else {
+        combination_value(annex, rule, actions, leading)
+    };
+    let id = format!("en1990.{}.{leading}", rule_slug(rule));
+    let title = copy(format!("Combination {}", clause_for_rule(rule).section), format!("Kombination {}", clause_for_rule(rule).section));
+    let mut builder = CheckResult::assess(id, "EN 1990", clause_for_rule(rule), SubjectRef::whole(copy("Structure", "Tragwerk")), title)
+        .utilization(q_force(ed), q_force(resistance))
+        .annex(annex.choice())
+        .explanation(copy(
+            format!("E_d = {ed:.3} vs R_d = {resistance:.3} (leading={leading})"),
+            format!("E_d = {ed:.3} gegenüber R_d = {resistance:.3} (führend={leading})"),
+        ));
+    if ed > resistance {
+        builder = builder.remedy(resistance_remedy("", "members[id=governing].rdStr", copy("Governing member", "Maßgebendes Bauteil"), resistance, ed));
+    }
+    builder.build()
+}
+
+fn rule_slug(rule: CombinationRule) -> &'static str {
     match rule {
-        CombinationRule::Uls610 => format!("ULS 6.10 leading={leading}"),
-        CombinationRule::Uls610a => format!("ULS 6.10a leading={leading}"),
-        CombinationRule::Uls610b => format!("ULS 6.10b leading={leading}"),
-        CombinationRule::SlsCharacteristic => format!("SLS characteristic leading={leading}"),
-        CombinationRule::SlsFrequent => format!("SLS frequent leading={leading}"),
-        CombinationRule::SlsQuasiPermanent => "SLS quasi-permanent".into(),
+        CombinationRule::Uls610 => "6.10",
+        CombinationRule::Uls610a => "6.10a",
+        CombinationRule::Uls610b => "6.10b",
+        CombinationRule::Uls611 => "6.11",
+        CombinationRule::Uls612 => "6.12",
+        CombinationRule::Uls612b => "6.12b",
+        CombinationRule::SlsCharacteristic => "6.14b",
+        CombinationRule::SlsFrequent => "6.15b",
+        CombinationRule::SlsQuasiPermanent => "6.16b",
     }
 }
 
-/// ✅️ Check one combination against a resistance limit [kN].
-pub fn check_combination<A: NationalAnnex>(annex: &A, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize, resistance_kn: f64) -> CheckResult {
-    let ed = if matches!(rule, CombinationRule::Uls610 | CombinationRule::Uls610a | CombinationRule::Uls610b) { combination_uls(annex, situation, rule, actions, leading) } else { combination_value(annex, rule, actions, leading) };
-    CheckResult::from_utilization(clause_for_rule(rule), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), message_for_rule(rule, leading), annex.choice())
-}
-
 /// ✅️ Run all relevant combinations for an action set in a design situation.
-pub fn check_combination_set<A: NationalAnnex>(annex: &A, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) -> CheckReport {
+pub fn check_combination_set<A: NationalAnnex>(annex: &A, situation: DesignSituation, actions: &ActionSet, resistance: f64) -> CheckReport {
     let mut report = CheckReport::default();
     let n_leading = actions.q_k.len().max(1);
     for rule in rules_for_situation(situation, LimitState::Uls) {
@@ -555,20 +924,20 @@ pub fn check_combination_set<A: NationalAnnex>(annex: &A, situation: DesignSitua
             if actions.q_k.is_empty() && leading > 0 {
                 break;
             }
-            report.push(check_combination(annex, situation, rule, actions, leading, resistance_kn));
+            report.push(check_combination(annex, situation, rule, actions, leading, resistance));
         }
     }
     for rule in rules_for_situation(situation, LimitState::Sls) {
         match rule {
             CombinationRule::SlsQuasiPermanent => {
-                report.push(check_combination(annex, situation, rule, actions, 0, resistance_kn));
+                report.push(check_combination(annex, situation, rule, actions, 0, resistance));
             }
             _ => {
                 for leading in 0..n_leading {
                     if actions.q_k.is_empty() && leading > 0 {
                         break;
                     }
-                    report.push(check_combination(annex, situation, rule, actions, leading, resistance_kn));
+                    report.push(check_combination(annex, situation, rule, actions, leading, resistance));
                 }
             }
         }
@@ -576,68 +945,100 @@ pub fn check_combination_set<A: NationalAnnex>(annex: &A, situation: DesignSitua
     report
 }
 
-/// ✅️ Check design action against resistance (ULS).
+/// ✅️ Check design action against resistance (ULS Eq. 6.10 governing).
 pub fn check_uls_action<A: NationalAnnex>(annex: &A, actions: &ActionSet, leading: usize, resistance: f64) -> CheckResult {
     let ed = combination_6_10(annex, actions, leading);
-    CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4", "6.10"), Quantity::force_kn(ed), Quantity::force_kn(resistance), "ULS design action", annex.choice())
+    let mut builder = CheckResult::assess("en1990.6.10.uls", "EN 1990", ClauseId::new("EN 1990", "§6.4", "6.10"), SubjectRef::whole(copy("Structure", "Tragwerk")), copy("ULS design action", "Grenzzustand der Tragfähigkeit"))
+        .utilization(q_force(ed), q_force(resistance))
+        .annex(annex.choice())
+        .explanation(copy(format!("Governing E_d = max(6.10a, 6.10b) = {ed:.3}"), format!("Maßgebendes E_d = max(6.10a, 6.10b) = {ed:.3}")));
+    if ed > resistance {
+        builder = builder.remedy(resistance_remedy("", "members[id=governing].rdStr", copy("Governing member", "Maßgebendes Bauteil"), resistance, ed));
+    }
+    builder.build()
 }
 // #endregion 🔖️Combinations
 
 // #region 🔖️Reliability
-/// 📐️ Reliability index target β for RC2 (EN 1990 Annex C).
-pub fn target_reliability_index(consequence_class: u8) -> f64 {
-    match consequence_class {
-        1 => 3.1,
-        2 => 3.8,
-        3 => 4.3,
-        _ => 3.8,
-    }
+pub fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckResult {
+    check_reliability_index_for(beta, consequence_class, consequence_class, 50.0, AnnexChoice::En)
 }
 
-pub fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckResult {
-    let target = target_reliability_index(consequence_class);
-    let passes = beta >= target;
-    CheckResult {
-        clause: ClauseId::new("EN 1990", "Annex C", "C.2"),
-        status: if passes { CheckStatus::Pass } else { CheckStatus::Fail },
-        computed: Quantity::new(crate::document::QuantityKind::Dimensionless, beta),
-        limit: Quantity::new(crate::document::QuantityKind::Dimensionless, target),
-        utilization: if passes { target / beta } else { beta / target },
-        message: "reliability index β".into(),
-        annex: AnnexChoice::En,
+pub fn check_reliability_index_for(beta: f64, consequence_class: u8, reliability_class: u8, reference_period_years: f64, annex: AnnexChoice) -> CheckResult {
+    let target = target_reliability_index_for(reliability_class, reference_period_years);
+    let mut builder = CheckResult::assess(
+        "en1990.annex-c.beta",
+        "EN 1990 Annex C",
+        ClauseId::new("EN 1990", "Annex C", "C.2"),
+        SubjectRef::new("", "betaComputed", copy("Reliability index", "Zuverlässigkeitsindex")),
+        copy("Target reliability index β", "Zielwert des Zuverlässigkeitsindex β"),
+    )
+    .minimum(q_dim(beta), q_dim(target))
+    .annex(annex)
+    .explanation(copy(
+        format!("β = {beta:.2} vs β_target = {target:.2} (RC{reliability_class}, T = {reference_period_years:.0} a, CC{consequence_class})"),
+        format!("β = {beta:.2} gegenüber β_Ziel = {target:.2} (RC{reliability_class}, T = {reference_period_years:.0} a, CC{consequence_class})"),
+    ));
+    if beta < target {
+        builder = builder.remedy(Remedy::at_least(
+            SubjectRef::new("", "betaComputed", copy("Reliability index", "Zuverlässigkeitsindex")),
+            q_dim(beta),
+            q_dim(target),
+            copy(
+                format!("Increase computed β from {beta:.2} to at least {target:.2}, or lower the reliability class."),
+                format!("Berechnetes β von {beta:.2} auf mindestens {target:.2} erhöhen oder Zuverlässigkeitsklasse absenken."),
+            ),
+        ));
     }
+    builder.build()
 }
 // #endregion 🔖️Reliability
 
 /// 🔁️ Append one design-situation's combination checks onto a shared report.
-pub fn append_combination_set<A: NationalAnnex>(report: &mut CheckReport, annex: &A, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) {
-    let sub = check_combination_set(annex, situation, actions, resistance_kn);
-    report.checks.extend(sub.checks);
+pub fn append_combination_set<A: NationalAnnex>(report: &mut CheckReport, annex: &A, situation: DesignSituation, actions: &ActionSet, resistance: f64) {
+    let sub = check_combination_set(annex, situation, actions, resistance);
+    report.extend(sub.checks);
 }
 
 /// 📋️ Run EN 1990 design basis checks across persistent, accidental, and seismic situations.
-pub fn check_design_basis<A: NationalAnnex>(annex: &A, actions: &ActionSet, resistance_kn: f64, consequence_class: u8) -> CheckReport {
+pub fn check_design_basis<A: NationalAnnex>(annex: &A, actions: &ActionSet, resistance: f64, consequence_class: u8) -> CheckReport {
     let mut report = CheckReport::default();
-    append_combination_set(&mut report, annex, DesignSituation::Persistent, actions, resistance_kn);
-    append_combination_set(&mut report, annex, DesignSituation::Accidental, actions, resistance_kn);
-    append_combination_set(&mut report, annex, DesignSituation::Seismic, actions, resistance_kn);
-    report.push(check_reliability_index(3.9, consequence_class));
+    append_combination_set(&mut report, annex, DesignSituation::Persistent, actions, resistance);
+    append_combination_set(&mut report, annex, DesignSituation::Accidental, actions, resistance);
+    append_combination_set(&mut report, annex, DesignSituation::Seismic, actions, resistance);
+    report.push(check_reliability_index_for(3.9, consequence_class, consequence_class, 50.0, annex.choice()));
     report
 }
 
-/// 🧮️ Seismic combination per EN 1990 Eq. 6.12b: ΣG_k + A_Ed + Σψ_2·Q_k.
-pub fn combination_6_12b<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed_kn: f64) -> f64 {
-    let mut sum = actions.g_k + seismic_a_ed_kn;
-    for (cat, q) in &actions.q_k {
-        sum += annex.psi_2(cat) * q;
-    }
-    sum
-}
-
 /// ✅️ Check the seismic design situation per EN 1990 Eq. 6.12b.
-pub fn check_seismic_situation<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed_kn: f64, resistance_kn: f64) -> CheckResult {
-    let ed = combination_6_12b(annex, actions, seismic_a_ed_kn);
-    CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4.3.4", "6.12b"), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), "seismic design situation", annex.choice())
+pub fn check_seismic_situation<A: NationalAnnex>(annex: &A, actions: &ActionSet, seismic_a_ed: f64, resistance: f64) -> CheckResult {
+    if seismic_a_ed.abs() < f64::EPSILON {
+        return CheckResult::assess(
+            "en1990.6.12b",
+            "EN 1990",
+            ClauseId::new("EN 1990", "§6.4.3.4", "6.12b"),
+            SubjectRef::whole(copy("Structure", "Tragwerk")),
+            copy("Seismic design situation", "Erdbebenbemessungssituation"),
+        )
+        .not_applicable(copy("No seismic action A_Ed defined.", "Keine seismische Einwirkung A_Ed definiert."))
+        .annex(annex.choice())
+        .build();
+    }
+    let ed = combination_6_12b(annex, actions, seismic_a_ed);
+    let mut builder = CheckResult::assess(
+        "en1990.6.12b",
+        "EN 1990",
+        ClauseId::new("EN 1990", "§6.4.3.4", "6.12b"),
+        SubjectRef::whole(copy("Structure", "Tragwerk")),
+        copy("Seismic design situation", "Erdbebenbemessungssituation"),
+    )
+    .utilization(q_force(ed), q_force(resistance))
+    .annex(annex.choice())
+    .explanation(copy(format!("E_d = G + A_Ed + Σψ₂Q = {ed:.3}"), format!("E_d = G + A_Ed + Σψ₂Q = {ed:.3}")));
+    if ed > resistance {
+        builder = builder.remedy(resistance_remedy("", "members[id=governing].rdStr", copy("Governing member", "Maßgebendes Bauteil"), resistance, ed));
+    }
+    builder.build()
 }
 //#endregion 🔖️ComplianceHelpers
 

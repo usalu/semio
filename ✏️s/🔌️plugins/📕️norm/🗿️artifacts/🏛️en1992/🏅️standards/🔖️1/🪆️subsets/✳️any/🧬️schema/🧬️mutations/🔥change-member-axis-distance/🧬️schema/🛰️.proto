@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeMemberAxisDistance {
+  string memberId = 1;
+  double newAxisDistance = 2;
+}

@@ -19,28 +19,52 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-selection-series/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/create-product/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-geometry-object/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/create-product-group/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-class/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/create-property-definition/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-group/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/create-subject/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-index/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/delete-product/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-series/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/delete-product-group/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/delete-property-definition/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-property-definition/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/delete-subject/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-subject/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-geometry-object/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-class/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-group/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-index/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product-series/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-product/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-property-definition/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/retire-subject/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/remove-part-number-input/schema.json"
@@ -55,16 +79,16 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-manufacturer/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-product/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-product-group/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-product-group/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/rename-product/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/replace-part-number-rule/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/update-script-limits/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/change-script-limits/schema.json"
     }
   ]
 }

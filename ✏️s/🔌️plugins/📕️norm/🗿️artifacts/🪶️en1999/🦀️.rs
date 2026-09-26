@@ -12,6 +12,10 @@ extern crate semio_framework_value_derive as value_derive;
 
 pub use semio_s_artifact_norm_contract::{app_surface, document, impl_norm_artifact_record, norm_owned_tool_job_factory, norm_results_window_config_owner, results_window_config};
 
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
+
+
 /// 📜 Language-neutral package declaration owned by this artifact.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 
@@ -84,28 +88,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "en1999.document",
                     extension: Some("en1999"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(semio_s_artifact_norm_en1998::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1998::document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(semio_s_artifact_norm_en1998::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1998::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1999.document"),
                 },
                 dsl::LanguageSpec {
                     id: "en1999.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(semio_s_artifact_norm_en1998::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1998::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(semio_s_artifact_norm_en1998::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1998::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1999.op"),
                 },
                 dsl::LanguageSpec {
                     id: "en1999.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(semio_s_artifact_norm_en1998::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1998::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("en1999.diff"),
@@ -116,8 +120,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(semio_s_artifact_norm_en1998::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1998::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1999.pack"),
                 },
                 dsl::LanguageSpec {
@@ -126,8 +130,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(semio_s_artifact_norm_en1998::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1998::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1999.spr"),
                 },
             ]
@@ -196,262 +200,182 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
                         #[path = "."]
-                        pub mod change_n_ed_kn {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-n-ed-kn/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_m_ed_knm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-m-ed-knm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_a_mm2 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-a-mm2/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_w_el_mm3 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-w-el-mm3/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-w-el-mm3/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️change-w-el-mm3/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_alloy {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-alloy/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-alloy/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-alloy/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_chi {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-chi/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-chi/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-chi/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_i_t_mm4 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-it-mm4/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-it-mm4/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀️change-it-mm4/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_l_cr_mm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-l-cr-mm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-l-cr-mm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-l-cr-mm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_theta_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-theta-c/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-theta-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-theta-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_delta_sigma_ed {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-delta-sigma-ed/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-delta-sigma-ed/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-delta-sigma-ed/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_delta_sigma_c {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-delta-sigma-c/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-delta-sigma-c/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-delta-sigma-c/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_fatigue_m {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-fatigue-m/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-fatigue-m/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-fatigue-m/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_n_cycles {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-n-cycles/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_v_weld_ed_kn {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-v-weld-ed-kn/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-v-weld-ed-kn/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️change-v-weld-ed-kn/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_weld_throat_mm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat-mm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat-mm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat-mm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_weld_length_mm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-weld-length-mm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-weld-length-mm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️change-weld-length-mm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_beta_w {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-beta-w/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-beta-w/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-beta-w/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_sheet_b_mm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-sheet-b-mm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-sheet-b-mm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️change-sheet-b-mm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_sheet_t_mm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️change-sheet-t-mm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️change-sheet-t-mm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📑️change-sheet-t-mm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_sheet_k_sigma {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-sheet-k-sigma/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-sheet-k-sigma/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-sheet-k-sigma/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_sheet_w_el_mm3 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-sheet-w-el-mm3/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-sheet-w-el-mm3/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️change-sheet-w-el-mm3/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_sheet_m_ed_knm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-sheet-m-ed-knm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-sheet-m-ed-knm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️change-sheet-m-ed-knm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_shell_t_mm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚️change-shell-t-mm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚️change-shell-t-mm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐚️change-shell-t-mm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_shell_r_mm {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-shell-r-mm/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-shell-r-mm/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️change-shell-r-mm/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod change_sigma_ed_shell_mpa {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-sigma-ed-shell-mpa/🦀️.rs"]
-                            mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-sigma-ed-shell-mpa/🔺️diff/🦀️.rs"]
-                            pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-sigma-ed-shell-mpa/↩️inverse/🦀️.rs"]
-                            pub mod inverse;
-                            pub use component::*;
-                        }
-                        #[path = "."]
                         pub mod change_annex {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🦀️.rs"]
                             mod component;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/🔺️diff/🦀️.rs"]
                             pub mod diff;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_materials {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-materials/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-materials/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-materials/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_sections {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-sections/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-sections/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-sections/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_members {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-members/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-members/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-members/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_connections {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-connections/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-connections/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-connections/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_fire_scenarios {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-scenarios/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-scenarios/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-fire-scenarios/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_fatigue_details {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-fatigue-details/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-fatigue-details/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-fatigue-details/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+#[path = "."]
+                        pub mod change_cold_formed {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-cold-formed/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-cold-formed/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-cold-formed/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+#[path = "."]
+                        pub mod change_shells {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙change-shells/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙change-shells/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙change-shells/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod add_member {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-member/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-member/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-member/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_member {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-member/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-member/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-member/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_member_n_ed {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-member-n-ed/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-member-n-ed/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-member-n-ed/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_member_m_y_ed {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-member-my-ed/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-member-my-ed/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⤴️change-member-my-ed/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_member_buckling_length {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-member-buckling-length/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-member-buckling-length/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️change-member-buckling-length/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_material_designation {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-material-designation/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-material-designation/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️change-material-designation/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_plate_thickness {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-plate-thickness/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-plate-thickness/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-plate-thickness/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_weld_throat {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-weld-throat/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_bolt_count {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩change-bolt-count/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩change-bolt-count/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩change-bolt-count/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
@@ -532,6 +456,11 @@ pub mod snapshot {
 pub use crate::standards::v1::subsets::any::schema::diff::En1999Diff;
 pub use crate::standards::v1::subsets::any::schema::mutations::En1999Mutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::En1999Snapshot;
+pub use crate::standards::v1::subsets::any::schema::snapshot::{
+    AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, BoltGroup, FatigueDetail, FireScenario,
+    MemberAction, PlateElement, WeldGroup,
+};
+
 
 #[path = "."]
 pub mod editor {
@@ -561,6 +490,14 @@ pub mod editor {
             pub mod set_snapshot;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-field/🦀️.rs"]
+            pub mod set_field;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕insert-item/🦀️.rs"]
+            pub mod insert_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖remove-item/🦀️.rs"]
+            pub mod remove_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹apply-remedy/🦀️.rs"]
+            pub mod apply_remedy;
         }
 
         #[path = "."]
@@ -635,4 +572,7 @@ pub mod aluminium_roof_purlin;
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏠️aluminium-roof-purlin/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
+
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏚️noncompliant-multi-fail/🦀️.rs"]
+pub mod noncompliant_multi_fail;
 //#endregion 🪢️TaxonomyMounts

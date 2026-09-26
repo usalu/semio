@@ -1,84 +1,352 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/artifact.json",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/schema.json",
   "title": "Din18599Artifact",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "buildingCategory",
+    "attachment",
     "useClass",
-    "heatedAreaM2",
-    "occupants",
-    "hT",
-    "hV",
-    "climate",
-    "internalGainsWM2",
-    "solarGainsKwh",
-    "systemLossesKwh",
-    "renewableKwh",
-    "annualLimitKwh",
-    "energyCarrier",
-    "referenceQPKwh"
+    "method",
+    "netFloorAreaM2",
+    "heatedVolumeM3",
+    "gegQpFactor",
+    "deltaUWbWM2k",
+    "automationClass",
+    "zones",
+    "elements",
+    "heating",
+    "dhw",
+    "ventilation",
+    "cooling",
+    "lighting",
+    "renewables",
+    "climate"
   ],
   "properties": {
+    "buildingCategory": {
+      "type": "string"
+    },
+    "attachment": {
+      "type": "string"
+    },
     "useClass": {
-      "type": "string",
-      "enum": [
-        "Residential",
-        "Office",
-        "School"
+      "type": "string"
+    },
+    "method": {
+      "type": "string"
+    },
+    "netFloorAreaM2": {
+      "type": "number"
+    },
+    "heatedVolumeM3": {
+      "type": "number"
+    },
+    "gegQpFactor": {
+      "type": "number"
+    },
+    "deltaUWbWM2k": {
+      "type": "number"
+    },
+    "automationClass": {
+      "type": "string"
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "labelEn",
+          "labelDe",
+          "usageProfile",
+          "areaM2",
+          "volumeM3",
+          "thetaIHeatC",
+          "thetaICoolC",
+          "occupants",
+          "internalGainsWM2",
+          "lightingPowerWM2"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "labelEn": {
+            "type": "string"
+          },
+          "labelDe": {
+            "type": "string"
+          },
+          "usageProfile": {
+            "type": "string"
+          },
+          "areaM2": {
+            "type": "number"
+          },
+          "volumeM3": {
+            "type": "number"
+          },
+          "thetaIHeatC": {
+            "type": "number"
+          },
+          "thetaICoolC": {
+            "type": "number"
+          },
+          "occupants": {
+            "type": "integer"
+          },
+          "internalGainsWM2": {
+            "type": "number"
+          },
+          "lightingPowerWM2": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "labelEn",
+          "labelDe",
+          "kind",
+          "zoneId",
+          "areaM2",
+          "uValueWM2k",
+          "orientationDeg",
+          "tiltDeg",
+          "gValue",
+          "fc",
+          "adjacency"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "labelEn": {
+            "type": "string"
+          },
+          "labelDe": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "zoneId": {
+            "type": "string"
+          },
+          "areaM2": {
+            "type": "number"
+          },
+          "uValueWM2k": {
+            "type": "number"
+          },
+          "orientationDeg": {
+            "type": "number"
+          },
+          "tiltDeg": {
+            "type": "number"
+          },
+          "gValue": {
+            "type": "number"
+          },
+          "fc": {
+            "type": "number"
+          },
+          "adjacency": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "heating": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generationEfficiency",
+        "distributionEfficiency",
+        "storageEfficiency",
+        "transferEfficiency",
+        "energyCarrier"
       ],
-      "x-semio-state": "artifact"
+      "properties": {
+        "generationEfficiency": {
+          "type": "number"
+        },
+        "distributionEfficiency": {
+          "type": "number"
+        },
+        "storageEfficiency": {
+          "type": "number"
+        },
+        "transferEfficiency": {
+          "type": "number"
+        },
+        "energyCarrier": {
+          "type": "string"
+        }
+      }
     },
-    "heatedAreaM2": {
-      "type": "number",
-      "x-semio-state": "artifact"
+    "dhw": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "specificDemandKwhPersonA",
+        "storageLossKwhA",
+        "distributionLossKwhA",
+        "energyCarrier"
+      ],
+      "properties": {
+        "specificDemandKwhPersonA": {
+          "type": "number"
+        },
+        "storageLossKwhA": {
+          "type": "number"
+        },
+        "distributionLossKwhA": {
+          "type": "number"
+        },
+        "energyCarrier": {
+          "type": "string"
+        }
+      }
     },
-    "occupants": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 4294967295,
-      "x-semio-state": "artifact"
+    "ventilation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "airflowM3H",
+        "heatRecoveryEta",
+        "fanPowerW"
+      ],
+      "properties": {
+        "airflowM3H": {
+          "type": "number"
+        },
+        "heatRecoveryEta": {
+          "type": "number"
+        },
+        "fanPowerW": {
+          "type": "number"
+        }
+      }
     },
-    "hT": {
-      "type": "number",
-      "x-semio-state": "artifact"
+    "cooling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "plant"
+      ],
+      "properties": {
+        "plant": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "eer",
+                "energyCarrier"
+              ],
+              "properties": {
+                "eer": {
+                  "type": "number"
+                },
+                "energyCarrier": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      }
     },
-    "hV": {
-      "type": "number",
-      "x-semio-state": "artifact"
+    "lighting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "controlFactor"
+      ],
+      "properties": {
+        "controlFactor": {
+          "type": "number"
+        }
+      }
+    },
+    "renewables": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pvAreaM2",
+        "pvEfficiency",
+        "solarThermalKwhA"
+      ],
+      "properties": {
+        "pvAreaM2": {
+          "type": "number"
+        },
+        "pvEfficiency": {
+          "type": "number"
+        },
+        "solarThermalKwhA": {
+          "type": "number"
+        }
+      }
     },
     "climate": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child.json",
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio"
-    },
-    "internalGainsWM2": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "solarGainsKwh": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "systemLossesKwh": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "renewableKwh": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "annualLimitKwh": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "energyCarrier": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "referenceQPKwh": {
-      "type": "number",
-      "x-semio-state": "artifact"
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childId",
+        "target"
+      ],
+      "properties": {
+        "childId": {
+          "type": "string"
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactId",
+            "dialect"
+          ],
+          "properties": {
+            "artifactId": {
+              "type": "string"
+            },
+            "dialect": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "artifactKind",
+                "standard",
+                "subset"
+              ],
+              "properties": {
+                "artifactKind": {
+                  "type": "string"
+                },
+                "standard": {
+                  "type": "string"
+                },
+                "subset": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

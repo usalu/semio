@@ -1,0 +1,5 @@
+type ChangeBarLayerDiameter {
+  memberId: String!
+  layerId: String!
+  newDiameter: Float!
+}

@@ -1,0 +1,97 @@
+{
+  "annex": "De",
+  "structureKind": "building",
+  "steelFYPa": 355000000.0,
+  "beams": [],
+  "columns": [
+    {
+      "id": "col-C1",
+      "kind": "concrete_filled",
+      "lengthM": 3.5,
+      "steelAM2": 0.0084,
+      "steelFYPa": 355000000.0,
+      "concreteAM2": 0.072,
+      "concreteFCkPa": 30000000.0,
+      "reinforcementAsM2": 0.0012,
+      "reinforcementFYkPa": 500000000.0,
+      "iM4": 0.00021,
+      "bucklingCurve": "a",
+      "outerSizeM": 0.3,
+      "wallThicknessM": 0.01,
+      "actions": [
+        {
+          "id": "G-col",
+          "kind": "permanent",
+          "category": "self",
+          "stage": "composite",
+          "qAreaPa": 0.0,
+          "mKNm": 20000.0,
+          "vKN": 0.0,
+          "nKN": 1200000.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0
+        },
+        {
+          "id": "Q-col",
+          "kind": "imposed",
+          "category": "B",
+          "stage": "composite",
+          "qAreaPa": 0.0,
+          "mKNm": 15000.0,
+          "vKN": 0.0,
+          "nKN": 400000.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0
+        }
+      ]
+    }
+  ],
+  "slabs": [
+    {
+      "id": "slab-S1",
+      "spanM": 3.0,
+      "sheeting": {
+        "profile": "trapezoidal",
+        "heightM": 0.055,
+        "ribWidthM": 0.1,
+        "thicknessM": 0.0009,
+        "ribsParallelToBeam": false
+      },
+      "concreteThicknessM": 0.14,
+      "fCkPa": 30000000.0,
+      "mFactor": 180.0,
+      "kFactor": 0.05,
+      "asM2PerM": 0.00025,
+      "support": "simply_supported",
+      "actions": [
+        {
+          "id": "G-slab",
+          "kind": "permanent",
+          "category": "self",
+          "stage": "composite",
+          "qAreaPa": 3500.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0
+        },
+        {
+          "id": "Q-slab",
+          "kind": "imposed",
+          "category": "B",
+          "stage": "composite",
+          "qAreaPa": 2000.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0
+        }
+      ]
+    }
+  ],
+  "fireRating": "r60",
+  "insulationThicknessM": 0.025,
+  "fatigueDetail": "stud_welded"
+}

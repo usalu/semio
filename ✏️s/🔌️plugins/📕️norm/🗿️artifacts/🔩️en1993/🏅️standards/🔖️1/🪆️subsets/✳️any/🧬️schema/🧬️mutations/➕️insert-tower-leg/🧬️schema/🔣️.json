@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-tower-leg/schema.json",
+  "title": "InsertTowerLeg",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "tower_leg"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "tower_leg": {
+      "type": "object"
+    }
+  }
+}

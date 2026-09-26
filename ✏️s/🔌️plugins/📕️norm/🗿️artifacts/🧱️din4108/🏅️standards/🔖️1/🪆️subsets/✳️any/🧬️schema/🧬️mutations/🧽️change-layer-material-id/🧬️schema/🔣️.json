@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-layer-material-id/schema.json",
+  "title": "ChangeLayerMaterialId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "elementId",
+    "index",
+    "newMaterialId"
+  ],
+  "properties": {
+    "elementId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newMaterialId": {
+      "type": "string"
+    }
+  }
+}

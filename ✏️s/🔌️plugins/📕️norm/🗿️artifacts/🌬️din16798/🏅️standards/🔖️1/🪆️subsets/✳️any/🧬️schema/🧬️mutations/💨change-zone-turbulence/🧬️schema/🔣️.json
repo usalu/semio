@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-turbulence/schema.json",
+  "title": "ChangeZoneTurbulence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newTurbulenceIntensityPercent"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newTurbulenceIntensityPercent": {
+      "type": "number"
+    }
+  }
+}

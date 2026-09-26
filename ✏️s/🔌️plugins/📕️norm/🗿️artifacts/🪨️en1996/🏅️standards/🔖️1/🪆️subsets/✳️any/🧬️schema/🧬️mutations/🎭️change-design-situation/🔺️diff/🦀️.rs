@@ -1,14 +1,7 @@
-//! 🔺️ `change-design-situation` sparse diff construction — writes only `En1996Diff.design_situation` from the payload.
-
-use crate::diff::En1996Diff;
-use crate::mutations::change_design_situation::ChangeDesignSituation;
-use crate::En1996Snapshot;
-
-//#region 🔖️Diff
+use super::ChangeDesignSituation;
+use crate::diff::En1996WallList;
+use crate::{En1996Diff, En1996Snapshot};
 pub fn diff(payload: &ChangeDesignSituation, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
-    if base.design_situation == payload.new_design_situation {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Design situation already has this value.");
-    }
-    protocol::MutationOutcome::new(En1996Diff { design_situation: Some(payload.new_design_situation), ..Default::default() })
+    let diff = En1996Diff { design_situation: Some(payload.new_design_situation), ..Default::default() };
+    protocol::MutationOutcome::new(diff)
 }
-//#endregion 🔖️Diff

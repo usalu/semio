@@ -12,11 +12,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck } = dependencies;
   vitest.it("retains the preceding inference job when a successor opening is refused", async () => {
     const { readFileSync } = await import("node:fs");
-    const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
     const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧫️fixtures/🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL("./🔨️modules/💡️inference/🚪️opening/🧬️schema/🔣️.json", source.url), "utf8"));
-    vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    vitest.expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
     for (const kind of fixture.routes) {
       const routes: string[] = [];
       const request = kind === "inference-open" ? fixture.request
@@ -72,13 +71,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const WORKER_LAW_CAPABILITY_TWO = `session.v1.${"d".repeat(32)}.${"5".repeat(64)}`;
   vitest.it("binds acknowledged Shell session reads through the actual worker broker", async () => {
     const { readFileSync } = await import("node:fs");
-    const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
     const { HubSessionPortClientV1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts");
     const directory = "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/";
     const corpus = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(schema);
+    const validate = semioSchemaAjvV1({ strict: true }).compile(schema);
     const authorities = corpus.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
     const originalFetch = globalThis.fetch;
     const channel = new MessageChannel();
@@ -112,12 +110,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   vitest.it("requires an acknowledged private broker port before Shell session requests", async () => {
     const { readFileSync } = await import("node:fs");
     const { setImmediate: immediate } = await import("node:timers/promises");
-    const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
     const directory = "./🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/";
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
-    vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    vitest.expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
     const { HubSessionPortClientV1, HUB_SESSION_PORT_CLIENT_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_INITIALIZATION_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_MAX_PENDING } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts");
     vitest.expect(equal([HUB_SESSION_PORT_CLIENT_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_MAX_PENDING], [fixture.timeoutMs, fixture.maximumPending])).toBe(true);
     vitest.expect(HUB_SESSION_PORT_CLIENT_INITIALIZATION_TIMEOUT_MS).toBe(fixture.initializationTimeoutMs);
@@ -175,12 +172,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   vitest.it("closes the private broker proof before or during a session-authority read", async () => {
     const { readFileSync } = await import("node:fs");
     const { setImmediate: immediate } = await import("node:timers/promises");
-    const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
     const directory = "./🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/";
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
-    vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    vitest.expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
     const { HubSessionPortClientV1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts");
     const originalFetch = globalThis.fetch;
     try {
@@ -229,12 +225,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   vitest.it("refreshes Shell session authority serially and cancels stale callbacks", async () => {
     const { readFileSync } = await import("node:fs");
-    const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
     const directory = "./🔨️modules/📇️directory/🪪️session-refresh/";
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
-    vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+    vitest.expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
     const { directorySessionAuthorityIsCurrentV1, directorySessionAuthorityTextV1, directorySessionRefreshRetryDelayMsV1, startDirectorySessionRefreshV1, DIRECTORY_SESSION_REFRESH_INTERVAL_MS, DIRECTORY_SESSION_AUTHORITY_TEXT_V1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts");
     const corpus = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
     const first = corpus.rows[0].value;
@@ -1030,11 +1025,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("artifact bootstrap atomic restore", () => {
     it("retains the exact bootstrap owner across hash completion and progress callbacks", async () => {
       const { readFile } = await import("node:fs/promises");
-      const { default: Ajv } = await import("ajv");
       const { createHash } = await import("node:crypto");
       const corpus = JSON.parse(await readFile(new URL("./🧫️fixtures/📇️directory/🧵️artifact-bootstrap-owner-v1.json", source.url), "utf8"));
       const schema = JSON.parse(await readFile(new URL("./🔨️modules/📇️directory/🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
-      const validate = new Ajv({ strict: true }).addKeyword("x-semio-note").addSchema(schema).getSchema(`${schema.$id}#/$defs/DirectoryArtifactBootstrapOwnerV1`)!;
+      const validate = semioSchemaAjvV1({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/DirectoryArtifactBootstrapOwnerV1`)!;
       expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
       const fixture = await artifactBootstrapFixture(),
         frame = decodeFixtureFrame(fixture.wire.inlineWelcomeHex);
@@ -1426,8 +1420,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }>;
       const parsed: unknown = JSON.parse(await readFile(new URL("./🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(await readFile(new URL("./🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
-      const Ajv = (await import("ajv")).default;
-      const validate = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/GisMapPeerRebootstrapV1`)! as unknown as (value: unknown) => value is GisMapPeerRebootstrapFixtureV1;
+      const { semioSchemaAjvV1 } = await import("../🧬️schema-oracle/🟦️.ts");
+      const validate = semioSchemaAjvV1({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/GisMapPeerRebootstrapV1`)! as unknown as (value: unknown) => value is GisMapPeerRebootstrapFixtureV1;
       expect(validate(parsed)).toBe(true);
       if (!validate(parsed)) throw new Error("GIS Map peer rebootstrap fixture is invalid");
       const corpus = parsed;
@@ -1875,13 +1869,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("admits administration transport only for the verified page's exact space and command capability", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const base = "./🔨️modules/📇️directory/🧬️schema/";
       const fixture = JSON.parse(readFileSync(new URL(base + "🏛️administration/🧫️fixtures/🛂️command-admission/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL(base + "🏛️administration/🧫️fixtures/🛂️command-admission/🧬️schema/🔣️.json", source.url), "utf8"));
       const directorySchema = JSON.parse(readFileSync(new URL(base + "🔣️.json", source.url), "utf8"));
-      expect(new Ajv({ strict: true }).addSchema(directorySchema).compile(schema)(fixture)).toBe(true);
+      expect(semioSchemaAjvV1({ strict: true }).addSchema(directorySchema).compile(schema)(fixture)).toBe(true);
       const members = [{ userId: "user-a", email: "a@example.invalid", role: "author" as const, owner: true }];
       let epoch = 100;
       for (const row of fixture.allowed as Array<{ capability: string; command: DirectoryCommand }>) {
@@ -1925,12 +1918,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("retires older administration page reads and refuses refresh during a sealed command", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const base = "./🔨️modules/📇️directory/🧬️schema/🏛️administration/🧫️fixtures/📄️page-retirement/";
       const fixture = JSON.parse(readFileSync(new URL(base + "🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL(base + "🧬️schema/🔣️.json", source.url), "utf8"));
-      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
       const author = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
       const member = await sealMemberAdministrationPage();
       for (const row of fixture.cases) {
@@ -1982,13 +1974,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("changes space properties only after exact worker receipts and canonical refreshes", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const base = "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🧫️fixtures/⚙️properties/";
       const fixture = JSON.parse(readFileSync(new URL(base + "🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL(base + "🧬️schema/🔣️.json", source.url), "utf8"));
       const directorySchema = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🔣️.json", source.url), "utf8"));
-      expect(new Ajv({ strict: true }).addSchema(directorySchema).compile(schema)(fixture)).toBe(true);
+      expect(semioSchemaAjvV1({ strict: true }).addSchema(directorySchema).compile(schema)(fixture)).toBe(true);
       const members = [{ userId: "user-a", email: "a@example.invalid", role: "author" as const, owner: true }];
       const properties: { name: string; visibility: "public" | "private" } = { name: "Administered", visibility: "private" };
       const harness = administrationHarness([200]);
@@ -2071,11 +2062,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("settles delete only from an exact accepted receipt and never interprets a page 404 as deletion", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const base = "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛂️SpaceAdministration/🧫️fixtures/🗑️delete-space/";
       const fixture = JSON.parse(readFileSync(new URL(base + "🔣️.json", source.url), "utf8")) as { acceptedOutcomes: Array<"accepted" | "previously-accepted">; missingPageStatus: number; confirmation: string };
       const schema = JSON.parse(readFileSync(new URL(base + "🧬️schema/🔣️.json", source.url), "utf8"));
-      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      expect(semioSchemaAjvV1({ strict: true }).compile(schema)(fixture)).toBe(true);
       expect(fixture.confirmation).toBe("get-after-accepted-receipt");
       const page = await sealAdministrationPage([{ userId: "user-a", email: "a@example.invalid", role: "author", owner: true }], []);
       let epoch = 160;
@@ -2734,7 +2724,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("accepts the exact current Hub inference receipt and events wire", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: equal } = await import("fast-deep-equal");
-      const { default: Ajv } = await import("ajv");
       const wire = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).wire;
       const schema = JSON.parse(readFileSync(new URL("../../../🌎️hub/💡️inference/🧬️schema/🔣️.json", source.url), "utf8"));
       const production = await import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts");
@@ -2742,7 +2731,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         ["receipt", "InferenceJobReceiptV1", production.parseGisMapInferenceJobReceiptV1],
         ["page", "InferenceEventPageV1", production.parseGisMapInferenceEventPageV1],
       ] as const) {
-        const valid = new Ajv({ strict: true }).addKeyword("x-semio-formats").compile({ $defs: schema.$defs, $ref: `#/$defs/${definition}` });
+        const valid = semioSchemaAjvV1({ strict: true }).compile({ $defs: schema.$defs, $ref: `#/$defs/${definition}` });
         expect(valid(wire[name]), JSON.stringify(valid.errors)).toBe(true);
         expect(equal(parse(wire[name]), wire[name])).toBe(true);
         for (const candidate of [{ ...wire[name], schema: "foreign" }, { ...wire[name], proposalHash: undefined }]) expect(() => parse(candidate)).toThrow();
@@ -2752,11 +2741,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("requires verified session authority and never adopts a successor proof for retained inference", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
-      const valid = new Ajv({ strict: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/GisMapInferencePortV1" });
+      const valid = semioSchemaAjvV1({ strict: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/GisMapInferencePortV1" });
       expect(valid(fixture), JSON.stringify(valid.errors)).toBe(true);
       expect(equal(fixture.retainedClosing.authorityFence.cases, ["absent-authority-refused", "sealed-request-proof-replacement"])).toBe(true);
 
@@ -3082,13 +3070,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("requires verified session authority to physically reopen a fresh document owner", async () => {
       const { readFileSync } = await import("node:fs");
-      const { default: Ajv } = await import("ajv");
       const { default: equal } = await import("fast-deep-equal");
       const authorityFixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authorities = authorityFixture.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
       const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
-      const validate = new Ajv({ strict: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/GisMapInferencePortV1" });
+      const validate = semioSchemaAjvV1({ strict: true }).compile({ $defs: schema.$defs, $ref: "#/$defs/GisMapInferencePortV1" });
       expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
       const harness = await inferenceHarness({ lease: "editor" });
       try {
@@ -4065,8 +4052,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFile } = await import("node:fs/promises");
       const corpus = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
-      const Ajv = (await import("ajv")).default;
-      const validators = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(schema);
+      const { semioSchemaAjvV1 } = await import("../🧬️schema-oracle/🟦️.ts");
+      const validators = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(schema);
       const validateScope = validators.getSchema(`${schema.$id}#/$defs/DocumentOpeningScopeResolutionV1`)!;
       const validateFirstOpen = validators.getSchema(`${schema.$id}#/$defs/DocumentFirstOpenV1`)!;
       expect(corpus.cases.every((row: unknown) => validateScope(row)) && validateFirstOpen(corpus.firstOpen), JSON.stringify([...validateScope.errors ?? [], ...validateFirstOpen.errors ?? []])).toBe(true);
@@ -5012,9 +4999,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const fixture = await executionTargetLeaseFixture();
       const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const actionFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
-      const Ajv = (await import("ajv")).default;
+      const { semioSchemaAjvV1 } = await import("../🧬️schema-oracle/🟦️.ts");
       const schema = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", source.url), "utf8"));
-      expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
+      expect(semioSchemaAjvV1({ strict: true }).compile(schema)(corpus)).toBe(true);
       const { applyPatch } = await import("fast-json-patch");
       const rendererOracle = applyPatch({ revision: 0, nodeKind: null as string | null }, [
         { op: "replace", path: "/revision", value: corpus.browserRender.revision },

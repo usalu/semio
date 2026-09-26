@@ -3,7 +3,7 @@
   "status": "closed",
   "prompt": "Fix the details panel so that when a piece is selected, the parent connection section renders INSIDE the piece section tree as a TreeItem, not as a separate collapsible panel section. Verify it works visually in the running sketchpad.",
   "summary": "Verified parent connection is embedded inside PiecesSectionForm as a TreeItem using ConnectionScopeProvider+SingleConnectionInfo+SingleConnectionFields. No standalone ParentConnectionSection exists. No TypeScript errors. Dev server compiles cleanly. Section registration is clean.",
-  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "started": "2026-02-24T07:07:17.930303379Z",
   "finished": "2026-02-24T07:11:06.137993293Z",
   "interactions": [

@@ -1,3 +1,54 @@
-# norm.en1995.mutations text grammar schema
-scalar Bytes
-type Document { schema: String! payload: String! }
+# 🧬️ EN 1995 mutation schema — hierarchical timber subject.
+
+union En1995Mutation =
+    ChangeAnnex
+  | InsertMember
+  | RemoveMember
+  | ChangeMemberH
+  | ChangeMemberB
+  | ChangeMemberStrengthClass
+  | ChangeConnectionNumber
+  | InsertConnection
+  | RemoveConnection
+
+type ChangeAnnex {
+  newAnnex: String! @state(class: ARTIFACT)
+}
+
+type InsertMember {
+  index: Int! @state(class: ARTIFACT)
+  member: JSON! @state(class: ARTIFACT)
+}
+
+type RemoveMember {
+  index: Int! @state(class: ARTIFACT)
+}
+
+type ChangeMemberH {
+  index: Int! @state(class: ARTIFACT)
+  newHM: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberB {
+  index: Int! @state(class: ARTIFACT)
+  newBM: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberStrengthClass {
+  index: Int! @state(class: ARTIFACT)
+  newStrengthClass: String! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionNumber {
+  index: Int! @state(class: ARTIFACT)
+  newNumber: Int! @state(class: ARTIFACT)
+}
+
+type InsertConnection {
+  index: Int! @state(class: ARTIFACT)
+  connection: JSON! @state(class: ARTIFACT)
+}
+
+type RemoveConnection {
+  index: Int! @state(class: ARTIFACT)
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-effective-depth/schema.json",
+  "title": "ChangeMemberEffectiveDepth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newValue"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "newValue": {
+      "type": "number"
+    }
+  }
+}

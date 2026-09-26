@@ -1685,22 +1685,6 @@ var mcpDescriptionTable = map[string]map[providers.McpClientKind]string{
 		providers.McpClientClaude:  "Use when Claude Code must continue a closed ticket before new edits; use when rebinding a plan id for archival on the next close.",
 		providers.McpClientCodex:   "Use when Codex must continue a closed ticket before new edits; use when rebinding a memory id for archival on the next close.",
 	},
-	"tool_section_move": {
-		providers.McpClientGeneric: "Use when a region rename is required and the surrounding file context is already loaded.",
-		providers.McpClientCursor:  "Use when the Cursor agent must rename a region and the surrounding file context is already loaded.",
-		providers.McpClientKiro:    "Use when the Kiro agent must rename a region and the surrounding file context is already loaded.",
-		providers.McpClientCopilot: "Use when the Copilot agent must rename a region and the surrounding file context is already loaded.",
-		providers.McpClientClaude:  "Use when Claude Code must rename a region and the surrounding file context is already loaded.",
-		providers.McpClientCodex:   "Use when Codex must rename a region and the surrounding file context is already loaded.",
-	},
-	"tool_file_integrate": {
-		providers.McpClientGeneric: "Use when two files must be merged at a named region boundary without losing section markers.",
-		providers.McpClientCursor:  "Use when the Cursor agent must merge two files at a named region boundary without losing section markers.",
-		providers.McpClientKiro:    "Use when the Kiro agent must merge two files at a named region boundary without losing section markers.",
-		providers.McpClientCopilot: "Use when the Copilot agent must merge two files at a named region boundary without losing section markers.",
-		providers.McpClientClaude:  "Use when Claude Code must merge two files at a named region boundary without losing section markers.",
-		providers.McpClientCodex:   "Use when Codex must merge two files at a named region boundary without losing section markers.",
-	},
 	"tool_goal_open": {
 		providers.McpClientGeneric: "Call when a new goal must be recorded before any ticket can reference it.",
 		providers.McpClientCursor:  "Call when the Cursor agent must record a new goal before any ticket references it.",
@@ -1724,14 +1708,6 @@ var mcpDescriptionTable = map[string]map[providers.McpClientKind]string{
 		providers.McpClientCopilot: "Call when the Copilot agent must reopen a closed goal because its outcome did not hold.",
 		providers.McpClientClaude:  "Call when Claude Code must reopen a closed goal because its outcome did not hold.",
 		providers.McpClientCodex:   "Call when Codex must reopen a closed goal because its outcome did not hold.",
-	},
-	"tool_section_extract": {
-		providers.McpClientGeneric: "Use when a region must be split out into its own file before shrinking the original module.",
-		providers.McpClientCursor:  "Use when the Cursor agent must split a region into its own file before shrinking the original module.",
-		providers.McpClientKiro:    "Use when the Kiro agent must split a region into its own file before shrinking the original module.",
-		providers.McpClientCopilot: "Use when the Copilot agent must split a region into its own file before shrinking the original module.",
-		providers.McpClientClaude:  "Use when Claude Code must split a region into its own file before shrinking the original module.",
-		providers.McpClientCodex:   "Use when Codex must split a region into its own file before shrinking the original module.",
 	},
 	"arg_plan_id": {
 		providers.McpClientCursor:  "Set when a `.cursor/plans/*_<id>.plan.md` file exists and must be archived into the ticket on close.",
@@ -1947,34 +1923,6 @@ func CreateMcpServer(kind providers.McpClientKind, toolTimeout time.Duration) *M
 	}
 	s.AddTool(NewTool("ticket_reopen", reopenOpts...), wrapMcpToolHandler(toolTimeout, newTicketReopenHandler(kind)))
 
-	s.AddTool(
-		NewTool("section_move",
-			WithDescription(mcpDesc(kind, "tool_section_move")),
-			WithString("file", Required(), Description("Path to the file containing the section.")),
-			WithString("old_name", Required(), Description("Current name of the section.")),
-			WithString("new_name", Required(), Description("New name for the section.")),
-		),
-		wrapMcpToolHandler(toolTimeout, sectionMove),
-	)
-	s.AddTool(
-		NewTool("file_integrate",
-			WithDescription(mcpDesc(kind, "tool_file_integrate")),
-			WithString("source", Required(), Description("Path to the source file.")),
-			WithString("target_section", Required(), Description("Name of the section in the target file to integrate into.")),
-			WithString("target_file", Required(), Description("Path to the target file.")),
-			WithString("target_parent_section", Description("Name of the parent section in the target file.")),
-		),
-		wrapMcpToolHandler(toolTimeout, sectionIntegrate),
-	)
-	s.AddTool(
-		NewTool("section_extract",
-			WithDescription(mcpDesc(kind, "tool_section_extract")),
-			WithString("source_file", Required(), Description("Path to the source file.")),
-			WithString("source_section", Required(), Description("Name of the section to extract.")),
-			WithString("target_file", Required(), Description("Path to the target file where the section will be written.")),
-		),
-		wrapMcpToolHandler(toolTimeout, sectionExtract),
-	)
 	s.AddTool(
 		NewTool("goal_open",
 			WithDescription(mcpDesc(kind, "tool_goal_open")),

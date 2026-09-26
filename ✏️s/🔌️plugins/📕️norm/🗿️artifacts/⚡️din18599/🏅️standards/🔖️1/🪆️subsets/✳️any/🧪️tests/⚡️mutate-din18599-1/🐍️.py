@@ -31,34 +31,14 @@ build_adapter = _vocabulary.build_adapter
 #: 🏷️ Every kind this subset's committed catalog declares, in catalog order.
 KINDS = [
     "change-use-class",
-    "change-heated-area-m2",
-    "change-occupants",
-    "change-ht",
-    "change-hv",
-    "change-internal-gains-wm2",
-    "change-solar-gains-kwh",
-    "change-system-losses-kwh",
-    "change-renewable-kwh",
-    "change-annual-limit-kwh",
-    "change-energy-carrier",
-    "change-reference-qp-kwh",
+    "change-net-floor-area-m2",
     "update-climate",
 ]
 
 #: 🧫️ The committed specification vector each kind publishes, as (triad directory, fixture name).
 VECTORS = {
-    "change-use-class": ("🏷️change-use-class", "🏢️reclassifies-the-building-as-an-office"),
-    "change-heated-area-m2": ("📐️change-heated-area-m2", "📏️extends-the-heated-area-to-160-m2"),
-    "change-occupants": ("👥️change-occupants", "👥️raises-the-occupancy-to-six-people"),
-    "change-ht": ("🧱️change-ht", "🧱️raises-the-transmission-loss-coefficient-to-118-w-per-k"),
-    "change-hv": ("🌬️change-hv", "🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k"),
-    "change-internal-gains-wm2": ("🔥️change-internal-gains-wm2", "🌡️raises-the-internal-gains-to-5-w-per-m2"),
-    "change-solar-gains-kwh": ("☀️change-solar-gains-kwh", "🌞️raises-the-annual-solar-gains-to-132-kwh"),
-    "change-system-losses-kwh": ("📉️change-system-losses-kwh", "🛠️cuts-the-system-losses-to-450-kwh"),
-    "change-renewable-kwh": ("♻️change-renewable-kwh", "🔆️raises-the-on-site-renewable-yield-to-2250-kwh"),
-    "change-annual-limit-kwh": ("🚦️change-annual-limit-kwh", "🎯️tightens-the-annual-primary-energy-limit-to-6000-kwh"),
-    "change-energy-carrier": ("🔋️change-energy-carrier", "⚡️switches-the-energy-carrier-to-an-electric-heat-pump"),
-    "change-reference-qp-kwh": ("🏢️change-reference-qp-kwh", "📉️lowers-the-reference-building-primary-energy-to-8750-kwh"),
+    "change-use-class": ("🏷️use-class", "🏢️reclassifies-the-building-as-an-office"),
+    "change-net-floor-area-m2": ("📐️net-floor-area-m2", "📏️extends-net-floor-area-to-160-m2"),
     "update-climate": ("🌦️update-climate", "🌧️refuses-a-negative-january-irradiance"),
 }
 

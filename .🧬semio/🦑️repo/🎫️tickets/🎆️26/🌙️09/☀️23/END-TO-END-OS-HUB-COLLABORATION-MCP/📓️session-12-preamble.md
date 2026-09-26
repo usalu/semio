@@ -95,3 +95,6 @@ Session-11 rules (`📓️session-11-preamble.md`) apply unless overridden here.
     time, and root `Cargo.toml` / `.cargo/config.toml` profile edits change every unit's identity. Until W2 reports the
     `--packages all` publish DONE, none of these files may be edited (nor anything under `📇️directory/🧬️schema/` or any other
     `🔣️.json` the kernel includes). Prepare such changes as patches under `wp-<slice>/`.
+22. **Coordinator-owned chains (15:0x):** an agent's usage cut tears down its process tree (W2's publish 2 died with exit 143 at
+    11:43 when W2 was cut). Multi-hour chains (catalog publishes, restages, hub 7800 holds) are launched by the COORDINATOR
+    (`python3 wp-w2/w2-detach.py <log> <cmd…>`); agents prepare the exact command and hand it over, then monitor.

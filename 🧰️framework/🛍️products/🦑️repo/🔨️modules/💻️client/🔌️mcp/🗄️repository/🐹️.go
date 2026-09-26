@@ -108,37 +108,6 @@ func (repository ClientRepository) Call(ctx context.Context, name string, raw js
 			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid ticket path"}
 		}
 		result = client.ToolTicketReopen(year, month, day, slug, params.Prompt, params.LLM, params.Effort, params.Client, params.Draft, params.Title, params.Goal, params.Parent, params.NoManagement, repository.profile, params.PlanID, params.SpecID)
-	case "section_move":
-		var params struct {
-			File    string `json:"file"`
-			OldName string `json:"old_name"`
-			NewName string `json:"new_name"`
-		}
-		if err := DecodeParams(raw, &params); err != nil || params.File == "" || params.OldName == "" || params.NewName == "" {
-			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid section_move arguments"}
-		}
-		result = client.ToolSectionMove(params.File, params.OldName, params.NewName)
-	case "file_integrate":
-		var params struct {
-			Source              string `json:"source"`
-			TargetSection       string `json:"target_section"`
-			TargetFile          string `json:"target_file"`
-			TargetParentSection string `json:"target_parent_section"`
-		}
-		if err := DecodeParams(raw, &params); err != nil || params.Source == "" || params.TargetSection == "" || params.TargetFile == "" {
-			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid file_integrate arguments"}
-		}
-		result = client.ToolIntegrate(params.Source, params.TargetSection, params.TargetFile, params.TargetParentSection)
-	case "section_extract":
-		var params struct {
-			SourceFile    string `json:"source_file"`
-			SourceSection string `json:"source_section"`
-			TargetFile    string `json:"target_file"`
-		}
-		if err := DecodeParams(raw, &params); err != nil || params.SourceFile == "" || params.SourceSection == "" || params.TargetFile == "" {
-			return RepositoryResult{}, &HandlerError{Code: -32010, Message: "invalid section_extract arguments"}
-		}
-		result = client.ToolExtract(params.SourceFile, params.SourceSection, params.TargetFile)
 	case "goal_open":
 		var params struct {
 			Title        string `json:"title"`
@@ -338,9 +307,6 @@ func NewRepositoryServerWithLimitsFor(repository RepositoryHandlers, profile cli
 		{Name: "ticket_open", Description: "Open a repository ticket.", InputSchema: object(openProperties, "emoji", "title", "prompt", "goal")},
 		{Name: "ticket_close", Description: "Close a repository ticket.", InputSchema: object(map[string]Schema{"path": stringField("YY/MM/DD/SLUG path."), "summary": stringField("Completion summary."), "files": arrayField("Changed files."), "title": stringField("Updated title."), "no_management": booleanField("Skip management integration.")}, "summary")},
 		{Name: "ticket_reopen", Description: "Reopen a repository ticket.", InputSchema: object(reopenProperties)},
-		{Name: "section_move", Description: "Rename or move a section.", InputSchema: object(map[string]Schema{"file": stringField("Source file."), "old_name": stringField("Current section."), "new_name": stringField("New section.")}, "file", "old_name", "new_name")},
-		{Name: "file_integrate", Description: "Integrate a source file into a target section.", InputSchema: object(map[string]Schema{"source": stringField("Source file."), "target_section": stringField("Target section."), "target_file": stringField("Target file."), "target_parent_section": stringField("Optional parent section.")}, "source", "target_section", "target_file")},
-		{Name: "section_extract", Description: "Extract a section into a target file.", InputSchema: object(map[string]Schema{"source_file": stringField("Source file."), "source_section": stringField("Source section."), "target_file": stringField("Target file.")}, "source_file", "source_section", "target_file")},
 		{Name: "goal_open", Description: "Open a repository goal.", InputSchema: object(map[string]Schema{"title": stringField("Goal title."), "description": stringField("Goal description."), "prompt": stringField("Goal prompt."), "due_date": stringField("YYYY-MM-DD due date."), "llm": stringField("Model."), "client": stringField("Agent client."), "parent": stringField("Parent goal id."), "milestone": stringField("Management milestone."), "no_management": booleanField("Skip management integration.")}, "title", "prompt")},
 		{Name: "goal_close", Description: "Close a repository goal.", InputSchema: object(map[string]Schema{"id": stringField("Goal id."), "summary": stringField("Completion summary."), "no_management": booleanField("Skip management integration.")}, "id", "summary")},
 		{Name: "goal_reopen", Description: "Reopen a repository goal.", InputSchema: object(map[string]Schema{"id": stringField("Goal id."), "prompt": stringField("Additional goal prompt."), "llm": stringField("Model."), "client": stringField("Agent client."), "title": stringField("Updated title."), "description": stringField("Updated description."), "due_date": stringField("YYYY-MM-DD due date."), "no_management": booleanField("Skip management integration.")}, "id", "prompt", "llm", "client")},

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-axis-distance/schema.json",
+  "title": "ChangeMemberAxisDistance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newAxisDistance"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "newAxisDistance": {
+      "type": "number"
+    }
+  }
+}

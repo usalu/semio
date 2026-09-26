@@ -1,0 +1,12 @@
+{
+  "InsertZone": {
+    "index": 1,
+    "zone": {
+      "id": "zone-extra",
+      "floorAreaM2": 40.0,
+      "heaviness": "medium",
+      "nightVentilation": "none",
+      "windows": []
+    }
+  }
+}

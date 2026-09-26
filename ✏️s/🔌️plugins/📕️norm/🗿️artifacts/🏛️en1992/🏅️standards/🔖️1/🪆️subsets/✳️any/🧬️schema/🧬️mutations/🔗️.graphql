@@ -1,39 +1,86 @@
-# 🧬️ En1992 mutation schema — artifact-lane fields only.
+# 🧬️ En1992 mutations — hierarchical artifact fields only (no flat design-effect stubs).
 
 type En1992Mutation {
-  annex: String! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  fCk: Float! @state(class: ARTIFACT)
-  bMm: Float! @state(class: ARTIFACT)
-  dMm: Float! @state(class: ARTIFACT)
-  aSMm2: Float! @state(class: ARTIFACT)
-  fYk: Float! @state(class: ARTIFACT)
-  rhoL: Float! @state(class: ARTIFACT)
-  nEdKn: Float! @state(class: ARTIFACT)
-  pKn: Float! @state(class: ARTIFACT)
-  aCMm2: Float! @state(class: ARTIFACT)
-  useFem: Boolean! @state(class: ARTIFACT)
-  spanM: Float! @state(class: ARTIFACT)
-  udlKnM: Float! @state(class: ARTIFACT)
-  fireRating: String! @state(class: ARTIFACT)
-  providedAxisDistanceMm: Float! @state(class: ARTIFACT)
-  bridgeSigmaCMpa: Float! @state(class: ARTIFACT)
-  bridgeDeltaSigmaSMpa: Float! @state(class: ARTIFACT)
-  tightnessClass: String! @state(class: ARTIFACT)
-  hdOverH: Float! @state(class: ARTIFACT)
-  liquidSigmaSMpa: Float! @state(class: ARTIFACT)
-  liquidRhoPEff: Float! @state(class: ARTIFACT)
-  liquidFCtEffMpa: Float! @state(class: ARTIFACT)
-  liquidESMpa: Float! @state(class: ARTIFACT)
-  liquidSRMaxMm: Float! @state(class: ARTIFACT)
-  anchorHEfMm: Float! @state(class: ARTIFACT)
-  anchorCracked: Boolean! @state(class: ARTIFACT)
-  anchorFUkMpa: Float! @state(class: ARTIFACT)
-  anchorFYkMpa: Float! @state(class: ARTIFACT)
-  anchorASMm2: Float! @state(class: ARTIFACT)
-  anchorDMm: Float! @state(class: ARTIFACT)
-  anchorC1Mm: Float! @state(class: ARTIFACT)
-  anchorNEdKn: Float! @state(class: ARTIFACT)
-  anchorVEdKn: Float! @state(class: ARTIFACT)
+  annex: String @state(class: ARTIFACT)
+  title: String @state(class: ARTIFACT)
+  designWorkingLifeYears: Float @state(class: ARTIFACT)
+  deltaCDev: Float @state(class: ARTIFACT)
+  cementType: String @state(class: ARTIFACT)
+  members: [En1992MemberMutation!] @state(class: ARTIFACT)
+  anchors: [En1992AnchorMutation!] @state(class: ARTIFACT)
+  concreteGrades: [En1992ConcreteMutation!] @state(class: ARTIFACT)
+  reinforcementGrades: [En1992ReinfMutation!] @state(class: ARTIFACT)
+}
+
+type En1992MemberMutation {
+  id: String!
+  cover: Float
+  width: Float
+  height: Float
+  effectiveDepth: Float
+  span: Float
+  exposure: String
+  fireAxisDistance: Float
+  fireRating: String
+  stirrupSpacing: Float
+  useFem: Boolean
+  udl: Float
+  deflectionSensitive: Boolean
+  actions: [En1992ActionMutation!]
+  longitudinal: [En1992BarMutation!]
+  punching: En1992PunchingMutation
+  prestress: En1992PrestressMutation
+}
+
+type En1992ActionMutation {
+  id: String!
+  kind: String
+  category: String
+  source: String
+  gKLine: Float
+  qKLine: Float
+  pointForce: Float
+  mK: Float
+  nK: Float
+  vK: Float
+  tK: Float
+  vKPunch: Float
+}
+
+type En1992BarMutation {
+  id: String!
+  diameter: Float
+  count: Int
+  anchorageLength: Float
+  lapLength: Float
+}
+
+type En1992PunchingMutation {
+  columnWidth: Float
+  columnDepth: Float
+  columnPosition: String
+  asw: Float
+}
+
+type En1992PrestressMutation {
+  force: Float
+  area: Float
+  eccentricity: Float
+  lossRatio: Float
+}
+
+type En1992AnchorMutation {
+  id: String!
+  hEf: Float
+  aS: Float
+}
+
+type En1992ConcreteMutation {
+  id: String!
+  fCk: Float
+}
+
+type En1992ReinfMutation {
+  id: String!
+  fYk: Float
 }

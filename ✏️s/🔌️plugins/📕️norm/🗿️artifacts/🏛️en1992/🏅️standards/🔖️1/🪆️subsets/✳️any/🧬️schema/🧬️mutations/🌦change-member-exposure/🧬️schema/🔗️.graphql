@@ -1,0 +1,4 @@
+type ChangeMemberExposure {
+  memberId: String!
+  newExposure: String!
+}

@@ -1,0 +1,4 @@
+type ChangeAnchorAs {
+  anchorId: String!
+  newValue: Float!
+}

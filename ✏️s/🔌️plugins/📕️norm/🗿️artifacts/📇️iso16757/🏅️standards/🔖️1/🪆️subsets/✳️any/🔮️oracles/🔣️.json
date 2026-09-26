@@ -8,14 +8,15 @@
       "ecosystem": "python",
       "package": "",
       "capabilities": [
-        "iso16757-1-mutate"
+        "iso16757-1-mutate",
+        "iso16757-1-evaluate"
       ],
       "comparisonProfiles": [
         "ordered-json-v1"
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.iso16757` — checked against PyPI, which serves no `iso16757`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../🧪️tests/📇️mutate-iso16757-1/🐍️.py`, all 21 kinds of `Iso16757Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `iso16757-1-mutate`'s external-oracle requirement for its 21-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 21 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
+      "rationale": "🐍️ No third-party library in any ecosystem reads or writes `s.norm.iso16757` — checked against PyPI, which serves no `iso16757`, `eurocode`, `vdi3805` or `iso16757` distribution, and whose nearest real packages (`structuralcodes`, `concreteproperties`, `anastruct`) implement design-code formulae and speak no interchange format — so this subset's reference is a SECOND IMPLEMENTATION rather than a third-party distribution. That is why `package` is empty: the entry links no external library and contributes nothing to the dependency ratchet. The implementation is `../🧪️tests/📇️mutate-iso16757-1/🐍️.py`, all 29 kinds of `Iso16757Mutation` written in Python from `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`'s `📓️taxonomy.md` (verb table, the `new_<field>` naming mechanic, the addressing convention) and `📓️derivation-rules.md` (shape rules), plus this manifest's own catalog for the closed list of kinds. It imports nothing from the Rust it judges and transliterates none of it — the field a `new*` argument names is resolved by normalised spelling against the document's own keys, exactly as the naming mechanic states. Its reading is pinned by reaching every committed handcrafted `(before, mutation, after, outcome)` vector and by re-emitting the committed `.dsl.semio` artifact byte for byte, neither of which a misreading could do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `iso16757-1-mutate`'s external-oracle requirement for its 21-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.\n\n[2026-09-02, D1 — SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION] Promoted from cross-semio-implementation to verified-native-second-implementation: this artifact is semio-native (isSemioNativeArtifact), this reference's own third-party survey above (kept verbatim) already names what was checked and declined, its python implementation differs from the Rust subject, and it covers 100% of this manifest's 1 capability/capabilities with 21 committed fixture vector(s). See .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/📓️d1-native-oracle-discharge.md.",
       "kind": "verified-native-second-implementation",
       "engine": {
         "family": "none",
@@ -55,6 +56,20 @@
           ]
         }
       }
+    },
+    {
+      "id": "iso16757-1-python-compliance",
+      "ecosystem": "python",
+      "package": "jsonschema",
+      "capabilities": [
+        "iso16757-1-evaluate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "Independent evaluate oracle at compliance/python recomputes Part 2 volume and Part 5 part-number script within 0.5 percent and validates snapshot JSON Schema via third-party jsonschema."
     }
   ],
   "noOracleDecisions": [],
@@ -121,9 +136,9 @@
           ]
         },
         {
-          "mutationId": "create-product",
-          "sourceMutationDirectoryName": "📦️create-product",
-          "mutationDirectoryName": "📦️create-product",
+          "mutationId": "introduce-product",
+          "sourceMutationDirectoryName": "📦️introduce-product",
+          "mutationDirectoryName": "📦️introduce-product",
           "scenarios": [
             {
               "id": "appends-a-pr900-product-to-the-existing-series",
@@ -132,9 +147,9 @@
           ]
         },
         {
-          "mutationId": "create-product-group",
-          "sourceMutationDirectoryName": "🧺️create-product-group",
-          "mutationDirectoryName": "🧺️create-product-group",
+          "mutationId": "introduce-product-group",
+          "sourceMutationDirectoryName": "🧺️introduce-product-group",
+          "mutationDirectoryName": "🧺️introduce-product-group",
           "scenarios": [
             {
               "id": "appends-a-towel-radiators-group",
@@ -143,9 +158,9 @@
           ]
         },
         {
-          "mutationId": "create-property-definition",
-          "sourceMutationDirectoryName": "📐️create-property-definition",
-          "mutationDirectoryName": "📐️create-property-definition",
+          "mutationId": "introduce-property-definition",
+          "sourceMutationDirectoryName": "📐️introduce-property-definition",
+          "mutationDirectoryName": "📐️introduce-property-definition",
           "scenarios": [
             {
               "id": "appends-a-selection-scoped-length-property",
@@ -154,9 +169,9 @@
           ]
         },
         {
-          "mutationId": "create-subject",
-          "sourceMutationDirectoryName": "🌳️create-subject",
-          "mutationDirectoryName": "🌳️create-subject",
+          "mutationId": "introduce-subject",
+          "sourceMutationDirectoryName": "🌳️introduce-subject",
+          "mutationDirectoryName": "🌳️introduce-subject",
           "scenarios": [
             {
               "id": "appends-a-towel-radiator-subject-under-the-radiator-parent",
@@ -165,9 +180,9 @@
           ]
         },
         {
-          "mutationId": "delete-product",
-          "sourceMutationDirectoryName": "🚫️delete-product",
-          "mutationDirectoryName": "🚫️delete-product",
+          "mutationId": "retire-product",
+          "sourceMutationDirectoryName": "🚫️retire-product",
+          "mutationDirectoryName": "🚫️retire-product",
           "scenarios": [
             {
               "id": "removes-the-pr600-product-from-the-catalogue",
@@ -176,9 +191,9 @@
           ]
         },
         {
-          "mutationId": "delete-product-group",
-          "sourceMutationDirectoryName": "🧹️delete-product-group",
-          "mutationDirectoryName": "🧹️delete-product-group",
+          "mutationId": "retire-product-group",
+          "sourceMutationDirectoryName": "🧹️retire-product-group",
+          "mutationDirectoryName": "🧹️retire-product-group",
           "scenarios": [
             {
               "id": "removes-the-radiators-group-and-strands-its-class",
@@ -187,9 +202,9 @@
           ]
         },
         {
-          "mutationId": "delete-property-definition",
-          "sourceMutationDirectoryName": "🧽️delete-property-definition",
-          "mutationDirectoryName": "🧽️delete-property-definition",
+          "mutationId": "retire-property-definition",
+          "sourceMutationDirectoryName": "🧽️retire-property-definition",
+          "mutationDirectoryName": "🧽️retire-property-definition",
           "scenarios": [
             {
               "id": "removes-the-height-property-definition",
@@ -198,9 +213,9 @@
           ]
         },
         {
-          "mutationId": "delete-subject",
-          "sourceMutationDirectoryName": "✂️delete-subject",
-          "mutationDirectoryName": "✂️delete-subject",
+          "mutationId": "retire-subject",
+          "sourceMutationDirectoryName": "✂️retire-subject",
+          "mutationDirectoryName": "✂️retire-subject",
           "scenarios": [
             {
               "id": "removes-the-radiator-subject-from-the-dictionary",
@@ -286,20 +301,108 @@
           ]
         },
         {
-          "mutationId": "update-script-limits",
-          "sourceMutationDirectoryName": "🚦️update-script-limits",
-          "mutationDirectoryName": "🚦️update-script-limits",
+          "mutationId": "change-script-limits",
+          "sourceMutationDirectoryName": "🚦️change-script-limits",
+          "mutationDirectoryName": "🚦️change-script-limits",
           "scenarios": [
             {
               "id": "doubles-the-step-budget-and-quintuples-the-timeout",
               "directoryName": "🚦️doubles-the-step-budget-and-quintuples-the-timeout"
             }
           ]
+        },
+        {
+          "mutationId": "introduce-product-class",
+          "sourceMutationDirectoryName": "🏷️introduce-product-class",
+          "mutationDirectoryName": "🏷️introduce-product-class",
+          "scenarios": [
+            {
+              "id": "appends-a-towel-radiator-class",
+              "directoryName": "🏷️appends-a-towel-radiator-class"
+            }
+          ]
+        },
+        {
+          "mutationId": "retire-product-class",
+          "sourceMutationDirectoryName": "🗑️retire-product-class",
+          "mutationDirectoryName": "🗑️retire-product-class",
+          "scenarios": [
+            {
+              "id": "removes-the-panel-radiator-class",
+              "directoryName": "🗑️removes-the-panel-radiator-class"
+            }
+          ]
+        },
+        {
+          "mutationId": "introduce-product-series",
+          "sourceMutationDirectoryName": "📚introduce-product-series",
+          "mutationDirectoryName": "📚introduce-product-series",
+          "scenarios": [
+            {
+              "id": "appends-a-pr-plus-series",
+              "directoryName": "📚appends-a-pr-plus-series"
+            }
+          ]
+        },
+        {
+          "mutationId": "retire-product-series",
+          "sourceMutationDirectoryName": "🗑️retire-product-series",
+          "mutationDirectoryName": "🗑️retire-product-series",
+          "scenarios": [
+            {
+              "id": "removes-the-pr-series",
+              "directoryName": "🗑️removes-the-pr-series"
+            }
+          ]
+        },
+        {
+          "mutationId": "introduce-product-index",
+          "sourceMutationDirectoryName": "🔎introduce-product-index",
+          "mutationDirectoryName": "🔎introduce-product-index",
+          "scenarios": [
+            {
+              "id": "appends-a-pr600-index",
+              "directoryName": "🔎appends-a-pr600-index"
+            }
+          ]
+        },
+        {
+          "mutationId": "retire-product-index",
+          "sourceMutationDirectoryName": "🗑️retire-product-index",
+          "mutationDirectoryName": "🗑️retire-product-index",
+          "scenarios": [
+            {
+              "id": "removes-the-pr600-index",
+              "directoryName": "🗑️removes-the-pr600-index"
+            }
+          ]
+        },
+        {
+          "mutationId": "introduce-geometry-object",
+          "sourceMutationDirectoryName": "📐introduce-geometry-object",
+          "mutationDirectoryName": "📐introduce-geometry-object",
+          "scenarios": [
+            {
+              "id": "appends-a-pr600-geometry",
+              "directoryName": "📐appends-a-pr600-geometry"
+            }
+          ]
+        },
+        {
+          "mutationId": "retire-geometry-object",
+          "sourceMutationDirectoryName": "🗑️retire-geometry-object",
+          "mutationDirectoryName": "🗑️retire-geometry-object",
+          "scenarios": [
+            {
+              "id": "removes-the-pr600-geometry",
+              "directoryName": "🗑️removes-the-pr600-geometry"
+            }
+          ]
         }
       ],
       "kinds": [
         "change-exchange-process",
-        "update-script-limits",
+        "change-script-limits",
         "replace-part-number-rule",
         "change-part-number-input",
         "remove-part-number-input",
@@ -309,16 +412,24 @@
         "remove-selection-constraint",
         "rename-catalogue",
         "rename-manufacturer",
-        "create-product-group",
-        "delete-product-group",
+        "introduce-product-group",
+        "retire-product-group",
         "rename-product-group",
-        "create-product",
-        "delete-product",
+        "introduce-product",
+        "retire-product",
         "rename-product",
-        "create-property-definition",
-        "delete-property-definition",
-        "create-subject",
-        "delete-subject"
+        "introduce-property-definition",
+        "retire-property-definition",
+        "introduce-subject",
+        "retire-subject",
+        "introduce-product-class",
+        "retire-product-class",
+        "introduce-product-series",
+        "retire-product-series",
+        "introduce-product-index",
+        "retire-product-index",
+        "introduce-geometry-object",
+        "retire-geometry-object"
       ]
     }
   ],
@@ -437,7 +548,7 @@
           "subset": "part-1"
         },
         {
-          "id": "create-product",
+          "id": "introduce-product",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -445,9 +556,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "create-product",
+            "operation": "introduce-product",
             "bridgeVersion": 1,
-            "variant": "CreateProduct"
+            "variant": "IntroduceProduct"
           },
           "oracleRequirements": [
             {
@@ -458,7 +569,7 @@
           "subset": "part-1"
         },
         {
-          "id": "create-product-group",
+          "id": "introduce-product-group",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -466,9 +577,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "create-product-group",
+            "operation": "introduce-product-group",
             "bridgeVersion": 1,
-            "variant": "CreateProductGroup"
+            "variant": "IntroduceProductGroup"
           },
           "oracleRequirements": [
             {
@@ -479,7 +590,7 @@
           "subset": "part-1"
         },
         {
-          "id": "create-property-definition",
+          "id": "introduce-property-definition",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -487,9 +598,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "create-property-definition",
+            "operation": "introduce-property-definition",
             "bridgeVersion": 1,
-            "variant": "CreatePropertyDefinition"
+            "variant": "IntroducePropertyDefinition"
           },
           "oracleRequirements": [
             {
@@ -500,7 +611,7 @@
           "subset": "part-1"
         },
         {
-          "id": "create-subject",
+          "id": "introduce-subject",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -508,9 +619,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "create-subject",
+            "operation": "introduce-subject",
             "bridgeVersion": 1,
-            "variant": "CreateSubject"
+            "variant": "IntroduceSubject"
           },
           "oracleRequirements": [
             {
@@ -521,7 +632,7 @@
           "subset": "part-4"
         },
         {
-          "id": "delete-product",
+          "id": "retire-product",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -529,9 +640,9 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "delete-product",
+            "operation": "retire-product",
             "bridgeVersion": 1,
-            "variant": "DeleteProduct"
+            "variant": "RetireProduct"
           },
           "oracleRequirements": [
             {
@@ -542,7 +653,7 @@
           "subset": "part-1"
         },
         {
-          "id": "delete-product-group",
+          "id": "retire-product-group",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -550,9 +661,9 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "delete-product-group",
+            "operation": "retire-product-group",
             "bridgeVersion": 1,
-            "variant": "DeleteProductGroup"
+            "variant": "RetireProductGroup"
           },
           "oracleRequirements": [
             {
@@ -563,7 +674,7 @@
           "subset": "part-1"
         },
         {
-          "id": "delete-property-definition",
+          "id": "retire-property-definition",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -571,9 +682,9 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "delete-property-definition",
+            "operation": "retire-property-definition",
             "bridgeVersion": 1,
-            "variant": "DeletePropertyDefinition"
+            "variant": "RetirePropertyDefinition"
           },
           "oracleRequirements": [
             {
@@ -584,7 +695,7 @@
           "subset": "part-1"
         },
         {
-          "id": "delete-subject",
+          "id": "retire-subject",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -592,9 +703,9 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "delete-subject",
+            "operation": "retire-subject",
             "bridgeVersion": 1,
-            "variant": "DeleteSubject"
+            "variant": "RetireSubject"
           },
           "oracleRequirements": [
             {
@@ -754,7 +865,7 @@
           "subset": "part-5"
         },
         {
-          "id": "update-script-limits",
+          "id": "change-script-limits",
           "capability": "iso16757-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -762,9 +873,9 @@
             "no-op"
           ],
           "productionDispatch": {
-            "operation": "update-script-limits",
+            "operation": "change-script-limits",
             "bridgeVersion": 1,
-            "variant": "UpdateScriptLimits"
+            "variant": "ChangeScriptLimits"
           },
           "oracleRequirements": [
             {
@@ -773,6 +884,174 @@
             }
           ],
           "subset": "part-5"
+        },
+        {
+          "id": "introduce-product-class",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "introduce-product-class",
+            "bridgeVersion": 1,
+            "variant": "IntroduceProductClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "retire-product-class",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "retire-product-class",
+            "bridgeVersion": 1,
+            "variant": "RetireProductClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "introduce-product-series",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "introduce-product-series",
+            "bridgeVersion": 1,
+            "variant": "IntroduceProductSeries"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "retire-product-series",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "retire-product-series",
+            "bridgeVersion": 1,
+            "variant": "RetireProductSeries"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "introduce-product-index",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "introduce-product-index",
+            "bridgeVersion": 1,
+            "variant": "IntroduceProductIndex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "retire-product-index",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "retire-product-index",
+            "bridgeVersion": 1,
+            "variant": "RetireProductIndex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "part-1"
+        },
+        {
+          "id": "introduce-geometry-object",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "introduce-geometry-object",
+            "bridgeVersion": 1,
+            "variant": "IntroduceGeometryObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "part-2"
+        },
+        {
+          "id": "retire-geometry-object",
+          "capability": "iso16757-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "retire-geometry-object",
+            "bridgeVersion": 1,
+            "variant": "RetireGeometryObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "iso16757-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ],
+          "subset": "part-2"
         }
       ]
     }

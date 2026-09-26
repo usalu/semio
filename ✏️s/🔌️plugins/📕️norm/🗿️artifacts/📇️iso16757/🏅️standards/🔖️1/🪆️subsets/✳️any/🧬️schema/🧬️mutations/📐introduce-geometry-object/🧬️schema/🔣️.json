@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-geometry-object/schema.json",
+  "title": "IntroduceGeometryObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "geometryObject"
+  ],
+  "properties": {
+    "geometryObject": {
+      "title": "GeometryObject",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "shape": {
+          "type": "object"
+        },
+        "symbolic": {
+          "type": "object"
+        },
+        "spaces": {
+          "type": "array"
+        },
+        "surfaces": {
+          "type": "array"
+        },
+        "ports": {
+          "type": "array"
+        },
+        "parameterBindings": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

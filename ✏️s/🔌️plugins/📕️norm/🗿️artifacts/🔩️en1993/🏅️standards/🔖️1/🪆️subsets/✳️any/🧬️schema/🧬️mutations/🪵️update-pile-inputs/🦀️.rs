@@ -1,19 +1,17 @@
-//! ⚓ `update-pile-inputs` — atomically updates the pile-inputs facet (pile_sigma_mpa, pile_k_red, pile_n_ed_kn are validated together for one EN 1993 check, never one-field-at-a-time).
+//! `upsert-pile` — upsert a `SteelPile` by id into `piles`.
 
-use crate::{En1993Mutation, En1993Snapshot};
+use crate::{SteelPile, En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdatePileInputs {
-    pub new_pile_sigma_mpa: f64,
-    pub new_pile_k_red: f64,
-    pub new_pile_n_ed_kn: f64,
+    pub pile: SteelPile,
 }
 
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdatePileInputs {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "pile-inputs", kind: "update-pile-inputs", record: "UpdatedPileInputs" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "pile", kind: "update-pile-inputs", record: "UpdatedPile" };
 
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -22,7 +20,13 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdatePileInputs
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-5 pile foundation inputs", "EN 1993-5 Eingaben für Pfahlgründungen aktualisieren")
+        protocol::LocalizedLabel::native(
+            &format!("Upsert pile {}", self.pile.id),
+            &format!("Pfahl setzen {}", self.pile.id),
+        )
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.pile.id.clone()]
     }
 }
 //#endregion 🔖️Payload

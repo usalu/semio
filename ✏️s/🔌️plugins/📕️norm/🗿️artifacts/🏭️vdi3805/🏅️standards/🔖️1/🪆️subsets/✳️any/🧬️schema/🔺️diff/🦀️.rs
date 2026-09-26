@@ -1,6 +1,6 @@
 //! 🧬️ Vdi3805 diff schema — sparse field delta over the artifact.
 
-use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry, SecurityLimits};
+use crate::{CatalogIndex, CharacteristicCurve, EditionId, EditionProfileChoice, ManufacturerCatalog, ManufacturerFile, ParametricGeometry};
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
@@ -30,8 +30,6 @@ pub struct Vdi3805Diff {
     pub geometry: Option<BTreeMap<String, ParametricGeometry>>,
     #[state(artifact)]
     pub curves: Option<BTreeMap<String, CharacteristicCurve>>,
-    #[state(artifact)]
-    pub limits: Option<SecurityLimits>,
 }
 //#endregion 🔖️Diff
 

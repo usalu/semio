@@ -1,27 +1,8 @@
-# 🧬️ EN 1996 diff schema.
-
 type En1996Diff {
-  artifact: En1996Artifact @state(class: ARTIFACT)
-  mEdKnm: Float @state(class: ARTIFACT)
-  nEdKn: Float @state(class: ARTIFACT)
-  vEdKn: Float @state(class: ARTIFACT)
-  hEdKn: Float @state(class: ARTIFACT)
-  zMm3: Float @state(class: ARTIFACT)
-  areaMm2: Float @state(class: ARTIFACT)
-  shearAreaMm2: Float @state(class: ARTIFACT)
-  fKMpa: Float @state(class: ARTIFACT)
-  fVkMpa: Float @state(class: ARTIFACT)
-  annex: Float @state(class: ARTIFACT)
-  masonryClass: Float @state(class: ARTIFACT)
-  designSituation: Float @state(class: ARTIFACT)
-  mu: Float @state(class: ARTIFACT)
-  wallThicknessMm: Float @state(class: ARTIFACT)
-  fireResistanceMin: Int @state(class: ARTIFACT)
-  unit: Float @state(class: ARTIFACT)
-  exposure: Float @state(class: ARTIFACT)
-  mortar: Float @state(class: ARTIFACT)
-  bedJointThicknessMm: Float @state(class: ARTIFACT)
-  storeys: Int @state(class: ARTIFACT)
-  hEfMm: Float @state(class: ARTIFACT)
-  tEfMm: Float @state(class: ARTIFACT)
+  artifact: JSON
+  annex: String
+  masonryClass: String
+  designSituation: String
+  storeys: Int
+  walls: JSON
 }

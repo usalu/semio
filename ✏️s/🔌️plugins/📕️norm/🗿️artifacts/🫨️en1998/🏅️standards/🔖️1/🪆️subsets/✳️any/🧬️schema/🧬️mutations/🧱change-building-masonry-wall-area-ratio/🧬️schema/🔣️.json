@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-masonry-wall-area-ratio/schema.json",
+  "title": "ChangeBuildingMasonryWallAreaRatio",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buildingIndex",
+    "newMasonryWallAreaRatio"
+  ],
+  "properties": {
+    "buildingIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newMasonryWallAreaRatio": {
+      "type": "number"
+    }
+  }
+}

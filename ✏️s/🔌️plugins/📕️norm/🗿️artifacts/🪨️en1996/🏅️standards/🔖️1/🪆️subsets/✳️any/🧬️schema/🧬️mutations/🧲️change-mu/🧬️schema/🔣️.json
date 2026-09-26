@@ -5,9 +5,13 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "index",
     "newMu"
   ],
   "properties": {
+    "index": {
+      "type": "integer"
+    },
     "newMu": {
       "type": "number"
     }

@@ -5,160 +5,534 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "nEdKn",
-    "mEdKnm",
-    "aMm2",
-    "wElMm3",
-    "alloy",
-    "chi",
-    "iTMm4",
-    "lCrMm",
-    "thetaC",
-    "deltaSigmaEd",
-    "deltaSigmaC",
-    "fatigueM",
-    "nCycles",
-    "vWeldEdKn",
-    "weldThroatMm",
-    "weldLengthMm",
-    "betaW",
-    "sheetBMm",
-    "sheetTMm",
-    "sheetKSigma",
-    "sheetWElMm3",
-    "sheetMEdKnm",
-    "shellTMm",
-    "shellRMm",
-    "sigmaEdShellMpa",
-    "annex"
+    "annex",
+    "materials",
+    "sections",
+    "members",
+    "connections",
+    "fireScenarios",
+    "fatigueDetails",
+    "coldFormed",
+    "shells"
   ],
   "properties": {
-    "nEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "aMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wElMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "alloy": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "chi": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "iTMm4": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "lCrMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "thetaC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "deltaSigmaEd": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "deltaSigmaC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fatigueM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "nCycles": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "vWeldEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "weldThroatMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "weldLengthMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "betaW": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "sheetBMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "sheetTMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "sheetKSigma": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "sheetWElMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "sheetMEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "shellTMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "shellRMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "sigmaEdShellMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "designation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "designation": {
+            "type": "string"
+          }
+        }
+      },
+      "x-semio-state": "artifact"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "webThickness",
+          "elements"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "height": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "flangeThickness": {
+            "type": "number"
+          },
+          "webThickness": {
+            "type": "number"
+          },
+          "outerDiameter": {
+            "type": "number",
+            "description": "CHS/tube outer diameter D [m]; 0 for non-tube section kinds (extrudedI, channel, angle, rhs, box)."
+          },
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "width",
+                "thickness",
+                "outstand",
+                "welded",
+                "weldPosition"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "number"
+                },
+                "thickness": {
+                  "type": "number"
+                },
+                "outstand": {
+                  "type": "boolean"
+                },
+                "welded": {
+                  "type": "boolean"
+                },
+                "weldPosition": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "description": "Discriminated section geometry by kind: extrudedI/channel/angle/rhs/box require height,width,flangeThickness,webThickness; tube/chs require outerDiameter and webThickness (wall)."
+      },
+      "x-semio-state": "artifact"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sectionId",
+          "materialId",
+          "length",
+          "bucklingLengthY",
+          "bucklingLengthZ",
+          "bucklingLengthT",
+          "ltbLength",
+          "c1",
+          "restrainedLtb",
+          "actions",
+          "support"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sectionId": {
+            "type": "string"
+          },
+          "materialId": {
+            "type": "string"
+          },
+          "length": {
+            "type": "number"
+          },
+          "bucklingLengthY": {
+            "type": "number"
+          },
+          "bucklingLengthZ": {
+            "type": "number"
+          },
+          "bucklingLengthT": {
+            "type": "number"
+          },
+          "ltbLength": {
+            "type": "number"
+          },
+          "c1": {
+            "type": "number"
+          },
+          "restrainedLtb": {
+            "type": "boolean"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "category",
+                "source",
+                "gKLine",
+                "qKLine",
+                "nK",
+                "vYK",
+                "vZK",
+                "mYK",
+                "mZK"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "gKLine": {
+                  "type": "number"
+                },
+                "qKLine": {
+                  "type": "number"
+                },
+                "nK": {
+                  "type": "number"
+                },
+                "vYK": {
+                  "type": "number"
+                },
+                "vZK": {
+                  "type": "number"
+                },
+                "mYK": {
+                  "type": "number"
+                },
+                "mZK": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "support": {
+            "type": "string"
+          }
+        }
+      },
+      "x-semio-state": "artifact"
+    },
+    "connections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "memberId",
+          "materialId",
+          "kind",
+          "bolts",
+          "welds",
+          "actions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "materialId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "bolts": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "material",
+              "diameter",
+              "rows",
+              "boltsPerRow",
+              "edgeDistance",
+              "pitch",
+              "gauge",
+              "plateThickness"
+            ],
+            "properties": {
+              "material": {
+                "type": "string"
+              },
+              "diameter": {
+                "type": "number"
+              },
+              "rows": {
+                "type": "integer"
+              },
+              "boltsPerRow": {
+                "type": "integer"
+              },
+              "edgeDistance": {
+                "type": "number"
+              },
+              "pitch": {
+                "type": "number"
+              },
+              "gauge": {
+                "type": "number"
+              },
+              "plateThickness": {
+                "type": "number"
+              }
+            }
+          },
+          "welds": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fillerAlloy",
+              "throat",
+              "length",
+              "betaW",
+              "hazExtent"
+            ],
+            "properties": {
+              "fillerAlloy": {
+                "type": "string"
+              },
+              "throat": {
+                "type": "number"
+              },
+              "length": {
+                "type": "number"
+              },
+              "betaW": {
+                "type": "number"
+              },
+              "hazExtent": {
+                "type": "number"
+              }
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "category",
+                "source",
+                "gKLine",
+                "qKLine",
+                "nK",
+                "vYK",
+                "vZK",
+                "mYK",
+                "mZK"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "gKLine": {
+                  "type": "number"
+                },
+                "qKLine": {
+                  "type": "number"
+                },
+                "nK": {
+                  "type": "number"
+                },
+                "vYK": {
+                  "type": "number"
+                },
+                "vZK": {
+                  "type": "number"
+                },
+                "mYK": {
+                  "type": "number"
+                },
+                "mZK": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-semio-state": "artifact"
+    },
+    "fireScenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "memberId",
+          "thetaA",
+          "durationS"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "thetaA": {
+            "type": "number"
+          },
+          "durationS": {
+            "type": "number"
+          }
+        }
+      },
+      "x-semio-state": "artifact"
+    },
+    "fatigueDetails": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "memberId",
+          "deltaSigmaEd",
+          "nCycles",
+          "detailCategory",
+          "m1",
+          "m2"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "memberId": {
+            "type": "string"
+          },
+          "deltaSigmaC": {
+            "type": "number"
+          },
+          "deltaSigmaEd": {
+            "type": "number"
+          },
+          "nCycles": {
+            "type": "number"
+          },
+          "detailCategory": {
+            "type": "string"
+          },
+          "m1": {
+            "type": "number"
+          },
+          "m2": {
+            "type": "number"
+          }
+        }
+      },
+      "x-semio-state": "artifact"
+    },
+    "coldFormed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "materialId",
+          "thickness",
+          "width",
+          "span",
+          "mEd",
+          "nEd",
+          "welded"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "materialId": {
+            "type": "string"
+          },
+          "thickness": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "span": {
+            "type": "number"
+          },
+          "mEd": {
+            "type": "number"
+          },
+          "nEd": {
+            "type": "number"
+          },
+          "welded": {
+            "type": "boolean"
+          }
+        }
+      },
+      "x-semio-state": "artifact"
+    },
+    "shells": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "materialId",
+          "radius",
+          "thickness",
+          "length",
+          "sigmaXEd",
+          "sigmaThetaEd"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "materialId": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "number"
+          },
+          "thickness": {
+            "type": "number"
+          },
+          "length": {
+            "type": "number"
+          },
+          "sigmaXEd": {
+            "type": "number"
+          },
+          "sigmaThetaEd": {
+            "type": "number"
+          }
+        }
+      },
       "x-semio-state": "artifact"
     }
   }

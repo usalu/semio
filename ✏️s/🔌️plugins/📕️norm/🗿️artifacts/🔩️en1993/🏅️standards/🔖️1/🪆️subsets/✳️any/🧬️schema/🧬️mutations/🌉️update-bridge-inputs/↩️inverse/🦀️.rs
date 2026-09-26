@@ -1,10 +1,11 @@
-//! ↩️ `update-bridge-inputs` — undo restores BASE's bridge inputs.
-
+//! ↩️ upsert inverse — restore prior entity or remove inserted one.
 use super::UpdateBridgeInputs;
+use crate::mutations::remove_bridge_fatigue;
 use crate::{En1993Mutation, En1993Snapshot};
-
-//#region 🔖️Inverse
-pub fn inverse(_payload: &UpdateBridgeInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
-    vec![En1993Mutation::UpdateBridgeInputs(UpdateBridgeInputs { new_bridge_lambda: base.bridge_lambda, new_bridge_phi_2: base.bridge_phi_2, new_bridge_delta_sigma_p_mpa: base.bridge_delta_sigma_p_mpa })]
+pub fn inverse(payload: &UpdateBridgeInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+    if let Some(prior) = base.bridge_fatigue.iter().find(|x| x.id == payload.bridge_fatigue_item.id) {
+        vec![En1993Mutation::UpdateBridgeInputs(UpdateBridgeInputs { bridge_fatigue_item: prior.clone() })]
+    } else {
+        vec![En1993Mutation::RemoveBridgeFatigue(remove_bridge_fatigue::RemoveBridgeFatigue { index: base.bridge_fatigue.len() })]
+    }
 }
-//#endregion 🔖️Inverse

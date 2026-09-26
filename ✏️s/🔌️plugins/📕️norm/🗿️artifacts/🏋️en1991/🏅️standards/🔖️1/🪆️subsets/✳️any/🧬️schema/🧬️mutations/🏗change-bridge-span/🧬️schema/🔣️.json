@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-span/schema.json",
+  "title": "ChangeBridgeSpan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBridgeSpan"
+  ],
+  "properties": {
+    "newBridgeSpan": {
+      "type": "number"
+    }
+  }
+}

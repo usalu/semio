@@ -1,0 +1,18 @@
+{
+  "InsertElement": {
+    "index": 3,
+    "element": {
+      "id": "wall-extra",
+      "kind": "wall",
+      "zoneId": "zone-living",
+      "orientationDeg": 90.0,
+      "inclinationDeg": 90.0,
+      "adjacent": "exterior",
+      "areaM2": 10.0,
+      "deltaUG": 0.0,
+      "deltaUF": 0.0,
+      "deltaUR": 0.0,
+      "layers": []
+    }
+  }
+}

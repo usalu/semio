@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-co2/schema.json",
+  "title": "ChangeZoneCo2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newCo2Ppm"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newCo2Ppm": {
+      "type": "number"
+    }
+  }
+}

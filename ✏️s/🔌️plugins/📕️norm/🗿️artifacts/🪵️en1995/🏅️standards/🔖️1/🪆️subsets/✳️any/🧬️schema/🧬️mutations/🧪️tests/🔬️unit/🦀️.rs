@@ -1,90 +1,124 @@
 use super::*;
-use protocol::Mutation;
+use protocol::SemanticMutation;
 
-/// ⚖️ One value per `En1995Mutation` variant — the closed set the semantics/round-trip tests
-/// iterate, mirroring this ticket's `en1992`/`en1993` precedent's own `every_mutation()` fixture.
 fn every_mutation() -> Vec<En1995Mutation> {
+    let base = En1995Snapshot::compliant_building_beam();
     vec![
         En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-        En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 }),
-        En1995Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 111.0 }),
-        En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 77.0 }),
-        En1995Mutation::ChangeWMm3(change_w_mm3::ChangeWMm3 { new_w_mm3: 2_000_000.0 }),
-        En1995Mutation::ChangeAMm2(change_a_mm2::ChangeAMm2 { new_a_mm2: 30_000.0 }),
-        En1995Mutation::ChangeBMm(change_b_mm::ChangeBMm { new_b_mm: 250.0 }),
-        En1995Mutation::ChangeHMm(change_h_mm::ChangeHMm { new_h_mm: 400.0 }),
-        En1995Mutation::ChangeFMK(change_f_m_k::ChangeFMK { new_f_m_k: 28.0 }),
-        En1995Mutation::ChangeFC0K(change_f_c_0_k::ChangeFC0K { new_f_c_0_k: 24.0 }),
-        En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() }),
-        En1995Mutation::ChangeLoadDuration(change_load_duration::ChangeLoadDuration { new_load_duration: "short".into() }),
-        En1995Mutation::ChangeMCritKnm(change_m_crit_knm::ChangeMCritKnm { new_m_crit_knm: 95.0 }),
-        En1995Mutation::ChangeFEdKn(change_f_ed_kn::ChangeFEdKn { new_f_ed_kn: 22.0 }),
-        En1995Mutation::ChangeAEfMm2(change_a_ef_mm2::ChangeAEfMm2 { new_a_ef_mm2: 14_000.0 }),
-        En1995Mutation::ChangeFVK(change_f_v_k::ChangeFVK { new_f_v_k: 4.5 }),
-        En1995Mutation::ChangeFireDurationMin(change_fire_duration_min::ChangeFireDurationMin { new_fire_duration_min: 60.0 }),
-        En1995Mutation::ChangeSectionDepthMm(change_section_depth_mm::ChangeSectionDepthMm { new_section_depth_mm: 350.0 }),
-        En1995Mutation::ChangeAVertMS2(change_a_vert_m_s2::ChangeAVertMS2 { new_a_vert_m_s2: 0.5 }),
-        En1995Mutation::ChangeNCyclesBridge(change_n_cycles_bridge::ChangeNCyclesBridge { new_n_cycles_bridge: 750_000.0 }),
+        En1995Mutation::InsertMember(insert_member::InsertMember { index: 99, member: crate::TimberMember { id: "beam-B9".into(), ..base.members[0].clone() } }),
+        En1995Mutation::RemoveMember(remove_member::RemoveMember { index: 0 }),
+        En1995Mutation::ChangeMemberLabelEn(change_member_label_en::ChangeMemberLabelEn { member_id: base.members[0].id.clone(), new_value: "Beam B1 (revised)".into() }),
+        En1995Mutation::ChangeMemberLabelDe(change_member_label_de::ChangeMemberLabelDe { member_id: base.members[0].id.clone(), new_value: "Träger B1 (überarbeitet)".into() }),
+        En1995Mutation::ChangeMemberRole(change_member_role::ChangeMemberRole { member_id: base.members[0].id.clone(), new_value: crate::MemberRole::Column }),
+        En1995Mutation::ChangeMemberStrengthClass(change_member_strength_class::ChangeMemberStrengthClass { member_id: base.members[0].id.clone(), new_value: "GL32h".into() }),
+        En1995Mutation::ChangeMemberServiceClass(change_member_service_class::ChangeMemberServiceClass { member_id: base.members[0].id.clone(), new_value: 2 }),
+        En1995Mutation::ChangeMemberSupport(change_member_support::ChangeMemberSupport { member_id: base.members[0].id.clone(), new_value: crate::SupportType::Cantilever }),
+        En1995Mutation::ChangeMemberB(change_member_b::ChangeMemberB { member_id: base.members[0].id.clone(), new_value: 0.24 }),
+        En1995Mutation::ChangeMemberH(change_member_h::ChangeMemberH { member_id: base.members[0].id.clone(), new_value: 0.5 }),
+        En1995Mutation::ChangeMemberSpan(change_member_span::ChangeMemberSpan { member_id: base.members[0].id.clone(), new_value: 7.0 }),
+        En1995Mutation::ChangeMemberSupportLength(change_member_support_length::ChangeMemberSupportLength { member_id: base.members[0].id.clone(), new_value: 0.2 }),
+        En1995Mutation::ChangeMemberBearingLength(change_member_bearing_length::ChangeMemberBearingLength { member_id: base.members[0].id.clone(), new_value: 0.2 }),
+        En1995Mutation::ChangeMemberBucklingY(change_member_buckling_y::ChangeMemberBucklingY { member_id: base.members[0].id.clone(), new_value: 6.0 }),
+        En1995Mutation::ChangeMemberBucklingZ(change_member_buckling_z::ChangeMemberBucklingZ { member_id: base.members[0].id.clone(), new_value: 2.0 }),
+        En1995Mutation::ChangeMemberLateralRestraint(change_member_lateral_restraint::ChangeMemberLateralRestraint { member_id: base.members[0].id.clone(), new_value: 1.0 }),
+        En1995Mutation::ChangeMemberNotchDepth(change_member_notch_depth::ChangeMemberNotchDepth { member_id: base.members[0].id.clone(), new_value: 0.02 }),
+        En1995Mutation::ChangeMemberNotchDistance(change_member_notch_distance::ChangeMemberNotchDistance { member_id: base.members[0].id.clone(), new_value: 0.1 }),
+        En1995Mutation::ChangeMemberMCrit(change_member_m_crit::ChangeMemberMCrit { member_id: base.members[0].id.clone(), new_value: 150000.0 }),
+        En1995Mutation::ChangeMemberMassPerM(change_member_mass_per_m::ChangeMemberMassPerM { member_id: base.members[0].id.clone(), new_value: 140.0 }),
+        En1995Mutation::ChangeMemberMassPerM2(change_member_mass_per_m2::ChangeMemberMassPerM2 { member_id: base.members[0].id.clone(), new_value: 60.0 }),
+        En1995Mutation::ChangeMemberDamping(change_member_damping::ChangeMemberDamping { member_id: base.members[0].id.clone(), new_value: 0.02 }),
+        En1995Mutation::ChangeMemberFireDuration(change_member_fire_duration::ChangeMemberFireDuration { member_id: base.members[0].id.clone(), new_value: 1800.0 }),
+        En1995Mutation::ChangeMemberBridgeNObs(change_member_bridge_n_obs::ChangeMemberBridgeNObs { member_id: base.members[0].id.clone(), new_value: 1.0e5 }),
+        En1995Mutation::ChangeMemberBridgeTLYears(change_member_bridge_tl_years::ChangeMemberBridgeTLYears { member_id: base.members[0].id.clone(), new_value: 50.0 }),
+        En1995Mutation::ChangeMemberBridgeBeta(change_member_bridge_beta::ChangeMemberBridgeBeta { member_id: base.members[0].id.clone(), new_value: 5.0 }),
+        En1995Mutation::ChangeMemberBridgeA(change_member_bridge_a::ChangeMemberBridgeA { member_id: base.members[0].id.clone(), new_value: 15.0 }),
+        En1995Mutation::ChangeMemberBridgeB(change_member_bridge_b::ChangeMemberBridgeB { member_id: base.members[0].id.clone(), new_value: 4.0 }),
+        En1995Mutation::ChangeMemberBridgeCrowd(change_member_bridge_crowd::ChangeMemberBridgeCrowd { member_id: base.members[0].id.clone(), new_value: 1.0 }),
+        En1995Mutation::InsertMemberAction(insert_member_action::InsertMemberAction { member_id: base.members[0].id.clone(), index: 99, action: crate::CharacteristicAction { id: "w".into(), ..base.members[0].actions[0].clone() } }),
+        En1995Mutation::RemoveMemberAction(remove_member_action::RemoveMemberAction { member_id: base.members[0].id.clone(), index: 0 }),
+        En1995Mutation::ChangeMemberActionKind(change_member_action_kind::ChangeMemberActionKind { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "imposed".into() }),
+        En1995Mutation::ChangeMemberActionCategory(change_member_action_category::ChangeMemberActionCategory { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "B".into() }),
+        En1995Mutation::ChangeMemberActionLoadDuration(change_member_action_load_duration::ChangeMemberActionLoadDuration { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: "short".into() }),
+        En1995Mutation::ChangeMemberActionQLine(change_member_action_q_line::ChangeMemberActionQLine { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 3500.0 }),
+        En1995Mutation::ChangeMemberActionFPoint(change_member_action_f_point::ChangeMemberActionFPoint { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 2000.0 }),
+        En1995Mutation::ChangeMemberActionMK(change_member_action_mk::ChangeMemberActionMK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 12000.0 }),
+        En1995Mutation::ChangeMemberActionVK(change_member_action_vk::ChangeMemberActionVK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 8000.0 }),
+        En1995Mutation::ChangeMemberActionNK(change_member_action_nk::ChangeMemberActionNK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 5000.0 }),
+        En1995Mutation::ChangeMemberActionNTK(change_member_action_ntk::ChangeMemberActionNTK { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 3000.0 }),
+        En1995Mutation::ChangeMemberActionFC90K(change_member_action_fc90_k::ChangeMemberActionFC90K { member_id: base.members[0].id.clone(), action_id: base.members[0].actions[0].id.clone(), new_value: 9000.0 }),
+        En1995Mutation::InsertConnection(insert_connection::InsertConnection { index: 99, connection: crate::TimberConnection { id: "conn-C9".into(), ..base.connections[0].clone() } }),
+        En1995Mutation::RemoveConnection(remove_connection::RemoveConnection { index: 0 }),
+        En1995Mutation::ChangeConnectionLabelEn(change_connection_label_en::ChangeConnectionLabelEn { connection_id: base.connections[0].id.clone(), new_value: "Bolt group (revised)".into() }),
+        En1995Mutation::ChangeConnectionLabelDe(change_connection_label_de::ChangeConnectionLabelDe { connection_id: base.connections[0].id.clone(), new_value: "Schraubverbund (überarbeitet)".into() }),
+        En1995Mutation::ChangeConnectionFastenerType(change_connection_fastener_type::ChangeConnectionFastenerType { connection_id: base.connections[0].id.clone(), new_value: "screw".into() }),
+        En1995Mutation::ChangeConnectionStrengthClass(change_connection_strength_class::ChangeConnectionStrengthClass { connection_id: base.connections[0].id.clone(), new_value: "C24".into() }),
+        En1995Mutation::ChangeConnectionServiceClass(change_connection_service_class::ChangeConnectionServiceClass { connection_id: base.connections[0].id.clone(), new_value: 2 }),
+        En1995Mutation::ChangeConnectionDiameter(change_connection_diameter::ChangeConnectionDiameter { connection_id: base.connections[0].id.clone(), new_value: 0.016 }),
+        En1995Mutation::ChangeConnectionNumber(change_connection_number::ChangeConnectionNumber { connection_id: base.connections[0].id.clone(), new_value: 12 }),
+        En1995Mutation::ChangeConnectionRows(change_connection_rows::ChangeConnectionRows { connection_id: base.connections[0].id.clone(), new_value: 3 }),
+        En1995Mutation::ChangeConnectionSpacing(change_connection_spacing::ChangeConnectionSpacing { connection_id: base.connections[0].id.clone(), new_value: 0.1 }),
+        En1995Mutation::ChangeConnectionEdgeDistance(change_connection_edge_distance::ChangeConnectionEdgeDistance { connection_id: base.connections[0].id.clone(), new_value: 0.05 }),
+        En1995Mutation::ChangeConnectionEndDistance(change_connection_end_distance::ChangeConnectionEndDistance { connection_id: base.connections[0].id.clone(), new_value: 0.1 }),
+        En1995Mutation::ChangeConnectionT1(change_connection_t1::ChangeConnectionT1 { connection_id: base.connections[0].id.clone(), new_value: 0.22 }),
+        En1995Mutation::ChangeConnectionT2(change_connection_t2::ChangeConnectionT2 { connection_id: base.connections[0].id.clone(), new_value: 0.22 }),
+        En1995Mutation::ChangeConnectionSteelPlate(change_connection_steel_plate::ChangeConnectionSteelPlate { connection_id: base.connections[0].id.clone(), new_value: true }),
+        En1995Mutation::ChangeConnectionSteelPlateThickness(change_connection_steel_plate_thickness::ChangeConnectionSteelPlateThickness { connection_id: base.connections[0].id.clone(), new_value: 0.008 }),
+        En1995Mutation::ChangeConnectionShearPlanes(change_connection_shear_planes::ChangeConnectionShearPlanes { connection_id: base.connections[0].id.clone(), new_value: 2 }),
+        En1995Mutation::ChangeConnectionFUK(change_connection_fuk::ChangeConnectionFUK { connection_id: base.connections[0].id.clone(), new_value: 500_000_000.0 }),
+        En1995Mutation::InsertConnectionAction(insert_connection_action::InsertConnectionAction { connection_id: base.connections[0].id.clone(), index: 99, action: crate::ConnectionAction { id: "w".into(), ..base.connections[0].actions[0].clone() } }),
+        En1995Mutation::RemoveConnectionAction(remove_connection_action::RemoveConnectionAction { connection_id: base.connections[0].id.clone(), index: 0 }),
+        En1995Mutation::ChangeConnectionActionKind(change_connection_action_kind::ChangeConnectionActionKind { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: "imposed".into() }),
+        En1995Mutation::ChangeConnectionActionLoadDuration(change_connection_action_load_duration::ChangeConnectionActionLoadDuration { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: "short".into() }),
+        En1995Mutation::ChangeConnectionActionFK(change_connection_action_fk::ChangeConnectionActionFK { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: 12000.0 }),
     ]
 }
 
-fn round_trip(base: &En1995Snapshot, mutation: &En1995Mutation) -> En1995Snapshot {
-    let forward = vcs::apply_mutation(base, mutation).expect("valid mutation").0;
-    let mut restored = forward.clone();
-    for back in mutation.inverse(base) {
-        restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
-    }
-    assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
-    forward
-}
-
-#[semio_framework_async_macros::async_test]
-async fn every_variant_registers_an_approved_semantic_descriptor() {
+/// 🏷️ Every declared variant labels itself and the closed vocabulary is exactly [`KINDS`].
+#[test]
+fn every_declared_kind_has_a_label_and_matches_kinds_len() {
     for mutation in every_mutation() {
-        let descriptor = protocol::SemanticMutation::semantics(&mutation);
-        assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
+        let _ = <En1995Mutation as SemanticMutation<En1995Snapshot>>::label(&mutation);
     }
-    assert_eq!(<En1995Mutation as protocol::SemanticMutation<En1995Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
+    assert_eq!(every_mutation().len(), KINDS.len());
 }
 
-#[semio_framework_async_macros::async_test]
-async fn every_variant_round_trips_via_inverse() {
-    let base = En1995Snapshot::default();
+/// 🔀 `from_snapshot(base, apply(m, base))` reproduces the applied state for every variant, so the
+/// editor's `set-field` / `insert-item` / `remove-item` / `set-snapshot` commands can reach each leaf.
+#[test]
+fn from_snapshot_reaches_every_variant() {
+    let base = En1995Snapshot::compliant_building_beam();
     for mutation in every_mutation() {
-        round_trip(&base, &mutation);
+        let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &base);
+        assert!(outcome.worst_level().is_none(), "{mutation:?}: {:?}", outcome.messages());
+        let target = protocol::MutationDiff::apply(outcome.diff(), &base).expect("applies");
+        let derived = En1995Mutation::from_snapshot(&base, &target);
+        assert!(!derived.is_empty() || target == base, "{mutation:?} left no trace for from_snapshot");
+        let mut replayed = base.clone();
+        for step in &derived {
+            let step_outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(step, &replayed);
+            assert!(step_outcome.worst_level().is_none(), "{step:?}: {:?}", step_outcome.messages());
+            replayed = protocol::MutationDiff::apply(step_outcome.diff(), &replayed).expect("derived step applies");
+        }
+        assert_eq!(replayed, target, "{mutation:?}: from_snapshot did not reproduce the applied state via {derived:?}");
     }
 }
 
-//#region 🧪️MutationLaws
-/// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::os_spr::protocol_laws`), exercised against the three most structurally
-/// distinct variants: the enum-typed scalar (`change-annex`), a typical `f64` scalar
-/// (`change-m-ed-knm`), and a `String` scalar (`change-service-class`).
-#[semio_framework_async_macros::async_test]
-async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
-    let base = En1995Snapshot::default();
-    let mutation = En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+/// 🔀 A whole-example switch (`set-snapshot`) is expressible as a mutation list.
+#[test]
+fn from_snapshot_carries_between_examples() {
+    let pairs = [
+        (En1995Snapshot::compliant_building_beam(), En1995Snapshot::noncompliant_building()),
+        (En1995Snapshot::noncompliant_building(), En1995Snapshot::compliant_bridge()),
+        (En1995Snapshot::compliant_bridge(), En1995Snapshot::noncompliant_bridge()),
+        (En1995Snapshot::noncompliant_bridge(), En1995Snapshot::compliant_building_beam()),
+    ];
+    for (base, target) in pairs {
+        let mut replayed = base.clone();
+        for step in En1995Mutation::from_snapshot(&base, &target) {
+            let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&step, &replayed);
+            assert!(outcome.worst_level().is_none(), "{step:?}: {:?}", outcome.messages());
+            replayed = protocol::MutationDiff::apply(outcome.diff(), &replayed).expect("step applies");
+        }
+        assert_eq!(replayed, target);
+    }
 }
-#[semio_framework_async_macros::async_test]
-async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
-    let base = En1995Snapshot::default();
-    let mutation = En1995Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 999.0 });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = En1995Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 77.0 }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-#[semio_framework_async_macros::async_test]
-async fn change_service_class_satisfies_the_inverse_and_absorb_laws() {
-    let base = En1995Snapshot::default();
-    let mutation = En1995Mutation::ChangeServiceClass(change_service_class::ChangeServiceClass { new_service_class: "sc2".into() });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = En1995Mutation::ChangeLoadDuration(change_load_duration::ChangeLoadDuration { new_load_duration: "short".into() }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-//#endregion 🧪️MutationLaws

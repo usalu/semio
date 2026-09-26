@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-class/schema.json",
+  "title": "IntroduceProductClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "productClass"
+  ],
+  "properties": {
+    "productClass": {
+      "title": "ProductClass",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "groupId",
+        "names",
+        "requiredPropertyIds",
+        "optionalPropertyIds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "groupId": {
+          "type": "string"
+        },
+        "parentId": {
+          "type": "string"
+        },
+        "names": {
+          "title": "Names",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alternatives",
+            "preferred"
+          ],
+          "properties": {
+            "preferred": {
+              "title": "LocalizedText",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "locale",
+                "text"
+              ],
+              "properties": {
+                "locale": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            },
+            "shortName": {
+              "type": "string"
+            },
+            "alternatives": {
+              "type": "array",
+              "items": {
+                "title": "LocalizedText",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "locale",
+                  "text"
+                ],
+                "properties": {
+                  "locale": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requiredPropertyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "optionalPropertyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -16,11 +16,15 @@ pub struct SetActiveExample {
 //#region 🔖️Handler
 /// 🎨️ Replaces the live document with the named example's `PRIMARY_TEXT`, or clears it when the id is empty.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, En1995Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1995Mutation, NoConfigMutation>, Fault> {
-    let snapshot = match payload.example_id.trim() {
-        "" => En1995Snapshot::default(),
-        id if id == crate::glulam_footbridge::ID => <En1995Snapshot as store::ArtifactDsl>::parse_dsl(crate::glulam_footbridge::PRIMARY_TEXT)
-            .map_err(|error| Fault::from(format!("set-active-example: invalid example text: {error:?}")))?,
-        _ => return Ok(Emit::default()),
+    let id = payload.example_id.trim();
+    let snapshot = if id.is_empty() {
+        En1995Snapshot::default()
+    } else {
+        let Some(example) = crate::examples().into_iter().find(|example| example.id() == id) else {
+            return Ok(Emit::default());
+        };
+        <En1995Snapshot as store::ArtifactDsl>::parse_dsl(&example.document())
+            .map_err(|error| Fault::from(format!("set-active-example: invalid example text: {error:?}")))?
     };
     set_snapshot::handle(&set_snapshot::ReplaceSnapshot { snapshot }, doc, cfg)
 }

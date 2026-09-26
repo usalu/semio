@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-crane-runway/schema.json",
+  "title": "InsertCraneRunway",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "crane_runway"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "crane_runway": {
+      "type": "object"
+    }
+  }
+}

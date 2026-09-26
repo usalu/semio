@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeMemberExposure {
+  string memberId = 1;
+  string newExposure = 2;
+}

@@ -1,8 +1,7 @@
-//! 🌡️ `change-t-int-c` — sets the DIN 4108 `t_int_c` scalar.
+//! 🌡️ `change-t-int-c`.
 
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-//#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
@@ -11,7 +10,12 @@ pub struct ChangeTIntC {
 }
 
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeTIntC {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "t-int-c", kind: "change-t-int-c", record: "ChangedTIntC" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "t-int-c",
+        kind: "change-t-int-c",
+        record: "ChangedTIntC",
+    };
 
     fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -20,7 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeTIntC {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change indoor temperature [°C] to {}", self.new_t_int_c), &format!("Raumlufttemperatur [°C] auf {} ändern", self.new_t_int_c))
+        protocol::LocalizedLabel::native("change-t-int-c", "change-t-int-c")
     }
 }
-//#endregion 🔖️Payload

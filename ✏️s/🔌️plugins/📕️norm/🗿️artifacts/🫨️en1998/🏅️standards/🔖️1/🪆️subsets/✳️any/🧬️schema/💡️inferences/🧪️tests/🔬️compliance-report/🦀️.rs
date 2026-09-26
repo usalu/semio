@@ -1,14 +1,14 @@
 use super::*;
-
+use crate::document::CheckStatus;
 #[semio_framework_async_macros::async_test]
-async fn full_seismic_e2e() {
-    let report = check_full_seismic(&En1998Snapshot::default());
-    assert_eq!(report.checks.len(), 12);
+async fn default_evaluate_complies() {
+    let report = evaluate(&crate::En1998Snapshot::default());
+    assert!(report.complies());
 }
-
 #[semio_framework_async_macros::async_test]
-async fn full_seismic_en_annex_e2e() {
-    let document = En1998Snapshot { annex: "en".into(), ..En1998Snapshot::default() };
-    let report = check_full_seismic(&document);
-    assert_eq!(report.checks.len(), 12);
+async fn empty_scopes_are_not_applicable() {
+    let mut doc = crate::En1998Snapshot::compliant_de_office();
+    doc.bridges.clear();
+    let report = evaluate(&doc);
+    assert!(report.checks.iter().any(|c| c.id == "en1998.2.na" && c.status == CheckStatus::NotApplicable));
 }

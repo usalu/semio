@@ -26,9 +26,9 @@ async fn change_exchange_process_round_trips() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn update_script_limits_round_trips() {
+async fn change_script_limits_round_trips() {
     let base = Iso16757Snapshot::reference_fixture();
-    let mutation = Iso16757Mutation::UpdateScriptLimits(update_script_limits::mutation::UpdateScriptLimits { new_max_steps: 1, new_max_recursion: 2, new_timeout_ms: 3 });
+    let mutation = Iso16757Mutation::ChangeScriptLimits(change_script_limits::mutation::ChangeScriptLimits { new_max_steps: 1, new_max_recursion: 2, new_timeout_ms: 3 });
     let after = round_trip(&base, &mutation);
     assert_eq!(after.script_limits, part_5::ScriptLimits { max_steps: 1, max_recursion: 2, timeout_ms: 3 });
 }
@@ -56,11 +56,11 @@ async fn change_part_number_input_undo_of_a_fresh_key_is_remove() {
 #[semio_framework_async_macros::async_test]
 async fn selection_class_and_constraints_round_trip() {
     let base = Iso16757Snapshot::reference_fixture();
-    let change_class = Iso16757Mutation::ChangeSelectionClass(change_selection_class::mutation::ChangeSelectionClass { new_class_id: "class.other".into() });
+    let change_class = Iso16757Mutation::ChangeSelectionClass(change_selection_class::mutation::ChangeSelectionClass { new_class_id: "class-other".into() });
     let after = round_trip(&base, &change_class);
-    assert_eq!(after.selection.class_id, "class.other");
+    assert_eq!(after.selection.class_id, "class-other");
 
-    let constraint = part_1::SelectionConstraint { property_id: "prop.other".into(), operator: part_1::ConstraintOperator::NotEqual, value: crate::CatalogueValue::Text { value: "x".into() } };
+    let constraint = part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "prop-other".into(), operator: part_1::ConstraintOperator::NotEqual, value: crate::CatalogueValue::Text { value: "x".into() } };
     let add = Iso16757Mutation::AddSelectionConstraint(add_selection_constraint::mutation::AddSelectionConstraint { constraint });
     let after_add = round_trip(&base, &add);
     assert_eq!(after_add.selection.constraints.len(), base.selection.constraints.len() + 1);
@@ -83,63 +83,63 @@ async fn rename_catalogue_and_manufacturer_round_trip() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn create_then_delete_product_group_round_trips() {
+async fn create_then_retire_product_group_round_trips() {
     let base = Iso16757Snapshot::reference_fixture();
-    let product_group = part_1::ProductGroup { id: "group.new".into(), names: Names { preferred: LocalizedText { locale: "en".into(), text: "New Group".into() }, short_name: None, alternatives: Vec::new() }, dictionary_subject_id: None };
-    let create = Iso16757Mutation::CreateProductGroup(create_product_group::mutation::CreateProductGroup { product_group: product_group.clone(), index: None });
+    let product_group = part_1::ProductGroup { id: "group-new".into(), names: Names { preferred: LocalizedText { locale: "en".into(), text: "New Group".into() }, short_name: None, alternatives: Vec::new() }, dictionary_subject_id: None };
+    let create = Iso16757Mutation::IntroduceProductGroup(introduce_product_group::mutation::IntroduceProductGroup { product_group: product_group.clone(), index: None });
     let after_create = round_trip(&base, &create);
-    assert!(after_create.catalogue.product_groups.iter().any(|group| group.id == "group.new"));
+    assert!(after_create.catalogue.product_groups.iter().any(|group| group.id == "group-new"));
 
     let undo = create.inverse(&base);
-    assert_eq!(undo, vec![Iso16757Mutation::DeleteProductGroup(delete_product_group::mutation::DeleteProductGroup { id: "group.new".into() })]);
+    assert_eq!(undo, vec![Iso16757Mutation::RetireProductGroup(retire_product_group::mutation::RetireProductGroup { id: "group-new".into() })]);
 
-    let rename = Iso16757Mutation::RenameProductGroup(rename_product_group::mutation::RenameProductGroup { id: "group.new".into(), new_name: "Renamed".into() });
+    let rename = Iso16757Mutation::RenameProductGroup(rename_product_group::mutation::RenameProductGroup { id: "group-new".into(), new_name: "Renamed".into() });
     let after_rename = round_trip(&after_create, &rename);
-    assert_eq!(after_rename.catalogue.product_groups.iter().find(|group| group.id == "group.new").unwrap().names.preferred.text, "Renamed");
+    assert_eq!(after_rename.catalogue.product_groups.iter().find(|group| group.id == "group-new").unwrap().names.preferred.text, "Renamed");
 
-    let delete = Iso16757Mutation::DeleteProductGroup(delete_product_group::mutation::DeleteProductGroup { id: "group.valves".into() });
+    let delete = Iso16757Mutation::RetireProductGroup(retire_product_group::mutation::RetireProductGroup { id: "group-valves".into() });
     let after_delete = round_trip(&base, &delete);
-    assert!(!after_delete.catalogue.product_groups.iter().any(|group| group.id == "group.valves"));
+    assert!(!after_delete.catalogue.product_groups.iter().any(|group| group.id == "group-valves"));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn delete_product_group_of_a_missing_id_has_an_empty_inverse() {
+async fn retire_product_group_of_a_missing_id_has_an_empty_inverse() {
     let base = Iso16757Snapshot::reference_fixture();
-    let delete = Iso16757Mutation::DeleteProductGroup(delete_product_group::mutation::DeleteProductGroup { id: "nope".into() });
+    let delete = Iso16757Mutation::RetireProductGroup(retire_product_group::mutation::RetireProductGroup { id: "nope".into() });
     assert!(delete.inverse(&base).is_empty(), "deleting an absent id has nothing to undo");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn create_rename_delete_product_round_trips() {
+async fn create_rename_retire_product_round_trips() {
     let base = Iso16757Snapshot::reference_fixture();
     let product = part_1::Product {
-        id: "product.new".into(),
-        series_id: "series.cv".into(),
+        id: "product-new".into(),
+        series_id: "series-cv".into(),
         names: Names { preferred: LocalizedText { locale: "en".into(), text: "New Product".into() }, short_name: None, alternatives: Vec::new() },
         parameter_domains: Vec::new(),
         variants: Vec::new(),
         static_properties: Vec::new(),
     };
-    let create = Iso16757Mutation::CreateProduct(create_product::mutation::CreateProduct { product: product.clone(), index: None });
+    let create = Iso16757Mutation::IntroduceProduct(introduce_product::mutation::IntroduceProduct { product: product.clone(), index: None });
     let after_create = round_trip(&base, &create);
-    assert!(after_create.catalogue.products.iter().any(|p| p.id == "product.new"));
+    assert!(after_create.catalogue.products.iter().any(|p| p.id == "product-new"));
 
-    let rename = Iso16757Mutation::RenameProduct(rename_product::mutation::RenameProduct { id: "product.new".into(), new_name: "Renamed Product".into() });
+    let rename = Iso16757Mutation::RenameProduct(rename_product::mutation::RenameProduct { id: "product-new".into(), new_name: "Renamed Product".into() });
     let after_rename = round_trip(&after_create, &rename);
-    assert_eq!(after_rename.catalogue.products.iter().find(|p| p.id == "product.new").unwrap().names.preferred.text, "Renamed Product");
+    assert_eq!(after_rename.catalogue.products.iter().find(|p| p.id == "product-new").unwrap().names.preferred.text, "Renamed Product");
 
-    let delete = Iso16757Mutation::DeleteProduct(delete_product::mutation::DeleteProduct { id: "product.cv".into() });
+    let delete = Iso16757Mutation::RetireProduct(retire_product::mutation::RetireProduct { id: "product-cv".into() });
     let after_delete = round_trip(&base, &delete);
-    assert!(!after_delete.catalogue.products.iter().any(|p| p.id == "product.cv"));
+    assert!(!after_delete.catalogue.products.iter().any(|p| p.id == "product-cv"));
     let undo = delete.inverse(&base);
     assert_eq!(undo.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
-async fn create_then_delete_property_definition_round_trips() {
+async fn create_then_retire_property_definition_round_trips() {
     let base = Iso16757Snapshot::reference_fixture();
     let definition = part_1::PropertyDefinition {
-        id: "prop.new".into(),
+        id: "prop-new".into(),
         names: Names { preferred: LocalizedText { locale: "en".into(), text: "New Prop".into() }, short_name: None, alternatives: Vec::new() },
         data_type: "text".into(),
         unit: None,
@@ -147,41 +147,92 @@ async fn create_then_delete_property_definition_round_trips() {
         kind: part_1::PropertyKind::Static,
         dictionary_property_id: None,
     };
-    let create = Iso16757Mutation::CreatePropertyDefinition(create_property_definition::mutation::CreatePropertyDefinition { property_definition: definition, index: None });
+    let create = Iso16757Mutation::IntroducePropertyDefinition(introduce_property_definition::mutation::IntroducePropertyDefinition { property_definition: definition, index: None });
     let after_create = round_trip(&base, &create);
-    assert!(after_create.catalogue.property_definitions.iter().any(|d| d.id == "prop.new"));
+    assert!(after_create.catalogue.property_definitions.iter().any(|d| d.id == "prop-new"));
 
-    let delete = Iso16757Mutation::DeletePropertyDefinition(delete_property_definition::mutation::DeletePropertyDefinition { id: "prop.new".into() });
+    let delete = Iso16757Mutation::RetirePropertyDefinition(retire_property_definition::mutation::RetirePropertyDefinition { id: "prop-new".into() });
     let after_delete = round_trip(&after_create, &delete);
-    assert!(!after_delete.catalogue.property_definitions.iter().any(|d| d.id == "prop.new"));
+    assert!(!after_delete.catalogue.property_definitions.iter().any(|d| d.id == "prop-new"));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn create_then_delete_subject_round_trips() {
+async fn create_then_retire_subject_round_trips() {
     let base = Iso16757Snapshot::reference_fixture();
     let subject = part_4::Subject {
-        id: "subject.new".into(),
+        id: "subject-new".into(),
         kind: part_4::SubjectKind::ProductClass,
         names: Names { preferred: LocalizedText { locale: "en".into(), text: "New Subject".into() }, short_name: None, alternatives: Vec::new() },
         definition: LocalizedText { locale: "en".into(), text: "A new subject".into() },
         parent_id: None,
     };
-    let create = Iso16757Mutation::CreateSubject(create_subject::mutation::CreateSubject { subject: subject.clone(), index: None });
+    let create = Iso16757Mutation::IntroduceSubject(introduce_subject::mutation::IntroduceSubject { subject: subject.clone(), index: None });
     let after_create = round_trip(&base, &create);
-    assert!(after_create.dictionary.subjects.iter().any(|s| s.id == "subject.new"));
+    assert!(after_create.dictionary.subjects.iter().any(|s| s.id == "subject-new"));
 
-    let delete = Iso16757Mutation::DeleteSubject(delete_subject::mutation::DeleteSubject { id: "subject.new".into() });
+    let delete = Iso16757Mutation::RetireSubject(retire_subject::mutation::RetireSubject { id: "subject-new".into() });
     let after_delete = round_trip(&after_create, &delete);
-    assert!(!after_delete.dictionary.subjects.iter().any(|s| s.id == "subject.new"));
+    assert!(!after_delete.dictionary.subjects.iter().any(|s| s.id == "subject-new"));
 
-    let delete_missing = Iso16757Mutation::DeleteSubject(delete_subject::mutation::DeleteSubject { id: "nope".into() });
+    let delete_missing = Iso16757Mutation::RetireSubject(retire_subject::mutation::RetireSubject { id: "nope".into() });
     assert!(delete_missing.inverse(&base).is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(Iso16757Mutation::kinds().len(), 21);
+    assert_eq!(Iso16757Mutation::kinds().len(), 29);
     let mutation = Iso16757Mutation::RenameCatalogue(rename_catalogue::mutation::RenameCatalogue { new_name: "x".into() });
     assert_eq!(mutation.semantics().kind, "rename-catalogue");
     assert_eq!(mutation.semantics().record, "RenamedCatalogue");
 }
+
+
+#[test]
+fn create_and_retire_product_class_roundtrip() {
+    let base = crate::Iso16757Snapshot::default();
+    let class = crate::part_1::ProductClass {
+        id: "class-test".into(),
+        group_id: base.catalogue.product_groups[0].id.clone(),
+        parent_id: None,
+        names: crate::Names {
+            preferred: crate::LocalizedText { locale: "en".into(), text: "Test".into() },
+            short_name: None,
+            alternatives: vec![crate::LocalizedText { locale: "de".into(), text: "Test".into() }],
+        },
+        required_property_ids: Vec::new(),
+        optional_property_ids: Vec::new(),
+    };
+    let create = crate::Iso16757Mutation::IntroduceProductClass(crate::mutations::introduce_product_class::mutation::IntroduceProductClass {
+        product_class: class.clone(),
+        index: None,
+    });
+    let (after, _) = crate::mutations::apply_iso16757_mutation(&base, &create).expect("create class");
+    assert!(after.catalogue.product_classes.iter().any(|c| c.id == "class-test"));
+    let delete = crate::Iso16757Mutation::RetireProductClass(crate::mutations::retire_product_class::mutation::RetireProductClass { id: "class-test".into() });
+    let (restored, _) = crate::mutations::apply_iso16757_mutation(&after, &delete).expect("delete class");
+    assert!(restored.catalogue.product_classes.iter().all(|c| c.id != "class-test"));
+}
+
+#[test]
+fn create_and_retire_geometry_object_roundtrip() {
+    use crate::part_2::{GeometryNode, GeometryObject};
+    use std::collections::BTreeMap;
+    let base = crate::Iso16757Snapshot::default();
+    let obj = GeometryObject {
+        id: "geom-test".into(),
+        shape: Some(GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 0.1), ("height".into(), 0.1), ("depth".into(), 0.1)]) }),
+        symbolic: None,
+        spaces: Vec::new(),
+        surfaces: Vec::new(),
+        ports: Vec::new(),
+        parameter_bindings: BTreeMap::new(),
+    };
+    let create = crate::Iso16757Mutation::IntroduceGeometryObject(crate::mutations::introduce_geometry_object::mutation::IntroduceGeometryObject { geometry_object: obj });
+    let (after, _) = crate::mutations::apply_iso16757_mutation(&base, &create).expect("create geom");
+    assert!(after.geometry.objects.contains_key("geom-test"));
+    let delete = crate::Iso16757Mutation::RetireGeometryObject(crate::mutations::retire_geometry_object::mutation::RetireGeometryObject { id: "geom-test".into() });
+    let (restored, _) = crate::mutations::apply_iso16757_mutation(&after, &delete).expect("delete geom");
+    assert!(!restored.geometry.objects.contains_key("geom-test"));
+}
+
+

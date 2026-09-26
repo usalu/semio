@@ -1,3 +1,74 @@
+// 🧬️ EN 1995 mutation schema — hierarchical timber subject.
 syntax = "proto3";
-package semio.s.norm.en1995.mutations_text;
-message Artifact { string schema = 1; bytes payload = 2; }
+package semio.s.norm.en1995.mutation;
+
+message ChangeAnnex {
+  // @state artifact
+  string new_annex = 1;
+}
+
+message InsertMember {
+  // @state artifact
+  uint32 index = 1;
+  // @state artifact
+  bytes member = 2;
+}
+
+message RemoveMember {
+  // @state artifact
+  uint32 index = 1;
+}
+
+message ChangeMemberH {
+  // @state artifact
+  uint32 index = 1;
+  // @state artifact
+  double new_h_m = 2;
+}
+
+message ChangeMemberB {
+  // @state artifact
+  uint32 index = 1;
+  // @state artifact
+  double new_b_m = 2;
+}
+
+message ChangeMemberStrengthClass {
+  // @state artifact
+  uint32 index = 1;
+  // @state artifact
+  string new_strength_class = 2;
+}
+
+message ChangeConnectionNumber {
+  // @state artifact
+  uint32 index = 1;
+  // @state artifact
+  uint32 new_number = 2;
+}
+
+message InsertConnection {
+  // @state artifact
+  uint32 index = 1;
+  // @state artifact
+  bytes connection = 2;
+}
+
+message RemoveConnection {
+  // @state artifact
+  uint32 index = 1;
+}
+
+message En1995Mutation {
+  oneof payload {
+    ChangeAnnex change_annex = 1;
+    InsertMember insert_member = 2;
+    RemoveMember remove_member = 3;
+    ChangeMemberH change_member_h = 4;
+    ChangeMemberB change_member_b = 5;
+    ChangeMemberStrengthClass change_member_strength_class = 6;
+    ChangeConnectionNumber change_connection_number = 7;
+    InsertConnection insert_connection = 8;
+    RemoveConnection remove_connection = 9;
+  }
+}

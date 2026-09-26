@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "Add role key to flow-bim extension manifest and remove temporary verification overlay",
   "summary": "1. Verified precondition ticket .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/FLOW-PLUGIN-TS-MODULES-AND-EXTENSIONS-CONSOLIDATION status is 'closed'.\n2. Inspected ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust/Cargo.toml and verified role = \"extension\" is set in [package.metadata.semio] and no temporary verification overlay remains.\n3. Executed 'bun ./📜️script.ts generate' and 'bun ./📜️script.ts check' in 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry — confirmed plugin registry catalog refreshed with 38 plugin crates including flow-extension-bim at ✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust, and check is green.",
-  "goal": "🎯aioptimizedrepo",
+  "goal": "🎯runningframework🎯runningproducts🎯runningrepo",
   "sessions": [
     "⚪edc0f86a-c9bc-4168-b09a-363fcf9bdf4e"
   ],

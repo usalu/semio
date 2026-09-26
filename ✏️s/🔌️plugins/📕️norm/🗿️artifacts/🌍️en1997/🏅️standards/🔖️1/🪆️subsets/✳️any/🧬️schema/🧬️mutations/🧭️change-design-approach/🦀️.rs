@@ -1,9 +1,9 @@
-//! 🛋️ `change-design-approach` payload — changes the En1997 document's `design_approach` (design approach).
+//! 🧹 `change-design-approach` payload.
 
 use crate::diff::En1997Diff;
 use crate::mutations::En1997Mutation;
 use crate::En1997Snapshot;
-//#region 🔖️ChangeDesignApproach
+
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
@@ -14,18 +14,16 @@ pub struct ChangeDesignApproach {
 }
 
 impl protocol::MutationKind<En1997Snapshot, En1997Mutation> for ChangeDesignApproach {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "design-approach", kind: "change-design-approach", record: "ChangedDesignApproach" };
-
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change", entity: "design-approach", kind: "change-design-approach", record: "ChangedDesignApproach",
+    };
     fn diff(&self, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1997Snapshot) -> Vec<En1997Mutation> {
         super::inverse::inverse(self, base)
     }
-
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change design approach to \"{}\"", self.new_design_approach), &format!("Bemessungsansatz auf \"{}\" ändern", self.new_design_approach))
+        protocol::LocalizedLabel::native("change-design-approach", "change-design-approach")
     }
 }
-//#endregion 🔖️ChangeDesignApproach

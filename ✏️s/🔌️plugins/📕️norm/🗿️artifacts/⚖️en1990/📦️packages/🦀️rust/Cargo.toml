@@ -28,8 +28,6 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 pack = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
-
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

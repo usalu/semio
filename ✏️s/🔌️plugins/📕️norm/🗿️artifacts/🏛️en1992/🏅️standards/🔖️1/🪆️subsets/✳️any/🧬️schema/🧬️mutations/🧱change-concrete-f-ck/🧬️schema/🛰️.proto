@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeConcreteFCk {
+  string gradeId = 1;
+  double newFCk = 2;
+}

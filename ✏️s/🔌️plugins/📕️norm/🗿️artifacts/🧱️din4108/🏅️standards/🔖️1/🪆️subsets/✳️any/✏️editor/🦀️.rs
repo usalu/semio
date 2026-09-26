@@ -7,7 +7,7 @@
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::document::NormHost;
-use crate::editor::din4108::commands::{evaluate, selected_check, set_active_example, set_snapshot};
+use crate::editor::din4108::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_active_example, set_field, set_snapshot};
 use crate::editor::din4108::modes::edit as edit_mode;
 use crate::editor::din4108::modes::edit::windows::{inputs, results};
 use crate::editor::din4108::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -28,6 +28,8 @@ use store::EngineHandles;
 pub const LABEL: &str = "DIN 4108";
 /// ðï¸ The playground/registry variant key â every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "din4108";
+/// 🆔️ Retained-command / UI action controller id.
+pub const CONTROLLER_ID: &str = "s.norm.din4108@1/*#editor";
 pub const DOCUMENT_SCHEMA: &str = "semio.norm.din4108/v1";
 //#endregion ðï¸Constants
 
@@ -43,6 +45,10 @@ semio_framework_plugin::app_commands! {
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
+        "setField" as "set-field" => set_field::SetField,
+        "insertItem" as "insert-item" => insert_item::InsertItem,
+        "removeItem" as "remove-item" => remove_item::RemoveItem,
+        "applyRemedy" as "apply-remedy" => apply_remedy::ApplyRemedy,
     }
 }
 //#endregion ðï¸Commands
@@ -94,8 +100,8 @@ impl ArtifactEditor for Din4108PlayApp {
         artifact_schema: "semio.norm.din4108/v1",
         factory: "Din4108BoundedCommandJobFactory",
         factory_type: Din4108BoundedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]
+        contract: crate::app_surface::norm_bounded_contract(),
+        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
 
 
@@ -127,33 +133,7 @@ impl ArtifactEditor for Din4108PlayApp {
     /// the three verbs were already `Migrated`, retained and proven, and were still inert in the shell.
     /// `setSnapshot` carries the whole compliance document, so its argument is that document's own
     /// camelCase JSON projection (exactly what the Inputs window renders).
-    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Din4108Command, Fault> {
-        match action {
-            "evaluate" => Ok(Din4108Command::Evaluate(evaluate::Evaluate {})),
-            "setSelectedCheckIndex" => Ok(Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: crate::app_surface::selected_check_index_arg(args) })),
-            "setActiveExample" => {
-                let example_id = args
-                    .and_then(|value| value.get("exampleId").or_else(|| value.get("example_id")).or_else(|| value.get("value")))
-                    .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
-                    .unwrap_or_default();
-                Ok(Din4108Command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
-            }
-            "setSnapshot" => {
-                let text = args
-                    .and_then(|value| value.get("snapshot"))
-                    .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
-                    .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON"))?;
-                let snapshot = crate::standards::v1::subsets::any::schema::snapshot::decode_din4108_snapshot_json(&text)
-                    .map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-invalid"), error))?;
-                Ok(Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot }))
-            }
-            other => Err(Fault::new(
-                semio_framework_plugin::FaultOrigin::App,
-                semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
-                format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample)"),
-            )),
-        }
-    }
+    semio_s_artifact_norm_contract::norm_command_from_action!(Din4108Command, crate::standards::v1::subsets::any::schema::snapshot::decode_din4108_snapshot_json);
 
     fn handle(
         command: &Din4108Command,
@@ -170,12 +150,12 @@ impl ArtifactEditor for Din4108PlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, Din4108Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let host = NormHost::<Din4108Family>::from_artifact(doc.snapshot.clone());
         match body_key {
-            inputs::BODY_INPUTS => inputs::render(doc.snapshot),
-            results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS)),
-            document_panel::BODY_ARTIFACT => document_panel::render(&host),
-            catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
-            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index),
-            _ => crate::app_surface::render_unknown_body(body_key),
+            inputs::BODY_INPUTS => inputs::render(doc.snapshot, view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, inputs::BODY_INPUTS)),
+            results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS), view_state.locale, Some(CONTROLLER_ID)),
+            document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),
+            catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Self::examples(), view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, catalogue_panel::BODY_CATALOGUE)),
+            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
+            _ => crate::app_surface::render_unknown_body(body_key, view_state.locale),
         }
         .map(semio_framework_plugin::built_to_component_tree)
     }
@@ -201,6 +181,8 @@ impl ArtifactEditor for Din4108PlayApp {
 crate::norm_owned_tool_job_factory!(Din4108BoundedCommandJobFactory, Din4108PlayApp);
 
 impl crate::app_surface::NormRetainedEditor for Din4108PlayApp {
+    type Family = Din4108Family;
+
     type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;
 
     fn selected_check_window_mutation(command: &Din4108Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation> {
@@ -271,6 +253,39 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
             )
             .action_destructive("setActiveExample")
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("setField", LocalizedLabel::native("Set Field", "Feld setzen"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
+                        semio_framework_plugin::ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                    ]),
+            )
+            .action_interactive_job("setField", InteractiveJobClassification::Migrated)
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("insertItem", LocalizedLabel::native("Insert Item", "Eintrag einfügen"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
+                        semio_framework_plugin::ActionArgDef::text("index", LocalizedLabel::native("Index", "Index")),
+                    ]),
+            )
+            .action_interactive_job("insertItem", InteractiveJobClassification::Migrated)
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("removeItem", LocalizedLabel::native("Remove Item", "Eintrag entfernen"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
+                        semio_framework_plugin::ActionArgDef::text("index", LocalizedLabel::native("Index", "Index")),
+                    ]),
+            )
+            .action_interactive_job("removeItem", InteractiveJobClassification::Migrated)
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("applyRemedy", LocalizedLabel::native("Apply Remedy", "Abhilfe anwenden"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![
+                        semio_framework_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")),
+                        semio_framework_plugin::ActionArgDef::text("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")),
+                    ]),
+            )
+            .action_interactive_job("applyRemedy", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder` takes a bare `AppDefinition` — there is no

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/remove-anchor/schema.json",
+  "title": "RemoveAnchor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "anchorId"
+  ],
+  "properties": {
+    "anchorId": {
+      "type": "string"
+    }
+  }
+}

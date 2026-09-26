@@ -20,7 +20,7 @@ impl Vdi3805Diff {
             }
             let mut next = artifact.clone();
             if let Some(value) = &self.manufacturer_file {
-                next.manufacturer_file = value.clone();
+                next.catalog.file = value.clone();
             }
             if let Some(value) = &self.catalog {
                 next.catalog = value.clone();
@@ -42,9 +42,6 @@ impl Vdi3805Diff {
             }
             if let Some(value) = &self.curves {
                 next.curves = value.clone();
-            }
-            if let Some(value) = &self.limits {
-                next.limits = *value;
             }
             next
         })
@@ -59,7 +56,7 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
             }
             let mut next = snapshot.clone();
             if let Some(value) = &self.manufacturer_file {
-                next.manufacturer_file = value.clone();
+                next.catalog.file = value.clone();
             }
             if let Some(value) = &self.catalog {
                 next.catalog = value.clone();
@@ -81,9 +78,6 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
             }
             if let Some(value) = &self.curves {
                 next.curves = value.clone();
-            }
-            if let Some(value) = &self.limits {
-                next.limits = *value;
             }
             next
         })
@@ -108,8 +102,7 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
         take!(index);
         take!(geometry);
         take!(curves);
-        take!(limits);
-    }
+            }
 }
 //#endregion 🔖️Apply
 

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-span-m/schema.json",
+  "title": "ChangeBeamSpanM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newSpanM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newSpanM": {
+      "type": "number"
+    }
+  }
+}

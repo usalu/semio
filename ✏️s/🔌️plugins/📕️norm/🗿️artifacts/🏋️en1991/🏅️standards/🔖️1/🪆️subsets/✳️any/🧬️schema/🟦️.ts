@@ -1,68 +1,108 @@
-/** 🧬️ En1991 artifact schema — every field with its state class. */
+/** 🧬️ En1991Artifact schema — artifact-lane fields only. */
 
 export interface En1991Artifact {
   /** @state artifact */
-  areaM2: number;
-  /** @state artifact */
-  category: string;
-  /** @state artifact */
   annex: string;
   /** @state artifact */
-  selfWeightMaterial: string;
+  snowZone: string;
   /** @state artifact */
-  selfWeightThicknessM: number;
+  altitude: number;
   /** @state artifact */
-  assumedGKKnM2: number;
+  enSk: number;
   /** @state artifact */
-  fireCurve: string;
-  /** @state artifact */
-  fireResistanceMin: number;
-  /** @state artifact */
-  fireMemberCapacityC: number;
-  /** @state artifact */
-  snowZone: number;
-  /** @state artifact */
-  snowAltitudeM: number;
-  /** @state artifact */
-  enSKKnM2: number;
+  exceptionalSnowNorthGermanLowlands: boolean;
   /** @state artifact */
   windZone: number;
   /** @state artifact */
-  enVBMS: number;
+  enVb: number;
   /** @state artifact */
-  deltaTK: number;
+  terrainCategory: number;
+  /** @state artifact */
+  mixedTerrainUpwind: number;
+  /** @state artifact */
+  mixedTerrainDistance: number;
+  /** @state artifact */
+  orographyFactor: number;
+  /** @state artifact */
+  coastOrIsland: boolean;
+  /** @state artifact */
+  airDensity: number;
+  /** @state artifact */
+  height: number;
+  /** @state artifact */
+  width: number;
+  /** @state artifact */
+  depth: number;
+  /** @state artifact */
+  assumedDeltaT: number;
+  /** @state artifact */
+  requiredDeltaT: number;
   /** @state artifact */
   constructionActivity: string;
   /** @state artifact */
-  accidentalMassT: number;
+  assumedConstructionQk: number;
   /** @state artifact */
-  accidentalSpeedKmH: number;
+  structureKind: boolean;
   /** @state artifact */
   bridgeLane: number;
   /** @state artifact */
-  bridgeSpanM: number;
+  bridgeSpan: number;
   /** @state artifact */
-  bridgeLaneWidthM: number;
+  bridgeLaneWidth: number;
   /** @state artifact */
-  bridgeMomentResistanceKnm: number;
+  assumedBridgeTandem: number;
+  /** @state artifact */
+  assumedBridgeUdl: number;
+  /** @state artifact */
+  assumedBridgeLm2: number;
+  /** @state artifact */
+  assumedBridgeFootway: number;
+  /** @state artifact */
+  craneClaimed: boolean;
   /** @state artifact */
   craneClass: string;
   /** @state artifact */
   hoistClass: string;
   /** @state artifact */
-  hoistingSpeedMS: number;
+  hoistingSpeed: number;
   /** @state artifact */
-  siloBulkDensityKnM3: number;
+  assumedCraneWheel: number;
   /** @state artifact */
-  siloHeightM: number;
+  assumedCraneHorizontal: number;
   /** @state artifact */
-  siloHydraulicRadiusM: number;
+  siloClaimed: boolean;
+  /** @state artifact */
+  siloKind: string;
+  /** @state artifact */
+  siloBulkDensity: number;
+  /** @state artifact */
+  siloHeight: number;
+  /** @state artifact */
+  siloHydraulicRadius: number;
   /** @state artifact */
   siloMu: number;
   /** @state artifact */
   siloK: number;
   /** @state artifact */
-  cS: number;
+  assumedSiloPressure: number;
   /** @state artifact */
-  cD: number;
+  assumedSiloPatch: number;
+  /** @state artifact */
+  assumedSiloWallFriction: number;
+  /** @state artifact */
+  floors: FloorArea[];
+  /** @state artifact */
+  selfWeightElements: SelfWeightElement[];
+  /** @state artifact */
+  roofs: RoofArea[];
+  /** @state artifact */
+  windFaces: WindFace[];
+  /** @state artifact */
+  accidentalCases: AccidentalCase[];
 }
+
+export interface FloorArea { id: string; category: string; area: number; assumedQk: number; assumedQkConcentrated: number; assumedPartitions: number; }
+export interface SelfWeightElement { id: string; material: string; thickness: number; assumedGk: number; }
+export interface RoofArea { id: string; roofType: string; pitchDeg: number; cE: number; cT: number; hasParapet: boolean; parapetHeight: number; driftObstructionHeight: number; multiSpan: boolean; assumedSk: number; }
+export interface WindFace { id: string; zone: string; z: number; cPe10: number; cPe1: number; cPi: number; cS: number; cD: number; assumedWp: number; }
+export interface AccidentalCase { id: string; kind: string; vehicleMass: number; vehicleSpeed: number; explosionMass: number; standoff: number; assumedForce: number; assumedPressure: number; }

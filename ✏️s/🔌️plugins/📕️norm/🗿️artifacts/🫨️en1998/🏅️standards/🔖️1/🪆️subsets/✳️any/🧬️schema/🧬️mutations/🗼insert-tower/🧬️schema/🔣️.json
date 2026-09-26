@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-tower/schema.json",
+  "title": "InsertTower",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "tower"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tower": {
+      "type": "object"
+    }
+  }
+}

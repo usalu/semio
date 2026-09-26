@@ -1,0 +1,4 @@
+type ChangeAnchorHEf {
+  anchorId: String!
+  newValue: Float!
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeBeamTransverseAs": {
+    "index": 0,
+    "newTransverseAsM2PerM": 0.0004
+  }
+}

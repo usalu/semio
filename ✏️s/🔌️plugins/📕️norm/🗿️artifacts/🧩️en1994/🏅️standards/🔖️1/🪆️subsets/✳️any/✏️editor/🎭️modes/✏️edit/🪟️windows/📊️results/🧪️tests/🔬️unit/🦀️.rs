@@ -10,6 +10,7 @@ async fn definition_declares_this_windows_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_the_computed_checks() {
     let mut app = context::app_with_registry().await;
+    context::dispatch(&mut app, crate::editor::en1994::En1994Command::Evaluate(crate::editor::en1994::commands::evaluate::Evaluate {})).await;
     let rendered = context::render(&mut app, BODY_RESULTS).await;
     assert!(!rendered.contains("No checks computed."), "the default document must compute at least one check: {rendered}");
     context::close(&mut app);

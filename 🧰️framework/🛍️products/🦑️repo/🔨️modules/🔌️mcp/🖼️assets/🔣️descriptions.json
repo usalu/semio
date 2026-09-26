@@ -234,14 +234,6 @@
       "claude": "Fetch when ticket inventory is required before Claude Code chooses where to attach work.",
       "codex": "Fetch when ticket inventory is required before Codex chooses where to attach work."
     },
-    "tool_file_integrate": {
-      "generic": "Use when two files must be merged at a named region boundary without losing section markers.",
-      "cursor": "Use when the Cursor agent must merge two files at a named region boundary without losing section markers.",
-      "kiro": "Use when the Kiro agent must merge two files at a named region boundary without losing section markers.",
-      "copilot": "Use when the Copilot agent must merge two files at a named region boundary without losing section markers.",
-      "claude": "Use when Claude Code must merge two files at a named region boundary without losing section markers.",
-      "codex": "Use when Codex must merge two files at a named region boundary without losing section markers."
-    },
     "tool_goal_close": {
       "generic": "Call when a goal is fulfilled and must be closed with an evidence summary.",
       "cursor": "Call when the Cursor agent has fulfilled a goal and must close it with an evidence summary.",
@@ -265,22 +257,6 @@
       "copilot": "Call when the Copilot agent must reopen a closed goal because its outcome did not hold.",
       "claude": "Call when Claude Code must reopen a closed goal because its outcome did not hold.",
       "codex": "Call when Codex must reopen a closed goal because its outcome did not hold."
-    },
-    "tool_section_extract": {
-      "generic": "Use when a region must be split out into its own file before shrinking the original module.",
-      "cursor": "Use when the Cursor agent must split a region into its own file before shrinking the original module.",
-      "kiro": "Use when the Kiro agent must split a region into its own file before shrinking the original module.",
-      "copilot": "Use when the Copilot agent must split a region into its own file before shrinking the original module.",
-      "claude": "Use when Claude Code must split a region into its own file before shrinking the original module.",
-      "codex": "Use when Codex must split a region into its own file before shrinking the original module."
-    },
-    "tool_section_move": {
-      "generic": "Use when a region rename is required and the surrounding file context is already loaded.",
-      "cursor": "Use when the Cursor agent must rename a region and the surrounding file context is already loaded.",
-      "kiro": "Use when the Kiro agent must rename a region and the surrounding file context is already loaded.",
-      "copilot": "Use when the Copilot agent must rename a region and the surrounding file context is already loaded.",
-      "claude": "Use when Claude Code must rename a region and the surrounding file context is already loaded.",
-      "codex": "Use when Codex must rename a region and the surrounding file context is already loaded."
     },
     "tool_ticket_close": {
       "generic": "Use only when the tracked task is finished, the summary is final, and the touched paths list is complete. Oversized ticket-folder artifacts (files above 5 MiB, folders above 10 MiB) are deleted automatically on close.",

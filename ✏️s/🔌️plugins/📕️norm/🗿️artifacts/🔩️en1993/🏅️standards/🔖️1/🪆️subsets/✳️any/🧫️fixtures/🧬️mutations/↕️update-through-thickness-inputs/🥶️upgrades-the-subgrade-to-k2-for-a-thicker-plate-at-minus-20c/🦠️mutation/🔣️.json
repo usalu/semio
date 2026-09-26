@@ -1,7 +1,26 @@
 {
   "UpdateThroughThicknessInputs": {
-    "new_t10_steel_subgrade": "K2",
-    "new_t10_actual_thickness_mm": 40.0,
-    "new_t10_t_ed_c": -20.0
+    "section": {
+      "id": "sec-heb240",
+      "designation": "HEB 300",
+      "kind": "rolledI",
+      "h": 0.24,
+      "b": 0.24,
+      "tw": 0.01,
+      "tf": 0.017,
+      "r": 0.021,
+      "area": 0.0106,
+      "shearAreaY": 0.00512,
+      "shearAreaZ": 0.0024,
+      "iy": 0.0001126,
+      "iz": 3.923e-05,
+      "it": 6.53e-07,
+      "iw": 4.87e-06,
+      "wElY": 0.000938,
+      "wElZ": 0.000327,
+      "wPlY": 0.001053,
+      "wPlZ": 0.000501,
+      "areaNet": 0.0095
+    }
   }
 }

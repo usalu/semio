@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReplaceElements",
+  "type": "object",
+  "properties": {
+    "newElements": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/replace-elements/schema.json"
+}

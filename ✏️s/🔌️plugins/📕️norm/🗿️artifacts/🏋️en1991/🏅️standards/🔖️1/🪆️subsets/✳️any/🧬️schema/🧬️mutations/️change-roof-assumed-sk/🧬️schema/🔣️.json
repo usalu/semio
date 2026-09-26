@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-roof-assumed-sk/schema.json",
+  "title": "ChangeRoofAssumedSk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newAssumedSk"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newAssumedSk": {
+      "type": "number"
+    }
+  }
+}

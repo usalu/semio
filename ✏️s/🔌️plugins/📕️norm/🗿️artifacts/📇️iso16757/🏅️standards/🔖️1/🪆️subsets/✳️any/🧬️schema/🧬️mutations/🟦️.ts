@@ -81,6 +81,74 @@ export interface ProductGroup {
   dictionarySubjectId?: string;
 }
 
+export interface ProductClass {
+  id: string;
+  groupId: string;
+  parentId?: string;
+  names: Names;
+  requiredPropertyIds: string[];
+  optionalPropertyIds: string[];
+}
+
+export interface ProductSeries {
+  id: string;
+  classId: string;
+  names: Names;
+  sharedPropertyValues: Record<string, CatalogueValue>;
+  geometryId?: string;
+}
+
+export interface ProductIndex {
+  id: string;
+  productId: string;
+  variantId?: string;
+  searchTags: string[];
+}
+
+export type BoundingBox = {
+  min: [number, number, number];
+  max: [number, number, number];
+};
+
+/** 📦️ Part 2 space envelope. */
+export type Space = {
+  id: string;
+  kind: string;
+  bounds: BoundingBox;
+};
+
+/** 🎨️ Part 2 semantic surface. */
+export type Surface = {
+  id: string;
+  purpose: string;
+  bounds: BoundingBox;
+};
+
+/** 🔌️ Part 2 port definition. */
+export type Port = {
+  id: string;
+  medium: string;
+  position: [number, number, number];
+  direction: [number, number, number];
+  portType: string;
+};
+
+export type GeometryNode =
+  | { node: "primitive"; kind: string; parameters: Record<string, number> }
+  | { node: "transform"; translation: number[]; rotationDeg: number[]; child: GeometryNode }
+  | { node: "boolean"; operator: string; children: GeometryNode[] }
+  | { node: "reference"; geometryId: string };
+
+export interface GeometryObject {
+  id: string;
+  shape?: GeometryNode;
+  symbolic?: GeometryNode;
+  spaces: Space[];
+  surfaces: Surface[];
+  ports: Port[];
+  parameterBindings: Record<string, string>;
+}
+
 export interface PropertyDefinition {
   id: string;
   names: Names;
@@ -139,7 +207,7 @@ export interface ChangeExchangeProcess {
   new_exchange_process: ExchangeProcess;
 }
 
-export interface UpdateScriptLimits {
+export interface ChangeScriptLimits {
   new_max_steps: number;
   new_max_recursion: number;
   new_timeout_ms: number;
@@ -182,12 +250,12 @@ export interface RenameManufacturer {
   new_name: string;
 }
 
-export interface CreateProductGroup {
+export interface IntroduceProductGroup {
   product_group: ProductGroup;
   index?: number;
 }
 
-export interface DeleteProductGroup {
+export interface RetireProductGroup {
   id: string;
 }
 
@@ -196,12 +264,12 @@ export interface RenameProductGroup {
   new_name: string;
 }
 
-export interface CreateProduct {
+export interface IntroduceProduct {
   product: Product;
   index?: number;
 }
 
-export interface DeleteProduct {
+export interface RetireProduct {
   id: string;
 }
 
@@ -210,27 +278,62 @@ export interface RenameProduct {
   new_name: string;
 }
 
-export interface CreatePropertyDefinition {
+export interface IntroducePropertyDefinition {
   property_definition: PropertyDefinition;
   index?: number;
 }
 
-export interface DeletePropertyDefinition {
+export interface RetirePropertyDefinition {
   id: string;
 }
 
-export interface CreateSubject {
+export interface IntroduceSubject {
   subject: Subject;
   index?: number;
 }
 
-export interface DeleteSubject {
+export interface RetireSubject {
+  id: string;
+}
+
+export interface IntroduceProductClass {
+  product_class: ProductClass;
+  index?: number;
+}
+
+export interface RetireProductClass {
+  id: string;
+}
+
+export interface IntroduceProductSeries {
+  product_series: ProductSeries;
+  index?: number;
+}
+
+export interface RetireProductSeries {
+  id: string;
+}
+
+export interface IntroduceProductIndex {
+  product_index: ProductIndex;
+  index?: number;
+}
+
+export interface RetireProductIndex {
+  id: string;
+}
+
+export interface IntroduceGeometryObject {
+  geometry_object: GeometryObject;
+}
+
+export interface RetireGeometryObject {
   id: string;
 }
 
 export type Iso16757Mutation =
   | { ChangeExchangeProcess: ChangeExchangeProcess }
-  | { UpdateScriptLimits: UpdateScriptLimits }
+  | { ChangeScriptLimits: ChangeScriptLimits }
   | { ReplacePartNumberRule: ReplacePartNumberRule }
   | { ChangePartNumberInput: ChangePartNumberInput }
   | { RemovePartNumberInput: RemovePartNumberInput }
@@ -240,13 +343,21 @@ export type Iso16757Mutation =
   | { RemoveSelectionConstraint: RemoveSelectionConstraint }
   | { RenameCatalogue: RenameCatalogue }
   | { RenameManufacturer: RenameManufacturer }
-  | { CreateProductGroup: CreateProductGroup }
-  | { DeleteProductGroup: DeleteProductGroup }
+  | { IntroduceProductGroup: IntroduceProductGroup }
+  | { RetireProductGroup: RetireProductGroup }
   | { RenameProductGroup: RenameProductGroup }
-  | { CreateProduct: CreateProduct }
-  | { DeleteProduct: DeleteProduct }
+  | { IntroduceProduct: IntroduceProduct }
+  | { RetireProduct: RetireProduct }
   | { RenameProduct: RenameProduct }
-  | { CreatePropertyDefinition: CreatePropertyDefinition }
-  | { DeletePropertyDefinition: DeletePropertyDefinition }
-  | { CreateSubject: CreateSubject }
-  | { DeleteSubject: DeleteSubject };
+  | { IntroducePropertyDefinition: IntroducePropertyDefinition }
+  | { RetirePropertyDefinition: RetirePropertyDefinition }
+  | { IntroduceSubject: IntroduceSubject }
+  | { RetireSubject: RetireSubject }
+  | { IntroduceProductClass: IntroduceProductClass }
+  | { RetireProductClass: RetireProductClass }
+  | { IntroduceProductSeries: IntroduceProductSeries }
+  | { RetireProductSeries: RetireProductSeries }
+  | { IntroduceProductIndex: IntroduceProductIndex }
+  | { RetireProductIndex: RetireProductIndex }
+  | { IntroduceGeometryObject: IntroduceGeometryObject }
+  | { RetireGeometryObject: RetireGeometryObject };

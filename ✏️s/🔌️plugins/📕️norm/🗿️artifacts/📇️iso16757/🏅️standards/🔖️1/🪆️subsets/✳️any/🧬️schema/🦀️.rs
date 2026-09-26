@@ -694,12 +694,32 @@ pub mod part_5 {
     }
 
     pub fn validate_exchange(catalogue: &crate::part_1::Catalogue, ifc: &IfcCatalogue) -> Vec<String> {
+        use std::collections::HashSet;
         let mut issues = Vec::new();
         if ifc.schema.is_empty() {
             issues.push("missing IFC schema declaration".into());
         }
         if ifc.products.len() != catalogue.products.len() {
             issues.push(format!("IFC product count {} != catalogue {}", ifc.products.len(), catalogue.products.len()));
+        }
+        let ifc_ids: HashSet<_> = ifc.products.iter().map(|p| p.global_id.clone()).collect();
+        for product in &catalogue.products {
+            if !ifc_ids.contains(&product.id) {
+                issues.push(format!("catalogue product '{}' missing IFC entity globalId", product.id));
+            }
+        }
+        for node in &ifc.products {
+            if node.entity_type.trim().is_empty() {
+                issues.push(format!("IFC node '{}' missing entity_type", node.global_id));
+            }
+            if node.global_id.trim().is_empty() {
+                issues.push("IFC product node missing global_id".into());
+            }
+            for child in &node.children {
+                if child.global_id.trim().is_empty() || child.entity_type.trim().is_empty() {
+                    issues.push(format!("IFC node '{}' has incomplete child entity", node.global_id));
+                }
+            }
         }
         issues
     }

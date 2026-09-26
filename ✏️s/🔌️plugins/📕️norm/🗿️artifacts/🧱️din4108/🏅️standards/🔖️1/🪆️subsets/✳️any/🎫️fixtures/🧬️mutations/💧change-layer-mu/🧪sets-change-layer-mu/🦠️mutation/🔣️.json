@@ -1,0 +1,7 @@
+{
+  "ChangeLayerMu": {
+    "element_id": "wall-north",
+    "index": 2,
+    "new_mu": 50.0
+  }
+}

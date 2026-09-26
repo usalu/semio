@@ -7,13 +7,12 @@
   "aggregateVariant": "ChangeConsequenceClass",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 3,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied",
-    "no-op",
-    "rejected"
+    "no-op"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

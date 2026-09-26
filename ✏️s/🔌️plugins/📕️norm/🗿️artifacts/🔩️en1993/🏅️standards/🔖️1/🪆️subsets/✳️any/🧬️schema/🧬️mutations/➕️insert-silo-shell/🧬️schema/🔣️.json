@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-silo-shell/schema.json",
+  "title": "InsertSiloShell",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "silo_shell"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "silo_shell": {
+      "type": "object"
+    }
+  }
+}

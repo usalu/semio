@@ -1,0 +1,14 @@
+{
+  "title": "Retarget Tickets Onto Running Goals",
+  "emoji": "🎯",
+  "status": "closed",
+  "description": "Retarget tickets whose goal is an old goal but whose subject belongs to a goal in the running tree. Leave tickets that have no home in the new tree.",
+  "summary": "Retargeted 2414 tickets from old goals onto the running goal that owns that work. Docs, .NET, and Grasshopper tickets stayed on their current goals. The landing counts are in the ticket retarget note.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2762"
+  },
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪183671a8aa4a406da6c7be8c4d1e446e"
+  ]
+}

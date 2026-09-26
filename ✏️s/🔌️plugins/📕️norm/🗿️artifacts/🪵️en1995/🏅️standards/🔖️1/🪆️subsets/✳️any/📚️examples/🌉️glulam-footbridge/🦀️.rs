@@ -1,10 +1,10 @@
-//! 📚️ Example `glulam-footbridge`.
+//! 📚️ Example compliant EN 1995-2 glulam pedestrian footbridge girder (fatigue, pedestrian comfort, ULS, SLS).
 
 use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "glulam-footbridge";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Glulam Footbridge", "Glulam Footbridge")
+    LocalizedLabel::native("Compliant Glulam Footbridge", "Nachweisfähige BSH-Fußgängerbrücke")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio");

@@ -1,0 +1,48 @@
+{
+  "InsertSlab": {
+    "index": 0,
+    "slab": {
+      "id": "slab-new",
+      "spanM": 3.0,
+      "sheeting": {
+        "profile": "trapezoidal",
+        "heightM": 0.055,
+        "ribWidthM": 0.1,
+        "thicknessM": 0.0009,
+        "ribsParallelToBeam": false
+      },
+      "concreteThicknessM": 0.14,
+      "fCkPa": 30000000.0,
+      "mFactor": 180.0,
+      "kFactor": 0.05,
+      "asM2PerM": 0.00025,
+      "support": "simply_supported",
+      "actions": [
+        {
+          "id": "G-slab",
+          "kind": "permanent",
+          "category": "self",
+          "stage": "composite",
+          "qAreaPa": 3500.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0
+        },
+        {
+          "id": "Q-slab",
+          "kind": "imposed",
+          "category": "B",
+          "stage": "composite",
+          "qAreaPa": 2000.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0
+        }
+      ]
+    }
+  }
+}

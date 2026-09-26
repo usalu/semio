@@ -1,21 +1,17 @@
-//! ⚡ `update-weld-inputs` — atomically updates the weld-inputs facet (weld_a_mm, weld_l_mm, weld_f_u_mpa, weld_steel_grade, weld_f_ed_kn are validated together for one EN 1993 check, never one-field-at-a-time).
+//! `upsert-member-action` — upsert a `MemberAction` by id into `member_actions`.
 
-use crate::{En1993Mutation, En1993Snapshot};
+use crate::{MemberAction, En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdateWeldInputs {
-    pub new_weld_a_mm: f64,
-    pub new_weld_l_mm: f64,
-    pub new_weld_f_u_mpa: f64,
-    pub new_weld_steel_grade: String,
-    pub new_weld_f_ed_kn: f64,
+    pub member_action: MemberAction,
 }
 
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateWeldInputs {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "weld-inputs", kind: "update-weld-inputs", record: "UpdatedWeldInputs" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "memberAction", kind: "update-weld-inputs", record: "UpdatedMemberAction" };
 
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -24,7 +20,13 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateWeldInputs
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-1-8 welded connection inputs", "EN 1993-1-8 Eingaben für Schweißverbindungen aktualisieren")
+        protocol::LocalizedLabel::native(
+            &format!("Upsert member action {}", self.member_action.id),
+            &format!("Bauteilbeanspruchung setzen {}", self.member_action.id),
+        )
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.member_action.id.clone()]
     }
 }
 //#endregion 🔖️Payload

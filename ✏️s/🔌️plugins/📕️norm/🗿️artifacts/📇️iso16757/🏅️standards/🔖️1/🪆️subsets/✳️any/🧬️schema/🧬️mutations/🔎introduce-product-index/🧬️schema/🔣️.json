@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-index/schema.json",
+  "title": "IntroduceProductIndex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "productIndex"
+  ],
+  "properties": {
+    "productIndex": {
+      "title": "ProductIndex",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "productId",
+        "searchTags"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "productId": {
+          "type": "string"
+        },
+        "variantId": {
+          "type": "string"
+        },
+        "searchTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

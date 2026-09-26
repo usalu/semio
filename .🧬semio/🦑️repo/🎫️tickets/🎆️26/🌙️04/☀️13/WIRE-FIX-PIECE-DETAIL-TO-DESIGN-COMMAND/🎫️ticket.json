@@ -3,6 +3,6 @@
   "status": "closed",
   "description": "Connect fix piece button in detail panel with compose.designApp.fixPieces; apply to selected design pieces only.",
   "summary": "Added compose.designApp.fixPieces (fixPiecesInDesign + piecesMetadata for linked pieces only). Detail panel uses useDesignAppFixPieces with selectedDesignPieceGuidsForCommands and existing transaction. Updated: compose/sketchpad/index.tsx.",
-  "goal": "🎯️sketchpadfeatures",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "finished": "2026-04-13T00:00:00.000Z"
 }

@@ -46,7 +46,7 @@ import { runNestedCargoPackageAdapter } from "./🧰️framework/🛍️products
 import { ensureMcpBinary, requireMcpBinary } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js";
 /**
- * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`, `📜️script.ts generate neo4j elements`).
+ * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`).
  */
 import {
   Script,
@@ -271,7 +271,7 @@ function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void 
 }
 
 //#region 🔖️NativeOsScript
-/** 🖥️Runs native bootstrap shells under `repo/native/bootstrap` (setup|start). */
+/** 🖥️Runs the native bootstrap under `repo/native/bootstrap`. */
 export class NativeOsScript extends Script {
   run(segments: string[]): void {
     const cmd = segments[0] ?? "setup";
@@ -390,19 +390,12 @@ export class SetupScript extends Script {
 export class StartScript extends Script {
   run(_segments: string[]): void {
     process.chdir(this.root);
-    const runGenerate = () => {
-      if (runCmdStatus(BUN, [join(this.root, "📜️script.ts"), "generate"], { cwd: this.root, ...orchestratorBudgetOpts() }) !== 0) {
-        console.log("[start] `bun run generate` did not refresh all `.🧬semio/🦑️repo/🛂️manifest` bundles (Neo4j may be offline).");
-      }
-    };
-
     if (!existsSync(join(this.root, "node_modules", "nx", "package.json"))) {
       console.log("[start] node_modules incomplete — run `bun install` and `bun ./📜️script.ts setup`.");
       return;
     }
 
     if (process.env.DEVCONTAINER === "true") {
-      runGenerate();
       console.log("[start] Devcontainer session ready.");
       return;
     }
@@ -417,12 +410,9 @@ export class StartScript extends Script {
       });
       console.log(`[start] local development hub owner launching at ${process.env.S_HUB_URL} (data ${process.env.OS_HUB_DATA}, log local-hub.log there); every \`dev s\` row signs in through its session broker`);
     }
-    if (process.platform === "win32" || process.platform === "darwin" || process.platform === "linux") {
-      new NativeOsScript(this.root, this.repoRoot).run(["start"]);
-    } else {
+    if (process.platform !== "win32" && process.platform !== "darwin" && process.platform !== "linux") {
       console.log(`[start] Unsupported platform ${process.platform}.`);
     }
-    runGenerate();
   }
 }
 //#endregion 🔖️StartScript
@@ -553,10 +543,6 @@ export class DevScript extends Script {
 
   private runMcp(segments: string[]): void {
     const a = segments[0];
-    if (a === "neo4j") {
-      this.runMcpNeo4j(segments.slice(1));
-      return;
-    }
     if (a === "stdio") {
       const rest = segments.slice(1);
       if ((rest[0] ?? "").trim().toLowerCase() === "os") {
@@ -586,26 +572,6 @@ export class DevScript extends Script {
       return;
     }
     runCmd("npx", ["--yes", "@modelcontextprotocol/inspector"], { cwd: this.root, ...daemonBudgetOpts() });
-  }
-
-  private runMcpNeo4j(neoSegments: string[]): void {
-    const { nameParts, passthrough } = partitionNeo4jGraphCliArgv(neoSegments);
-    const hasName = nameParts.length > 0;
-    const graphDatabase = hasName ? joinNeo4jGraphDatabaseName(nameParts) : process.env.NEO4J_DATABASE || defaultNeo4jGraphDatabaseName();
-    const args = [...passthrough];
-    if (hasName && !args.includes("--namespace")) args.push("--namespace", graphDatabase);
-    runCmd("uvx", ["mcp-neo4j-cypher", ...args], {
-      cwd: this.root,
-      env: {
-        ...process.env,
-        NEO4J_URI: process.env.NEO4J_URI || "bolt://localhost:7687",
-        NEO4J_USERNAME: process.env.NEO4J_USERNAME || "neo4j",
-        NEO4J_PASSWORD: process.env.NEO4J_PASSWORD || "password",
-        NEO4J_DATABASE: graphDatabase,
-        NEO4J_TELEMETRY: process.env.NEO4J_TELEMETRY || "false",
-      },
-      ...daemonBudgetOpts(),
-    });
   }
 
   /** 🌉️ Runs the `semio-os` MCP gateway (`semio-framework-os-mcp`) over stdio or Streamable HTTP.
@@ -669,10 +635,6 @@ export class GenerateScript extends Script {
       this.generateTaxonomy(segments.slice(1));
       return;
     }
-    if (segments[0] === "neo4j") {
-      new Neo4jCypherExport(this.root).runFromArgv(segments.slice(1));
-      return;
-    }
     if (segments[0] === "plugin-glue") {
       this.generatePluginGlue(segments.slice(1));
       return;
@@ -681,32 +643,8 @@ export class GenerateScript extends Script {
       runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:generate-scale-fixture", ...segments.slice(1)], { cwd: this.root });
       return;
     }
-    let successes = 0;
-    let failures = 0;
-    const exporter = new Neo4jCypherExport(this.root);
-    for (const spec of getAllNeo4jGraphExportSpecs(process.env)) {
-      const joined = joinNeo4jGraphDatabaseName(spec);
-      const prev = process.env.NEO4J_DATABASE;
-      process.env.NEO4J_DATABASE = joined;
-      try {
-        if (exporter.tryExportFromArgv([...spec])) successes += 1;
-        else {
-          failures += 1;
-          console.error(`[generate] neo4j (${joined}) failed.`);
-        }
-      } finally {
-        if (prev === undefined) delete process.env.NEO4J_DATABASE;
-        else process.env.NEO4J_DATABASE = prev;
-      }
-    }
-    if (successes === 0) {
-      console.error("[generate] no Neo4j database could be exported.");
-      process.exit(1);
-    }
-    if (failures > 0) {
-      console.error(`[generate] partial success (${successes} ok, ${failures} failed).`);
-    }
-    console.log(`[generate] Neo4j Cypher export finished (${successes} ok, ${failures} skipped/failed) under .🧬semio/🦑️repo/🛂️manifest.`);
+    console.error("[generate] usage: bun ./📜️script.ts generate <taxonomy|plugin-glue|scale-fixture>");
+    process.exit(1);
   }
 
   /** 🧩️ Writes deterministic census or duplicate evidence with its Markdown companion. */
@@ -15124,27 +15062,6 @@ export class PublishScript extends Script {
 }
 //#endregion 🔖️PublishScript
 
-//#region 🔖️PurgeScript
-export class PurgeScript extends Script {
-  run(segments: string[]): void {
-    if (segments[0] !== "neo4j") {
-      console.error("[purge] usage: bun ./📜️script.ts purge neo4j");
-      process.exit(1);
-    }
-    const database = process.env.NEO4J_DATABASE || defaultNeo4jGraphDatabaseName();
-    const uri = process.env.NEO4J_URI || "bolt://localhost:7687";
-    const user = process.env.NEO4J_USERNAME || "neo4j";
-    const password = process.env.NEO4J_PASSWORD || "password";
-    if (runCmdStatus("cypher-shell", ["-a", uri, "-u", user, "-p", password, "-d", database, "--format", "plain", "RETURN 1 AS ok;"], { cwd: this.root }) !== 0) {
-      console.warn("[purge.neo4j] cypher-shell unavailable — skip.");
-      process.exit(0);
-    }
-    console.log("[purge.neo4j] connectivity ok; no_operation.");
-  }
-}
-//#endregion 🔖️PurgeScript
-
-
 //#region 🔖️MicroCommitScript
 /** 🎆️Stages WIP changes and writes deterministic micro-commit templates (GitKraken + CLI). */
 export class MicroCommitScript extends Script {
@@ -15682,234 +15599,11 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("build", BuildScript)
   .register("cpp", CppScript)
   .register("publish", PublishScript)
-  .register("purge", PurgeScript)
   .register("clean", CleanScript)
   .register("micro-commit", MicroCommitScript)
   .register("commit", CommitScript);
 
 //#endregion 🔖️Dispatch
-
-//#region 🔖️generate-neo4j-gen
-/**
- * 🛂️ Neo4j → `.🧬semio/🦑️repo/🛂️manifest/<graph>.cypher` export (pure module; invoked from root `script.ts`). Product graphs are fixed specs; extra Bolt graphs use `NEO4J_EXTRA_GRAPH_DATABASES` (comma-separated). Argv segments join with `-` via `joinNeo4jGraphDatabaseName`.
- */
-const NEO4J_VERSION = "5.26.26";
-
-/** 🏗️Product graphs exported by the current workspace; not arbitrary developer databases. */
-export const NEO4J_PRODUCT_GRAPH_DATABASE_SPECS = [["elements"], ["coda"], ["reuse"]] as const;
-
-/** 🗑️Env key: comma-separated extra Bolt graph names for `bun run generate` and native `.🧬semio/🦑️repo/🛂️manifest/*.cypher` stubs. */
-export const NEO4J_EXTRA_GRAPH_DATABASES_ENV = "NEO4J_EXTRA_GRAPH_DATABASES";
-
-/** 🔗️Bolt user graph name from argv segments after `neo4j` / `generate neo4j` (hyphen join). */
-export function joinNeo4jGraphDatabaseName(parts: readonly string[]): string {
-  return parts.join("-");
-}
-
-/** 🧭️Current default product graph for Neo4j commands that omit a database name. */
-export function defaultNeo4jGraphDatabaseName(): string {
-  return joinNeo4jGraphDatabaseName(NEO4J_PRODUCT_GRAPH_DATABASE_SPECS[0]);
-}
-
-/** 🔀️Parses `NEO4J_EXTRA_GRAPH_DATABASES` into trimmed non-empty graph names. */
-export function parseExtraNeo4jGraphDatabaseNamesFromEnv(env: NodeJS.ProcessEnv = process.env): string[] {
-  const raw = env[NEO4J_EXTRA_GRAPH_DATABASES_ENV]?.trim();
-  if (!raw) return [];
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
-/** 📋️Product graph argv rows plus `[name]` per extra env entry. */
-export function getAllNeo4jGraphExportSpecs(env: NodeJS.ProcessEnv = process.env): string[][] {
-  const core: string[][] = NEO4J_PRODUCT_GRAPH_DATABASE_SPECS.map((row) => [...row]);
-  const extras = parseExtraNeo4jGraphDatabaseNamesFromEnv(env).map((n) => [n]);
-  return [...core, ...extras];
-}
-
-/** 🧾️Bolt graph names allowed for `generate neo4j …` (product + extras). */
-export function neo4jExportDatabaseNameSet(env: NodeJS.ProcessEnv = process.env): Set<string> {
-  return new Set(getAllNeo4jGraphExportSpecs(env).map((spec) => joinNeo4jGraphDatabaseName(spec)));
-}
-
-/** @deprecated Prefer `getAllNeo4jGraphExportSpecs`; product-only joined names. */
-export const NEO4J_GRAPH_DATABASE_NAMES = NEO4J_PRODUCT_GRAPH_DATABASE_SPECS.map((s) => joinNeo4jGraphDatabaseName(s));
-
-export type Neo4jGraphDatabaseName = (typeof NEO4J_GRAPH_DATABASE_NAMES)[number];
-
-export function partitionNeo4jGraphCliArgv(segments: string[]): { nameParts: string[]; passthrough: string[] } {
-  const nameParts: string[] = [];
-  let i = 0;
-  while (i < segments.length && !segments[i]!.startsWith("-")) {
-    nameParts.push(segments[i]!);
-    i += 1;
-  }
-  return { nameParts, passthrough: segments.slice(i) };
-}
-
-export class Neo4jCypherExport {
-  constructor(private readonly repoRoot: string) {}
-
-  resolveCypherShell(): string | null {
-    const runtimeName = process.platform === "win32" ? "cypher-shell.bat" : "cypher-shell";
-    const cachedShell = join(getRepoMetaDir(this.repoRoot), "⚡️cache", "neo4j", `neo4j-community-${NEO4J_VERSION}`, "bin", runtimeName);
-    const candidates = [process.env.NEO4J_CYPHER_SHELL, cachedShell, runtimeName].filter((value): value is string => Boolean(value));
-
-    for (const candidate of candidates) {
-      if (candidate.includes("/") || candidate.includes("\\")) {
-        if (existsSync(candidate)) return candidate;
-        continue;
-      }
-      try {
-        if (runProbe(candidate, ["--version"]).status === 0) return candidate;
-      } catch {
-        /* try next */
-      }
-    }
-    return null;
-  }
-
-  buildCypherEnv(): NodeJS.ProcessEnv {
-    const env = { ...process.env };
-    if (process.platform === "win32") {
-      const javaHome = "C:\\Program Files\\Microsoft\\jdk-21.0.11.10-hotspot";
-      const javaExecutable = join(javaHome, "bin", "java.exe");
-      if (existsSync(javaExecutable)) {
-        env.JAVA_HOME = javaHome;
-        env.Path = `${join(javaHome, "bin")};${env.Path || ""}`;
-      }
-    }
-    return env;
-  }
-
-  runCypher(database: string, cypher: string): { ok: boolean; stdout: string; stderr: string } {
-    const shell = this.resolveCypherShell();
-    if (!shell) {
-      return { ok: false, stdout: "", stderr: "cypher-shell not found (install Neo4j tools or set NEO4J_CYPHER_SHELL)." };
-    }
-
-    const queryDir = join(getRepoMetaDir(this.repoRoot), "⚡️cache");
-    mkdirSync(queryDir, { recursive: true });
-    const queryPath = join(queryDir, `neo4j-generate-query-${process.pid}-${Date.now()}.cypher`);
-    writeFileSync(queryPath, `${cypher.trim()}\n`, "utf8");
-
-    try {
-      const result = runProbe(shell, ["-a", process.env.NEO4J_URI || "bolt://localhost:7687", "-u", process.env.NEO4J_USERNAME || "neo4j", "-p", process.env.NEO4J_PASSWORD || "password", "-d", database, "--format", "plain", "-f", queryPath], {
-        cwd: this.repoRoot,
-        env: this.buildCypherEnv(),
-      });
-
-      return {
-        ok: result.status === 0,
-        stdout: result.stdout,
-        stderr: result.stderr,
-      };
-    } finally {
-      try {
-        unlinkSync(queryPath);
-      } catch {
-        /* temp query cleanup */
-      }
-    }
-  }
-
-  apocExportCypherAllToAbsoluteFile(database: string, absoluteFile: string): { ok: boolean; message: string } {
-    const neoPath = absoluteFile.replace(/\\/g, "/");
-    const apocTarget = /^[A-Za-z]:\//.test(neoPath) ? `file:${neoPath}` : neoPath.startsWith("/") ? `file://${neoPath}` : neoPath;
-    const pathLiteral = JSON.stringify(apocTarget);
-    const cypher = [
-      `CALL apoc.export.cypher.all(${pathLiteral}, {`,
-      `  format: "cypher-shell",`,
-      `  writeNodeProperties: true,`,
-      `  ifNotExists: true,`,
-      `  useOptimizations: { type: "UNWIND_BATCH", unwindBatchSize: 100 }`,
-      `})`,
-      `YIELD file, batches, source, format, nodes, relationships, properties, time, rows, batchSize`,
-      `RETURN file, batches, source, format, nodes, relationships, properties, time, rows, batchSize;`,
-    ].join("\n");
-
-    const { ok, stdout, stderr } = this.runCypher(database, cypher);
-    if (!ok) {
-      return {
-        ok: false,
-        message: `${stderr || stdout || "unknown error"}\n` + "Ensure APOC is installed, apoc.export.file.enabled=true, and Neo4j may write this absolute path (set apoc.import.file.use_neo4j_config=false on Desktop — see setup scripts).",
-      };
-    }
-    return { ok: true, message: stdout.trim() };
-  }
-
-  writeGeneratedCypherBundle(technology: string, database: string, body: string, finalPath: string): void {
-    const stamp = new Date().toISOString();
-    const header = [
-      "// SPDX-License-Identifier: AGPL-3.0-only",
-      "// Generated exclusively from the live Neo4j database — do not edit this file by hand.",
-      "// Refresh: `bun run generate` (root `script.ts`).",
-      `// graph: ${technology} | database: ${database} | generated: ${stamp}`,
-      "//",
-      "",
-    ].join("\n");
-
-    writeFileSync(finalPath, `${header}${body.trim()}\n`, "utf8");
-  }
-
-  tryExportFromArgv(argv: string[]): boolean {
-    const { nameParts, passthrough } = partitionNeo4jGraphCliArgv(argv);
-    if (passthrough.length > 0) {
-      console.error(`[generate:neo4j] unexpected extra arguments (use only graph name segments before any -flags): ${JSON.stringify(passthrough)}`);
-      return false;
-    }
-    const joined = nameParts.length > 0 ? joinNeo4jGraphDatabaseName(nameParts) : (process.env.NEO4J_DATABASE ?? defaultNeo4jGraphDatabaseName());
-    const allowed = neo4jExportDatabaseNameSet(process.env);
-    if (!allowed.has(joined)) {
-      const hint = parseExtraNeo4jGraphDatabaseNamesFromEnv(process.env).length === 0 ? ` Set ${NEO4J_EXTRA_GRAPH_DATABASES_ENV} to a comma-separated list of extra Bolt graph names (e.g. metabolism,mydb).` : "";
-      console.error(`[generate:neo4j] graph database must be one of: ${[...allowed].sort().join(", ")} (got ${JSON.stringify(joined)}; argv segments ${JSON.stringify(nameParts)}).${hint}`);
-      return false;
-    }
-
-    const technology = joined;
-    const database = process.env.NEO4J_DATABASE ?? joined;
-    const outDir = join(getRepoMetaDir(this.repoRoot), "🛂️manifest");
-    mkdirSync(outDir, { recursive: true });
-
-    const finalAbs = join(outDir, `${technology}.cypher`);
-    const cacheDir = join(getRepoMetaDir(this.repoRoot), "⚡️cache");
-    mkdirSync(cacheDir, { recursive: true });
-    const tmpAbs = join(cacheDir, `.generate-${technology}-${process.pid}.tmp.cypher`);
-
-    const probe = this.runCypher(database, "RETURN 1 AS ok;");
-    if (!probe.ok) {
-      console.error(`[generate:neo4j] cannot reach database ${JSON.stringify(database)}:\n${probe.stderr || probe.stdout}`);
-      return false;
-    }
-
-    if (existsSync(tmpAbs)) unlinkSync(tmpAbs);
-
-    const result = this.apocExportCypherAllToAbsoluteFile(database, tmpAbs);
-    if (!result.ok) {
-      console.error(`[generate:neo4j] apoc.export.cypher.all failed:\n${result.message}`);
-      return false;
-    }
-
-    if (!existsSync(tmpAbs)) {
-      console.error(`[generate:neo4j] expected export file missing at ${tmpAbs} after APOC call.`);
-      return false;
-    }
-
-    const body = readFileSync(tmpAbs, "utf8");
-    unlinkSync(tmpAbs);
-    this.writeGeneratedCypherBundle(technology, database, body, finalAbs);
-
-    console.log(`[generate:neo4j] wrote ${finalAbs} (database ${database}).`);
-    if (result.message) console.log(result.message);
-    return true;
-  }
-
-  runFromArgv(argv: string[]): void {
-    if (!this.tryExportFromArgv(argv)) process.exit(1);
-  }
-}
-//#endregion 🔖️generate-neo4j-gen
 
 //#region 🔖️Policy
 /**

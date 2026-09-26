@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-storey-drift-x-m/schema.json",
+  "title": "ChangeStoreyDriftXM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "buildingIndex",
+    "storeyIndex",
+    "newDriftXM"
+  ],
+  "properties": {
+    "buildingIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "storeyIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newDriftXM": {
+      "type": "number"
+    }
+  }
+}

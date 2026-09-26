@@ -1,24 +1,6 @@
-# 🧬️ EN 1995 snapshot schema.
-
+# 🪵 EN 1995 snapshot GraphQL mirror
 type En1995Snapshot {
-  annex: Float! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  nEdKn: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  wMm3: Float! @state(class: ARTIFACT)
-  aMm2: Float! @state(class: ARTIFACT)
-  bMm: Float! @state(class: ARTIFACT)
-  hMm: Float! @state(class: ARTIFACT)
-  fMK: Float! @state(class: ARTIFACT)
-  fC0K: Float! @state(class: ARTIFACT)
-  serviceClass: Float! @state(class: ARTIFACT)
-  loadDuration: Float! @state(class: ARTIFACT)
-  mCritKnm: Float! @state(class: ARTIFACT)
-  fEdKn: Float! @state(class: ARTIFACT)
-  aEfMm2: Float! @state(class: ARTIFACT)
-  fVK: Float! @state(class: ARTIFACT)
-  fireDurationMin: Float! @state(class: ARTIFACT)
-  sectionDepthMm: Float! @state(class: ARTIFACT)
-  aVertMS2: Float! @state(class: ARTIFACT)
-  nCyclesBridge: Float! @state(class: ARTIFACT)
+  annex: String!
+  members: [JSON!]!
+  connections: [JSON!]!
 }

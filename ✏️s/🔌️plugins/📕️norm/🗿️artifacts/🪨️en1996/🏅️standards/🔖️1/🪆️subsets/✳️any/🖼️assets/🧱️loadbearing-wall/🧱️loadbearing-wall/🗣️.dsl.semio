@@ -1,2 +1,8 @@
 semio norm.en1996.dsl v1
-m-ed-knm=12.5 n-ed-kn=350 v-ed-kn=42 h-ed-kn=18 z-mm3=12000000 area-mm2=600000 shear-area-mm2=360000 f-k-mpa=6.4 f-vk-mpa=0.2 annex=en masonry-class=class2 design-situation=transient mu=0.35 wall-thickness-mm=300 fire-resistance-min=90 unit=calcium-silicate exposure=mx3 mortar=m10 bed-joint-thickness-mm=10 storeys=4 h-ef-mm=3200 t-ef-mm=300
+annex=de masonry-class=class1 design-situation=persistent storeys=2
+walls [id:TEXT label-en:TEXT label-de:TEXT wall-type:ENUM thickness-m:QTY height-m:QTY length-m:QTY support-sides:UINT openings:TABLE slab-bearing-depth-m:QTY eccentricity-top-m:QTY eccentricity-bottom-m:QTY unit-group:ENUM unit-material:ENUM f-b-pa:QTY unit-length-m:QTY unit-width-m:QTY unit-height-m:QTY mortar-type:ENUM mortar-class:ENUM mortar-strength-pa:QTY bed-joint-thickness-m:QTY reinforced:BOOL as-vertical-m2:QTY as-horizontal-m2:QTY f-yd-pa:QTY fire-rei-min:UINT exposure:ENUM mu:NUM density-kg-m3:NUM phi-infinity:NUM is-basement:BOOL load-cases:TABLE] {
+  wall-north "North load-bearing wall" "Tragende Nordwand" load-bearing 0.365m 2.75m 5m 4 [ ] 0.12m 0.02m 0.015m group1 clay 20000000Pa 0.24m 0.365m 0.113m general-purpose m10 10000000Pa 0.012m false 0m2 0m2 0Pa 90 mx1 0.4 1800 1.5 false [ {id=ulsinz design-situation=persistent imposed-category=A g-k-slab-n=120000N q-k-imposed-pa=2000Pa tributary-area-m2=12.5m2 slab-span-m=4.5m q-k-snow-pa=0Pa q-p-wind-pa=800Pa c-pe=0.8 h-k-earth-n=0N
+  concentrated [id:TEXT force-n:QTY bearing-area-m2:QTY bearing-length-m:QTY] {
+  }
+  } ]
+}

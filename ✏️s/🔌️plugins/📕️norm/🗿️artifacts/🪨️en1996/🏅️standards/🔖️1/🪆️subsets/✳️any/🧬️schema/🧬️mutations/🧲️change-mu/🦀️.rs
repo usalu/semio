@@ -1,31 +1,32 @@
-//! 🏗️ `change-mu` payload — changes the En1996 document's `mu` (friction coefficient mu).
+//! 🧲️change-mu
+use crate::{En1996Mutation, En1996Snapshot};
 
-use crate::diff::En1996Diff;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-//#region 🔖️ChangeMu
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
 pub struct ChangeMu {
+    pub index: usize,
     pub new_mu: f64,
 }
 
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeMu {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "mu", kind: "change-mu", record: "ChangedMu" };
-
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "mu",
+        kind: "change-mu",
+        record: "ChangedMu",
+    };
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<En1996Mutation as protocol::Mutation<En1996Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         super::inverse::inverse(self, base)
     }
-
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change friction coefficient mu to {}", self.new_mu), &format!("Reibungsbeiwert μ auf {} ändern", self.new_mu))
+        protocol::LocalizedLabel::native("Change friction μ", "Reibungsbeiwert μ ändern")
     }
 }
-//#endregion 🔖️ChangeMu
+
+#[cfg(test)]
+#[path = "🧪️tests/🧲️applies-change-mu/🦀️.rs"]
+mod named_test;

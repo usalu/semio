@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-geotechnical-category/schema.json",
+  "title": "ChangeGeotechnicalCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newGeotechnicalCategory"
+  ],
+  "properties": {
+    "newGeotechnicalCategory": {
+      "type": "integer"
+    }
+  }
+}

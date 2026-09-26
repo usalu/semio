@@ -1,18 +1,22 @@
-//! ➖️ `remove-layer` — takes a construction layer out of the build-up by BASE-state index.
+//! ➖️`remove-layer`.
 
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-//#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveLayer {
+    pub element_id: String,
     pub index: usize,
 }
 
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveLayer {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "layer", kind: "remove-layer", record: "RemovedLayer" };
-
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "remove",
+        entity: "layer",
+        kind: "remove-layer",
+        record: "RemovedLayer",
+    };
     fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
@@ -20,10 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for RemoveLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Remove layer #{}", self.index), &format!("Schicht #{} entfernen", self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
+        protocol::LocalizedLabel::native("remove-layer", "remove-layer")
     }
 }
-//#endregion 🔖️Payload

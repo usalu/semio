@@ -1,26 +1,80 @@
-# 🧬️ EN 1997 mutation schema.
-
-type En1997Mutation {
-  vEdKn: Float! @state(class: ARTIFACT)
-  hEdKn: Float! @state(class: ARTIFACT)
-  footingAreaM2: Float! @state(class: ARTIFACT)
-  phiDeg: Float! @state(class: ARTIFACT)
-  cKpa: Float! @state(class: ARTIFACT)
-  gammaKnM3: Float! @state(class: ARTIFACT)
-  bM: Float! @state(class: ARTIFACT)
-  dFM: Float! @state(class: ARTIFACT)
-  eSMpa: Float! @state(class: ARTIFACT)
-  nu: Float! @state(class: ARTIFACT)
-  designApproach: Float! @state(class: ARTIFACT)
-  annex: Float! @state(class: ARTIFACT)
-  settlementLimitMm: Float! @state(class: ARTIFACT)
-  nPileEdKn: Float! @state(class: ARTIFACT)
-  alphaS: Float! @state(class: ARTIFACT)
-  pileDM: Float! @state(class: ARTIFACT)
-  qSKpa: Float! @state(class: ARTIFACT)
-  pileLM: Float! @state(class: ARTIFACT)
-  qBKpa: Float! @state(class: ARTIFACT)
-  pileBaseAreaM2: Float! @state(class: ARTIFACT)
-  pileNProfiles: Int! @state(class: ARTIFACT)
-  zInvestigatedM: Float! @state(class: ARTIFACT)
+# 🧬️ En1997 mutations
+enum AnnexChoice { de en }
+input SoilLayerInput {
+  id: String!
+  soilType: String!
+  depthTop: Float!
+  depthBottom: Float!
+  gamma: Float!
+  gammaPrime: Float!
+  phiPrimeDeg: Float!
+  cohesionEffective: Float!
+  cohesionUndrained: Float!
+  oedometricModulus: Float!
+  poissonRatio: Float!
+  cptQc: Float!
+  sptN: Float!
 }
+input SpreadFoundationInput {
+  id: String!
+  width: Float!
+  length: Float!
+  embedment: Float!
+  baseInclinationDeg: Float!
+  settlementLimit: Float!
+}
+input PileInput {
+  id: String!
+  pileType: String!
+  diameter: Float!
+  length: Float!
+  count: Int!
+  alphaS: Float!
+  unitShaftResistance: Float!
+  unitBaseResistance: Float!
+  compressionPermanent: Float!
+  compressionVariable: Float!
+  tensionPermanent: Float!
+  tensionVariable: Float!
+}
+union En1997Mutation =
+  ChangeAnnex
+  | ChangeGeotechnicalCategory
+  | ChangeDesignSituation
+  | ChangeDesignApproach
+  | ChangeGroundwaterLevel
+  | ChangeInvestigationDepth
+  | ChangeFootingWidth
+  | ChangeFootingEmbedment
+  | ChangePileLength
+  | ChangePileCount
+  | ChangeWallBaseWidth
+  | ChangeSlopeAngle
+  | ChangeLayerPhiPrime
+  | ChangeLayerOedometricModulus
+  | InsertLayer
+  | RemoveLayer
+  | InsertFooting
+  | RemoveFooting
+  | InsertPile
+  | RemovePile
+type ChangeAnnex { mutation: String! newAnnex: AnnexChoice! }
+type ChangeGeotechnicalCategory { mutation: String! newGeotechnicalCategory: Int! }
+type ChangeDesignSituation { mutation: String! newDesignSituation: String! }
+type ChangeDesignApproach { mutation: String! newDesignApproach: String! }
+type ChangeGroundwaterLevel { mutation: String! newGroundwaterLevel: Float! }
+type ChangeInvestigationDepth { mutation: String! newInvestigationDepth: Float! }
+type ChangeFootingWidth { mutation: String! id: String! newWidth: Float! }
+type ChangeFootingEmbedment { mutation: String! id: String! newEmbedment: Float! }
+type ChangePileLength { mutation: String! id: String! newLength: Float! }
+type ChangePileCount { mutation: String! id: String! newCount: Int! }
+type ChangeWallBaseWidth { mutation: String! id: String! newBaseWidth: Float! }
+type ChangeSlopeAngle { mutation: String! id: String! newAngleDeg: Float! }
+type ChangeLayerPhiPrime { mutation: String! id: String! newPhiPrimeDeg: Float! }
+type ChangeLayerOedometricModulus { mutation: String! id: String! newOedometricModulus: Float! }
+type InsertLayer { mutation: String! index: Int! layer: SoilLayerInput! }
+type RemoveLayer { mutation: String! index: Int! }
+type InsertFooting { mutation: String! index: Int! footing: SpreadFoundationInput! }
+type RemoveFooting { mutation: String! index: Int! }
+type InsertPile { mutation: String! index: Int! pile: PileInput! }
+type RemovePile { mutation: String! index: Int! }

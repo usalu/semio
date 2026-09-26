@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "A lane-less typed operation (View verbs, and Mutation reducers that emitted nothing) records its history row from retire_typed_operation_unit, after take_typed_operation_completion has already built history_patch, so the row surfaces on the next command. Record it before the completion patch, and make that route agree with dispatch_emit's empty-emit branch. Fix the puzzle history laws that asserted no row only because of the lag.",
   "summary": "A lane-less settled typed operation logs one command row on the admitting completion, matching dispatch_emit's empty-emit branch. A View whose only durable emission is per-window config still logs nothing, and faults still log nothing. A coalesced amend re-upserts its existing row on the admitting tick. Semantics: 📓️semantics.md.",
-  "goal": "🎯r2602🎯runningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [
     "⚪3115a8ff420b45baa1c39af97878c892"
   ]

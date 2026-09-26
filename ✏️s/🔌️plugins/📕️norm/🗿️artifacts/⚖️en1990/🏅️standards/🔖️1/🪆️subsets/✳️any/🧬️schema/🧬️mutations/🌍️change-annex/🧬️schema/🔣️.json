@@ -1,19 +1,4 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-annex/schema.json",
   "title": "ChangeAnnex",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "newAnnex"
-  ],
-  "properties": {
-    "newAnnex": {
-      "type": "string",
-      "enum": [
-        "En",
-        "De"
-      ]
-    }
-  }
+  "type": "object"
 }

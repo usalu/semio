@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-fire-exposure/schema.json",
+  "title": "InsertFireExposure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "fire_exposure"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "fire_exposure": {
+      "type": "object"
+    }
+  }
+}

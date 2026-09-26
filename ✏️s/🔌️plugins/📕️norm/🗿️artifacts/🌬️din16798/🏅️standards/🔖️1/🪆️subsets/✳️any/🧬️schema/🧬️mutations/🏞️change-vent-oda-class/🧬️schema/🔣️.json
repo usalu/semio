@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-oda-class/schema.json",
+  "title": "ChangeVentOdaClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newOdaClass"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string"
+    },
+    "newOdaClass": {
+      "type": "string"
+    }
+  }
+}

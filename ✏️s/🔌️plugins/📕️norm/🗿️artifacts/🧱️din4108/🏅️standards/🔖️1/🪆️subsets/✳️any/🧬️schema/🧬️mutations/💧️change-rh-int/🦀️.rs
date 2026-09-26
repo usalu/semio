@@ -1,8 +1,7 @@
-//! 💧 `change-rh-int` — sets the DIN 4108 `rh_int` scalar.
+//! 💧️ `change-rh-int`.
 
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-//#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
@@ -11,7 +10,12 @@ pub struct ChangeRhInt {
 }
 
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeRhInt {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "rh-int", kind: "change-rh-int", record: "ChangedRhInt" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "rh-int",
+        kind: "change-rh-int",
+        record: "ChangedRhInt",
+    };
 
     fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -20,7 +24,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for ChangeRhInt {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change indoor relative humidity to {}", self.new_rh_int), &format!("Relative Raumluftfeuchte auf {} ändern", self.new_rh_int))
+        protocol::LocalizedLabel::native("change-rh-int", "change-rh-int")
     }
 }
-//#endregion 🔖️Payload

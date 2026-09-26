@@ -1,14 +1,14 @@
-//! 🔺️ `change-exposure` sparse diff construction — writes only `En1996Diff.exposure` from the payload.
-
-use crate::diff::En1996Diff;
-use crate::mutations::change_exposure::ChangeExposure;
-use crate::En1996Snapshot;
-
-//#region 🔖️Diff
+use super::ChangeExposure;
+use crate::diff::En1996WallList;
+use crate::{En1996Diff, En1996Snapshot};
 pub fn diff(payload: &ChangeExposure, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
-    if base.exposure == payload.new_exposure {
-        return protocol::MutationOutcome::empty().warn("mutation.no-op", "Exposure already has this value.");
-    }
-    protocol::MutationOutcome::new(En1996Diff { exposure: Some(payload.new_exposure), ..Default::default() })
+    let diff = {
+        if payload.index >= base.walls.len() {
+            return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid wall index."), Vec::<String>::new());
+        }
+        let mut walls = base.walls.clone();
+        walls[payload.index].exposure = payload.new_exposure;
+        En1996Diff { walls: Some(En1996WallList { values: walls }), ..Default::default() }
+    };
+    protocol::MutationOutcome::new(diff)
 }
-//#endregion 🔖️Diff

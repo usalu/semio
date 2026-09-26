@@ -1,7 +1,7 @@
 //! 📥️ EN 1995 play app — the inputs window: the raw compliance document, rendered as JSON.
 
 use crate::En1995Snapshot;
-use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-en1995-inputs";
@@ -16,8 +16,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &En1995Snapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_document_json(document)
+pub fn render(document: &En1995Snapshot, locale: semio_framework_plugin::Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    crate::app_surface::render_document_editor(document, locale, controller_id, Some(crate::field_meta::en1995_field_meta), windows)
 }
 //#endregion 🔖️Render
 

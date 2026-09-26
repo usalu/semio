@@ -8,13 +8,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::En1991Snapshot;
 
-/// 🏬️ The retail-hydrocarbon-fire example fixture, handcrafted in `en1991`'s DSL
-/// (`store::ArtifactDsl`): a retail unit (imposed category D) evaluated under the EN annex with a
-/// hydrocarbon fire curve and a full set of the other action sub-scenarios (snow, wind, thermal,
+/// 🏬️ The de-office-compliant example fixture, handcrafted in `en1991`'s DSL
+/// (`store::ArtifactDsl`): a DE office (design-load assumptions) evaluated under the EN annex with a
+/// DE annex snow/wind/imposed and a full set of the other action sub-scenarios (snow, wind, thermal,
 /// construction, accidental impact, bridge, crane, silo) at plausible non-zero values — distinct
 /// from `En1991Snapshot::default()`'s category-B/DE-annex/standard-fire-curve values so the grammar's
 /// non-default branches (category, annex, fire curve) are exercised too.
-pub const EN1991_RETAIL_HYDROCARBON_FIRE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🔥️retail-hydrocarbon-fire/🔥️retail-hydrocarbon-fire/🗣️.dsl.semio");
+pub const EN1991_DE_OFFICE_COMPLIANT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1991` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<En1991Snapshot, store::TextError> {

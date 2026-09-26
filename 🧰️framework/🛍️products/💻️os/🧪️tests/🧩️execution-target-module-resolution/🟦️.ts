@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
+import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json");
@@ -50,7 +50,7 @@ function oracle(row: Case): Case["expected"] {
 
 describe("🧩️ execution-target module resolution", () => {
   it("the fixture satisfies its schema", () => {
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
+    const validate = semioSchemaAjvV1({ allErrors: true, strict: true }).compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   });
 

@@ -1,8 +1,7 @@
 //! 🧱️ EN 1996 artifact schema — every field with its state class.
 
-use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, Quantity};
+use crate::document::AnnexChoice;
 use crate::En1996Snapshot;
-use crate::MasonryClass;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
@@ -14,49 +13,15 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1996")]
 pub struct En1996Artifact {
     #[state(artifact)]
-    pub m_ed_knm: f64,
-    #[state(artifact)]
-    pub n_ed_kn: f64,
-    #[state(artifact)]
-    pub v_ed_kn: f64,
-    #[state(artifact)]
-    pub h_ed_kn: f64,
-    #[state(artifact)]
-    pub z_mm3: f64,
-    #[state(artifact)]
-    pub area_mm2: f64,
-    #[state(artifact)]
-    pub shear_area_mm2: f64,
-    #[state(artifact)]
-    pub f_k_mpa: f64,
-    #[state(artifact)]
-    pub f_vk_mpa: f64,
-    #[state(artifact)]
     pub annex: AnnexChoice,
     #[state(artifact)]
-    pub masonry_class: MasonryClass,
+    pub masonry_class: crate::MasonryClass,
     #[state(artifact)]
     pub design_situation: crate::document::DesignSituation,
     #[state(artifact)]
-    pub mu: f64,
-    #[state(artifact)]
-    pub wall_thickness_mm: f64,
-    #[state(artifact)]
-    pub fire_resistance_min: u32,
-    #[state(artifact)]
-    pub unit: String,
-    #[state(artifact)]
-    pub exposure: crate::part_2::ExposureClass,
-    #[state(artifact)]
-    pub mortar: crate::part_2::MortarClass,
-    #[state(artifact)]
-    pub bed_joint_thickness_mm: f64,
-    #[state(artifact)]
     pub storeys: u32,
     #[state(artifact)]
-    pub h_ef_mm: f64,
-    #[state(artifact)]
-    pub t_ef_mm: f64,
+    pub walls: Vec<crate::MasonryWall>,
 }
 //#endregion 🔖️Artifact
 
@@ -76,82 +41,25 @@ impl From<En1996Snapshot> for En1996Artifact {
 impl En1996Artifact {
     pub fn to_snapshot(&self) -> En1996Snapshot {
         En1996Snapshot {
-            m_ed_knm: self.m_ed_knm,
-            n_ed_kn: self.n_ed_kn,
-            v_ed_kn: self.v_ed_kn,
-            h_ed_kn: self.h_ed_kn,
-            z_mm3: self.z_mm3,
-            area_mm2: self.area_mm2,
-            shear_area_mm2: self.shear_area_mm2,
-            f_k_mpa: self.f_k_mpa,
-            f_vk_mpa: self.f_vk_mpa,
             annex: self.annex,
             masonry_class: self.masonry_class,
             design_situation: self.design_situation,
-            mu: self.mu,
-            wall_thickness_mm: self.wall_thickness_mm,
-            fire_resistance_min: self.fire_resistance_min,
-            unit: self.unit.clone(),
-            exposure: self.exposure,
-            mortar: self.mortar,
-            bed_joint_thickness_mm: self.bed_joint_thickness_mm,
             storeys: self.storeys,
-            h_ef_mm: self.h_ef_mm,
-            t_ef_mm: self.t_ef_mm,
+            walls: self.walls.clone(),
         }
     }
 
     pub fn from_snapshot(snapshot: En1996Snapshot) -> Self {
         Self {
-            m_ed_knm: snapshot.m_ed_knm,
-            n_ed_kn: snapshot.n_ed_kn,
-            v_ed_kn: snapshot.v_ed_kn,
-            h_ed_kn: snapshot.h_ed_kn,
-            z_mm3: snapshot.z_mm3,
-            area_mm2: snapshot.area_mm2,
-            shear_area_mm2: snapshot.shear_area_mm2,
-            f_k_mpa: snapshot.f_k_mpa,
-            f_vk_mpa: snapshot.f_vk_mpa,
             annex: snapshot.annex,
             masonry_class: snapshot.masonry_class,
             design_situation: snapshot.design_situation,
-            mu: snapshot.mu,
-            wall_thickness_mm: snapshot.wall_thickness_mm,
-            fire_resistance_min: snapshot.fire_resistance_min,
-            unit: snapshot.unit,
-            exposure: snapshot.exposure,
-            mortar: snapshot.mortar,
-            bed_joint_thickness_mm: snapshot.bed_joint_thickness_mm,
             storeys: snapshot.storeys,
-            h_ef_mm: snapshot.h_ef_mm,
-            t_ef_mm: snapshot.t_ef_mm,
+            walls: snapshot.walls,
         }
     }
 
-    pub fn set_snapshot(&mut self, snapshot: En1996Snapshot) {
-        self.m_ed_knm = snapshot.m_ed_knm;
-        self.n_ed_kn = snapshot.n_ed_kn;
-        self.v_ed_kn = snapshot.v_ed_kn;
-        self.h_ed_kn = snapshot.h_ed_kn;
-        self.z_mm3 = snapshot.z_mm3;
-        self.area_mm2 = snapshot.area_mm2;
-        self.shear_area_mm2 = snapshot.shear_area_mm2;
-        self.f_k_mpa = snapshot.f_k_mpa;
-        self.f_vk_mpa = snapshot.f_vk_mpa;
-        self.annex = snapshot.annex;
-        self.masonry_class = snapshot.masonry_class;
-        self.design_situation = snapshot.design_situation;
-        self.mu = snapshot.mu;
-        self.wall_thickness_mm = snapshot.wall_thickness_mm;
-        self.fire_resistance_min = snapshot.fire_resistance_min;
-        self.unit = snapshot.unit;
-        self.exposure = snapshot.exposure;
-        self.mortar = snapshot.mortar;
-        self.bed_joint_thickness_mm = snapshot.bed_joint_thickness_mm;
-        self.storeys = snapshot.storeys;
-        self.h_ef_mm = snapshot.h_ef_mm;
-        self.t_ef_mm = snapshot.t_ef_mm;
-    }
+    pub fn set_snapshot(&mut self, snapshot: En1996Snapshot) { *self = Self::from_snapshot(snapshot); }
 }
 //#endregion 🔖️Conversions
 
@@ -299,241 +207,9 @@ semio_framework_plugin::derive_artifact_facets!(
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️ComplianceHelpers
-/// 📐️ Pure EN 1996 compliance helpers (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
-/// relocated verbatim from the deleted `⚙️engine`. `na_de`, `MasonryUnit`, `AnnexParams`,
-/// `part_1_1`/`part_1_2`/`part_3` and `check_masonry_wall` are pure function libraries; the
-/// snapshot-level composition (`evaluate`, `check_full_masonry`, `annex_params`) lives in
-/// `💡️inferences`. `na_de` re-exports `semio_s_artifact_norm_en1990`'s relocated `NaDe`.
-pub mod na_de {
-    pub use semio_s_artifact_norm_en1990::standards::v1::subsets::any::schema::na_de::NaDe;
-
-    /// 🇩️🇪️ Partial factor γ_M per DIN EN 1996-1-1/NA (flat, independent of masonry class).
-    pub fn gamma_m() -> f64 {
-        super::AnnexParams { annex: crate::document::AnnexChoice::De, masonry_class: crate::MasonryClass::default(), accidental: false }.gamma_m()
-    }
-}
-
-/// 🧱️ Masonry unit type per EN 1996-1-1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-pub enum MasonryUnit {
-    Clay,
-    CalciumSilicate,
-    Aac,
-}
-
-impl MasonryUnit {
-    pub fn label(self) -> &'static str {
-        match self {
-            Self::Clay => "clay",
-            Self::CalciumSilicate => "calcium silicate",
-            Self::Aac => "AAC",
-        }
-    }
-}
-
-// #region 🔖️Annex
-/// ⚖️ Resolved national-annex parameters governing the masonry partial factor γ_M (EN 1996-1-1 §2.4.3 vs DIN EN 1996-1-1/NA).
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-pub struct AnnexParams {
-    pub annex: AnnexChoice,
-    pub masonry_class: MasonryClass,
-    pub accidental: bool,
-}
-
-impl AnnexParams {
-    pub fn gamma_m(self) -> f64 {
-        match self.annex {
-            AnnexChoice::En => self.masonry_class.gamma_m_en(),
-            AnnexChoice::De if self.accidental => 1.3,
-            AnnexChoice::De => 1.5,
-        }
-    }
-}
-// #endregion 🔖️Annex
-
-// #region 🔖️Part1_1
-pub mod part_1_1 {
-    use super::*;
-
-    pub fn design_strength_mpa(f_k_mpa: f64, gamma_m: f64) -> f64 {
-        f_k_mpa / gamma_m
-    }
-
-    pub fn flexural_resistance_knm(z_mm3: f64, f_xd_mpa: f64) -> f64 {
-        z_mm3 * f_xd_mpa / 1_000_000.0
-    }
-
-    pub fn compression_resistance_kn(a_mm2: f64, f_d_mpa: f64) -> f64 {
-        a_mm2 * f_d_mpa / 1000.0
-    }
-
-    pub fn shear_design_strength_mpa(f_vk_mpa: f64, gamma_m: f64) -> f64 {
-        f_vk_mpa / gamma_m
-    }
-
-    pub fn shear_resistance_kn(a_mm2: f64, f_vd_mpa: f64) -> f64 {
-        a_mm2 * f_vd_mpa / 1000.0
-    }
-
-    pub fn sliding_resistance_kn(mu: f64, n_ed_kn: f64, f_vd_mpa: f64, a_mm2: f64) -> f64 {
-        mu * n_ed_kn + a_mm2 * f_vd_mpa / 1000.0
-    }
-
-    pub fn check_flexure(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1996-1-1", "§6.2", "6.2"),
-            Quantity::new(crate::document::QuantityKind::Moment, m_ed * 1_000_000.0),
-            Quantity::new(crate::document::QuantityKind::Moment, m_rd * 1_000_000.0),
-            "masonry flexure ULS",
-            annex,
-        )
-    }
-
-    pub fn check_compression(sigma_ed_mpa: f64, f_d_mpa: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.1.2", "6.1"), Quantity::stress_mpa(sigma_ed_mpa), Quantity::stress_mpa(f_d_mpa), "masonry compression ULS", annex)
-    }
-
-    pub fn check_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2.3", "6.2"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "masonry shear ULS", annex)
-    }
-
-    pub fn check_sliding(h_ed_kn: f64, h_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2.4", "6.2"), Quantity::force_kn(h_ed_kn), Quantity::force_kn(h_rd_kn), "masonry sliding ULS", annex)
-    }
-}
-// #endregion 🔖️Part1_1
-
-// #region 🔖️Part1_2
-pub mod part_1_2 {
-    use super::*;
-
-    /// 🔥️ Minimum fire wall thickness [mm] per EN 1996-1-2 Table 5.1 (simplified).
-    pub fn required_wall_thickness_mm(fire_resistance_min: u32, unit: MasonryUnit) -> f64 {
-        let base = match fire_resistance_min {
-            30 => 60.0,
-            60 => 90.0,
-            90 => 120.0,
-            120 => 150.0,
-            180 => 200.0,
-            240 => 250.0,
-            _ => 90.0,
-        };
-        match unit {
-            MasonryUnit::Clay => base,
-            MasonryUnit::CalciumSilicate => base * 1.1,
-            MasonryUnit::Aac => base * 1.25,
-        }
-    }
-
-    pub fn check_fire_wall(thickness_mm: f64, required_mm: f64) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1996-1-2", "§4", "4.1"), Quantity::length_m(thickness_mm / 1000.0), Quantity::length_m(required_mm / 1000.0), "masonry fire wall thickness", AnnexChoice::De)
-    }
-}
-// #endregion 🔖️Part1_2
-
-// #region 🔖️Part2
-/// 🧱️ EN 1996-2 selection of materials & execution: exposure-class durability admissibility and bed-joint execution checks. `ExposureClass`/`MortarClass` live in `crate::part_2` (En1996Snapshot field types); this submodule holds only the compute functions.
-pub mod part_2 {
-    use super::*;
-    use crate::part_2::{ExposureClass, MortarClass};
-
-    /// 📊️ Minimum admissible mortar strength [MPa] for a (unit, exposure) pair; ∞ marks an inadmissible combination.
-    fn required_mortar_strength_mpa(exposure: ExposureClass, unit: MasonryUnit) -> f64 {
-        match (exposure, unit) {
-            (ExposureClass::Mx1, _) => 1.0,
-            (ExposureClass::Mx2, MasonryUnit::Aac) => 2.5,
-            (ExposureClass::Mx2, MasonryUnit::Clay) | (ExposureClass::Mx2, MasonryUnit::CalciumSilicate) => 5.0,
-            (ExposureClass::Mx3, MasonryUnit::Clay) | (ExposureClass::Mx3, MasonryUnit::CalciumSilicate) => 10.0,
-            (ExposureClass::Mx3, MasonryUnit::Aac) => f64::INFINITY,
-            (ExposureClass::Mx4, MasonryUnit::Clay) => 20.0,
-            (ExposureClass::Mx4, _) => f64::INFINITY,
-            (ExposureClass::Mx5, MasonryUnit::Clay) => 20.0,
-            (ExposureClass::Mx5, _) => f64::INFINITY,
-        }
-    }
-
-    pub fn is_combination_admissible(exposure: ExposureClass, unit: MasonryUnit, mortar: MortarClass) -> bool {
-        mortar.compressive_strength_mpa() >= required_mortar_strength_mpa(exposure, unit)
-    }
-
-    pub fn check_exposure_mortar(exposure: ExposureClass, unit: MasonryUnit, mortar: MortarClass) -> CheckResult {
-        let required = required_mortar_strength_mpa(exposure, unit);
-        CheckResult::from_minimum(
-            ClauseId::new("EN 1996-2", "Annex B", "B.1"),
-            Quantity::stress_mpa(mortar.compressive_strength_mpa()),
-            Quantity::stress_mpa(required),
-            format!("{} unit / {:?} mortar in exposure {:?}", unit.label(), mortar, exposure),
-            AnnexChoice::En,
-        )
-    }
-
-    /// 📏️ General-purpose mortar bed-joint thickness must fall within 6–15mm per EN 1996-2 §8.
-    pub fn check_bed_joint_thickness(thickness_mm: f64) -> CheckResult {
-        let clause = ClauseId::new("EN 1996-2", "§8", "8.1");
-        let computed = Quantity::length_m(thickness_mm / 1000.0);
-        let limit = Quantity::length_m(0.015);
-        let within_range = (6.0..=15.0).contains(&thickness_mm);
-        let utilization = thickness_mm / 15.0;
-        if within_range {
-            CheckResult::pass(clause, computed, limit, utilization, "bed-joint thickness within 6-15mm general-purpose mortar range", AnnexChoice::En)
-        } else {
-            CheckResult::fail(clause, computed, limit, utilization, "bed-joint thickness outside 6-15mm general-purpose mortar range", AnnexChoice::En)
-        }
-    }
-}
-// #endregion 🔖️Part2
-
-// #region 🔖️Part3
-/// 📐️ EN 1996-3 simplified Φ_s reduction-factor method for slender plain masonry walls (§4.2); prior retaining-wall/earth-pressure content was deleted as out-of-scope for EN 1996-3 — earth pressure and retaining-wall stability belong to EN 1997, and there is no clean EN 1996-1-1 "basement wall" analogue for it.
-pub mod part_3 {
-    use super::*;
-
-    /// 📉️ Simplified capacity-reduction factor Φ_s per EN 1996-3 §4.2 (valid while ≥ 0).
-    pub fn phi_s(h_ef_mm: f64, t_ef_mm: f64) -> f64 {
-        let ratio = h_ef_mm / t_ef_mm;
-        (0.85 - 0.0011 * ratio * ratio).max(0.0)
-    }
-
-    pub fn n_rd_kn(phi_s: f64, f_d_mpa: f64, area_mm2: f64) -> f64 {
-        phi_s * f_d_mpa * area_mm2 / 1000.0
-    }
-
-    /// 🚧️ The simplified method only applies up to 3 storeys and a slenderness ratio of 27 (EN 1996-3 §1.1 scope).
-    pub fn is_applicable(storeys: u32, h_ef_mm: f64, t_ef_mm: f64) -> bool {
-        storeys <= 3 && h_ef_mm / t_ef_mm <= 27.0
-    }
-
-    #[allow(clippy::too_many_arguments, reason = "one argument per parameter the published clause formula itself names; bundling them into a struct would break the 1:1 reading against the standard")]
-    pub fn check_simplified_compression(n_ed_kn: f64, phi_s: f64, f_d_mpa: f64, area_mm2: f64, storeys: u32, h_ef_mm: f64, t_ef_mm: f64, annex: AnnexChoice) -> CheckResult {
-        let clause = ClauseId::new("EN 1996-3", "§4.2", "4.2");
-        if !is_applicable(storeys, h_ef_mm, t_ef_mm) {
-            return CheckResult {
-                clause,
-                status: CheckStatus::NotApplicable,
-                computed: Quantity::force_kn(n_ed_kn),
-                limit: Quantity::force_kn(0.0),
-                utilization: 0.0,
-                message: "simplified method not applicable: exceeds storey count or slenderness limit".into(),
-                annex,
-            };
-        }
-        let n_rd = n_rd_kn(phi_s, f_d_mpa, area_mm2);
-        CheckResult::from_utilization(clause, Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd), "simplified compression method N_Rd", annex)
-    }
-}
-// #endregion 🔖️Part3
-
-/// 📋️ Masonry wall under vertical load.
-pub fn check_masonry_wall(n_ed_kn: f64, area_mm2: f64, f_k_mpa: f64, gamma_m: f64) -> CheckReport {
-    let sigma = n_ed_kn * 1000.0 / area_mm2;
-    let f_d = part_1_1::design_strength_mpa(f_k_mpa, gamma_m);
-    let mut report = CheckReport::default();
-    report.push(part_1_1::check_compression(sigma, f_d, AnnexChoice::De));
-    report
-}
-
+#[path = "⚖️masonry/🦀️.rs"]
+mod masonry;
+pub use masonry::*;
 //#endregion 🔖️ComplianceHelpers
 
 //#region 🧪️ComplianceTests
@@ -541,3 +217,8 @@ pub fn check_masonry_wall(n_ed_kn: f64, area_mm2: f64, f_k_mpa: f64, gamma_m: f6
 #[path = "🧪️tests/⚖️compliance/🦀️.rs"]
 mod compliance_tests;
 //#endregion 🧪️ComplianceTests
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️oracle/🦀️.rs"]
+mod oracle_tests;
+

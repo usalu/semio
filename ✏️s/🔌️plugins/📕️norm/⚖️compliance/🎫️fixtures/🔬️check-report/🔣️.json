@@ -1,0 +1,124 @@
+{
+  "summary": {
+    "total": 2,
+    "pass": 1,
+    "warning": 0,
+    "fail": 1,
+    "notApplicable": 0,
+    "worstUtilization": 1.1666666666666667,
+    "complies": false,
+    "parts": [
+      {
+        "part": "DIN 4108-2",
+        "pass": 1,
+        "warning": 0,
+        "fail": 1,
+        "notApplicable": 0,
+        "worstUtilization": 1.1666666666666667,
+        "complies": false
+      }
+    ]
+  },
+  "checks": [
+    {
+      "id": "din4108.2.uvalue.wall-north",
+      "part": "DIN 4108-2",
+      "clause": {
+        "family": "DIN 4108",
+        "part": "2",
+        "section": "5.1"
+      },
+      "subject": {
+        "entityId": "wall-north",
+        "path": "elements[0].layers[1].thicknessM",
+        "label": {
+          "en": "North wall",
+          "de": "Nordwand"
+        }
+      },
+      "status": "Fail",
+      "title": {
+        "en": "External wall U-value",
+        "de": "U-Wert Außenwand"
+      },
+      "explanation": {
+        "en": "Computed U=0.28 W/(m²·K) exceeds limit 0.24 W/(m²·K).",
+        "de": "Berechneter U=0.28 W/(m²·K) überschreitet Grenzwert 0.24 W/(m²·K)."
+      },
+      "computed": {
+        "kind": "HeatTransferCoefficient",
+        "value": 0.28
+      },
+      "limit": {
+        "kind": "HeatTransferCoefficient",
+        "value": 0.24
+      },
+      "utilization": 1.1666666666666667,
+      "annex": "De",
+      "remedies": [
+        {
+          "target": {
+            "entityId": "wall-north",
+            "path": "elements[0].layers[1].thicknessM",
+            "label": {
+              "en": "North wall",
+              "de": "Nordwand"
+            }
+          },
+          "current": {
+            "kind": "Length",
+            "value": 0.08
+          },
+          "required": {
+            "kind": "Length",
+            "value": 0.124
+          },
+          "bound": "AtLeast",
+          "options": [],
+          "action": {
+            "en": "Increase insulation of layer 2 from 80 mm to at least 124 mm.",
+            "de": "Dämmstärke von Schicht 2 von 80 mm auf mindestens 124 mm erhöhen."
+          },
+          "applicable": true
+        }
+      ]
+    },
+    {
+      "id": "din4108.2.psi.pass",
+      "part": "DIN 4108-2",
+      "clause": {
+        "family": "DIN 4108",
+        "part": "2",
+        "section": "6.2"
+      },
+      "subject": {
+        "entityId": "",
+        "path": "",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        }
+      },
+      "status": "Pass",
+      "title": {
+        "en": "Thermal bridge ψ",
+        "de": "Wärmebrücke ψ"
+      },
+      "explanation": {
+        "en": "Within limit.",
+        "de": "Innerhalb der Grenze."
+      },
+      "computed": {
+        "kind": "Dimensionless",
+        "value": 0.4
+      },
+      "limit": {
+        "kind": "Dimensionless",
+        "value": 1.0
+      },
+      "utilization": 0.4,
+      "annex": "De",
+      "remedies": []
+    }
+  ]
+}

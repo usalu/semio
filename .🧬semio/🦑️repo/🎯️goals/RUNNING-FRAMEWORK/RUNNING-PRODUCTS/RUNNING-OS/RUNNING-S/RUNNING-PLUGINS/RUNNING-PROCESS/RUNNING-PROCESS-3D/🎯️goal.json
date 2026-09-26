@@ -1,0 +1,15 @@
+{
+  "title": "Running Process 3d",
+  "description": "The process 3d engine and surface run inside Process.",
+  "prompt": "The process 3d engine and surface run inside Process.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningprocess",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2685"
+  }
+}

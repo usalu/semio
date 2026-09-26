@@ -1,39 +1,118 @@
-# 🧬️ En1992 snapshot schema — artifact-lane fields only.
+# 🧬️ EN 1992 snapshot GraphQL facet — mirrors Rust subject (characteristic actions; Table 3.1 derived off-schema).
+enum AnnexChoice { En De }
+enum MemberKind { Beam Slab Column Wall FlatSlab RibbedSlab TensionMember Bridge LiquidRetaining }
+enum SupportCondition { SimplySupported Continuous Cantilever Fixed }
+enum ExposureClass { X0 Xc1 Xc2 Xc3 Xc4 Xd1 Xd2 Xd3 Xs1 Xs2 Xs3 Xf1 Xf2 Xf3 Xf4 Xa1 Xa2 Xa3 }
+enum FireRating { R30 R60 R90 R120 }
+enum TightnessClass { Tc0 Tc1 Tc2 }
+enum DuctilityClass { A B C }
+
+type ConcreteGrade {
+  id: String!
+  name: String!
+  fCk: Float!
+}
+
+type ReinforcementGrade {
+  id: String!
+  name: String!
+  fYk: Float!
+  eS: Float!
+  ductility: DuctilityClass!
+  k: Float!
+  epsUk: Float!
+}
+
+type PrestressSteel { id: String! name: String! fPk: Float! fP01k: Float! }
+
+type BarLayer {
+  id: String!
+  diameter: Float!
+  count: Int!
+  position: String!
+  anchorageLength: Float!
+  lapLength: Float!
+  bondCondition: String!
+  aggregateSize: Float!
+}
+
+type Stirrups { diameter: Float! spacing: Float! legs: Int! }
+type PunchingSpec { columnWidth: Float! columnDepth: Float! columnPosition: String! asw: Float! }
+type PrestressSpec { force: Float! area: Float! eccentricity: Float! lossRatio: Float! }
+type FireSpec { rating: FireRating! axisDistance: Float! columnMethod: String! slabSystem: String! }
+
+type LoadCaseActions {
+  id: String!
+  kind: String!
+  category: String!
+  source: String!
+  gKLine: Float!
+  qKLine: Float!
+  pointForce: Float!
+  mK: Float!
+  nK: Float!
+  vK: Float!
+  tK: Float!
+  vKPunch: Float!
+}
+
+type RcMember {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  kind: MemberKind!
+  concreteGradeId: String!
+  reinforcementGradeId: String!
+  prestressSteelId: String!
+  exposure: ExposureClass!
+  width: Float!
+  height: Float!
+  effectiveDepth: Float!
+  cover: Float!
+  span: Float!
+  support: SupportCondition!
+  bucklingLength: Float!
+  longitudinal: [BarLayer!]!
+  stirrups: Stirrups
+  punching: PunchingSpec
+  prestress: PrestressSpec
+  fire: FireSpec
+  actions: [LoadCaseActions!]!
+  useFem: Boolean!
+  udl: Float!
+  deflectionSensitive: Boolean!
+  tightness: TightnessClass!
+  hdOverH: Float!
+  liquidSigmaS: Float!
+  liquidRhoPEff: Float!
+  liquidFCtEff: Float!
+  liquidSRMax: Float!
+  bridgeSigmaC: Float!
+  bridgeDeltaSigmaS: Float!
+}
+
+type Anchor {
+  id: String!
+  hEf: Float!
+  cracked: Boolean!
+  fUk: Float!
+  fYk: Float!
+  aS: Float!
+  d: Float!
+  c1: Float!
+  fCk: Float!
+  actions: [LoadCaseActions!]!
+}
 
 type En1992Snapshot {
-  annex: String! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  fCk: Float! @state(class: ARTIFACT)
-  bMm: Float! @state(class: ARTIFACT)
-  dMm: Float! @state(class: ARTIFACT)
-  aSMm2: Float! @state(class: ARTIFACT)
-  fYk: Float! @state(class: ARTIFACT)
-  rhoL: Float! @state(class: ARTIFACT)
-  nEdKn: Float! @state(class: ARTIFACT)
-  pKn: Float! @state(class: ARTIFACT)
-  aCMm2: Float! @state(class: ARTIFACT)
-  useFem: Boolean! @state(class: ARTIFACT)
-  spanM: Float! @state(class: ARTIFACT)
-  udlKnM: Float! @state(class: ARTIFACT)
-  fireRating: String! @state(class: ARTIFACT)
-  providedAxisDistanceMm: Float! @state(class: ARTIFACT)
-  bridgeSigmaCMpa: Float! @state(class: ARTIFACT)
-  bridgeDeltaSigmaSMpa: Float! @state(class: ARTIFACT)
-  tightnessClass: String! @state(class: ARTIFACT)
-  hdOverH: Float! @state(class: ARTIFACT)
-  liquidSigmaSMpa: Float! @state(class: ARTIFACT)
-  liquidRhoPEff: Float! @state(class: ARTIFACT)
-  liquidFCtEffMpa: Float! @state(class: ARTIFACT)
-  liquidESMpa: Float! @state(class: ARTIFACT)
-  liquidSRMaxMm: Float! @state(class: ARTIFACT)
-  anchorHEfMm: Float! @state(class: ARTIFACT)
-  anchorCracked: Boolean! @state(class: ARTIFACT)
-  anchorFUkMpa: Float! @state(class: ARTIFACT)
-  anchorFYkMpa: Float! @state(class: ARTIFACT)
-  anchorASMm2: Float! @state(class: ARTIFACT)
-  anchorDMm: Float! @state(class: ARTIFACT)
-  anchorC1Mm: Float! @state(class: ARTIFACT)
-  anchorNEdKn: Float! @state(class: ARTIFACT)
-  anchorVEdKn: Float! @state(class: ARTIFACT)
+  annex: AnnexChoice! @state(class: ARTIFACT)
+  title: String! @state(class: ARTIFACT)
+  designWorkingLifeYears: Float! @state(class: ARTIFACT)
+  deltaCDev: Float! @state(class: ARTIFACT)
+  cementType: String! @state(class: ARTIFACT)
+  concreteGrades: [ConcreteGrade!]! @state(class: ARTIFACT)
+  reinforcementGrades: [ReinforcementGrade!]! @state(class: ARTIFACT)
+  prestressSteels: [PrestressSteel!]! @state(class: ARTIFACT)
+  members: [RcMember!]! @state(class: ARTIFACT)
+  anchors: [Anchor!]! @state(class: ARTIFACT)
 }

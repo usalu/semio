@@ -1,26 +1,101 @@
-# 🧬️ EN 1997 snapshot schema.
+# 📸️ En1997Artifact GraphQL mirror
+enum AnnexChoice { de en }
 
-type En1997Snapshot {
-  vEdKn: Float! @state(class: ARTIFACT)
-  hEdKn: Float! @state(class: ARTIFACT)
-  footingAreaM2: Float! @state(class: ARTIFACT)
-  phiDeg: Float! @state(class: ARTIFACT)
-  cKpa: Float! @state(class: ARTIFACT)
-  gammaKnM3: Float! @state(class: ARTIFACT)
-  bM: Float! @state(class: ARTIFACT)
-  dFM: Float! @state(class: ARTIFACT)
-  eSMpa: Float! @state(class: ARTIFACT)
-  nu: Float! @state(class: ARTIFACT)
-  designApproach: Float! @state(class: ARTIFACT)
-  annex: Float! @state(class: ARTIFACT)
-  settlementLimitMm: Float! @state(class: ARTIFACT)
-  nPileEdKn: Float! @state(class: ARTIFACT)
-  alphaS: Float! @state(class: ARTIFACT)
-  pileDM: Float! @state(class: ARTIFACT)
-  qSKpa: Float! @state(class: ARTIFACT)
-  pileLM: Float! @state(class: ARTIFACT)
-  qBKpa: Float! @state(class: ARTIFACT)
-  pileBaseAreaM2: Float! @state(class: ARTIFACT)
-  pileNProfiles: Int! @state(class: ARTIFACT)
-  zInvestigatedM: Float! @state(class: ARTIFACT)
+type SoilLayer {
+  id: String!
+  soilType: String!
+  depthTop: Float!
+  depthBottom: Float!
+  gamma: Float!
+  gammaPrime: Float!
+  phiPrimeDeg: Float!
+  cohesionEffective: Float!
+  cohesionUndrained: Float!
+  oedometricModulus: Float!
+  poissonRatio: Float!
+  cptQc: Float!
+  sptN: Float!
+}
+type FoundationLoadCase {
+  id: String!
+  designSituation: String!
+  verticalPermanent: Float!
+  verticalVariable: Float!
+  horizontalPermanent: Float!
+  horizontalVariable: Float!
+  momentPermanent: Float!
+  momentVariable: Float!
+}
+type SpreadFoundation {
+  id: String!
+  width: Float!
+  length: Float!
+  embedment: Float!
+  baseInclinationDeg: Float!
+  settlementLimit: Float!
+  loadCases: [FoundationLoadCase!]!
+}
+type PileTestProfile { id: String! shaftResistance: Float! baseResistance: Float! }
+type Pile {
+  id: String!
+  pileType: String!
+  diameter: Float!
+  length: Float!
+  count: Int!
+  alphaS: Float!
+  unitShaftResistance: Float!
+  unitBaseResistance: Float!
+  compressionPermanent: Float!
+  compressionVariable: Float!
+  tensionPermanent: Float!
+  tensionVariable: Float!
+  testProfiles: [PileTestProfile!]!
+}
+type RetainingWall {
+  id: String!
+  height: Float!
+  embedment: Float!
+  baseWidth: Float!
+  stemThickness: Float!
+  backfillPhiDeg: Float!
+  backfillGamma: Float!
+  wallFrictionDeg: Float!
+  earthPressureMode: String!
+  wallMovement: String!
+  ocr: Float!
+  concreteGamma: Float!
+  surcharge: Float!
+  verticalPermanent: Float!
+  horizontalPermanent: Float!
+}
+type Slope {
+  id: String!
+  angleDeg: Float!
+  height: Float!
+  length: Float!
+  governingLayerId: String!
+}
+type UpliftCase {
+  id: String!
+  permanentStabilizing: Float!
+  permanentDestabilizing: Float!
+  variableDestabilizing: Float!
+  porePressure: Float!
+  totalStress: Float!
+}
+
+type En1997Artifact {
+  structureId: String!
+  geotechnicalCategory: Int!
+  designSituation: String!
+  designApproach: String!
+  annex: AnnexChoice!
+  groundwaterLevel: Float!
+  investigationDepth: Float!
+  layers: [SoilLayer!]!
+  footings: [SpreadFoundation!]!
+  piles: [Pile!]!
+  retainingWalls: [RetainingWall!]!
+  slopes: [Slope!]!
+  upliftCases: [UpliftCase!]!
 }

@@ -205,9 +205,9 @@ const OWNED_SCHEMA_MODULES = {
 
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MODULES, exportId: string) {
-  const Ajv = (await import("ajv")).default;
+  const { semioSchemaAjvV1 } = await import("../../🧪️tests/🧬️schema-oracle/🟦️.ts");
   const doc = JSON.parse(readFileSync(join(repoRoot, OWNED_SCHEMA_MODULES[scope]), "utf8")) as { $id: string };
-  const compiled = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note").addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
+  const compiled = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
   return compiled;
 }

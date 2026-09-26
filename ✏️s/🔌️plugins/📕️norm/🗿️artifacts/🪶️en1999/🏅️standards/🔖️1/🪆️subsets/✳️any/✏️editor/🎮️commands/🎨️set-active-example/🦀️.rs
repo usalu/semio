@@ -14,12 +14,12 @@ pub struct SetActiveExample {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-/// 🎨️ Replaces the live document with the named example's `PRIMARY_TEXT`, or clears it when the id is empty.
+/// 🎨️ Replaces the live document with the named example's snapshot factory (SI subject), or clears it when the id is empty.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, En1999Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1999Mutation, NoConfigMutation>, Fault> {
     let snapshot = match payload.example_id.trim() {
         "" => En1999Snapshot::default(),
-        id if id == crate::aluminium_roof_purlin::ID => <En1999Snapshot as store::ArtifactDsl>::parse_dsl(crate::aluminium_roof_purlin::PRIMARY_TEXT)
-            .map_err(|error| Fault::from(format!("set-active-example: invalid example text: {error:?}")))?,
+        id if id == crate::aluminium_roof_purlin::ID => crate::aluminium_roof_purlin::snapshot(),
+        id if id == crate::noncompliant_multi_fail::ID => crate::noncompliant_multi_fail::snapshot(),
         _ => return Ok(Emit::default()),
     };
     set_snapshot::handle(&set_snapshot::ReplaceSnapshot { snapshot }, doc, cfg)

@@ -1,13 +1,15 @@
-use super::*;
-
-#[semio_framework_async_macros::async_test]
-async fn full_masonry_worked_example() {
-    let report = check_full_masonry(&En1996Snapshot::default());
-    assert_eq!(report.checks.len(), 8);
+#[test]
+fn evaluate_default_complies() {
+    let doc = crate::En1996Snapshot::default();
+    let report = super::super::evaluate(&doc);
+    assert!(report.checks.len() >= 5);
+    assert!(report.complies());
 }
 
-#[semio_framework_async_macros::async_test]
-async fn evaluate_runs_all_parts() {
-    let report = evaluate(&En1996Snapshot::default());
-    assert_eq!(report.checks.len(), 8);
+#[test]
+fn evaluate_noncompliant_has_fails() {
+    let doc = crate::En1996Snapshot::noncompliant_multi_fail();
+    let report = super::super::evaluate(&doc);
+    assert!(!report.complies());
+    assert!(report.summary.fail >= 3);
 }

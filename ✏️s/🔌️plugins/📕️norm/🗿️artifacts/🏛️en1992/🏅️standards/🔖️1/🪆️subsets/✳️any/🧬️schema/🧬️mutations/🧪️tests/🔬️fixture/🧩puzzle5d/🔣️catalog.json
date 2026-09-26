@@ -1,0 +1,818 @@
+{
+  "schemaVersion": 1,
+  "family": "en1992",
+  "vectors": [
+    {
+      "kind": "change-annex",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-annex"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-title",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-title"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-design-working-life",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-design-working-life"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-delta-c-dev",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-delta-c-dev"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-cement-type",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-cement-type"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-concrete-f-ck",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-concrete-f-ck"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-reinforcement-f-yk",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-reinforcement-f-yk"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "insert-member",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "insert-member"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "remove-member",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "remove-member"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "reorder-members",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "reorder-members"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-width",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-width"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-height",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-height"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-effective-depth",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-effective-depth"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-cover",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-cover"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-exposure",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-exposure"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-span",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-span"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-stirrup-spacing",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-stirrup-spacing"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-axis-distance",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-axis-distance"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-member-fire-rating",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-member-fire-rating"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-bar-layer-count",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-bar-layer-count"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-bar-layer-diameter",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-bar-layer-diameter"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-action-mk",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-action-mk"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-action-n-ed",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-action-n-ed"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-action-v-ed",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-action-v-ed"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "insert-anchor",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "insert-anchor"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "remove-anchor",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "remove-anchor"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-anchor-h-ef",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-anchor-h-ef"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    },
+    {
+      "kind": "change-anchor-as",
+      "before": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "mutation": {
+        "kind": "change-anchor-as"
+      },
+      "after": {
+        "annex": "De",
+        "title": "Office frame RC assessment",
+        "members": [
+          {
+            "id": "beam-B1",
+            "cover": 0.035,
+            "width": 0.3
+          }
+        ]
+      },
+      "notes": "hierarchical SI subject; full apply/inverse covered by mutation unit tests"
+    }
+  ]
+}

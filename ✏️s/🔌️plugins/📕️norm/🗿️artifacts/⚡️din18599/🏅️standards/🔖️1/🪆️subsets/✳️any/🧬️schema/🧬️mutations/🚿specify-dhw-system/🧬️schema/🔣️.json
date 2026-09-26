@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SpecifyDhwSystem",
+  "type": "object",
+  "properties": {
+    "newDhw": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/specify-dhw-system/schema.json"
+}

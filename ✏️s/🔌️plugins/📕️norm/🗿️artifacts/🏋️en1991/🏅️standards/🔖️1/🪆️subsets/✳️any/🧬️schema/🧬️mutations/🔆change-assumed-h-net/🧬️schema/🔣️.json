@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "new_assumed_h_net"
+  ],
+  "properties": {
+    "new_assumed_h_net": {
+      "type": "number"
+    }
+  }
+}

@@ -7131,6 +7131,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
@@ -7170,8 +7171,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-din16798",
- "semio-s-artifact-norm-din4108",
  "semio-s-artifact-stdio-semio",
  "serde",
  "serde_json",
@@ -7211,7 +7210,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-stdio-semio",
  "serde",
  "serde_json",
 ]
@@ -7231,7 +7229,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
  "serde",
  "serde_json",
 ]
@@ -7272,7 +7269,6 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-fem-2d",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1992",
  "serde",
  "serde_json",
 ]
@@ -7292,7 +7288,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1993",
  "serde",
  "serde_json",
 ]
@@ -7312,8 +7307,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1994",
  "serde",
  "serde_json",
 ]
@@ -7333,8 +7326,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1995",
  "serde",
  "serde_json",
 ]
@@ -7354,8 +7345,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1996",
  "serde",
  "serde_json",
 ]
@@ -7375,8 +7364,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1997",
  "serde",
  "serde_json",
 ]
@@ -7396,8 +7383,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1998",
  "serde",
  "serde_json",
 ]
@@ -7417,7 +7402,6 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1999",
  "serde",
  "serde_json",
 ]
@@ -9525,6 +9509,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-artifact-norm-contract",
  "semio-s-artifact-norm-din16798",

@@ -37,7 +37,7 @@ fn built_outcome() -> protocol::MutationOutcome<Iso16757Diff> {
 async fn retargets_the_selection_at_the_towel_radiator_class() {
     let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-selection-class applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the applied state differs from the committed after-snapshot");
-    assert_eq!(applied.selection.class_id, "class.towel-radiator", "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the selection class must be retargeted");
+    assert_eq!(applied.selection.class_id, "class-towel-radiator", "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the selection class must be retargeted");
     assert_eq!(applied.selection.constraints, before().selection.constraints, "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: both existing constraints must ride through the clone");
     assert_eq!(applied.catalogue.product_classes.len(), 1, "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: retargeting at an id that does not exist yet must not create a class");
 }
@@ -74,7 +74,7 @@ async fn committed_json_is_canonical() {
     assert_eq!(reencoded, original, "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the committed change-selection-class JSON is not canonical");
 }
 
-/// 🎯️ "class.towel-radiator" differs from the committed "class.panel-radiator", so the equality guard stays
+/// 🎯️ "class-towel-radiator" differs from the committed "class.panel-radiator", so the equality guard stays
 /// shut. There is deliberately no existence check on the target class.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
@@ -101,7 +101,7 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed change-selection-class diff decodes");
     let selection = decoded.selection.as_ref().expect("the committed change-selection-class diff carries the selection request");
-    assert_eq!(selection.class_id, "class.towel-radiator", "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the diff must carry the new class id");
+    assert_eq!(selection.class_id, "class-towel-radiator", "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the diff must carry the new class id");
     assert_eq!(selection.constraints.len(), 2, "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: the selection delta is whole-container, so both constraints ride along");
     assert!(decoded.catalogue.is_none(), "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: change-selection-class writes `selection` and must leave `catalogue` untouched");
     assert!(decoded.dictionary.is_none(), "change-selection-class/retargets-the-selection-at-the-towel-radiator-class: change-selection-class writes `selection` and must leave `dictionary` untouched");

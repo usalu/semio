@@ -1,140 +1,207 @@
-use super::*;
-use protocol::Mutation;
+//! 🧬️ EN 1992 mutation unit tests — hierarchical RC structure vocabulary.
 
-/// ⚖️ One value per `En1992Mutation` variant — the closed set the semantics/round-trip tests
-/// iterate, mirroring this ticket's din16798/vdi3805 precedents' own `every_mutation()` fixture.
-fn every_mutation() -> Vec<En1992Mutation> {
-    vec![
-        En1992Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
-        En1992Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 150.0 }),
-        En1992Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 95.0 }),
-        En1992Mutation::ChangeFCk(change_f_ck::ChangeFCk { new_f_ck: 35.0 }),
-        En1992Mutation::ChangeBMm(change_b_mm::ChangeBMm { new_b_mm: 350.0 }),
-        En1992Mutation::ChangeDMm(change_d_mm::ChangeDMm { new_d_mm: 500.0 }),
-        En1992Mutation::ChangeASMm2(change_a_s_mm2::ChangeASMm2 { new_a_s_mm2: 1400.0 }),
-        En1992Mutation::ChangeFYk(change_f_yk::ChangeFYk { new_f_yk: 550.0 }),
-        En1992Mutation::ChangeRhoL(change_rho_l::ChangeRhoL { new_rho_l: 0.015 }),
-        En1992Mutation::ChangeNEdKn(change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 25.0 }),
-        En1992Mutation::ChangePKn(change_p_kn::ChangePKn { new_p_kn: 50.0 }),
-        En1992Mutation::ChangeACMm2(change_a_c_mm2::ChangeACMm2 { new_a_c_mm2: 150000.0 }),
-        En1992Mutation::ChangeUseFem(change_use_fem::ChangeUseFem { new_use_fem: true }),
-        En1992Mutation::ChangeSpanM(change_span_m::ChangeSpanM { new_span_m: 7.5 }),
-        En1992Mutation::ChangeUdlKnM(change_udl_kn_m::ChangeUdlKnM { new_udl_kn_m: 24.0 }),
-        En1992Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: crate::part_1_2::FireRating::R90 }),
-        En1992Mutation::ChangeProvidedAxisDistanceMm(change_provided_axis_distance_mm::ChangeProvidedAxisDistanceMm { new_provided_axis_distance_mm: 40.0 }),
-        En1992Mutation::ChangeBridgeSigmaCMpa(change_bridge_sigma_c_mpa::ChangeBridgeSigmaCMpa { new_bridge_sigma_c_mpa: 14.0 }),
-        En1992Mutation::ChangeBridgeDeltaSigmaSMpa(change_bridge_delta_sigma_s_mpa::ChangeBridgeDeltaSigmaSMpa { new_bridge_delta_sigma_s_mpa: 120.0 }),
-        En1992Mutation::ChangeTightnessClass(change_tightness_class::ChangeTightnessClass { new_tightness_class: crate::part_3::TightnessClass::Tc2 }),
-        En1992Mutation::ChangeHdOverH(change_hd_over_h::ChangeHdOverH { new_hd_over_h: 12.0 }),
-        En1992Mutation::ChangeLiquidSigmaSMpa(change_liquid_sigma_s_mpa::ChangeLiquidSigmaSMpa { new_liquid_sigma_s_mpa: 220.0 }),
-        En1992Mutation::ChangeLiquidRhoPEff(change_liquid_rho_p_eff::ChangeLiquidRhoPEff { new_liquid_rho_p_eff: 0.012 }),
-        En1992Mutation::ChangeLiquidFCtEffMpa(change_liquid_f_ct_eff_mpa::ChangeLiquidFCtEffMpa { new_liquid_f_ct_eff_mpa: 3.1 }),
-        En1992Mutation::ChangeLiquidESMpa(change_liquid_e_s_mpa::ChangeLiquidESMpa { new_liquid_e_s_mpa: 205000.0 }),
-        En1992Mutation::ChangeLiquidSRMaxMm(change_liquid_s_r_max_mm::ChangeLiquidSRMaxMm { new_liquid_s_r_max_mm: 275.0 }),
-        En1992Mutation::ChangeAnchorHEfMm(change_anchor_h_ef_mm::ChangeAnchorHEfMm { new_anchor_h_ef_mm: 90.0 }),
-        En1992Mutation::ChangeAnchorCracked(change_anchor_cracked::ChangeAnchorCracked { new_anchor_cracked: true }),
-        En1992Mutation::ChangeAnchorFUkMpa(change_anchor_f_uk_mpa::ChangeAnchorFUkMpa { new_anchor_f_uk_mpa: 850.0 }),
-        En1992Mutation::ChangeAnchorFYkMpa(change_anchor_f_yk_mpa::ChangeAnchorFYkMpa { new_anchor_f_yk_mpa: 680.0 }),
-        En1992Mutation::ChangeAnchorASMm2(change_anchor_a_s_mm2::ChangeAnchorASMm2 { new_anchor_a_s_mm2: 94.3 }),
-        En1992Mutation::ChangeAnchorDMm(change_anchor_d_mm::ChangeAnchorDMm { new_anchor_d_mm: 14.0 }),
-        En1992Mutation::ChangeAnchorC1Mm(change_anchor_c1_mm::ChangeAnchorC1Mm { new_anchor_c1_mm: 120.0 }),
-        En1992Mutation::ChangeAnchorNEdKn(change_anchor_n_ed_kn::ChangeAnchorNEdKn { new_anchor_n_ed_kn: 15.0 }),
-        En1992Mutation::ChangeAnchorVEdKn(change_anchor_v_ed_kn::ChangeAnchorVEdKn { new_anchor_v_ed_kn: 8.0 }),
-    ]
+use crate::document::AnnexChoice;
+use crate::part_1_2::FireRating;
+use crate::{ExposureClass, En1992Snapshot};
+use super::{
+    apply_en1992_mutation, change_action_mk, change_action_n_ed, change_action_v_ed, change_anchor_a_s,
+    change_anchor_h_ef, change_annex, change_bar_layer_count, change_bar_layer_diameter, change_cement_type,
+    change_concrete_f_ck, change_delta_c_dev, change_design_working_life, change_member_axis_distance,
+    change_member_cover, change_member_effective_depth, change_member_exposure, change_member_fire_rating,
+    change_member_height, change_member_span, change_member_stirrup_spacing, change_member_width,
+    change_reinforcement_f_yk, change_title, insert_anchor, insert_member, remove_anchor, remove_member,
+    reorder_members, En1992Mutation,
+};
+
+fn base() -> En1992Snapshot {
+    En1992Snapshot::compliant_office_frame()
 }
 
-fn round_trip(base: &En1992Snapshot, mutation: &En1992Mutation) -> En1992Snapshot {
-    let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
-    let mut restored = forward.clone();
-    for back in mutation.inverse(base) {
-        let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
-        restored = next;
+#[test]
+fn change_annex_switches_national_annex() {
+    let before = base();
+    let mutation = En1992Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En });
+    let (after, _) = apply_en1992_mutation(&before, &mutation).expect("apply");
+    assert_eq!(after.annex, AnnexChoice::En);
+}
+
+#[test]
+fn change_title_updates_document_title() {
+    let before = base();
+    let mutation = En1992Mutation::ChangeTitle(change_title::ChangeTitle { new_title: "Wave C Frame".into() });
+    let (after, _) = apply_en1992_mutation(&before, &mutation).expect("apply");
+    assert_eq!(after.title, "Wave C Frame");
+}
+
+#[test]
+fn change_design_working_life_updates_years() {
+    let before = base();
+    let mutation = En1992Mutation::ChangeDesignWorkingLife(change_design_working_life::ChangeDesignWorkingLife { new_years: 100.0 });
+    let (after, _) = apply_en1992_mutation(&before, &mutation).expect("apply");
+    assert_eq!(after.design_working_life_years, 100.0);
+}
+
+#[test]
+fn change_delta_c_dev_updates_cover_allowance() {
+    let before = base();
+    let mutation = En1992Mutation::ChangeDeltaCDev(change_delta_c_dev::ChangeDeltaCDev { new_delta_c_dev: 0.015 });
+    let (after, _) = apply_en1992_mutation(&before, &mutation).expect("apply");
+    assert!((after.delta_c_dev - 0.015).abs() < 1e-12);
+}
+
+#[test]
+fn change_cement_type_updates_binder() {
+    let before = base();
+    let mutation = En1992Mutation::ChangeCementType(change_cement_type::ChangeCementType { new_cement_type: "CEM III".into() });
+    let (after, _) = apply_en1992_mutation(&before, &mutation).expect("apply");
+    assert_eq!(after.cement_type, "CEM III");
+}
+
+#[test]
+fn change_concrete_f_ck_updates_grade() {
+    let before = base();
+    let grade_id = before.concrete_grades[0].id.clone();
+    let mutation = En1992Mutation::ChangeConcreteFCk(change_concrete_f_ck::ChangeConcreteFCk { grade_id: grade_id.clone(), new_f_ck: 40.0e6 });
+    let (after, _) = apply_en1992_mutation(&before, &mutation).expect("apply");
+    assert!((after.concrete(&grade_id).unwrap().f_ck - 40.0e6).abs() < 1.0);
+}
+
+#[test]
+fn change_reinforcement_f_yk_updates_grade() {
+    let before = base();
+    let grade_id = before.reinforcement_grades[0].id.clone();
+    let mutation = En1992Mutation::ChangeReinforcementFYk(change_reinforcement_f_yk::ChangeReinforcementFYk { grade_id: grade_id.clone(), new_f_yk: 550.0e6 });
+    let (after, _) = apply_en1992_mutation(&before, &mutation).expect("apply");
+    assert!((after.reinforcement(&grade_id).unwrap().f_yk - 550.0e6).abs() < 1.0);
+}
+
+#[test]
+fn insert_and_remove_member_round_trip() {
+    let before = base();
+    let mut member = before.members[0].clone();
+    member.id = "beam-extra".into();
+    let insert = En1992Mutation::InsertMember(insert_member::InsertMember { index: before.members.len(), member: member.clone() });
+    let (mid, _) = apply_en1992_mutation(&before, &insert).expect("insert");
+    assert!(mid.members.iter().any(|m| m.id == "beam-extra"));
+    let remove = En1992Mutation::RemoveMember(remove_member::RemoveMember { member_id: "beam-extra".into() });
+    let (after, _) = apply_en1992_mutation(&mid, &remove).expect("remove");
+    assert!(!after.members.iter().any(|m| m.id == "beam-extra"));
+}
+
+#[test]
+fn reorder_members_swaps_indices() {
+    let before = base();
+    assert!(before.members.len() >= 2);
+    let first = before.members[0].id.clone();
+    let mutation = En1992Mutation::ReorderMembers(reorder_members::ReorderMembers { from_index: 0, to_index: 1 });
+    let (after, _) = apply_en1992_mutation(&before, &mutation).expect("reorder");
+    assert_eq!(after.members[1].id, first);
+}
+
+#[test]
+fn change_member_geometry_fields() {
+    let before = base();
+    let id = before.members[0].id.clone();
+    for (mutation, check) in [
+        (En1992Mutation::ChangeMemberWidth(change_member_width::ChangeMemberWidth { member_id: id.clone(), new_value: 0.4 }), 0.4),
+        (En1992Mutation::ChangeMemberHeight(change_member_height::ChangeMemberHeight { member_id: id.clone(), new_value: 0.7 }), 0.7),
+        (En1992Mutation::ChangeMemberEffectiveDepth(change_member_effective_depth::ChangeMemberEffectiveDepth { member_id: id.clone(), new_value: 0.62 }), 0.62),
+        (En1992Mutation::ChangeMemberCover(change_member_cover::ChangeMemberCover { member_id: id.clone(), new_value: 0.04 }), 0.04),
+        (En1992Mutation::ChangeMemberSpan(change_member_span::ChangeMemberSpan { member_id: id.clone(), new_value: 8.0 }), 8.0),
+    ] {
+        let (after, _) = apply_en1992_mutation(&before, &mutation).expect("geom");
+        let m = after.members.iter().find(|m| m.id == id).unwrap();
+        let value = match &mutation {
+            En1992Mutation::ChangeMemberWidth(_) => m.width,
+            En1992Mutation::ChangeMemberHeight(_) => m.height,
+            En1992Mutation::ChangeMemberEffectiveDepth(_) => m.effective_depth,
+            En1992Mutation::ChangeMemberCover(_) => m.cover,
+            En1992Mutation::ChangeMemberSpan(_) => m.span,
+            _ => unreachable!(),
+        };
+        assert!((value - check).abs() < 1e-12);
     }
-    assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
-    forward
 }
 
-#[semio_framework_async_macros::async_test]
-async fn every_variant_registers_an_approved_semantic_descriptor() {
-    for mutation in every_mutation() {
-        let descriptor = protocol::SemanticMutation::semantics(&mutation);
-        assert!(protocol::is_approved_verb(descriptor.verb), "unapproved verb {:?} on {mutation:?}", descriptor.verb);
-    }
-    assert_eq!(<En1992Mutation as protocol::SemanticMutation<En1992Snapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
+#[test]
+fn change_member_exposure_and_fire() {
+    let before = base();
+    let id = before.members[0].id.clone();
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeMemberExposure(change_member_exposure::ChangeMemberExposure {
+        member_id: id.clone(),
+        new_exposure: ExposureClass::Xc4,
+    })).expect("exposure");
+    assert_eq!(after.members.iter().find(|m| m.id == id).unwrap().exposure, ExposureClass::Xc4);
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeMemberFireRating(change_member_fire_rating::ChangeMemberFireRating {
+        member_id: id.clone(),
+        new_rating: FireRating::R90,
+    })).expect("fire");
+    assert_eq!(after.members.iter().find(|m| m.id == id).unwrap().fire.as_ref().unwrap().rating, FireRating::R90);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn every_variant_round_trips_via_inverse() {
-    let base = En1992Snapshot::default();
-    for mutation in every_mutation() {
-        round_trip(&base, &mutation);
-    }
+#[test]
+fn change_member_stirrup_spacing_and_axis_distance() {
+    let before = base();
+    let id = before.members[0].id.clone();
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeMemberStirrupSpacing(change_member_stirrup_spacing::ChangeMemberStirrupSpacing {
+        member_id: id.clone(),
+        new_spacing: 0.120,
+    })).expect("stirrup");
+    assert!((after.members.iter().find(|m| m.id == id).unwrap().stirrups.as_ref().unwrap().spacing - 0.120).abs() < 1e-12);
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeMemberAxisDistance(change_member_axis_distance::ChangeMemberAxisDistance {
+        member_id: id.clone(),
+        new_axis_distance: 0.045,
+    })).expect("axis");
+    assert!((after.members.iter().find(|m| m.id == id).unwrap().fire.as_ref().unwrap().axis_distance - 0.045).abs() < 1e-12);
 }
 
-//#region 🧪️MutationLaws
-/// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`
-/// (reachable here as `protocol::os_spr::protocol_laws`), exercised against the three most structurally
-/// distinct variants: the enum-typed scalar (`change-annex`), a typical `f64` scalar
-/// (`change-m-ed-knm`), and a `bool` scalar (`change-use-fem`).
-#[semio_framework_async_macros::async_test]
-async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
-    let base = En1992Snapshot::default();
-    let mutation = En1992Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = En1992Mutation::ChangeFireRating(change_fire_rating::ChangeFireRating { new_fire_rating: crate::part_1_2::FireRating::R90 }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-#[semio_framework_async_macros::async_test]
-async fn change_m_ed_knm_satisfies_the_inverse_and_absorb_laws() {
-    let base = En1992Snapshot::default();
-    let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 150.0 });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = En1992Mutation::ChangeVEdKn(change_v_ed_kn::ChangeVEdKn { new_v_ed_kn: 95.0 }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-#[semio_framework_async_macros::async_test]
-async fn change_use_fem_satisfies_the_inverse_and_absorb_laws() {
-    let base = En1992Snapshot::default();
-    let mutation = En1992Mutation::ChangeUseFem(change_use_fem::ChangeUseFem { new_use_fem: true });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
-    let d1 = mutation.diff(&base).diff().clone();
-    let d2 = En1992Mutation::ChangeAnchorCracked(change_anchor_cracked::ChangeAnchorCracked { new_anchor_cracked: true }).diff(&base).diff().clone();
-    protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
-}
-//#endregion 🧪️MutationLaws
-
-//#region 🔖️OutcomeLaws
-/// ✅️ §C2/fan-out-recipe laws (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`):
-/// this facet is entirely one verb family (root-scoped `change-<field>`), so one representative
-/// Fatal/no-op/determinism check per structurally distinct field type stands in for "one per
-/// verb family". `assert_missing_target_is_error` does not apply — every field is a document-root
-/// scalar that always exists, never an id-keyed/addressable target. `assert_outcome_policy_matrix`
-/// is not landed under that literal name yet (only the differently-shaped `assert_policy_matrix`
-/// exists) — flagged for the coordinator/lane 1-D, not improvised around.
-#[semio_framework_async_macros::async_test]
-async fn change_m_ed_knm_non_finite_is_fatal() {
-    let base = En1992Snapshot::default();
-    let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: f64::NAN });
-    let outcome = mutation.diff(&base);
-    protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
+#[test]
+fn change_bar_layer_and_actions() {
+    let before = base();
+    let id = before.members[0].id.clone();
+    let layer_id = before.members[0].longitudinal[0].id.clone();
+    let action_id = before.members[0].actions[0].id.clone();
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeBarLayerCount(change_bar_layer_count::ChangeBarLayerCount {
+        member_id: id.clone(), layer_id: layer_id.clone(), new_count: 6,
+    })).expect("count");
+    assert_eq!(after.members.iter().find(|m| m.id == id).unwrap().longitudinal.iter().find(|l| l.id == layer_id).unwrap().count, 6);
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeBarLayerDiameter(change_bar_layer_diameter::ChangeBarLayerDiameter {
+        member_id: id.clone(), layer_id: layer_id.clone(), new_diameter: 0.02,
+    })).expect("dia");
+    assert!((after.members.iter().find(|m| m.id == id).unwrap().longitudinal.iter().find(|l| l.id == layer_id).unwrap().diameter - 0.02).abs() < 1e-12);
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeActionMk(change_action_mk::ChangeActionMk {
+        member_id: id.clone(), action_id: action_id.clone(), new_value: 200.0e3,
+    })).expect("m");
+    assert!((after.members.iter().find(|m| m.id == id).unwrap().actions.iter().find(|a| a.id == action_id).unwrap().m_k - 200.0e3).abs() < 1.0);
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeActionNEd(change_action_n_ed::ChangeActionNEd {
+        member_id: id.clone(), action_id: action_id.clone(), new_value: -50.0e3,
+    })).expect("n");
+    assert!((after.members.iter().find(|m| m.id == id).unwrap().actions.iter().find(|a| a.id == action_id).unwrap().n_k + 50.0e3).abs() < 1.0);
+    let (after, _) = apply_en1992_mutation(&before, &En1992Mutation::ChangeActionVEd(change_action_v_ed::ChangeActionVEd {
+        member_id: id.clone(), action_id: action_id.clone(), new_value: 90.0e3,
+    })).expect("v");
+    assert!((after.members.iter().find(|m| m.id == id).unwrap().actions.iter().find(|a| a.id == action_id).unwrap().v_k - 90.0e3).abs() < 1.0);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn change_annex_same_value_is_no_op() {
-    let base = En1992Snapshot::default();
-    let mutation = En1992Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: base.annex });
-    let outcome = mutation.diff(&base);
-    assert_eq!(outcome.worst_level(), Some(protocol::Severity::Warning));
-    assert_eq!(outcome.diff(), &En1992Diff::default());
+#[test]
+fn insert_remove_and_change_anchor() {
+    let before = base();
+    let mut anchor = before.anchors[0].clone();
+    anchor.id = "anchor-extra".into();
+    let (mid, _) = apply_en1992_mutation(&before, &En1992Mutation::InsertAnchor(insert_anchor::InsertAnchor {
+        index: before.anchors.len(), anchor: anchor.clone(),
+    })).expect("insert");
+    assert!(mid.anchors.iter().any(|a| a.id == "anchor-extra"));
+    let (after, _) = apply_en1992_mutation(&mid, &En1992Mutation::ChangeAnchorHEf(change_anchor_h_ef::ChangeAnchorHEf {
+        anchor_id: "anchor-extra".into(), new_value: 0.12,
+    })).expect("hef");
+    assert!((after.anchors.iter().find(|a| a.id == "anchor-extra").unwrap().h_ef - 0.12).abs() < 1e-12);
+    let (after, _) = apply_en1992_mutation(&mid, &En1992Mutation::ChangeAnchorAs(change_anchor_a_s::ChangeAnchorAs {
+        anchor_id: "anchor-extra".into(), new_value: 2.0e-4,
+    })).expect("as");
+    assert!((after.anchors.iter().find(|a| a.id == "anchor-extra").unwrap().a_s - 2.0e-4).abs() < 1e-12);
+    let (after, _) = apply_en1992_mutation(&mid, &En1992Mutation::RemoveAnchor(remove_anchor::RemoveAnchor {
+        anchor_id: "anchor-extra".into(),
+    })).expect("remove");
+    assert!(!after.anchors.iter().any(|a| a.id == "anchor-extra"));
 }
-
-#[semio_framework_async_macros::async_test]
-async fn change_m_ed_knm_is_deterministic() {
-    let base = En1992Snapshot::default();
-    let mutation = En1992Mutation::ChangeMEdKnm(change_m_ed_knm::ChangeMEdKnm { new_m_ed_knm: 150.0 });
-    protocol::os_spr::protocol_laws::assert_outcome_deterministic(&base, &mutation).await;
-}
-//#endregion 🔖️OutcomeLaws

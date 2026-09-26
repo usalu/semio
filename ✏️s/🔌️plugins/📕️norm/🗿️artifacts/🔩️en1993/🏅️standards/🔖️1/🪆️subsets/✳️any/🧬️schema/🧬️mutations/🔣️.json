@@ -7,31 +7,16 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-annex/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bolt-inputs/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bridge-inputs/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-cold-formed-inputs/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-crane-inputs/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fatigue-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-member-properties/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fire-inputs/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-hss-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-cold-formed-inputs/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-member-properties/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-pile-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-stainless-inputs/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-plated-inputs/schema.json"
@@ -40,19 +25,130 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-silo-shell-inputs/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-stainless-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bolt-inputs/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tension-component-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-weld-inputs/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-fatigue-inputs/schema.json"
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-through-thickness-inputs/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tension-component-inputs/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-hss-inputs/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-bridge-inputs/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-tower-inputs/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-weld-inputs/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-pile-inputs/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/update-crane-inputs/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-material/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-material/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-section/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-section/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-member/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-member/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-load-case/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-load-case/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-member-action/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-member-action/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-joint/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-joint/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-fatigue-detail/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-fatigue-detail/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-fire-exposure/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-fire-exposure/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-cold-formed-member/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-cold-formed-member/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-plated-panel/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-plated-panel/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-silo-shell/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-silo-shell/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-tension-component/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-tension-component/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-bridge-fatigue/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-bridge-fatigue/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-tower-leg/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-tower-leg/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-pile/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-pile/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-crane-runway/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-crane-runway/schema.json"
     }
   ]
 }

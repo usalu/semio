@@ -1,0 +1,15 @@
+{
+  "title": "Running Puzzle 3d",
+  "description": "The puzzle 3d engine and surface run inside Puzzle.",
+  "prompt": "The puzzle 3d engine and surface run inside Puzzle.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningpuzzle",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2687"
+  }
+}

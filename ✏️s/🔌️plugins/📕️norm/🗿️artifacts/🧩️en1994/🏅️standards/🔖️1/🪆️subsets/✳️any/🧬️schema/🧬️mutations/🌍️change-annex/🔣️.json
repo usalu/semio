@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️change-annex",
   "semanticKind": "change-annex",
-  "displayName": "Change Annex",
+  "displayName": "ChangeAnnex",
   "emoji": "🌍️",
   "aggregateVariant": "ChangeAnnex",
   "payloadSchema": "🧬️schema/🔣️.json",
@@ -12,7 +12,8 @@
   "diffParticipation": "detect",
   "outcomeClasses": [
     "applied",
-    "no-op"
+    "no-op",
+    "rejected"
   ],
   "composition": "atomic",
   "requiredLanguageSurfaces": [

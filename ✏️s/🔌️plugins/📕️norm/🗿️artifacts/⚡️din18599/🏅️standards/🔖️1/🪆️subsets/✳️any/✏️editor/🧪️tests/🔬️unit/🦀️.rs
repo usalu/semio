@@ -169,6 +169,8 @@ async fn every_declared_body_key_renders() {
 async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, Din18599Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(&<Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default())) })).await;
+    context::dispatch(&mut app, Din18599Command::Evaluate(evaluate::Evaluate {})).await;
+    context::settle(&mut app).await;
     let host = NormHost::<DinV18599Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
     context::close(&mut app);
@@ -223,8 +225,20 @@ async fn report_out_exports_the_computed_check_report() {
     let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
-    assert!(!report.checks.is_empty());
+    let value: serde_json::Value = serde_json::from_str(&json).expect("report json parses");
+    let checks = value.get("checks").and_then(|c| c.as_array()).expect("checks array");
+    assert!(!checks.is_empty());
+    let summary = value.get("summary").expect("summary");
+    assert_eq!(summary.get("complies").and_then(|v| v.as_bool()), Some(true));
+    let ids: Vec<&str> = checks.iter().filter_map(|c| c.get("id").and_then(|v| v.as_str())).collect();
+    assert!(ids.iter().any(|id| *id == "din18599.geg.ht-prime"), "ids={ids:?}");
+    assert!(ids.iter().any(|id| *id == "din18599.geg.qp"), "ids={ids:?}");
+    let ht = checks.iter().find(|c| c.get("id").and_then(|v| v.as_str()) == Some("din18599.geg.ht-prime")).expect("ht-prime check");
+    let qty_val = |q: &serde_json::Value| q.get("value").or_else(|| q.get("Value")).and_then(|v| v.as_f64());
+    let computed = ht.get("computed").and_then(qty_val).expect("ht computed");
+    let limit = ht.get("limit").and_then(qty_val).expect("ht limit");
+    assert!(computed > 0.0 && limit > 0.0, "computed={computed} limit={limit}");
+    assert!(computed <= limit + 1e-6, "default subject must pass H′T gate");
     context::close(&mut app);
 }
 //#endregion ðï¸Behavior
@@ -234,7 +248,7 @@ async fn report_out_exports_the_computed_check_report() {
 /// (`expected Enum, found Absent at 1:1`). The argument now reaches the handler as the same document.
 #[semio_framework_async_macros::async_test]
 async fn the_declared_snapshot_argument_carries_the_documents_json() {
-    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/🌬️change-hv/🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k/📸️snapshot/➡️after/🔣️.json");
+    const AFTER: &str = include_str!("../../../🧫️fixtures/🧬️mutations/📐️net-floor-area-m2/📏️extends-net-floor-area-to-160-m2/📸️snapshot/➡️after/🔣️.json");
     let expected = crate::standards::v1::subsets::any::schema::snapshot::decode_din18599_snapshot_json(AFTER).expect("the committed after fixture decodes");
     let args = dsl::json::from_json_str::<dsl::DslValue>(&format!("{{\"snapshot\":{AFTER}}}")).expect("rail arguments");
     let command = <Din18599PlayApp as ArtifactEditor>::command_from_action("setSnapshot", Some(&args)).expect("setSnapshot converts from the declared argument");

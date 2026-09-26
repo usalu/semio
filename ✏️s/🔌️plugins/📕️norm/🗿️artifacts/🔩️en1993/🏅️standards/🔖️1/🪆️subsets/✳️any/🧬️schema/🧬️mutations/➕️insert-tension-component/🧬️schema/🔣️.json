@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-tension-component/schema.json",
+  "title": "InsertTensionComponent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "tension_component"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "tension_component": {
+      "type": "object"
+    }
+  }
+}

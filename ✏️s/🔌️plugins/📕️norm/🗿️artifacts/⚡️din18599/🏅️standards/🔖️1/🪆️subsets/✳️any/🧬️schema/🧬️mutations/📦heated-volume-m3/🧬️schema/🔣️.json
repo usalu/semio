@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChangeHeatedVolumeM3",
+  "type": "object",
+  "properties": {
+    "newHeatedVolumeM3": {
+      "type": "number"
+    }
+  },
+  "additionalProperties": false,
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din18599/mutation/change-heated-volume-m3/schema.json"
+}

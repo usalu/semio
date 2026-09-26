@@ -16,44 +16,59 @@ impl Din18599Diff {
     pub fn apply_to_artifact(&self, artifact: &Din18599Artifact) -> protocol::MutationApplyResult<Din18599Artifact> {
         Ok({
             let mut next = artifact.clone();
-            if let Some(value) = &self.use_class {
-                next.use_class = *value;
+            if let Some(value) = self.building_category {
+                next.building_category = value;
             }
-            if let Some(value) = &self.heated_area_m2 {
-                next.heated_area_m2 = *value;
+            if let Some(value) = self.attachment {
+                next.attachment = value;
             }
-            if let Some(value) = &self.occupants {
-                next.occupants = *value;
+            if let Some(value) = self.use_class {
+                next.use_class = value;
             }
-            if let Some(value) = &self.h_t {
-                next.h_t = *value;
+            if let Some(value) = self.method {
+                next.method = value;
             }
-            if let Some(value) = &self.h_v {
-                next.h_v = *value;
+            if let Some(value) = self.net_floor_area_m2 {
+                next.net_floor_area_m2 = value;
+            }
+            if let Some(value) = self.heated_volume_m3 {
+                next.heated_volume_m3 = value;
+            }
+            if let Some(value) = self.geg_qp_factor {
+                next.geg_qp_factor = value;
+            }
+            if let Some(value) = self.delta_u_wb_w_m2k {
+                next.delta_u_wb_w_m2k = value;
+            }
+            if let Some(value) = self.automation_class {
+                next.automation_class = value;
+            }
+            if let Some(list) = &self.zones {
+                next.zones = list.values.clone();
+            }
+            if let Some(list) = &self.elements {
+                next.elements = list.values.clone();
+            }
+            if let Some(value) = &self.heating {
+                next.heating = value.clone();
+            }
+            if let Some(value) = &self.dhw {
+                next.dhw = value.clone();
+            }
+            if let Some(value) = &self.ventilation {
+                next.ventilation = value.clone();
+            }
+            if let Some(value) = &self.cooling {
+                next.cooling = value.clone();
+            }
+            if let Some(value) = &self.lighting {
+                next.lighting = value.clone();
+            }
+            if let Some(value) = &self.renewables {
+                next.renewables = value.clone();
             }
             if let Some(value) = &self.climate {
                 next.climate = value.clone();
-            }
-            if let Some(value) = &self.internal_gains_w_m2 {
-                next.internal_gains_w_m2 = *value;
-            }
-            if let Some(value) = &self.solar_gains_kwh {
-                next.solar_gains_kwh = *value;
-            }
-            if let Some(value) = &self.system_losses_kwh {
-                next.system_losses_kwh = *value;
-            }
-            if let Some(value) = &self.renewable_kwh {
-                next.renewable_kwh = *value;
-            }
-            if let Some(value) = &self.annual_limit_kwh {
-                next.annual_limit_kwh = *value;
-            }
-            if let Some(value) = &self.energy_carrier {
-                next.energy_carrier = value.clone();
-            }
-            if let Some(value) = &self.reference_q_p_kwh {
-                next.reference_q_p_kwh = *value;
             }
             next
         })
@@ -64,44 +79,59 @@ impl MutationDiff<Din18599Snapshot> for Din18599Diff {
     fn apply(&self, snapshot: &Din18599Snapshot) -> protocol::MutationApplyResult<Din18599Snapshot> {
         Ok({
             let mut next = snapshot.clone();
-            if let Some(value) = &self.use_class {
-                next.use_class = *value;
+            if let Some(value) = self.building_category {
+                next.building_category = value;
             }
-            if let Some(value) = &self.heated_area_m2 {
-                next.heated_area_m2 = *value;
+            if let Some(value) = self.attachment {
+                next.attachment = value;
             }
-            if let Some(value) = &self.occupants {
-                next.occupants = *value;
+            if let Some(value) = self.use_class {
+                next.use_class = value;
             }
-            if let Some(value) = &self.h_t {
-                next.h_t = *value;
+            if let Some(value) = self.method {
+                next.method = value;
             }
-            if let Some(value) = &self.h_v {
-                next.h_v = *value;
+            if let Some(value) = self.net_floor_area_m2 {
+                next.net_floor_area_m2 = value;
+            }
+            if let Some(value) = self.heated_volume_m3 {
+                next.heated_volume_m3 = value;
+            }
+            if let Some(value) = self.geg_qp_factor {
+                next.geg_qp_factor = value;
+            }
+            if let Some(value) = self.delta_u_wb_w_m2k {
+                next.delta_u_wb_w_m2k = value;
+            }
+            if let Some(value) = self.automation_class {
+                next.automation_class = value;
+            }
+            if let Some(list) = &self.zones {
+                next.zones = list.values.clone();
+            }
+            if let Some(list) = &self.elements {
+                next.elements = list.values.clone();
+            }
+            if let Some(value) = &self.heating {
+                next.heating = value.clone();
+            }
+            if let Some(value) = &self.dhw {
+                next.dhw = value.clone();
+            }
+            if let Some(value) = &self.ventilation {
+                next.ventilation = value.clone();
+            }
+            if let Some(value) = &self.cooling {
+                next.cooling = value.clone();
+            }
+            if let Some(value) = &self.lighting {
+                next.lighting = value.clone();
+            }
+            if let Some(value) = &self.renewables {
+                next.renewables = value.clone();
             }
             if let Some(value) = &self.climate {
                 next.climate = value.clone();
-            }
-            if let Some(value) = &self.internal_gains_w_m2 {
-                next.internal_gains_w_m2 = *value;
-            }
-            if let Some(value) = &self.solar_gains_kwh {
-                next.solar_gains_kwh = *value;
-            }
-            if let Some(value) = &self.system_losses_kwh {
-                next.system_losses_kwh = *value;
-            }
-            if let Some(value) = &self.renewable_kwh {
-                next.renewable_kwh = *value;
-            }
-            if let Some(value) = &self.annual_limit_kwh {
-                next.annual_limit_kwh = *value;
-            }
-            if let Some(value) = &self.energy_carrier {
-                next.energy_carrier = value.clone();
-            }
-            if let Some(value) = &self.reference_q_p_kwh {
-                next.reference_q_p_kwh = *value;
             }
             next
         })
@@ -114,19 +144,24 @@ impl MutationDiff<Din18599Snapshot> for Din18599Diff {
                 }
             };
         }
+        take!(building_category);
+        take!(attachment);
         take!(use_class);
-        take!(heated_area_m2);
-        take!(occupants);
-        take!(h_t);
-        take!(h_v);
+        take!(method);
+        take!(net_floor_area_m2);
+        take!(heated_volume_m3);
+        take!(geg_qp_factor);
+        take!(delta_u_wb_w_m2k);
+        take!(automation_class);
+        take!(zones);
+        take!(elements);
+        take!(heating);
+        take!(dhw);
+        take!(ventilation);
+        take!(cooling);
+        take!(lighting);
+        take!(renewables);
         take!(climate);
-        take!(internal_gains_w_m2);
-        take!(solar_gains_kwh);
-        take!(system_losses_kwh);
-        take!(renewable_kwh);
-        take!(annual_limit_kwh);
-        take!(energy_carrier);
-        take!(reference_q_p_kwh);
     }
 }
 //#endregion 🔖️Apply

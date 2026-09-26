@@ -1,9 +1,9 @@
-//! 🧬️ En1992 diff schema — sparse field delta over the artifact.
+//! 🧬️ En1992 sparse diff over the hierarchical structure subject.
 
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
-/// 🔺️ Sparse field delta for the En1992 artifact.
+/// 🔺️ Sparse field delta for En1992.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -15,78 +15,67 @@ pub struct En1992Diff {
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
-    pub m_ed_knm: Option<f64>,
+    pub title: Option<String>,
     #[state(artifact)]
-    pub v_ed_kn: Option<f64>,
+    pub design_working_life_years: Option<f64>,
     #[state(artifact)]
-    pub f_ck: Option<f64>,
+    pub delta_c_dev: Option<f64>,
     #[state(artifact)]
-    pub b_mm: Option<f64>,
+    pub cement_type: Option<String>,
     #[state(artifact)]
-    pub d_mm: Option<f64>,
+    pub concrete_grades: Option<En1992ConcreteGradeList>,
     #[state(artifact)]
-    pub a_s_mm2: Option<f64>,
+    pub reinforcement_grades: Option<En1992ReinforcementGradeList>,
     #[state(artifact)]
-    pub f_yk: Option<f64>,
+    pub prestress_steels: Option<En1992PrestressSteelList>,
     #[state(artifact)]
-    pub rho_l: Option<f64>,
+    pub members: Option<En1992MemberList>,
     #[state(artifact)]
-    pub n_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub p_kn: Option<f64>,
-    #[state(artifact)]
-    pub a_c_mm2: Option<f64>,
-    #[state(artifact)]
-    pub use_fem: Option<bool>,
-    #[state(artifact)]
-    pub span_m: Option<f64>,
-    #[state(artifact)]
-    pub udl_kn_m: Option<f64>,
-    #[state(artifact)]
-    pub fire_rating: Option<crate::part_1_2::FireRating>,
-    #[state(artifact)]
-    pub provided_axis_distance_mm: Option<f64>,
-    #[state(artifact)]
-    pub bridge_sigma_c_mpa: Option<f64>,
-    #[state(artifact)]
-    pub bridge_delta_sigma_s_mpa: Option<f64>,
-    #[state(artifact)]
-    pub tightness_class: Option<crate::part_3::TightnessClass>,
-    #[state(artifact)]
-    pub hd_over_h: Option<f64>,
-    #[state(artifact)]
-    pub liquid_sigma_s_mpa: Option<f64>,
-    #[state(artifact)]
-    pub liquid_rho_p_eff: Option<f64>,
-    #[state(artifact)]
-    pub liquid_f_ct_eff_mpa: Option<f64>,
-    #[state(artifact)]
-    pub liquid_e_s_mpa: Option<f64>,
-    #[state(artifact)]
-    pub liquid_s_r_max_mm: Option<f64>,
-    #[state(artifact)]
-    pub anchor_h_ef_mm: Option<f64>,
-    #[state(artifact)]
-    pub anchor_cracked: Option<bool>,
-    #[state(artifact)]
-    pub anchor_f_uk_mpa: Option<f64>,
-    #[state(artifact)]
-    pub anchor_f_yk_mpa: Option<f64>,
-    #[state(artifact)]
-    pub anchor_a_s_mm2: Option<f64>,
-    #[state(artifact)]
-    pub anchor_d_mm: Option<f64>,
-    #[state(artifact)]
-    pub anchor_c1_mm: Option<f64>,
-    #[state(artifact)]
-    pub anchor_n_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub anchor_v_ed_kn: Option<f64>,
+    pub anchors: Option<En1992AnchorList>,
 }
 //#endregion 🔖️Diff
 
 //#region 🔖️DeltaHelpers
-/// 📋 List wrapper for optional vector diffs.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1992ConcreteGradeList {
+    pub values: Vec<crate::ConcreteGrade>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1992ReinforcementGradeList {
+    pub values: Vec<crate::ReinforcementGrade>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1992PrestressSteelList {
+    pub values: Vec<crate::PrestressSteel>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1992MemberList {
+    pub values: Vec<crate::RcMember>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct En1992AnchorList {
+    pub values: Vec<crate::Anchor>,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]

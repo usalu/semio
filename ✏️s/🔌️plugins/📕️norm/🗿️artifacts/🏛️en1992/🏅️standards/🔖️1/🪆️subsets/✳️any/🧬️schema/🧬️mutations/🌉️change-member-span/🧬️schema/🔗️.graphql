@@ -1,0 +1,4 @@
+type ChangeMemberSpan {
+  memberId: String!
+  newValue: Float!
+}

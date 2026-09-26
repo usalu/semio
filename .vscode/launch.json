@@ -114,17 +114,6 @@
       }
     },
     {
-      "name": "🏭️generate",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:generate",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": -49.8
-      }
-    },
-    {
       "name": "🧹lint",
       "type": "node-terminal",
       "request": "launch",
@@ -177,17 +166,6 @@
       "presentation": {
         "group": "3_dev",
         "order": -49.3
-      }
-    },
-    {
-      "name": "🗑️purge",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:purge",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": -49.2
       }
     },
     {
@@ -4694,6 +4672,17 @@
       }
     },
     {
+    {
+      "name": "📦️generate📕️norm🪨️en1996🖼️example-assets",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1996-rs:regenerate-example-assets",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.16915
+      }
+    },
       "name": "📦️generate🧬️surface-schema",
       "type": "node-terminal",
       "request": "launch",

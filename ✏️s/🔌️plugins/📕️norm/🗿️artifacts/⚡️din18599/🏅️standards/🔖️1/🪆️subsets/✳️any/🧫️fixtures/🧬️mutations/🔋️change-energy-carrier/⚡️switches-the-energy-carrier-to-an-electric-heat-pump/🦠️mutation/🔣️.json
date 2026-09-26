@@ -1,4 +1,0 @@
-{
-  "mutation": "changeEnergyCarrier",
-  "newEnergyCarrier": "electricity_heat_pump"
-}

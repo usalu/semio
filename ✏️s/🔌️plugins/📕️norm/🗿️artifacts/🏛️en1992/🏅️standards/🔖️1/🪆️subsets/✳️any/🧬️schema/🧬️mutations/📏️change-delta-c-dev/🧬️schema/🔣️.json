@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-delta-c-dev/schema.json",
+  "title": "ChangeDeltaCDev",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newDeltaCDev"
+  ],
+  "properties": {
+    "newDeltaCDev": {
+      "type": "number"
+    }
+  }
+}

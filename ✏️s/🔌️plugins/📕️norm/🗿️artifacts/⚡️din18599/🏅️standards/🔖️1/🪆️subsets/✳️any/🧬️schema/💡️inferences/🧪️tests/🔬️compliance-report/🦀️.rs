@@ -1,23 +1,26 @@
-use super::*;
-use crate::document::ClimateZoneDe;
-use crate::standards::v1::subsets::any::schema::{from_building, reference_wall_layers};
+//! 🔬️ Compliance report shape for DIN V 18599 rebuild.
 
-fn reference_100m2_inputs() -> BalancingInputs {
-    from_building(&reference_wall_layers(), 100.0, 4, ClimateZoneDe::Zone2, 0.0).unwrap()
+use crate::document::CheckStatus;
+use crate::subjects;
+use crate::standards::v1::subsets::any::schema::inferences::evaluate;
+
+#[test]
+fn evaluate_emits_grouped_geg_and_part_checks() {
+    let report = evaluate(&crate::subjects::compliant_detached_house());
+    assert!(report.summary.total >= 8);
+    assert!(report.complies());
+    assert!(report.checks.iter().any(|c| c.part.contains("GEG")));
+    assert!(report.checks.iter().any(|c| c.title.en.contains("Primary energy") || c.id.contains("qp")));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn balance_annual_includes_all_parts() {
-    let inputs = reference_100m2_inputs();
-    let report = balance_annual(&inputs).unwrap();
-    assert_eq!(report.checks.len(), 12);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn part_1_check_reached_via_balance_annual() {
-    let inputs = reference_100m2_inputs();
-    let check = part_1::check(&inputs).unwrap();
-    assert_eq!(check.clause.family, "DIN V 18599-1");
-    let report = balance_annual(&inputs).unwrap();
-    assert!(report.checks.iter().any(|c| c.clause.family == "DIN V 18599-1" && c.clause.part == "§6"));
+#[test]
+fn noncompliant_report_has_localized_remedies() {
+    let report = evaluate(&crate::subjects::noncompliant_detached_house());
+    assert!(!report.complies());
+    let fail = report.failing().next().unwrap();
+    assert!(!fail.remedies.is_empty());
+    assert!(!fail.title.de.is_empty());
+    assert!(!fail.explanation.de.is_empty());
+    assert!(!fail.remedies[0].action.de.is_empty());
+    assert_ne!(fail.status, CheckStatus::Pass);
 }

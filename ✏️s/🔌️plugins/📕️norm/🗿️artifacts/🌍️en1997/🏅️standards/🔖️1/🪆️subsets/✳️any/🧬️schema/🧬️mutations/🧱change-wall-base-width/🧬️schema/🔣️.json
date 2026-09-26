@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-wall-base-width/schema.json",
+  "title": "ChangeWallBaseWidth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBaseWidth"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newBaseWidth": {
+      "type": "number"
+    }
+  }
+}

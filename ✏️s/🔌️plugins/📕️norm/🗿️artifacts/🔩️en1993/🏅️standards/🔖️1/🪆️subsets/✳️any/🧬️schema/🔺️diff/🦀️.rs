@@ -1,5 +1,9 @@
-//! 🧬️ En1993 diff schema — sparse field delta over the artifact.
+//! 🧬️ En1993 diff schema — sparse field delta over the hierarchical steel subject.
 
+use crate::{
+    BridgeFatigue, ColdFormedMember, CraneRunway, FatigueDetail, FireExposure, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial,
+    SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg,
+};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -15,161 +19,66 @@ pub struct En1993Diff {
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
-    pub n_ed_kn: Option<f64>,
+    pub materials: Option<En1993MaterialList>,
     #[state(artifact)]
-    pub m_ed_knm: Option<f64>,
+    pub sections: Option<En1993SectionList>,
     #[state(artifact)]
-    pub v_ed_kn: Option<f64>,
+    pub members: Option<En1993MemberList>,
     #[state(artifact)]
-    pub a_mm2: Option<f64>,
+    pub load_cases: Option<En1993LoadCaseList>,
     #[state(artifact)]
-    pub a_v_mm2: Option<f64>,
+    pub member_actions: Option<En1993MemberActionList>,
     #[state(artifact)]
-    pub w_pl_mm3: Option<f64>,
+    pub joints: Option<En1993JointList>,
     #[state(artifact)]
-    pub f_y_mpa: Option<f64>,
+    pub fatigue_details: Option<En1993FatigueList>,
     #[state(artifact)]
-    pub f_u_mpa: Option<f64>,
+    pub fire_exposures: Option<En1993FireList>,
     #[state(artifact)]
-    pub chi: Option<f64>,
+    pub cold_formed_members: Option<En1993ColdFormedList>,
     #[state(artifact)]
-    pub a_net_mm2: Option<f64>,
+    pub plated_panels: Option<En1993PlatedList>,
     #[state(artifact)]
-    pub tension_n_ed_kn: Option<f64>,
+    pub silo_shells: Option<En1993SiloList>,
     #[state(artifact)]
-    pub fire_thickness_mm: Option<f64>,
+    pub tension_components: Option<En1993TensionList>,
     #[state(artifact)]
-    pub fire_rating: Option<String>,
+    pub bridge_fatigue: Option<En1993BridgeList>,
     #[state(artifact)]
-    pub fire_massivity: Option<f64>,
+    pub tower_legs: Option<En1993TowerList>,
     #[state(artifact)]
-    pub fire_mu_0: Option<f64>,
+    pub piles: Option<En1993PileList>,
     #[state(artifact)]
-    pub fire_design_temperature_c: Option<f64>,
-    #[state(artifact)]
-    pub cf_b_bar_mm: Option<f64>,
-    #[state(artifact)]
-    pub cf_t_mm: Option<f64>,
-    #[state(artifact)]
-    pub cf_k_sigma: Option<f64>,
-    #[state(artifact)]
-    pub cf_psi: Option<f64>,
-    #[state(artifact)]
-    pub cf_n_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub cf_gross_resistance_kn: Option<f64>,
-    #[state(artifact)]
-    pub stainless_m_ed_knm: Option<f64>,
-    #[state(artifact)]
-    pub stainless_w_pl_mm3: Option<f64>,
-    #[state(artifact)]
-    pub stainless_f_y_mpa: Option<f64>,
-    #[state(artifact)]
-    pub plated_lambda_p: Option<f64>,
-    #[state(artifact)]
-    pub plated_sigma_ed_mpa: Option<f64>,
-    #[state(artifact)]
-    pub silo_t_mm: Option<f64>,
-    #[state(artifact)]
-    pub silo_r_mm: Option<f64>,
-    #[state(artifact)]
-    pub shell_sigma_x_ed_mpa: Option<f64>,
-    #[state(artifact)]
-    pub silo_k: Option<f64>,
-    #[state(artifact)]
-    pub silo_gamma_kn_m3: Option<f64>,
-    #[state(artifact)]
-    pub silo_depth_m: Option<f64>,
-    #[state(artifact)]
-    pub bolt_f_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub bolt_n_bolts: Option<u32>,
-    #[state(artifact)]
-    pub bolt_a_s_mm2: Option<f64>,
-    #[state(artifact)]
-    pub bolt_e1_mm: Option<f64>,
-    #[state(artifact)]
-    pub bolt_e2_mm: Option<f64>,
-    #[state(artifact)]
-    pub bolt_d0_mm: Option<f64>,
-    #[state(artifact)]
-    pub bolt_d_mm: Option<f64>,
-    #[state(artifact)]
-    pub bolt_t_mm: Option<f64>,
-    #[state(artifact)]
-    pub bolt_f_u_mpa: Option<f64>,
-    #[state(artifact)]
-    pub bolt_f_ub_mpa: Option<f64>,
-    #[state(artifact)]
-    pub weld_a_mm: Option<f64>,
-    #[state(artifact)]
-    pub weld_l_mm: Option<f64>,
-    #[state(artifact)]
-    pub weld_f_u_mpa: Option<f64>,
-    #[state(artifact)]
-    pub weld_steel_grade: Option<String>,
-    #[state(artifact)]
-    pub weld_f_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub delta_sigma_mpa: Option<f64>,
-    #[state(artifact)]
-    pub fatigue_category: Option<u8>,
-    #[state(artifact)]
-    pub fatigue_method: Option<String>,
-    #[state(artifact)]
-    pub t10_steel_subgrade: Option<String>,
-    #[state(artifact)]
-    pub t10_actual_thickness_mm: Option<f64>,
-    #[state(artifact)]
-    pub t10_t_ed_c: Option<f64>,
-    #[state(artifact)]
-    pub tension_component_f_uk_kn: Option<f64>,
-    #[state(artifact)]
-    pub tension_component_f_k_kn: Option<f64>,
-    #[state(artifact)]
-    pub tension_component_n_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub hss_w_el_mm3: Option<f64>,
-    #[state(artifact)]
-    pub hss_f_y_mpa: Option<f64>,
-    #[state(artifact)]
-    pub hss_section_class: Option<u8>,
-    #[state(artifact)]
-    pub hss_m_ed_knm: Option<f64>,
-    #[state(artifact)]
-    pub bridge_lambda: Option<f64>,
-    #[state(artifact)]
-    pub bridge_phi_2: Option<f64>,
-    #[state(artifact)]
-    pub bridge_delta_sigma_p_mpa: Option<f64>,
-    #[state(artifact)]
-    pub tower_wind_factor: Option<f64>,
-    #[state(artifact)]
-    pub tower_n_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub pile_sigma_mpa: Option<f64>,
-    #[state(artifact)]
-    pub pile_k_red: Option<f64>,
-    #[state(artifact)]
-    pub pile_n_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub crane_f_z_ed_kn: Option<f64>,
-    #[state(artifact)]
-    pub crane_wheel_contact_length_mm: Option<f64>,
-    #[state(artifact)]
-    pub crane_dispersion_mm: Option<f64>,
-    #[state(artifact)]
-    pub crane_t_w_mm: Option<f64>,
+    pub crane_runways: Option<En1993CraneList>,
 }
-//#endregion 🔖️Diff
 
-//#region 🔖️DeltaHelpers
-/// 📋 List wrapper for optional vector diffs.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1993StringList {
-    pub values: Vec<String>,
+macro_rules! list_wrap {
+    ($name:ident, $ty:ty) => {
+        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+        #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+        #[cfg_attr(test, serde(rename_all = "camelCase", default))]
+        #[value(rename_all = "camelCase", default)]
+        pub struct $name {
+            pub values: Vec<$ty>,
+        }
+    };
 }
-//#endregion 🔖️DeltaHelpers
+
+list_wrap!(En1993MaterialList, SteelMaterial);
+list_wrap!(En1993SectionList, SteelSection);
+list_wrap!(En1993MemberList, SteelMember);
+list_wrap!(En1993LoadCaseList, LoadCase);
+list_wrap!(En1993MemberActionList, MemberAction);
+list_wrap!(En1993JointList, SteelJoint);
+list_wrap!(En1993FatigueList, FatigueDetail);
+list_wrap!(En1993FireList, FireExposure);
+list_wrap!(En1993ColdFormedList, ColdFormedMember);
+list_wrap!(En1993PlatedList, PlatedPanel);
+list_wrap!(En1993SiloList, SiloShell);
+list_wrap!(En1993TensionList, TensionComponent);
+list_wrap!(En1993BridgeList, BridgeFatigue);
+list_wrap!(En1993TowerList, TowerLeg);
+list_wrap!(En1993PileList, SteelPile);
+list_wrap!(En1993CraneList, CraneRunway);
+
+//#endregion 🔖️Diff

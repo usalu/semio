@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-envelope-n50/schema.json",
+  "title": "ChangeEnvelopeN50",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newEnvelopeN50HInv"
+  ],
+  "properties": {
+    "newEnvelopeN50HInv": {
+      "type": "number"
+    }
+  }
+}

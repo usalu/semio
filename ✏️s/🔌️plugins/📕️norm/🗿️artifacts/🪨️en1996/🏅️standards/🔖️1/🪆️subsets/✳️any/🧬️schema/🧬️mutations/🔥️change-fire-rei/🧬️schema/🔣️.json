@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-fire-rei/schema.json",
+  "title": "ChangeFireRei",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newFireReiMin"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newFireReiMin": {
+      "type": "integer"
+    }
+  }
+}

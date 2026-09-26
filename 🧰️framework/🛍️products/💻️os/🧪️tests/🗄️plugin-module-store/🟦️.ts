@@ -5,7 +5,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import { PluginModuleUnavailableError, type PluginModuleAcquisitionProgress } from "@semio-tech/framework";
 import { PLUGIN_MODULE_STORE_V1, validatePluginModuleStoreRecordV1, type PluginModuleStoreRecordV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
 import {
@@ -22,6 +21,7 @@ import {
 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🗄️store/🟦️.ts";
 import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type HubPluginSourceNoticeV1, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
 import { PLUGIN_MODULE_TRANSFER_RETRY_V1, TrustedPluginModuleRefusalV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
+import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧫️fixtures/🗄️store/🔣️.json");
@@ -71,7 +71,7 @@ const recordKey = (id: BundleId) => keys.record(fixture.records[id].generationId
 
 describe("🗄️ plugin module store", () => {
   it("every fixture record satisfies the store schema by Ajv and by the TS twin", () => {
-    const ajv = new Ajv({ strict: false, allErrors: true }).addSchema({ ...hubSchema, $ref: undefined }).addSchema(storeSchema);
+    const ajv = semioSchemaAjvV1({ strict: false, allErrors: true }).addSchema({ ...hubSchema, $ref: undefined }).addSchema(storeSchema);
     const oracle = ajv.getSchema(`${storeSchema.$id}#/$defs/PluginModuleStoreRecordV1`)!;
     for (const id of ["noteA", "noteB", "drawB"] as const) {
       expect(oracle(fixture.records[id]), JSON.stringify(oracle.errors)).toBe(true);

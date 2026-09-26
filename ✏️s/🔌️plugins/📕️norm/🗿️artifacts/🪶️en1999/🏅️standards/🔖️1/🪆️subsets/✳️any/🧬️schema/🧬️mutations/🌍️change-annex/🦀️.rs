@@ -1,20 +1,26 @@
-//! 🦘 `change-annex` payload — changes the En1999 document's `annex` (national annex).
+//! 🦎 `change-annex` mutation leaf.
 
 use crate::diff::En1999Diff;
 use crate::mutations::En1999Mutation;
 use crate::En1999Snapshot;
-//#region 🔖️ChangeAnnex
+use crate::document::AnnexChoice;
+
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ChangeAnnex {
-    pub new_annex: crate::document::AnnexChoice,
+    pub new_annex: AnnexChoice,
 }
 
 impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeAnnex {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annex", kind: "change-annex", record: "ChangedAnnex" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "annex",
+        kind: "change-annex",
+        record: "ChangedAnnex",
+    };
 
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         super::diff::diff(self, base)
@@ -25,7 +31,6 @@ impl protocol::MutationKind<En1999Snapshot, En1999Mutation> for ChangeAnnex {
     }
 
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change national annex to {:?}", self.new_annex), &format!("Nationalen Anhang auf {:?} ändern", self.new_annex))
+        protocol::LocalizedLabel::native("change-annex", "change-annex")
     }
 }
-//#endregion 🔖️ChangeAnnex

@@ -1,0 +1,15 @@
+{
+  "title": "Running Space",
+  "description": "The space engine and surface run inside Space.",
+  "prompt": "The space engine and surface run inside Space.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningspace",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2696"
+  }
+}

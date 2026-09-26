@@ -1,0 +1,25 @@
+{
+  "artifact": null,
+  "manufacturerFile": {
+    "header_version": "3805",
+    "manufacturer": "ACME",
+    "building_system_number": {
+      "system_code": "420",
+      "subsystem": "10",
+      "sequence": 1
+    },
+    "created": "2023-06-01",
+    "charset": "UTF-8",
+    "record_count": 2,
+    "extensions": {
+      "fields": {}
+    }
+  },
+  "catalog": null,
+  "editionProfile": null,
+  "correctionAsOf": null,
+  "strictMode": null,
+  "index": null,
+  "geometry": null,
+  "curves": null
+}

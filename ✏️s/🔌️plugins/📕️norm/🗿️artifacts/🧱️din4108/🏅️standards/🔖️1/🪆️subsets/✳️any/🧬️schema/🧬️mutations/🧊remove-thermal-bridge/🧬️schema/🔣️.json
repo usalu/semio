@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/remove-thermal-bridge/schema.json",
+  "title": "RemoveThermalBridge",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

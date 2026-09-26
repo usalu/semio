@@ -1,0 +1,14 @@
+//! ↩️ `change-product-configuration` — undo restores BASE's configuration; missing id ⇒
+//! `Vec::new()`.
+
+use super::ChangeProductConfiguration;
+use crate::{Vdi3805Mutation, Vdi3805Snapshot};
+
+//#region 🔖️Inverse
+pub fn inverse(payload: &ChangeProductConfiguration, base: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
+    let Some(product) = base.catalog.products.iter().find(|p| p.identity.article_number == payload.id) else {
+        return Vec::new();
+    };
+    vec![Vdi3805Mutation::ChangeProductConfiguration(ChangeProductConfiguration { id: payload.id.clone(), new_configuration: product.configuration.clone() })]
+}
+//#endregion 🔖️Inverse

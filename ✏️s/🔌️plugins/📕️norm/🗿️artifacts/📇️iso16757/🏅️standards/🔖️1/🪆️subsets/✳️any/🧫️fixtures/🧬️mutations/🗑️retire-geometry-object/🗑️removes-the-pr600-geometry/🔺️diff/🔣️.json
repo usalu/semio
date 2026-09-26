@@ -1,0 +1,23 @@
+{
+  "artifact": null,
+  "catalogue": null,
+  "dictionary": null,
+  "exchangeProcess": null,
+  "geometry": {
+    "objects": {},
+    "primitive_registry": [
+      {
+        "id": "box",
+        "parameters": [
+          "width",
+          "height",
+          "depth"
+        ]
+      }
+    ]
+  },
+  "partNumberInputs": null,
+  "partNumberRule": null,
+  "scriptLimits": null,
+  "selection": null
+}

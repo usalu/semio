@@ -1,31 +1,32 @@
-//! 💧 `change-exposure` payload — changes the En1996 document's `exposure` (durability exposure class).
+//! 💧️change-exposure
+use crate::{En1996Mutation, En1996Snapshot};
 
-use crate::diff::En1996Diff;
-use crate::mutations::En1996Mutation;
-use crate::En1996Snapshot;
-//#region 🔖️ChangeExposure
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
 pub struct ChangeExposure {
-    pub new_exposure: crate::part_2::ExposureClass,
+    pub index: usize,
+    pub new_exposure: crate::ExposureClass,
 }
 
 impl protocol::MutationKind<En1996Snapshot, En1996Mutation> for ChangeExposure {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "exposure", kind: "change-exposure", record: "ChangedExposure" };
-
-    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "exposure",
+        kind: "change-exposure",
+        record: "ChangedExposure",
+    };
+    fn diff(&self, base: &En1996Snapshot) -> protocol::MutationOutcome<<En1996Mutation as protocol::Mutation<En1996Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
-
     fn inverse(&self, base: &En1996Snapshot) -> Vec<En1996Mutation> {
         super::inverse::inverse(self, base)
     }
-
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change durability exposure class to {:?}", self.new_exposure), &format!("Expositionsklasse (Dauerhaftigkeit) auf {:?} ändern", self.new_exposure))
+        protocol::LocalizedLabel::native("Change exposure class", "Expositionsklasse ändern")
     }
 }
-//#endregion 🔖️ChangeExposure
+
+#[cfg(test)]
+#[path = "🧪️tests/💧️applies-change-exposure/🦀️.rs"]
+mod named_test;

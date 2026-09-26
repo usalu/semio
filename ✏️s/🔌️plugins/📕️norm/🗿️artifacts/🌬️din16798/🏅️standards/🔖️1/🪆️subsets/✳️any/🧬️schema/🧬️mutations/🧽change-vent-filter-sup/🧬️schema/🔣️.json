@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-vent-filter-sup/schema.json",
+  "title": "ChangeVentFilterSup",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ventId",
+    "newFilterSupClass"
+  ],
+  "properties": {
+    "ventId": {
+      "type": "string"
+    },
+    "newFilterSupClass": {
+      "type": "string"
+    }
+  }
+}

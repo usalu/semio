@@ -1,7 +1,19 @@
 {
   "UpdatePileInputs": {
-    "new_pile_sigma_mpa": 320.0,
-    "new_pile_k_red": 0.75,
-    "new_pile_n_ed_kn": 340.0
+    "pile": {
+      "id": "pile-1",
+      "sectionId": "sec-heb240",
+      "materialId": "mat-s355",
+      "drivingStress": 280000000.0,
+      "embeddedLength": 8.0,
+      "shaftPerimeter": 1.2,
+      "actions": [
+        {
+          "id": "fa-1",
+          "loadCaseId": "g-permanent",
+          "force": 500000.0
+        }
+      ]
+    }
   }
 }

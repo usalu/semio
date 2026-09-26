@@ -1,12 +1,10 @@
-//! ↩️ `change-annex` inverse — restores the pre-change `annex` from BASE state; `change` is its
-//! own inverse partner (per `📓️taxonomy.md`).
+//! ↩️ `change-annex` inverse.
 
-use crate::mutations::change_annex::ChangeAnnex;
-use crate::mutations::En1990Mutation;
+use super::ChangeAnnex;
+use crate::En1990Mutation;
 use crate::En1990Snapshot;
 
-//#region 🔖️Inverse
-pub fn inverse(_payload: &ChangeAnnex, base: &En1990Snapshot) -> Vec<En1990Mutation> {
+pub fn inverse(mutation: &ChangeAnnex, base: &En1990Snapshot) -> Vec<En1990Mutation> {
+    let _ = mutation;
     vec![En1990Mutation::ChangeAnnex(ChangeAnnex { new_annex: base.annex })]
 }
-//#endregion 🔖️Inverse

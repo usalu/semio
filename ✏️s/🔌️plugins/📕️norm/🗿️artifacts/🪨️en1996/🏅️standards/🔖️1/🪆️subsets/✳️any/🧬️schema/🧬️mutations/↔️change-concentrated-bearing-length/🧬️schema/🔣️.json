@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-concentrated-bearing-length/schema.json",
+  "title": "ChangeConcentratedBearingLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallIndex",
+    "loadCaseIndex",
+    "index",
+    "newBearingLengthM"
+  ],
+  "properties": {
+    "wallIndex": {
+      "type": "integer"
+    },
+    "loadCaseIndex": {
+      "type": "integer"
+    },
+    "index": {
+      "type": "integer"
+    },
+    "newBearingLengthM": {
+      "type": "number"
+    }
+  }
+}

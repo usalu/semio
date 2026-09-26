@@ -1,7 +1,7 @@
 //! 🎨️ Load a declared example into the open compliance document.
 
 use super::set_snapshot;
-use crate::{Din18599Snapshot, Din18599Mutation};
+use crate::{Din18599Mutation, Din18599Snapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -14,13 +14,16 @@ pub struct SetActiveExample {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-/// 🎨️ Replaces the live document with the named example's `PRIMARY_TEXT`, or clears it when the id is empty.
+/// 🎨️ Replaces the live document with a named example's `PRIMARY_TEXT` DSL asset.
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Din18599Snapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Din18599Mutation, NoConfigMutation>, Fault> {
     let text = match payload.example_id.trim() {
-        "" => <Din18599Snapshot as store::ArtifactDsl>::print_dsl(&Din18599Snapshot::default()),
-        id if id == crate::examples::demo::ID => crate::examples::demo::PRIMARY_TEXT.to_string(),
+        "" | "demo" => crate::examples::demo::PRIMARY_TEXT,
+        "compliant-detached" => crate::examples::compliant_detached::PRIMARY_TEXT,
+        "noncompliant-detached" => crate::examples::noncompliant_detached::PRIMARY_TEXT,
+        "compliant-two-zone" => crate::examples::compliant_two_zone::PRIMARY_TEXT,
+        "cooled-office" => crate::examples::cooled_office::PRIMARY_TEXT,
         _ => return Ok(Emit::default()),
     };
-    set_snapshot::handle(&set_snapshot::ReplaceSnapshot { text }, doc, cfg)
+    set_snapshot::handle(&set_snapshot::ReplaceSnapshot { text: crate::document::escape_op_text_field(text) }, doc, cfg)
 }
 //#endregion 🔖️Handler

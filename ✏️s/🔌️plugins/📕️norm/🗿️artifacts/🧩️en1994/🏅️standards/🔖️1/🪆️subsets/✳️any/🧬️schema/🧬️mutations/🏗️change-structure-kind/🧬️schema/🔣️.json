@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-structure-kind/schema.json",
+  "title": "ChangeStructureKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newStructureKind"
+  ],
+  "properties": {
+    "newStructureKind": {
+      "type": "string"
+    }
+  }
+}

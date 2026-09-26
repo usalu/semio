@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-thickness/schema.json",
+  "title": "ChangeWallThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newThicknessM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newThicknessM": {
+      "type": "number"
+    }
+  }
+}

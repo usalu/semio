@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/remove-concentrated/schema.json",
+  "title": "RemoveConcentrated",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallIndex",
+    "loadCaseIndex",
+    "index"
+  ],
+  "properties": {
+    "wallIndex": {
+      "type": "integer"
+    },
+    "loadCaseIndex": {
+      "type": "integer"
+    },
+    "index": {
+      "type": "integer"
+    }
+  }
+}

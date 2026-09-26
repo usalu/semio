@@ -1,39 +1,102 @@
+message AccessoryLink { string accessory_id = 1; bool required = 2; uint32 quantity = 3; }
+message CompositionLink { string component_id = 1; uint32 quantity = 2; }
+message GenericAttribute { string key = 1; string value = 2; string unit = 3; }
 syntax = "proto3";
 package semio.s.norm.vdi3805.diff;
+
+// 🧬️ Vdi3805 diff schema — sparse field delta.
+
+message LocalizedText { string locale = 1; string text = 2; }
+message BuildingSystemNumber { string system_code = 1; string subsystem = 2; int32 sequence = 3; }
+message ExtensionFields { map<string, string> fields = 1; }
+message ManufacturerFile {
+  string header_version = 1;
+  string manufacturer = 2;
+  BuildingSystemNumber building_system_number = 3;
+  string created = 4;
+  string charset = 5;
+  int32 record_count = 6;
+  ExtensionFields extensions = 7;
+}
+message NativeRecord { string family = 1; repeated string fields = 2; ExtensionFields extensions = 3; }
+message ValveHeatingAttributes {
+  uint32 dn = 1; double kvs_m3_s = 2; string pressure_class = 3; string connection_type = 4; double authority_min = 5; double authority_max = 6;
+}
+message RadiatorAttributes {
+  double standard_output_w = 1; double heat_exponent_n = 2; double length_m = 3; double height_m = 4; double depth_m = 5; string connection_type = 6;
+}
+message PumpHeatingAttributes {
+  uint32 dn_suction = 1; uint32 dn_discharge = 2; double nominal_flow_m3_s = 3; double nominal_head_m = 4; double motor_power_w = 5; double hydraulic_efficiency = 6; optional string qh_curve_ref = 7;
+}
+message HeatGeneratorAttributes {
+  double nominal_heat_output_w = 1; string fuel_type = 2; double flow_temp_max_c = 3; double return_temp_min_c = 4;
+}
+message SheetAttributes {
+  oneof payload {
+    ValveHeatingAttributes valve_heating = 1;
+    RadiatorAttributes radiator = 2;
+    PumpHeatingAttributes pump_heating = 3;
+    HeatGeneratorAttributes heat_generator = 4;
+    bool generic = 5;
+  }
+}
+message Configuration {
+  string id = 1;
+  SheetAttributes attributes = 2;
+  optional string geometry_ref = 3;
+  repeated string function_refs = 4;
+}
+message ProductIdentity { string manufacturer_code = 1; string product_group = 2; string article_number = 3; }
+message Product {
+  ProductIdentity identity = 1;
+  repeated LocalizedText title = 2;
+  uint32 sheet = 3;
+  repeated NativeRecord records = 4;
+  Configuration configuration = 5;
+  repeated AccessoryLink accessories = 6;
+  repeated CompositionLink components = 7;
+  ExtensionFields extensions = 8;
+}
+message ManufacturerCatalog { ManufacturerFile file = 1; repeated Product products = 2; ExtensionFields extensions = 3; }
+message EditionId { int32 year = 1; int32 month = 2; }
+message CatalogIndexEntry { string product_id = 1; uint32 sheet = 2; repeated string tags = 3; optional uint32 dn = 4; }
+message CatalogIndex { repeated CatalogIndexEntry entries = 1; }
+message BoundingBox { double min_x = 1; double min_y = 2; double min_z = 3; double max_x = 4; double max_y = 5; double max_z = 6; }
+message GeometryConnection { string id = 1; double x = 2; double y = 3; double z = 4; double nx = 5; double ny = 6; double nz = 7; }
+message ParametricGeometry { string id = 1; BoundingBox bbox = 2; repeated GeometryConnection connections = 3; map<string, double> parameters = 4; }
+message CurvePoint { double x = 1; double y = 2; }
+message CharacteristicCurve { string id = 1; repeated CurvePoint points = 2; }
+message SecurityLimits { uint64 max_file_bytes = 1; uint32 max_records = 2; uint32 max_field_length = 3; uint32 max_nesting_depth = 4; }
+
+message Vdi3805Artifact {
+  ManufacturerCatalog catalog = 2;
+  map<string, string> edition_profile = 3;
+  EditionId correction_as_of = 4;
+  bool strict_mode = 5;
+  CatalogIndex index = 6;
+  map<string, ParametricGeometry> geometry = 7;
+  map<string, CharacteristicCurve> curves = 8;
+}
 
 message Vdi3805Diff {
   // @state artifact
   optional Vdi3805Artifact artifact = 1;
   // @state artifact
-  optional string manufacturer_file = 2;
+  optional ManufacturerFile manufacturer_file = 2;
   // @state artifact
-  optional string catalog = 3;
+  optional ManufacturerCatalog catalog = 3;
   // @state artifact
   optional map<string, string> edition_profile = 4;
   // @state artifact
-  optional string correction_as_of = 5;
+  optional EditionId correction_as_of = 5;
   // @state artifact
   optional bool strict_mode = 6;
   // @state artifact
-  optional string index = 7;
+  optional CatalogIndex index = 7;
   // @state artifact
-  optional map<string, string> geometry = 8;
+  optional map<string, ParametricGeometry> geometry = 8;
   // @state artifact
-  optional map<string, string> curves = 9;
+  optional map<string, CharacteristicCurve> curves = 9;
   // @state artifact
-  optional string limits = 10;
+  optional SecurityLimits limits = 10;
 }
-
-message Vdi3805Artifact {
-  string manufacturer_file = 1;
-  string catalog = 2;
-  map<string, string> edition_profile = 3;
-  string correction_as_of = 4;
-  bool strict_mode = 5;
-  string index = 6;
-  map<string, string> geometry = 7;
-  map<string, string> curves = 8;
-  string limits = 9;
-}
-
-message Vdi3805StringList { repeated string values = 1; }

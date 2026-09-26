@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-member-action-fc90-k/schema.json",
+  "title": "ChangeMemberActionFC90K",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "actionId",
+    "newValue"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "actionId": {
+      "type": "string"
+    },
+    "newValue": {
+      "type": "number",
+      "format": "double"
+    }
+  }
+}

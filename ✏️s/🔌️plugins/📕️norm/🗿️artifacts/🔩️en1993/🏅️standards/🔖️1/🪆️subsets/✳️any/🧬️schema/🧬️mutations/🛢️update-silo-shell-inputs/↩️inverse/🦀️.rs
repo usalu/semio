@@ -1,17 +1,11 @@
-//! ↩️ `update-silo-shell-inputs` — undo restores BASE's silo shell inputs.
-
+//! ↩️ upsert inverse — restore prior entity or remove inserted one.
 use super::UpdateSiloShellInputs;
+use crate::mutations::remove_silo_shell;
 use crate::{En1993Mutation, En1993Snapshot};
-
-//#region 🔖️Inverse
-pub fn inverse(_payload: &UpdateSiloShellInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
-    vec![En1993Mutation::UpdateSiloShellInputs(UpdateSiloShellInputs {
-        new_silo_t_mm: base.silo_t_mm,
-        new_silo_r_mm: base.silo_r_mm,
-        new_shell_sigma_x_ed_mpa: base.shell_sigma_x_ed_mpa,
-        new_silo_k: base.silo_k,
-        new_silo_gamma_kn_m3: base.silo_gamma_kn_m3,
-        new_silo_depth_m: base.silo_depth_m,
-    })]
+pub fn inverse(payload: &UpdateSiloShellInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+    if let Some(prior) = base.silo_shells.iter().find(|x| x.id == payload.silo_shell.id) {
+        vec![En1993Mutation::UpdateSiloShellInputs(UpdateSiloShellInputs { silo_shell: prior.clone() })]
+    } else {
+        vec![En1993Mutation::RemoveSiloShell(remove_silo_shell::RemoveSiloShell { index: base.silo_shells.len() })]
+    }
 }
-//#endregion 🔖️Inverse

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-thermal-bridge-bb2-type/schema.json",
+  "title": "ChangeThermalBridgeBb2Type",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bridgeId",
+    "newBb2Type"
+  ],
+  "properties": {
+    "bridgeId": {
+      "type": "string"
+    },
+    "newBb2Type": {
+      "type": "string"
+    }
+  }
+}

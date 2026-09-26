@@ -1,0 +1,6 @@
+{
+  "ChangeThermalBridgeLength": {
+    "bridge_id": "tb-window-reveal",
+    "new_length_m": 30.0
+  }
+}

@@ -16,8 +16,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(host: &NormHost<DinV18599Family>, selected_check_index: Option<u32>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_inspection(host.report(), selected_check_index)
+pub fn render(host: &NormHost<DinV18599Family>, selected_check_index: Option<u32>, locale: semio_framework_plugin::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    crate::app_surface::render_inspection(host.report(), selected_check_index, locale, controller_id)
 }
 //#endregion 🔖️Render
 

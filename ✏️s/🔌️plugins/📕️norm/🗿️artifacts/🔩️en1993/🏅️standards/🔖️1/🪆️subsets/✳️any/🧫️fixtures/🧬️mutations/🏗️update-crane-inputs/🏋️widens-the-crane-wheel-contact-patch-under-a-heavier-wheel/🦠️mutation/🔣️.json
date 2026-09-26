@@ -1,8 +1,20 @@
 {
   "UpdateCraneInputs": {
-    "new_crane_f_z_ed_kn": 75.0,
-    "new_crane_wheel_contact_length_mm": 125.0,
-    "new_crane_dispersion_mm": 62.5,
-    "new_crane_t_w_mm": 12.0
+    "crane_runway": {
+      "id": "crane-1",
+      "memberId": "member-b1",
+      "wheelContactLength": 0.15,
+      "dispersion": 0.05,
+      "webThickness": 0.01,
+      "fy": 355000000.0,
+      "phi": 1.1,
+      "actions": [
+        {
+          "id": "cr-1",
+          "loadCaseId": "q-imposed",
+          "force": 80000.0
+        }
+      ]
+    }
   }
 }

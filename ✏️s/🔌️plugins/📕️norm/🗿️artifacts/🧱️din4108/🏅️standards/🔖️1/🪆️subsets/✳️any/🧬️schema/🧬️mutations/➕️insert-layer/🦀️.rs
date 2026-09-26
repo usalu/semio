@@ -1,20 +1,23 @@
-//! ➕️ `insert-layer` — places a new construction layer at a FINAL-state index in the layer
-//! build-up (an intrinsically ordered, anonymous collection — no stable id on `LayerDocument`).
+//! ➕️ `insert-layer`.
 
-use crate::{Din4108Mutation, Din4108Snapshot, LayerDocument};
+use crate::{Din4108Mutation, Din4108Snapshot};
 
-//#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertLayer {
+    pub element_id: String,
     pub index: usize,
-    pub layer: LayerDocument,
+    pub layer: crate::LayerDocument,
 }
 
 impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertLayer {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "layer", kind: "insert-layer", record: "InsertedLayer" };
-
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "insert",
+        entity: "layer",
+        kind: "insert-layer",
+        record: "InsertedLayer",
+    };
     fn diff(&self, base: &Din4108Snapshot) -> protocol::MutationOutcome<<Din4108Mutation as protocol::Mutation<Din4108Snapshot>>::Diff> {
         super::diff::diff(self, base)
     }
@@ -22,10 +25,6 @@ impl protocol::MutationKind<Din4108Snapshot, Din4108Mutation> for InsertLayer {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Insert layer at #{}", self.index), &format!("Schicht an #{} einfügen", self.index))
-    }
-    fn target(&self) -> Vec<String> {
-        vec![self.index.to_string()]
+        protocol::LocalizedLabel::native("insert-layer", "insert-layer")
     }
 }
-//#endregion 🔖️Payload

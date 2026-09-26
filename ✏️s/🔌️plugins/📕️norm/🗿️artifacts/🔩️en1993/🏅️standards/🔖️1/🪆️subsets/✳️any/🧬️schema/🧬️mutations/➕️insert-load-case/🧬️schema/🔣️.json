@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-load-case/schema.json",
+  "title": "InsertLoadCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "load_case"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "load_case": {
+      "type": "object",
+      "category": "office"
+    }
+  }
+}

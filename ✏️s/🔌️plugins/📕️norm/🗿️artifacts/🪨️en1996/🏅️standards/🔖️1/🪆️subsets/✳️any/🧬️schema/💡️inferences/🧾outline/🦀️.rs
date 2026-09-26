@@ -1,36 +1,8 @@
-//! 🧾 `outline` — one named inference: this document's own field/section structure. A norm
-//! compliance record IS the document it describes, so its "outline" is its top-level field list
-//! (`sectionOutline`/`fieldCount`, fixed by the snapshot's own schema shape) plus a real
-//! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
-//! no collection-typed top-level field).
+//! 🧾 Document outline for EN 1996 masonry building.
 
 use crate::En1996Snapshot;
 
-//#region 🔖️Outline
-const SECTION_FIELDS: &[&str] = &[
-    "m_ed_knm",
-    "n_ed_kn",
-    "v_ed_kn",
-    "h_ed_kn",
-    "z_mm3",
-    "area_mm2",
-    "shear_area_mm2",
-    "f_k_mpa",
-    "f_vk_mpa",
-    "annex",
-    "masonry_class",
-    "design_situation",
-    "mu",
-    "wall_thickness_mm",
-    "fire_resistance_min",
-    "unit",
-    "exposure",
-    "mortar",
-    "bed_joint_thickness_mm",
-    "storeys",
-    "h_ef_mm",
-    "t_ef_mm",
-];
+const SECTION_FIELDS: &[&str] = &["annex", "masonryClass", "designSituation", "storeys", "walls"];
 
 /// 🧾️ `En1996` document outline.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -44,23 +16,18 @@ pub struct En1996Outline {
 }
 
 impl En1996Outline {
-    pub fn compute(_snapshot: &En1996Snapshot) -> Self {
+    pub fn compute(snapshot: &En1996Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
-        let entry_count = 0;
+        let entry_count = snapshot.walls.len() as u32;
         Self { section_outline, field_count, entry_count }
     }
 }
 
 impl Default for En1996Outline {
-    fn default() -> Self {
-        Self::compute(&En1996Snapshot::default())
-    }
+    fn default() -> Self { Self::compute(&En1996Snapshot::default()) }
 }
-//#endregion 🔖️Outline
 
 #[cfg(test)]
-//#region 🧪️Tests
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

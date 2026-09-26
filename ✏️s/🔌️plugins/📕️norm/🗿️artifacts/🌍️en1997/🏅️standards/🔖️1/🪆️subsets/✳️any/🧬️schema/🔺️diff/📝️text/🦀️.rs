@@ -11,160 +11,48 @@ use crate::artifact_schema::En1997Artifact;
 use crate::En1997Snapshot;
 use protocol::MutationDiff;
 
+macro_rules! apply_scalar {
+    ($self:ident, $next:ident, $($field:ident),+ $(,)?) => {
+        $(
+            if let Some(value) = &$self.$field {
+                $next.$field = value.clone();
+            }
+        )+
+    };
+}
+
 //#region 🔖️Apply
 impl En1997Diff {
     pub fn apply_to_artifact(&self, artifact: &En1997Artifact) -> protocol::MutationApplyResult<En1997Artifact> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok((**replacement).clone());
-            }
-            let mut next = artifact.clone();
-            if let Some(value) = &self.v_ed_kn {
-                next.v_ed_kn = *value;
-            }
-            if let Some(value) = &self.h_ed_kn {
-                next.h_ed_kn = *value;
-            }
-            if let Some(value) = &self.footing_area_m2 {
-                next.footing_area_m2 = *value;
-            }
-            if let Some(value) = &self.phi_deg {
-                next.phi_deg = *value;
-            }
-            if let Some(value) = &self.c_kpa {
-                next.c_kpa = *value;
-            }
-            if let Some(value) = &self.gamma_kn_m3 {
-                next.gamma_kn_m3 = *value;
-            }
-            if let Some(value) = &self.b_m {
-                next.b_m = *value;
-            }
-            if let Some(value) = &self.d_f_m {
-                next.d_f_m = *value;
-            }
-            if let Some(value) = &self.e_s_mpa {
-                next.e_s_mpa = *value;
-            }
-            if let Some(value) = &self.nu {
-                next.nu = *value;
-            }
-            if let Some(value) = &self.design_approach {
-                next.design_approach = value.clone();
-            }
-            if let Some(value) = &self.annex {
-                next.annex = *value;
-            }
-            if let Some(value) = &self.settlement_limit_mm {
-                next.settlement_limit_mm = *value;
-            }
-            if let Some(value) = &self.n_pile_ed_kn {
-                next.n_pile_ed_kn = *value;
-            }
-            if let Some(value) = &self.alpha_s {
-                next.alpha_s = *value;
-            }
-            if let Some(value) = &self.pile_d_m {
-                next.pile_d_m = *value;
-            }
-            if let Some(value) = &self.q_s_kpa {
-                next.q_s_kpa = *value;
-            }
-            if let Some(value) = &self.pile_l_m {
-                next.pile_l_m = *value;
-            }
-            if let Some(value) = &self.q_b_kpa {
-                next.q_b_kpa = *value;
-            }
-            if let Some(value) = &self.pile_base_area_m2 {
-                next.pile_base_area_m2 = *value;
-            }
-            if let Some(value) = &self.pile_n_profiles {
-                next.pile_n_profiles = *value;
-            }
-            if let Some(value) = &self.z_investigated_m {
-                next.z_investigated_m = *value;
-            }
-            next
-        })
+        if let Some(replacement) = &self.artifact {
+            return Ok((**replacement).clone());
+        }
+        let mut next = artifact.clone();
+        apply_scalar!(self, next, structure_id, geotechnical_category, design_situation, design_approach, annex, groundwater_level, investigation_depth);
+        if let Some(list) = &self.layers { next.layers = list.values.clone(); }
+        if let Some(list) = &self.footings { next.footings = list.values.clone(); }
+        if let Some(list) = &self.piles { next.piles = list.values.clone(); }
+        if let Some(list) = &self.retaining_walls { next.retaining_walls = list.values.clone(); }
+        if let Some(list) = &self.slopes { next.slopes = list.values.clone(); }
+        if let Some(list) = &self.uplift_cases { next.uplift_cases = list.values.clone(); }
+        Ok(next)
     }
 }
 
 impl MutationDiff<En1997Snapshot> for En1997Diff {
     fn apply(&self, snapshot: &En1997Snapshot) -> protocol::MutationApplyResult<En1997Snapshot> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok(replacement.to_snapshot());
-            }
-            let mut next = snapshot.clone();
-            if let Some(value) = &self.v_ed_kn {
-                next.v_ed_kn = *value;
-            }
-            if let Some(value) = &self.h_ed_kn {
-                next.h_ed_kn = *value;
-            }
-            if let Some(value) = &self.footing_area_m2 {
-                next.footing_area_m2 = *value;
-            }
-            if let Some(value) = &self.phi_deg {
-                next.phi_deg = *value;
-            }
-            if let Some(value) = &self.c_kpa {
-                next.c_kpa = *value;
-            }
-            if let Some(value) = &self.gamma_kn_m3 {
-                next.gamma_kn_m3 = *value;
-            }
-            if let Some(value) = &self.b_m {
-                next.b_m = *value;
-            }
-            if let Some(value) = &self.d_f_m {
-                next.d_f_m = *value;
-            }
-            if let Some(value) = &self.e_s_mpa {
-                next.e_s_mpa = *value;
-            }
-            if let Some(value) = &self.nu {
-                next.nu = *value;
-            }
-            if let Some(value) = &self.design_approach {
-                next.design_approach = value.clone();
-            }
-            if let Some(value) = &self.annex {
-                next.annex = *value;
-            }
-            if let Some(value) = &self.settlement_limit_mm {
-                next.settlement_limit_mm = *value;
-            }
-            if let Some(value) = &self.n_pile_ed_kn {
-                next.n_pile_ed_kn = *value;
-            }
-            if let Some(value) = &self.alpha_s {
-                next.alpha_s = *value;
-            }
-            if let Some(value) = &self.pile_d_m {
-                next.pile_d_m = *value;
-            }
-            if let Some(value) = &self.q_s_kpa {
-                next.q_s_kpa = *value;
-            }
-            if let Some(value) = &self.pile_l_m {
-                next.pile_l_m = *value;
-            }
-            if let Some(value) = &self.q_b_kpa {
-                next.q_b_kpa = *value;
-            }
-            if let Some(value) = &self.pile_base_area_m2 {
-                next.pile_base_area_m2 = *value;
-            }
-            if let Some(value) = &self.pile_n_profiles {
-                next.pile_n_profiles = *value;
-            }
-            if let Some(value) = &self.z_investigated_m {
-                next.z_investigated_m = *value;
-            }
-            next
-        })
+        if let Some(replacement) = &self.artifact {
+            return Ok(replacement.to_snapshot());
+        }
+        let mut next = snapshot.clone();
+        apply_scalar!(self, next, structure_id, geotechnical_category, design_situation, design_approach, annex, groundwater_level, investigation_depth);
+        if let Some(list) = &self.layers { next.layers = list.values.clone(); }
+        if let Some(list) = &self.footings { next.footings = list.values.clone(); }
+        if let Some(list) = &self.piles { next.piles = list.values.clone(); }
+        if let Some(list) = &self.retaining_walls { next.retaining_walls = list.values.clone(); }
+        if let Some(list) = &self.slopes { next.slopes = list.values.clone(); }
+        if let Some(list) = &self.uplift_cases { next.uplift_cases = list.values.clone(); }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
@@ -178,28 +66,19 @@ impl MutationDiff<En1997Snapshot> for En1997Diff {
                 }
             };
         }
-        take!(v_ed_kn);
-        take!(h_ed_kn);
-        take!(footing_area_m2);
-        take!(phi_deg);
-        take!(c_kpa);
-        take!(gamma_kn_m3);
-        take!(b_m);
-        take!(d_f_m);
-        take!(e_s_mpa);
-        take!(nu);
+        take!(structure_id);
+        take!(geotechnical_category);
+        take!(design_situation);
         take!(design_approach);
         take!(annex);
-        take!(settlement_limit_mm);
-        take!(n_pile_ed_kn);
-        take!(alpha_s);
-        take!(pile_d_m);
-        take!(q_s_kpa);
-        take!(pile_l_m);
-        take!(q_b_kpa);
-        take!(pile_base_area_m2);
-        take!(pile_n_profiles);
-        take!(z_investigated_m);
+        take!(groundwater_level);
+        take!(investigation_depth);
+        take!(layers);
+        take!(footings);
+        take!(piles);
+        take!(retaining_walls);
+        take!(slopes);
+        take!(uplift_cases);
     }
 }
 //#endregion 🔖️Apply
@@ -217,6 +96,5 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
-/// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type En1997DiffText = String;
 //#endregion 🚚️Carrier

@@ -5,10 +5,14 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "elementId",
     "index",
     "newThicknessM"
   ],
   "properties": {
+    "elementId": {
+      "type": "string"
+    },
     "index": {
       "type": "integer",
       "minimum": 0

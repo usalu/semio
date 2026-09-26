@@ -818,24 +818,6 @@
         "forwardAllArgs": true
       }
     },
-    "generate": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "options": {
-        "command": "bun ./📜️script.ts generate",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
-    "generate-neo4j": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "options": {
-        "command": "bun ./📜️script.ts generate neo4j",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
     "generate-taxonomy-census": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -1782,14 +1764,6 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts publish",
-        "forwardAllArgs": true
-      }
-    },
-    "purge": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts purge",
         "forwardAllArgs": true
       }
     },

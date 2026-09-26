@@ -3,7 +3,7 @@
   "emoji": "🪟",
   "status": "closed",
   "description": "Dev cannot check out the repo on Windows because tracked paths contain Windows-illegal filename components (e.g. a whitespace-only filename inside a ticket folder). Audit all tracked paths for Windows-illegal components (forbidden chars <>:\"|?*, control chars, trailing space/dot, leading space, reserved device names CON/PRN/AUX/NUL/COM#/LPT#, empty/whitespace-only names), remove or rename the offenders, and make sure `bun ./📜️script.ts clean` (the workspace `windows-illegal` removal kind already implemented in 📜️script.ts) actually detects and deletes any such paths going forward, including inside open (non-closed) tickets.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
+  "goal": "🎯runningframework🎯runningproducts🎯runningrepo",
   "sessions": [
     "⚪09b0b4cd096c4504acbeef46a87b0cb8"
   ],

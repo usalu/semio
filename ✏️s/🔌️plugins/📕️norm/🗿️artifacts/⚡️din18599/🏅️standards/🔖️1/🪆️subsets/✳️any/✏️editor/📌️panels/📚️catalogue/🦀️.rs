@@ -1,8 +1,4 @@
-//! 📚️ DIN V 18599 play app panel — the catalogue tab.
-//!
-//! 📌️ The catalogue surface is a headline placeholder today (no norm family ships a browsable clause
-//! catalogue yet); the tab exists so the framework's workbench group has this app's slot reserved and
-//! the body key resolves instead of falling through to the unknown-body text node.
+//! 📚️ DIN V 18599 play app panel — selectable examples via `render_catalogue` (reference tables TBD).
 
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
@@ -16,9 +12,16 @@ pub fn definition() -> PanelTabDefinition {
 }
 //#endregion 🔖️Definition
 
+
+/// 📚️ Normative reference tables for this family (none typed yet).
+pub fn reference_tables() -> Vec<crate::app_surface::CatalogueTable> {
+    Vec::new()
+}
+
 //#region 🔖️Render
-pub fn render() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(crate::editor::din18599::LABEL)
+/// 📚️ Lists every `ExampleSource` from the editor catalogue with set-active-example actions.
+pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_plugin::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

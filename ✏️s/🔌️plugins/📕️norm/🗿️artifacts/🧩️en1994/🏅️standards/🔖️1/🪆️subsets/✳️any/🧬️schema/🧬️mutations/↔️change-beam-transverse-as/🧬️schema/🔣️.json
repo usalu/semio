@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-transverse-as/schema.json",
+  "title": "ChangeBeamTransverseAs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newTransverseAsM2PerM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newTransverseAsM2PerM": {
+      "type": "number"
+    }
+  }
+}

@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "Implement @elements/scene per plan scene_3d_board_pendant_296f1e60: R3F scene, pool, chunking, relocate, connect modes, play site, tests, ticket-only bake script for nakagin fixture JSON.",
   "summary": "Added @elements/scene: R3F Canvas with SceneObject/SceneVortex/SceneTie, GLTF pool refcounts, frustum chunking, TransformControls relocate + proximity callback, fixture parse/encode, planeBasisToThreeJs. Play harness with @elements/ui, Nakagin JSON fixture (baked from board via ticket bake-nakagin-scene.mts), Vitest + Playwright. Root dev:scene and nx project targets.",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "plan": {
     "client": "cursor",
     "id": "296f1e60",

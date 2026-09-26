@@ -20,6 +20,333 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 
 //#region 🔖️Types
 
+/// 🧱 Steel material grade entry (SI: fy/fu/E/G in Pa).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelMaterial {
+    pub id: String,
+    pub grade: String,
+    pub fy: f64,
+    pub fu: f64,
+    pub e_modulus: f64,
+    pub g_modulus: f64,
+    pub subgrade: String,
+    pub kind: String,
+}
+
+/// 📐️ Steel section with full property table (SI: m, m², m³, m⁴).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelSection {
+    pub id: String,
+    pub designation: String,
+    pub kind: String,
+    pub h: f64,
+    pub b: f64,
+    pub tw: f64,
+    pub tf: f64,
+    pub r: f64,
+    pub area: f64,
+    pub shear_area_y: f64,
+    pub shear_area_z: f64,
+    pub iy: f64,
+    pub iz: f64,
+    pub it: f64,
+    pub iw: f64,
+    pub w_el_y: f64,
+    pub w_el_z: f64,
+    pub w_pl_y: f64,
+    pub w_pl_z: f64,
+    pub area_net: f64,
+}
+
+/// 🏗️ Structural member (lengths in m; ψ dimensionless).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelMember {
+    pub id: String,
+    pub label: String,
+    pub member_type: String,
+    pub section_id: String,
+    pub material_id: String,
+    pub length: f64,
+    pub buckling_length_y: f64,
+    pub buckling_length_z: f64,
+    pub ltb_length: f64,
+    pub ltb_restraint_spacing: f64,
+    pub load_application: String,
+    pub end_moment_ratio_psi: f64,
+    pub moment_diagram: String,
+    pub deflection_limit_ratio: f64,
+    pub analysis: String,
+}
+
+/// 🏋️ Design action effects (SI: N, N·m).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct DesignAction {
+    pub n: f64,
+    pub vy: f64,
+    pub vz: f64,
+    pub my: f64,
+    pub mz: f64,
+    pub t: f64,
+}
+
+/// 📋 Load case identity.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct LoadCase {
+    pub id: String,
+    pub name: String,
+    pub kind: String,
+    pub category: String,
+}
+
+/// 🔗 Member action under a load case.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct MemberAction {
+    pub id: String,
+    pub member_id: String,
+    pub load_case_id: String,
+    pub action: DesignAction,
+}
+
+
+/// 📉 Characteristic scalar force under a load case (SI N).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ForceAction {
+    pub id: String,
+    pub load_case_id: String,
+    pub force: f64,
+}
+
+/// 🔩 Characteristic joint forces under a load case (SI N).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct JointForceAction {
+    pub id: String,
+    pub load_case_id: String,
+    pub shear: f64,
+    pub tension: f64,
+}
+
+/// 📊 Fatigue stress-range band (Δσ_i, n_i) for Palmgren-Miner.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FatigueBand {
+    pub id: String,
+    pub delta_sigma: f64,
+    pub cycles: f64,
+}
+
+/// 🔩 Bolted or welded joint.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelJoint {
+    pub id: String,
+    pub kind: String,
+    pub member_id: String,
+    pub bolt_class: String,
+    pub bolt_diameter: f64,
+    pub bolt_rows: u32,
+    pub bolts_per_row: u32,
+    pub pitch: f64,
+    pub gauge: f64,
+    pub end_distance: f64,
+    pub edge_distance: f64,
+    pub shear_planes: u32,
+    pub plate_thickness: f64,
+    pub plate_fu: f64,
+    pub weld_throat: f64,
+    pub weld_length: f64,
+    pub weld_fu: f64,
+    pub weld_grade: String,
+    #[dsl(table)]
+    pub actions: Vec<JointForceAction>,
+    pub category: String,
+    pub friction_mu: f64,
+    pub preload_force: f64,
+    pub slip_factor_ks: f64,
+    pub friction_surfaces: u32,
+}
+
+/// 🔄 Fatigue detail category assessment.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FatigueDetail {
+    pub id: String,
+    pub member_id: String,
+    pub category: u8,
+    pub method: String,
+    #[dsl(table)]
+    pub spectrum: Vec<FatigueBand>,
+}
+
+/// 🔥 Fire exposure on a member.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct FireExposure {
+    pub id: String,
+    pub member_id: String,
+    pub rating: String,
+    pub protection_thickness: f64,
+    pub section_factor: f64,
+    pub mu0: f64,
+    pub protection_conductivity: f64,
+    pub protection_density: f64,
+    pub protection_specific_heat: f64,
+}
+
+/// ❄️ Cold-formed thin-gauge member (1-3).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ColdFormedMember {
+    pub id: String,
+    pub b_bar: f64,
+    pub thickness: f64,
+    pub k_sigma: f64,
+    pub psi: f64,
+    pub fy: f64,
+    pub gross_resistance: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🧱 Plated panel for EN 1993-1-5.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct PlatedPanel {
+    pub id: String,
+    pub a: f64,
+    pub b: f64,
+    pub thickness: f64,
+    pub fy: f64,
+    pub k_sigma: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🛢️ Silo / shell of revolution.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SiloShell {
+    pub id: String,
+    pub thickness: f64,
+    pub radius: f64,
+    pub depth: f64,
+    pub k: f64,
+    pub gamma: f64,
+    pub fy: f64,
+}
+
+/// 🪢 Tension component / cable (1-11).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct TensionComponent {
+    pub id: String,
+    pub f_uk: f64,
+    pub f_k: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🌉 Bridge fatigue parameters (EN 1993-2).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct BridgeFatigue {
+    pub id: String,
+    pub member_id: String,
+    pub lambda: f64,
+    pub phi2: f64,
+    pub delta_sigma_p: f64,
+    pub category: u8,
+    pub method: String,
+}
+
+/// 🗼 Tower leg (EN 1993-3-1).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct TowerLeg {
+    pub id: String,
+    pub member_id: String,
+    pub force_coefficient: f64,
+    pub dynamic_factor: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🪵 Steel pile (EN 1993-5).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct SteelPile {
+    pub id: String,
+    pub section_id: String,
+    pub material_id: String,
+    pub driving_stress: f64,
+    pub embedded_length: f64,
+    pub shaft_perimeter: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
+/// 🏗️ Crane runway local web check (EN 1993-6).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct CraneRunway {
+    pub id: String,
+    pub member_id: String,
+    pub wheel_contact_length: f64,
+    pub dispersion: f64,
+    pub web_thickness: f64,
+    pub fy: f64,
+    pub phi: f64,
+    #[dsl(table)]
+    pub actions: Vec<ForceAction>,
+}
+
 //#endregion 🔖️Types
 
 //#region 🔖️ArtifactKind
@@ -89,28 +416,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "en1993.document",
                     extension: Some("en1993"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(semio_s_artifact_norm_en1992::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1992::document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(semio_s_artifact_norm_en1992::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1992::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1993.document"),
                 },
                 dsl::LanguageSpec {
                     id: "en1993.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(semio_s_artifact_norm_en1992::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1992::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(semio_s_artifact_norm_en1992::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1992::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1993.op"),
                 },
                 dsl::LanguageSpec {
                     id: "en1993.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(semio_s_artifact_norm_en1992::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(semio_s_artifact_norm_en1992::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("en1993.diff"),
@@ -121,8 +448,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(semio_s_artifact_norm_en1992::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1992::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1993.pack"),
                 },
                 dsl::LanguageSpec {
@@ -131,8 +458,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(semio_s_artifact_norm_en1992::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(semio_s_artifact_norm_en1992::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("en1993.spr"),
                 },
             ]
@@ -371,6 +698,326 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                         }
+                        #[path = "."]
+                        pub mod insert_material {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-material/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-material/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-material/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_material {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-material/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-material/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-material/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_section {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-section/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-section/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-section/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_section {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-section/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-section/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-section/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_member {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_member {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-member/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-member/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-member/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_load_case {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-load-case/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-load-case/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-load-case/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_load_case {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-load-case/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-load-case/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-load-case/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_member_action {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member-action/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member-action/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-member-action/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_member_action {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-member-action/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-member-action/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-member-action/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_joint {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-joint/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-joint/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-joint/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_joint {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-joint/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-joint/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-joint/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_fatigue_detail {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fatigue-detail/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fatigue-detail/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fatigue-detail/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_fatigue_detail {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-fatigue-detail/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-fatigue-detail/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-fatigue-detail/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_fire_exposure {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fire-exposure/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fire-exposure/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-fire-exposure/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_fire_exposure {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-fire-exposure/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-fire-exposure/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-fire-exposure/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_cold_formed_member {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-cold-formed-member/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-cold-formed-member/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-cold-formed-member/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_cold_formed_member {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-cold-formed-member/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-cold-formed-member/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-cold-formed-member/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_plated_panel {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-plated-panel/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-plated-panel/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-plated-panel/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_plated_panel {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-plated-panel/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-plated-panel/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-plated-panel/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_silo_shell {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-silo-shell/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-silo-shell/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-silo-shell/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_silo_shell {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-silo-shell/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-silo-shell/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-silo-shell/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_tension_component {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tension-component/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tension-component/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tension-component/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_tension_component {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-tension-component/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-tension-component/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-tension-component/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_bridge_fatigue {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-bridge-fatigue/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-bridge-fatigue/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-bridge-fatigue/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_bridge_fatigue {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-bridge-fatigue/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-bridge-fatigue/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-bridge-fatigue/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_tower_leg {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tower-leg/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tower-leg/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-tower-leg/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_tower_leg {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-tower-leg/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-tower-leg/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-tower-leg/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_pile {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-pile/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-pile/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-pile/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_pile {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-pile/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-pile/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-pile/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod insert_crane_runway {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-crane-runway/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-crane-runway/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️insert-crane-runway/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod remove_crane_runway {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-crane-runway/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-crane-runway/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-crane-runway/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
                     }
                 }
                 #[path = "."]
@@ -449,6 +1096,8 @@ pub use crate::standards::v1::subsets::any::schema::diff::En1993Diff;
 pub use crate::standards::v1::subsets::any::schema::mutations::En1993Mutation;
 pub use crate::standards::v1::subsets::any::schema::snapshot::En1993Snapshot;
 
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs"]
+pub mod field_meta;
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -477,6 +1126,14 @@ pub mod editor {
             pub mod set_snapshot;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-field/🦀️.rs"]
+            pub mod set_field;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕insert-item/🦀️.rs"]
+            pub mod insert_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖remove-item/🦀️.rs"]
+            pub mod remove_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹apply-remedy/🦀️.rs"]
+            pub mod apply_remedy;
         }
 
         #[path = "."]
@@ -548,6 +1205,8 @@ pub mod viewer {
 //#region 🪢️TaxonomyMounts
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔩️high-strength-connection/🦀️.rs"]
 pub mod high_strength_connection;
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/✅️heb240-compliant/🦀️.rs"]
+pub mod heb240_compliant;
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔩️high-strength-connection/🧪️tests/🧩️example/🦀️.rs"]
 mod example;

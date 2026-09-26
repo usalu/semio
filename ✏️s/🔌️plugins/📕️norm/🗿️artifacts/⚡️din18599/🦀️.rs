@@ -23,13 +23,210 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 use crate::document::ClimateZoneDe;
 
 // #region 🔖️Types
-/// 🏢️ Building use class for energy reference area factors.
+/// 🏢️ Building use class for DIN V 18599-10 usage profiles / GEG reference area.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum UseClass {
     Residential,
     Office,
     School,
+}
+
+/// 🏷️ DIN V 18599-10 Nutzungsprofil for a thermal zone (typed; drives hours / outdoor-air defaults).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum UsageProfile {
+    WFH,
+    Office,
+    School,
+}
+
+/// 🏠️ Residential vs non-residential GEG path (H′T Anlage 2 vs mean-U Anlage 3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum BuildingCategory {
+    Residential,
+    NonResidential,
+}
+
+/// 🧱 Attachment type for GEG Anlage 2 H′T limit table.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum Attachment {
+    Detached,
+    SemiDetached,
+    EndTerrace,
+    MidTerrace,
+}
+
+/// 🧮 Calculation method — detailed monthly balance (-2) or tabular (-12).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum CalculationMethod {
+    DetailedMonthly,
+    Tabular,
+}
+
+/// 🎛️ Building automation / BACS class (DIN V 18599-11).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum AutomationClass {
+    A,
+    B,
+    C,
+    D,
+}
+
+/// 🧱 Opaque / transparent envelope element kind.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum ElementKind {
+    Wall,
+    Roof,
+    Floor,
+    Door,
+    Window,
+}
+
+/// 🌡️ Thermal adjacency for transmission weighting factor.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+pub enum Adjacency {
+    Outdoor,
+    Ground,
+    Unheated,
+    Heated,
+}
+
+/// 🗺️ Thermal zone with part-10 usage profile and setpoints.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ThermalZone {
+    pub id: String,
+    pub label_en: String,
+    pub label_de: String,
+    pub usage_profile: UsageProfile,
+    pub area_m2: f64,
+    pub volume_m3: f64,
+    pub theta_i_heat_c: f64,
+    pub theta_i_cool_c: f64,
+    pub occupants: u32,
+    pub internal_gains_w_m2: f64,
+    pub lighting_power_w_m2: f64,
+}
+
+/// 🧱 Envelope element (area, U, orientation, g, Fc, adjacency).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct EnvelopeElement {
+    pub id: String,
+    pub label_en: String,
+    pub label_de: String,
+    pub kind: ElementKind,
+    pub zone_id: String,
+    pub area_m2: f64,
+    pub u_value_w_m2k: f64,
+    pub orientation_deg: f64,
+    pub tilt_deg: f64,
+    pub g_value: f64,
+    pub fc: f64,
+    pub adjacency: Adjacency,
+}
+
+/// 🔥 Heating system efficiencies and carrier (DIN V 18599-5).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct HeatingSystem {
+    pub generation_efficiency: f64,
+    pub distribution_efficiency: f64,
+    pub storage_efficiency: f64,
+    pub transfer_efficiency: f64,
+    pub energy_carrier: String,
+}
+
+/// 🚿 Domestic hot water system (DIN V 18599-8).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct DhwSystem {
+    pub specific_demand_kwh_person_a: f64,
+    pub storage_loss_kwh_a: f64,
+    pub distribution_loss_kwh_a: f64,
+    pub energy_carrier: String,
+}
+
+/// 🌬️ Ventilation with heat recovery (DIN V 18599-6/-7).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct VentilationSystem {
+    pub airflow_m3_h: f64,
+    pub heat_recovery_eta: f64,
+    pub fan_power_w: f64,
+}
+
+/// ❄️ Cooling plant parameters when installed (DIN V 18599-7).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct CoolingPlant {
+    pub eer: f64,
+    pub energy_carrier: String,
+}
+
+/// ❄️ Cooling / AC — discriminated via optional plant (absent = no cooling system).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct CoolingSystem {
+    pub plant: Option<CoolingPlant>,
+}
+
+impl CoolingSystem {
+    /// 🔎 Whether a cooling plant is installed.
+    pub fn is_installed(&self) -> bool {
+        self.plant.is_some()
+    }
+
+    /// ❄️ EER when installed (else 1.0 sentinel unused by evaluate).
+    pub fn eer(&self) -> f64 {
+        self.plant.as_ref().map(|p| p.eer).unwrap_or(1.0)
+    }
+
+    /// ⛽ Carrier when installed.
+    pub fn energy_carrier(&self) -> &str {
+        self.plant.as_ref().map(|p| p.energy_carrier.as_str()).unwrap_or("electricity")
+    }
+}
+
+/// 💡 Building-level lighting control (DIN V 18599-4); installed power lives on zones.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct LightingSystem {
+    pub control_factor: f64,
+}
+
+/// ☀️ On-site renewables / PV (DIN V 18599-9).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct Renewables {
+    pub pv_area_m2: f64,
+    pub pv_efficiency: f64,
+    pub solar_thermal_kwh_a: f64,
 }
 
 /// 📐️ Monthly climate data for balancing. Keeps its `dsl::DslRecord` derive — unlike the snapshot's
@@ -45,20 +242,20 @@ pub struct MonthlyClimate {
 }
 
 impl MonthlyClimate {
-    pub fn german_reference(zone: ClimateZoneDe) -> Self {
-        let winter = zone.design_external_temperature_c();
-        let summer = zone.summer_design_temperature_c();
-        let mean = (winter + summer) / 2.0;
-        let amplitude = (summer - winter) / 2.0;
-        let mut theta_e = [0.0; 12];
-        let g_h = [30.0, 60.0, 100.0, 140.0, 180.0, 200.0, 210.0, 190.0, 140.0, 90.0, 40.0, 20.0];
-        for (i, t) in theta_e.iter_mut().enumerate() {
-            let month = i as f64 + 1.0;
-            *t = mean + amplitude * (2.0 * std::f64::consts::PI * (month - 7.0) / 12.0).cos();
+    /// 🌤️ Potsdam reference climate (DIN V 18599-10 / TRY-aligned monthly means).
+    pub fn potsdam_reference() -> Self {
+        Self {
+            theta_e_c: [-0.4, 0.6, 4.1, 8.4, 13.4, 16.6, 18.4, 17.9, 14.0, 9.2, 4.4, 1.0],
+            g_h_w_m2: [25.0, 50.0, 95.0, 145.0, 185.0, 200.0, 195.0, 170.0, 120.0, 70.0, 35.0, 20.0],
         }
-        Self { theta_e_c: theta_e, g_h_w_m2: g_h }
+    }
+
+    pub fn german_reference(zone: ClimateZoneDe) -> Self {
+        let _ = zone;
+        Self::potsdam_reference()
     }
 }
+
 
 //#region 🔖️Composition
 /// 🧩️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2 (orchestrator-dispatched
@@ -141,7 +338,12 @@ pub fn din18599_climate_child_from_data(climate: &MonthlyClimate) -> Din18599Cli
 /// every energy-balance/compliance/inference/mutation-diff call path in this artifact now uses. A
 /// wire-only child fails soft until its child document is materialized by the host.
 pub fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
-    snapshot.climate.local_owner::<Din18599ClimateWorkingData>().map_or(MonthlyClimate { theta_e_c: [0.0; 12], g_h_w_m2: [0.0; 12] }, |data| data.climate.clone())
+    snapshot
+        .climate
+        .local_owner::<Din18599ClimateWorkingData>()
+        .map(|data| data.climate.clone())
+        .filter(|climate| climate.g_h_w_m2.iter().any(|g| *g > 0.0))
+        .unwrap_or_else(MonthlyClimate::potsdam_reference)
 }
 //#endregion 🔖️WorkingScene
 //#endregion 🔖️Composition
@@ -149,6 +351,157 @@ pub fn din18599_climate(snapshot: &Din18599Snapshot) -> MonthlyClimate {
 /// 📋️ Annual energy balancing inputs stored in the persisted snapshot.
 pub type BalancingInputs = Din18599Snapshot;
 //#endregion 🔖️Types
+
+//#region 🔖️Subjects
+/// 🏗 Realistic DIN V 18599 example subjects (compliant + non-compliant).
+pub mod subjects {
+    use super::*;
+
+    fn potsdam_climate() -> Din18599ClimateChild {
+        din18599_climate_child_from_data(&MonthlyClimate::potsdam_reference())
+    }
+
+    fn base_house(compliant: bool) -> Din18599Snapshot {
+        let wall_u = if compliant { 0.20 } else { 0.48 };
+        let roof_u = if compliant { 0.14 } else { 0.40 };
+        let floor_u = if compliant { 0.25 } else { 0.45 };
+        let window_u = if compliant { 0.95 } else { 2.70 };
+        let window_g = if compliant { 0.55 } else { 0.70 };
+        let gen_eff = if compliant { 0.98 } else { 0.78 };
+        let pv = if compliant { 18.0 } else { 0.0 };
+        let delta_u = if compliant { 0.03 } else { 0.10 };
+        Din18599Snapshot {
+            building_category: BuildingCategory::Residential,
+            attachment: Attachment::Detached,
+            use_class: UseClass::Residential,
+            method: CalculationMethod::DetailedMonthly,
+            net_floor_area_m2: 140.0,
+            heated_volume_m3: 364.0,
+            geg_qp_factor: 0.55,
+            delta_u_wb_w_m2k: delta_u,
+            automation_class: if compliant { AutomationClass::B } else { AutomationClass::D },
+            zones: vec![ThermalZone {
+                id: "zone-living".into(),
+                label_en: "Living".into(),
+                label_de: "Wohnen".into(),
+                usage_profile: UsageProfile::WFH,
+                area_m2: 140.0,
+                volume_m3: 364.0,
+                theta_i_heat_c: 20.0,
+                theta_i_cool_c: 26.0,
+                occupants: 4,
+                internal_gains_w_m2: 3.5,
+                lighting_power_w_m2: if compliant { 6.0 } else { 12.0 },
+            }],
+            elements: vec![
+                EnvelopeElement { id: "wall-n".into(), label_en: "North wall".into(), label_de: "Nordwand".into(), kind: ElementKind::Wall, zone_id: "zone-living".into(), area_m2: 42.0, u_value_w_m2k: wall_u, orientation_deg: 0.0, tilt_deg: 90.0, g_value: 0.6, fc: 1.0, adjacency: Adjacency::Outdoor },
+                EnvelopeElement { id: "wall-e".into(), label_en: "East wall".into(), label_de: "Ostwand".into(), kind: ElementKind::Wall, zone_id: "zone-living".into(), area_m2: 36.0, u_value_w_m2k: wall_u, orientation_deg: 90.0, tilt_deg: 90.0, g_value: 0.6, fc: 1.0, adjacency: Adjacency::Outdoor },
+                EnvelopeElement { id: "wall-s".into(), label_en: "South wall".into(), label_de: "Südwand".into(), kind: ElementKind::Wall, zone_id: "zone-living".into(), area_m2: 42.0, u_value_w_m2k: wall_u, orientation_deg: 180.0, tilt_deg: 90.0, g_value: 0.6, fc: 1.0, adjacency: Adjacency::Outdoor },
+                EnvelopeElement { id: "wall-w".into(), label_en: "West wall".into(), label_de: "Westwand".into(), kind: ElementKind::Wall, zone_id: "zone-living".into(), area_m2: 36.0, u_value_w_m2k: wall_u, orientation_deg: 270.0, tilt_deg: 90.0, g_value: 0.6, fc: 1.0, adjacency: Adjacency::Outdoor },
+                EnvelopeElement { id: "roof".into(), label_en: "Roof".into(), label_de: "Dach".into(), kind: ElementKind::Roof, zone_id: "zone-living".into(), area_m2: 150.0, u_value_w_m2k: roof_u, orientation_deg: 180.0, tilt_deg: 35.0, g_value: 0.6, fc: 1.0, adjacency: Adjacency::Outdoor },
+                EnvelopeElement { id: "floor".into(), label_en: "Ground floor".into(), label_de: "Bodenplatte".into(), kind: ElementKind::Floor, zone_id: "zone-living".into(), area_m2: 140.0, u_value_w_m2k: floor_u, orientation_deg: 0.0, tilt_deg: 0.0, g_value: 0.6, fc: 1.0, adjacency: Adjacency::Ground },
+                EnvelopeElement { id: "win-s".into(), label_en: "South windows".into(), label_de: "Südfenster".into(), kind: ElementKind::Window, zone_id: "zone-living".into(), area_m2: 18.0, u_value_w_m2k: window_u, orientation_deg: 180.0, tilt_deg: 90.0, g_value: window_g, fc: if compliant { 0.7 } else { 1.0 }, adjacency: Adjacency::Outdoor },
+                EnvelopeElement { id: "win-n".into(), label_en: "North windows".into(), label_de: "Nordfenster".into(), kind: ElementKind::Window, zone_id: "zone-living".into(), area_m2: 6.0, u_value_w_m2k: window_u, orientation_deg: 0.0, tilt_deg: 90.0, g_value: window_g, fc: 1.0, adjacency: Adjacency::Outdoor },
+                EnvelopeElement { id: "door".into(), label_en: "Entrance door".into(), label_de: "Haustür".into(), kind: ElementKind::Door, zone_id: "zone-living".into(), area_m2: 2.1, u_value_w_m2k: if compliant { 1.3 } else { 3.0 }, orientation_deg: 0.0, tilt_deg: 90.0, g_value: 0.6, fc: 1.0, adjacency: Adjacency::Outdoor },
+            ],
+            heating: HeatingSystem {
+                generation_efficiency: gen_eff,
+                distribution_efficiency: if compliant { 0.96 } else { 0.90 },
+                storage_efficiency: 0.98,
+                transfer_efficiency: if compliant { 0.96 } else { 0.92 },
+                energy_carrier: if compliant { "natural_gas".into() } else { "heating_oil".into() },
+            },
+            dhw: DhwSystem {
+                specific_demand_kwh_person_a: 500.0,
+                storage_loss_kwh_a: if compliant { 200.0 } else { 450.0 },
+                distribution_loss_kwh_a: if compliant { 150.0 } else { 300.0 },
+                energy_carrier: "natural_gas".into(),
+            },
+            ventilation: VentilationSystem {
+                airflow_m3_h: 140.0,
+                heat_recovery_eta: if compliant { 0.80 } else { 0.0 },
+                fan_power_w: if compliant { 60.0 } else { 0.0 },
+            },
+            cooling: CoolingSystem { plant: None },
+            lighting: LightingSystem {
+                control_factor: if compliant { 0.8 } else { 1.0 },
+            },
+            renewables: Renewables { pv_area_m2: pv, pv_efficiency: 0.18, solar_thermal_kwh_a: if compliant { 1200.0 } else { 0.0 } },
+            climate: potsdam_climate(),
+        }
+    }
+
+    /// ✅ GEG-compliant detached house near Potsdam (realistic passing subject).
+    pub fn compliant_detached_house() -> Din18599Snapshot {
+        base_house(true)
+    }
+
+    /// ❌ Same geometry with thin envelope, oil boiler, no HRV/PV (multiple GEG failures).
+    pub fn noncompliant_detached_house() -> Din18599Snapshot {
+        base_house(false)
+    }
+
+    /// 🏢 Two-zone compliant house (living + office) for zone-assignment tests.
+    pub fn compliant_two_zone_house() -> Din18599Snapshot {
+        let mut doc = base_house(true);
+        doc.zones = vec![
+            ThermalZone {
+                id: "zone-living".into(),
+                label_en: "Living".into(),
+                label_de: "Wohnen".into(),
+                usage_profile: UsageProfile::WFH,
+                area_m2: 90.0,
+                volume_m3: 234.0,
+                theta_i_heat_c: 20.0,
+                theta_i_cool_c: 26.0,
+                occupants: 3,
+                internal_gains_w_m2: 3.5,
+                lighting_power_w_m2: 6.0,
+            },
+            ThermalZone {
+                id: "zone-office".into(),
+                label_en: "Home office".into(),
+                label_de: "Arbeitszimmer".into(),
+                usage_profile: UsageProfile::Office,
+                area_m2: 50.0,
+                volume_m3: 130.0,
+                theta_i_heat_c: 21.0,
+                theta_i_cool_c: 26.0,
+                occupants: 1,
+                internal_gains_w_m2: 5.0,
+                lighting_power_w_m2: 10.0,
+            },
+        ];
+        for el in &mut doc.elements {
+            if el.id == "win-n" || el.id == "wall-n" {
+                el.zone_id = "zone-office".into();
+            }
+        }
+        doc
+    }
+
+    /// ❄️ Non-residential office with cooling plant (scopes cooling leaves for perturbation).
+    pub fn cooled_office_building() -> Din18599Snapshot {
+        let mut doc = base_house(true);
+        doc.use_class = UseClass::Office;
+        doc.zones[0].usage_profile = UsageProfile::Office;
+        doc.zones[0].lighting_power_w_m2 = 10.0;
+        doc.zones[0].internal_gains_w_m2 = 6.0;
+        doc.dhw.specific_demand_kwh_person_a = 100.0;
+        doc.dhw.storage_loss_kwh_a = 40.0;
+        doc.dhw.distribution_loss_kwh_a = 30.0;
+        doc.cooling = CoolingSystem {
+            plant: Some(CoolingPlant {
+                eer: 3.2,
+                energy_carrier: "electricity".into(),
+            }),
+        };
+        doc.renewables.pv_area_m2 = 80.0;
+        doc.zones[0].theta_i_cool_c = 26.0;
+        doc
+    }
+}
+//#endregion 🔖️Subjects
 
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port —
@@ -337,122 +690,182 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;
                         #[path = "."]
+                        pub mod change_building_category {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️building-category/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️building-category/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️building-category/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_attachment {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱attachment/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱attachment/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱attachment/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod change_use_class {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-use-class/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️use-class/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-use-class/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️use-class/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-use-class/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️use-class/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_heated_area_m2 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-heated-area-m2/🦀️.rs"]
+                        pub mod change_method {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮method/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-heated-area-m2/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮method/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-heated-area-m2/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮method/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_occupants {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-occupants/🦀️.rs"]
+                        pub mod change_net_floor_area_m2 {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️net-floor-area-m2/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-occupants/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️net-floor-area-m2/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-occupants/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️net-floor-area-m2/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_h_t {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-ht/🦀️.rs"]
+                        pub mod change_heated_volume_m3 {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦heated-volume-m3/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-ht/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦heated-volume-m3/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️change-ht/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦heated-volume-m3/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_h_v {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-hv/🦀️.rs"]
+                        pub mod change_geg_qp_factor {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️geg-qp-factor/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-hv/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️geg-qp-factor/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-hv/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️geg-qp-factor/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_internal_gains_w_m2 {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-internal-gains-wm2/🦀️.rs"]
+                        pub mod change_delta_u_wb {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉delta-u-wb/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-internal-gains-wm2/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉delta-u-wb/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-internal-gains-wm2/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉delta-u-wb/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_solar_gains_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-solar-gains-kwh/🦀️.rs"]
+                        pub mod change_automation_class {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️automation-class/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-solar-gains-kwh/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️automation-class/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-solar-gains-kwh/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️automation-class/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_system_losses_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-system-losses-kwh/🦀️.rs"]
+                        pub mod specify_heating_system {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥specify-heating-system/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-system-losses-kwh/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥specify-heating-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️change-system-losses-kwh/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥specify-heating-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_renewable_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-renewable-kwh/🦀️.rs"]
+                        pub mod specify_dhw_system {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿specify-dhw-system/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-renewable-kwh/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿specify-dhw-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-renewable-kwh/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿specify-dhw-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_annual_limit_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-annual-limit-kwh/🦀️.rs"]
+                        pub mod update_ventilation {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-ventilation/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-annual-limit-kwh/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-ventilation/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️change-annual-limit-kwh/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️update-ventilation/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_energy_carrier {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️change-energy-carrier/🦀️.rs"]
+                        pub mod update_cooling {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-cooling/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️change-energy-carrier/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-cooling/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️change-energy-carrier/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️update-cooling/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
                         #[path = "."]
-                        pub mod change_reference_q_p_kwh {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-reference-qp-kwh/🦀️.rs"]
+                        pub mod update_lighting {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡update-lighting/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-reference-qp-kwh/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡update-lighting/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-reference-qp-kwh/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡update-lighting/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod update_renewables {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️update-renewables/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️update-renewables/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️update-renewables/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_zones {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-zones/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-zones/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-zones/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod replace_elements {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩replace-elements/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩replace-elements/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩replace-elements/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod change_element_u {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-element-u/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-element-u/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️change-element-u/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
@@ -552,6 +965,30 @@ pub mod examples {
         mod component;
         pub use component::*;
     }
+    #[path = "."]
+    pub mod compliant_detached {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/✅️compliant-detached/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod noncompliant_detached {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️noncompliant-detached/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod compliant_two_zone {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️compliant-two-zone/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod cooled_office {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❄️cooled-office/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
 }
 
 #[path = "."]
@@ -582,6 +1019,14 @@ pub mod editor {
             pub mod set_snapshot;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️set-field/🦀️.rs"]
+            pub mod set_field;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➕insert-item/🦀️.rs"]
+            pub mod insert_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖remove-item/🦀️.rs"]
+            pub mod remove_item;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹apply-remedy/🦀️.rs"]
+            pub mod apply_remedy;
         }
 
         #[path = "."]
@@ -591,6 +1036,9 @@ pub mod editor {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
                 mod component;
                 pub use component::*;
+
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🏷️field-meta/🦀️.rs"]
+                pub mod field_meta;
 
                 #[path = "."]
                 pub mod windows {

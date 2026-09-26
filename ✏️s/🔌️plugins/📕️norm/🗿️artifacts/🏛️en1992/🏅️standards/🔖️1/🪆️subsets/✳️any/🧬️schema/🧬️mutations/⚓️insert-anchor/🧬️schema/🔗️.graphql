@@ -1,0 +1,4 @@
+type InsertAnchor {
+  index: Int!
+  anchor: String!
+}

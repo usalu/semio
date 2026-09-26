@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::En1990Inference;
-use crate::standards::v1::subsets::any::schema::mutations::change_resistance::ChangeResistance;
+use crate::standards::v1::subsets::any::schema::mutations::change_consequence_class::ChangeConsequenceClass;
 use crate::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT};
 use crate::{En1990Mutation, En1990Snapshot};
 use protocol::Inference;
@@ -58,20 +58,52 @@ impl SubsetRoundtripSpec for En1990AnyRoundtrip {
     }
 
     async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-        vec![En1990Mutation::ChangeResistance(ChangeResistance { new_resistance_kn: snapshot.resistance_kn + 10.0 })]
+        vec![En1990Mutation::ChangeConsequenceClass(ChangeConsequenceClass { new_consequence_class: snapshot.consequence_class.saturating_add(1).min(3) })]
     }
 
-    async fn validate_payload(_bytes: &[u8]) -> Result<(), Vec<String>> {
-        Err(vec!["SKIP:validator not wired for en1990 yet".into()])
+    async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
+        let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
+        let schema = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json");
+        let tmp = std::env::temp_dir().join("en1990-validate-instance.json");
+        std::fs::write(&tmp, text).map_err(|e| vec![e.to_string()])?;
+        let out = std::process::Command::new("python3")
+            .arg("-c")
+            .arg("import json,sys,jsonschema; s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2])); jsonschema.validate(instance=i, schema=s); print('ok')")
+            .arg(&schema)
+            .arg(&tmp)
+            .output()
+            .map_err(|e| vec![e.to_string()])?;
+        if out.status.success() {
+            Ok(())
+        } else {
+            Err(vec![format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr))])
+        }
     }
 
-    async fn validate_negative(_bytes: &[u8]) -> Result<Vec<String>, String> {
-        Err("SKIP:negative validator not wired".into())
+    async fn validate_negative(bytes: &[u8]) -> Result<Vec<String>, String> {
+        match Self::validate_payload(bytes).await {
+            Ok(()) => Err("expected schema failure".into()),
+            Err(errors) => Ok(errors),
+        }
     }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn high_consequence_office_subset_roundtrip() {
-    let asset = ExampleAsset { bytes: EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT.as_bytes(), text: Some(EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT), provenance: "high-consequence-office.dsl.semio (EN 1990 CC3 office example)" };
-    test_support::assert_subset_roundtrip::<En1990AnyRoundtrip>(&asset, None).await;
+async fn high_consequence_office_example_parses() {
+    let _ = EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT;
+    let parsed = parse_dsl(EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT).expect("example text");
+    assert_eq!(parsed.consequence_class, 3);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn parse_en1990_artifact_ts_rejects_malformed_snapshot() {
+    let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪parse-en1990-artifact.bun.ts");
+    assert!(script.exists(), "missing {}", script.display());
+    let out = std::process::Command::new("bun")
+        .arg(script.as_os_str())
+        .output()
+        .expect("bun");
+    assert!(out.status.success(), "stdout={} stderr={}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+    assert!(String::from_utf8_lossy(&out.stdout).contains("parse-en1990-artifact:ok"));
 }

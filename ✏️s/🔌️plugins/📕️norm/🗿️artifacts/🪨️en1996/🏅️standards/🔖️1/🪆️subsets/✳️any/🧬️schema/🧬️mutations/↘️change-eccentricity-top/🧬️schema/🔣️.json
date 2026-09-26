@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-eccentricity-top/schema.json",
+  "title": "ChangeEccentricityTop",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newEccentricityTopM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newEccentricityTopM": {
+      "type": "number"
+    }
+  }
+}

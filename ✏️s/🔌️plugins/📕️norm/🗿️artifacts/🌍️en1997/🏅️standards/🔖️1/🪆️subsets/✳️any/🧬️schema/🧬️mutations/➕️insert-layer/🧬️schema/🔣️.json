@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/insert-layer/schema.json",
+  "title": "InsertLayer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "layer"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "layer": {
+      "type": "object"
+    }
+  }
+}

@@ -1,13 +1,21 @@
-use super::*;
-use crate::mutations::En1999Mutation;
-use protocol::{Mutation as _, MutationDiff};
+//! 🔬️ Updated for hierarchical EN 1999 subject.
 
-#[semio_framework_async_macros::async_test]
-async fn change_mutation_diff_updates_only_its_field() {
-    let base = En1999Snapshot::default();
-    let mutation = En1999Mutation::ChangeNEdKn(crate::mutations::change_n_ed_kn::ChangeNEdKn { new_n_ed_kn: 95.0 });
-    let outcome = mutation.diff(&base);
-    let mut expected = base.clone();
-    expected.n_ed_kn = 95.0;
-    assert_eq!(outcome.diff().apply(&base).expect("valid mutation diff"), expected);
+use crate::En1999Snapshot;
+use crate::mutations::En1999Mutation;
+
+#[test]
+fn default_snapshot_has_members() {
+    let s = En1999Snapshot::default();
+    assert!(!s.members.is_empty());
+    assert!(!s.materials.is_empty());
+}
+
+#[test]
+fn from_snapshot_bulk_replace_count() {
+    let empty = En1999Snapshot::empty();
+    let target = En1999Snapshot::compliant_roof_purlin();
+    let raised = En1999Mutation::from_snapshot(&empty, &target);
+    assert!(raised.len() >= 5, "expected hierarchical replace mutations, got {}", raised.len());
+    let noop = En1999Mutation::from_snapshot(&target, &target);
+    assert!(noop.is_empty());
 }

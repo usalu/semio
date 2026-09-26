@@ -1,39 +1,15 @@
-//! 🧾 `outline` — one named inference: this document's own field/section structure. A norm
-//! compliance record IS the document it describes, so its "outline" is its top-level field list
-//! (`sectionOutline`/`fieldCount`, fixed by the snapshot's own schema shape) plus a real
-//! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
-//! no collection-typed top-level field).
+//! 🧾 Outline inference for EN 1999 aluminium-structure subject.
 
 use crate::En1999Snapshot;
 
-//#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[
-    "n_ed_kn",
-    "m_ed_knm",
-    "a_mm2",
-    "w_el_mm3",
-    "alloy",
-    "chi",
-    "i_t_mm4",
-    "l_cr_mm",
-    "theta_c",
-    "delta_sigma_ed",
-    "delta_sigma_c",
-    "fatigue_m",
-    "n_cycles",
-    "v_weld_ed_kn",
-    "weld_throat_mm",
-    "weld_length_mm",
-    "beta_w",
-    "sheet_b_mm",
-    "sheet_t_mm",
-    "sheet_k_sigma",
-    "sheet_w_el_mm3",
-    "sheet_m_ed_knm",
-    "shell_t_mm",
-    "shell_r_mm",
-    "sigma_ed_shell_mpa",
     "annex",
+    "materials",
+    "sections",
+    "members",
+    "connections",
+    "fireScenarios",
+    "fatigueDetails",
 ];
 
 /// 🧾️ `En1999` document outline.
@@ -48,10 +24,17 @@ pub struct En1999Outline {
 }
 
 impl En1999Outline {
-    pub fn compute(_snapshot: &En1999Snapshot) -> Self {
+    pub fn compute(snapshot: &En1999Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
-        let entry_count = 0;
+        let entry_count = (
+            snapshot.materials.len()
+            + snapshot.sections.len()
+            + snapshot.members.len()
+            + snapshot.connections.len()
+            + snapshot.fire_scenarios.len()
+            + snapshot.fatigue_details.len()
+        ) as u32;
         Self { section_outline, field_count, entry_count }
     }
 }
@@ -61,10 +44,3 @@ impl Default for En1999Outline {
         Self::compute(&En1999Snapshot::default())
     }
 }
-//#endregion 🔖️Outline
-
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

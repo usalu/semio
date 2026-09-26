@@ -73,7 +73,7 @@
     ],
     "product_series": [
       {
-        "id": "series.pr",
+        "id": "series-pr",
         "class_id": "class.panel-radiator",
         "names": {
           "preferred": {
@@ -90,7 +90,7 @@
     "products": [
       {
         "id": "product.pr600",
-        "series_id": "series.pr",
+        "series_id": "series-pr",
         "names": {
           "preferred": {
             "locale": "en",
@@ -185,7 +185,7 @@
     ]
   },
   "selection": {
-    "class_id": "class.towel-radiator",
+    "class_id": "class-towel-radiator",
     "constraints": [
       {
         "property_id": "prop.height",
@@ -193,7 +193,8 @@
         "value": {
           "kind": "decimal",
           "value": 600.0
-        }
+        },
+        "id": "constraint-prop.height-0"
       },
       {
         "property_id": "prop.length",
@@ -201,10 +202,11 @@
         "value": {
           "kind": "decimal",
           "value": 1000.0
-        }
+        },
+        "id": "constraint-prop.length-1"
       }
     ],
-    "series_id": "series.pr"
+    "series_id": "series-pr"
   },
   "partNumberRule": {
     "kind": "literal",

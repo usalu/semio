@@ -3,7 +3,7 @@
   "emoji": "🔖️",
   "status": "closed",
   "description": "Refactor compose/rs, compose/graphql, compose/js, compose/react, compose/sketchpad so every kit mutation is scoped: kit or alternative latest checkpoint -\u003e draft -\u003e transaction -\u003e command batch. Add KitWriteScope in Rust, typed GraphQL command inputs (no JSON scalars for writes), JS KitStore scoped APIs, React scope providers/hooks, Sketchpad routing through scoped commands. Bind plan kit_command_scopes_b02844b8.",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️kitapp",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "plan": {
     "client": "cursor",
     "id": "b02844b8",

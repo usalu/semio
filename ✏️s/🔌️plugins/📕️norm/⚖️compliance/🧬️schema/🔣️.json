@@ -1,0 +1,331 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/check-report/schema.json",
+  "title": "CheckReport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "summary",
+    "checks"
+  ],
+  "definitions": {
+    "QuantityKind": {
+      "type": "string",
+      "enum": [
+        "Dimensionless",
+        "Length",
+        "Area",
+        "Volume",
+        "Mass",
+        "Time",
+        "Temperature",
+        "Force",
+        "Pressure",
+        "Stress",
+        "Moment",
+        "Energy",
+        "Power",
+        "ThermalConductivity",
+        "ThermalResistance",
+        "HeatTransferCoefficient",
+        "AirPermeability",
+        "VentilationRate",
+        "Acceleration"
+      ]
+    },
+    "Quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/definitions/QuantityKind"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "ClauseId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "part",
+        "section"
+      ],
+      "properties": {
+        "family": {
+          "type": "string"
+        },
+        "part": {
+          "type": "string"
+        },
+        "section": {
+          "type": "string"
+        }
+      }
+    },
+    "LocalizedCopy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string"
+        },
+        "de": {
+          "type": "string"
+        }
+      }
+    },
+    "SubjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entityId",
+        "path",
+        "label"
+      ],
+      "properties": {
+        "entityId": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "label": {
+          "$ref": "#/definitions/LocalizedCopy"
+        }
+      }
+    },
+    "CheckStatus": {
+      "type": "string",
+      "enum": [
+        "Pass",
+        "Warning",
+        "Fail",
+        "NotApplicable"
+      ]
+    },
+    "AnnexChoice": {
+      "type": "string",
+      "enum": [
+        "En",
+        "De"
+      ]
+    },
+    "RemedyBound": {
+      "type": "string",
+      "enum": [
+        "AtLeast",
+        "AtMost",
+        "Exactly",
+        "OneOf"
+      ]
+    },
+    "Remedy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "current",
+        "required",
+        "bound",
+        "options",
+        "action",
+        "applicable"
+      ],
+      "properties": {
+        "target": {
+          "$ref": "#/definitions/SubjectRef"
+        },
+        "current": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "required": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "bound": {
+          "$ref": "#/definitions/RemedyBound"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "action": {
+          "$ref": "#/definitions/LocalizedCopy"
+        },
+        "applicable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CheckResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "part",
+        "clause",
+        "subject",
+        "status",
+        "title",
+        "explanation",
+        "computed",
+        "limit",
+        "utilization",
+        "annex",
+        "remedies"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "part": {
+          "type": "string"
+        },
+        "clause": {
+          "$ref": "#/definitions/ClauseId"
+        },
+        "subject": {
+          "$ref": "#/definitions/SubjectRef"
+        },
+        "status": {
+          "$ref": "#/definitions/CheckStatus"
+        },
+        "title": {
+          "$ref": "#/definitions/LocalizedCopy"
+        },
+        "explanation": {
+          "$ref": "#/definitions/LocalizedCopy"
+        },
+        "computed": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "limit": {
+          "$ref": "#/definitions/Quantity"
+        },
+        "utilization": {
+          "type": "number"
+        },
+        "annex": {
+          "$ref": "#/definitions/AnnexChoice"
+        },
+        "remedies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Remedy"
+          }
+        }
+      }
+    },
+    "PartVerdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "part",
+        "pass",
+        "warning",
+        "fail",
+        "notApplicable",
+        "worstUtilization",
+        "complies"
+      ],
+      "properties": {
+        "part": {
+          "type": "string"
+        },
+        "pass": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notApplicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "worstUtilization": {
+          "type": "number"
+        },
+        "complies": {
+          "type": "boolean"
+        }
+      }
+    },
+    "CheckReportSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "pass",
+        "warning",
+        "fail",
+        "notApplicable",
+        "worstUtilization",
+        "complies",
+        "parts"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pass": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "warning": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fail": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "notApplicable": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "worstUtilization": {
+          "type": "number"
+        },
+        "complies": {
+          "type": "boolean"
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PartVerdict"
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "summary": {
+      "$ref": "#/definitions/CheckReportSummary"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CheckResult"
+      }
+    }
+  }
+}

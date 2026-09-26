@@ -1,55 +1,9 @@
-//! 🦀️ EN 1998 exhaustive mutation case — Rust adapter. Ticket
-//! 26/08/23/END-TO-END-TESTING-REFACTOR, wave 14 (the no-oracle conversion). The recorded
-//! no-oracle decision `en1998-1-mutation-semantics` is gone from
-//! `../../🔣️oracle.json`, because a reference now
-//! exists to compare against: `s.norm.en1998` is a
-//! semio-native artifact with no third-party reader or writer, so its reference is a second
-//! IMPLEMENTATION: the independent Python `🐍️component.py` beside this file, registered as the
-//! oracle `en1998-1-python-independent`. This adapter is the SUBJECT half only — it drives this
-//! repository's own `apply_en1998_mutation` over the full 49-kind `En1998Mutation` vocabulary.
+//! 🧪 Language-agnostic EN 1998-1 mutation oracle — current vocabulary.
 //!
-//! Forty-nine document-root scalars and booleans, one `change-<field>` each — the
-//! second-largest vocabulary in the plugin — spanning seven of EN 1998's own structure classes
-//! in ONE document: buildings (seismic zone, ground type, importance class, structural system,
-//! T_1, mass, V_Rd, drift, height, the multiple-resisting-systems flag), the EN-annex spectrum
-//! (a_gR, ground type, spectrum type, period ratio), bridges (V_Rd, bearing displacement demand
-//! and capacity), retrofit assessment (knowledge level, limit state, E_d, R_k, gamma_el), silos
-//! and tanks (height, radius, N_Rd, V_Ed, V_Rd, behaviour factor q, plus the tank mass and
-//! V_Rd), towers and chimneys (M_Ed, M_Rd, the chimney flag, q, mass), foundations (area, p_Rd,
-//! H_Ed, H_Rd, the two stiffness factors k) and retaining walls (height, phi, soil gamma, the
-//! ductility factor r, H_Rd).
-//!
-//! ⚖️ WHERE THE ASSERTIONS LIVE. Every law this case claims is asserted IN ROLE inside the
-//! subject handlers as well as being compared against the oracle's answer, through the shared
-//! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law` module (`law::mutation_is_observable`,
-//! `law::inverse_restores`, `law::round_trip_preserves`, `law::carrier_is_exact`) that the
-//! stdio mutation cases use, reached through the `oracleHostPackages` entry this plugin
-//! declares in `✏️s/🔌️plugins/📕️norm/🔣️oracle.json`. What `parity` adds on top is the
-//! one thing a single implementation can never provide: that a second implementation, written in
-//! another language from the same written specification, reaches the same document.
-//!
-//! 🌉️ HOW THE FIXTURES REACH TYPED VALUES. The generated test host links only
-//! `semio-repo-test-host`, the stdio law crate and — behind `sut` — this plugin's own crate;
-//! `serde`, `serde_json` and this crate's `protocol`/`store`/`vcs` extern-crate aliases are all
-//! unreachable from here. The subset's own production code therefore exports the bridges
-//! (`decode_en1998_snapshot_json`/`encode_en1998_snapshot_json`,
-//! `decode_en1998_dsl`/`encode_en1998_dsl`, `decode_en1998_pack`/`encode_en1998_pack` in
-//! `../../🧬️schema/📸️snapshot/🦀️.rs`;
-//! `decode_en1998_mutation_json`, `apply_en1998_mutation`, `inverse_en1998_mutation` in
-//! `../../🧬️schema/🧬️mutations/🦀️.rs`), whose
-//! signatures name only reachable types. This side reaches the committed vectors through
-//! `include_str!` and the Python side through the `asset://` URIs the feature declares, so both
-//! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
-//! them that could drift from what the other one read.
-//!
-//! 🚧️ The Rust SUBJECT phase still cannot run: `semio-s-plugin-norm` does not compile (671 errors
-//! at the time of writing — a concurrent session is mid-flight across ~2000 files of this plugin,
-//! removing gratuitous `async fn` wrappers). `parity` therefore has nothing to compare the oracle
-//! against YET; the moment the crate is green it does, with no further change here. The subject half is
-//! written against the SYNC trait surface the fixture tests in this crate already call
-//! (`Mutation::diff`, `MutationDiff::apply`, `Mutation::inverse`, `ArtifactDsl`,
-//! `ArtifactPack`) rather than against the plugin's async wrappers, and is `sut`-gated so the
-//! oracle-only run never links it.
+//! Covers the live `En1998Mutation` kinds: annex/site, building insert/remove,
+//! system VRd, storey mass/stiffness/drift, plan/elevation regularity, member detailing,
+//! masonry wall ratio, and part 2–6 insert/change leaves (bridge/assessment/silo/tank/
+//! foundation/retaining-wall/tower). Wire kinds match `to_kebab(variant)` / SEMANTICS.kind.
 
 use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;

@@ -1,0 +1,29 @@
+semio norm.en1990.dsl v1
+annex=de project-id=accidental-seismic-failing structure-kind=building altitude-m=120 consequence-class=2 reliability-class=2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8
+permanents [id:TEXT kind:TEXT gk:NUM] {
+  G-sup g_sup 100000
+  G-inf g_inf 20000
+}
+variables [id:TEXT category:TEXT qk:NUM] {
+  Q-office office 50000
+  Q-wind wind 25000
+}
+accidentals [id:TEXT ad:NUM] {
+  A-impact 180000
+}
+seismics [id:TEXT a-ek:NUM importance-class:TEXT] {
+  E-1 150000 iii
+}
+members [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {
+  beam-B1 "Office beam B1" "Büroträger B1" 150000 150000 120000 100000 0 6 0.03 250 4 3
+}
+bridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {
+}
+effects [member-id:TEXT action-id:TEXT influence:NUM] {
+  beam-B1 G-sup 1
+  beam-B1 G-inf 1
+  beam-B1 Q-office 1
+  beam-B1 Q-wind 1
+  beam-B1 A-impact 1
+  beam-B1 E-1 1
+}

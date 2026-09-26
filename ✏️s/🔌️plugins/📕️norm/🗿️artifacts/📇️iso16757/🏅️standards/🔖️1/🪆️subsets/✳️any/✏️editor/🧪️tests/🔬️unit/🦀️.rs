@@ -86,6 +86,10 @@ fn every_command() -> Vec<Iso16757Command> {
         Iso16757Command::Evaluate(evaluate::Evaluate {}),
         Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         Iso16757Command::SetActiveExample(set_active_example::SetActiveExample { example_id: String::new() }),
+        Iso16757Command::SetField(super::set_field::SetField { path: "partNumberInputs.dn".into(), value_json: "50".into() }),
+        Iso16757Command::InsertItem(super::insert_item::InsertItem { path: "catalogue.productGroups".into(), index: 0, value_json: None }),
+        Iso16757Command::RemoveItem(super::remove_item::RemoveItem { path: "catalogue.productGroups".into(), index: 0 }),
+        Iso16757Command::ApplyRemedy(super::apply_remedy::ApplyRemedy { check_id: String::new(), remedy_index: 0 }),
     ]
 }
 
@@ -97,14 +101,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]);
+    assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]);
 }
 
 /// 🧷️ The permanent wire guard: every row round-trips text↔binary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example"];
+    let keywords = ["set-snapshot", "evaluate", "selected-check", "set-active-example", "set-field", "insert-item", "remove-item", "apply-remedy"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -170,6 +174,7 @@ async fn every_declared_body_key_renders() {
 async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, Iso16757Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Iso16757Snapshot::default() })).await;
+    context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
     let host = NormHost::<Iso16757Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
     context::close(&mut app);
@@ -180,7 +185,8 @@ async fn set_snapshot_commits_a_host_backed_report() {
 #[semio_framework_async_macros::async_test]
 async fn norm_family_evaluate_matches_host() {
     let doc = Iso16757Snapshot::default();
-    let host = Host::from_artifact(doc);
+    let mut host = Host::from_artifact(doc);
+    host.evaluate();
     assert!(!host.report().checks.is_empty());
     assert_eq!(<Iso16757Family as crate::document::NormFamily>::family_id(), crate::document::NormFamilyId::Iso16757);
 }
@@ -231,10 +237,11 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
+    context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
     let media = semio_framework_plugin::resolve_ready(PluginApp::export_media(&mut app, "report:out")).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
-    let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
+    let report: crate::document::CheckReport = pack::json::from_json_str(&json).expect("report json parses");
     assert!(!report.checks.is_empty());
     context::close(&mut app);
 }

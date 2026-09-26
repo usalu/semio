@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import {
   bindingsDataClass,
   ephemeralLocalPersistenceBinding,
@@ -13,6 +12,7 @@ import {
   type PersistenceBinding,
   type PersistenceDataClass,
 } from "../../🟦️.ts";
+import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(
@@ -24,7 +24,7 @@ const schema = JSON.parse(
 
 describe("persistence data class routing", () => {
   it("validates the language-agnostic fixture against schema", () => {
-    const ajv = new Ajv({ strict: false, allErrors: true });
+    const ajv = semioSchemaAjvV1({ strict: false, allErrors: true });
     ajv.addSchema(schema);
     const validateCase = ajv.getSchema(`${schema.$id}#/$defs/ClassifiedPersistenceBinding`);
     const validateLane = ajv.getSchema(`${schema.$id}#/$defs/ClassifiedWireLane`);

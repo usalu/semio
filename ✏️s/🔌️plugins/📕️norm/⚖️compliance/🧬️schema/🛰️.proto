@@ -1,0 +1,116 @@
+syntax = "proto3";
+package semio.norm.compliance;
+
+enum QuantityKind {
+  QUANTITY_KIND_DIMENSIONLESS = 0;
+  QUANTITY_KIND_LENGTH = 1;
+  QUANTITY_KIND_AREA = 2;
+  QUANTITY_KIND_VOLUME = 3;
+  QUANTITY_KIND_MASS = 4;
+  QUANTITY_KIND_TIME = 5;
+  QUANTITY_KIND_TEMPERATURE = 6;
+  QUANTITY_KIND_FORCE = 7;
+  QUANTITY_KIND_PRESSURE = 8;
+  QUANTITY_KIND_STRESS = 9;
+  QUANTITY_KIND_MOMENT = 10;
+  QUANTITY_KIND_ENERGY = 11;
+  QUANTITY_KIND_POWER = 12;
+  QUANTITY_KIND_THERMAL_CONDUCTIVITY = 13;
+  QUANTITY_KIND_THERMAL_RESISTANCE = 14;
+  QUANTITY_KIND_HEAT_TRANSFER_COEFFICIENT = 15;
+  QUANTITY_KIND_AIR_PERMEABILITY = 16;
+  QUANTITY_KIND_VENTILATION_RATE = 17;
+  QUANTITY_KIND_ACCELERATION = 18;
+}
+
+message Quantity {
+  QuantityKind kind = 1;
+  double value = 2;
+}
+
+message ClauseId {
+  string family = 1;
+  string part = 2;
+  string section = 3;
+}
+
+message LocalizedCopy {
+  string en = 1;
+  string de = 2;
+}
+
+message SubjectRef {
+  string entity_id = 1;
+  string path = 2;
+  LocalizedCopy label = 3;
+}
+
+enum CheckStatus {
+  CHECK_STATUS_PASS = 0;
+  CHECK_STATUS_WARNING = 1;
+  CHECK_STATUS_FAIL = 2;
+  CHECK_STATUS_NOT_APPLICABLE = 3;
+}
+
+enum AnnexChoice {
+  ANNEX_CHOICE_EN = 0;
+  ANNEX_CHOICE_DE = 1;
+}
+
+enum RemedyBound {
+  REMEDY_BOUND_AT_LEAST = 0;
+  REMEDY_BOUND_AT_MOST = 1;
+  REMEDY_BOUND_EXACTLY = 2;
+  REMEDY_BOUND_ONE_OF = 3;
+}
+
+message Remedy {
+  SubjectRef target = 1;
+  Quantity current = 2;
+  Quantity required = 3;
+  RemedyBound bound = 4;
+  repeated string options = 5;
+  LocalizedCopy action = 6;
+  bool applicable = 7;
+}
+
+message CheckResult {
+  string id = 1;
+  string part = 2;
+  ClauseId clause = 3;
+  SubjectRef subject = 4;
+  CheckStatus status = 5;
+  LocalizedCopy title = 6;
+  LocalizedCopy explanation = 7;
+  Quantity computed = 8;
+  Quantity limit = 9;
+  double utilization = 10;
+  AnnexChoice annex = 11;
+  repeated Remedy remedies = 12;
+}
+
+message PartVerdict {
+  string part = 1;
+  uint32 pass = 2;
+  uint32 warning = 3;
+  uint32 fail = 4;
+  uint32 not_applicable = 5;
+  double worst_utilization = 6;
+  bool complies = 7;
+}
+
+message CheckReportSummary {
+  uint32 total = 1;
+  uint32 pass = 2;
+  uint32 warning = 3;
+  uint32 fail = 4;
+  uint32 not_applicable = 5;
+  double worst_utilization = 6;
+  bool complies = 7;
+  repeated PartVerdict parts = 8;
+}
+
+message CheckReport {
+  CheckReportSummary summary = 1;
+  repeated CheckResult checks = 2;
+}

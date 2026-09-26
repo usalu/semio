@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeReinforcementFYk {
+  string gradeId = 1;
+  double newFYk = 2;
+}

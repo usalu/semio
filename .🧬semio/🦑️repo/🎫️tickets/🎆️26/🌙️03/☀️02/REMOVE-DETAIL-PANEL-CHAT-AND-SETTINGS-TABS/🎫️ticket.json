@@ -3,7 +3,7 @@
   "status": "closed",
   "prompt": "remove chat and setting tabs from detail panel and make sure they never appear again by placing a test in the existing testing structure",
   "summary": "Filtered .chat and .settings tabs from the rightSidePanel detail panel in Sketchpad.tsx. The hasRightTabs check, both rightSidePanel auto-select effects, and the tab list in the render all exclude tabs whose id ends with .chat or .settings. Navbar-triggered chat/settings panels continue to source their content from rightSidePanelTabs as before — no app-file changes needed.",
-  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "started": "2026-03-02T13:19:39.027044079Z",
   "finished": "2026-03-04T15:29:27.205699918Z",
   "interactions": [

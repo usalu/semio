@@ -74,7 +74,7 @@
     ],
     "product_series": [
       {
-        "id": "series.pr",
+        "id": "series-pr",
         "class_id": "class.panel-radiator",
         "names": {
           "preferred": {
@@ -91,7 +91,7 @@
     "products": [
       {
         "id": "product.pr600",
-        "series_id": "series.pr",
+        "series_id": "series-pr",
         "names": {
           "preferred": {
             "locale": "en",

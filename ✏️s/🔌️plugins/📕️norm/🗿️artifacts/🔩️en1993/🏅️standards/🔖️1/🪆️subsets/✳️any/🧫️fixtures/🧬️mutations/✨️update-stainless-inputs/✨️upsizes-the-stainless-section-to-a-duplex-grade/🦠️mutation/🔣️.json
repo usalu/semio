@@ -1,7 +1,14 @@
 {
   "UpdateStainlessInputs": {
-    "new_stainless_m_ed_knm": 56.0,
-    "new_stainless_w_pl_mm3": 384000.0,
-    "new_stainless_f_y_mpa": 460.0
+    "material": {
+      "id": "mat-s460",
+      "grade": "S460",
+      "fy": 460000000.0,
+      "fu": 540000000.0,
+      "eModulus": 210000000000.0,
+      "gModulus": 81000000000.0,
+      "subgrade": "J2",
+      "kind": "carbon"
+    }
   }
 }

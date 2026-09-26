@@ -3,7 +3,7 @@
   "status": "closed",
   "prompt": "Move design chat/settings out of scene window tabs and open them from navbar toggles in left side panel position",
   "summary": "Filtered utility tabs out of the shared right panel across sketchpad apps while preserving navbar toggle access; extended the existing Panels Playwright spec with cross-app assertions.",
-  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "started": "2026-02-22T15:53:43.299819146Z",
   "finished": "2026-02-27T11:43:59.375362133Z",
   "interactions": [

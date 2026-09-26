@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-wall-label-en/schema.json",
+  "title": "ChangeWallLabelEn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newLabelEn"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newLabelEn": {
+      "type": "string"
+    }
+  }
+}

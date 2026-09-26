@@ -41,7 +41,7 @@ pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Din18599Snapshot
     let text = crate::document::unescape_op_text_field(&payload.text);
     let mut target = <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(format!("set-snapshot: invalid document text: {error}")))?;
     reattach_unchanged_climate_child(&mut target, doc.snapshot);
-    crate::app_surface::commit_snapshot_fields(Din18599Mutation::from_snapshot(&target), "setSnapshot")
+    crate::app_surface::commit_snapshot_fields(Din18599Mutation::from_snapshot(doc.snapshot, &target), "setSnapshot")
 }
 
 /// 🧷️ The `.din18599` payload carries the composed climate child by id and uri ONLY — its

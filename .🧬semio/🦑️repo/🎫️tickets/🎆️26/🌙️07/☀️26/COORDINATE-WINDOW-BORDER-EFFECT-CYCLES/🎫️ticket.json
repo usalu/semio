@@ -4,7 +4,7 @@
   "status": "closed",
   "description": "Phase-lock loading, waiting, introduced, and celebrate border effects via shared :root CSS clocks.",
   "summary": "Border effects (loading, waiting, introduced, celebrate) now share document-level phase clocks on unlayered :root. Inheritable @property tokens drive element rings, window silhouettes, and CelebrateContent paint; consumers no longer start local spin/pulse animations. 3D celebrate conic uses document.timeline for CSS phase lock. Added CSS contract vitest for root clocks and paint-only consumers.",
-  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [],
   "files": [
     "ui/styling/js/ui.css",

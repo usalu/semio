@@ -9,13 +9,7 @@
   ],
   "properties": {
     "newDesignSituation": {
-      "type": "string",
-      "enum": [
-        "Persistent",
-        "Transient",
-        "Accidental",
-        "Seismic"
-      ]
+      "type": "string"
     }
   }
 }

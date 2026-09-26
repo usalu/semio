@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/remove-zone/schema.json",
+  "title": "RemoveZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    }
+  }
+}

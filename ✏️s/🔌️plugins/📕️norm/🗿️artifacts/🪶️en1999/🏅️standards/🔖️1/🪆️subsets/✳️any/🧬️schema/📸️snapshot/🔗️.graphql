@@ -1,30 +1,23 @@
-# 🧬️ EN 1999 snapshot schema.
-
-type En1999Snapshot {
-  nEdKn: Float! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  aMm2: Float! @state(class: ARTIFACT)
-  wElMm3: Float! @state(class: ARTIFACT)
-  alloy: Float! @state(class: ARTIFACT)
-  chi: Float! @state(class: ARTIFACT)
-  iTMm4: Float! @state(class: ARTIFACT)
-  lCrMm: Float! @state(class: ARTIFACT)
-  thetaC: Float! @state(class: ARTIFACT)
-  deltaSigmaEd: Float! @state(class: ARTIFACT)
-  deltaSigmaC: Float! @state(class: ARTIFACT)
-  fatigueM: Float! @state(class: ARTIFACT)
-  nCycles: Float! @state(class: ARTIFACT)
-  vWeldEdKn: Float! @state(class: ARTIFACT)
-  weldThroatMm: Float! @state(class: ARTIFACT)
-  weldLengthMm: Float! @state(class: ARTIFACT)
-  betaW: Float! @state(class: ARTIFACT)
-  sheetBMm: Float! @state(class: ARTIFACT)
-  sheetTMm: Float! @state(class: ARTIFACT)
-  sheetKSigma: Float! @state(class: ARTIFACT)
-  sheetWElMm3: Float! @state(class: ARTIFACT)
-  sheetMEdKnm: Float! @state(class: ARTIFACT)
-  shellTMm: Float! @state(class: ARTIFACT)
-  shellRMm: Float! @state(class: ARTIFACT)
-  sigmaEdShellMpa: Float! @state(class: ARTIFACT)
-  annex: Float! @state(class: ARTIFACT)
+type En1999Snapshot @state {
+  annex: String! @state(artifact)
+  materials: [AluminiumMaterial!]! @state(artifact)
+  sections: [AluminiumSection!]! @state(artifact)
+  members: [AluminiumMember!]! @state(artifact)
+  connections: [AluminiumConnection!]! @state(artifact)
+  fireScenarios: [FireScenario!]! @state(artifact)
+  fatigueDetails: [FatigueDetail!]! @state(artifact)
+  coldFormed: [ColdFormedSheet!]! @state(artifact)
+  shells: [AluminiumShell!]! @state(artifact)
 }
+type AluminiumMaterial { id: String!, designation: String! }
+type PlateElement { id: String!, width: Float!, thickness: Float!, outstand: Boolean!, welded: Boolean!, weldPosition: Float! }
+type AluminiumSection { id: String!, kind: String!, height: Float!, width: Float!, flangeThickness: Float!, webThickness: Float!, outerDiameter: Float!, elements: [PlateElement!]! }
+type MemberAction { id: String!, kind: String!, category: String!, source: String!, gKLine: Float!, qKLine: Float!, nK: Float!, vYK: Float!, vZK: Float!, mYK: Float!, mZK: Float! }
+type AluminiumMember { id: String!, sectionId: String!, materialId: String!, length: Float!, support: String!, bucklingLengthY: Float!, bucklingLengthZ: Float!, bucklingLengthT: Float!, ltbLength: Float!, c1: Float!, restrainedLtb: Boolean!, actions: [MemberAction!]! }
+type BoltGroup { material: String!, diameter: Float!, rows: Int!, boltsPerRow: Int!, edgeDistance: Float!, pitch: Float!, gauge: Float!, plateThickness: Float! }
+type WeldGroup { fillerAlloy: String!, throat: Float!, length: Float!, betaW: Float!, hazExtent: Float! }
+type AluminiumConnection { id: String!, memberId: String!, materialId: String!, kind: String!, actions: [MemberAction!]!, bolts: BoltGroup!, welds: WeldGroup! }
+type FireScenario { id: String!, memberId: String!, thetaA: Float!, durationS: Float! }
+type FatigueDetail { id: String!, memberId: String!, detailCategory: String!, deltaSigmaC: Float!, deltaSigmaEd: Float!, nCycles: Float!, m1: Float!, m2: Float! }
+type ColdFormedSheet { id: String!, materialId: String!, thickness: Float!, width: Float!, span: Float!, mEd: Float!, nEd: Float!, welded: Boolean! }
+type AluminiumShell { id: String!, materialId: String!, radius: Float!, thickness: Float!, length: Float!, sigmaXEd: Float!, sigmaThetaEd: Float! }

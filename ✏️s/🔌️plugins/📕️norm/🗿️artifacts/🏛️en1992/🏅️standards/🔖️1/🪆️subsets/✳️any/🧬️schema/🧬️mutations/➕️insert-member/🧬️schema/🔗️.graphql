@@ -1,0 +1,4 @@
+type InsertMember {
+  index: Int!
+  member: String!
+}

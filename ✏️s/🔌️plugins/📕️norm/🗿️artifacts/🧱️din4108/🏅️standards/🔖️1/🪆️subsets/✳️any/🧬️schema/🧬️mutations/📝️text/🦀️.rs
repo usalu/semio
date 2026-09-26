@@ -1,20 +1,4 @@
-//! ⚡️ DIN 4108 artifact — hand-rolled `OpText`/`OpBinary` for `Din4108Mutation`.
-//! `#[derive(dsl_derive::Mutations)]` only generates `Mutation`/`SemanticMutation` (see
-//! `../🦀️.rs`'s `🔖️Mutations` region) — the wire-text/wire-binary codecs stay handcrafted
-//! here, one keyword per semantic verb, grammar `keyword key1=value1 key2=value2 ...`. Every field
-//! (scalar or structured) already derives `ToValue`/`FromValue`, so it round-trips through a
-//! quoted JSON atom uniformly — a second handcrafted grammar per Rust primitive type would just
-//! duplicate that losslessly (same rationale ISO 16757's sibling facet documents for its
-//! structured-only fields, applied uniformly here given this facet's field-count).
-
-pub use crate::artifact_schema::mutations::Din4108Mutation;
-
-use crate::artifact_schema::mutations::{
-    change_airtightness_class::ChangeAirtightnessClass, change_airtightness_n50::ChangeAirtightnessN50, change_application_type::ChangeApplicationType, change_bb2_details_conform::ChangeBb2DetailsConform, change_catalog_id::ChangeCatalogId,
-    change_category::ChangeCategory, change_climate::ChangeClimate, change_declared_application_class::ChangeDeclaredApplicationClass, change_envelope_area_m2::ChangeEnvelopeAreaM2, change_irradiance_w_m2::ChangeIrradianceWM2,
-    change_layer_lambda::ChangeLayerLambda, change_layer_thickness::ChangeLayerThickness, change_material_id::ChangeMaterialId, change_moisture_mu_exterior::ChangeMoistureMuExterior, change_moisture_mu_interior::ChangeMoistureMuInterior,
-    change_psi_times_l_sum::ChangePsiTimesLSum, change_rh_int::ChangeRhInt, change_solar_absorptance::ChangeSolarAbsorptance, change_t_int_c::ChangeTIntC, insert_layer::InsertLayer, remove_layer::RemoveLayer, reorder_layers::ReorderLayers,
-};
+//! ⚡️ DIN 4108 artifact — `OpText`/`OpBinary` for `Din4108Mutation`.
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -22,394 +6,414 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-//#region 🔖️ScalarCodec
-/// 🔤️ Quoted-string encode/decode — the only value kind that can contain a raw space, so every
-/// other token stays space-free and tokenizable by [`tokenize_args`].
-fn enc_str(s: &str) -> String {
-    format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
-}
-fn dec_str(s: &str) -> Result<String, String> {
-    let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
-    let mut out = String::with_capacity(inner.len());
-    let mut chars = inner.chars();
-    while let Some(c) = chars.next() {
-        if c != '\\' {
-            out.push(c);
-            continue;
-        }
-        match chars.next() {
-            Some('\\') => out.push('\\'),
-            Some('"') => out.push('"'),
-            Some(other) => return Err(format!("bad escape \\{other}")),
-            None => return Err("dangling escape".into()),
-        }
-    }
-    Ok(out)
-}
-/// 🧬️ Every payload field already derives `ToValue`/`FromValue` — a quoted JSON atom reuses
-/// that losslessly instead of a second handcrafted grammar per field type.
-fn enc_json<T: dsl::ToValue>(value: &T) -> String {
-    enc_str(&pack::json::to_json_string(value))
-}
-fn dec_json<T: dsl::FromValue>(s: &str) -> Result<T, String> {
-    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
-}
-//#endregion 🔖️ScalarCodec
-
-//#region 🔖️Tokenizer
-/// 🔡️ Splits `key=value` tokens on plain spaces, EXCEPT spaces inside a `"..."` quoted value —
-/// needed because string/JSON payloads may contain spaces.
-fn tokenize_args(rest: &str) -> Vec<String> {
-    let mut tokens = Vec::new();
-    let mut current = String::new();
-    let mut in_quotes = false;
-    let mut chars = rest.chars();
-    while let Some(c) = chars.next() {
-        match c {
-            '"' => {
-                current.push(c);
-                in_quotes = !in_quotes;
-            }
-            '\\' if in_quotes => {
-                current.push(c);
-                if let Some(next) = chars.next() {
-                    current.push(next);
-                }
-            }
-            ' ' if !in_quotes => {
-                if !current.is_empty() {
-                    tokens.push(std::mem::take(&mut current));
-                }
-            }
-            _ => current.push(c),
-        }
-    }
-    if !current.is_empty() {
-        tokens.push(current);
-    }
-    tokens
-}
-fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
-}
-//#endregion 🔖️Tokenizer
+pub use crate::artifact_schema::mutations::Din4108Mutation;
+use crate::artifact_schema::mutations::{
+    change_climate_zone,
+    change_usage,
+    change_t_int_c,
+    change_rh_int,
+    change_airtightness_n50,
+    change_has_mechanical_ventilation,
+    change_bb2_details_conform,
+    insert_zone,
+    remove_zone,
+    change_zone_floor_area,
+    change_zone_heaviness,
+    change_zone_night_ventilation,
+    insert_zone_window,
+    remove_zone_window,
+    change_zone_window_area,
+    change_zone_window_g_value,
+    change_zone_window_shading_fc,
+    insert_element,
+    remove_element,
+    change_element_area,
+    change_element_adjacent,
+    change_element_kind,
+    insert_layer,
+    remove_layer,
+    reorder_layers,
+    change_layer_thickness,
+    change_layer_lambda,
+    change_layer_mu,
+    change_layer_material_id,
+    insert_thermal_bridge,
+    remove_thermal_bridge,
+    change_thermal_bridge_psi,
+    change_thermal_bridge_length,
+    change_element_orientation_deg,
+    change_element_inclination_deg,
+    change_element_delta_u_g,
+    change_element_delta_u_f,
+    change_element_delta_u_r,
+    change_thermal_bridge_bb2_type,
+    change_zone_window_orientation,
+    change_zone_window_inclination_deg,
+    change_layer_application_type,
+    change_layer_compressive_class,
+};
+use protocol::OpText;
 
 //#region 🔖️OpText
-fn print_din4108_mutation(mutation: &Din4108Mutation) -> String {
-    match mutation {
-        Din4108Mutation::ChangeCategory(p) => format!("change-category new-category={}", enc_json(&p.new_category)),
-        Din4108Mutation::ChangeClimate(p) => format!("change-climate new-climate={}", enc_json(&p.new_climate)),
-        Din4108Mutation::ChangeAirtightnessN50(p) => format!("change-airtightness-n50 new-airtightness-n50={}", enc_json(&p.new_airtightness_n50)),
-        Din4108Mutation::ChangePsiTimesLSum(p) => format!("change-psi-times-l-sum new-psi-times-l-sum={}", enc_json(&p.new_psi_times_l_sum)),
-        Din4108Mutation::ChangeRhInt(p) => format!("change-rh-int new-rh-int={}", enc_json(&p.new_rh_int)),
-        Din4108Mutation::ChangeCatalogId(p) => format!("change-catalog-id new-catalog-id={}", enc_json(&p.new_catalog_id)),
-        Din4108Mutation::ChangeMaterialId(p) => format!("change-material-id new-material-id={}", enc_json(&p.new_material_id)),
-        Din4108Mutation::ChangeAirtightnessClass(p) => format!("change-airtightness-class new-airtightness-class={}", enc_json(&p.new_airtightness_class)),
-        Din4108Mutation::ChangeTIntC(p) => format!("change-t-int-c new-t-int-c={}", enc_json(&p.new_t_int_c)),
-        Din4108Mutation::ChangeSolarAbsorptance(p) => format!("change-solar-absorptance new-solar-absorptance={}", enc_json(&p.new_solar_absorptance)),
-        Din4108Mutation::ChangeIrradianceWM2(p) => format!("change-irradiance-wm2 new-irradiance-w-m2={}", enc_json(&p.new_irradiance_w_m2)),
-        Din4108Mutation::ChangeMoistureMuExterior(p) => format!("change-moisture-mu-exterior new-moisture-mu-exterior={}", enc_json(&p.new_moisture_mu_exterior)),
-        Din4108Mutation::ChangeMoistureMuInterior(p) => format!("change-moisture-mu-interior new-moisture-mu-interior={}", enc_json(&p.new_moisture_mu_interior)),
-        Din4108Mutation::ChangeEnvelopeAreaM2(p) => format!("change-envelope-area-m2 new-envelope-area-m2={}", enc_json(&p.new_envelope_area_m2)),
-        Din4108Mutation::ChangeBb2DetailsConform(p) => format!("change-bb2-details-conform new-bb2-details-conform={}", enc_json(&p.new_bb2_details_conform)),
-        Din4108Mutation::ChangeApplicationType(p) => format!("change-application-type new-application-type={}", enc_json(&p.new_application_type)),
-        Din4108Mutation::ChangeDeclaredApplicationClass(p) => format!("change-declared-application-class new-declared-application-class={}", enc_json(&p.new_declared_application_class)),
-        Din4108Mutation::InsertLayer(p) => format!("insert-layer index={} layer={}", enc_json(&p.index), enc_json(&p.layer)),
-        Din4108Mutation::RemoveLayer(p) => format!("remove-layer index={}", enc_json(&p.index)),
-        Din4108Mutation::ReorderLayers(p) => format!("reorder-layers from={} to={}", enc_json(&p.from), enc_json(&p.to)),
-        Din4108Mutation::ChangeLayerThickness(p) => format!("change-layer-thickness index={} new-thickness-m={}", enc_json(&p.index), enc_json(&p.new_thickness_m)),
-        Din4108Mutation::ChangeLayerLambda(p) => format!("change-layer-lambda index={} new-lambda-w-mk={}", enc_json(&p.index), enc_json(&p.new_lambda_w_mk)),
-    }
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+enum Din4108MutationDsl {
+    ChangeClimateZone {
+        new_climate_zone: crate::document::ClimateZoneDe,
+    },
+    ChangeUsage {
+        new_usage: String,
+    },
+    ChangeTIntC {
+        new_t_int_c: f64,
+    },
+    ChangeRhInt {
+        new_rh_int: f64,
+    },
+    ChangeAirtightnessN50 {
+        new_airtightness_n50: f64,
+    },
+    ChangeHasMechanicalVentilation {
+        new_has_mechanical_ventilation: bool,
+    },
+    ChangeBb2DetailsConform {
+        new_bb2_details_conform: bool,
+    },
+    InsertZone {
+        index: usize,
+        #[dsl(block)]
+        zone: crate::ThermalZone,
+    },
+    RemoveZone {
+        index: usize,
+    },
+    ChangeZoneFloorArea {
+        zone_id: String,
+        new_floor_area_m2: f64,
+    },
+    ChangeZoneHeaviness {
+        zone_id: String,
+        new_heaviness: String,
+    },
+    ChangeZoneNightVentilation {
+        zone_id: String,
+        new_night_ventilation: String,
+    },
+    InsertZoneWindow {
+        zone_id: String,
+        index: usize,
+        #[dsl(block)]
+        window: crate::ZoneWindow,
+    },
+    RemoveZoneWindow {
+        zone_id: String,
+        index: usize,
+    },
+    ChangeZoneWindowArea {
+        zone_id: String,
+        window_id: String,
+        new_area_m2: f64,
+    },
+    ChangeZoneWindowGValue {
+        zone_id: String,
+        window_id: String,
+        new_g_value: f64,
+    },
+    ChangeZoneWindowShadingFc {
+        zone_id: String,
+        window_id: String,
+        new_shading_fc: f64,
+    },
+    InsertElement {
+        index: usize,
+        #[dsl(block)]
+        element: crate::EnvelopeElement,
+    },
+    RemoveElement {
+        index: usize,
+    },
+    ChangeElementArea {
+        element_id: String,
+        new_area_m2: f64,
+    },
+    ChangeElementAdjacent {
+        element_id: String,
+        new_adjacent: String,
+    },
+    ChangeElementKind {
+        element_id: String,
+        new_kind: String,
+    },
+    InsertLayer {
+        element_id: String,
+        index: usize,
+        #[dsl(block)]
+        layer: crate::LayerDocument,
+    },
+    RemoveLayer {
+        element_id: String,
+        index: usize,
+    },
+    ReorderLayers {
+        element_id: String,
+        from: usize,
+        to: usize,
+    },
+    ChangeLayerThickness {
+        element_id: String,
+        index: usize,
+        new_thickness_m: f64,
+    },
+    ChangeLayerLambda {
+        element_id: String,
+        index: usize,
+        new_lambda: f64,
+    },
+    ChangeLayerMu {
+        element_id: String,
+        index: usize,
+        new_mu: f64,
+    },
+    ChangeLayerMaterialId {
+        element_id: String,
+        index: usize,
+        new_material_id: String,
+    },
+    InsertThermalBridge {
+        index: usize,
+        #[dsl(block)]
+        bridge: crate::ThermalBridge,
+    },
+    RemoveThermalBridge {
+        index: usize,
+    },
+    ChangeThermalBridgePsi {
+        bridge_id: String,
+        new_psi: f64,
+    },
+    ChangeThermalBridgeLength {
+        bridge_id: String,
+        new_length_m: f64,
+    },
+    ChangeElementOrientationDeg {
+        element_id: String,
+        new_orientation_deg: f64,
+    },
+    ChangeElementInclinationDeg {
+        element_id: String,
+        new_inclination_deg: f64,
+    },
+    ChangeElementDeltaUg {
+        element_id: String,
+        new_delta_u_g: f64,
+    },
+    ChangeElementDeltaUf {
+        element_id: String,
+        new_delta_u_f: f64,
+    },
+    ChangeElementDeltaUr {
+        element_id: String,
+        new_delta_u_r: f64,
+    },
+    ChangeThermalBridgeBb2Type {
+        bridge_id: String,
+        new_bb2_type: String,
+    },
+    ChangeZoneWindowOrientation {
+        zone_id: String,
+        window_id: String,
+        new_orientation: String,
+    },
+    ChangeZoneWindowInclinationDeg {
+        zone_id: String,
+        window_id: String,
+        new_inclination_deg: f64,
+    },
+    ChangeLayerApplicationType {
+        element_id: String,
+        index: usize,
+        new_application_type: String,
+    },
+    ChangeLayerCompressiveClass {
+        element_id: String,
+        index: usize,
+        new_compressive_class: String,
+    },
 }
 
-fn parse_din4108_mutation(line: &str) -> Result<Din4108Mutation, String> {
-    let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-    let args = parse_args(rest)?;
-    let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("din4108 mutation: missing arg '{k}' for '{keyword}'"));
-    match keyword {
-        "change-category" => Ok(Din4108Mutation::ChangeCategory(ChangeCategory { new_category: dec_json(&arg("new-category")?)? })),
-        "change-climate" => Ok(Din4108Mutation::ChangeClimate(ChangeClimate { new_climate: dec_json(&arg("new-climate")?)? })),
-        "change-airtightness-n50" => Ok(Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50: dec_json(&arg("new-airtightness-n50")?)? })),
-        "change-psi-times-l-sum" => Ok(Din4108Mutation::ChangePsiTimesLSum(ChangePsiTimesLSum { new_psi_times_l_sum: dec_json(&arg("new-psi-times-l-sum")?)? })),
-        "change-rh-int" => Ok(Din4108Mutation::ChangeRhInt(ChangeRhInt { new_rh_int: dec_json(&arg("new-rh-int")?)? })),
-        "change-catalog-id" => Ok(Din4108Mutation::ChangeCatalogId(ChangeCatalogId { new_catalog_id: dec_json(&arg("new-catalog-id")?)? })),
-        "change-material-id" => Ok(Din4108Mutation::ChangeMaterialId(ChangeMaterialId { new_material_id: dec_json(&arg("new-material-id")?)? })),
-        "change-airtightness-class" => Ok(Din4108Mutation::ChangeAirtightnessClass(ChangeAirtightnessClass { new_airtightness_class: dec_json(&arg("new-airtightness-class")?)? })),
-        "change-t-int-c" => Ok(Din4108Mutation::ChangeTIntC(ChangeTIntC { new_t_int_c: dec_json(&arg("new-t-int-c")?)? })),
-        "change-solar-absorptance" => Ok(Din4108Mutation::ChangeSolarAbsorptance(ChangeSolarAbsorptance { new_solar_absorptance: dec_json(&arg("new-solar-absorptance")?)? })),
-        "change-irradiance-wm2" => Ok(Din4108Mutation::ChangeIrradianceWM2(ChangeIrradianceWM2 { new_irradiance_w_m2: dec_json(&arg("new-irradiance-w-m2")?)? })),
-        "change-moisture-mu-exterior" => Ok(Din4108Mutation::ChangeMoistureMuExterior(ChangeMoistureMuExterior { new_moisture_mu_exterior: dec_json(&arg("new-moisture-mu-exterior")?)? })),
-        "change-moisture-mu-interior" => Ok(Din4108Mutation::ChangeMoistureMuInterior(ChangeMoistureMuInterior { new_moisture_mu_interior: dec_json(&arg("new-moisture-mu-interior")?)? })),
-        "change-envelope-area-m2" => Ok(Din4108Mutation::ChangeEnvelopeAreaM2(ChangeEnvelopeAreaM2 { new_envelope_area_m2: dec_json(&arg("new-envelope-area-m2")?)? })),
-        "change-bb2-details-conform" => Ok(Din4108Mutation::ChangeBb2DetailsConform(ChangeBb2DetailsConform { new_bb2_details_conform: dec_json(&arg("new-bb2-details-conform")?)? })),
-        "change-application-type" => Ok(Din4108Mutation::ChangeApplicationType(ChangeApplicationType { new_application_type: dec_json(&arg("new-application-type")?)? })),
-        "change-declared-application-class" => Ok(Din4108Mutation::ChangeDeclaredApplicationClass(ChangeDeclaredApplicationClass { new_declared_application_class: dec_json(&arg("new-declared-application-class")?)? })),
-        "insert-layer" => Ok(Din4108Mutation::InsertLayer(InsertLayer { index: dec_json(&arg("index")?)?, layer: dec_json(&arg("layer")?)? })),
-        "remove-layer" => Ok(Din4108Mutation::RemoveLayer(RemoveLayer { index: dec_json(&arg("index")?)? })),
-        "reorder-layers" => Ok(Din4108Mutation::ReorderLayers(ReorderLayers { from: dec_json(&arg("from")?)?, to: dec_json(&arg("to")?)? })),
-        "change-layer-thickness" => Ok(Din4108Mutation::ChangeLayerThickness(ChangeLayerThickness { index: dec_json(&arg("index")?)?, new_thickness_m: dec_json(&arg("new-thickness-m")?)? })),
-        "change-layer-lambda" => Ok(Din4108Mutation::ChangeLayerLambda(ChangeLayerLambda { index: dec_json(&arg("index")?)?, new_lambda_w_mk: dec_json(&arg("new-lambda-w-mk")?)? })),
-        other => Err(format!("din4108 mutation: unknown keyword {other:?}")),
-    }
-}
-
-impl protocol::OpText for Din4108Mutation {
-    fn print_op(&self) -> String {
-        print_din4108_mutation(self)
-    }
+//#region 🔖️HandcraftedOpCodecs
+impl OpText for Din4108MutationDsl {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        parse_din4108_mutation(line).map_err(|e| store::TextError::new(e, store::TextSpan::at(1, 1)))
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
-//#endregion 🔖️OpText
 
-//#region 🔖️OpBinaryCodec
-/// 🎞️ Every variant's binary form is `tag u8 | json-string-per-field` — the JSON-per-field
-/// consolidation used by `OpText` above applies equally here.
-fn write_json_bin<T: dsl::ToValue>(out: &mut Vec<u8>, value: &T) {
-    let bytes = pack::json::to_json_string(value);
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes.as_bytes());
-}
-fn read_json_bin<T: dsl::FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    let bytes = reader.read_bytes(len).map_err(|e| e.to_string())?;
-    let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-    pack::json::from_json_str(text).map_err(|e| e.to_string())
+impl protocol::OpBinary for Din4108MutationDsl {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dsl::variants_binary::encode_tagged_op(include_str!("../💾️binary/📡️.protocol.semio"), self)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        dsl::variants_binary::decode_tagged_op(include_str!("../💾️binary/📡️.protocol.semio"), bytes)
+    }
 }
 
-//#region 🏷️WireTags
-/// 🏷️ Op tags of `Din4108Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
-const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
-const TAG_CHANGE_CATEGORY: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-category");
-const TAG_CHANGE_CLIMATE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-climate");
-const TAG_CHANGE_AIRTIGHTNESS_N50: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-airtightness-n50");
-const TAG_CHANGE_PSI_TIMES_L_SUM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-psi-times-l-sum");
-const TAG_CHANGE_RH_INT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-rh-int");
-const TAG_CHANGE_CATALOG_ID: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-catalog-id");
-const TAG_CHANGE_MATERIAL_ID: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-material-id");
-const TAG_CHANGE_AIRTIGHTNESS_CLASS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-airtightness-class");
-const TAG_CHANGE_T_INT_C: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-t-int-c");
-const TAG_CHANGE_SOLAR_ABSORPTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-solar-absorptance");
-const TAG_CHANGE_IRRADIANCE_WM2: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-irradiance-wm2");
-const TAG_CHANGE_MOISTURE_MU_EXTERIOR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-moisture-mu-exterior");
-const TAG_CHANGE_MOISTURE_MU_INTERIOR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-moisture-mu-interior");
-const TAG_CHANGE_ENVELOPE_AREA_M2: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-envelope-area-m2");
-const TAG_CHANGE_BB2_DETAILS_CONFORM: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-bb2-details-conform");
-const TAG_CHANGE_APPLICATION_TYPE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-application-type");
-const TAG_CHANGE_DECLARED_APPLICATION_CLASS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-declared-application-class");
-const TAG_INSERT_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-layer");
-const TAG_REMOVE_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-layer");
-const TAG_REORDER_LAYERS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "reorder-layers");
-const TAG_CHANGE_LAYER_THICKNESS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-layer-thickness");
-const TAG_CHANGE_LAYER_LAMBDA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-layer-lambda");
-//#endregion 🏷️WireTags
+impl OpText for Din4108Mutation {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        Ok(din4108_mutation_from_dsl(Din4108MutationDsl::parse_op(line)?))
+    }
+    fn print_op(&self) -> String {
+        din4108_mutation_to_dsl(self).print_op()
+    }
+}
 
 impl protocol::OpBinary for Din4108Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let tag: u8 = match self {
-            Din4108Mutation::ChangeCategory(_) => TAG_CHANGE_CATEGORY,
-            Din4108Mutation::ChangeClimate(_) => TAG_CHANGE_CLIMATE,
-            Din4108Mutation::ChangeAirtightnessN50(_) => TAG_CHANGE_AIRTIGHTNESS_N50,
-            Din4108Mutation::ChangePsiTimesLSum(_) => TAG_CHANGE_PSI_TIMES_L_SUM,
-            Din4108Mutation::ChangeRhInt(_) => TAG_CHANGE_RH_INT,
-            Din4108Mutation::ChangeCatalogId(_) => TAG_CHANGE_CATALOG_ID,
-            Din4108Mutation::ChangeMaterialId(_) => TAG_CHANGE_MATERIAL_ID,
-            Din4108Mutation::ChangeAirtightnessClass(_) => TAG_CHANGE_AIRTIGHTNESS_CLASS,
-            Din4108Mutation::ChangeTIntC(_) => TAG_CHANGE_T_INT_C,
-            Din4108Mutation::ChangeSolarAbsorptance(_) => TAG_CHANGE_SOLAR_ABSORPTANCE,
-            Din4108Mutation::ChangeIrradianceWM2(_) => TAG_CHANGE_IRRADIANCE_WM2,
-            Din4108Mutation::ChangeMoistureMuExterior(_) => TAG_CHANGE_MOISTURE_MU_EXTERIOR,
-            Din4108Mutation::ChangeMoistureMuInterior(_) => TAG_CHANGE_MOISTURE_MU_INTERIOR,
-            Din4108Mutation::ChangeEnvelopeAreaM2(_) => TAG_CHANGE_ENVELOPE_AREA_M2,
-            Din4108Mutation::ChangeBb2DetailsConform(_) => TAG_CHANGE_BB2_DETAILS_CONFORM,
-            Din4108Mutation::ChangeApplicationType(_) => TAG_CHANGE_APPLICATION_TYPE,
-            Din4108Mutation::ChangeDeclaredApplicationClass(_) => TAG_CHANGE_DECLARED_APPLICATION_CLASS,
-            Din4108Mutation::InsertLayer(_) => TAG_INSERT_LAYER,
-            Din4108Mutation::RemoveLayer(_) => TAG_REMOVE_LAYER,
-            Din4108Mutation::ReorderLayers(_) => TAG_REORDER_LAYERS,
-            Din4108Mutation::ChangeLayerThickness(_) => TAG_CHANGE_LAYER_THICKNESS,
-            Din4108Mutation::ChangeLayerLambda(_) => TAG_CHANGE_LAYER_LAMBDA,
-        };
-        let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
-        match self {
-            Din4108Mutation::ChangeCategory(p) => write_json_bin(&mut out, &p.new_category),
-            Din4108Mutation::ChangeClimate(p) => write_json_bin(&mut out, &p.new_climate),
-            Din4108Mutation::ChangeAirtightnessN50(p) => write_json_bin(&mut out, &p.new_airtightness_n50),
-            Din4108Mutation::ChangePsiTimesLSum(p) => write_json_bin(&mut out, &p.new_psi_times_l_sum),
-            Din4108Mutation::ChangeRhInt(p) => write_json_bin(&mut out, &p.new_rh_int),
-            Din4108Mutation::ChangeCatalogId(p) => write_json_bin(&mut out, &p.new_catalog_id),
-            Din4108Mutation::ChangeMaterialId(p) => write_json_bin(&mut out, &p.new_material_id),
-            Din4108Mutation::ChangeAirtightnessClass(p) => write_json_bin(&mut out, &p.new_airtightness_class),
-            Din4108Mutation::ChangeTIntC(p) => write_json_bin(&mut out, &p.new_t_int_c),
-            Din4108Mutation::ChangeSolarAbsorptance(p) => write_json_bin(&mut out, &p.new_solar_absorptance),
-            Din4108Mutation::ChangeIrradianceWM2(p) => write_json_bin(&mut out, &p.new_irradiance_w_m2),
-            Din4108Mutation::ChangeMoistureMuExterior(p) => write_json_bin(&mut out, &p.new_moisture_mu_exterior),
-            Din4108Mutation::ChangeMoistureMuInterior(p) => write_json_bin(&mut out, &p.new_moisture_mu_interior),
-            Din4108Mutation::ChangeEnvelopeAreaM2(p) => write_json_bin(&mut out, &p.new_envelope_area_m2),
-            Din4108Mutation::ChangeBb2DetailsConform(p) => write_json_bin(&mut out, &p.new_bb2_details_conform),
-            Din4108Mutation::ChangeApplicationType(p) => write_json_bin(&mut out, &p.new_application_type),
-            Din4108Mutation::ChangeDeclaredApplicationClass(p) => write_json_bin(&mut out, &p.new_declared_application_class),
-            Din4108Mutation::InsertLayer(p) => {
-                write_json_bin(&mut out, &p.index);
-                write_json_bin(&mut out, &p.layer);
-            }
-            Din4108Mutation::RemoveLayer(p) => write_json_bin(&mut out, &p.index),
-            Din4108Mutation::ReorderLayers(p) => {
-                write_json_bin(&mut out, &p.from);
-                write_json_bin(&mut out, &p.to);
-            }
-            Din4108Mutation::ChangeLayerThickness(p) => {
-                write_json_bin(&mut out, &p.index);
-                write_json_bin(&mut out, &p.new_thickness_m);
-            }
-            Din4108Mutation::ChangeLayerLambda(p) => {
-                write_json_bin(&mut out, &p.index);
-                write_json_bin(&mut out, &p.new_lambda_w_mk);
-            }
-        }
-        Ok(out)
+        din4108_mutation_to_dsl(self).encode_op()
     }
-
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let mut reader = store::ByteReader::new(bytes);
-        let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
-        let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
-        match tag {
-            TAG_CHANGE_CATEGORY => {
-                let new_category = read_json_bin(&mut reader).map_err(|e| malformed("new_category", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeCategory(ChangeCategory { new_category }))
-            }
-            TAG_CHANGE_CLIMATE => {
-                let new_climate = read_json_bin(&mut reader).map_err(|e| malformed("new_climate", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeClimate(ChangeClimate { new_climate }))
-            }
-            TAG_CHANGE_AIRTIGHTNESS_N50 => {
-                let new_airtightness_n50 = read_json_bin(&mut reader).map_err(|e| malformed("new_airtightness_n50", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50 }))
-            }
-            TAG_CHANGE_PSI_TIMES_L_SUM => {
-                let new_psi_times_l_sum = read_json_bin(&mut reader).map_err(|e| malformed("new_psi_times_l_sum", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangePsiTimesLSum(ChangePsiTimesLSum { new_psi_times_l_sum }))
-            }
-            TAG_CHANGE_RH_INT => {
-                let new_rh_int = read_json_bin(&mut reader).map_err(|e| malformed("new_rh_int", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeRhInt(ChangeRhInt { new_rh_int }))
-            }
-            TAG_CHANGE_CATALOG_ID => {
-                let new_catalog_id = read_json_bin(&mut reader).map_err(|e| malformed("new_catalog_id", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeCatalogId(ChangeCatalogId { new_catalog_id }))
-            }
-            TAG_CHANGE_MATERIAL_ID => {
-                let new_material_id = read_json_bin(&mut reader).map_err(|e| malformed("new_material_id", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeMaterialId(ChangeMaterialId { new_material_id }))
-            }
-            TAG_CHANGE_AIRTIGHTNESS_CLASS => {
-                let new_airtightness_class = read_json_bin(&mut reader).map_err(|e| malformed("new_airtightness_class", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeAirtightnessClass(ChangeAirtightnessClass { new_airtightness_class }))
-            }
-            TAG_CHANGE_T_INT_C => {
-                let new_t_int_c = read_json_bin(&mut reader).map_err(|e| malformed("new_t_int_c", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeTIntC(ChangeTIntC { new_t_int_c }))
-            }
-            TAG_CHANGE_SOLAR_ABSORPTANCE => {
-                let new_solar_absorptance = read_json_bin(&mut reader).map_err(|e| malformed("new_solar_absorptance", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeSolarAbsorptance(ChangeSolarAbsorptance { new_solar_absorptance }))
-            }
-            TAG_CHANGE_IRRADIANCE_WM2 => {
-                let new_irradiance_w_m2 = read_json_bin(&mut reader).map_err(|e| malformed("new_irradiance_w_m2", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeIrradianceWM2(ChangeIrradianceWM2 { new_irradiance_w_m2 }))
-            }
-            TAG_CHANGE_MOISTURE_MU_EXTERIOR => {
-                let new_moisture_mu_exterior = read_json_bin(&mut reader).map_err(|e| malformed("new_moisture_mu_exterior", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeMoistureMuExterior(ChangeMoistureMuExterior { new_moisture_mu_exterior }))
-            }
-            TAG_CHANGE_MOISTURE_MU_INTERIOR => {
-                let new_moisture_mu_interior = read_json_bin(&mut reader).map_err(|e| malformed("new_moisture_mu_interior", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeMoistureMuInterior(ChangeMoistureMuInterior { new_moisture_mu_interior }))
-            }
-            TAG_CHANGE_ENVELOPE_AREA_M2 => {
-                let new_envelope_area_m2 = read_json_bin(&mut reader).map_err(|e| malformed("new_envelope_area_m2", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeEnvelopeAreaM2(ChangeEnvelopeAreaM2 { new_envelope_area_m2 }))
-            }
-            TAG_CHANGE_BB2_DETAILS_CONFORM => {
-                let new_bb2_details_conform = read_json_bin(&mut reader).map_err(|e| malformed("new_bb2_details_conform", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeBb2DetailsConform(ChangeBb2DetailsConform { new_bb2_details_conform }))
-            }
-            TAG_CHANGE_APPLICATION_TYPE => {
-                let new_application_type = read_json_bin(&mut reader).map_err(|e| malformed("new_application_type", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeApplicationType(ChangeApplicationType { new_application_type }))
-            }
-            TAG_CHANGE_DECLARED_APPLICATION_CLASS => {
-                let new_declared_application_class = read_json_bin(&mut reader).map_err(|e| malformed("new_declared_application_class", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeDeclaredApplicationClass(ChangeDeclaredApplicationClass { new_declared_application_class }))
-            }
-            TAG_INSERT_LAYER => {
-                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
-                let layer = read_json_bin(&mut reader).map_err(|e| malformed("layer", reader.position(), e))?;
-                Ok(Din4108Mutation::InsertLayer(InsertLayer { index, layer }))
-            }
-            TAG_REMOVE_LAYER => {
-                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
-                Ok(Din4108Mutation::RemoveLayer(RemoveLayer { index }))
-            }
-            TAG_REORDER_LAYERS => {
-                let from = read_json_bin(&mut reader).map_err(|e| malformed("from", reader.position(), e))?;
-                let to = read_json_bin(&mut reader).map_err(|e| malformed("to", reader.position(), e))?;
-                Ok(Din4108Mutation::ReorderLayers(ReorderLayers { from, to }))
-            }
-            TAG_CHANGE_LAYER_THICKNESS => {
-                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
-                let new_thickness_m = read_json_bin(&mut reader).map_err(|e| malformed("new_thickness_m", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeLayerThickness(ChangeLayerThickness { index, new_thickness_m }))
-            }
-            TAG_CHANGE_LAYER_LAMBDA => {
-                let index = read_json_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
-                let new_lambda_w_mk = read_json_bin(&mut reader).map_err(|e| malformed("new_lambda_w_mk", reader.position(), e))?;
-                Ok(Din4108Mutation::ChangeLayerLambda(ChangeLayerLambda { index, new_lambda_w_mk }))
-            }
-            other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
-        }
+        Ok(din4108_mutation_from_dsl(Din4108MutationDsl::decode_op(bytes)?))
     }
 }
-//#endregion 🔖️OpBinaryCodec
 
-//#region 🔖️DemoCases
-/// 🧪️ One representative value per variant — reused by the round-trip law test below.
+//#endregion 🔖️HandcraftedOpCodecs
+
+fn din4108_mutation_to_dsl(mutation: &Din4108Mutation) -> Din4108MutationDsl {
+    match mutation {
+        Din4108Mutation::ChangeClimateZone(payload) => Din4108MutationDsl::ChangeClimateZone { new_climate_zone: payload.new_climate_zone },
+        Din4108Mutation::ChangeUsage(payload) => Din4108MutationDsl::ChangeUsage { new_usage: payload.new_usage.clone() },
+        Din4108Mutation::ChangeTIntC(payload) => Din4108MutationDsl::ChangeTIntC { new_t_int_c: payload.new_t_int_c },
+        Din4108Mutation::ChangeRhInt(payload) => Din4108MutationDsl::ChangeRhInt { new_rh_int: payload.new_rh_int },
+        Din4108Mutation::ChangeAirtightnessN50(payload) => Din4108MutationDsl::ChangeAirtightnessN50 { new_airtightness_n50: payload.new_airtightness_n50 },
+        Din4108Mutation::ChangeHasMechanicalVentilation(payload) => Din4108MutationDsl::ChangeHasMechanicalVentilation { new_has_mechanical_ventilation: payload.new_has_mechanical_ventilation },
+        Din4108Mutation::ChangeBb2DetailsConform(payload) => Din4108MutationDsl::ChangeBb2DetailsConform { new_bb2_details_conform: payload.new_bb2_details_conform },
+        Din4108Mutation::InsertZone(payload) => Din4108MutationDsl::InsertZone { index: payload.index, zone: payload.zone.clone() },
+        Din4108Mutation::RemoveZone(payload) => Din4108MutationDsl::RemoveZone { index: payload.index },
+        Din4108Mutation::ChangeZoneFloorArea(payload) => Din4108MutationDsl::ChangeZoneFloorArea { zone_id: payload.zone_id.clone(), new_floor_area_m2: payload.new_floor_area_m2 },
+        Din4108Mutation::ChangeZoneHeaviness(payload) => Din4108MutationDsl::ChangeZoneHeaviness { zone_id: payload.zone_id.clone(), new_heaviness: payload.new_heaviness.clone() },
+        Din4108Mutation::ChangeZoneNightVentilation(payload) => Din4108MutationDsl::ChangeZoneNightVentilation { zone_id: payload.zone_id.clone(), new_night_ventilation: payload.new_night_ventilation.clone() },
+        Din4108Mutation::InsertZoneWindow(payload) => Din4108MutationDsl::InsertZoneWindow { zone_id: payload.zone_id.clone(), index: payload.index, window: payload.window.clone() },
+        Din4108Mutation::RemoveZoneWindow(payload) => Din4108MutationDsl::RemoveZoneWindow { zone_id: payload.zone_id.clone(), index: payload.index },
+        Din4108Mutation::ChangeZoneWindowArea(payload) => Din4108MutationDsl::ChangeZoneWindowArea { zone_id: payload.zone_id.clone(), window_id: payload.window_id.clone(), new_area_m2: payload.new_area_m2 },
+        Din4108Mutation::ChangeZoneWindowGValue(payload) => Din4108MutationDsl::ChangeZoneWindowGValue { zone_id: payload.zone_id.clone(), window_id: payload.window_id.clone(), new_g_value: payload.new_g_value },
+        Din4108Mutation::ChangeZoneWindowShadingFc(payload) => Din4108MutationDsl::ChangeZoneWindowShadingFc { zone_id: payload.zone_id.clone(), window_id: payload.window_id.clone(), new_shading_fc: payload.new_shading_fc },
+        Din4108Mutation::InsertElement(payload) => Din4108MutationDsl::InsertElement { index: payload.index, element: payload.element.clone() },
+        Din4108Mutation::RemoveElement(payload) => Din4108MutationDsl::RemoveElement { index: payload.index },
+        Din4108Mutation::ChangeElementArea(payload) => Din4108MutationDsl::ChangeElementArea { element_id: payload.element_id.clone(), new_area_m2: payload.new_area_m2 },
+        Din4108Mutation::ChangeElementAdjacent(payload) => Din4108MutationDsl::ChangeElementAdjacent { element_id: payload.element_id.clone(), new_adjacent: payload.new_adjacent.clone() },
+        Din4108Mutation::ChangeElementKind(payload) => Din4108MutationDsl::ChangeElementKind { element_id: payload.element_id.clone(), new_kind: payload.new_kind.clone() },
+        Din4108Mutation::InsertLayer(payload) => Din4108MutationDsl::InsertLayer { element_id: payload.element_id.clone(), index: payload.index, layer: payload.layer.clone() },
+        Din4108Mutation::RemoveLayer(payload) => Din4108MutationDsl::RemoveLayer { element_id: payload.element_id.clone(), index: payload.index },
+        Din4108Mutation::ReorderLayers(payload) => Din4108MutationDsl::ReorderLayers { element_id: payload.element_id.clone(), from: payload.from, to: payload.to },
+        Din4108Mutation::ChangeLayerThickness(payload) => Din4108MutationDsl::ChangeLayerThickness { element_id: payload.element_id.clone(), index: payload.index, new_thickness_m: payload.new_thickness_m },
+        Din4108Mutation::ChangeLayerLambda(payload) => Din4108MutationDsl::ChangeLayerLambda { element_id: payload.element_id.clone(), index: payload.index, new_lambda: payload.new_lambda },
+        Din4108Mutation::ChangeLayerMu(payload) => Din4108MutationDsl::ChangeLayerMu { element_id: payload.element_id.clone(), index: payload.index, new_mu: payload.new_mu },
+        Din4108Mutation::ChangeLayerMaterialId(payload) => Din4108MutationDsl::ChangeLayerMaterialId { element_id: payload.element_id.clone(), index: payload.index, new_material_id: payload.new_material_id.clone() },
+        Din4108Mutation::InsertThermalBridge(payload) => Din4108MutationDsl::InsertThermalBridge { index: payload.index, bridge: payload.bridge.clone() },
+        Din4108Mutation::RemoveThermalBridge(payload) => Din4108MutationDsl::RemoveThermalBridge { index: payload.index },
+        Din4108Mutation::ChangeThermalBridgePsi(payload) => Din4108MutationDsl::ChangeThermalBridgePsi { bridge_id: payload.bridge_id.clone(), new_psi: payload.new_psi },
+        Din4108Mutation::ChangeThermalBridgeLength(payload) => Din4108MutationDsl::ChangeThermalBridgeLength { bridge_id: payload.bridge_id.clone(), new_length_m: payload.new_length_m },
+
+        Din4108Mutation::ChangeElementOrientationDeg(payload) => Din4108MutationDsl::ChangeElementOrientationDeg { element_id: payload.element_id.clone(), new_orientation_deg: payload.new_orientation_deg },
+        Din4108Mutation::ChangeElementInclinationDeg(payload) => Din4108MutationDsl::ChangeElementInclinationDeg { element_id: payload.element_id.clone(), new_inclination_deg: payload.new_inclination_deg },
+        Din4108Mutation::ChangeElementDeltaUg(payload) => Din4108MutationDsl::ChangeElementDeltaUg { element_id: payload.element_id.clone(), new_delta_u_g: payload.new_delta_u_g },
+        Din4108Mutation::ChangeElementDeltaUf(payload) => Din4108MutationDsl::ChangeElementDeltaUf { element_id: payload.element_id.clone(), new_delta_u_f: payload.new_delta_u_f },
+        Din4108Mutation::ChangeElementDeltaUr(payload) => Din4108MutationDsl::ChangeElementDeltaUr { element_id: payload.element_id.clone(), new_delta_u_r: payload.new_delta_u_r },
+        Din4108Mutation::ChangeThermalBridgeBb2Type(payload) => Din4108MutationDsl::ChangeThermalBridgeBb2Type { bridge_id: payload.bridge_id.clone(), new_bb2_type: payload.new_bb2_type.clone() },
+        Din4108Mutation::ChangeZoneWindowOrientation(payload) => Din4108MutationDsl::ChangeZoneWindowOrientation { zone_id: payload.zone_id.clone(), window_id: payload.window_id.clone(), new_orientation: payload.new_orientation.clone() },
+        Din4108Mutation::ChangeZoneWindowInclinationDeg(payload) => Din4108MutationDsl::ChangeZoneWindowInclinationDeg { zone_id: payload.zone_id.clone(), window_id: payload.window_id.clone(), new_inclination_deg: payload.new_inclination_deg },
+        Din4108Mutation::ChangeLayerApplicationType(payload) => Din4108MutationDsl::ChangeLayerApplicationType { element_id: payload.element_id.clone(), index: payload.index, new_application_type: payload.new_application_type.clone() },
+        Din4108Mutation::ChangeLayerCompressiveClass(payload) => Din4108MutationDsl::ChangeLayerCompressiveClass { element_id: payload.element_id.clone(), index: payload.index, new_compressive_class: payload.new_compressive_class.clone() },
+    }
+}
+
+fn din4108_mutation_from_dsl(dsl: Din4108MutationDsl) -> Din4108Mutation {
+    match dsl {
+        Din4108MutationDsl::ChangeClimateZone { new_climate_zone } => Din4108Mutation::ChangeClimateZone(change_climate_zone::ChangeClimateZone { new_climate_zone }),
+        Din4108MutationDsl::ChangeUsage { new_usage } => Din4108Mutation::ChangeUsage(change_usage::ChangeUsage { new_usage }),
+        Din4108MutationDsl::ChangeTIntC { new_t_int_c } => Din4108Mutation::ChangeTIntC(change_t_int_c::ChangeTIntC { new_t_int_c }),
+        Din4108MutationDsl::ChangeRhInt { new_rh_int } => Din4108Mutation::ChangeRhInt(change_rh_int::ChangeRhInt { new_rh_int }),
+        Din4108MutationDsl::ChangeAirtightnessN50 { new_airtightness_n50 } => Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::ChangeAirtightnessN50 { new_airtightness_n50 }),
+        Din4108MutationDsl::ChangeHasMechanicalVentilation { new_has_mechanical_ventilation } => Din4108Mutation::ChangeHasMechanicalVentilation(change_has_mechanical_ventilation::ChangeHasMechanicalVentilation { new_has_mechanical_ventilation }),
+        Din4108MutationDsl::ChangeBb2DetailsConform { new_bb2_details_conform } => Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::ChangeBb2DetailsConform { new_bb2_details_conform }),
+        Din4108MutationDsl::InsertZone { index, zone } => Din4108Mutation::InsertZone(insert_zone::InsertZone { index, zone }),
+        Din4108MutationDsl::RemoveZone { index } => Din4108Mutation::RemoveZone(remove_zone::RemoveZone { index }),
+        Din4108MutationDsl::ChangeZoneFloorArea { zone_id, new_floor_area_m2 } => Din4108Mutation::ChangeZoneFloorArea(change_zone_floor_area::ChangeZoneFloorArea { zone_id, new_floor_area_m2 }),
+        Din4108MutationDsl::ChangeZoneHeaviness { zone_id, new_heaviness } => Din4108Mutation::ChangeZoneHeaviness(change_zone_heaviness::ChangeZoneHeaviness { zone_id, new_heaviness }),
+        Din4108MutationDsl::ChangeZoneNightVentilation { zone_id, new_night_ventilation } => Din4108Mutation::ChangeZoneNightVentilation(change_zone_night_ventilation::ChangeZoneNightVentilation { zone_id, new_night_ventilation }),
+        Din4108MutationDsl::InsertZoneWindow { zone_id, index, window } => Din4108Mutation::InsertZoneWindow(insert_zone_window::InsertZoneWindow { zone_id, index, window }),
+        Din4108MutationDsl::RemoveZoneWindow { zone_id, index } => Din4108Mutation::RemoveZoneWindow(remove_zone_window::RemoveZoneWindow { zone_id, index }),
+        Din4108MutationDsl::ChangeZoneWindowArea { zone_id, window_id, new_area_m2 } => Din4108Mutation::ChangeZoneWindowArea(change_zone_window_area::ChangeZoneWindowArea { zone_id, window_id, new_area_m2 }),
+        Din4108MutationDsl::ChangeZoneWindowGValue { zone_id, window_id, new_g_value } => Din4108Mutation::ChangeZoneWindowGValue(change_zone_window_g_value::ChangeZoneWindowGValue { zone_id, window_id, new_g_value }),
+        Din4108MutationDsl::ChangeZoneWindowShadingFc { zone_id, window_id, new_shading_fc } => Din4108Mutation::ChangeZoneWindowShadingFc(change_zone_window_shading_fc::ChangeZoneWindowShadingFc { zone_id, window_id, new_shading_fc }),
+        Din4108MutationDsl::InsertElement { index, element } => Din4108Mutation::InsertElement(insert_element::InsertElement { index, element }),
+        Din4108MutationDsl::RemoveElement { index } => Din4108Mutation::RemoveElement(remove_element::RemoveElement { index }),
+        Din4108MutationDsl::ChangeElementArea { element_id, new_area_m2 } => Din4108Mutation::ChangeElementArea(change_element_area::ChangeElementArea { element_id, new_area_m2 }),
+        Din4108MutationDsl::ChangeElementAdjacent { element_id, new_adjacent } => Din4108Mutation::ChangeElementAdjacent(change_element_adjacent::ChangeElementAdjacent { element_id, new_adjacent }),
+        Din4108MutationDsl::ChangeElementKind { element_id, new_kind } => Din4108Mutation::ChangeElementKind(change_element_kind::ChangeElementKind { element_id, new_kind }),
+        Din4108MutationDsl::InsertLayer { element_id, index, layer } => Din4108Mutation::InsertLayer(insert_layer::InsertLayer { element_id, index, layer }),
+        Din4108MutationDsl::RemoveLayer { element_id, index } => Din4108Mutation::RemoveLayer(remove_layer::RemoveLayer { element_id, index }),
+        Din4108MutationDsl::ReorderLayers { element_id, from, to } => Din4108Mutation::ReorderLayers(reorder_layers::ReorderLayers { element_id, from, to }),
+        Din4108MutationDsl::ChangeLayerThickness { element_id, index, new_thickness_m } => Din4108Mutation::ChangeLayerThickness(change_layer_thickness::ChangeLayerThickness { element_id, index, new_thickness_m }),
+        Din4108MutationDsl::ChangeLayerLambda { element_id, index, new_lambda } => Din4108Mutation::ChangeLayerLambda(change_layer_lambda::ChangeLayerLambda { element_id, index, new_lambda }),
+        Din4108MutationDsl::ChangeLayerMu { element_id, index, new_mu } => Din4108Mutation::ChangeLayerMu(change_layer_mu::ChangeLayerMu { element_id, index, new_mu }),
+        Din4108MutationDsl::ChangeLayerMaterialId { element_id, index, new_material_id } => Din4108Mutation::ChangeLayerMaterialId(change_layer_material_id::ChangeLayerMaterialId { element_id, index, new_material_id }),
+        Din4108MutationDsl::InsertThermalBridge { index, bridge } => Din4108Mutation::InsertThermalBridge(insert_thermal_bridge::InsertThermalBridge { index, bridge }),
+        Din4108MutationDsl::RemoveThermalBridge { index } => Din4108Mutation::RemoveThermalBridge(remove_thermal_bridge::RemoveThermalBridge { index }),
+        Din4108MutationDsl::ChangeThermalBridgePsi { bridge_id, new_psi } => Din4108Mutation::ChangeThermalBridgePsi(change_thermal_bridge_psi::ChangeThermalBridgePsi { bridge_id, new_psi }),
+        Din4108MutationDsl::ChangeThermalBridgeLength { bridge_id, new_length_m } => Din4108Mutation::ChangeThermalBridgeLength(change_thermal_bridge_length::ChangeThermalBridgeLength { bridge_id, new_length_m }),
+
+        Din4108MutationDsl::ChangeElementOrientationDeg { element_id, new_orientation_deg } => Din4108Mutation::ChangeElementOrientationDeg(change_element_orientation_deg::ChangeElementOrientationDeg { element_id, new_orientation_deg }),
+        Din4108MutationDsl::ChangeElementInclinationDeg { element_id, new_inclination_deg } => Din4108Mutation::ChangeElementInclinationDeg(change_element_inclination_deg::ChangeElementInclinationDeg { element_id, new_inclination_deg }),
+        Din4108MutationDsl::ChangeElementDeltaUg { element_id, new_delta_u_g } => Din4108Mutation::ChangeElementDeltaUg(change_element_delta_u_g::ChangeElementDeltaUg { element_id, new_delta_u_g }),
+        Din4108MutationDsl::ChangeElementDeltaUf { element_id, new_delta_u_f } => Din4108Mutation::ChangeElementDeltaUf(change_element_delta_u_f::ChangeElementDeltaUf { element_id, new_delta_u_f }),
+        Din4108MutationDsl::ChangeElementDeltaUr { element_id, new_delta_u_r } => Din4108Mutation::ChangeElementDeltaUr(change_element_delta_u_r::ChangeElementDeltaUr { element_id, new_delta_u_r }),
+        Din4108MutationDsl::ChangeThermalBridgeBb2Type { bridge_id, new_bb2_type } => Din4108Mutation::ChangeThermalBridgeBb2Type(change_thermal_bridge_bb2_type::ChangeThermalBridgeBb2Type { bridge_id, new_bb2_type }),
+        Din4108MutationDsl::ChangeZoneWindowOrientation { zone_id, window_id, new_orientation } => Din4108Mutation::ChangeZoneWindowOrientation(change_zone_window_orientation::ChangeZoneWindowOrientation { zone_id, window_id, new_orientation }),
+        Din4108MutationDsl::ChangeZoneWindowInclinationDeg { zone_id, window_id, new_inclination_deg } => Din4108Mutation::ChangeZoneWindowInclinationDeg(change_zone_window_inclination_deg::ChangeZoneWindowInclinationDeg { zone_id, window_id, new_inclination_deg }),
+        Din4108MutationDsl::ChangeLayerApplicationType { element_id, index, new_application_type } => Din4108Mutation::ChangeLayerApplicationType(change_layer_application_type::ChangeLayerApplicationType { element_id, index, new_application_type }),
+        Din4108MutationDsl::ChangeLayerCompressiveClass { element_id, index, new_compressive_class } => Din4108Mutation::ChangeLayerCompressiveClass(change_layer_compressive_class::ChangeLayerCompressiveClass { element_id, index, new_compressive_class }),
+    }
+}
+
 #[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<Din4108Mutation> {
-    use crate::LayerDocument;
-
+fn demo_mutation_cases() -> Vec<Din4108Mutation> {
+    use crate::document::ClimateZoneDe;
     vec![
-        Din4108Mutation::ChangeCategory(ChangeCategory { new_category: "nonresidential".into() }),
-        Din4108Mutation::ChangeClimate(ChangeClimate { new_climate: crate::document::ClimateZoneDe::Zone3 }),
-        Din4108Mutation::ChangeAirtightnessN50(ChangeAirtightnessN50 { new_airtightness_n50: 3.0 }),
-        Din4108Mutation::ChangePsiTimesLSum(ChangePsiTimesLSum { new_psi_times_l_sum: 0.03 }),
-        Din4108Mutation::ChangeRhInt(ChangeRhInt { new_rh_int: 0.55 }),
-        Din4108Mutation::ChangeCatalogId(ChangeCatalogId { new_catalog_id: "AW-02".into() }),
-        Din4108Mutation::ChangeMaterialId(ChangeMaterialId { new_material_id: "eps".into() }),
-        Din4108Mutation::ChangeAirtightnessClass(ChangeAirtightnessClass { new_airtightness_class: "class1".into() }),
-        Din4108Mutation::ChangeTIntC(ChangeTIntC { new_t_int_c: 21.0 }),
-        Din4108Mutation::ChangeSolarAbsorptance(ChangeSolarAbsorptance { new_solar_absorptance: 0.7 }),
-        Din4108Mutation::ChangeIrradianceWM2(ChangeIrradianceWM2 { new_irradiance_w_m2: 650.0 }),
-        Din4108Mutation::ChangeMoistureMuExterior(ChangeMoistureMuExterior { new_moisture_mu_exterior: 18.0 }),
-        Din4108Mutation::ChangeMoistureMuInterior(ChangeMoistureMuInterior { new_moisture_mu_interior: 1.5 }),
-        Din4108Mutation::ChangeEnvelopeAreaM2(ChangeEnvelopeAreaM2 { new_envelope_area_m2: 120.0 }),
-        Din4108Mutation::ChangeBb2DetailsConform(ChangeBb2DetailsConform { new_bb2_details_conform: false }),
-        Din4108Mutation::ChangeApplicationType(ChangeApplicationType { new_application_type: "NDEO".into() }),
-        Din4108Mutation::ChangeDeclaredApplicationClass(ChangeDeclaredApplicationClass { new_declared_application_class: "kh".into() }),
-        Din4108Mutation::InsertLayer(InsertLayer { index: 1, layer: LayerDocument { thickness_m: 0.05, lambda_w_mk: 0.04 } }),
-        Din4108Mutation::RemoveLayer(RemoveLayer { index: 1 }),
-        Din4108Mutation::ReorderLayers(ReorderLayers { from: 0, to: 1 }),
-        Din4108Mutation::ChangeLayerThickness(ChangeLayerThickness { index: 1, new_thickness_m: 0.3 }),
-        Din4108Mutation::ChangeLayerLambda(ChangeLayerLambda { index: 1, new_lambda_w_mk: 0.9 }),
+        Din4108Mutation::ChangeClimateZone(change_climate_zone::ChangeClimateZone { new_climate_zone: ClimateZoneDe::Zone3 }),
+        Din4108Mutation::ChangeUsage(change_usage::ChangeUsage { new_usage: "nonresidential".into() }),
+        Din4108Mutation::ChangeTIntC(change_t_int_c::ChangeTIntC { new_t_int_c: 21.5 }),
+        Din4108Mutation::ChangeRhInt(change_rh_int::ChangeRhInt { new_rh_int: 0.55 }),
+        Din4108Mutation::ChangeAirtightnessN50(change_airtightness_n50::ChangeAirtightnessN50 { new_airtightness_n50: 1.5 }),
+        Din4108Mutation::ChangeHasMechanicalVentilation(change_has_mechanical_ventilation::ChangeHasMechanicalVentilation { new_has_mechanical_ventilation: true }),
+        Din4108Mutation::ChangeBb2DetailsConform(change_bb2_details_conform::ChangeBb2DetailsConform { new_bb2_details_conform: false }),
+        Din4108Mutation::RemoveZone(remove_zone::RemoveZone { index: 0 }),
+        Din4108Mutation::RemoveElement(remove_element::RemoveElement { index: 0 }),
+        Din4108Mutation::RemoveThermalBridge(remove_thermal_bridge::RemoveThermalBridge { index: 0 }),
+        Din4108Mutation::ChangeZoneFloorArea(change_zone_floor_area::ChangeZoneFloorArea { zone_id: "z0".into(), new_floor_area_m2: 40.0 }),
+        Din4108Mutation::ChangeElementArea(change_element_area::ChangeElementArea { element_id: "e0".into(), new_area_m2: 12.0 }),
+        Din4108Mutation::ChangeLayerThickness(change_layer_thickness::ChangeLayerThickness { element_id: "e0".into(), index: 0, new_thickness_m: 0.2 }),
+        Din4108Mutation::ChangeLayerLambda(change_layer_lambda::ChangeLayerLambda { element_id: "e0".into(), index: 0, new_lambda: 0.035 }),
+        Din4108Mutation::ChangeThermalBridgePsi(change_thermal_bridge_psi::ChangeThermalBridgePsi { bridge_id: "b0".into(), new_psi: 0.05 }),
+        Din4108Mutation::ChangeThermalBridgeLength(change_thermal_bridge_length::ChangeThermalBridgeLength { bridge_id: "b0".into(), new_length_m: 8.0 }),
+        Din4108Mutation::ChangeElementOrientationDeg(change_element_orientation_deg::ChangeElementOrientationDeg { element_id: "e0".into(), new_orientation_deg: 180.0 }),
+        Din4108Mutation::ChangeThermalBridgeBb2Type(change_thermal_bridge_bb2_type::ChangeThermalBridgeBb2Type { bridge_id: "b0".into(), new_bb2_type: "categoryB".into() }),
+        Din4108Mutation::ChangeLayerApplicationType(change_layer_application_type::ChangeLayerApplicationType { element_id: "e0".into(), index: 0, new_application_type: "WAP".into() }),
     ]
 }
-//#endregion 🔖️DemoCases
 
-//#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-//#endregion 🧪️Tests

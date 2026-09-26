@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-member-n-ed/schema.json",
+  "title": "ChangeMemberNEd",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "loadCaseId",
+    "newNEd"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "loadCaseId": {
+      "type": "string"
+    },
+    "newNEd": {
+      "type": "number"
+    }
+  }
+}

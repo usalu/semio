@@ -1,0 +1,4 @@
+syntax = "proto3";
+message RemoveMember {
+  string memberId = 1;
+}

@@ -1,16 +1,11 @@
 //! 🧬️ En1990 diff schema — sparse field delta over the artifact.
 
-use crate::En1990QkChild;
+use crate::document::AnnexChoice;
+use crate::{AccidentalAction, BridgeSls, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
-/// 🔺️ Sparse field delta for the En1990 artifact. `q_k` is a single-`Option` composed-child slot
-/// (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM round 2) — always-present slot shape per
-/// `📓️migration-recipe.md` §8, matching `➗️mathematical`'s `notation`/`results`/`computed` diff
-/// fields. The former whole-document-replace `artifact: Option<Box<En1990Artifact>>` slot is
-/// removed — dead code (never constructed by any app command; `set-snapshot` already decomposes
-/// into the closed semantic mutation vocabulary via `En1990Mutation::from_snapshot`) and shaped
-/// exactly like the banned `SetSnapshot` vocabulary.
+/// 🔺️ Sparse field delta for the En1990 artifact.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -18,18 +13,45 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Diff {
     #[state(artifact)]
-    pub g_k: Option<f64>,
+    pub annex: Option<AnnexChoice>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle::optional"))]
-    pub q_k: Option<En1990QkChild>,
+    pub project_id: Option<String>,
     #[state(artifact)]
-    pub resistance_kn: Option<f64>,
+    pub structure_kind: Option<String>,
+    #[state(artifact)]
+    pub altitude_m: Option<f64>,
     #[state(artifact)]
     pub consequence_class: Option<u8>,
     #[state(artifact)]
-    pub annex: Option<crate::document::AnnexChoice>,
+    pub reliability_class: Option<u8>,
     #[state(artifact)]
-    pub seismic_a_ed_kn: Option<f64>,
+    pub design_working_life_category: Option<u8>,
+    #[state(artifact)]
+    pub design_working_life_years: Option<f64>,
+    #[state(artifact)]
+    pub reference_period_years: Option<f64>,
+    #[state(artifact)]
+    pub supervision_level: Option<String>,
+    #[state(artifact)]
+    pub inspection_level: Option<String>,
+    #[state(artifact)]
+    pub k_fi_declared: Option<f64>,
+    #[state(artifact)]
+    pub beta_computed: Option<f64>,
+    #[state(artifact)]
+    pub permanents: Option<Vec<PermanentAction>>,
+    #[state(artifact)]
+    pub variables: Option<Vec<VariableAction>>,
+    #[state(artifact)]
+    pub accidentals: Option<Vec<AccidentalAction>>,
+    #[state(artifact)]
+    pub seismics: Option<Vec<SeismicAction>>,
+    #[state(artifact)]
+    pub members: Option<Vec<Member>>,
+    #[state(artifact)]
+    pub bridge_sls: Option<Vec<BridgeSls>>,
+    #[state(artifact)]
+    pub effects: Option<Vec<MemberEffect>>,
 }
 //#endregion 🔖️Diff
 

@@ -3,7 +3,7 @@
   "factory": {
     "type": "NormBoundedCommandJobFactory",
     "payloadSchema": "norm.tool-command.v1",
-    "maximumRawBytes": 8192,
+    "maximumRawBytes": 524288,
     "shared": true
   },
   "publicationContracts": [
@@ -27,6 +27,30 @@
     },
     {
       "toolId": "setActiveExample",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "setField",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "insertItem",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "removeItem",
+      "lanes": [
+        "artifact"
+      ]
+    },
+    {
+      "toolId": "applyRemedy",
       "lanes": [
         "artifact"
       ]
@@ -78,6 +102,54 @@
       "execution": "bounded",
       "admission": "migrated",
       "reducer": "🎮️commands/🎨️set-active-example — loads PRIMARY_TEXT via set-snapshot decomposition"
+    },
+    {
+      "id": "setField",
+      "emittedLanes": [
+        "artifact"
+      ],
+      "publicationLanes": [
+        "artifact"
+      ],
+      "execution": "bounded",
+      "admission": "migrated",
+      "reducer": "generic setField via value-tree edit + from_snapshot"
+    },
+    {
+      "id": "insertItem",
+      "emittedLanes": [
+        "artifact"
+      ],
+      "publicationLanes": [
+        "artifact"
+      ],
+      "execution": "bounded",
+      "admission": "migrated",
+      "reducer": "generic insertItem via value-tree edit + from_snapshot"
+    },
+    {
+      "id": "removeItem",
+      "emittedLanes": [
+        "artifact"
+      ],
+      "publicationLanes": [
+        "artifact"
+      ],
+      "execution": "bounded",
+      "admission": "migrated",
+      "reducer": "generic removeItem via value-tree edit + from_snapshot"
+    },
+    {
+      "id": "applyRemedy",
+      "emittedLanes": [
+        "artifact"
+      ],
+      "publicationLanes": [
+        "artifact"
+      ],
+      "execution": "bounded",
+      "admission": "migrated",
+      "reducer": "generic applyRemedy via value-tree edit + from_snapshot"
     }
   ],
   "apps": [
@@ -159,9 +231,9 @@
   ],
   "expected": {
     "apps": 15,
-    "routesPerApp": 4,
-    "identities": 60,
-    "retained": 60,
+    "routesPerApp": 8,
+    "identities": 120,
+    "retained": 120,
     "batchOnlyPendingRewrite": 0
   },
   "oracle": {

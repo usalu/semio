@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-zone-window-shading-fc/schema.json",
+  "title": "ChangeZoneWindowShadingFc",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "windowId",
+    "newShadingFc"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "windowId": {
+      "type": "string"
+    },
+    "newShadingFc": {
+      "type": "number"
+    }
+  }
+}

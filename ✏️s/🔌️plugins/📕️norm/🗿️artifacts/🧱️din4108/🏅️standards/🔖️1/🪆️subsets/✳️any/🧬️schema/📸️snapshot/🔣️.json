@@ -1,113 +1,247 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Din4108Snapshot",
   "type": "object",
-  "additionalProperties": false,
   "required": [
-    "category",
-    "layers",
-    "climate",
-    "airtightnessN50",
-    "psiTimesLSum",
-    "rhInt",
-    "catalogId",
-    "materialId",
-    "airtightnessClass",
+    "climateZone",
+    "usage",
     "tIntC",
-    "solarAbsorptance",
-    "irradianceWM2",
-    "moistureMuExterior",
-    "moistureMuInterior",
-    "envelopeAreaM2",
+    "rhInt",
+    "hasMechanicalVentilation",
+    "airtightnessN50",
     "bb2DetailsConform",
-    "applicationType",
-    "declaredApplicationClass"
+    "zones",
+    "elements",
+    "thermalBridges"
   ],
   "properties": {
-    "category": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "climateZone": {
+      "type": "string"
     },
-    "layers": {
-      "type": "array",
-      "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/artifact.json#/$defs/Din4108LayerDocument"
-      },
-      "x-semio-state": "artifact"
-    },
-    "climate": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "airtightnessN50": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "psiTimesLSum": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "rhInt": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "catalogId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "materialId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "airtightnessClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "usage": {
+      "type": "string"
     },
     "tIntC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+      "type": "number"
     },
-    "solarAbsorptance": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "rhInt": {
+      "type": "number"
     },
-    "irradianceWM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "hasMechanicalVentilation": {
+      "type": "boolean"
     },
-    "moistureMuExterior": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "moistureMuInterior": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "envelopeAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "airtightnessN50": {
+      "type": "number"
     },
     "bb2DetailsConform": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
+      "type": "boolean"
     },
-    "applicationType": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "zones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "floorAreaM2",
+          "heaviness",
+          "nightVentilation",
+          "windows"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "floorAreaM2": {
+            "type": "number"
+          },
+          "heaviness": {
+            "type": "string"
+          },
+          "nightVentilation": {
+            "type": "string"
+          },
+          "windows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "orientation",
+                "areaM2",
+                "gValue",
+                "shadingFc",
+                "inclinationDeg"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "orientation": {
+                  "type": "string"
+                },
+                "areaM2": {
+                  "type": "number"
+                },
+                "gValue": {
+                  "type": "number"
+                },
+                "shadingFc": {
+                  "type": "number"
+                },
+                "inclinationDeg": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
     },
-    "declaredApplicationClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "zoneId",
+          "orientationDeg",
+          "inclinationDeg",
+          "adjacent",
+          "areaM2",
+          "layers",
+          "deltaUG",
+          "deltaUF",
+          "deltaUR"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "zoneId": {
+            "type": "string"
+          },
+          "orientationDeg": {
+            "type": "number"
+          },
+          "inclinationDeg": {
+            "type": "number"
+          },
+          "adjacent": {
+            "type": "string"
+          },
+          "areaM2": {
+            "type": "number"
+          },
+          "layers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "materialId",
+                "thicknessM",
+                "lambda",
+                "mu",
+                "density",
+                "segments"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "materialId": {
+                  "type": "string"
+                },
+                "thicknessM": {
+                  "type": "number"
+                },
+                "lambda": {
+                  "type": "number"
+                },
+                "mu": {
+                  "type": "number"
+                },
+                "density": {
+                  "type": "number"
+                },
+                "segments": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "materialId",
+                      "fraction",
+                      "lambda",
+                      "mu",
+                      "density"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "materialId": {
+                        "type": "string"
+                      },
+                      "fraction": {
+                        "type": "number"
+                      },
+                      "lambda": {
+                        "type": "number"
+                      },
+                      "mu": {
+                        "type": "number"
+                      },
+                      "density": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "deltaUG": {
+            "type": "number"
+          },
+          "deltaUF": {
+            "type": "number"
+          },
+          "deltaUR": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "thermalBridges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "psi",
+          "lengthM",
+          "bb2Type"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "psi": {
+            "type": "number"
+          },
+          "lengthM": {
+            "type": "number"
+          },
+          "bb2Type": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

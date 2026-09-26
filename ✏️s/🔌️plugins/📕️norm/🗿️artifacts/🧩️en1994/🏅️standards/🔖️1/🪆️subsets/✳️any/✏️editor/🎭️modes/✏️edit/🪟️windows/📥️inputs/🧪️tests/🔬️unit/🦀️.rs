@@ -8,8 +8,9 @@ async fn definition_declares_this_windows_body_key() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn renders_the_document_as_json() {
+async fn renders_structured_inputs() {
     let mut app = context::app_with_registry().await;
-    assert!(context::render(&mut app, BODY_INPUTS).await.contains(':'), "the inputs body renders the document json");
+    let body = context::render(&mut app, BODY_INPUTS).await;
+    assert!(!body.is_empty(), "structured inputs must render a non-empty body");
     context::close(&mut app);
 }

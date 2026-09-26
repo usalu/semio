@@ -202,7 +202,6 @@
     "dev:shooting:base-icon": "bun nx run workspace:dev -- shooting fixture base-icon",
     "dev:trinity:jack": "bun nx run workspace:dev -- trinity jack",
     "dev:trinity:rewriting": "bun nx run workspace:dev -- trinity rewriting",
-    "generate": "bun nx run workspace:generate",
     "schema:generate": "bun nx run workspace:schema-generate",
     "schema:docs": "bun nx run workspace:schema-docs",
     "schema:check": "bun nx run workspace:schema-check",
@@ -235,7 +234,6 @@
     "cpp:build": "bun nx run workspace:cpp-build --",
     "cpp:test": "bun nx run workspace:cpp-test --",
     "publish": "bun nx run workspace:publish",
-    "purge": "bun nx run workspace:purge",
     "wasm:flow-core": "nx run semio-framework-os-flow-core:wasm"
   },
   "devDependencies": {

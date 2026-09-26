@@ -1,0 +1,15 @@
+{
+  "title": "Running Hub",
+  "description": "os-hub is the running server. It boots on the development topology and passes the production gate.",
+  "prompt": "os-hub is the running server. It boots on the development topology and passes the production gate.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningserver",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2625"
+  }
+}

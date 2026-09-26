@@ -10,6 +10,7 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_the_family_headline() {
     let mut app = context::app_with_registry().await;
+    context::dispatch(&mut app, crate::editor::iso16757::Iso16757Command::Evaluate(crate::editor::iso16757::commands::evaluate::Evaluate {})).await;
     assert!(context::render(&mut app, BODY_ARTIFACT).await.contains("checks"));
     context::close(&mut app);
 }

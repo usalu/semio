@@ -4,7 +4,7 @@
   "status": "open",
   "description": "Bring the ◻️puzzle 2d and 🖐️puzzle 5d artifacts of the 🧩️puzzle plugin to complete feature parity with 🧊️puzzle 3d (fill tool with run panel, brush, selection/hover, transform, inspector, outliner, catalogue, settings, history, clipboard, import/export, engagement bar, context menu, locale) and prove that all three playgrounds boot and run end to end in the React host with a Playwright battery each. Builds on 26/09/06/PUZZLE-2D-END-TO-END (2d battery 33 PASS / 4 FAIL on 2026-09-17 02:14) and 26/09/02/PUZZLE-3D-END-TO-END (3d reference checklist + battery).",
   "summary": "",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": ["⚪a6e7ca7e-f0dd-4806-9a1a-c298737d8b70"],
   "note": "Ticket bookkeeping done manually on disk: repo and semio MCP servers timed out at session start (2026-09-17)."
 }

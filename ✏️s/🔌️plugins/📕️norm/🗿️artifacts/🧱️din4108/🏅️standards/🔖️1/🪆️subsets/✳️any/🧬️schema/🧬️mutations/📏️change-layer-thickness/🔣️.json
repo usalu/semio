@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeLayerThickness",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 20,
+  "binaryTag": 21,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

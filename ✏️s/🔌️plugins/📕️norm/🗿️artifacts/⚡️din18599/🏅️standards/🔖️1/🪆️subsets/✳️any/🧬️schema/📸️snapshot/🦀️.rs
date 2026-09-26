@@ -1,16 +1,15 @@
-//! 🧬️ Din18599 snapshot schema — artifact-lane fields only.
+//! 🧬️ Din18599 snapshot schema — complete building subject (zones, envelope, systems).
 
-use crate::{Din18599ClimateChild, MonthlyClimate, UseClass};
+use crate::{
+    Adjacency, Attachment, AutomationClass, BuildingCategory, CalculationMethod, CoolingSystem, DhwSystem, Din18599ClimateChild, ElementKind, EnvelopeElement, HeatingSystem, LightingSystem, MonthlyClimate, Renewables, ThermalZone, UseClass, VentilationSystem,
+};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot
 
-/// 📸️ Persisted Din18599 document snapshot. Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
-/// round 2 (`norm→C:table` on `din18599.climate`): the inline `MonthlyClimate` (two twelve-month
-/// arrays) is replaced by a fixed composed `s.stdio.semio`/`table` CHILD slot — see
-/// `🗿️artifacts/⚡️din18599/🦀️.rs`'s `🔖️Composition` region for the converters/
-/// working-scene cache. `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission;
-/// never hand-written.
+/// 📸️ Persisted Din18599 building energy subject. Climate remains a composed `s.stdio.semio`/`table`
+/// child (Potsdam / part-10 monthly means); envelope and zones are id-keyed lists; plant systems are
+/// nested records. Derived H_T / H_V / Q_P are never stored as free inputs.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -19,33 +18,45 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Snapshot {
     #[state(artifact)]
+    pub building_category: BuildingCategory,
+    #[state(artifact)]
+    pub attachment: Attachment,
+    #[state(artifact)]
     pub use_class: UseClass,
     #[state(artifact)]
-    pub heated_area_m2: f64,
+    pub method: CalculationMethod,
     #[state(artifact)]
-    pub occupants: u32,
+    pub net_floor_area_m2: f64,
     #[state(artifact)]
-    pub h_t: f64,
+    pub heated_volume_m3: f64,
     #[state(artifact)]
-    pub h_v: f64,
+    pub geg_qp_factor: f64,
+    #[state(artifact)]
+    pub delta_u_wb_w_m2k: f64,
+    #[state(artifact)]
+    pub automation_class: AutomationClass,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub zones: Vec<ThermalZone>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub elements: Vec<EnvelopeElement>,
+    #[state(artifact)]
+    pub heating: HeatingSystem,
+    #[state(artifact)]
+    pub dhw: DhwSystem,
+    #[state(artifact)]
+    pub ventilation: VentilationSystem,
+    #[state(artifact)]
+    pub cooling: CoolingSystem,
+    #[state(artifact)]
+    pub lighting: LightingSystem,
+    #[state(artifact)]
+    pub renewables: Renewables,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
     pub climate: Din18599ClimateChild,
-    #[state(artifact)]
-    pub internal_gains_w_m2: f64,
-    #[state(artifact)]
-    pub solar_gains_kwh: f64,
-    #[state(artifact)]
-    pub system_losses_kwh: f64,
-    #[state(artifact)]
-    pub renewable_kwh: f64,
-    #[state(artifact)]
-    pub annual_limit_kwh: f64,
-    #[state(artifact)]
-    pub energy_carrier: String,
-    #[state(artifact)]
-    pub reference_q_p_kwh: f64,
 }
 
 //#region 🔖️HandcraftedArtifactCodecs
@@ -92,67 +103,37 @@ impl store::ArtifactPack for Din18599Snapshot {
 
 impl Default for Din18599Snapshot {
     fn default() -> Self {
-        let climate = crate::din18599_climate_child_from_data(&MonthlyClimate {
-            theta_e_c: [-14.0, -11.186533479473212, -3.4999999999999964, 7.000000000000001, 17.5, 25.186533479473212, 28.0, 25.186533479473212, 17.5, 7.000000000000001, -3.4999999999999964, -11.186533479473212],
-            g_h_w_m2: [30.0, 60.0, 100.0, 140.0, 180.0, 200.0, 210.0, 190.0, 140.0, 90.0, 40.0, 20.0],
-        });
-        Self {
-            use_class: UseClass::Residential,
-            heated_area_m2: 100.0,
-            occupants: 4,
-            h_t: 92.12124613902822,
-            h_v: 40.800000000000004,
-            climate,
-            internal_gains_w_m2: 3.5,
-            solar_gains_kwh: 84.0,
-            system_losses_kwh: 800.0,
-            renewable_kwh: 1500.0,
-            annual_limit_kwh: 7500.0,
-            energy_carrier: "natural_gas".into(),
-            reference_q_p_kwh: 10000.0,
-        }
+        crate::subjects::compliant_detached_house()
     }
 }
 //#endregion 🔖️Snapshot
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ The canonical JSON projection of a [`Din18599Snapshot`] — the surface
-/// `../../../../../🧪️tests/⚡️mutate-din18599-1` is compared through under `ordered-json-v1`.
+/// 📤️ The canonical JSON projection of a [`Din18599Snapshot`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_din18599_snapshot_json(snapshot: &Din18599Snapshot) -> String {
     pack::json::to_json_string(snapshot)
 }
 
-/// 📥️ The `serde_json` inverse of [`encode_din18599_snapshot_json`] — decodes the committed
-/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️.json`
-/// specification vectors into real [`Din18599Snapshot`] values, so the case adapter reads the committed
-/// fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
-/// adapter is impossible — the generated test host links only this crate — which is why the bridge
-/// belongs here.
+/// 📥️ The `serde_json` inverse of [`encode_din18599_snapshot_json`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_din18599_snapshot_json(text: &str) -> Result<Din18599Snapshot, String> {
     pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
-/// 📖️ Parses the committed `.dsl.semio` artifact into a [`Din18599Snapshot`]. Calls the `ArtifactDsl`
-/// trait method directly rather than the `📝️text` facet's async wrapper, because a test host has no
-/// async runtime to drive one.
+/// 📖️ Parses the committed `.dsl.semio` artifact into a [`Din18599Snapshot`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_din18599_dsl(text: &str) -> Result<Din18599Snapshot, String> {
     <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
-/// 🖨️ Prints a [`Din18599Snapshot`] back to its canonical `.dsl.semio` body. Canonical is the operative
-/// word: the committed example assets ARE this function's own output, which is why the identity
-/// scenario asserts byte-exactness rather than the no-byte-pass-through inequality.
+/// 🖨️ Prints a [`Din18599Snapshot`] back to its canonical `.dsl.semio` body.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_din18599_dsl(snapshot: &Din18599Snapshot) -> String {
     store::ArtifactDsl::print_dsl(snapshot)
 }
 
-/// 📦️ Decodes a [`Din18599Snapshot`] from the binary `.pack.semio` envelope — an independently written
-/// codec from the DSL grammar above, which is what makes their agreement evidence that the document
-/// was parsed rather than copied.
+/// 📦️ Decodes a [`Din18599Snapshot`] from the binary `.pack.semio` envelope.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_din18599_pack(bytes: &[u8]) -> Result<Din18599Snapshot, String> {
     <Din18599Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
@@ -164,4 +145,3 @@ pub fn encode_din18599_pack(snapshot: &Din18599Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(snapshot)
 }
 //#endregion 🌉️ExternalCodecBridge
-

@@ -4,10 +4,11 @@ import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv, { type ValidateFunction } from "ajv";
+import type { ValidateFunction } from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runBunx, runVitest } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 import { SceneShadingPixelCheckScript } from "../../../../🔮️oracles/🎨️world3d-scene-shading/📜️script.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../🧪️tests/🧬️schema-oracle/🟦️.ts";
 
 const MODULE_SCHEMAS = {
   renderer: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
@@ -16,8 +17,8 @@ const MODULE_SCHEMAS = {
   presence: "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🧬️schema/🔣️.json",
 } as const;
 
-/** 🧬️ A draft-07 validator that treats the annotation-only `discriminator` keyword as data. */
-const ownedAjv = (): Ajv => new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-note");
+/** 🧬️ A strict draft-07 validator that knows the `x-semio-*` vendor annotation vocabulary (`💻️os/🧪️tests/🧬️schema-oracle`). */
+const ownedAjv = () => semioSchemaAjvV1({ strict: true, allErrors: true });
 
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 function ownedExport(repoRoot: string, scope: keyof typeof MODULE_SCHEMAS, exportId: string): ValidateFunction {
@@ -225,13 +226,13 @@ export function hubAuthContractOracle(repoRoot: string): number {
   assert.deepEqual(request.required, osFixture.requestFieldOrder);
   const rust = readFileSync(join(repoRoot, "🌎️hub/🔐️auth/🦀️.rs"), "utf8");
   assert.match(rust, new RegExp(`SIGN_IN_REQUEST_MAX_BYTES: usize = ${osFixture.requestMaxBytes};`));
-  const validate = new Ajv({ strict: false, allErrors: true }).addSchema(hubSchema).getSchema(`${"https://json.schemas.assets.semio-tech.com/hub/auth/schema.json"}#/$defs/CredentialSignInRequestV1`);
+  const validate = semioSchemaAjvV1({ strict: false, allErrors: true }).addSchema(hubSchema).getSchema(`${"https://json.schemas.assets.semio-tech.com/hub/auth/schema.json"}#/$defs/CredentialSignInRequestV1`);
   if (!validate) throw new Error("hub auth schema publishes no CredentialSignInRequestV1");
   for (const row of osFixture.credentials) {
     const body = { schema: osFixture.requestSchema, email: row.email.trim().toLowerCase(), password: row.password, deviceInstanceId: "device-au2", clientClass: "browser" };
     assert.equal(validate(body) === true, row.valid, `credential admission disagrees with the hub schema for ${row.email}`);
   }
-  const token = new Ajv({ strict: false }).addSchema(hubSchema).getSchema(`${"https://json.schemas.assets.semio-tech.com/hub/auth/schema.json"}#/$defs/SessionCapabilityV1`);
+  const token = semioSchemaAjvV1({ strict: false }).addSchema(hubSchema).getSchema(`${"https://json.schemas.assets.semio-tech.com/hub/auth/schema.json"}#/$defs/SessionCapabilityV1`);
   if (!token) throw new Error("hub auth schema publishes no SessionCapabilityV1");
   for (const row of osFixture.tokens) assert.equal(token(row.token) === true, row.valid, `token admission disagrees with the hub schema for ${row.token.slice(0, 24)}`);
   const codes = (hubSchema.$defs.AuthErrorCodeV1!.enum as readonly string[]).slice().sort();

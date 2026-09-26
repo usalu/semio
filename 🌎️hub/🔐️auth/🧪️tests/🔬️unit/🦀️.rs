@@ -294,9 +294,10 @@ mod long {
 
 /// ⏱️ Benchmark law: a sign-in's credential derivation at the default cost (210 000 PBKDF2-HMAC-SHA256
 /// iterations) costs what its 420 000 SHA-256 compressions cost — the HMAC keyed once, two compressions
-/// per iteration, never four — measured against the same number of compressions hashed in bulk in the
-/// same moment, so machine load cancels out; and the best of five fits the sub-second session-mint
-/// budget on a loaded machine.
+/// per iteration (an unkeyed HMAC costs four, twice the bound) — measured against the same number of
+/// compressions hashed in bulk in the same moment, so machine load cancels out. The session mint's
+/// absolute latency is the live probe's (`wp-h10.md`), not this law's: wall time under fleet load is
+/// not a property of the code.
 #[test]
 fn a_default_cost_credential_derivation_fits_the_session_mint_budget() {
     let bulk = vec![0x5au8; 420_000 * 64];
@@ -310,6 +311,5 @@ fn a_default_cost_credential_derivation_fits_the_session_mint_budget() {
         derivation = derivation.min(started.elapsed());
         assert_eq!(credential.iterations(), password::DEFAULT_ITERATIONS);
     }
-    assert!(derivation < compressions * 3, "a derivation ({derivation:?}) costs more than its compressions ({compressions:?}) allow");
-    assert!(derivation < std::time::Duration::from_secs(1), "one default-cost derivation took {derivation:?}");
+    assert!(derivation < compressions * 2, "a derivation ({derivation:?}) costs more than its 420 000 compressions ({compressions:?}) allow");
 }

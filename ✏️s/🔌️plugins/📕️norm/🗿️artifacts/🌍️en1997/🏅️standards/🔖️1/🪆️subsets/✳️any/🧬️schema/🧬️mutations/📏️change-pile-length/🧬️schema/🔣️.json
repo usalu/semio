@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-length/schema.json",
+  "title": "ChangePileLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLength"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newLength": {
+      "type": "number"
+    }
+  }
+}

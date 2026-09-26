@@ -1,77 +1,134 @@
 syntax = "proto3";
 package semio.s.norm.en1992.artifact;
 
-// 🧬️ En1992 artifact schema — every field with its state class.
+message ConcreteGrade {
+  string id = 1;
+  string name = 2;
+  double f_ck = 3;
+}
+
+message ReinforcementGrade {
+  string id = 1;
+  string name = 2;
+  double f_yk = 3;
+  double e_s = 4;
+}
+
+message PrestressSteel {
+  string id = 1;
+  string name = 2;
+  double f_pk = 3;
+  double f_p01k = 4;
+}
+
+message BarLayer {
+  string id = 1;
+  double diameter = 2;
+  uint32 count = 3;
+  string position = 4;
+}
+
+message Stirrups {
+  double diameter = 1;
+  double spacing = 2;
+  uint32 legs = 3;
+}
+
+message PunchingSpec {
+  double column_width = 1;
+  double column_depth = 2;
+  double u1 = 3;
+  double beta = 4;
+  double asw = 5;
+}
+
+message PrestressSpec {
+  double force = 1;
+  double eccentricity = 2;
+}
+
+message FireSpec {
+  string rating = 1;
+  double axis_distance = 2;
+}
+
+message LoadCaseActions {
+  string id = 1;
+  string combination = 2;
+  double m_ed = 3;
+  double n_ed = 4;
+  double v_ed = 5;
+  double t_ed = 6;
+  double v_ed_punch = 7;
+}
+
+message RcMember {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string kind = 4;
+  string concrete_grade_id = 5;
+  string reinforcement_grade_id = 6;
+  string prestress_steel_id = 7;
+  string exposure = 8;
+  double width = 9;
+  double height = 10;
+  double effective_depth = 11;
+  double cover = 12;
+  double span = 13;
+  string support = 14;
+  double buckling_length = 15;
+  repeated BarLayer longitudinal = 16;
+  Stirrups stirrups = 17;
+  PunchingSpec punching = 18;
+  PrestressSpec prestress = 19;
+  FireSpec fire = 20;
+  repeated LoadCaseActions actions = 21;
+  bool use_fem = 22;
+  double udl = 23;
+  string tightness = 24;
+  double hd_over_h = 25;
+  double liquid_sigma_s = 26;
+  double liquid_rho_p_eff = 27;
+  double liquid_f_ct_eff = 28;
+  double liquid_s_r_max = 29;
+  double bridge_sigma_c = 30;
+  double bridge_delta_sigma_s = 31;
+}
+
+message Anchor {
+  string id = 1;
+  double h_ef = 2;
+  bool cracked = 3;
+  double f_uk = 4;
+  double f_yk = 5;
+  double a_s = 6;
+  double d = 7;
+  double c1 = 8;
+  double n_ed = 9;
+  double v_ed = 10;
+  double f_ck = 11;
+}
 
 message En1992Artifact {
   // @state artifact
   string annex = 1;
   // @state artifact
-  double m_ed_knm = 2;
+  string title = 2;
   // @state artifact
-  double v_ed_kn = 3;
+  double design_working_life_years = 3;
   // @state artifact
-  double f_ck = 4;
+  double delta_c_dev = 4;
   // @state artifact
-  double b_mm = 5;
+  string cement_type = 5;
   // @state artifact
-  double d_mm = 6;
+  repeated ConcreteGrade concrete_grades = 6;
   // @state artifact
-  double a_s_mm2 = 7;
+  repeated ReinforcementGrade reinforcement_grades = 7;
   // @state artifact
-  double f_yk = 8;
+  repeated PrestressSteel prestress_steels = 8;
   // @state artifact
-  double rho_l = 9;
+  repeated RcMember members = 9;
   // @state artifact
-  double n_ed_kn = 10;
-  // @state artifact
-  double p_kn = 11;
-  // @state artifact
-  double a_c_mm2 = 12;
-  // @state artifact
-  bool use_fem = 13;
-  // @state artifact
-  double span_m = 14;
-  // @state artifact
-  double udl_kn_m = 15;
-  // @state artifact
-  string fire_rating = 16;
-  // @state artifact
-  double provided_axis_distance_mm = 17;
-  // @state artifact
-  double bridge_sigma_c_mpa = 18;
-  // @state artifact
-  double bridge_delta_sigma_s_mpa = 19;
-  // @state artifact
-  string tightness_class = 20;
-  // @state artifact
-  double hd_over_h = 21;
-  // @state artifact
-  double liquid_sigma_s_mpa = 22;
-  // @state artifact
-  double liquid_rho_p_eff = 23;
-  // @state artifact
-  double liquid_f_ct_eff_mpa = 24;
-  // @state artifact
-  double liquid_e_s_mpa = 25;
-  // @state artifact
-  double liquid_s_r_max_mm = 26;
-  // @state artifact
-  double anchor_h_ef_mm = 27;
-  // @state artifact
-  bool anchor_cracked = 28;
-  // @state artifact
-  double anchor_f_uk_mpa = 29;
-  // @state artifact
-  double anchor_f_yk_mpa = 30;
-  // @state artifact
-  double anchor_a_s_mm2 = 31;
-  // @state artifact
-  double anchor_d_mm = 32;
-  // @state artifact
-  double anchor_c1_mm = 33;
-  // @state artifact
-  double anchor_n_ed_kn = 34;
-  // @state artifact
-  double anchor_v_ed_kn = 35;
+  repeated Anchor anchors = 10;
 }

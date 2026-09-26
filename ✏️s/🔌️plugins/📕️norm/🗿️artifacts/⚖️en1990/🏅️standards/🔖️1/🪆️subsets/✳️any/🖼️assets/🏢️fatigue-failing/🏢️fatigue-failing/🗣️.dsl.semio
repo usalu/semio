@@ -1,0 +1,25 @@
+semio norm.en1990.dsl v1
+annex=de project-id=fatigue-failing structure-kind=building altitude-m=0 consequence-class=2 reliability-class=2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8
+permanents [id:TEXT kind:TEXT gk:NUM] {
+  G-sup g_sup 80000
+  G-inf g_inf 20000
+}
+variables [id:TEXT category:TEXT qk:NUM] {
+  Q-office office 80000
+  Q-wind wind 20000
+}
+accidentals [id:TEXT ad:NUM] {
+}
+seismics [id:TEXT a-ek:NUM importance-class:TEXT] {
+}
+members [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {
+  beam-B1 "Fatigue beam B1" "Ermüdungsträger B1" 200000 200000 200000 180000 50000 6 0.018 250 5.5 3
+}
+bridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {
+}
+effects [member-id:TEXT action-id:TEXT influence:NUM] {
+  beam-B1 G-sup 1
+  beam-B1 G-inf 1
+  beam-B1 Q-office 1
+  beam-B1 Q-wind 1
+}

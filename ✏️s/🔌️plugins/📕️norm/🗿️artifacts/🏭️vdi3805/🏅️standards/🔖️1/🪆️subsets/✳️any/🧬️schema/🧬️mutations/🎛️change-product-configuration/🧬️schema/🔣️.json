@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-product-configuration/schema.json",
+  "title": "ChangeProductConfiguration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newConfiguration"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newConfiguration": {
+      "title": "Configuration",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "functionRefs",
+        "id",
+        "parameters"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "geometryRef": {
+          "type": "string"
+        },
+        "functionRefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "attributes": {
+          "kind": "valveHeating",
+          "dn": 50,
+          "kvsM3S": 0.00125,
+          "pressureClass": "PN16",
+          "connectionType": "flange",
+          "authorityMin": 0.3,
+          "authorityMax": 0.7
+        }
+      }
+    }
+  }
+}

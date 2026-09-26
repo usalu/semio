@@ -83,27 +83,27 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id                          | dir                           | fixture                                                    |
-      | change-exchange-process     | 🔄️change-exchange-process      | 🔄️advances-the-exchange-stage-to-determine-product           |
-      | update-script-limits        | 🚦️update-script-limits         | 🚦️doubles-the-step-budget-and-quintuples-the-timeout         |
-      | replace-part-number-rule    | 🧮️replace-part-number-rule     | 🧮️swaps-the-literal-rule-for-a-height-driven-script          |
-      | change-part-number-input    | 🎛️change-part-number-input     | 🔢️raises-the-height-part-number-input-to-750                 |
-      | remove-part-number-input    | 🔌️remove-part-number-input     | 🔢️drops-the-length-part-number-input                         |
-      | change-selection-class      | 🎯️change-selection-class       | 🎯️retargets-the-selection-at-the-towel-radiator-class        |
-      | change-selection-series     | 🧵️change-selection-series      | 🧵️narrows-the-selection-to-the-pr-plus-series                |
-      | add-selection-constraint    | 🔒️add-selection-constraint     | 🔒️appends-a-width-under-800-constraint                       |
-      | remove-selection-constraint | 🔓️remove-selection-constraint | 🔓️drops-the-trailing-length-constraint                       |
-      | rename-catalogue            | 📇️rename-catalogue             | 📇️restamps-the-catalogue-as-the-2026-edition                 |
-      | rename-manufacturer         | 🏭️rename-manufacturer          | 🏭️adds-the-ag-suffix-to-the-manufacturer                     |
-      | create-product-group        | 🧺️create-product-group         | 🧺️appends-a-towel-radiators-group                            |
-      | delete-product-group        | 🧹️delete-product-group         | 🚫️removes-the-radiators-group-and-strands-its-class          |
-      | rename-product-group        | 🗂️rename-product-group         | ✏️renames-the-radiators-group-to-panel-radiators             |
-      | create-product              | 📦️create-product               | 📦️appends-a-pr900-product-to-the-existing-series             |
-      | delete-product              | 🚫️delete-product               | 🚫️removes-the-pr600-product-from-the-catalogue               |
-      | rename-product              | 🏷️rename-product              | ✏️renames-pr600-to-the-compact-variant-name                  |
-      | create-property-definition  | 📐️create-property-definition   | 📏️appends-a-selection-scoped-length-property                 |
-      | delete-property-definition  | 🧽️delete-property-definition   | 🚫️removes-the-height-property-definition                     |
-      | create-subject              | 🌳️create-subject               | 🌳️appends-a-towel-radiator-subject-under-the-radiator-parent |
-      | delete-subject              | ✂️delete-subject               | 🚫️removes-the-radiator-subject-from-the-dictionary           |
+      | change-exchange-process     | 🔄️change-exchange-process           | 🔄️advances-the-exchange-stage-to-determine-product           |
+      | change-script-limits        | 🚦️change-script-limits           | 🚦️doubles-the-step-budget-and-quintuples-the-timeout         |
+      | replace-part-number-rule    | 🧮️replace-part-number-rule           | 🧮️swaps-the-literal-rule-for-a-height-driven-script          |
+      | change-part-number-input    | 🎛️change-part-number-input           | 🔢️raises-the-height-part-number-input-to-750                 |
+      | remove-part-number-input    | 🔌️remove-part-number-input           | 🔢️drops-the-length-part-number-input                         |
+      | change-selection-class      | 🎯️change-selection-class           | 🎯️retargets-the-selection-at-the-towel-radiator-class        |
+      | change-selection-series     | 🧵️change-selection-series           | 🧵️narrows-the-selection-to-the-pr-plus-series                |
+      | add-selection-constraint    | 🔒️add-selection-constraint           | 🔒️appends-a-width-under-800-constraint                       |
+      | remove-selection-constraint | 🔓️remove-selection-constraint           | 🔓️drops-the-trailing-length-constraint                       |
+      | rename-catalogue            | 📇️rename-catalogue           | 📇️restamps-the-catalogue-as-the-2026-edition                 |
+      | rename-manufacturer         | 🏭️rename-manufacturer           | 🏭️adds-the-ag-suffix-to-the-manufacturer                     |
+      | introduce-product-group        | 🧺️introduce-product-group           | 🧺️appends-a-towel-radiators-group                            |
+      | retire-product-group        | 🧹️retire-product-group           | 🚫️removes-the-radiators-group-and-strands-its-class          |
+      | rename-product-group        | 🗂️rename-product-group           | ✏️renames-the-radiators-group-to-panel-radiators             |
+      | introduce-product              | 📦️introduce-product           | 📦️appends-a-pr900-product-to-the-existing-series             |
+      | retire-product              | 🚫️retire-product           | 🚫️removes-the-pr600-product-from-the-catalogue               |
+      | rename-product              | 🏷️rename-product           | ✏️renames-pr600-to-the-compact-variant-name                  |
+      | introduce-property-definition  | 📐️introduce-property-definition           | 📏️appends-a-selection-scoped-length-property                 |
+      | retire-property-definition  | 🧽️retire-property-definition           | 🚫️removes-the-height-property-definition                     |
+      | introduce-subject              | 🌳️introduce-subject           | 🌳️appends-a-towel-radiator-subject-under-the-radiator-parent |
+      | retire-subject              | ✂️retire-subject           | 🚫️removes-the-radiator-subject-from-the-dictionary           |
 
   @id-inverse
   @level-exhaustive
@@ -117,27 +117,27 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id                          | dir                           | fixture                                                    |
-      | change-exchange-process     | 🔄️change-exchange-process      | 🔄️advances-the-exchange-stage-to-determine-product           |
-      | update-script-limits        | 🚦️update-script-limits         | 🚦️doubles-the-step-budget-and-quintuples-the-timeout         |
-      | replace-part-number-rule    | 🧮️replace-part-number-rule     | 🧮️swaps-the-literal-rule-for-a-height-driven-script          |
-      | change-part-number-input    | 🎛️change-part-number-input     | 🔢️raises-the-height-part-number-input-to-750                 |
-      | remove-part-number-input    | 🔌️remove-part-number-input     | 🔢️drops-the-length-part-number-input                         |
-      | change-selection-class      | 🎯️change-selection-class       | 🎯️retargets-the-selection-at-the-towel-radiator-class        |
-      | change-selection-series     | 🧵️change-selection-series      | 🧵️narrows-the-selection-to-the-pr-plus-series                |
-      | add-selection-constraint    | 🔒️add-selection-constraint     | 🔒️appends-a-width-under-800-constraint                       |
-      | remove-selection-constraint | 🔓️remove-selection-constraint | 🔓️drops-the-trailing-length-constraint                       |
-      | rename-catalogue            | 📇️rename-catalogue             | 📇️restamps-the-catalogue-as-the-2026-edition                 |
-      | rename-manufacturer         | 🏭️rename-manufacturer          | 🏭️adds-the-ag-suffix-to-the-manufacturer                     |
-      | create-product-group        | 🧺️create-product-group         | 🧺️appends-a-towel-radiators-group                            |
-      | delete-product-group        | 🧹️delete-product-group         | 🚫️removes-the-radiators-group-and-strands-its-class          |
-      | rename-product-group        | 🗂️rename-product-group         | ✏️renames-the-radiators-group-to-panel-radiators             |
-      | create-product              | 📦️create-product               | 📦️appends-a-pr900-product-to-the-existing-series             |
-      | delete-product              | 🚫️delete-product               | 🚫️removes-the-pr600-product-from-the-catalogue               |
-      | rename-product              | 🏷️rename-product              | ✏️renames-pr600-to-the-compact-variant-name                  |
-      | create-property-definition  | 📐️create-property-definition   | 📏️appends-a-selection-scoped-length-property                 |
-      | delete-property-definition  | 🧽️delete-property-definition   | 🚫️removes-the-height-property-definition                     |
-      | create-subject              | 🌳️create-subject               | 🌳️appends-a-towel-radiator-subject-under-the-radiator-parent |
-      | delete-subject              | ✂️delete-subject               | 🚫️removes-the-radiator-subject-from-the-dictionary           |
+      | change-exchange-process     | 🔄️change-exchange-process           | 🔄️advances-the-exchange-stage-to-determine-product           |
+      | change-script-limits        | 🚦️change-script-limits           | 🚦️doubles-the-step-budget-and-quintuples-the-timeout         |
+      | replace-part-number-rule    | 🧮️replace-part-number-rule           | 🧮️swaps-the-literal-rule-for-a-height-driven-script          |
+      | change-part-number-input    | 🎛️change-part-number-input           | 🔢️raises-the-height-part-number-input-to-750                 |
+      | remove-part-number-input    | 🔌️remove-part-number-input           | 🔢️drops-the-length-part-number-input                         |
+      | change-selection-class      | 🎯️change-selection-class           | 🎯️retargets-the-selection-at-the-towel-radiator-class        |
+      | change-selection-series     | 🧵️change-selection-series           | 🧵️narrows-the-selection-to-the-pr-plus-series                |
+      | add-selection-constraint    | 🔒️add-selection-constraint           | 🔒️appends-a-width-under-800-constraint                       |
+      | remove-selection-constraint | 🔓️remove-selection-constraint           | 🔓️drops-the-trailing-length-constraint                       |
+      | rename-catalogue            | 📇️rename-catalogue           | 📇️restamps-the-catalogue-as-the-2026-edition                 |
+      | rename-manufacturer         | 🏭️rename-manufacturer           | 🏭️adds-the-ag-suffix-to-the-manufacturer                     |
+      | introduce-product-group        | 🧺️introduce-product-group           | 🧺️appends-a-towel-radiators-group                            |
+      | retire-product-group        | 🧹️retire-product-group           | 🚫️removes-the-radiators-group-and-strands-its-class          |
+      | rename-product-group        | 🗂️rename-product-group           | ✏️renames-the-radiators-group-to-panel-radiators             |
+      | introduce-product              | 📦️introduce-product           | 📦️appends-a-pr900-product-to-the-existing-series             |
+      | retire-product              | 🚫️retire-product           | 🚫️removes-the-pr600-product-from-the-catalogue               |
+      | rename-product              | 🏷️rename-product           | ✏️renames-pr600-to-the-compact-variant-name                  |
+      | introduce-property-definition  | 📐️introduce-property-definition           | 📏️appends-a-selection-scoped-length-property                 |
+      | retire-property-definition  | 🧽️retire-property-definition           | 🚫️removes-the-height-property-definition                     |
+      | introduce-subject              | 🌳️introduce-subject           | 🌳️appends-a-towel-radiator-subject-under-the-radiator-parent |
+      | retire-subject              | ✂️retire-subject           | 🚫️removes-the-radiator-subject-from-the-dictionary           |
 
   @id-identity-round-trip
   @level-long

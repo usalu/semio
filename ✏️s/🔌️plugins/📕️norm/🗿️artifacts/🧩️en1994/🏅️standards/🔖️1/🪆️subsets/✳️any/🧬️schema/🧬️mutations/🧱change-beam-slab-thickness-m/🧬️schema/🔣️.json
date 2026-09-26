@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-slab-thickness-m/schema.json",
+  "title": "ChangeBeamSlabThicknessM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newSlabThicknessM"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newSlabThicknessM": {
+      "type": "number"
+    }
+  }
+}

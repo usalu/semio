@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-cement-type/schema.json",
+  "title": "ChangeCementType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newCementType"
+  ],
+  "properties": {
+    "newCementType": {
+      "type": "string"
+    }
+  }
+}

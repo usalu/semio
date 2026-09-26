@@ -1,0 +1,15 @@
+{
+  "title": "Running Playbook",
+  "description": "The playbook engine and surface run inside Playbook.",
+  "prompt": "The playbook engine and surface run inside Playbook.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningplaybook",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2682"
+  }
+}

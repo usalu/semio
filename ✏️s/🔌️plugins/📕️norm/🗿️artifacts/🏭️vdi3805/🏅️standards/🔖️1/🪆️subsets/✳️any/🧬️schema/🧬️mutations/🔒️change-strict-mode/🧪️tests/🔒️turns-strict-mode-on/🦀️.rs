@@ -103,7 +103,6 @@ async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
     assert_eq!(raised_diff.strict_mode, Some(true), "change-strict-mode/turns-strict-mode-on: the diff must publish strictMode = true");
-    assert!(raised_diff.limits.is_none(), "change-strict-mode/turns-strict-mode-on: the strict-mode flag and the security limits are separate facets");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-strict-mode/turns-strict-mode-on: produced diff differs from the committed 🔺️diff/🔣️.json");

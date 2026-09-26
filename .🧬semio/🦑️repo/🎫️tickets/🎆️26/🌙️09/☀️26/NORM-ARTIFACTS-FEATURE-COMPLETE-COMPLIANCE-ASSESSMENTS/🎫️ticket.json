@@ -1,0 +1,17 @@
+{
+  "title": "Norm Artifacts Feature Complete Compliance Assessments",
+  "emoji": "⚖️",
+  "status": "closed",
+  "description": "All norm artifacts must be proper, non-stubbed, feature-complete assessments for each norm. The artifact is the complete subject to evaluate and the report shows what complies, what does not comply and how it could comply. Everything must work end to end for a user.",
+  "summary": "EN 1997 round-4: non-tautological CPT/SPT φ′ checks with fail→pass remedy; per-element+project BS-P/T/A governing summaries; typed TS/GraphQL/proto facets + parity; Bishop geometry-driven FoS + Python oracle ±0.5%; GEO-3 citations; CORRECTION 14:37 epsilon gaming removed. Runner: Summary [0.636s] 92 tests run: 92 passed, 0 skipped. Taxonomy: 547 payloads.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2763"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningnorm",
+  "sessions": [
+    "⚪5123ef70a12b4ba9ba0d08ad38e7a631",
+    "⚪890708149e584a8e911aba14adb9edac",
+    "⚪24bd0d6beb9b44bc8cc69574d6a1f29e",
+    "⚪571526f541cf48738a90284ea5836477"
+  ]
+}

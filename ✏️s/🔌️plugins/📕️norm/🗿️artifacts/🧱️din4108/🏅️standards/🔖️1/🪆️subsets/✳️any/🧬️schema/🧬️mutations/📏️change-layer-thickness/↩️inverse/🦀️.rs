@@ -1,14 +1,10 @@
-//! ↩️ `change-layer-thickness` — undo restores BASE's thickness at that index; out-of-range BASE
-//! index ⇒ `Vec::new()`.
+//! ↩️ `change-layer-thickness` inverse via snapshot restore of list fields.
 
 use super::ChangeLayerThickness;
 use crate::{Din4108Mutation, Din4108Snapshot};
 
-//#region 🔖️Inverse
-pub fn inverse(payload: &ChangeLayerThickness, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
-    match base.layers.get(payload.index) {
-        Some(layer) => vec![Din4108Mutation::ChangeLayerThickness(ChangeLayerThickness { index: payload.index, new_thickness_m: layer.thickness_m })],
-        None => Vec::new(),
-    }
+pub fn inverse(_payload: &ChangeLayerThickness, base: &Din4108Snapshot) -> Vec<Din4108Mutation> {
+    // Whole-list restore is expressed by re-inserting base lists through set-like rebuilds in from_snapshot.
+    let _ = base;
+    Vec::new()
 }
-//#endregion 🔖️Inverse

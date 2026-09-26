@@ -1,66 +1,21 @@
-//! 🧾 `outline` — one named inference: this document's own field/section structure. A norm
-//! compliance record IS the document it describes, so its "outline" is its top-level field list
-//! (`sectionOutline`/`fieldCount`, fixed by the snapshot's own schema shape) plus a real
-//! `entryCount` over whatever repeated sub-entries it actually carries (0 when the snapshot has
-//! no collection-typed top-level field).
+//! 🧾 `outline` — document field structure for the scoped EN 1998 subject.
 
 use crate::En1998Snapshot;
 
-//#region 🔖️Outline
 const SECTION_FIELDS: &[&str] = &[
-    "seismic_zone",
-    "ground_type",
-    "importance_class",
-    "structural_system",
-    "t1_s",
-    "mass_t",
-    "v_rd_kn",
-    "drift_mm",
-    "height_m",
-    "multiple_resisting_systems",
     "annex",
-    "en_a_gr",
-    "en_ground_type",
-    "en_spectrum_type",
-    "period_ratio",
-    "bridge_v_rd_kn",
-    "bearing_d_ed_mm",
-    "bearing_d_rd_mm",
-    "retrofit_knowledge_level",
-    "retrofit_limit_state",
-    "retrofit_e_d_kn",
-    "retrofit_r_k_kn",
-    "retrofit_gamma_el",
-    "silo_height_m",
-    "silo_radius_m",
-    "silo_n_rd_kn",
-    "silo_v_ed_kn",
-    "silo_v_rd_kn",
-    "silo_q_nominal",
-    "tank_height_m",
-    "tank_radius_m",
-    "tank_mass_t",
-    "tank_v_rd_kn",
-    "tower_m_ed_knm",
-    "tower_m_rd_knm",
-    "tower_is_chimney",
-    "tower_q_nominal",
-    "tower_mass_t",
-    "foundation_area_m2",
-    "foundation_p_rd_kpa",
-    "foundation_h_ed_kn",
-    "foundation_h_rd_kn",
-    "k_foundation",
-    "k_soil",
-    "wall_height_m",
-    "wall_phi_deg",
-    "wall_soil_gamma_kn_m3",
-    "wall_r",
-    "wall_h_rd_kn",
+    "site",
+    "buildings",
+    "bridges",
+    "assessments",
+    "silos",
+    "tanks",
+    "foundations",
+    "retainingWalls",
+    "towers",
 ];
 
-/// 🧾️ `En1998` document outline.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
@@ -71,23 +26,19 @@ pub struct En1998Outline {
 }
 
 impl En1998Outline {
-    pub fn compute(_snapshot: &En1998Snapshot) -> Self {
-        let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
-        let field_count = section_outline.len() as u32;
-        let entry_count = 0;
-        Self { section_outline, field_count, entry_count }
+    pub fn compute(snapshot: &En1998Snapshot) -> Self {
+        let entry_count = (snapshot.buildings.len()
+            + snapshot.bridges.len()
+            + snapshot.assessments.len()
+            + snapshot.silos.len()
+            + snapshot.tanks.len()
+            + snapshot.foundations.len()
+            + snapshot.retaining_walls.len()
+            + snapshot.towers.len()) as u32;
+        Self {
+            section_outline: SECTION_FIELDS.iter().map(|s| (*s).to_string()).collect(),
+            field_count: SECTION_FIELDS.len() as u32,
+            entry_count,
+        }
     }
 }
-
-impl Default for En1998Outline {
-    fn default() -> Self {
-        Self::compute(&En1998Snapshot::default())
-    }
-}
-//#endregion 🔖️Outline
-
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

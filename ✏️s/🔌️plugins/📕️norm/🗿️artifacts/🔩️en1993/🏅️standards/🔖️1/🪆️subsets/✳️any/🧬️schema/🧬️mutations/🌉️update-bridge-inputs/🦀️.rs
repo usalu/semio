@@ -1,19 +1,17 @@
-//! 🌉 `update-bridge-inputs` — atomically updates the bridge-inputs facet (bridge_lambda, bridge_phi_2, bridge_delta_sigma_p_mpa are validated together for one EN 1993 check, never one-field-at-a-time).
+//! `upsert-bridge-fatigue` — upsert a `BridgeFatigue` by id into `bridge_fatigue`.
 
-use crate::{En1993Mutation, En1993Snapshot};
+use crate::{BridgeFatigue, En1993Mutation, En1993Snapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct UpdateBridgeInputs {
-    pub new_bridge_lambda: f64,
-    pub new_bridge_phi_2: f64,
-    pub new_bridge_delta_sigma_p_mpa: f64,
+    pub bridge_fatigue_item: BridgeFatigue,
 }
 
 impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateBridgeInputs {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "bridge-inputs", kind: "update-bridge-inputs", record: "UpdatedBridgeInputs" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "update", entity: "bridgeFatigue", kind: "update-bridge-inputs", record: "UpdatedBridgeFatigue" };
 
     fn diff(&self, base: &En1993Snapshot) -> protocol::MutationOutcome<<En1993Mutation as protocol::Mutation<En1993Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -22,7 +20,13 @@ impl protocol::MutationKind<En1993Snapshot, En1993Mutation> for UpdateBridgeInpu
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native("Update EN 1993-2 steel bridge inputs", "EN 1993-2 Eingaben für Stahlbrücken aktualisieren")
+        protocol::LocalizedLabel::native(
+            &format!("Upsert bridge fatigue {}", self.bridge_fatigue_item.id),
+            &format!("Brückenermüdung setzen {}", self.bridge_fatigue_item.id),
+        )
+    }
+    fn target(&self) -> Vec<String> {
+        vec![self.bridge_fatigue_item.id.clone()]
     }
 }
 //#endregion 🔖️Payload

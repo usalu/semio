@@ -1,58 +1,25 @@
-// 🧬️ EN 1999 artifact schema.
 syntax = "proto3";
-package semio.s.norm.en1999.artifact;
-
-message En1999Artifact {
-  // @state artifact
-  double n_ed_kn = 1;
-  // @state artifact
-  double m_ed_knm = 2;
-  // @state artifact
-  double a_mm2 = 3;
-  // @state artifact
-  double w_el_mm3 = 4;
-  // @state artifact
-  double alloy = 5;
-  // @state artifact
-  double chi = 6;
-  // @state artifact
-  double i_t_mm4 = 7;
-  // @state artifact
-  double l_cr_mm = 8;
-  // @state artifact
-  double theta_c = 9;
-  // @state artifact
-  double delta_sigma_ed = 10;
-  // @state artifact
-  double delta_sigma_c = 11;
-  // @state artifact
-  double fatigue_m = 12;
-  // @state artifact
-  double n_cycles = 13;
-  // @state artifact
-  double v_weld_ed_kn = 14;
-  // @state artifact
-  double weld_throat_mm = 15;
-  // @state artifact
-  double weld_length_mm = 16;
-  // @state artifact
-  double beta_w = 17;
-  // @state artifact
-  double sheet_b_mm = 18;
-  // @state artifact
-  double sheet_t_mm = 19;
-  // @state artifact
-  double sheet_k_sigma = 20;
-  // @state artifact
-  double sheet_w_el_mm3 = 21;
-  // @state artifact
-  double sheet_m_ed_knm = 22;
-  // @state artifact
-  double shell_t_mm = 23;
-  // @state artifact
-  double shell_r_mm = 24;
-  // @state artifact
-  double sigma_ed_shell_mpa = 25;
-  // @state artifact
-  double annex = 26;
+package semio.norm.en1999;
+message En1999Snapshot {
+  string annex = 1;
+  repeated AluminiumMaterial materials = 2;
+  repeated AluminiumSection sections = 3;
+  repeated AluminiumMember members = 4;
+  repeated AluminiumConnection connections = 5;
+  repeated FireScenario fire_scenarios = 6;
+  repeated FatigueDetail fatigue_details = 7;
+  repeated ColdFormedSheet cold_formed = 8;
+  repeated AluminiumShell shells = 9;
 }
+message AluminiumMaterial { string id = 1; string designation = 2; }
+message PlateElement { string id = 1; double width = 2; double thickness = 3; bool outstand = 4; bool welded = 5; double weld_position = 6; }
+message AluminiumSection { string id = 1; string kind = 2; double height = 3; double width = 4; double flange_thickness = 5; double web_thickness = 6; double outer_diameter = 7; repeated PlateElement elements = 8; }
+message MemberAction { string id = 1; string kind = 2; string category = 3; string source = 4; double g_k_line = 5; double q_k_line = 6; double n_k = 7; double v_y_k = 8; double v_z_k = 9; double m_y_k = 10; double m_z_k = 11; }
+message AluminiumMember { string id = 1; string section_id = 2; string material_id = 3; double length = 4; string support = 5; double buckling_length_y = 6; double buckling_length_z = 7; double buckling_length_t = 8; double ltb_length = 9; double c1 = 10; bool restrained_ltb = 11; repeated MemberAction actions = 12; }
+message BoltGroup { string material = 1; double diameter = 2; uint32 rows = 3; uint32 bolts_per_row = 4; double edge_distance = 5; double pitch = 6; double gauge = 7; double plate_thickness = 8; }
+message WeldGroup { string filler_alloy = 1; double throat = 2; double length = 3; double beta_w = 4; double haz_extent = 5; }
+message AluminiumConnection { string id = 1; string member_id = 2; string material_id = 3; string kind = 4; repeated MemberAction actions = 5; BoltGroup bolts = 6; WeldGroup welds = 7; }
+message FireScenario { string id = 1; string member_id = 2; double theta_a = 3; double duration_s = 4; }
+message FatigueDetail { string id = 1; string member_id = 2; string detail_category = 3; double delta_sigma_c = 4; double delta_sigma_ed = 5; double n_cycles = 6; double m1 = 7; double m2 = 8; }
+message ColdFormedSheet { string id = 1; string material_id = 2; double thickness = 3; double width = 4; double span = 5; double m_ed = 6; double n_ed = 7; bool welded = 8; }
+message AluminiumShell { string id = 1; string material_id = 2; double radius = 3; double thickness = 4; double length = 5; double sigma_x_ed = 6; double sigma_theta_ed = 7; }

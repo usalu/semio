@@ -1,22 +1,99 @@
 {
   "annex": "En",
-  "mEdKnm": 25.0,
-  "nEdKn": 50.0,
-  "vEdKn": 15.0,
-  "wMm3": 3000000.0,
-  "aMm2": 60000.0,
-  "bMm": 200.0,
-  "hMm": 300.0,
-  "fMK": 24.0,
-  "fC0K": 21.0,
-  "serviceClass": "sc1",
-  "loadDuration": "medium",
-  "mCritKnm": 80.0,
-  "fEdKn": 18.0,
-  "aEfMm2": 12000.0,
-  "fVK": 4.0,
-  "fireDurationMin": 30.0,
-  "sectionDepthMm": 300.0,
-  "aVertMS2": 0.25,
-  "nCyclesBridge": 500000.0
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Main glulam floor beam B1",
+      "labelDe": "Hauptträger BSH Decke B1",
+      "role": "floor",
+      "strengthClass": "GL28h",
+      "serviceClass": 1,
+      "support": "simplySupported",
+      "bM": 0.2,
+      "hM": 0.4,
+      "spanM": 5.0,
+      "supportLengthM": 0.15,
+      "bearingLengthM": 0.15,
+      "bucklingLengthYM": 5.0,
+      "bucklingLengthZM": 1.5,
+      "lateralRestraintSpacingM": 1.5,
+      "notchDepthM": 0.0,
+      "notchDistanceM": 0.0,
+      "mCritNm": 180000.0,
+      "massKgPerM": 120.0,
+      "massKgPerM2": 0.0,
+      "dampingXi": 0.015,
+      "fireDurationS": 0.0,
+      "bridgeNObs": 0.0,
+      "bridgeTLYears": 0.0,
+      "bridgeBeta": 0.0,
+      "bridgeA": 0.0,
+      "bridgeB": 0.0,
+      "bridgeCrowdPerM2": 0.0,
+      "actions": [
+        {
+          "id": "g",
+          "kind": "permanent",
+          "category": "",
+          "loadDuration": "permanent",
+          "qLineNPerM": 2500.0,
+          "fPointN": 0.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "fC90KN": 0.0
+        },
+        {
+          "id": "q",
+          "kind": "imposed",
+          "category": "A",
+          "loadDuration": "medium",
+          "qLineNPerM": 3000.0,
+          "fPointN": 0.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "fC90KN": 0.0
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-C1",
+      "labelEn": "Bolt group at support",
+      "labelDe": "Schraubverbund am Auflager",
+      "fastenerType": "bolt",
+      "strengthClass": "GL28h",
+      "serviceClass": 1,
+      "diameterM": 0.012,
+      "number": 8,
+      "rows": 2,
+      "spacingM": 0.09,
+      "edgeDistanceM": 0.048,
+      "endDistanceM": 0.096,
+      "t1M": 0.2,
+      "t2M": 0.2,
+      "steelPlate": false,
+      "steelPlateThicknessM": 0.0,
+      "shearPlanes": 1,
+      "fUK": 400000000.0,
+      "actions": [
+        {
+          "id": "g",
+          "kind": "permanent",
+          "loadDuration": "permanent",
+          "fKN": 8000.0
+        },
+        {
+          "id": "q",
+          "kind": "imposed",
+          "loadDuration": "medium",
+          "fKN": 10000.0
+        }
+      ]
+    }
+  ]
 }

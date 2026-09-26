@@ -28,8 +28,6 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 pack = { workspace = true }
-semio-s-artifact-norm-en1990 = { workspace = true }
-semio-s-artifact-norm-en1995 = { workspace = true }
 
 
 [dev-dependencies]
@@ -40,3 +38,8 @@ semio-framework-async-macros = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[[bin]]
+name = "regenerate-en1996-example-assets"
+path = "bins/regenerate_example_assets.rs"
+

@@ -1,0 +1,194 @@
+{
+  "buildingCategory": "Residential",
+  "attachment": "Detached",
+  "useClass": "Office",
+  "method": "DetailedMonthly",
+  "netFloorAreaM2": 140.0,
+  "heatedVolumeM3": 364.0,
+  "gegQpFactor": 0.55,
+  "deltaUWbWM2k": 0.03,
+  "automationClass": "B",
+  "zones": [
+    {
+      "id": "zone-living",
+      "labelEn": "Living",
+      "labelDe": "Wohnen",
+      "usageProfile": "WFH",
+      "areaM2": 140.0,
+      "volumeM3": 364.0,
+      "thetaIHeatC": 20.0,
+      "thetaICoolC": 26.0,
+      "occupants": 4,
+      "internalGainsWM2": 3.5,
+      "lightingPowerWM2": 8.0
+    }
+  ],
+  "elements": [
+    {
+      "id": "wall-n",
+      "labelEn": "North wall",
+      "labelDe": "Nordwand",
+      "kind": "Wall",
+      "zoneId": "zone-living",
+      "areaM2": 42.0,
+      "uValueWM2k": 0.2,
+      "orientationDeg": 0.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    },
+    {
+      "id": "wall-e",
+      "labelEn": "East wall",
+      "labelDe": "Ostwand",
+      "kind": "Wall",
+      "zoneId": "zone-living",
+      "areaM2": 36.0,
+      "uValueWM2k": 0.2,
+      "orientationDeg": 90.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    },
+    {
+      "id": "wall-s",
+      "labelEn": "South wall",
+      "labelDe": "Südwand",
+      "kind": "Wall",
+      "zoneId": "zone-living",
+      "areaM2": 42.0,
+      "uValueWM2k": 0.2,
+      "orientationDeg": 180.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    },
+    {
+      "id": "wall-w",
+      "labelEn": "West wall",
+      "labelDe": "Westwand",
+      "kind": "Wall",
+      "zoneId": "zone-living",
+      "areaM2": 36.0,
+      "uValueWM2k": 0.2,
+      "orientationDeg": 270.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    },
+    {
+      "id": "roof",
+      "labelEn": "Roof",
+      "labelDe": "Dach",
+      "kind": "Roof",
+      "zoneId": "zone-living",
+      "areaM2": 150.0,
+      "uValueWM2k": 0.14,
+      "orientationDeg": 180.0,
+      "tiltDeg": 35.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    },
+    {
+      "id": "floor",
+      "labelEn": "Ground floor",
+      "labelDe": "Bodenplatte",
+      "kind": "Floor",
+      "zoneId": "zone-living",
+      "areaM2": 140.0,
+      "uValueWM2k": 0.25,
+      "orientationDeg": 0.0,
+      "tiltDeg": 0.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Ground"
+    },
+    {
+      "id": "win-s",
+      "labelEn": "South windows",
+      "labelDe": "Südfenster",
+      "kind": "Window",
+      "zoneId": "zone-living",
+      "areaM2": 18.0,
+      "uValueWM2k": 0.95,
+      "orientationDeg": 180.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.55,
+      "fc": 0.7,
+      "adjacency": "Outdoor"
+    },
+    {
+      "id": "win-n",
+      "labelEn": "North windows",
+      "labelDe": "Nordfenster",
+      "kind": "Window",
+      "zoneId": "zone-living",
+      "areaM2": 6.0,
+      "uValueWM2k": 0.95,
+      "orientationDeg": 0.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.55,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    },
+    {
+      "id": "door",
+      "labelEn": "Entrance door",
+      "labelDe": "Haustür",
+      "kind": "Door",
+      "zoneId": "zone-living",
+      "areaM2": 2.1,
+      "uValueWM2k": 1.3,
+      "orientationDeg": 0.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    }
+  ],
+  "heating": {
+    "generationEfficiency": 0.95,
+    "distributionEfficiency": 0.95,
+    "storageEfficiency": 0.98,
+    "transferEfficiency": 0.95,
+    "energyCarrier": "natural_gas"
+  },
+  "dhw": {
+    "specificDemandKwhPersonA": 500.0,
+    "storageLossKwhA": 200.0,
+    "distributionLossKwhA": 150.0,
+    "energyCarrier": "natural_gas"
+  },
+  "ventilation": {
+    "airflowM3H": 140.0,
+    "heatRecoveryEta": 0.8,
+    "fanPowerW": 60.0
+  },
+  "cooling": {
+    "plant": null
+  },
+  "lighting": {
+    "controlFactor": 0.8
+  },
+  "renewables": {
+    "pvAreaM2": 18.0,
+    "pvEfficiency": 0.18,
+    "solarThermalKwhA": 1200.0
+  },
+  "climate": {
+    "childId": "din18599-climate-5e913c6dbbe501b5",
+    "target": {
+      "artifactId": "din18599-climate-5e913c6dbbe501b5",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  }
+}

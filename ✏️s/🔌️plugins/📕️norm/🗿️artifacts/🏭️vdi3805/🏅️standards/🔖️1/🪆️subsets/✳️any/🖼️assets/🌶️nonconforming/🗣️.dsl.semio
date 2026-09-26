@@ -1,0 +1,54 @@
+semio norm.vdi3805.dsl v1
+strict-mode=true
+}
+catalog=file=header-version="3805" manufacturer=DEMO created="2026-07-22" charset=UTF-8 record-count=3 building-system-number=system-code="420" subsystem="10" sequence=1 extensions=fields={
+}
+extensions=fields={
+}
+products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
+  VLV-50-001 {manufacturer-code=DEMO product-group=HV article-number=VLV-50-001} [ {locale=de text="Stellventil DN50"} {locale=en text="Control valve DN50"} ] 2 [ {family="100" fields=[ "100" DEMO HV VLV-50-001 "2" ] extensions=fields={
+  }
+  } {family="110" fields=[ "110" cfg.VLV-50-001 geom.valve.50 curve-kvs ] extensions=fields={
+  }
+  } {family="200" fields=[ "200" geom.valve.50 "0.15" "0.20" "0.10" ] extensions=fields={
+  }
+  } {family="210" fields=[ "210" dn "47" kvs "0.5" pressure_class "" connection_type flange authority_min "0.8" authority_max "0.2" ] extensions=fields={
+  }
+  } {family="400" fields=[ "400" curve-kvs "0" "0" "100" "4.5" ] extensions=fields={
+  }
+  } ] {id=cfg.VLV-50-001 geometry-ref=geom.missing attributes={
+    authorityMax=0.2 authorityMin=0.8 connectionType="flange" dn=47 kind="valveHeating" kvsM3S=0.0001388888888888889 pressureClass=""
+  }
+  function-refs=[ curve-kvs ]} [ ] [ ] {fields={
+  }
+  }
+  HIST-12 {manufacturer-code=DEMO product-group=HX article-number=HIST-12} [ {locale=de text="Historischer Vorschlag"} {locale=en text="Historical proposal"} ] 12 [ {family="100" fields=[ "100" DEMO HX HIST-12 "12" ] extensions=fields={
+  }
+  } ] {id=cfg.HIST-12 attributes={
+    kind="generic"
+    entries=[]
+  }
+  function-refs=[ ]} [ ] [ ] {fields={
+  }
+  }
+}
+edition-profile={
+}
+correction-as-of=year=2024 month=1 index=
+entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
+  VLV-50-001 2 [ "Stellventil DN50" "Control valve DN50" ] 47
+  HIST-12 12 [ "Historischer Vorschlag" "Historical proposal" ] _
+}
+geometry={
+  geom.valve.50=id=geom.valve.50 bbox=min-x=0 min-y=0 min-z=0 max-x=0.15 max-y=0.2 max-z=0.1 parameters={
+  }
+  connections [id:TEXT medium:TEXT position:TUPLE direction:TUPLE diameter-mm:QTY] {
+  }
+}
+curves={
+  curve-kvs=id=curve-kvs x-unit=symbol="%" kind=dimensionless delta=true si-factor=0.01 y-unit=symbol=m3/h kind=volume delta=false si-factor=0.0002777777777777778
+  points [x:NUM y:NUM] {
+    0 0
+    100 4.5
+  }
+}

@@ -1,10 +1,13 @@
 {
   "UpdateSiloShellInputs": {
-    "new_silo_t_mm": 12.0,
-    "new_silo_r_mm": 3500.0,
-    "new_shell_sigma_x_ed_mpa": 190.0,
-    "new_silo_k": 0.625,
-    "new_silo_gamma_kn_m3": 22.0,
-    "new_silo_depth_m": 8.0
+    "silo_shell": {
+      "id": "silo-1",
+      "thickness": 0.012,
+      "radius": 3.0,
+      "depth": 8.0,
+      "k": 0.5,
+      "gamma": 18000.0,
+      "fy": 355000000.0
+    }
   }
 }

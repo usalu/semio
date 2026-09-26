@@ -1,0 +1,10 @@
+//! ↩️ `change-script-limits` — undo restores BASE's whole limits facet.
+
+use super::mutation::ChangeScriptLimits;
+use crate::{Iso16757Mutation, Iso16757Snapshot};
+
+//#region 🔖️Inverse
+pub fn inverse(_payload: &ChangeScriptLimits, base: &Iso16757Snapshot) -> Vec<Iso16757Mutation> {
+    vec![Iso16757Mutation::ChangeScriptLimits(ChangeScriptLimits { new_max_steps: base.script_limits.max_steps, new_max_recursion: base.script_limits.max_recursion, new_timeout_ms: base.script_limits.timeout_ms })]
+}
+//#endregion 🔖️Inverse

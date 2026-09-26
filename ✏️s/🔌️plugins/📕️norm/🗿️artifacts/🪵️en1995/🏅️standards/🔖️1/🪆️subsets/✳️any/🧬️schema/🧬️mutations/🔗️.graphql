@@ -1,24 +1,411 @@
-# 🧬️ EN 1995 mutation schema.
+# 🧬️ EN 1995 mutation schema — hierarchical timber subject (members ⊃ actions, connections ⊃ actions).
 
-type En1995Mutation {
-  annex: Float! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  nEdKn: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  wMm3: Float! @state(class: ARTIFACT)
-  aMm2: Float! @state(class: ARTIFACT)
-  bMm: Float! @state(class: ARTIFACT)
-  hMm: Float! @state(class: ARTIFACT)
-  fMK: Float! @state(class: ARTIFACT)
-  fC0K: Float! @state(class: ARTIFACT)
-  serviceClass: Float! @state(class: ARTIFACT)
-  loadDuration: Float! @state(class: ARTIFACT)
-  mCritKnm: Float! @state(class: ARTIFACT)
-  fEdKn: Float! @state(class: ARTIFACT)
-  aEfMm2: Float! @state(class: ARTIFACT)
-  fVK: Float! @state(class: ARTIFACT)
-  fireDurationMin: Float! @state(class: ARTIFACT)
-  sectionDepthMm: Float! @state(class: ARTIFACT)
-  aVertMS2: Float! @state(class: ARTIFACT)
-  nCyclesBridge: Float! @state(class: ARTIFACT)
+union En1995Mutation =
+    ChangeAnnex
+  | InsertMember
+  | RemoveMember
+  | ChangeMemberLabelEn
+  | ChangeMemberLabelDe
+  | ChangeMemberRole
+  | ChangeMemberStrengthClass
+  | ChangeMemberServiceClass
+  | ChangeMemberSupport
+  | ChangeMemberB
+  | ChangeMemberH
+  | ChangeMemberSpan
+  | ChangeMemberSupportLength
+  | ChangeMemberBearingLength
+  | ChangeMemberBucklingY
+  | ChangeMemberBucklingZ
+  | ChangeMemberLateralRestraint
+  | ChangeMemberNotchDepth
+  | ChangeMemberNotchDistance
+  | ChangeMemberMCrit
+  | ChangeMemberMassPerM
+  | ChangeMemberMassPerM2
+  | ChangeMemberDamping
+  | ChangeMemberFireDuration
+  | ChangeMemberBridgeNObs
+  | ChangeMemberBridgeTLYears
+  | ChangeMemberBridgeBeta
+  | ChangeMemberBridgeA
+  | ChangeMemberBridgeB
+  | ChangeMemberBridgeCrowd
+  | InsertMemberAction
+  | RemoveMemberAction
+  | ChangeMemberActionKind
+  | ChangeMemberActionCategory
+  | ChangeMemberActionLoadDuration
+  | ChangeMemberActionQLine
+  | ChangeMemberActionFPoint
+  | ChangeMemberActionMK
+  | ChangeMemberActionVK
+  | ChangeMemberActionNK
+  | ChangeMemberActionNTK
+  | ChangeMemberActionFC90K
+  | InsertConnection
+  | RemoveConnection
+  | ChangeConnectionLabelEn
+  | ChangeConnectionLabelDe
+  | ChangeConnectionFastenerType
+  | ChangeConnectionStrengthClass
+  | ChangeConnectionServiceClass
+  | ChangeConnectionDiameter
+  | ChangeConnectionNumber
+  | ChangeConnectionRows
+  | ChangeConnectionSpacing
+  | ChangeConnectionEdgeDistance
+  | ChangeConnectionEndDistance
+  | ChangeConnectionT1
+  | ChangeConnectionT2
+  | ChangeConnectionSteelPlate
+  | ChangeConnectionSteelPlateThickness
+  | ChangeConnectionShearPlanes
+  | ChangeConnectionFUK
+  | InsertConnectionAction
+  | RemoveConnectionAction
+  | ChangeConnectionActionKind
+  | ChangeConnectionActionLoadDuration
+  | ChangeConnectionActionFK
+
+type ChangeAnnex {
+  newAnnex: String! @state(class: ARTIFACT)
+}
+
+type InsertMember {
+  index: Int! @state(class: ARTIFACT)
+  member: JSON! @state(class: ARTIFACT)
+}
+
+type RemoveMember {
+  index: Int! @state(class: ARTIFACT)
+}
+
+type ChangeMemberLabelEn {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberLabelDe {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberRole {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberStrengthClass {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberServiceClass {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Int! @state(class: ARTIFACT)
+}
+
+type ChangeMemberSupport {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberB {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberH {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberSpan {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberSupportLength {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBearingLength {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBucklingY {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBucklingZ {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberLateralRestraint {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberNotchDepth {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberNotchDistance {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberMCrit {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberMassPerM {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberMassPerM2 {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberDamping {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberFireDuration {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBridgeNObs {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBridgeTLYears {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBridgeBeta {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBridgeA {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBridgeB {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBridgeCrowd {
+  memberId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type InsertMemberAction {
+  memberId: String! @state(class: ARTIFACT)
+  index: Int! @state(class: ARTIFACT)
+  action: JSON! @state(class: ARTIFACT)
+}
+
+type RemoveMemberAction {
+  memberId: String! @state(class: ARTIFACT)
+  index: Int! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionKind {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionCategory {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionLoadDuration {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionQLine {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionFPoint {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionMK {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionVK {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionNK {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionNTK {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberActionFC90K {
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type InsertConnection {
+  index: Int! @state(class: ARTIFACT)
+  connection: JSON! @state(class: ARTIFACT)
+}
+
+type RemoveConnection {
+  index: Int! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionLabelEn {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionLabelDe {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionFastenerType {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionStrengthClass {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionServiceClass {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Int! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionDiameter {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionNumber {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Int! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionRows {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Int! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionSpacing {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionEdgeDistance {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionEndDistance {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionT1 {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionT2 {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionSteelPlate {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Boolean! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionSteelPlateThickness {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionShearPlanes {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Int! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionFUK {
+  connectionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
+}
+
+type InsertConnectionAction {
+  connectionId: String! @state(class: ARTIFACT)
+  index: Int! @state(class: ARTIFACT)
+  action: JSON! @state(class: ARTIFACT)
+}
+
+type RemoveConnectionAction {
+  connectionId: String! @state(class: ARTIFACT)
+  index: Int! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionActionKind {
+  connectionId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionActionLoadDuration {
+  connectionId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: String! @state(class: ARTIFACT)
+}
+
+type ChangeConnectionActionFK {
+  connectionId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newValue: Float! @state(class: ARTIFACT)
 }

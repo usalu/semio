@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-element-kind/schema.json",
+  "title": "ChangeElementKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "elementId",
+    "newKind"
+  ],
+  "properties": {
+    "elementId": {
+      "type": "string"
+    },
+    "newKind": {
+      "type": "string"
+    }
+  }
+}

@@ -1,6 +1,17 @@
 {
   "UpdateTowerInputs": {
-    "new_tower_wind_factor": 1.75,
-    "new_tower_n_ed_kn": 480.0
+    "tower_leg": {
+      "id": "tower-1",
+      "memberId": "member-b1",
+      "forceCoefficient": 1.5,
+      "dynamicFactor": 1.0,
+      "actions": [
+        {
+          "id": "fa-1",
+          "loadCaseId": "w-wind",
+          "force": 450000.0
+        }
+      ]
+    }
   }
 }

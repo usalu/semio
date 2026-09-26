@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/mutation/change-usage/schema.json",
+  "title": "ChangeUsage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newUsage"
+  ],
+  "properties": {
+    "newUsage": {
+      "type": "string"
+    }
+  }
+}

@@ -14,8 +14,6 @@ use std::collections::BTreeMap;
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Snapshot {
     #[state(artifact)]
-    pub manufacturer_file: ManufacturerFile,
-    #[state(artifact)]
     pub catalog: ManufacturerCatalog,
     #[state(artifact)]
     pub edition_profile: BTreeMap<String, EditionProfileChoice>,
@@ -29,8 +27,6 @@ pub struct Vdi3805Snapshot {
     pub geometry: BTreeMap<String, ParametricGeometry>,
     #[state(artifact)]
     pub curves: BTreeMap<String, CharacteristicCurve>,
-    #[state(artifact)]
-    pub limits: SecurityLimits,
 }
 //#region 🔖️HandcraftedArtifactCodecs
 // 🧬️ Consolidated (W5a, ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT): the fifteen norm families' identical

@@ -1,135 +1,276 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/artifact.json",
-  "title": "En1996Artifact",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio://norm/en1996/snapshot",
+  "title": "En1996Snapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mEdKnm",
-    "nEdKn",
-    "vEdKn",
-    "hEdKn",
-    "zMm3",
-    "areaMm2",
-    "shearAreaMm2",
-    "fKMpa",
-    "fVkMpa",
     "annex",
     "masonryClass",
     "designSituation",
-    "mu",
-    "wallThicknessMm",
-    "fireResistanceMin",
-    "unit",
-    "exposure",
-    "mortar",
-    "bedJointThicknessMm",
     "storeys",
-    "hEfMm",
-    "tEfMm"
+    "walls"
   ],
   "properties": {
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "nEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "hEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "zMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "areaMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "shearAreaMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fKMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fVkMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
     "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "type": "string"
     },
     "masonryClass": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "type": "string"
     },
     "designSituation": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "mu": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wallThicknessMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fireResistanceMin": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "unit": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "exposure": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "mortar": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "bedJointThicknessMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+      "type": "string"
     },
     "storeys": {
       "type": "integer",
-      "x-semio-state": "artifact"
+      "minimum": 0
     },
-    "hEfMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tEfMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "walls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "labelEn",
+          "labelDe",
+          "wallType",
+          "thicknessM",
+          "heightM",
+          "lengthM",
+          "supportSides",
+          "openings",
+          "slabBearingDepthM",
+          "eccentricityTopM",
+          "eccentricityBottomM",
+          "unitGroup",
+          "unitMaterial",
+          "fBPa",
+          "unitLengthM",
+          "unitWidthM",
+          "unitHeightM",
+          "mortarType",
+          "mortarClass",
+          "mortarStrengthPa",
+          "bedJointThicknessM",
+          "reinforced",
+          "asVerticalM2",
+          "asHorizontalM2",
+          "fYdPa",
+          "fireReiMin",
+          "exposure",
+          "mu",
+          "densityKgM3",
+          "phiInfinity",
+          "isBasement",
+          "loadCases"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "labelEn": {
+            "type": "string"
+          },
+          "labelDe": {
+            "type": "string"
+          },
+          "wallType": {
+            "type": "string"
+          },
+          "thicknessM": {
+            "type": "number"
+          },
+          "heightM": {
+            "type": "number"
+          },
+          "lengthM": {
+            "type": "number"
+          },
+          "supportSides": {
+            "type": "integer"
+          },
+          "openings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "widthM",
+                "heightM",
+                "sillHeightM"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "widthM": {
+                  "type": "number"
+                },
+                "heightM": {
+                  "type": "number"
+                },
+                "sillHeightM": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "slabBearingDepthM": {
+            "type": "number"
+          },
+          "eccentricityTopM": {
+            "type": "number"
+          },
+          "eccentricityBottomM": {
+            "type": "number"
+          },
+          "unitGroup": {
+            "type": "string"
+          },
+          "unitMaterial": {
+            "type": "string"
+          },
+          "fBPa": {
+            "type": "number"
+          },
+          "unitLengthM": {
+            "type": "number"
+          },
+          "unitWidthM": {
+            "type": "number"
+          },
+          "unitHeightM": {
+            "type": "number"
+          },
+          "mortarType": {
+            "type": "string"
+          },
+          "mortarClass": {
+            "type": "string"
+          },
+          "mortarStrengthPa": {
+            "type": "number"
+          },
+          "bedJointThicknessM": {
+            "type": "number"
+          },
+          "reinforced": {
+            "type": "boolean"
+          },
+          "asVerticalM2": {
+            "type": "number"
+          },
+          "asHorizontalM2": {
+            "type": "number"
+          },
+          "fYdPa": {
+            "type": "number"
+          },
+          "fireReiMin": {
+            "type": "integer"
+          },
+          "exposure": {
+            "type": "string"
+          },
+          "mu": {
+            "type": "number"
+          },
+          "densityKgM3": {
+            "type": "number"
+          },
+          "phiInfinity": {
+            "type": "number"
+          },
+          "isBasement": {
+            "type": "boolean"
+          },
+          "loadCases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "designSituation",
+                "imposedCategory",
+                "gKSlabN",
+                "qKImposedPa",
+                "tributaryAreaM2",
+                "slabSpanM",
+                "qKSnowPa",
+                "qPWindPa",
+                "cPe",
+                "hKEarthN",
+                "concentrated"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "designSituation": {
+                  "type": "string"
+                },
+                "imposedCategory": {
+                  "type": "string"
+                },
+                "gKSlabN": {
+                  "type": "number"
+                },
+                "qKImposedPa": {
+                  "type": "number"
+                },
+                "tributaryAreaM2": {
+                  "type": "number"
+                },
+                "slabSpanM": {
+                  "type": "number"
+                },
+                "qKSnowPa": {
+                  "type": "number"
+                },
+                "qPWindPa": {
+                  "type": "number"
+                },
+                "cPe": {
+                  "type": "number"
+                },
+                "hKEarthN": {
+                  "type": "number"
+                },
+                "concentrated": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "forceN",
+                      "bearingAreaM2",
+                      "bearingLengthM"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "forceN": {
+                        "type": "number"
+                      },
+                      "bearingAreaM2": {
+                        "type": "number"
+                      },
+                      "bearingLengthM": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

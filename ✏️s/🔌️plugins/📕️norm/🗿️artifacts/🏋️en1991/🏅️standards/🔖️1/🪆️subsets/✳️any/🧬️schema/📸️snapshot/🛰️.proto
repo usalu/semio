@@ -1,69 +1,105 @@
 syntax = "proto3";
 package semio.s.norm.en1991.snapshot;
 
+// 🧬️ En1991Snapshot schema — every field with its state class.
+
 message En1991Snapshot {
   // @state artifact
-  double area_m2 = 1;
+  string annex = 1;
   // @state artifact
-  string category = 2;
+  string snow_zone = 2;
   // @state artifact
-  string annex = 3;
+  double altitude = 3;
   // @state artifact
-  string self_weight_material = 4;
+  double en_sk = 4;
   // @state artifact
-  double self_weight_thickness_m = 5;
+  bool exceptional_snow_north_german_lowlands = 5;
   // @state artifact
-  double assumed_g_k_kn_m2 = 6;
+  uint32 wind_zone = 6;
   // @state artifact
-  string fire_curve = 7;
+  double en_vb = 7;
   // @state artifact
-  double fire_resistance_min = 8;
+  uint32 terrain_category = 8;
   // @state artifact
-  double fire_member_capacity_c = 9;
+  uint32 mixed_terrain_upwind = 9;
   // @state artifact
-  uint32 snow_zone = 10;
+  double mixed_terrain_distance = 10;
   // @state artifact
-  double snow_altitude_m = 11;
+  double orography_factor = 11;
   // @state artifact
-  double en_s_k_kn_m2 = 12;
+  bool coast_or_island = 12;
   // @state artifact
-  uint32 wind_zone = 13;
+  double air_density = 13;
   // @state artifact
-  double en_v_b_m_s = 14;
+  double height = 14;
   // @state artifact
-  double delta_t_k = 15;
+  double width = 15;
   // @state artifact
-  string construction_activity = 16;
+  double depth = 16;
   // @state artifact
-  double accidental_mass_t = 17;
+  double assumed_delta_t = 17;
   // @state artifact
-  double accidental_speed_km_h = 18;
+  double required_delta_t = 18;
   // @state artifact
-  uint32 bridge_lane = 19;
+  string construction_activity = 19;
   // @state artifact
-  double bridge_span_m = 20;
+  double assumed_construction_qk = 20;
   // @state artifact
-  double bridge_lane_width_m = 21;
+  bool bridge_claimed = 21;
   // @state artifact
-  double bridge_moment_resistance_knm = 22;
+  uint32 bridge_lane = 22;
   // @state artifact
-  string crane_class = 23;
+  double bridge_span = 23;
   // @state artifact
-  string hoist_class = 24;
+  double bridge_lane_width = 24;
   // @state artifact
-  double hoisting_speed_m_s = 25;
+  double assumed_bridge_tandem = 25;
   // @state artifact
-  double silo_bulk_density_kn_m3 = 26;
+  double assumed_bridge_udl = 26;
   // @state artifact
-  double silo_height_m = 27;
+  double assumed_bridge_lm2 = 27;
   // @state artifact
-  double silo_hydraulic_radius_m = 28;
+  double assumed_bridge_footway = 28;
   // @state artifact
-  double silo_mu = 29;
+  bool crane_claimed = 29;
   // @state artifact
-  double silo_k = 30;
+  string crane_class = 30;
   // @state artifact
-  double c_s = 31;
+  string hoist_class = 31;
   // @state artifact
-  double c_d = 32;
+  double hoisting_speed = 32;
+  // @state artifact
+  double assumed_crane_wheel = 33;
+  // @state artifact
+  double assumed_crane_horizontal = 34;
+  // @state artifact
+  bool silo_claimed = 35;
+  // @state artifact
+  string silo_kind = 36;
+  // @state artifact
+  double silo_bulk_density = 37;
+  // @state artifact
+  double silo_height = 38;
+  // @state artifact
+  double silo_hydraulic_radius = 39;
+  // @state artifact
+  double silo_mu = 40;
+  // @state artifact
+  double silo_k = 41;
+  // @state artifact
+  double assumed_silo_pressure = 42;
+  // @state artifact
+  double assumed_silo_patch = 43;
+  // @state artifact
+  double assumed_silo_wall_friction = 44;
+  // @state artifact
+  string floors = 45;
+  // @state artifact
+  string self_weight_elements = 46;
+  // @state artifact
+  string roofs = 47;
+  // @state artifact
+  string wind_faces = 48;
+  // @state artifact
+  string accidental_cases = 49;
 }

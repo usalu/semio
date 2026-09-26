@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-cold-formed/schema.json",
+  "title": "ChangeColdFormed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "coldFormed"
+  ],
+  "properties": {
+    "coldFormed": {}
+  },
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️change-cold-formed",
+  "semanticKind": "change-cold-formed",
+  "emoji": "❄️",
+  "aggregateVariant": "ChangeColdFormed",
+  "displayName": "Change Cold Formed"
+}

@@ -3,7 +3,7 @@
   "emoji": "🐛️",
   "status": "closed",
   "description": "Follow-up: when zooming largely on e.g. Top, parts of the grid are missing on the right — always show a clean grid covering the complete screen. Screenshot shows hard vertical cutoff.",
-  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [],
   "summary": "Follow-up: hard vertical grid cutoff when zooming in orthographic Top was the drei Grid plane (sized from fadeDistance) undershooting the live frustum — fade tracked camera Z, not ortho zoom. cameraGridFadeDistance now sizes from cameraGridVisibleRadius × 32 so the plane always overfills the viewport with clean corner opacity. Vitest 196 pass; verify-fade-coverage.mjs ok.",
   "files": [

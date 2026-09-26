@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-materials/schema.json",
+  "title": "ChangeMaterials",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "materials"
+  ],
+  "properties": {
+    "materials": {}
+  },
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-materials",
+  "semanticKind": "change-materials",
+  "emoji": "🧱",
+  "aggregateVariant": "ChangeMaterials",
+  "displayName": "Change Materials"
+}

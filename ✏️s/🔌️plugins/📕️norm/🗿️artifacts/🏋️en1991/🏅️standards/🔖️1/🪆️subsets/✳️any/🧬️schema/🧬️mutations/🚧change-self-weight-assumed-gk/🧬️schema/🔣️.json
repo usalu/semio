@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-self-weight-assumed-gk/schema.json",
+  "title": "ChangeSelfWeightAssumedGk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newAssumedGk"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "newAssumedGk": {
+      "type": "number"
+    }
+  }
+}

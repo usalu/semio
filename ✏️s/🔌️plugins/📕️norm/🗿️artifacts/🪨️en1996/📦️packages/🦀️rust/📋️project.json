@@ -39,6 +39,14 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "regenerate-example-assets": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts regenerate-example-assets",
+        "forwardAllArgs": true
+      }
     }
   }
 }

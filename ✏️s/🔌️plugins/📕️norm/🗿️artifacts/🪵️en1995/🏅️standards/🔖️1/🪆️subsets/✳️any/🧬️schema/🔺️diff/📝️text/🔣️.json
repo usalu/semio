@@ -1,7 +1,43 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/diff/text.json",
-  "title": "En1995DiffText",
-  "type": "string",
-  "description": "🚚️ The text representation of En1995Diff: the instance is the serialized document this facet's grammar and codec speak."
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/diff.json",
+  "title": "En1995Diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [],
+  "properties": {
+    "artifact": {
+      "title": "En1995Artifact",
+      "type": "object",
+      "x-semio-state": "artifact"
+    },
+    "annex": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "members": {
+      "type": "object",
+      "x-semio-state": "artifact",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "object",
+      "x-semio-state": "artifact",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
 }

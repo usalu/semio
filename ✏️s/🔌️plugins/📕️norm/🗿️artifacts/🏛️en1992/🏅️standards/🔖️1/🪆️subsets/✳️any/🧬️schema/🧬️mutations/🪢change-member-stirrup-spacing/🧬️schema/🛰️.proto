@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ChangeMemberStirrupSpacing {
+  string memberId = 1;
+  double newSpacing = 2;
+}

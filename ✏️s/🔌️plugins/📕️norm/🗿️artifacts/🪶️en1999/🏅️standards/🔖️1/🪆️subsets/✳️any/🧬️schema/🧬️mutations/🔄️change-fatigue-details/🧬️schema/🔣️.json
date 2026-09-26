@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fatigue-details/schema.json",
+  "title": "ChangeFatigueDetails",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fatigueDetails"
+  ],
+  "properties": {
+    "fatigueDetails": {}
+  },
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-fatigue-details",
+  "semanticKind": "change-fatigue-details",
+  "emoji": "🔄️",
+  "aggregateVariant": "ChangeFatigueDetails",
+  "displayName": "Change Fatigue Details"
+}

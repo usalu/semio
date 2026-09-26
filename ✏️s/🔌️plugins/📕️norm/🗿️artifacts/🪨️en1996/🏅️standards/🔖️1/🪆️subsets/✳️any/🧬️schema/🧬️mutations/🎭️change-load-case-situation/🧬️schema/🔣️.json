@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-load-case-situation/schema.json",
+  "title": "ChangeLoadCaseSituation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallIndex",
+    "loadCaseIndex",
+    "newDesignSituation"
+  ],
+  "properties": {
+    "wallIndex": {
+      "type": "integer"
+    },
+    "loadCaseIndex": {
+      "type": "integer"
+    },
+    "newDesignSituation": {
+      "type": "string"
+    }
+  }
+}

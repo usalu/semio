@@ -110,9 +110,9 @@
           ]
         },
         {
-          "mutationId": "create-curve",
-          "sourceMutationDirectoryName": "📈️create-curve",
-          "mutationDirectoryName": "📈️create-curve",
+          "mutationId": "add-curve",
+          "sourceMutationDirectoryName": "📈️add-curve",
+          "mutationDirectoryName": "📈️add-curve",
           "scenarios": [
             {
               "id": "adds-the-curve-dp-pressure-drop-curve",
@@ -121,9 +121,9 @@
           ]
         },
         {
-          "mutationId": "create-geometry",
-          "sourceMutationDirectoryName": "🧊️create-geometry",
-          "mutationDirectoryName": "🧊️create-geometry",
+          "mutationId": "add-geometry",
+          "sourceMutationDirectoryName": "🧊️add-geometry",
+          "mutationDirectoryName": "🧊️add-geometry",
           "scenarios": [
             {
               "id": "adds-the-geom-valve-80-definition",
@@ -132,9 +132,9 @@
           ]
         },
         {
-          "mutationId": "create-product",
-          "sourceMutationDirectoryName": "📦️create-product",
-          "mutationDirectoryName": "📦️create-product",
+          "mutationId": "add-product",
+          "sourceMutationDirectoryName": "📦️add-product",
+          "mutationDirectoryName": "📦️add-product",
           "scenarios": [
             {
               "id": "appends-vlv-80-002-and-its-index-entry",
@@ -143,9 +143,9 @@
           ]
         },
         {
-          "mutationId": "delete-curve",
-          "sourceMutationDirectoryName": "📉️delete-curve",
-          "mutationDirectoryName": "📉️delete-curve",
+          "mutationId": "remove-curve",
+          "sourceMutationDirectoryName": "📉️remove-curve",
+          "mutationDirectoryName": "📉️remove-curve",
           "scenarios": [
             {
               "id": "removes-the-curve-kvs-flow-curve",
@@ -154,9 +154,9 @@
           ]
         },
         {
-          "mutationId": "delete-geometry",
-          "sourceMutationDirectoryName": "🚮️delete-geometry",
-          "mutationDirectoryName": "🚮️delete-geometry",
+          "mutationId": "remove-geometry",
+          "sourceMutationDirectoryName": "🚮️remove-geometry",
+          "mutationDirectoryName": "🚮️remove-geometry",
           "scenarios": [
             {
               "id": "removes-the-geom-valve-50-definition",
@@ -165,9 +165,9 @@
           ]
         },
         {
-          "mutationId": "delete-product",
-          "sourceMutationDirectoryName": "🗑️delete-product",
-          "mutationDirectoryName": "🗑️delete-product",
+          "mutationId": "remove-product",
+          "sourceMutationDirectoryName": "🗑️remove-product",
+          "mutationDirectoryName": "🗑️remove-product",
           "scenarios": [
             {
               "id": "removes-vlv-50-001-and-its-index-entry",
@@ -209,9 +209,9 @@
           ]
         },
         {
-          "mutationId": "replace-curve-points",
-          "sourceMutationDirectoryName": "📍️replace-curve-points",
-          "mutationDirectoryName": "📍️replace-curve-points",
+          "mutationId": "change-curve-points",
+          "sourceMutationDirectoryName": "📍️change-curve-points",
+          "mutationDirectoryName": "📍️change-curve-points",
           "scenarios": [
             {
               "id": "resamples-curve-kvs-onto-three-points",
@@ -220,9 +220,9 @@
           ]
         },
         {
-          "mutationId": "replace-geometry-parameters",
-          "sourceMutationDirectoryName": "🧮️replace-geometry-parameters",
-          "mutationDirectoryName": "🧮️replace-geometry-parameters",
+          "mutationId": "change-geometry-parameters",
+          "sourceMutationDirectoryName": "🧮️change-geometry-parameters",
+          "mutationDirectoryName": "🧮️change-geometry-parameters",
           "scenarios": [
             {
               "id": "rescales-geom-valve-50-to-half-and-adds-clearance",
@@ -231,9 +231,9 @@
           ]
         },
         {
-          "mutationId": "replace-product-configuration",
-          "sourceMutationDirectoryName": "🎛️replace-product-configuration",
-          "mutationDirectoryName": "🎛️replace-product-configuration",
+          "mutationId": "change-product-configuration",
+          "sourceMutationDirectoryName": "🎛️change-product-configuration",
+          "mutationDirectoryName": "🎛️change-product-configuration",
           "scenarios": [
             {
               "id": "reparameterises-vlv-50-001-to-dn-80-and-resyncs-index-dn",
@@ -253,9 +253,9 @@
           ]
         },
         {
-          "mutationId": "update-limits",
-          "sourceMutationDirectoryName": "🚧️update-limits",
-          "mutationDirectoryName": "🚧️update-limits",
+          "mutationId": "change-limits",
+          "sourceMutationDirectoryName": "🚧️change-limits",
+          "mutationDirectoryName": "🚧️change-limits",
           "scenarios": [
             {
               "id": "tightens-every-untrusted-input-limit",
@@ -264,9 +264,9 @@
           ]
         },
         {
-          "mutationId": "update-manufacturer-file",
-          "sourceMutationDirectoryName": "🏭️update-manufacturer-file",
-          "mutationDirectoryName": "🏭️update-manufacturer-file",
+          "mutationId": "change-manufacturer-file",
+          "sourceMutationDirectoryName": "🏭️change-manufacturer-file",
+          "mutationDirectoryName": "🏭️change-manufacturer-file",
           "scenarios": [
             {
               "id": "renames-the-header-manufacturer-to-acme",
@@ -276,25 +276,25 @@
         }
       ],
       "kinds": [
-        "update-manufacturer-file",
+        "change-manufacturer-file",
         "change-correction-as-of",
         "change-strict-mode",
-        "update-limits",
+        "change-limits",
         "change-edition-profile",
         "remove-edition-profile",
-        "create-product",
-        "delete-product",
+        "add-product",
+        "remove-product",
         "rename-product",
-        "replace-product-configuration",
-        "create-geometry",
-        "delete-geometry",
+        "change-product-configuration",
+        "add-geometry",
+        "remove-geometry",
         "resize-geometry",
         "add-geometry-connection",
         "remove-geometry-connection",
-        "replace-geometry-parameters",
-        "create-curve",
-        "delete-curve",
-        "replace-curve-points"
+        "change-geometry-parameters",
+        "add-curve",
+        "remove-curve",
+        "change-curve-points"
       ]
     }
   ],
@@ -393,7 +393,7 @@
           "subset": "catalog"
         },
         {
-          "id": "create-curve",
+          "id": "add-curve",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -401,9 +401,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "create-curve",
+            "operation": "add-curve",
             "bridgeVersion": 1,
-            "variant": "CreateCurve"
+            "variant": "AddCurve"
           },
           "oracleRequirements": [
             {
@@ -414,7 +414,7 @@
           "subset": "curves"
         },
         {
-          "id": "create-geometry",
+          "id": "add-geometry",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -422,9 +422,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "create-geometry",
+            "operation": "add-geometry",
             "bridgeVersion": 1,
-            "variant": "CreateGeometry"
+            "variant": "AddGeometry"
           },
           "oracleRequirements": [
             {
@@ -435,7 +435,7 @@
           "subset": "geometry"
         },
         {
-          "id": "create-product",
+          "id": "add-product",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -443,9 +443,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "create-product",
+            "operation": "add-product",
             "bridgeVersion": 1,
-            "variant": "CreateProduct"
+            "variant": "AddProduct"
           },
           "oracleRequirements": [
             {
@@ -456,7 +456,7 @@
           "subset": "catalog"
         },
         {
-          "id": "delete-curve",
+          "id": "remove-curve",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -464,9 +464,9 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "delete-curve",
+            "operation": "remove-curve",
             "bridgeVersion": 1,
-            "variant": "DeleteCurve"
+            "variant": "RemoveCurve"
           },
           "oracleRequirements": [
             {
@@ -477,7 +477,7 @@
           "subset": "curves"
         },
         {
-          "id": "delete-geometry",
+          "id": "remove-geometry",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -485,9 +485,9 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "delete-geometry",
+            "operation": "remove-geometry",
             "bridgeVersion": 1,
-            "variant": "DeleteGeometry"
+            "variant": "RemoveGeometry"
           },
           "oracleRequirements": [
             {
@@ -498,7 +498,7 @@
           "subset": "geometry"
         },
         {
-          "id": "delete-product",
+          "id": "remove-product",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -506,9 +506,9 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "delete-product",
+            "operation": "remove-product",
             "bridgeVersion": 1,
-            "variant": "DeleteProduct"
+            "variant": "RemoveProduct"
           },
           "oracleRequirements": [
             {
@@ -583,7 +583,7 @@
           "subset": "catalog"
         },
         {
-          "id": "replace-curve-points",
+          "id": "change-curve-points",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -592,9 +592,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "replace-curve-points",
+            "operation": "change-curve-points",
             "bridgeVersion": 1,
-            "variant": "ReplaceCurvePoints"
+            "variant": "ChangeCurvePoints"
           },
           "oracleRequirements": [
             {
@@ -605,7 +605,7 @@
           "subset": "curves"
         },
         {
-          "id": "replace-geometry-parameters",
+          "id": "change-geometry-parameters",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -614,9 +614,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "replace-geometry-parameters",
+            "operation": "change-geometry-parameters",
             "bridgeVersion": 1,
-            "variant": "ReplaceGeometryParameters"
+            "variant": "ChangeGeometryParameters"
           },
           "oracleRequirements": [
             {
@@ -627,7 +627,7 @@
           "subset": "geometry"
         },
         {
-          "id": "replace-product-configuration",
+          "id": "change-product-configuration",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -636,9 +636,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "replace-product-configuration",
+            "operation": "change-product-configuration",
             "bridgeVersion": 1,
-            "variant": "ReplaceProductConfiguration"
+            "variant": "ChangeProductConfiguration"
           },
           "oracleRequirements": [
             {
@@ -671,7 +671,7 @@
           "subset": "geometry"
         },
         {
-          "id": "update-limits",
+          "id": "change-limits",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -679,9 +679,9 @@
             "no-op"
           ],
           "productionDispatch": {
-            "operation": "update-limits",
+            "operation": "change-limits",
             "bridgeVersion": 1,
-            "variant": "UpdateLimits"
+            "variant": "ChangeLimits"
           },
           "oracleRequirements": [
             {
@@ -692,7 +692,7 @@
           "subset": "catalog"
         },
         {
-          "id": "update-manufacturer-file",
+          "id": "change-manufacturer-file",
           "capability": "vdi3805-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -700,9 +700,9 @@
             "no-op"
           ],
           "productionDispatch": {
-            "operation": "update-manufacturer-file",
+            "operation": "change-manufacturer-file",
             "bridgeVersion": 1,
-            "variant": "UpdateManufacturerFile"
+            "variant": "ChangeManufacturerFile"
           },
           "oracleRequirements": [
             {

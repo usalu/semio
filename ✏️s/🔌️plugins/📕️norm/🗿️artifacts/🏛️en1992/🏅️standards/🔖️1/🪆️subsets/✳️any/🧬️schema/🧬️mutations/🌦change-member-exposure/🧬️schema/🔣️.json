@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-exposure/schema.json",
+  "title": "ChangeMemberExposure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newExposure"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string"
+    },
+    "newExposure": {
+      "type": "string"
+    }
+  }
+}

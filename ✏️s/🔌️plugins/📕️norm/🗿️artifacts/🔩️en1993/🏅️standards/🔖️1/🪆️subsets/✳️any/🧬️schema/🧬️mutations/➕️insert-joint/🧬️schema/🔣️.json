@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/insert-joint/schema.json",
+  "title": "InsertJoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "joint"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer"
+    },
+    "joint": {
+      "type": "object",
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0.0,
+      "slipFactorKs": 1.0,
+      "frictionSurfaces": 1,
+      "gauge": 0.06,
+      "actions": [
+        {
+          "id": "jf-1",
+          "loadCaseId": "g-permanent",
+          "shear": 0.0,
+          "tension": 0.0
+        }
+      ]
+    }
+  }
+}

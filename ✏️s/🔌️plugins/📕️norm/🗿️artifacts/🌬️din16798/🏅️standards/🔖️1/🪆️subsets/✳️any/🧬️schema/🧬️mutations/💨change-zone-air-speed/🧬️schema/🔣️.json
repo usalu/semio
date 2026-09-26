@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-air-speed/schema.json",
+  "title": "ChangeZoneAirSpeed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newAirSpeedMS"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newAirSpeedMS": {
+      "type": "number"
+    }
+  }
+}

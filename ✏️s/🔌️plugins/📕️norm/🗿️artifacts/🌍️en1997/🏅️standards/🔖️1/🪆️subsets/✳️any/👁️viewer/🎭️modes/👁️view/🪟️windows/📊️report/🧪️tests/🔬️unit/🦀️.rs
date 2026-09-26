@@ -9,5 +9,5 @@ async fn definition_declares_the_shared_table_window_kind() {
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_node_for_the_default_document() {
     let document = En1997Snapshot::default();
-    let _node = render(&document);
+    let _node = render(&document, Default::default());
 }

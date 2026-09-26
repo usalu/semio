@@ -1,306 +1,234 @@
-//! 🧬️ En1998 artifact — closed semantic mutation dispatch enum (constitutional: op).
-//!
-//! Derived from `En1998Snapshot`'s shape per `📓️derivation-rules.md` rule 1: a flat, id-less,
-//! document-root parameter form (forty-nine persistent scalar/boolean fields describing the EN 1998 seismic design check across buildings, bridges, retrofit, silos/tanks, towers, foundations and retaining walls) — no id-keyed
-//! collections, no name/identity field to `rename`. Every field becomes its own `change-<field>`
-//! mutation per the rule's "change-<field> per remaining scalar" clause; none qualify for the
-//! `update-<facet>` grouping exception (each parameter is independently entered on its own input row,
-//! never validated as an atomic multi-field bundle). The pre-migration whole-document-replace variant
-//! is gone: banned outright per `📓️taxonomy.md`/`📓️derivation-rules.md` rule 6, with NO replacement
-//! mutation; file-open/import/load-example now goes through `store::ArtifactStore::reset`, entirely
-//! outside this enum. The old whole-document-replace macro call is removed with it.
-//!
-//! All triads are mounted directly as `mutations`-sibling modules in `🦀️.rs` (this lane's agent
-//! owns `🦀️.rs`). The one exception is the `🧪️FixtureTests` region at the bottom of this file:
-//! the per-mutation fixture cases self-wire from here, because `🦀️.rs` is shared across all
-//! fifteen norm artifacts and is under concurrent edit.
+//! 🧬️ En1998 artifact — closed semantic mutation dispatch enum.
 
 use crate::diff::En1998Diff;
 use crate::En1998Snapshot;
 
-//#region 🔖️Leaves
 use super::change_annex;
-use super::change_bearing_d_ed_mm;
-use super::change_bearing_d_rd_mm;
-use super::change_bridge_v_rd_kn;
-use super::change_drift_mm;
-use super::change_en_a_gr;
-use super::change_en_ground_type;
-use super::change_en_spectrum_type;
-use super::change_foundation_area_m2;
-use super::change_foundation_h_ed_kn;
-use super::change_foundation_h_rd_kn;
-use super::change_foundation_p_rd_kpa;
-use super::change_ground_type;
-use super::change_height_m;
-use super::change_importance_class;
-use super::change_k_foundation;
-use super::change_k_soil;
-use super::change_mass_t;
-use super::change_multiple_resisting_systems;
-use super::change_period_ratio;
-use super::change_retrofit_e_d_kn;
-use super::change_retrofit_gamma_el;
-use super::change_retrofit_knowledge_level;
-use super::change_retrofit_limit_state;
-use super::change_retrofit_r_k_kn;
-use super::change_seismic_zone;
-use super::change_silo_height_m;
-use super::change_silo_n_rd_kn;
-use super::change_silo_q_nominal;
-use super::change_silo_radius_m;
-use super::change_silo_v_ed_kn;
-use super::change_silo_v_rd_kn;
-use super::change_structural_system;
-use super::change_t1_s;
-use super::change_tank_height_m;
-use super::change_tank_mass_t;
-use super::change_tank_radius_m;
-use super::change_tank_v_rd_kn;
-use super::change_tower_is_chimney;
-use super::change_tower_m_ed_knm;
-use super::change_tower_m_rd_knm;
-use super::change_tower_mass_t;
-use super::change_tower_q_nominal;
-use super::change_v_rd_kn;
-use super::change_wall_h_rd_kn;
-use super::change_wall_height_m;
-use super::change_wall_phi_deg;
-use super::change_wall_r;
-use super::change_wall_soil_gamma_kn_m3;
-//#endregion 🔖️Leaves
+use super::update_site;
+use super::insert_building;
+use super::remove_building;
+use super::change_system_base_shear_resistance_n;
+use super::change_storey_permanent_gk_n;
+use super::change_storey_stiffness_x;
+use super::change_storey_drift_xm;
+use super::change_building_plan_regular;
+use super::change_building_elevation_regular;
+use super::change_member_detailing_compatible;
+use super::change_building_masonry_wall_area_ratio;
+use super::insert_bridge;
+use super::change_bridge_v_rd_n;
+use super::insert_assessment;
+use super::change_assessment_rkn;
+use super::insert_silo;
+use super::insert_tank;
+use super::insert_foundation;
+use super::insert_retaining_wall;
+use super::insert_tower;
+use super::change_tower_m_rd_nm;
 
-//#region 🔖️Mutations
-/// 🧬️ Closed semantic mutation vocabulary for the en1998 document, derived per
-/// `📓️derivation-rules.md` from `En1998Snapshot`'s flat scalar/enum shape.
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "mutation", rename_all = "camelCase"))]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = En1998Snapshot, diff = En1998Diff, schema = "norm.en1998")]
+#[mutations(snapshot = En1998Snapshot, diff = En1998Diff, schema = "s.norm.en1998")]
 pub enum En1998Mutation {
-    ChangeSeismicZone(change_seismic_zone::ChangeSeismicZone),
-    ChangeGroundType(change_ground_type::ChangeGroundType),
-    ChangeImportanceClass(change_importance_class::ChangeImportanceClass),
-    ChangeStructuralSystem(change_structural_system::ChangeStructuralSystem),
-    ChangeT1S(change_t1_s::ChangeT1S),
-    ChangeMassT(change_mass_t::ChangeMassT),
-    ChangeVRdKn(change_v_rd_kn::ChangeVRdKn),
-    ChangeDriftMm(change_drift_mm::ChangeDriftMm),
-    ChangeHeightM(change_height_m::ChangeHeightM),
-    ChangeMultipleResistingSystems(change_multiple_resisting_systems::ChangeMultipleResistingSystems),
     ChangeAnnex(change_annex::ChangeAnnex),
-    ChangeEnAGr(change_en_a_gr::ChangeEnAGr),
-    ChangeEnGroundType(change_en_ground_type::ChangeEnGroundType),
-    ChangeEnSpectrumType(change_en_spectrum_type::ChangeEnSpectrumType),
-    ChangePeriodRatio(change_period_ratio::ChangePeriodRatio),
-    ChangeBridgeVRdKn(change_bridge_v_rd_kn::ChangeBridgeVRdKn),
-    ChangeBearingDEdMm(change_bearing_d_ed_mm::ChangeBearingDEdMm),
-    ChangeBearingDRdMm(change_bearing_d_rd_mm::ChangeBearingDRdMm),
-    ChangeRetrofitKnowledgeLevel(change_retrofit_knowledge_level::ChangeRetrofitKnowledgeLevel),
-    ChangeRetrofitLimitState(change_retrofit_limit_state::ChangeRetrofitLimitState),
-    ChangeRetrofitEDKn(change_retrofit_e_d_kn::ChangeRetrofitEDKn),
-    ChangeRetrofitRKKn(change_retrofit_r_k_kn::ChangeRetrofitRKKn),
-    ChangeRetrofitGammaEl(change_retrofit_gamma_el::ChangeRetrofitGammaEl),
-    ChangeSiloHeightM(change_silo_height_m::ChangeSiloHeightM),
-    ChangeSiloRadiusM(change_silo_radius_m::ChangeSiloRadiusM),
-    ChangeSiloNRdKn(change_silo_n_rd_kn::ChangeSiloNRdKn),
-    ChangeSiloVEdKn(change_silo_v_ed_kn::ChangeSiloVEdKn),
-    ChangeSiloVRdKn(change_silo_v_rd_kn::ChangeSiloVRdKn),
-    ChangeSiloQNominal(change_silo_q_nominal::ChangeSiloQNominal),
-    ChangeTankHeightM(change_tank_height_m::ChangeTankHeightM),
-    ChangeTankRadiusM(change_tank_radius_m::ChangeTankRadiusM),
-    ChangeTankMassT(change_tank_mass_t::ChangeTankMassT),
-    ChangeTankVRdKn(change_tank_v_rd_kn::ChangeTankVRdKn),
-    ChangeTowerMEdKnm(change_tower_m_ed_knm::ChangeTowerMEdKnm),
-    ChangeTowerMRdKnm(change_tower_m_rd_knm::ChangeTowerMRdKnm),
-    ChangeTowerIsChimney(change_tower_is_chimney::ChangeTowerIsChimney),
-    ChangeTowerQNominal(change_tower_q_nominal::ChangeTowerQNominal),
-    ChangeTowerMassT(change_tower_mass_t::ChangeTowerMassT),
-    ChangeFoundationAreaM2(change_foundation_area_m2::ChangeFoundationAreaM2),
-    ChangeFoundationPRdKpa(change_foundation_p_rd_kpa::ChangeFoundationPRdKpa),
-    ChangeFoundationHEdKn(change_foundation_h_ed_kn::ChangeFoundationHEdKn),
-    ChangeFoundationHRdKn(change_foundation_h_rd_kn::ChangeFoundationHRdKn),
-    ChangeKFoundation(change_k_foundation::ChangeKFoundation),
-    ChangeKSoil(change_k_soil::ChangeKSoil),
-    ChangeWallHeightM(change_wall_height_m::ChangeWallHeightM),
-    ChangeWallPhiDeg(change_wall_phi_deg::ChangeWallPhiDeg),
-    ChangeWallSoilGammaKnM3(change_wall_soil_gamma_kn_m3::ChangeWallSoilGammaKnM3),
-    ChangeWallR(change_wall_r::ChangeWallR),
-    ChangeWallHRdKn(change_wall_h_rd_kn::ChangeWallHRdKn),
+    UpdateSite(update_site::UpdateSite),
+    InsertBuilding(insert_building::InsertBuilding),
+    RemoveBuilding(remove_building::RemoveBuilding),
+    ChangeSystemBaseShearResistanceN(change_system_base_shear_resistance_n::ChangeSystemBaseShearResistanceN),
+    ChangeStoreyPermanentGkN(change_storey_permanent_gk_n::ChangeStoreyPermanentGkN),
+    ChangeStoreyStiffnessX(change_storey_stiffness_x::ChangeStoreyStiffnessX),
+    ChangeStoreyDriftXM(change_storey_drift_xm::ChangeStoreyDriftXM),
+    ChangeBuildingPlanRegular(change_building_plan_regular::ChangeBuildingPlanRegular),
+    ChangeBuildingElevationRegular(change_building_elevation_regular::ChangeBuildingElevationRegular),
+    ChangeMemberDetailingCompatible(change_member_detailing_compatible::ChangeMemberDetailingCompatible),
+    ChangeBuildingMasonryWallAreaRatio(change_building_masonry_wall_area_ratio::ChangeBuildingMasonryWallAreaRatio),
+    InsertBridge(insert_bridge::InsertBridge),
+    ChangeBridgeVRdN(change_bridge_v_rd_n::ChangeBridgeVRdN),
+    InsertAssessment(insert_assessment::InsertAssessment),
+    ChangeAssessmentRKN(change_assessment_rkn::ChangeAssessmentRKN),
+    InsertSilo(insert_silo::InsertSilo),
+    InsertTank(insert_tank::InsertTank),
+    InsertFoundation(insert_foundation::InsertFoundation),
+    InsertRetainingWall(insert_retaining_wall::InsertRetainingWall),
+    InsertTower(insert_tower::InsertTower),
+    ChangeTowerMRdNm(change_tower_m_rd_nm::ChangeTowerMRdNm),
 }
 
-/// 🏷️ Every declared kind of [`En1998Mutation`], in `#[derive(dsl::Mutations)]`'s own declaration
-/// order and spelling — the list `../../🔣️oracle.json` publishes as the `en1998-1-any`
-/// mutation catalog and `../../../../../🧪️tests/🫨️mutate-en1998-1` registers its scenarios from. The
-/// test platform never parses Rust, so [`kinds_catalog::kinds_match_the_enum_and_the_catalog`] below
-/// is what keeps the enum, this const and the committed manifest from drifting apart.
 pub const KINDS: &[&str] = &[
-    "change-seismic-zone",
-    "change-ground-type",
-    "change-importance-class",
-    "change-structural-system",
-    "change-t1-s",
-    "change-mass-t",
-    "change-v-rd-kn",
-    "change-drift-mm",
-    "change-height-m",
-    "change-multiple-resisting-systems",
     "change-annex",
-    "change-en-a-gr",
-    "change-en-ground-type",
-    "change-en-spectrum-type",
-    "change-period-ratio",
-    "change-bridge-v-rd-kn",
-    "change-bearing-d-ed-mm",
-    "change-bearing-d-rd-mm",
-    "change-retrofit-knowledge-level",
-    "change-retrofit-limit-state",
-    "change-retrofit-ed-kn",
-    "change-retrofit-rk-kn",
-    "change-retrofit-gamma-el",
-    "change-silo-height-m",
-    "change-silo-radius-m",
-    "change-silo-n-rd-kn",
-    "change-silo-v-ed-kn",
-    "change-silo-v-rd-kn",
-    "change-silo-q-nominal",
-    "change-tank-height-m",
-    "change-tank-radius-m",
-    "change-tank-mass-t",
-    "change-tank-v-rd-kn",
-    "change-tower-m-ed-knm",
-    "change-tower-m-rd-knm",
-    "change-tower-is-chimney",
-    "change-tower-q-nominal",
-    "change-tower-mass-t",
-    "change-foundation-area-m2",
-    "change-foundation-p-rd-kpa",
-    "change-foundation-h-ed-kn",
-    "change-foundation-h-rd-kn",
-    "change-k-foundation",
-    "change-k-soil",
-    "change-wall-height-m",
-    "change-wall-phi-deg",
-    "change-wall-soil-gamma-kn-m3",
-    "change-wall-r",
-    "change-wall-h-rd-kn",
+    "update-site",
+    "insert-building",
+    "remove-building",
+    "change-system-base-shear-resistance-n",
+    "change-storey-permanent-gk-n",
+    "change-storey-stiffness-x",
+    "change-storey-drift-xm",
+    "change-building-plan-regular",
+    "change-building-elevation-regular",
+    "change-member-detailing-compatible",
+    "change-building-masonry-wall-area-ratio",
+    "insert-bridge",
+    "change-bridge-v-rd-n",
+    "insert-assessment",
+    "change-assessment-rkn",
+    "insert-silo",
+    "insert-tank",
+    "insert-foundation",
+    "insert-retaining-wall",
+    "insert-tower",
+    "change-tower-m-rd-nm",
 ];
-//#endregion 🔖️Mutations
 
-//#region 🔖️FromSnapshot
 impl En1998Mutation {
-    /// 📤️ Decomposes a whole `En1998Snapshot` into one `change-<field>` mutation per
-    /// persistent field — the closed-vocabulary replacement for the banned whole-document-replace
-    /// variant, used by `import_media`'s `"model:in"` port and the `set-snapshot` app command to
-    /// bundle a bulk document replacement into a single atomic `Emit::commit`.
-    pub fn from_snapshot(snapshot: &En1998Snapshot) -> Vec<En1998Mutation> {
-        let mut mutations = Vec::with_capacity(49);
-        mutations.push(En1998Mutation::ChangeSeismicZone(change_seismic_zone::ChangeSeismicZone { new_seismic_zone: snapshot.seismic_zone }));
-        mutations.push(En1998Mutation::ChangeGroundType(change_ground_type::ChangeGroundType { new_ground_type: snapshot.ground_type.clone() }));
-        mutations.push(En1998Mutation::ChangeImportanceClass(change_importance_class::ChangeImportanceClass { new_importance_class: snapshot.importance_class.clone() }));
-        mutations.push(En1998Mutation::ChangeStructuralSystem(change_structural_system::ChangeStructuralSystem { new_structural_system: snapshot.structural_system.clone() }));
-        mutations.push(En1998Mutation::ChangeT1S(change_t1_s::ChangeT1S { new_t1_s: snapshot.t1_s }));
-        mutations.push(En1998Mutation::ChangeMassT(change_mass_t::ChangeMassT { new_mass_t: snapshot.mass_t }));
-        mutations.push(En1998Mutation::ChangeVRdKn(change_v_rd_kn::ChangeVRdKn { new_v_rd_kn: snapshot.v_rd_kn }));
-        mutations.push(En1998Mutation::ChangeDriftMm(change_drift_mm::ChangeDriftMm { new_drift_mm: snapshot.drift_mm }));
-        mutations.push(En1998Mutation::ChangeHeightM(change_height_m::ChangeHeightM { new_height_m: snapshot.height_m }));
-        mutations.push(En1998Mutation::ChangeMultipleResistingSystems(change_multiple_resisting_systems::ChangeMultipleResistingSystems { new_multiple_resisting_systems: snapshot.multiple_resisting_systems }));
-        mutations.push(En1998Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: snapshot.annex.clone() }));
-        mutations.push(En1998Mutation::ChangeEnAGr(change_en_a_gr::ChangeEnAGr { new_en_a_gr: snapshot.en_a_gr }));
-        mutations.push(En1998Mutation::ChangeEnGroundType(change_en_ground_type::ChangeEnGroundType { new_en_ground_type: snapshot.en_ground_type.clone() }));
-        mutations.push(En1998Mutation::ChangeEnSpectrumType(change_en_spectrum_type::ChangeEnSpectrumType { new_en_spectrum_type: snapshot.en_spectrum_type.clone() }));
-        mutations.push(En1998Mutation::ChangePeriodRatio(change_period_ratio::ChangePeriodRatio { new_period_ratio: snapshot.period_ratio }));
-        mutations.push(En1998Mutation::ChangeBridgeVRdKn(change_bridge_v_rd_kn::ChangeBridgeVRdKn { new_bridge_v_rd_kn: snapshot.bridge_v_rd_kn }));
-        mutations.push(En1998Mutation::ChangeBearingDEdMm(change_bearing_d_ed_mm::ChangeBearingDEdMm { new_bearing_d_ed_mm: snapshot.bearing_d_ed_mm }));
-        mutations.push(En1998Mutation::ChangeBearingDRdMm(change_bearing_d_rd_mm::ChangeBearingDRdMm { new_bearing_d_rd_mm: snapshot.bearing_d_rd_mm }));
-        mutations.push(En1998Mutation::ChangeRetrofitKnowledgeLevel(change_retrofit_knowledge_level::ChangeRetrofitKnowledgeLevel { new_retrofit_knowledge_level: snapshot.retrofit_knowledge_level.clone() }));
-        mutations.push(En1998Mutation::ChangeRetrofitLimitState(change_retrofit_limit_state::ChangeRetrofitLimitState { new_retrofit_limit_state: snapshot.retrofit_limit_state.clone() }));
-        mutations.push(En1998Mutation::ChangeRetrofitEDKn(change_retrofit_e_d_kn::ChangeRetrofitEDKn { new_retrofit_e_d_kn: snapshot.retrofit_e_d_kn }));
-        mutations.push(En1998Mutation::ChangeRetrofitRKKn(change_retrofit_r_k_kn::ChangeRetrofitRKKn { new_retrofit_r_k_kn: snapshot.retrofit_r_k_kn }));
-        mutations.push(En1998Mutation::ChangeRetrofitGammaEl(change_retrofit_gamma_el::ChangeRetrofitGammaEl { new_retrofit_gamma_el: snapshot.retrofit_gamma_el }));
-        mutations.push(En1998Mutation::ChangeSiloHeightM(change_silo_height_m::ChangeSiloHeightM { new_silo_height_m: snapshot.silo_height_m }));
-        mutations.push(En1998Mutation::ChangeSiloRadiusM(change_silo_radius_m::ChangeSiloRadiusM { new_silo_radius_m: snapshot.silo_radius_m }));
-        mutations.push(En1998Mutation::ChangeSiloNRdKn(change_silo_n_rd_kn::ChangeSiloNRdKn { new_silo_n_rd_kn: snapshot.silo_n_rd_kn }));
-        mutations.push(En1998Mutation::ChangeSiloVEdKn(change_silo_v_ed_kn::ChangeSiloVEdKn { new_silo_v_ed_kn: snapshot.silo_v_ed_kn }));
-        mutations.push(En1998Mutation::ChangeSiloVRdKn(change_silo_v_rd_kn::ChangeSiloVRdKn { new_silo_v_rd_kn: snapshot.silo_v_rd_kn }));
-        mutations.push(En1998Mutation::ChangeSiloQNominal(change_silo_q_nominal::ChangeSiloQNominal { new_silo_q_nominal: snapshot.silo_q_nominal }));
-        mutations.push(En1998Mutation::ChangeTankHeightM(change_tank_height_m::ChangeTankHeightM { new_tank_height_m: snapshot.tank_height_m }));
-        mutations.push(En1998Mutation::ChangeTankRadiusM(change_tank_radius_m::ChangeTankRadiusM { new_tank_radius_m: snapshot.tank_radius_m }));
-        mutations.push(En1998Mutation::ChangeTankMassT(change_tank_mass_t::ChangeTankMassT { new_tank_mass_t: snapshot.tank_mass_t }));
-        mutations.push(En1998Mutation::ChangeTankVRdKn(change_tank_v_rd_kn::ChangeTankVRdKn { new_tank_v_rd_kn: snapshot.tank_v_rd_kn }));
-        mutations.push(En1998Mutation::ChangeTowerMEdKnm(change_tower_m_ed_knm::ChangeTowerMEdKnm { new_tower_m_ed_knm: snapshot.tower_m_ed_knm }));
-        mutations.push(En1998Mutation::ChangeTowerMRdKnm(change_tower_m_rd_knm::ChangeTowerMRdKnm { new_tower_m_rd_knm: snapshot.tower_m_rd_knm }));
-        mutations.push(En1998Mutation::ChangeTowerIsChimney(change_tower_is_chimney::ChangeTowerIsChimney { new_tower_is_chimney: snapshot.tower_is_chimney }));
-        mutations.push(En1998Mutation::ChangeTowerQNominal(change_tower_q_nominal::ChangeTowerQNominal { new_tower_q_nominal: snapshot.tower_q_nominal }));
-        mutations.push(En1998Mutation::ChangeTowerMassT(change_tower_mass_t::ChangeTowerMassT { new_tower_mass_t: snapshot.tower_mass_t }));
-        mutations.push(En1998Mutation::ChangeFoundationAreaM2(change_foundation_area_m2::ChangeFoundationAreaM2 { new_foundation_area_m2: snapshot.foundation_area_m2 }));
-        mutations.push(En1998Mutation::ChangeFoundationPRdKpa(change_foundation_p_rd_kpa::ChangeFoundationPRdKpa { new_foundation_p_rd_kpa: snapshot.foundation_p_rd_kpa }));
-        mutations.push(En1998Mutation::ChangeFoundationHEdKn(change_foundation_h_ed_kn::ChangeFoundationHEdKn { new_foundation_h_ed_kn: snapshot.foundation_h_ed_kn }));
-        mutations.push(En1998Mutation::ChangeFoundationHRdKn(change_foundation_h_rd_kn::ChangeFoundationHRdKn { new_foundation_h_rd_kn: snapshot.foundation_h_rd_kn }));
-        mutations.push(En1998Mutation::ChangeKFoundation(change_k_foundation::ChangeKFoundation { new_k_foundation: snapshot.k_foundation }));
-        mutations.push(En1998Mutation::ChangeKSoil(change_k_soil::ChangeKSoil { new_k_soil: snapshot.k_soil }));
-        mutations.push(En1998Mutation::ChangeWallHeightM(change_wall_height_m::ChangeWallHeightM { new_wall_height_m: snapshot.wall_height_m }));
-        mutations.push(En1998Mutation::ChangeWallPhiDeg(change_wall_phi_deg::ChangeWallPhiDeg { new_wall_phi_deg: snapshot.wall_phi_deg }));
-        mutations.push(En1998Mutation::ChangeWallSoilGammaKnM3(change_wall_soil_gamma_kn_m3::ChangeWallSoilGammaKnM3 { new_wall_soil_gamma_kn_m3: snapshot.wall_soil_gamma_kn_m3 }));
-        mutations.push(En1998Mutation::ChangeWallR(change_wall_r::ChangeWallR { new_wall_r: snapshot.wall_r }));
-        mutations.push(En1998Mutation::ChangeWallHRdKn(change_wall_h_rd_kn::ChangeWallHRdKn { new_wall_h_rd_kn: snapshot.wall_h_rd_kn }));
+    /// 🔀 Decompose a snapshot edit into the closed semantic mutation vocabulary.
+    pub fn from_snapshot(base: &En1998Snapshot, target: &En1998Snapshot) -> Vec<En1998Mutation> {
+        let mut mutations = Vec::new();
+        if base.annex != target.annex {
+            mutations.push(En1998Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: target.annex.clone() }));
+        }
+        if base.site != target.site {
+            mutations.push(En1998Mutation::UpdateSite(update_site::UpdateSite { site: target.site.clone() }));
+        }
+        if base.buildings != target.buildings {
+            for index in (0..base.buildings.len()).rev() {
+                mutations.push(En1998Mutation::RemoveBuilding(remove_building::RemoveBuilding { index }));
+            }
+            for (index, building) in target.buildings.iter().enumerate() {
+                mutations.push(En1998Mutation::InsertBuilding(insert_building::InsertBuilding { index, building: building.clone() }));
+            }
+        } else {
+            for (bi, (bb, tb)) in base.buildings.iter().zip(target.buildings.iter()).enumerate() {
+                if bb.plan_regular != tb.plan_regular {
+                    mutations.push(En1998Mutation::ChangeBuildingPlanRegular(change_building_plan_regular::ChangeBuildingPlanRegular {
+                        building_index: bi,
+                        new_plan_regular: tb.plan_regular,
+                    }));
+                }
+                if bb.elevation_regular != tb.elevation_regular {
+                    mutations.push(En1998Mutation::ChangeBuildingElevationRegular(change_building_elevation_regular::ChangeBuildingElevationRegular {
+                        building_index: bi,
+                        new_elevation_regular: tb.elevation_regular,
+                    }));
+                }
+                if bb.masonry_wall_area_ratio.to_bits() != tb.masonry_wall_area_ratio.to_bits() {
+                    mutations.push(En1998Mutation::ChangeBuildingMasonryWallAreaRatio(change_building_masonry_wall_area_ratio::ChangeBuildingMasonryWallAreaRatio {
+                        building_index: bi,
+                        new_masonry_wall_area_ratio: tb.masonry_wall_area_ratio,
+                    }));
+                }
+                for (si, (bs, ts)) in bb.systems.iter().zip(tb.systems.iter()).enumerate() {
+                    if bs.base_shear_resistance_n.to_bits() != ts.base_shear_resistance_n.to_bits() {
+                        mutations.push(En1998Mutation::ChangeSystemBaseShearResistanceN(change_system_base_shear_resistance_n::ChangeSystemBaseShearResistanceN {
+                            building_index: bi,
+                            system_index: si,
+                            new_base_shear_resistance_n: ts.base_shear_resistance_n,
+                        }));
+                    }
+                }
+                for (si, (bst, tst)) in bb.storeys.iter().zip(tb.storeys.iter()).enumerate() {
+                    if bst.permanent_gk_n.to_bits() != tst.permanent_gk_n.to_bits() {
+                        mutations.push(En1998Mutation::ChangeStoreyPermanentGkN(change_storey_permanent_gk_n::ChangeStoreyPermanentGkN {
+                            building_index: bi,
+                            storey_index: si,
+                            new_permanent_gk_n: tst.permanent_gk_n,
+                        }));
+                    }
+                    if bst.stiffness_x.to_bits() != tst.stiffness_x.to_bits() {
+                        mutations.push(En1998Mutation::ChangeStoreyStiffnessX(change_storey_stiffness_x::ChangeStoreyStiffnessX {
+                            building_index: bi,
+                            storey_index: si,
+                            new_stiffness_x: tst.stiffness_x,
+                        }));
+                    }
+                    if bst.drift_x_m.to_bits() != tst.drift_x_m.to_bits() {
+                        mutations.push(En1998Mutation::ChangeStoreyDriftXM(change_storey_drift_xm::ChangeStoreyDriftXM {
+                            building_index: bi,
+                            storey_index: si,
+                            new_drift_x_m: tst.drift_x_m,
+                        }));
+                    }
+                }
+                for (mi, (bm, tm)) in bb.members.iter().zip(tb.members.iter()).enumerate() {
+                    if bm.detailing_compatible_with_q != tm.detailing_compatible_with_q {
+                        mutations.push(En1998Mutation::ChangeMemberDetailingCompatible(change_member_detailing_compatible::ChangeMemberDetailingCompatible {
+                            building_index: bi,
+                            member_index: mi,
+                            new_detailing_compatible_with_q: tm.detailing_compatible_with_q,
+                        }));
+                    }
+                }
+            }
+        }
+        if base.bridges != target.bridges {
+            if base.bridges.len() == target.bridges.len() {
+                for (i, (b, tbridge)) in base.bridges.iter().zip(target.bridges.iter()).enumerate() {
+                    if b.v_rd_n.to_bits() != tbridge.v_rd_n.to_bits() {
+                        mutations.push(En1998Mutation::ChangeBridgeVRdN(change_bridge_v_rd_n::ChangeBridgeVRdN { index: i, new_v_rd_n: tbridge.v_rd_n }));
+                    }
+                }
+            } else {
+                for (index, bridge) in target.bridges.iter().enumerate() {
+                    mutations.push(En1998Mutation::InsertBridge(insert_bridge::InsertBridge { index, bridge: bridge.clone() }));
+                }
+            }
+        }
+        if base.assessments != target.assessments {
+            if base.assessments.len() == target.assessments.len() {
+                for (i, (b, a)) in base.assessments.iter().zip(target.assessments.iter()).enumerate() {
+                    if b.r_k_n.to_bits() != a.r_k_n.to_bits() {
+                        mutations.push(En1998Mutation::ChangeAssessmentRKN(change_assessment_rkn::ChangeAssessmentRKN { index: i, new_r_k_n: a.r_k_n }));
+                    }
+                }
+            } else {
+                for (index, assessment) in target.assessments.iter().enumerate() {
+                    mutations.push(En1998Mutation::InsertAssessment(insert_assessment::InsertAssessment { index, assessment: assessment.clone() }));
+                }
+            }
+        }
+        if base.silos != target.silos {
+            for (index, silo) in target.silos.iter().enumerate() {
+                if base.silos.get(index) != Some(silo) {
+                    mutations.push(En1998Mutation::InsertSilo(insert_silo::InsertSilo { index, silo: silo.clone() }));
+                }
+            }
+        }
+        if base.tanks != target.tanks {
+            for (index, tank) in target.tanks.iter().enumerate() {
+                if base.tanks.get(index) != Some(tank) {
+                    mutations.push(En1998Mutation::InsertTank(insert_tank::InsertTank { index, tank: tank.clone() }));
+                }
+            }
+        }
+        if base.foundations != target.foundations {
+            for (index, foundation) in target.foundations.iter().enumerate() {
+                if base.foundations.get(index) != Some(foundation) {
+                    mutations.push(En1998Mutation::InsertFoundation(insert_foundation::InsertFoundation { index, foundation: foundation.clone() }));
+                }
+            }
+        }
+        if base.retaining_walls != target.retaining_walls {
+            for (index, wall) in target.retaining_walls.iter().enumerate() {
+                if base.retaining_walls.get(index) != Some(wall) {
+                    mutations.push(En1998Mutation::InsertRetainingWall(insert_retaining_wall::InsertRetainingWall { index, wall: wall.clone() }));
+                }
+            }
+        }
+        if base.towers != target.towers {
+            if base.towers.len() == target.towers.len() {
+                for (i, (b, tw)) in base.towers.iter().zip(target.towers.iter()).enumerate() {
+                    if b.m_rd_nm.to_bits() != tw.m_rd_nm.to_bits() {
+                        mutations.push(En1998Mutation::ChangeTowerMRdNm(change_tower_m_rd_nm::ChangeTowerMRdNm { index: i, new_m_rd_nm: tw.m_rd_nm }));
+                    }
+                }
+            } else {
+                for (index, tower) in target.towers.iter().enumerate() {
+                    mutations.push(En1998Mutation::InsertTower(insert_tower::InsertTower { index, tower: tower.clone() }));
+                }
+            }
+        }
         mutations
     }
 }
-//#endregion 🔖️FromSnapshot
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
-//#region 🧪️FixtureTests
-/// 🧪️ The 49 handcrafted mutation fixtures (contract D1, ticket
-/// `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`) are self-wired from here rather than from
-/// `🦀️.rs`: that file is shared by all fifteen norm artifacts and is being edited concurrently,
-/// so each artifact mounts its own `🧪️tests` leaves. `#[path = "."]` re-bases the nested `#[path]`
-/// attributes onto this file's own directory, which is this `🧬️mutations/` tree.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests
-
-//#region 🌉️ExternalCodecBridge
-/// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
-/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
-/// specification vectors carry — into a real [`En1998Mutation`]. The generated test host of
-/// `../../../../../🧪️tests/🫨️mutate-en1998-1` links only this crate, so `serde_json` is unreachable
-/// from that adapter and the bridge belongs here rather than there.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_en1998_mutation_json(text: &str) -> Result<En1998Mutation, String> {
-    pack::json::from_json_str(text).map_err(|error| error.to_string())
-}
-
-/// ▶️ Applies one mutation to `base`, returning the resulting document together with every
-/// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
-/// crosses this boundary. Built on the SYNC `Mutation::diff`/`MutationDiff::apply` pair this
-/// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_en1998_mutation(base: &En1998Snapshot, mutation: &En1998Mutation) -> Result<(En1998Snapshot, Vec<String>), String> {
-    let raised = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(mutation, base);
-    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
-    Ok((applied, messages))
-}
-
-/// ↩️ This mutation's own computed inverse against `base` — the metamorphic property
-/// `🫨️mutate-en1998-1`'s `inverse-<kind>` scenarios assert, exposed under a name the test adapter can
-/// reach without naming `protocol::Mutation`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn inverse_en1998_mutation(mutation: &En1998Mutation, base: &En1998Snapshot) -> Vec<En1998Mutation> {
-    <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(mutation, base)
-}
-//#endregion 🌉️ExternalCodecBridge
-
-//#region 🧪️KindsCatalog
-#[cfg(test)]
-#[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
-mod kinds_catalog;
-//#endregion 🧪️KindsCatalog

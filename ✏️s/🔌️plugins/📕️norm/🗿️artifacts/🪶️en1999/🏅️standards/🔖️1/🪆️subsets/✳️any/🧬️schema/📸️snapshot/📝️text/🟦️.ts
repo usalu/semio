@@ -1,4 +1,5 @@
 /** 📝️ Text representation for `norm.en1999.snapshot`. */
+import type { En1999Snapshot } from "../🟦️.ts";
 export type En1999SnapshotText = string;
 
 //#region 🚪️Parsers
@@ -17,8 +18,8 @@ type normEn1999SnapshotTextGuardTextBounds = { readonly minLength?: number; read
 type normEn1999SnapshotTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normEn1999SnapshotTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normEn1999SnapshotTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normEn1999SnapshotTextGuardReject(at, "value is not an object");
+export const normEn1999SnapshotTextGuardObject = (value: unknown, at: string): Readonly<En1999Snapshot> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as En1999Snapshot) : normEn1999SnapshotTextGuardReject(at, "value is not an object");
 export const normEn1999SnapshotTextGuardArray = (value: unknown, at: string, bounds: normEn1999SnapshotTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normEn1999SnapshotTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normEn1999SnapshotTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);

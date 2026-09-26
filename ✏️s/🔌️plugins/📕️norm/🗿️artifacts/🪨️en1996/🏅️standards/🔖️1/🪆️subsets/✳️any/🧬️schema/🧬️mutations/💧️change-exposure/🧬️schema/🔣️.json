@@ -5,18 +5,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "index",
     "newExposure"
   ],
   "properties": {
+    "index": {
+      "type": "integer"
+    },
     "newExposure": {
-      "type": "string",
-      "enum": [
-        "Mx1",
-        "Mx2",
-        "Mx3",
-        "Mx4",
-        "Mx5"
-      ]
+      "type": "string"
     }
   }
 }

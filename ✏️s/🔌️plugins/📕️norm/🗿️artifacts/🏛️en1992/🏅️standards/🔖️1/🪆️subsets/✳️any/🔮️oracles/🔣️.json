@@ -66,427 +66,343 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "change-ac-mm2",
-          "sourceMutationDirectoryName": "📐️change-ac-mm2",
-          "mutationDirectoryName": "📐️change-ac-mm2",
-          "scenarios": [
-            {
-              "id": "raises-a-c-mm2-to-168750-0",
-              "directoryName": "📐️raises-a-c-mm2-to-168750-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-as-mm2",
-          "sourceMutationDirectoryName": "🔩️change-anchor-as-mm2",
-          "mutationDirectoryName": "🔩️change-anchor-as-mm2",
-          "scenarios": [
-            {
-              "id": "raises-anchor-a-s-mm2-to-157-0",
-              "directoryName": "🔩️raises-anchor-a-s-mm2-to-157-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-c1-mm",
-          "sourceMutationDirectoryName": "📍️change-anchor-c1-mm",
-          "mutationDirectoryName": "📍️change-anchor-c1-mm",
-          "scenarios": [
-            {
-              "id": "raises-anchor-c1-mm-to-137-5",
-              "directoryName": "📍️raises-anchor-c1-mm-to-137-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-cracked",
-          "sourceMutationDirectoryName": "💥️change-anchor-cracked",
-          "mutationDirectoryName": "💥️change-anchor-cracked",
-          "scenarios": [
-            {
-              "id": "turns-anchor-cracked-on",
-              "directoryName": "💥️turns-anchor-cracked-on"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-d-mm",
-          "sourceMutationDirectoryName": "⭕️change-anchor-d-mm",
-          "mutationDirectoryName": "⭕️change-anchor-d-mm",
-          "scenarios": [
-            {
-              "id": "raises-anchor-d-mm-to-16-0",
-              "directoryName": "⭕️raises-anchor-d-mm-to-16-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-f-uk-mpa",
-          "sourceMutationDirectoryName": "💪️change-anchor-f-uk-mpa",
-          "mutationDirectoryName": "💪️change-anchor-f-uk-mpa",
-          "scenarios": [
-            {
-              "id": "raises-anchor-f-uk-mpa-to-900-0",
-              "directoryName": "💪️raises-anchor-f-uk-mpa-to-900-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-f-yk-mpa",
-          "sourceMutationDirectoryName": "🛡️change-anchor-f-yk-mpa",
-          "mutationDirectoryName": "🛡️change-anchor-f-yk-mpa",
-          "scenarios": [
-            {
-              "id": "raises-anchor-f-yk-mpa-to-720-0",
-              "directoryName": "🛡️raises-anchor-f-yk-mpa-to-720-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-h-ef-mm",
-          "sourceMutationDirectoryName": "⚓️change-anchor-h-ef-mm",
-          "mutationDirectoryName": "⚓️change-anchor-h-ef-mm",
-          "scenarios": [
-            {
-              "id": "raises-anchor-h-ef-mm-to-105-0",
-              "directoryName": "⚓️raises-anchor-h-ef-mm-to-105-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-n-ed-kn",
-          "sourceMutationDirectoryName": "🪝️change-anchor-n-ed-kn",
-          "mutationDirectoryName": "🪝️change-anchor-n-ed-kn",
-          "scenarios": [
-            {
-              "id": "raises-anchor-n-ed-kn-to-22-5",
-              "directoryName": "🪝️raises-anchor-n-ed-kn-to-22-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-anchor-v-ed-kn",
-          "sourceMutationDirectoryName": "✂️change-anchor-v-ed-kn",
-          "mutationDirectoryName": "✂️change-anchor-v-ed-kn",
-          "scenarios": [
-            {
-              "id": "raises-anchor-v-ed-kn-to-11-25",
-              "directoryName": "✂️raises-anchor-v-ed-kn-to-11-25"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-as-mm2",
-          "sourceMutationDirectoryName": "🪜️change-as-mm2",
-          "mutationDirectoryName": "🪜️change-as-mm2",
-          "scenarios": [
-            {
-              "id": "raises-a-s-mm2-to-1608-5",
-              "directoryName": "🪜️raises-a-s-mm2-to-1608-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-b-mm",
-          "sourceMutationDirectoryName": "↔️change-b-mm",
-          "mutationDirectoryName": "↔️change-b-mm",
-          "scenarios": [
-            {
-              "id": "raises-b-mm-to-375-0",
-              "directoryName": "↔️raises-b-mm-to-375-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bridge-delta-sigma-s-mpa",
-          "sourceMutationDirectoryName": "🔁️change-bridge-delta-sigma-s-mpa",
-          "mutationDirectoryName": "🔁️change-bridge-delta-sigma-s-mpa",
-          "scenarios": [
-            {
-              "id": "raises-bridge-delta-sigma-s-mpa-to-132-5",
-              "directoryName": "🔁️raises-bridge-delta-sigma-s-mpa-to-132-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bridge-sigma-c-mpa",
-          "sourceMutationDirectoryName": "🛣️change-bridge-sigma-c-mpa",
-          "mutationDirectoryName": "🛣️change-bridge-sigma-c-mpa",
-          "scenarios": [
-            {
-              "id": "raises-bridge-sigma-c-mpa-to-15-75",
-              "directoryName": "🌉️raises-bridge-sigma-c-mpa-to-15-75"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-d-mm",
-          "sourceMutationDirectoryName": "↕️change-d-mm",
-          "mutationDirectoryName": "↕️change-d-mm",
-          "scenarios": [
-            {
-              "id": "raises-d-mm-to-512-5",
-              "directoryName": "↕️raises-d-mm-to-512-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-f-ck",
-          "sourceMutationDirectoryName": "🪨️change-f-ck",
-          "mutationDirectoryName": "🪨️change-f-ck",
-          "scenarios": [
-            {
-              "id": "raises-f-ck-to-45-0",
-              "directoryName": "🪨️raises-f-ck-to-45-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-f-yk",
-          "sourceMutationDirectoryName": "🔧️change-f-yk",
-          "mutationDirectoryName": "🔧️change-f-yk",
-          "scenarios": [
-            {
-              "id": "raises-f-yk-to-550-0",
-              "directoryName": "🔧️raises-f-yk-to-550-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-fire-rating",
-          "sourceMutationDirectoryName": "🔥️change-fire-rating",
-          "mutationDirectoryName": "🔥️change-fire-rating",
-          "scenarios": [
-            {
-              "id": "switches-fire-rating-to-r120",
-              "directoryName": "🔥️switches-fire-rating-to-r120"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-hd-over-h",
-          "sourceMutationDirectoryName": "🌊️change-hd-over-h",
-          "mutationDirectoryName": "🌊️change-hd-over-h",
-          "scenarios": [
-            {
-              "id": "raises-hd-over-h-to-12-5",
-              "directoryName": "🌊️raises-hd-over-h-to-12-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-liquid-es-mpa",
-          "sourceMutationDirectoryName": "🌀️change-liquid-es-mpa",
-          "mutationDirectoryName": "🌀️change-liquid-es-mpa",
-          "scenarios": [
-            {
-              "id": "raises-liquid-e-s-mpa-to-205000-0",
-              "directoryName": "🌀️raises-liquid-e-s-mpa-to-205000-0"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-liquid-f-ct-eff-mpa",
-          "sourceMutationDirectoryName": "🧱️change-liquid-f-ct-eff-mpa",
-          "mutationDirectoryName": "🧱️change-liquid-f-ct-eff-mpa",
-          "scenarios": [
-            {
-              "id": "raises-liquid-f-ct-eff-mpa-to-3-25",
-              "directoryName": "🧱️raises-liquid-f-ct-eff-mpa-to-3-25"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-liquid-rho-p-eff",
-          "sourceMutationDirectoryName": "🧷️change-liquid-rho-p-eff",
-          "mutationDirectoryName": "🧷️change-liquid-rho-p-eff",
-          "scenarios": [
-            {
-              "id": "raises-liquid-rho-p-eff-to-0-0078125",
-              "directoryName": "🧷️raises-liquid-rho-p-eff-to-0-0078125"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-liquid-sigma-s-mpa",
-          "sourceMutationDirectoryName": "🧲️change-liquid-sigma-s-mpa",
-          "mutationDirectoryName": "🧲️change-liquid-sigma-s-mpa",
-          "scenarios": [
-            {
-              "id": "raises-liquid-sigma-s-mpa-to-235-5",
-              "directoryName": "🧲️raises-liquid-sigma-s-mpa-to-235-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-liquid-sr-max-mm",
-          "sourceMutationDirectoryName": "🕳️change-liquid-sr-max-mm",
-          "mutationDirectoryName": "🕳️change-liquid-sr-max-mm",
-          "scenarios": [
-            {
-              "id": "raises-liquid-s-r-max-mm-to-312-5",
-              "directoryName": "🕳️raises-liquid-s-r-max-mm-to-312-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-m-ed-knm",
-          "sourceMutationDirectoryName": "⤴️change-m-ed-knm",
-          "mutationDirectoryName": "⤴️change-m-ed-knm",
-          "scenarios": [
-            {
-              "id": "raises-m-ed-knm-to-187-5",
-              "directoryName": "⤴️raises-m-ed-knm-to-187-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-n-ed-kn",
-          "sourceMutationDirectoryName": "🏋️change-n-ed-kn",
-          "mutationDirectoryName": "🏋️change-n-ed-kn",
-          "scenarios": [
-            {
-              "id": "raises-n-ed-kn-to-62-5",
-              "directoryName": "🏋️raises-n-ed-kn-to-62-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-p-kn",
-          "sourceMutationDirectoryName": "🏹️change-p-kn",
-          "mutationDirectoryName": "🏹️change-p-kn",
-          "scenarios": [
-            {
-              "id": "raises-p-kn-to-45-5",
-              "directoryName": "🏹️raises-p-kn-to-45-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-provided-axis-distance-mm",
-          "sourceMutationDirectoryName": "📏️change-provided-axis-distance-mm",
-          "mutationDirectoryName": "📏️change-provided-axis-distance-mm",
-          "scenarios": [
-            {
-              "id": "raises-provided-axis-distance-mm-to-42-5",
-              "directoryName": "📏️raises-provided-axis-distance-mm-to-42-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-rho-l",
-          "sourceMutationDirectoryName": "🧮️change-rho-l",
-          "mutationDirectoryName": "🧮️change-rho-l",
-          "scenarios": [
-            {
-              "id": "raises-rho-l-to-0-015625",
-              "directoryName": "🧮️raises-rho-l-to-0-015625"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-span-m",
-          "sourceMutationDirectoryName": "🌉️change-span-m",
-          "mutationDirectoryName": "🌉️change-span-m",
-          "scenarios": [
-            {
-              "id": "raises-span-m-to-7-5",
-              "directoryName": "🌉️raises-span-m-to-7-5"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-tightness-class",
-          "sourceMutationDirectoryName": "💧️change-tightness-class",
-          "mutationDirectoryName": "💧️change-tightness-class",
-          "scenarios": [
-            {
-              "id": "switches-tightness-class-to-tc2",
-              "directoryName": "💧️switches-tightness-class-to-tc2"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-udl-kn-m",
-          "sourceMutationDirectoryName": "⬇️change-udl-kn-m",
-          "mutationDirectoryName": "⬇️change-udl-kn-m",
-          "scenarios": [
-            {
-              "id": "raises-udl-kn-m-to-26-25",
-              "directoryName": "⬇️raises-udl-kn-m-to-26-25"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-use-fem",
-          "sourceMutationDirectoryName": "🕸️change-use-fem",
-          "mutationDirectoryName": "🕸️change-use-fem",
-          "scenarios": [
-            {
-              "id": "turns-use-fem-on",
-              "directoryName": "🕸️turns-use-fem-on"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-v-ed-kn",
-          "sourceMutationDirectoryName": "🪚️change-v-ed-kn",
-          "mutationDirectoryName": "🪚️change-v-ed-kn",
-          "scenarios": [
-            {
-              "id": "raises-v-ed-kn-to-96-5",
-              "directoryName": "🪚️raises-v-ed-kn-to-96-5"
-            }
-          ]
-        },
-        {
           "mutationId": "change-annex",
           "sourceMutationDirectoryName": "🌍️change-annex",
           "mutationDirectoryName": "🌍️change-annex",
           "scenarios": [
             {
-              "id": "switches-annex-to-en",
-              "directoryName": "🌍️switches-annex-to-en"
+              "id": "applies-change-annex",
+              "directoryName": "🧪applies-change-annex"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-title",
+          "sourceMutationDirectoryName": "🏷️change-title",
+          "mutationDirectoryName": "🏷️change-title",
+          "scenarios": [
+            {
+              "id": "applies-change-title",
+              "directoryName": "🧪applies-change-title"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-design-working-life",
+          "sourceMutationDirectoryName": "📅️change-design-working-life",
+          "mutationDirectoryName": "📅️change-design-working-life",
+          "scenarios": [
+            {
+              "id": "applies-change-design-working-life",
+              "directoryName": "🧪applies-change-design-working-life"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-c-dev",
+          "sourceMutationDirectoryName": "📏️change-delta-c-dev",
+          "mutationDirectoryName": "📏️change-delta-c-dev",
+          "scenarios": [
+            {
+              "id": "applies-change-delta-c-dev",
+              "directoryName": "🧪applies-change-delta-c-dev"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cement-type",
+          "sourceMutationDirectoryName": "🧪change-cement-type",
+          "mutationDirectoryName": "🧪change-cement-type",
+          "scenarios": [
+            {
+              "id": "applies-change-cement-type",
+              "directoryName": "🧪applies-change-cement-type"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-concrete-f-ck",
+          "sourceMutationDirectoryName": "🧱change-concrete-f-ck",
+          "mutationDirectoryName": "🧱change-concrete-f-ck",
+          "scenarios": [
+            {
+              "id": "applies-change-concrete-f-ck",
+              "directoryName": "🧪applies-change-concrete-f-ck"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reinforcement-f-yk",
+          "sourceMutationDirectoryName": "🔩change-reinforcement-f-yk",
+          "mutationDirectoryName": "🔩change-reinforcement-f-yk",
+          "scenarios": [
+            {
+              "id": "applies-change-reinforcement-f-yk",
+              "directoryName": "🧪applies-change-reinforcement-f-yk"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-member",
+          "sourceMutationDirectoryName": "➕️insert-member",
+          "mutationDirectoryName": "➕️insert-member",
+          "scenarios": [
+            {
+              "id": "applies-insert-member",
+              "directoryName": "🧪applies-insert-member"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-member",
+          "sourceMutationDirectoryName": "➖️remove-member",
+          "mutationDirectoryName": "➖️remove-member",
+          "scenarios": [
+            {
+              "id": "applies-remove-member",
+              "directoryName": "🧪applies-remove-member"
+            }
+          ]
+        },
+        {
+          "mutationId": "reorder-members",
+          "sourceMutationDirectoryName": "🔀️reorder-members",
+          "mutationDirectoryName": "🔀️reorder-members",
+          "scenarios": [
+            {
+              "id": "applies-reorder-members",
+              "directoryName": "🧪applies-reorder-members"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-width",
+          "sourceMutationDirectoryName": "↔️change-member-width",
+          "mutationDirectoryName": "↔️change-member-width",
+          "scenarios": [
+            {
+              "id": "applies-change-member-width",
+              "directoryName": "🧪applies-change-member-width"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-height",
+          "sourceMutationDirectoryName": "↕️change-member-height",
+          "mutationDirectoryName": "↕️change-member-height",
+          "scenarios": [
+            {
+              "id": "applies-change-member-height",
+              "directoryName": "🧪applies-change-member-height"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-effective-depth",
+          "sourceMutationDirectoryName": "📐️change-member-effective-depth",
+          "mutationDirectoryName": "📐️change-member-effective-depth",
+          "scenarios": [
+            {
+              "id": "applies-change-member-effective-depth",
+              "directoryName": "🧪applies-change-member-effective-depth"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-cover",
+          "sourceMutationDirectoryName": "🛡️change-member-cover",
+          "mutationDirectoryName": "🛡️change-member-cover",
+          "scenarios": [
+            {
+              "id": "applies-change-member-cover",
+              "directoryName": "🧪applies-change-member-cover"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-exposure",
+          "sourceMutationDirectoryName": "🌦change-member-exposure",
+          "mutationDirectoryName": "🌦change-member-exposure",
+          "scenarios": [
+            {
+              "id": "applies-change-member-exposure",
+              "directoryName": "🧪applies-change-member-exposure"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-span",
+          "sourceMutationDirectoryName": "🌉️change-member-span",
+          "mutationDirectoryName": "🌉️change-member-span",
+          "scenarios": [
+            {
+              "id": "applies-change-member-span",
+              "directoryName": "🧪applies-change-member-span"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-stirrup-spacing",
+          "sourceMutationDirectoryName": "🪢change-member-stirrup-spacing",
+          "mutationDirectoryName": "🪢change-member-stirrup-spacing",
+          "scenarios": [
+            {
+              "id": "applies-change-member-stirrup-spacing",
+              "directoryName": "🧪applies-change-member-stirrup-spacing"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-axis-distance",
+          "sourceMutationDirectoryName": "🔥change-member-axis-distance",
+          "mutationDirectoryName": "🔥change-member-axis-distance",
+          "scenarios": [
+            {
+              "id": "applies-change-member-axis-distance",
+              "directoryName": "🧪applies-change-member-axis-distance"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-fire-rating",
+          "sourceMutationDirectoryName": "🔥️change-member-fire-rating",
+          "mutationDirectoryName": "🔥️change-member-fire-rating",
+          "scenarios": [
+            {
+              "id": "applies-change-member-fire-rating",
+              "directoryName": "🧪applies-change-member-fire-rating"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bar-layer-count",
+          "sourceMutationDirectoryName": "#️⃣change-bar-layer-count",
+          "mutationDirectoryName": "#️⃣change-bar-layer-count",
+          "scenarios": [
+            {
+              "id": "applies-change-bar-layer-count",
+              "directoryName": "🧪applies-change-bar-layer-count"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bar-layer-diameter",
+          "sourceMutationDirectoryName": "⭕change-bar-layer-diameter",
+          "mutationDirectoryName": "⭕change-bar-layer-diameter",
+          "scenarios": [
+            {
+              "id": "applies-change-bar-layer-diameter",
+              "directoryName": "🧪applies-change-bar-layer-diameter"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-action-mk",
+          "sourceMutationDirectoryName": "⤴️change-action-mk",
+          "mutationDirectoryName": "⤴️change-action-mk",
+          "scenarios": [
+            {
+              "id": "applies-change-action-mk",
+              "directoryName": "🧪applies-change-action-mk"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-action-n-ed",
+          "sourceMutationDirectoryName": "🏋️change-action-n-ed",
+          "mutationDirectoryName": "🏋️change-action-n-ed",
+          "scenarios": [
+            {
+              "id": "applies-change-action-n-ed",
+              "directoryName": "🧪applies-change-action-n-ed"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-action-v-ed",
+          "sourceMutationDirectoryName": "↘️change-action-v-ed",
+          "mutationDirectoryName": "↘️change-action-v-ed",
+          "scenarios": [
+            {
+              "id": "applies-change-action-v-ed",
+              "directoryName": "🧪applies-change-action-v-ed"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-anchor",
+          "sourceMutationDirectoryName": "⚓️insert-anchor",
+          "mutationDirectoryName": "⚓️insert-anchor",
+          "scenarios": [
+            {
+              "id": "applies-insert-anchor",
+              "directoryName": "🧪applies-insert-anchor"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-anchor",
+          "sourceMutationDirectoryName": "🗑️remove-anchor",
+          "mutationDirectoryName": "🗑️remove-anchor",
+          "scenarios": [
+            {
+              "id": "applies-remove-anchor",
+              "directoryName": "🧪applies-remove-anchor"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-h-ef",
+          "sourceMutationDirectoryName": "📍change-anchor-h-ef",
+          "mutationDirectoryName": "📍change-anchor-h-ef",
+          "scenarios": [
+            {
+              "id": "applies-change-anchor-h-ef",
+              "directoryName": "🧪applies-change-anchor-h-ef"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-anchor-as",
+          "sourceMutationDirectoryName": "🧷change-anchor-a-s",
+          "mutationDirectoryName": "🧷change-anchor-a-s",
+          "scenarios": [
+            {
+              "id": "applies-change-anchor-as",
+              "directoryName": "🧪applies-change-anchor-as"
             }
           ]
         }
       ],
       "kinds": [
         "change-annex",
-        "change-m-ed-knm",
-        "change-v-ed-kn",
-        "change-f-ck",
-        "change-b-mm",
-        "change-d-mm",
-        "change-as-mm2",
-        "change-f-yk",
-        "change-rho-l",
-        "change-n-ed-kn",
-        "change-p-kn",
-        "change-ac-mm2",
-        "change-use-fem",
-        "change-span-m",
-        "change-udl-kn-m",
-        "change-fire-rating",
-        "change-provided-axis-distance-mm",
-        "change-bridge-sigma-c-mpa",
-        "change-bridge-delta-sigma-s-mpa",
-        "change-tightness-class",
-        "change-hd-over-h",
-        "change-liquid-sigma-s-mpa",
-        "change-liquid-rho-p-eff",
-        "change-liquid-f-ct-eff-mpa",
-        "change-liquid-es-mpa",
-        "change-liquid-sr-max-mm",
-        "change-anchor-h-ef-mm",
-        "change-anchor-cracked",
-        "change-anchor-f-uk-mpa",
-        "change-anchor-f-yk-mpa",
-        "change-anchor-as-mm2",
-        "change-anchor-d-mm",
-        "change-anchor-c1-mm",
-        "change-anchor-n-ed-kn",
-        "change-anchor-v-ed-kn"
+        "change-title",
+        "change-design-working-life",
+        "change-delta-c-dev",
+        "change-cement-type",
+        "change-concrete-f-ck",
+        "change-reinforcement-f-yk",
+        "insert-member",
+        "remove-member",
+        "reorder-members",
+        "change-member-width",
+        "change-member-height",
+        "change-member-effective-depth",
+        "change-member-cover",
+        "change-member-exposure",
+        "change-member-span",
+        "change-member-stirrup-spacing",
+        "change-member-axis-distance",
+        "change-member-fire-rating",
+        "change-bar-layer-count",
+        "change-bar-layer-diameter",
+        "change-action-mk",
+        "change-action-n-ed",
+        "change-action-v-ed",
+        "insert-anchor",
+        "remove-anchor",
+        "change-anchor-h-ef",
+        "change-anchor-as"
       ]
     }
   ],
@@ -500,716 +416,6 @@
       "subsetDirectoryName": "✳️any",
       "mutations": [
         {
-          "id": "change-ac-mm2",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-ac-mm2",
-            "bridgeVersion": 1,
-            "variant": "ChangeACMm2"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-as-mm2",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-as-mm2",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorASMm2"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-c1-mm",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-c1-mm",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorC1Mm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-cracked",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-cracked",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorCracked"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-d-mm",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-d-mm",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorDMm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-f-uk-mpa",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-f-uk-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorFUkMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-f-yk-mpa",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-f-yk-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorFYkMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-h-ef-mm",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-h-ef-mm",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorHEfMm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-n-ed-kn",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-n-ed-kn",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorNEdKn"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-anchor-v-ed-kn",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-anchor-v-ed-kn",
-            "bridgeVersion": 1,
-            "variant": "ChangeAnchorVEdKn"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-as-mm2",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-as-mm2",
-            "bridgeVersion": 1,
-            "variant": "ChangeASMm2"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-b-mm",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-b-mm",
-            "bridgeVersion": 1,
-            "variant": "ChangeBMm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-bridge-delta-sigma-s-mpa",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-bridge-delta-sigma-s-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeBridgeDeltaSigmaSMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-bridge-sigma-c-mpa",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-bridge-sigma-c-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeBridgeSigmaCMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-d-mm",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-d-mm",
-            "bridgeVersion": 1,
-            "variant": "ChangeDMm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-f-ck",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-f-ck",
-            "bridgeVersion": 1,
-            "variant": "ChangeFCk"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-f-yk",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-f-yk",
-            "bridgeVersion": 1,
-            "variant": "ChangeFYk"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-fire-rating",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-fire-rating",
-            "bridgeVersion": 1,
-            "variant": "ChangeFireRating"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-hd-over-h",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-hd-over-h",
-            "bridgeVersion": 1,
-            "variant": "ChangeHdOverH"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-liquid-es-mpa",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-liquid-es-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeLiquidESMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-liquid-f-ct-eff-mpa",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-liquid-f-ct-eff-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeLiquidFCtEffMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-liquid-rho-p-eff",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-liquid-rho-p-eff",
-            "bridgeVersion": 1,
-            "variant": "ChangeLiquidRhoPEff"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-liquid-sigma-s-mpa",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-liquid-sigma-s-mpa",
-            "bridgeVersion": 1,
-            "variant": "ChangeLiquidSigmaSMpa"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-liquid-sr-max-mm",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-liquid-sr-max-mm",
-            "bridgeVersion": 1,
-            "variant": "ChangeLiquidSRMaxMm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-m-ed-knm",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-m-ed-knm",
-            "bridgeVersion": 1,
-            "variant": "ChangeMEdKnm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-n-ed-kn",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-n-ed-kn",
-            "bridgeVersion": 1,
-            "variant": "ChangeNEdKn"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-p-kn",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-p-kn",
-            "bridgeVersion": 1,
-            "variant": "ChangePKn"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-provided-axis-distance-mm",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-provided-axis-distance-mm",
-            "bridgeVersion": 1,
-            "variant": "ChangeProvidedAxisDistanceMm"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-rho-l",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-rho-l",
-            "bridgeVersion": 1,
-            "variant": "ChangeRhoL"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-span-m",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-span-m",
-            "bridgeVersion": 1,
-            "variant": "ChangeSpanM"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-tightness-class",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-tightness-class",
-            "bridgeVersion": 1,
-            "variant": "ChangeTightnessClass"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-udl-kn-m",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-udl-kn-m",
-            "bridgeVersion": 1,
-            "variant": "ChangeUdlKnM"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-use-fem",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-use-fem",
-            "bridgeVersion": 1,
-            "variant": "ChangeUseFem"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-v-ed-kn",
-          "capability": "en1992-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-v-ed-kn",
-            "bridgeVersion": 1,
-            "variant": "ChangeVEdKn"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1992-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
           "id": "change-annex",
           "capability": "en1992-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -1221,6 +427,546 @@
             "operation": "change-annex",
             "bridgeVersion": 1,
             "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-title",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-title",
+            "bridgeVersion": 1,
+            "variant": "ChangeTitle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-design-working-life",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-design-working-life",
+            "bridgeVersion": 1,
+            "variant": "ChangeDesignWorkingLife"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-delta-c-dev",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-delta-c-dev",
+            "bridgeVersion": 1,
+            "variant": "ChangeDeltaCDev"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-cement-type",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-cement-type",
+            "bridgeVersion": 1,
+            "variant": "ChangeCementType"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-concrete-f-ck",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-concrete-f-ck",
+            "bridgeVersion": 1,
+            "variant": "ChangeConcreteFCk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reinforcement-f-yk",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reinforcement-f-yk",
+            "bridgeVersion": 1,
+            "variant": "ChangeReinforcementFYk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-member",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-member",
+            "bridgeVersion": 1,
+            "variant": "InsertMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-member",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-member",
+            "bridgeVersion": 1,
+            "variant": "RemoveMember"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "reorder-members",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-members",
+            "bridgeVersion": 1,
+            "variant": "ReorderMembers"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-width",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-width",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-height",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-height",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-effective-depth",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-effective-depth",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberEffectiveDepth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-cover",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-cover",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberCover"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-exposure",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-exposure",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberExposure"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-span",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-span",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberSpan"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-stirrup-spacing",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-stirrup-spacing",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberStirrupSpacing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-axis-distance",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-axis-distance",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberAxisDistance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-fire-rating",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-fire-rating",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberFireRating"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bar-layer-count",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bar-layer-count",
+            "bridgeVersion": 1,
+            "variant": "ChangeBarLayerCount"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bar-layer-diameter",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bar-layer-diameter",
+            "bridgeVersion": 1,
+            "variant": "ChangeBarLayerDiameter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-action-mk",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-action-mk",
+            "bridgeVersion": 1,
+            "variant": "ChangeActionMk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-action-n-ed",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-action-n-ed",
+            "bridgeVersion": 1,
+            "variant": "ChangeActionNEd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-action-v-ed",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-action-v-ed",
+            "bridgeVersion": 1,
+            "variant": "ChangeActionVEd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-anchor",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-anchor",
+            "bridgeVersion": 1,
+            "variant": "InsertAnchor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-anchor",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-anchor",
+            "bridgeVersion": 1,
+            "variant": "RemoveAnchor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-h-ef",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-h-ef",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorHEf"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1992-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-anchor-as",
+          "capability": "en1992-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-anchor-as",
+            "bridgeVersion": 1,
+            "variant": "ChangeAnchorAs"
           },
           "oracleRequirements": [
             {

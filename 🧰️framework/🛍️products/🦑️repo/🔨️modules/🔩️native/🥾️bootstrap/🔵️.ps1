@@ -2,11 +2,11 @@
 #
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 #
-# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, verifies a user-created native Neo4j Desktop compose DBMS, and installs the local VS Code extension when editor CLIs are available.
+# Specs: Zero-touch Windows-native bootstrap that upgrades machine dependencies to the current supported baseline with winget, prepares repo-local caches and env vars, syncs workspace dependencies, and installs the local VS Code extension when editor CLIs are available.
 #
 # Summary: Windows-native bootstrap for the compose monorepo. Invoke from a fresh clone with Windows PowerShell 5.1 or PowerShell 7:
-# `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup` (full) or `… start`
-# (IDE session); `bun ./📜️script.ts setup native` routes here once Bun exists. Saved as UTF-8 with BOM: Windows PowerShell 5.1
+# `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup`
+# `bun ./📜️script.ts setup native` routes here once Bun exists. Saved as UTF-8 with BOM: Windows PowerShell 5.1
 # decodes a BOM-less script with the ANSI code page and would turn every emoji path literal below into a different path.
 #
 #endregion 🧲️Header
@@ -14,9 +14,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("setup", "start")]
+    [ValidateSet("setup")]
     [string]$Command = "setup",
-    [switch]$SessionStart,
     [switch]$SkipMachineInstall,
     [switch]$SkipGlobalCliInstall,
     [switch]$SkipEditorInstall,
@@ -29,12 +28,8 @@ $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
-$sessionStartEffective = $SessionStart.IsPresent -or ($Command -eq "start")
-
 #region 🎯️Targets
 $script:PythonKind = "3.14"
-$script:Neo4jVersion = "5.26.26"
-$script:ApocVersion = "5.26.4"
 #endregion 🎯️Targets
 
 #region 🔧️Helpers
@@ -73,16 +68,6 @@ function Ensure-Directory {
     if (-not (Test-Path -LiteralPath $Path)) {
         New-Item -ItemType Directory -Path $Path -Force | Out-Null
     }
-}
-
-function Set-TextFileUtf8NoBom {
-    param(
-        [string]$Path,
-        [string[]]$Value
-    )
-
-    $encoding = [System.Text.UTF8Encoding]::new($false)
-    [System.IO.File]::WriteAllLines($Path, $Value, $encoding)
 }
 
 function Refresh-CurrentProcessPath {
@@ -352,396 +337,7 @@ function Stop-RepoPythonProcesses {
     }
 }
 
-function Test-TcpPort {
-    param(
-        [string]$HostName,
-        [int]$Port
-    )
-
-    $client = [System.Net.Sockets.TcpClient]::new()
-    try {
-        $async = $client.BeginConnect($HostName, $Port, $null, $null)
-        if (-not $async.AsyncWaitHandle.WaitOne(1000)) {
-            return $false
-        }
-        $client.EndConnect($async)
-        return $true
-    } catch {
-        return $false
-    } finally {
-        $client.Close()
-    }
-}
-
-function Invoke-Neo4jCypher {
-    param(
-        [string]$RepoRoot,
-        [string]$Cypher,
-        [string]$Database = "compose",
-        [string]$RequiredOutputPattern = ""
-    )
-
-    Use-MicrosoftOpenJdk21
-    $runtimeCypherShell = Join-Path $RepoRoot ".🧬semio\🦑️repo\⚡️cache\neo4j\neo4j-community-$($script:Neo4jVersion)\bin\cypher-shell.bat"
-    $cypherShell = Get-FirstCommandPath @($runtimeCypherShell, "cypher-shell.cmd", "cypher-shell.exe", "cypher-shell")
-    if ($cypherShell) {
-        $logRoot = Join-Path $RepoRoot ".🧬semio\🦑️repo\⚡️cache\neo4j"
-        Ensure-Directory -Path $logRoot
-        $logId = "{0}-{1}" -f $PID, ([Guid]::NewGuid().ToString("N"))
-        $stdout = Join-Path $logRoot "cypher-shell.$logId.stdout.log"
-        $stderr = Join-Path $logRoot "cypher-shell.$logId.stderr.log"
-        $arguments = @(
-            "-a", "bolt://localhost:7687",
-            "-u", "neo4j",
-            "-p", "password",
-            "-d", $Database,
-            "--format", "plain",
-            $Cypher
-        )
-        $previousErrorActionPreference = $ErrorActionPreference
-        $ErrorActionPreference = "Continue"
-        try {
-            & $cypherShell @arguments > $stdout 2> $stderr
-            if ($LASTEXITCODE -ne 0) {
-                return $false
-            }
-            if ($RequiredOutputPattern) {
-                $output = Get-Content -LiteralPath $stdout -Raw -ErrorAction SilentlyContinue
-                return $output -match $RequiredOutputPattern
-            }
-            return $true
-        } finally {
-            $ErrorActionPreference = $previousErrorActionPreference
-        }
-    }
-
-    return $false
-}
-
-function Get-Neo4jSchemaUri {
-    param(
-        [string]$RepoRoot,
-        [string]$Technology
-    )
-
-    $rootUri = ($RepoRoot -replace "\\", "/")
-    return "file:///$rootUri/.🧬semio/🦑️repo/\uD83D\uDEC2/$Technology.cypher"
-}
-
-function Get-RunningNeo4jDesktopDbmsHome {
-    $processes = Get-CimInstance Win32_Process | Where-Object {
-        $_.CommandLine -and
-        $_.CommandLine -match "--home-dir=" -and
-        $_.CommandLine -match "\\.Neo4jDesktop2?\\Data\\dbmss\\"
-    }
-    foreach ($process in $processes) {
-        if ($process.CommandLine -match '--home-dir="([^"]+)"') {
-            return $Matches[1]
-        }
-        if ($process.CommandLine -match '--home-dir=([^\s]+)') {
-            return $Matches[1]
-        }
-    }
-    return $null
-}
-
-function Set-TextSetting {
-    param(
-        [string]$Path,
-        [string]$Key,
-        [string]$Value
-    )
-
-    $lines = @()
-    if (Test-Path -LiteralPath $Path) {
-        $lines = Get-Content -LiteralPath $Path
-    }
-    $pattern = "^[#\s]*$([Regex]::Escape($Key))="
-    $matched = $false
-    $lines = @($lines | ForEach-Object {
-        if ($_ -match $pattern) {
-            $matched = $true
-            "$Key=$Value"
-        } else {
-            $_
-        }
-    })
-    if (-not $matched) {
-        $lines += "$Key=$Value"
-    }
-    Set-TextFileUtf8NoBom -Path $Path -Value $lines
-}
-
-function Install-Neo4jDesktopApoc {
-    param([string]$RepoRoot)
-
-    $dbmsHome = Get-RunningNeo4jDesktopDbmsHome
-    if (-not $dbmsHome) {
-        Write-Step "APOC auto-install skipped because the reachable DBMS is not a running Neo4j Desktop local DBMS."
-        return $false
-    }
-
-    $plugins = Join-Path $dbmsHome "plugins"
-    $labs = Join-Path $dbmsHome "labs"
-    $conf = Join-Path $dbmsHome "conf"
-    Ensure-Directory -Path $plugins
-    $coreJar = Get-ChildItem -LiteralPath $labs -Filter "apoc-*-core.jar" -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
-    if ($coreJar) {
-        Copy-Item -LiteralPath $coreJar.FullName -Destination (Join-Path $plugins $coreJar.Name) -Force
-        if ($coreJar.Name -match "apoc-(.+)-core\.jar") {
-            $apocVersion = $Matches[1]
-            $extendedJar = Join-Path $plugins ("apoc-extended-{0}.jar" -f $apocVersion)
-            if (-not (Test-Path -LiteralPath $extendedJar)) {
-                Invoke-WebRequest -Uri "https://repo.maven.apache.org/maven2/org/neo4j/procedure/apoc-extended/$apocVersion/apoc-extended-$apocVersion.jar" -OutFile $extendedJar
-            }
-        }
-    }
-
-    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "dbms.security.procedures.allowlist" -Value "apoc.*"
-    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "dbms.security.procedures.unrestricted" -Value "apoc.*"
-    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "server.directories.import" -Value (($RepoRoot -replace "\\", "/"))
-    Set-TextSetting -Path (Join-Path $conf "neo4j.conf") -Key "initial.dbms.default_database" -Value "compose"
-    Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.export.file.enabled" -Value "true"
-    Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.import.file.enabled" -Value "true"
-    Set-TextSetting -Path (Join-Path $conf "apoc.conf") -Key "apoc.import.file.use_neo4j_config" -Value "false"
-
-    $neo4jBat = Join-Path $dbmsHome "bin\neo4j.bat"
-    if (Test-Path -LiteralPath $neo4jBat) {
-        Write-Step "Restarting Neo4j Desktop local compose DBMS to load APOC..."
-        Use-MicrosoftOpenJdk21
-        $escapedHome = [Regex]::Escape($dbmsHome)
-        $processes = Get-CimInstance Win32_Process | Where-Object {
-            $_.Name -match "^java" -and $_.CommandLine -match $escapedHome
-        }
-        foreach ($process in $processes) {
-            Stop-Process -Id $process.ProcessId -Force
-        }
-        for ($i = 0; $i -lt 30 -and (Test-TcpPort -HostName "127.0.0.1" -Port 7687); $i++) {
-            Start-Sleep -Seconds 1
-        }
-        Start-Process -FilePath $neo4jBat -ArgumentList @("console") -WorkingDirectory $dbmsHome -WindowStyle Hidden | Out-Null
-        for ($i = 0; $i -lt 45 -and -not (Test-TcpPort -HostName "127.0.0.1" -Port 7687); $i++) {
-            Start-Sleep -Seconds 2
-        }
-    } else {
-        Write-Step "APOC installed into the compose DBMS. Restart it in Neo4j Desktop to load the program."
-    }
-
-    return $true
-}
-
-function Resolve-NativeNeo4jGraphDatabase {
-    param([string]$RepoRoot)
-
-    $preferred = if ($env:NEO4J_DATABASE) { $env:NEO4J_DATABASE } else { "compose" }
-    if (Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $preferred -Cypher "RETURN 1 AS ok;") {
-        return $preferred
-    }
-    return $preferred
-}
-
-function Get-Neo4jExtraBoltGraphNamesFromEnv {
-    if ([string]::IsNullOrWhiteSpace($env:NEO4J_EXTRA_GRAPH_DATABASES)) { return @() }
-    $env:NEO4J_EXTRA_GRAPH_DATABASES.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' }
-}
-
-function Format-Neo4jDatabaseNameForCypher {
-    param([string]$Name)
-    if ($Name -match '^[a-zA-Z_][a-zA-Z0-9_]*$') { return $Name }
-    return ('`' + ($Name -replace '`', '``') + '`')
-}
-
-function Get-JavaMajorVersion {
-    $java = Get-FirstCommandPath @(
-        "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot\bin\java.exe",
-        "java.exe",
-        "java"
-    )
-    if (-not $java) {
-        return 0
-    }
-    $logRoot = Join-Path (Get-RepoRoot) ".🧬semio\🦑️repo\⚡️cache\neo4j"
-    Ensure-Directory -Path $logRoot
-    $stdout = Join-Path $logRoot "java-version.stdout.log"
-    $stderr = Join-Path $logRoot "java-version.stderr.log"
-    Start-Process -FilePath $java -ArgumentList @("-version") -NoNewWindow -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr | Out-Null
-    $versionText = ((Get-Content -LiteralPath $stdout -ErrorAction SilentlyContinue) + (Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue)) -join "`n"
-    if ($versionText -match 'version\s+"(\d+)') {
-        return [int]$Matches[1]
-    }
-    if ($versionText -match '(\d+)\.\d+\.\d+') {
-        return [int]$Matches[1]
-    }
-    return 0
-}
-
-function Use-MicrosoftOpenJdk21 {
-    $javaHome = "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot"
-    if (Test-Path -LiteralPath (Join-Path $javaHome "bin\java.exe")) {
-        $env:JAVA_HOME = $javaHome
-        $env:Path = (Join-Path $javaHome "bin") + ";" + $env:Path
-    }
-}
-
-function Ensure-NativeNeo4jTools {
-    param([string]$RepoRoot)
-
-    $cacheRoot = Join-Path $RepoRoot ".🧬semio\🦑️repo\⚡️cache\neo4j"
-    $runtimeRoot = Join-Path $cacheRoot ("neo4j-community-{0}" -f $script:Neo4jVersion)
-    $zipPath = Join-Path $cacheRoot ("neo4j-community-{0}-windows.zip" -f $script:Neo4jVersion)
-    Ensure-Directory -Path $cacheRoot
-
-    if (-not (Test-Path -LiteralPath $runtimeRoot)) {
-        $url = "https://dist.neo4j.org/neo4j-community-$($script:Neo4jVersion)-windows.zip"
-        Write-Step "Downloading Neo4j Community $($script:Neo4jVersion) tools for cypher-shell..."
-        Invoke-WebRequest -Uri $url -OutFile $zipPath
-        Write-Step "Extracting Neo4j tools..."
-        Expand-Archive -LiteralPath $zipPath -DestinationPath $cacheRoot -Force
-    }
-
-    $plugins = Join-Path $runtimeRoot "plugins"
-    Ensure-Directory -Path $plugins
-    $apocCore = Join-Path $plugins ("apoc-core-{0}-core.jar" -f $script:ApocVersion)
-    $apocExtended = Join-Path $plugins ("apoc-{0}-extended.jar" -f $script:ApocVersion)
-    if (-not (Test-Path -LiteralPath $apocCore)) {
-        Invoke-WebRequest -Uri "https://repo.maven.apache.org/maven2/org/neo4j/procedure/apoc-core/$($script:ApocVersion)/apoc-core-$($script:ApocVersion)-core.jar" -OutFile $apocCore
-    }
-    if (-not (Test-Path -LiteralPath $apocExtended)) {
-        Invoke-WebRequest -Uri "https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases/download/$($script:ApocVersion)/apoc-$($script:ApocVersion)-extended.jar" -OutFile $apocExtended
-    }
-
-    $conf = Join-Path $runtimeRoot "conf\neo4j.conf"
-    Use-MicrosoftOpenJdk21
-    $dataDir = (Join-Path $runtimeRoot "data") -replace "\\", "/"
-    $logsDir = (Join-Path $runtimeRoot "logs") -replace "\\", "/"
-    $importDir = $RepoRoot -replace "\\", "/"
-    $settings = [ordered]@{
-        "server.default_listen_address" = "127.0.0.1"
-        "server.bolt.listen_address" = ":7687"
-        "server.http.listen_address" = ":7474"
-        "dbms.usage_report.enabled" = "false"
-        "server.directories.data" = $dataDir
-        "server.directories.logs" = $logsDir
-        "server.directories.import" = $importDir
-        "dbms.security.procedures.allowlist" = "apoc.*"
-        "dbms.security.procedures.unrestricted" = "apoc.*"
-    }
-    $lines = @()
-    if (Test-Path -LiteralPath $conf) {
-        $lines = Get-Content -LiteralPath $conf
-    }
-    foreach ($key in $settings.Keys) {
-        $value = $settings[$key]
-        $pattern = "^[#\s]*$([Regex]::Escape($key))="
-        $matched = $false
-        $lines = @($lines | ForEach-Object {
-            if ($_ -match $pattern) {
-                $matched = $true
-                "$key=$value"
-            } else {
-                $_
-            }
-        })
-        if (-not $matched) {
-            $lines += "$key=$value"
-        }
-    }
-    Set-TextFileUtf8NoBom -Path $conf -Value $lines
-
-    $apocConf = Join-Path $runtimeRoot "conf\apoc.conf"
-    Set-TextFileUtf8NoBom -Path $apocConf -Value @(
-        "apoc.export.file.enabled=true",
-        "apoc.import.file.enabled=true",
-        "apoc.import.file.use_neo4j_config=false"
-    )
-
-    return $runtimeRoot
-}
-
-function Ensure-NativeNeo4j {
-    param([string]$RepoRoot)
-
-    $technologies = @("compose", "elements", "coda", "reuse") + @(Get-Neo4jExtraBoltGraphNamesFromEnv)
-    if (Test-TcpPort -HostName "127.0.0.1" -Port 7687) {
-        Write-Step "Neo4j is reachable at bolt://localhost:7687."
-    } else {
-        Write-Step "Neo4j is not reachable. Create and start a native Neo4j Desktop local DBMS named compose on Bolt port 7687, password password, then run this setup again."
-        return
-    }
-
-    Ensure-NativeNeo4jTools -RepoRoot $RepoRoot | Out-Null
-    $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
-    Write-Step "Neo4j graph database for imports: $graphDb"
-
-    $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
-    if (-not $apocReady) {
-        if (Install-Neo4jDesktopApoc -RepoRoot $RepoRoot) {
-            $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
-            $apocReady = Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "SHOW PROCEDURES YIELD name WHERE name IN ['apoc.cypher.runFile', 'apoc.export.cypher.query'] RETURN count(name) AS count;" -RequiredOutputPattern "\b2\b"
-        }
-        if (-not $apocReady) {
-            Write-Step "Neo4j is reachable, but APOC is not ready. In Neo4j Desktop, install/enable APOC for the local compose DBMS and restart it."
-            return
-        }
-    }
-
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE compose IF NOT EXISTS;" | Out-Null
-    foreach ($extraDb in (Get-Neo4jExtraBoltGraphNamesFromEnv)) {
-        $q = Format-Neo4jDatabaseNameForCypher -Name $extraDb
-        Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CREATE DATABASE $q IF NOT EXISTS;" | Out-Null
-    }
-    #region 🔥️Neo4jEnterpriseDropStockDb
-    # Enterprise Desktop: schema often lands in the stock `neo4j` DB. Ensure `compose` is default, then drop `neo4j`.
-    # Community (single user DB): these calls fail harmlessly.
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "START DATABASE compose WAIT;" | Out-Null
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "CALL dbms.setDefaultDatabase('compose');" | Out-Null
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database "system" -Cypher "DROP DATABASE neo4j IF EXISTS CASCADE ALIASES WAIT;" | Out-Null
-    #endregion 🔥️Neo4jEnterpriseDropStockDb
-    $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
-    Write-Step "Neo4j graph database for imports (after optional CREATE DATABASE compose): $graphDb"
-
-    Write-Step "Neo4j: clearing graph in $graphDb, then loading generated .🧬semio/🦑️repo/🛂️manifest/*.cypher (from `bun run generate`) …"
-    Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "MATCH (n) DETACH DELETE n;" | Out-Null
-
-    foreach ($technology in $technologies) {
-        $schemaFile = Join-Path $RepoRoot ".🧬semio\🦑️repo\🛂️manifest\$technology.cypher"
-        if (Test-Path -LiteralPath $schemaFile) {
-            $meaningfulLine = Get-Content -LiteralPath $schemaFile | Where-Object { $_ -notmatch '^\s*(//|:|$)' } | Select-Object -First 1
-            if ($meaningfulLine) {
-                $schemaUri = Get-Neo4jSchemaUri -RepoRoot $RepoRoot -Technology $technology
-                Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "CALL apoc.cypher.runFile('$schemaUri') YIELD row RETURN count(row) AS rows;" | Out-Null
-                Write-Step "Neo4j schema imported into ${graphDb}: $technology."
-            }
-        }
-    }
-    if (Get-Command bun -ErrorAction SilentlyContinue) {
-        $savedDb = $env:NEO4J_DATABASE
-        $env:NEO4J_DATABASE = $graphDb
-        Push-Location $RepoRoot
-        try {
-            & bun "./📜️script.ts" purge neo4j | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                Write-Step "Neo4j legacy-property prune exited with code $LASTEXITCODE (cypher-shell may be missing)."
-            }
-        } finally {
-            Pop-Location
-            if ($null -ne $savedDb) {
-                $env:NEO4J_DATABASE = $savedDb
-            } else {
-                Remove-Item Env:\NEO4J_DATABASE -ErrorAction SilentlyContinue
-            }
-        }
-    }
-}
 #endregion 🔧️Helpers
-
-if ($sessionStartEffective) {
-    $SkipMachineInstall = $true
-    $SkipGlobalCliInstall = $true
-    $SkipEditorInstall = $true
-    $SkipPlaywrightInstall = $true
-    $SkipRepoBootstrap = $true
-}
 
 $repoRoot = Get-RepoRoot
 Set-Location $repoRoot
@@ -763,7 +359,6 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "OpenJS.NodeJS.LTS" -Label "Node.js LTS"
     Sync-WingetPackage -Id "Kitware.CMake" -Label "CMake"
     Sync-WingetPackage -Id "Ninja-build.Ninja" -Label "Ninja"
-    Sync-WingetPackage -Id "Microsoft.OpenJDK.21" -Label "Microsoft OpenJDK 21"
     Sync-WingetPackage -Id "GoLang.Go" -Label "Go"
     Sync-WingetPackage -Id "Python.Python.3.14" -Label "Python 3.14"
     Sync-WingetPackage -Id "astral-sh.uv" -Label "uv"
@@ -782,9 +377,7 @@ if (-not $SkipMachineInstall) {
     Sync-WingetPackage -Id "f3d-app.f3d" -Label "F3D"
     Sync-WingetPackage -Id "Microsoft.VisualStudioCode" -Label "VS Code"
     Sync-WingetPackage -Id "Microsoft.VisualStudioCode.CLI" -Label "VS Code CLI"
-    Sync-WingetPackage -Id "Neo4j.Neo4jDesktop" -Label "Neo4j Desktop"
     Set-UserPathPriority -PreferredEntries @(
-        "C:\Program Files\Microsoft\jdk-21.0.11.10-hotspot\bin",
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314\Scripts"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python314"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Launcher"),
@@ -826,20 +419,7 @@ Set-UserEnvironmentVariable -Name "SEMIO_GITKRAKEN_AUTO_START" -Value "false"
 Set-UserEnvironmentVariable -Name "SEMIO_F3D_AUTO_START" -Value "true"
 Set-UserEnvironmentVariable -Name "SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL" -Value ""
 Set-UserEnvironmentVariable -Name "EDITOR" -Value "code --wait"
-Set-UserEnvironmentVariable -Name "NEO4J_URI" -Value "bolt://localhost:7687"
-Set-UserEnvironmentVariable -Name "NEO4J_USERNAME" -Value "neo4j"
-Set-UserEnvironmentVariable -Name "NEO4J_PASSWORD" -Value "password"
-    Set-UserEnvironmentVariable -Name "NEO4J_TELEMETRY" -Value "false"
-    Set-UserEnvironmentVariable -Name "NEO4J_DATABASE" -Value "compose"
 #endregion 🗂️UserState
-
-#region 🗄️Neo4jRuntime
-Ensure-NativeNeo4j -RepoRoot $repoRoot
-if ($sessionStartEffective) {
-    Write-Step "Native Windows IDE session setup complete."
-    exit 0
-}
-#endregion 🗄️Neo4jRuntime
 
 #region 🌐️GlobalCliInstall
 if (-not $SkipGlobalCliInstall) {

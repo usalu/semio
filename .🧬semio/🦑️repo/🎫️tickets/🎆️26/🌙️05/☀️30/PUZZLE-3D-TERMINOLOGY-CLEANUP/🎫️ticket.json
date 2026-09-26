@@ -4,6 +4,6 @@
   "status": "closed",
   "description": "Clean puzzle 3d terminology: object/object kind, vortex/vortex kind, attraction/attraction kind, cable/cable kind only. Remove node, magnet, edge, wire aliases. Get tests and play working.",
   "summary": "Cleaned puzzle 3D terminology: object/vortex/attraction/cable and matching kind catalogs; removed magnet/node/handle/wire/edge aliases; migrated nakagin scene fixture; vitest passes (88 react + 13 play).",
-  "goal": "🎯️puzzle",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningpuzzle🎯runningpuzzle3d",
   "sessions": ["⚪️0fc3a28db9b44741aedbcba55fb0bff7"]
 }

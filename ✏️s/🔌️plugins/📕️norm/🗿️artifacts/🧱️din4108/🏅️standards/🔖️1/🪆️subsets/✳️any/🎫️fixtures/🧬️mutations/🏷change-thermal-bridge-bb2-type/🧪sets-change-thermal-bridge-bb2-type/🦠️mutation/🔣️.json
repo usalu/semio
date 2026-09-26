@@ -1,0 +1,6 @@
+{
+  "ChangeThermalBridgeBb2Type": {
+    "bridge_id": "tb-window-reveal",
+    "new_bb2_type": "categoryB"
+  }
+}

@@ -1,22 +1,3 @@
-# 🧬️ Din4108 mutation schema — artifact-lane fields only.
+# 🧬️ Din4108 mutations aggregate.
 
-type Din4108Mutation {
-  category: String! @state(class: ARTIFACT)
-  layers: [String!]! @state(class: ARTIFACT)
-  climate: String! @state(class: ARTIFACT)
-  airtightnessN50: Float! @state(class: ARTIFACT)
-  psiTimesLSum: Float! @state(class: ARTIFACT)
-  rhInt: Float! @state(class: ARTIFACT)
-  catalogId: String! @state(class: ARTIFACT)
-  materialId: String! @state(class: ARTIFACT)
-  airtightnessClass: String! @state(class: ARTIFACT)
-  tIntC: Float! @state(class: ARTIFACT)
-  solarAbsorptance: Float! @state(class: ARTIFACT)
-  irradianceWM2: Float! @state(class: ARTIFACT)
-  moistureMuExterior: Float! @state(class: ARTIFACT)
-  moistureMuInterior: Float! @state(class: ARTIFACT)
-  envelopeAreaM2: Float! @state(class: ARTIFACT)
-  bb2DetailsConform: Boolean! @state(class: ARTIFACT)
-  applicationType: String! @state(class: ARTIFACT)
-  declaredApplicationClass: String! @state(class: ARTIFACT)
-}
+union Din4108Mutation = Din4108ChangeClimateZone | Din4108ChangeUsage | Din4108ChangeTIntC | Din4108ChangeRhInt | Din4108ChangeAirtightnessN50 | Din4108ChangeHasMechanicalVentilation | Din4108ChangeBb2DetailsConform | Din4108InsertZone | Din4108RemoveZone | Din4108ChangeZoneFloorArea | Din4108ChangeZoneHeaviness | Din4108ChangeZoneNightVentilation | Din4108InsertZoneWindow | Din4108RemoveZoneWindow | Din4108ChangeZoneWindowArea | Din4108ChangeZoneWindowGValue | Din4108ChangeZoneWindowShadingFc | Din4108InsertElement | Din4108RemoveElement | Din4108ChangeElementArea | Din4108ChangeElementAdjacent | Din4108ChangeElementKind | Din4108InsertLayer | Din4108RemoveLayer | Din4108ReorderLayers | Din4108ChangeLayerThickness | Din4108ChangeLayerLambda | Din4108ChangeLayerMu | Din4108ChangeLayerMaterialId | Din4108InsertThermalBridge | Din4108RemoveThermalBridge | Din4108ChangeThermalBridgePsi | Din4108ChangeThermalBridgeLength

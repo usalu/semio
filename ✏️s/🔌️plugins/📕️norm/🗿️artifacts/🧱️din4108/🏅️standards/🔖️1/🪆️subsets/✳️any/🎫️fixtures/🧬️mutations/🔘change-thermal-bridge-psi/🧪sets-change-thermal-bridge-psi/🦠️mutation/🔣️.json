@@ -1,0 +1,6 @@
+{
+  "ChangeThermalBridgePsi": {
+    "bridge_id": "tb-window-reveal",
+    "new_psi": 0.08
+  }
+}

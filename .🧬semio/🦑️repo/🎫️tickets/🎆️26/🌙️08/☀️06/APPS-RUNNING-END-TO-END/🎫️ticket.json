@@ -4,5 +4,5 @@
   "status": "closed",
   "description": "After the heavy monorepo restructure, get all apps running end to end: fix playground catalog path, electron-forge bun.lock discovery, verify each bun run dev:* boots.",
   "summary": "Restored end-to-end app boots after monorepo restructure. Electron Forge finds electron under bun.lock (existing patch applied). Retargeted package.json build:* scripts from removed @semio-tech/framework-playground-dev to @semio-tech/framework-os-dev. Hardened root DevScript to regenerate the playground catalog when empty. Retargeted stale ⚡️implementations path aliases to Shape-V2 📦️packages glue entries (framework-core, framework-os-core, infinite renderers, host/ui scripts, session/brand imports). Verified: bun run dev:procedural:3d serves HTTP 200; 10 priority playground apps smoke OK; compose-desktop launches Electron. Remaining known gap: @semio-tech/animate-present-core is still missing for mit-bestand presentation.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings"
 }

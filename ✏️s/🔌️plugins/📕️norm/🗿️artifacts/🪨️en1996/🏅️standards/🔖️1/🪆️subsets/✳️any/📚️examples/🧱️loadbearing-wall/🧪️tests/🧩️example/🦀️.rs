@@ -1,22 +1,9 @@
-#[semio_framework_async_macros::async_test]
-async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio");
-    assert!(text.len() > 8);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn inference_determinism_law() {
-    use crate::artifact_schema::inferences::En1996Inference;
-    use crate::En1996Snapshot;
-    use protocol::Inference;
-    let snapshot = En1996Snapshot::default();
-    assert_eq!(En1996Inference::infer(&snapshot), En1996Inference::infer(&snapshot));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn inference_default_law() {
-    use crate::artifact_schema::inferences::En1996Inference;
-    use crate::En1996Snapshot;
-    use protocol::Inference;
-    assert_eq!(En1996Inference::infer(&En1996Snapshot::default()), En1996Inference::default());
+#[test]
+fn compliant_example_dsl_asset_parses_and_passes() {
+    let text = crate::loadbearing_wall::PRIMARY_TEXT;
+    assert!(text.len() > 40, "DSL asset too short");
+    let doc = <crate::En1996Snapshot as store::ArtifactDsl>::parse_dsl(text).expect("parse loadbearing DSL asset");
+    assert_eq!(doc.walls[0].id, "wall-north");
+    let report = crate::standards::v1::subsets::any::schema::inferences::evaluate(&doc);
+    assert!(report.complies(), "compliant DSL must Pass: {:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
 }

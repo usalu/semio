@@ -3,7 +3,7 @@
   "emoji": "🖨️",
   "status": "open",
   "description": "Get the 🖨️raster plugin (✏️s/🔌️plugins/🖨️raster) working end to end: the crate builds natively and for wasm32-wasip2, its tests and oracle fixtures pass, the descriptor is regenerated, and `bun run dev:raster` boots with every window rendering non-empty content, examples loading and switchable, and editor actions dispatching at runtime.",
-  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "sessions": [
     "⚪feae8329-6c36-42e3-88bd-6e53d7e1043a",
     "⚪5255b245-8bb3-43e0-b401-962dcc3fea3c"

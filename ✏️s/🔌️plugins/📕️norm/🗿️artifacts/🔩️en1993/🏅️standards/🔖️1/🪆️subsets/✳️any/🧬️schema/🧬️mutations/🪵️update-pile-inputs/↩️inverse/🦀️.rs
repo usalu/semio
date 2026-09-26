@@ -1,10 +1,11 @@
-//! ↩️ `update-pile-inputs` — undo restores BASE's pile inputs.
-
+//! ↩️ upsert inverse — restore prior entity or remove inserted one.
 use super::UpdatePileInputs;
+use crate::mutations::remove_pile;
 use crate::{En1993Mutation, En1993Snapshot};
-
-//#region 🔖️Inverse
-pub fn inverse(_payload: &UpdatePileInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
-    vec![En1993Mutation::UpdatePileInputs(UpdatePileInputs { new_pile_sigma_mpa: base.pile_sigma_mpa, new_pile_k_red: base.pile_k_red, new_pile_n_ed_kn: base.pile_n_ed_kn })]
+pub fn inverse(payload: &UpdatePileInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+    if let Some(prior) = base.piles.iter().find(|x| x.id == payload.pile.id) {
+        vec![En1993Mutation::UpdatePileInputs(UpdatePileInputs { pile: prior.clone() })]
+    } else {
+        vec![En1993Mutation::RemovePile(remove_pile::RemovePile { index: base.piles.len() })]
+    }
 }
-//#endregion 🔖️Inverse

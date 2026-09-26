@@ -1,10 +1,11 @@
-//! ↩️ `update-fatigue-inputs` — undo restores BASE's fatigue inputs.
-
+//! ↩️ upsert inverse — restore prior entity or remove inserted one.
 use super::UpdateFatigueInputs;
+use crate::mutations::remove_fatigue_detail;
 use crate::{En1993Mutation, En1993Snapshot};
-
-//#region 🔖️Inverse
-pub fn inverse(_payload: &UpdateFatigueInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
-    vec![En1993Mutation::UpdateFatigueInputs(UpdateFatigueInputs { new_delta_sigma_mpa: base.delta_sigma_mpa, new_fatigue_category: base.fatigue_category, new_fatigue_method: base.fatigue_method.clone() })]
+pub fn inverse(payload: &UpdateFatigueInputs, base: &En1993Snapshot) -> Vec<En1993Mutation> {
+    if let Some(prior) = base.fatigue_details.iter().find(|x| x.id == payload.fatigue_detail.id) {
+        vec![En1993Mutation::UpdateFatigueInputs(UpdateFatigueInputs { fatigue_detail: prior.clone() })]
+    } else {
+        vec![En1993Mutation::RemoveFatigueDetail(remove_fatigue_detail::RemoveFatigueDetail { index: base.fatigue_details.len() })]
+    }
 }
-//#endregion 🔖️Inverse

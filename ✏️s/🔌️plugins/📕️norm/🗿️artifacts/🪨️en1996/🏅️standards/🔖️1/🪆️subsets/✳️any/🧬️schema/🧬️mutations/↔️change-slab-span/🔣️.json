@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\udcd5\ufe0fnorm/\ud83d\uddff\ufe0fartifacts/\ud83e\udea8\ufe0fen1996/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f1/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations/\u2194\ufe0fchange-slab-span",
+  "semanticKind": "change-slab-span",
+  "displayName": "ChangeSlabSpan",
+  "emoji": "\u2194\ufe0f",
+  "aggregateVariant": "ChangeSlabSpan",
+  "payloadSchema": "\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+  "textOpcode": null,
+  "binaryTag": 76,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

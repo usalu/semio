@@ -1,0 +1,15 @@
+{
+  "title": "Running Print",
+  "description": "The print product runs on its own.",
+  "prompt": "The print product runs on its own.",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "cursor-chat",
+  "llm": "grok-4",
+  "parent": "🎯runningframework🎯runningproducts",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2620"
+  }
+}

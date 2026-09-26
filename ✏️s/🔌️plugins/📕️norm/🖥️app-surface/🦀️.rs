@@ -15,15 +15,19 @@
 /// 🧵️ Retained norm command output with empty application config and draft lanes.
 pub type NormRetainedCommandResult<M> = Result<Emit<M, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraftMutation>, Fault>;
 
-use crate::document::{CheckReport, NormFamily, NormHost};
+use crate::document::{
+    cached_report_for, document_revision_key, invalidate_cached_report_for, store_cached_report_for, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, NormFamily, NormHost, Quantity,
+    QuantityKind, Remedy, RemedyBound,
+};
 use semio_framework::ToolExecutionContract;
-use semio_framework_plugin::plugin_app_close_prelude as ui;
-use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind};
+use semio_framework_ui_contract as ui;
+use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::{
-    tree_item_desc, ui_node_list, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, Fault, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, NoConfig, NoConfigMutation, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, PortMultiplicity, SurfaceKind, TreeWindows, UiAssemblyResult,
-    WindowConfigOwner, WindowKindDefinition, WindowLayout,
-    WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowOptions,
+    tree_group, tree_item_desc, tree_item_with_action, tree_window_section_or_placeholder, ui_node_list, ActionFactory, AppIo, ArtifactKindSpec, ArtifactPresentation, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, BuiltNode, ConfigView, Emit, ExampleSource, Fault, FaultCode, FaultOrigin, Locale,
+    LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, ModeDefinition, NoConfig, NoConfigMutation, OsMediaCapability, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder,
+    PluginAssemblyError, PortMultiplicity, SurfaceKind, Terminology, TreeWindows, Trigger, UiAssemblyResult, UiFixedList, UiMapBuilder, UiText, UiValue, WindowConfigOwner, WindowKindDefinition, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode,
+    WindowLayoutWindowNode, WindowOptions,
 };
 
 /// 🧹️ Installs the exact bounded store owners and disposers shared by every Norm editor.
@@ -154,18 +158,539 @@ pub fn single_window_layout(window_kind_id: &str, title: &str) -> WindowLayout {
     }
 }
 
-/// 📊️ `TableWindowKit` column headers for a norm `CheckReport` — shared by all fifteen viewers'
-/// report windows so the table shape is declared exactly once.
-pub fn report_table_columns() -> Vec<String> {
-    vec!["Clause".into(), "Status".into(), "Utilization".into(), "Message".into()]
+/// 📊️ `TableWindowKit` column headers for a norm `CheckReport` — shared by all fifteen viewers.
+pub fn report_table_columns(locale: Locale) -> Vec<String> {
+    let terminology = Terminology::Native;
+    vec![
+        LocalizedLabel::native("Part", "Teil").resolve(terminology, locale).into(),
+        LocalizedLabel::native("Clause", "Klausel").resolve(terminology, locale).into(),
+        LocalizedLabel::native("Subject", "Gegenstand").resolve(terminology, locale).into(),
+        LocalizedLabel::native("Status", "Status").resolve(terminology, locale).into(),
+        LocalizedLabel::native("Utilization", "Ausnutzung").resolve(terminology, locale).into(),
+        LocalizedLabel::native("Title", "Titel").resolve(terminology, locale).into(),
+        LocalizedLabel::native("Remedy", "Abhilfe").resolve(terminology, locale).into(),
+    ]
 }
 
-/// 📊️ `TableWindowKit` rows for a norm `CheckReport` — one row per computed check, columns matching
-/// `report_table_columns`.
-pub fn report_table_rows(report: &CheckReport) -> Vec<Vec<String>> {
-    report.checks.iter().map(|check| vec![check.clause.to_string(), format!("{:?}", check.status), format!("{:.2}", check.utilization), check.message.clone()]).collect()
+/// 📊️ `TableWindowKit` rows for a norm `CheckReport` — columns matching [`report_table_columns`].
+pub fn report_table_rows(report: &CheckReport, locale: Locale) -> Vec<Vec<String>> {
+    let protocol_locale = protocol_locale(locale);
+    report
+        .checks
+        .iter()
+        .map(|check| {
+            let remedy = check
+                .remedies
+                .first()
+                .map(|remedy| remedy.action.resolve(&protocol_locale).to_string())
+                .unwrap_or_default();
+            vec![
+                check.part.clone(),
+                check.clause.to_string(),
+                check.subject.label.resolve(&protocol_locale).to_string(),
+                status_label(check.status, locale),
+                format!("{:.2}", check.utilization),
+                check.title.resolve(&protocol_locale).to_string(),
+                remedy,
+            ]
+        })
+        .collect()
 }
 //#endregion 🔖️ViewerManifest
+
+//#region 🔖️LocaleChrome
+/// 🗣️ Maps the shell [`Locale`] onto the protocol axis [`LocalizedCopy`] resolves against.
+pub fn protocol_locale(locale: Locale) -> protocol::Locale {
+    match locale {
+        Locale::En => protocol::Locale::En,
+        Locale::De => protocol::Locale::De,
+    }
+}
+
+/// 🏷️ Localized chrome string from a fixed en/de pair.
+fn chrome(en: &str, de: &str, locale: Locale) -> String {
+    LocalizedLabel::native(en, de).resolve(Terminology::Native, locale).to_string()
+}
+
+/// 🏷️ `MediaPortSpec.label` is a plain `String` — pack both native terms from a [`LocalizedLabel`].
+fn media_port_label(label: LocalizedLabel) -> String {
+    format!(
+        "{} / {}",
+        label.resolve(Terminology::Native, Locale::En),
+        label.resolve(Terminology::Native, Locale::De),
+    )
+}
+
+/// ✅️ Localized status chip text.
+pub fn status_label(status: CheckStatus, locale: Locale) -> String {
+    match status {
+        CheckStatus::Pass => chrome("Pass", "Bestanden", locale),
+        CheckStatus::Warning => chrome("Warning", "Warnung", locale),
+        CheckStatus::Fail => chrome("Fail", "Nicht bestanden", locale),
+        CheckStatus::NotApplicable => chrome("Not applicable", "Nicht anwendbar", locale),
+    }
+}
+
+/// 📐️ Formats a SI [`Quantity`] with a natural display unit for the kind.
+pub fn format_quantity(quantity: &Quantity) -> String {
+    match quantity.kind {
+        QuantityKind::Force => format!("{:.3} kN", quantity.value / 1_000.0),
+        QuantityKind::Stress | QuantityKind::Pressure => format!("{:.3} MPa", quantity.value / 1_000_000.0),
+        QuantityKind::Length => {
+            if quantity.value.abs() > 0.0 && quantity.value.abs() < 1.0 {
+                format!("{:.1} mm", quantity.value * 1_000.0)
+            } else {
+                format!("{:.3} m", quantity.value)
+            }
+        }
+        QuantityKind::Area => format!("{:.3} m²", quantity.value),
+        QuantityKind::Volume => format!("{:.3} m³", quantity.value),
+        QuantityKind::HeatTransferCoefficient => format!("{:.3} W/(m²K)", quantity.value),
+        QuantityKind::ThermalResistance => format!("{:.3} m²K/W", quantity.value),
+        QuantityKind::ThermalConductivity => format!("{:.3} W/(m·K)", quantity.value),
+        QuantityKind::Energy => format!("{:.3} kWh/(m²a)", quantity.value / 3_600_000.0),
+        QuantityKind::Power => format!("{:.3} W", quantity.value),
+        QuantityKind::Moment => format!("{:.3} kN·m", quantity.value / 1_000.0),
+        QuantityKind::Mass => format!("{:.3} kg", quantity.value),
+        QuantityKind::Time => format!("{:.3} s", quantity.value),
+        QuantityKind::Temperature => format!("{:.2} K", quantity.value),
+        QuantityKind::Acceleration => format!("{:.3} m/s²", quantity.value),
+        QuantityKind::AirPermeability => format!("{:.3} m³/(m²h)", quantity.value),
+        QuantityKind::VentilationRate => format!("{:.3} 1/h", quantity.value),
+        QuantityKind::Dimensionless => format!("{:.3}", quantity.value),
+    }
+}
+
+/// 🆔️ Editor controller id for a norm variant (`s.norm.<variant>@1/*#editor`).
+pub fn editor_controller_id(variant: &str) -> String {
+    format!("s.norm.{variant}@1/*#editor")
+}
+//#endregion 🔖️LocaleChrome
+
+//#region 🔖️ValuePath
+/// 🧭 One segment of a camelCase snapshot path (`field`, `[index]`, or `[id=…]`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PathSegment {
+    Field(String),
+    Index(usize),
+    Id(String),
+}
+
+/// 🧭 Validates a list-element id for `[id=…]` selectors (must not contain `]`, `.`, or `=`).
+pub fn validate_path_element_id(id: &str) -> Result<(), String> {
+    if id.is_empty() {
+        return Err("list element id must not be empty".into());
+    }
+    if id.contains([']', '.', '=']) {
+        return Err(format!("list element id '{id}' must not contain ']', '.', or '='"));
+    }
+    Ok(())
+}
+
+/// 🧭 Parses `elements[2].layers[id=L1].thicknessM` into segments (`[index]` or `[id=…]`).
+pub fn parse_path(path: &str) -> Result<Vec<PathSegment>, String> {
+    let mut segments = Vec::new();
+    let mut rest = path.trim();
+    if rest.is_empty() {
+        return Err("path must not be empty".into());
+    }
+    while !rest.is_empty() {
+        if rest.starts_with('.') {
+            rest = &rest[1..];
+        }
+        if rest.starts_with('[') {
+            let close = rest.find(']').ok_or_else(|| format!("unclosed selector in path '{path}'"))?;
+            let inner = &rest[1..close];
+            if let Some(id) = inner.strip_prefix("id=") {
+                validate_path_element_id(id).map_err(|error| format!("{error} in path '{path}'"))?;
+                segments.push(PathSegment::Id(id.to_string()));
+            } else if inner.chars().all(|c| c.is_ascii_digit()) && !inner.is_empty() {
+                let index: usize = inner.parse().map_err(|_| format!("invalid index in path '{path}'"))?;
+                segments.push(PathSegment::Index(index));
+            } else {
+                return Err(format!("malformed list selector '[{inner}]' in path '{path}' (expected [index] or [id=…])"));
+            }
+            rest = &rest[close + 1..];
+            continue;
+        }
+        let end = rest.find(['.', '[']).unwrap_or(rest.len());
+        let field = &rest[..end];
+        if field.is_empty() {
+            return Err(format!("empty field in path '{path}'"));
+        }
+        segments.push(PathSegment::Field(field.to_string()));
+        rest = &rest[end..];
+    }
+    Ok(segments)
+}
+
+fn object_id_field(value: &dsl::DslValue) -> Option<&str> {
+    let dsl::DslValue::Object(entries) = value else {
+        return None;
+    };
+    entries.iter().find(|(key, _)| key == "id").and_then(|(_, value)| match value {
+        dsl::DslValue::String(raw) => Some(raw.as_str()),
+        _ => None,
+    })
+}
+
+/// 🧭 Formats a list-element path segment: `[id=…]` when the element has a string `id`, else `[index]`.
+pub fn list_element_selector(item: &dsl::DslValue, index: usize) -> String {
+    match object_id_field(item).and_then(|id| validate_path_element_id(id).ok().map(|_| id)) {
+        Some(id) => format!("[id={id}]"),
+        None => format!("[{index}]"),
+    }
+}
+
+/// 🧭 Joins an array path with a list-element selector.
+pub fn list_element_path(array_path: &str, item: &dsl::DslValue, index: usize) -> String {
+    format!("{array_path}{}", list_element_selector(item, index))
+}
+
+fn resolve_list_index(items: &[dsl::DslValue], segment: &PathSegment, path_hint: &str) -> Result<usize, String> {
+    match segment {
+        PathSegment::Index(index) => {
+            if *index >= items.len() {
+                return Err(format!("index {index} out of range in path '{path_hint}'"));
+            }
+            Ok(*index)
+        }
+        PathSegment::Id(id) => {
+            let mut found = None;
+            for (index, item) in items.iter().enumerate() {
+                if object_id_field(item) == Some(id.as_str()) {
+                    if found.is_some() {
+                        return Err(format!("duplicate list element id '{id}' in path '{path_hint}'"));
+                    }
+                    found = Some(index);
+                }
+            }
+            found.ok_or_else(|| format!("unknown list element id '{id}' in path '{path_hint}'"))
+        }
+        PathSegment::Field(name) => Err(format!("expected list selector before continuing past field '{name}' in path '{path_hint}'")),
+    }
+}
+
+fn value_at_mut<'a>(root: &'a mut dsl::DslValue, segments: &[PathSegment], path_hint: &str) -> Result<&'a mut dsl::DslValue, String> {
+    let mut cursor = root;
+    for segment in segments {
+        match segment {
+            PathSegment::Field(name) => {
+                let dsl::DslValue::Object(entries) = cursor else {
+                    return Err(format!("expected object before field '{name}' in path '{path_hint}'"));
+                };
+                let Some(index) = entries.iter().position(|(key, _)| key == name) else {
+                    return Err(format!("missing field '{name}' in path '{path_hint}'"));
+                };
+                cursor = &mut entries[index].1;
+            }
+            PathSegment::Index(_) | PathSegment::Id(_) => {
+                let dsl::DslValue::Array(items) = cursor else {
+                    return Err(format!("expected array before list selector in path '{path_hint}'"));
+                };
+                let index = resolve_list_index(items, segment, path_hint)?;
+                cursor = &mut items[index];
+            }
+        }
+    }
+    Ok(cursor)
+}
+
+fn value_at<'a>(root: &'a dsl::DslValue, segments: &[PathSegment], path_hint: &str) -> Result<&'a dsl::DslValue, String> {
+    let mut cursor = root;
+    for segment in segments {
+        match segment {
+            PathSegment::Field(name) => {
+                let dsl::DslValue::Object(entries) = cursor else {
+                    return Err(format!("expected object before field '{name}' in path '{path_hint}'"));
+                };
+                let Some((_, value)) = entries.iter().find(|(key, _)| key == name) else {
+                    return Err(format!("missing field '{name}' in path '{path_hint}'"));
+                };
+                cursor = value;
+            }
+            PathSegment::Index(_) | PathSegment::Id(_) => {
+                let dsl::DslValue::Array(items) = cursor else {
+                    return Err(format!("expected array before list selector in path '{path_hint}'"));
+                };
+                let index = resolve_list_index(items, segment, path_hint)?;
+                cursor = &items[index];
+            }
+        }
+    }
+    Ok(cursor)
+}
+
+/// 🔎 Reads the value at `path` (supports `[index]` and `[id=…]`).
+pub fn get_value_at_path<'a>(root: &'a dsl::DslValue, path: &str) -> Result<&'a dsl::DslValue, String> {
+    let segments = parse_path(path)?;
+    value_at(root, &segments, path)
+}
+
+/// ✏️ Sets the value at `path` inside a camelCase document value tree.
+pub fn set_value_at_path(root: &mut dsl::DslValue, path: &str, value: dsl::DslValue) -> Result<(), String> {
+    let segments = parse_path(path)?;
+    *value_at_mut(root, &segments, path)? = value;
+    Ok(())
+}
+
+/// ➕ Inserts `value` (or null) into the array at `path` at `index` (append when index ≥ len).
+///
+/// `path` must address the array itself (not a list element selector).
+pub fn insert_value_at_path(root: &mut dsl::DslValue, path: &str, index: usize, value: Option<dsl::DslValue>) -> Result<(), String> {
+    let segments = parse_path(path)?;
+    if matches!(segments.last(), Some(PathSegment::Index(_) | PathSegment::Id(_))) {
+        return Err(format!("insertItem path '{path}' must address an array, not a list element"));
+    }
+    let slot = value_at_mut(root, &segments, path)?;
+    let dsl::DslValue::Array(items) = slot else {
+        return Err(format!("insertItem path '{path}' must address an array"));
+    };
+    let insert_at = index.min(items.len());
+    items.insert(insert_at, value.unwrap_or(dsl::DslValue::Null));
+    Ok(())
+}
+
+/// ➖ Removes a list element.
+///
+/// - `path` ends with `[index]` / `[id=…]` → remove that element (the `index` arg is ignored).
+/// - `path` addresses an array → remove at `index`.
+pub fn remove_value_at_path(root: &mut dsl::DslValue, path: &str, index: usize) -> Result<(), String> {
+    let segments = parse_path(path)?;
+    if let Some(PathSegment::Index(_) | PathSegment::Id(_)) = segments.last() {
+        let (parent, last) = segments.split_at(segments.len() - 1);
+        let slot = if parent.is_empty() {
+            root
+        } else {
+            value_at_mut(root, parent, path)?
+        };
+        let dsl::DslValue::Array(items) = slot else {
+            return Err(format!("removeItem path '{path}' must address a list element"));
+        };
+        let remove_at = resolve_list_index(items, &last[0], path)?;
+        items.remove(remove_at);
+        return Ok(());
+    }
+    let slot = value_at_mut(root, &segments, path)?;
+    let dsl::DslValue::Array(items) = slot else {
+        return Err(format!("removeItem path '{path}' must address an array"));
+    };
+    if index >= items.len() {
+        return Err(format!("removeItem index {index} out of range for '{path}'"));
+    }
+    items.remove(index);
+    Ok(())
+}
+
+/// 🏷️ One enum/select option — wire `value` plus localized display labels families MUST supply.
+#[derive(Clone, Copy, Debug)]
+pub struct NormFieldChoice {
+    pub value: &'static str,
+    pub label_en: &'static str,
+    pub label_de: &'static str,
+}
+
+/// 🏷️ Optional per-path field metadata families may supply for the structured inputs editor.
+#[derive(Clone, Copy, Debug)]
+pub struct NormFieldMeta {
+    pub label_en: &'static str,
+    pub label_de: &'static str,
+    pub unit: Option<&'static str>,
+    pub choices: Option<&'static [NormFieldChoice]>,
+}
+
+/// 🏷️ Lookup hook consumed by [`resolve_field_meta`] (families usually wrap [`lookup_norm_field_meta`]).
+pub type NormFieldMetaFn = fn(&str) -> Option<NormFieldMeta>;
+
+/// 🏷️ Empty metadata table hook — wire `Some(empty_field_meta)` until a family fills its table.
+pub fn empty_field_meta(_path: &str) -> Option<NormFieldMeta> {
+    None
+}
+
+/// 🧩 Shared adapter for family metadata tables.
+///
+/// # Table format
+///
+/// Each entry is `(key, NormFieldMeta)` where `key` is a camelCase value-tree path template:
+/// - Exact keys: `annex`, `site.seismicZone`
+/// - List wildcards: replace every `[index]` with `[]`, e.g. `buildings[].storeys[].massKg`
+/// - Nested list keys may nest wildcards: `footings[].loadCases[].verticalPermanent`
+///
+/// `NormFieldMeta.choices` is a slice of [`NormFieldChoice`]: wire `value` plus `label_en`/`label_de`.
+/// Families MUST supply localized choice labels — raw codes (or humanized codes) as the select label
+/// alone are not acceptable.
+///
+/// Lookup order for a concrete path such as `buildings[0].storeys[id=S2].massKg`:
+/// 1. Exact key match on the concrete path
+/// 2. Exact key match on the `[]`-normalized template (`[index]` and `[id=…]` both become `[]`)
+/// 3. Longest prefix at a `.` segment boundary (trying template form, then concrete), so a table
+///    entry `buildings[].storeys[]` still labels `buildings[0].storeys[id=S2].massKg` when the leaf
+///    key is absent
+pub fn lookup_norm_field_meta(table: &[(&str, NormFieldMeta)], path: &str) -> Option<NormFieldMeta> {
+    if let Some((_, meta)) = table.iter().find(|(key, _)| *key == path) {
+        return Some(*meta);
+    }
+    let templated = index_wildcards(path);
+    if let Some((_, meta)) = table.iter().find(|(key, _)| *key == templated.as_str()) {
+        return Some(*meta);
+    }
+    longest_prefix_meta(table, &templated).or_else(|| longest_prefix_meta(table, path))
+}
+
+fn index_wildcards(path: &str) -> String {
+    let mut out = String::with_capacity(path.len());
+    let mut chars = path.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '[' {
+            out.push_str("[]");
+            for x in chars.by_ref() {
+                if x == ']' {
+                    break;
+                }
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+fn longest_prefix_meta(table: &[(&str, NormFieldMeta)], path: &str) -> Option<NormFieldMeta> {
+    let mut best: Option<(usize, NormFieldMeta)> = None;
+    for (key, meta) in table {
+        if path == *key || path.starts_with(&format!("{key}.")) || path.starts_with(&format!("{key}[")) {
+            let rank = key.len();
+            if best.as_ref().map(|(len, _)| rank > *len).unwrap_or(true) {
+                best = Some((rank, *meta));
+            }
+        }
+    }
+    best.map(|(_, meta)| meta)
+}
+
+/// 🏷️ Resolves metadata for `path` via the family hook, applying `[]` normalization + longest prefix.
+pub fn resolve_field_meta(path: &str, meta_fn: Option<NormFieldMetaFn>) -> Option<NormFieldMeta> {
+    let lookup = meta_fn?;
+    if let Some(meta) = lookup(path) {
+        return Some(meta);
+    }
+    let templated = index_wildcards(path);
+    if templated != path {
+        if let Some(meta) = lookup(&templated) {
+            return Some(meta);
+        }
+    }
+    let mut prefix = templated.as_str();
+    while let Some(cut) = prefix.rfind(['.', '[']) {
+        prefix = &prefix[..cut];
+        if prefix.is_empty() {
+            break;
+        }
+        if let Some(meta) = lookup(prefix) {
+            return Some(meta);
+        }
+    }
+    None
+}
+
+fn field_label(path: &str, meta: Option<NormFieldMeta>, locale: Locale) -> String {
+    if let Some(meta) = meta {
+        return chrome(meta.label_en, meta.label_de, locale);
+    }
+    path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']').to_string()
+}
+
+/// 📤️ Projects `document` to its camelCase value tree, runs `edit`, decodes back, and commits `from_snapshot` as one undoable edit.
+///
+/// 📐️ **SI convention:** snapshot scalar quantity fields MUST store SI (m, N, Pa, …). `applyRemedy` writes
+/// `Remedy.required.value` (already SI) straight into `remedy.target.path`. Family agents must not store mm/kN/MPa
+/// in snapshot fields — display units are UI-only via [`format_quantity`] / [`NormFieldMeta::unit`].
+pub fn commit_value_tree_edit<D, M, F>(document: &D, description: &str, edit: impl FnOnce(&mut dsl::DslValue) -> Result<(), String>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+where
+    D: Clone + dsl::ToValue + dsl::FromValue,
+    F: FnOnce(&D, &D) -> Vec<M>,
+{
+    let mut tree = dsl::ToValue::to_value(document);
+    edit(&mut tree).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))?;
+    let target = dsl::FromValue::from_value(tree).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-decode"), error.to_string()))?;
+    commit_snapshot_fields(from_snapshot(document, &target), description)
+}
+
+/// ✏️ Generic `setField` — `{path, value}` over the document value tree.
+pub fn handle_set_field<D, M, F>(document: &D, path: &str, value: dsl::DslValue, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+where
+    D: Clone + dsl::ToValue + dsl::FromValue,
+    F: FnOnce(&D, &D) -> Vec<M>,
+{
+    let path = path.to_string();
+    commit_value_tree_edit(document, "setField", move |tree| set_value_at_path(tree, &path, value), from_snapshot)
+}
+
+/// ➕ Generic `insertItem` — `{path, index, value?}`.
+pub fn handle_insert_item<D, M, F>(document: &D, path: &str, index: usize, value: Option<dsl::DslValue>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+where
+    D: Clone + dsl::ToValue + dsl::FromValue,
+    F: FnOnce(&D, &D) -> Vec<M>,
+{
+    let path = path.to_string();
+    commit_value_tree_edit(document, "insertItem", move |tree| insert_value_at_path(tree, &path, index, value), from_snapshot)
+}
+
+/// ➖ Generic `removeItem` — `{path, index}`.
+pub fn handle_remove_item<D, M, F>(document: &D, path: &str, index: usize, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+where
+    D: Clone + dsl::ToValue + dsl::FromValue,
+    F: FnOnce(&D, &D) -> Vec<M>,
+{
+    let path = path.to_string();
+    commit_value_tree_edit(document, "removeItem", move |tree| remove_value_at_path(tree, &path, index), from_snapshot)
+}
+
+/// 🩹 Resolves a remedy on `report` into a path + value write (numeric SI or OneOf option string).
+pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usize, option_index: usize, tree: &mut dsl::DslValue) -> Result<(), Fault> {
+    let check = report.checks.iter().find(|check| check.id == check_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-check"), format!("check '{check_id}' not in report")))?;
+    let remedy = check.remedies.get(remedy_index).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-remedy"), format!("remedy {remedy_index} missing on '{check_id}'")))?;
+    if !remedy.applicable {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-not-applicable"), format!("remedy {remedy_index} on '{check_id}' is not applicable")));
+    }
+    let path = remedy.target.path.clone();
+    if path.is_empty() {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-empty-path"), format!("remedy {remedy_index} on '{check_id}' has empty target path")));
+    }
+    let value = match remedy.bound {
+        RemedyBound::OneOf => {
+            let option = remedy
+                .options
+                .get(option_index)
+                .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-option"), format!("option {option_index} missing on OneOf remedy {remedy_index} for '{check_id}'")))?;
+            dsl::DslValue::String(option.clone())
+        }
+        _ => dsl::DslValue::float(remedy.required.value),
+    };
+    set_value_at_path(tree, &path, value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))
+}
+
+/// 🩹 Generic `applyRemedy` — re-evaluates, finds `checkId`, writes SI `required` (or OneOf option) into `remedy.target.path`.
+pub fn handle_apply_remedy<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, from_snapshot: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
+where
+    F: NormFamily,
+    F::Document: Clone + dsl::ToValue + dsl::FromValue,
+    Map: FnOnce(&F::Document, &F::Document) -> Vec<F::Mutation>,
+{
+    handle_apply_remedy_with_option::<F, Map>(document, check_id, remedy_index, 0, from_snapshot)
+}
+
+/// 🩹 `applyRemedy` with an explicit OneOf `option_index` (ignored for numeric bounds).
+pub fn handle_apply_remedy_with_option<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, option_index: usize, from_snapshot: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
+where
+    F: NormFamily,
+    F::Document: Clone + dsl::ToValue + dsl::FromValue,
+    Map: FnOnce(&F::Document, &F::Document) -> Vec<F::Mutation>,
+{
+    let report = cached_report_for::<F>(document).unwrap_or_else(|| F::evaluate(document));
+    commit_value_tree_edit(document, "applyRemedy", move |tree| apply_remedy_edit(&report, check_id, remedy_index, option_index, tree).map_err(|fault| format!("{:?}", fault)), from_snapshot)
+}
+//#endregion 🔖️ValuePath
 
 //#region 🔖️Render
 fn render_text(value: impl Into<String>) -> UiAssemblyResult<BuiltNode> {
@@ -196,66 +721,609 @@ fn render_text_chunks(value: &str) -> UiAssemblyResult<BuiltNode> {
     ui::column().try_children(children).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm text chunk admission failed"))?.try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "norm text chunk build failed"))
 }
 
-/// 📑️ Renders a whole `CheckReport` as one row per computed check.
-///
-/// 🪟️ The rows are VIRTUALISED, never paged or truncated: the checks are one windowed section that
-/// stamps the report's FULL `total` and materialises only the slice the host asked for, so a norm
-/// run with hundreds of clause checks streams instead of refusing the body with `ui.fixed-capacity`.
-pub fn render_report(report: &CheckReport, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let rows: Vec<(usize, &crate::document::CheckResult)> = report.checks.iter().enumerate().collect();
+fn ui_error(code: &'static str) -> PluginAssemblyError {
+    PluginAssemblyError::new(code, "norm UI admission failed")
+}
+
+fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
+    UiText::try_from_str(value.as_ref()).ok_or_else(|| ui_error("ui.text"))
+}
+
+fn ui_value_text(value: impl AsRef<str>) -> UiAssemblyResult<UiValue> {
+    ui_text(value).map(UiValue::Text)
+}
+
+fn action_args_map(entries: Vec<(&str, UiValue)>) -> UiAssemblyResult<UiValue> {
+    let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_error("ui.value.map"))?;
+    for (key, value) in entries {
+        args.push(key.into(), value).map_err(|_| ui_error("ui.value.map.entry"))?;
+    }
+    Ok(UiValue::Map(args.finish()))
+}
+
+fn norm_action(controller_id: &'static str, action: &str, args: Option<UiValue>) -> UiAssemblyResult<(semio_framework_plugin::ActionId, Option<UiValue>)> {
+    ActionFactory::new(controller_id).action(action, args)
+}
+
+fn bind_change<B: HasBase>(builder: B, controller_id: &'static str, action: &str, args: UiValue) -> UiAssemblyResult<B> {
+    let (action, args) = norm_action(controller_id, action, Some(args))?;
+    match args {
+        Some(args) => builder.try_on_with(Trigger::Change, action, args).map_err(|_| ui_error("ui.control.binding")),
+        None => builder.try_on(Trigger::Change, action).map_err(|_| ui_error("ui.control.binding")),
+    }
+}
+
+fn control_row(row_id: &str, label: &str, control: BuiltNode) -> UiAssemblyResult<BuiltNode> {
+    let row = ui::tree_item(norm_ui_label(label)?).try_id(row_id).map_err(|_| ui_error("ui.node.id"))?;
+    row.try_child(control).map_err(|_| ui_error("ui.node.child"))?.try_build().map_err(|_| ui_error("ui.node.build"))
+}
+
+fn check_row_label(check: &CheckResult, index: usize, locale: Locale) -> String {
+    let protocol_locale = protocol_locale(locale);
+    let subject = check.subject.label.resolve(&protocol_locale);
+    let subject_path = if check.subject.path.is_empty() {
+        subject.to_string()
+    } else {
+        format!("{subject} @ {}", check.subject.path)
+    };
+    format!(
+        "{}. [{}] {} — {} — {} vs {} u={:.2} — {}",
+        index + 1,
+        status_label(check.status, locale),
+        check.title.resolve(&protocol_locale),
+        subject_path,
+        format_quantity(&check.computed),
+        format_quantity(&check.limit),
+        check.utilization,
+        check.clause
+    )
+}
+
+fn report_flat_rows<'a>(report: &'a CheckReport) -> Vec<ReportListRow<'a>> {
+    let mut rows = Vec::new();
+    let mut check_index = 0usize;
+    for (part_index, (part, checks)) in report.by_part().into_iter().enumerate() {
+        let verdict = report.summary.parts.iter().find(|item| item.part == part);
+        rows.push(ReportListRow::Part { part_index, part, verdict });
+        for check in checks {
+            rows.push(ReportListRow::Check { check_index, check });
+            check_index += 1;
+        }
+    }
+    rows
+}
+
+enum ReportListRow<'a> {
+    Part { part_index: usize, part: &'a str, verdict: Option<&'a crate::document::PartVerdict> },
+    Check { check_index: usize, check: &'a CheckResult },
+}
+
+fn part_verdict_label(part: &str, verdict: Option<&crate::document::PartVerdict>, locale: Locale) -> String {
+    let Some(verdict) = verdict else {
+        return part.to_string();
+    };
+    let status = if verdict.complies {
+        chrome("complies", "erfüllt", locale)
+    } else {
+        chrome("does not comply", "nicht erfüllt", locale)
+    };
+    format!(
+        "{part} — {status} (✓{} ⚠{} ✗{} · u={:.2})",
+        verdict.pass, verdict.warning, verdict.fail, verdict.worst_utilization
+    )
+}
+
+fn build_check_tree_item(check: &CheckResult, check_index: usize, locale: Locale, controller_id: Option<&'static str>) -> UiAssemblyResult<BuiltNode> {
+    let protocol_locale = protocol_locale(locale);
+    let label = check_row_label(check, check_index, locale);
+    let id = format!("norm-report-check-{check_index}");
+    let expand = matches!(check.status, CheckStatus::Fail | CheckStatus::Warning);
+    if !expand {
+        return tree_item_desc(id, norm_ui_label(label)?, None);
+    }
+    let mut children = UiFixedList::default();
+    children
+        .try_push(tree_item_desc(
+            format!("{id}.explanation"),
+            norm_ui_label(chrome("Explanation", "Erläuterung", locale))?,
+            Some(check.explanation.resolve(&protocol_locale).to_string()),
+        )?)
+        .map_err(|_| ui_error("ui.fixed-capacity"))?;
+    for (remedy_index, remedy) in check.remedies.iter().enumerate() {
+        let remedy_label = format!("{}: {}", chrome("Remedy", "Abhilfe", locale), remedy.action.resolve(&protocol_locale));
+        if matches!(remedy.bound, RemedyBound::OneOf) {
+            if remedy.options.is_empty() {
+                children
+                    .try_push(tree_item_desc(format!("{id}.remedy-{remedy_index}"), norm_ui_label(remedy_label)?, Some(chrome("No options", "Keine Optionen", locale)))?)
+                    .map_err(|_| ui_error("ui.fixed-capacity"))?;
+                continue;
+            }
+            for (option_index, option) in remedy.options.iter().enumerate() {
+                let child = if let Some(controller_id) = controller_id {
+                    let args = action_args_map(vec![("path", ui_value_text(&remedy.target.path)?), ("value", ui_value_text(option)?)])?;
+                    tree_item_with_action(
+                        format!("{id}.remedy-{remedy_index}.option-{option_index}"),
+                        norm_ui_label(format!("{} — {option}", chrome("Choose", "Wählen", locale)))?,
+                        Some(remedy_label.clone()),
+                        norm_action(controller_id, "setField", Some(args))?,
+                    )?
+                } else {
+                    tree_item_desc(format!("{id}.remedy-{remedy_index}.option-{option_index}"), norm_ui_label(format!("{remedy_label}: {option}"))?, None)?
+                };
+                children.try_push(child).map_err(|_| ui_error("ui.fixed-capacity"))?;
+            }
+            continue;
+        }
+        let child = if remedy.applicable {
+            if let Some(controller_id) = controller_id {
+                let args = action_args_map(vec![
+                    ("checkId", ui_value_text(&check.id)?),
+                    ("remedyIndex", UiValue::Number(remedy_index as f64)),
+                ])?;
+                tree_item_with_action(
+                    format!("{id}.remedy-{remedy_index}"),
+                    norm_ui_label(format!("{} — {}", chrome("Apply", "Anwenden", locale), remedy_label))?,
+                    Some(format!("{} → {}", format_quantity(&remedy.current), format_quantity(&remedy.required))),
+                    norm_action(controller_id, "applyRemedy", Some(args))?,
+                )?
+            } else {
+                tree_item_desc(format!("{id}.remedy-{remedy_index}"), norm_ui_label(remedy_label)?, Some(format!("{} → {}", format_quantity(&remedy.current), format_quantity(&remedy.required))))?
+            }
+        } else {
+            tree_item_desc(format!("{id}.remedy-{remedy_index}"), norm_ui_label(remedy_label)?, Some(chrome("Not auto-applicable", "Nicht automatisch anwendbar", locale)))?
+        };
+        children.try_push(child).map_err(|_| ui_error("ui.fixed-capacity"))?;
+    }
+    tree_group(id, norm_ui_label(label)?, true, children)
+}
+
+/// 📑️ Renders a whole `CheckReport` grouped by `part`, virtualised as one flat windowed section.
+pub fn render_report(report: &CheckReport, windows: &TreeWindows<'_>, locale: Locale, controller_id: Option<&'static str>) -> UiAssemblyResult<BuiltNode> {
+    let rows = report_flat_rows(report);
     PanelTreeBuilder::new(NORM_REPORT_TREE_ID)?
         .window_section_or_placeholder(
             windows,
             NORM_REPORT_SECTION_ID,
-            Some(norm_ui_label("Checks")?),
+            Some(norm_ui_label(chrome("Checks", "Nachweise", locale))?),
             true,
             &rows,
-            |(index, check)| tree_item_desc(format!("norm-report-check-{index}"), norm_ui_label(format!("{}. {} — {:?} u={:.2} — {}", index + 1, check.clause, check.status, check.utilization, check.message))?, None),
-            norm_ui_label("No checks computed.")?,
+            |row| match row {
+                ReportListRow::Part { part_index, part, verdict } => {
+                    tree_item_desc(format!("norm-report-part-{part_index}"), norm_ui_label(part_verdict_label(part, *verdict, locale))?, None)
+                }
+                ReportListRow::Check { check_index, check } => build_check_tree_item(check, *check_index, locale, controller_id),
+            },
+            norm_ui_label(chrome("No checks computed.", "Keine Nachweise berechnet.", locale))?,
         )?
         .build()
 }
 
-/// 📄️ Renders a document as pretty-printed JSON — the inputs window's surface.
+/// 📜 Arrays and object maps at or above this length rely on host windowing (same path for both).
+pub const NORM_LIST_VIRTUALIZE_THRESHOLD: usize = 64;
+
+/// 🪪 Stable `TreeWindows` node key for a document path (`root` when empty).
+pub fn inputs_section_id(path: &str) -> String {
+    if path.is_empty() {
+        "norm-inputs-root".into()
+    } else {
+        format!("norm-inputs-{path}")
+    }
+}
+
+fn collection_header(label: &str, count: usize) -> String {
+    format!("{label} ({count})")
+}
+
+fn render_object_editor(
+    path: &str,
+    entries: &[(String, dsl::DslValue)],
+    locale: Locale,
+    controller_id: &'static str,
+    meta_fn: Option<NormFieldMetaFn>,
+    windows: &TreeWindows<'_>,
+    depth: usize,
+    label: String,
+) -> UiAssemblyResult<BuiltNode> {
+    let section_id = inputs_section_id(path);
+    let default_open = path.is_empty();
+    let section_label = if path.is_empty() { chrome("Document", "Dokument", locale) } else { label };
+    let pairs: Vec<(&String, &dsl::DslValue)> = entries.iter().map(|(key, child)| (key, child)).collect();
+    tree_window_section_or_placeholder(
+        windows,
+        &section_id,
+        norm_ui_label(collection_header(&section_label, pairs.len()))?,
+        default_open,
+        &pairs,
+        |(key, child)| {
+            let child_path = if path.is_empty() { (*key).clone() } else { format!("{path}.{}", *key) };
+            render_value_editor(&child_path, child, locale, controller_id, meta_fn, windows, depth + 1)
+        },
+        norm_ui_label(chrome("Empty object", "Leeres Objekt", locale))?,
+    )
+}
+
+fn render_array_editor(
+    path: &str,
+    items: &[dsl::DslValue],
+    locale: Locale,
+    controller_id: &'static str,
+    meta_fn: Option<NormFieldMetaFn>,
+    windows: &TreeWindows<'_>,
+    depth: usize,
+    label: String,
+) -> UiAssemblyResult<BuiltNode> {
+    let section_id = inputs_section_id(path);
+    let default_open = false;
+    let indexed: Vec<(usize, &dsl::DslValue)> = items.iter().enumerate().collect();
+    let list = tree_window_section_or_placeholder(
+        windows,
+        &section_id,
+        norm_ui_label(collection_header(&label, indexed.len()))?,
+        default_open,
+        &indexed,
+        |(index, child)| {
+            let child_path = list_element_path(path, child, *index);
+            let mut row_children = UiFixedList::default();
+            row_children
+                .try_push(render_value_editor(&child_path, child, locale, controller_id, meta_fn, windows, depth + 1)?)
+                .map_err(|_| ui_error("ui.fixed-capacity"))?;
+            let remove_args = action_args_map(vec![("path", ui_value_text(&child_path)?), ("index", UiValue::Number(0.0))])?;
+            row_children
+                .try_push(tree_item_with_action(
+                    format!("norm-inputs.{path}.remove-{index}"),
+                    norm_ui_label(chrome("Remove", "Entfernen", locale))?,
+                    None,
+                    norm_action(controller_id, "removeItem", Some(remove_args))?,
+                )?)
+                .map_err(|_| ui_error("ui.fixed-capacity"))?;
+            tree_group(
+                format!("norm-inputs.{path}.row-{index}"),
+                norm_ui_label(list_element_selector(child, *index))?,
+                false,
+                row_children,
+            )
+        },
+        norm_ui_label(chrome("Empty list", "Leere Liste", locale))?,
+    )?;
+    if !windows.is_open(&section_id, default_open) {
+        return Ok(list);
+    }
+    let insert_args = action_args_map(vec![("path", ui_value_text(path)?), ("index", UiValue::Number(items.len() as f64))])?;
+    let add = tree_item_with_action(
+        format!("norm-inputs.{path}.add"),
+        norm_ui_label(chrome("Add item", "Eintrag hinzufügen", locale))?,
+        None,
+        norm_action(controller_id, "insertItem", Some(insert_args))?,
+    )?;
+    let mut children = UiFixedList::default();
+    children.try_push(list).map_err(|_| ui_error("ui.fixed-capacity"))?;
+    children.try_push(add).map_err(|_| ui_error("ui.fixed-capacity"))?;
+    tree_group(format!("norm-inputs.{path}.editor"), norm_ui_label(label)?, true, children)
+}
+
+fn render_value_editor(
+    path: &str,
+    value: &dsl::DslValue,
+    locale: Locale,
+    controller_id: &'static str,
+    meta_fn: Option<NormFieldMetaFn>,
+    windows: &TreeWindows<'_>,
+    depth: usize,
+) -> UiAssemblyResult<BuiltNode> {
+    if depth > 24 {
+        return tree_item_desc(format!("norm-inputs.{path}"), norm_ui_label(path)?, Some("…".into()));
+    }
+    let meta = resolve_field_meta(path, meta_fn);
+    let label = field_label(path, meta, locale);
+    match value {
+        dsl::DslValue::Object(entries) => render_object_editor(path, entries, locale, controller_id, meta_fn, windows, depth, label),
+        dsl::DslValue::Array(items) => render_array_editor(path, items, locale, controller_id, meta_fn, windows, depth, label),
+        dsl::DslValue::Bool(flag) => {
+            let row_id = format!("norm-inputs.{path}");
+            let options: Vec<(String, String)> = vec![("true".into(), chrome("True", "Wahr", locale)), ("false".into(), chrome("False", "Falsch", locale))];
+            let mut control = ui::select(ui_text(if *flag { "true" } else { "false" })?).try_id(format!("{row_id}.select")).map_err(|_| ui_error("ui.node.id"))?;
+            for (option, option_label) in options {
+                control = control.try_item(ui_text(option)?, norm_ui_label(option_label)?).map_err(|_| ui_error("ui.select.item"))?;
+            }
+            let args = action_args_map(vec![("path", ui_value_text(path)?)])?;
+            control_row(&row_id, &label, bind_change(control, controller_id, "setField", args)?.try_build().map_err(|_| ui_error("ui.node.build"))?)
+        }
+        dsl::DslValue::Number(number) => {
+            let row_id = format!("norm-inputs.{path}");
+            let display = if let Some(unit) = meta.and_then(|meta| meta.unit) {
+                format!("{} {unit}", number.as_f64())
+            } else {
+                format!("{}", number.as_f64())
+            };
+            let control = ui::input(InputKind::Number).value(ui_text(display)?).try_id(format!("{row_id}.input")).map_err(|_| ui_error("ui.node.id"))?;
+            let args = action_args_map(vec![("path", ui_value_text(path)?)])?;
+            control_row(&row_id, &label, bind_change(control, controller_id, "setField", args)?.try_build().map_err(|_| ui_error("ui.node.build"))?)
+        }
+        dsl::DslValue::String(raw) => {
+            let row_id = format!("norm-inputs.{path}");
+            if let Some(choices) = meta.and_then(|meta| meta.choices) {
+                let mut control = ui::select(ui_text(raw)?).try_id(format!("{row_id}.select")).map_err(|_| ui_error("ui.node.id"))?;
+                for choice in choices.iter().take(32) {
+                    let choice_label = chrome(choice.label_en, choice.label_de, locale);
+                    control = control.try_item(ui_text(choice.value)?, norm_ui_label(choice_label)?).map_err(|_| ui_error("ui.select.item"))?;
+                }
+                let args = action_args_map(vec![("path", ui_value_text(path)?)])?;
+                control_row(&row_id, &label, bind_change(control, controller_id, "setField", args)?.try_build().map_err(|_| ui_error("ui.node.build"))?)
+            } else {
+                let control = ui::input(InputKind::Text).value(ui_text(raw)?).try_id(format!("{row_id}.input")).map_err(|_| ui_error("ui.node.id"))?;
+                let args = action_args_map(vec![("path", ui_value_text(path)?)])?;
+                control_row(&row_id, &label, bind_change(control, controller_id, "setField", args)?.try_build().map_err(|_| ui_error("ui.node.build"))?)
+            }
+        }
+        dsl::DslValue::Null => tree_item_desc(format!("norm-inputs.{path}"), norm_ui_label(label)?, Some(chrome("empty", "leer", locale))),
+    }
+}
+
+/// 📄️ Structured, schema-driven, localized property editor over the document's camelCase value tree.
+pub fn render_document_editor<D: dsl::ToValue>(
+    document: &D,
+    locale: Locale,
+    controller_id: &'static str,
+    meta_fn: Option<NormFieldMetaFn>,
+    windows: &TreeWindows<'_>,
+) -> UiAssemblyResult<BuiltNode> {
+    let tree = dsl::ToValue::to_value(document);
+    render_value_editor("", &tree, locale, controller_id, meta_fn, windows, 0)
+}
+
+/// 📄️ Legacy pretty JSON — kept for tests that still project raw text chunks.
 pub fn render_document_json<D: dsl::ToValue>(document: &D) -> UiAssemblyResult<BuiltNode> {
     let json = pack::json::to_string_pretty(&pack::json::from_dsl_value(&dsl::ToValue::to_value(document)));
     render_text_chunks(&json)
 }
 
-/// 🧾️ Renders a one-line headline for a family's current session — the document panel's surface.
-pub fn render_summary<F: NormFamily>(host: &NormHost<F>) -> UiAssemblyResult<BuiltNode> {
+/// 🧾️ Localized summary headline from the report rollup.
+pub fn render_summary<F: NormFamily>(host: &NormHost<F>, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let report = host.report();
-    render_text(format!("{} — {} checks, worst u={:.2}, all pass={}", F::family_id().label(), report.checks.len(), report.worst_utilization(), report.all_pass()))
+    let summary = &report.summary;
+    let verdict = if summary.complies {
+        chrome("complies", "erfüllt", locale)
+    } else {
+        chrome("does not comply", "nicht erfüllt", locale)
+    };
+    let parts = summary
+        .parts
+        .iter()
+        .map(|part| {
+            let mark = if part.complies { "✓" } else { "✗" };
+            format!("{mark}{}", part.part)
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
+    render_text(format!(
+        "{} — {} {}: {verdict}: {} {}, {} {}, {} {} · {}={:.2} · {parts}",
+        F::family_id().label(),
+        summary.total,
+        chrome("checks", "Nachweise", locale),
+        summary.fail,
+        chrome("failing", "nicht bestanden", locale),
+        summary.warning,
+        chrome("warnings", "Warnungen", locale),
+        summary.pass,
+        chrome("passing", "bestanden", locale),
+        chrome("worst u", "max. Ausnutzung", locale),
+        summary.worst_utilization
+    ))
 }
 
-/// 📚️ Renders the catalogue panel's placeholder headline for a family.
-pub fn render_catalogue(label: &str) -> UiAssemblyResult<BuiltNode> {
-    render_text(format!("{label} catalogue"))
+/// 📚️ One column in a normative reference [`CatalogueTable`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct CatalogueColumn {
+    pub id: &'static str,
+    pub label_en: &'static str,
+    pub label_de: &'static str,
+    pub unit: Option<&'static str>,
 }
 
-/// 🔍️ Renders the inspection panel — the `selected_check_index` row of the report, falling back to the
-/// first check when the index is unset or out of range (and to a placeholder when there are no checks).
-pub fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>) -> UiAssemblyResult<BuiltNode> {
+/// 📚️ Typed cell value for a catalogue table row.
+#[derive(Clone, Debug, PartialEq)]
+pub enum CatalogueCell {
+    Text(String),
+    Number { value: f64, decimals: u8 },
+    Empty,
+}
+
+impl CatalogueCell {
+    /// 🏷️ Localized display string for a cell (numbers use fixed decimals; empty → em dash).
+    pub fn display(&self, locale: Locale) -> String {
+        match self {
+            Self::Text(text) => text.clone(),
+            Self::Number { value, decimals } => format!("{value:.prec$}", prec = *decimals as usize),
+            Self::Empty => chrome("—", "—", locale),
+        }
+    }
+
+    /// 🔤 Text cell from a static label.
+    pub fn text(value: impl Into<String>) -> Self {
+        Self::Text(value.into())
+    }
+
+    /// 🔢 Number cell with fixed decimal places.
+    pub fn number(value: f64, decimals: u8) -> Self {
+        Self::Number { value, decimals }
+    }
+}
+
+/// 📚️ One data row in a normative reference table.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CatalogueRow {
+    pub id: String,
+    pub cells: Vec<CatalogueCell>,
+}
+
+/// 📚️ Schema-first normative reference table shown beside examples in the catalogue panel.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CatalogueTable {
+    pub id: &'static str,
+    pub title_en: &'static str,
+    pub title_de: &'static str,
+    pub clause: ClauseId,
+    pub columns: Vec<CatalogueColumn>,
+    pub rows: Vec<CatalogueRow>,
+}
+
+fn catalogue_column_header(column: &CatalogueColumn, locale: Locale) -> String {
+    let label = chrome(column.label_en, column.label_de, locale);
+    match column.unit {
+        Some(unit) => format!("{label} [{unit}]"),
+        None => label,
+    }
+}
+
+fn catalogue_row_description(table: &CatalogueTable, row: &CatalogueRow, locale: Locale) -> String {
+    table
+        .columns
+        .iter()
+        .enumerate()
+        .map(|(index, column)| {
+            let cell = row.cells.get(index).unwrap_or(&CatalogueCell::Empty);
+            format!("{}={}", catalogue_column_header(column, locale), cell.display(locale))
+        })
+        .collect::<Vec<_>>()
+        .join(" · ")
+}
+
+fn render_catalogue_examples(examples: &[ExampleSource], locale: Locale, controller_id: &'static str) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let mut items = UiFixedList::default();
+    if examples.is_empty() {
+        items
+            .try_push(tree_item_desc("norm-catalogue.empty", norm_ui_label(chrome("Examples", "Beispiele", locale))?, Some(chrome("No examples", "Keine Beispiele", locale)))?)
+            .map_err(|_| ui_error("ui.fixed-capacity"))?;
+    } else {
+        for example in examples {
+            let args = action_args_map(vec![("exampleId", ui_value_text(example.id())?)])?;
+            items
+                .try_push(tree_item_with_action(
+                    format!("norm-catalogue.{}", example.id()),
+                    norm_ui_label(example.label().resolve(Terminology::Native, locale))?,
+                    None,
+                    norm_action(controller_id, "setActiveExample", Some(args))?,
+                )?)
+                .map_err(|_| ui_error("ui.fixed-capacity"))?;
+        }
+    }
+    Ok(items)
+}
+
+/// 📚️ Catalogue panel: example picker plus optional normative reference tables (windowed).
+///
+/// ```ignore
+/// render_catalogue(&examples, &tables, locale, CONTROLLER_ID, &TreeWindows::for_body(view, BODY_CATALOGUE))
+/// ```
+pub fn render_catalogue(
+    examples: &[ExampleSource],
+    tables: &[CatalogueTable],
+    locale: Locale,
+    controller_id: &'static str,
+    windows: &TreeWindows<'_>,
+) -> UiAssemblyResult<BuiltNode> {
+    let example_items = render_catalogue_examples(examples, locale, controller_id)?;
+    let mut builder = PanelTreeBuilder::new("norm-catalogue")?.section(
+        "norm-catalogue.examples",
+        Some(norm_ui_label(chrome("Examples", "Beispiele", locale))?),
+        true,
+        example_items,
+    )?;
+    for table in tables {
+        let section_id = format!("norm-catalogue.table-{}", table.id);
+        let title = chrome(table.title_en, table.title_de, locale);
+        let header = format!("{title} · {} · ({})", table.clause, table.rows.len());
+        let column_band = table.columns.iter().map(|column| catalogue_column_header(column, locale)).collect::<Vec<_>>().join(" | ");
+        let rows: Vec<&CatalogueRow> = table.rows.iter().collect();
+        builder = builder.window_section_or_placeholder(
+            windows,
+            &section_id,
+            Some(norm_ui_label(header)?),
+            false,
+            &rows,
+            |row| {
+                tree_item_desc(
+                    format!("norm-catalogue.table-{}.{}", table.id, row.id),
+                    norm_ui_label(catalogue_row_description(table, row, locale))?,
+                    Some(column_band.clone()),
+                )
+            },
+            norm_ui_label(chrome("Empty table", "Leere Tabelle", locale))?,
+        )?;
+    }
+    builder.build()
+}
+
+/// 🔍️ Full check card for the inspection panel.
+pub fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>, locale: Locale, controller_id: Option<&'static str>) -> UiAssemblyResult<BuiltNode> {
     let checks = &report.checks;
     let index = selected_check_index.map(|value| value as usize).filter(|index| *index < checks.len()).unwrap_or(0);
     let Some(check) = checks.get(index) else {
-        let items = ui_node_list([tree_item_desc("norm-inspection.empty", norm_ui_label("Check")?, Some("No checks".into()))])?;
-        return PanelTreeBuilder::new("norm-inspection")?.section("norm-inspection.summary", Some(norm_ui_label("Inspection")?), true, items)?.build();
+        let items = ui_node_list([tree_item_desc("norm-inspection.empty", norm_ui_label(chrome("Check", "Nachweis", locale))?, Some(chrome("No checks", "Keine Nachweise", locale)))])?;
+        return PanelTreeBuilder::new("norm-inspection")?.section("norm-inspection.summary", Some(norm_ui_label(chrome("Inspection", "Inspektion", locale))?), true, items)?.build();
     };
-    let items = ui_node_list([
-        tree_item_desc("norm-inspection.check.clause", norm_ui_label("Clause")?, Some(check.clause.to_string())),
-        tree_item_desc("norm-inspection.check.status", norm_ui_label("Status")?, Some(format!("{:?}", check.status))),
-        tree_item_desc("norm-inspection.check.utilization", norm_ui_label("Utilization")?, Some(format!("{:.2}", check.utilization))),
-        tree_item_desc("norm-inspection.check.message", norm_ui_label("Message")?, Some(check.message.clone())),
-    ])?;
+    let protocol_locale = protocol_locale(locale);
+    let mut rows = Vec::new();
+    rows.push(tree_item_desc("norm-inspection.check.id", norm_ui_label(chrome("Id", "Kennung", locale))?, Some(check.id.clone()))?);
+    rows.push(tree_item_desc("norm-inspection.check.part", norm_ui_label(chrome("Part", "Teil", locale))?, Some(check.part.clone()))?);
+    rows.push(tree_item_desc("norm-inspection.check.clause", norm_ui_label(chrome("Clause", "Klausel", locale))?, Some(check.clause.to_string()))?);
+    rows.push(tree_item_desc(
+        "norm-inspection.check.subject",
+        norm_ui_label(chrome("Subject", "Gegenstand", locale))?,
+        Some(check.subject.label.resolve(&protocol_locale).to_string()),
+    )?);
+    if !check.subject.path.is_empty() {
+        rows.push(tree_item_desc(
+            "norm-inspection.check.subject-path",
+            norm_ui_label(chrome("Subject path", "Gegenstandspfad", locale))?,
+            Some(check.subject.path.clone()),
+        )?);
+    }
+    rows.push(tree_item_desc("norm-inspection.check.status", norm_ui_label(chrome("Status", "Status", locale))?, Some(status_label(check.status, locale)))?);
+    rows.push(tree_item_desc("norm-inspection.check.title", norm_ui_label(chrome("Title", "Titel", locale))?, Some(check.title.resolve(&protocol_locale).to_string()))?);
+    rows.push(tree_item_desc(
+        "norm-inspection.check.explanation",
+        norm_ui_label(chrome("Explanation", "Erläuterung", locale))?,
+        Some(check.explanation.resolve(&protocol_locale).to_string()),
+    )?);
+    rows.push(tree_item_desc("norm-inspection.check.computed", norm_ui_label(chrome("Computed", "Berechnet", locale))?, Some(format_quantity(&check.computed)))?);
+    rows.push(tree_item_desc("norm-inspection.check.limit", norm_ui_label(chrome("Limit", "Grenzwert", locale))?, Some(format_quantity(&check.limit)))?);
+    rows.push(tree_item_desc("norm-inspection.check.utilization", norm_ui_label(chrome("Utilization", "Ausnutzung", locale))?, Some(format!("{:.2}", check.utilization)))?);
+    rows.push(tree_item_desc("norm-inspection.check.annex", norm_ui_label(chrome("Annex", "Anhang", locale))?, Some(check.annex.label().into()))?);
+    for (remedy_index, remedy) in check.remedies.iter().enumerate() {
+        let detail = format!(
+            "{} · {} → {} · {}",
+            remedy.action.resolve(&protocol_locale),
+            format_quantity(&remedy.current),
+            format_quantity(&remedy.required),
+            remedy.target.path
+        );
+        let row = if remedy.applicable {
+            if let Some(controller_id) = controller_id {
+                let args = action_args_map(vec![("checkId", ui_value_text(&check.id)?), ("remedyIndex", UiValue::Number(remedy_index as f64))])?;
+                tree_item_with_action(
+                    format!("norm-inspection.check.remedy-{remedy_index}"),
+                    norm_ui_label(format!("{} {}", chrome("Apply", "Anwenden", locale), remedy_index + 1))?,
+                    Some(detail),
+                    norm_action(controller_id, "applyRemedy", Some(args))?,
+                )?
+            } else {
+                tree_item_desc(format!("norm-inspection.check.remedy-{remedy_index}"), norm_ui_label(chrome("Remedy", "Abhilfe", locale))?, Some(detail))?
+            }
+        } else {
+            tree_item_desc(format!("norm-inspection.check.remedy-{remedy_index}"), norm_ui_label(chrome("Remedy", "Abhilfe", locale))?, Some(detail))?
+        };
+        rows.push(row);
+    }
+    let items = ui_node_list(rows.into_iter().map(Ok))?;
     PanelTreeBuilder::new("norm-inspection")?
-        .section("norm-inspection.check", Some(norm_ui_label(format!("Check {}", index + 1))?), true, items)?
+        .section("norm-inspection.check", Some(norm_ui_label(format!("{} {}", chrome("Check", "Nachweis", locale), index + 1))?), true, items)?
         .build()
 }
 
 /// ❓️ The unknown-body-key fallback every norm app's `render` ends with.
-pub fn render_unknown_body(body_key: &str) -> UiAssemblyResult<BuiltNode> {
-    render_text(format!("Unknown body: {body_key}"))
+pub fn render_unknown_body(body_key: &str, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+    render_text(format!("{}: {body_key}", chrome("Unknown body", "Unbekannter Inhalt", locale)))
 }
 //#endregion 🔖️Render
 
@@ -331,7 +1399,7 @@ pub fn norm_io(variant: &str, artifact_schema: &str) -> AppIo {
         ports: vec![
             MediaPortSpec {
                 id: "model:in".into(),
-                label: "Model".into(),
+                label: media_port_label(LocalizedLabel::native("Model", "Modell")),
                 direction: MediaPortDirection::In,
                 media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
                 kind_id: None,
@@ -340,7 +1408,7 @@ pub fn norm_io(variant: &str, artifact_schema: &str) -> AppIo {
             },
             MediaPortSpec {
                 id: "report:out".into(),
-                label: "Report".into(),
+                label: media_port_label(LocalizedLabel::native("Report", "Bericht")),
                 direction: MediaPortDirection::Out,
                 media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
                 kind_id: Some(artifact_kind_id.clone()),
@@ -365,8 +1433,12 @@ where
     F::Document: store::ArtifactPack,
 {
     if port == "report:out" {
-        let host = NormHost::<F>::from_artifact(document.clone());
-        let json = pack::json::to_json_string(host.report());
+        let report = cached_report_for::<F>(document).unwrap_or_else(|| {
+            let report = F::evaluate(document);
+            store_cached_report_for::<F>(document, report.clone());
+            report
+        });
+        let json = pack::json::to_json_string(&report);
         return Ok(Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: artifact_kind_id(variant), json } });
     }
     if port != "artifact:out" {
@@ -430,8 +1502,82 @@ pub fn selected_check_index_arg(args: Option<&dsl::DslValue>) -> Option<u32> {
     args.and_then(|value| value.get("index")).and_then(dsl::DslValue::as_u64).map(|value| value as u32)
 }
 
-/// 🌉️ Installs the `{action, args}` → typed-`Command` bridge every norm editor needs, for the four
-/// verbs all fifteen declare (`setSnapshot`/`evaluate`/`setSelectedCheckIndex`/`setActiveExample`).
+/// 🎯️ Path argument used by `setField` / `insertItem` / `removeItem`.
+pub fn path_arg(args: Option<&dsl::DslValue>) -> String {
+    args.and_then(|value| value.get("path"))
+        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+        .unwrap_or_default()
+}
+
+/// 🎯️ Index argument used by `insertItem` / `removeItem` / `applyRemedy.remedyIndex`.
+pub fn index_arg(args: Option<&dsl::DslValue>, key: &str) -> usize {
+    args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_u64).map(|value| value as usize).unwrap_or(0)
+}
+
+/// 🎯️ Optional value argument — host control merges under `value`; absent ⇒ JSON null.
+pub fn value_arg_json(args: Option<&dsl::DslValue>) -> String {
+    match args.and_then(|value| value.get("value")) {
+        Some(value) => dsl::json::to_json_string(value),
+        None => "null".into(),
+    }
+}
+
+/// 🎯️ `applyRemedy.checkId` (also accepts `check_id`).
+pub fn check_id_arg(args: Option<&dsl::DslValue>) -> String {
+    args.and_then(|value| value.get("checkId").or_else(|| value.get("check_id")))
+        .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+        .unwrap_or_default()
+}
+
+fn dsl_value_from_json(json: &str) -> Result<dsl::DslValue, String> {
+    pack::json::from_json_str::<dsl::DslValue>(json).map_err(|error| error.to_string())
+}
+
+/// ✏️ Shared `setField` handler body used by every family's command leaf.
+pub fn dispatch_set_field<D, M, F>(document: &D, path: &str, value_json: &str, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+where
+    D: Clone + dsl::ToValue + dsl::FromValue,
+    F: FnOnce(&D, &D) -> Vec<M>,
+{
+    let value = dsl_value_from_json(value_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.set-field-value"), error))?;
+    handle_set_field(document, path, value, from_snapshot)
+}
+
+/// ➕ Shared `insertItem` handler body.
+pub fn dispatch_insert_item<D, M, F>(document: &D, path: &str, index: usize, value_json: Option<&str>, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+where
+    D: Clone + dsl::ToValue + dsl::FromValue,
+    F: FnOnce(&D, &D) -> Vec<M>,
+{
+    let value = match value_json {
+        Some(json) if json != "null" => Some(dsl_value_from_json(json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.insert-item-value"), error))?),
+        _ => None,
+    };
+    handle_insert_item(document, path, index, value, from_snapshot)
+}
+
+/// ➖ Shared `removeItem` handler body.
+pub fn dispatch_remove_item<D, M, F>(document: &D, path: &str, index: usize, from_snapshot: F) -> Result<Emit<M, NoConfigMutation>, Fault>
+where
+    D: Clone + dsl::ToValue + dsl::FromValue,
+    F: FnOnce(&D, &D) -> Vec<M>,
+{
+    handle_remove_item(document, path, index, from_snapshot)
+}
+
+/// 🩹 Shared `applyRemedy` handler body.
+pub fn dispatch_apply_remedy<Fam, Map>(document: &Fam::Document, check_id: &str, remedy_index: usize, from_snapshot: Map) -> Result<Emit<Fam::Mutation, NoConfigMutation>, Fault>
+where
+    Fam: NormFamily,
+    Fam::Document: Clone + dsl::ToValue + dsl::FromValue,
+    Map: FnOnce(&Fam::Document, &Fam::Document) -> Vec<Fam::Mutation>,
+{
+    handle_apply_remedy::<Fam, Map>(document, check_id, remedy_index, from_snapshot)
+}
+
+
+/// 🌉️ Installs the `{action, args}` → typed-`Command` bridge every norm editor needs, for the eight
+/// verbs all fifteen declare (`setSnapshot`/`evaluate`/`setSelectedCheckIndex`/`setActiveExample`/`setField`/`insertItem`/`removeItem`/`applyRemedy`).
 ///
 /// 🩹️ `ArtifactEditor::command_from_action`'s default refuses EVERY id — `app.command.unsupported:
 /// action '…' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand)`
@@ -471,6 +1617,26 @@ macro_rules! norm_command_from_action {
                         .unwrap_or_default();
                     Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
                 }
+                "setField" => Ok($command::SetField(set_field::SetField {
+                    path: $crate::app_surface::path_arg(args),
+                    value_json: $crate::app_surface::value_arg_json(args),
+                })),
+                "insertItem" => Ok($command::InsertItem(insert_item::InsertItem {
+                    path: $crate::app_surface::path_arg(args),
+                    index: $crate::app_surface::index_arg(args, "index") as u32,
+                    value_json: {
+                        let raw = $crate::app_surface::value_arg_json(args);
+                        if raw == "null" { None } else { Some(raw) }
+                    },
+                })),
+                "removeItem" => Ok($command::RemoveItem(remove_item::RemoveItem {
+                    path: $crate::app_surface::path_arg(args),
+                    index: $crate::app_surface::index_arg(args, "index") as u32,
+                })),
+                "applyRemedy" => Ok($command::ApplyRemedy(apply_remedy::ApplyRemedy {
+                    check_id: $crate::app_surface::check_id_arg(args),
+                    remedy_index: $crate::app_surface::index_arg(args, "remedyIndex") as u32,
+                })),
                 "setSnapshot" => {
                     let json = args
                         .and_then(|value| value.get("snapshot"))
@@ -482,7 +1648,7 @@ macro_rules! norm_command_from_action {
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,
                     semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
-                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample)"),
+                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample/setField/insertItem/removeItem/applyRemedy)"),
                 )),
             }
         }
@@ -502,6 +1668,26 @@ macro_rules! norm_command_from_action {
                         .unwrap_or_default();
                     Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
                 }
+                "setField" => Ok($command::SetField(set_field::SetField {
+                    path: $crate::app_surface::path_arg(args),
+                    value_json: $crate::app_surface::value_arg_json(args),
+                })),
+                "insertItem" => Ok($command::InsertItem(insert_item::InsertItem {
+                    path: $crate::app_surface::path_arg(args),
+                    index: $crate::app_surface::index_arg(args, "index") as u32,
+                    value_json: {
+                        let raw = $crate::app_surface::value_arg_json(args);
+                        if raw == "null" { None } else { Some(raw) }
+                    },
+                })),
+                "removeItem" => Ok($command::RemoveItem(remove_item::RemoveItem {
+                    path: $crate::app_surface::path_arg(args),
+                    index: $crate::app_surface::index_arg(args, "index") as u32,
+                })),
+                "applyRemedy" => Ok($command::ApplyRemedy(apply_remedy::ApplyRemedy {
+                    check_id: $crate::app_surface::check_id_arg(args),
+                    remedy_index: $crate::app_surface::index_arg(args, "remedyIndex") as u32,
+                })),
                 "setSnapshot" => {
                     let text = args
                         .and_then(|value| value.get("snapshot"))
@@ -513,7 +1699,7 @@ macro_rules! norm_command_from_action {
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,
                     semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
-                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample)"),
+                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample/setField/insertItem/removeItem/applyRemedy)"),
                 )),
             }
         }
@@ -533,15 +1719,15 @@ pub fn snapshot<'a, D>(doc: &'a ArtifactView<'_, D>) -> &'a D {
 /// 🧾️ Every norm tool id, in `app_commands!` row order. All fifteen apps declare exactly this set, so
 /// the list, [`NORM_PUBLICATION_CONTRACTS`], every factory key set and every `bounded_first_step_tool_proofs!`
 /// block are driven from this one constant (including `setActiveExample`).
-pub const NORM_RETAINED_TOOL_IDS: &[&str] = &["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"];
+pub const NORM_RETAINED_TOOL_IDS: &[&str] = &["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"];
 /// 🧬️ The payload schema id every norm retained command job is admitted under.
 pub const NORM_RETAINED_PAYLOAD_SCHEMA: &str = "norm.tool-command.v1";
 /// 🎒️ Wire ceiling for one norm tool dispatch: the largest payload is `setSnapshot`'s whole compliance
 /// document, a few dozen scalar quantities plus an ordered layer list — kilobytes, never megabytes.
-pub const NORM_RETAINED_RAW_BYTES: usize = 8_192;
+pub const NORM_RETAINED_RAW_BYTES: usize = 524_288;
 /// 🎒️ Real bound for one Artifact-lane edit: a single `change-<field>`/`insert-layer`/`remove-layer`
 /// leaf, the only artifact mutations any norm command emits.
-pub const NORM_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
+pub const NORM_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 2_097_152;
 /// 🚦️ Per-tool publication lanes, read straight off the three command bodies: `set-snapshot` commits
 /// artifact mutations, `evaluate` emits nothing at all (the report is derived on every read), and
 /// `selected-check` writes persisted-local state through the exact Results-window config lane.
@@ -550,6 +1736,10 @@ pub const NORM_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "evaluate", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setSelectedCheckIndex", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setField", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "insertItem", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeItem", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "applyRemedy", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
 /// 🛣️ Stable language-neutral identifier for one live publication lane.
@@ -570,7 +1760,7 @@ pub const fn publication_lane_id(lane: ArtifactToolPublicationLane) -> &'static 
 
 /// ⏱️ The one bounded-first-step contract all forty-five norm tool identities share.
 pub fn norm_bounded_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(NORM_RETAINED_RAW_BYTES, 32, 32, 16_384, 7_500)
+    ToolExecutionContract::bounded_first_step(NORM_RETAINED_RAW_BYTES, 64, 64, 65_536, 7_999)
 }
 
 /// 🧵️ The per-app half of the shared factory: an editor states only how its own aggregated command enum
@@ -578,12 +1768,140 @@ pub fn norm_bounded_contract() -> ToolExecutionContract {
 /// below. `dispatch_retained` MUST route into the app's `🎮️commands/*` bodies, which stay the sole
 /// authority for what a norm command does.
 pub trait NormRetainedEditor: semio_framework_plugin::ArtifactEditor<Config = NoConfig, ConfigMutation = NoConfigMutation, DraftMutation = semio_framework_plugin::NoDraftMutation> {
+    type Family: NormFamily<Document = Self::Snapshot, Mutation = Self::Mutation>;
     type ResultsWindowConfigOwner: WindowConfigOwner<State = crate::results_window_config::NormResultsWindowConfig, Mutation = crate::results_window_config::NormResultsWindowConfigMutation>;
 
     fn selected_check_window_mutation(command: &Self::Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation>;
 
     fn dispatch_retained(command: &Self::Command, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> NormRetainedCommandResult<Self::Mutation>;
 }
+
+/// 🧮️ Cooperative evaluate-job state (progress phases + cancel + checkpoint bytes).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct NormEvaluateWorkState {
+    pub phase: u8,
+    pub cancelled: bool,
+}
+
+impl NormEvaluateWorkState {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.is_empty() {
+            return Err(Fault::from("norm-evaluate-checkpoint-capacity"));
+        }
+        target[0] = self.phase;
+        Ok(1)
+    }
+
+    pub fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        self.phase = checkpoint.first().copied().unwrap_or(0);
+        self.cancelled = false;
+        Ok(())
+    }
+
+    pub fn begin_close(&mut self) {
+        self.cancelled = true;
+    }
+
+    pub fn emit_progress_stage(&mut self) -> Option<&'static str> {
+        match self.phase {
+            0 => {
+                self.phase = 1;
+                Some("norm-evaluate-prepare")
+            }
+            1 => {
+                self.phase = 2;
+                Some("norm-evaluate-run")
+            }
+            _ => None,
+        }
+    }
+
+    pub fn ready_to_evaluate(&self) -> bool {
+        self.phase >= 2 && !self.cancelled
+    }
+}
+
+/// 🧮️ Multi-step retained `evaluate` work: progress events, cooperative cancel, checkpoint/restore, revision-keyed report cache.
+pub struct NormEvaluateCommandWork<A: NormRetainedEditor> {
+    tool_id: &'static str,
+    state: NormEvaluateWorkState,
+    _owner: std::marker::PhantomData<fn() -> A>,
+}
+
+impl<A: NormRetainedEditor> NormEvaluateCommandWork<A> {
+    pub fn new(tool_id: &'static str) -> Self {
+        Self { tool_id, state: NormEvaluateWorkState::new(), _owner: std::marker::PhantomData }
+    }
+}
+
+impl<A: NormRetainedEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<A>> for NormEvaluateCommandWork<A> {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        _command: &A::Command,
+        _snapshot: &A::Snapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<A>>>,
+    ) -> Option<usize> {
+        Some(3)
+    }
+
+    fn step(
+        &mut self,
+        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<A>>,
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<A>>, Fault> {
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.state.cancelled {
+            return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
+        }
+        if let Some(stage) = self.state.emit_progress_stage() {
+            let preview: &[u8] = match stage {
+                "norm-evaluate-prepare" => br#"{"en":"Preparing evaluation","de":"Auswertung wird vorbereitet"}"#.as_slice(),
+                _ => br#"{"en":"Evaluating checks","de":"Nachweise werden ausgewertet"}"#.as_slice(),
+            };
+            return Ok(ArtifactCommandWorkStep::Progress { stage, preview });
+        }
+        invalidate_cached_report_for::<A::Family>(input.snapshot);
+        let report = <A::Family as NormFamily>::evaluate(input.snapshot);
+        store_cached_report_for::<A::Family>(input.snapshot, report);
+        let _ = document_revision_key(input.snapshot);
+        let emit = norm_retained_reduce::<A>(
+            input.command,
+            input.snapshot,
+            input.config,
+            input.history,
+            input.interaction,
+            input.hover,
+            input.context,
+            input.operation,
+        )?;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        self.state.checkpoint(target)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        self.state.restore(checkpoint)
+    }
+
+    fn begin_close(&mut self) {
+        self.state.begin_close();
+    }
+
+    fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+        InteractiveJobCloseStep::Complete
+    }
+}
+
 
 /// 🎯️ Routes ordinary and retained commands through the same exact Results-window address.
 pub fn dispatch_norm_command<A: NormRetainedEditor>(
@@ -680,10 +1998,15 @@ impl<A: NormRetainedEditor> semio_framework::ToolJobFactory for NormBoundedComma
         input: semio_framework::action_bus::RetainedToolWireInput,
         checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
     ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > NORM_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((semio_framework::ToolJobFactoryError::new("norm retained command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        if input.declared_bytes() > NORM_RETAINED_RAW_BYTES
+            || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES)
+        {
+            return Err((semio_framework::ToolJobFactoryError::new("norm retained command rejects oversized wire or checkpoint"), input, checkpoint));
         }
-        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input))
+        match checkpoint {
+            Some(checkpoint) => Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint)),
+            None => Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input)),
+        }
     }
 }
 
@@ -784,7 +2107,12 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
     if tool_id != request.tool_id {
         return Err(Fault::from("norm-command-tool-mismatch"));
     }
-    let work = Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, norm_retained_reduce::<A>, norm_bounded_extent::<A>));
+    let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<A>>> = if tool_id == "evaluate" {
+        Box::new(NormEvaluateCommandWork::<A>::new(tool_id))
+    } else {
+        Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, norm_retained_reduce::<A>, norm_bounded_extent::<A>))
+    };
+    let maximum_work_items = if tool_id == "evaluate" { 3 } else { 1 };
     let operation = semio_framework_plugin::AppOperationContext {
         app_instance_id: request.app_instance_id,
         parent_document_id: request.parent_document_id.clone(),
@@ -806,7 +2134,7 @@ pub fn build_norm_tool_job<A: NormRetainedEditor>(request: semio_framework_plugi
         },
         A::command_id,
         NORM_RETAINED_RAW_BYTES,
-        1,
+        maximum_work_items,
         work,
     )?;
     Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))

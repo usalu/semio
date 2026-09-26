@@ -1,4 +1,4 @@
-//! 🗺️ `change-annex` — sets the En 1994 national annex choice (EN vs. DE-NA) scalar.
+//! 🌍️ `change-annex` mutation leaf.
 
 use crate::document::AnnexChoice;
 use crate::{En1994Mutation, En1994Snapshot};
@@ -21,7 +21,7 @@ impl protocol::MutationKind<En1994Snapshot, En1994Mutation> for ChangeAnnex {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change annex to {:?}", self.new_annex), &format!("Anhang auf {:?} ändern", self.new_annex))
+        protocol::LocalizedLabel::native("change-annex", "change-annex")
     }
 }
 //#endregion 🔖️Payload

@@ -97,6 +97,10 @@ path = "../../🦀️.rs"
 name = "surface_render"
 path = "../../🖥️app-surface/🧪️tests/🖥️app-surface/🦀️.rs"
 
+[[test]]
+name = "compliance_gate"
+path = "../../🧪️tests/🚦️compliance-gate/🦀️.rs"
+
 [features]
 default = []
 cross-fem = ["semio-s-artifact-norm-en1992/cross-fem", "semio-s-artifact-norm-en1993/cross-fem"]
@@ -123,6 +127,7 @@ semio-s-artifact-norm-vdi3805 = { workspace = true }
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
 semio-s-artifact-norm-contract = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

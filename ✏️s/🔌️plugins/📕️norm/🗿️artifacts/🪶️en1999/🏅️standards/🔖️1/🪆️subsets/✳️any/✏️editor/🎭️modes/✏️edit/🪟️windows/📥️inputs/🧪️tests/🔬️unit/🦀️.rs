@@ -8,8 +8,13 @@ async fn definition_declares_this_windows_body_key() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn renders_the_document_as_json() {
+async fn renders_the_structured_document_editor() {
     let mut app = context::app_with_registry().await;
-    assert!(context::render(&mut app, BODY_INPUTS).await.contains(':'), "the inputs body renders the document json");
+    let body = context::render(&mut app, BODY_INPUTS).await;
+    assert!(!body.contains("Unknown body"), "inputs body must resolve");
+    assert!(
+        body.contains("National annex") || body.contains("Nationaler Anhang") || body.contains("norm-inputs"),
+        "inputs must render the structured editor, not a bare JSON dump: {body}"
+    );
     context::close(&mut app);
 }

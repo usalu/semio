@@ -1,5 +1,4 @@
-//! 🎯 `change-consequence-class` — sets the EN 1990 document's consequence class (CC1/CC2/CC3),
-//! which drives the target reliability index used by `check_reliability_index`.
+//! `change-consequence-class` mutation for EN 1990.
 
 use crate::{En1990Mutation, En1990Snapshot};
 
@@ -12,7 +11,12 @@ pub struct ChangeConsequenceClass {
 }
 
 impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeConsequenceClass {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "consequence-class", kind: "change-consequence-class", record: "ChangedConsequenceClass" };
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "consequence-class",
+        kind: "change-consequence-class",
+        record: "ChangedConsequenceClass",
+    };
 
     fn diff(&self, base: &En1990Snapshot) -> protocol::MutationOutcome<<En1990Mutation as protocol::Mutation<En1990Snapshot>>::Diff> {
         super::diff::diff(self, base)
@@ -21,7 +25,7 @@ impl protocol::MutationKind<En1990Snapshot, En1990Mutation> for ChangeConsequenc
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Change consequence class to CC{}", self.new_consequence_class), &format!("Schadensfolgeklasse auf CC{} ändern", self.new_consequence_class))
+        protocol::LocalizedLabel::native("Change consequence-class", "Ändern: consequence-class")
     }
 }
 //#endregion 🔖️Payload

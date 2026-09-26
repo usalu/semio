@@ -1,7 +1,7 @@
 //! 📥️ VDI 3805 play app — the inputs window: the raw compliance document, rendered as JSON.
 
 use crate::Vdi3805Snapshot;
-use semio_framework_plugin::{LocalizedLabel, WindowKindDefinition};
+use semio_framework_plugin::{LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_INPUTS: &str = "norm-vdi3805-inputs";
@@ -16,8 +16,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &Vdi3805Snapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_document_json(document)
+pub fn render(document: &Vdi3805Snapshot, locale: semio_framework_plugin::Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    crate::app_surface::render_document_editor(document, locale, controller_id, Some(crate::editor::field_meta::vdi3805_field_meta), windows)
 }
 //#endregion 🔖️Render
 

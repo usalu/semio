@@ -1,450 +1,966 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.norm.en1993.snapshot",
   "title": "En1993Snapshot",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "annex",
-    "nEdKn",
-    "mEdKnm",
-    "vEdKn",
-    "aMm2",
-    "aVMm2",
-    "wPlMm3",
-    "fYMpa",
-    "fUMpa",
-    "chi",
-    "aNetMm2",
-    "tensionNEdKn",
-    "fireThicknessMm",
-    "fireRating",
-    "fireMassivity",
-    "fireMu0",
-    "fireDesignTemperatureC",
-    "cfBBarMm",
-    "cfTMm",
-    "cfKSigma",
-    "cfPsi",
-    "cfNEdKn",
-    "cfGrossResistanceKn",
-    "stainlessMEdKnm",
-    "stainlessWPlMm3",
-    "stainlessFYMpa",
-    "platedLambdaP",
-    "platedSigmaEdMpa",
-    "siloTMm",
-    "siloRMm",
-    "shellSigmaXEdMpa",
-    "siloK",
-    "siloGammaKnM3",
-    "siloDepthM",
-    "boltFEdKn",
-    "boltNBolts",
-    "boltASMm2",
-    "boltE1Mm",
-    "boltE2Mm",
-    "boltD0Mm",
-    "boltDMm",
-    "boltTMm",
-    "boltFUMpa",
-    "boltFUbMpa",
-    "weldAMm",
-    "weldLMm",
-    "weldFUMpa",
-    "weldSteelGrade",
-    "weldFEdKn",
-    "deltaSigmaMpa",
-    "fatigueCategory",
-    "fatigueMethod",
-    "t10SteelSubgrade",
-    "t10ActualThicknessMm",
-    "t10TEdC",
-    "tensionComponentFUkKn",
-    "tensionComponentFKKn",
-    "tensionComponentNEdKn",
-    "hssWElMm3",
-    "hssFYMpa",
-    "hssSectionClass",
-    "hssMEdKnm",
-    "bridgeLambda",
-    "bridgePhi2",
-    "bridgeDeltaSigmaPMpa",
-    "towerWindFactor",
-    "towerNEdKn",
-    "pileSigmaMpa",
-    "pileKRed",
-    "pileNEdKn",
-    "craneFZEdKn",
-    "craneWheelContactLengthMm",
-    "craneDispersionMm",
-    "craneTWMm"
+    "materials",
+    "sections",
+    "members",
+    "loadCases",
+    "memberActions",
+    "joints",
+    "fatigueDetails",
+    "fireExposures",
+    "coldFormedMembers",
+    "platedPanels",
+    "siloShells",
+    "tensionComponents",
+    "bridgeFatigue",
+    "towerLegs",
+    "piles",
+    "craneRunways"
   ],
   "properties": {
     "annex": {
       "type": "string",
+      "enum": [
+        "en",
+        "de"
+      ],
       "x-semio-state": "artifact"
     },
-    "nEdKn": {
-      "type": "number",
-      "format": "double",
+    "materials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SteelMaterial"
+      },
       "x-semio-state": "artifact"
     },
-    "mEdKnm": {
-      "type": "number",
-      "format": "double",
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SteelSection"
+      },
       "x-semio-state": "artifact"
     },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
+    "members": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SteelMember"
+      },
       "x-semio-state": "artifact"
     },
-    "aMm2": {
-      "type": "number",
-      "format": "double",
+    "loadCases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/LoadCase"
+      },
       "x-semio-state": "artifact"
-    },
-    "aVMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "wPlMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fYMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fUMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "chi": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "aNetMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tensionNEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fireThicknessMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fireRating": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "fireMassivity": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fireMu0": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fireDesignTemperatureC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "cfBBarMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "cfTMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "cfKSigma": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "cfPsi": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "cfNEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "cfGrossResistanceKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "stainlessMEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "stainlessWPlMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "stainlessFYMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "platedLambdaP": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "platedSigmaEdMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloTMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloRMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "shellSigmaXEdMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloK": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloGammaKnM3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "siloDepthM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltFEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltNBolts": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
-    },
-    "boltASMm2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltE1Mm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltE2Mm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltD0Mm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltDMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltTMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltFUMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "boltFUbMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "weldAMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "weldLMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "weldFUMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "weldSteelGrade": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "weldFEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "deltaSigmaMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "fatigueCategory": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
-    },
-    "fatigueMethod": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "t10SteelSubgrade": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "t10ActualThicknessMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "t10TEdC": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tensionComponentFUkKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tensionComponentFKKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "tensionComponentNEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "hssWElMm3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "hssFYMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "hssSectionClass": {
-      "type": "integer",
-      "format": "uint32",
-      "x-semio-state": "artifact"
-    },
-    "hssMEdKnm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "bridgeLambda": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "bridgePhi2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "bridgeDeltaSigmaPMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerWindFactor": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "towerNEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "pileSigmaMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "pileKRed": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "pileNEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "craneFZEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "craneWheelContactLengthMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "craneDispersionMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "craneTWMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    },
+    "memberActions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MemberAction"
+      },
+      "x-semio-state": "artifact"
+    },
+    "joints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SteelJoint"
+      },
+      "x-semio-state": "artifact"
+    },
+    "fatigueDetails": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FatigueDetail"
+      },
+      "x-semio-state": "artifact"
+    },
+    "fireExposures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FireExposure"
+      },
+      "x-semio-state": "artifact"
+    },
+    "coldFormedMembers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ColdFormedMember"
+      },
+      "x-semio-state": "artifact"
+    },
+    "platedPanels": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PlatedPanel"
+      },
+      "x-semio-state": "artifact"
+    },
+    "siloShells": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SiloShell"
+      },
+      "x-semio-state": "artifact"
+    },
+    "tensionComponents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TensionComponent"
+      },
+      "x-semio-state": "artifact"
+    },
+    "bridgeFatigue": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/BridgeFatigue"
+      },
+      "x-semio-state": "artifact"
+    },
+    "towerLegs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TowerLeg"
+      },
+      "x-semio-state": "artifact"
+    },
+    "piles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/SteelPile"
+      },
+      "x-semio-state": "artifact"
+    },
+    "craneRunways": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/CraneRunway"
+      },
+      "x-semio-state": "artifact"
+    }
+  },
+  "definitions": {
+    "SteelMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "grade",
+        "fy",
+        "fu",
+        "eModulus",
+        "gModulus",
+        "subgrade",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "grade": {
+          "type": "string"
+        },
+        "fy": {
+          "type": "number"
+        },
+        "fu": {
+          "type": "number"
+        },
+        "eModulus": {
+          "type": "number"
+        },
+        "gModulus": {
+          "type": "number"
+        },
+        "subgrade": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        }
+      }
+    },
+    "SteelSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "designation",
+        "kind",
+        "h",
+        "b",
+        "tw",
+        "tf",
+        "r",
+        "area",
+        "shearAreaY",
+        "shearAreaZ",
+        "iy",
+        "iz",
+        "it",
+        "iw",
+        "wElY",
+        "wElZ",
+        "wPlY",
+        "wPlZ",
+        "areaNet"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "designation": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "h": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "tw": {
+          "type": "number"
+        },
+        "tf": {
+          "type": "number"
+        },
+        "r": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        },
+        "shearAreaY": {
+          "type": "number"
+        },
+        "shearAreaZ": {
+          "type": "number"
+        },
+        "iy": {
+          "type": "number"
+        },
+        "iz": {
+          "type": "number"
+        },
+        "it": {
+          "type": "number"
+        },
+        "iw": {
+          "type": "number"
+        },
+        "wElY": {
+          "type": "number"
+        },
+        "wElZ": {
+          "type": "number"
+        },
+        "wPlY": {
+          "type": "number"
+        },
+        "wPlZ": {
+          "type": "number"
+        },
+        "areaNet": {
+          "type": "number"
+        }
+      }
+    },
+    "SteelMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "analysis",
+        "bucklingLengthY",
+        "bucklingLengthZ",
+        "deflectionLimitRatio",
+        "endMomentRatioPsi",
+        "id",
+        "label",
+        "length",
+        "loadApplication",
+        "ltbLength",
+        "ltbRestraintSpacing",
+        "materialId",
+        "memberType",
+        "momentDiagram",
+        "sectionId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "memberType": {
+          "type": "string"
+        },
+        "sectionId": {
+          "type": "string"
+        },
+        "materialId": {
+          "type": "string"
+        },
+        "length": {
+          "type": "number"
+        },
+        "bucklingLengthY": {
+          "type": "number"
+        },
+        "bucklingLengthZ": {
+          "type": "number"
+        },
+        "ltbLength": {
+          "type": "number"
+        },
+        "ltbRestraintSpacing": {
+          "type": "number"
+        },
+        "loadApplication": {
+          "type": "string"
+        },
+        "endMomentRatioPsi": {
+          "type": "number"
+        },
+        "momentDiagram": {
+          "type": "string"
+        },
+        "deflectionLimitRatio": {
+          "type": "number"
+        },
+        "analysis": {
+          "type": "string"
+        }
+      }
+    },
+    "LoadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "category"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      }
+    },
+    "DesignAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n",
+        "vy",
+        "vz",
+        "my",
+        "mz",
+        "t"
+      ],
+      "properties": {
+        "n": {
+          "type": "number"
+        },
+        "vy": {
+          "type": "number"
+        },
+        "vz": {
+          "type": "number"
+        },
+        "my": {
+          "type": "number"
+        },
+        "mz": {
+          "type": "number"
+        },
+        "t": {
+          "type": "number"
+        }
+      }
+    },
+    "MemberAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memberId",
+        "loadCaseId",
+        "action"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "loadCaseId": {
+          "type": "string"
+        },
+        "action": {
+          "$ref": "#/definitions/DesignAction"
+        }
+      }
+    },
+    "SteelJoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "memberId",
+        "boltClass",
+        "boltDiameter",
+        "boltRows",
+        "boltsPerRow",
+        "pitch",
+        "endDistance",
+        "edgeDistance",
+        "shearPlanes",
+        "plateThickness",
+        "plateFu",
+        "weldThroat",
+        "weldLength",
+        "weldFu",
+        "weldGrade",
+        "category",
+        "frictionMu",
+        "preloadForce",
+        "slipFactorKs",
+        "frictionSurfaces",
+        "gauge",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "boltClass": {
+          "type": "string"
+        },
+        "boltDiameter": {
+          "type": "number"
+        },
+        "boltRows": {
+          "type": "integer"
+        },
+        "boltsPerRow": {
+          "type": "integer"
+        },
+        "pitch": {
+          "type": "number"
+        },
+        "endDistance": {
+          "type": "number"
+        },
+        "edgeDistance": {
+          "type": "number"
+        },
+        "shearPlanes": {
+          "type": "integer"
+        },
+        "plateThickness": {
+          "type": "number"
+        },
+        "plateFu": {
+          "type": "number"
+        },
+        "weldThroat": {
+          "type": "number"
+        },
+        "weldLength": {
+          "type": "number"
+        },
+        "weldFu": {
+          "type": "number"
+        },
+        "weldGrade": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "frictionMu": {
+          "type": "number"
+        },
+        "preloadForce": {
+          "type": "number"
+        },
+        "slipFactorKs": {
+          "type": "number"
+        },
+        "frictionSurfaces": {
+          "type": "integer"
+        },
+        "gauge": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/JointForceAction"
+          }
+        }
+      }
+    },
+    "FatigueDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memberId",
+        "category",
+        "method",
+        "spectrum"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "category": {
+          "type": "integer"
+        },
+        "method": {
+          "type": "string"
+        },
+        "spectrum": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FatigueBand"
+          }
+        }
+      }
+    },
+    "FireExposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memberId",
+        "rating",
+        "protectionThickness",
+        "sectionFactor",
+        "mu0",
+        "protectionConductivity",
+        "protectionDensity",
+        "protectionSpecificHeat"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "rating": {
+          "type": "string"
+        },
+        "protectionThickness": {
+          "type": "number"
+        },
+        "sectionFactor": {
+          "type": "number"
+        },
+        "mu0": {
+          "type": "number"
+        },
+        "protectionConductivity": {
+          "type": "number"
+        },
+        "protectionDensity": {
+          "type": "number"
+        },
+        "protectionSpecificHeat": {
+          "type": "number"
+        }
+      }
+    },
+    "ColdFormedMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bBar",
+        "thickness",
+        "kSigma",
+        "psi",
+        "fy",
+        "grossResistance",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bBar": {
+          "type": "number"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "kSigma": {
+          "type": "number"
+        },
+        "psi": {
+          "type": "number"
+        },
+        "fy": {
+          "type": "number"
+        },
+        "grossResistance": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ForceAction"
+          }
+        }
+      }
+    },
+    "PlatedPanel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "a",
+        "b",
+        "thickness",
+        "fy",
+        "kSigma",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "a": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "fy": {
+          "type": "number"
+        },
+        "kSigma": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ForceAction"
+          }
+        }
+      }
+    },
+    "SiloShell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "thickness",
+        "radius",
+        "depth",
+        "k",
+        "gamma",
+        "fy"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        },
+        "k": {
+          "type": "number"
+        },
+        "gamma": {
+          "type": "number"
+        },
+        "fy": {
+          "type": "number"
+        }
+      }
+    },
+    "TensionComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fUk",
+        "fK",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fUk": {
+          "type": "number"
+        },
+        "fK": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ForceAction"
+          }
+        }
+      }
+    },
+    "BridgeFatigue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memberId",
+        "lambda",
+        "phi2",
+        "deltaSigmaP",
+        "category",
+        "method"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "lambda": {
+          "type": "number"
+        },
+        "phi2": {
+          "type": "number"
+        },
+        "deltaSigmaP": {
+          "type": "number"
+        },
+        "category": {
+          "type": "integer"
+        },
+        "method": {
+          "type": "string"
+        }
+      }
+    },
+    "TowerLeg": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memberId",
+        "forceCoefficient",
+        "dynamicFactor",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "forceCoefficient": {
+          "type": "number"
+        },
+        "dynamicFactor": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ForceAction"
+          }
+        }
+      }
+    },
+    "SteelPile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "sectionId",
+        "materialId",
+        "drivingStress",
+        "embeddedLength",
+        "shaftPerimeter",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sectionId": {
+          "type": "string"
+        },
+        "materialId": {
+          "type": "string"
+        },
+        "drivingStress": {
+          "type": "number"
+        },
+        "embeddedLength": {
+          "type": "number"
+        },
+        "shaftPerimeter": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ForceAction"
+          }
+        }
+      }
+    },
+    "CraneRunway": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memberId",
+        "wheelContactLength",
+        "dispersion",
+        "webThickness",
+        "fy",
+        "phi",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "wheelContactLength": {
+          "type": "number"
+        },
+        "dispersion": {
+          "type": "number"
+        },
+        "webThickness": {
+          "type": "number"
+        },
+        "fy": {
+          "type": "number"
+        },
+        "phi": {
+          "type": "number"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ForceAction"
+          }
+        }
+      }
+    },
+    "ForceAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "loadCaseId",
+        "force"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "loadCaseId": {
+          "type": "string"
+        },
+        "force": {
+          "type": "number"
+        }
+      }
+    },
+    "JointForceAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "loadCaseId",
+        "shear",
+        "tension"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "loadCaseId": {
+          "type": "string"
+        },
+        "shear": {
+          "type": "number"
+        },
+        "tension": {
+          "type": "number"
+        }
+      }
+    },
+    "FatigueBand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "deltaSigma",
+        "cycles"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "deltaSigma": {
+          "type": "number"
+        },
+        "cycles": {
+          "type": "number"
+        }
+      }
     }
   }
 }

@@ -1,0 +1,5 @@
+syntax = "proto3";
+message ReorderMembers {
+  uint32 fromIndex = 1;
+  uint32 toIndex = 2;
+}

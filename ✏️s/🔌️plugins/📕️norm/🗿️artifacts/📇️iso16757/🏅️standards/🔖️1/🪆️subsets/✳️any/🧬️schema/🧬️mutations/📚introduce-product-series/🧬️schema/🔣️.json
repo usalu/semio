@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/mutation/introduce-product-series/schema.json",
+  "title": "IntroduceProductSeries",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "productSeries"
+  ],
+  "properties": {
+    "productSeries": {
+      "title": "ProductSeries",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "classId",
+        "names"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "classId": {
+          "type": "string"
+        },
+        "names": {
+          "title": "Names",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "alternatives",
+            "preferred"
+          ],
+          "properties": {
+            "preferred": {
+              "title": "LocalizedText",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "locale",
+                "text"
+              ],
+              "properties": {
+                "locale": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              }
+            },
+            "shortName": {
+              "type": "string"
+            },
+            "alternatives": {
+              "type": "array",
+              "items": {
+                "title": "LocalizedText",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "locale",
+                  "text"
+                ],
+                "properties": {
+                  "locale": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sharedPropertyValues": {
+          "type": "object"
+        },
+        "geometryId": {
+          "type": "string"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

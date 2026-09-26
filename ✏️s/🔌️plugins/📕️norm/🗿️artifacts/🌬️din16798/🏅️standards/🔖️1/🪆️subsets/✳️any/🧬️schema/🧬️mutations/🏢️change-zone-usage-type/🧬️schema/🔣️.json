@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/mutation/change-zone-usage-type/schema.json",
+  "title": "ChangeZoneUsageType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "zoneId",
+    "newUsageType"
+  ],
+  "properties": {
+    "zoneId": {
+      "type": "string"
+    },
+    "newUsageType": {
+      "type": "string"
+    }
+  }
+}

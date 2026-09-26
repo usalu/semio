@@ -1804,7 +1804,7 @@ pub fn prompt_instruction(name: &str) -> Option<&'static str> {
 }
 
 /// 🧰️ Every tool name, in the order `tools/list` sorts them.
-pub const TOOL_NAMES: [&str; 9] = ["file_integrate", "goal_close", "goal_open", "goal_reopen", "section_extract", "section_move", "ticket_close", "ticket_open", "ticket_reopen"];
+pub const TOOL_NAMES: [&str; 6] = ["goal_close", "goal_open", "goal_reopen", "ticket_close", "ticket_open", "ticket_reopen"];
 
 /// 📚️ Every resource URI, in the order `resources/list` sorts them.
 pub const RESOURCE_URIS: [&str; 8] = ["repo://", "repo://bundles", "repo://contributors", "repo://files", "repo://folders", "repo://goals", "repo://policies", "repo://tickets"];
@@ -1868,29 +1868,6 @@ pub fn tool_schemas(profile: Profile) -> Vec<Tool> {
             ),
         ),
         tool("ticket_reopen", Schema::object(reopen, &[])),
-        tool(
-            "section_move",
-            Schema::object(vec![("file", Schema::string("Source file.")), ("old_name", Schema::string("Current section.")), ("new_name", Schema::string("New section."))], &["file", "old_name", "new_name"]),
-        ),
-        tool(
-            "file_integrate",
-            Schema::object(
-                vec![
-                    ("source", Schema::string("Source file.")),
-                    ("target_section", Schema::string("Target section.")),
-                    ("target_file", Schema::string("Target file.")),
-                    ("target_parent_section", Schema::string("Optional parent section.")),
-                ],
-                &["source", "target_section", "target_file"],
-            ),
-        ),
-        tool(
-            "section_extract",
-            Schema::object(
-                vec![("source_file", Schema::string("Source file.")), ("source_section", Schema::string("Source section.")), ("target_file", Schema::string("Target file."))],
-                &["source_file", "source_section", "target_file"],
-            ),
-        ),
         tool(
             "goal_open",
             Schema::object(

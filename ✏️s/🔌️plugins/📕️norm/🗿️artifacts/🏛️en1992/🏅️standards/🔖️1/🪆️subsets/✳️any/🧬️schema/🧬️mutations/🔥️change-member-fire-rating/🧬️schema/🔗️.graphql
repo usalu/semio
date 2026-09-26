@@ -1,0 +1,4 @@
+type ChangeMemberFireRating {
+  memberId: String!
+  newRating: String!
+}

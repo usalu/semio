@@ -36,7 +36,7 @@ impl protocol::InferenceSpec<En1992Snapshot> for En1992Inference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.norm.en1992.inference.outline", reads: &[] }]
+        &[protocol::InferenceFieldSpec { id: "s.norm.en1992.inference.outline", reads: &["annex","members","anchors","concreteGrades","reinforcementGrades","deltaCDev"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -66,43 +66,21 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-/// 📋️ Full EN 1992 compliance-report conformance law (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — relocated verbatim from the deleted
-/// `⚙️engine`. `evaluate` is the `En1992Snapshot -> CheckReport` projection; everything it composes
-/// is a pure helper living in the parent `🧬️schema`.
 use crate::document::CheckReport;
-#[cfg(feature = "cross-fem")]
-use crate::standards::v1::subsets::any::schema::check_rc_beam_from_fem;
-use crate::standards::v1::subsets::any::schema::{check_full_rc_beam, part_1_2, part_2, part_3, part_4};
+use crate::standards::v1::subsets::any::schema::{evaluate_anchor, evaluate_member};
 
-/// 📋️ `En1992Snapshot -> CheckReport` conformance law — the artifact's compliance evaluation.
+/// 📋️ `En1992Snapshot -> CheckReport` — full hierarchical structure assessment.
 pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
-    let mut report = if document.use_fem {
-        #[cfg(feature = "cross-fem")]
-        {
-            check_rc_beam_from_fem(document.span_m, document.udl_kn_m, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.annex).unwrap_or_else(|_| CheckReport::default())
-        }
-        #[cfg(not(feature = "cross-fem"))]
-        {
-            CheckReport::default()
-        }
-    } else {
-        check_full_rc_beam(document.m_ed_knm, document.v_ed_kn, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.n_ed_kn, document.p_kn, document.a_c_mm2, document.annex)
-    };
-
-    report.push(part_1_2::check_fire_beam_axis_distance(document.b_mm, document.provided_axis_distance_mm, document.fire_rating));
-
-    report.push(part_2::check_bridge_concrete_stress(document.bridge_sigma_c_mpa, document.f_ck));
-    report.push(part_2::check_bridge_fatigue(document.bridge_delta_sigma_s_mpa));
-
-    let w_k_liquid = part_3::crack_width_tightness_mm(document.liquid_sigma_s_mpa, document.liquid_rho_p_eff, document.liquid_f_ct_eff_mpa, document.liquid_e_s_mpa, document.liquid_s_r_max_mm);
-    report.push(part_3::check_tightness_crack_width(w_k_liquid, document.tightness_class, document.hd_over_h));
-
-    let anchor_n_ed_n = document.anchor_n_ed_kn * 1000.0;
-    report.push(part_4::check_anchor_steel(anchor_n_ed_n, document.anchor_a_s_mm2, document.anchor_f_uk_mpa, document.anchor_f_yk_mpa));
-    report.push(part_4::check_anchor_concrete_cone(anchor_n_ed_n, document.f_ck, document.anchor_h_ef_mm, document.anchor_cracked));
-    report.push(part_4::check_anchor_edge_shear(document.anchor_v_ed_kn * 1000.0, document.anchor_d_mm, document.anchor_h_ef_mm, document.f_ck, document.anchor_c1_mm));
-
+    let mut report = CheckReport::default();
+    if document.members.is_empty() && document.anchors.is_empty() {
+        return report;
+    }
+    for member in &document.members {
+        report.extend(evaluate_member(document, member));
+    }
+    for anchor in &document.anchors {
+        report.extend(evaluate_anchor(document, anchor));
+    }
     report
 }
 //#endregion 🔖️ComplianceReport

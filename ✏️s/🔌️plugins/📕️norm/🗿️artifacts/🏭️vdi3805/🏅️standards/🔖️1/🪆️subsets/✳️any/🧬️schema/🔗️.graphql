@@ -1,15 +1,62 @@
+type AccessoryLink { accessoryId: String! required: Boolean! quantity: Int! }
+type CompositionLink { componentId: String! quantity: Int! }
 # 🧬️ Vdi3805 artifact schema — every field with its state class.
 
-type Vdi3805Artifact {
-  manufacturerFile: String! @state(class: ARTIFACT)
-  catalog: String! @state(class: ARTIFACT)
-  editionProfile: [Vdi3805StringMapEntry!]! @state(class: ARTIFACT)
-  correctionAsOf: String! @state(class: ARTIFACT)
-  strictMode: Boolean! @state(class: ARTIFACT)
-  index: String! @state(class: ARTIFACT)
-  geometry: [Vdi3805StringMapEntry!]! @state(class: ARTIFACT)
-  curves: [Vdi3805StringMapEntry!]! @state(class: ARTIFACT)
-  limits: String! @state(class: ARTIFACT)
-}
 
+type LocalizedText { locale: String! text: String! }
+type BuildingSystemNumber { systemCode: String! subsystem: String! sequence: Int! }
+type ExtensionFields { fields: [Vdi3805StringMapEntry!]! }
+type ManufacturerFile {
+  headerVersion: String!
+  manufacturer: String!
+  buildingSystemNumber: BuildingSystemNumber!
+  created: String!
+  charset: String!
+  recordCount: Int!
+  extensions: ExtensionFields!
+}
+type NativeRecord { family: String! fields: [String!]! extensions: ExtensionFields! }
+type ValveHeatingAttributes { dn: Int! kvsM3S: Float! pressureClass: String! connectionType: String! authorityMin: Float! authorityMax: Float! }
+type RadiatorAttributes { standardOutputW: Float! heatExponentN: Float! lengthM: Float! heightM: Float! depthM: Float! connectionType: String! }
+type PumpHeatingAttributes { dnSuction: Int! dnDischarge: Int! nominalFlowM3S: Float! nominalHeadM: Float! motorPowerW: Float! hydraulicEfficiency: Float! qhCurveRef: String }
+type HeatGeneratorAttributes { nominalHeatOutputW: Float! fuelType: String! flowTempMaxC: Float! returnTempMinC: Float! }
+union SheetAttributes = ValveHeatingAttributes | RadiatorAttributes | PumpHeatingAttributes | HeatGeneratorAttributes | GenericAttributes
+type GenericAttribute { key: String! value: String! unit: String }
+type GenericAttributes { entries: [GenericAttribute!]! }
+type Configuration { id: String! attributes: SheetAttributes! geometryRef: String functionRefs: [String!]! }
+type ProductIdentity { manufacturerCode: String! productGroup: String! articleNumber: String! }
+type Product {
+  id: String!
+  identity: ProductIdentity!
+  title: [LocalizedText!]!
+  sheet: Int!
+  records: [NativeRecord!]!
+  configuration: Configuration!
+  accessories: [AccessoryLink!]!
+  components: [CompositionLink!]!
+  extensions: ExtensionFields!
+}
+type ManufacturerCatalog { file: ManufacturerFile! products: [Product!]! extensions: ExtensionFields! }
+type EditionId { year: Int! month: Int! }
+type CatalogIndexEntry { productId: String! sheet: Int! tags: [String!]! dn: Int }
+type CatalogIndex { entries: [CatalogIndexEntry!]! }
+type BoundingBox { minX: Float! minY: Float! minZ: Float! maxX: Float! maxY: Float! maxZ: Float! }
+type GeometryConnection { id: String! x: Float! y: Float! z: Float! nx: Float! ny: Float! nz: Float! }
+type ParametricGeometry { id: String! bbox: BoundingBox! connections: [GeometryConnection!]! parameters: [Vdi3805FloatMapEntry!]! }
+type CurvePoint { x: Float! y: Float! }
+type CharacteristicCurve { id: String! points: [CurvePoint!]! }
+type SecurityLimits { maxFileBytes: Int! maxRecords: Int! maxFieldLength: Int! maxNestingDepth: Int! }
 type Vdi3805StringMapEntry { key: String! value: String! }
+type Vdi3805FloatMapEntry { key: String! value: Float! }
+
+type Vdi3805Artifact {
+  catalog: ManufacturerCatalog! @state(class: ARTIFACT)
+  editionProfile: [Vdi3805StringMapEntry!]! @state(class: ARTIFACT)
+  correctionAsOf: EditionId! @state(class: ARTIFACT)
+  strictMode: Boolean! @state(class: ARTIFACT)
+  index: CatalogIndex! @state(class: ARTIFACT)
+  geometry: [Vdi3805GeometryMapEntry!]! @state(class: ARTIFACT)
+  curves: [Vdi3805CurveMapEntry!]! @state(class: ARTIFACT)
+}
+type Vdi3805GeometryMapEntry { key: String! value: ParametricGeometry! }
+type Vdi3805CurveMapEntry { key: String! value: CharacteristicCurve! }

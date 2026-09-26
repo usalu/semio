@@ -7,7 +7,7 @@
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::document::NormHost;
-use crate::editor::en1992::commands::{evaluate, selected_check, set_active_example, set_snapshot};
+use crate::editor::en1992::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_active_example, set_field, set_snapshot};
 use crate::editor::en1992::modes::edit as edit_mode;
 use crate::editor::en1992::modes::edit::windows::{inputs, results};
 use crate::editor::en1992::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -28,6 +28,8 @@ use store::EngineHandles;
 pub const LABEL: &str = "EN 1992";
 /// ðï¸ The playground/registry variant key â every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "en1992";
+/// 🆔️ Retained-command / UI action controller id.
+pub const CONTROLLER_ID: &str = "s.norm.en1992@1/*#editor";
 pub const DOCUMENT_SCHEMA: &str = "semio.norm.en1992/v1";
 //#endregion ðï¸Constants
 
@@ -43,6 +45,10 @@ semio_framework_plugin::app_commands! {
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
+        "setField" as "set-field" => set_field::SetField,
+        "insertItem" as "insert-item" => insert_item::InsertItem,
+        "removeItem" as "remove-item" => remove_item::RemoveItem,
+        "applyRemedy" as "apply-remedy" => apply_remedy::ApplyRemedy,
     }
 }
 //#endregion ðï¸Commands
@@ -54,7 +60,7 @@ pub struct En1992PlayApp;
 impl ArtifactEditor for En1992PlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::liquid_retaining_fem_anchor::source()]
+        vec![crate::compliant_office_frame::source(), crate::failing_under_reinforced::source(), crate::compliant_prestressed_beam::source(), crate::failing_prestressed_beam::source(), crate::liquid_retaining_fem_anchor::source()]
     }
     type Snapshot = En1992Snapshot;
     type Mutation = En1992Mutation;
@@ -94,8 +100,8 @@ impl ArtifactEditor for En1992PlayApp {
         artifact_schema: "semio.norm.en1992/v1",
         factory: "En1992BoundedCommandJobFactory",
         factory_type: En1992BoundedCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]
+        contract: crate::app_surface::norm_bounded_contract(),
+        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
 
 
@@ -137,12 +143,12 @@ impl ArtifactEditor for En1992PlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, En1992Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let host = NormHost::<En1992Family>::from_artifact(doc.snapshot.clone());
         match body_key {
-            inputs::BODY_INPUTS => inputs::render(doc.snapshot),
-            results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS)),
-            document_panel::BODY_ARTIFACT => document_panel::render(&host),
-            catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(),
-            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index),
-            _ => crate::app_surface::render_unknown_body(body_key),
+            inputs::BODY_INPUTS => inputs::render(doc.snapshot, view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, inputs::BODY_INPUTS)),
+            results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS), view_state.locale, Some(CONTROLLER_ID)),
+            document_panel::BODY_ARTIFACT => document_panel::render(&host, view_state.locale),
+            catalogue_panel::BODY_CATALOGUE => catalogue_panel::render(Self::examples(), view_state.locale, CONTROLLER_ID),
+            inspection_panel::BODY_INSPECTION => inspection_panel::render(&host, crate::results_window_config::current::<results::ResultsWindowConfigOwner>(cfg).selected_check_index, view_state.locale, Some(CONTROLLER_ID)),
+            _ => crate::app_surface::render_unknown_body(body_key, view_state.locale),
         }
         .map(semio_framework_plugin::built_to_component_tree)
     }
@@ -157,7 +163,7 @@ impl ArtifactEditor for En1992PlayApp {
 
     /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, En1992Snapshot>) -> Result<Emit<En1992Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
-        crate::app_surface::import_media(port, media, |snapshot: En1992Snapshot| En1992Mutation::from_snapshot(&snapshot))
+        crate::app_surface::import_media(port, media, |snapshot: En1992Snapshot| En1992Mutation::from_snapshot(&En1992Snapshot::default(), &snapshot))
     }
     //#endregion ðï¸MediaPorts
 }
@@ -167,6 +173,8 @@ impl ArtifactEditor for En1992PlayApp {
 crate::norm_owned_tool_job_factory!(En1992BoundedCommandJobFactory, En1992PlayApp);
 
 impl crate::app_surface::NormRetainedEditor for En1992PlayApp {
+    type Family = En1992Family;
+
     type ResultsWindowConfigOwner = results::ResultsWindowConfigOwner;
 
     fn selected_check_window_mutation(command: &En1992Command) -> Option<crate::results_window_config::NormResultsWindowConfigMutation> {
@@ -238,6 +246,39 @@ pub fn create_en1992_app() -> semio_framework_plugin::AppDefinition {
             )
             .action_destructive("setActiveExample")
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("setField", LocalizedLabel::native("Set Field", "Feld setzen"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
+                        semio_framework_plugin::ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")),
+                    ]),
+            )
+            .action_interactive_job("setField", InteractiveJobClassification::Migrated)
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("insertItem", LocalizedLabel::native("Insert Item", "Eintrag einfügen"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
+                        semio_framework_plugin::ActionArgDef::text("index", LocalizedLabel::native("Index", "Index")),
+                    ]),
+            )
+            .action_interactive_job("insertItem", InteractiveJobClassification::Migrated)
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("removeItem", LocalizedLabel::native("Remove Item", "Eintrag entfernen"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![
+                        semio_framework_plugin::ActionArgDef::text("path", LocalizedLabel::native("Path", "Pfad")),
+                        semio_framework_plugin::ActionArgDef::text("index", LocalizedLabel::native("Index", "Index")),
+                    ]),
+            )
+            .action_interactive_job("removeItem", InteractiveJobClassification::Migrated)
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("applyRemedy", LocalizedLabel::native("Apply Remedy", "Abhilfe anwenden"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![
+                        semio_framework_plugin::ActionArgDef::text("checkId", LocalizedLabel::native("Check", "Nachweis")),
+                        semio_framework_plugin::ActionArgDef::text("remedyIndex", LocalizedLabel::native("Remedy", "Abhilfe")),
+                    ]),
+            )
+            .action_interactive_job("applyRemedy", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🚧️ SDK GAP (contract §2.4): `EditorBuilder` takes a bare `AppDefinition` — there is no

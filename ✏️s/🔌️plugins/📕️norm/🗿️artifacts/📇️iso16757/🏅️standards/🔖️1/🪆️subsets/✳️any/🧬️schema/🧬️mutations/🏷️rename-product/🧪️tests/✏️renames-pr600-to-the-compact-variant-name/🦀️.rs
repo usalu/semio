@@ -102,7 +102,7 @@ async fn committed_diff_is_canonical() {
     let decoded: Iso16757Diff = serde_json::from_str(DIFF).expect("the committed rename-product diff decodes");
     let catalogue = decoded.catalogue.as_ref().expect("the committed rename-product diff carries the catalogue");
     assert_eq!(catalogue.products[0].names.preferred.text, "PR-600 Compact", "rename-product/renames-pr600-to-the-compact-variant-name: the diff must carry the new product name");
-    assert_eq!(catalogue.products[0].series_id, "series.pr", "rename-product/renames-pr600-to-the-compact-variant-name: the series membership rides through the diff unchanged");
+    assert_eq!(catalogue.products[0].series_id, "series-pr", "rename-product/renames-pr600-to-the-compact-variant-name: the series membership rides through the diff unchanged");
     assert!(decoded.dictionary.is_none(), "rename-product/renames-pr600-to-the-compact-variant-name: rename-product writes `catalogue` and must leave `dictionary` untouched");
     assert!(decoded.selection.is_none(), "rename-product/renames-pr600-to-the-compact-variant-name: rename-product writes `catalogue` and must leave `selection` untouched");
     assert!(decoded.part_number_rule.is_none(), "rename-product/renames-pr600-to-the-compact-variant-name: rename-product writes `catalogue` and must leave `part_number_rule` untouched");

@@ -66,134 +66,200 @@
       "subsetDirectoryName": "✳️any",
       "vectors": [
         {
-          "mutationId": "change-annual-limit-kwh",
-          "sourceMutationDirectoryName": "🚦️change-annual-limit-kwh",
-          "mutationDirectoryName": "🚦️change-annual-limit-kwh",
+          "mutationId": "change-building-category",
+          "sourceMutationDirectoryName": "🏠️building-category",
+          "mutationDirectoryName": "🏠️building-category",
           "scenarios": [
             {
-              "id": "tightens-the-annual-primary-energy-limit-to-6000-kwh",
-              "directoryName": "🎯️tightens-the-annual-primary-energy-limit-to-6000-kwh"
+              "id": "applies-building-category",
+              "directoryName": "🎯️applies-building-category"
             }
           ]
         },
         {
-          "mutationId": "change-energy-carrier",
-          "sourceMutationDirectoryName": "🔋️change-energy-carrier",
-          "mutationDirectoryName": "🔋️change-energy-carrier",
+          "mutationId": "change-attachment",
+          "sourceMutationDirectoryName": "🧱attachment",
+          "mutationDirectoryName": "🧱attachment",
           "scenarios": [
             {
-              "id": "switches-the-energy-carrier-to-an-electric-heat-pump",
-              "directoryName": "⚡️switches-the-energy-carrier-to-an-electric-heat-pump"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-heated-area-m2",
-          "sourceMutationDirectoryName": "📐️change-heated-area-m2",
-          "mutationDirectoryName": "📐️change-heated-area-m2",
-          "scenarios": [
-            {
-              "id": "extends-the-heated-area-to-160-m2",
-              "directoryName": "📏️extends-the-heated-area-to-160-m2"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-ht",
-          "sourceMutationDirectoryName": "🧱️change-ht",
-          "mutationDirectoryName": "🧱️change-ht",
-          "scenarios": [
-            {
-              "id": "raises-the-transmission-loss-coefficient-to-118-w-per-k",
-              "directoryName": "🧱️raises-the-transmission-loss-coefficient-to-118-w-per-k"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-hv",
-          "sourceMutationDirectoryName": "🌬️change-hv",
-          "mutationDirectoryName": "🌬️change-hv",
-          "scenarios": [
-            {
-              "id": "raises-the-ventilation-loss-coefficient-to-52-25-w-per-k",
-              "directoryName": "🌬️raises-the-ventilation-loss-coefficient-to-52-25-w-per-k"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-internal-gains-wm2",
-          "sourceMutationDirectoryName": "🔥️change-internal-gains-wm2",
-          "mutationDirectoryName": "🔥️change-internal-gains-wm2",
-          "scenarios": [
-            {
-              "id": "raises-the-internal-gains-to-5-w-per-m2",
-              "directoryName": "🌡️raises-the-internal-gains-to-5-w-per-m2"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-occupants",
-          "sourceMutationDirectoryName": "👥️change-occupants",
-          "mutationDirectoryName": "👥️change-occupants",
-          "scenarios": [
-            {
-              "id": "raises-the-occupancy-to-six-people",
-              "directoryName": "👥️raises-the-occupancy-to-six-people"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-reference-qp-kwh",
-          "sourceMutationDirectoryName": "🏢️change-reference-qp-kwh",
-          "mutationDirectoryName": "🏢️change-reference-qp-kwh",
-          "scenarios": [
-            {
-              "id": "lowers-the-reference-building-primary-energy-to-8750-kwh",
-              "directoryName": "📉️lowers-the-reference-building-primary-energy-to-8750-kwh"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-renewable-kwh",
-          "sourceMutationDirectoryName": "♻️change-renewable-kwh",
-          "mutationDirectoryName": "♻️change-renewable-kwh",
-          "scenarios": [
-            {
-              "id": "raises-the-on-site-renewable-yield-to-2250-kwh",
-              "directoryName": "🔆️raises-the-on-site-renewable-yield-to-2250-kwh"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-solar-gains-kwh",
-          "sourceMutationDirectoryName": "☀️change-solar-gains-kwh",
-          "mutationDirectoryName": "☀️change-solar-gains-kwh",
-          "scenarios": [
-            {
-              "id": "raises-the-annual-solar-gains-to-132-kwh",
-              "directoryName": "🌞️raises-the-annual-solar-gains-to-132-kwh"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-system-losses-kwh",
-          "sourceMutationDirectoryName": "📉️change-system-losses-kwh",
-          "mutationDirectoryName": "📉️change-system-losses-kwh",
-          "scenarios": [
-            {
-              "id": "cuts-the-system-losses-to-450-kwh",
-              "directoryName": "🛠️cuts-the-system-losses-to-450-kwh"
+              "id": "applies-attachment",
+              "directoryName": "🎯️applies-attachment"
             }
           ]
         },
         {
           "mutationId": "change-use-class",
-          "sourceMutationDirectoryName": "🏷️change-use-class",
-          "mutationDirectoryName": "🏷️change-use-class",
+          "sourceMutationDirectoryName": "🏷️use-class",
+          "mutationDirectoryName": "🏷️use-class",
           "scenarios": [
             {
               "id": "reclassifies-the-building-as-an-office",
               "directoryName": "🏢️reclassifies-the-building-as-an-office"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-method",
+          "sourceMutationDirectoryName": "🧮method",
+          "mutationDirectoryName": "🧮method",
+          "scenarios": [
+            {
+              "id": "applies-method",
+              "directoryName": "🎯️applies-method"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-net-floor-area-m2",
+          "sourceMutationDirectoryName": "📐️net-floor-area-m2",
+          "mutationDirectoryName": "📐️net-floor-area-m2",
+          "scenarios": [
+            {
+              "id": "extends-net-floor-area-to-160-m2",
+              "directoryName": "📏️extends-net-floor-area-to-160-m2"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-heated-volume-m3",
+          "sourceMutationDirectoryName": "📦heated-volume-m3",
+          "mutationDirectoryName": "📦heated-volume-m3",
+          "scenarios": [
+            {
+              "id": "applies-heated-volume-m3",
+              "directoryName": "🎯️applies-heated-volume-m3"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-geg-qp-factor",
+          "sourceMutationDirectoryName": "⚖️geg-qp-factor",
+          "mutationDirectoryName": "⚖️geg-qp-factor",
+          "scenarios": [
+            {
+              "id": "applies-geg-qp-factor",
+              "directoryName": "🎯️applies-geg-qp-factor"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-delta-u-wb",
+          "sourceMutationDirectoryName": "🌉delta-u-wb",
+          "mutationDirectoryName": "🌉delta-u-wb",
+          "scenarios": [
+            {
+              "id": "applies-delta-u-wb",
+              "directoryName": "🎯️applies-delta-u-wb"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-automation-class",
+          "sourceMutationDirectoryName": "🎛️automation-class",
+          "mutationDirectoryName": "🎛️automation-class",
+          "scenarios": [
+            {
+              "id": "applies-automation-class",
+              "directoryName": "🎯️applies-automation-class"
+            }
+          ]
+        },
+        {
+          "mutationId": "specify-heating-system",
+          "sourceMutationDirectoryName": "🔥specify-heating-system",
+          "mutationDirectoryName": "🔥specify-heating-system",
+          "scenarios": [
+            {
+              "id": "applies-specify-heating-system",
+              "directoryName": "🎯️applies-specify-heating-system"
+            }
+          ]
+        },
+        {
+          "mutationId": "specify-dhw-system",
+          "sourceMutationDirectoryName": "🚿specify-dhw-system",
+          "mutationDirectoryName": "🚿specify-dhw-system",
+          "scenarios": [
+            {
+              "id": "applies-specify-dhw-system",
+              "directoryName": "🎯️applies-specify-dhw-system"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-ventilation",
+          "sourceMutationDirectoryName": "🌬️update-ventilation",
+          "mutationDirectoryName": "🌬️update-ventilation",
+          "scenarios": [
+            {
+              "id": "applies-update-ventilation",
+              "directoryName": "🎯️applies-update-ventilation"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-cooling",
+          "sourceMutationDirectoryName": "❄️update-cooling",
+          "mutationDirectoryName": "❄️update-cooling",
+          "scenarios": [
+            {
+              "id": "applies-update-cooling",
+              "directoryName": "🎯️applies-update-cooling"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-lighting",
+          "sourceMutationDirectoryName": "💡update-lighting",
+          "mutationDirectoryName": "💡update-lighting",
+          "scenarios": [
+            {
+              "id": "applies-update-lighting",
+              "directoryName": "🎯️applies-update-lighting"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-renewables",
+          "sourceMutationDirectoryName": "☀️update-renewables",
+          "mutationDirectoryName": "☀️update-renewables",
+          "scenarios": [
+            {
+              "id": "applies-update-renewables",
+              "directoryName": "🎯️applies-update-renewables"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-zones",
+          "sourceMutationDirectoryName": "🗺️replace-zones",
+          "mutationDirectoryName": "🗺️replace-zones",
+          "scenarios": [
+            {
+              "id": "applies-replace-zones",
+              "directoryName": "🎯️applies-replace-zones"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-elements",
+          "sourceMutationDirectoryName": "🧩replace-elements",
+          "mutationDirectoryName": "🧩replace-elements",
+          "scenarios": [
+            {
+              "id": "applies-replace-elements",
+              "directoryName": "🎯️applies-replace-elements"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-element-u",
+          "sourceMutationDirectoryName": "🌡️change-element-u",
+          "mutationDirectoryName": "🌡️change-element-u",
+          "scenarios": [
+            {
+              "id": "applies-change-element-u",
+              "directoryName": "🎯️applies-change-element-u"
             }
           ]
         },
@@ -208,21 +274,6 @@
             }
           ]
         }
-      ],
-      "kinds": [
-        "change-use-class",
-        "change-heated-area-m2",
-        "change-occupants",
-        "change-ht",
-        "change-hv",
-        "change-internal-gains-wm2",
-        "change-solar-gains-kwh",
-        "change-system-losses-kwh",
-        "change-renewable-kwh",
-        "change-annual-limit-kwh",
-        "change-energy-carrier",
-        "change-reference-qp-kwh",
-        "update-climate"
       ]
     }
   ],
@@ -236,7 +287,7 @@
       "subsetDirectoryName": "✳️any",
       "mutations": [
         {
-          "id": "change-annual-limit-kwh",
+          "id": "change-building-category",
           "capability": "din18599-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -245,9 +296,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-annual-limit-kwh",
+            "operation": "change-building-category",
             "bridgeVersion": 1,
-            "variant": "ChangeAnnualLimitKwh"
+            "variant": "ChangeBuildingCategory"
           },
           "oracleRequirements": [
             {
@@ -257,27 +308,7 @@
           ]
         },
         {
-          "id": "change-energy-carrier",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-energy-carrier",
-            "bridgeVersion": 1,
-            "variant": "ChangeEnergyCarrier"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-heated-area-m2",
+          "id": "change-attachment",
           "capability": "din18599-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -286,176 +317,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "change-heated-area-m2",
+            "operation": "change-attachment",
             "bridgeVersion": 1,
-            "variant": "ChangeHeatedAreaM2"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-ht",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-ht",
-            "bridgeVersion": 1,
-            "variant": "ChangeHT"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-hv",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-hv",
-            "bridgeVersion": 1,
-            "variant": "ChangeHV"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-internal-gains-wm2",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-internal-gains-wm2",
-            "bridgeVersion": 1,
-            "variant": "ChangeInternalGainsWM2"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-occupants",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-occupants",
-            "bridgeVersion": 1,
-            "variant": "ChangeOccupants"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-reference-qp-kwh",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-reference-qp-kwh",
-            "bridgeVersion": 1,
-            "variant": "ChangeReferenceQPKwh"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-renewable-kwh",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-renewable-kwh",
-            "bridgeVersion": 1,
-            "variant": "ChangeRenewableKwh"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-solar-gains-kwh",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-solar-gains-kwh",
-            "bridgeVersion": 1,
-            "variant": "ChangeSolarGainsKwh"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "din18599-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-system-losses-kwh",
-          "capability": "din18599-1-mutate",
-          "payloadSchema": "🧬️.schema.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "change-system-losses-kwh",
-            "bridgeVersion": 1,
-            "variant": "ChangeSystemLossesKwh"
+            "variant": "ChangeAttachment"
           },
           "oracleRequirements": [
             {
@@ -470,12 +334,328 @@
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied",
-            "no-op"
+            "no-op",
+            "rejected"
           ],
           "productionDispatch": {
             "operation": "change-use-class",
             "bridgeVersion": 1,
             "variant": "ChangeUseClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-method",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-method",
+            "bridgeVersion": 1,
+            "variant": "ChangeMethod"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-net-floor-area-m2",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-net-floor-area-m2",
+            "bridgeVersion": 1,
+            "variant": "ChangeNetFloorAreaM2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-heated-volume-m3",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-heated-volume-m3",
+            "bridgeVersion": 1,
+            "variant": "ChangeHeatedVolumeM3"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-geg-qp-factor",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-geg-qp-factor",
+            "bridgeVersion": 1,
+            "variant": "ChangeGegQpFactor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-delta-u-wb",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-delta-u-wb",
+            "bridgeVersion": 1,
+            "variant": "ChangeDeltaUWb"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-automation-class",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-automation-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeAutomationClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "specify-heating-system",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "specify-heating-system",
+            "bridgeVersion": 1,
+            "variant": "SpecifyHeatingSystem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "specify-dhw-system",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "specify-dhw-system",
+            "bridgeVersion": 1,
+            "variant": "SpecifyDhwSystem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-ventilation",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-ventilation",
+            "bridgeVersion": 1,
+            "variant": "UpdateVentilation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-cooling",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-cooling",
+            "bridgeVersion": 1,
+            "variant": "UpdateCooling"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-lighting",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-lighting",
+            "bridgeVersion": 1,
+            "variant": "UpdateLighting"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "update-renewables",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-renewables",
+            "bridgeVersion": 1,
+            "variant": "UpdateRenewables"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-zones",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-zones",
+            "bridgeVersion": 1,
+            "variant": "ReplaceZones"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "replace-elements",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-elements",
+            "bridgeVersion": 1,
+            "variant": "ReplaceElements"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "din18599-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-element-u",
+          "capability": "din18599-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-element-u",
+            "bridgeVersion": 1,
+            "variant": "ChangeElementU"
           },
           "oracleRequirements": [
             {

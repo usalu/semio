@@ -1,0 +1,5 @@
+syntax = "proto3";
+message InsertMember {
+  uint32 index = 1;
+  string member = 2;
+}

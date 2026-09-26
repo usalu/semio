@@ -6,7 +6,7 @@
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️.py` beside this file, registered as the
 //! oracle `iso16757-1-python-independent`. This adapter is the SUBJECT half only — it drives this
-//! repository's own `apply_iso16757_mutation` over the full 21-kind `Iso16757Mutation`
+//! repository's own `apply_iso16757_mutation` over the full 29-kind `Iso16757Mutation`
 //! vocabulary.
 //!
 //! This is the RICHEST document shape in the plugin and the only one besides `🏭️vdi3805` whose
@@ -14,7 +14,7 @@
 //! multi-collection document — catalogue, dictionary, geometry, selection, part-number rule,
 //! part-number inputs, script limits and exchange process — and the twenty-one kinds split into
 //! three genuinely different families: document-root scalars (`change-exchange-process`,
-//! `update-script-limits`, `replace-part-number-rule`, `change`/`remove-part-number-input`,
+//! `change-script-limits`, `replace-part-number-rule`, `change`/`remove-part-number-input`,
 //! `change-selection-class`, `change-selection-series`), ordered constraint edits on the
 //! selection facet (`add`/`remove-selection-constraint`), and full create/delete(+rename)
 //! lifecycles over four id-keyed collections — the catalogue's `product_groups` and `products`,
@@ -63,7 +63,7 @@ use semio_s_plugin_stdio_test_oracle::law;
 #[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
     "change-exchange-process",
-    "update-script-limits",
+    "change-script-limits",
     "replace-part-number-rule",
     "change-part-number-input",
     "remove-part-number-input",
@@ -73,16 +73,24 @@ const KINDS: &[&str] = &[
     "remove-selection-constraint",
     "rename-catalogue",
     "rename-manufacturer",
-    "create-product-group",
-    "delete-product-group",
+    "introduce-product-group",
+    "retire-product-group",
     "rename-product-group",
-    "create-product",
-    "delete-product",
+    "introduce-product",
+    "retire-product",
     "rename-product",
-    "create-property-definition",
-    "delete-property-definition",
-    "create-subject",
-    "delete-subject",
+    "introduce-property-definition",
+    "retire-property-definition",
+    "introduce-subject",
+    "retire-subject",
+    "introduce-product-class",
+    "retire-product-class",
+    "introduce-product-series",
+    "retire-product-series",
+    "introduce-product-index",
+    "retire-product-index",
+    "introduce-geometry-object",
+    "retire-geometry-object",
 ];
 
 /// 🗣️ The real committed ISO 16757 document, read where the domain already keeps it.
@@ -104,11 +112,11 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-the-exchange-stage-to-determine-product/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔄️change-exchange-process/🔄️advances-the-exchange-stage-to-determine-product/🎯️outcome/🔣️.json"),
         ),
-        "update-script-limits" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️update-script-limits/🚦️doubles-the-step-budget-and-quintuples-the-timeout/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️update-script-limits/🚦️doubles-the-step-budget-and-quintuples-the-timeout/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️update-script-limits/🚦️doubles-the-step-budget-and-quintuples-the-timeout/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚦️update-script-limits/🚦️doubles-the-step-budget-and-quintuples-the-timeout/🎯️outcome/🔣️.json"),
+        "change-script-limits" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/🚦️doubles-the-step-budget-and-quintuples-the-timeout/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/🚦️doubles-the-step-budget-and-quintuples-the-timeout/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/🚦️doubles-the-step-budget-and-quintuples-the-timeout/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚦️change-script-limits/🚦️doubles-the-step-budget-and-quintuples-the-timeout/🎯️outcome/🔣️.json"),
         ),
         "replace-part-number-rule" => (
             include_str!("../../🧫️fixtures/🧬️mutations/🧮️replace-part-number-rule/🧮️swaps-the-literal-rule-for-a-height-driven-script/📸️snapshot/⬅️before/🔣️.json"),
@@ -164,17 +172,17 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/🏭️adds-the-ag-suffix-to-the-manufacturer/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🏭️rename-manufacturer/🏭️adds-the-ag-suffix-to-the-manufacturer/🎯️outcome/🔣️.json"),
         ),
-        "create-product-group" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧺️create-product-group/🧺️appends-a-towel-radiators-group/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧺️create-product-group/🧺️appends-a-towel-radiators-group/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧺️create-product-group/🧺️appends-a-towel-radiators-group/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧺️create-product-group/🧺️appends-a-towel-radiators-group/🎯️outcome/🔣️.json"),
+        "introduce-product-group" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/🧺️appends-a-towel-radiators-group/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/🧺️appends-a-towel-radiators-group/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/🧺️appends-a-towel-radiators-group/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧺️introduce-product-group/🧺️appends-a-towel-radiators-group/🎯️outcome/🔣️.json"),
         ),
-        "delete-product-group" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧹️delete-product-group/🚫️removes-the-radiators-group-and-strands-its-class/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧹️delete-product-group/🚫️removes-the-radiators-group-and-strands-its-class/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧹️delete-product-group/🚫️removes-the-radiators-group-and-strands-its-class/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧹️delete-product-group/🚫️removes-the-radiators-group-and-strands-its-class/🎯️outcome/🔣️.json"),
+        "retire-product-group" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧹️retire-product-group/🚫️removes-the-radiators-group-and-strands-its-class/🎯️outcome/🔣️.json"),
         ),
         "rename-product-group" => (
             include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✏️renames-the-radiators-group-to-panel-radiators/📸️snapshot/⬅️before/🔣️.json"),
@@ -182,17 +190,17 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✏️renames-the-radiators-group-to-panel-radiators/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🗂️rename-product-group/✏️renames-the-radiators-group-to-panel-radiators/🎯️outcome/🔣️.json"),
         ),
-        "create-product" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️create-product/📦️appends-a-pr900-product-to-the-existing-series/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️create-product/📦️appends-a-pr900-product-to-the-existing-series/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️create-product/📦️appends-a-pr900-product-to-the-existing-series/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📦️create-product/📦️appends-a-pr900-product-to-the-existing-series/🎯️outcome/🔣️.json"),
+        "introduce-product" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/📦️appends-a-pr900-product-to-the-existing-series/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/📦️appends-a-pr900-product-to-the-existing-series/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/📦️appends-a-pr900-product-to-the-existing-series/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📦️introduce-product/📦️appends-a-pr900-product-to-the-existing-series/🎯️outcome/🔣️.json"),
         ),
-        "delete-product" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🚫️delete-product/🚫️removes-the-pr600-product-from-the-catalogue/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚫️delete-product/🚫️removes-the-pr600-product-from-the-catalogue/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚫️delete-product/🚫️removes-the-pr600-product-from-the-catalogue/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🚫️delete-product/🚫️removes-the-pr600-product-from-the-catalogue/🎯️outcome/🔣️.json"),
+        "retire-product" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/🚫️removes-the-pr600-product-from-the-catalogue/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/🚫️removes-the-pr600-product-from-the-catalogue/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/🚫️removes-the-pr600-product-from-the-catalogue/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚫️retire-product/🚫️removes-the-pr600-product-from-the-catalogue/🎯️outcome/🔣️.json"),
         ),
         "rename-product" => (
             include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✏️renames-pr600-to-the-compact-variant-name/📸️snapshot/⬅️before/🔣️.json"),
@@ -200,29 +208,77 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✏️renames-pr600-to-the-compact-variant-name/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-product/✏️renames-pr600-to-the-compact-variant-name/🎯️outcome/🔣️.json"),
         ),
-        "create-property-definition" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️create-property-definition/📏️appends-a-selection-scoped-length-property/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️create-property-definition/📏️appends-a-selection-scoped-length-property/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️create-property-definition/📏️appends-a-selection-scoped-length-property/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️create-property-definition/📏️appends-a-selection-scoped-length-property/🎯️outcome/🔣️.json"),
+        "introduce-property-definition" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️introduce-property-definition/📏️appends-a-selection-scoped-length-property/🎯️outcome/🔣️.json"),
         ),
-        "delete-property-definition" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧽️delete-property-definition/🚫️removes-the-height-property-definition/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧽️delete-property-definition/🚫️removes-the-height-property-definition/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧽️delete-property-definition/🚫️removes-the-height-property-definition/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧽️delete-property-definition/🚫️removes-the-height-property-definition/🎯️outcome/🔣️.json"),
+        "retire-property-definition" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/🚫️removes-the-height-property-definition/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/🚫️removes-the-height-property-definition/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/🚫️removes-the-height-property-definition/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🧽️retire-property-definition/🚫️removes-the-height-property-definition/🎯️outcome/🔣️.json"),
         ),
-        "create-subject" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌳️create-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌳️create-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌳️create-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌳️create-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🎯️outcome/🔣️.json"),
+        "introduce-subject" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌳️introduce-subject/🌳️appends-a-towel-radiator-subject-under-the-radiator-parent/🎯️outcome/🔣️.json"),
         ),
-        "delete-subject" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️delete-subject/🚫️removes-the-radiator-subject-from-the-dictionary/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️delete-subject/🚫️removes-the-radiator-subject-from-the-dictionary/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️delete-subject/🚫️removes-the-radiator-subject-from-the-dictionary/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️delete-subject/🚫️removes-the-radiator-subject-from-the-dictionary/🎯️outcome/🔣️.json"),
+        "retire-subject" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/🚫️removes-the-radiator-subject-from-the-dictionary/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/🚫️removes-the-radiator-subject-from-the-dictionary/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/🚫️removes-the-radiator-subject-from-the-dictionary/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✂️retire-subject/🚫️removes-the-radiator-subject-from-the-dictionary/🎯️outcome/🔣️.json"),
+        ),
+        "introduce-product-class" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/🏷️appends-a-towel-radiator-class/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/🏷️appends-a-towel-radiator-class/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/🏷️appends-a-towel-radiator-class/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️introduce-product-class/🏷️appends-a-towel-radiator-class/🎯️outcome/🔣️.json"),
+        ),
+        "retire-product-class" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/🗑️removes-the-panel-radiator-class/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/🗑️removes-the-panel-radiator-class/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/🗑️removes-the-panel-radiator-class/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-class/🗑️removes-the-panel-radiator-class/🎯️outcome/🔣️.json"),
+        ),
+        "introduce-product-series" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/📚appends-a-pr-plus-series/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/📚appends-a-pr-plus-series/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/📚appends-a-pr-plus-series/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📚introduce-product-series/📚appends-a-pr-plus-series/🎯️outcome/🔣️.json"),
+        ),
+        "retire-product-series" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/🗑️removes-the-pr-series/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/🗑️removes-the-pr-series/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/🗑️removes-the-pr-series/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-series/🗑️removes-the-pr-series/🎯️outcome/🔣️.json"),
+        ),
+        "introduce-product-index" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/🔎appends-a-pr600-index/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/🔎appends-a-pr600-index/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/🔎appends-a-pr600-index/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔎introduce-product-index/🔎appends-a-pr600-index/🎯️outcome/🔣️.json"),
+        ),
+        "retire-product-index" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/🗑️removes-the-pr600-index/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/🗑️removes-the-pr600-index/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/🗑️removes-the-pr600-index/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-product-index/🗑️removes-the-pr600-index/🎯️outcome/🔣️.json"),
+        ),
+        "introduce-geometry-object" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/📐appends-a-pr600-geometry/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/📐appends-a-pr600-geometry/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/📐appends-a-pr600-geometry/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐introduce-geometry-object/📐appends-a-pr600-geometry/🎯️outcome/🔣️.json"),
+        ),
+        "retire-geometry-object" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/🗑️removes-the-pr600-geometry/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/🗑️removes-the-pr600-geometry/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/🗑️removes-the-pr600-geometry/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️retire-geometry-object/🗑️removes-the-pr600-geometry/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-iso16757-1: no committed fixture is registered for kind {other:?}"),
     }

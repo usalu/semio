@@ -239,6 +239,14 @@ Paths relative to `🧰️framework/🛍️products/💻️os/🔨️modules/` u
   `cargo check --lib --profile test` rc=0 (warnings = proof; the two in my file fixed).
 - 11:1x wasm32 final gates queued in the mutex (`wasm-checks-5.sh` → `check-wasm-8.txt`: wasip2 framework + kernel + plugin, kernel
   `sync` unknown-unknown, renderer unknown-unknown).
+- 11:21 test binary with the split laws built (`--no-run` rc=0, 0 warnings in my file). **Cross-shell run 7** (`CROSS_MODE=cursors`,
+  load 55–64): step 1 ✗ — both native sign-in attempts answered `Unreachable` inside the 30 s sign-in deadline (hub mint + `me`
+  under load; React's sign-in, which has no request deadline, got through at the same time). Load, not a defect; to re-measure
+  the mint time with curl once 7800 is back.
+- ~14:59 app restart killed every process (my wasm check queue `check-wasm-8`, the React serve 6590). 15:01 7800 rebooting on B2
+  (W2 now runs the `--packages all` publish in the wasm mutex). 15:03 React serve 6590 relaunched (`serve-react-6590-b.txt`),
+  wasm gates re-queued (`wasm-checks-5.sh` → `check-wasm-9.txt`, behind W2's hold). Rules 20/21 (guest freeze; no edits to
+  taxonomy/nx/project.json/root Cargo/`.cargo`/`📇️directory/🧬️schema`) observed: no such edits since 05:45.
 
 ## Coordination (read me, WG7 / coordinator)
 

@@ -2,7 +2,7 @@
   "title": "Fix Unregistered Toolbar Group I18n Names",
   "status": "closed",
   "prompt": "Fix toolbar group toggle IDs that have no corresponding i18n entries. The id compose.sketchpad.toolbar.group.selection/filter/etc has no i18n translation, causing raw IDs to show as tooltip labels. Also search for other similar unregistered IDs across the sketchpad UI.",
-  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings",
   "started": "2026-03-11T09:11:20.06270195Z",
   "interactions": [
     {

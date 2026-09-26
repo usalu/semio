@@ -4,119 +4,90 @@
   "title": "En1997Diff",
   "type": "object",
   "additionalProperties": false,
-  "required": [],
   "properties": {
     "artifact": {
-      "title": "En1997Artifact",
-      "type": "object",
-      "x-semio-state": "artifact"
+      "type": [
+        "object",
+        "null"
+      ]
     },
-    "vEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "structureId": {
+      "type": [
+        "string",
+        "null"
+      ]
     },
-    "hEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "geotechnicalCategory": {
+      "type": [
+        "integer",
+        "null"
+      ]
     },
-    "footingAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "phiDeg": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "cKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "gammaKnM3": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "bM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "dFM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "eSMpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "nu": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "designSituation": {
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "designApproach": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "type": [
+        "string",
+        "null"
+      ]
     },
-    "settlementLimitMm": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "groundwaterLevel": {
+      "type": [
+        "number",
+        "null"
+      ]
     },
-    "nPileEdKn": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "investigationDepth": {
+      "type": [
+        "number",
+        "null"
+      ]
     },
-    "alphaS": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "layers": {
+      "type": [
+        "object",
+        "null"
+      ]
     },
-    "pileDM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "footings": {
+      "type": [
+        "object",
+        "null"
+      ]
     },
-    "qSKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "piles": {
+      "type": [
+        "object",
+        "null"
+      ]
     },
-    "pileLM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "retainingWalls": {
+      "type": [
+        "object",
+        "null"
+      ]
     },
-    "qBKpa": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "slopes": {
+      "type": [
+        "object",
+        "null"
+      ]
     },
-    "pileBaseAreaM2": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
-    "pileNProfiles": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "zInvestigatedM": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
+    "upliftCases": {
+      "type": [
+        "object",
+        "null"
+      ]
     }
   }
 }

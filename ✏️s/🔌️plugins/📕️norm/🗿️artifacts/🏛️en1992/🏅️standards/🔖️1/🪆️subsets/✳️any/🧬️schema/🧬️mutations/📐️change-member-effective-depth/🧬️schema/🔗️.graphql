@@ -1,0 +1,4 @@
+type ChangeMemberEffectiveDepth {
+  memberId: String!
+  newValue: Float!
+}

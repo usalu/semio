@@ -17,8 +17,8 @@ type normDin16798InferenceTextGuardTextBounds = { readonly minLength?: number; r
 type normDin16798InferenceTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normDin16798InferenceTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normDin16798InferenceTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normDin16798InferenceTextGuardReject(at, "value is not an object");
+export const normDin16798InferenceTextGuardObject = (value: unknown, at: string): object =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as object) : normDin16798InferenceTextGuardReject(at, "value is not an object");
 export const normDin16798InferenceTextGuardArray = (value: unknown, at: string, bounds: normDin16798InferenceTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normDin16798InferenceTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normDin16798InferenceTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);

@@ -1,22 +1,9 @@
-#[semio_framework_async_macros::async_test]
-async fn primary_asset_is_nonempty() {
-    let text = include_str!("../../../../🖼️assets/🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio");
-    assert!(text.len() > 8);
-}
+//! 🔬️ Example smoke.
 
-#[semio_framework_async_macros::async_test]
-async fn inference_determinism_law() {
-    use crate::artifact_schema::inferences::En1999Inference;
-    use crate::En1999Snapshot;
-    use protocol::Inference;
-    let snapshot = En1999Snapshot::default();
-    assert_eq!(En1999Inference::infer(&snapshot), En1999Inference::infer(&snapshot));
-}
+use crate::aluminium_roof_purlin;
 
-#[semio_framework_async_macros::async_test]
-async fn inference_default_law() {
-    use crate::artifact_schema::inferences::En1999Inference;
-    use crate::En1999Snapshot;
-    use protocol::Inference;
-    assert_eq!(En1999Inference::infer(&En1999Snapshot::default()), En1999Inference::default());
+#[test]
+fn example_snapshot_is_realistic() {
+    let s = aluminium_roof_purlin::snapshot();
+    assert_eq!(s.members[0].id, "purlin-1");
 }
