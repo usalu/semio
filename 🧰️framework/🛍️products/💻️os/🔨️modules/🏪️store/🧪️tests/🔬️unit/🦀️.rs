@@ -7,6 +7,10 @@ mod native_codec_send_tests;
 #[path = "../../🔗️backbone/✂️detach/🧪️tests/✂️detach/🦀️.rs"]
 mod backbone_detach_refusal_tests;
 
+#[cfg(test)]
+#[path = "../📤️outbound-announcement/🦀️.rs"]
+mod outbound_announcement_tests;
+
 use super::fixture_mutations::{
     demo::{AddN, DeleteN, DemoMutation, RestoreN, SetN},
     lossy::{LossyMutation, SetN as LossySetN},
@@ -4254,6 +4258,8 @@ fn mutation_envelope_at(actor: &str, mutation_id: &str, operation: DemoMutation,
         document_id: ArtifactId("demo".to_string()),
         actor: ActorId(actor.to_string()),
         dependencies,
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode demo mutation") },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp: hlc,
@@ -5195,6 +5201,8 @@ async fn sample_envelope_for_backbone_test() -> crate::os_spr::MutationEnvelope 
         document_id: ArtifactId("doc-1".to_string()),
         actor: ActorId("actor-1".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: vec![1, 2, 3] },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
@@ -5287,11 +5295,9 @@ async fn loaded_envelope_with_stale_backbone_ref_never_auto_attaches() {
 }
 
 /// 🧬️ A component codec that answers `codec.print-mirror` with the pair's byte counts, so a law can
-/// see the pair it was handed, and mints a zero-history genesis stamped `minted_identity` (the asked
-/// identity when `None`).
+/// see the pair it was handed.
 struct EchoComponentCodec {
     schema: &'static str,
-    minted_identity: Option<&'static str>,
 }
 
 impl ComponentDocumentCodec for EchoComponentCodec {
@@ -5306,14 +5312,6 @@ impl ComponentDocumentCodec for EchoComponentCodec {
     fn print_mirror<'a>(&'a self, pack: &'a [u8], spr: &'a [u8]) -> ComponentDocumentCodecFuture<'a, ArtifactTextFiles> {
         Box::pin(async move { Ok(ArtifactTextFiles { dsl: pack.len().to_string(), ops: spr.len().to_string() }) })
     }
-
-    fn genesis<'a>(&'a self, document_id: &'a str) -> ComponentDocumentCodecFuture<'a, ComponentDocumentGenesis> {
-        Box::pin(async move {
-            let history = crate::os_spr::HistoryLog { doc_id: self.minted_identity.unwrap_or(document_id).to_string(), schema: self.schema.to_string(), ..crate::os_spr::HistoryLog::default() };
-            let spr = crate::os_spr::encode_history(&history, &crate::os_spr::EncodeOptions::default()).await.map_err(|error| VcsError::Serialize(error.to_string()))?;
-            Ok(ComponentDocumentGenesis { pack: document_id.as_bytes().to_vec(), spr })
-        })
-    }
 }
 
 /// 🧭️ One resolution per schema, in the hub's trusted-catalog order: the linked Rust codec whenever
@@ -5325,8 +5323,8 @@ async fn a_kind_resolves_to_its_linked_codec_before_its_mounted_component() {
     let linked = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.kind-codec-linked/v1");
     let linked_hash = linked.pack_schema_hash;
     register_document_codec(linked).expect("linked codec registers");
-    register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.kind-codec-linked/v1", minted_identity: None })).expect("component codec registers");
-    register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.kind-codec-component/v1", minted_identity: None })).expect("component codec registers");
+    register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.kind-codec-linked/v1" })).expect("component codec registers");
+    register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.kind-codec-component/v1" })).expect("component codec registers");
 
     let resolved = document_kind_codec("test.kind-codec-linked/v1").await.expect("registry").expect("linked kind resolves");
     assert!(matches!(resolved, DocumentKindCodec::Linked(_)), "a linked codec outranks a mounted component");
@@ -5338,26 +5336,6 @@ async fn a_kind_resolves_to_its_linked_codec_before_its_mounted_component() {
     assert_eq!(resolved.print_mirror(&[1, 2, 3], &[4]).await.expect("component mirror"), ArtifactTextFiles { dsl: "3".into(), ops: "1".into() }, "the mirror is the component's answer for exactly the pair handed over");
 
     assert!(document_kind_codec("test.kind-codec-unowned/v1").await.expect("registry").is_none());
-}
-
-/// 🌱️ A host opens a document on the genesis its owning component mints for exactly that identity — the
-/// baseline the hub seeds a new artifact from — so every mutation the guest then authors names the
-/// document it opened. Measured without it (ticket 26/09/23 slice WG8, two-user gate run 12): the native
-/// guest authored against its app id (`s.block.block2d@1/*#editor`) and the document actor refused
-/// every edit as `document backbone scope mismatch`. A component minting another identity is refused;
-/// a kind no mounted component owns has no genesis here.
-#[semio_framework_async_macros::async_test]
-async fn a_document_opens_on_the_genesis_its_owning_component_mints_for_its_identity() {
-    register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.genesis-owned/v1", minted_identity: None })).expect("component codec registers");
-    register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.genesis-foreign/v1", minted_identity: Some("another-document") })).expect("component codec registers");
-
-    let genesis = component_document_genesis("test.genesis-owned/v1", "artifact-1").await.expect("owned genesis").expect("a mounted component owns the kind");
-    let history = crate::os_spr::decode_history(&genesis.spr, &crate::os_spr::DecodeOptions::default()).await.expect("genesis history decodes");
-    assert_eq!((history.doc_id.as_str(), history.schema.as_str(), history.edits.len()), ("artifact-1", "test.genesis-owned/v1", 0));
-    assert_eq!(genesis.pack, b"artifact-1".to_vec(), "the pair is the component's own answer");
-
-    assert!(matches!(component_document_genesis("test.genesis-foreign/v1", "artifact-1").await, Err(VcsError::ValidationFailed(_))), "a genesis of another identity is refused");
-    assert_eq!(component_document_genesis("test.genesis-unowned/v1", "artifact-1").await, Ok(None));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -6364,6 +6342,8 @@ fn severity_mutation_envelope_at(document_id: &str, actor: &str, mutation_id: &s
         document_id: ArtifactId(document_id.to_string()),
         actor: ActorId(actor.to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode severity mutation") },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp,

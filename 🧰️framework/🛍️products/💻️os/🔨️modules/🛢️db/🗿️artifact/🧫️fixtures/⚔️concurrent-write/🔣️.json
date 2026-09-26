@@ -1,0 +1,94 @@
+{
+  "schema": "semio.db.concurrent-write/v1",
+  "vectors": [
+    {
+      "id": "a-write-that-observed-the-other-authors-latest-write-is-accepted",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a1", "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "vigilant-refuses-a-same-target-write-authored-without-seeing-the-other",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a0", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a0", "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "refused", "codes": ["mutation.clamped"] }
+      ]
+    },
+    {
+      "id": "normal-accepts-the-same-target-concurrent-write-and-reports-it",
+      "policy": "normal",
+      "commits": [
+        { "write": { "id": "a0", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a0", "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": ["mutation.clamped"] }
+      ]
+    },
+    {
+      "id": "concurrent-writes-to-disjoint-targets-are-no-conflict",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a0", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a0", "writes": { "target": ["name"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "an-undeclared-target-is-the-whole-artifact",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "b1", "actor": "bob", "observed": null, "writes": { "target": [] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "refused", "codes": ["mutation.clamped"] }
+      ]
+    },
+    {
+      "id": "an-authors-own-writes-are-never-concurrent",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a2", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "a-write-that-saw-an-older-write-but-not-the-newest-is-concurrent-with-the-newest",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": "a1", "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "c1", "actor": "carol", "observed": "a1", "writes": { "target": ["text"] } }, "outcome": "refused", "codes": ["mutation.clamped"] },
+        { "write": { "id": "c2", "actor": "carol", "observed": "b1", "writes": { "target": ["text"] } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "shared-segments-overlap-and-distinct-ids-do-not",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "a1", "actor": "alice", "observed": null, "writes": { "target": ["tiles", "t-hero"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b1", "actor": "bob", "observed": null, "writes": { "target": ["t-other"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b2", "actor": "bob", "observed": null, "writes": { "target": ["tiles"] } }, "outcome": "refused", "codes": ["mutation.clamped"] }
+      ]
+    },
+    {
+      "id": "history-transitions-are-never-graded-and-never-conflict",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "b1", "actor": "bob", "observed": null, "writes": { "target": [] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "a-undo", "actor": "alice", "observed": null, "writes": { "transition": true } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "b2", "actor": "bob", "observed": null, "writes": { "target": [] } }, "outcome": "accepted", "codes": [] }
+      ]
+    },
+    {
+      "id": "readable-path-map-writes-conflict-only-on-shared-paths",
+      "policy": "vigilant",
+      "commits": [
+        { "write": { "id": "x1", "actor": "alice", "observed": null, "writes": { "paths": ["x"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "y1", "actor": "bob", "observed": null, "writes": { "paths": ["y"] } }, "outcome": "accepted", "codes": [] },
+        { "write": { "id": "x2", "actor": "bob", "observed": null, "writes": { "paths": ["x"] } }, "outcome": "refused", "codes": ["mutation.clamped"] },
+        { "write": { "id": "x3", "actor": "bob", "observed": "x1", "writes": { "paths": ["x"] } }, "outcome": "accepted", "codes": [] }
+      ]
+    }
+  ]
+}

@@ -51,7 +51,6 @@ export function verifyAdminEntryGraph(root: string): void {
   assert.equal(inside(htmlEntry), true, "Hub admin module entry escapes the package");
   assert.equal(existsSync(htmlEntry), true, "Hub admin canonical module entry does not exist");
   assert.equal(inside(realpathSync(htmlEntry)), true, "Hub admin module entry resolves outside the package");
-  console.log(`[DEBUG] hub admin entry graph oracle: ${fixture.laws.length} laws, ${modules.length} HTML module entry, 1 package export, ${readFileSync(htmlEntry).byteLength} entry bytes`);
 }
 
 type AdminStylesheetGraph = { readonly version: number; readonly stylesheet: string; readonly imports: readonly string[]; readonly sources: readonly string[]; readonly shared: { readonly manifest: string; readonly export: string; readonly canonical: string }; readonly laws: readonly string[] };
@@ -104,6 +103,5 @@ export function verifyAdminStylesheetGraph(root: string): void {
     }
   };
   visit(canonicalPath);
-  console.log(`[DEBUG] hub admin stylesheet graph oracle: ${fixture.laws.length} laws, ${imports.length} canonical import, ${sources.length} Tailwind sources, ${localImports} resolved shared imports across ${visited.size} stylesheets`);
 }
 

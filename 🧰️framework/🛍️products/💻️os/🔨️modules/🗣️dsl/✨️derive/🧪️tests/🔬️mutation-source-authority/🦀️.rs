@@ -31,7 +31,7 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
     let owner = mutation_root.join("🆕️insert-page");
     let source = owner.join("🦀️.rs");
     let descriptor = owner.join("🔣️.json");
-    let taxonomy = workspace.join("authority/🔣️taxonomy.json");
+    let taxonomy = workspace.join(MUTATION_AUTHORITY_LOCATOR);
     fs::create_dir_all(&owner).unwrap();
     fs::create_dir_all(taxonomy.parent().unwrap()).unwrap();
     fs::write(workspace.join("nx.json"), "{}").unwrap();
@@ -40,11 +40,12 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
     let mut descriptor_value = fixture["descriptor"].clone();
     descriptor_value["owner"] = serde_json::Value::String(owner_text);
     fs::write(&descriptor, serde_json::to_vec(&descriptor_value).unwrap()).unwrap();
-    fs::write(&taxonomy, r#"{"fileKinds":{"rust":{"emoji":"🦀️","extensionChains":[".rs"]},"json":{"emoji":"🔣️","extensionChains":[".json"]}},"mutationComponentFileKindId":"rust","mutationDescriptorFileKindId":"json","mutationBehaviorFacetDirs":["🦠️mutation","🔺️diff","↩️inverse"],"semanticCollections":{"🧬️mutations":{"kind":"mutation"}}}"#).unwrap();
-    fs::write(workspace.join("📋️project.json"), r#"{"metadata":{"semio":{"taxonomy":"authority/🔣️taxonomy.json"}}}"#).unwrap();
+    fs::write(&taxonomy, r#"{"schema":"semio.dsl.mutation-source-authority/v1","sourceFilename":"🦀️.rs","descriptorFilename":"🔣️.json","mutationCollection":"🧬️mutations","mutationPayloadFacet":"🦠️mutation","mutationDomainOwners":{},"mutationAggregateSources":{}}"#).unwrap();
+    fs::write(workspace.join("📋️project.json"), "{}").unwrap();
     match case {
-        "missing-locator" => fs::write(workspace.join("📋️project.json"), r#"{"metadata":{"semio":{}}}"#).unwrap(),
-        "malformed-locator" => fs::write(workspace.join("📋️project.json"), r#"{"metadata":{"semio":{"taxonomy":"../authority/🔣️taxonomy.json"}}}"#).unwrap(),
+        "missing-authority" => fs::remove_file(&taxonomy).unwrap(),
+        "malformed-authority" => fs::write(&taxonomy, r#"{"schema":"semio.dsl.mutation-source-authority/v0","sourceFilename":"🦀️.rs","descriptorFilename":"🔣️.json","mutationCollection":"🧬️mutations","mutationPayloadFacet":"🦠️mutation","mutationDomainOwners":{},"mutationAggregateSources":{}}"#).unwrap(),
+        "unsafe-authority-segment" => fs::write(&taxonomy, r#"{"schema":"semio.dsl.mutation-source-authority/v1","sourceFilename":"🦀️.rs","descriptorFilename":"🔣️.json","mutationCollection":"domain/🧬️mutations","mutationPayloadFacet":"🦠️mutation","mutationDomainOwners":{},"mutationAggregateSources":{}}"#).unwrap(),
         "wrong-root-pair" => fs::remove_file(workspace.join("nx.json")).unwrap(),
         "wrong-primary-filename" => {
             const HISTORICAL_PRIMARY_FILENAME: &str = "component.rs";
@@ -89,8 +90,8 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
             fs::rename(&descriptor, &actual).unwrap();
             link_file(&actual, &descriptor);
         }
-        "symlink-taxonomy" => {
-            let actual = workspace.join("authority/🔣️actual.json");
+        "symlink-authority" => {
+            let actual = taxonomy.with_file_name("🔣️actual.json");
             fs::rename(&taxonomy, &actual).unwrap();
             link_file(&actual, &taxonomy);
         }
@@ -169,7 +170,7 @@ fn validates_mutation_source_authority_fixture() {
             assert!(facts.owner.ends_with("🆕️insert-page"));
             assert_eq!(facts.source_path.file_name().and_then(|name| name.to_str()), Some("🦀️.rs"));
             assert_eq!(facts.descriptor_path.file_name().and_then(|name| name.to_str()), Some("🔣️.json"));
-            assert!(facts.taxonomy_path.ends_with("authority/🔣️taxonomy.json"));
+            assert_eq!(facts.taxonomy_path, workspace.join(MUTATION_AUTHORITY_LOCATOR));
         }
     }
 }
@@ -198,7 +199,7 @@ fn validates_exact_domain_mutation_source_authority_fixture() {
         descriptor["owner"] = mutation_authority_relative(&workspace, &owner).unwrap().into();
         descriptor["semanticKind"] = vector["semanticKind"].clone();
         fs::write(owner.join("🔣️.json"), serde_json::to_vec(&descriptor).unwrap()).unwrap();
-        let taxonomy_path = workspace.join("authority/🔣️taxonomy.json");
+        let taxonomy_path = workspace.join(MUTATION_AUTHORITY_LOCATOR);
         let mut taxonomy: serde_json::Value = serde_json::from_slice(&fs::read(&taxonomy_path).unwrap()).unwrap();
         let mut domains = domain_fixture["domains"].clone();
         let mut root = domain_fixture["mutationRoot"].as_str().unwrap();
@@ -242,4 +243,17 @@ fn validates_exact_domain_mutation_source_authority_fixture() {
             }
         }
     }
+}
+
+#[test]
+fn mutation_authority_locator_names_the_committed_projection_of_this_workspace() {
+    let committed = fs::canonicalize(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🔣️mutation-authority.json")).unwrap();
+    let workspace = mutation_authority_workspace_root(&committed).unwrap();
+    assert_eq!(fs::canonicalize(mutation_authority_locator(&workspace, MUTATION_AUTHORITY_LOCATOR).unwrap()).unwrap(), committed);
+    let projection: serde_json::Value = serde_json::from_slice(&fs::read(&committed).unwrap()).unwrap();
+    assert_eq!(projection["schema"], MUTATION_AUTHORITY_SCHEMA);
+    let collection = mutation_authority_segment(&projection, "mutationCollection").unwrap();
+    for key in ["sourceFilename", "descriptorFilename", "mutationPayloadFacet"] { mutation_authority_segment(&projection, key).unwrap(); }
+    mutation_authority_domain_owners(&projection, &collection).unwrap();
+    mutation_authority_aggregate_sources(&projection, &collection).unwrap();
 }

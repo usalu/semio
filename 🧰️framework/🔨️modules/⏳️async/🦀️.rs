@@ -1716,8 +1716,11 @@ mod native_pool {
     use std::thread::{self, JoinHandle};
     use std::time::{Duration, Instant};
 
+    /// 🧺️ One worker's lane queues plus each queue's length as of its last unlock, so a scan (the
+    /// owner's or a thief's) skips an empty lane without taking its lock.
     struct WorkerLocal {
         queues: [Mutex<VecDeque<Job>>; LANE_COUNT],
+        queued: [AtomicUsize; LANE_COUNT],
     }
 
     thread_local! {
@@ -1728,7 +1731,15 @@ mod native_pool {
 
     impl WorkerLocal {
         fn new() -> WorkerLocal {
-            WorkerLocal { queues: std::array::from_fn(|_| Mutex::new(admitted_job_queue())) }
+            WorkerLocal { queues: std::array::from_fn(|_| Mutex::new(admitted_job_queue())), queued: std::array::from_fn(|_| AtomicUsize::new(0)) }
+        }
+
+        fn publish(&self, lane: Lane, queue: &VecDeque<Job>) {
+            self.queued[lane.index()].store(queue.len(), Ordering::Release);
+        }
+
+        fn queued(&self, lane: Lane) -> bool {
+            self.queued[lane.index()].load(Ordering::Acquire) != 0
         }
     }
 
@@ -1816,11 +1827,11 @@ mod native_pool {
         for _ in 0..LANE_COUNT * UNIT_COST as usize {
             let lane = Lane::ALL[*cursor];
             *cursor = (*cursor + 1) % LANE_COUNT;
-            let mut queue = my.queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner);
-            if queue.is_empty() && !inner.maintenance.has_pending(Some(lane)) && (lane != Lane::Io || !inner.deferred_wakes.has_pending()) {
+            if !my.queued(lane) && !inner.maintenance.has_pending(Some(lane)) && (lane != Lane::Io || !inner.deferred_wakes.has_pending()) {
                 deficits[lane.index()] = 0;
                 continue;
             }
+            let mut queue = my.queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner);
             deficits[lane.index()] += lane.weight() as i64;
             if deficits[lane.index()] >= UNIT_COST {
                 let low_priority_permit = if is_low_priority(lane) {
@@ -1841,6 +1852,7 @@ mod native_pool {
                 } else {
                     inner.maintenance.select(lane, &mut queue)
                 };
+                my.publish(lane, &queue);
                 if let Some(work) = work {
                     deficits[lane.index()] -= UNIT_COST;
                     return Some((lane, work, low_priority_permit));
@@ -1859,6 +1871,9 @@ mod native_pool {
         for offset in 1..worker_count {
             let victim = (my_index + offset) % worker_count;
             for lane in Lane::ALL {
+                if !inner.workers[victim].queued(lane) {
+                    continue;
+                }
                 let mut queue = inner.workers[victim].queues[lane.index()].lock().unwrap_or_else(PoisonError::into_inner);
                 if queue.is_empty() {
                     continue;
@@ -1872,6 +1887,7 @@ mod native_pool {
                     None
                 };
                 if let Some(job) = queue.pop_front() {
+                    inner.workers[victim].publish(lane, &queue);
                     return Some((lane, PoolWork::Job(job), low_priority_permit));
                 }
             }
@@ -2008,6 +2024,7 @@ mod native_pool {
                 panic!("WorkerPool: mandatory submission failed closed: {:?}", WorkerSubmitErrorKind::Saturated);
             }
             queue.push_back(job);
+            self.inner.workers[index].publish(lane, &queue);
             drop(queue);
             self.inner.notify_idle();
         }
@@ -2078,6 +2095,7 @@ mod native_pool {
                 return Err(WorkerSubmitError { kind: WorkerSubmitErrorKind::Saturated, job });
             }
             queue.push_back(job);
+            self.inner.workers[index].publish(lane, &queue);
             drop(queue);
             self.inner.notify_idle();
             Ok(())

@@ -106,6 +106,10 @@ mod generated_plugin_hosts;
 #[path = "../../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod scenes;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "../🕰️native-temporal/🦀️.rs"]
+mod native_temporal;
+
 #[path = "../../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod shell;
 
@@ -174,6 +178,13 @@ mod browser_worker;
 
 #[path = "../🪟️winit-app/🦀️.rs"]
 mod winit_app;
+
+// ♿️ The native shell's platform accessibility bridge: every window's accessibility projection as one AccessKit tree
+// (NSAccessibility / UI Automation / AT-SPI), AccessKit kept behind this one module. The browser build's DOM mirror
+// (`♿️accessibility-mirror`) is its twin.
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "../♿️native-accessibility/🦀️.rs"]
+pub(crate) mod native_accessibility;
 //#endregion 🔖️OsHostDecomposition
 
 // 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-kernel-loop): the real multi-shard `Kernel`
@@ -3938,12 +3949,25 @@ pub(crate) mod kernel_runtime {
     /// how long `run_turn`'s tick loop waits for a granted turn's `ShardOutcome` before giving up.
     const RUN_TURN_OUTCOME_TIMEOUT: Duration = Duration::from_secs(5);
 
-    /// ⏳️ How long one [`KernelPoolState::run_turn`] request may keep its actor's turn going —
-    /// preemption resumes and settle continuations together. The same order as
-    /// `RUN_TURN_OUTCOME_TIMEOUT`'s per-grant wait: every grant is itself bounded by the 100 ms
-    /// `TURN_BUDGET` wall. A guest still preempted when it runs out is reported as wedged; a guest
-    /// still answering `MoreWork` is handed back settled-as-far-as-it-got, never mid-call.
+    /// ⏳️ How long one [`KernelPoolState::run_turn`] request keeps settling a guest that COMPLETED its turn
+    /// answering `MoreWork`: past it the guest is handed back settled-as-far-as-it-got, never mid-call. A
+    /// guest preempted MID-call is never bounded by wall-clock time: it yields its slice to the other
+    /// actors ([`KernelPoolState::yield_slice`]) and only an explicit cancel ends it
+    /// ([`KernelPoolState::turn_cancelled`]).
     const RUN_TURN_SETTLE_BUDGET: Duration = Duration::from_secs(30);
+
+    /// ⚖️ How many queued requests of other instances run between two slices of a mid-flight turn — the
+    /// fairness contract's `requestsBetweenSlices` (`🧑‍🎨engine/🧫️fixtures/🧵️kernel-pool-future` `turnFairness`); a
+    /// slice itself is [`TURN_BUDGET`]'s fuel and wall.
+    const TURN_REQUESTS_BETWEEN_SLICES: usize = 1;
+
+    /// 🧩️ How many compiled components the kernel keeps for reuse by content hash — a reopened kind, a second
+    /// window of one app — before the oldest is dropped (its live instances keep their own handle).
+    const COMPILED_COMPONENT_CAPACITY: usize = 8;
+
+    /// 🧪️ How many mid-flight turns their owners cancelled in this test process ([`KernelPoolState::retire_cancelled_turn`]).
+    #[cfg(test)]
+    pub(crate) static CANCELLED_KERNEL_TURNS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
     /// 🤫️ Consecutive continuation turns that carried nothing after which [`KernelPoolState::run_turn`]
     /// stops settling a guest that still answers `MoreWork`: that guest is waiting on a host round trip
@@ -4287,6 +4311,20 @@ pub(crate) mod kernel_runtime {
         AcknowledgeJobProgress {
             token: JobProgressPresentationToken,
         },
+    }
+
+    /// ⚖️ Whether `request` may be served between two slices of a turn that is mid-flight on instance `busy`
+    /// (the fairness contract `🧑‍🎨engine/🧫️fixtures/🧵️kernel-turn-fairness`): every request of ANOTHER instance
+    /// that owns its outcome, and a new app; never one for the busy instance itself (its guest owns the next
+    /// call), never a close or a retained-rejection drain (their maintenance invariants hold only between
+    /// whole requests).
+    fn kernel_request_interleavable(request: &KernelRequest, busy: u32) -> bool {
+        match request {
+            KernelRequest::Exchange { instance, .. } | KernelRequest::AdvanceRetained { instance, .. } | KernelRequest::AdvanceProductReplay { instance } | KernelRequest::ExchangeCommands { instance, .. } => *instance != busy,
+            KernelRequest::MountProductReplay { owner } | KernelRequest::RetireProductReplay { owner } => owner.instance != busy,
+            KernelRequest::CreateApp { .. } | KernelRequest::AcknowledgeJobProgress { .. } => true,
+            KernelRequest::DestroyApp { .. } | KernelRequest::CloseRealm { .. } | KernelRequest::RetireProductReplayRefusal { .. } | KernelRequest::CloseRejectedCommandBuild { .. } | KernelRequest::CloseRejectedEvents { .. } => false,
+        }
     }
 
     impl KernelRequest {
@@ -5626,9 +5664,16 @@ pub(crate) mod kernel_runtime {
     #[derive(Default)]
     struct ResponseSlot {
         state: Mutex<ResponseState>,
+        abandoned: std::sync::atomic::AtomicBool,
     }
 
     impl ResponseSlot {
+        /// 🛑️ Whether the requester dropped its future before an outcome reached it — the explicit cancel of
+        /// a request whose owner follows it with progress and a cancel (a document open's create request).
+        fn abandoned(&self) -> bool {
+            self.abandoned.load(std::sync::atomic::Ordering::Acquire)
+        }
+
         fn deliver(&self, outcome: KernelOutcome) {
             let waker = {
                 let mut state = self.state.lock().expect("response slot lock");
@@ -5648,6 +5693,16 @@ pub(crate) mod kernel_runtime {
         slot: Arc<ResponseSlot>,
         request: Option<KernelRequest>,
         queue: Arc<KernelRequestQueue>,
+        finished: bool,
+    }
+
+    impl Drop for KernelFuture {
+        fn drop(&mut self) {
+            if !self.finished && self.request.is_none() {
+                self.slot.abandoned.store(true, std::sync::atomic::Ordering::Release);
+                self.queue.wake_consumer();
+            }
+        }
     }
 
     impl Future for KernelFuture {
@@ -5667,6 +5722,7 @@ pub(crate) mod kernel_runtime {
                 let previous = state.waker.take();
                 drop(state);
                 drop(previous);
+                this.finished = true;
                 return Poll::Ready(outcome);
             }
             let previous = state.waker.replace(waker);
@@ -5707,7 +5763,7 @@ pub(crate) mod kernel_runtime {
         }
 
         fn submit(&self, request: KernelRequest) -> KernelFuture {
-            KernelFuture { slot: Arc::new(ResponseSlot::default()), request: Some(request), queue: self.queue.clone() }
+            KernelFuture { slot: Arc::new(ResponseSlot::default()), request: Some(request), queue: self.queue.clone(), finished: false }
         }
 
         fn try_acknowledge_job_progress(&self, token: JobProgressPresentationToken) -> bool {
@@ -6790,6 +6846,13 @@ pub(crate) mod kernel_runtime {
         fault_closing_actors: [Option<ActorId>; JOB_PROGRESS_ACTIVE_CAPACITY],
         realm_progress_close_started: bool,
         semantic_close_document_lane: bool,
+        /// 🎛️ The response slots of the requests being served, innermost last, each with whether its owner
+        /// may cancel it mid-turn ([`Self::turn_cancelled`]).
+        serving: Vec<(Arc<ResponseSlot>, bool)>,
+        /// ⚖️ True while a request runs in another actor's slice gap ([`Self::yield_slice`]): a gap never nests.
+        interleaving: bool,
+        /// 🧩️ The components compiled most recently, newest first, by content hash ([`Self::compile_serving_others`]).
+        compiled_components: Vec<(PackageHash, semio_framework_plugin_host::CompiledHandle)>,
     }
 
     impl KernelPoolState {
@@ -6832,6 +6895,9 @@ pub(crate) mod kernel_runtime {
                 fault_closing_actors: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
                 realm_progress_close_started: false,
                 semantic_close_document_lane: false,
+                serving: Vec::with_capacity(2),
+                interleaving: false,
+                compiled_components: Vec::with_capacity(COMPILED_COMPONENT_CAPACITY),
             }
         }
 
@@ -7480,7 +7546,7 @@ pub(crate) mod kernel_runtime {
             let package_ref = PackageRef { package: package_id.clone(), hash };
             // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
             // remains a genuine suspension point on the worker-pool-owned request state machine.
-            let compiled = self.guest_runtime.compile(&package_ref, bytes).await.map_err(|error| error.to_string())?;
+            let compiled = self.compile_serving_others(package_ref.clone(), bytes.to_vec()).await?;
             if !artifact_schema.is_empty() {
                 let codec = semio_framework_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema).map_err(|error| error.to_string())?;
                 semio_framework_os_kernel::os_store::register_component_document_codec(Arc::new(codec)).map_err(|error| error.to_string())?;
@@ -7981,7 +8047,7 @@ pub(crate) mod kernel_runtime {
             }
             let mut settled: Option<ExchangeOutcome> = None;
             while let Some(batch) = batches.pop_front() {
-                let first = self.run_turn_once(actor, instance, batch, deadline).await?;
+                let first = self.run_turn_once(actor, instance, batch).await?;
                 let outcome = self.settle_turn(actor, instance, first, deadline).await?;
                 match settled.as_mut() {
                     Some(earlier) => earlier.absorb(outcome)?,
@@ -8000,7 +8066,7 @@ pub(crate) mod kernel_runtime {
                 if std::time::Instant::now() >= deadline || quiet >= run_turn_quiescent_continuations() {
                     break;
                 }
-                let (later, next) = self.run_turn_once(actor, instance, events, deadline).await?;
+                let (later, next) = self.run_turn_once(actor, instance, events).await?;
                 quiet = if later.carries_nothing() { quiet + 1 } else { 0 };
                 outcome.absorb(later)?;
                 owed.extend(run_turn_continuation_turns(next));
@@ -8020,16 +8086,132 @@ pub(crate) mod kernel_runtime {
         ///   for it and settles it like any turn, so the guest commits the job one unit per `MoreWork`
         ///   continuation and answers the verb (`Invocation { in_reply_to: 0 }`, `OperationCompleted`).
         async fn settle_reserved_jobs(&mut self, actor: ActorId, instance: u32, outcome: &mut ExchangeOutcome) -> Result<(), String> {
-            let deadline = std::time::Instant::now() + RUN_TURN_SETTLE_BUDGET;
             while self.reserved_jobs.iter().flatten().any(|job| job.actor == actor) {
-                if std::time::Instant::now() >= deadline {
-                    return Err(format!("kernel: actor {}'s reserved tool jobs did not end within {RUN_TURN_SETTLE_BUDGET:?}", actor.0));
+                if self.turn_cancelled() {
+                    return Err(self.retire_cancelled_turn(actor).await);
                 }
-                let first = self.run_reserved_job_once(actor, instance, deadline).await?;
-                let later = self.settle_turn(actor, instance, first, deadline).await?;
+                let first = self.run_reserved_job_once(actor, instance).await?;
+                let later = self.settle_turn(actor, instance, first, std::time::Instant::now() + RUN_TURN_SETTLE_BUDGET).await?;
                 outcome.absorb(later)?;
+                if !self.reserved_jobs.iter().flatten().any(|job| job.actor == actor && job.step.is_none()) {
+                    self.yield_slice(actor, instance).await;
+                }
             }
             Ok(())
+        }
+
+        /// 🛑️ Whether the turn being driven must end now: its requester cancelled it (a cancellable request whose
+        /// response slot was abandoned — a document open's create) or the realm is closing (a realm close waits
+        /// at the head of the queue). Nothing else ends a turn: a slow guest is never killed by wall-clock time.
+        fn turn_cancelled(&self) -> bool {
+            self.serving.last().is_some_and(|(slot, cancellable)| *cancellable && slot.abandoned()) || self.request_queue.head_is(|request| matches!(request, KernelRequest::CloseRealm { .. }))
+        }
+
+        /// ✂️ Retires an actor whose turn was cancelled mid-call: a mid-flight guest can never be handed back,
+        /// so its shard instance is dropped, the scheduler stops granting it, and every host record of it goes.
+        /// Answers the error its request reports.
+        async fn retire_cancelled_turn(&mut self, actor: ActorId) -> String {
+            let _ = self.runtime.kernel_mut().suspend(actor, None).await;
+            self.runtime.unregister(actor).await;
+            self.instances.retain(|_, instance_actor| *instance_actor != actor);
+            for route in self.replay_routes.iter_mut().filter(|route| route.is_some_and(|route| route.actor == actor)) {
+                *route = None;
+            }
+            for job in self.reserved_jobs.iter_mut().filter(|job| job.is_some_and(|job| job.actor == actor)) {
+                *job = None;
+            }
+            self.begin_fault_close(actor);
+            #[cfg(test)]
+            CANCELLED_KERNEL_TURNS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            format!("kernel: actor {}'s turn was cancelled by its owner", actor.0)
+        }
+
+        /// 🧩️ Compiles `bytes` on the worker pool while this loop keeps serving the other instances' requests — a
+        /// large component parses for minutes in a debug host, and the synchronous parse used to hold the whole
+        /// loop — reusing the handle already compiled for the same content hash. The open's owner may cancel it
+        /// while it parses ([`Self::turn_cancelled`]); the parse then finishes unobserved on its worker.
+        async fn compile_serving_others(&mut self, package: PackageRef, bytes: Vec<u8>) -> Result<semio_framework_plugin_host::CompiledHandle, String> {
+            if let Some((_, compiled)) = self.compiled_components.iter().find(|(hash, _)| *hash == package.hash) {
+                return Ok(compiled.clone());
+            }
+            let handoff: Arc<Mutex<(Option<Result<semio_framework_plugin_host::CompiledHandle, String>>, Option<Waker>)>> = Arc::default();
+            let worker = handoff.clone();
+            let runtime = self.guest_runtime.clone();
+            let key = package.clone();
+            crate::renderer_worker_pool().submit(
+                semio_framework_async::Lane::Background,
+                Box::new(move || {
+                    let result = semio_framework_async::block_on(runtime.compile(&key, &bytes)).map_err(|error| error.to_string());
+                    let waker = {
+                        let mut slot = worker.lock().expect("compile handoff lock");
+                        slot.0 = Some(result);
+                        slot.1.take()
+                    };
+                    if let Some(waker) = waker {
+                        waker.wake();
+                    }
+                }),
+            );
+            loop {
+                let gap = std::future::poll_fn(|cx| {
+                    let mut slot = handoff.lock().expect("compile handoff lock");
+                    if let Some(result) = slot.0.take() {
+                        return Poll::Ready(Some(result));
+                    }
+                    slot.1 = Some(cx.waker().clone());
+                    drop(slot);
+                    if self.turn_cancelled() {
+                        return Poll::Ready(Some(Err("kernel: the open was cancelled while its component compiled".to_string())));
+                    }
+                    if !self.interleaving && self.request_queue.head_is(|request| kernel_request_interleavable(request, u32::MAX)) {
+                        return Poll::Ready(None);
+                    }
+                    self.request_queue.watch(cx.waker());
+                    Poll::Pending
+                })
+                .await;
+                match gap {
+                    Some(result) => {
+                        let compiled = result?;
+                        if self.compiled_components.len() == COMPILED_COMPONENT_CAPACITY {
+                            self.compiled_components.pop();
+                        }
+                        self.compiled_components.insert(0, (package.hash, compiled.clone()));
+                        return Ok(compiled);
+                    }
+                    None => self.serve_head_between(u32::MAX).await,
+                }
+            }
+        }
+
+        /// ⚖️ Serves the head request when it may run beside work mid-flight on instance `busy`, marking the gap so a
+        /// request served in it never opens another.
+        async fn serve_head_between(&mut self, busy: u32) {
+            let Some((request, slot)) = self.request_queue.try_next_if(|request| kernel_request_interleavable(request, busy)) else { return };
+            self.interleaving = true;
+            let outcome = self.serve(request, &slot).await;
+            self.interleaving = false;
+            if let Some(outcome) = outcome {
+                slot.deliver(outcome);
+            }
+        }
+
+        /// ⚖️ Gives the other actors one request between two slices of `actor`'s turn on instance `busy` (the
+        /// fairness contract's `requestsBetweenSlices`): the head of the queue runs when it may
+        /// ([`kernel_request_interleavable`]) while `actor` is suspended in the scheduler, so no grant of that
+        /// request can reach the mid-flight guest; then `actor` is resumed. A request running in a slice gap
+        /// never opens another gap.
+        async fn yield_slice(&mut self, actor: ActorId, busy: u32) {
+            if self.interleaving || !self.request_queue.head_is(|request| kernel_request_interleavable(request, busy)) {
+                return;
+            }
+            let suspended = self.runtime.kernel_mut().suspend(actor, None).await.is_ok();
+            for _ in 0..TURN_REQUESTS_BETWEEN_SLICES {
+                self.serve_head_between(busy).await;
+            }
+            if suspended {
+                let _ = self.runtime.kernel_mut().resume(actor).await;
+            }
         }
 
         /// 🧾️ Registers every reserved-kind `Effect::SpawnJob` of `actor`'s settled turn with the
@@ -8072,8 +8254,10 @@ pub(crate) mod kernel_runtime {
         /// events of the continuation turn (see [`Self::run_turn`]). A granted actor the shard reports
         /// [`ShardOutcome::Preempted`] — ours or one `Kernel::tick` granted beside it — is resumed right
         /// here with an `Event::Wake` envelope (the shard's "resume with no events"), so the tick loop
-        /// keeps granting it until its turn returns; `deadline` bounds how long that may take.
-        async fn run_turn_once(&mut self, actor: ActorId, instance: u32, events: Vec<Event>, deadline: std::time::Instant) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
+        /// keeps granting it until its turn returns — after each of OUR actor's slices the request at the
+        /// head of the queue may run first ([`Self::yield_slice`]), and only an explicit cancel ends the turn
+        /// ([`Self::turn_cancelled`]).
+        async fn run_turn_once(&mut self, actor: ActorId, instance: u32, events: Vec<Event>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
             let mut envelopes = Vec::with_capacity(events.len().max(1));
             let mut replay_start_index = None;
             if events.is_empty() {
@@ -8110,13 +8294,13 @@ pub(crate) mod kernel_runtime {
                     });
                 }
             }
-            self.dispatch_turn(actor, instance, envelopes, replay_start_index, deadline).await
+            self.dispatch_turn(actor, instance, envelopes, replay_start_index).await
         }
 
         /// 🧰️ One turn of `actor`'s oldest live [`ReservedToolJob`]: its next `Payload::JobStep`, or, once
         /// the job ended, no envelope at all and only the wait for the deferred `Event::JobCompleted` turn
         /// [`Self::dispatch_turn`] counts as owed.
-        async fn run_reserved_job_once(&mut self, actor: ActorId, instance: u32, deadline: std::time::Instant) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
+        async fn run_reserved_job_once(&mut self, actor: ActorId, instance: u32) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
             let Some(oldest) = self.reserved_jobs.iter().flatten().filter(|job| job.actor == actor).min_by_key(|job| job.job).copied() else {
                 return Ok((ExchangeOutcome { frames: Vec::new(), surfaces: UiFixedList::default(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle, typed_results: Vec::new() }, None));
             };
@@ -8124,13 +8308,13 @@ pub(crate) mod kernel_runtime {
                 Some(turn) => vec![Envelope { to: actor, from: Origin::Kernel, lane: Lane::Interactive, seq: next_seq()?, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::JobStep { turn } }],
                 None => Vec::new(),
             };
-            self.dispatch_turn(actor, instance, envelopes, None, deadline).await
+            self.dispatch_turn(actor, instance, envelopes, None).await
         }
 
         /// 🚚️ Submits `envelopes` to `actor`, then grants and collects until nothing is left to grant and
         /// no deferred reserved-job completion of `actor` is owed. An outcome no grant of this call asked
         /// for is such a completion: the shard runs a job's `Event::JobCompleted` turn by itself.
-        async fn dispatch_turn(&mut self, actor: ActorId, instance: u32, envelopes: Vec<Envelope>, replay_start_index: Option<usize>, deadline: std::time::Instant) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
+        async fn dispatch_turn(&mut self, actor: ActorId, instance: u32, envelopes: Vec<Envelope>, replay_start_index: Option<usize>) -> Result<(ExchangeOutcome, Option<Vec<Event>>), String> {
             let stepped_reserved_job = envelopes.iter().find_map(|envelope| match &envelope.payload {
                 Payload::JobStep { turn } => self.reserved_jobs.iter().flatten().any(|job| job.actor == actor && job.job == turn.job).then_some(turn.job),
                 _ => None,
@@ -8216,8 +8400,11 @@ pub(crate) mod kernel_runtime {
                             replay_capture_started = true;
                         }
                         ShardOutcome::Preempted { actor: reported } => {
-                            if std::time::Instant::now() >= deadline {
-                                return Err(format!("kernel: actor {reported} stayed preempted past its {RUN_TURN_SETTLE_BUDGET:?} turn budget"));
+                            if reported == actor.0 {
+                                if self.turn_cancelled() {
+                                    return Err(self.retire_cancelled_turn(actor).await);
+                                }
+                                self.yield_slice(actor, instance).await;
                             }
                             let resume = Envelope {
                                 to: ActorId(reported),
@@ -8598,6 +8785,40 @@ pub(crate) mod kernel_runtime {
             std::future::poll_fn(|cx| self.poll(cx)).await
         }
 
+        /// 🎚️ Pops the head request only when `admit` accepts it — FIFO and the command credits stay exactly as
+        /// [`Self::try_next`] keeps them; a head that may not run now stays the head.
+        fn try_next_if(&self, admit: impl Fn(&KernelRequest) -> bool) -> Option<(KernelRequest, Arc<ResponseSlot>)> {
+            {
+                let state = self.state.try_lock().ok()?;
+                let head = state.slots[state.read].as_ref().filter(|_| state.len != 0)?;
+                if !admit(&head.0) {
+                    return None;
+                }
+            }
+            self.try_next()
+        }
+
+        /// 🔔️ Wakes `waker` when the next request is admitted — the loop's own wait, borrowed by a request that
+        /// serves other instances while it waits for its own work ([`KernelPoolState::compile_serving_others`]).
+        fn watch(&self, waker: &Waker) {
+            if let Ok(mut state) = self.state.try_lock() {
+                state.consumer_waker = Some(waker.clone());
+            }
+        }
+
+        /// 🔔️ Wakes the loop so a request waiting in a gap re-reads its requester's cancel.
+        fn wake_consumer(&self) {
+            let waker = self.state.try_lock().ok().and_then(|mut state| state.consumer_waker.take());
+            if let Some(waker) = waker {
+                waker.wake();
+            }
+        }
+
+        /// 👀️ Whether the head request satisfies `test` (`false` for an empty or contended queue).
+        fn head_is(&self, test: impl Fn(&KernelRequest) -> bool) -> bool {
+            self.state.try_lock().is_ok_and(|state| state.len != 0 && state.slots[state.read].as_ref().is_some_and(|head| test(&head.0)))
+        }
+
         async fn enqueue_retained(&self, request: KernelRequest, slot: Arc<ResponseSlot>) {
             let mut owner = Some((request, slot));
             std::future::poll_fn(|cx| {
@@ -8776,36 +8997,58 @@ pub(crate) mod kernel_runtime {
                 Some(ready) => ready,
                 None => queue.next().await,
             };
-            let outcome = match request {
+            if let Some(outcome) = state.serve(request, &slot).await {
+                slot.deliver(outcome);
+            }
+        }
+    }
+
+    impl KernelPoolState {
+        /// 🎛️ Serves one request and answers the outcome its slot receives — `None` for a request that owns its own
+        /// completion (a close step, an acknowledgement, a retained rejection drain). The loop and a slice gap
+        /// ([`Self::yield_slice`]) both serve through here; the returned future is boxed because a request served
+        /// in a gap is itself served by a turn this future drives.
+        fn serve<'a>(&'a mut self, request: KernelRequest, slot: &Arc<ResponseSlot>) -> Pin<Box<dyn Future<Output = Option<KernelOutcome>> + Send + 'a>> {
+            let cancellable = matches!(request, KernelRequest::CreateApp { .. });
+            self.serving.push((slot.clone(), cancellable));
+            Box::pin(async move {
+                let outcome = self.serve_request(request).await;
+                self.serving.pop();
+                outcome
+            })
+        }
+
+        async fn serve_request(&mut self, request: KernelRequest) -> Option<KernelOutcome> {
+            Some(match request {
                 KernelRequest::CreateApp { owner } => {
                     let (wasm_path, plugin_id, app_id, artifact_schema) = owner.into_parts();
-                    KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id, artifact_schema).await)
+                    KernelOutcome::Created(self.create_app(wasm_path, plugin_id, app_id, artifact_schema).await)
                 }
                 KernelRequest::DestroyApp { owner } => {
-                    if state.destroy_app_step(owner.instance).await {
+                    if self.destroy_app_step(owner.instance).await {
                         owner.finish(KernelCloseStatus::Complete);
                     } else {
                         owner.phase.store(KERNEL_CLOSE_READY, std::sync::atomic::Ordering::Release);
                         let _ = owner.try_schedule();
                     }
-                    continue;
+                    return None;
                 }
                 KernelRequest::CloseRealm { owner } => {
-                    if state.close_realm_progress_step() {
+                    if self.close_realm_progress_step() {
                         owner.finish(KernelCloseStatus::Complete);
                     } else {
                         owner.phase.store(KERNEL_CLOSE_READY, std::sync::atomic::Ordering::Release);
                         let _ = owner.try_schedule();
                     }
-                    continue;
+                    return None;
                 }
                 KernelRequest::AcknowledgeJobProgress { token } => {
-                    state.acknowledge_job_progress(token);
-                    continue;
+                    self.acknowledge_job_progress(token);
+                    return None;
                 }
-                KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(state.exchange(instance, vec![event.into_event()]).await),
-                KernelRequest::AdvanceRetained { instance, surface } => KernelOutcome::Exchanged(state.advance_retained_surface_one(instance, surface)),
-                KernelRequest::MountProductReplay { owner } => KernelOutcome::ProductReplayMounted(state.mount_product_replay(owner)),
+                KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(self.exchange(instance, vec![event.into_event()]).await),
+                KernelRequest::AdvanceRetained { instance, surface } => KernelOutcome::Exchanged(self.advance_retained_surface_one(instance, surface)),
+                KernelRequest::MountProductReplay { owner } => KernelOutcome::ProductReplayMounted(self.mount_product_replay(owner)),
                 KernelRequest::RetireProductReplay { owner } => {
                     owner.retire();
                     KernelOutcome::ProductReplayMounted(Ok(()))
@@ -8814,20 +9057,19 @@ pub(crate) mod kernel_runtime {
                     owner.retire();
                     KernelOutcome::ProductReplayMounted(Ok(()))
                 }
-                KernelRequest::AdvanceProductReplay { instance } => KernelOutcome::Exchanged(state.advance_product_replay(instance).await),
-                KernelRequest::ExchangeCommands { instance, driver } => KernelOutcome::Exchanged(state.exchange_commands(instance, driver).await),
+                KernelRequest::AdvanceProductReplay { instance } => KernelOutcome::Exchanged(self.advance_product_replay(instance).await),
+                KernelRequest::ExchangeCommands { instance, driver } => KernelOutcome::Exchanged(self.exchange_commands(instance, driver).await),
                 KernelRequest::CloseRejectedCommandBuild { key, owner } => {
-                    assert!(state.rejected_command_builds.can_insert(key), "worker drains the prior rejected command build before dequeuing another request");
-                    state.rejected_command_builds.insert_admitted(key, owner);
-                    continue;
+                    assert!(self.rejected_command_builds.can_insert(key), "worker drains the prior rejected command build before dequeuing another request");
+                    self.rejected_command_builds.insert_admitted(key, owner);
+                    return None;
                 }
                 KernelRequest::CloseRejectedEvents { owner } => {
-                    assert!(state.rejected_events.is_none(), "worker drains the prior rejected event owner before dequeuing another request");
-                    state.rejected_events = Some(owner);
-                    continue;
+                    assert!(self.rejected_events.is_none(), "worker drains the prior rejected event owner before dequeuing another request");
+                    self.rejected_events = Some(owner);
+                    return None;
                 }
-            };
-            slot.deliver(outcome);
+            })
         }
     }
 
@@ -10128,7 +10370,6 @@ impl RuntimeDispatchCursor {
         None
     }
 
-    #[cfg(test)]
     fn close_step(&mut self) -> bool {
         self.events.metrics = None;
         if self.events.pointer_move.take().is_some() {
@@ -10149,9 +10390,49 @@ impl RuntimeDispatchCursor {
     }
 }
 
+/// 🧾️ Carries a renderer-local receipt beside the unchanged domain action.
+struct FrameActionEnvelope {
+    descriptor: ActionDescriptor,
+    receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
+    cancelled: bool,
+}
+
+/// 🛟️ Settles the checked-out receipt even when its async dispatch future is cancelled.
+struct FrameActionReceiptOwner {
+    receipt: Option<ui_wgpu::wgpu::ActionQueueReceipt>,
+}
+
+impl FrameActionReceiptOwner {
+    fn settle(&mut self, outcome: engine_canvas::TextEditorActionOutcome<'_>) {
+        if let Some(receipt) = self.receipt.take() {
+            engine_canvas::settle_text_editor_action_receipt(receipt, outcome);
+        }
+    }
+}
+
+impl Drop for FrameActionReceiptOwner {
+    fn drop(&mut self) {
+        self.settle(engine_canvas::TextEditorActionOutcome::Cancelled);
+    }
+}
+
+impl FrameActionEnvelope {
+    fn cancel(self) {
+        if let Some(receipt) = self.receipt {
+            engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+        }
+    }
+}
+
+impl From<ui_wgpu::wgpu::QueuedActionDescriptor> for FrameActionEnvelope {
+    fn from(queued: ui_wgpu::wgpu::QueuedActionDescriptor) -> Self {
+        Self { descriptor: queued.descriptor, receipt: queued.receipt, cancelled: false }
+    }
+}
+
 /// 📦️ Fixed FIFO ownership for admitted frame actions; refusal returns the identical action.
 struct FrameActionBatchOwner {
-    slots: [Option<ActionDescriptor>; ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY],
+    slots: [Option<FrameActionEnvelope>; ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY],
     expected: u8,
     len: u8,
     source_remaining: u8,
@@ -10170,7 +10451,7 @@ impl FrameActionBatchOwner {
 }
 
 struct FrameActionOwners {
-    slots: [Option<ActionDescriptor>; WORLD3D_DEADLINE_CAPACITY],
+    slots: [Option<FrameActionEnvelope>; WORLD3D_DEADLINE_CAPACITY],
     head: usize,
     len: usize,
     batch: Option<FrameActionBatchOwner>,
@@ -10198,7 +10479,7 @@ impl FrameActionOwners {
         if self.slots[index].is_some() {
             return Err(action);
         }
-        self.slots[index] = Some(action);
+        self.slots[index] = Some(FrameActionEnvelope { descriptor: action, receipt: None, cancelled: false });
         self.len = next_len;
         Ok(())
     }
@@ -10215,12 +10496,17 @@ impl FrameActionOwners {
         self.batch.as_ref().map(FrameActionBatchOwner::remaining)
     }
 
-    fn stage_batch_action(&mut self, action: ActionDescriptor) -> FrameActionBatchStage {
-        let Some(batch) = self.batch.as_mut() else { return FrameActionBatchStage::Fault };
+    fn stage_batch_action(&mut self, action: FrameActionEnvelope) -> FrameActionBatchStage {
+        let Some(batch) = self.batch.as_mut() else {
+            action.cancel();
+            return FrameActionBatchStage::Fault;
+        };
         if batch.fault.is_some() {
+            action.cancel();
             return FrameActionBatchStage::Fault;
         }
         if batch.len == batch.expected || usize::from(batch.len) == batch.slots.len() {
+            action.cancel();
             batch.fault = Some("frame input action batch staging exceeded its reserved slice");
             return FrameActionBatchStage::Fault;
         }
@@ -10269,7 +10555,9 @@ impl FrameActionOwners {
         let fault = batch.fault?;
         if batch.len > 0 {
             batch.len -= 1;
-            batch.slots[usize::from(batch.len)] = None;
+            if let Some(action) = batch.slots[usize::from(batch.len)].take() {
+                action.cancel();
+            }
             return Some(Ok(FrameInputActionStep::Pending));
         }
         let source_remaining = usize::from(batch.source_remaining);
@@ -10280,7 +10568,10 @@ impl FrameActionOwners {
                 _ => return Some(Err("bounded frame input action batch source identity changed while retiring")),
             }
             match input.take_action_step() {
-                Ok(Some(_)) => {
+                Ok(Some(action)) => {
+                    if let Some(receipt) = action.receipt() {
+                        engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+                    }
                     batch.source_remaining -= 1;
                     return Some(Ok(FrameInputActionStep::Pending));
                 }
@@ -10292,7 +10583,7 @@ impl FrameActionOwners {
         Some(Err(fault))
     }
 
-    fn pop_front(&mut self) -> Option<ActionDescriptor> {
+    fn pop_front(&mut self) -> Option<FrameActionEnvelope> {
         if self.len == 0 {
             return None;
         }
@@ -10306,13 +10597,27 @@ impl FrameActionOwners {
         if let Some(batch) = self.batch.as_mut() {
             if batch.len > 0 {
                 batch.len -= 1;
-                batch.slots[usize::from(batch.len)] = None;
+                if let Some(action) = batch.slots[usize::from(batch.len)].take() {
+                    action.cancel();
+                }
                 return false;
             }
             self.batch = None;
             return false;
         }
-        self.pop_front().is_none()
+        if let Some(action) = self.pop_front() {
+            action.cancel();
+            return false;
+        }
+        true
+    }
+
+    fn cancel_correlation(&mut self, token: std::num::NonZeroU64) {
+        for action in self.slots.iter_mut().flatten().chain(self.batch.iter_mut().flat_map(|batch| batch.slots.iter_mut().flatten())) {
+            if action.receipt.is_some_and(|receipt| receipt.token == token) {
+                action.cancelled = true;
+            }
+        }
     }
 
     fn is_empty(&self) -> bool {
@@ -10360,11 +10665,20 @@ fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, actions
         Err(_) => return fail_frame_action_batch(input, actions, "bounded frame input action batch source faulted"),
     };
     if !actions.consume_batch_source() {
+        if let Some(receipt) = action.receipt() {
+            engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+        }
         return fail_frame_action_batch(input, actions, "bounded frame input action batch source accounting faulted");
     }
-    let action = match action.into_descriptor() {
-        Ok(action) => action,
-        Err(_) => return fail_frame_action_batch(input, actions, "bounded frame input action failed materialization"),
+    let receipt = action.receipt();
+    let action = match action.into_envelope() {
+        Ok(action) => FrameActionEnvelope::from(action),
+        Err(_) => {
+            if let Some(receipt) = receipt {
+                engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+            }
+            return fail_frame_action_batch(input, actions, "bounded frame input action failed materialization");
+        }
     };
     match actions.stage_batch_action(action) {
         FrameActionBatchStage::Pending => Ok(FrameInputActionStep::Pending),
@@ -10394,7 +10708,7 @@ const SHELL_SYNC_PUMP_INTERVAL_MS: f64 = 100.0;
 enum FrameDeferredWork {
     ShellMaintenance,
     PumpSync,
-    Action(ActionDescriptor),
+    Action(FrameActionEnvelope),
     FlushTutorial,
     /// 🫀️ ONE step of the shell's settle lane — the runtime's half of the pump. It comes LAST in a
     /// frame's deferred order because an input action the same frame carries is what the user is
@@ -10467,7 +10781,6 @@ impl FrameDeferredCursor {
         true
     }
 
-    #[cfg(any(not(target_arch = "wasm32"), test))]
     fn begin_close(&mut self) {
         self.closing = true;
     }
@@ -10724,6 +11037,44 @@ enum RuntimeApply {
 }
 
 impl RuntimeApply {
+    fn close_returned_interaction_step(&mut self, runtime: &mut AppRuntime) -> bool {
+        match self {
+            Self::ResumeFrameDeferred { interaction, cursor } => {
+                if let Some(returned) = interaction.take() {
+                    runtime.return_interaction(returned);
+                    return false;
+                }
+                if let Some(owner) = cursor.as_mut() {
+                    owner.begin_close();
+                    if !owner.close_step() {
+                        return false;
+                    }
+                }
+                cursor.take();
+                true
+            }
+            Self::ResumeDispatch { interaction, cursor } => {
+                if let Some(returned) = interaction.take() {
+                    runtime.return_interaction(returned);
+                    return false;
+                }
+                if cursor.as_mut().is_some_and(|owner| !owner.close_step()) {
+                    return false;
+                }
+                cursor.take();
+                true
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::RestoreInteraction(interaction) => {
+                if let Some(returned) = interaction.take() {
+                    runtime.return_interaction(returned);
+                }
+                true
+            }
+            _ => false,
+        }
+    }
+
     /// 🎟️ Whether applying this completion HANDS THE INTERACTION STATE BACK. The checkout ledger ages
     /// a live checkout against exactly this: while one of these is queued (or a reservation for one is
     /// in flight) the state has an owner, and however long that owner takes it is not a leak. An arm
@@ -10890,16 +11241,26 @@ impl RuntimeApply {
                     interaction.shell.pump_sync_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
-                    // 🪪️ Every action on this lane came out of an engine surface's bounded input
-                    // authority — a world pane's hover/pick/camera, a board's or a map's twin — so it
-                    // is `gesture` provenance, never a control press. React stamps the same origin on
-                    // the same rows (`🏛️ShellHost/🎯️input-ledger/🟦️.ts`'s `InputOriginV1`).
-                    if let Err(error) = interaction.shell.dispatch_gesture_action(action).await {
-                        log_debug(&format!("[DEBUG] frame deferred action failed: {error}"));
-                        // 🧯️ WGPU-RENDERER-REACT-PARITY packet W1j: a failed gesture is React's
-                        // transient-notice case (viewer-read-only / mutation-rejected / render
-                        // error), not the persistent bottom-left error line this used to set.
-                        interaction.shell.note_dispatch_fault(&error);
+                    if action.cancelled {
+                        action.cancel();
+                    } else {
+                        let receipt = action.receipt;
+                        let mut receipt_owner = FrameActionReceiptOwner { receipt };
+                        match interaction.shell.dispatch_gesture_action(action.descriptor).await {
+                            Ok(()) => {
+                                receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Accepted);
+                            }
+                            Err(error) => {
+                                receipt_owner.settle(engine_canvas::TextEditorActionOutcome::Refused(&error));
+                                if let Some(receipt) = receipt {
+                                    if receipt.abort_correlation_on_error {
+                                        cursor_value.actions.cancel_correlation(receipt.token);
+                                    }
+                                }
+                                log_debug(&format!("[DEBUG] frame deferred action failed: {error}"));
+                                interaction.shell.note_dispatch_fault(&error);
+                            }
+                        }
                     }
                 }
                 FrameDeferredWork::FlushTutorial => interaction.shell.tutorial_flush_pending_document_ops().await,
@@ -11919,8 +12280,38 @@ impl RuntimeMailbox {
         let Ok(mut runtime) = self.try_lock() else {
             return false;
         };
+        let returned = {
+            let Ok(mut queue) = self.0.completions.try_lock() else { return false };
+            let index = queue.ready.iter().position(|completion| match completion.apply {
+                RuntimeApply::ResumeFrameDeferred { .. } | RuntimeApply::ResumeDispatch { .. } => true,
+                #[cfg(not(target_arch = "wasm32"))]
+                RuntimeApply::RestoreInteraction(_) => true,
+                _ => false,
+            });
+            index.and_then(|index| queue.take_at(index).map(|completion| (index, completion)))
+        };
+        if let Some((index, mut completion)) = returned {
+            let complete = completion.apply.close_returned_interaction_step(&mut runtime);
+            completion.restores_interaction = completion.apply.restores_interaction();
+            if !complete {
+                self.0.completions.lock().expect("runtime completion mailbox lock").restore_at(index, completion);
+            }
+            return false;
+        }
+        if let Some(cursor) = runtime.pending_frame_deferred.as_mut() {
+            cursor.begin_close();
+            if cursor.close_step() {
+                runtime.pending_frame_deferred = None;
+            }
+            return false;
+        }
+        if !runtime.frame_actions.close_step() {
+            return false;
+        }
         let Some(interaction) = runtime.interaction.as_mut() else { return true };
-        interaction.input.close_step().is_ok_and(|complete| complete) && interaction.input.terminal_is_empty()
+        interaction.input.close_step_with_receipt(|receipt| {
+            engine_canvas::settle_text_editor_action_receipt(receipt, engine_canvas::TextEditorActionOutcome::Cancelled);
+        }).is_ok_and(|complete| complete) && interaction.input.terminal_is_empty()
     }
 
     pub(crate) fn take_renderer_asset_step(&self) -> Option<RendererAssetFetchOwner> {
@@ -14123,7 +14514,19 @@ impl FrameTransaction {
                         }
                         return AppFrameTransactionStep::Pending;
                     }
-                    Ok(FrameInputActionStep::Empty | FrameInputActionStep::Deferred) => {}
+                    Ok(FrameInputActionStep::Empty) => {
+                        match engine_canvas::drive_text_editor_outbox_step(&mut app.input) {
+                            Ok(true) => return AppFrameTransactionStep::Pending,
+                            Ok(false) => {}
+                            Err(fault) => {
+                                log_debug(&format!("[DEBUG] text editor outbox admission failed: {fault:?}"));
+                                runtime.record_frame_fault("text editor outbox admission failed");
+                                self.phase = AppFrameTransactionPhase::Terminal;
+                                return AppFrameTransactionStep::Fault;
+                            }
+                        }
+                    }
+                    Ok(FrameInputActionStep::Deferred) => {}
                     Err(fault) => {
                         runtime.record_frame_fault(fault);
                         self.phase = AppFrameTransactionPhase::Terminal;
@@ -16718,7 +17121,7 @@ impl AppInteractionState {
     }
 
     fn has_pending_text_work(&self) -> bool {
-        self.input.text_buffer.runnable_work_pending() || self.text_cancel_pending
+        self.input.text_buffer.runnable_work_pending() || self.text_cancel_pending || engine_canvas::has_pending_text_editor_outbox()
     }
 
     fn drive_text_operation(&mut self) {
@@ -16764,6 +17167,12 @@ impl AppInteractionState {
     }
 
     async fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
+        if interpreter::apply_focused_vfs_control_key(&action, &mut self.input) {
+            return;
+        }
+        if interpreter::apply_focused_table_stepper_key(&action, &mut self.input) {
+            return;
+        }
         if interpreter::apply_focused_ink_editor_key(&action, &modifiers, &mut self.input) {
             return;
         }
@@ -16775,6 +17184,9 @@ impl AppInteractionState {
                 if let Err(err) = self.shell.handle_keyboard_async(KeyAction::Space(true), &modifiers, &mut self.input).await {
                     log_debug(&format!("keyboard failed: {err}"));
                 }
+                return;
+            }
+            if interpreter::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
                 return;
             }
             self.space_pressed = *pressed;
@@ -16912,6 +17324,9 @@ impl AppInteractionState {
             interpreter::blur_focused_ink_editor_at(x, y, &mut self.input);
         }
         let target = if down { self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme) } else { None };
+        interpreter::blur_focused_text_editor_for_pointer(target.as_ref(), down, button);
+        interpreter::blur_focused_table_stepper_for_pointer(down, button);
+        interpreter::blur_focused_vfs_control_for_pointer(down, button);
         let owner = if down {
             let Some(owner) = self.pointer_capture.press(pointer_id, if target.is_some() { PointerHitOwner::Surface } else { PointerHitOwner::Chrome }, x, y) else {
                 self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
@@ -17526,6 +17941,8 @@ pub async fn run_socket_grant_probe() -> i32 {
         document_id: ArtifactId(document_id.into()),
         actor: ActorId("untrusted-local-probe".into()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: ArtifactDiff { schema: SchemaId(PROBE_SCHEMA.into()), payload: vec![sequence] },
         inverse: InverseMutation { schema: SchemaId(PROBE_SCHEMA.into()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp::new(0, 0),
@@ -17560,6 +17977,7 @@ pub async fn run_socket_grant_probe() -> i32 {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) {
+    scenes::install_native_host_temporal_formatter(std::sync::Arc::new(native_temporal::SystemTemporalFormatter::default()));
     let event_loop = EventLoop::<winit_app::HostUserEvent>::with_user_event().build().expect("event loop");
     let proxy = event_loop.create_proxy();
     let mut app = winit_app::WinitApp::new(proxy, plugin_filter.to_string(), plugin_modules_root);
@@ -17890,6 +18308,17 @@ pub fn boot_brand_id() -> Option<String> {
 /// (`shouldReplayIntroductionOnLoad(undefined) === false`), so no caller needs an `Option` arm.
 pub fn boot_brand() -> WgpuBootBrand {
     BOOT_DESCRIPTOR.with(|cell| cell.borrow().brand.clone())
+}
+
+/// 🏷️ The shell window's title — React's `ShellBrand.windowTitle`, `"Semio"` when this boot resolved no brand — which the
+/// native window shows and its platform accessibility root announces.
+pub fn boot_window_title() -> String {
+    let title = boot_brand().window_title;
+    if title.is_empty() {
+        "Semio".to_string()
+    } else {
+        title
+    }
 }
 
 /// #️⃣ The one-shot `#semio-broker=` proof the page carried, or `None`. React reads the same hash at

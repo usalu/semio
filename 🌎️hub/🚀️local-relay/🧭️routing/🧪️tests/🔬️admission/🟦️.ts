@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { AUTH_CREDENTIAL_ROUTE, AUTH_SESSION_ME_ROUTE, AUTH_SESSION_MINT_ROUTE } from "../../../../🔐️auth/🧬️schema/🟦️.ts";
+import { AUTH_CREDENTIAL_ROUTE, AUTH_SESSION_ME_ROUTE, AUTH_SESSION_MINT_ROUTE, AUTH_SESSION_SIGN_OUT_ROUTE } from "../../../../🔐️auth/🧬️schema/🟦️.ts";
 import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelayInviteRedemptionPath, localRelaySpaceArtifactCreationPath, localRelayUpstreamPath } from "../../🟦️.ts";
 
 /** 🧭 The relay's verdict for one browser-side path, always through the real `/_semio/hub` prefix. */
@@ -11,7 +11,7 @@ test("the relay admits exactly the hub's own session-lifecycle routes, verb by v
   for (const [method, route] of [
     ["POST", AUTH_SESSION_MINT_ROUTE],
     ["GET", AUTH_SESSION_ME_ROUTE],
-    ["DELETE", AUTH_SESSION_ME_ROUTE],
+    ["POST", AUTH_SESSION_SIGN_OUT_ROUTE],
     ["POST", AUTH_CREDENTIAL_ROUTE],
   ] as const) {
     expect(relay(method, route), `${method} ${route}`).toBe(route);
@@ -23,6 +23,9 @@ test("the relay admits exactly the hub's own session-lifecycle routes, verb by v
     ["PUT", AUTH_SESSION_MINT_ROUTE],
     ["POST", AUTH_SESSION_ME_ROUTE],
     ["PUT", AUTH_SESSION_ME_ROUTE],
+    ["DELETE", AUTH_SESSION_ME_ROUTE],
+    ["GET", AUTH_SESSION_SIGN_OUT_ROUTE],
+    ["DELETE", AUTH_SESSION_SIGN_OUT_ROUTE],
     ["GET", AUTH_CREDENTIAL_ROUTE],
     ["DELETE", AUTH_CREDENTIAL_ROUTE],
   ] as const) {
@@ -36,6 +39,7 @@ test("a path that merely resembles an admitted auth route stays closed", () => {
     "/auth/",
     "/auth/sessions/",
     "/auth/sessions/me/extra",
+    "/auth/sessions/me/sign-out/extra",
     "/auth/sessionsme",
     "/auth/sessions/mex",
     "/auth/credentials/reset",

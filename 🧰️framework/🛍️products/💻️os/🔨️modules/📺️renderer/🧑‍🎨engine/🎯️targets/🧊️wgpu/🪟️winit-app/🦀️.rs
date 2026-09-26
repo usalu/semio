@@ -418,6 +418,9 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             if crate::interpreter::apply_focused_ink_paste(&text, false, &mut app.input) {
                 return;
             }
+            if crate::interpreter::apply_focused_text_editor_text(&text, &mut app.input) {
+                return;
+            }
             if let Err(error) = app.enqueue_text_operation(text) {
                 app.text_fault = Some(error);
             }
@@ -431,6 +434,24 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             match crate::interpreter::start_focused_ink_clipboard_stream(stream, target == TextEditTarget::PasteImageDataUrl, declared_bytes) {
                 Ok(true) => {}
                 Ok(false) => {
+                    let text_editor = if target == TextEditTarget::Paste { crate::interpreter::start_focused_text_editor_stream(stream, declared_bytes) } else { Ok(false) };
+                    match text_editor {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            if let Err(error) = app.start_text_operation(stream, declared_bytes) {
+                                app.text_fault = Some(error);
+                            }
+                        }
+                        Err(error) => app.text_fault = Some(error.to_string()),
+                    }
+                }
+                Err(error) => app.text_fault = Some(error.to_string()),
+            }
+        }
+        DispatchEvent::TextEditStart { stream, target, declared_bytes } => {
+            match crate::interpreter::start_focused_text_editor_stream(stream, declared_bytes) {
+                Ok(true) => {}
+                Ok(false) => {
                     if let Err(error) = app.start_text_operation(stream, declared_bytes) {
                         app.text_fault = Some(error);
                     }
@@ -438,22 +459,26 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
                 Err(error) => app.text_fault = Some(error.to_string()),
             }
         }
-        DispatchEvent::TextEditStart { stream, declared_bytes, .. } => {
-            if let Err(error) = app.start_text_operation(stream, declared_bytes) {
-                app.text_fault = Some(error);
-            }
-        }
         DispatchEvent::TextEditChunk { stream, text } => match crate::interpreter::push_focused_ink_clipboard_stream(stream, &text) {
             Ok(true) => {}
             Ok(false) => {
-                if let Err(error) = app.push_text_operation(stream, text) {
-                    app.text_fault = Some(error)
+                match crate::interpreter::push_focused_text_editor_stream(stream, &text) {
+                    Ok(true) => {}
+                    Ok(false) => {
+                        if let Err(error) = app.push_text_operation(stream, text) {
+                            app.text_fault = Some(error)
+                        }
+                    }
+                    Err(error) => app.text_fault = Some(error.to_string()),
                 }
             }
             Err(error) => app.text_fault = Some(error.to_string()),
         },
         DispatchEvent::TextEditCommit { stream } => {
             if crate::interpreter::commit_focused_ink_clipboard_stream(stream, &mut app.input) {
+                return;
+            }
+            if crate::interpreter::commit_focused_text_editor_stream(stream, &mut app.input) {
                 return;
             }
             if let Err(error) = app.commit_text_operation(stream) {
@@ -464,11 +489,17 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             if crate::interpreter::abort_focused_ink_clipboard_stream(stream) {
                 return;
             }
+            if crate::interpreter::abort_focused_text_editor_stream(stream) {
+                return;
+            }
             if let Err(error) = app.abort_text_operation(stream) {
                 app.text_fault = Some(error);
             }
         }
         DispatchEvent::Ime(ImeEvent::Commit { text }) => {
+            if crate::interpreter::apply_focused_text_editor_text(&text, &mut app.input) {
+                return;
+            }
             if let Err(error) = app.enqueue_text_operation(text) {
                 app.text_fault = Some(error);
             }
@@ -523,6 +554,10 @@ fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<ui_wgpu::wgpu::K
         "ArrowRight" => Some(K::ArrowRight),
         "ArrowUp" => Some(K::ArrowUp),
         "ArrowDown" => Some(K::ArrowDown),
+        "Home" => Some(K::Home),
+        "End" => Some(K::End),
+        "PageUp" => Some(K::PageUp),
+        "PageDown" => Some(K::PageDown),
         "Tab" => Some(K::Tab),
         _ if key.len() >= 2 && key.starts_with('F') && key[1..].chars().all(|c| c.is_ascii_digit()) => key[1..].parse::<u8>().ok().map(K::Function),
         _ if key.chars().count() == 1 => Some(K::Char(key.to_string())),
@@ -530,11 +565,21 @@ fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<ui_wgpu::wgpu::K
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+fn ime_event_from_winit(ime: &winit::event::Ime) -> ImeEvent {
+    match ime {
+        winit::event::Ime::Enabled => ImeEvent::Start,
+        winit::event::Ime::Preedit(text, cursor) => ImeEvent::Update { text: text.clone(), cursor: cursor.map(|(_, end)| end).unwrap_or_default() },
+        winit::event::Ime::Commit(text) => ImeEvent::Commit { text: text.clone() },
+        winit::event::Ime::Disabled => ImeEvent::Cancel,
+    }
+}
+
 //#endregion 🔖️WindowDelegate for OsHost
 
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
-    use super::{advance_frame_generation, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
+    use super::{advance_frame_generation, ime_event_from_winit, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
     use crate::os_host::OsHostRetirement;
     use crate::RuntimeMailbox;
     use std::sync::Arc;
@@ -586,6 +631,9 @@ mod native {
         #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: std::path::PathBuf,
         window: Option<Arc<Window>>,
+        /// ♿️ The window's platform accessibility adapter, attached before the window was first shown.
+        #[cfg(not(target_arch = "wasm32"))]
+        accessibility: Option<crate::native_accessibility::NativeAccessibilityBridge>,
         host: Option<OsHost>,
         retirement: Option<OsHostRetirement>,
         #[cfg(not(target_arch = "wasm32"))]
@@ -615,6 +663,8 @@ mod native {
                 #[cfg(not(target_arch = "wasm32"))]
                 plugin_modules_root,
                 window: None,
+                #[cfg(not(target_arch = "wasm32"))]
+                accessibility: None,
                 host: None,
                 retirement: None,
                 #[cfg(not(target_arch = "wasm32"))]
@@ -808,6 +858,7 @@ mod native {
                 let logical = logical_key_to_dispatch_string(&event.logical_key);
                 Some(ui_host::key_dispatch_event(logical, app.modifiers, event.state == ElementState::Pressed))
             }
+            WindowEvent::Ime(ime) => Some(DispatchEvent::Ime(ime_event_from_winit(ime))),
             WindowEvent::ModifiersChanged(modifiers) => {
                 app.modifiers = modifiers_from_winit(modifiers.state());
                 None
@@ -847,8 +898,7 @@ mod native {
             // 🏷️ React's `ShellBrand.windowTitle` — the brand ROW the boot descriptor carries
             // (`WgpuBootBrand`), `"Semio"` when this boot resolved no brand. React sets the same string
             // as the document title on its own shell (`🧑‍💻dev/🟦️.ts`'s brand mount).
-            let brand_title = crate::boot_brand().window_title;
-            let mut attributes = WindowAttributes::default().with_title(if brand_title.is_empty() { "Semio".to_string() } else { brand_title });
+            let mut attributes = WindowAttributes::default().with_title(crate::boot_window_title());
             #[cfg(target_arch = "wasm32")]
             {
                 use winit::platform::web::WindowAttributesExtWebSys;
@@ -862,9 +912,23 @@ mod native {
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
-                attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0));
+                attributes = attributes.with_inner_size(winit::dpi::LogicalSize::new(1280.0, 800.0)).with_visible(false);
             }
             let window = Arc::new(event_loop.create_window(attributes).expect("create window"));
+            // ♿️ The platform accessibility adapter must exist before the window is first shown (AccessKit's own
+            // contract), so the native window is created hidden, the bridge attached, and only then shown.
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let proxy = self.proxy.clone();
+                self.accessibility = Some(crate::native_accessibility::NativeAccessibilityBridge::new(
+                    event_loop,
+                    &window,
+                    Arc::new(move || {
+                        let _ = proxy.send_event(HostUserEvent::Wake);
+                    }),
+                ));
+                window.set_visible(true);
+            }
             publish_system_appearance(window.theme());
             self.window = Some(window.clone());
             let proxy = self.proxy.clone();
@@ -943,6 +1007,10 @@ mod native {
         // 🚫️async: U1 — sync per winit's own `ApplicationHandler` trait.
         fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
             let Some(window) = self.window.clone() else { return };
+            #[cfg(not(target_arch = "wasm32"))]
+            if let Some(bridge) = self.accessibility.as_mut() {
+                bridge.process_window_event(&window, &event);
+            }
             if self.host.is_none() && self.retirement.is_none() {
                 return;
             }
@@ -1010,6 +1078,10 @@ mod native {
             if let Some(retirement) = self.retirement.as_mut() {
                 if retirement.close_step() && retirement.terminal_is_empty() {
                     self.retirement = None;
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        self.accessibility = None;
+                    }
                     self.window = None;
                     event_loop.exit();
                 } else {
@@ -1018,6 +1090,15 @@ mod native {
                 return;
             }
             let Some(host) = self.host.as_mut() else { return };
+            // ♿️ The platform tree follows the latest presented publication; every assistive-technology action is
+            // handed to the shell as the accessibility event it is, exactly like a browser mirror event.
+            #[cfg(not(target_arch = "wasm32"))]
+            if let Some(bridge) = self.accessibility.as_mut() {
+                bridge.refresh();
+                for event in bridge.take_dispatch_events() {
+                    host.handle_event(event);
+                }
+            }
             let now = host.now_seconds();
             if let Some(reason) = should_request_redraw(&mut host.scheduler, now) {
                 self.pending_reason = Some(reason);

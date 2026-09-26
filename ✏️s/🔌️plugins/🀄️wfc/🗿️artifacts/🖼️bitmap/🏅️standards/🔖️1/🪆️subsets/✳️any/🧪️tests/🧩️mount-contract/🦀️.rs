@@ -1,80 +1,109 @@
-//! 🧪️ Language-agnostic bitmap mount contract — the identities, window kinds, codecs, mutation
-//! vocabulary and examples every other language's mirror of this subset measures itself against.
-//! The committed `🧫️fixtures/🧩️mount-contract/🔣️.json` is the shared statement; this file is its
-//! Rust half.
+//! 🦀️ Bitmap mount contract — Rust adapter, the SUBJECT half.
+//!
+//! Measures what the subset really mounts — the editor and viewer definitions the plugin builder produces, the OS
+//! artifact kind, the inference tool id, the mutation roster and the bundled example builders — against the committed
+//! language-agnostic statement `shared://🧩️mount-contract/🔣️.json`, and answers with what it measured. The surfaces are
+//! gated behind `component-app-assembly`, which this subset's contribution declares as the subject host's feature.
+//!
+//! @see ../../🔮️oracles/🔣️.json — `subjectFeatures`
 
-use crate::examples::{flowers_24, rooms_16};
-use crate::schema::snapshot::text::{parse_dsl, print_dsl};
-use crate::{BitmapSnapshot, WFC_BITMAP_DIALECT};
-use store::ArtifactPack;
+use semio_repo_test_host::Adapter;
 
-const CONTRACT: &str = include_str!("../../🧫️fixtures/🧩️mount-contract/🔣️.json");
+//#region 🔖️Subject
+#[cfg(feature = "sut")]
+mod subject {
+    use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_artifact_wfc_bitmap::examples::{flowers_24, rooms_16};
+    use semio_s_artifact_wfc_bitmap::schema::snapshot::text::{parse_dsl, print_dsl};
+    use semio_s_artifact_wfc_bitmap::{artifact_kind, editor, inferences, mutations, viewer};
 
-fn contract() -> serde_json::Value {
-    serde_json::from_str(CONTRACT).expect("the mount contract decodes")
-}
+    const CONTRACT: &str = "shared://🧩️mount-contract/🔣️.json";
 
-fn strings(value: &serde_json::Value, key: &str) -> Vec<String> {
-    value[key].as_array().unwrap_or_else(|| panic!("the contract declares '{key}'")).iter().map(|entry| entry.as_str().expect("a text entry").to_string()).collect()
-}
+    fn text(value: &str) -> Json {
+        Json::String(value.to_string())
+    }
 
-#[test]
-fn editor_and_viewer_share_the_bitmap_dialect() {
-    assert_eq!(<crate::editor::bitmap::BitmapEditor as semio_framework_plugin::ArtifactEditor>::DIALECT, WFC_BITMAP_DIALECT);
-    assert_eq!(<crate::viewer::bitmap::BitmapViewer as semio_framework_plugin::ArtifactViewer>::DIALECT, WFC_BITMAP_DIALECT);
-}
+    fn texts(values: &[String]) -> Json {
+        Json::Array(values.iter().map(|value| text(value)).collect())
+    }
 
-#[test]
-fn the_declared_app_ids_and_kind_id_are_the_committed_ones() {
-    let contract = contract();
-    assert_eq!(crate::editor::bitmap::create_bitmap_editor().id, contract["editorAppId"].as_str().expect("editorAppId"));
-    assert_eq!(crate::viewer::bitmap::create_bitmap_viewer().id, contract["viewerAppId"].as_str().expect("viewerAppId"));
-    assert_eq!(crate::artifact_kind().id, contract["artifactKindId"].as_str().expect("artifactKindId"));
-    assert_eq!(crate::inferences::BITMAP_INFERENCE_TOOL_ID, contract["inferenceToolId"].as_str().expect("inferenceToolId"));
-}
+    fn answer(entries: Vec<(&str, Json)>) -> Outcome {
+        let projection = Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+        Outcome::with_raw(projection.to_string().into_bytes(), projection)
+    }
 
-#[test]
-fn both_surfaces_declare_exactly_the_committed_window_kinds() {
-    let declared = strings(&contract(), "windowKindIds");
-    for definition in [crate::editor::bitmap::create_bitmap_editor(), crate::viewer::bitmap::create_bitmap_viewer()] {
-        let ids: Vec<String> = definition.window_kinds.iter().map(|window| window.id.clone()).collect();
-        assert_eq!(ids, declared, "surface {} declares the wrong window kinds", definition.id);
+    fn agree(what: &str, measured: &Json, committed: Json) -> Result<(), String> {
+        if *measured == committed {
+            Ok(())
+        } else {
+            Err(format!("{what}: the subset mounts {} but the committed contract states {}", measured.to_string(), committed.to_string()))
+        }
+    }
+
+    pub fn surface_ids(ctx: &Context) -> Result<Outcome, String> {
+        let contract = ctx.fixture_json(CONTRACT)?;
+        let measured = [
+            ("editorAppId", text(&editor::bitmap::create_bitmap_editor().id)),
+            ("viewerAppId", text(&viewer::bitmap::create_bitmap_viewer().id)),
+            ("artifactKindId", text(&artifact_kind().id)),
+            ("inferenceToolId", text(inferences::BITMAP_INFERENCE_TOOL_ID)),
+        ];
+        for (key, value) in &measured {
+            agree(key, value, text(&contract.str(key)))?;
+        }
+        Ok(answer(measured.into_iter().collect()))
+    }
+
+    pub fn window_kinds(ctx: &Context) -> Result<Outcome, String> {
+        let committed = Json::Array(ctx.fixture_json(CONTRACT)?.array("windowKindIds"));
+        let editor = texts(&editor::bitmap::create_bitmap_editor().window_kinds.iter().map(|window| window.id.clone()).collect::<Vec<_>>());
+        let viewer = texts(&viewer::bitmap::create_bitmap_viewer().window_kinds.iter().map(|window| window.id.clone()).collect::<Vec<_>>());
+        agree("editor window kinds", &editor, committed.clone())?;
+        agree("viewer window kinds", &viewer, committed)?;
+        Ok(answer(vec![("editor", editor), ("viewer", viewer)]))
+    }
+
+    pub fn mutation_vocabulary(ctx: &Context) -> Result<Outcome, String> {
+        let kinds = texts(&mutations::KINDS.iter().map(|kind| kind.to_string()).collect::<Vec<_>>());
+        agree("mutation roster", &kinds, Json::Array(ctx.fixture_json(CONTRACT)?.array("mutationKinds")))?;
+        Ok(answer(vec![("mutationKinds", kinds)]))
+    }
+
+    pub fn examples(ctx: &Context) -> Result<Outcome, String> {
+        let committed = ctx.fixture_json(CONTRACT)?.array("examples");
+        let mut rows = Vec::new();
+        for (id, snapshot) in [("rooms-16", rooms_16::snapshot()), ("flowers-24", flowers_24::snapshot())] {
+            let reparsed = parse_dsl(&print_dsl(&snapshot)).map_err(|error| format!("{id}: the printed DSL does not parse back: {error:?}"))?;
+            if reparsed != snapshot {
+                return Err(format!("{id}: printing the example to DSL and parsing it back changed it"));
+            }
+            let row = Json::Object(vec![
+                ("id".to_string(), text(id)),
+                ("inputWidth".to_string(), Json::Number(f64::from(snapshot.input.width))),
+                ("inputHeight".to_string(), Json::Number(f64::from(snapshot.input.height))),
+                ("paletteSize".to_string(), Json::Number(snapshot.input.palette.len() as f64)),
+            ]);
+            let statement = committed.iter().find(|entry| entry.str("id") == id).ok_or_else(|| format!("the committed contract lists no example {id}"))?;
+            for key in ["inputWidth", "inputHeight", "paletteSize"] {
+                agree(&format!("{id}.{key}"), &row.get(key).cloned().unwrap_or(Json::Null), statement.get(key).cloned().unwrap_or(Json::Null))?;
+            }
+            rows.push(row);
+        }
+        if rows.len() != committed.len() {
+            return Err(format!("the subset bundles {} examples but the committed contract lists {}", rows.len(), committed.len()));
+        }
+        Ok(answer(vec![("examples", Json::Array(rows))]))
     }
 }
+//#endregion 🔖️Subject
 
-#[test]
-fn the_mutation_vocabulary_is_the_committed_one() {
-    assert_eq!(crate::mutations::KINDS.to_vec(), strings(&contract(), "mutationKinds"));
+//#region 🔖️Registration
+/// 🧭️ Registration entry point the generated host calls, one handler per scenario id. The subject half is
+/// `sut`-gated so a build without the subset never compiles it.
+pub fn adapter() -> Adapter {
+    let built = Adapter::new("rust");
+    #[cfg(feature = "sut")]
+    let built = built.subject("surface-ids", subject::surface_ids).subject("window-kinds", subject::window_kinds).subject("mutation-vocabulary", subject::mutation_vocabulary).subject("examples", subject::examples);
+    built
 }
-
-#[test]
-fn examples_round_trip_dsl_and_pack() {
-    for snapshot in [rooms_16::snapshot(), flowers_24::snapshot()] {
-        let text = print_dsl(&snapshot);
-        assert!(!text.trim().is_empty());
-        assert_eq!(parse_dsl(&text).expect("dsl"), snapshot);
-        let pack = ArtifactPack::encode_pack(&snapshot);
-        assert!(pack.len() > 64);
-        assert_eq!(<BitmapSnapshot as ArtifactPack>::decode_pack(&pack).expect("pack"), snapshot);
-    }
-}
-
-#[test]
-fn every_committed_example_row_matches_its_builder() {
-    let contract = contract();
-    let rows = contract["examples"].as_array().expect("examples");
-    let built = [("rooms-16", rooms_16::snapshot()), ("flowers-24", flowers_24::snapshot())];
-    assert_eq!(rows.len(), built.len());
-    for (row, (id, snapshot)) in rows.iter().zip(built) {
-        assert_eq!(row["id"].as_str(), Some(id));
-        assert_eq!(row["inputWidth"].as_u64(), Some(u64::from(snapshot.input.width)));
-        assert_eq!(row["inputHeight"].as_u64(), Some(u64::from(snapshot.input.height)));
-        assert_eq!(row["paletteSize"].as_u64(), Some(snapshot.input.palette.len() as u64));
-    }
-}
-
-#[test]
-fn example_labels_are_localized_en_and_de() {
-    assert_eq!(rooms_16::label(), semio_framework_plugin::LocalizedLabel::native("Rooms 16", "Räume 16"));
-    assert_eq!(flowers_24::label(), semio_framework_plugin::LocalizedLabel::native("Flowers 24", "Blumen 24"));
-}
+//#endregion 🔖️Registration

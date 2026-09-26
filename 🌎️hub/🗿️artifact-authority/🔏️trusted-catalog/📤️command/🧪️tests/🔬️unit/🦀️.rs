@@ -16,5 +16,4 @@ fn trusted_publication_transport_matches_neutral_arguments_and_input_bounds() {
     let maximum = fixture["commandBytes"].as_u64().unwrap() as usize;
     assert_eq!(read_command(vec![b' '; maximum].as_slice()).unwrap().len(), maximum);
     assert!(read_command(vec![b' '; maximum + 1].as_slice()).is_err());
-    println!("[DEBUG] publication transport: args=closed stdin=1..4096 one-shot-before-services=required");
 }

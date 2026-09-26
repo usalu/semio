@@ -59,10 +59,10 @@ fn materialize(name: &str) -> (PathBuf, PathBuf, PathBuf, PathBuf) {
             fs::rename(workspace.join("domain"), nested.join("domain")).unwrap();
             return (workspace.clone(), workspace, nested.join("domain/🧬️mutations/🦀️.rs"), leaf);
         }
-        "taxonomy-filename-change" => {
+        "authority-filename-change" => {
             let changed = mutation_root.join("🐹️.go");
             fs::rename(&aggregate, &changed).unwrap();
-            fs::write(workspace.join("authority/🔣️taxonomy.json"), r#"{"fileKinds":{"go":{"emoji":"🐹️","extensionChains":[".go"]},"json":{"emoji":"🔣️","extensionChains":[".json"]}},"mutationComponentFileKindId":"go","mutationDescriptorFileKindId":"json","mutationBehaviorFacetDirs":["🦠️mutation","🔺️diff","↩️inverse"],"semanticCollections":{"🧬️mutations":{"kind":"mutation"}}}"#).unwrap();
+            fs::write(workspace.join(MUTATION_AUTHORITY_LOCATOR), r#"{"schema":"semio.dsl.mutation-source-authority/v1","sourceFilename":"🐹️.go","descriptorFilename":"🔣️.json","mutationCollection":"🧬️mutations","mutationPayloadFacet":"🦠️mutation","mutationDomainOwners":{},"mutationAggregateSources":{}}"#).unwrap();
             return (workspace.clone(), workspace, changed, leaf);
         }
         "symlink-source" => {
@@ -97,7 +97,7 @@ fn validates_schema_first_aggregate_authority_fixture() {
             assert!(facts.mutation_root.ends_with("domain/🧬️mutations"));
             assert!(facts.source_path.ends_with(facts.source_filename.as_str()));
             assert!(!facts.descriptor_filename.is_empty());
-            assert!(facts.taxonomy_path.ends_with("authority/🔣️taxonomy.json"));
+            assert_eq!(facts.taxonomy_path, workspace.join(MUTATION_AUTHORITY_LOCATOR));
         }
     }
 }
@@ -157,7 +157,7 @@ fn validates_explicit_aggregate_component_sources() {
             "explicit-sources" => (),
             _ => panic!("unknown component source fixture {name}"),
         }
-        let taxonomy_path = workspace.join("authority/🔣️taxonomy.json");
+        let taxonomy_path = workspace.join(MUTATION_AUTHORITY_LOCATOR);
         let mut taxonomy: serde_json::Value = serde_json::from_slice(&fs::read(&taxonomy_path).unwrap()).unwrap();
         taxonomy["mutationAggregateSources"] = serde_json::json!({ aggregate: sources });
         fs::write(&taxonomy_path, serde_json::to_vec(&taxonomy).unwrap()).unwrap();

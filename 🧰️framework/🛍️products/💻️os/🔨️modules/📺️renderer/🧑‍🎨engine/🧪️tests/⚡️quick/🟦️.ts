@@ -102,7 +102,7 @@ describe("renderer quick contracts", () => {
     vi.stubGlobal("fetch", async () => new Response(null, { status: 200 }));
     try {
       const builtBeforeBoot = Date.now() - 1_000;
-      const source = createDevPluginSource([{ pluginId: "note", moduleUrl: "/🔌️plugin-modules/🗒️note/🌉️bridge.js" }], "/🔌️plugin-modules/watch");
+      const source = createDevPluginSource([{ pluginId: "note", moduleUrl: "/🔌️plugin-modules/🗒️note/🌉️bridge.js" }], () => () => {});
       const boot = await source.acquireModule("note", undefined, { signal: new AbortController().signal });
       expect(boot.rebuiltAt).toBeGreaterThanOrEqual(builtBeforeBoot);
       expect(new URL(boot.moduleUrl, "http://semio.test").searchParams.get("v")).toBe(String(boot.rebuiltAt));

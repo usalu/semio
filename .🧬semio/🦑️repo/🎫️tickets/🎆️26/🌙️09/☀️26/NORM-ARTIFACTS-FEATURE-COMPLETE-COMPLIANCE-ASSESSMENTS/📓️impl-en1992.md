@@ -53,3 +53,29 @@ Output of 4 successful tasks were not shown. Run with --verbose or --output-styl
 ## Remaining gaps
 
 _none_
+
+## Round-2 Wave C close-out (fresh fixer)
+
+**Runner:** `bun nx run @semio-tech/norm-en1992-rs:test --skip-nx-cache -- --no-fail-fast`  
+**Summary:** `[   0.902s] 98 tests run: 98 passed, 0 skipped`  
+**Also:** `bun nx run @semio-tech/norm-plugin:mutation-leaf-taxonomy-generate` → 547 payloads
+
+### Blocking items closed
+
+| # | Item | Evidence |
+|---|------|----------|
+| 1 | Scope-aware perturbation `(id, status, computed, limit, utilization)` across beam/col/slab/liquid/prestressed/anchor; exemptions only id/name/title/labelEn/labelDe | `every_editable_leaf_influences_a_check_scope_aware` |
+| 2 | Committed prestressed beam examples + verdict | `🧵compliant-prestressed-beam`, `💥failing-prestressed-beam`; `prestressed_examples_evaluate` |
+| 3 | Mutation facets no `_placeholder` / `Record<string, unknown>` | `mutation_facets_have_no_placeholder_or_unknown`; rename `change-action-mk` |
+| 4 | ACC-6.11 with `AnnexParams::for_situation(..., "accidental")` γ_c=1.3 DE | ACC companion flexure; `accidental_de_gamma_reduces_vs_uls` |
+| 5 | Anchor characteristic actions → EN 1990 combine (source-aware udl/point/external) | `combine_anchor_actions` + SLS ψ₂ companion |
+| 6 | Dead `let _ =` removed; k/ε_uk, ε_cu2, n, f_ck,cube, f_p0,1k read normatively | ductility §3.2.7; constitutive §3.1.7; prestress §5.10 |
+| 7 | Fire `required_for` routes 5.2a/b, 5.3, 5.9, 5.11 | `fire_tables_route_per_kind_and_rating` |
+| 8 | Distinct en/de explanations | `no_identical_en_de_explanations_in_committed_examples` |
+| 9 | `title` as report subject label; exempt as `title` only | `member_ref` / anchor labels; `title_appears_in_subject_labels` |
+| 10 | Non-zero `pointForce` + `tK` on beam-B1 | `compliant_office_frame` Q-office |
+| + | Shared Table 3.1 f_ck const; catalogue windows; dangling prestressSteelId + duplicate ids Fail with `one_of`; liquid verdict | `TABLE_3_1_FCK_MPA`; `evaluated_concrete_fck_matches_catalogue_cell`; integrity in `evaluate`; `liquid_retaining_example_has_verdict` |
+
+### Gaps
+
+_(none)_

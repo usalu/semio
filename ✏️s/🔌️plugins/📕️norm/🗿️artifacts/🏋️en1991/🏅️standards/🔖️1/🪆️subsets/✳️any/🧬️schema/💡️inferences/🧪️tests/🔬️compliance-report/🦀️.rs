@@ -407,8 +407,8 @@ async fn scope_aware_perturbation_of_editable_leaves() {
         de_accidental_variants, de_bridge_compliant, de_fire_parametric_compliant, de_office_compliant,
     };
     use crate::{FireMode, StructureKind};
-    // Exempt: descriptive entity `id` labels only. N/A leaves listed per example (bridge/fire/accidental scope).
-    // N/A when fireMode=none / structureKind=building — discriminators fireMode/structureKind stay in scope.
+    // Out-of-scope top-level keys per committed example (bridge/fire/accidental discriminators stay in scope).
+    // Leaf exemptions: descriptive id/name/title/labelEn/labelDe only — never whole nested key lists.
     let office_na = [
         "enSk", "enVb", "thermalBridgeType", "mixedTerrainUpwind",
         "fireCurve", "fireDuration", "assumedGasTemperature", "assumedHNet", "fireCompartmentArea",
@@ -417,8 +417,7 @@ async fn scope_aware_perturbation_of_editable_leaves() {
         "assumedBridgeLm2", "assumedBridgeFootway", "assumedBridgeLm3", "assumedBridgeLm4", "bridgeLoadGroup",
     ];
     let bridge_na = [
-        "enSk", "enVb", "thermalBridgeType", "mixedTerrainUpwind",
-        // No wind/snow entities on bridge example — site wind/snow leaves are out of scope.
+        "enSk", "enVb", "mixedTerrainUpwind", "tMax", "tMin", "t0",
         "airDensity", "windZone", "terrainCategory", "orographyFactor", "coastOrIsland", "mixedTerrainDistance",
         "height", "width", "depth", "altitude", "snowZone", "exceptionalSnowNorthGermanLowlands",
         "fireMode", "fireCurve", "fireDuration", "assumedGasTemperature", "assumedHNet", "fireCompartmentArea",
@@ -446,6 +445,144 @@ async fn scope_aware_perturbation_of_editable_leaves() {
         "siloKind", "siloBulkDensity", "siloHeight", "siloHydraulicRadius", "siloMu", "siloK",
         "assumedSiloPressure", "assumedSiloPatch", "assumedSiloWallFriction",
     ];
+    const EXEMPT_LEAVES: &[&str] = &["id", "name", "title", "labelEn", "labelDe"];
+    fn collect_leaves(v: &serde_json::Value, path: &str, out: &mut Vec<(String, serde_json::Value)>) {
+        match v {
+            serde_json::Value::Object(map) => {
+                for (k, child) in map {
+                    let next = if path.is_empty() { k.clone() } else { format!("{path}.{k}") };
+                    match child {
+                        serde_json::Value::Object(_) | serde_json::Value::Array(_) => collect_leaves(child, &next, out),
+                        _ => out.push((next, child.clone())),
+                    }
+                }
+            }
+            serde_json::Value::Array(items) => {
+                for (i, child) in items.iter().enumerate() {
+                    let next = if let Some(id) = child.get("id").and_then(|x| x.as_str()) {
+                        format!("{path}[id={id}]")
+                    } else {
+                        format!("{path}[{i}]")
+                    };
+                    match child {
+                        serde_json::Value::Object(_) | serde_json::Value::Array(_) => collect_leaves(child, &next, out),
+                        _ => out.push((next, child.clone())),
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    fn leaf_name(path: &str) -> &str {
+        path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']')
+    }
+    fn top_key(path: &str) -> &str {
+        path.split(['.', '[']).next().unwrap_or(path)
+    }
+    fn next_string(leaf: &str, s: &str) -> Option<String> {
+        Some(match leaf {
+            "annex" => if s == "de" { "en" } else { "de" }.into(),
+            "snowZone" => if s == "2" { "3" } else { "2" }.into(),
+            "constructionActivity" => if s == "scaffolding" { "formwork" } else { "scaffolding" }.into(),
+            "thermalElementType" => if s == "building" { "bridge1" } else { "building" }.into(),
+            "bridgeLoadGroup" => if s == "gr1a" { "gr1b" } else { "gr1a" }.into(),
+            "craneClass" | "hoistClass" => if s == "HC2" { "HC4" } else { "HC2" }.into(),
+            "siloKind" => if s == "silo" { "tank" } else { "silo" }.into(),
+            "fireOccupancy" => if s == "office" { "warehouse" } else { "office" }.into(),
+            "fireCurve" => if s == "parametric" { "standard" } else { "parametric" }.into(),
+            "fireMode" => if s == "parametric" { "nominal" } else { "parametric" }.into(),
+            "structureKind" => if s == "bridge" { "building" } else { "bridge" }.into(),
+            "category" => if s.to_ascii_uppercase().starts_with('B') { "C1" } else { "B1" }.into(),
+            "material" => if s == "concrete" || s == "reinforced_concrete" { "steel" } else { "concrete" }.into(),
+            "roofType" => if s.contains("multi") { "duopitch" } else { "multispan" }.into(),
+            "zone" => match s.to_ascii_uppercase().as_str() {
+                "A" => "B".into(),
+                "B" => "C".into(),
+                "C" => "D".into(),
+                "D" => "E".into(),
+                "E" => "A".into(),
+                "F" => "G".into(),
+                "G" => "H".into(),
+                _ => "A".into(),
+            },
+            _ => return None,
+        })
+    }
+    fn next_number(leaf: &str, f: f64, height_hint: f64) -> f64 {
+        match leaf {
+            "altitude" => f.max(0.0) + 400.0,
+            "mixedTerrainDistance" => if f <= 0.0 { 500.0 } else { f * 0.25 },
+            "depth" => (height_hint / 5.5).max(0.5),
+            "height" => f.max(1.0) * 3.0 + 5.0,
+            "width" => f.max(1.0) * 0.2,
+            "windZone" | "terrainCategory" | "mixedTerrainUpwind" | "bridgeLane" | "thermalBridgeType" => {
+                let i = (f as u8).max(1);
+                f64::from(if i >= 4 { 1 } else { i + 1 })
+            }
+            "storeyCount" => f64::from(if (f as u8) < 2 { 4 } else { 1 }),
+            // Fig. 7.2: A≤1 → c_pe,1; A≥10 → c_pe,10; else log-interp — cross the plateau.
+            "loadedArea" => if f >= 10.0 - 1e-9 { 5.0 } else if f <= 1.0 + 1e-9 { 5.0 } else { 15.0 },
+            _ => if f.abs() < 1e-12 { 1.0 } else { f * 1.37 + 25.0 },
+        }
+    }
+    fn assign_at(root: &mut serde_json::Value, target: &str, current: &str, leaf: &str, height_hint: f64) -> bool {
+        match root {
+            serde_json::Value::Object(map) => {
+                let keys: Vec<String> = map.keys().cloned().collect();
+                for k in keys {
+                    let next = if current.is_empty() { k.clone() } else { format!("{current}.{k}") };
+                    if next == target {
+                        let child = map.get_mut(&k).unwrap();
+                        return match child {
+                            serde_json::Value::Number(n) => {
+                                if let Some(f) = n.as_f64() {
+                                    *child = serde_json::json!(next_number(leaf, f, height_hint));
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
+                            serde_json::Value::Bool(b) => {
+                                *child = serde_json::json!(!*b);
+                                true
+                            }
+                            serde_json::Value::String(s) => {
+                                if let Some(n) = next_string(leaf, s) {
+                                    *child = serde_json::json!(n);
+                                    true
+                                } else {
+                                    false
+                                }
+                            }
+                            _ => false,
+                        };
+                    }
+                    if target.starts_with(&(next.clone() + ".")) || target.starts_with(&(next.clone() + "[")) {
+                        if assign_at(map.get_mut(&k).unwrap(), target, &next, leaf, height_hint) {
+                            return true;
+                        }
+                    }
+                }
+                false
+            }
+            serde_json::Value::Array(items) => {
+                for (i, child) in items.iter_mut().enumerate() {
+                    let next = if let Some(id) = child.get("id").and_then(|x| x.as_str()) {
+                        format!("{current}[id={id}]")
+                    } else {
+                        format!("{current}[{i}]")
+                    };
+                    if target == next || target.starts_with(&(next.clone() + ".")) || target.starts_with(&(next.clone() + "[")) {
+                        if assign_at(child, target, &next, leaf, height_hint) {
+                            return true;
+                        }
+                    }
+                }
+                false
+            }
+            _ => false,
+        }
+    }
     let suites = [
         ("office", de_office_compliant(), &office_na[..]),
         ("bridge", de_bridge_compliant(), &bridge_na[..]),
@@ -459,98 +596,23 @@ async fn scope_aware_perturbation_of_editable_leaves() {
             assert_eq!(base.fire_mode, FireMode::Parametric);
         }
         let json = serde_json::to_value(&base).expect("serde snapshot");
-        let obj = json.as_object().unwrap();
-        for (key, val) in obj {
-            if key == "id" || na.contains(&key.as_str()) {
+        let height_hint = json.get("height").and_then(|x| x.as_f64()).unwrap_or(12.0);
+        let mut leaves = Vec::new();
+        collect_leaves(&json, "", &mut leaves);
+        for (path, _val) in leaves {
+            let leaf = leaf_name(&path);
+            if EXEMPT_LEAVES.contains(&leaf) {
+                continue;
+            }
+            if na.contains(&top_key(&path)) {
                 continue;
             }
             let mut j = json.clone();
-            let mut changed = false;
-            match val {
-                serde_json::Value::Number(n) => {
-                    if let Some(f) = n.as_f64() {
-                        // Push past DE snow altitude plateaus (zone 2: ≤285 m) and similar clamps.
-                        let next = match key.as_str() {
-                            "altitude" => f.max(0.0) + 400.0,
-                            "mixedTerrainDistance" => if f <= 0.0 { 500.0 } else { f * 0.25 },
-                            // Cross EN 1991-1-4 Table 7.1 h/d thresholds (1 and 5) for zone D/E.
-                            "depth" => {
-                                let h = j.get("height").and_then(|x| x.as_f64()).unwrap_or(12.0);
-                                (h / 5.5).max(0.5)
-                            }
-                            "height" => f.max(1.0) * 3.0 + 5.0,
-                            "width" => f.max(1.0) * 0.2,
-                            _ => if f.abs() < 1e-12 { 1.0 } else { f * 1.37 + 25.0 },
-                        };
-                        j[key] = serde_json::json!(next);
-                        changed = true;
-                    }
-                }
-                serde_json::Value::Bool(b) => {
-                    j[key] = serde_json::json!(!*b);
-                    changed = true;
-                }
-                serde_json::Value::String(s) => {
-                    let next = match key.as_str() {
-                        "annex" => if s == "de" { "en" } else { "de" },
-                        "snowZone" => if s == "2" { "3" } else { "2" },
-                        "constructionActivity" => if s == "scaffolding" { "formwork" } else { "scaffolding" },
-                        "thermalElementType" => if s == "building" { "bridge1" } else { "building" },
-                        "bridgeLoadGroup" => if s == "gr1a" { "gr5" } else { "gr1a" },
-                        "craneClass" | "hoistClass" => if s == "HC2" { "HC4" } else { "HC2" },
-                        "siloKind" => if s == "silo" { "tank" } else { "silo" },
-                        "fireOccupancy" => if s == "office" { "warehouse" } else { "office" },
-                        "fireCurve" => if s == "parametric" { "standard" } else { "parametric" },
-                        "fireMode" => if s == "parametric" { "nominal" } else { "parametric" },
-                        "structureKind" => if s == "bridge" { "building" } else { "bridge" },
-                        _ => continue,
-                    };
-                    j[key] = serde_json::json!(next);
-                    changed = true;
-                }
-                serde_json::Value::Array(arr) if !arr.is_empty() => {
-                    if let Some(item) = j[key].as_array_mut().and_then(|a| a.get_mut(0)) {
-                        fn bump_numeric_leaves(v: &mut serde_json::Value, changed: &mut bool) {
-                            match v {
-                                serde_json::Value::Object(map) => {
-                                    for (k, child) in map.iter_mut() {
-                                        if k == "id" { continue; }
-                                        match child {
-                                            serde_json::Value::Number(n) => {
-                                                if let Some(f) = n.as_f64() {
-                                                    *child = serde_json::json!(if f.abs() < 1e-12 { 1.0 } else { f * 0.55 });
-                                                    *changed = true;
-                                                }
-                                            }
-                                            serde_json::Value::Bool(b) => {
-                                                *child = serde_json::json!(!*b);
-                                                *changed = true;
-                                            }
-                                            serde_json::Value::Array(items) => {
-                                                for it in items.iter_mut() { bump_numeric_leaves(it, changed); }
-                                            }
-                                            serde_json::Value::Object(_) => bump_numeric_leaves(child, changed),
-                                            _ => {}
-                                        }
-                                    }
-                                }
-                                serde_json::Value::Array(items) => {
-                                    for it in items.iter_mut() { bump_numeric_leaves(it, changed); }
-                                }
-                                _ => {}
-                            }
-                        }
-                        bump_numeric_leaves(item, &mut changed);
-                    }
-                }
-                _ => {}
-            }
-            if !changed {
+            if !assign_at(&mut j, &path, "", leaf, height_hint) {
                 continue;
             }
             let Ok(perturbed) = serde_json::from_value::<En1991Snapshot>(j) else { continue };
             let after = evaluate(&perturbed);
-            // CORRECTION 14:37/14:42: (id, status, computed, limit, utilization) — explanation-only changes do not count.
             let delta = baseline.checks.len() != after.checks.len()
                 || baseline.checks.iter().zip(after.checks.iter()).any(|(a, b)| {
                     a.id != b.id
@@ -559,9 +621,53 @@ async fn scope_aware_perturbation_of_editable_leaves() {
                         || (a.computed.value - b.computed.value).abs() > 1e-6
                         || (a.utilization - b.utilization).abs() > 1e-6
                 });
-            assert!(delta, "perturbation of `{key}` on {name} did not change any check (exempt labels: id only; N/A listed in suite)");
+            assert!(delta, "perturbation of `{path}` on {name} did not change any check (exempt: id/name/title/labelEn/labelDe)");
         }
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn duplicate_floor_id_fails_integrity() {
+    let mut doc = de_office_compliant();
+    let twin = doc.floors[0].clone();
+    doc.floors.push(twin);
+    let report = evaluate(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.duplicate.floors") && c.status == CheckStatus::Fail));
+    assert!(!report.complies());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn duplicate_wind_face_id_fails_integrity() {
+    let mut doc = de_office_compliant();
+    assert!(!doc.wind_faces.is_empty());
+    let twin = doc.wind_faces[0].clone();
+    doc.wind_faces.push(twin);
+    let report = evaluate(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.duplicate.windFaces") && c.status == CheckStatus::Fail));
+    assert!(!report.complies());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn duplicate_roof_id_fails_integrity() {
+    let mut doc = de_office_compliant();
+    assert!(!doc.roofs.is_empty());
+    let twin = doc.roofs[0].clone();
+    doc.roofs.push(twin);
+    let report = evaluate(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.duplicate.roofs") && c.status == CheckStatus::Fail));
+    assert!(!report.complies());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn duplicate_accidental_id_fails_integrity() {
+    use crate::example_subjects::de_accidental_variants;
+    let mut doc = de_accidental_variants();
+    assert!(!doc.accidental_cases.is_empty());
+    let twin = doc.accidental_cases[0].clone();
+    doc.accidental_cases.push(twin);
+    let report = evaluate(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.duplicate.accidentalCases") && c.status == CheckStatus::Fail));
+    assert!(!report.complies());
 }
 
 #[semio_framework_async_macros::async_test]

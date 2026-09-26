@@ -243,6 +243,8 @@ where
         document_id: document,
         actor: op.author_id().unwrap_or(default_actor),
         dependencies: op.dependencies(),
+        observed: None,
+        target: op.conflict_target(),
         diff: protocol::ArtifactDiff { schema: schema.clone(), payload: encode_pathmap(&forward).await },
         inverse: protocol::InverseMutation { schema, payload: encode_pathmap(&backward).await },
         timestamp: op.timestamp().unwrap_or(default_timestamp),
@@ -296,6 +298,74 @@ async fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol
             protocol::MutationMessage::fatal("mutation.invariant", format!("command {} violates constraint '{description}' held by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at([description.clone()])
         }
     }
+}
+/// @emoji 🏷️ `CommandTouch` kind of a durable group decision's marker in the recent commit window: it names
+/// the decision's edit so a later write can say it observed it, and it is never itself graded.
+const DURABLE_GROUP_TOUCH_KIND: &str = "db.durable-group";
+
+/// @emoji 🧷️ The recent-window marker of one committed durable group decision (see [`DURABLE_GROUP_TOUCH_KIND`]).
+fn durable_group_touch(edit_id: &str) -> db_conflict::CommandTouch {
+    db_conflict::CommandTouch::new(protocol::MutationId(edit_id.to_string()), protocol::ActorId(String::new()), db_conflict::CommandKind::from(DURABLE_GROUP_TOUCH_KIND), protocol::HybridLogicalTimestamp::new(0, 0))
+}
+
+/// @emoji 🪟️ Appends one committed touch to the bounded recent commit window, oldest out first.
+fn remember_recent_touch(window: &mut VecDeque<db_conflict::CommandTouch>, touch: db_conflict::CommandTouch) {
+    if window.len() >= MAX_RECENT_TOUCHES {
+        window.pop_front();
+    }
+    window.push_back(touch);
+}
+
+/// @emoji 👁️ Whether `observed` names `touch`: its command itself, or — for a durable group decision's marker —
+/// one of the operations its edit folded (`<edit>#<position>`), which reach a replica inside that edit.
+fn touch_is_named(touch: &db_conflict::CommandTouch, observed: &str) -> bool {
+    observed == touch.command_id.0 || (touch.kind.0 == DURABLE_GROUP_TOUCH_KIND && observed.strip_prefix(touch.command_id.0.as_str()).is_some_and(|position| position.starts_with('#')))
+}
+
+/// @emoji ✍️ Whether `touch` wrote document fields: history transitions (undo, redo, checkpoints) and durable
+/// group markers never did.
+fn touch_writes_fields(touch: &db_conflict::CommandTouch) -> bool {
+    touch.kind.0 != DURABLE_GROUP_TOUCH_KIND && touch.kind.0 != protocol::HISTORY_TRANSITION_SCHEMA
+}
+
+/// @emoji 🕰️ The writes `envelope` was authored without seeing: in commit order (the recent commit window, then the
+/// batch's earlier envelopes), every write after the one it names as `observed` — all of them when it observed
+/// nothing in the window — by another actor. A replica stamps each operation it authors with the newest foreign
+/// operation it had applied, and replicas receive commits in commit order, so everything up to that one was seen;
+/// the author's own writes are its own history. A history transition is never graded.
+fn unseen_concurrent_writes<'a>(recent: &'a VecDeque<db_conflict::CommandTouch>, batch: &'a [db_conflict::CommandTouch], envelope: &protocol::MutationEnvelope) -> Vec<&'a db_conflict::CommandTouch> {
+    if protocol::is_history_transition(envelope) {
+        return Vec::new();
+    }
+    let window: Vec<&db_conflict::CommandTouch> = recent.iter().chain(batch.iter()).collect();
+    let seen = envelope.observed.as_ref().and_then(|observed| window.iter().rposition(|touch| touch_is_named(touch, &observed.0))).map_or(0, |index| index + 1);
+    window.into_iter().skip(seen).filter(|touch| touch.actor != envelope.actor && touch_writes_fields(touch)).collect()
+}
+
+/// @emoji 🎯️ Whether two declared targets (outermost segment first) can address the same part: an empty target is
+/// the whole artifact; otherwise they overlap when they share a segment — conservative for path-shaped targets
+/// (`[collection, id]`) and exact for id-set targets.
+fn targets_overlap(a: &[String], b: &[String]) -> bool {
+    a.is_empty() || b.is_empty() || a.iter().any(|segment| b.contains(segment))
+}
+
+/// @emoji ⚖️ Grades `written` — authored without seeing the concurrent write `unseen` — into `mutation.clamped`
+/// (contract §C9: region intersection = `Warning`): fields both touch when the database can read both diffs, else
+/// their declared targets overlapping. Disjoint parts are no conflict. `Normal` accepts a clamped write with its
+/// message, `Vigilant` refuses it (ticket 26/09/23 C10: a vigilant hub accepted a same-field write authored
+/// during a 12 s cut, because no plugin diff is readable here and no client said what it had seen).
+async fn grade_concurrent_write(written: &db_conflict::CommandTouch, written_target: &[String], unseen: &db_conflict::CommandTouch, unseen_target: &[String]) -> Vec<protocol::MutationMessage> {
+    if !written.touched.regions.is_empty() && !unseen.touched.regions.is_empty() {
+        let mut messages = Vec::new();
+        for record in db_conflict::ConflictDetector::new().detect(&[unseen.clone(), written.clone()]) {
+            messages.push(grade_conflict_record(&record).await);
+        }
+        return messages;
+    }
+    if !targets_overlap(written_target, unseen_target) {
+        return Vec::new();
+    }
+    vec![protocol::MutationMessage::warn("mutation.clamped", format!("command {} was authored without seeing concurrent command {}, which writes the same part of the document", written.command_id.0, unseen.command_id.0)).at(written_target.to_vec())]
 }
 //#endregion 🔖️Conflict
 
@@ -976,389 +1046,6 @@ async fn close_wal_record_batch(records: &mut db_wal::WalRecordBatch) -> Result<
     Ok(())
 }
 
-const ARTIFACT_WAL_DEPENDENCIES: usize = 64;
-const ARTIFACT_WAL_FIELD_BYTES: usize = (db_storage::DB_IO_OPERATION_PAGES - 1) * db_storage::DB_IO_PAGE_BYTES;
-
-struct ArtifactWalTextField {
-    bytes: [u8; db_storage::DbIoText::maximum_capacity()],
-    len: usize,
-    remaining: Option<usize>,
-}
-
-impl ArtifactWalTextField {
-    fn new() -> Self {
-        Self { bytes: [0; db_storage::DbIoText::maximum_capacity()], len: 0, remaining: None }
-    }
-
-    fn poll(&mut self, cursor: &mut db_wal::WalBytesCursor<'_>, control: &mut db_wal::WalCursorControl) -> Result<Option<db_storage::DbIoText>, DbError> {
-        if self.remaining.is_none() {
-            self.remaining = Some(cursor.begin_field(db_storage::DbIoText::maximum_capacity() as u64, control)?);
-            return Ok(None);
-        }
-        let remaining = self.remaining.as_mut().ok_or_else(|| DbError::Internal("artifact WAL text lost remaining bytes".to_string()))?;
-        if *remaining != 0 {
-            let copied = cursor.read_field_fragment(remaining, &mut self.bytes[self.len..], control)?;
-            self.len += copied;
-            return Ok(None);
-        }
-        let value = std::str::from_utf8(&self.bytes[..self.len]).map_err(|_| DbError::Corrupt("artifact WAL text is not UTF-8".to_string()))?;
-        let text = db_storage::DbIoText::try_from_str(value)?;
-        *self = Self::new();
-        Ok(Some(text))
-    }
-}
-
-struct ArtifactWalPageField {
-    remaining: Option<usize>,
-    writer: Option<db_storage::DbIoPageWriter>,
-    seal: Option<db_storage::DbIoPageWriterSeal>,
-}
-
-impl ArtifactWalPageField {
-    fn new() -> Self {
-        Self { remaining: None, writer: None, seal: None }
-    }
-
-    fn poll(&mut self, cursor: &mut db_wal::WalBytesCursor<'_>, control: &mut db_wal::WalCursorControl, context: &mut std::task::Context<'_>) -> std::task::Poll<Result<db_storage::DbIoPages, DbError>> {
-        if self.remaining.is_none() {
-            let remaining = match cursor.begin_field(ARTIFACT_WAL_FIELD_BYTES as u64, control) {
-                Ok(remaining) => remaining,
-                Err(error) => return std::task::Poll::Ready(Err(error)),
-            };
-            let writer = match db_storage::DbIoPageWriter::try_reserve(remaining.div_ceil(db_storage::DB_IO_PAGE_BYTES)) {
-                Ok(writer) => writer,
-                Err(rejected) => return std::task::Poll::Ready(Err(rejected.into_error())),
-            };
-            self.remaining = Some(remaining);
-            self.writer = Some(writer);
-            context.waker().wake_by_ref();
-            return std::task::Poll::Pending;
-        }
-        let remaining = self.remaining.as_mut().ok_or_else(|| DbError::Internal("artifact WAL page field lost remaining bytes".to_string()));
-        let remaining = match remaining {
-            Ok(remaining) => remaining,
-            Err(error) => return std::task::Poll::Ready(Err(error)),
-        };
-        if *remaining != 0 {
-            let mut fragment = [0u8; db_storage::DB_IO_PAGE_BYTES];
-            let copied = match cursor.read_field_fragment(remaining, &mut fragment, control) {
-                Ok(copied) => copied,
-                Err(error) => return std::task::Poll::Ready(Err(error)),
-            };
-            let written = match self.writer.as_mut().ok_or_else(|| DbError::Internal("artifact WAL page field lost writer".to_string())).and_then(|writer| {
-                let head = writer.write_fragment(&fragment[..copied])?;
-                if head == copied {
-                    return Ok(head);
-                }
-                Ok(head + writer.write_fragment(&fragment[head..copied])?)
-            }) {
-                Ok(written) => written,
-                Err(error) => return std::task::Poll::Ready(Err(error)),
-            };
-            if written != copied {
-                return std::task::Poll::Ready(Err(DbError::Internal("artifact WAL page field writer made a partial admitted write".to_string())));
-            }
-            context.waker().wake_by_ref();
-            return std::task::Poll::Pending;
-        }
-        if self.seal.is_none() {
-            let writer = match self.writer.take() {
-                Some(writer) => writer,
-                None => return std::task::Poll::Ready(Err(DbError::Internal("artifact WAL page field lost seal owner".to_string()))),
-            };
-            self.seal = Some(writer.seal_retained());
-            context.waker().wake_by_ref();
-            return std::task::Poll::Pending;
-        }
-        let seal = match self.seal.as_mut() {
-            Some(seal) => seal,
-            None => return std::task::Poll::Ready(Err(DbError::Internal("artifact WAL page field lost retained seal".to_string()))),
-        };
-        match Pin::new(seal).poll(context) {
-            std::task::Poll::Pending => std::task::Poll::Pending,
-            std::task::Poll::Ready(Ok(pages)) => {
-                self.seal = None;
-                self.remaining = None;
-                std::task::Poll::Ready(Ok(pages))
-            }
-            std::task::Poll::Ready(Err(rejected)) => std::task::Poll::Ready(Err(rejected.into_error())),
-        }
-    }
-}
-
-struct ArtifactWalRetainedEnvelope {
-    mutation_id: db_storage::DbIoText,
-    document_id: db_storage::DbIoText,
-    actor: db_storage::DbIoText,
-    dependencies: [Option<db_storage::DbIoText>; ARTIFACT_WAL_DEPENDENCIES],
-    dependency_count: u8,
-    diff_schema: db_storage::DbIoText,
-    diff_payload: db_storage::DbIoPages,
-    inverse_schema: db_storage::DbIoText,
-    inverse_payload: db_storage::DbIoPages,
-    timestamp: protocol::HybridLogicalTimestamp,
-}
-
-struct ArtifactWalEnvelopeDecode<'bytes, 'control> {
-    cursor: db_wal::WalBytesCursor<'bytes>,
-    control: &'control mut db_wal::WalCursorControl,
-    phase: u8,
-    text: ArtifactWalTextField,
-    page: ArtifactWalPageField,
-    mutation_id: Option<db_storage::DbIoText>,
-    document_id: Option<db_storage::DbIoText>,
-    actor: Option<db_storage::DbIoText>,
-    dependencies: [Option<db_storage::DbIoText>; ARTIFACT_WAL_DEPENDENCIES],
-    dependency_count: u8,
-    dependency: u8,
-    diff_schema: Option<db_storage::DbIoText>,
-    diff_payload: Option<db_storage::DbIoPages>,
-    inverse_schema: Option<db_storage::DbIoText>,
-    inverse_payload: Option<db_storage::DbIoPages>,
-    timestamp: Option<protocol::HybridLogicalTimestamp>,
-}
-
-fn decode_retained_envelope<'bytes, 'control>(bytes: &'bytes db_wal::WalBytes, control: &'control mut db_wal::WalCursorControl) -> ArtifactWalEnvelopeDecode<'bytes, 'control> {
-    ArtifactWalEnvelopeDecode {
-        cursor: bytes.cursor(),
-        control,
-        phase: 0,
-        text: ArtifactWalTextField::new(),
-        page: ArtifactWalPageField::new(),
-        mutation_id: None,
-        document_id: None,
-        actor: None,
-        dependencies: std::array::from_fn(|_| None),
-        dependency_count: 0,
-        dependency: 0,
-        diff_schema: None,
-        diff_payload: None,
-        inverse_schema: None,
-        inverse_payload: None,
-        timestamp: None,
-    }
-}
-
-impl Future for ArtifactWalEnvelopeDecode<'_, '_> {
-    type Output = Result<ArtifactWalRetainedEnvelope, DbError>;
-
-    fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let owner = self.as_mut().get_mut();
-        let result = match owner.phase {
-            0 | 1 | 2 | 4 | 5 | 7 => owner.text.poll(&mut owner.cursor, &mut *owner.control),
-            _ => Ok(None),
-        };
-        match result {
-            Err(error) => return std::task::Poll::Ready(Err(error)),
-            Ok(Some(text)) => match owner.phase {
-                0 => owner.mutation_id = Some(text),
-                1 => owner.document_id = Some(text),
-                2 => owner.actor = Some(text),
-                4 => {
-                    owner.dependencies[owner.dependency as usize] = Some(text);
-                    owner.dependency += 1;
-                    if owner.dependency < owner.dependency_count {
-                        context.waker().wake_by_ref();
-                        return std::task::Poll::Pending;
-                    }
-                }
-                5 => owner.diff_schema = Some(text),
-                7 => owner.inverse_schema = Some(text),
-                _ => return std::task::Poll::Ready(Err(DbError::Internal("artifact WAL text completed outside its phase".to_string()))),
-            },
-            Ok(None) if matches!(owner.phase, 0 | 1 | 2 | 4 | 5 | 7) => {
-                context.waker().wake_by_ref();
-                return std::task::Poll::Pending;
-            }
-            Ok(None) => {}
-        }
-        match owner.phase {
-            0 | 1 | 2 | 4 | 5 | 7 => owner.phase += 1,
-            3 => {
-                let count = match owner.cursor.varint(&mut *owner.control) {
-                    Ok(count) => count,
-                    Err(error) => return std::task::Poll::Ready(Err(error)),
-                };
-                if let Err(error) = check_len(count, ARTIFACT_WAL_DEPENDENCIES as u64, "artifact WAL envelope dependencies") {
-                    return std::task::Poll::Ready(Err(error));
-                }
-                owner.dependency_count = count as u8;
-                owner.phase = if count == 0 { 5 } else { 4 };
-            }
-            6 => match owner.page.poll(&mut owner.cursor, owner.control, context) {
-                std::task::Poll::Pending => return std::task::Poll::Pending,
-                std::task::Poll::Ready(Ok(pages)) => {
-                    owner.diff_payload = Some(pages);
-                    owner.phase = 7;
-                }
-                std::task::Poll::Ready(Err(error)) => return std::task::Poll::Ready(Err(error)),
-            },
-            8 => match owner.page.poll(&mut owner.cursor, owner.control, context) {
-                std::task::Poll::Pending => return std::task::Poll::Pending,
-                std::task::Poll::Ready(Ok(pages)) => {
-                    owner.inverse_payload = Some(pages);
-                    owner.phase = 9;
-                }
-                std::task::Poll::Ready(Err(error)) => return std::task::Poll::Ready(Err(error)),
-            },
-            9 => {
-                let actor = match owner.cursor.varint(&mut *owner.control) {
-                    Ok(value) => value,
-                    Err(error) => return std::task::Poll::Ready(Err(error)),
-                };
-                let physical_ms = match owner.cursor.varint(&mut *owner.control) {
-                    Ok(value) => value,
-                    Err(error) => return std::task::Poll::Ready(Err(error)),
-                };
-                let logical = match owner.cursor.varint(&mut *owner.control) {
-                    Ok(value) => value,
-                    Err(error) => return std::task::Poll::Ready(Err(error)),
-                };
-                owner.timestamp = Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical });
-                owner.phase = 10;
-            }
-            10 => {
-                if owner.cursor.remaining() != 0 {
-                    return std::task::Poll::Ready(Err(DbError::Corrupt("WAL command envelope has trailing bytes".to_string())));
-                }
-                return std::task::Poll::Ready(Ok(ArtifactWalRetainedEnvelope {
-                    mutation_id: owner.mutation_id.take().ok_or_else(|| DbError::Internal("artifact WAL decode lost mutation identity".to_string()))?,
-                    document_id: owner.document_id.take().ok_or_else(|| DbError::Internal("artifact WAL decode lost document identity".to_string()))?,
-                    actor: owner.actor.take().ok_or_else(|| DbError::Internal("artifact WAL decode lost actor identity".to_string()))?,
-                    dependencies: std::mem::replace(&mut owner.dependencies, std::array::from_fn(|_| None)),
-                    dependency_count: owner.dependency_count,
-                    diff_schema: owner.diff_schema.take().ok_or_else(|| DbError::Internal("artifact WAL decode lost diff schema".to_string()))?,
-                    diff_payload: owner.diff_payload.take().ok_or_else(|| DbError::Internal("artifact WAL decode lost diff pages".to_string()))?,
-                    inverse_schema: owner.inverse_schema.take().ok_or_else(|| DbError::Internal("artifact WAL decode lost inverse schema".to_string()))?,
-                    inverse_payload: owner.inverse_payload.take().ok_or_else(|| DbError::Internal("artifact WAL decode lost inverse pages".to_string()))?,
-                    timestamp: owner.timestamp.take().ok_or_else(|| DbError::Internal("artifact WAL decode lost timestamp".to_string()))?,
-                }));
-            }
-            _ => return std::task::Poll::Ready(Err(DbError::Internal("artifact WAL decoder reached a stale phase".to_string()))),
-        }
-        context.waker().wake_by_ref();
-        std::task::Poll::Pending
-    }
-}
-
-struct ArtifactWalEnvelopeAdapter<'control> {
-    retained: Option<ArtifactWalRetainedEnvelope>,
-    control: &'control mut db_wal::WalCursorControl,
-    phase: u8,
-    dependency: u8,
-    page: u8,
-    mutation_id: Option<protocol::MutationId>,
-    document_id: Option<protocol::ArtifactId>,
-    actor: Option<protocol::ActorId>,
-    dependencies: Vec<protocol::MutationId>,
-    diff_schema: Option<protocol::SchemaId>,
-    diff_payload: Vec<u8>,
-    inverse_schema: Option<protocol::SchemaId>,
-    inverse_payload: Vec<u8>,
-}
-
-impl ArtifactWalEnvelopeAdapter<'_> {
-    fn take_text(text: &mut db_storage::DbIoText) -> String {
-        let value = text.as_str().to_string();
-        text.close_step();
-        value
-    }
-}
-
-fn adapt_retained_envelope<'control>(retained: ArtifactWalRetainedEnvelope, control: &'control mut db_wal::WalCursorControl) -> ArtifactWalEnvelopeAdapter<'control> {
-    ArtifactWalEnvelopeAdapter {
-        retained: Some(retained),
-        control,
-        phase: 0,
-        dependency: 0,
-        page: 0,
-        mutation_id: None,
-        document_id: None,
-        actor: None,
-        dependencies: Vec::new(),
-        diff_schema: None,
-        diff_payload: Vec::new(),
-        inverse_schema: None,
-        inverse_payload: Vec::new(),
-    }
-}
-
-impl Future for ArtifactWalEnvelopeAdapter<'_> {
-    type Output = Result<protocol::MutationEnvelope, DbError>;
-
-    fn poll(mut self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let owner = self.as_mut().get_mut();
-        if let Err(error) = owner.control.grant() {
-            return std::task::Poll::Ready(Err(error));
-        }
-        let retained = match owner.retained.as_mut() {
-            Some(retained) => retained,
-            None => return std::task::Poll::Ready(Err(DbError::Internal("artifact WAL adapter was polled after terminal handoff".to_string()))),
-        };
-        match owner.phase {
-            0 => owner.mutation_id = Some(protocol::MutationId(Self::take_text(&mut retained.mutation_id))),
-            1 => owner.document_id = Some(protocol::ArtifactId(Self::take_text(&mut retained.document_id))),
-            2 => owner.actor = Some(protocol::ActorId(Self::take_text(&mut retained.actor))),
-            3 if owner.dependency < retained.dependency_count => {
-                let text = retained.dependencies[owner.dependency as usize].as_mut().ok_or_else(|| DbError::Internal("artifact WAL adapter lost dependency owner".to_string()))?;
-                owner.dependencies.push(protocol::MutationId(Self::take_text(text)));
-                owner.dependency += 1;
-                context.waker().wake_by_ref();
-                return std::task::Poll::Pending;
-            }
-            3 => {}
-            4 => owner.diff_schema = Some(protocol::SchemaId(Self::take_text(&mut retained.diff_schema))),
-            5 if owner.page < retained.diff_payload.page_count() => {
-                let fragment = retained.diff_payload.page(owner.page).ok_or_else(|| DbError::Internal("artifact WAL adapter lost diff page".to_string()))?;
-                owner.diff_payload.extend_from_slice(fragment);
-                owner.page += 1;
-                context.waker().wake_by_ref();
-                return std::task::Poll::Pending;
-            }
-            5 => owner.page = 0,
-            6 => match retained.diff_payload.close_step()? {
-                Some(_) => {
-                    context.waker().wake_by_ref();
-                    return std::task::Poll::Pending;
-                }
-                None => {}
-            },
-            7 => owner.inverse_schema = Some(protocol::SchemaId(Self::take_text(&mut retained.inverse_schema))),
-            8 if owner.page < retained.inverse_payload.page_count() => {
-                let fragment = retained.inverse_payload.page(owner.page).ok_or_else(|| DbError::Internal("artifact WAL adapter lost inverse page".to_string()))?;
-                owner.inverse_payload.extend_from_slice(fragment);
-                owner.page += 1;
-                context.waker().wake_by_ref();
-                return std::task::Poll::Pending;
-            }
-            8 => owner.page = 0,
-            9 => match retained.inverse_payload.close_step()? {
-                Some(_) => {
-                    context.waker().wake_by_ref();
-                    return std::task::Poll::Pending;
-                }
-                None => {}
-            },
-            10 => {
-                let retained = owner.retained.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost terminal owner".to_string()))?;
-                return std::task::Poll::Ready(Ok(protocol::MutationEnvelope {
-                    mutation_id: owner.mutation_id.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost mutation identity".to_string()))?,
-                    document_id: owner.document_id.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost document identity".to_string()))?,
-                    actor: owner.actor.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost actor identity".to_string()))?,
-                    dependencies: std::mem::take(&mut owner.dependencies),
-                    diff: protocol::ArtifactDiff { schema: owner.diff_schema.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost diff schema".to_string()))?, payload: std::mem::take(&mut owner.diff_payload) },
-                    inverse: protocol::InverseMutation { schema: owner.inverse_schema.take().ok_or_else(|| DbError::Internal("artifact WAL adapter lost inverse schema".to_string()))?, payload: std::mem::take(&mut owner.inverse_payload) },
-                    timestamp: retained.timestamp,
-                }));
-            }
-            _ => return std::task::Poll::Ready(Err(DbError::Internal("artifact WAL adapter reached a stale phase".to_string()))),
-        }
-        owner.phase += 1;
-        context.waker().wake_by_ref();
-        std::task::Poll::Pending
-    }
-}
-
 //#region 🔖️StateRetirement
 const ARTIFACT_STATE_RETIREMENT_SLOTS: usize = 64;
 
@@ -1607,6 +1294,10 @@ impl DocumentState {
     /// itself nor a declared `dependencies` member).
     async fn apply_entries(&mut self, mutation_id: &protocol::MutationId, dependencies: &[protocol::MutationId], entries: &[(String, Option<DslValue>)]) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
         check_len(entries.len() as u64, 64, "db_artifact::retained_state_mutations")?;
+        if entries.is_empty() {
+            while artifact_state_retirement_maintenance_step()? {}
+            return Ok((db_state::TouchedSet::new(), Vec::new()));
+        }
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let mut control = db_state::StateCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
         let mut staged: [Option<db_state::StateEntry>; 64] = std::array::from_fn(|_| None);
@@ -1789,6 +1480,8 @@ pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + '
     applied: HashMap<String, protocol::MutationEnvelope>,
     applied_receipts: HashMap<String, CommandReceipt>,
     durable_group_receipts: HashMap<String, store::durable_group::DurableOwnedGroupJournalReceiptV1>,
+    durable_group_edit_ids: HashSet<String>,
+    recent_targets: HashMap<String, Vec<String>>,
     actor_seq: HashMap<String, u64>,
     frontier: Frontier,
     head_edit_id: Option<protocol::MutationId>,
@@ -1798,7 +1491,145 @@ pub struct ArtifactEngine<A: AuthzHook + 'static = AllowAll, V: VersionGraph + '
     recent_touches: VecDeque<db_conflict::CommandTouch>,
     live_queries: HashMap<u64, db_query::LiveQuery>,
     next_live_query_id: u64,
+    index_backlog: ArtifactIndexBacklog,
     config: ArtifactEngineConfig<A, V>,
+}
+
+/// @emoji 🗂️ Index entries of commits that are durable in the WAL but not yet written as index runs.
+/// A commit appends to it; whenever a kind holds a full run (`db_index::RUN_ENTRIES_MAX`), that run
+/// is written — at most `INDEX_RUNS_PER_KIND_PER_COMMIT` runs per kind per commit — so the four
+/// index kinds cost one run write per 64 entries instead of a write, a listing and a merge per entry.
+/// The WAL stays the source of truth: nothing here is durable, and opening a document refills the
+/// backlog from the WAL suffix past what each kind's newest run already records.
+#[derive(Default)]
+struct ArtifactIndexBacklog {
+    commands: VecDeque<(u64, db_index::RecordLocation)>,
+    inverses: VecDeque<(u64, db_index::RecordLocation)>,
+    actor_seqs: VecDeque<(ActorId, u64, u64)>,
+    frontiers: VecDeque<Frontier>,
+}
+
+/// @emoji 🧾️ How far each index kind of one document already records (its newest run's highest
+/// command or commit seq): the replay on open re-queues exactly what lies beyond.
+#[derive(Clone, Copy, Default)]
+struct ArtifactIndexWatermarks {
+    commands: u64,
+    inverses: u64,
+    actor_seqs: u64,
+    frontiers: u64,
+}
+
+/// @emoji 🧺️ The most full runs one commit writes per index kind: enough to keep pace with the
+/// largest batch (256 envelopes = 4 runs) and drain a backlog left by a reopen.
+const INDEX_RUNS_PER_KIND_PER_COMMIT: usize = 5;
+
+/// @emoji 🛑️ The most entries one index kind may keep waiting for a run write before a commit
+/// surfaces the write failure instead of queueing further.
+const INDEX_BACKLOG_ENTRIES_MAX: usize = 64 * db_index::RUN_ENTRIES_MAX;
+
+impl ArtifactIndexBacklog {
+    async fn watermarks(storage: &impl db_storage::IndexStorage, document: &ArtifactId) -> Result<ArtifactIndexWatermarks, DbError> {
+        Ok(ArtifactIndexWatermarks {
+            commands: db_index::CommandIndex::new(storage, document.clone()).await.indexed_through().await?,
+            inverses: db_index::InverseIndex::new(storage, document.clone()).await.indexed_through().await?,
+            actor_seqs: db_index::ActorSeqIndex::new(storage, document.clone()).await.indexed_through().await?,
+            frontiers: db_index::FrontierIndex::new(storage, document.clone()).await.indexed_through().await?,
+        })
+    }
+
+    fn queue_command(&mut self, watermarks: &ArtifactIndexWatermarks, seq: u64, location: db_index::RecordLocation, actor: ActorId, actor_seq: u64) {
+        if seq > watermarks.commands {
+            self.commands.push_back((seq, location));
+        }
+        if seq > watermarks.inverses {
+            self.inverses.push_back((seq, location));
+        }
+        if seq > watermarks.actor_seqs {
+            self.actor_seqs.push_back((actor, actor_seq, seq));
+        }
+    }
+
+    fn queue_frontier(&mut self, watermarks: &ArtifactIndexWatermarks, frontier: &Frontier) {
+        if frontier.commit_seq > watermarks.frontiers {
+            self.frontiers.push_back(frontier.clone());
+        }
+    }
+
+    fn pending(&self) -> usize {
+        self.commands.len().max(self.inverses.len()).max(self.actor_seqs.len()).max(self.frontiers.len())
+    }
+
+    /// @emoji 🚚️ Writes this backlog's runs: only full ones (bounded per kind) after a commit, or
+    /// everything including a partial tail (`drain`) before WAL history may be deleted. Each written
+    /// run leaves the backlog at once, so a failed write resumes exactly where it stopped.
+    async fn flush(&mut self, storage: &impl db_storage::IndexStorage, document: &ArtifactId, drain: bool) -> Result<(), DbError> {
+        let full = db_index::RUN_ENTRIES_MAX;
+        let runs = if drain { usize::MAX } else { INDEX_RUNS_PER_KIND_PER_COMMIT };
+        let commands = db_index::CommandIndex::new(storage, document.clone()).await;
+        for _ in 0..runs {
+            let take = if self.commands.len() >= full { full } else if drain { self.commands.len() } else { 0 };
+            if take == 0 {
+                break;
+            }
+            let run: Vec<_> = self.commands.iter().take(take).copied().collect();
+            commands.record_run(&run).await?;
+            self.commands.drain(..take);
+        }
+        let inverses = db_index::InverseIndex::new(storage, document.clone()).await;
+        for _ in 0..runs {
+            let take = if self.inverses.len() >= full { full } else if drain { self.inverses.len() } else { 0 };
+            if take == 0 {
+                break;
+            }
+            let run: Vec<_> = self.inverses.iter().take(take).copied().collect();
+            inverses.record_run(&run).await?;
+            self.inverses.drain(..take);
+        }
+        let actor_seqs = db_index::ActorSeqIndex::new(storage, document.clone()).await;
+        for _ in 0..runs {
+            let take = if self.actor_seqs.len() >= full { full } else if drain { self.actor_seqs.len() } else { 0 };
+            if take == 0 {
+                break;
+            }
+            let run: Vec<_> = self.actor_seqs.iter().take(take).cloned().collect();
+            actor_seqs.record_run(&run).await?;
+            self.actor_seqs.drain(..take);
+        }
+        let frontiers = db_index::FrontierIndex::new(storage, document.clone()).await;
+        for _ in 0..runs {
+            let take = if self.frontiers.len() >= full { full } else if drain { self.frontiers.len() } else { 0 };
+            if take == 0 {
+                break;
+            }
+            let run: Vec<_> = self.frontiers.iter().take(take).cloned().collect();
+            frontiers.record_run(&run).await?;
+            self.frontiers.drain(..take);
+        }
+        Ok(())
+    }
+}
+
+/// @emoji 🧭️ Consistency resolution of a mounted document: its current frontier is the engine's
+/// own, and a historical frontier is found among the not-yet-written backlog before the index.
+struct ArtifactConsistencyResolver<'a, S: db_storage::IndexStorage> {
+    current: Frontier,
+    pending: &'a VecDeque<Frontier>,
+    commits: db_index::CommitIndex<'a, S>,
+    frontiers: db_index::FrontierIndex<'a, S>,
+}
+
+impl<S: db_storage::IndexStorage> db_query::ConsistencyResolver for ArtifactConsistencyResolver<'_, S> {
+    async fn current_frontier(&self) -> Result<Frontier, DbError> {
+        Ok(self.current.clone())
+    }
+
+    async fn frontier_for_commit(&self, commit_id: &str) -> Result<Frontier, DbError> {
+        let command_seq = self.commits.lookup(commit_id).await?.ok_or_else(|| DbError::NotFound(format!("unknown commit id {commit_id:?}")))?;
+        if let Some(frontier) = self.pending.iter().find(|frontier| frontier.commit_seq == command_seq) {
+            return Ok(frontier.clone());
+        }
+        self.frontiers.lookup(command_seq).await?.ok_or_else(|| DbError::NotFound(format!("no frontier recorded at command_seq {command_seq}")))
+    }
 }
 
 /// 🧯️ Engine construction rejection that keeps every acquired WAL owner until bounded terminal close.
@@ -1973,7 +1804,10 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             let wal_facet = storage.wal().await;
             let replay_cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
             let replay_control = db_wal::WalCursorControl::new(replay_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
+            let watermarks = ArtifactIndexBacklog::watermarks(&storage.index().await, &core_id).await?;
             let mut records = db_wal::replay_committed_document(&wal_facet, &core_id, replay_control).await?;
+            let mut decode_control = db_wal::WalCursorControl::stall_bounded(Arc::new(std::sync::atomic::AtomicBool::new(false)), db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
+            let mut turn = db_wal::WalTurn::start();
             let mut batch_ids: HashSet<String> = HashSet::new();
             let mut seen: u64 = 0;
             let mut replay_frontier = Frontier::genesis(core_id.clone());
@@ -1982,10 +1816,11 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             let result = async {
                 loop {
                     records.renew_step()?;
+                    decode_control.renew_step()?;
                     let mut transaction = match records.next_transaction_step().await? {
                         db_wal::WalCommittedStep::Transaction(transaction) => transaction,
                         db_wal::WalCommittedStep::Yield => {
-                            semio_framework_async::yield_once().await;
+                            turn.step().await;
                             continue;
                         }
                         db_wal::WalCommittedStep::Done => break,
@@ -2000,7 +1835,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                         let record = match transaction.next_record_step()? {
                             db_wal::WalCommittedRecordStep::Record(record) => record,
                             db_wal::WalCommittedRecordStep::Yield => {
-                                semio_framework_async::yield_once().await;
+                                turn.step().await;
                                 continue;
                             }
                             db_wal::WalCommittedRecordStep::Done => break,
@@ -2014,31 +1849,32 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                         }
                         match record {
                             db_wal::WalRecord::Command(bytes) => {
-                                let mut control = db_wal::WalCursorControl::new(Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
-                                let retained = decode_retained_envelope(bytes, &mut control).await?;
-                                let envelope = adapt_retained_envelope(retained, &mut control).await?;
+                                let envelope = db_sync::decode_wal_command(bytes, &mut decode_control)?;
                                 if envelope.document_id.0 != core_id.0 {
                                     return Err(DbError::Corrupt("artifact envelope document differs".to_string()));
                                 }
                                 replay_head_edit_id = Some(envelope.mutation_id.clone());
                                 seen += 1;
                                 batch_ids.insert(envelope.mutation_id.0.clone());
+                                let actor = to_core_actor_id(&envelope.actor).await;
                                 if seen <= applied_head_seq {
-                                    engine.applied.insert(envelope.mutation_id.0.clone(), envelope);
+                                    *engine.actor_seq.entry(envelope.actor.0.clone()).or_insert(0) += 1;
+                                    engine.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
                                 } else {
                                     let (touched, _conflicts, _) = engine.apply_one(&envelope, &batch_ids).await?;
                                     let touch = command_touch(&envelope, &touched);
-                                    if engine.recent_touches.len() >= MAX_RECENT_TOUCHES {
-                                        engine.recent_touches.pop_front();
-                                    }
-                                    engine.recent_touches.push_back(touch);
+                                    engine.remember_target(&envelope);
+                                    remember_recent_touch(&mut engine.recent_touches, touch);
                                     report.commands_replayed += 1;
                                 }
+                                let actor_seq = *engine.actor_seq.get(&envelope.actor.0).unwrap_or(&0);
+                                engine.index_backlog.queue_command(&watermarks, seen, db_index::RecordLocation { segment: segment_index, offset: seen, len: 1 }, actor, actor_seq);
                             }
                             db_wal::WalRecord::Frontier(frontier) => {
                                 if frontier.document != core_id {
                                     return Err(DbError::Corrupt("artifact frontier document differs".to_string()));
                                 }
+                                engine.index_backlog.queue_frontier(&watermarks, frontier);
                                 frontier_seen = true;
                                 replay_frontier = frontier.clone();
                                 replay_projected = true;
@@ -2060,8 +1896,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                             _ => {}
                         }
                         while transaction.close_record_step()? {
-                            semio_framework_async::yield_once().await;
+                            turn.step().await;
                         }
+                        turn.step().await;
                     }
                     if !batch_ids.is_empty() && !frontier_seen {
                         return Err(DbError::Corrupt("artifact committed commands have no frontier".to_string()));
@@ -2073,6 +1910,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                         seen = seen.checked_add(1).ok_or_else(|| DbError::LimitExceeded("artifact replay head sequence"))?;
                         let receipt = store::durable_group::DurableOwnedGroupJournalReceiptV1 { anchor_sha256: record.anchor_sha256().to_string(), decision_sha256: record.decision_sha256().to_string(), transaction_id, segment_index };
                         let duplicate = engine.durable_group_receipts.insert(receipt.decision_sha256.clone(), receipt).is_some();
+                        engine.durable_group_edit_ids.insert(record.parent_edit_id().to_string());
                         if !duplicate {
                             replay_frontier = Frontier {
                                 document: core_id.clone(),
@@ -2082,6 +1920,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                                 epoch: replay_frontier.epoch,
                             };
                             replay_head_edit_id = Some(protocol::MutationId(record.parent_edit_id().to_string()));
+                            remember_recent_touch(&mut engine.recent_touches, durable_group_touch(record.parent_edit_id()));
                             replay_projected = true;
                         }
                     }
@@ -2141,6 +1980,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             applied: HashMap::new(),
             applied_receipts: HashMap::new(),
             durable_group_receipts: HashMap::new(),
+            durable_group_edit_ids: HashSet::new(),
+            recent_targets: HashMap::new(),
             actor_seq: HashMap::new(),
             frontier: Frontier::genesis(core_id.clone()),
             head_edit_id: None,
@@ -2150,6 +1991,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             recent_touches: VecDeque::new(),
             live_queries: HashMap::new(),
             next_live_query_id: 0,
+            index_backlog: ArtifactIndexBacklog::default(),
             config,
         }
     }
@@ -2165,7 +2007,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             return Ok((db_state::TouchedSet::new(), Vec::new(), false));
         }
         for dependency in &envelope.dependencies {
-            if !self.applied.contains_key(&dependency.0) && !batch_ids.contains(&dependency.0) {
+            if !self.applied.contains_key(&dependency.0) && !batch_ids.contains(&dependency.0) && !self.names_durable_group_operation(&dependency.0) {
                 return Err(DbError::InvalidArgument(format!("operation {} depends on unseen operation {}", envelope.mutation_id.0, dependency.0)));
             }
         }
@@ -2176,6 +2018,22 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let actor_seq = self.actor_seq.entry(envelope.actor.0.clone()).or_insert(0);
         *actor_seq += 1;
         Ok((touched, conflicts, true))
+    }
+
+    /// @emoji 👁️ Whether `dependency` names an operation a committed durable group decision folded: the
+    /// decision's edit itself, or `<edit>#<position>`.
+    fn names_durable_group_operation(&self, dependency: &str) -> bool {
+        self.durable_group_edit_ids.contains(dependency) || dependency.rsplit_once('#').is_some_and(|(edit, position)| !position.is_empty() && position.bytes().all(|byte| byte.is_ascii_digit()) && self.durable_group_edit_ids.contains(edit))
+    }
+
+    /// @emoji 🎯️ Keeps `envelope`'s declared target while its touch is in the recent commit window, so a later
+    /// concurrent write can be graded against it; targets that left the window are dropped with it.
+    fn remember_target(&mut self, envelope: &protocol::MutationEnvelope) {
+        if self.recent_targets.len() >= MAX_RECENT_TOUCHES {
+            let window: HashSet<&str> = self.recent_touches.iter().map(|touch| touch.command_id.0.as_str()).collect();
+            self.recent_targets.retain(|command, _| window.contains(command.as_str()));
+        }
+        self.recent_targets.insert(envelope.mutation_id.0.clone(), envelope.target.clone());
     }
 
     /// @emoji 🚦️ The full command pipeline: admit → dedupe → base-resolve/deps → authz → validate →
@@ -2219,6 +2077,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         // 🎯️ Third tuple element (`Vec<u8>`, the envelope's own encoded bytes) is kept alongside so
         // the outbox push below the outcome-step gate doesn't have to re-encode.
         let mut newly_applied: Vec<(protocol::MutationEnvelope, db_state::TouchedSet, Vec<u8>)> = Vec::new();
+        let mut staging_operation: Option<u64> = None;
+        let mut applied_actor_seqs: Vec<u64> = Vec::new();
 
         for envelope in &batch.envelopes {
             // authz: the `AuthzHook` seam (defaults to `AllowAll`; `db_engine`'s `SecurityAuthzHook`
@@ -2246,24 +2106,19 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             if !applied_now {
                 continue;
             }
+            applied_actor_seqs.push(*self.actor_seq.get(&envelope.actor.0).unwrap_or(&0));
 
             for region in &touched.regions {
                 touched_all.record(region.clone());
             }
             conflicts_all.extend(conflicts);
 
-            // 🎯️ B4: `WalRecord::Diff`/`Inverse` (JSON `serde_json::to_vec` of the same fields
-            // `Command` already carries in real binary, via `protocol::encode_envelope`) deleted —
-            // never read anywhere in recovery/replay (confirmed: `db_artifact`/`db_engine` only
-            // ever reconstruct state from `WalRecord::Command`), a pure redundant JSON duplicate.
-            let command_bytes = admit_wal_bytes(envelope_bytes, self.config.limits.max_command_bytes, &mut wal_control).await?;
-            let mut outbox_bytes = Vec::new();
-            protocol::encode_envelope(envelope, &mut outbox_bytes);
-            let outbox_bytes = admit_wal_bytes(outbox_bytes, self.config.limits.max_command_bytes, &mut wal_control).await?;
+            let command_bytes = match staging_operation {
+                None => admit_wal_bytes(envelope_bytes.clone(), self.config.limits.max_command_bytes, &mut wal_control).await?,
+                Some(operation) => db_wal::WalBytes::copy_for_operation(operation, &envelope_bytes, &mut wal_control).await?,
+            };
+            staging_operation = Some(command_bytes.operation());
             push_wal_record(&mut records, db_wal::WalRecord::Command(command_bytes), &mut wal_control).await?;
-            push_wal_record(&mut records, db_wal::WalRecord::Outbox(outbox_bytes), &mut wal_control).await?;
-            let mut envelope_bytes = Vec::new();
-            protocol::encode_envelope(envelope, &mut envelope_bytes);
             newly_applied.push((envelope.clone(), touched, envelope_bytes));
         }
 
@@ -2279,15 +2134,13 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         // findings (probed against recent commit history) into graded `protocol::MutationMessage`s,
         // then let `options.policy` decide before touching `self.recent_touches`/`self.outbox`/the
         // WAL at all — a rejected batch must leave every one of those untouched.
-        let new_ids: HashSet<&str> = newly_applied.iter().map(|(envelope, _, _)| envelope.mutation_id.0.as_str()).collect();
         let batch_touches: Vec<db_conflict::CommandTouch> = newly_applied.iter().map(|(envelope, touched, _)| command_touch(envelope, touched)).collect();
-        let probe: Vec<db_conflict::CommandTouch> = self.recent_touches.iter().cloned().chain(batch_touches.iter().cloned()).collect();
-        // 🔀️ `grade_conflict_record` genuinely awaits (`protocol::MutationMessage::warn`/`fatal`),
-        // so this can't stay an `Iterator::map` chain (R10 residue shape 1: `.await` inside a sync
-        // closure) — hoisted into an explicit async loop instead.
         let mut messages: Vec<protocol::MutationMessage> = Vec::new();
-        for record in db_conflict::ConflictDetector::new().detect(&probe).iter().filter(|record| new_ids.contains(record.command_id.0.as_str()) || new_ids.contains(record.conflicting_with.0.as_str())) {
-            messages.push(grade_conflict_record(record).await);
+        for (index, (envelope, _, _)) in newly_applied.iter().enumerate() {
+            for unseen in unseen_concurrent_writes(&self.recent_touches, &batch_touches[..index], envelope) {
+                let unseen_target = self.recent_targets.get(&unseen.command_id.0).map(Vec::as_slice).or_else(|| newly_applied[..index].iter().find(|(earlier, _, _)| earlier.mutation_id == unseen.command_id).map(|(earlier, _, _)| earlier.target.as_slice())).unwrap_or(&[]);
+                messages.extend(grade_concurrent_write(&batch_touches[index], &envelope.target, unseen, unseen_target).await);
+            }
         }
         if let Some(worst) = protocol::worst_level(&messages) {
             if options.policy.rejects(worst) {
@@ -2299,11 +2152,11 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         // integration (see its own doc) — `submit`'s own returned `ConflictRecord`s stay this
         // crate's original path-granular last-writer detection above (see `🔖️Conflict`'s doc). Only
         // reached once the outcome step above has accepted the batch.
+        for (envelope, _, _) in &newly_applied {
+            self.remember_target(envelope);
+        }
         for touch in batch_touches {
-            if self.recent_touches.len() >= MAX_RECENT_TOUCHES {
-                self.recent_touches.pop_front();
-            }
-            self.recent_touches.push_back(touch);
+            remember_recent_touch(&mut self.recent_touches, touch);
         }
         for (envelope, _, bytes) in &newly_applied {
             self.outbox.push(OutboxEntry { mutation_id: envelope.mutation_id.clone(), bytes: bytes.clone() });
@@ -2316,28 +2169,26 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
         // WAL append + durability (ArtifactWal::submit wraps `records` in its own TxBegin/TxCommit)
         let wal_facet = self.storage.wal().await;
-        self.wal.submit(&wal_facet, &records, options.durability, now_ms).await?;
+        let appended = self.wal.submit(&wal_facet, &records, options.durability, now_ms).await?;
         drop(wal_facet);
         wal_control.grant()?;
         let _ = records.close_step()?;
         drop(records);
         self.frontier = new_frontier.clone();
 
-        // publish: durable indices
-        let index_facet = self.storage.index().await;
-        let command_index = db_index::CommandIndex::new(&index_facet, self.document.clone()).await;
-        let inverse_index = db_index::InverseIndex::new(&index_facet, self.document.clone()).await;
-        let actor_seq_index = db_index::ActorSeqIndex::new(&index_facet, self.document.clone()).await;
-        db_index::FrontierIndex::new(&index_facet, self.document.clone()).await.record(&new_frontier).await?;
+        // publish: index entries join the backlog; full runs are written, bounded per commit
         let base_seq = self.frontier.head_seq - newly_applied.len() as u64;
-        for (offset, (envelope, _, _)) in newly_applied.iter().enumerate() {
+        let queued = ArtifactIndexWatermarks::default();
+        for (offset, ((envelope, _, _), actor_seq)) in newly_applied.iter().zip(&applied_actor_seqs).enumerate() {
             let seq = base_seq + offset as u64 + 1;
-            let location = db_index::RecordLocation { segment: self.wal.active_segment_index().await, offset: seq, len: 1 };
-            command_index.record(seq, location).await?;
-            inverse_index.record(seq, location).await?;
-            let core_actor = to_core_actor_id(&envelope.actor).await;
-            let actor_seq = *self.actor_seq.get(&envelope.actor.0).unwrap_or(&0);
-            actor_seq_index.record(&core_actor, actor_seq, seq).await?;
+            let location = db_index::RecordLocation { segment: appended.segment_index, offset: seq, len: 1 };
+            self.index_backlog.queue_command(&queued, seq, location, to_core_actor_id(&envelope.actor).await, *actor_seq);
+        }
+        self.index_backlog.queue_frontier(&queued, &new_frontier);
+        let index_facet = self.storage.index().await;
+        let flushed = self.index_backlog.flush(&index_facet, &self.document, false).await;
+        if flushed.is_err() && self.index_backlog.pending() > INDEX_BACKLOG_ENTRIES_MAX {
+            flushed?;
         }
 
         // project: run every registered projection over each newly-applied envelope
@@ -2399,6 +2250,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             document_id: self.protocol_document.clone(),
             actor,
             dependencies: vec![target.clone()],
+            observed: None,
+            target: Vec::new(),
             diff: protocol::ArtifactDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)).await },
             inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
@@ -2485,6 +2338,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let receipt = store::durable_group::DurableOwnedGroupJournalReceiptV1 { anchor_sha256, decision_sha256, transaction_id: receipt.tx_id, segment_index: receipt.segment_index };
         self.frontier = next_frontier.clone();
         self.head_edit_id = Some(head_edit_id.clone());
+        self.durable_group_edit_ids.insert(head_edit_id.0.clone());
+        remember_recent_touch(&mut self.recent_touches, durable_group_touch(&head_edit_id.0));
         self.commit_log.push(CommitNotification { frontier: next_frontier, operation_ids: vec![head_edit_id], touched: db_state::TouchedSet::new() });
         self.durable_group_receipts.insert(receipt.decision_sha256.clone(), receipt.clone());
         Ok(ArtifactDurableGroupJournalAppendV1::Committed(receipt))
@@ -2547,6 +2402,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         now_ms: u64,
         cancelled: Arc<std::sync::atomic::AtomicBool>,
     ) -> Result<db_compact::CompactionReport, DbError> {
+        let index_facet = self.storage.index().await;
+        self.index_backlog.flush(&index_facet, &self.document, true).await?;
+        drop(index_facet);
         db_compact::retained_compaction_with_wal(self.storage.clone(), &mut self.wal, holder, consolidate_snapshots, budget, now_ms, cancelled).await
     }
 
@@ -2592,7 +2450,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     #[allow(clippy::needless_pass_by_value)]
     pub async fn query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
         let index_facet = self.storage.index().await;
-        let resolver = db_query::IndexConsistencyResolver { commits: db_index::CommitIndex::new(&index_facet, self.document.clone()).await, frontiers: db_index::FrontierIndex::new(&index_facet, self.document.clone()).await };
+        let resolver = ArtifactConsistencyResolver {
+            current: self.frontier.clone(),
+            pending: &self.index_backlog.frontiers,
+            commits: db_index::CommitIndex::new(&index_facet, self.document.clone()).await,
+            frontiers: db_index::FrontierIndex::new(&index_facet, self.document.clone()).await,
+        };
         // A fresh document has no recorded frontier yet; canonical reads still succeed via the
         // in-memory frontier, so only consult the resolver for modes that truly need the index.
         if !matches!(consistency, db_query::Consistency::Canonical) {
@@ -2667,6 +2530,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             document_id: self.protocol_document.clone(),
             actor: protocol::ActorId("preview".to_string()),
             dependencies: Vec::new(),
+            observed: None,
+            target: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)).await },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
@@ -3049,6 +2914,8 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
     }
     let control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
     let mut records = db_wal::replay_committed_document(wal, document, control).await?;
+    let mut decode_control = db_wal::WalCursorControl::stall_bounded(cancelled.clone(), db_wal::WAL_REPLAY_STEP_STALL_BOUND, db_wal::WAL_REPLAY_STEP_FUEL)?;
+    let mut turn = db_wal::WalTurn::start();
     let result = async {
         let mut point = ArtifactLedgerPoint::genesis();
         let mut decisions: HashSet<String> = HashSet::new();
@@ -3059,10 +2926,11 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
                 return Err(DbError::Unavailable("ledger tail cancelled".to_string()));
             }
             records.renew_step()?;
+            decode_control.renew_step()?;
             let mut transaction = match records.next_transaction_step().await? {
                 db_wal::WalCommittedStep::Transaction(transaction) => transaction,
                 db_wal::WalCommittedStep::Yield => {
-                    semio_framework_async::yield_once().await;
+                    turn.step().await;
                     continue;
                 }
                 db_wal::WalCommittedStep::Done => return Err(DbError::NotFound("ledger tail end is not a committed ledger point".to_string())),
@@ -3074,16 +2942,14 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
                 let record = match transaction.next_record_step()? {
                     db_wal::WalCommittedRecordStep::Record(record) => record,
                     db_wal::WalCommittedRecordStep::Yield => {
-                        semio_framework_async::yield_once().await;
+                        turn.step().await;
                         continue;
                     }
                     db_wal::WalCommittedRecordStep::Done => break,
                 };
                 match record {
                     db_wal::WalRecord::Command(bytes) => {
-                        let mut control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
-                        let retained = decode_retained_envelope(bytes, &mut control).await?;
-                        let envelope = adapt_retained_envelope(retained, &mut control).await?;
+                        let envelope = db_sync::decode_wal_command(bytes, &mut decode_control)?;
                         if envelope.document_id.0 != document.0 {
                             return Err(DbError::Corrupt("ledger envelope document differs".to_string()));
                         }
@@ -3105,8 +2971,9 @@ pub async fn artifact_ledger_tail(wal: &impl WalStorage, document: &ArtifactId, 
                     _ => {}
                 }
                 while transaction.close_record_step()? {
-                    semio_framework_async::yield_once().await;
+                    turn.step().await;
                 }
+                turn.step().await;
             }
             transaction.finish()?;
             let next = match (decision, frontier, envelopes.last()) {
@@ -5285,6 +5152,11 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     terminal: std::sync::atomic::AtomicBool,
 }
 
+/// @emoji ⏱️ How long one worker turn of a document authority keeps re-polling a self-woken turn
+/// future before it hands the worker back to the pool.
+#[cfg(not(target_arch = "wasm32"))]
+const ARTIFACT_RUNNER_TURN_MICROS: u64 = 2_000;
+
 #[cfg(not(target_arch = "wasm32"))]
 struct ArtifactRunnerPoll<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     runner: Arc<ArtifactRunner<A, V>>,
@@ -5666,6 +5538,16 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         }
     }
 
+    /// @emoji 🔁️ Keeps polling in this worker turn when the future woke itself while it was being
+    /// polled (a cooperative yield, a storage step that completed inline) and the turn budget
+    /// remains: every such wake used to cost a full worker-pool round trip.
+    fn repoll_within_turn(&self, turn_ends: std::time::Instant) -> bool {
+        use std::sync::atomic::Ordering;
+        std::time::Instant::now() < turn_ends
+            && !self.cancelled.load(Ordering::Acquire)
+            && self.handoff.driver.compare_exchange(ArtifactRunnerDriver::PollingWake as u8, ArtifactRunnerDriver::Polling as u8, Ordering::AcqRel, Ordering::Acquire).is_ok()
+    }
+
     fn run_turn(self: Arc<Self>, generation: u64, direct_close: bool) {
         use std::panic::AssertUnwindSafe;
         use std::sync::atomic::Ordering;
@@ -5698,10 +5580,17 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
 
         let waker = std::task::Waker::from(Arc::new(ArtifactRunnerWake { runner: Arc::downgrade(&self), generation }));
         let mut context = std::task::Context::from_waker(&waker);
+        let turn_ends = std::time::Instant::now() + std::time::Duration::from_micros(ARTIFACT_RUNNER_TURN_MICROS);
 
         let mut builder = self.builder.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if let Some(future) = builder.as_mut() {
-            match std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context))) {
+            let polled = loop {
+                let polled = std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context)));
+                if !matches!(polled, Ok(std::task::Poll::Pending)) || !self.repoll_within_turn(turn_ends) {
+                    break polled;
+                }
+            };
+            match polled {
                 Ok(std::task::Poll::Pending) => return,
                 Ok(std::task::Poll::Ready(Ok(engine))) => {
                     builder.take();
@@ -5740,7 +5629,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         let mut turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if let Some(active) = turn.as_mut() {
             match active {
-                ArtifactTurn::Future(future) => match std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context))) {
+                ArtifactTurn::Future(future) => match loop {
+                    let polled = std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context)));
+                    if !matches!(polled, Ok(std::task::Poll::Pending)) || !self.repoll_within_turn(turn_ends) {
+                        break polled;
+                    }
+                } {
                     Ok(std::task::Poll::Pending) => return,
                     Ok(std::task::Poll::Ready(engine)) => {
                         turn.take();
@@ -5782,7 +5676,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                     if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
                         replay.request_close(DbError::Closed);
                     }
-                    match std::panic::catch_unwind(AssertUnwindSafe(|| Pin::new(&mut *replay).poll(&mut context))) {
+                    match loop {
+                        let polled = std::panic::catch_unwind(AssertUnwindSafe(|| Pin::new(&mut *replay).poll(&mut context)));
+                        if !matches!(polled, Ok(std::task::Poll::Pending)) || !self.repoll_within_turn(turn_ends) {
+                            break polled;
+                        }
+                    } {
                         Ok(std::task::Poll::Pending) => return,
                         Ok(std::task::Poll::Ready(result)) => {
                             let engine = engine.take();
@@ -6215,4 +6114,8 @@ impl Drop for ArtifactRunnerTerminalJob {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/⚔️concurrent-write/🦀️.rs"]
+mod concurrent_write_tests;
 //#endregion 🧪️Tests

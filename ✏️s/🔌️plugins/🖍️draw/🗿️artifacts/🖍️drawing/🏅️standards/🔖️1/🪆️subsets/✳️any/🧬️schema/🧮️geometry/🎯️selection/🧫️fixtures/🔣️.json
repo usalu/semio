@@ -1,0 +1,167 @@
+[
+  {
+    "name": "triangle",
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        0,
+        10
+      ]
+    ],
+    "points": [
+      {
+        "point": [
+          1,
+          1
+        ],
+        "inside": true
+      },
+      {
+        "point": [
+          6,
+          6
+        ],
+        "inside": false
+      },
+      {
+        "point": [
+          5,
+          5
+        ],
+        "inside": true
+      },
+      {
+        "point": [
+          0,
+          0
+        ],
+        "inside": true
+      }
+    ],
+    "boxes": [
+      {
+        "bounds": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "inside": true
+      },
+      {
+        "bounds": [
+          6,
+          6,
+          1,
+          1
+        ],
+        "inside": false
+      }
+    ]
+  },
+  {
+    "name": "concave",
+    "polygon": [
+      [
+        0,
+        0
+      ],
+      [
+        10,
+        0
+      ],
+      [
+        10,
+        10
+      ],
+      [
+        6,
+        10
+      ],
+      [
+        6,
+        4
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        4,
+        10
+      ],
+      [
+        0,
+        10
+      ]
+    ],
+    "points": [
+      {
+        "point": [
+          5,
+          7
+        ],
+        "inside": false
+      },
+      {
+        "point": [
+          3,
+          7
+        ],
+        "inside": true
+      },
+      {
+        "point": [
+          5,
+          3
+        ],
+        "inside": true
+      }
+    ],
+    "boxes": [
+      {
+        "bounds": [
+          3,
+          3,
+          4,
+          4
+        ],
+        "inside": false
+      },
+      {
+        "bounds": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "inside": true
+      },
+      {
+        "bounds": [
+          0,
+          0,
+          3,
+          3
+        ],
+        "inside": true
+      },
+      {
+        "bounds": [
+          1,
+          7,
+          6,
+          0
+        ],
+        "inside": false
+      }
+    ]
+  }
+]

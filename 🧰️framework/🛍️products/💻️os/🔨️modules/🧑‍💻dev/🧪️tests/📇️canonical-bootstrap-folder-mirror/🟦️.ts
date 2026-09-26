@@ -42,14 +42,12 @@ import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COM
 
 import {
   CANONICAL_BOOTSTRAP_FOLDER_MIRROR_MAX_BYTES,
-  PLUGIN_SOURCE_WATCH_PATH,
   backboneDbHandleFor,
   descriptorRouteDecision,
   publishCanonicalBootstrapFolderMirror,
   readBackbonePayload,
   reserveCanonicalBootstrapFolderMirror,
   retireCanonicalBootstrapFolderMirror,
-  scanBuiltPluginModules,
   stageCanonicalBootstrapFolderMirror,
   writeBackbonePayload,
   type CanonicalBootstrapFolderMirrorReserveV1,

@@ -1836,6 +1836,30 @@
               "$ref": "#/$defs/RebootstrapRequired"
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "spaceId",
+            "change"
+          ],
+          "properties": {
+            "kind": {
+              "const": "access-changed"
+            },
+            "spaceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "change": {
+              "enum": [
+                "granted",
+                "revoked"
+              ]
+            }
+          }
         }
       ]
     },
@@ -4834,11 +4858,12 @@
       ]
     },
     "ArtifactCreationProgressCopyV1": {
-      "description": "🈯️ Artifact-creation progress copy for one locale: the heading, the cancel affordance, and one line per progress and catalog phase.",
+      "description": "🈯️ Artifact-creation progress copy for one locale: the heading, how long the hub has been working on it, the cancel affordance, and one line per progress and catalog phase.",
       "type": "object",
       "additionalProperties": false,
       "required": [
         "heading",
+        "waiting",
         "cancel",
         "cancelling",
         "opening",
@@ -4850,6 +4875,12 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 256
+        },
+        "waiting": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "\\{elapsed\\}"
         },
         "cancel": {
           "type": "string",

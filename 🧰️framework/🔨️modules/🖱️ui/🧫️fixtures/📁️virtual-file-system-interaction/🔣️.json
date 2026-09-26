@@ -1,0 +1,161 @@
+{
+  "rows": [
+    {
+      "id": "root",
+      "fileNodeKindId": "root",
+      "name": "Workspace",
+      "hasChildren": true
+    },
+    {
+      "id": "folder",
+      "fileNodeKindId": "branch",
+      "name": "Models",
+      "parentId": "root",
+      "hasChildren": true
+    },
+    {
+      "id": "instance",
+      "fileNodeKindId": "leaf",
+      "name": "Tower",
+      "parentId": "folder",
+      "navigateUri": "os://instance/inst-7"
+    },
+    {
+      "id": "export",
+      "fileNodeKindId": "leaf",
+      "name": "Export",
+      "parentId": "folder",
+      "navigateUri": "os://export/inst-7/pdf"
+    },
+    {
+      "id": "space",
+      "fileNodeKindId": "leaf",
+      "name": "Space",
+      "parentId": "folder",
+      "navigateUri": "/spaces/space-9"
+    },
+    {
+      "id": "studio",
+      "fileNodeKindId": "leaf",
+      "name": "Studio",
+      "parentId": "folder",
+      "navigateUri": "studio:space-10"
+    },
+    {
+      "id": "external",
+      "fileNodeKindId": "leaf",
+      "name": "External",
+      "parentId": "folder",
+      "navigateUri": "https://example.invalid/file"
+    },
+    {
+      "id": "malformed",
+      "fileNodeKindId": "leaf",
+      "name": "Malformed",
+      "parentId": "folder",
+      "navigateUri": "os://instance/"
+    }
+  ],
+  "visibility": [
+    {
+      "id": "expanded",
+      "expandedRowIds": [
+        "root",
+        "folder"
+      ],
+      "visibleRowIds": [
+        "folder",
+        "instance",
+        "export",
+        "space",
+        "studio",
+        "external",
+        "malformed"
+      ],
+      "levels": [
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "collapsed",
+      "expandedRowIds": [
+        "root"
+      ],
+      "visibleRowIds": [
+        "folder"
+      ],
+      "levels": [
+        0
+      ]
+    }
+  ],
+  "chrome": [
+    {
+      "locale": "en",
+      "name": "Name",
+      "empty": "No file system nodes",
+      "expand": "Expand",
+      "collapse": "Collapse"
+    },
+    {
+      "locale": "de",
+      "name": "Name",
+      "empty": "Keine Dateisystemknoten",
+      "expand": "Ausklappen",
+      "collapse": "Einklappen"
+    }
+  ],
+  "keyboard": [
+    { "control": "chevron", "key": "enter", "result": "toggle" },
+    { "control": "chevron", "key": "space", "result": "toggle" },
+    { "control": "row", "key": "enter", "result": null },
+    { "control": "row", "key": "space", "result": null }
+  ],
+  "navigation": [
+    {
+      "rowId": "instance",
+      "action": "openInstance",
+      "args": {
+        "instanceId": "inst-7"
+      }
+    },
+    {
+      "rowId": "export",
+      "action": "exportMedia",
+      "args": {
+        "instanceId": "inst-7",
+        "format": "pdf"
+      }
+    },
+    {
+      "rowId": "space",
+      "action": "navigateVirtualFileSystemNode",
+      "args": {
+        "spaceId": "space-9"
+      }
+    },
+    {
+      "rowId": "studio",
+      "action": "navigateVirtualFileSystemNode",
+      "args": {
+        "spaceId": "space-10"
+      }
+    },
+    {
+      "rowId": "external",
+      "action": null,
+      "args": null
+    },
+    {
+      "rowId": "malformed",
+      "action": null,
+      "args": null
+    }
+  ]
+}

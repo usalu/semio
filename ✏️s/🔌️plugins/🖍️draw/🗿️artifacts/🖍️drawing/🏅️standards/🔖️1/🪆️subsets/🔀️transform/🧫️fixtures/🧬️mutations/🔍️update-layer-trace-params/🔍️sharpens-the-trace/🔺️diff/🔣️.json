@@ -20,7 +20,8 @@
           "strokeJson": null,
           "booleanOperation": null,
           "traceParamsJson": "{\"threshold\":0.8,\"simplifyEpsilon\":0.25}",
-          "layerJson": null
+          "layerJson": null,
+          "pathSegments": null
         }
       }
     ],

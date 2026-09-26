@@ -77,14 +77,14 @@ const TREE_TREE: BuiltNode = node({
       children: [
         node({
           key: "item-background",
-          component: { type: "treeItem", label: "Background", description: null, icon: "square", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] },
+          component: { type: "treeItem", label: "Background", description: null, icon: "square", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], inlineToolbar: null, detail: null },
           bindings: [bind("activate", "selectItem")],
         }),
         node({
           key: "item-foreground",
-          component: { type: "treeItem", label: "Foreground", description: null, icon: "square", defaultOpen: true, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] },
+          component: { type: "treeItem", label: "Foreground", description: null, icon: "square", defaultOpen: true, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], inlineToolbar: null, detail: null },
           children: [
-            node({ key: "item-foreground-shadow", component: { type: "treeItem", label: "Shadow", description: null, icon: "circle", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] } }),
+            node({ key: "item-foreground-shadow", component: { type: "treeItem", label: "Shadow", description: null, icon: "circle", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], inlineToolbar: null, detail: null } }),
           ],
         }),
       ],
@@ -95,7 +95,7 @@ const TREE_TREE: BuiltNode = node({
       children: [
         node({
           key: "item-visible",
-          component: { type: "treeItem", label: "Visible", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] },
+          component: { type: "treeItem", label: "Visible", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], inlineToolbar: null, detail: null },
           children: [node({ key: "toggle-visible", component: { type: "toggle", appearance: "checkbox", on: true, icon: "eye", text: "Visible" }, bindings: [bind("change", "toggleVisible")] })],
         }),
       ],

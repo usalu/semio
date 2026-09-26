@@ -117,6 +117,31 @@ print("released", flush=True)
     finally { rmSync(databasePath("hardlink")); }
     symlinkSync(directory, join(root, "linked-store"), process.platform === "win32" ? "junction" : "dir");
     await assert.rejects(() => api.acquireResourceLease({ directory: join(root, "linked-store"), resource: "linked", mode: "exclusive", signal: new AbortController().signal }), /invalid.*directory/i);
+    const queueStore = join(root, "queue-store"), order: string[] = [], quiet = () => {};
+    const holder = await api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "holder", signal: new AbortController().signal, onWait: quiet });
+    const queue = join(queueStore, createHash("sha256").update("fifo").digest("hex") + ".queue");
+    writeFileSync(join(queue, "000000000000001-0000999999-crashed"), "999999\n");
+    const first = api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "first", signal: new AbortController().signal, onWait: quiet }).then((lease: { release(): void }) => (order.push("first"), lease));
+    await Bun.sleep(50);
+    const second = api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "second", signal: new AbortController().signal, onWait: quiet }).then((lease: { release(): void }) => (order.push("second"), lease));
+    await Bun.sleep(600);
+    assert.deepEqual(order, []);
+    holder.release();
+    const firstLease = await first;
+    await Bun.sleep(600);
+    assert.deepEqual(order, ["first"]);
+    firstLease.release();
+    (await second).release();
+    assert.deepEqual(order, ["first", "second"]);
+    assert.deepEqual(readdirSync(queue), []);
+    const cancelled = new AbortController(), blocker = await api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "blocker", signal: new AbortController().signal, onWait: quiet });
+    const abandoned = api.acquireQueuedResourceLease({ directory: queueStore, resource: "fifo", mode: "exclusive", owner: "abandoned", signal: cancelled.signal, onWait: quiet });
+    await Bun.sleep(50);
+    cancelled.abort();
+    await assert.rejects(() => abandoned, /abort/i);
+    blocker.release();
+    assert.deepEqual(readdirSync(queue), []);
+    console.log("Resource lease queue: arrival order served, a crashed waiter's ticket swept, a cancelled waiter leaves no ticket PASS");
     console.log("[DEBUG] Resource lease deadlines, cancellation while held, progress failure, ordered multi-resource access, consumer failure, identity/journal and path guards PASS");
   } finally {
     for (const child of children) if (child.process.exitCode === null) child.process.kill("SIGKILL");

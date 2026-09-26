@@ -85,6 +85,94 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "backend-up": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backend up",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backend-down": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backend down",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backend-status": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backend status",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backend-run": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backend run",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "backup-restore-drill": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts backup-restore-drill",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "residency-watch": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts residency-watch",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "boot-watch": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts boot-watch",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "hub-freshness": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts hub-freshness",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     }
   }
 }

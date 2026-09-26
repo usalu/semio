@@ -20,7 +20,7 @@ import protocolSchema from "../../🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -467,6 +467,33 @@ describe("🔮️ oracle evidence rules", () => {
     expect(breaches.some((breach) => breach.id === "differential-without-evidence")).toBe(true);
     rmSync(join(testCacheDir(repoRoot, "work"), "🧪️contract-self-test"), { recursive: true, force: true });
   });
+
+  test("a declared differential row whose adapter cannot run is a contract breach: no entry point, or no adapter in the oracle's language", () => {
+    const oracle = { id: "reader-x", kind: "third-party-library" as const, ecosystem: "javascript", package: "reader-x", capabilities: ["x"], comparisonProfiles: ["ordered-json-v1"], license: "MIT", testOnly: true as const };
+    const registry: import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry = { schemaVersion: 1, oracles: [oracle], probes: [], noOracleDecisions: [], comparisonProfiles: [...CORE_COMPARISON_PROFILES], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [] };
+    const feature = "@capability-x @oracle-reader-x @comparison-ordered-json-v1\nFeature: F\n  @id-s @level-quick @mode-differential\n  Scenario: S\n    Given a value\n";
+    const taxonomy = testTaxonomy(repoRoot);
+    const featureFilename = testFilenameForKind(taxonomy, taxonomy.testFeatureFileKindId);
+    const filenameOf = (implementation: string): string => testFilenameForKind(taxonomy, taxonomy.testAdapterFileKinds[Object.entries(taxonomy.testImplementationIds).find(([, id]) => id === implementation)![0]]!);
+    const root = join(testCacheDir(repoRoot, "work"), "🧪️contract-entry-self-test");
+    rmSync(root, { recursive: true, force: true });
+    const caseWith = (name: string, adapters: Readonly<Record<string, string>>) => {
+      const dir = join(root, "🧪️tests", name);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, featureFilename), feature);
+      for (const [implementation, source] of Object.entries(adapters)) writeFileSync(join(dir, filenameOf(implementation)), source);
+      return validateCaseContract(repoRoot, { owner: relativeToRepo(repoRoot, root), ownerName: "🧪️contract-entry-self-test", case: name, caseDir: relativeToRepo(repoRoot, dir), featurePath: `${relativeToRepo(repoRoot, dir)}/${featureFilename}`, adapters: Object.fromEntries(Object.keys(adapters).map((implementation) => [implementation, `${relativeToRepo(repoRoot, dir)}/${filenameOf(implementation)}`])), sharedFixtureDir: null, projectName: name }, registry).map((breach) => breach.id);
+    };
+    const script = caseWith("script-without-entry", { python: "import json\nprint(json.dumps({}))\n", typescript: "export default defineTestAdapter({ implementation: \"typescript\" });\n" });
+    expect(script.filter((id) => id === "adapter-entry-point-missing")).toEqual(["adapter-entry-point-missing"]);
+    expect(script).not.toContain("oracle-adapter-missing");
+    const subjectOnly = caseWith("oracle-language-missing", { rust: "pub fn adapter() -> Adapter {\n    Adapter::new(\"rust\")\n}\n" });
+    expect(subjectOnly).toContain("oracle-adapter-missing");
+    expect(subjectOnly).not.toContain("adapter-entry-point-missing");
+    const wired = caseWith("wired", { rust: "pub fn adapter() -> Adapter {\n    Adapter::new(\"rust\")\n}\n", typescript: "export default defineTestAdapter({ implementation: \"typescript\" });\n" });
+    expect(wired.filter((id) => id === "adapter-entry-point-missing" || id === "oracle-adapter-missing")).toEqual([]);
+    rmSync(root, { recursive: true, force: true });
+  });
 });
 
 describe("🌱️ native second implementation", () => {
@@ -518,7 +545,7 @@ describe("🌱️ native second implementation", () => {
       mutationCatalogs: [],
       mutationManifests,
       fixtureManifests: [],
-      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests, fixtureManifests: [], probes: [], problems: [] }],
+      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: [], mutationManifests, fixtureManifests: [], probes: [], problems: [] }],
     }) as unknown as Registry;
 
   test("isSemioNativeArtifact refuses every s.stdio.* interchange format except s.stdio.semio itself", () => {
@@ -728,7 +755,7 @@ describe("🧫️ mutation without fixture", () => {
       mutationCatalogs: catalogs,
       mutationManifests: manifests,
       fixtureManifests: fixtures,
-      contributions: [{ owner: "test/owner", manifestPath: "test/owner/🔮️oracles/🔣️.json", oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: catalogs, mutationManifests: manifests, fixtureManifests: fixtures, probes: [], problems: [] }],
+      contributions: [{ owner: "test/owner", manifestPath: "test/owner/🔮️oracles/🔣️.json", oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: catalogs, mutationManifests: manifests, fixtureManifests: fixtures, probes: [], problems: [] }],
     }) as unknown as Registry;
 
   test("a mutation with neither a v2 fixture nor a v1 vector is a breach", () => {
@@ -833,6 +860,14 @@ describe("🚫️ oracle purity", () => {
 });
 
 describe("🧩️ cross-language oracle hosts", () => {
+  test("a subject host enables the features the owner and its ancestors declare for its language, and nothing else", () => {
+    const contribution = (owner: string, subjectFeatures: readonly { implementation: "rust" | "python"; features: readonly string[]; rationale: string }[]) => ({ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures, mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] });
+    const registry = { schemaVersion: 2, oracles: [], probes: [], noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [contribution("plugin", [{ implementation: "rust", features: ["app"], rationale: "the plugin's surfaces are feature-gated" }]), contribution("plugin/artifact", [{ implementation: "rust", features: ["assembly", "app"], rationale: "the artifact's surfaces are feature-gated" }, { implementation: "python", features: ["py"], rationale: "another language" }]), contribution("plugin/sibling", [{ implementation: "rust", features: ["sibling"], rationale: "a sibling owner" }])] } as unknown as Parameters<typeof subjectFeaturesFor>[0];
+    expect(subjectFeaturesFor(registry, "plugin/artifact/subset", "rust")).toEqual(["app", "assembly"]);
+    expect(subjectFeaturesFor(registry, "plugin/artifact/subset", "python")).toEqual(["py"]);
+    expect(subjectFeaturesFor(registry, "other", "rust")).toEqual([]);
+  });
+
   test("a contributed host package is selected for whichever implementation declares it, not for Rust alone", () => {
     const registry = repoRegistry;
     const owners = new Set(repoCases.map((entry) => entry.owner));
@@ -992,7 +1027,7 @@ describe("🎯 reimplementation-registered-as-third-party is entry-granular, not
       mutationCatalogs: [],
       mutationManifests: [],
       fixtureManifests: [],
-      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] }],
+      contributions: [{ owner, manifestPath: `${owner}/🔮️oracles/🔣️.json`, oracles, noOracleDecisions: [], comparisonProfiles: [], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], probes: [], problems: [] }],
     }) as unknown as Registry;
 
   /** 🦀️ A `match kind { … }` catch-all whose exact wording is what the detector's `predicts` regex looks

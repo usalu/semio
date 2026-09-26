@@ -4,7 +4,6 @@ import { join } from "node:path";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
 import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 
 //#region 🧪️Validation
 class CheckScript extends BundleScript {
@@ -199,23 +198,13 @@ class AddWidgetRetainedCheckScript extends BundleScript {
 }
 //#endregion 🧪️Validation
 
-/** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
- * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
- * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
-class DescribeScript extends BundleScript {
-  run(): void {
-    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-flow", join(this.root, "..", "..")));
-  }
-}
-
 const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript)
   .register("test-source", SourceTestScript)
   .register("child-identity-check", ChildIdentityCheckScript)
   .register("child-edit-check", ChildEditCheckScript)
-  .register("add-widget-retained-check", AddWidgetRetainedCheckScript)
-  .register("describe", DescribeScript);
+  .register("add-widget-retained-check", AddWidgetRetainedCheckScript);
 registerPlaygroundSiteBuildCommands(router);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

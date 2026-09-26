@@ -37,7 +37,10 @@ pub(crate) fn finish_retired_cpu_only_map_fixture_close() {
 #[cfg(test)]
 pub(crate) fn finish_cpu_only_fixture_component_close(close: impl FnOnce(&crate::interpreter::ScenePointerTarget)) {
     let Some(request) = take_component_surface_close_request() else { return };
-    assert!(matches!(request.owner.kind, ui_wgpu::wgpu::SurfaceKind::TiledMap | ui_wgpu::wgpu::SurfaceKind::NodeGraph | ui_wgpu::wgpu::SurfaceKind::Board2d));
+    assert!(matches!(request.owner.kind, ui_wgpu::wgpu::SurfaceKind::TiledMap | ui_wgpu::wgpu::SurfaceKind::NodeGraph | ui_wgpu::wgpu::SurfaceKind::Board2d | ui_wgpu::wgpu::SurfaceKind::TextEditor));
+    if let Some(token) = crate::engine_canvas::engine_surface_token(&request.owner.host_id) {
+        assert_eq!(request.engine_token, Some(token), "the scene close owns the exact engine token bound during paint");
+    }
     close(&request.owner);
     assert!(crate::engine_canvas::engine_surface_token(&request.owner.host_id).is_none());
     if let Some(token) = request.engine_token {

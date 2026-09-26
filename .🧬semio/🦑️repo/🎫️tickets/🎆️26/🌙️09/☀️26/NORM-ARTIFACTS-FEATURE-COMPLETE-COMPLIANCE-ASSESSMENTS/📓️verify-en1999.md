@@ -1,126 +1,201 @@
-# Verify — EN 1999 (Wave D, Round 3)
+# Verify — EN 1999 (Wave D, Round 6)
 
-VERDICT: FAIL (8 blocking)
+**VERDICT: PASS (0 blocking)**
+
+**Verifier:** Wave D Round 6 (read-only; tests run)  
+**Family root:** `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/`  
+**Impl claim:** fixer `d469004d` — hierarchical diff/mutation facets regenerated, inference guard typed, three referential-integrity tests, 77/77 + 51/51  
+**Test runs (verifier):**
+
+| Command | Result | Log |
+|---------|--------|-----|
+| `bun nx run @semio-tech/norm-en1999-rs:test --skip-nx-cache -- --no-fail-fast` | **Summary [0.633s] 77 passed, 0 skipped** | `🗑️generated/verify-en1999/test-r6.txt` |
+| `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache` | **Summary [0.273s] 51 passed, 0 skipped** | `🗑️generated/verify-en1999/contract-test-r6.txt` |
+
+## Round 6 — R5 blocker re-check
+
+| # | R5 blocker | R6 | Evidence |
+|---|------------|-----|----------|
+| 1 | Diff facets match hierarchical `En1999Diff`; no scalar `nEdKn`/`chi` | **PASS** | `🔺️diff/🟦️.ts:16–37` (`artifact`…`shells` only); `🔺️diff/🔗️.graphql:2–13`; `🔺️diff/🛰️.proto:4–25`; `facet_diff_matches_rust` (`🧪️tests/⚖️compliance/🦀️.rs:456–472`) asserts fields + absence of stale scalars |
+| 2 | Mutation facets match 18 semantic `KINDS`; scalar union gone | **PASS** | `🧬️mutations/🦀️.rs:52–71` (`KINDS`); `🧬️mutations/🟦️.ts:101–143` (`EN1999_MUTATION_KINDS` + discriminated union); `🧬️mutations/🔗️.graphql:3–23`; `facet_mutations_match_kinds` (`:475–491`) |
+| 3 | `normEn1999InferenceGuardObject` → `Readonly<En1999Inference>` | **PASS** | `💡️inferences/🟦️.ts:30–31`; `rg Record<string, unknown>` over family → **0** hits |
+| 4 | Referential-integrity compliance tests (duplicate + dangling) | **PASS** | `duplicate_material_id_fails_with_oneof_remedy` (`:783–801`); `dangling_connection_material_id_fails_with_oneof_existing_materials` (`:804–825`); `dangling_connection_member_id_fails_with_oneof_existing_members` (`:828–849`) — each asserts `CheckStatus::Fail`, en≠de explanations, `RemedyBound::OneOf` with existing ids (not `exactly`/dummy utilization) |
+
+**New tests since R5 (72→77):** `facet_diff_matches_rust`, `facet_mutations_match_kinds`, `duplicate_material_id_fails_with_oneof_remedy`, `dangling_connection_material_id_fails_with_oneof_existing_materials`, `dangling_connection_member_id_fails_with_oneof_existing_members`.
+
+### Evaluate-path spot-check (no regression)
+
+| Item | R6 | Evidence |
+|------|-----|----------|
+| No fingerprint / `en1999.en1990.psi` / `id_score` / `tag_fp` / `1e-9 *` gaming | **PASS** | `rg fingerprint\|en1990\.psi\|id_score\|tag_fp\|1e-9 \*` over family `*.rs` evaluate path → **0** gaming hits; `.max(1e-9)` divide guards only (`🧬️schema/🦀️.rs:961,1284,…`) |
+| Perturbation signature `(id,status,computed,limit,utilization)` | **PASS** | `every_editable_leaf_influences_a_check` (`:665–748`) — `to_bits()` on computed/limit/utilization; explanation excluded |
+| Catalogue shares evaluate consts | **PASS** | `CATALOGUE_ALLOY_ROWS` (`🧬️schema/🦀️.rs:616–641`); catalogue panel imports same (`✏️editor/📌️panels/📚️catalogue/🦀️.rs:25–47`); `alloy_table_3_2_6082_t6` (`:17–34`) |
+| SLS frequent + shell `tau_rcr` | **PASS** | `en1999.7.2.sls-freq.*` (`🧬️schema/🦀️.rs:1652`); `en1999.8.sls-freq.*` (`:1902`); shell shear `tau_rcr` (`:2378–2480`) |
+
+## Round 6 — Brief checks (1–10 + 7b)
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| 1 Subject completeness | **PASS** | Hierarchical SI snapshot; characteristic `MemberAction`; EN 1990 ULS+SLS governing |
+| 2 Clause coverage | **PASS** | Parts 1-1…1-5 + §7.2 SLS + §8 connections; shell τ; bi-linear fatigue |
+| 3 Numerics | **PASS** | Hand/oracle tests green; catalogue cell = evaluated `N_Rd` limit |
+| 4 Applicability | **PASS** | Empty-list N/A gates |
+| 5 National annex | **PASS** | γ_Mf DE vs EN on fatigue |
+| 6 Report quality | **PASS** | Governing combo + action_id on ULS/SLS; `[id=…]` remedies resolve |
+| 7 Examples | **PASS** | Compliant + multi-fail decode/evaluate |
+| 7b Inputs UX | **PASS** | `field_meta_covers_every_editable_leaf_en_de` |
+| 8 Mutations & schema | **PASS** | Snapshot + diff + mutations + proto + inference guards aligned |
+| 9 Tests | **PASS** | 77/77 + 51/51; facet parity + referential integrity + perturbation + catalogue cell |
+| 10 Stubs | **PASS** | No `todo!`/`#[ignore]` in evaluate path |
+
+## Round 6 — Blocking fix list
+
+None
+
+## Round 6 — Non-blocking observations
+
+- R5 doc cited “19 semantic `KINDS`”; Rust/TS/GQL/proto and `facet_mutations_match_kinds` correctly assert **18** (`🧬️mutations/🦀️.rs:52–71`, `:480`).
+- Referential-integrity tests assert `status` + remedy law but not `computed`/`limit`/`utilization` — acceptable for pure reference Fails (no normative quantity emitted).
+- `actions[].id` duplicates within one owner still not scanned by `push_duplicate_id_fails` (only top-level entity lists).
+
+---
+
+# Verify — EN 1999 (Wave D, Round 5)
+
+**VERDICT: FAIL (4 blocking)**
+
+**Verifier:** Wave D Round 5 (read-only; tests run)  
+**Family root:** `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/`  
+**Impl claim:** `📓️impl-en1999.md` — R4 rework (fingerprint removal + normative connection `sls-freq`), 72/72  
+**Test runs (verifier):**
+
+| Command | Result | Log |
+|---------|--------|-----|
+| `bun nx run @semio-tech/norm-en1999-rs:test --skip-nx-cache -- --no-fail-fast` | **Summary [0.801s] 72 passed, 0 skipped** | `🗑️generated/verify-en1999/test-r5.txt` |
+| `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache` | **Summary [0.277s] 51 passed, 0 skipped** | `🗑️generated/verify-en1999/contract-test-r5.txt` |
 
 ## Round history
 
 | Round | Verdict | Notes |
 |-------|---------|-------|
 | R1 | FAIL (8 blocking) | Remedy paths, silent alloy, fire k_θ, missing 1-4/1-5, stale DSL, oracle/jsonschema, weak remedy-law, empty field-meta |
-| R2 | FAIL (7 blocking) | EN 1990 absent, ρ_u unused, cold-formed discard, shell χ=0.70, single-slope fatigue, remedy-law, ignored leaves, identical en/de |
-| R3 | **FAIL (8 blocking)** | R2 formula gaps largely closed; **TS/GraphQL facets still pre-refactor**; perturbation gate weak; governing combination not reported; identical en/de persists; no SLS |
+| R2 | FAIL (7 blocking) | EN 1990 absent, ρ_u unused, cold-formed discard, shell χ=0.70, single-slope fatigue, remedy-law, ignored leaves |
+| R3 | FAIL (8 blocking) | Facets pre-refactor; perturbation gate weak; governing combo not reported; identical en/de; no SLS |
+| R4 | FAIL (9 blocking) | Snapshot facets fixed; signature gaming + dummy binds + partial gov combo + hand-typed cold/shell + catalogue dup + dangling materialId + no duplicate scan + stale diff/mutation guards |
+| R4 rework | Coordinator rejected `en1999.en1990.psi.*` fingerprints (CORRECTION 14:37); normative `en1999.8.sls-freq.*` wired instead (`📓️fix-en1999-r4-no-fingerprint-gaming.md`) |
+| **R5** | **FAIL (4 blocking)** | **All nine R4 evaluate-path blockers closed; diff/mutation/proto facets still pre-refactor; inference guard loose; referential Fails untested** |
 
-**R3 runner:** `bun nx run @semio-tech/norm-en1999-rs:test --skip-nx-cache -- --no-fail-fast` → **Summary [0.471s] 65 tests run: 65 passed, 0 skipped** (log: `🗑️generated/verify-en1999/test-r3.txt`).
+---
 
-## Round 2 blocking item re-check
+## Round 5 — R4 blocker re-check (+ fingerprint rejection)
 
-| # | Round-2 blocker | R3 | Evidence |
-|---|-----------------|-----|----------|
-| 1 | EN 1990 action model (no hand-typed member design effects) | **FIXED** (members) / **PARTIAL** (connections) | `part_en1990::governing_member_effects` ULS 6.10a/b (`🧬️schema/🦀️.rs:333–394`); `check_member` uses `gov.n_ed`…`m_z_ed` (`873–875`). Connections: `n_k * 1.35` / `v_k * 1.50` proxy when explicit (`1271–1279`), not full combination engine. |
-| 2 | `ρ_u,haz` in HAZ net checks | **FIXED** | `effective_area` applies `rho_u_haz` + `weld_position` (`549–563`); weld resistance uses ρ_u (`1347`); `haz_rho_u_governs_welded_net_section` test (`🧪️tests/⚖️compliance/🦀️.rs:424–431`). |
-| 3 | Cold-formed `nEd`/`welded`/`span` discarded | **FIXED** | Axial (`1669–1695`), support/web crippling via `span` (`1697–1729`), N–M (`1731–1762`); no `let _ =` discard. |
-| 4 | Shell meridional `χ` hardcoded 0.70 | **FIXED** | `σ_x,Rcr`, `λ̄_x`, `χ_x` from geometry (`1798–1807`); `shell_chi_from_geometry_hand_value` (`🧪️tests/⚖️compliance/🦀️.rs:435–453`). |
-| 5 | Fatigue single `slopeM` | **FIXED** | `FatigueDetail.m1`/`m2` (`📸️snapshot/🦀️.rs:188–191`); bi-linear `fatigue_strength_pa` / `damage_ratio` (`729–761`); `fatigue_strength_at_5e5` test. |
-| 6 | Remedy-law ≥2 fail→pass | **FIXED** | `remedy_law_writing_required_improves_fail` applies ≥2 remedies, re-evaluates, asserts Pass/u≤1 per targeted id (`196–240`). |
-| 7 | Unread editable leaves | **PARTIAL** | `every_editable_leaf_influences_a_check` passes via **ratio gate** (`518–521`), not per-leaf; hardcoded exemptions for `.outerDiameter`, `.bolts.material` (`513–516`). |
+| # | R4 blocker | R5 | Evidence |
+|---|------------|-----|----------|
+| 1 | Perturbation signature `(id,status,computed,limit,utilization)`; no explanation | **PASS** | `every_editable_leaf_influences_a_check` (`🧪️tests/⚖️compliance/🦀️.rs:627–709`) compares `to_bits()` on computed/limit/utilization; `unchanged.is_empty()` per leaf; only `.id` exempt |
+| 2 | `effective_wel_y` uses ρ_u,haz; no `let _ = rho_u_haz` | **PASS** | `rho_o_haz.min(rho_u_haz)` in `effective_wel_y` (`🧬️schema/🦀️.rs:756–764`); `rg let _ = (rho_u_haz|rho_o_haz)` → **0** hits in family evaluate path |
+| 3 | Shell τ check uses `tau_rcr` | **PASS** | `en1999.1-5.shear.{id}` (`🧬️schema/🦀️.rs:2470–2480`); `tau_rcr` in explanation |
+| 4 | Every member ULS explanation names governing combo + action_id | **PASS** | All `6.2.*`/`6.3.*` checks use `(ULS {combo}, lead {action_id})` / `(GZT {combo}, führend {action_id})` (e.g. `:1247–1248`, `:1313–1314`, `:1382+`); test `governing_uls_combination_named_in_member_explanations` (`:456–475`) filters all `en1999.6.2.*`/`6.3.*` |
+| 5 | SLS frequent + cold/shell characteristic `actions[]` | **PASS** | Member `en1999.7.2.sls-freq.*` (`:1651–1664`); connection `en1999.8.sls-freq.*` (`:1866–1907`); `ColdFormedSheet`/`AluminiumShell` carry `actions: Vec<MemberAction>` (`📸️snapshot/🦀️.rs:218,236`); no `mEd`/`nEd`/`sigma*Ed` in snapshot JSON leaves |
+| 6 | `CATALOGUE_ALLOY_ROWS` shared; evaluated limit = catalogue cell | **PASS** | `part_1_1::CATALOGUE_ALLOY_ROWS` (`🧬️schema/🦀️.rs:616–641`); catalogue panel imports same const (`✏️editor/📌️panels/📚️catalogue/🦀️.rs:25–47`); test `alloy_table_3_2_6082_t6` asserts `N_Rd` limit vs `A_eff·f_o/γ_M1` (`🧪️tests/⚖️compliance/🦀️.rs:17–34`) |
+| 7 | Dangling `connections[].materialId` → Fail + one_of | **PASS** | `evaluate_structure` (`🧬️schema/🦀️.rs:2700–2720`) |
+| 8 | Duplicate entity ids → Fail | **PASS (code)** | `push_duplicate_id_fails` on all eight lists (`:2543–2550`) — **no compliance test** (see blocking #4) |
+| 9 | Typed text guards (inference/diff/mutations) | **PARTIAL** | `📝️text/🟦️.ts` for snapshot/diff/mutations/inferences return `Readonly<En1999*>`; **`💡️inferences/🟦️.ts:30–31` still `Record<string, unknown>`** |
 
-## Round 1 item re-check (still relevant)
+### Fingerprint gaming (CORRECTION 14:37)
 
-| # | Round-1 blocker | R3 | Evidence |
-|---|-----------------|-----|----------|
-| 1 | `[id=…]` remedy paths | **PASS** | `remedy_paths_use_id_selectors_and_resolve_in_snapshot` (`173–193`). |
-| 2 | Unknown alloy silent default | **PASS** | `resolve_alloy` → `None`; `unknown_alloy_emits_fail_with_oneof_catalogue`. |
-| 3 | Fire without `k_θ` | **PASS** | `k_theta` on `N_fi`/`M_fi` (`1441–1447`); fire test. |
-| 4 | Missing `coldFormed[]`/`shells[]` | **PASS** | Snapshot + evaluate + entity tests. |
-| 5 | Stale DSL/pack | **PASS** | `bundled_example_assets_match_regenerated_dsl_and_pack`. |
-| 6 | Oracle ±0.5% + jsonschema | **PASS** | Both tests run; oracle overlap limited to 4 id patterns (`294–297`). |
-| 7 | Remedy-law ≥2 | **PASS** | See R2 #6. |
-| 8 | `empty_field_meta` | **PASS** | `field_meta_covers_every_editable_leaf_en_de`; stale orphan rows remain (see 13:43). |
+| Item | R5 | Evidence |
+|------|-----|----------|
+| No `en1999.en1990.psi.*` / `fingerprint` / `1e-9 *` field folds in evaluate | **PASS** | `rg fingerprint|en1990\.psi|1e-9 \*` over `🧬️schema/🦀️.rs` evaluate path → **0** gaming hits; `1e-9` only in `.max(1e-9)` denominators |
+| Connection `actions[].category` moves normative SLS without fingerprints | **PASS** | `sls_connection_effects` + `en1999.8.sls-freq.{id}` (`🧬️schema/🦀️.rs:1866–1907`) |
 
-## Brief checks (1–10 + 7b)
+---
+
+## Round 5 — ADDENDA 14:54 / 14:42 / CORRECTION 13:27
+
+| Item | R5 | Evidence |
+|------|-----|----------|
+| `reference_tables()` populated from evaluate consts | **PASS** | `reference_tables()` → `alloy_table_3_2()` from `CATALOGUE_ALLOY_ROWS` (`✏️editor/📌️panels/📚️catalogue/🦀️.rs:20–48`) |
+| Dangling refs Fail (en+de, remedy `one_of`) | **PASS (code)** / **FAIL (tests)** | Members (`:2657–2676`), connections materialId (`:2700–2720`), memberId (`check_connection` `:1712–1729`), fire/fatigue/cold/shell material refs — **no `*dangling*` / `*duplicate*` compliance tests** |
+| Duplicate entity ids Fail | **PASS (code)** / **FAIL (tests)** | `push_duplicate_id_fails` — not exercised by tests |
+| Facets regenerated (snapshot + diff + mutations + proto) | **FAIL** | Snapshot TS/GQL/proto current (`facet_field_names_match_snapshot_json_schema` `:436–452`). **Diff + mutations facets still flat scalar pre-refactor** (below) |
+| No `Record<string, unknown>` on subject/inference guards | **FAIL** | `normEn1999InferenceGuardObject` → `Record<string, unknown>` (`💡️inferences/🟦️.ts:30–31`) |
+| Perturbation: full nested walk, signature without explanation | **PASS** | `walk_leaves` + per-leaf assert (`:627–709`); two fixtures (compliant + noncompliant) |
+
+---
+
+## Round 5 — Facet drift (blocking)
+
+Rust source of truth:
+
+- `En1999Diff` (`🔺️diff/🦀️.rs:11–32`): `artifact`, `annex`, `materials`, `sections`, `members`, `connections`, `fireScenarios`, `fatigueDetails`, `coldFormed`, `shells` only.
+- `En1999Mutation` (`🧬️mutations/🦀️.rs:31–71`): 19 semantic kinds (`change-materials`, `change-members`, `add-member`, …).
+
+Stale generated facets still expose the **old 26-scalar** Wave-A demo:
+
+| Facet | Stale fields (examples) | Rust expects |
+|-------|-------------------------|--------------|
+| `🔺️diff/🟦️.ts` | `nEdKn`, `mEdKnm`, `chi`, `sheetMEdKnm`, `sigmaEdShellMpa`, … | entity list optionals only |
+| `🔺️diff/🔗️.graphql` | same scalar set | hierarchical diff |
+| `🔺️diff/🛰️.proto` | `n_ed_kn` … `sigma_ed_shell_mpa` (fields 2–27) | `materials`/`members`/… messages |
+| `🧬️mutations/🟦️.ts` | `changeNEdKn`, `changeChi`, `changeSheetMEdKnm`, … (26 variants) | `changeMembers`, `changeConnections`, … |
+| `🧬️mutations/🔗️.graphql` | flat `nEdKn`…`annex` on `En1999Mutation` | discriminated semantic mutations |
+| `🧬️mutations/🛰️.proto` | scalar `n_ed_kn`… | semantic mutation union |
+
+`facet_field_names_match_snapshot_json_schema` reads `mut_ts` but **never asserts** on diff/mutation facet parity — drift survives 72/72 green.
+
+---
+
+## Round 5 — Brief checks (1–10 + 7b)
 
 | Check | Result | Evidence |
 |-------|--------|----------|
-| 1 Subject completeness | **PARTIAL** | Members: characteristic `MemberAction` + EN 1990 ULS (`📸️snapshot/🦀️.rs:57–87`, `governing_member_effects`). **Governing combination computed but discarded** (`876: let _ = gov.combination`). Connections use γ·N_k proxy (`1271–1279`). Cold-formed/shells still carry hand-typed design scalars (`m_ed`/`n_ed`, `sigma_x_ed`/`sigma_theta_ed`). **No SLS** combinations anywhere (`rg SLS` → none). |
-| 2 Clause coverage | **PASS** (formulas) | Parts 1-1…1-5 reached with real formulas; no `χ=0.70` hardcode; bi-linear fatigue. |
-| 3 Numerics | **PASS** | Hand recompute in `🗑️generated/verify-en1999/hand-numerics.txt`: χ(λ̄=1)=0.656, aw6082 ρ_o/ρ_u, Δσ_R@5×10⁵≈98.01 MPa, shell χ_x from geometry, M_c,Rd≈5.67 kNm — all within ±0.5 %. |
-| 4 Applicability | **PASS** | Empty-list N/A gates; cold/shell NA when absent. |
-| 5 National annex | **PASS** | γ_Mf DE 1.35 vs EN 1.0 (`de_and_en_gamma_identical` skips fatigue); aluminium γ_M1/γ_M2 identical EN/DE documented. |
-| 6 Report quality | **FAIL** | Paths/id grammar OK; remedies on fails. **≥7 check explanations use identical en/de format strings** (`923–926`, `958–961`, `994–997`, `1126`, `1160`, `1202`, `1338–1341`, `1847–1848`, `1874–1875`). **Governing ULS combination not named** in report (`876`). |
-| 7 Examples | **PASS** | Compliant + multi-fail decode/evaluate; DSL/pack drift green. |
-| 7b Inputs UX | **PARTIAL** | Structured editor test green; field-meta covers snapshot leaves. **Stale meta rows** `members[].actions[].vYEd`/`vZEd`/`mZEd` (design labels) do not match snapshot `vYK`/`vZK`/`mZK` (`🏷️field-meta/🦀️.rs:95–98`). `CONN_KINDS` omits `combined` though examples use it (`📸️snapshot/🦀️.rs:377`). |
-| 8 Mutations & schema | **FAIL** | Semantic mutations OK. **JSON Schema (`📸️snapshot/🔣️.json`) matches Rust** (nK, m1/m2, coldFormed, shells). **TS + GraphQL facets are stale pre-refactor**: `MemberAction` still `nEd/vYEd/mYEd` (`📸️snapshot/🟦️.ts:13`, `🔗️.graphql:13`); `FatigueDetail.slopeM` (`🟦️.ts:19`); `En1999Snapshot` missing `coldFormed`/`shells` (`🟦️.ts:1–9`); connections still `nEd`/`vEd`. Guard helpers use `Record<string, unknown>` (`📸️snapshot/📝️text/🟦️.ts:20–21`). |
-| 9 Tests | **PASS** | 65 executed, 0 skipped; numeric/oracle/jsonschema/remedy tests assert values. |
-| 10 Stubs | **PASS** | No `todo!`/`#[ignore]` in evaluate path; catalogue panel placeholder only (`✏️editor/📌️panels/📚️catalogue/🦀️.rs:3`). |
+| 1 Subject completeness | **PASS** | Hierarchical SI snapshot; characteristic `MemberAction` on members/connections/cold/shell; EN 1990 ULS+SLS governing |
+| 2 Clause coverage | **PASS** | Parts 1-1…1-5 + §7.2 SLS + §8 connections; shell τ; bi-linear fatigue |
+| 3 Numerics | **PASS** | Hand/oracle tests green; `alloy_table_3_2_6082_t6` ties catalogue to `N_Rd` |
+| 4 Applicability | **PASS** | Empty-list N/A gates for members/connections/fire/fatigue/cold/shell |
+| 5 National annex | **PASS** | γ_Mf DE vs EN on fatigue; documented identical γ_M1/γ_M2 |
+| 6 Report quality | **PASS** | Governing combo + action_id on ULS/SLS checks; `[id=…]` remedies resolve |
+| 7 Examples | **PASS** | Compliant + multi-fail decode/evaluate; DSL/pack drift test |
+| 7b Inputs UX | **PASS** | `field_meta_covers_every_editable_leaf_en_de`; structured editor test |
+| 8 Mutations & schema | **FAIL** | Snapshot + artifact JSON aligned; **diff/mutation TS/GQL/proto stale**; inference guard loose |
+| 9 Tests | **PARTIAL** | 72/72 pass; perturbation + catalogue cell test strong; **missing referential-integrity + facet parity beyond snapshot** |
+| 10 Stubs | **PASS** | No `todo!`/`#[ignore]` in evaluate path |
 
-## CORRECTION 13:27 (12 causes)
+## Round 5 — CORRECTION 13:27 (twelve causes)
 
-| # | Cause | R3 |
+| # | Cause | R5 |
 |---|-------|-----|
-| 1 | Choice labels en+de | **PASS** — `🏷️field-meta/🦀️.rs:9–49` |
-| 2 | Every editable leaf meta | **PASS** — walk test on both examples |
-| 3 | Structured editor | **PASS** — `renders_the_structured_document_editor` |
+| 1 | Choice labels en+de | **PASS** |
+| 2 | Every editable leaf meta | **PASS** |
+| 3 | Structured editor | **PASS** |
 | 4 | `[id=…]` paths resolve | **PASS** |
 | 5 | ≥2 fail→pass remedy apply | **PASS** |
 | 6 | Example decode + verdicts | **PASS** |
 | 7 | Oracle + jsonschema | **PASS** |
-| 8 | Facets regenerated | **FAIL** — TS/GraphQL/proto out of sync with Rust/JSON (see check 8) |
-| 9 | No tautologies / ignored inputs | **PARTIAL** — perturbation uses 50% allowance; `rho_o_haz` explicitly discarded in `effective_area` (`551: let _ = rho_o_haz`) though ρ_o used in `effective_wel_y` |
+| 8 | Facets regenerated | **FAIL** — diff + mutations + proto; inference `Record` guard |
+| 9 | No tautologies / ignored inputs | **PASS** — gaming audit clean post fingerprint removal |
 | 10 | No trivially-true tests | **PASS** |
-| 11 | Semantic mutation names | **PASS** |
-| 12 | Localized dynamic text | **FAIL** — identical en/de formula copies (see check 6) |
+| 11 | Semantic mutation names (Rust) | **PASS** — TS/GQL facets still scalar names |
+| 12 | Localized dynamic text | **PASS** — `explanations_en_de_not_identical_except_numbers` |
 
-## CORRECTION 13:43 (perturbation + structural actions)
+---
 
-| Item | Result | Evidence |
-|------|--------|----------|
-| Scope-aware perturbation | **FAIL** | `every_editable_leaf_influences_a_check` runs **only** on `compliant_roof_purlin()` (`456–457`); gate `unchanged.len() * 2 < active_leaves` allows ~half unchanged (`518–521`); exemptions `.outerDiameter`, `.bolts.material` (`513–516`) beyond id labels. Does not perturb cold-formed/fire/HAZ leaves in a dedicated example per ADDENDUM. |
-| N/A-in-default not exempt | **FAIL** | `outerDiameter` exempt though on schema; `gKLine`/`qKLine` on `source=external` actions likely no-op in default example (see `🗑️generated/verify-en1999/ignored-fields-audit.txt`). |
-| Leaf set vs field-meta | **PARTIAL** | Snapshot leaves covered by meta walk test. **Orphan meta paths** `vYEd`/`vZEd`/`mZEd` never appear in JSON snapshot. |
-| Static ignored-fields audit | **PASS** (reads) | `ignored-fields-audit.txt`: no leaf wholly absent from `schema.rs` string search; perturbation gate is the gap. |
-| Governing combination reported | **FAIL** | `gov.combination` discarded (`876`). |
-| SLS + fatigue spectra | **FAIL** | ULS + fire ψ₂ only; no SLS checks; fatigue is single-block Δσ_Ed not multi-range spectrum. |
+## Round 5 — Blocking fix list
 
-**Explicit perturbation exemptions (allowed: descriptive `id` only):**
-- Test exempts: `sections[].outerDiameter`, `connections[].bolts.material`
-- Test allows: any leaf failing ratio gate (up to ~50% of active leaves)
+1. **`🔺️diff/🟦️.ts`, `🔺️diff/🔗️.graphql`, `🔺️diff/🛰️.proto`** — Regenerate from `🔺️diff/🦀️.rs` (`artifact`, `annex`, `materials`…`shells`); remove all scalar `nEdKn`/`chi`/… fields. Extend `facet_field_names_match_snapshot_json_schema` (or add `facet_diff_matches_rust`) to fail on stale diff field names.
 
-## EN 1999 scope spot-check
+2. **`🧬️mutations/🟦️.ts`, `🧬️mutations/🔗️.graphql`, `🧬️mutations/🛰️.proto`** — Regenerate from `🧬️mutations/🦀️.rs` `KINDS` (19 semantic mutations); delete scalar `changeNEdKn`/`changeChi`/… union. Assert TS/GQL/proto list matches `KINDS`.
 
-| Scope item | R3 | Notes |
-|------------|-----|-------|
-| 1-1 alloys Table 3.2, HAZ ρ_o/ρ_u | **OK** | Catalogue from Table 3.2 (`436–454`); ρ_u in net section |
-| EN 1990 ULS combinations | **OK** (members) | 6.10a/b + governing pick |
-| EN 1990 governing combination in report | **FAIL** | Not emitted |
-| SLS combinations | **FAIL** | Not implemented |
-| 1-2 fire k_θ, durationS | **OK** | `theta_eff` from `duration_s` (`1438–1440`) |
-| 1-3 bi-linear fatigue m1/m2 | **OK** | |
-| 1-4 cold-formed | **OK** | nEd, welded, span wired |
-| 1-5 shell χ | **OK** | Computed; `length` in σ_θ,Rcr (`1799`) |
-| Facets parity Rust↔TS↔GraphQL | **FAIL** | TS/GraphQL stale |
+3. **`💡️inferences/🟦️.ts:30–31`** — Change `normEn1999InferenceGuardObject` to return `Readonly<En1999Inference>` (mirror `💡️inferences/📝️text/🟦️.ts:21–22`); remove `Record<string, unknown>`.
 
-## Blocking fix list
+4. **`🧪️tests/⚖️compliance/🦀️.rs`** — Add tests: (a) duplicate `materials[].id` (or `members[].id`) → `en1999.ref.duplicate.*` Fail with `one_of` remedy; (b) dangling `connections[].materialId` → `en1999.ref.conn.material.*` Fail; (c) dangling `connections[].memberId` → `en1999.8.ref.*` Fail. Mirror en1990/en1997 fleet pattern (ADDENDUM 14:42).
 
-1. **`🧬️schema/📸️snapshot/🟦️.ts`, `🧬️schema/🔗️.graphql`, `🧬️schema/🟦️.ts`, proto leaves** — Regenerate all non-JSON facets from current Rust snapshot: `MemberAction` must use `id/kind/category/source/gKLine/qKLine/nK/vYK/vZK/mYK/mZK` (not `nEd/vYEd/…`); `AluminiumConnection` → `nK`/`vK`; `FatigueDetail` → `detailCategory/m1/m2` (remove `slopeM`); `En1999Snapshot` must include `coldFormed` and `shells`. Add a parity test that fails when TS/GraphQL field names diverge from `📸️snapshot/🔣️.json`.
+---
 
-2. **`🧪️tests/⚖️compliance/🦀️.rs:456–521` — scope-aware perturbation** — Replace ratio gate with **per-leaf** assert: for each editable leaf in the committed example where the field is applicable, perturbation must change ≥1 check utilization/status/explanation. Run on `compliant_roof_purlin` **and** ensure part-specific leaves (cold-formed, shell, fire HAZ, fatigue) are perturbed in that example (already present). Remove `.outerDiameter`/`.bolts.material` exemptions unless proven non-applicable with a localized N/A reason; wire `outerDiameter` into tube checks or move to discriminated `tube` section kind only.
+## Round 5 — Non-blocking observations
 
-3. **`🧬️schema/🦀️.rs:876` + member report text** — Emit `gov.combination` and governing `action_id` in every member ULS check `explanation` (en + de, distinct German wording). Add test asserting explanation contains `uls-610a` or `uls-610b` for multi-variable load case.
-
-4. **`🧬️schema/🦀️.rs` — identical en/de explanations** — Localize all formula explanation pairs currently using the same `format!` template for en and de (minimum: `923–926`, `958–961`, `994–997`, `1126`, `1160`, `1202`, `1338–1341`, `1847–1848`, `1874–1875`). German must use engineering terms (e.g. „Kehlnahtdicke“, „Biegedrillknicken“, not English unit strings only).
-
-5. **`🧬️schema/🦀️.rs` + `part_en1990`** — Implement EN 1990 **SLS** combination family (characteristic / frequent / quasi-permanent per DE NA) for member deflection/stress service checks, or dedicated SLS check ids gated when service limits are modelled; structural-family rule requires SLS alongside ULS.
-
-6. **`✏️editor/🏷️field-meta/🦀️.rs:95–98`** — Remove stale `vYEd`/`vZEd`/`mZEd` rows; ensure `vYK`/`vZK`/`mZK` labels say “characteristic” (not “design”). Add `combined` to `CONN_KINDS` (`57–60`) to match evaluate + examples.
-
-7. **`🧬️schema/🦀️.rs:1271–1279`** — Connection design effects must come from the same EN 1990 governing engine (or explicit characteristic connection load cases combined per 6.10), not `n_k * 1.35` / `v_k * 1.50` scalars when `n_k`/`v_k` are characteristic inputs.
-
-8. **Generated TS guard helpers (`📝️text/🟦️.ts` et al.)** — Regenerate without `Record<string, unknown>` bare-object guards per CORRECTION 13:27 #8; use typed snapshot interfaces.
-
-## Non-blocking observations
-
-- Round 3 closes all seven Round-2 **formula** blockers; evaluate path is materially complete for ULS member/shell/cold-formed/fatigue/fire.
-- JSON Schema anchor (`📸️snapshot/🔣️.json`) is current; jsonschema test validates against it while TS consumers would deserialize wrong shapes.
-- Oracle compares only `.6.2.3.n.`, `.6.2.5.m.`, `1-2.fire.`, `1-3.fat.` ids — extend after facet fix.
-- `effective_area` ignores `rho_o_haz` parameter (`551`) while bending path uses ρ_o in `effective_wel_y` — intentional split but parameter should be used or removed from signature.
-- Catalogue panel remains headline placeholder (outside Wave D gate).
+- R5 closes **all nine R4 evaluate-path blockers** and passes the post-rejection gaming audit; the family is materially feature-complete on the Rust evaluation surface.
+- `push_action_field_fails` adds valuable EN 1990 referential validation on `kind`/`category`/`source` without fingerprints.
+- Oracle overlap threshold remains `compared >= 2` per example (`:343`) — consider raising once facet drift is fixed.
+- `actions[].id` duplicates within one owner are not scanned by `push_duplicate_id_fails` (only top-level entity lists).
+- Connection lever arm `0.50` m for moment→force conversion is hardcoded (`check_connection` `:1706–1708`) — document or expose if subject-specific geometry is required later.

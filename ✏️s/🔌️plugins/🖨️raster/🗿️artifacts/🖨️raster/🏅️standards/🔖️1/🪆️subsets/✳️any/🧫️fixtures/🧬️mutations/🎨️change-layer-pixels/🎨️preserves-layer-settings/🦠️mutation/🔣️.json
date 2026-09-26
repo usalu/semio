@@ -1,0 +1,11 @@
+{
+  "mutation": "changeLayerPixels",
+  "layerId": "paint",
+  "expectedImageKey": null,
+  "content": {
+    "imageKey": null,
+    "width": 3,
+    "height": 2
+  },
+  "transform": null
+}

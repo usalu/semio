@@ -5,6 +5,27 @@ fn secondary_pointer_button_uses_context_menu_code() {
     assert_eq!(pointer_button_to_i16(PointerButton::Secondary), 2);
 }
 
+#[test]
+fn normalized_host_maps_table_stepper_navigation_keys_without_text_fallback() {
+    for (key, expected) in [
+        ("Home", ui_wgpu::wgpu::KeyAction::Home),
+        ("End", ui_wgpu::wgpu::KeyAction::End),
+        ("PageUp", ui_wgpu::wgpu::KeyAction::PageUp),
+        ("PageDown", ui_wgpu::wgpu::KeyAction::PageDown),
+    ] {
+        assert_eq!(key_action_from_dispatch(key, true), Some(expected));
+        assert_eq!(key_action_from_dispatch(key, false), None);
+    }
+}
+
+#[test]
+fn normalized_native_ime_commit_preserves_the_exact_unicode_payload() {
+    let text = "日本é";
+    assert_eq!(ime_event_from_winit(&winit::event::Ime::Commit(text.into())), ui_render::ImeEvent::Commit { text: text.into() });
+    assert_eq!(ime_event_from_winit(&winit::event::Ime::Preedit(text.into(), Some((0, text.len())))), ui_render::ImeEvent::Update { text: text.into(), cursor: text.len() });
+    assert_eq!(ime_event_from_winit(&winit::event::Ime::Disabled), ui_render::ImeEvent::Cancel);
+}
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct OsShortcutFixture {

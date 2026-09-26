@@ -1,13 +1,13 @@
 //! 📐️ ISO 16757-2 geometry graph, solids, ports, spaces, placement.
 
-use super::common::{assess, catalogue_subject, copy, fail, na, pass, q_dim, q_len, q_vol, subject};
+use super::common::{assess, catalogue_subject, copy, fail, na, pass, q_dim, q_len, q_vol, subject, controlled_ordinal};
 use crate::document::{CheckReport, CheckStatus, Quantity, QuantityKind, Remedy, RemedyBound};
 use crate::part_2::{GeometryCatalogue, GeometryNode, GeometryObject, SpaceKind};
 use crate::standards::v1::subsets::any::schema::part_2 as helpers;
 use crate::Iso16757Snapshot;
 use std::collections::HashSet;
 
-const INSTALL_CLEARANCE_M: f64 = 0.05;
+use crate::artifact_schema::part_2::INSTALL_CLEARANCE_M;
 
 pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     check_ports_primitives_and_spaces(doc, report);
@@ -283,7 +283,7 @@ pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                         format!("Add at least one PortDefinition on '{id}' with non-zero direction and medium."),
                         format!("Mindestens eine PortDefinition an '{id}' mit nicht-nuller Richtung und Medium hinzufügen."),
                     ),
-                    applicable: true,
+                    applicable: false,
                 }],
             ));
         } else {
@@ -467,8 +467,7 @@ pub fn check_part_2(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     }
 
     if graph_fail == 0 && volume_fail == 0 && port_fail == 0 && space_fail == 0 && binding_fail == 0 {
-        let _ = (objects_ok, catalogue_subject);
-    }
+            }
 }
 
 /// 📐️ Positive extent helper used by tests/oracles.
@@ -604,6 +603,76 @@ fn check_ports_primitives_and_spaces(doc: &Iso16757Snapshot, report: &mut CheckR
             }
         }
         for port in &obj.ports {
+            let medium = port.medium.trim();
+            let port_type = port.port_type.trim();
+            if medium.is_empty() {
+                report.push(fail(
+                    format!("iso16757.2.6.1.portMedium.{id}.{}", port.id),
+                    "2",
+                    "6.1",
+                    subject(id, format!("geometry.objects.{id}.ports[id={}].medium", port.id), id, id),
+                    copy("Port medium", "Anschlussmedium"),
+                    copy(
+                        format!("Port '{}' medium must be non-empty (Part 2 §6.1).", port.id),
+                        format!("Anschluss '{}' Medium darf nicht leer sein (Teil 2 §6.1).", port.id),
+                    ),
+                    vec![Remedy::one_of(
+                        subject(id, format!("geometry.objects.{id}.ports[id={}].medium", port.id), id, id),
+                        vec!["water".into(), "air".into(), "gas".into(), "signal".into()],
+                        copy("Set port medium to a declared MEP medium.", "Anschlussmedium auf ein deklariertes TGA-Medium setzen."),
+                    )],
+                ));
+            } else {
+                report.push(assess(
+                    format!("iso16757.2.6.1.portMedium.{id}.{}", port.id),
+                    "2",
+                    "6.1",
+                    subject(id, format!("geometry.objects.{id}.ports[id={}].medium", port.id), id, id),
+                    copy("Port medium", "Anschlussmedium"),
+                    copy(
+                        format!("Port '{}' medium is '{medium}'.", port.id),
+                        format!("Anschluss '{}' Medium ist '{medium}'.", port.id),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(controlled_ordinal(medium, &["water", "air", "oil", "steam", "glycol", "refrigerant", "other"])),
+                    q_dim(1.0),
+                    Vec::new(),
+                ));
+            }
+            if port_type.is_empty() {
+                report.push(fail(
+                    format!("iso16757.2.6.1.portType.{id}.{}", port.id),
+                    "2",
+                    "6.1",
+                    subject(id, format!("geometry.objects.{id}.ports[id={}].portType", port.id), id, id),
+                    copy("Port type", "Anschlussart"),
+                    copy(
+                        format!("Port '{}' portType must be non-empty (Part 2 §6.1).", port.id),
+                        format!("Anschluss '{}' portType darf nicht leer sein (Teil 2 §6.1).", port.id),
+                    ),
+                    vec![Remedy::one_of(
+                        subject(id, format!("geometry.objects.{id}.ports[id={}].portType", port.id), id, id),
+                        vec!["inlet".into(), "outlet".into(), "inOutlet".into()],
+                        copy("Set portType to inlet, outlet, or inOutlet.", "portType auf inlet, outlet oder inOutlet setzen."),
+                    )],
+                ));
+            } else {
+                report.push(assess(
+                    format!("iso16757.2.6.1.portType.{id}.{}", port.id),
+                    "2",
+                    "6.1",
+                    subject(id, format!("geometry.objects.{id}.ports[id={}].portType", port.id), id, id),
+                    copy("Port type", "Anschlussart"),
+                    copy(
+                        format!("Port '{}' portType is '{port_type}'.", port.id),
+                        format!("Anschluss '{}' portType ist '{port_type}'.", port.id),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(controlled_ordinal(port_type, &["inlet", "outlet", "inOutlet", "sensor", "other"])),
+                    q_dim(1.0),
+                    Vec::new(),
+                ));
+            }
             let dir_n = (port.direction[0].powi(2) + port.direction[1].powi(2) + port.direction[2].powi(2)).sqrt();
             let ok_dir = (dir_n - 1.0).abs() < 1e-3;
             if !ok_dir {
@@ -702,8 +771,8 @@ fn check_ports_primitives_and_spaces(doc: &Iso16757Snapshot, report: &mut CheckR
                             format!("Primitiv '{}' deklariert Teil-2-Parameter {:?}.", prim.id, prim.parameters),
                         ),
                         CheckStatus::Pass,
-                        q_dim(params.len() as f64),
-                        q_dim(params.len() as f64),
+                        q_dim(1.0),
+                        q_dim(1.0),
                         Vec::new(),
                     ));
                 } else {

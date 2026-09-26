@@ -138,8 +138,7 @@ edit(BOOT, '''        DirectoryCommand::AnnounceDocument { descriptor } => Some(
     }''', '''        DirectoryCommand::AnnounceDocument { descriptor } => Some(descriptor.space_id.clone()),
         DirectoryCommand::RecordUserPreference { .. } => None,
     }''')
-edit(BOOT, '''async fn directory_event_page_event_visible(state: &HubState, event: &DirectoryEvent, caller: &AuthedUser) -> Result<bool, StatusCode> {
-    let Some(space_id)''', '''/// 🌐️ Which lane a directory event page serves: the directory (every event the caller may see, never a preference) or the
+edit(BOOT, '''fn directory_event_page_event_visible(member_spaces: &BTreeSet<String>, event: &DirectoryEvent, caller: &AuthedUser) -> bool {''', '''/// 🌐️ Which lane a directory event page serves: the directory (every event the caller may see, never a preference) or the
 /// caller's own preferences (`user.preference-recorded` of the caller, nothing else). Both share one seq, one receipt and
 /// one page machinery; an event of the other lane is skipped like an invisible one.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -148,14 +147,17 @@ enum DirectoryEventLaneV1 {
     Preferences,
 }
 
-async fn directory_event_page_event_visible(state: &HubState, event: &DirectoryEvent, caller: &AuthedUser, lane: DirectoryEventLaneV1) -> Result<bool, StatusCode> {
-    let preference = matches!(event.body, os_directory::DirectoryEventBody::UserPreferenceRecorded { .. });
-    if preference != (lane == DirectoryEventLaneV1::Preferences) {
-        return Ok(false);
+/// 🌐️ The page lane an event belongs to: a `user.preference-recorded` event rides only the preference lane.
+fn directory_event_lane_v1(event: &DirectoryEvent) -> DirectoryEventLaneV1 {
+    match event.body {
+        os_directory::DirectoryEventBody::UserPreferenceRecorded { .. } => DirectoryEventLaneV1::Preferences,
+        _ => DirectoryEventLaneV1::Directory,
     }
-    let Some(space_id)''')
+}
+
+fn directory_event_page_event_visible(member_spaces: &BTreeSet<String>, event: &DirectoryEvent, caller: &AuthedUser) -> bool {''')
 edit(BOOT, '''async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, after: u64, control: &DirectoryEventPageHttpControl) -> Result<DirectoryEventPageV1, StatusCode> {''', '''async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, after: u64, control: &DirectoryEventPageHttpControl, lane: DirectoryEventLaneV1) -> Result<DirectoryEventPageV1, StatusCode> {''')
-edit(BOOT, '''        let visible = directory_event_page_event_visible(state, &event, &caller).await?;''', '''        let visible = directory_event_page_event_visible(state, &event, &caller, lane).await?;''')
+edit(BOOT, '''        if !directory_event_page_event_visible(&member_spaces, &event, &caller) {''', '''        if directory_event_lane_v1(&event) != lane || !directory_event_page_event_visible(&member_spaces, &event, &caller) {''')
 edit(BOOT, '''async fn get_directory_event_page_v1(OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
     let after = directory_event_page_request_admission(&uri)?;''', '''async fn get_directory_event_page_v1(OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectoryEventPageV1>, StatusCode> {
     serve_directory_event_page_v1(uri, headers, state, DirectoryEventLaneV1::Directory).await

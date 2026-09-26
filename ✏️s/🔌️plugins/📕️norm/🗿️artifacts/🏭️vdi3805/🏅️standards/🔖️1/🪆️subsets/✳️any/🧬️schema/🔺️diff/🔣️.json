@@ -12,6 +12,9 @@
       "x-semio-state": "artifact",
       "$ref": "#/$defs/Vdi3805Artifact"
     },
+    "manufacturerFile": {
+      "$ref": "#/$defs/ManufacturerFile"
+    },
     "catalog": {
       "$ref": "#/$defs/ManufacturerCatalog",
       "x-semio-state": "artifact"
@@ -646,16 +649,20 @@
       ],
       "properties": {
         "maxFileBytes": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "maxRecords": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "maxFieldLength": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "maxNestingDepth": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -663,15 +670,13 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "manufacturerFile",
         "catalog",
         "editionProfile",
         "correctionAsOf",
         "strictMode",
         "index",
         "geometry",
-        "curves",
-        "limits"
+        "curves"
       ],
       "properties": {
         "catalog": {
@@ -707,6 +712,16 @@
             "$ref": "#/$defs/CharacteristicCurve"
           },
           "x-semio-state": "artifact"
+        },
+        "limits": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityLimits"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -763,7 +778,10 @@
           "type": "string"
         },
         "unit": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

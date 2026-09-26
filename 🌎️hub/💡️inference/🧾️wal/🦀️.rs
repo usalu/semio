@@ -345,6 +345,11 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
     Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), bound))
 }
 
+/// 🧹️ A replay begins when the verifier takes the WAL lease above, not when the cursor
+/// opens: a retained log whose receipt segment was compacted away fails the open, and
+/// returning here left the retirement unaccounted, so `close_steps` read zero for a
+/// verification that did take and release a lease. The retirement is one step and it is
+/// recorded, so the counter answers "every replay I began, I retired" on both paths.
 async fn verify_retained(state: &VerifierState, target: &InferenceWalTargetV1, fence: &Arc<InferenceDocumentFenceV1>, control: &InferenceOperationControlV1) -> Result<Option<CommittedInferenceWalWitnessV1>, InferenceErrorV1> {
     let document = target.document_key();
     let storage = state.storage.wal().await;
@@ -353,11 +358,6 @@ async fn verify_retained(state: &VerifierState, target: &InferenceWalTargetV1, f
     let mut replay = match WalReplayCursor::open_at_segment(&storage, &document, target.receipt.segment_index, retained_control).await {
         Ok(replay) => replay,
         Err(_) => {
-            // 🧹️ A replay begins when the verifier takes the WAL lease above, not when the cursor
-            // opens: a retained log whose receipt segment was compacted away fails the open, and
-            // returning here left the retirement unaccounted, so `close_steps` read zero for a
-            // verification that did take and release a lease. The retirement is one step and it is
-            // recorded, so the counter answers "every replay I began, I retired" on both paths.
             state.close_steps.fetch_add(1, Ordering::AcqRel);
             return Err(InferenceErrorV1::Storage);
         }

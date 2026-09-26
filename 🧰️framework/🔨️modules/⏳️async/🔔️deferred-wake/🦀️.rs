@@ -1,7 +1,7 @@
 //! 🔔️ Fixed pool-owned waker transfer, isolated from job and maintenance admission.
 
 use super::{Mutex, PoisonError, Waker};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
 pub const WORKER_DEFERRED_WAKE_PARTITIONS: usize = 64;
 pub const WORKER_DEFERRED_WAKES_PER_PARTITION: usize = 32;
@@ -74,15 +74,18 @@ impl WorkerDeferredWakeInvocation {
     }
 }
 
+/// 📨️ `occupied` counts the wakers held across every partition: written under the state lock,
+/// read without it, so an idle worker learns there is nothing to wake without contending.
 pub(super) struct WorkerDeferredWakeRegistry {
     identity: u64,
     state: Mutex<State>,
+    occupied: AtomicUsize,
 }
 
 impl WorkerDeferredWakeRegistry {
     pub(super) fn new() -> Self {
         let identity = NEXT_DEFERRED_WAKE_POOL_ID.try_update(Ordering::Relaxed, Ordering::Relaxed, |value| value.checked_add(1)).expect("WorkerPool deferred-wake identity exhausted");
-        Self { identity, state: Mutex::new(State { next_generation: 1, closed: false, entries: std::array::from_fn(|_| None), cursor: 0 }) }
+        Self { identity, state: Mutex::new(State { next_generation: 1, closed: false, entries: std::array::from_fn(|_| None), cursor: 0 }), occupied: AtomicUsize::new(0) }
     }
 
     pub(super) fn install(&self) -> Result<WorkerDeferredWakeTicket, WorkerDeferredWakeError> {
@@ -123,6 +126,7 @@ impl WorkerDeferredWakeRegistry {
             return Err(WorkerDeferredWakeRejected { error: WorkerDeferredWakeError::Occupied, waker });
         }
         *entry = Some(waker);
+        self.occupied.fetch_add(1, Ordering::Release);
         Ok(())
     }
 
@@ -143,7 +147,7 @@ impl WorkerDeferredWakeRegistry {
     }
 
     pub(super) fn has_pending(&self) -> bool {
-        self.state.lock().unwrap_or_else(PoisonError::into_inner).entries.iter().flatten().any(|partition| partition.entries.iter().any(Option::is_some))
+        self.occupied.load(Ordering::Acquire) != 0
     }
 
     pub(super) fn shutdown(&self) {
@@ -151,6 +155,9 @@ impl WorkerDeferredWakeRegistry {
     }
 
     pub(super) fn select(&self) -> Option<WorkerDeferredWakeInvocation> {
+        if !self.has_pending() {
+            return None;
+        }
         let mut state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
         let selected = (0..WORKER_DEFERRED_WAKE_CAPACITY).map(|offset| (state.cursor + offset) % WORKER_DEFERRED_WAKE_CAPACITY).find(|flat| {
             let partition = flat / WORKER_DEFERRED_WAKES_PER_PARTITION;
@@ -161,6 +168,7 @@ impl WorkerDeferredWakeRegistry {
         let partition = selected / WORKER_DEFERRED_WAKES_PER_PARTITION;
         let slot = selected % WORKER_DEFERRED_WAKES_PER_PARTITION;
         let waker = state.entries[partition].as_mut().expect("selected exact deferred-wake partition").entries[slot].take().expect("selected exact deferred waker");
+        self.occupied.fetch_sub(1, Ordering::Release);
         Some(WorkerDeferredWakeInvocation { waker })
     }
 }

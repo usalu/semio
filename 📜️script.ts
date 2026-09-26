@@ -124,7 +124,6 @@ import {
   type TestLevel,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { cargoTargetDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import {
   buildSemanticCensus,
   fileKindIdForSourcePath,
@@ -493,7 +492,7 @@ export class DevScript extends Script {
     const port = process.env.STORYBOOK_PORT ?? "6010";
     const useExactPort = process.env.STORYBOOK_EXACT_PORT === "1" || process.env.STORYBOOK_EXACT_PORT === "true";
     const storybookArgs = ["storybook", "dev", "-c", ".storybook", "-p", port, ...(useExactPort ? ["--exact-port"] : []), "--host", host, "--no-open", "--debug", ...storybook.args];
-    runCmd("bunx", storybookArgs, {
+    runCmd(process.execPath, ["x", ...storybookArgs], {
       cwd: this.root,
       env: {
         ...process.env,
@@ -564,14 +563,14 @@ export class DevScript extends Script {
     const mode = a === "repo" ? "repo" : "default";
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
     if (mode === "repo") {
-      runCmd("npx", ["--yes", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"], {
+      runCmd(process.execPath, ["x", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"], {
         cwd: this.root,
         env: { ...process.env, HOST: host },
         ...daemonBudgetOpts(),
       });
       return;
     }
-    runCmd("npx", ["--yes", "@modelcontextprotocol/inspector"], { cwd: this.root, ...daemonBudgetOpts() });
+    runCmd(process.execPath, ["x", "@modelcontextprotocol/inspector"], { cwd: this.root, ...daemonBudgetOpts() });
   }
 
   /** 🌉️ Runs the `semio-os` MCP gateway (`semio-framework-os-mcp`) over stdio or Streamable HTTP.
@@ -714,7 +713,7 @@ export class LintScript extends Script {
       console.log("[lint] Nx completed the repository lint graph.");
       return;
     }
-    runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd(process.execPath, ["x", "dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root });
   }
 }
 //#endregion 🔖️LintScript
@@ -7094,6 +7093,66 @@ export function verifyComposedChildRefRows(root: string): ComposedChildRefRow[] 
   return rows;
 }
 
+/** 🧮️ The two production source censuses as gates (acceptance ledger 1.8 / 1.9): `placeholders` fails on any
+ * `unimplemented!(` / `todo!(` in a production (non-test) Rust source; `commands` fails on any production command declared
+ * `InteractiveJobClassification::BatchOnlyPendingRewrite` (unreachable from every control of the running app). Both
+ * cross-check their scanner against `git grep`, print their table, and publish the acceptance record.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts `runSourceCensus` */
+async function runSourceCensusGate(root: string, which: "placeholders" | "commands"): Promise<void> {
+  const { acceptanceCheckResult, publishAcceptanceCheckResult, runSourceCensus } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+  const controller = new AbortController();
+  const cancel = (): void => controller.abort();
+  process.once("SIGINT", cancel);
+  const startedAt = new Date();
+  try {
+    const census = runSourceCensus(root, controller.signal, (line) => console.error(`[verify source-census] ${line}`));
+    const oracleAgrees = census.placeholderDisagreements.length === 0 && census.callDisagreements.length === 0;
+    if (which === "placeholders") {
+      const production = census.placeholders.filter((hit) => !hit.testOnly && !hit.commented);
+      for (const hit of census.placeholders.filter((entry) => !entry.commented)) console.log(`[verify production-placeholders] ${hit.testOnly ? "test" : "PRODUCTION"} ${hit.macro}! ${hit.path}:${hit.line}`);
+      for (const disagreement of census.placeholderDisagreements) console.log(`[verify production-placeholders] oracle disagreement ${disagreement}`);
+      const status = production.length === 0 && oracleAgrees ? "pass" : "fail";
+      console.log(`[verify production-placeholders] files=${census.files} production=${production.length} test=${census.placeholders.filter((hit) => hit.testOnly && !hit.commented).length} commented=${census.placeholders.filter((hit) => hit.commented).length} oracle=${oracleAgrees ? "agrees" : "DISAGREES"}`);
+      publishAcceptanceCheckResult(root, acceptanceCheckResult({
+        check: "production-placeholders",
+        status,
+        startedAt,
+        measured: { files: census.files, production: production.length, testOnly: census.placeholders.filter((hit) => hit.testOnly && !hit.commented).length, oracleAgrees },
+        summary: { en: `${production.length} production unimplemented!/todo! placeholders in ${census.files} Rust sources${production.length ? `: ${production.slice(0, 4).map((hit) => `${hit.path}:${hit.line}`).join(", ")}` : ""}`, de: `${production.length} produktive unimplemented!/todo!-Platzhalter in ${census.files} Rust-Quellen${production.length ? `: ${production.slice(0, 4).map((hit) => `${hit.path}:${hit.line}`).join(", ")}` : ""}` },
+      }));
+      if (status !== "pass") process.exitCode = 1;
+      return;
+    }
+    const production = census.jobs.filter((job) => !job.testOnly);
+    const unreachable = production.filter((job) => job.classification === "BatchOnlyPendingRewrite");
+    const perOwner = new Map<string, { migrated: number; unreachable: string[]; other: number }>();
+    for (const job of production) {
+      const owner = /^✏️s\/🔌️plugins\/([^/]+)/u.exec(job.path)?.[1] ?? job.path.split("/").slice(0, 3).join("/");
+      const row = perOwner.get(owner) ?? { migrated: 0, unreachable: [], other: 0 };
+      if (job.classification === "Migrated") row.migrated += 1;
+      else if (job.classification === "BatchOnlyPendingRewrite") row.unreachable.push(job.command);
+      else row.other += 1;
+      perOwner.set(owner, row);
+    }
+    console.log("| owner | migrated | unreachable (BatchOnlyPendingRewrite) | other | unreachable commands |\n|---|---|---|---|---|");
+    for (const [owner, row] of [...perOwner].sort((left, right) => right[1].unreachable.length - left[1].unreachable.length)) console.log(`| ${owner} | ${row.migrated} | ${row.unreachable.length} | ${row.other} | ${row.unreachable.join(", ")} |`);
+    for (const line of census.unparsed) console.log(`[verify interactivity commands] non-literal declaration ${line}`);
+    for (const disagreement of census.callDisagreements) console.log(`[verify interactivity commands] oracle disagreement ${disagreement}`);
+    const status = unreachable.length === 0 && oracleAgrees && census.unparsed.length === 0 ? "pass" : "fail";
+    console.log(`[verify interactivity commands] declarations=${production.length} unreachable=${unreachable.length} non-literal=${census.unparsed.length} oracle=${oracleAgrees ? "agrees" : "DISAGREES"}`);
+    publishAcceptanceCheckResult(root, acceptanceCheckResult({
+      check: "command-reachability",
+      status,
+      startedAt,
+      measured: { declarations: production.length, unreachable: unreachable.length, nonLiteral: census.unparsed.length, oracleAgrees },
+      summary: { en: `${unreachable.length}/${production.length} production commands unreachable (BatchOnlyPendingRewrite)${unreachable.length ? `: ${[...perOwner].filter(([, row]) => row.unreachable.length).map(([owner, row]) => `${owner} ${row.unreachable.length}`).join(", ")}` : ""}`, de: `${unreachable.length}/${production.length} produktive Befehle unerreichbar (BatchOnlyPendingRewrite)${unreachable.length ? `: ${[...perOwner].filter(([, row]) => row.unreachable.length).map(([owner, row]) => `${owner} ${row.unreachable.length}`).join(", ")}` : ""}` },
+    }));
+    if (status !== "pass") process.exitCode = 1;
+  } finally {
+    process.removeListener("SIGINT", cancel);
+  }
+}
+
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "taxonomy") {
@@ -7122,6 +7181,14 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "rust-warnings") {
       await this.runRustWarnings(segments.slice(1));
+      return;
+    }
+    if (segments[0] === "production-placeholders") {
+      await runSourceCensusGate(this.root, "placeholders");
+      return;
+    }
+    if (segments[0] === "interactivity" && segments[1] === "commands") {
+      await runSourceCensusGate(this.root, "commands");
       return;
     }
     if (segments[0] === "interactivity" && segments[1] === "tool-jobs") {
@@ -8759,7 +8826,7 @@ export class VerifyScript extends Script {
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
     // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
     console.log("[verify] dependency-cruiser boundaries…");
-    runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd(process.execPath, ["x", "dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs", "--output-type", "err"], { cwd: this.root });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
     runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -14077,7 +14144,7 @@ function interactivityMcpHttpTransportFailures(transportSource: string, bridgeSo
 //#region 🔖️FormatScript
 export class FormatScript extends Script {
   run(_segments: string[]): void {
-    runCmd("bunx", ["prettier", "-w", "."], { cwd: this.root, shell: true });
+    runCmd(process.execPath, ["x", "prettier", "-w", "."], { cwd: this.root });
   }
 }
 //#endregion 🔖️FormatScript
@@ -14225,7 +14292,7 @@ export class TestScript extends Script {
     });
     try {
       await this.waitForUrl(new URL("🌐️.html", baseUrl).href, 120000);
-      runCmd("bunx", ["playwright", "test", "--config", ".storybook/🧪️tests/🧪️browser-runner/🟦️.ts"], {
+      runCmd(process.execPath, ["x", "playwright", "test", "--config", ".storybook/🧪️tests/🧪️browser-runner/🟦️.ts"], {
         cwd: this.root,
         env: {
           ...process.env,
@@ -14904,7 +14971,7 @@ export class BuildScript extends Script {
     }
     if (slice === "storybook") {
       assertNoOwnedStorybookMdx(this.root);
-      runCmd("bunx", ["storybook", "build", "-c", ".storybook", "--output-dir", process.env.STORYBOOK_OUTPUT_DIR ?? "storybook-static"], { cwd: this.root });
+      runCmd(process.execPath, ["x", "storybook", "build", "-c", ".storybook", "--output-dir", process.env.STORYBOOK_OUTPUT_DIR ?? "storybook-static"], { cwd: this.root });
       assertUiStorybookDiscovery(this.root);
       return;
     }
@@ -15082,28 +15149,23 @@ export class CommitScript extends Script {
 
 //#region 🔖️OsScript
 /** 🧩️One `framework/os/dev` plugin registry row ([[🔌️plugins.json]]) — only the fields `os run`'s preflight needs. */
-type OsPluginArtifact = { pluginId: string; wasmOut: string };
+type OsPluginArtifact = { pluginId: string; cratePath: string; wasmOut: string };
 
 /**
- * 🔍️Plugin ids from the generated plugin registry with no built `.wasm` under Cargo's own configured
- * deliverable root (`.cargo/config.toml`'s `build.target-dir`) `/wasm32-wasip2/{wasm-dev,wasm-release}/`
- * — same resolution order as `resolve_plugin_paths` in `semio-framework-os-run`.
+ * 🔍️Plugin ids from the generated plugin registry with no component deliverable under their crate's
+ * `dist/component-{dev,release}` — same resolution order as `resolve_plugin_paths` in `semio-framework-os-run`.
  */
-const PLUGIN_WASM_PROFILE_DIRS = ["wasm-dev", "wasm-release"] as const;
+const PLUGIN_COMPONENT_PROFILE_DIRS = ["dist/component-dev", "dist/component-release"] as const;
 
-function pluginWasmArtifactExists(repoRoot: string, wasmOut: string): boolean {
-  const wasmTargetDir = join(cargoTargetDirectory(repoRoot), "wasm32-wasip2");
-  for (const profileDir of PLUGIN_WASM_PROFILE_DIRS) {
-    if (existsSync(join(wasmTargetDir, profileDir, wasmOut))) return true;
-  }
-  return false;
+function pluginWasmArtifactExists(repoRoot: string, entry: OsPluginArtifact): boolean {
+  return PLUGIN_COMPONENT_PROFILE_DIRS.some((profileDir) => existsSync(join(repoRoot, entry.cratePath, profileDir, entry.wasmOut)));
 }
 
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
   const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
   if (!existsSync(registryPath)) return [];
   const entries = JSON.parse(readFileSync(registryPath, "utf8")) as OsPluginArtifact[];
-  return entries.filter((entry) => !pluginWasmArtifactExists(repoRoot, entry.wasmOut)).map((entry) => entry.pluginId);
+  return entries.filter((entry) => !pluginWasmArtifactExists(repoRoot, entry)).map((entry) => entry.pluginId);
 }
 
 /** 🕸️Headless OS studio commands — computes a workflow without a UI (`os run <bundle>.studio`). */
@@ -15471,7 +15533,7 @@ export class SchemaScript extends Script {
 
   /** 🧪️ Runs the ajv draft-07 oracle spec that validates the owned Rust structural validator. */
   private oracle(): void {
-    runCmd("bunx", this.oracleArguments(), { cwd: this.root });
+    runCmd(process.execPath, ["x", ...this.oracleArguments()], { cwd: this.root });
   }
 
   /**
@@ -15510,7 +15572,7 @@ export class SchemaScript extends Script {
     const tracked = this.readCatalog();
     if (!tracked.parsed) throw new Error(`[schema test] ${this.catalogPath()} is absent or unreadable after a re-read. Run bun ./📜️script.ts schema generate before the gate; running the harness against a torn catalog reports every scope as malformed.`);
     const harness = runCmdStatus("bun", [`${this.testDomainPath()}/📜️script.ts`, "test", "schema", ...rest], { cwd: this.root });
-    const oracle = runCmdStatus("bunx", this.oracleArguments(), { cwd: this.root });
+    const oracle = runCmdStatus(process.execPath, ["x", ...this.oracleArguments()], { cwd: this.root });
     console.log(`[schema test] harness exit=${harness}, draft-07 oracle exit=${oracle}`);
     if (harness !== 0 || oracle !== 0) process.exit(1);
   }

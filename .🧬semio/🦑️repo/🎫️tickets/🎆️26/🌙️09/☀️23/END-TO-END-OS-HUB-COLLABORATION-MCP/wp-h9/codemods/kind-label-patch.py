@@ -13,6 +13,7 @@ After --apply: `bun nx run @semio-tech/framework:generate` (regenerates `🤖️
 then fix every residual `ArtifactKindSpec.name`/`OsArtifactDescriptor.name` read the compiler names (compile-atomic).
 """
 import re
+import subprocess
 import sys
 
 ROOT = "/Users/ueli/Documents/semio/"
@@ -23,7 +24,7 @@ GERMAN = {
     "2D Drawing": "2D-Zeichnung", "2D Generation": "2D-Generierung", "2D Grid": "2D-Gitter", "2D Image": "2D-Bild",
     "2D Map": "2D-Karte", "2D Puzzle": "2D-Puzzle", "2D Raster": "2D-Rasterbild", "2D Shooting": "2D-Aufnahme",
     "3D CAD": "3D-CAD", "3D Generation": "3D-Generierung", "3D Grid": "3D-Gitter", "3D Lowpoly": "3D-Lowpoly",
-    "3D Process": "3D-Prozess", "3D Puzzle": "3D-Puzzle", "3D Remodeling": "3D-Umbau", "5D Puzzle": "5D-Puzzle",
+    "3D Process": "3D-Prozess", "3D Puzzle": "3D-Puzzle", "3D Terrain": "3D-Gelände", "3D Remodeling": "3D-Umbau", "5D Puzzle": "5D-Puzzle",
     "Animate Presentation": "Animierte Präsentation", "Architect Program": "Raumprogramm", "Binary": "Binärdatei",
     "Builder Test 3D": "Builder-Test 3D", "DAG": "DAG", "Deflate": "Deflate", "Energy Model": "Energiemodell",
     "Equation": "Gleichung", "FEM 2D Results": "FEM-2D-Ergebnisse", "FEM 3D Results": "FEM-3D-Ergebnisse",
@@ -125,7 +126,8 @@ def rewrite(file, text, plan, missing):
 
 
 def main():
-    files = [line for line in open(ROOT + ".tmp-ticket/wp-h9/generated/kindspec-files.txt", encoding="utf-8").read().split("\n") if line]
+    listed = subprocess.run(["git", "grep", "-l", "-I", "-E", "ArtifactKindSpec \\{", "--", "*.rs"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
+    files = [line for line in listed.split("\n") if line and "🎫️tickets" not in line]
     plan, missing, failures = [], set(), []
     changed = {}
     for file in files:

@@ -911,6 +911,8 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
             document_id: ArtifactId(document_id.to_string()),
             actor: ActorId(actor),
             dependencies,
+            observed: None,
+            target: Vec::new(),
             diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId(schema.to_string()), payload },
             inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
             timestamp,
@@ -1022,6 +1024,11 @@ pub fn document_socket_authority_admits(authority: &crate::os_directory::client:
         && binding.lease.is_none_or(|lease| authority.matches_lease_fields(lease))
 }
 
+/// 🪢️ A canonical pair's public baseline in the runtime frontier grammar a `SocketHelloV1` advertises.
+fn canonical_pair_baseline(frontier: &crate::os_directory::ArtifactFrontier) -> RuntimeFrontierSummary {
+    RuntimeFrontierSummary { document_id: ArtifactId(frontier.document_id.clone()), head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id.clone(), last_commit_seq: frontier.last_commit_seq, chain_hash: frontier.chain_hash.0 }
+}
+
 /// @emoji 👋️ The client-first frame every document socket opens with.
 pub fn document_socket_hello(schema: &str, pack_schema_hash: [u8; 32], resume_token: Option<String>, frontier: Option<RuntimeFrontierSummary>) -> ClientFrame {
     ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: schema.to_string(), pack_schema_hash, resume_token, frontier }
@@ -1086,12 +1093,26 @@ pub fn replica_hlc_seed() -> Result<u64, crate::os_identity::EntropyError> {
 //#region 🔖️DocumentLinkShortage
 /// @emoji 🔌️ The capped doubling reconnect and the longest shortage one hub document's link rides out
 /// (`🧬️schema/document-link-shortage/🔣️.json` `$defs/Policy`). The bound is twice the backoff cap, so at
-/// least two capped reconnect attempts fall inside it.
+/// least two capped reconnect attempts fall inside it, and no retry is ever scheduled past it: the last
+/// attempt of every shortage runs AT the bound. An attempt that never answers ends the link at the
+/// ceiling, the bound plus one capped backoff.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DocumentLinkShortagePolicy {
     pub reconnect_min_ms: u64,
     pub reconnect_max_ms: u64,
     pub shortage_bound_ms: u64,
+}
+
+impl DocumentLinkShortagePolicy {
+    /// 🔁️ When the next attempt of a shortage that began at `since_ms` is due: one backoff after `now_ms`, never past the bound.
+    pub fn retry_at(&self, since_ms: u64, now_ms: u64, backoff_ms: u64) -> u64 {
+        now_ms.saturating_add(backoff_ms).min(since_ms.saturating_add(self.shortage_bound_ms))
+    }
+
+    /// ⏳️ The instant a shortage that began at `since_ms` ends although no attempt answered: the bound plus one capped backoff.
+    pub fn ceiling_at(&self, since_ms: u64) -> u64 {
+        since_ms.saturating_add(self.shortage_bound_ms).saturating_add(self.reconnect_max_ms)
+    }
 }
 
 /// 🔌️ The policy every shell drives (`🧫️fixtures/document-link-shortage-v1` `policy`, the React twin
@@ -1192,15 +1213,15 @@ impl DocumentLink {
             (Self::Expired { .. } | Self::Revoked { .. }, _) => self,
             (_, DocumentLinkEvent::Refused { now_ms }) => Self::Revoked { at_ms: now_ms },
             (_, DocumentLinkEvent::Restored { .. }) => Self::Linked,
-            (Self::Linked, DocumentLinkEvent::Failed { now_ms }) => Self::Unlinked { since_ms: now_ms, backoff_ms: policy.reconnect_min_ms, retry_at_ms: now_ms.saturating_add(policy.reconnect_min_ms) },
+            (Self::Linked, DocumentLinkEvent::Failed { now_ms }) => Self::Unlinked { since_ms: now_ms, backoff_ms: policy.reconnect_min_ms, retry_at_ms: policy.retry_at(now_ms, now_ms, policy.reconnect_min_ms) },
             (Self::Unlinked { since_ms, backoff_ms, .. }, DocumentLinkEvent::Failed { now_ms }) => {
                 if now_ms.saturating_sub(since_ms) >= policy.shortage_bound_ms {
                     return Self::Expired { since_ms, at_ms: now_ms };
                 }
                 let backoff_ms = backoff_ms.saturating_mul(2).clamp(policy.reconnect_min_ms, policy.reconnect_max_ms);
-                Self::Unlinked { since_ms, backoff_ms, retry_at_ms: now_ms.saturating_add(backoff_ms) }
+                Self::Unlinked { since_ms, backoff_ms, retry_at_ms: policy.retry_at(since_ms, now_ms, backoff_ms) }
             }
-            (Self::Unlinked { since_ms, .. }, DocumentLinkEvent::Tick { now_ms }) if now_ms.saturating_sub(since_ms) >= policy.shortage_bound_ms => Self::Expired { since_ms, at_ms: now_ms },
+            (Self::Unlinked { since_ms, .. }, DocumentLinkEvent::Tick { now_ms }) if now_ms >= policy.ceiling_at(since_ms) => Self::Expired { since_ms, at_ms: now_ms },
             (_, DocumentLinkEvent::Tick { .. }) => self,
         }
     }
@@ -1220,10 +1241,10 @@ impl DocumentLink {
         matches!(self, Self::Linked | Self::Unlinked { .. })
     }
 
-    /// ⏳️ When an unlinked link expires unless it relinks first.
+    /// ⏳️ The latest instant an unlinked link can live: its ceiling. A failed attempt at the bound ends it earlier.
     pub fn expires_at_ms(self, policy: &DocumentLinkShortagePolicy) -> Option<u64> {
         match self {
-            Self::Unlinked { since_ms, .. } => Some(since_ms.saturating_add(policy.shortage_bound_ms)),
+            Self::Unlinked { since_ms, .. } => Some(policy.ceiling_at(since_ms)),
             _ => None,
         }
     }
@@ -1250,6 +1271,22 @@ impl DocumentLink {
     }
 }
 //#endregion 🔖️DocumentLinkShortage
+
+//#region 🔁️DocumentEchoSuppression
+/// @emoji 🔁️ The envelopes of one server `Commands` frame a replica applies, in order: echo suppression is by operation identity,
+/// never by frame origin. An envelope is applied unless its id is one this replica authored or already applied, and every admitted id
+/// is recorded in `applied`. A frame is never discarded whole — the hub's hello catch-up tail carries anyone's edits, the joiner's own
+/// earlier device included (ticket 26/09/23 session 12, run s12i: late joiners saw no history). Schema
+/// `🧬️schema/document-echo-suppression`; law `🧫️fixtures/document-echo-suppression-v1`; TS twin `admitRemoteEnvelopes`.
+pub fn admit_remote_envelopes(applied: &mut std::collections::HashSet<String>, envelopes: impl IntoIterator<Item = MutationEnvelope>) -> Vec<MutationEnvelope> {
+    envelopes.into_iter().filter(|envelope| applied.insert(envelope.mutation_id.0.clone())).collect()
+}
+
+/// @emoji 🔁️ Records the operations this replica authored, so their echo is never applied a second time.
+pub fn note_authored_envelopes(applied: &mut std::collections::HashSet<String>, envelopes: &[MutationEnvelope]) {
+    applied.extend(envelopes.iter().map(|envelope| envelope.mutation_id.0.clone()));
+}
+//#endregion 🔁️DocumentEchoSuppression
 
 //#region 🔖️DocumentSocketDoor
 /// @emoji 📬️ One observation of a browser document socket's receive side.
@@ -1312,6 +1349,8 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
         document_id: envelope.document_id.clone(),
         actor: envelope.actor.clone(),
         dependencies: vec![envelope.mutation_id.clone()],
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
         inverse: crate::os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
@@ -1559,6 +1598,7 @@ struct OpenDocument {
 struct ArtifactHostState {
     documents: std::collections::HashMap<ArtifactDocumentKey, OpenDocument>,
     document_execution_target_leases: std::collections::HashMap<ArtifactDocumentKey, crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+    document_seeds: std::collections::HashMap<ArtifactDocumentKey, crate::os_directory::CanonicalCheckpointPairV1>,
     #[cfg(not(target_arch = "wasm32"))]
     closing: std::collections::HashMap<u64, ArtifactActorRunnerHandle>,
     next_generation: u64,
@@ -1570,6 +1610,7 @@ impl ArtifactHostState {
         Self {
             documents: std::collections::HashMap::new(),
             document_execution_target_leases: std::collections::HashMap::new(),
+            document_seeds: std::collections::HashMap::new(),
             #[cfg(not(target_arch = "wasm32"))]
             closing: std::collections::HashMap::new(),
             next_generation: 1,
@@ -1649,6 +1690,25 @@ impl ArtifactHost {
         true
     }
 
+    /// 🪢️ Hands the next actor of a hub document the canonical checkpoint pair its shell verified and loaded into the
+    /// guest ([`crate::os_directory::DirectoryClient::document_canonical_checkpoint_pair`]): the actor starts at that
+    /// pair — its history known, its first `SocketHelloV1` naming the pair's baseline frontier, so the hub tails only
+    /// what came after it. Consumed by the next [`Self::open`] of the same key.
+    pub fn set_document_seed(&self, document_key: &ArtifactDocumentKey, pair: crate::os_directory::CanonicalCheckpointPairV1) -> bool {
+        let ArtifactDocumentKey::Hub { space_id, document_id } = document_key else {
+            return false;
+        };
+        if pair.scope.space_id != *space_id || pair.scope.document_id != *document_id {
+            return false;
+        }
+        let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if state.documents.contains_key(document_key) || state.document_seeds.contains_key(document_key) {
+            return false;
+        }
+        state.document_seeds.insert(document_key.clone(), pair);
+        true
+    }
+
     /// @emoji ☎️ Installs the browser's document-socket dialer; every later hub document actor dials through it.
     #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     pub fn set_document_socket_dialer(&self, dialer: std::sync::Arc<dyn DocumentSocketDialer>) {
@@ -1669,7 +1729,10 @@ impl ArtifactHost {
     pub async fn open(&self, config: ArtifactActorConfig) -> ArtifactChannels {
         let document_id = config.document_id.clone();
         let document_key = ArtifactDocumentKey::for_config(&config);
-        let document_execution_target_lease = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).document_execution_target_leases.remove(&document_key);
+        let (document_execution_target_lease, seed) = {
+            let mut state = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            (state.document_execution_target_leases.remove(&document_key), state.document_seeds.remove(&document_key))
+        };
         let _ = self.close_key(&document_key);
         let generation = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).claim_generation();
         let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}")).await;
@@ -1677,7 +1740,7 @@ impl ArtifactHost {
         let (event_tx, _event_rx) = broadcast::channel(256);
         let document_cancel = self.cancel.child_now();
         #[cfg(not(target_arch = "wasm32"))]
-        let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone(), self.credential.clone(), self.socket_grant_source.clone(), document_execution_target_lease, document_cancel.clone()).await;
+        let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone(), self.credential.clone(), self.socket_grant_source.clone(), document_execution_target_lease, seed, document_cancel.clone()).await;
         // 🌉️ Narrowed to match `mod wasm_actor`'s own gate: it is a browser WebSocket/`web_sys`
         // bridge, and `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too. On the WASI
         // component target neither actor exists — `native_actor` is `tokio_tungstenite`/
@@ -1693,11 +1756,11 @@ impl ArtifactHost {
             remote,
             cmd_rx,
             event_tx.clone(),
-            wasm_actor::WasmActorHub { credential: self.credential.clone(), socket_grant_source: self.socket_grant_source.clone(), dialer: self.document_socket_dialer.clone(), lease: document_execution_target_lease, cancel: document_cancel.clone() },
+            wasm_actor::WasmActorHub { credential: self.credential.clone(), socket_grant_source: self.socket_grant_source.clone(), dialer: self.document_socket_dialer.clone(), lease: document_execution_target_lease, seed, cancel: document_cancel.clone() },
         )
         .await;
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
-        let _ = (&self.pool, config, remote, cmd_rx, document_execution_target_lease);
+        let _ = (&self.pool, config, remote, cmd_rx, document_execution_target_lease, seed);
         #[cfg(not(target_arch = "wasm32"))]
         {
             let weak_host = std::sync::Arc::downgrade(&self.inner);
@@ -2072,6 +2135,8 @@ mod native_actor {
         current_spr: Option<Vec<u8>>,
         current_archive: Option<Vec<u8>>,
         known_op_ids: HashSet<String>,
+        /// @emoji 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
+        applied_op_ids: HashSet<String>,
         last_written_hash: Option<String>,
         remote_state: RemoteState,
         last_status: Option<ArtifactSyncStatus>,
@@ -2172,6 +2237,7 @@ mod native_actor {
                 current_spr: None,
                 current_archive: None,
                 known_op_ids: HashSet::new(),
+                applied_op_ids: HashSet::new(),
                 last_written_hash: None,
                 remote_state: RemoteState::Detached,
                 last_status: None,
@@ -2191,6 +2257,40 @@ mod native_actor {
 
         fn set_readiness(&mut self, readiness: Arc<dyn Fn() + Send + Sync>) {
             self.readiness = Some(readiness);
+        }
+
+        /// 🪢️ Starts this hub document at the canonical checkpoint pair its shell verified and already loaded into the
+        /// guest: the pair's history is known (a tail never re-applies it), a folder binding persists it, and the first
+        /// `SocketHelloV1` names its baseline, so the hub sends only what followed it. A pair whose SPR cannot be read
+        /// is reported as a conflict and the document starts unseeded.
+        pub(super) async fn seed_hub_document(&mut self, pair: crate::os_directory::CanonicalCheckpointPairV1) {
+            let seeded = match spr_op_ids(&pair.spr_bytes).await {
+                Ok(op_ids) => crate::os_spr::encode_document_archive_bytes(&crate::os_spr::DocumentArchivePack { parent_pack: pair.pack_bytes.clone(), parent_spr: pair.spr_bytes.clone(), members: Vec::new() }).map(|archive| (op_ids, archive)).map_err(|error| error.to_string()),
+                Err(error) => Err(error),
+            };
+            let (op_ids, archive) = match seeded {
+                Ok(seeded) => seeded,
+                Err(error) => {
+                    self.emit(ArtifactEvent::Conflict(MutationMessage {
+                        level: crate::os_dsl::Severity::Error,
+                        code: crate::os_dsl::FaultCode::new("hubDocumentSeed"),
+                        message: format!("the canonical checkpoint pair could not seed the document: {error}"),
+                        target: vec![self.document_id.clone()],
+                        op_index: None,
+                    }));
+                    return;
+                }
+            };
+            if let Some(folder) = self.folder.as_ref() {
+                if folder.write_archive(&archive).await.is_ok() {
+                    self.last_written_hash = Some(document_archive_hash(&archive));
+                }
+            }
+            self.known_op_ids = op_ids;
+            self.server_frontier = Some(canonical_pair_baseline(&pair.baseline_frontier));
+            self.current_pack = Some(pair.pack_bytes);
+            self.current_spr = Some(pair.spr_bytes);
+            self.current_archive = Some(archive);
         }
 
         /// @emoji 🏃️ Advances exactly one command, readiness source, timer, backbone owner, or status turn.
@@ -2340,7 +2440,7 @@ mod native_actor {
 
         /// @emoji 🌱️ Seeds persistence state from any already-stored recursive archive and installs the file watcher.
         async fn setup(&mut self) {
-            let seeded = match self.folder.as_ref() {
+            let seeded = match self.folder.as_ref().filter(|_| self.current_pack.is_none()) {
                 Some(folder) => folder.read_archive().await.ok().flatten(),
                 None => None,
             };
@@ -3080,7 +3180,7 @@ mod native_actor {
                 self.pending_batches.len(),
                 self.socket_actor_confirmed,
                 self.artifact_rebootstrap_required,
-                self.known_op_ids.iter().cloned().collect(),
+                self.known_op_ids.union(&self.applied_op_ids).cloned().collect(),
             )
         }
 
@@ -3155,22 +3255,18 @@ mod native_actor {
                         Err(error) => self.fail_artifact_bootstrap(error.to_string()).await,
                     }
                 }
-                ServerFrame::Commands { envelopes, origin, frontier } => {
+                ServerFrame::Commands { envelopes, frontier, .. } => {
                     if self.artifact_bootstrap.is_some() {
                         self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion").await;
                         return;
                     }
-                    if self.socket_actor.as_deref() != Some(origin.0.as_str()) {
-                        let converted: Vec<MutationEnvelope> = envelopes.into_iter().filter(|envelope| !self.known_op_ids.contains(&envelope.mutation_id.0)).collect();
-                        if !converted.is_empty() {
-                            self.persist_operations(&converted).await;
-                            for envelope in &converted {
-                                self.known_op_ids.insert(envelope.mutation_id.0.clone());
-                            }
-                            if !self.deliver_remote_operations(converted).await {
-                                self.fail_artifact_bootstrap("artifact tail could not be installed").await;
-                                return;
-                            }
+                    let persisted = &self.known_op_ids;
+                    let fresh = admit_remote_envelopes(&mut self.applied_op_ids, envelopes.into_iter().filter(|envelope| !persisted.contains(&envelope.mutation_id.0)));
+                    if !fresh.is_empty() {
+                        self.persist_operations(&fresh).await;
+                        if !self.deliver_remote_operations(fresh).await {
+                            self.fail_artifact_bootstrap("artifact tail could not be installed").await;
+                            return;
                         }
                     }
                     self.server_frontier = Some(frontier);
@@ -3266,6 +3362,7 @@ mod native_actor {
             if envelopes.is_empty() {
                 return;
             }
+            note_authored_envelopes(&mut self.applied_op_ids, envelopes);
             if self.socket_authority_deadline.is_some_and(|deadline| deadline <= Instant::now()) {
                 self.queue_outbox(envelopes.iter().cloned());
                 self.invalidate_socket_authority().await;
@@ -3962,11 +4059,15 @@ mod native_actor {
         credential: Arc<std::sync::RwLock<Option<Arc<crate::os_directory::client::LocalHubCredential>>>>,
         socket_grant_source: Arc<std::sync::RwLock<Option<Arc<dyn crate::os_directory::client::HubSocketGrantSource>>>>,
         document_execution_target_lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+        seed: Option<crate::os_directory::CanonicalCheckpointPairV1>,
         operation_cancel: semio_framework_async::CancelToken,
     ) -> ArtifactActorRunnerHandle {
         let io_reactor = document_socket_io_reactor();
         let mailbox = cmd_rx.close_handle();
-        let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential, socket_grant_source, document_execution_target_lease, operation_cancel).await;
+        let mut actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events, credential, socket_grant_source, document_execution_target_lease, operation_cancel).await;
+        if let Some(pair) = seed {
+            actor.seed_hub_document(pair).await;
+        }
         let runner = Arc::new(ActorRunner {
             pool,
             io_reactor,
@@ -4057,6 +4158,7 @@ mod wasm_actor {
         pub(super) socket_grant_source: SharedGrantSource,
         pub(super) dialer: SharedDialer,
         pub(super) lease: Option<crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>,
+        pub(super) seed: Option<crate::os_directory::CanonicalCheckpointPairV1>,
         pub(super) cancel: semio_framework_async::CancelToken,
     }
 
@@ -4139,6 +4241,8 @@ mod wasm_actor {
         artifact_bootstrap: Option<PendingWasmArtifactBootstrap>,
         pending_batches: std::collections::HashMap<u64, Vec<MutationEnvelope>>,
         outbox: Vec<MutationEnvelope>,
+        /// @emoji 🔁️ Every operation id this replica authored or applied — the echo filter ([`admit_remote_envelopes`]).
+        applied_op_ids: std::collections::HashSet<String>,
         document_backbone_retention: DocumentBackboneRetentionV1,
         next_batch_id: u64,
         next_local_rejection_batch_id: u64,
@@ -4367,6 +4471,7 @@ mod wasm_actor {
             if envelopes.is_empty() {
                 return;
             }
+            note_authored_envelopes(&mut self.applied_op_ids, envelopes);
             let (Some(socket_actor), Some(hlc_seed)) = (self.socket_actor.clone(), self.hlc_seed) else {
                 self.queue_outbox(envelopes.iter().cloned());
                 return;
@@ -4696,12 +4801,13 @@ mod wasm_actor {
                         Err(error) => self.fail_artifact_bootstrap(error.to_string()),
                     }
                 }
-                ServerFrame::Commands { envelopes, origin, frontier } => {
+                ServerFrame::Commands { envelopes, frontier, .. } => {
                     if self.artifact_bootstrap.is_some() {
                         self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion");
                         return;
                     }
-                    if self.socket_actor.as_deref() != Some(origin.0.as_str()) && !self.deliver_remote_operations(envelopes).await {
+                    let fresh = admit_remote_envelopes(&mut self.applied_op_ids, envelopes);
+                    if !self.deliver_remote_operations(fresh).await {
                         self.fail_artifact_bootstrap("artifact tail could not be installed");
                         return;
                     }
@@ -4844,7 +4950,7 @@ mod wasm_actor {
             socket_actor_confirmed: false,
             socket_authority: None,
             session_color: None,
-            server_frontier: None,
+            server_frontier: hub.seed.as_ref().map(|pair| canonical_pair_baseline(&pair.baseline_frontier)),
             resume_token: None,
             pending_resume_token: None,
             required_tail_frontier: None,
@@ -4852,6 +4958,7 @@ mod wasm_actor {
             artifact_bootstrap: None,
             pending_batches: std::collections::HashMap::new(),
             outbox: Vec::new(),
+            applied_op_ids: std::collections::HashSet::new(),
             document_backbone_retention: DocumentBackboneRetentionV1::default(),
             next_batch_id: 0,
             next_local_rejection_batch_id: u64::MAX,
@@ -5510,3 +5617,6 @@ mod document_socket_connect_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️document-link-shortage/🦀️.rs"]
 mod document_link_shortage_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️document-echo-suppression/🦀️.rs"]
+mod document_echo_suppression_tests;

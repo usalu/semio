@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "posix": {
+    "stdout": "  PID  PPID STAT COMMAND\n    1     0 Ss   /sbin/launchd\n  812     1 S    /Users/dev/.bun/bin/bun /Users/dev/semio/📜️script.ts dev s\n  813   812 Z    <defunct>\n  900   812 R+   node /Users/dev/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-os-dev:dev -- s\r\n\n",
+    "rows": [
+      {
+        "pid": 1,
+        "parent": 0,
+        "stat": "Ss",
+        "command": "/sbin/launchd"
+      },
+      {
+        "pid": 812,
+        "parent": 1,
+        "stat": "S",
+        "command": "/Users/dev/.bun/bin/bun /Users/dev/semio/📜️script.ts dev s"
+      },
+      {
+        "pid": 813,
+        "parent": 812,
+        "stat": "Z",
+        "command": "<defunct>"
+      },
+      {
+        "pid": 900,
+        "parent": 812,
+        "stat": "R+",
+        "command": "node /Users/dev/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-os-dev:dev -- s"
+      }
+    ]
+  },
+  "windows": [
+    {
+      "name": "array with system processes, quoted executables, blank command line and a malformed row",
+      "stdout": "﻿[{\"ProcessId\":0,\"ParentProcessId\":0,\"Name\":\"System Idle Process\",\"CommandLine\":null},{\"ProcessId\":4,\"ParentProcessId\":0,\"Name\":\"System\",\"CommandLine\":null},{\"ProcessId\":7120,\"ParentProcessId\":6012,\"Name\":\"bun.exe\",\"CommandLine\":\"\\\"C:\\\\Users\\\\Jane Doe\\\\.bun\\\\bin\\\\bun.exe\\\" C:\\\\src\\\\semio\\\\📜️script.ts dev s\"},{\"ProcessId\":7188,\"ParentProcessId\":7120,\"Name\":\"node.exe\",\"CommandLine\":\"\\\"C:\\\\Program Files\\\\nodejs\\\\node.exe\\\" C:\\\\src\\\\semio\\\\node_modules\\\\nx\\\\bin\\\\nx.js run @semio-tech/framework-os-dev:dev -- s\"},{\"ProcessId\":7200,\"ParentProcessId\":7188,\"Name\":\"cargo.exe\",\"CommandLine\":\"   \"},{\"ProcessId\":\"x\",\"ParentProcessId\":1,\"Name\":\"bogus\",\"CommandLine\":\"bogus\"}]\r\n",
+      "rows": [
+        {
+          "pid": 0,
+          "parent": 0,
+          "stat": "",
+          "command": "System Idle Process"
+        },
+        {
+          "pid": 4,
+          "parent": 0,
+          "stat": "",
+          "command": "System"
+        },
+        {
+          "pid": 7120,
+          "parent": 6012,
+          "stat": "",
+          "command": "\"C:\\Users\\Jane Doe\\.bun\\bin\\bun.exe\" C:\\src\\semio\\📜️script.ts dev s"
+        },
+        {
+          "pid": 7188,
+          "parent": 7120,
+          "stat": "",
+          "command": "\"C:\\Program Files\\nodejs\\node.exe\" C:\\src\\semio\\node_modules\\nx\\bin\\nx.js run @semio-tech/framework-os-dev:dev -- s"
+        },
+        {
+          "pid": 7200,
+          "parent": 7188,
+          "stat": "",
+          "command": "cargo.exe"
+        }
+      ]
+    },
+    {
+      "name": "a single process is one object, not an array",
+      "stdout": "{\"ProcessId\":5,\"ParentProcessId\":4,\"Name\":\"smss.exe\",\"CommandLine\":null}",
+      "rows": [
+        {
+          "pid": 5,
+          "parent": 4,
+          "stat": "",
+          "command": "smss.exe"
+        }
+      ]
+    },
+    {
+      "name": "no output",
+      "stdout": "",
+      "rows": []
+    }
+  ],
+  "activeBuild": {
+    "pattern": "\\bnx(?:\\.js)?[\"']?\\s+run\\s+['\"]?@semio-tech\\/",
+    "matches": [
+      900,
+      7188
+    ]
+  }
+}

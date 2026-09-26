@@ -268,14 +268,15 @@ impl JobRegistry {
     /// its authorization/TTL semantics, which this registry does not provide) uses to track the SAME
     /// id's mutable progress/result here: mint the `HandleTable` entry first with
     /// `HandleKind::Job`/`mint_id`, then call this with that exact id.
+    ///
+    /// 📈️ Every producer in this crate mints through here, so binding the job to the `tools/call`
+    /// progress token currently active on this thread covers all of them by construction — no
+    /// producer has to opt in, and none can silently forget to.
     pub fn begin_with_id(&self, job_id: impl Into<String>, kind: &str) -> String {
         let job_id = job_id.into();
         let mut record = JobRecord { kind: kind.to_string(), status: JobStatus::Pending, progress: None, message: None, result: None, error: None, cancel_requested: false, on_cancel: None, events: Vec::new(), next_ordinal: 0 };
         record.append("accepted", None, None);
         self.jobs.lock().expect("job registry lock poisoned").insert(job_id.clone(), record);
-        // 📈️ Every producer in this crate mints through here, so binding the job to the `tools/call`
-        // progress token currently active on this thread covers all of them by construction — no
-        // producer has to opt in, and none can silently forget to.
         crate::notify::bind_job_to_active_scope(&job_id);
         job_id
     }
@@ -302,6 +303,9 @@ impl JobRegistry {
         accepted
     }
 
+    /// 📈️ A terminal transition is the client's LAST progress row (1.0 for a success), then
+    /// the binding is released so a long-lived stdio process never accumulates one entry per
+    /// job it ever ran.
     fn finish(&self, job_id: &str, status: JobStatus, result: Option<serde_json::Value>, error: Option<GatewayError>) -> bool {
         let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
         let accepted = match jobs.get_mut(job_id) {
@@ -328,9 +332,6 @@ impl JobRegistry {
         };
         drop(jobs);
         if accepted {
-            // 📈️ A terminal transition is the client's LAST progress row (1.0 for a success), then
-            // the binding is released so a long-lived stdio process never accumulates one entry per
-            // job it ever ran.
             if status == JobStatus::Succeeded {
                 crate::notify::job_progress_changed(job_id, 1.0, Some("succeeded"));
             }

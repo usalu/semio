@@ -33,6 +33,11 @@ impl MutationKind<WriterSnapshot, WriterMutation> for ChangeUri {
         super::inverse::inverse(self, base)
     }
 
+    /// 🎯️ The writer's source URI. Concurrent writers of the same field conflict; writers of different fields never do.
+    fn target(&self) -> Vec<String> {
+        vec!["uri".to_string()]
+    }
+
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(&format!("Change document URI to \"{}\"", self.new_uri), &format!("Dokument-URI auf \"{}\" ändern", self.new_uri))
     }

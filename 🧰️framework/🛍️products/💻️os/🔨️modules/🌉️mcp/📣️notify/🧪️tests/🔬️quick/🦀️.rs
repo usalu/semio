@@ -80,6 +80,7 @@ fn walking_every_page_yields_the_whole_list_exactly_once() {
     assert_eq!(walked, all);
 }
 
+/// 📄️ A cursor past the end is a legal, empty FINAL page, so a client's walk always terminates.
 #[test]
 fn every_list_method_answers_a_cursor_and_a_foreign_cursor_is_invalid_params() {
     let (mut server, _sink) = server_with_sink();
@@ -87,7 +88,6 @@ fn every_list_method_answers_a_cursor_and_a_foreign_cursor_is_invalid_params() {
         let first = result_of(&mut server, request(1, method, serde_json::json!({})));
         let items = first.get(key).and_then(serde_json::Value::as_array).cloned().unwrap_or_default();
         assert!(!items.is_empty(), "{method} answered no {key}");
-        // 📄️ A cursor past the end is a legal, empty FINAL page, so a client's walk always terminates.
         let last = result_of(&mut server, request(2, method, serde_json::json!({ "cursor": encode_cursor(items.len()) })));
         assert_eq!(last.get(key).and_then(serde_json::Value::as_array).map(Vec::len), Some(0), "{method} past-the-end page was not empty");
         assert!(last.get("nextCursor").is_none(), "{method} past-the-end page still offered a nextCursor");
@@ -143,13 +143,13 @@ fn subscribing_to_an_unknown_resource_is_refused_rather_than_silently_accepted()
     assert!(server.subscriptions().subscribed().is_empty());
 }
 
+/// 🔁️ A repeat subscribe is legal and must not double-deliver.
 #[test]
 fn subscribe_records_and_unsubscribe_forgets() {
     let (mut server, _sink) = server_with_sink();
     let uri = "semio://artifact/doc-1";
     assert!(!server.dispatch(&request(1, "resources/subscribe", serde_json::json!({ "uri": uri }))).expect("answers").is_error());
     assert_eq!(server.subscriptions().subscribed(), vec![uri.to_string()]);
-    // 🔁️ A repeat subscribe is legal and must not double-deliver.
     assert!(!server.dispatch(&request(2, "resources/subscribe", serde_json::json!({ "uri": uri }))).expect("answers").is_error());
     assert_eq!(server.subscriptions().subscribed().len(), 1);
     assert!(!server.dispatch(&request(3, "resources/unsubscribe", serde_json::json!({ "uri": uri }))).expect("answers").is_error());
@@ -206,11 +206,17 @@ fn the_declared_table_says_which_tool_changed_which_resource() {
     assert!(changes_from_tool_result("capabilities_search", false, Some(&serde_json::json!({ "hits": [] }))).is_empty(), "a read-only tool changed nothing");
 }
 
+/// 🧫️ `MockArtifactChannel` names its artifact `mock-artifact-<instance>`; subscribe to every
+/// instance the fixture could mint so this test asserts the WIRING, not an id guess.
+///
+/// 🔔️ The real proof: the very artifact id the invocation reports is the URI a subscriber was
+/// told about, through `tools/call` alone — no test-only broadcast anywhere in this path.
+///
+/// 🧫️ The fixture refused the invocation (no scope, no such capability): then nothing may have
+/// been published either — silence on a non-mutation is exactly as load-bearing.
 #[test]
 fn a_committed_mutation_through_tools_call_reaches_a_subscriber() {
     let (mut server, sink) = server_with_sink();
-    // 🧫️ `MockArtifactChannel` names its artifact `mock-artifact-<instance>`; subscribe to every
-    // instance the fixture could mint so this test asserts the WIRING, not an id guess.
     for instance in 0..4u32 {
         server.dispatch(&request(1, "resources/subscribe", serde_json::json!({ "uri": format!("semio://artifact/mock-artifact-{instance}") })));
     }
@@ -222,8 +228,6 @@ fn a_committed_mutation_through_tools_call_reaches_a_subscriber() {
     let artifact_id = structured.get("revisionAfter").and_then(|revision| revision.get("artifactId")).and_then(serde_json::Value::as_str);
     let published = sink.taken();
     match artifact_id {
-        // 🔔️ The real proof: the very artifact id the invocation reports is the URI a subscriber was
-        // told about, through `tools/call` alone — no test-only broadcast anywhere in this path.
         Some(artifact_id) => {
             let expected = format!("semio://artifact/{artifact_id}");
             assert!(
@@ -231,8 +235,6 @@ fn a_committed_mutation_through_tools_call_reaches_a_subscriber() {
                 "a committed mutation of {artifact_id} pushed no resources/updated; published {published:?}"
             );
         }
-        // 🧫️ The fixture refused the invocation (no scope, no such capability): then nothing may have
-        // been published either — silence on a non-mutation is exactly as load-bearing.
         None => assert!(published.iter().all(|notification| notification.method != NOTIFICATION_RESOURCES_UPDATED), "a failed invocation still pushed an update: {published:?}"),
     }
 }
@@ -245,6 +247,7 @@ fn a_job_minted_outside_a_progress_scope_publishes_nothing() {
     assert!(!job_progress_changed(&job_id, 0.5, None));
 }
 
+/// 🧹️ Terminal transition publishes the last row and releases the binding.
 #[test]
 fn a_job_minted_inside_a_progress_scope_pushes_notifications_progress() {
     let sink = Arc::new(RecordingSink::new());
@@ -264,7 +267,6 @@ fn a_job_minted_inside_a_progress_scope_pushes_notifications_progress() {
     assert_eq!(rows[0].params.as_ref().and_then(|params| params.get("progress")), Some(&serde_json::json!(0.25)));
     assert_eq!(rows[0].params.as_ref().and_then(|params| params.get("message")), Some(&serde_json::json!("quarter")));
     assert_eq!(rows[1].params.as_ref().and_then(|params| params.get("progress")), Some(&serde_json::json!(0.75)));
-    // 🧹️ Terminal transition publishes the last row and releases the binding.
     crate::ui::job_registry().succeed(&job_id, serde_json::json!({}));
     let terminal = sink.taken();
     assert_eq!(terminal.iter().filter(|notification| notification.method == NOTIFICATION_PROGRESS).count(), 1);
@@ -283,12 +285,12 @@ fn a_progress_scope_restores_the_one_it_replaced() {
     assert_eq!(active_progress_binding().map(|binding| binding.token), Some(serde_json::json!("outer")));
 }
 
+/// 🧪️ `job_get` against an unknown id is a real call that mints no job — what it proves is that
+/// the token plumbing is entered and left cleanly, with no notification invented.
 #[test]
 fn a_tools_call_progress_token_binds_the_jobs_that_call_mints() {
     let (mut server, sink) = server_with_sink();
     sink.taken();
-    // 🧪️ `job_get` against an unknown id is a real call that mints no job — what it proves is that
-    // the token plumbing is entered and left cleanly, with no notification invented.
     let called = request(77, "tools/call", serde_json::json!({ "name": "job_get", "arguments": { "jobId": "job-does-not-exist" }, "_meta": { "progressToken": "tok-m5b-2" } }));
     let _ = server.dispatch(&called);
     assert!(active_progress_binding().is_none(), "the progress scope outlived the call");
@@ -385,13 +387,14 @@ fn every_tool_declares_a_compilable_output_schema() {
 /// Driven through `tools/call` for real, over every tool this fixture server can call with no
 /// arguments — a tool whose no-argument call is an input error is skipped, and the skipped names are
 /// reported so the count is never silently zero.
+///
+/// 📐️ One representative REAL argument set per tool that needs one, so the oracle validates an
+/// actual result rather than only the handful of tools that answer to `{}`.
 #[test]
 fn every_callable_tool_result_validates_against_its_own_output_schema() {
     let (mut server, _sink) = server_with_sink();
     let tools = server.tools.list();
     let schemas: BTreeMap<String, serde_json::Value> = tools.iter().filter_map(|tool| tool.output_schema.clone().map(|schema| (tool.name.clone(), schema))).collect();
-    // 📐️ One representative REAL argument set per tool that needs one, so the oracle validates an
-    // actual result rather than only the handful of tools that answer to `{}`.
     let representative: BTreeMap<&str, serde_json::Value> = BTreeMap::from([
         ("capabilities_search", serde_json::json!({ "query": "note" })),
         ("capabilities_describe", serde_json::json!({ "capabilityId": "capabilities.search" })),

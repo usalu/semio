@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChangeLayerPixels",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "expectedImageKey",
+    "content"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "expectedImageKey": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "imageKey",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "imageKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "width": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 16384
+        }
+      }
+    },
+    "transform": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "scaleX",
+        "scaleY",
+        "rotation"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "scaleX": {
+          "type": "number"
+        },
+        "scaleY": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-pixels/schema.json"
+}

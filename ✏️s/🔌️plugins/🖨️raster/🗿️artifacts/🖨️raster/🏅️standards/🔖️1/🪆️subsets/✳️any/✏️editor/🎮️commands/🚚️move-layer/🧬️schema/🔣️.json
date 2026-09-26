@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Move Layer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "targetRowId",
+    "dropPosition"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetRowId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dropPosition": {
+      "enum": [
+        "before",
+        "after",
+        "inside"
+      ]
+    }
+  }
+}

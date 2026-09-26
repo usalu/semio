@@ -174,6 +174,12 @@ pub trait AuthorityOperationControl: Send + Sync {
     /// a legitimate refusal. The default ignores the sentence, so a control with nowhere to put one
     /// is not forced to invent a sink.
     fn fault(&self, _detail: &str) {}
+
+    /// 📈️ Where a trusted-catalog load reports its per-package progress (`TrustedCatalogLoadProgressV1`), which the
+    /// loaded catalog keeps for its background verification; `None` keeps both private to the catalog.
+    fn catalog_progress(&self) -> Option<std::sync::Arc<trusted_catalog::TrustedCatalogLoadProgressCellV1>> {
+        None
+    }
 }
 
 /// ⏱️ What ends one authority operation that was not cancelled.
@@ -196,17 +202,40 @@ enum OperationBoundV1 {
     NoProgress { span_ms: u64, last_checkpoint_ms: std::sync::atomic::AtomicU64 },
 }
 
-/// ⏱️ Bounded operation context shared with trusted codecs so long work stays cancellable.
+/// 🔢️ The serial the next [`OperationContext`] takes; serials are unique within the process.
+static OPERATION_SERIAL: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
+/// ⏱️ Bounded operation context shared with trusted codecs so long work stays cancellable. It also owns
+/// what its codec calls must share for exactly its lifetime: a compiled guest the residency ledger did
+/// not admit serves every call of the operation that compiled it and is dropped with the operation.
 pub struct OperationContext<'a> {
     bound: OperationBoundV1,
     limits: AuthorityLimits,
     control: &'a dyn AuthorityOperationControl,
+    serial: u64,
+    retained: std::sync::Mutex<Vec<std::sync::Arc<dyn std::any::Any + Send + Sync>>>,
 }
 
 impl<'a> OperationContext<'a> {
     /// 🏛️ Creates one authority context with an absolute exclusive deadline.
-    pub const fn new(deadline_ms: u64, limits: AuthorityLimits, control: &'a dyn AuthorityOperationControl) -> Self {
-        Self { bound: OperationBoundV1::Deadline(deadline_ms), limits, control }
+    pub fn new(deadline_ms: u64, limits: AuthorityLimits, control: &'a dyn AuthorityOperationControl) -> Self {
+        Self { bound: OperationBoundV1::Deadline(deadline_ms), limits, control, serial: OPERATION_SERIAL.fetch_add(1, std::sync::atomic::Ordering::Relaxed), retained: std::sync::Mutex::new(Vec::new()) }
+    }
+
+    /// 🔢️ This operation's process-unique serial: a residency ledger counts one use per operation, however
+    /// many codec calls it makes.
+    pub fn serial(&self) -> u64 {
+        self.serial
+    }
+
+    /// 📈️ The catalog progress cell the host reads, when it reads one.
+    pub(crate) fn catalog_progress(&self) -> Option<std::sync::Arc<trusted_catalog::TrustedCatalogLoadProgressCellV1>> {
+        self.control.catalog_progress()
+    }
+
+    /// 📌️ Keeps `value` alive until this operation ends.
+    pub(crate) fn retain(&self, value: std::sync::Arc<dyn std::any::Any + Send + Sync>) {
+        self.retained.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(value);
     }
 
     /// 🧗️ Creates one authority context bounded by progress instead of the calendar: it refuses only
@@ -218,7 +247,7 @@ impl<'a> OperationContext<'a> {
             return Err(AuthorityError::InvalidLimits);
         }
         let last_checkpoint_ms = std::sync::atomic::AtomicU64::new(control.now_ms());
-        Ok(Self { bound: OperationBoundV1::NoProgress { span_ms, last_checkpoint_ms }, limits, control })
+        Ok(Self { bound: OperationBoundV1::NoProgress { span_ms, last_checkpoint_ms }, limits, control, serial: OPERATION_SERIAL.fetch_add(1, std::sync::atomic::Ordering::Relaxed), retained: std::sync::Mutex::new(Vec::new()) })
     }
 
     /// 🧯️ Returns the immutable request budgets.

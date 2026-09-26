@@ -2,9 +2,9 @@
 
 ## Status
 
-`bun nx run @semio-tech/norm-en1991-rs:test --skip-nx-cache -- --no-fail-fast` → `Summary [   1.095s] 70 tests run: 70 passed, 0 skipped`.
+`bun nx run @semio-tech/norm-en1991-rs:test --skip-nx-cache -- --no-fail-fast` → `Summary [   1.086s] 79 tests run: 79 passed, 0 skipped`.
 
-Remaining gaps: **none**.
+Remaining gaps: **none** (round-3 closed).
 
 
 ## Subject schema (SI base)
@@ -44,3 +44,48 @@ Extras: tight DE UDL in compliant example; LM1 span moment; asset drift assertio
 ## Requests to coordinator
 
 - Shared `mutation-leaf-taxonomy-generate` may still fail on concurrent en1993 descriptor identity — EN1991 rows merged directly.
+
+## Round-2 (Wave D verify closeout)
+
+`bun nx run @semio-tech/norm-en1991-rs:test --skip-nx-cache -- --no-fail-fast` → `Summary [   0.754s] 74 tests run: 74 passed, 0 skipped`.
+
+`bun nx run @semio-tech/norm-plugin:mutation-leaf-taxonomy-generate` → `norm mutation-leaf taxonomy generated: 547 payloads`.
+
+### Blocking items 1–6
+
+| # | Fix | file:line | Tests |
+|---|-----|-----------|-------|
+| 1 | Scope-aware perturbation (status/computed/limit/utilization; CORRECTION 14:37) | `💡️inferences/🧪️tests/🔬️compliance-report/🦀️.rs:405` | `scope_aware_perturbation_of_editable_leaves` |
+| 2 | Table 4.1 notional lanes; governing Table 4.4a load-group; Annex A/E fire from A_f/H; e=min(b,2h) ze | `💡️inferences/🦀️.rs:136–160,179–248,281–396`; `🧬️schema/🦀️.rs:773–776,778–798,901–917,1140` | bridge/fire example + compliance |
+| 3 | Discriminated accidental impact\|explosion; FireMode; StructureKind + examples | `🏋️en1991/🦀️.rs` (`FireMode`/`StructureKind`/`AccidentalCase`); `📚️examples/🧬️subjects/🦀️.rs` | field-meta + perturbation suites |
+| 4 | Field-meta en+de over all examples; lane labels; terrain 0 | `✏️editor/🏷️field-meta/🦀️.rs`; coverage `compliance-report/🦀️.rs:336` | `field_meta_coverage_all_committed_examples` |
+| 5 | c_pe,1 table conformance + Fig.7.2 log interpolation | `💡️inferences/🦀️.rs:184–241`; `🧬️schema/🦀️.rs:801–854` | wind cpe checks |
+| 6 | jsonschema required (no ImportError skip); oracle manifest count | `compliance-report/🦀️.rs:318`, `:568` | `snapshot_json_validates_against_schema`, `oracle_manifest_kind_count_matches_mutation_enum` |
+
+### Extra (decisions / non-blocking)
+
+- DE NA B.3 q_p scaled by ρ/1.25 (`🧬️schema/🦀️.rs:774`) so `airDensity` is normative.
+- Load-group remedy targets the failing constituent path (tandem/UDL/LM2/LM3/LM4/footway) (`💡️inferences/🦀️.rs:367–377`).
+- Default geometry width/height/z set so e=min(b,2h) changes z_e across NA B.3 breakpoints.
+
+### CORRECTION 14:37
+
+No epsilon/fingerprint gaming. Perturbation asserts check id/status/computed/limit/utilization only. Annex-scoped and claim-gated leaves listed per suite N/A (not dummy bindings).
+
+## Round-3 (Wave C fixer)
+
+`bun nx run @semio-tech/norm-en1991-rs:test --skip-nx-cache -- --no-fail-fast` → `Summary [   1.086s] 79 tests run: 79 passed, 0 skipped`.
+
+### Blocking items 1–4
+
+| # | Fix | files | Tests |
+|---|-----|-------|-------|
+| 1 | Scope-aware perturbation walks every nested editable leaf (all array indices/depths); numeric+bool+enum; signature `(id,status,computed,limit,utilization)`; exemptions only id/name/title/labelEn/labelDe | `🧬️schema/💡️inferences/🧪️tests/🔬️compliance-report/🦀️.rs` | `scope_aware_perturbation_of_editable_leaves` |
+| 2 | `reference_tables()` from shared `part_1_1`/`part_1_3`/`part_1_4` consts (Table 6.1 DE/EN q_k, snow zones, NA B.3 q_p); catalogue rejects empty | `✏️editor/📌️panels/📚️catalogue/🦀️.rs` + unit | `reference_tables_cells_match_imposed_and_evaluate_limit` (B1 DE 2000 Pa = evaluate limit) |
+| 3 | Duplicate entity ids Fail (floors/selfWeight/roofs/windFaces/accidentalCases) + dangling-ref helper; en+de + `one_of` remedy | `🧬️schema/💡️inferences/🦀️.rs` | `duplicate_floor_id_fails_integrity`, wind/roof/accidental analogues |
+| 4 | Diff + root artifact facets: `AccidentalCase={id,impact[],explosion[]}`; drop flat kind/combined fields + `requiredDeltaT`; `structureKind` string enum; drop orphan `kind` field-meta | `🧬️schema/🔳️json`/`🟦️.ts`, `🔺️diff/*`, `🏷️field-meta/🦀️.rs` | schema/jsonschema suites |
+
+### Normative leaf wiring (perturbation)
+
+- Floor `area` → total force check `q_k·A` (`en1991.1-1.floor-force.*`).
+- `hasParapet` / multi roof types → `shape_mu` parapet notional min height + multi-bay μ=1.6.

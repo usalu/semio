@@ -4,6 +4,8 @@
 export interface RasterBrushOptions {
   size: number;
   opacity: number;
+  hardness: number;
+  color: string;
 }
 
 export const RASTER_PLAY_BRUSH_OPTIONS_GROUP_ID = "raster-utility-options-paintBrush" as const;

@@ -392,6 +392,8 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthSession) REQUIRE a.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthSession) REQUIRE a.selector IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (s:SyncSession) REQUIRE s.id IS UNIQUE",
+    "CREATE INDEX sync_session_space IF NOT EXISTS FOR (s:SyncSession) ON (s.spaceId)",
+    "CREATE INDEX directory_event_space IF NOT EXISTS FOR (e:DirectoryEvent) ON (e.spaceId)",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (i:SpaceInvite) REQUIRE i.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (r:DirectoryCommandReceipt) REQUIRE r.key IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (r:CheckpointPublicationReceipt) REQUIRE r.key IS UNIQUE",
@@ -475,17 +477,18 @@ impl Neo4jDirectory {
     }
 
     /// 🔁️ One attempt of [`HubDirectory::append_artifact_creation_fact`]; the trait method retries it while Neo4j reports a transient fault.
+    ///
+    /// ⏱️ A fact may not be stamped in the future. It may be stamped LATE: the durable
+    /// `deadline_ms` is what closes an ABANDONED key, and refusing a `Prepared` past it here
+    /// refused a genesis the guest had already produced — a 176 s honest creation on the biggest
+    /// staged component (ticket 26/09/18 slice HC1, hub 7681). A key the recovery sweep did close
+    /// is terminal, and `decide_artifact_creation_fact_append_v1` refuses the transition on it.
     async fn append_artifact_creation_fact_attempt(&self, append: &ArtifactCreationFactAppendV1) -> DirectoryResult<ArtifactCreationOperationV1> {
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
         let request_key = lock_artifact_creation_request(&mut txn, &append.actor.user_id, &append.request_id).await?;
         let observed_now = validate_artifact_creation_authority(&mut txn, &append.actor, &append.space_id, None).await?;
         let mut facts = artifact_creation_facts(&mut txn, &request_key).await?;
         let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        // ⏱️ A fact may not be stamped in the future. It may be stamped LATE: the durable
-        // `deadline_ms` is what closes an ABANDONED key, and refusing a `Prepared` past it here
-        // refused a genesis the guest had already produced — a 176 s honest creation on the biggest
-        // staged component (ticket 26/09/18 slice HC1, hub 7681). A key the recovery sweep did close
-        // is terminal, and `decide_artifact_creation_fact_append_v1` refuses the transition on it.
         if append.recorded_at_ms > observed_now {
             return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
         }
@@ -537,6 +540,12 @@ impl Neo4jDirectory {
     }
 
     /// 🔁️ One attempt of [`HubDirectory::append_document_genesis`]; the trait method retries it while Neo4j reports a transient fault.
+    ///
+    /// ⏱️ The durable `deadline_ms` closes an ABANDONED key; it is not a bound on how long an
+    /// honest genesis may take. Refusing the publication past it stranded a creation whose
+    /// pair was already prepared, in `preparing`, until the recovery sweep closed it (ticket
+    /// 26/09/18 slice HC1, hub 7681: 128 s of guest genesis, then this). A closed key is
+    /// terminal and `validate_document_genesis_append_v1` refuses a publication on it.
     async fn append_document_genesis_attempt(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
         append.intent.validate()?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
@@ -559,11 +568,6 @@ impl Neo4jDirectory {
             txn.commit().await.map_err(backend)?;
             return Ok(DocumentGenesisCommitV1::Existing(operation));
         }
-        // ⏱️ The durable `deadline_ms` closes an ABANDONED key; it is not a bound on how long an
-        // honest genesis may take. Refusing the publication past it stranded a creation whose
-        // pair was already prepared, in `preparing`, until the recovery sweep closed it (ticket
-        // 26/09/18 slice HC1, hub 7681: 128 s of guest genesis, then this). A closed key is
-        // terminal and `validate_document_genesis_append_v1` refuses a publication on it.
         if append.now_ms > observed_now {
             return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
         }
@@ -1919,6 +1923,32 @@ impl HubDirectory for Neo4jDirectory {
                 active_connections: u64::try_from(row.get::<i64>("activeConnections").map_err(backend)?).map_err(backend)?,
                 updated_at: row.get("updatedAt").map_err(backend)?,
             });
+        }
+        Ok(summaries)
+    }
+
+    async fn list_visible_space_summaries(&self, user_id: Option<&str>) -> DirectoryResult<Vec<(AdminSpaceSummaryRecord, Option<SpaceRole>)>> {
+        let cypher = "MATCH (s:Space) WHERE s.visibility = 'public' OR EXISTS { MATCH (:User {id: $user_id})-[:MEMBER_OF]->(s) }
+                      CALL { WITH s OPTIONAL MATCH (:User)-[membership:MEMBER_OF]->(s) RETURN count(membership) AS memberCount }
+                      CALL { WITH s OPTIONAL MATCH (s)-[:CONTAINS_DOCUMENT]->(document:DocumentDescriptor) RETURN count(document) AS documentCount }
+                      CALL { WITH s OPTIONAL MATCH (session:SyncSession {spaceId: s.id}) WHERE session.disconnectedAt IS NULL RETURN count(session) AS activeConnections }
+                      CALL { WITH s OPTIONAL MATCH (event:DirectoryEvent {spaceId: s.id}) RETURN max(event.recordedAt) AS lastEventAt }
+                      CALL { WITH s OPTIONAL MATCH (:User {id: $user_id})-[own:MEMBER_OF]->(s) RETURN head(collect(own.role)) AS role }
+                      RETURN s AS s, memberCount, documentCount, activeConnections, coalesce(lastEventAt, s.createdAt) AS updatedAt, role ORDER BY s.id";
+        let mut result = self.graph.execute(query(cypher).param("user_id", user_id.map(str::to_string))).await.map_err(backend)?;
+        let mut summaries = Vec::new();
+        while let Some(row) = result.next().await.map_err(backend)? {
+            let role: Option<String> = row.get("role").map_err(backend)?;
+            summaries.push((
+                AdminSpaceSummaryRecord {
+                    space: space_from_node(&row)?,
+                    member_count: u64::try_from(row.get::<i64>("memberCount").map_err(backend)?).map_err(backend)?,
+                    document_count: u64::try_from(row.get::<i64>("documentCount").map_err(backend)?).map_err(backend)?,
+                    active_connections: u64::try_from(row.get::<i64>("activeConnections").map_err(backend)?).map_err(backend)?,
+                    updated_at: row.get("updatedAt").map_err(backend)?,
+                },
+                role.as_deref().and_then(SpaceRole::parse),
+            ));
         }
         Ok(summaries)
     }

@@ -199,9 +199,12 @@
       "route": "/auth/sessions/me"
     },
     {
-      "method": "DELETE",
-      "path": "/auth/sessions/me",
-      "route": "/auth/sessions/me"
+      "method": "POST",
+      "path": "/auth/sessions/me/sign-out",
+      "route": "/auth/sessions/me/sign-out",
+      "body": {
+        "kind": "empty"
+      }
     },
     {
       "method": "POST",
@@ -221,9 +224,12 @@
       "route": "AGENT_DELEGATION_ROUTE"
     },
     {
-      "method": "DELETE",
-      "path": "/auth/agent-delegations/delegation-h",
-      "route": "/auth/agent-delegations/{id}"
+      "method": "POST",
+      "path": "/auth/agent-delegations/delegation-h/revoke",
+      "route": "AGENT_DELEGATION_REVOKE_ROUTE",
+      "body": {
+        "kind": "empty"
+      }
     },
     {
       "method": "POST",
@@ -556,5 +562,151 @@
         }
       }
     }
-  ]
+  ],
+  "generative": {
+    "description": "🎲️ The generative law over the same routes: for every seed, `casesPerRoute` requests per route, each the route's own request with a drawn list of mutations (method, credential, content type, body, path segment, query, extra header); every socket route additionally receives `socketCases` sequences of `framesPerSocketCase` drawn frames after a valid connection. The draws are language-neutral: draw k of a seed is the k-th little-endian u64 of the concatenated blocks SHA-256(`semio.hub.hostile-draws/v1` ‖ le64(seed) ‖ le64(block)), block = 0, 1, 2, …; `below(n)` is a draw modulo n. The oracle is the fixed one: never a dropped connection or an untyped answer, never a 5xx other than a typed 503, never a success for a route that needs a credential when the request carried none it may use, and `/healthz` answers after every case; a socket ends with a close frame or stays open, never a bare disconnect. A finding is shrunk (mutations dropped, bodies and strings halved) within `maxShrinkSteps` requests before it is reported with its seed.",
+    "seeds": [
+      1,
+      2,
+      3
+    ],
+    "casesPerRoute": 6,
+    "socketCases": 4,
+    "framesPerSocketCase": 12,
+    "budgetMs": 240000,
+    "maxShrinkSteps": 48,
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS"
+    ],
+    "contentTypes": [
+      "application/json",
+      "application/json; charset=utf-16",
+      "text/plain",
+      "multipart/form-data; boundary=semio",
+      "application/octet-stream",
+      "",
+      "application/x-www-form-urlencoded",
+      "application/json\u0000"
+    ],
+    "credentials": [
+      "valid",
+      "absent",
+      "forged",
+      "empty-bearer",
+      "basic",
+      "lowercase-scheme",
+      "oversized",
+      "duplicate"
+    ],
+    "segments": [
+      "..",
+      "%2e%2e",
+      "%00",
+      "%2F",
+      "%ff%fe",
+      "é́",
+      "🧨",
+      ".",
+      "~",
+      "a%20b",
+      "-1",
+      "0",
+      "99999999999999999999",
+      "[]",
+      "{}",
+      "%"
+    ],
+    "queries": [
+      "since=-1",
+      "since=abc",
+      "since=18446744073709551616",
+      "limit=0",
+      "limit=999999999",
+      "cursor=%00",
+      "since=1&since=2",
+      "a=%zz",
+      "=",
+      "&&&"
+    ],
+    "headers": [
+      [
+        "x-forwarded-proto",
+        "http"
+      ],
+      [
+        "x-forwarded-host",
+        "evil.example"
+      ],
+      [
+        "origin",
+        "http://evil.example"
+      ],
+      [
+        "sec-websocket-protocol",
+        "semio.socket.v1, forged"
+      ],
+      [
+        "upgrade",
+        "websocket"
+      ],
+      [
+        "connection",
+        "upgrade"
+      ],
+      [
+        "accept",
+        "text/html"
+      ],
+      [
+        "x-semio-refusal",
+        "forged"
+      ],
+      [
+        "range",
+        "bytes=5-1"
+      ],
+      [
+        "if-none-match",
+        "*"
+      ]
+    ],
+    "drawVectors": [
+      {
+        "seed": 1,
+        "draws": [
+          "10911a2d87cea596",
+          "85fe76e45f404439",
+          "910844b62fb163aa",
+          "7592ecaec7ce7c92",
+          "db813c6bb04a10b2",
+          "660b31e60f991402",
+          "3ba72f7de07d7a1d",
+          "3051a962dc3fbaae",
+          "589e23fc3a839328",
+          "a96f6d73ad4931c2"
+        ]
+      },
+      {
+        "seed": 1337,
+        "draws": [
+          "33b45d3101554149",
+          "8c25eb521825c847",
+          "89d5582d60846ee2",
+          "bc741b34ec2acf08",
+          "7e9e64d113a748c6",
+          "764fedbeff409c04",
+          "8b5c19363afec677",
+          "637226bf3c432964",
+          "606d5ce8b1d1c375",
+          "0a6d8ff919e77949"
+        ]
+      }
+    ]
+  }
 }

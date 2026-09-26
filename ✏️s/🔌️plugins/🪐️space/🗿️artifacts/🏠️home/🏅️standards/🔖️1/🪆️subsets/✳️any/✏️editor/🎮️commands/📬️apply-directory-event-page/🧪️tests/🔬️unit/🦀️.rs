@@ -1,5 +1,6 @@
 
 use super::*;
+use crate::editor::home::config::DirectoryProjectionReceiptV1;
 use protocol::Mutation as _;
 
 fn seal(mut page: store::os_directory::DirectoryEventPageV1) -> store::os_directory::DirectoryEventPageV1 {
@@ -42,8 +43,8 @@ async fn sealed_page_replaces_projection_once_and_rejects_races() {
     let duplicate_receipt: DirectoryProjectionReceiptV1 = protocol::FromValue::from_value(duplicate.events[0].payload.clone()).expect("typed duplicate receipt");
     assert_eq!(duplicate_receipt, current.directory_projection_receipt().expect("current receipt"));
 
-    let stale = seal(store::os_directory::DirectoryEventPageV1 { after_seq_exclusive: 0, through_seq_inclusive: 6, receipt_sha256: String::new(), ..first.clone() });
-    assert!(dispatch(&current, &stale).is_err(), "same-authority stale base cannot replace the projection");
+    let raced = seal(store::os_directory::DirectoryEventPageV1 { after_seq_exclusive: 3, through_seq_inclusive: 6, receipt_sha256: String::new(), ..first.clone() });
+    assert!(dispatch(&current, &raced).is_err(), "a same-authority page that does not continue the held frontier cannot replace the projection");
 
     let event = store::os_directory::DirectoryEvent {
         seq: 7,
@@ -96,6 +97,12 @@ async fn sealed_page_replaces_projection_once_and_rejects_races() {
     let replaced = emitted.config_mutations[0].diff(&advanced).diff().clone();
     assert_eq!(replaced.directory().expect("replaced projection").cursor, 0);
     assert!(replaced.directory().expect("replaced projection").spaces.is_empty());
+
+    let origin_replay = seal(store::os_directory::DirectoryEventPageV1 { after_seq_exclusive: 0, through_seq_inclusive: 4, has_more: true, events: Vec::new(), receipt_sha256: String::new(), ..second.clone() });
+    let emitted = dispatch(&advanced, &origin_replay).expect("a same-authority replay from the origin rebuilds the projection");
+    let rebuilt = emitted.config_mutations[0].diff(&advanced).diff().clone();
+    assert_eq!(rebuilt.directory().expect("rebuilt projection").cursor, 4, "the rebuild restarts at the replayed page's frontier");
+    assert!(rebuilt.directory().expect("rebuilt projection").spaces.is_empty(), "nothing folded before the origin replay survives it");
 
     let mut forged = second;
     forged.receipt_sha256 = "c".repeat(64);

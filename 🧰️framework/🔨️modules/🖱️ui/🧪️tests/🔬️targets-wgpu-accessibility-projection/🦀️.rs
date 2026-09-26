@@ -58,6 +58,56 @@ fn mounted_tree(law: &serde_json::Value) -> UiTree {
     panic!("document reconcile did not terminate inside its own node budget");
 }
 
+/// 🔀️ Each retained Toggle appearance publishes the live state channel of the concrete React
+/// control it mirrors: pressed for the button Toggle and checked for TreeCheckbox.
+#[test]
+fn mounted_toggle_appearances_stamp_only_their_native_live_state_channel() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️contract/🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).expect("🔀️ the retained-toggle fixture parses");
+    for (index, case) in fixture["cases"].as_array().expect("toggle cases").iter().enumerate() {
+        let source_state = case["component"]["on"].as_bool().expect("authored toggle state");
+        let record: UiNodeRecord = serde_json::from_value(serde_json::json!({
+            "id": index,
+            "key": format!("#toggle-{index}"),
+            "component": case["component"],
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+            "style": {},
+            "activity": "idle",
+            "accessibility": { "label": case["accessibleLabel"] }
+        }))
+        .unwrap_or_else(|error| panic!("{}: fixture record deserializes: {error}", case["id"].as_str().expect("case id")));
+        let header = UiDocumentLeaseHeader {
+            generation: FIXTURE_GENERATION,
+            surface: SurfaceId::try_from(format!("toggle.semantic.{index}").as_str()).expect("fixture surface id"),
+            revision: UiRevision(0),
+            root: record.id,
+            layout_epoch: 0,
+            node_count: 1,
+        };
+        let node_id = record.id;
+        let mut document = UiDocumentTree::new(header).expect("fixture header admits");
+        document.try_upsert_record(record).expect("fixture record admits");
+        let mut tree = UiTree::new();
+        tree.publish_document(document);
+        let mut cursor = UiDocumentReconcileCursor::default();
+        cursor.rearm(FIXTURE_GENERATION);
+        for _ in 0..64 {
+            if matches!(tree.step_document_reconcile(&mut cursor, "procedural-main", "generation3d"), UiDocumentReconcileStep::Complete) {
+                break;
+            }
+        }
+        let mounted = tree.document_node(node_id).expect("toggle mounted");
+        let crate::wgpu::component::ui::UiNode::Toggle(toggle) = &mut tree.node_mut(mounted).expect("mounted toggle is live").spec.0 else { panic!("fixture toggle reconciles as UiNode::Toggle") };
+        toggle.presence.selected = !source_state;
+        let projected = accessibility_projection(&tree).pop().expect("mounted toggle is projected");
+        let live_state = !source_state;
+        match case["expected"]["stateAttribute"].as_str().expect("state attribute") {
+            "aria-pressed" => assert_eq!((projected.role.as_str(), projected.pressed, projected.checked), ("button", Some(live_state), None), "{}", projected.key),
+            "aria-checked" => assert_eq!((projected.role.as_str(), projected.checked, projected.pressed), ("checkbox", Some(live_state), None), "{}", projected.key),
+            attribute => panic!("unexpected state attribute {attribute}"),
+        }
+    }
+}
+
 /// ♿️ The headline: a mounted document answers the FULL projection the shared fixture declares, in
 /// pre-order and with the right depth — the tree an assistive technology reads.
 #[test]

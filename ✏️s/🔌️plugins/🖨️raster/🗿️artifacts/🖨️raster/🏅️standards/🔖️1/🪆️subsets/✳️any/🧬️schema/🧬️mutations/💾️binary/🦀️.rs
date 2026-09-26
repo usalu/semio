@@ -179,7 +179,7 @@ struct RasterLayerFields {
 
 enum RasterMutationFields {
     String(String),
-    Strings { first: String, second: Option<String> },
+    Strings { first: String, second: Option<String>, third: Option<String> },
     Create { parent: Option<String>, layer: Option<Box<RasterLayerNode>> },
     Asset { id: String, asset: Option<RasterImageAsset> },
 }
@@ -350,16 +350,17 @@ impl RasterOwnedRetirement {
         match mutation {
             CreateLayer(payload) => RasterMutationFields::Create { parent: payload.parent_id, layer: Some(payload.layer) },
             DeleteLayer(payload) => RasterMutationFields::String(payload.layer_id),
-            ReorderLayers(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.parent_id },
-            RenameLayer(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_name) },
+            ReorderLayers(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.parent_id, third: None },
+            RenameLayer(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_name), third: None },
             ChangeLayerVisible(payload) => RasterMutationFields::String(payload.layer_id),
             ChangeLayerOpacity(payload) => RasterMutationFields::String(payload.layer_id),
-            ChangeLayerBlendMode(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_blend_mode) },
+            ChangeLayerBlendMode(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_blend_mode), third: None },
             MoveLayer(payload) => RasterMutationFields::String(payload.layer_id),
             ResizeLayer(payload) => RasterMutationFields::String(payload.layer_id),
-            ChangeLayerAdjustmentKind(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_adjustment_kind) },
+            ChangeLayerAdjustmentKind(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_adjustment_kind), third: None },
             AddLayerAsset(payload) => RasterMutationFields::Asset { id: payload.asset_id, asset: Some(payload.asset) },
             RemoveLayerAsset(payload) => RasterMutationFields::String(payload.asset_id),
+            ChangeLayerPixels(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected_image_key, third: payload.content.image_key },
         }
     }
 
@@ -468,11 +469,15 @@ impl RasterOwnedRetirement {
                     drop(frame.owner.take());
                     Ok(RasterRetirementAction::Pop)
                 }
-                RasterMutationFields::Strings { first, second } => match frame.phase {
+                RasterMutationFields::Strings { first, second, third } => match frame.phase {
                     0 => Ok(Self::release_string(first, &mut frame.phase, 1, maximum_items, maximum_bytes)),
                     1 if second.is_some() => {
                         frame.phase = 2;
                         Ok(RasterRetirementAction::Push(RasterRetirementOwner::String(second.take().expect("Raster mutation second string remains retained"))))
+                    }
+                    1 | 2 if third.is_some() => {
+                        frame.phase = 3;
+                        Ok(RasterRetirementAction::Push(RasterRetirementOwner::String(third.take().expect("Raster mutation third string remains retained"))))
                     }
                     _ => {
                         drop(frame.owner.take());
@@ -2453,6 +2458,7 @@ impl RasterMutationDigestAuthority {
             RasterMutation::ChangeLayerAdjustmentKind(_) => 10,
             RasterMutation::AddLayerAsset(_) => 11,
             RasterMutation::RemoveLayerAsset(_) => 12,
+            RasterMutation::ChangeLayerPixels(_) => 13,
         }
     }
 
@@ -2630,6 +2636,26 @@ impl RasterMutationDigestAuthority {
                     }
                     self.phase = 4;
                     Ok(false)
+                }
+                _ => Ok(self.finish(digest, cx)),
+            },
+            RasterMutation::ChangeLayerPixels(value) => match self.phase {
+                1 => string_phase!(&value.layer_id, 2),
+                2 => scalar_phase!(&[u8::from(value.expected_image_key.is_some())], if value.expected_image_key.is_some() { 3 } else { 4 }),
+                3 => string_phase!(value.expected_image_key.as_ref().ok_or("raster-store.digest-image-expected")?, 4),
+                4 => scalar_phase!(&[u8::from(value.content.image_key.is_some())], if value.content.image_key.is_some() { 5 } else { 6 }),
+                5 => string_phase!(value.content.image_key.as_ref().ok_or("raster-store.digest-image-key")?, 6),
+                6 => {
+                    let mut fields = [0_u8; 49];
+                    fields[..4].copy_from_slice(&value.content.width.unwrap_or(0).to_be_bytes());
+                    fields[4..8].copy_from_slice(&value.content.height.unwrap_or(0).to_be_bytes());
+                    if let Some(transform) = &value.transform {
+                        fields[8] = 1;
+                        for (index, number) in [transform.x, transform.y, transform.scale_x, transform.scale_y, transform.rotation].iter().enumerate() {
+                            fields[9 + index * 8..17 + index * 8].copy_from_slice(&number.to_bits().to_be_bytes());
+                        }
+                    }
+                    scalar_phase!(&fields, 7)
                 }
                 _ => Ok(self.finish(digest, cx)),
             },
@@ -2884,6 +2910,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::ChangeLayerBlendMode(value) => Some(&value.layer_id),
             RasterMutation::MoveLayer(value) => Some(&value.layer_id),
             RasterMutation::ResizeLayer(value) => Some(&value.layer_id),
+            RasterMutation::ChangeLayerPixels(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerAdjustmentKind(value) => Some(&value.layer_id),
             RasterMutation::AddLayerAsset(_) | RasterMutation::RemoveLayerAsset(_) => None,
         }
@@ -3131,6 +3158,18 @@ impl RasterMutationCandidateAuthority {
                         };
                         *width = Some(value.new_width);
                         *height = Some(value.new_height);
+                    }
+                    RasterMutation::ChangeLayerPixels(value) => {
+                        if !raster_reserve_unit(cx) { return Ok(false); }
+                        crate::mutations::change_layer_pixels::validate(value, snapshot)?;
+                        let replacement = value.content.image_key.as_ref().map(raster_clone_owned_string).transpose()?;
+                        let RasterLayerNode::Pixel { image_key, width, height, transform, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else { return Err("raster-store.mutation-pixels-target"); };
+                        if let Some(previous) = std::mem::replace(image_key, replacement) {
+                            *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::String(previous))));
+                        }
+                        *width = value.content.width;
+                        *height = value.content.height;
+                        if let Some(next) = &value.transform { *transform = next.clone(); }
                     }
                     RasterMutation::ChangeLayerAdjustmentKind(value) => {
                         if !raster_reserve_unit(cx) {

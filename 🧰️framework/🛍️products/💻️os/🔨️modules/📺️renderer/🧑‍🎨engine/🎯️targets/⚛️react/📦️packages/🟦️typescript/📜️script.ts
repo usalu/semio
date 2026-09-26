@@ -211,6 +211,7 @@ class DirectoryHomeBootstrapCheckScript extends BundleScript {
 export function hubAuthContractOracle(repoRoot: string): number {
   const hubSchema = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🔐️auth/🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, Record<string, unknown>> };
   const osFixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🔣️.json"), "utf8")) as {
+    signOutPath: string;
     requestSchema: string;
     errorSchema: string;
     requestMaxBytes: number;
@@ -226,6 +227,7 @@ export function hubAuthContractOracle(repoRoot: string): number {
   assert.deepEqual(request.required, osFixture.requestFieldOrder);
   const rust = readFileSync(join(repoRoot, "🌎️hub/🔐️auth/🦀️.rs"), "utf8");
   assert.match(rust, new RegExp(`SIGN_IN_REQUEST_MAX_BYTES: usize = ${osFixture.requestMaxBytes};`));
+  assert.ok(rust.includes(`SESSION_SIGN_OUT_ROUTE: &str = "${osFixture.signOutPath}";`), "the os sign-out path is the hub's own sign-out command route");
   const validate = semioSchemaAjvV1({ strict: false, allErrors: true }).addSchema(hubSchema).getSchema(`${"https://json.schemas.assets.semio-tech.com/hub/auth/schema.json"}#/$defs/CredentialSignInRequestV1`);
   if (!validate) throw new Error("hub auth schema publishes no CredentialSignInRequestV1");
   for (const row of osFixture.credentials) {

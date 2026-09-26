@@ -1,63 +1,28 @@
 @capability-version-requirement-satisfaction
 @oracle-semver
 @comparison-ordered-json-v1
-Feature: Decide whether a version satisfies a requirement
-  `versionSatisfies` implements a deliberate SUBSET of the semver requirement grammar — `*`,
-  `=X.Y.Z`, `^X.Y.Z`, `~X.Y.Z`, `>=X.Y.Z` — with the standard leading-zero caret tiers. Because that
-  subset is a published contract rather than a repository invention, `semver` is a genuine oracle for
-  it: for every requirement inside the subset, the two must agree on every version.
+Feature: Decide whether a version satisfies an exact dependency pin
+  A manifest dependency is an exact pin `=X.Y.Z` and nothing else: one tree is one catalog, and a trusted
+  catalog admits only exact pins inside its closure. `=X.Y.Z` is also a published semver comparator, so
+  `semver` is a genuine oracle for it: for every pin, the two must agree on every version.
 
-  The vectors stay inside the subset on purpose. Ranges, prerelease tags, `x` wildcards, build
-  metadata and whitespace-separated comparators are outside the frozen grammar and are rejected by
-  design; asserting those against `semver` would be measuring a deliberate divergence, not a bug.
+  Ranges (`*`, `^`, `~`, `>=`, a bare triple) are outside the pin grammar and refused by design — the
+  refusal vectors live in `🚫️reject-malformed-version-input`, not here, because `semver` would satisfy
+  them and asserting that would be measuring a deliberate divergence, not a bug.
 
-  @id-exact-and-any
+  @id-exact-pins
   @level-fundamental
   @mode-differential
-  Scenario: The `*` and `=` requirements
+  Scenario: The exact pin across every component
     Given the version and requirement pairs
       | version | requirement |
-      | 1.2.3   | *           |
-      | 0.0.0   | *           |
       | 1.2.3   | =1.2.3      |
       | 1.2.4   | =1.2.3      |
       | 1.2.2   | =1.2.3      |
-      | 2.0.0   | =1.2.3      |
-    Then the reference implementation and this repository agree on every pair
-
-  @id-caret-tiers
-  @level-fundamental
-  @mode-differential
-  Scenario: Caret across the major, minor and patch tiers
-    Given the version and requirement pairs
-      | version | requirement |
-      | 1.2.3   | ^1.2.3      |
-      | 1.9.9   | ^1.2.3      |
-      | 2.0.0   | ^1.2.3      |
-      | 1.2.2   | ^1.2.3      |
-      | 0.2.3   | ^0.2.3      |
-      | 0.2.9   | ^0.2.3      |
-      | 0.3.0   | ^0.2.3      |
-      | 0.2.2   | ^0.2.3      |
-      | 0.0.3   | ^0.0.3      |
-      | 0.0.4   | ^0.0.3      |
-      | 0.0.2   | ^0.0.3      |
-      | 0.1.0   | ^0.0.3      |
-    Then the reference implementation and this repository agree on every pair
-
-  @id-tilde-and-at-least
-  @level-fundamental
-  @mode-differential
-  Scenario: Tilde and at-least
-    Given the version and requirement pairs
-      | version | requirement |
-      | 1.2.3   | ~1.2.3      |
-      | 1.2.9   | ~1.2.3      |
-      | 1.3.0   | ~1.2.3      |
-      | 1.2.2   | ~1.2.3      |
-      | 0.0.0   | ~0.0.0      |
-      | 1.2.3   | >=1.2.3     |
-      | 9.9.9   | >=1.2.3     |
-      | 1.2.2   | >=1.2.3     |
-      | 0.0.1   | >=0.0.0     |
+      | 1.3.3   | =1.2.3      |
+      | 2.2.3   | =1.2.3      |
+      | 0.1.0   | =0.1.0      |
+      | 0.1.1   | =0.1.0      |
+      | 0.0.0   | =0.0.0      |
+      | 10.20.30 | =10.20.30  |
     Then the reference implementation and this repository agree on every pair

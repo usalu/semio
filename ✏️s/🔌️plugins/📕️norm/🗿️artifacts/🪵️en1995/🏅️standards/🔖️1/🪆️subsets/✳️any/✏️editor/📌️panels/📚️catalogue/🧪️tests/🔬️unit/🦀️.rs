@@ -53,11 +53,22 @@ fn strength_class_table_lists_every_tabulated_class_with_values() {
     assert_eq!(roles.rows.len(), 4);
 }
 
+fn cells(locale: Locale) -> Vec<CatalogueCell> {
+    reference_tables(locale).into_iter().flat_map(|table| table.rows).flat_map(|row| row.cells).collect()
+}
+
 #[test]
 fn reference_tables_are_localized_in_english_and_german() {
     let en = projected(Locale::En);
     let de = projected(Locale::De);
-    assert!(en.contains("Strength classes") && en.contains("Glulam (EN 14080)") && en.contains("Bridge"), "{en}");
-    assert!(de.contains("Festigkeitsklassen") && de.contains("Brettschichtholz (EN 14080)") && de.contains("Brücke") && de.contains("Stabdübel"), "{de}");
-    assert!(!de.contains("Glulam (EN 14080)"), "German catalogue must not leak English product names: {de}");
+    assert!(en.contains("Strength classes") && en.contains("Dowel-type fasteners") && en.contains("Member roles"), "{en}");
+    assert!(de.contains("Festigkeitsklassen") && de.contains("Stiftförmige Verbindungsmittel") && de.contains("Bauteilrollen"), "{de}");
+    let (en_cells, de_cells) = (cells(Locale::En), cells(Locale::De));
+    for text in ["Glulam (EN 14080)", "Bridge — EN 1995-2 girder", "Dowel"] {
+        assert!(en_cells.contains(&CatalogueCell::text(text)), "English tables must contain {text}");
+        assert!(!de_cells.contains(&CatalogueCell::text(text)), "German tables must not leak {text}");
+    }
+    for text in ["Brettschichtholz (EN 14080)", "Brücke — Träger nach EN 1995-2", "Stabdübel"] {
+        assert!(de_cells.contains(&CatalogueCell::text(text)), "German tables must contain {text}");
+    }
 }

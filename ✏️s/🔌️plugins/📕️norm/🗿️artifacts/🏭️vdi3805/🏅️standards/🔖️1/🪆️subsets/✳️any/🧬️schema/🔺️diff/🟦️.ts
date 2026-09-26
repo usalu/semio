@@ -56,7 +56,6 @@ export interface Vdi3805Artifact {
   index: CatalogIndex;
   geometry: Record<string, ParametricGeometry>;
   curves: Record<string, CharacteristicCurve>;
-  limits: SecurityLimits;
 }
 
 /** 🧬️ Vdi3805 diff schema — sparse field delta. */
@@ -80,6 +79,5 @@ export interface Vdi3805Diff {
   /** @state artifact */
   curves?: Record<string, CharacteristicCurve>;
   /** @state artifact */
-  limits?: SecurityLimits;
 }
 

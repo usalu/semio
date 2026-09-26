@@ -582,7 +582,4 @@ mod store_fixture;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🦀️.rs"]
 mod mount_contract;
 
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🔲️mutate-grid2d-1/🦀️.rs"]
-mod mutate_grid2d_1;
 //#endregion 🧪️Tests

@@ -1,0 +1,18 @@
+{
+  "placeholders": [
+    { "name": "a production todo in code", "path": "✏️s/🔌️plugins/x/🦀️.rs", "text": "fn a() {\n    todo!()\n}\n", "expected": [{ "line": 2, "macro": "todo", "testOnly": false, "commented": false }] },
+    { "name": "a line comment is not code", "path": "✏️s/🔌️plugins/x/🦀️.rs", "text": "// unimplemented!(\"later\")\nfn a() {}\n", "expected": [{ "line": 1, "macro": "unimplemented", "testOnly": false, "commented": true }] },
+    { "name": "a block comment across lines is not code", "path": "🧰️framework/x/🦀️.rs", "text": "/* start\n  todo!()\n end */ fn a() {}\n", "expected": [{ "line": 2, "macro": "todo", "testOnly": false, "commented": true }] },
+    { "name": "a double slash inside a string keeps the macro after it as code", "path": "🌎️hub/x/🦀️.rs", "text": "let url = \"http://x\"; unimplemented!();\n", "expected": [{ "line": 1, "macro": "unimplemented", "testOnly": false, "commented": false }] },
+    { "name": "a test path is test-only", "path": "🧰️framework/🔨️modules/🔄️machine/🧪️tests/🔬️host-unit/🦀️.rs", "text": "unimplemented!(\"host tests never step a machine\")\n", "expected": [{ "line": 1, "macro": "unimplemented", "testOnly": true, "commented": false }] },
+    { "name": "no placeholder", "path": "✏️s/x/🦀️.rs", "text": "fn a() -> u8 { 1 }\n", "expected": [] }
+  ],
+  "interactiveJobs": [
+    { "name": "literal id, bare classification", "path": "✏️s/🔌️plugins/📐️cad/x/🦀️.rs", "text": "b.action_interactive_job(\"saveCurrent\", InteractiveJobClassification::BatchOnlyPendingRewrite)\n", "expected": [{ "command": "saveCurrent", "classification": "BatchOnlyPendingRewrite", "line": 1 }], "calls": 1, "codeCalls": 1 },
+    { "name": "qualified classification across lines", "path": "✏️s/🔌️plugins/🗒️note/x/🦀️.rs", "text": "b\n  .action_interactive_job(\n    \"addBlock\",\n    semio_framework_plugin::InteractiveJobClassification::Migrated)\n", "expected": [{ "command": "addBlock", "classification": "Migrated", "line": 2 }], "calls": 1, "codeCalls": 1 },
+    { "name": "constant path id", "path": "✏️s/🔌️plugins/🗄️stdio/x/🦀️.rs", "text": ".action_interactive_job(contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)\n", "expected": [{ "command": "contract::SET_ACTIVE_EXAMPLE_ACTION_ID", "classification": "Migrated", "line": 1 }], "calls": 1, "codeCalls": 1 },
+    { "name": "dereferenced loop id", "path": "✏️s/🔌️plugins/🔋️energy/x/🦀️.rs", "text": "for tool_id in IDS {\n    builder = builder.action_interactive_job(*tool_id, InteractiveJobClassification::Migrated);\n}\n", "expected": [{ "command": "tool_id", "classification": "Migrated", "line": 2 }], "calls": 1, "codeCalls": 1 },
+    { "name": "a mention in a doc comment is not a declaration", "path": "✏️s/🔌️plugins/🗄️stdio/x/🦀️.rs", "text": "/// and `.action_interactive_job(.., Migrated)`: only Migrated survives\npub fn a() {}\n", "expected": [], "calls": 1, "codeCalls": 0 },
+    { "name": "a variable classification is a call the census cannot classify", "path": "✏️s/🔌️plugins/x/🦀️.rs", "text": "b.action_interactive_job(\"a\", classification)\n", "expected": [], "calls": 1, "codeCalls": 1 }
+  ]
+}

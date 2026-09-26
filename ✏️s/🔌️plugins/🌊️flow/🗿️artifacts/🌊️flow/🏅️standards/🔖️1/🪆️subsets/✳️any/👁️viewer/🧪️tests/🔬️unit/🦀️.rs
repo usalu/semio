@@ -20,7 +20,7 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
         .label("Flow Viewer Lifecycle")
         .version("0.1.0")
         .package_id("semio:flow-viewer-lifecycle")
-        .depends_on("flow", semio_framework::VersionReq::Any)
+        .depends_on("flow", semio_framework::tree_pin!())
         .viewer::<FlowViewer>(definition)
         .try_build()
         .unwrap();

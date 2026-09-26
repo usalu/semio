@@ -18,6 +18,8 @@ fn inference_command_exact_decoder_executes_neutral_bounds_canonical_eof_and_act
         document_id: protocol::ArtifactId(command["documentId"].as_str().unwrap().into()),
         actor: protocol::ActorId(command["actor"].as_str().unwrap().into()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(command["diff"]["schema"].as_str().unwrap().into()), payload: decode_hex(command["diff"]["payloadHex"].as_str().unwrap()) },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(command["inverse"]["schema"].as_str().unwrap().into()), payload: decode_hex(command["inverse"]["payloadHex"].as_str().unwrap()) },
         timestamp: protocol::HybridLogicalTimestamp { actor: command["timestamp"]["actor"].as_u64().unwrap(), physical_ms: command["timestamp"]["physicalMs"].as_u64().unwrap(), logical: command["timestamp"]["logical"].as_u64().unwrap() },

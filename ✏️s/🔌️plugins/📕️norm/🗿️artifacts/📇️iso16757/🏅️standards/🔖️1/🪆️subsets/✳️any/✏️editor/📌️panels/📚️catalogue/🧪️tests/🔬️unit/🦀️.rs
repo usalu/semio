@@ -29,3 +29,31 @@ fn renders_reference_tables_with_examples() {
     }
 }
 
+#[test]
+fn reference_tables_are_populated_from_evaluate_constants() {
+    let tables = reference_tables();
+    assert!(
+        !tables.is_empty(),
+        "reference_tables() must expose normative catalogue cells (edition profiles, lifecycle statuses, exchange stages, …) sourced from the same consts evaluate() reads — CORRECTION 14:54"
+    );
+    for table in &tables {
+        assert!(!table.id.is_empty());
+        assert!(!table.title_en.is_empty() && !table.title_de.is_empty());
+        assert!(!table.rows.is_empty(), "table {} must have at least one row", table.id);
+    }
+    let clearance = tables
+        .iter()
+        .find(|t| t.id == "iso16757-2-installation-clearance")
+        .expect("installation clearance table");
+    let cell = clearance.rows[0].cells.get(1).expect("clearance value cell");
+    match cell {
+        crate::app_surface::CatalogueCell::Number { value, .. } => {
+            assert!(
+                (*value - crate::artifact_schema::part_2::INSTALL_CLEARANCE_M).abs() < 1e-12,
+                "clearance cell must equal evaluate() INSTALL_CLEARANCE_M limit"
+            );
+        }
+        other => panic!("expected number cell, got {other:?}"),
+    }
+}
+

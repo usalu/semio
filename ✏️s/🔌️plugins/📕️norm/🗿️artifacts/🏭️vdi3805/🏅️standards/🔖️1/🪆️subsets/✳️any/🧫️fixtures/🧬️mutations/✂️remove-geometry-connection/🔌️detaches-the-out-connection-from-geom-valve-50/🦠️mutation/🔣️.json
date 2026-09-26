@@ -1,6 +1,6 @@
 {
   "RemoveGeometryConnection": {
-    "id": "geom.valve.50",
-    "connection_id": "out"
+    "id": "geom-valve-50",
+    "connectionId": "out"
   }
 }

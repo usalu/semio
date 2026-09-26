@@ -31,4 +31,12 @@ fn renders_reference_tables_with_examples() {
             table.id
         );
     }
+    let cop = tables.iter().find(|t| t.id == "heat-pump-cop").expect("COP table");
+    let max_cell = cop.rows.iter().find(|r| r.id == "max").expect("max row").cells.get(1).expect("value");
+    match max_cell {
+        crate::app_surface::CatalogueCell::Number { value, .. } => {
+            assert!((*value - crate::SHEET_NUMERIC_BOUNDS_53_COP.1).abs() < 1e-12, "catalogue COP max must equal evaluate const");
+        }
+        _ => panic!("COP max must be numeric"),
+    };
 }

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/editor/edit-pixels.json",
+  "title": "Edit Layer Pixels",
+  "description": "Publishes one completed pixel operation against the expected immutable image revision. Selection spans are ordered non-overlapping [offset,length,coverage] triples in layer pixel coordinates.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["layerId", "expectedImageKey", "operation", "selection"],
+  "properties": {
+    "layerId": { "type": "string", "minLength": 1 },
+    "expectedImageKey": { "type": ["string", "null"] },
+    "operation": { "type": "string", "contentMediaType": "application/json" },
+    "selection": { "type": ["string", "null"], "contentMediaType": "application/json" }
+  }
+}

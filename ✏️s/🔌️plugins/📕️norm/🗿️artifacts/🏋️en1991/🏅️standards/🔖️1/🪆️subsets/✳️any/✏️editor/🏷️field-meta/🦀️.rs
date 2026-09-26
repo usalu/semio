@@ -98,7 +98,6 @@ fn exact(path: &str) -> Option<NormFieldMeta> {
         "loadedArea" => NormFieldMeta { label_en: "Loaded area A for c_pe", label_de: "Belastete Fläche A für c_pe", unit: Some("m²"), choices: None },
         "impact" => NormFieldMeta { label_en: "Vehicle impact", label_de: "Fahrzeuganprall", unit: None, choices: None },
         "explosion" => NormFieldMeta { label_en: "Explosion", label_de: "Explosion", unit: None, choices: None },
-        "kind" => NormFieldMeta { label_en: "Accidental kind", label_de: "Art des außergewöhnlichen Falls", unit: None, choices: Some(&[NormFieldChoice { value: "impact", label_en: "Vehicle impact", label_de: "Fahrzeuganprall" }, NormFieldChoice { value: "explosion", label_en: "Explosion", label_de: "Explosion" }]) },
         "vehicleMass" => NormFieldMeta { label_en: "Vehicle mass", label_de: "Fahrzeugmasse", unit: Some("kg"), choices: None },
         "vehicleSpeed" => NormFieldMeta { label_en: "Vehicle speed", label_de: "Fahrzeuggeschwindigkeit", unit: Some("m/s"), choices: None },
         "explosionMass" => NormFieldMeta { label_en: "Explosion charge mass", label_de: "Explosionsmasse", unit: Some("kg"), choices: None },

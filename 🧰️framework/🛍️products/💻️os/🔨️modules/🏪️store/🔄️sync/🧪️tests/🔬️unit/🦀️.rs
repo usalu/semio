@@ -28,6 +28,8 @@ fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
         document_id: ArtifactId(document_id.into()),
         actor: ActorId("actor-a".into()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
@@ -386,28 +388,80 @@ fn bootstrap_frontier_identity_rejects_same_ordinals_with_wrong_authenticated_he
     assert!(frontier_reaches(&required, &required));
 }
 
+/// 🔌️ Dials `actor` into a loopback hub socket and answers the hub's end of it.
+#[cfg(not(target_arch = "wasm32"))]
+async fn connect(actor: &mut native_actor::ArtifactActor, receipt_actor: &str) -> tokio_tungstenite::WebSocketStream<tokio::net::TcpStream> {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind test socket");
+    let url = format!("ws://{}", listener.local_addr().expect("test socket address"));
+    let accepted = tokio::spawn(async move {
+        let (stream, _) = listener.accept().await.expect("accept test socket");
+        tokio_tungstenite::accept_async(stream).await.expect("upgrade test socket")
+    });
+    actor.connect_test_socket(&url, receipt_actor).await;
+    accepted.await.expect("test socket task")
+}
+
+/// 📨️ The next client frame the hub's end of a loopback socket reads.
+#[cfg(not(target_arch = "wasm32"))]
+async fn receive_frame(socket: &mut tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>) -> ClientFrame {
+    use futures::StreamExt;
+    let message = tokio::time::timeout(std::time::Duration::from_secs(1), socket.next()).await.expect("client frame deadline").expect("client frame owner").expect("client frame");
+    let tokio_tungstenite::tungstenite::Message::Binary(bytes) = message else { panic!("expected binary client frame") };
+    crate::os_spr::decode_client_frame(&bytes).await.expect("decode client frame").1
+}
+
+/// 🪢️ A hub document's actor seeded with the canonical checkpoint pair its shell verified starts AT the pair: the pair
+/// and its history are the actor's, no transfer is in flight, and its first `SocketHelloV1` names the pair's baseline,
+/// so the hub tails only what followed it — the one seed of every shell (ticket 26/09/23 slice WG10).
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn a_seeded_hub_actor_says_hello_at_the_canonical_pair_baseline() {
+    let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
+    let baseline = bootstrap.baseline_frontier.clone();
+    let (_, remote) = ChannelBackbone::pair("native-seed-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(8);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "seed-test".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let blob = |bytes: &[u8]| crate::os_directory::PublishedArtifactBlob { sha256: crate::os_directory::ArtifactHash(semio_framework_hash::Sha256::digest(bytes)), byte_length: bytes.len() as u64 };
+    actor
+        .seed_hub_document(crate::os_directory::CanonicalCheckpointPairV1 {
+            scope: crate::os_directory::DocumentScope::new("space-seed", "demo"),
+            descriptor_digest_v1: crate::os_directory::ArtifactHash([0x11; 32]),
+            active_checkpoint_id: crate::os_directory::ArtifactHash([0x22; 32]),
+            baseline_frontier: crate::os_directory::ArtifactFrontier { document_id: "demo".into(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: crate::os_directory::ArtifactHash(baseline.chain_hash) },
+            pack: blob(&pair.pack),
+            spr: blob(&pair.spr),
+            aggregate_sha256: crate::os_directory::ArtifactHash(crate::os_spr::artifact_bootstrap_aggregate_hash(&pair.pack, &pair.spr)),
+            pack_bytes: pair.pack.clone(),
+            spr_bytes: pair.spr.clone(),
+        })
+        .await;
+    let (pack, spr, frontier, pending_required, resume, pending_resume, remote_state, outbox, _) = actor.bootstrap_test_state();
+    assert_eq!((pack.as_deref(), spr.as_deref()), (Some(pair.pack.as_slice()), Some(pair.spr.as_slice())));
+    assert_eq!(frontier, Some(baseline.clone()), "the actor's hub frontier is the pair's baseline");
+    assert_eq!((pending_required, resume, pending_resume, outbox.len()), (None, None, None, 0), "a seed is no transfer in flight");
+    assert!(!matches!(remote_state, RemoteState::Live { .. }));
+    let mut socket = connect(&mut actor, "hub.v1.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd").await;
+    let ClientFrame::SocketHelloV1 { frontier, resume_token, .. } = receive_frame(&mut socket).await else { panic!("the first frame is the hello") };
+    assert_eq!((frontier, resume_token), (Some(baseline), None), "the hello asks the hub only for what followed the pair");
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::test]
 async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue() {
     use futures::StreamExt;
     use tokio_tungstenite::tungstenite::Message;
-
-    async fn connect(actor: &mut native_actor::ArtifactActor, receipt_actor: &str) -> tokio_tungstenite::WebSocketStream<tokio::net::TcpStream> {
-        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind test socket");
-        let url = format!("ws://{}", listener.local_addr().expect("test socket address"));
-        let accepted = tokio::spawn(async move {
-            let (stream, _) = listener.accept().await.expect("accept test socket");
-            tokio_tungstenite::accept_async(stream).await.expect("upgrade test socket")
-        });
-        actor.connect_test_socket(&url, receipt_actor).await;
-        accepted.await.expect("test socket task")
-    }
-
-    async fn receive_frame(socket: &mut tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>) -> ClientFrame {
-        let message = tokio::time::timeout(std::time::Duration::from_secs(1), socket.next()).await.expect("client frame deadline").expect("client frame owner").expect("client frame");
-        let Message::Binary(bytes) = message else { panic!("expected binary client frame") };
-        crate::os_spr::decode_client_frame(&bytes).await.expect("decode client frame").1
-    }
 
     let (_, remote) = ChannelBackbone::pair("native-actor-epoch-test").await;
     let (_, receiver) = artifact_mailbox_pair();
@@ -963,6 +1017,8 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         document_id: ArtifactId("doc-1".to_string()),
         actor: ActorId("actor-1".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
@@ -1038,6 +1094,8 @@ async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
         document_id: ArtifactId("doc-1".to_string()),
         actor: ActorId("actor-2".to_string()),
         dependencies: vec![MutationId("op-1".to_string())],
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },

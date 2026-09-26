@@ -69,6 +69,11 @@ pub(crate) enum LayoutNodeKind {
         expanded: bool,
         reversed: bool,
     },
+    /// 🎞️ One explicitly related TreeItem Surface, flowing below the row chrome and before nested
+    /// rows in a bounded scene band.
+    TreeDetail {
+        height: f32,
+    },
     /// 🎛️ A value-carrying control: one control row tall on its own, so a container that sizes its
     /// children by intrinsic height (a `Section`) never collapses it to zero.
     ///
@@ -286,7 +291,7 @@ fn flow_from_spec(spec: &LayoutSpec) -> FlowStyle {
 /// 🧩️ EXACTLY the host's band, clipped, filling the parent's cross axis: the host paints inside
 /// the solved rect and this engine reserves it without measuring anything of its own.
 fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored: Option<&LayoutSpec>, metrics: &TreeRowMetrics) -> FlowStyle {
-    if matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. })) && !matches!(kind, LayoutNodeKind::TreeRow { .. }) {
+    if matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. })) && !matches!(kind, LayoutNodeKind::TreeRow { .. } | LayoutNodeKind::TreeDetail { .. }) {
         let control_height = match kind {
             LayoutNodeKind::Control { height, .. } => height,
             _ => metrics.control_height,
@@ -315,6 +320,7 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
         LayoutNodeKind::Tree { height, reversed } => band(height, 0.0, reversed),
         LayoutNodeKind::TreeSection { header, height, reversed, .. } => band(height, header, reversed),
         LayoutNodeKind::TreeRow { row, height, reversed, .. } => band(height, row, reversed),
+        LayoutNodeKind::TreeDetail { height } => FlowStyle { width: Dim::Fill, height: Dim::Length(height), shrink: 0.0, ..FlowStyle::default() },
         LayoutNodeKind::Control { height, label_padding } => {
             let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
             flow.min_height = height;

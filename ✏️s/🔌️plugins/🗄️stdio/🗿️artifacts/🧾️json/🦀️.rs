@@ -55,7 +55,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.json".into(),
+        id: "s.stdio.json".into(),
         name: "Json".into(),
         source_format: STDIO_JSON_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

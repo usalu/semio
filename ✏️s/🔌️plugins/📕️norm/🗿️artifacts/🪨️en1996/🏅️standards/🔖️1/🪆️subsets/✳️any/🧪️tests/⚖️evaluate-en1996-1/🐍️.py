@@ -81,9 +81,58 @@ def gamma_m_en(masonry_class: str) -> float:
 def psi0_imposed(cat: str) -> float:
     return {"A":0.7,"B":0.7,"C":0.7,"D":0.7,"E":1.0,"H":0.0}.get(str(cat).upper()[:1], 0.7)
 
+def effective_length_m(wall):
+    """🪟 Opening-aware ℓ_ef (§5.5.1.4) — mirrors Rust effective_length_m."""
+    L = float(wall.get("lengthM", wall.get("length_m", 0)))
+    h = max(float(wall.get("heightM", wall.get("height_m", 0))), 1e-6)
+    l = L
+    for o in wall.get("openings") or []:
+        ow = float(o.get("widthM", 0))
+        oh = float(o.get("heightM", 0))
+        sill = float(o.get("sillHeightM", 0))
+        pier = sill <= 0.05 * h and oh >= 0.85 * h
+        if pier:
+            l -= ow
+        else:
+            open_frac = min(1.0, max(0.0, oh / h))
+            sill_frac = min(1.0, max(0.0, sill / h))
+            l -= ow * open_frac * (0.35 + 0.65 * (1.0 - sill_frac))
+    return max(l, 0.1 * L)
+
+def self_weight_n(wall):
+    """🏋️ Net self-weight [N] after opening volume deduction."""
+    t = float(wall.get("thicknessM", 0))
+    L = float(wall.get("lengthM", 0))
+    h = float(wall.get("heightM", 0))
+    dens = float(wall.get("densityKgM3", 1800))
+    vol_gross = t * L * h
+    vol_open = sum(float(o.get("widthM", 0)) * float(o.get("heightM", 0)) * t for o in (wall.get("openings") or []))
+    return dens * 9.81 * max(vol_gross - vol_open, 0.0)
+
+def eccentricity_from_slab_rotation_m(wall, lc, n_ed):
+    """🔄 e_θ from ℓ_f (DIN EN 1996-1-1/NA NDP 6.1.2.2 / Annex C), capped 0,05·t."""
+    t = float(wall.get("thicknessM", 0))
+    l_f = min(max(float(lc.get("slabSpanM", 0)), 0.0), 6.0)
+    e_full = l_f / 25.0
+    n_floor = max(
+        float(lc.get("gKSlabN", 0))
+        + float(lc.get("qKImposedPa", 0)) * float(lc.get("tributaryAreaM2", 0))
+        + float(lc.get("qKSnowPa", 0)) * float(lc.get("tributaryAreaM2", 0)),
+        0.0,
+    )
+    share = min(1.0, max(0.0, n_floor / abs(n_ed))) if abs(n_ed) > 1e-6 else 1.0
+    return min(e_full * share, 0.05 * max(t, 1e-6))
+
+def phi_1_slab_span(slab_span_m):
+    """📉 DE-NA Φ₁ (NDP 6.1.2.2 / NA Annex C): 1,6 − ℓ_f/6 on 4,5…6,0 m."""
+    l_f = min(max(float(slab_span_m), 0.0), 6.0)
+    if l_f <= 4.5:
+        return 1.0
+    return max(0.0, min(1.0, 1.6 - l_f / 6.0))
+
 def design_stations(wall, lc, annex="de"):
     """EN 1990 ULS max-N stations — mirrors Rust design_effects imposed-leading."""
-    g_self = float(wall.get("densityKgM3", 1800)) * 9.81 * float(wall.get("thicknessM", 0)) * float(wall.get("lengthM", 0)) * float(wall.get("heightM", 0))
+    g_self = self_weight_n(wall)
     g_slab = float(lc.get("gKSlabN", 0))
     q_imp = float(lc.get("qKImposedPa", 0)) * float(lc.get("tributaryAreaM2", 0))
     q_snow = float(lc.get("qKSnowPa", 0)) * float(lc.get("tributaryAreaM2", 0))
@@ -117,39 +166,42 @@ def assess_wall(annex, masonry_class, wall):
     h = float(wall.get("heightM", wall.get("height_m", 0)))
     t = float(wall.get("thicknessM", wall.get("thickness_m", 0)))
     L = float(wall.get("lengthM", wall.get("length_m", 0)))
+    L_eff = effective_length_m(wall)
     sides = int(wall.get("supportSides", wall.get("support_sides", 2)))
     e_top_decl = float(wall.get("eccentricityTopM", wall.get("eccentricity_top_m", 0)))
     e_bot = float(wall.get("eccentricityBottomM", wall.get("eccentricity_bottom_m", 0)))
     e_slab = abs(t / 2.0 - float(wall.get("slabBearingDepthM", 0)) / 2.0)
-    e_top = abs(e_top_decl + e_slab)
-    hef = rho_n(sides, h, L) * h
+    hef = rho_n(sides, h, L_eff) * h
     lam = hef / t if t else 999
     phis = phi_s(annex, lam)
     e_init = hef / 450.0
-    e_i_top = abs(e_top + e_init)
-    e_i_bot = abs(e_bot + e_init)
-    phi_top = phi_i(e_i_top, t)
-    phi_bot = phi_i(e_i_bot, t)
-    e_m = 0.5 * (e_top + e_bot) + e_init
     phi_inf = float(wall.get("phiInfinity", 1.5))
-    e_k = 0.002 * phi_inf * (hef / max(t, 1e-6)) * math.sqrt(max(t * abs(e_m), 1e-18))
-    e_mk = max(abs(e_m + e_k), 0.05 * t)
-    phi_mid = phi_m(lam, e_mk, t)
     gamma = gamma_m_de(masonry_class, False) if annex == "de" else gamma_m_en(masonry_class)
     fd = fk / gamma
-    A = max(L * t, 0.0)
+    A = max(L_eff * t, 0.0)
     n_rd_simp = phis * (fd * 1e6) * A
     lcs = wall.get("loadCases") or wall.get("load_cases") or []
     n_ed = 0.0
     n_ed_bot = 0.0
-    phi = phi_mid
-    n_rd_g = phi_mid * (fd * 1e6) * A
+    phi = 1.0
+    n_rd_g = A * (fd * 1e6)
     if lcs:
-        # Governing load effect by max bottom N, then critical station by max N/Φ (matches Rust).
         best_u = -1.0
         for lc in lcs:
             nt, nm, nb = design_stations(wall, lc, annex)
             n_ed_bot = max(n_ed_bot, nb)
+            n_ref = max(nt, nm)
+            e_theta = eccentricity_from_slab_rotation_m(wall, lc, n_ref)
+            phi1 = phi_1_slab_span(lc.get("slabSpanM", 0))
+            e_top = abs(e_top_decl + e_slab + e_theta)
+            e_i_top = abs(e_top + e_init)
+            e_i_bot = abs(e_bot + e_init)
+            phi_top = phi_i(e_i_top, t) * phi1
+            phi_bot = phi_i(e_i_bot, t) * phi1
+            e_m = 0.5 * (e_top + e_bot) + e_init
+            e_k = 0.002 * phi_inf * (hef / max(t, 1e-6)) * math.sqrt(max(t * abs(e_m), 1e-18))
+            e_mk = max(abs(e_m + e_k), 0.05 * t)
+            phi_mid = phi_m(lam, e_mk, t) * phi1
             for n_i, phi_i_ in ((nt, phi_top), (nm, phi_mid), (nb, phi_bot)):
                 u = n_i / max(phi_i_, 1e-9)
                 if u > best_u:
@@ -221,7 +273,7 @@ def main():
             if "simplified" in cid and "basement" not in cid:
                 ref = got["utilization_simplified"]
                 key = "simplified"
-            elif "6.1.2.compression" in cid:
+            elif "6.1.2.compression" in cid and ".compression.mid." not in cid:
                 ref = got["utilization_annex_g"]
                 key = "annex_g"
             else:

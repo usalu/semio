@@ -1,133 +1,143 @@
-/** 🧬️ En1999 document mutations — discriminated union mirroring `En1999Mutation` (WASM wiring). */
+/** 🧬️ En1999 document mutations — discriminated union mirroring `En1999Mutation` / `KINDS`. */
 
-export interface ChangeNEdKn {
-  newNEdKn: number;
-}
-
-export interface ChangeMEdKnm {
-  newMEdKnm: number;
-}
-
-export interface ChangeAMm2 {
-  newAMm2: number;
-}
-
-export interface ChangeWElMm3 {
-  newWElMm3: number;
-}
-
-export interface ChangeAlloy {
-  newAlloy: string;
-}
-
-export interface ChangeChi {
-  newChi: number;
-}
-
-export interface ChangeITMm4 {
-  newITMm4: number;
-}
-
-export interface ChangeLCrMm {
-  newLCrMm: number;
-}
-
-export interface ChangeThetaC {
-  newThetaC: number;
-}
-
-export interface ChangeDeltaSigmaEd {
-  newDeltaSigmaEd: number;
-}
-
-export interface ChangeDeltaSigmaC {
-  newDeltaSigmaC: number;
-}
-
-export interface ChangeFatigueM {
-  newFatigueM: number;
-}
-
-export interface ChangeNCycles {
-  newNCycles: number;
-}
-
-export interface ChangeVWeldEdKn {
-  newVWeldEdKn: number;
-}
-
-export interface ChangeWeldThroatMm {
-  newWeldThroatMm: number;
-}
-
-export interface ChangeWeldLengthMm {
-  newWeldLengthMm: number;
-}
-
-export interface ChangeBetaW {
-  newBetaW: number;
-}
-
-export interface ChangeSheetBMm {
-  newSheetBMm: number;
-}
-
-export interface ChangeSheetTMm {
-  newSheetTMm: number;
-}
-
-export interface ChangeSheetKSigma {
-  newSheetKSigma: number;
-}
-
-export interface ChangeSheetWElMm3 {
-  newSheetWElMm3: number;
-}
-
-export interface ChangeSheetMEdKnm {
-  newSheetMEdKnm: number;
-}
-
-export interface ChangeShellTMm {
-  newShellTMm: number;
-}
-
-export interface ChangeShellRMm {
-  newShellRMm: number;
-}
-
-export interface ChangeSigmaEdShellMpa {
-  newSigmaEdShellMpa: number;
-}
+import type {
+  AluminiumConnection,
+  AluminiumMaterial,
+  AluminiumMember,
+  AluminiumSection,
+  AluminiumShell,
+  AnnexChoice,
+  ColdFormedSheet,
+  FatigueDetail,
+  FireScenario,
+} from "../📸️snapshot/🟦️.ts";
 
 export interface ChangeAnnex {
-  newAnnex: "En" | "De";
+  newAnnex: AnnexChoice;
 }
 
+export interface ChangeMaterials {
+  materials: AluminiumMaterial[];
+}
+
+export interface ChangeSections {
+  sections: AluminiumSection[];
+}
+
+export interface ChangeMembers {
+  members: AluminiumMember[];
+}
+
+export interface ChangeConnections {
+  connections: AluminiumConnection[];
+}
+
+export interface ChangeFireScenarios {
+  fireScenarios: FireScenario[];
+}
+
+export interface ChangeFatigueDetails {
+  fatigueDetails: FatigueDetail[];
+}
+
+export interface ChangeColdFormed {
+  coldFormed: ColdFormedSheet[];
+}
+
+export interface ChangeShells {
+  shells: AluminiumShell[];
+}
+
+export interface AddMember {
+  index: number;
+  member: AluminiumMember;
+}
+
+export interface RemoveMember {
+  id: string;
+}
+
+export interface ChangeMemberNEd {
+  memberId: string;
+  actionId: string;
+  newNK: number;
+}
+
+export interface ChangeMemberMYEd {
+  memberId: string;
+  actionId: string;
+  newMYK: number;
+}
+
+export interface ChangeMemberBucklingLength {
+  memberId: string;
+  axis: string;
+  newLength: number;
+}
+
+export interface ChangeMaterialDesignation {
+  materialId: string;
+  newDesignation: string;
+}
+
+export interface ChangePlateThickness {
+  sectionId: string;
+  elementId: string;
+  newThickness: number;
+}
+
+export interface ChangeWeldThroat {
+  connectionId: string;
+  newThroat: number;
+}
+
+export interface ChangeBoltCount {
+  connectionId: string;
+  newRows: number;
+  newBoltsPerRow: number;
+}
+
+/** 🏷️ Semantic mutation kind strings — must match Rust `KINDS`. */
+export const EN1999_MUTATION_KINDS = [
+  "change-annex",
+  "change-materials",
+  "change-sections",
+  "change-members",
+  "change-connections",
+  "change-fire-scenarios",
+  "change-fatigue-details",
+  "change-cold-formed",
+  "change-shells",
+  "add-member",
+  "remove-member",
+  "change-member-n-ed",
+  "change-member-my-ed",
+  "change-member-buckling-length",
+  "change-material-designation",
+  "change-plate-thickness",
+  "change-weld-throat",
+  "change-bolt-count",
+] as const;
+
+export type En1999MutationKind = (typeof EN1999_MUTATION_KINDS)[number];
+
 export type En1999Mutation =
-  | ({ mutation: "changeNEdKn" } & ChangeNEdKn)
-  | ({ mutation: "changeMEdKnm" } & ChangeMEdKnm)
-  | ({ mutation: "changeAMm2" } & ChangeAMm2)
-  | ({ mutation: "changeWElMm3" } & ChangeWElMm3)
-  | ({ mutation: "changeAlloy" } & ChangeAlloy)
-  | ({ mutation: "changeChi" } & ChangeChi)
-  | ({ mutation: "changeITMm4" } & ChangeITMm4)
-  | ({ mutation: "changeLCrMm" } & ChangeLCrMm)
-  | ({ mutation: "changeThetaC" } & ChangeThetaC)
-  | ({ mutation: "changeDeltaSigmaEd" } & ChangeDeltaSigmaEd)
-  | ({ mutation: "changeDeltaSigmaC" } & ChangeDeltaSigmaC)
-  | ({ mutation: "changeFatigueM" } & ChangeFatigueM)
-  | ({ mutation: "changeNCycles" } & ChangeNCycles)
-  | ({ mutation: "changeVWeldEdKn" } & ChangeVWeldEdKn)
-  | ({ mutation: "changeWeldThroatMm" } & ChangeWeldThroatMm)
-  | ({ mutation: "changeWeldLengthMm" } & ChangeWeldLengthMm)
-  | ({ mutation: "changeBetaW" } & ChangeBetaW)
-  | ({ mutation: "changeSheetBMm" } & ChangeSheetBMm)
-  | ({ mutation: "changeSheetTMm" } & ChangeSheetTMm)
-  | ({ mutation: "changeSheetKSigma" } & ChangeSheetKSigma)
-  | ({ mutation: "changeSheetWElMm3" } & ChangeSheetWElMm3)
-  | ({ mutation: "changeSheetMEdKnm" } & ChangeSheetMEdKnm)
-  | ({ mutation: "changeShellTMm" } & ChangeShellTMm)
-  | ({ mutation: "changeShellRMm" } & ChangeShellRMm)
-  | ({ mutation: "changeSigmaEdShellMpa" } & ChangeSigmaEdShellMpa)
-  | ({ mutation: "changeAnnex" } & ChangeAnnex);
+    ({ mutation: "changeAnnex" } & ChangeAnnex)
+  | ({ mutation: "changeMaterials" } & ChangeMaterials)
+  | ({ mutation: "changeSections" } & ChangeSections)
+  | ({ mutation: "changeMembers" } & ChangeMembers)
+  | ({ mutation: "changeConnections" } & ChangeConnections)
+  | ({ mutation: "changeFireScenarios" } & ChangeFireScenarios)
+  | ({ mutation: "changeFatigueDetails" } & ChangeFatigueDetails)
+  | ({ mutation: "changeColdFormed" } & ChangeColdFormed)
+  | ({ mutation: "changeShells" } & ChangeShells)
+  | ({ mutation: "addMember" } & AddMember)
+  | ({ mutation: "removeMember" } & RemoveMember)
+  | ({ mutation: "changeMemberNEd" } & ChangeMemberNEd)
+  | ({ mutation: "changeMemberMYEd" } & ChangeMemberMYEd)
+  | ({ mutation: "changeMemberBucklingLength" } & ChangeMemberBucklingLength)
+  | ({ mutation: "changeMaterialDesignation" } & ChangeMaterialDesignation)
+  | ({ mutation: "changePlateThickness" } & ChangePlateThickness)
+  | ({ mutation: "changeWeldThroat" } & ChangeWeldThroat)
+  | ({ mutation: "changeBoltCount" } & ChangeBoltCount)
+;

@@ -36,13 +36,49 @@ export interface En1991Artifact {
   /** @state artifact */
   assumedDeltaT: number;
   /** @state artifact */
-  requiredDeltaT: number;
+  tMax: number;
+  /** @state artifact */
+  tMin: number;
+  /** @state artifact */
+  t0: number;
+  /** @state artifact */
+  thermalElementType: string;
+  /** @state artifact */
+  thermalBridgeType: number;
+  /** @state artifact */
+  deltaTM: number;
+  /** @state artifact */
+  storeyCount: number;
+  /** @state artifact */
+  fireMode: "none" | "nominal" | "parametric";
+  /** @state artifact */
+  fireCurve: string;
+  /** @state artifact */
+  fireDuration: number;
+  /** @state artifact */
+  assumedGasTemperature: number;
+  /** @state artifact */
+  assumedHNet: number;
+  /** @state artifact */
+  fireCompartmentArea: number;
+  /** @state artifact */
+  fireCompartmentHeight: number;
+  /** @state artifact */
+  fireOpeningFactor: number;
+  /** @state artifact */
+  fireThermalInertia: number;
+  /** @state artifact */
+  fireOccupancy: string;
+  /** @state artifact */
+  fireLoadDensityQf: number;
+  /** @state artifact */
+  assumedQfD: number;
   /** @state artifact */
   constructionActivity: string;
   /** @state artifact */
   assumedConstructionQk: number;
   /** @state artifact */
-  structureKind: boolean;
+  structureKind: "building" | "bridge";
   /** @state artifact */
   bridgeLane: number;
   /** @state artifact */
@@ -57,6 +93,12 @@ export interface En1991Artifact {
   assumedBridgeLm2: number;
   /** @state artifact */
   assumedBridgeFootway: number;
+  /** @state artifact */
+  assumedBridgeLm3: number;
+  /** @state artifact */
+  assumedBridgeLm4: number;
+  /** @state artifact */
+  bridgeLoadGroup: string;
   /** @state artifact */
   craneClaimed: boolean;
   /** @state artifact */
@@ -104,5 +146,7 @@ export interface En1991Artifact {
 export interface FloorArea { id: string; category: string; area: number; assumedQk: number; assumedQkConcentrated: number; assumedPartitions: number; }
 export interface SelfWeightElement { id: string; material: string; thickness: number; assumedGk: number; }
 export interface RoofArea { id: string; roofType: string; pitchDeg: number; cE: number; cT: number; hasParapet: boolean; parapetHeight: number; driftObstructionHeight: number; multiSpan: boolean; assumedSk: number; }
-export interface WindFace { id: string; zone: string; z: number; cPe10: number; cPe1: number; cPi: number; cS: number; cD: number; assumedWp: number; }
-export interface AccidentalCase { id: string; kind: string; vehicleMass: number; vehicleSpeed: number; explosionMass: number; standoff: number; assumedForce: number; assumedPressure: number; }
+export interface WindFace { id: string; zone: string; z: number; cPe10: number; cPe1: number; cPi: number; cS: number; cD: number; loadedArea: number; assumedWp: number; }
+export interface AccidentalImpact { vehicleMass: number; vehicleSpeed: number; assumedForce: number; }
+export interface AccidentalExplosion { explosionMass: number; standoff: number; assumedPressure: number; }
+export interface AccidentalCase { id: string; impact: AccidentalImpact[]; explosion: AccidentalExplosion[]; }

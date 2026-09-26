@@ -2,6 +2,7 @@
   "schema": "semio.directory.hub-sign-in-fixtures.v1",
   "mintPath": "/auth/sessions",
   "sessionPath": "/auth/sessions/me",
+  "signOutPath": "/auth/sessions/me/sign-out",
   "requestSchema": "semio.hub.auth.credential-sign-in/v1",
   "errorSchema": "semio.hub.auth.error/v1",
   "requestMaxBytes": 1024,

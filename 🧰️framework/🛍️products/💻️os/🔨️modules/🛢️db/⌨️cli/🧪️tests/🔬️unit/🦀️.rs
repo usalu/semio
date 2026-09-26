@@ -52,6 +52,8 @@ async fn test_envelope(id: &str, document: &protocol::ArtifactId) -> protocol::M
         document_id: document.clone(),
         actor: protocol::ActorId("tester".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": "hello"})).await.unwrap() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": null})).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),

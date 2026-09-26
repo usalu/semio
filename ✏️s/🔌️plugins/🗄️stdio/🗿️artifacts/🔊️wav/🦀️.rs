@@ -60,7 +60,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.wav".into(),
+        id: "s.stdio.wav".into(),
         name: "Wav".into(),
         source_format: STDIO_WAV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

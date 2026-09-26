@@ -83,8 +83,13 @@ fn every_shortage_status_speaks_the_fixture_texts_in_both_tongues() {
 fn an_unlinked_link_needs_a_turn_at_its_retry_or_its_expiry() {
     let link = DocumentLink::Linked.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, DocumentLinkEvent::Failed { now_ms: 1_000 });
     assert_eq!(link.next_deadline_ms(&DOCUMENT_LINK_SHORTAGE_POLICY), Some(1_000 + DOCUMENT_LINK_SHORTAGE_POLICY.reconnect_min_ms));
-    let capped = DocumentLink::Unlinked { since_ms: 0, backoff_ms: DOCUMENT_LINK_SHORTAGE_POLICY.reconnect_max_ms, retry_at_ms: 70_000 };
-    assert_eq!(capped.next_deadline_ms(&DOCUMENT_LINK_SHORTAGE_POLICY), Some(DOCUMENT_LINK_SHORTAGE_POLICY.shortage_bound_ms), "expiry wins over a later retry");
+    let hung = DocumentLink::Unlinked { since_ms: 0, backoff_ms: DOCUMENT_LINK_SHORTAGE_POLICY.reconnect_max_ms, retry_at_ms: u64::MAX };
+    assert_eq!(hung.next_deadline_ms(&DOCUMENT_LINK_SHORTAGE_POLICY), Some(DOCUMENT_LINK_SHORTAGE_POLICY.shortage_bound_ms + DOCUMENT_LINK_SHORTAGE_POLICY.reconnect_max_ms), "the ceiling wins over a retry that never comes");
+    let mut walked = DocumentLink::Linked.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, DocumentLinkEvent::Failed { now_ms: 0 });
+    while let Some(retry_at_ms) = walked.retry_at_ms().filter(|at| *at < DOCUMENT_LINK_SHORTAGE_POLICY.shortage_bound_ms) {
+        walked = walked.apply(&DOCUMENT_LINK_SHORTAGE_POLICY, DocumentLinkEvent::Failed { now_ms: retry_at_ms });
+    }
+    assert_eq!(walked.retry_at_ms(), Some(DOCUMENT_LINK_SHORTAGE_POLICY.shortage_bound_ms), "the last attempt of every shortage runs at the bound");
     assert_eq!(DocumentLink::Linked.next_deadline_ms(&DOCUMENT_LINK_SHORTAGE_POLICY), None);
 }
 

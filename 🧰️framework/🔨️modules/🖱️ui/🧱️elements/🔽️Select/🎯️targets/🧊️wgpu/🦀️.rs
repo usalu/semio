@@ -149,10 +149,10 @@ pub(crate) const SELECT_SCROLL_MIN_STEP: f32 = 24.0;
 
 /// 🔼️ A scroll offset clamped to what the popup can actually scroll: `content - viewport`, never
 /// negative. The viewport is `overflow-y-auto`, so the DOM clamps this for React.
-pub(crate) fn select_clamped_scroll(items: usize, theme: &Theme, painted_height: f32, offset: f32) -> f32 {
+pub(crate) fn select_clamped_scroll(items: usize, theme: &Theme, viewport_height: f32, offset: f32) -> f32 {
     let content = items as f32 * select_row_height(theme);
-    let inner = (painted_height - theme.padding_standard * 2.0).max(0.0);
-    offset.clamp(0.0, (content - inner).max(0.0))
+    let scroll_height = content + theme.padding_standard * 2.0;
+    offset.clamp(0.0, (scroll_height - viewport_height.max(0.0)).max(0.0))
 }
 
 //#region 🔼️ScrollSlots
@@ -193,10 +193,10 @@ pub(crate) fn select_scroll_control_parts(control_id: &str) -> Option<(&str, f32
     control_id.strip_suffix(".scroll.down").map(|id| (id, 1.0))
 }
 
-/// 🔼️ The scrollable viewport's own height inside a popup of `painted_height` — the popup minus its
-/// `p-single` inset, which is the `clientHeight` React's `scrollSelectViewport` reads.
-pub(crate) fn select_scroll_viewport_height(theme: &Theme, painted_height: f32) -> f32 {
-    (painted_height - theme.padding_standard * 2.0).max(0.0)
+/// 🔼️ The scrollable viewport's `clientHeight`, including its `p-single` padding exactly as the DOM
+/// reports it to React's `scrollSelectViewport`.
+pub(crate) fn select_scroll_viewport_height(_theme: &Theme, viewport_height: f32) -> f32 {
+    viewport_height.max(0.0)
 }
 
 /// 🔼️ Applies one pending chevron `direction` to `offset` and clamps the result — the ONE place both
@@ -227,6 +227,8 @@ pub(crate) struct SelectPopupGeometry {
     pub max_scroll: f32,
     pub first_row: usize,
     pub last_row: usize,
+    row_height: f32,
+    viewport_padding: f32,
 }
 
 impl SelectPopupGeometry {
@@ -254,7 +256,7 @@ pub(crate) fn select_popup_geometry(trigger: Rect, items: usize, theme: &Theme, 
     let scroll = select_scrolled_offset(items, theme, viewport_height, offset, direction);
     let (first_row, last_row) = select_scrolled_row_window(items, theme, viewport_height, scroll);
     let max_scroll = select_clamped_scroll(items, theme, viewport_height, f32::MAX);
-    SelectPopupGeometry { menu, up, down, scroll, max_scroll, first_row, last_row }
+    SelectPopupGeometry { menu, up, down, scroll, max_scroll, first_row, last_row, row_height: select_row_height(theme), viewport_padding: theme.padding_standard }
 }
 
 pub(crate) fn select_popup_viewport_rect(popup: SelectPopupGeometry) -> Rect {
@@ -265,10 +267,17 @@ pub(crate) fn select_popup_viewport_rect(popup: SelectPopupGeometry) -> Rect {
     Rect::new(left, top, width, (bottom - top).max(0.0))
 }
 
-pub(crate) fn select_revealed_scroll(popup: SelectPopupGeometry, index: usize, theme: &Theme) -> f32 {
+pub(crate) fn select_revealed_scroll(popup: SelectPopupGeometry, index: usize) -> f32 {
     let viewport = select_popup_viewport_rect(popup);
-    let row_top = theme.padding_standard + index as f32 * select_row_height(theme);
-    let row_bottom = row_top + select_row_height(theme);
+    let row_top = popup.viewport_padding + index as f32 * popup.row_height;
+    let row_bottom = row_top + popup.row_height;
+    if popup.row_height >= viewport.h {
+        const EDGE_EPSILON: f32 = 0.001;
+        if row_top < popup.scroll - EDGE_EPSILON || row_top > popup.scroll + viewport.h + EDGE_EPSILON {
+            return row_top.clamp(0.0, popup.max_scroll);
+        }
+        return popup.scroll;
+    }
     if row_top < popup.scroll {
         row_top.clamp(0.0, popup.max_scroll)
     } else if row_bottom > popup.scroll + viewport.h {
@@ -544,7 +553,7 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
         let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
         draw.begin_glass_content(glass);
         crate::wgpu::chrome::push_chrome_border(draw, popup.menu, ctx.theme.stroke_hairline, ctx.theme.border_normal, true, true, true, true);
-        draw.push_scissor(popup.menu);
+        draw.push_scissor(select_popup_viewport_rect(popup));
         for (index, item) in items.iter().enumerate().take(popup.last_row).skip(popup.first_row) {
             let row = select_popup_row_rect(bounds, index, popup, ctx.theme);
             let row_hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y).and_then(|h| h.control_id.as_deref()) == Some(&format!("{id}.item.{}", item.value()));

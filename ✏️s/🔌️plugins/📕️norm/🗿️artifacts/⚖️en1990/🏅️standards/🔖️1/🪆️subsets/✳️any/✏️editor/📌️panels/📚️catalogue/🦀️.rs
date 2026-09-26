@@ -3,6 +3,7 @@
 use crate::app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
 use crate::artifact_schema::{psi_for_category, NaDe, NaEn};
 use crate::document::{ClauseId, NationalAnnex};
+use crate::ImportanceClass;
 use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, TreeWindows, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 pub const BODY_CATALOGUE: &str = "norm.en1990.play.catalogue";
@@ -91,12 +92,16 @@ fn importance_gamma_i() -> CatalogueTable {
             CatalogueColumn { id: "class", label_en: "Class", label_de: "Kategorie", unit: None },
             CatalogueColumn { id: "gamma", label_en: "γ_I", label_de: "γ_I", unit: None },
         ],
-        rows: vec![
-            CatalogueRow { id: "I".into(), cells: vec![CatalogueCell::text("I"), CatalogueCell::number(0.8, 1)] },
-            CatalogueRow { id: "II".into(), cells: vec![CatalogueCell::text("II"), CatalogueCell::number(1.0, 1)] },
-            CatalogueRow { id: "III".into(), cells: vec![CatalogueCell::text("III"), CatalogueCell::number(1.2, 1)] },
-            CatalogueRow { id: "IV".into(), cells: vec![CatalogueCell::text("IV"), CatalogueCell::number(1.4, 1)] },
-        ],
+        rows: [ImportanceClass::I, ImportanceClass::II, ImportanceClass::III, ImportanceClass::IV]
+            .into_iter()
+            .map(|class| {
+                let label = format!("{class:?}");
+                CatalogueRow {
+                    id: label.clone(),
+                    cells: vec![CatalogueCell::text(label), CatalogueCell::number(class.gamma_i(), 1)],
+                }
+            })
+            .collect(),
     }
 }
 

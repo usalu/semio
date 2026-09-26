@@ -1,7 +1,6 @@
 use super::*;
 
-const PLUGIN_WASM_CARGO_CACHE_DIR: &str = ".🧬semio/🦑️repo/⚡️cache/cargo";
-const PLUGIN_WASM_PROFILE_DIRS: [&str; 2] = ["wasm-dev", "wasm-release"];
+const PLUGIN_COMPONENT_PROFILE_DIRS: [&str; 2] = ["component-dev", "component-release"];
 
 /// 🗒️ `✏️s/🔌️plugins/🗒️note/🔣️.json` `manifest.apps[0].id` — the guest refuses any other id with
 /// `plugin.internal: unknown app`, which is itself the proof that the open reached real app routing.
@@ -21,31 +20,31 @@ fn repo_root() -> PathBuf {
     dir
 }
 
-/// 🔎️ The FRESHEST build of one plugin component anywhere in the shared cargo cache. Preamble
-/// rule 25 gives every slice a private `CARGO_TARGET_DIR` (`target-<slice>`) beside the shared
-/// `target`, so the component a fleet slice just rebuilt is routinely NOT under `target/`. Picking
-/// the newest mtime across every `target*` root is what keeps these laws honest about the tree
-/// that is actually checked out rather than about whichever build happened to land first.
+/// 🔎️ The FRESHEST deliverable of one plugin component: `<component crate>/dist/<profile>/<file>` over every plugin
+/// and extension crate under `✏️s/🔌️plugins`, newest mtime first. These are the bytes `describe`, the dev staging and the
+/// trusted catalog read; cargo's own target directories are build internals no law reads.
 fn plugin_wasm(file_name: &str) -> Option<PathBuf> {
-    plugin_wasm_in_profiles(file_name, &PLUGIN_WASM_PROFILE_DIRS)
+    plugin_wasm_in_profiles(file_name, &PLUGIN_COMPONENT_PROFILE_DIRS)
 }
 
 /// 🎯️ The same search restricted to named profiles. A law about how LONG a component takes must
-/// say which build it means: `wasm-dev` carries four times the code of `wasm-release` for the same
+/// say which build it means: `component-dev` carries four times the code of `component-release` for the same
 /// plugin (215 MB against 48 MB for `🌍️gis` on 2026-09-22), and a trusted catalog stages the
 /// RELEASE component, so a timing law that silently picked up whichever profile a peer rebuilt last
 /// measures a build no hub ever runs — which is exactly what happened to slice HC1 at 21:52.
 fn plugin_wasm_in_profiles(file_name: &str, profiles: &[&str]) -> Option<PathBuf> {
-    let cache = repo_root().join(PLUGIN_WASM_CARGO_CACHE_DIR);
-    let mut newest: Option<(std::time::SystemTime, PathBuf)> = None;
-    for entry in std::fs::read_dir(&cache).ok()?.flatten() {
-        let name = entry.file_name();
-        let Some(name) = name.to_str() else { continue };
-        if name != "target" && !name.starts_with("target-") {
-            continue;
+    let plugins = repo_root().join("✏️s/🔌️plugins");
+    let mut crates = Vec::new();
+    for owner in std::fs::read_dir(&plugins).ok()?.flatten() {
+        crates.push(owner.path().join("📦️packages/🦀️rust"));
+        for extension in std::fs::read_dir(owner.path().join("🧩️extensions")).into_iter().flatten().flatten() {
+            crates.push(extension.path().join("📦️packages/🦀️rust"));
         }
+    }
+    let mut newest: Option<(std::time::SystemTime, PathBuf)> = None;
+    for crate_root in crates {
         for profile in profiles.iter().copied() {
-            let candidate = entry.path().join("wasm32-wasip2").join(profile).join(file_name);
+            let candidate = crate_root.join("dist").join(profile).join(file_name);
             let Ok(modified) = candidate.metadata().and_then(|meta| meta.modified()) else { continue };
             if newest.as_ref().is_none_or(|(seen, _)| modified > *seen) {
                 newest = Some((modified, candidate));
@@ -398,7 +397,7 @@ const STDIO_DOCUMENT_SCHEMA: &str = "stdio.txt";
 /// Returns the failure text rather than panicking so the sweep above it can report every component
 /// in one run instead of dying on the first.
 async fn codec_sweep_one_component(package: &str, file_name: &str, kind: &str, schema: &str, which: CodecSweepRuntime, text: GenesisMirrorText) -> Result<(), String> {
-    let Some(path) = plugin_wasm_in_profiles(file_name, &["wasm-release"]) else { return Err(format!("{file_name} is not built in any target root")) };
+    let Some(path) = plugin_wasm_in_profiles(file_name, &["component-release"]) else { return Err(format!("{file_name} is not built in any target root")) };
     let bytes = std::fs::read(&path).map_err(|error| format!("read {}: {error}", path.display()))?;
     let runtime = match which {
         CodecSweepRuntime::Owned => GuestRuntimes::Owned(OwnedRuntime::new()),
@@ -462,7 +461,7 @@ async fn owned_codec_answers_every_call_on_every_staged_component() {
     let mut swept = 0usize;
     let mut failures = Vec::new();
     for (package, file_name, kind, schema, which, text) in STAGED_CODEC_COMPONENTS {
-        if plugin_wasm_in_profiles(file_name, &["wasm-release"]).is_none() {
+        if plugin_wasm_in_profiles(file_name, &["component-release"]).is_none() {
             continue;
         }
         swept += 1;
@@ -501,7 +500,7 @@ const GIS_DOCUMENT_SCHEMA: &str = "gis.map";
 /// needs, and note is driven by the laws above.
 #[semio_framework_async_macros::async_test]
 async fn owned_codec_genesis_answers_the_biggest_staged_component_under_the_hub_s_own_budget() {
-    let Some(path) = plugin_wasm_in_profiles("semio_s_plugin_gis.wasm", &["wasm-release"]) else { return };
+    let Some(path) = plugin_wasm_in_profiles("semio_s_plugin_gis.wasm", &["component-release"]) else { return };
     let bytes = std::fs::read(&path).expect("read plugin component");
     let runtime = OwnedRuntime::new();
     let compiled = runtime.compile(&package_ref("semio:gis", &bytes), &bytes).await.expect("compile plugin component");

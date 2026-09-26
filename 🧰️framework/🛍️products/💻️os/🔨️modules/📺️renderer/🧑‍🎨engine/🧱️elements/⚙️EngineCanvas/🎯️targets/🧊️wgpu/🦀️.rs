@@ -20,7 +20,7 @@ use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
 use infinite_world::world::{tool_run_trace, WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::{json, Value};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::mem::ManuallyDrop;
 use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme};
@@ -81,6 +81,7 @@ struct EngineSurface {
     editor: Option<EditorHost>,
     editor_scene_pack: Option<Vec<u8>>,
     editor_sync_cache: EditorSyncCache,
+    editor_delivery: TextEditorDeliveryState,
     raster_host: Option<RasterHost>,
     raster_sync_cache: RasterSyncCache,
     width: u32,
@@ -172,12 +173,19 @@ struct EngineSurfaceSlot {
 
 struct EngineSurfaceRegistry {
     slots: Box<[EngineSurfaceSlot; ENGINE_SURFACE_CAPACITY]>,
+    next_text_editor_receipt: u64,
+    text_editor_outbox_cursor: usize,
     faulted: bool,
 }
 
 impl Default for EngineSurfaceRegistry {
     fn default() -> Self {
-        Self { slots: semio_framework_async::boxed_fixed_slots(|| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None }), faulted: false }
+        Self {
+            slots: semio_framework_async::boxed_fixed_slots(|| EngineSurfaceSlot { id: None, generation: 0, exhausted: false, value: None, retirement: None }),
+            next_text_editor_receipt: 1,
+            text_editor_outbox_cursor: 0,
+            faulted: false,
+        }
     }
 }
 
@@ -332,6 +340,7 @@ enum EngineSurfaceClosePhase {
     Editor,
     EditorPack,
     EditorSync,
+    EditorDelivery,
     Raster,
     RasterSync,
     Board,
@@ -377,6 +386,7 @@ struct EngineSurfaceRetirement {
     editor_source: Option<EditorHost>,
     editor_scene_pack: Option<Vec<u8>>,
     editor_sync_cache: EditorSyncCache,
+    editor_delivery: TextEditorDeliveryState,
     raster_source: Option<RasterHost>,
     raster_sync_cache: RasterSyncCache,
     last_note_click: Option<(String, f64)>,
@@ -412,6 +422,7 @@ impl EngineSurfaceRetirement {
             editor: editor_source,
             editor_scene_pack,
             editor_sync_cache,
+            editor_delivery,
             raster_host: raster_source,
             raster_sync_cache,
             width: _,
@@ -439,6 +450,7 @@ impl EngineSurfaceRetirement {
             editor_source,
             editor_scene_pack,
             editor_sync_cache,
+            editor_delivery,
             raster_source,
             raster_sync_cache,
             last_note_click,
@@ -673,6 +685,11 @@ impl EngineSurfaceRetirement {
             }
             EngineSurfaceClosePhase::EditorSync => {
                 if Self::close_editor_sync(&mut self.editor_sync_cache) {
+                    self.phase = EngineSurfaceClosePhase::EditorDelivery;
+                }
+            }
+            EngineSurfaceClosePhase::EditorDelivery => {
+                if self.editor_delivery.close_step() {
                     self.phase = EngineSurfaceClosePhase::Raster;
                 }
             }
@@ -734,6 +751,7 @@ impl EngineSurfaceRetirement {
                     || self.board_source.is_some()
                     || self.editor_scene_pack.is_some()
                     || !editor_sync_terminal(&self.editor_sync_cache)
+                    || !self.editor_delivery.terminal_is_empty()
                     || self.raster_source.is_some()
                     || self.raster.is_some()
                     || !raster_sync_terminal(&self.raster_sync_cache)
@@ -776,6 +794,7 @@ impl EngineSurfaceRetirement {
             && self.editor_source.is_none()
             && self.editor_scene_pack.is_none()
             && editor_sync_terminal(&self.editor_sync_cache)
+            && self.editor_delivery.terminal_is_empty()
             && self.raster_source.is_none()
             && self.raster.is_none()
             && raster_sync_terminal(&self.raster_sync_cache)
@@ -1622,7 +1641,7 @@ struct RasterSyncCache {
     hovered_id: Option<String>,
     active_utility: Option<String>,
     view_mode: Option<String>,
-    brush: Option<(f64, f64)>,
+    brush: Option<(f64, f64, u32, f64)>,
     theme_json: Option<String>,
     size_key: Option<String>,
 }
@@ -1635,6 +1654,117 @@ struct EditorSyncCache {
     scene_json: Option<String>,
     theme_json: Option<String>,
     size_key: Option<String>,
+}
+
+const TEXT_EDITOR_PENDING_ECHO_CAPACITY: usize = 256;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct TextEditorDeliverySnapshot {
+    controller_id: String,
+    surface_id: String,
+    text: String,
+    start: usize,
+    end: usize,
+}
+
+struct TextEditorDeliveryInFlight {
+    source: EngineSurfaceToken,
+    token: std::num::NonZeroU64,
+    snapshot: TextEditorDeliverySnapshot,
+    pending_members: u8,
+}
+
+#[derive(Default)]
+struct TextEditorDeliveryState {
+    active: Option<TextEditorDeliveryInFlight>,
+    latest: Option<TextEditorDeliverySnapshot>,
+    pending_echoes: VecDeque<String>,
+    acknowledged: Option<String>,
+    read_only: bool,
+    selection_undeclared: bool,
+}
+
+impl TextEditorDeliveryState {
+    fn reconcile_buffer(&mut self, buffer: &str) -> bool {
+        if let Some(index) = self.pending_echoes.iter().position(|pending| pending == buffer) {
+            self.pending_echoes.drain(..=index);
+            self.acknowledged = Some(buffer.to_owned());
+            return false;
+        }
+        if self.acknowledged.as_deref() == Some(buffer) {
+            return false;
+        }
+        self.pending_echoes.clear();
+        self.acknowledged = Some(buffer.to_owned());
+        true
+    }
+
+    fn offer(&mut self, snapshot: TextEditorDeliverySnapshot) {
+        if self.latest.as_ref() == Some(&snapshot) || self.active.as_ref().is_some_and(|active| active.snapshot == snapshot) {
+            return;
+        }
+        self.latest = Some(snapshot);
+    }
+
+    fn guest_has_text(&self, text: &str) -> bool {
+        self.pending_echoes.back().map_or_else(|| self.acknowledged.as_deref() == Some(text), |pending| pending == text)
+    }
+
+    fn note_dispatched(&mut self, source: EngineSurfaceToken, token: std::num::NonZeroU64, include_edit: bool, include_selection: bool) -> bool {
+        if self.active.is_some() {
+            return false;
+        }
+        let Some(snapshot) = self.latest.take() else { return false };
+        if include_edit {
+            if self.pending_echoes.len() == TEXT_EDITOR_PENDING_ECHO_CAPACITY {
+                self.pending_echoes.pop_front();
+            }
+            self.pending_echoes.push_back(snapshot.text.clone());
+        }
+        let pending_members = u8::from(include_edit) | (u8::from(include_selection) << 1);
+        self.active = Some(TextEditorDeliveryInFlight { source, token, snapshot, pending_members });
+        true
+    }
+
+    fn remove_pending_echo(&mut self, text: &str) -> bool {
+        let Some(index) = self.pending_echoes.iter().position(|pending| pending == text) else { return false };
+        self.pending_echoes.remove(index);
+        true
+    }
+
+    fn close_string(value: &mut String) -> bool {
+        value.pop().is_some()
+    }
+
+    fn close_snapshot(snapshot: &mut TextEditorDeliverySnapshot) -> bool {
+        Self::close_string(&mut snapshot.text) || Self::close_string(&mut snapshot.surface_id) || Self::close_string(&mut snapshot.controller_id)
+    }
+
+    fn close_step(&mut self) -> bool {
+        if self.latest.as_mut().is_some_and(Self::close_snapshot) {
+            return false;
+        }
+        self.latest = None;
+        if self.active.as_mut().is_some_and(|active| Self::close_snapshot(&mut active.snapshot)) {
+            return false;
+        }
+        self.active = None;
+        if self.pending_echoes.back_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.pending_echoes.pop_back();
+        if self.acknowledged.as_mut().is_some_and(Self::close_string) {
+            return false;
+        }
+        self.acknowledged = None;
+        self.read_only = false;
+        self.selection_undeclared = false;
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.active.is_none() && self.latest.is_none() && self.pending_echoes.is_empty() && self.acknowledged.is_none() && !self.read_only && !self.selection_undeclared
+    }
 }
 
 fn raster_sync_terminal(cache: &RasterSyncCache) -> bool {
@@ -1950,6 +2080,7 @@ fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
         editor: None,
         editor_scene_pack: None,
         editor_sync_cache: EditorSyncCache::default(),
+        editor_delivery: TextEditorDeliveryState::default(),
         raster_host: None,
         raster_sync_cache: RasterSyncCache::default(),
         width: pw.max(1),
@@ -2906,11 +3037,16 @@ fn sync_raster_engine(host: &mut RasterHost, cache: &mut RasterSyncCache, paint:
         cache.active_utility = Some(paint.active_utility.clone());
         changed = true;
     }
-    if cache.brush != Some((paint.brush_size, paint.brush_opacity)) {
-        host.set_brush_size(paint.brush_size as f32);
-        host.set_brush_opacity(paint.brush_opacity as f32);
-        cache.brush = Some((paint.brush_size, paint.brush_opacity));
-        changed = true;
+    if let Ok(color) = u32::from_str_radix(paint.brush_color.trim_start_matches('#'), 16) {
+        let brush = (paint.brush_size, paint.brush_opacity, color, paint.brush_hardness);
+        if cache.brush != Some(brush) {
+            host.set_brush_size(paint.brush_size as f32);
+            host.set_brush_opacity(paint.brush_opacity as f32);
+            host.set_brush_color([(color >> 16) as u8, (color >> 8) as u8, color as u8, 255]);
+            host.set_brush_hardness(paint.brush_hardness as f32);
+            cache.brush = Some(brush);
+            changed = true;
+        }
     }
     if cache.selection_json.as_deref() != Some(paint.selection_json.as_str()) || cache.hovered_id.as_deref() != paint.hovered_id.as_deref() {
         let selected: Vec<String> = serde_json::from_str(&paint.selection_json).unwrap_or_default();
@@ -3016,7 +3152,16 @@ pub fn sync_text_editor_scene(scene: &UiComponentSceneNode, bounds: Rect, theme:
             changed = true;
         }
         if entry.editor_sync_cache.scene_json.as_deref() != Some(scene_json.as_str()) {
-            let _ = host.sync_from_scene_json(&scene_json);
+            let external = entry.editor_delivery.reconcile_buffer(&editor.buffer);
+            let applied_scene_json = if external {
+                scene_json.clone()
+            } else {
+                let mut local = editor.clone();
+                local.buffer = host.text().to_owned();
+                local.selection_json = Some(json!({ "start": host.anchor(), "end": host.caret() }).to_string());
+                serde_json::to_string(&local).unwrap_or_else(|_| scene_json.clone())
+            };
+            let _ = host.sync_from_scene_json(&applied_scene_json);
             entry.editor_sync_cache.scene_json = Some(scene_json);
             changed = true;
         }
@@ -5707,6 +5852,22 @@ pub fn paint2d_pointer_button_into(
     if down {
         return Ok(true);
     }
+    if let Some(edit) = with_raster_host_mut(&scene.host_id, |host| host.pixel_edit().cloned()).flatten() {
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "editPixels", "surfaceId", &scene.surface_id, "layerId", &edit.layer_id, "expectedImageKey", edit.expected_image_key.as_deref().unwrap_or(""), "operation", &edit.operation, "selection"])?;
+        let mut batch = input.reserve_actions(1, bytes)?;
+        batch.action(&scene.controller_id, "editPixels", bytes, |builder| {
+            builder.begin_object(None)?;
+            builder.string(Some("surfaceId"), &scene.surface_id)?;
+            builder.string(Some("layerId"), &edit.layer_id)?;
+            if let Some(key) = &edit.expected_image_key { builder.string(Some("expectedImageKey"), key)?; } else { builder.null(Some("expectedImageKey"))?; }
+            builder.string(Some("operation"), &edit.operation)?;
+            builder.null(Some("selection"))?;
+            builder.end_container()
+        })?;
+        batch.publish()?;
+        with_raster_host_mut(&scene.host_id, |host| host.take_pixel_edit());
+        return Ok(true);
+    }
     let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
     let mut batch = input.reserve_actions(1, bytes)?;
     write_surface_camera(&mut batch, scene, camera)?;
@@ -5843,7 +6004,8 @@ pub fn text_editor_wheel_into(scene: &UiComponentSceneNode, delta: f32) -> bool 
 
 fn emit_text_editor_actions(
     scene: &UiComponentSceneNode,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    edited: bool,
     projected_document_bytes: impl FnOnce(&EditorHost) -> usize,
     mutate: impl FnOnce(&mut EditorHost),
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
@@ -5855,70 +6017,264 @@ fn emit_text_editor_actions(
         let Some(host) = entry.editor.as_mut() else {
             return Ok(false);
         };
+        if edited && entry.editor_delivery.read_only {
+            return Ok(true);
+        }
         let projected_bytes = projected_document_bytes(host);
-        if projected_bytes > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+        if edited && projected_bytes > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
             return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
         }
-        let selection_bytes = 17usize.checked_add(2 * decimal_digits(projected_bytes)).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
-        let batch_bytes = text_editor_pair_bytes(scene, projected_bytes, selection_bytes)?;
-        let mut batch = input.reserve_actions(2, batch_bytes)?;
+        text_editor_action_bytes(scene, edited.then_some(projected_bytes))?;
+        if !edited && entry.editor_delivery.selection_undeclared {
+            mutate(host);
+            return Ok(true);
+        }
         mutate(host);
-        write_text_editor_action_pair(&mut batch, scene, host)?;
-        batch.publish()?;
+        entry.editor_delivery.offer(TextEditorDeliverySnapshot {
+            controller_id: scene.controller_id.clone(),
+            surface_id: scene.surface_id.clone(),
+            text: host.text().to_owned(),
+            start: host.anchor(),
+            end: host.caret(),
+        });
         Ok(true)
     })
 }
 
-fn write_text_editor_action_pair(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, host: &EditorHost) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
-    let selection = format!("{{\"start\":{},\"end\":{}}}", host.anchor(), host.caret());
-    let select_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textSelect", "surfaceId", &scene.surface_id, "selectionJson", &selection])?;
+pub(crate) enum TextEditorActionOutcome<'a> {
+    Accepted,
+    Refused(&'a str),
+    Cancelled,
+}
+
+fn text_editor_delivery_bytes(snapshot: &TextEditorDeliverySnapshot, include_edit: bool, include_selection: bool) -> Result<(usize, usize, usize), ui_wgpu::wgpu::BoundedActionFault> {
+    let edit = if include_edit {
+        ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textEdit", "surfaceId", &snapshot.surface_id, "text", &snapshot.text])?
+    } else {
+        0
+    };
+    let selection = if include_selection {
+        ui_wgpu::wgpu::checked_action_string_bytes(&[&snapshot.controller_id, "textSelect", "surfaceId", &snapshot.surface_id, "start", "end"])?
+    } else {
+        0
+    };
+    let total = edit.checked_add(selection).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+    Ok((edit, selection, total))
+}
+
+fn text_editor_receipt_token(sequence: u64, slot: usize) -> Option<std::num::NonZeroU64> {
+    if sequence == 0 || sequence >= (u64::MAX >> 8) || slot >= ENGINE_SURFACE_CAPACITY {
+        return None;
+    }
+    std::num::NonZeroU64::new((sequence << 8) | slot as u64)
+}
+
+pub(crate) fn has_pending_text_editor_outbox() -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        cell.borrow().slots.iter().any(|slot| slot.value.as_ref().is_some_and(|surface| surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some()))
+    })
+}
+
+pub(crate) fn drive_text_editor_outbox_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let start = registry.text_editor_outbox_cursor % ENGINE_SURFACE_CAPACITY;
+        let Some(index) = (0..ENGINE_SURFACE_CAPACITY).map(|offset| (start + offset) % ENGINE_SURFACE_CAPACITY).find(|index| {
+            registry.slots[*index].value.as_ref().is_some_and(|surface| surface.editor_delivery.active.is_none() && surface.editor_delivery.latest.is_some())
+        }) else {
+            return Ok(false);
+        };
+        let Some(slot) = registry.slots.get(index) else { return Err(ui_wgpu::wgpu::BoundedActionFault::Structure) };
+        let source = EngineSurfaceToken { slot: index as u16, generation: slot.generation };
+        let surface = slot.value.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let snapshot = surface.editor_delivery.latest.clone().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let include_edit = !surface.editor_delivery.read_only && !surface.editor_delivery.guest_has_text(&snapshot.text);
+        let include_selection = !surface.editor_delivery.selection_undeclared;
+        if !include_edit && !include_selection {
+            registry.slots[index].value.as_mut().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?.editor_delivery.latest = None;
+            registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
+            return Ok(true);
+        }
+        let token = text_editor_receipt_token(registry.next_text_editor_receipt, index).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let (edit_bytes, selection_bytes, batch_bytes) = text_editor_delivery_bytes(&snapshot, include_edit, include_selection)?;
+        let mut batch = match input.reserve_actions(usize::from(include_edit) + usize::from(include_selection), batch_bytes) {
+            Ok(batch) => batch,
+            Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) => return Ok(false),
+            Err(fault) => return Err(fault),
+        };
+        if include_edit {
+            batch.action(&snapshot.controller_id, "textEdit", edit_bytes, |builder| {
+                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { token, member: 0, abort_correlation_on_error: true })?;
+                builder.begin_object(None)?;
+                builder.string(Some("surfaceId"), &snapshot.surface_id)?;
+                builder.string(Some("text"), &snapshot.text)?;
+                builder.end_container()
+            })?;
+        }
+        if include_selection {
+            batch.action(&snapshot.controller_id, "textSelect", selection_bytes, |builder| {
+                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { token, member: 1, abort_correlation_on_error: false })?;
+                builder.begin_object(None)?;
+                builder.string(Some("surfaceId"), &snapshot.surface_id)?;
+                builder.integer(Some("start"), snapshot.start as i64)?;
+                builder.integer(Some("end"), snapshot.end as i64)?;
+                builder.end_container()
+            })?;
+        }
+        let next_sequence = registry.next_text_editor_receipt.checked_add(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        batch.publish_with_checked(|| {
+            let Some(slot) = registry.slots.get_mut(index).filter(|slot| slot.generation == source.generation) else { return false };
+            let Some(surface) = slot.value.as_mut() else { return false };
+            if surface.editor_delivery.latest.as_ref() != Some(&snapshot) || !surface.editor_delivery.note_dispatched(source, token, include_edit, include_selection) {
+                return false;
+            }
+            registry.next_text_editor_receipt = next_sequence;
+            registry.text_editor_outbox_cursor = (index + 1) % ENGINE_SURFACE_CAPACITY;
+            true
+        })?;
+        Ok(true)
+    })
+}
+
+pub(crate) fn settle_text_editor_action_receipt(receipt: ui_wgpu::wgpu::ActionQueueReceipt, outcome: TextEditorActionOutcome<'_>) {
+    let index = (receipt.token.get() & 0xff) as usize;
+    ENGINE_SURFACES.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let Some(slot) = registry.slots.get_mut(index) else { return };
+        let generation = slot.generation;
+        let Some(surface) = slot.value.as_mut() else { return };
+        let (text, pending_members, source) = {
+            let Some(active) = surface.editor_delivery.active.as_mut().filter(|active| active.token == receipt.token && active.source.slot as usize == index && active.source.generation == generation) else { return };
+            let member = 1u8.checked_shl(u32::from(receipt.member)).unwrap_or(0);
+            if member == 0 || active.pending_members & member == 0 {
+                return;
+            }
+            active.pending_members &= !member;
+            (active.snapshot.text.clone(), active.pending_members, active.source)
+        };
+        if source.generation != generation {
+            return;
+        }
+        let mut resync = false;
+        match outcome {
+            TextEditorActionOutcome::Accepted => {}
+            TextEditorActionOutcome::Refused(reason) => {
+                if receipt.member == 0 {
+                    if matches!(reason, "undeclared-action" | "viewer-read-only") {
+                        surface.editor_delivery.read_only = true;
+                    }
+                    resync = surface.editor_delivery.remove_pending_echo(&text) && surface.editor_delivery.pending_echoes.is_empty();
+                } else if reason == "undeclared-action" {
+                    surface.editor_delivery.selection_undeclared = true;
+                }
+            }
+            TextEditorActionOutcome::Cancelled => {
+                if receipt.member == 0 {
+                    resync = surface.editor_delivery.remove_pending_echo(&text) && surface.editor_delivery.pending_echoes.is_empty();
+                }
+            }
+        }
+        if pending_members == 0 {
+            surface.editor_delivery.active = None;
+        }
+        if resync {
+            if let (Some(host), Some(scene_json)) = (surface.editor.as_mut(), surface.editor_sync_cache.scene_json.as_deref()) {
+                let _ = host.sync_from_scene_json(scene_json);
+            }
+        }
+    });
+}
+
+fn write_text_editor_selection(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, host: &EditorHost) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let select_bytes = text_editor_action_bytes(scene, None)?;
     batch.action(&scene.controller_id, "textSelect", select_bytes, |builder| {
         builder.begin_object(None)?;
         builder.string(Some("surfaceId"), &scene.surface_id)?;
-        builder.string(Some("selectionJson"), &selection)?;
-        builder.end_container()
-    })?;
-    let edit_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textEdit", "surfaceId", &scene.surface_id, "document", host.text()])?;
-    batch.action(&scene.controller_id, "textEdit", edit_bytes, |builder| {
-        builder.begin_object(None)?;
-        builder.string(Some("surfaceId"), &scene.surface_id)?;
-        builder.string(Some("document"), host.text())?;
+        builder.integer(Some("start"), host.anchor() as i64)?;
+        builder.integer(Some("end"), host.caret() as i64)?;
         builder.end_container()
     })
 }
 
-fn decimal_digits(value: usize) -> usize {
-    if value == 0 {
-        1
-    } else {
-        value.ilog10() as usize + 1
-    }
+fn text_editor_action_bytes(scene: &UiComponentSceneNode, document_bytes: Option<usize>) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
+    let selection = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textSelect", "surfaceId", &scene.surface_id, "start", "end"])?;
+    let Some(document_bytes) = document_bytes else { return Ok(selection) };
+    let edit = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textEdit", "surfaceId", &scene.surface_id, "text"])?;
+    selection.checked_add(edit).and_then(|bytes| bytes.checked_add(document_bytes)).filter(|bytes| *bytes <= ui_wgpu::wgpu::action::ACTION_QUEUE_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
 }
 
-fn text_editor_pair_bytes(scene: &UiComponentSceneNode, document_bytes: usize, selection_bytes: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
-    let fixed = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textSelect", "surfaceId", &scene.surface_id, "selectionJson", &scene.controller_id, "textEdit", "surfaceId", &scene.surface_id, "document"])?;
-    fixed.checked_add(document_bytes).and_then(|bytes| bytes.checked_add(selection_bytes)).filter(|bytes| *bytes <= ui_wgpu::wgpu::action::ACTION_QUEUE_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
+/// 📋️ Reads the exact UTF-8 selection owned by the mounted editor host.
+pub fn text_editor_selection_text(scene: &UiComponentSceneNode) -> Option<String> {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(&scene.host_id).and_then(|entry| entry.editor.as_ref()).map(EditorHost::selection_text))
+}
+
+/// ♿️ Reads the mounted editor's optimistic local text for its accessibility value.
+pub fn text_editor_accessibility_value(scene: &UiComponentSceneNode) -> Option<String> {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(&scene.host_id).and_then(|entry| entry.editor.as_ref()).map(|host| host.text().to_string()))
+}
+
+/// 🔒️ Reports the refusal-derived editor mode used by the accepted textarea projection.
+pub fn text_editor_is_read_only(scene: &UiComponentSceneNode) -> bool {
+    ENGINE_SURFACES.with(|cell| cell.borrow().get(&scene.host_id).is_some_and(|entry| entry.editor_delivery.read_only))
+}
+
+/// 📋️ Replaces the mounted editor's current selection and publishes the same ordered edit/select
+/// pair React's textarea host emits for paste, cut and a committed composition.
+pub fn text_editor_replace_selection_into(scene: &UiComponentSceneNode, text: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    emit_text_editor_actions(
+        scene,
+        input,
+        true,
+        |host| {
+            let source = host.text();
+            let start = host.anchor().min(host.caret()).min(source.len());
+            let end = host.anchor().max(host.caret()).min(source.len());
+            source.len().saturating_sub(end - start).saturating_add(text.len())
+        },
+        |host| host.replace_selection(text),
+    )
+}
+
+/// ♿️ Applies an accessibility textarea's complete value through the editor's ordered action pair.
+pub fn text_editor_replace_all_into(scene: &UiComponentSceneNode, text: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    emit_text_editor_actions(scene, input, true, |_| text.len(), |host| {
+        host.select_all();
+        host.replace_selection(text);
+    })
 }
 
 pub fn text_editor_apply_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let supported = match key {
-        KeyAction::Char(_) if !(modifiers.meta || modifiers.ctrl) => true,
+        KeyAction::Char(_) | KeyAction::Space(true) if !(modifiers.meta || modifiers.ctrl || modifiers.alt) => true,
         KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => true,
-        KeyAction::Backspace | KeyAction::Delete => true,
+        KeyAction::Backspace | KeyAction::Delete | KeyAction::Enter | KeyAction::Tab | KeyAction::ArrowLeft | KeyAction::ArrowRight | KeyAction::ArrowUp | KeyAction::ArrowDown | KeyAction::Home | KeyAction::End => true,
         _ => false,
     };
     if !supported {
         return Ok(false);
     }
+    if matches!(key, KeyAction::Enter) {
+        if let Some(gates) = scene.text_editor.as_ref().and_then(|editor| editor.newline_gates_json.as_deref()).filter(|gates| !gates.is_empty()) {
+            let caret = text_editor_caret(scene).1;
+            if !serde_json::from_str::<Vec<usize>>(gates).unwrap_or_default().contains(&caret) {
+                return Ok(true);
+            }
+        }
+    }
+    let selection_only = matches!(key, KeyAction::ArrowLeft | KeyAction::ArrowRight | KeyAction::ArrowUp | KeyAction::ArrowDown | KeyAction::Home | KeyAction::End)
+        || matches!(key, KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a"));
     emit_text_editor_actions(
         scene,
         input,
+        !selection_only,
         |host| {
             let text = host.text();
             let start = host.anchor().min(host.caret()).min(text.len());
             let end = host.anchor().max(host.caret()).min(text.len());
             match key {
-                KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => text.len().saturating_sub(end - start).saturating_add(ch.len()),
+                KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl || modifiers.alt) => text.len().saturating_sub(end - start).saturating_add(ch.len()),
+                KeyAction::Space(true) | KeyAction::Enter => text.len().saturating_sub(end - start).saturating_add(1),
+                KeyAction::Tab => text.len().saturating_sub(end - start).saturating_add(host.tab_insert_text().len()),
                 KeyAction::Backspace if start != end => text.len().saturating_sub(end - start),
                 KeyAction::Backspace => text[..start].chars().next_back().map_or(text.len(), |ch| text.len().saturating_sub(ch.len_utf8())),
                 KeyAction::Delete if start != end => text.len().saturating_sub(end - start),
@@ -5927,7 +6283,16 @@ pub fn text_editor_apply_key_into(scene: &UiComponentSceneNode, key: &KeyAction,
             }
         },
         |host| match key {
-            KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => host.insert_text(ch),
+            KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl || modifiers.alt) => host.insert_text(ch),
+            KeyAction::Space(true) => host.insert_text(" "),
+            KeyAction::Enter => host.insert_text("\n"),
+            KeyAction::Tab => host.insert_text(&host.tab_insert_text()),
+            KeyAction::ArrowLeft => host.move_left(modifiers.shift),
+            KeyAction::ArrowRight => host.move_right(modifiers.shift),
+            KeyAction::ArrowUp => host.move_up(modifiers.shift),
+            KeyAction::ArrowDown => host.move_down(modifiers.shift),
+            KeyAction::Home => host.move_line_start(modifiers.shift),
+            KeyAction::End => host.move_line_end(modifiers.shift),
             KeyAction::Backspace => host.backspace(),
             KeyAction::Delete => host.delete_forward(),
             KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => host.select_all(),
@@ -5939,7 +6304,7 @@ pub fn text_editor_apply_key_into(scene: &UiComponentSceneNode, key: &KeyAction,
 pub fn text_editor_select_span_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
-    emit_text_editor_actions(scene, input, |host| host.text().len(), |host| host.select_span_at_screen(sx, sy))
+    emit_text_editor_actions(scene, input, false, |host| host.text().len(), |host| host.select_span_at_screen(sx, sy))
 }
 
 pub fn text_editor_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, down: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
@@ -5948,6 +6313,7 @@ pub fn text_editor_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect
     emit_text_editor_actions(
         scene,
         input,
+        false,
         |host| host.text().len(),
         |host| {
             if down {
@@ -5962,7 +6328,7 @@ pub fn text_editor_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect
 pub fn text_editor_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
-    emit_text_editor_actions(scene, input, |host| host.text().len(), |host| host.pointer_move_screen(sx, sy, 0))
+    emit_text_editor_actions(scene, input, false, |host| host.text().len(), |host| host.pointer_move_screen(sx, sy, 0))
 }
 
 pub fn text_editor_pointer_cancel_into(surface_id: &str) -> bool {
@@ -5975,13 +6341,14 @@ pub fn text_editor_pointer_cancel_into(surface_id: &str) -> bool {
 }
 
 pub fn text_editor_set_selection_into(scene: &UiComponentSceneNode, anchor: usize, caret: usize, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    emit_text_editor_actions(scene, input, |host| host.text().len(), |host| host.set_selection_range(anchor, caret))
+    emit_text_editor_actions(scene, input, false, |host| host.text().len(), |host| host.set_selection_range(anchor, caret))
 }
 
 pub fn text_editor_apply_completion_into(scene: &UiComponentSceneNode, prefix_start: usize, caret: usize, insert_text: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     emit_text_editor_actions(
         scene,
         input,
+        true,
         |host| host.text().len().saturating_sub(caret.saturating_sub(prefix_start)).saturating_add(insert_text.len()),
         |host| {
             host.set_selection_range(prefix_start, caret);
@@ -6001,16 +6368,12 @@ pub fn text_editor_pointer_click_into(scene: &UiComponentSceneNode, inner: Rect,
         let Some(host) = entry.editor.as_mut() else {
             return Ok(false);
         };
-        if host.text().len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
-            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
-        }
-        let selection_bytes = 17usize.checked_add(2 * decimal_digits(host.text().len())).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
-        let pair_bytes = text_editor_pair_bytes(scene, host.text().len(), selection_bytes)?;
-        let mut batch = input.reserve_actions(4, pair_bytes.checked_mul(2).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?)?;
+        let selection_bytes = text_editor_action_bytes(scene, None)?;
+        let mut batch = input.reserve_actions(2, selection_bytes.checked_mul(2).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?)?;
         host.pointer_down_screen(sx, sy, button as i32);
-        write_text_editor_action_pair(&mut batch, scene, host)?;
+        write_text_editor_selection(&mut batch, scene, host)?;
         host.pointer_up_screen(sx, sy, 0);
-        write_text_editor_action_pair(&mut batch, scene, host)?;
+        write_text_editor_selection(&mut batch, scene, host)?;
         batch.publish()?;
         Ok(true)
     })

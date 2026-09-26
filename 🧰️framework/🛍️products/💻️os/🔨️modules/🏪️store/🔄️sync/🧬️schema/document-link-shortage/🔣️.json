@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/store/document-link-shortage/v1.json",
   "title": "Document Link Shortage V1",
-  "description": "The one state machine every shell (native wgpu, wasm32 wgpu, React) drives for a hub document's link: a short connection shortage keeps the document mounted and local edits queued while the link reconnects with a capped doubling backoff; a shortage longer than the bound expires the link (long offline periods are refused, never silently absorbed); a hub that withdraws access revokes it. Terminal states admit no local edit and never relink.",
+  "description": "The one state machine every shell (native wgpu, wasm32 wgpu, React) drives for a hub document's link: a short connection shortage keeps the document mounted and local edits queued while the link reconnects with a capped doubling backoff; no retry is scheduled past the bound, so the last attempt of every shortage runs at the bound; a failed attempt at or past the bound expires the link, and an attempt that never answers expires it at the ceiling (bound plus one capped backoff) — long offline periods are refused, never silently absorbed; a hub that withdraws access revokes it. Terminal states admit no local edit and never relink.",
   "$defs": {
     "Millis": { "type": "integer", "minimum": 0 },
     "Policy": {

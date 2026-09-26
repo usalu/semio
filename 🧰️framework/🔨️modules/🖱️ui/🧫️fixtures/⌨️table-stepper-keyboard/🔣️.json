@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "cell": {
+    "rowId": "beam-glulam-gl24h",
+    "columnId": "curated",
+    "columnLabel": "Curated",
+    "min": 0,
+    "max": 5,
+    "step": 0.5
+  },
+  "action": {
+    "controllerId": "sourcing-curation",
+    "action": "curationSetCount",
+    "args": { "objectId": "beam-glulam-gl24h" }
+  },
+  "cases": [
+    { "id": "arrow-up", "key": "ArrowUp", "value": 2, "consumed": true, "expectedDelta": 0.5 },
+    { "id": "arrow-right", "key": "ArrowRight", "value": 2, "consumed": true, "expectedDelta": 0.5 },
+    { "id": "arrow-down", "key": "ArrowDown", "value": 2, "consumed": true, "expectedDelta": -0.5 },
+    { "id": "arrow-left", "key": "ArrowLeft", "value": 2, "consumed": true, "expectedDelta": -0.5 },
+    { "id": "page-up-clamps", "key": "PageUp", "value": 2, "consumed": true, "expectedDelta": 3 },
+    { "id": "page-down-clamps", "key": "PageDown", "value": 2, "consumed": true, "expectedDelta": -2 },
+    { "id": "home", "key": "Home", "value": 2, "consumed": true, "expectedDelta": -2 },
+    { "id": "end", "key": "End", "value": 2, "consumed": true, "expectedDelta": 3 },
+    { "id": "unmapped", "key": "Enter", "value": 2, "consumed": false, "expectedDelta": null },
+    { "id": "upper-bound-consumes-without-action", "key": "PageUp", "value": 5, "consumed": true, "expectedDelta": null },
+    { "id": "home-at-lower-bound-is-unmapped", "key": "Home", "value": 0, "consumed": false, "expectedDelta": null }
+  ]
+}

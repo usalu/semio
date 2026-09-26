@@ -98,9 +98,11 @@ def k_mod(sc, rank):
     return K_MOD[service_class(sc)][rank]
 
 
-def gamma_m(product):
-    """🛡️ EN 1995-1-1 Table 2.3 (glulam 1.25, others 1.3)."""
-    return 1.25 if product == "glulam" else 1.3
+def gamma_m(annex, product):
+    """🛡️ EN 1995-1-1 Table 2.3 (glulam 1.25, LVL 1.2, others 1.3); DIN EN 1995-1-1/NA Table NA.2 sets 1.3 throughout."""
+    if annex == "de":
+        return 1.3
+    return {"glulam": 1.25, "lvl": 1.2}.get(product, 1.3)
 
 
 def k_cr(annex, fv):
@@ -131,6 +133,17 @@ def k_crit(lam):
 def lambda_rel_m(w, fm, mcrit):
     """📐️ Relative slenderness for bending."""
     return 0.0 if mcrit <= 0 or w <= 0 or fm <= 0 else math.sqrt(w * fm / mcrit)
+
+
+def effective_m_crit_nm(member):
+    """🪢 M_crit scaled by lateral-restraint spacing (§6.3.3)."""
+    span = max(num(member, "spanM"), 1e-6)
+    base = max(num(member, "mCritNm"), 1.0)
+    spacing = num(member, "lateralRestraintSpacingM")
+    if spacing <= 0:
+        return base
+    l_ef = max(min(spacing, span), 1e-6)
+    return base * (span / l_ef) ** 2
 
 
 def k_c(lam_rel):
@@ -177,6 +190,8 @@ def psi(kind, category):
         return 0.0, 0.0, 0.0
     if k == "snow":
         return 0.5, 0.2, 0.0
+    if k == "snow_high":
+        return 0.7, 0.5, 0.2
     if k == "wind":
         return 0.6, 0.2, 0.0
     if k == "imposed":
@@ -230,7 +245,7 @@ def combine(terms):
 
 
 def combinations(member):
-    """🔀️ EN 1990 eq. 6.10 ULS, SLS characteristic / quasi-permanent and accidental combinations."""
+    """🔀️ EN 1990 eq. 6.10 ULS, SLS characteristic / frequent(ψ₁) / quasi-permanent and accidental combinations."""
     actions = member.get("actions") or []
     if not actions:
         return []
@@ -248,6 +263,7 @@ def combinations(member):
         out.append(dict(id="uls.g", kind="uls", rank=shortest(perm), psi2=1.0, **combine([(GAMMA_G, ins[i]) for i in perm])))
         g = combine([(1.0, ins[i]) for i in perm])
         out.append(dict(id="sls.char.g", kind="char", rank=shortest(perm), psi2=1.0, **g))
+        out.append(dict(id="sls.freq.g", kind="freq", rank=shortest(perm), psi2=1.0, **g))
         out.append(dict(id="sls.qp.g", kind="qp", rank=shortest(perm), psi2=1.0, **g))
     else:
         rank = shortest(perm + var)
@@ -259,6 +275,10 @@ def combinations(member):
             others = [v for v in var if v != lead]
             char = [(1.0, ins[i]) for i in perm] + [(1.0, ins[lead])] + [(psis[v][0], ins[v]) for v in others]
             out.append(dict(id=f"sls.char.lead.{actions[lead]['id']}", kind="char", rank=rank, psi2=psis[lead][2], **combine(char)))
+        for lead in var:
+            others = [v for v in var if v != lead]
+            freq = [(1.0, ins[i]) for i in perm] + [(psis[lead][1], ins[lead])] + [(psis[v][2], ins[v]) for v in others]
+            out.append(dict(id=f"sls.freq.lead.{actions[lead]['id']}", kind="freq", rank=rank, psi2=psis[lead][1], **combine(freq)))
         qp = [(1.0, ins[i]) for i in perm] + [(psis[v][2], ins[v]) for v in var]
         out.append(dict(id="sls.qp", kind="qp", rank=rank, psi2=max(psis[v][2] for v in var), **combine(qp)))
     if acc:
@@ -330,12 +350,12 @@ def bridge_checks(annex, member, p):
     b, h, l = num(member, "bM"), num(member, "hM"), num(member, "spanM")
     w = b * h * h / 6
     km = k_mod(member.get("serviceClass"), DURATIONS.index("medium"))
-    g = gamma_m(p["product"])
+    g = gamma_m(annex, p["product"])
     q = max(num(member, "bridgeCrowdPerM2"), 0.0) * 800 * max(b, 0.05)
     coefficient = {"cantilever": 1 / 2, "continuousTwoSpan": 1 / 14}.get(member.get("support"), 1 / 8)
     m_crowd = q * l * l * coefficient
     m_ed = GAMMA_Q * m_crowd
-    fmd = km * k_h(h, p["product"]) * k_crit(lambda_rel_m(w, p["fm"], max(num(member, "mCritNm"), 1.0))) * p["fm"] / g
+    fmd = km * k_h(h, p["product"]) * k_crit(lambda_rel_m(w, p["fm"], effective_m_crit_nm(member))) * p["fm"] / g
     sigma_m = m_ed / w if w > 0 else 0.0
     delta = 0.4 * m_crowd / w if w > 0 else 0.0
     cycles = max(num(member, "bridgeNObs") * num(member, "bridgeTLYears"), 1.0)
@@ -381,9 +401,9 @@ def member_checks(annex, member):
     b, h = num(member, "bM"), num(member, "hM")
     sc = service_class(member.get("serviceClass"))
     km = k_mod(sc, uls["rank"])
-    g = gamma_m(p["product"])
+    g = gamma_m(annex, p["product"])
     area, w = b * h, b * h * h / 6
-    kcrit = k_crit(lambda_rel_m(w, p["fm"], max(num(member, "mCritNm"), 1.0)))
+    kcrit = k_crit(lambda_rel_m(w, p["fm"], effective_m_crit_nm(member)))
     fmd = km * k_h(h, p["product"]) * kcrit * p["fm"] / g
     sigma_m = uls["m"] / w if w > 0 else 0.0
     out = [{"id": f"en1995.6.1.6.bending.{mid}", "utilization": util(sigma_m, max(fmd, 1e-9))}]
@@ -419,15 +439,21 @@ def member_checks(annex, member):
             w_fin = w_inst * (1 + K_DEF[sc] * sls["psi2"])
             out.append({"id": f"en1995.7.2.winst.{mid}", "utilization": util(w_inst, span / 300)})
             out.append({"id": f"en1995.7.2.wfin.{mid}", "utilization": util(w_fin, span / (200 if annex == "de" else 250))})
+    freqs = [c for c in combos if c["kind"] == "freq"]
+    if freqs:
+        freq = last_max(freqs, lambda c: abs(c["q"]))
+        if span > 0 and (freq["q"] != 0 or freq["f"] != 0):
+            w_freq = deflection(member, p, freq["q"], freq["f"])
+            out.append({"id": f"en1995.7.2.wfreq.{mid}", "utilization": util(w_freq, span / 300)})
     if member.get("role") == "floor":
-        out.append(floor_check(annex, member, p))
+        out.extend(floor_checks(annex, member, p))
     if num(member, "fireDurationS") > 0:
         out.append(fire_check(member, p, uls["m"]))
     return out
 
 
-def floor_check(annex, member, p):
-    """🏠️ EN 1995-1-1 §7.3 floor vibration (simplified modal acceleration)."""
+def floor_checks(annex, member, p):
+    """🏠️ EN 1995-1-1 §7.3: f₁, w(1 kN) stiffness, and velocity (f₁≥8 Hz) or acceleration (f₁<8 Hz)."""
     b, h = num(member, "bM"), num(member, "hM")
     l = max(num(member, "spanM"), 1e-6)
     ei = p["e0"] * b * h ** 3 / 12
@@ -442,8 +468,22 @@ def floor_check(annex, member, p):
     w1kn = deflection(member, p, 0.0, 1000.0)
     xi = num(member, "dampingXi") if num(member, "dampingXi") > 0 else 0.01
     m_star = mu * l / 2
-    a = 1 / max(m_star * math.sqrt(xi), 1e-9) * max(f1 / 8, 0.1) * 0.25 if w1kn > 0 and m_star > 0 and f1 > 0 else 0.0
-    return {"id": f"en1995.7.3.vibration.{member['id']}", "utilization": util(a, 0.05 if annex == "de" else 0.10)}
+    a = 1 / max(m_star * math.sqrt(xi), 1e-9) * max(f1 / 8, 0.1) * 0.25 if m_star > 0 and f1 > 0 else 0.0
+    m_area = num(member, "massKgPerM2") if num(member, "massKgPerM2") > 0 else mu
+    v = math.sqrt(math.pi / (0.8 * m_area * xi)) if m_area > 0 and xi > 0 else 0.0
+    b_vel = 100.0
+    v_lim = b_vel ** (f1 * xi - 1.0) if f1 > 0 and xi > 0 else 0.0
+    w_lim = 0.0015 if annex == "de" else 0.0017
+    out = [
+        {"id": f"en1995.7.3.f1.{member['id']}", "utilization": util(8.0, max(f1, 1e-9))},
+        {"id": f"en1995.7.3.stiffness.{member['id']}", "utilization": util(w1kn, w_lim)},
+    ]
+    if f1 + 1e-9 >= 8.0:
+        out.append({"id": f"en1995.7.3.velocity.{member['id']}", "utilization": util(v, max(v_lim, 1e-12))})
+    else:
+        a_lim = 0.05 if annex == "de" else 0.10
+        out.append({"id": f"en1995.7.3.acceleration.{member['id']}", "utilization": util(a, a_lim)})
+    return out
 
 
 def johansen_single(t1, t2, d, fh1, fh2, my, fax):
@@ -475,14 +515,20 @@ def johansen_double(t1, t2, d, fh1, fh2, my, fax):
     return base + min(fax / 4, 0.25 * base)
 
 
-def johansen_steel(t, t_steel, d, fh, my, fax):
-    """🔩️ §8.2.3 steel-to-timber, thin plate when t_steel ≤ 0.5·d."""
-    if t_steel <= 0.5 * d:
-        third = fh * t * d * (math.sqrt(2 + 4 * my / max(fh * d * t * t, 1e-18)) - 1)
-    else:
-        third = 2.3 * math.sqrt(my * fh * d)
-    base = min(max(0.4 * fh * t * d, 0.0), max(1.15 * math.sqrt(2 * my * fh * d), 0.0), max(third, 0.0))
+def johansen_steel_central(t, d, fh, my, fax):
+    """🛡️ §8.2.3 eq. 8.10 thick plate, also eq. 8.13 central plate in double shear (per plane)."""
+    bearing = fh * t * d
+    base = max(min(bearing, bearing * (math.sqrt(2 + 4 * my / max(fh * d * t * t, 1e-18)) - 1), 2.3 * math.sqrt(my * fh * d)), 0.0)
     return base + min(fax / 4, 0.25 * base)
+
+
+def johansen_steel(t, t_steel, d, fh, my, fax):
+    """🔩️ §8.2.3 steel-to-timber single shear: eq. 8.9 thin (t_steel ≤ 0.5·d), eq. 8.10 thick (≥ d), linear between."""
+    base = max(min(0.4 * fh * t * d, 1.15 * math.sqrt(2 * my * fh * d)), 0.0)
+    thin = base + min(fax / 4, 0.25 * base)
+    thick = johansen_steel_central(t, d, fh, my, fax)
+    ratio = min(max((t_steel / max(d, 1e-12) - 0.5) / 0.5, 0.0), 1.0)
+    return thin + ratio * (thick - thin)
 
 
 def connection_checks(annex, conn):
@@ -504,15 +550,21 @@ def connection_checks(annex, conn):
     fax = 0.2 * fh * d * t1 if "screw" in fastener else 0.0
     planes_count = int(conn.get("shearPlanes") or 0)
     steel = bool(conn.get("steelPlate"))
-    if steel:
-        fvrk, planes = johansen_steel(t1, num(conn, "steelPlateThicknessM"), d, fh, my, fax), 1.0
+    if steel and planes_count >= 2:
+        fvrk = johansen_steel_central(t1, d, fh, my, fax)
+    elif steel:
+        fvrk = johansen_steel(t1, num(conn, "steelPlateThicknessM"), d, fh, my, fax)
     elif planes_count >= 2:
-        fvrk, planes = johansen_double(t1, t2, d, fh, fh, my, fax), planes_count / 2
+        fvrk = johansen_double(t1, t2, d, fh, fh, my, fax)
     else:
-        fvrk, planes = johansen_single(t1, t2, d, fh, fh, my, fax), float(max(planes_count, 1))
-    n = int(conn.get("number") or 0)
+        fvrk = johansen_single(t1, t2, d, fh, fh, my, fax)
+    planes = float(max(planes_count, 1))
+    rows = max(int(conn.get("rows") or 0), 1)
+    n_total = int(conn.get("number") or 0)
+    n = max(int(round(n_total / rows)), 1)
     spacing = num(conn, "spacingM")
-    nef = 1.0 if n <= 1 else min(n, n ** 0.9 * (max(spacing, 1e-6) / (13 * max(d, 1e-6))) ** 0.25)
+    nef_row = 1.0 if n <= 1 else min(n, n ** 0.9 * (max(spacing, 1e-6) / (13 * max(d, 1e-6))) ** 0.25)
+    nef = nef_row * rows
     fvrd = k_mod(conn.get("serviceClass"), rank) * nef * planes * fvrk / 1.3
     clause = "8.2.3" if steel else "8.2.2"
     dd = max(d, 1e-6)

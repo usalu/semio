@@ -7,6 +7,7 @@ const PN: &[NormFieldChoice] = &[
     NormFieldChoice { value: "PN10", label_en: "PN 10", label_de: "PN 10" },
     NormFieldChoice { value: "PN16", label_en: "PN 16", label_de: "PN 16" },
     NormFieldChoice { value: "PN25", label_en: "PN 25", label_de: "PN 25" },
+    NormFieldChoice { value: "PN40", label_en: "PN 40", label_de: "PN 40" },
 ];
 const FUEL: &[NormFieldChoice] = &[
     NormFieldChoice { value: "gas", label_en: "Natural gas", label_de: "Erdgas" },
@@ -67,6 +68,10 @@ const TABLE: &[(&str, NormFieldMeta)] = &[
     ("catalog.file.recordCount", m("Record count", "Satzanzahl", None)),
     ("catalog.file.extensions", m("Header extensions", "Kopferweiterungen", None)),
     ("catalog.file.extensions.fields", m("Extension fields", "Erweiterungsfelder", None)),
+    ("limits.maxFileBytes", m("Max file bytes", "Max. Dateibytes", Some("B"))),
+    ("limits.maxRecords", m("Max records", "Max. Datensätze", None)),
+    ("limits.maxFieldLength", m("Max field length", "Max. Feldlänge", Some("B"))),
+    ("limits.maxNestingDepth", m("Max nesting depth", "Max. Verschachtelungstiefe", None)),
     ("catalog.extensions", m("Catalogue extensions", "Katalogerweiterungen", None)),
     ("catalog.extensions.fields", m("Catalogue extension fields", "Katalog-Erweiterungsfelder", None)),
     ("catalog.products[]", m("Product", "Produkt", None)),

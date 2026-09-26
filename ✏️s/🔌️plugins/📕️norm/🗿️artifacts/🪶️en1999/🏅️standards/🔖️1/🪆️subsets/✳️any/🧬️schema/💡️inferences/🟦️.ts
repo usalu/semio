@@ -27,8 +27,8 @@ type normEn1999InferenceGuardTextBounds = { readonly minLength?: number; readonl
 type normEn1999InferenceGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normEn1999InferenceGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normEn1999InferenceGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normEn1999InferenceGuardReject(at, "value is not an object");
+export const normEn1999InferenceGuardObject = (value: unknown, at: string): Readonly<En1999Inference> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as En1999Inference) : normEn1999InferenceGuardReject(at, "value is not an object");
 export const normEn1999InferenceGuardArray = (value: unknown, at: string, bounds: normEn1999InferenceGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normEn1999InferenceGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normEn1999InferenceGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -61,15 +61,15 @@ export const normEn1999InferenceGuardConstant = <T extends string | number | boo
 export function parseEn1999Inference(value: unknown, at = "$"): En1999Inference {
   const row = normEn1999InferenceGuardObject(value, at);
   return {
-    outline: parseEn1999Outline(row["outline"], `${at}.outline`),
+    outline: parseEn1999Outline(row.outline, `${at}.outline`),
   };
 }
 
 export function parseEn1999Outline(value: unknown, at = "$"): En1999Outline {
-  const row = normEn1999InferenceGuardObject(value, at);
+  const row = normEn1999InferenceGuardObject(value, at) as unknown as En1999Outline;
   return {
-    sectionOutline: normEn1999InferenceGuardArray(row["sectionOutline"], `${at}.sectionOutline`).map((item, index) => normEn1999InferenceGuardString(item, `${at}.sectionOutline[${index}]`)),
-    fieldCount: normEn1999InferenceGuardInteger(row["fieldCount"], `${at}.fieldCount`),
-    entryCount: normEn1999InferenceGuardInteger(row["entryCount"], `${at}.entryCount`),
+    sectionOutline: normEn1999InferenceGuardArray(row.sectionOutline, `${at}.sectionOutline`).map((item, index) => normEn1999InferenceGuardString(item, `${at}.sectionOutline[${index}]`)),
+    fieldCount: normEn1999InferenceGuardInteger(row.fieldCount, `${at}.fieldCount`),
+    entryCount: normEn1999InferenceGuardInteger(row.entryCount, `${at}.entryCount`),
   };
 }

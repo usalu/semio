@@ -62,6 +62,7 @@ KINDS = (
     "change-layer-adjustment-kind",
     "add-layer-asset",
     "remove-layer-asset",
+    "change-layer-pixels",
 )
 """🏷️ Every kind the catalog declares."""
 
@@ -78,6 +79,7 @@ TAGS = {
     "change-layer-adjustment-kind": "changeLayerAdjustmentKind",
     "add-layer-asset": "addLayerAsset",
     "remove-layer-asset": "removeLayerAsset",
+    "change-layer-pixels": "changeLayerPixels",
 }
 """🔤️ The internally tagged `mutation` discriminator of each kind, as the committed schema spells it."""
 
@@ -242,6 +244,13 @@ def apply_mutation(document, mutation):
         elif kind == "move-layer":
             node["transform"]["x"] = float(mutation["newX"])
             node["transform"]["y"] = float(mutation["newY"])
+        elif kind == "change-layer-pixels":
+            if node["kind"] != "pixel" or node["imageKey"] != mutation["expectedImageKey"]:
+                raise AssertionError("Pixel revision mismatch")
+            for key in ("imageKey", "width", "height"):
+                node[key] = mutation["content"][key]
+            if mutation.get("transform") is not None:
+                node["transform"] = copy.deepcopy(mutation["transform"])
         elif kind == "resize-layer":
             if node["kind"] != "pixel":
                 raise AssertionError("%s: %r is a %s layer and carries no size" % (kind, node["id"], node["kind"]))
@@ -284,6 +293,8 @@ def inverse_mutation(document, mutation):
         return {"mutation": TAGS[kind], "layerId": node["id"], "newBlendMode": node["blendMode"]}
     if kind == "move-layer":
         return {"mutation": TAGS[kind], "layerId": node["id"], "newX": node["transform"]["x"], "newY": node["transform"]["y"]}
+    if kind == "change-layer-pixels":
+        return {"mutation": TAGS[kind], "layerId": node["id"], "expectedImageKey": mutation["content"]["imageKey"], "content": {key: node[key] for key in ("imageKey", "width", "height")}, "transform": copy.deepcopy(node["transform"]) if mutation.get("transform") is not None else None}
     if kind == "resize-layer":
         return {"mutation": TAGS[kind], "layerId": node["id"], "newWidth": node["width"], "newHeight": node["height"]}
     return {"mutation": TAGS[kind], "layerId": node["id"], "newAdjustmentKind": node["adjustmentKind"]}

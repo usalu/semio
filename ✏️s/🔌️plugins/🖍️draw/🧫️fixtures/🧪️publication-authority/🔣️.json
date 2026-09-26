@@ -160,6 +160,24 @@
           "lanes": [
             "host-only"
           ]
+        },
+        {
+          "id": "editSelection",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "editPath",
+          "lanes": [
+            "artifact"
+          ]
+        },
+        {
+          "id": "editFill",
+          "lanes": [
+            "artifact"
+          ]
         }
       ],
       "laws": {

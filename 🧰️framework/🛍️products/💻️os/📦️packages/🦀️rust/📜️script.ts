@@ -2140,6 +2140,94 @@ class CheckJcoPackageAdapterScript extends BundleScript {
 }
 //#endregion 🧩️JCO Package Adapter
 
+//#region 🌪️ReopenStorm
+/** 🌪️ The reopen-storm laws of the db engine: a hub restart's reconnect storm, measured where the storage lives. `unit`
+ * greets two dozen grown documents at once after a reopen (bound 30 s, the growth e2e's reopen bound); `fs`, `sqlite`,
+ * `postgres` and `neo4j` are the throughput laws that grow, reopen alone and reopen as a storm and bound the storm against
+ * the solo reopen (`🛢️db/⚙️engine/🧫️fixtures/⏱️throughput`). `postgres`/`neo4j` run against the ONE shared development
+ * server claimed by `os-hub-ts backend run <postgres|neo4j> -- …` (its `OS_HUB_*` environment selects it), so they are
+ * selected only by name and `all` never includes them. */
+const REOPEN_STORM_LAWS: Readonly<Record<string, Readonly<{ law: string; features: string; claimed?: string }>>> = {
+  unit: { law: "db_engine::tests::long::two_dozen_grown_documents_greeted_at_once_after_a_reopen_are_welcomed_within_the_reopen_bound", features: "sqlite" },
+  fs: { law: "db_engine::throughput_tests::fs_commits_and_reopen_storms_stay_within_their_throughput_bounds", features: "sqlite" },
+  sqlite: { law: "db_engine::throughput_tests::sqlite_commits_and_reopen_storms_stay_within_their_throughput_bounds", features: "sqlite" },
+  postgres: { law: "db_engine::throughput_tests::postgres_commits_and_reopen_storms_stay_within_their_throughput_bounds", features: "sqlite,postgres", claimed: "OS_HUB_DATABASE_URL" },
+  neo4j: { law: "db_engine::throughput_tests::neo4j_commits_and_reopen_storms_stay_within_their_throughput_bounds", features: "sqlite,neo4j", claimed: "OS_HUB_NEO4J_URI" },
+};
+
+/** 🌪️ `reopen-storm-check [unit|fs|sqlite|all]…` — runs each selected law alone in its own cargo test process (in place,
+ * `SEMIO_DB_ISOLATED_LAW`), streams its output, reads the storm welcome distribution it prints and publishes the
+ * acceptance record. Ctrl-C stops the running law. */
+class ReopenStormCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const wanted = segments.length === 0 || segments.includes("all") ? Object.keys(REOPEN_STORM_LAWS).filter((name) => !REOPEN_STORM_LAWS[name]!.claimed) : segments;
+    const unknown = wanted.filter((name) => !(name in REOPEN_STORM_LAWS));
+    if (unknown.length) throw new Error(`reopen-storm-check accepts ${Object.keys(REOPEN_STORM_LAWS).join(" | ")} | all, got ${unknown.join(",")}`);
+    const throughput = JSON.parse(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧫️fixtures/⏱️throughput/🔣️.json"), "utf8"));
+    const validate = ownedExport(this.repoRoot, "db.engine", "ThroughputV1");
+    assert(validate(throughput), `throughput fixture: ${JSON.stringify(validate.errors)}`);
+    console.log(`[reopen-storm] throughput fixture valid (ThroughputV1, AJV): storm ${throughput.storm.documents}×${throughput.storm.batches}×${throughput.storm.batchEdits}, storm/serial ≤ ${throughput.bounds.stormToSerialRatioMax}`);
+    const unclaimed = wanted.filter((name) => REOPEN_STORM_LAWS[name]!.claimed && !process.env[REOPEN_STORM_LAWS[name]!.claimed!]);
+    if (unclaimed.length) throw new Error(`reopen-storm-check ${unclaimed.join(",")} needs the claimed shared server: run it under \`os-hub-ts backend run ${unclaimed[0]} -- …\``);
+    const { spawn } = await import("node:child_process");
+    const { acceptanceCheckResult, publishAcceptanceCheckResult } = await import("../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+    const startedAt = new Date();
+    const measured: Record<string, number | string | boolean> = {};
+    const failed: string[] = [];
+    let cancelled = false;
+    for (const [index, name] of wanted.entries()) {
+      if (cancelled) break;
+      const { law, features, claimed } = REOPEN_STORM_LAWS[name]!;
+      console.log(`[reopen-storm] ${index + 1}/${wanted.length} ${name}: ${law}`);
+      const lines: string[] = [];
+      const status = await new Promise<number>((resolveExit) => {
+        const child = spawn("cargo", ["test", "-p", "semio-framework-os-kernel-db", "--features", features, "--lib", "--no-fail-fast", "--", "--exact", law, "--nocapture", "--test-threads=1", ...(claimed ? ["--include-ignored"] : [])], {
+          cwd: this.repoRoot,
+          env: { ...process.env, CARGO_INCREMENTAL: "0", RUST_MIN_STACK: "268435456", SEMIO_DB_ISOLATED_LAW: law },
+          stdio: ["ignore", "pipe", "pipe"],
+        });
+        const interrupt = (): void => {
+          cancelled = true;
+          child.kill("SIGINT");
+        };
+        process.once("SIGINT", interrupt);
+        const collect = (chunk: Buffer): void => {
+          const text = chunk.toString("utf8");
+          process.stdout.write(text);
+          lines.push(...text.split("\n"));
+        };
+        child.stdout?.on("data", collect);
+        child.stderr?.on("data", collect);
+        child.once("close", (code) => {
+          process.removeListener("SIGINT", interrupt);
+          resolveExit(code ?? -1);
+        });
+      });
+      const passed = status === 0 && lines.some((line) => line.includes("test result: ok. 1 passed"));
+      measured[`${name}Pass`] = passed;
+      const storm = lines.map((line) => /storm of (\d+) in (\d+) ms: welcome p50 ([\d.]+) ms .*? max ([\d.]+) ms(?:.*solo ([\d.]+) ms)?/u.exec(line)).find((match) => match !== null);
+      if (storm) Object.assign(measured, { [`${name}Documents`]: Number(storm[1]), [`${name}StormMs`]: Number(storm[2]), [`${name}WelcomeP50Ms`]: Number(storm[3]), [`${name}WelcomeMaxMs`]: Number(storm[4]) }, storm[5] === undefined ? {} : { [`${name}SoloMs`]: Number(storm[5]) });
+      if (!passed) failed.push(name);
+    }
+    const status = cancelled ? "skipped" : failed.length === 0 ? "pass" : "fail";
+    publishAcceptanceCheckResult(
+      this.repoRoot,
+      acceptanceCheckResult({
+        check: "hub-reopen-storm",
+        status,
+        startedAt,
+        measured: { ...measured, laws: wanted.join(","), cancelled },
+        summary: {
+          en: `reopen storm laws ${wanted.length - failed.length}/${wanted.length} pass (${wanted.join(", ")})${failed.length ? `; failing: ${failed.join(", ")}` : ""}${cancelled ? "; cancelled" : ""}`,
+          de: `Wiederöffnungssturm-Gesetze ${wanted.length - failed.length}/${wanted.length} bestanden (${wanted.join(", ")})${failed.length ? `; fehlgeschlagen: ${failed.join(", ")}` : ""}${cancelled ? "; abgebrochen" : ""}`,
+        },
+      }),
+    );
+    if (status !== "pass") process.exitCode = 1;
+  }
+}
+//#endregion 🌪️ReopenStorm
+
 const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("test", TestScript)
@@ -2174,5 +2262,6 @@ router.register("database-shutdown-check", DatabaseShutdownCheckScript);
 router.register("document-mount-single-flight-check", DocumentMountSingleFlightCheckScript);
 router.register("durable-owned-group-decision-check", DurableOwnedGroupDecisionCheckScript);
 router.register("durable-group-journal-check", DurableGroupJournalCheckScript);
+router.register("reopen-storm-check", ReopenStormCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });

@@ -46,7 +46,7 @@ describe("trusted stdio catalog", () => {
     expect(catalog.hubBundle).toBe(fixture.expectedHubBundle);
     expect(catalog.pluginId).toBe("stdio");
     expect(catalog.packageId).toBe("semio:stdio");
-    const json = catalog.nativeCodecs.find((row) => row.artifactKind === "stdio.json");
+    const json = catalog.nativeCodecs.find((row) => row.artifactKind === "s.stdio.json");
     expect(json?.factoryId).toBe("stdio.native.json.v1");
     expect(catalog.openTargets[0]?.packSchemaHash).toBe(json?.packSchemaHash);
   });

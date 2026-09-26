@@ -4,7 +4,7 @@ use crate::{GatewayError, GatewayErrorCode};
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
 use semio_framework_os_kernel::os_directory::{
     client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
-    descriptor_digest_v1, hex_lower, DirectoryEventBody, DirectorySpaceAdministrationPageV1, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
+    descriptor_digest_v1, hex_lower, DirectoryAccessChange, DirectoryEventBody, DirectorySpaceAdministrationPageV1, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
 };
 use semio_framework_os_kernel::{FromValue, ToValue};
 use std::collections::{BTreeMap, HashMap};
@@ -477,11 +477,19 @@ impl HubRemoteBinding {
                 self.invalidate("hub directory rebootstrap requires an authenticated descriptor refresh");
                 HubStreamObservation::RefreshRequired
             }
+            DirectoryStreamMessage::AccessChanged { space_id, change: DirectoryAccessChange::Revoked } if space_id == &self.space_id => {
+                self.revoke(HubBindingError::MembershipRequired);
+                HubStreamObservation::Revoked
+            }
+            DirectoryStreamMessage::AccessChanged { space_id, change: DirectoryAccessChange::Granted } if space_id == &self.space_id => {
+                self.invalidate("hub directory access grant requires an authenticated descriptor refresh");
+                HubStreamObservation::RefreshRequired
+            }
             DirectoryStreamMessage::Heartbeat { head_seq } => {
                 self.observed_event_seq.fetch_max(*head_seq, Ordering::SeqCst);
                 HubStreamObservation::Stable
             }
-            DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } | DirectoryStreamMessage::RebootstrapRequired { .. } => HubStreamObservation::Stable,
+            DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } | DirectoryStreamMessage::RebootstrapRequired { .. } | DirectoryStreamMessage::AccessChanged { .. } => HubStreamObservation::Stable,
         }
     }
 
@@ -629,6 +637,15 @@ fn next_authority_generation() -> Result<u64, HubBindingError> {
 ///
 /// The delegation token is read exactly once here and is never logged, never copied into
 /// `HubOptions`, and never written anywhere: what leaves this function is a session capability.
+///
+/// 🧵️ `process_worker_pool` SEALS the process-wide configuration on its first call, and this
+/// exchange is the first thing a `--hub --credential-file` process does — before
+/// `NativeHubBindingDriver::connect`, before the workspace, before the transport. Sizing it at a
+/// literal `1` therefore sealed the whole process at one core and made every later subsystem's
+/// `available_parallelism()` request a hard assertion failure (observed live 2026-09-20: the
+/// agent principal was adopted, the next line panicked with "process worker pool configuration
+/// mismatch … left: cores: 10, right: cores: 1"). Every other pool site in this crate reads
+/// `available_parallelism()`; this one must agree with them, not undercut them.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn exchange_agent_session(base_url: &str, credential: &crate::agent_credential::AgentCredentialV1) -> Result<crate::agent_credential::AgentSessionGrantV1, GatewayError> {
     use semio_framework_actor::{ActorId, PackageId};
@@ -640,14 +657,6 @@ pub fn exchange_agent_session(base_url: &str, credential: &crate::agent_credenti
     if origin != credential.hub_origin().trim_end_matches('/') {
         return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "--hub origin does not match the origin this agent credential was issued for"));
     }
-    // 🧵️ `process_worker_pool` SEALS the process-wide configuration on its first call, and this
-    // exchange is the first thing a `--hub --credential-file` process does — before
-    // `NativeHubBindingDriver::connect`, before the workspace, before the transport. Sizing it at a
-    // literal `1` therefore sealed the whole process at one core and made every later subsystem's
-    // `available_parallelism()` request a hard assertion failure (observed live 2026-09-20: the
-    // agent principal was adopted, the next line panicked with "process worker pool configuration
-    // mismatch … left: cores: 10, right: cores: 1"). Every other pool site in this crate reads
-    // `available_parallelism()`; this one must agree with them, not undercut them.
     let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
     let pool = semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores));
     let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
@@ -924,6 +933,11 @@ pub struct NativeHubBindingDriver {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl NativeHubBindingDriver {
+    /// 💰️ The per-package byte budget must admit ONE authorized execution-target component plus
+    /// the directory JSON around it. The previous flat 16 MiB was a directory-page budget: a real
+    /// `gis` component is 47 MB, so every component fetch would have aborted mid-body with
+    /// `ByteBudgetExhausted` — the budget is therefore derived from the Hub's own fixed component
+    /// ceiling rather than from a number chosen when only JSON crossed this pool.
     pub fn connect(credential: Arc<LocalHubCredential>, base_url: &str, space_id: &str) -> Result<(Arc<HubRemoteBinding>, Self, Arc<dyn HubSocketGrantSource>), GatewayError> {
         use semio_framework_actor::{ActorId, PackageId};
         use semio_framework_async::{HostAsyncRuntime, ProcessKind, ScopeOwner, TraceId, WorkerPoolConfig};
@@ -939,11 +953,6 @@ impl NativeHubBindingDriver {
         let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
         let scope = runtime.open_scope_now(ScopeOwner::Service("mcp-authenticated-hub-descriptor-index"), None);
         let compute = Arc::new(ComputePool::with_pool(2, pool));
-        // 💰️ The per-package byte budget must admit ONE authorized execution-target component plus
-        // the directory JSON around it. The previous flat 16 MiB was a directory-page budget: a real
-        // `gis` component is 47 MB, so every component fetch would have aborted mid-body with
-        // `ByteBudgetExhausted` — the budget is therefore derived from the Hub's own fixed component
-        // ceiling rather than from a number chosen when only JSON crossed this pool.
         let transport = NativeDirectoryTransport::with_new_http_pool_now(
             runtime.clone(),
             scope,

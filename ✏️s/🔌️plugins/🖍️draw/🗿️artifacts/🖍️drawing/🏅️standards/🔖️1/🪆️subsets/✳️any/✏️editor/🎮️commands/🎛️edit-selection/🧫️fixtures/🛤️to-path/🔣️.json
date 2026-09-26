@@ -1,0 +1,7 @@
+[
+  {"kind":"rect","geometry":{"x":1,"y":2,"width":6,"height":4},"segments":[{"kind":"move","to":[1,2]},{"kind":"line","to":[7,2]},{"kind":"line","to":[7,6]},{"kind":"line","to":[1,6]},{"kind":"close"}]},
+  {"kind":"line","geometry":{"x1":-2,"y1":3,"x2":8,"y2":5},"segments":[{"kind":"move","to":[-2,3]},{"kind":"line","to":[8,5]}]},
+  {"kind":"polygon","geometry":{"points":[[0,0],[4,0],[2,3]]},"segments":[{"kind":"move","to":[0,0]},{"kind":"line","to":[4,0]},{"kind":"line","to":[2,3]},{"kind":"close"}]},
+  {"kind":"ellipse","geometry":{"cx":0,"cy":0,"rx":1,"ry":2},"segments":[{"kind":"move","to":[0,-2]},{"kind":"cubic","ctrl1":[0.5522847498,-2],"ctrl2":[1,-1.1045694996],"to":[1,0]},{"kind":"cubic","ctrl1":[1,1.1045694996],"ctrl2":[0.5522847498,2],"to":[0,2]},{"kind":"cubic","ctrl1":[-0.5522847498,2],"ctrl2":[-1,1.1045694996],"to":[-1,0]},{"kind":"cubic","ctrl1":[-1,-1.1045694996],"ctrl2":[-0.5522847498,-2],"to":[0,-2]},{"kind":"close"}]},
+  {"kind":"circle","geometry":{"cx":0,"cy":0,"r":1},"segments":[{"kind":"move","to":[0,-1]},{"kind":"cubic","ctrl1":[0.5522847498,-1],"ctrl2":[1,-0.5522847498],"to":[1,0]},{"kind":"cubic","ctrl1":[1,0.5522847498],"ctrl2":[0.5522847498,1],"to":[0,1]},{"kind":"cubic","ctrl1":[-0.5522847498,1],"ctrl2":[-1,0.5522847498],"to":[-1,0]},{"kind":"cubic","ctrl1":[-1,-0.5522847498],"ctrl2":[-0.5522847498,-1],"to":[0,-1]},{"kind":"close"}]}
+]

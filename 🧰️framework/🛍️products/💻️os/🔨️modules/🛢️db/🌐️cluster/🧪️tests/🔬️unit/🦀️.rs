@@ -168,6 +168,8 @@ async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
         document_id: protocol::ArtifactId("doc-1".to_string()),
         actor: protocol::ActorId("actor-1".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
         timestamp: protocol::HybridLogicalTimestamp::new(1, seq),

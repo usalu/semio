@@ -22,7 +22,7 @@ async fn sample_manifest() -> ExtensionPackageManifest {
         extends: "flow".into(),
         capabilities: vec!["flow.operator".into()],
         topic_contributions: Value::Array(vec![object([("kind".to_string(), Value::from("flowExtension")), ("id".to_string(), Value::from("math.add"))])]),
-        dependencies: vec![PackagePluginDependency { plugin_id: "flow".into(), version: "^1.0.0".into() }],
+        dependencies: vec![PackagePluginDependency { plugin_id: "flow".into(), version: "=1.0.0".into() }],
         contributions: Value::Array(Vec::new()),
         package_format: EXTENSION_PACKAGE_FORMAT,
     }
@@ -67,11 +67,20 @@ async fn dependencies_default_absent_on_the_wire() {
 #[semio_framework_async_macros::async_test]
 async fn package_plugin_dependency_round_trips_as_a_plain_string_pair() {
     use crate::os_pack::json::{object, Value};
-    let dependency = PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() };
+    let dependency = PackagePluginDependency { plugin_id: "cad".into(), version: "=1.0.0".into() };
     let json = dependency.to_json();
-    assert_eq!(json, object([("pluginId".to_string(), Value::from("cad")), ("version".to_string(), Value::from("^1.0.0"))]));
+    assert_eq!(json, object([("pluginId".to_string(), Value::from("cad")), ("version".to_string(), Value::from("=1.0.0"))]));
     let round_tripped = PackagePluginDependency::from_json(&json).unwrap();
     assert_eq!(round_tripped, dependency);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn package_plugin_dependency_refuses_every_range() {
+    use crate::os_pack::json::{object, Value};
+    for range in ["*", "^1.0.0", "~1.0.0", ">=1.0.0", "1.0.0", "=1.0", "=1.x.0"] {
+        let json = object([("pluginId".to_string(), Value::from("cad")), ("version".to_string(), Value::from(range))]);
+        assert!(PackagePluginDependency::from_json(&json).is_err(), "{range:?} must be refused");
+    }
 }
 //#endregion 🔖️DependencyAndContributionTests
 

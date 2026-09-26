@@ -13,7 +13,8 @@
       "kinds": [
         "set-layer-boolean-operation",
         "update-layer-trace-params",
-        "update-layer-transform"
+        "update-layer-transform",
+        "update-path-geometry"
       ],
       "vectors": [
         {
@@ -46,6 +47,17 @@
             {
               "id": "translates-and-scales-shape-a",
               "directoryName": "📐️translates-and-scales-shape-a"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-path-geometry",
+          "sourceMutationDirectoryName": "✏️update-path-geometry",
+          "mutationDirectoryName": "✏️update-path-geometry",
+          "scenarios": [
+            {
+              "id": "reshape-curve",
+              "directoryName": "✏️reshape-curve"
             }
           ]
         }
@@ -165,6 +177,39 @@
             ]
           },
           "notes": "The retraced path is witnessed by geometry diff only — quick-xml never sees the threshold/epsilon parameters, only their geometric consequence via this repository's own semio_s_2d trace kernel."
+        },
+        {
+          "id": "update-path-geometry",
+          "capability": "drawing-1-transform-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-path-geometry",
+            "bridgeVersion": 1,
+            "variant": "UpdatePathGeometry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-1-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-1-mutate"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "scene-agrees-with-quick-xml-reader"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
         }
       ]
     }

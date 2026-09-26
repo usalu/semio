@@ -195,6 +195,13 @@ pub trait Mutation<P>: Clone + crate::value::ToValue + crate::value::FromValue {
     fn dependencies(&self) -> Vec<crate::ids::MutationId> {
         Vec::new()
     }
+    /// @emoji 🎯️ The structured address this operation writes (outermost segment first; empty: the
+    /// whole artifact), carried as `MutationEnvelope::target` so the hub can tell concurrent writes
+    /// to disjoint parts of a document it cannot read from writes to the same part.
+    /// `#[derive(Mutations)]` forwards each leaf's declared `MutationKind::target`.
+    fn conflict_target(&self) -> Vec<String> {
+        Vec::new()
+    }
     fn base_version(&self) -> Option<crate::ids::ArtifactVersion> {
         None
     }

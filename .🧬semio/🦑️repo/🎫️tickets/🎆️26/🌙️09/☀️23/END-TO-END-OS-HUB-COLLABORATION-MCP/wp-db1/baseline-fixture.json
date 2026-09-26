@@ -1,0 +1,30 @@
+{
+  "schema": "semio.db.throughput/v1",
+  "workers": 10,
+  "payloadBytes": 256,
+  "costModel": {
+    "batches": 8,
+    "batchEdits": 16
+  },
+  "storm": {
+    "documents": 8,
+    "batches": 4,
+    "batchEdits": 16
+  },
+  "bounds": {
+    "commitTasksMax": 10,
+    "commitTasksMeanMax": 4.0,
+    "commitIndexReadsMax": 0,
+    "commitTurnsPerTaskMax": 2,
+    "helloTasksMax": 8,
+    "ackLateToEarlyRatioMax": 2.0,
+    "ackToDurableAppendRatioMax": 6.0,
+    "welcomeStormToSoloRatioMax": 8.0
+  },
+  "targets": {
+    "ackP50Ms": 200,
+    "ackP95Ms": 1000,
+    "welcomeP50Ms": 1000,
+    "welcomeMaxMs": 30000
+  }
+}

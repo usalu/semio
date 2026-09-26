@@ -320,6 +320,28 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         Self::from_payload(payload, Some(input), Some(checkpoint))
     }
 
+    /// 👁️ The agent lane's prepare phase: runs this job's own preflight and work to the emit the shell lane
+    /// would publish, and publishes nothing. The job stays owned by the caller, which closes it through its
+    /// ordinary close protocol ([`InteractiveJob::begin_close`] / [`InteractiveJob::close_step`]).
+    pub fn preview_emit(&mut self) -> Result<(Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, EphemeralEmit<A>), Fault> {
+        let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) =
+            (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut())
+        else {
+            return Err(Fault::from("retained command preview owner is absent"));
+        };
+        let extent = work.extent(command, snapshot, interaction, self.context.as_deref()).ok_or_else(|| Fault::from("retained command work refused the command before any capacity was measured"))?;
+        if extent == 0 || extent > self.maximum_work_items {
+            return Err(Fault::from("retained command exceeds semantic work capacity"));
+        }
+        loop {
+            match work.step(&ArtifactCommandInputs { command, snapshot, config, history, interaction, hover, context: self.context.as_deref(), operation })? {
+                ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => {}
+                ArtifactCommandWorkStep::Complete(emit) => return Ok((emit, EphemeralEmit::default())),
+                ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral } => return Ok((emit, ephemeral)),
+            }
+        }
+    }
+
     fn from_payload(payload: ArtifactRetainedCommandPayload<A>, raw_input: Option<RetainedToolWireInput>, checkpoint_input: Option<RetainedToolWireInput>) -> Self {
         let phase = if checkpoint_input.is_some() {
             ArtifactRetainedCommandPhase::CheckpointPages

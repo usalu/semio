@@ -15,7 +15,7 @@ fn snapshot_schema_path() -> PathBuf {
 }
 
 fn oracle_script() -> PathBuf {
-    family_any_dir().join("🧪️tests").join("⚖️compliance-oracle").join("🐍️.py")
+    family_any_dir().join("🔮️oracles").join("⚖️compliance").join("🐍️.py")
 }
 
 fn example_dsl(name: &str) -> String {
@@ -72,7 +72,7 @@ fn de_vs_en_bridge_fatigue_gamma_mf() {
     en.beams[0].n_cycles = 2.0e6;
     en.beams[0].actions.push(crate::CharacteristicAction {
         id: "FLM3".into(), kind: "fatigue".into(), category: "flm3".into(), stage: "composite".into(),
-        q_area_pa: 0.0, m_k_nm: 0.0, v_k_n: 0.0, n_k_n: 0.0,
+        q_area_pa: 0.0, f_k_n: 0.0,
         delta_sigma_k_pa: 65e6, delta_tau_k_pa: 40e6,
     });
     let mut de = en.clone();
@@ -404,6 +404,13 @@ fn every_editable_leaf_affects_at_least_one_check() {
             }
             dsl::DslValue::Bool(v) => vec![dsl::DslValue::Bool(!*v)],
             dsl::DslValue::String(s) => {
+                if leaf_name(path) == "annex" {
+                    return ["En", "De"]
+                        .into_iter()
+                        .filter(|c| *c != s.as_str())
+                        .map(|c| dsl::DslValue::String((*c).into()))
+                        .collect();
+                }
                 let meta = en1994_field_meta(path);
                 if let Some(choices) = meta.and_then(|m| m.choices) {
                     choices
@@ -434,22 +441,15 @@ fn every_editable_leaf_affects_at_least_one_check() {
         path.contains(".steel.") && !path.ends_with("designation")
     }
 
-    fn beam_force_override(path: &str) -> bool {
-        (path.contains("beams[") || path.contains("slabs[")) && matches!(leaf_name(path), "mKNm" | "vKN" | "nKN")
-    }
-
-    fn column_area_companion(path: &str) -> bool {
-        path.contains("columns[") && matches!(leaf_name(path), "qAreaPa" | "vKN" | "deltaSigmaKPa" | "deltaTauKPa")
-    }
-
     type Pred = fn(&str) -> bool;
-    let scopes: [(&str, En1994Snapshot, Pred); 5] = [
+    let failing_beam = crate::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).expect("failing beam");
+    let scopes: [(&str, En1994Snapshot, Pred); 6] = [
         (
             "default-building",
             En1994Snapshot::default(),
             |p| {
                 let leaf = leaf_name(p);
-                if catalogue_steel_geom(p) || beam_force_override(p) || column_area_companion(p) {
+                if catalogue_steel_geom(p) {
                     return false;
                 }
                 if matches!(leaf, "ltbLengthM" | "nCycles" | "fatigueDetail" | "annex") {
@@ -459,10 +459,21 @@ fn every_editable_leaf_affects_at_least_one_check() {
                     return false;
                 }
                 if leaf == "category" {
-                    // Only multi-variable or QP-sensitive imposed on beams (ψ enters combinations).
                     return p.contains("beams[") && p.contains("Q-office");
                 }
                 true
+            },
+        ),
+        (
+            "failing-beam",
+            failing_beam,
+            |p| {
+                let leaf = leaf_name(p);
+                // Failing DSL base: walk governing load / stud / span leaves that prove Fail paths.
+                if p.contains("beams[") && matches!(leaf, "qAreaPa" | "spacingM" | "totalCount" | "spanM" | "slabThicknessM") {
+                    return true;
+                }
+                false
             },
         ),
         (
@@ -480,10 +491,13 @@ fn every_editable_leaf_affects_at_least_one_check() {
             En1994Snapshot::bridge_girder(),
             |p| {
                 let leaf = leaf_name(p);
-                if matches!(leaf, "structureKind" | "nCycles" | "fatigueDetail") {
+                if matches!(leaf, "annex" | "structureKind" | "nCycles" | "fatigueDetail") {
                     return true;
                 }
-                p.contains("[id=FLM3") && matches!(leaf, "deltaSigmaKPa" | "deltaTauKPa" | "kind")
+                if p.contains("[id=FLM3") && matches!(leaf, "deltaSigmaKPa" | "deltaTauKPa" | "kind" | "fKN" | "qAreaPa") {
+                    return true;
+                }
+                false
             },
         ),
         (
@@ -525,33 +539,22 @@ fn every_editable_leaf_affects_at_least_one_check() {
             }
         }
     }
-    // Annex γ_Mf,s / γ_Mf on bridge fatigue (DE 1.35 vs EN 1.15) — typed enum path.
+    // Annex γ_Mf on bridge fatigue limits (DE 1.35 vs EN 1.15) — same proof as de_vs_en_bridge_fatigue_gamma_mf.
     {
-        let mut base = En1994Snapshot::bridge_girder();
-        base.annex = AnnexChoice::De;
-        let de_sig = norm_sig(&evaluate(&base));
-        base.annex = AnnexChoice::En;
-        let en_sig = norm_sig(&evaluate(&base));
+        let mut de = En1994Snapshot::bridge_girder();
+        de.annex = AnnexChoice::De;
+        let mut en = de.clone();
+        en.annex = AnnexChoice::En;
+        let r_de = evaluate(&de);
+        let r_en = evaluate(&en);
+        let fat_de = r_de.checks.iter().find(|c| c.id.contains("delta-sigma")).expect("de fatigue");
+        let fat_en = r_en.checks.iter().find(|c| c.id.contains("delta-sigma")).expect("en fatigue");
+        assert!(fat_de.limit.value < fat_en.limit.value, "DE γ_Mf must lower Δσ_R (de={} en={})", fat_de.limit.value, fat_en.limit.value);
         checked += 1;
-        if de_sig == en_sig {
-            unaffected.push("bridge-fatigue:annex".into());
-        }
-    }
-
-    // Annex γ_Mf,s / γ_Mf on bridge fatigue (DE 1.35 vs EN 1.15) — typed enum path.
-    {
-        let mut base = En1994Snapshot::bridge_girder();
-        base.annex = AnnexChoice::De;
-        let de_sig = norm_sig(&evaluate(&base));
-        base.annex = AnnexChoice::En;
-        let en_sig = norm_sig(&evaluate(&base));
-        checked += 1;
-        if de_sig == en_sig {
-            unaffected.push("bridge-fatigue:annex".into());
-        }
     }
 
     // Column force leaves on default (characteristic N_k / M_k enter ULS 6.10).
+
 
 
     {
@@ -594,6 +597,7 @@ fn ts_snapshot_facets_have_no_unknown_and_match_rust_leaves() {
         assert!(!body.contains("_placeholder"), "{label} TS must not use _placeholder");
         assert!(body.contains("interface CompositeBeam"), "{label} missing CompositeBeam");
         assert!(body.contains("interface CharacteristicAction"), "{label} missing CharacteristicAction");
+        assert!(body.contains("interface ColumnAction"), "{label} missing ColumnAction");
         assert!(body.contains("qAreaPa"), "{label} missing qAreaPa");
         assert!(!body.contains("qLineNPerM"), "{label} must not keep qLineNPerM");
     }
@@ -607,3 +611,5 @@ fn ts_snapshot_facets_have_no_unknown_and_match_rust_leaves() {
     assert!(beam.get("actions").unwrap().as_array().unwrap()[0].get("qAreaPa").is_some());
     assert!(beam.get("actions").unwrap().as_array().unwrap()[0].get("qLineNPerM").is_none());
 }
+
+

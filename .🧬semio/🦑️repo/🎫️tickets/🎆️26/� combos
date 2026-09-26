@@ -1,0 +1,31 @@
+$ bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts nx run "@semio-tech/norm-vdi3805-rs:test" --skip-nx-cache -- --no-fail-fast
+
+ NX   Running target test for project @semio-tech/norm-vdi3805-rs and 3 tasks it depends on:
+
+
+✔  nx run @semio-tech/framework-schema:generate
+✔  nx run @semio-tech/ui-rs:generate
+✔  nx run @semio-tech/ui-styling-tokens:generate
+
+> nx run @semio-tech/norm-vdi3805-rs:test --no-fail-fast
+
+> bun ./📜️script.ts test --no-fail-fast
+
+[artifact-rust:semio-s-artifact-norm-vdi3805:test] running elapsedMs=10006
+────────────
+ Nextest run ID 94081a6a-2519-43f2-85fa-357b940c539c with nextest profile: fundamental
+    Starting 281 tests across 1 binary
+────────────
+     Summary [   6.931s] 281 tests run: 281 passed, 0 skipped
+
+
+
+ NX   Successfully ran target test for project @semio-tech/norm-vdi3805-rs and 3 tasks it depends on
+
+
+Output of 3 successful tasks were not shown. Run with --verbose or --output-style=static to see it.
+
+  Run duration:      23.4s
+  Cache:             Skipped (--skip-nx-cache)
+  Critical path:     20.5s (2 tasks)
+  Recoverable time:  <1ms

@@ -78,6 +78,31 @@ impl ArtifactOwnedToolJobFactory for PngEditorExampleFactory {
     type Owner = EditorApp<PngEditor>;
     const TOOL_IDS: &'static [&'static str] = STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PNG_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
+}
+//#region 🔖️Editor
+#[derive(Default, Clone, Copy)]
+pub struct PngEditor;
+
+impl ArtifactEditor for PngEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
+    type Snapshot = PngSnapshot;
+    type Mutation = PngMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Presence = NoPresence;
+    type PresenceMutation = NoPresenceMutation;
+    type Transient = NoTransient;
+    type TransientMutation = NoTransientMutation;
+    type Command = PngEditCommand;
+
+    const DIALECT: Dialect = PNG_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_PNG_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<PngEditor>,
@@ -104,31 +129,6 @@ impl ArtifactOwnedToolJobFactory for PngEditorExampleFactory {
     }
     fn command_id(command: &Self::Command) -> &'static str { pngEditor_command_id(command) }
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { pngEditor_command_from_action(action, args) }
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_PNG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
-}
-//#region 🔖️Editor
-#[derive(Default, Clone, Copy)]
-pub struct PngEditor;
-
-impl ArtifactEditor for PngEditor {
-    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
-    }
-    type Snapshot = PngSnapshot;
-    type Mutation = PngMutation;
-    type Config = NoConfig;
-    type ConfigMutation = NoConfigMutation;
-    type Draft = NoDraft;
-    type DraftMutation = NoDraftMutation;
-    type Presence = NoPresence;
-    type PresenceMutation = NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
-    type Command = PngEditCommand;
-
-    const DIALECT: Dialect = PNG_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = STDIO_PNG_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> Self::Snapshot {
         PngSnapshot::default()
@@ -168,6 +168,7 @@ pub fn create_png_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PNG_DIALECT).document(["semio", "png"]).icon_id("image").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
+        .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
         .build_definition()
 }

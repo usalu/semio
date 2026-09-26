@@ -1,6 +1,29 @@
 use super::*;
 
 #[test]
+fn closing_input_reports_each_admitted_action_receipt_once() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
+    let rows = fixture["receipts"].as_array().unwrap();
+    let mut input = InputState::<()>::default();
+    let mut batch = input.reserve_actions(rows.len(), rows.len() * 128).unwrap();
+    for row in rows {
+        batch.action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 128, |builder| {
+            builder.set_receipt(crate::wgpu::ActionQueueReceipt { token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })
+        }).unwrap();
+    }
+    batch.publish().unwrap();
+    let mut cancelled = Vec::new();
+    for _ in 0..64 {
+        if input.close_step_with_receipt(|receipt| cancelled.push(format!("{}:{}", receipt.token, receipt.member))).unwrap() {
+            break;
+        }
+    }
+    assert!(input.terminal_is_empty());
+    assert_eq!(serde_json::json!(cancelled), fixture["closed"]);
+    assert!(input.close_step_with_receipt(|_| panic!("receipt settled twice")).unwrap());
+}
+
+#[test]
 fn a_reopened_text_owner_drains_the_prior_projection_before_projecting_its_current_value() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⌨️text-owner-lifecycle/🔣️.json")).expect("text owner lifecycle fixture");
     assert_eq!(fixture["sequence"], serde_json::json!(["focus", "advance-to-projection", "blur", "refocus", "drain"]));

@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1", "status": "implemented", "from": "s.stdio.mp3.standard.mpeg1-layer3.dialect.source", "to": "s.stdio.mp3.standard.mpeg1-layer3.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.mp3.v1", "artifact_kind": "stdio.mp3", "artifact_schema": "stdio.mp3", "extension": "mp3", "pack_schema_hash": "3dc49d96a507fc2454bbb70e1d9958f08009bc3eb7db12da33c405ba148e7d6e", "runtime_capability_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.codec-stdio-mp3-extension-mp3.v1" } }
+    { "id": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1", "status": "implemented", "from": "s.stdio.mp3.standard.mpeg1-layer3.dialect.source", "to": "s.stdio.mp3.standard.mpeg1-layer3.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.mp3.v1", "artifact_kind": "s.stdio.mp3", "artifact_schema": "stdio.mp3", "extension": "mp3", "pack_schema_hash": "3dc49d96a507fc2454bbb70e1d9958f08009bc3eb7db12da33c405ba148e7d6e", "runtime_capability_id": "s.stdio.mp3.standard.mpeg1-layer3.codec.codec-stdio-mp3-extension-mp3.v1" } }
   ],
   "mutations": [],
   "inferences": [],

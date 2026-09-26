@@ -1,7 +1,7 @@
 {
   "ChangeGeometryParameters": {
-    "id": "geom.valve.50",
-    "new_parameters": {
+    "id": "geom-valve-50",
+    "newParameters": {
       "clearance": 0.0625,
       "scale": 0.5
     }

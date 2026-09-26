@@ -121,18 +121,6 @@
         "forwardAllArgs": true
       }
     },
-    "describe": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts describe",
-        "forwardAllArgs": true
-      },
-      "outputs": [
-        "{workspaceRoot}/\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\ude90\ufe0fspace/\ud83d\udec2\ufe0f.descriptor.semio",
-        "{workspaceRoot}/\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83e\ude90\ufe0fspace/\ud83d\udd23\ufe0f.json"
-      ]
-    },
     "persistence-data-class-check": {
       "executor": "nx:run-commands",
       "cache": true,

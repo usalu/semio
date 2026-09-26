@@ -6,11 +6,17 @@ type CharacteristicAction {
   category: String!
   stage: String!
   qAreaPa: Float!
-  mKNm: Float!
-  vKN: Float!
-  nKN: Float!
+  fKN: Float!
   deltaSigmaKPa: Float!
   deltaTauKPa: Float!
+}
+type ColumnAction {
+  id: String!
+  kind: String!
+  category: String!
+  stage: String!
+  nKN: Float!
+  mKNm: Float!
 }
 type SteelSection {
   designation: String!
@@ -72,7 +78,7 @@ type CompositeColumn {
   reinforcementFYkPa: Float!
   iM4: Float!
   bucklingCurve: String!
-  actions: [CharacteristicAction!]!
+  actions: [ColumnAction!]!
 }
 type CompositeSlab {
   id: String!

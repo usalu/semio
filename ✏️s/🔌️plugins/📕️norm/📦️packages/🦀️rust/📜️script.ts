@@ -4,8 +4,7 @@ import Ajv from "ajv";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
-import { FRESH_COMPONENT_MAX_BYTES, pluginWasmArtifactPath } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
+import { FRESH_COMPONENT_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
 
 /** 🪶️ Headroom this plugin holds under `FRESH_COMPONENT_MAX_BYTES`, so fifteen standards artifacts
  * never again reach the admission bound unnoticed: norm's component was 273 934 765 B against a
@@ -347,13 +346,13 @@ function componentCoreCensus(buffer: Buffer): NormComponentCensus {
   return { total: buffer.length, module: core.bytes, name: total((section) => section.id === 0 && section.name === "name"), code: total((section) => section.id === 10), data: total((section) => section.id === 11) };
 }
 
-/** ⚖️ Law: the `wasm-dev` component this plugin's `describe` reads fits the admission bound with
+/** ⚖️ Law: the `component-dev` deliverable this plugin's `describe` reads fits the admission bound with
  * norm's own headroom, and carries no `name` custom section — 55.9 % of the refused 2026-09-22
  * component was mangled symbol names, so their absence is what keeps the bound met. */
 class ComponentBudgetScript extends BundleScript {
   run(): void {
-    const component = pluginWasmArtifactPath(this.repoRoot, "semio-s-plugin-norm");
-    if (!existsSync(component)) throw new Error(`norm's wasm-dev component is absent, so its size cannot be weighed: build it with \`cargo build -p semio-s-plugin-norm --target wasm32-wasip2 --profile wasm-dev\` (${component})`);
+    const component = join(this.root, "dist", "component-dev", "semio_s_plugin_norm.wasm");
+    if (!existsSync(component)) throw new Error(`norm's component-dev deliverable is absent, so its size cannot be weighed: build it with \`bun nx run @semio-tech/norm-plugin:component-dev\` (${component})`);
     const census = componentCoreCensus(readFileSync(component));
     for (const hostile of [Buffer.from("this is not a wasm artifact"), Buffer.from("\0asm\r\0\0", "latin1")]) {
       let refused = false;
@@ -375,15 +374,6 @@ class ComponentBudgetScript extends BundleScript {
 class CheckScript extends BundleScript {
   run(segments: string[]): void {
     runCargo(["check", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);
-  }
-}
-
-/** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
- * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
- * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
-class DescribeScript extends BundleScript {
-  run(): void {
-    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-norm", join(this.root, "..", "..")));
   }
 }
 
@@ -427,7 +417,6 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check", CheckScript)
   .register("results-window-config-source", ResultsWindowConfigSourceScript)
   .register("results-window-config-test", ResultsWindowConfigTestScript)
-  .register("describe", DescribeScript)
   .register("component-budget-check", ComponentBudgetScript)
   .register("mutation-leaf-taxonomy-generate", MutationLeafTaxonomyGenerateScript)
   .register("mutation-leaf-taxonomy-check", MutationLeafTaxonomyCheckScript);

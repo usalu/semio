@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.md.standard.commonmark.codec.native-document.v1", "status": "implemented", "from": "s.stdio.md.standard.commonmark.dialect.source", "to": "s.stdio.md.standard.commonmark.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.md.v1", "artifact_kind": "stdio.md", "artifact_schema": "stdio.md", "extension": "md", "pack_schema_hash": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa", "runtime_capability_id": "s.stdio.md.standard.commonmark.codec.codec-stdio-md-extension-md.v1" } }
+    { "id": "s.stdio.md.standard.commonmark.codec.native-document.v1", "status": "implemented", "from": "s.stdio.md.standard.commonmark.dialect.source", "to": "s.stdio.md.standard.commonmark.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.md.v1", "artifact_kind": "s.stdio.md", "artifact_schema": "stdio.md", "extension": "md", "pack_schema_hash": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa", "runtime_capability_id": "s.stdio.md.standard.commonmark.codec.codec-stdio-md-extension-md.v1" } }
   ],
   "mutations": [],
   "inferences": [],

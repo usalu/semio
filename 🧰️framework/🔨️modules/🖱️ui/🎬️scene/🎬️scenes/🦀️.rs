@@ -1705,6 +1705,8 @@ pub struct Paint2dScene {
     pub active_utility: String,
     pub brush_size: f64,
     pub brush_opacity: f64,
+    pub brush_color: String,
+    pub brush_hardness: f64,
     pub view_mode: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub composite_viewport_json: Option<String>,
@@ -1837,6 +1839,8 @@ impl ToValue for Paint2dScene {
         value_push(&mut entries, "activeUtility", &self.active_utility);
         value_push(&mut entries, "brushSize", &self.brush_size);
         value_push(&mut entries, "brushOpacity", &self.brush_opacity);
+        value_push(&mut entries, "brushColor", &self.brush_color);
+        value_push(&mut entries, "brushHardness", &self.brush_hardness);
         value_push(&mut entries, "viewMode", &self.view_mode);
         value_push_option(&mut entries, "compositeViewportJson", &self.composite_viewport_json);
         value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
@@ -1856,6 +1860,8 @@ impl FromValue for Paint2dScene {
             active_utility: value_decode(&entries, "activeUtility")?,
             brush_size: value_decode(&entries, "brushSize")?,
             brush_opacity: value_decode(&entries, "brushOpacity")?,
+            brush_color: value_decode(&entries, "brushColor")?,
+            brush_hardness: value_decode(&entries, "brushHardness")?,
             view_mode: value_decode(&entries, "viewMode")?,
             composite_viewport_json: value_decode_option(&entries, "compositeViewportJson")?,
             lanes: value_decode_default(&entries, "lanes", Vec::new)?,

@@ -36,18 +36,6 @@
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       }
-    },
-    "describe": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🖨️raster/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts describe",
-        "forwardAllArgs": true
-      },
-      "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/🛂️.descriptor.semio",
-        "{workspaceRoot}/✏️s/🔌️plugins/🖨️raster/🔣️.json"
-      ]
     }
   }
 }

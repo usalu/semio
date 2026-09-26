@@ -1,4 +1,4 @@
-//! 📥️ EN 1995 play app — the inputs window: the raw compliance document, rendered as JSON.
+//! 📥️ EN 1995 play app — the inputs window: the raw compliance document, structured field editor.
 
 use crate::En1995Snapshot;
 use semio_framework_plugin::{LocalizedLabel, TreeWindows, WindowKindDefinition};

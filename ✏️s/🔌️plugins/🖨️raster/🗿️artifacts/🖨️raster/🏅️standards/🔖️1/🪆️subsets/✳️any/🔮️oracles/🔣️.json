@@ -188,6 +188,17 @@
               "directoryName": "📐️resizes-the-canvas-41d97f"
             }
           ]
+        },
+        {
+          "mutationId": "change-layer-pixels",
+          "sourceMutationDirectoryName": "🎨️change-layer-pixels",
+          "mutationDirectoryName": "🎨️change-layer-pixels",
+          "scenarios": [
+            {
+              "id": "preserves-layer-settings-and-nullable-extent",
+              "directoryName": "🎨️preserves-layer-settings"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -202,7 +213,8 @@
         "resize-layer",
         "change-layer-adjustment-kind",
         "add-layer-asset",
-        "remove-layer-asset"
+        "remove-layer-asset",
+        "change-layer-pixels"
       ]
     }
   ],
@@ -455,6 +467,27 @@
             "operation": "resize-layer",
             "bridgeVersion": 1,
             "variant": "ResizeLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "raster-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-layer-pixels",
+          "capability": "raster-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-layer-pixels",
+            "bridgeVersion": 1,
+            "variant": "ChangeLayerPixels"
           },
           "oracleRequirements": [
             {

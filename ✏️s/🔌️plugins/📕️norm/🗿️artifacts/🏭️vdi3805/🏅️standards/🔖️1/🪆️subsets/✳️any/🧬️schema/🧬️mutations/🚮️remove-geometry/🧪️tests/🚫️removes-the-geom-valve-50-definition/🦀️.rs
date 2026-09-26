@@ -17,10 +17,10 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
-}
+    }
 fn expected_after() -> Vdi3805Snapshot {
     serde_json::from_str(AFTER).expect("after snapshot decodes")
-}
+    }
 fn mutation() -> Vdi3805Mutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
@@ -28,14 +28,14 @@ fn applied() -> Vdi3805Snapshot {
     let base = before();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &base);
     <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), &base).expect("remove-geometry applies to its committed before-snapshot")
-}
+    }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let snapshot = applied();
     assert!(snapshot.geometry.is_empty(), "remove-geometry/removes-the-geom-valve-50-definition: the geometry map must end up empty");
-    assert_eq!(snapshot.catalog.products[0].configuration.geometry_ref.as_deref(), Some("geom.valve.50"), "remove-geometry/removes-the-geom-valve-50-definition: the dangling geometry_ref is left in place — no cascade");
+    assert_eq!(snapshot.catalog.products[0].configuration.geometry_ref.as_deref(), Some("geom-valve-50"), "remove-geometry/removes-the-geom-valve-50-definition: the dangling geometry_ref is left in place — no cascade");
     assert_eq!(snapshot, expected_after(), "remove-geometry/removes-the-geom-valve-50-definition: applied state differs from committed after-snapshot");
 }
 

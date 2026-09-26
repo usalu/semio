@@ -1,68 +1,65 @@
-# Impl — VDI 3805 (`🏭️vdi3805`)
+# Impl — VDI 3805 (`vdi3805` / 🏭️vdi3805)
 
-Wave C/D + Round 2 verifier fixes for the manufacturer product-data exchange guideline.
+Wave C fixer (fresh) against Round-4 `📓️verify-vdi3805.md` FAIL (1). Suite was 282/282 + contract 51/51; German titles and `catalog.file.*` paths left untouched.
+
+## Round 4 residual (FAIL 1 → closed)
+
+Dangling `accessoryId` / `componentId` (including after perturbation to `__dangling__`) now emit `Remedy::one_of` with existing catalogue **product ids** — same pattern as index `productId` and `geometryRef` — not `Remedy::exactly` with a 0→1 placeholder.
+
+| Site | Change |
+|------|--------|
+| Evaluate accessories / components | `Remedy::one_of(..., product_ids, …)` with en≠de action copy |
+| `validate_structure` accessory/component integrity | Compare against `product.id` set (was `article_number`) so structure Fail and evaluate Fail agree on the same identifier space |
+| `check_part1` structure branch | `accessoryId` / `componentId` paths take `one_of` product ids instead of falling through to `exactly` |
+
+Test: `dangling_accessory_and_component_ids_fail_with_one_of_existing_product_ids` asserts Fail + non-empty `one_of` options containing an existing product id for both accessory and component.
+
+Not reintroduced: `manufacturerFile.*` evaluate paths, bare-`id` perturbation exemption, fingerprints, `param_metric`, flange default.
 
 ## Final subject schema (sketch)
 
 ```text
 Vdi3805Snapshot
-├── manufacturerFile / catalog.file
+├── catalog.file          # single stored header (diff may carry sparse manufacturerFile → apply onto catalog.file)
 ├── catalog.products[id=…]
 │   ├── id (= articleNumber)
 │   ├── identity / title / sheet / records[]
 │   ├── configuration.attributes : SheetAttributes
 │   │   ├── valveHeating | radiator | pumpHeating | heatGenerator
-│   │   └── generic { entries[] { key, value, unit? } }  # mirrors native 210
-│   ├── accessories[] { accessoryId, required, quantity }
-│   └── components[] { componentId, quantity }
+│   │   └── generic { entries[] { key, value, unit? } }
+│   ├── accessories[] { accessoryId → product.id, required, quantity }
+│   └── components[] { componentId → product.id, quantity }
 ├── geometry / curves / editionProfile / correctionAsOf / index / limits
 ```
 
 SI: `kvsM3S` in m³/s, lengths in m, power in W, temperatures in °C.
 
-## Round 2 blockers (all fixed)
+## Prior Wave D Round 3 residuals (still closed)
 
-1. **Sheet routing** — `check_sheet_product` switches on `product.sheet` (2→valve, 3→radiator, 5→pump, 6→heat-gen, else operative). Sync Fail when 210 implies typed attrs but configuration is Generic.
-2. **Operative Blatt rules** — mandatory keys + numeric ranges + curve x-monotonicity per published sheet; `part_N` identity Pass removed (returns real Pass/Fail from sheet checks); coverage is one summary N/A (not 55 label-flooding rows).
-3. **Typed catalogues + Part 1** — radiator L/H/D; pump DN/head/power; heat-gen flow/return temps; `correctionAsOf` year/month; index product ids; accessories/components link ids.
-4. **Writable remedies** — sync/edition/mandatory Fail remedies target typed/generic attribute leaves (sync regenerates 210). CRUD mutation names renamed to approved semantic verbs: `add-`/`remove-`/`change-` (no create/update/delete/replace).
-5. **Field meta** — `[]` wildcards for correctionAsOf, index, accessories, components, geometry connections, pump/radiator/heat-gen, generic entries; leaf walk test asserts en+de.
-6. **Facets** — GraphQL `Product.id`; `GenericAttributes { entries }`; JSON/TS/proto updated.
-7. **Oracle** — Blatt 2/3/5/6 + representative generic mandatory; `every_emitted_path_resolves` on conforming+nonconforming.
-8. **Localization** — distinct en+de (no `copy(x,x)` for structure/mandatory why text).
+1. Perturbation: bare `id` not exempt; refs perturb to `__dangling__`.
+2. Distinct German SubjectRef titles (`Nennweite`, `Durchflusskoeffizient kvs`, …).
+3. Structure diagnostics/remedies emit `catalog.file.*` only.
 
-## Check catalogue
+## Gaming removal (14:37 / 14:42)
 
-| Part | Clause | Check id | Remedy |
-|------|--------|----------|--------|
-| 1 | 4.1–4.5 | structure / correctionAsOf / index / accessories / components | scalar leaves |
-| 2 | 4.2 / 5.1 | dn / kvs / pn / authority / curve | attribute + point y/x |
-| 3 | 4.1–4.3 | phi / n / lengthM / heightM / depthM | attribute leaves |
-| 5 | 4.1–4.3 / 5.1 | q / eta / DN / head / power / Q-H | attribute + point y |
-| 6 | 4.1–4.4 | qn / fuel / flowTempMaxC / returnTempMinC | attribute leaves |
-| Operative | 4.1–5.1 | mandatory / range / curve | attribute entry value |
-| Sync | 4.0 | attributes ↔ 210 | typed attribute leaf |
-| Edition | edition | profile mandatory set | attribute / productGroup |
+Guard: `check_sources_contain_no_fingerprint_gaming_patterns`. No `param_metric` / `pos_metric` / fingerprint folds in evaluate source.
 
 ## DE/EN
 
-VDI 3805 DE-origin only; `annex = De`.
+VDI 3805 DE-origin only; `annex = De`. English and German remedy/explanation strings stay different words.
 
-## Examples
+## Runner
 
-| Id | Role |
-|----|------|
-| conforming / demo | Blatt-2 DN50 valve with 210 + curve-kvs |
-| nonconforming | Multi-fail (structure, DN, kvs, historical, …) |
+`bun nx run @semio-tech/norm-vdi3805-rs:test --skip-nx-cache -- --no-fail-fast`
+→ **Summary [2.942s] 283 tests run: 283 passed, 0 skipped**
 
-## Mutations (semantic verbs)
-
-`change-manufacturer-file`, `change-limits`, `add-product`, `remove-product`, `change-product-configuration`, `add-geometry`, `remove-geometry`, `change-geometry-parameters`, `add-curve`, `remove-curve`, `change-curve-points`, plus existing `change-*` / `remove-*` / `rename-*` / `resize-*` / `add-geometry-connection`.
-
-## Tests run
-
-`bun nx run @semio-tech/norm-vdi3805-rs:test --skip-nx-cache -- --no-fail-fast` → **Summary [0.696s] 255 tests run: 255 passed, 0 skipped**.
+`bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache`
+→ **Summary [0.107s] 51 tests run: 51 passed, 0 skipped**
 
 ## Remaining gaps
+
+None.
+
+## Requests to coordinator
 
 None.

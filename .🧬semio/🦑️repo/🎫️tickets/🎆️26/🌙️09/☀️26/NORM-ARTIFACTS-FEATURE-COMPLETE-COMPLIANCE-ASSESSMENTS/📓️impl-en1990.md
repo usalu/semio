@@ -1,3 +1,24 @@
+# Impl — EN 1990 (Wave C Round 6)
+
+**Family:** `⚖️en1990`  
+**Runner (family):** `bun nx run @semio-tech/norm-en1990-rs:test --skip-nx-cache -- --no-fail-fast`  
+**Result:** `Summary [3.108s] 141 tests run: 141 passed, 0 skipped`  
+
+## Round 6 fixes (CORRECTION 14:54)
+
+| Item | Location |
+|------|----------|
+| `importance_gamma_i` rows from `ImportanceClass::{I..IV}.gamma_i()` (no duplicated literals) | `✏️editor/📌️panels/📚️catalogue/🦀️.rs` |
+| Catalogue ↔ source parity: EN office ψ₀ + class III γ_I | `reference_tables_cells_match_psi_and_gamma_i_sources` in `✏️editor/📌️panels/📚️catalogue/🧪️tests/🔬️unit/🦀️.rs` |
+
+Round-5 fixes (reference-id perturbation, referential integrity, duplicate ids, seismic N/A, `parseEn1990Artifact`) unchanged.
+
+## Remaining gaps
+
+None.
+
+---
+
 # Impl — EN 1990 (Wave D Round 5)
 
 **Family:** `⚖️en1990`  

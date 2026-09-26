@@ -1,6 +1,6 @@
 //! 🔔️ Fixed, generation-qualified, coalescing work independent of queued closures.
 use super::{Job, Lane, Mutex, PoisonError, VecDeque, LANE_COUNT};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 /// 📏️ Each pool pre-admits this many reusable maintenance slots.
 pub const WORKER_MAINTENANCE_CAPACITY: usize = 64;
@@ -65,9 +65,13 @@ struct State {
     hook_first: [bool; LANE_COUNT],
 }
 
+/// 🔔️ Per lane, how many hooks are requested and neither running, closing nor closed: written
+/// under the state lock after every transition, read without it, so an idle worker's scan never
+/// contends for the registry.
 pub(super) struct WorkerMaintenanceRegistry {
     identity: u64,
     state: Mutex<State>,
+    pending: [AtomicU32; LANE_COUNT],
 }
 
 pub(super) struct Invocation {
@@ -98,7 +102,19 @@ impl PoolWork {
 impl WorkerMaintenanceRegistry {
     pub(super) fn new() -> Self {
         let identity = NEXT_POOL_ID.try_update(Ordering::Relaxed, Ordering::Relaxed, |value| value.checked_add(1)).expect("WorkerPool maintenance identity exhausted");
-        Self { identity, state: Mutex::new(State { next_generation: 1, closed: false, entries: [None; WORKER_MAINTENANCE_CAPACITY], cursor: [0; LANE_COUNT], hook_first: [false; LANE_COUNT] }) }
+        Self { identity, state: Mutex::new(State { next_generation: 1, closed: false, entries: [None; WORKER_MAINTENANCE_CAPACITY], cursor: [0; LANE_COUNT], hook_first: [false; LANE_COUNT] }), pending: std::array::from_fn(|_| AtomicU32::new(0)) }
+    }
+
+    fn publish(&self, state: &State) {
+        let mut pending = [0u32; LANE_COUNT];
+        if !state.closed {
+            for entry in state.entries.iter().flatten().filter(|entry| entry.requested && !entry.running && !entry.closing) {
+                pending[entry.lane.index()] += 1;
+            }
+        }
+        for (published, count) in self.pending.iter().zip(pending) {
+            published.store(count, Ordering::Release);
+        }
     }
 
     pub(super) fn install(&self, lane: Lane, callback: WorkerMaintenanceCallback, context: [u64; 2]) -> Result<WorkerMaintenanceTicket, WorkerMaintenanceError> {
@@ -131,6 +147,7 @@ impl WorkerMaintenanceRegistry {
         }
         let result = if entry.requested { WorkerMaintenanceRequest::Coalesced } else { WorkerMaintenanceRequest::Requested };
         entry.requested = true;
+        self.publish(&state);
         Ok(result)
     }
 
@@ -139,16 +156,19 @@ impl WorkerMaintenanceRegistry {
         let entry = self.exact(&mut state, ticket)?;
         entry.closing = true;
         entry.requested = false;
-        if entry.running {
-            return Ok(false);
+        let running = entry.running;
+        if !running {
+            state.entries[usize::from(ticket.slot)] = None;
         }
-        state.entries[usize::from(ticket.slot)] = None;
-        Ok(true)
+        self.publish(&state);
+        Ok(!running)
     }
 
     pub(super) fn has_pending(&self, lane: Option<Lane>) -> bool {
-        let state = self.state.lock().unwrap_or_else(PoisonError::into_inner);
-        !state.closed && state.entries.iter().flatten().any(|entry| entry.requested && !entry.running && !entry.closing && lane.is_none_or(|lane| lane == entry.lane))
+        match lane {
+            Some(lane) => self.pending[lane.index()].load(Ordering::Acquire) != 0,
+            None => self.pending.iter().any(|pending| pending.load(Ordering::Acquire) != 0),
+        }
     }
 
     pub(super) fn shutdown(&self) {
@@ -157,6 +177,7 @@ impl WorkerMaintenanceRegistry {
         for entry in state.entries.iter_mut().flatten() {
             entry.requested = false;
         }
+        self.publish(&state);
     }
 
     pub(super) fn select(&self, lane: Lane, queue: &mut VecDeque<Job>) -> Option<PoolWork> {
@@ -178,7 +199,9 @@ impl WorkerMaintenanceRegistry {
         let entry = state.entries[slot].as_mut().expect("selected exact maintenance hook");
         entry.requested = false;
         entry.running = true;
-        Some(PoolWork::Maintenance(Invocation { ticket: WorkerMaintenanceTicket { pool: self.identity, slot: slot as u8, generation: entry.generation }, callback: entry.callback, context: entry.context }))
+        let invocation = Invocation { ticket: WorkerMaintenanceTicket { pool: self.identity, slot: slot as u8, generation: entry.generation }, callback: entry.callback, context: entry.context };
+        self.publish(&state);
+        Some(PoolWork::Maintenance(invocation))
     }
 
     pub(super) fn select_hook(&self, lane: Lane) -> Option<PoolWork> {
@@ -194,7 +217,9 @@ impl WorkerMaintenanceRegistry {
         let entry = state.entries[slot].as_mut().expect("selected exact maintenance hook");
         entry.requested = false;
         entry.running = true;
-        Some(PoolWork::Maintenance(Invocation { ticket: WorkerMaintenanceTicket { pool: self.identity, slot: slot as u8, generation: entry.generation }, callback: entry.callback, context: entry.context }))
+        let invocation = Invocation { ticket: WorkerMaintenanceTicket { pool: self.identity, slot: slot as u8, generation: entry.generation }, callback: entry.callback, context: entry.context };
+        self.publish(&state);
+        Some(PoolWork::Maintenance(invocation))
     }
 
     fn finish(&self, invocation: &Invocation, step: WorkerMaintenanceStep) {
@@ -208,6 +233,7 @@ impl WorkerMaintenanceRegistry {
         };
         if retire {
             state.entries[slot] = None;
+            self.publish(&state);
             return;
         }
         let entry = self.exact(&mut state, invocation.ticket).expect("running maintenance slot cannot be retired or reused");
@@ -217,6 +243,7 @@ impl WorkerMaintenanceRegistry {
         } else if step == WorkerMaintenanceStep::More {
             entry.requested = true;
         }
+        self.publish(&state);
     }
 }
 

@@ -7,19 +7,46 @@
 //! @see ../🦀️.rs — `divergence`, `mutation_is_observable`, `inverse_restores`.
 
 use super::{divergence, inverse_restores, mutation_is_observable};
-use semio_repo_test_host::{parse_json, Json};
+use semio_repo_test_host::{parse_json, Context, Json};
 
 //#region 🔖️Vector
 /// 🧫️ One kind's committed `(before, mutation, after, diff, outcome)` specification vector, read literally.
-pub struct Vector {
-    pub before: &'static str,
-    pub mutation: &'static str,
-    pub after: &'static str,
-    pub diff: &'static str,
-    pub outcome: &'static str,
+pub struct Vector<'a> {
+    pub before: &'a str,
+    pub mutation: &'a str,
+    pub after: &'a str,
+    pub diff: &'a str,
+    pub outcome: &'a str,
     /// 👁️ Whether the committed after-snapshot differs from the before-snapshot; `false` only for a record with no
     /// observable field (named, with its reason, in the case's feature).
     pub observable: bool,
+}
+
+/// 📜️ The five committed leaves a scenario's doc string addresses by URI (`before`, `mutation`, `after`, `diff`,
+/// `outcome`), read through the plan's declared fixtures — so the feature stays the one place a vector path is written.
+pub struct Leaves {
+    pub before: String,
+    pub mutation: String,
+    pub after: String,
+    pub diff: String,
+    pub outcome: String,
+}
+
+impl Leaves {
+    /// 📥️ Reads every leaf the scenario's doc string names.
+    pub fn read(ctx: &Context) -> Result<Leaves, String> {
+        let spec = ctx.doc_json()?;
+        let text = |member: &str| -> Result<String, String> {
+            let uri = spec.str(member);
+            String::from_utf8(ctx.fixture_bytes(&uri)?).map_err(|error| format!("{uri}: {error}"))
+        };
+        Ok(Leaves { before: text("before")?, mutation: text("mutation")?, after: text("after")?, diff: text("diff")?, outcome: text("outcome")? })
+    }
+
+    /// 🧫️ The leaves as the vector the laws judge.
+    pub fn vector(&self, observable: bool) -> Vector<'_> {
+        Vector { before: &self.before, mutation: &self.mutation, after: &self.after, diff: &self.diff, outcome: &self.outcome, observable }
+    }
 }
 //#endregion 🔖️Vector
 
@@ -56,7 +83,7 @@ fn declared_outcome_holds(kind: &str, produced: &[Json], outcome: &Json) -> Resu
 //#region 🔖️Laws
 /// 🎯️ The forward law over one report: after-snapshot, delta and diagnostics are exactly what the vector commits, and
 /// an `applied` vector really moved the snapshot. Returns the applied snapshot for the outcome payload.
-pub fn mutate(kind: &str, report: &str, committed: &Vector) -> Result<Json, String> {
+pub fn mutate(kind: &str, report: &str, committed: &Vector<'_>) -> Result<Json, String> {
     let report = parse_json(report)?;
     let applied = member(&report, "snapshot")?;
     if let Some(first) = divergence(applied, member(&report, "expectedSnapshot")?) {

@@ -53,6 +53,47 @@ async fn exercise_wal_storage(storage: &impl WalStorage) {
     writer.release().await.unwrap();
 }
 
+/// 🚪️ Opening a backend while every backend control of the process is taken waits for a release instead of refusing,
+/// and the wait is bounded: the in-process `--lib` gate failed unrelated laws with "db I/O backend control capacity
+/// exhausted" whenever the laws running beside them held or were still retiring all 64 controls. The capacity is filled
+/// with single open attempts (each refused at once when full, the pre-fix behaviour of every constructor); an admitted
+/// open then stays pending instead of answering that refusal, is served as soon as one held backend closes, and with
+/// the capacity held past [`DB_IO_ADMISSION_WAIT_MS`] it answers the capacity refusal instead of waiting forever.
+#[semio_framework_async_macros::async_test]
+async fn a_backend_opened_while_every_backend_control_is_taken_waits_for_a_release_instead_of_refusing() {
+    if !crate::db_storage::process_isolated_law("db_storage::tests::a_backend_opened_while_every_backend_control_is_taken_waits_for_a_release_instead_of_refusing") {
+        return;
+    }
+    let pool = db_io_test_pool();
+    let mut held = Vec::new();
+    let refusal = loop {
+        match MemoryStorage::open_once(pool.clone()).await {
+            Ok(storage) => held.push(storage),
+            Err(rejected) => break rejected,
+        }
+        assert!(held.len() <= DB_IO_BACKEND_CONTROLS, "no more than the declared {DB_IO_BACKEND_CONTROLS} backends are admitted");
+    };
+    assert!(db_io_backend_admission_saturated(refusal.error()), "a full process refuses a single attempt with its capacity refusal: {:?}", refusal.error());
+    drop(refusal);
+    assert!(!held.is_empty(), "the law holds at least one backend");
+    let mut waiting = Box::pin(MemoryStorage::new(pool.clone()));
+    let pending = std::future::poll_fn(|context| std::task::Poll::Ready(waiting.as_mut().poll(context).is_pending())).await;
+    assert!(pending, "an admitted open waits while every control is taken instead of answering the refusal");
+    held.pop().expect("a held backend").close().await.expect("closing one held backend releases its control");
+    let opened = waiting.await.expect("the waiting open is served once a control is released");
+    held.push(opened);
+    let started = std::time::Instant::now();
+    let exhausted = MemoryStorage::new(pool.clone()).await.err().expect("a capacity that never frees ends in its refusal");
+    let waited = started.elapsed();
+    assert!(db_io_backend_admission_saturated(exhausted.error()), "the bounded wait answers the capacity refusal: {:?}", exhausted.error());
+    assert!(waited >= std::time::Duration::from_millis(DB_IO_ADMISSION_WAIT_MS / 2), "the refusal came only after the admission wait: {waited:?}");
+    assert!(waited < std::time::Duration::from_millis(DB_IO_ADMISSION_WAIT_MS * 3), "the wait is bounded by the pool clock, not by the next release: {waited:?}");
+    drop(exhausted);
+    for storage in held {
+        storage.close().await.expect("every held backend closes");
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn memory_storage_satisfies_wal_storage_laws() {
     exercise_wal_storage(&MemoryStorage::new(db_io_test_pool()).await.unwrap()).await;

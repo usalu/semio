@@ -56,7 +56,9 @@ fn expanded_aggregate_matches_neutral_contract_and_syn_ast() {
         let expanded = tokens.to_string();
         assert_eq!(expanded.matches("validate_leaf").count(), conversions);
         assert_eq!(expanded.matches("validate_mutation_leaf_descriptor_roster_uniqueness").count(), 1);
-        assert_eq!(expanded.matches("include_str !").count(), 3);
+        assert_eq!(expanded.matches("include_str !").count(), 1);
+        assert!(expanded.contains("mutation-authority.json"));
+        assert!(!expanded.contains("nx.json") && !expanded.contains("project.json") && !expanded.contains("taxonomy.json"));
         assert!(!expanded.contains("include !"));
         assert!(expanded.contains("MutationLeaf > :: DESCRIPTOR"));
         assert!(expanded.contains("MutationLeaf > :: PROVENANCE"));

@@ -43,4 +43,27 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(() => prepared("component", { type: "treeSection", label: null, defaultOpen: null, window: { total: 10, offset: 4, rowExtent: "compactCheckbox" } })).toThrow("Unknown UI schema discriminator");
   });
 
+  it("requires and owns the explicit Tree inline toolbar and detail relations", () => {
+    const owner = prepared("component", {
+      type: "treeItem",
+      label: "Conflict",
+      description: null,
+      icon: null,
+      defaultOpen: null,
+      draggable: null,
+      dragData: null,
+      dimmed: null,
+      window: null,
+      granularity: null,
+      inlineToolbar: 42,
+      detail: 43,
+      rowActions: [],
+    });
+    expect(owner.value).toMatchObject({ type: "treeItem", inlineToolbar: 42, detail: 43 });
+    const retirement = owner.beginClose();
+    while (!retirement.terminalIsEmpty()) retirement.advance({ maxItems: 1, maxBytes: 4096 });
+    expect(() => prepared("component", { type: "treeItem", label: "Conflict", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, inlineToolBar: 42, rowActions: [] })).toThrow("Unknown UI field: inlineToolBar");
+    expect(() => prepared("component", { type: "treeItem", label: "Conflict", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, treeDetail: 43, rowActions: [] })).toThrow("Unknown UI field: treeDetail");
+  });
+
 }

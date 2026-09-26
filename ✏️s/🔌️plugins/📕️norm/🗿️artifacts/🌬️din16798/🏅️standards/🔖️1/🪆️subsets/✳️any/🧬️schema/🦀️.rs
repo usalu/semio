@@ -1,7 +1,8 @@
 //! 🧬️ Din16798 artifact schema + DIN EN 16798 compliance helpers.
 
 use crate::document::{
-    AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, OccupancyType, Quantity, QuantityKind, Remedy, RemedyBound, SubjectRef,
+    AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, OccupancyType, Quantity, QuantityKind, Remedy, RemedyBound,
+    SubjectRef,
 };
 use crate::{VentSystemDocument, ZoneDocument};
 use framework_schema::ArtifactSchema;
@@ -684,9 +685,99 @@ pub mod part_17 {
 }
 
 /// ✅️ Evaluate the complete DIN EN 16798 building subject.
+/// 🔗 Fail when an id-bearing collection contains duplicate entity ids.
+fn push_duplicate_ids(
+    report: &mut CheckReport,
+    annex: AnnexChoice,
+    table: &str,
+    table_en: &str,
+    table_de: &str,
+    ids: &[String],
+    path_for: &dyn Fn(&str) -> String,
+) {
+    let occupied: std::collections::BTreeSet<&str> = ids.iter().map(|s| s.as_str()).collect();
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for id in ids {
+        *counts.entry(id.clone()).or_insert(0) += 1;
+    }
+    for (id, count) in counts {
+        if count < 2 {
+            continue;
+        }
+        let path = path_for(&id);
+        let subject = SubjectRef::new(
+            &id,
+            path,
+            loc(
+                format!("Duplicate {table_en} id"),
+                format!("Doppelte {table_de}-Id"),
+            ),
+        );
+        let mut options = Vec::new();
+        for suffix in ["-2", "-b", "-unique"] {
+            let candidate = format!("{id}{suffix}");
+            if !occupied.contains(candidate.as_str()) {
+                options.push(candidate);
+            }
+            if options.len() >= 2 {
+                break;
+            }
+        }
+        if options.is_empty() {
+            options.push(format!("{id}-renamed"));
+        }
+        let free = options[0].clone();
+        report.push(
+            CheckResult::assess(
+                format!("din16798.integrity.duplicate.{table}.{id}"),
+                "DIN EN 16798 integrity",
+                ClauseId::new("EN 16798-1", "§5", "identity"),
+                subject.clone(),
+                loc(
+                    format!("Unique {table_en} id"),
+                    format!("Eindeutige {table_de}-Id"),
+                ),
+            )
+            .annex(annex)
+            .explanation(loc(
+                format!("Duplicate {table_en} id '{id}' appears {count} times; each entity id must be unique."),
+                format!("Die {table_de}-Id '{id}' ist {count}-fach vergeben; jede Entitäts-Id muss eindeutig sein."),
+            ))
+            .status(CheckStatus::Fail)
+            .remedy(Remedy::one_of(
+                subject,
+                options,
+                loc(
+                    format!("Rename the duplicated '{id}' entry to a free id such as '{free}'."),
+                    format!("Den doppelten Eintrag '{id}' auf eine freie Id wie '{free}' umbenennen."),
+                ),
+            ))
+            .build(),
+        );
+    }
+}
+
 pub fn check_full_environment(doc: &crate::Din16798Snapshot) -> CheckReport {
     let annex = annex_params::AnnexParams::for_choice(doc.annex);
     let mut report = CheckReport::default();
+    push_duplicate_ids(
+        &mut report,
+        doc.annex,
+        "zones",
+        "zone",
+        "Zone",
+        &doc.zones.iter().map(|z| z.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("zones[id={id}].id"),
+    );
+    push_duplicate_ids(
+        &mut report,
+        doc.annex,
+        "ventSystems",
+        "ventilation system",
+        "Lüftungsanlage",
+        &doc.vent_systems.iter().map(|v| v.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("ventSystems[id={id}].id"),
+    );
     if doc.zones.is_empty() {
         report.push(CheckResult::assess(
             "din16798.zones.empty", "DIN EN 16798-1", ClauseId::new("EN 16798-1", "§7", "scope"),
@@ -869,7 +960,7 @@ fn evaluate_zone(doc: &crate::Din16798Snapshot, _zi: usize, zone: &ZoneDocument,
         ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, pmv_s.abs()), Quantity::new(QuantityKind::Dimensionless, lim))
         .explanation(loc(format!("Summer PMV={pmv_s:.3} at {clo_summer:.2} clo; |PMV|≤{lim}"), format!("Sommer-PMV={pmv_s:.3} bei {clo_summer:.2} clo; |PMV|≤{lim}")));
         if pmv_s.abs() > lim {
-            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer, lim, pmv_s > 0.0);
+            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer, lim * 0.55, pmv_s > 0.0);
             bp_s = bp_s.remedy(Remedy::exactly(zone_subject(zone, path("tOpSummerC")), Quantity::new(QuantityKind::Temperature, zone.t_op_summer_c), Quantity::new(QuantityKind::Temperature, t_req),
                 loc(format!("Set summer operative temperature to ≈{t_req:.1} °C so |PMV|≤{lim}."), format!("Operative Sommertemperatur auf ≈{t_req:.1} °C setzen, damit |PMV|≤{lim}."))));
         }
@@ -881,7 +972,7 @@ fn evaluate_zone(doc: &crate::Din16798Snapshot, _zi: usize, zone: &ZoneDocument,
         ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, ppd_s), Quantity::new(QuantityKind::Dimensionless, plim))
         .explanation(loc(format!("Summer PPD={ppd_s:.1} %; limit {plim:.0} %"), format!("Sommer-PPD={ppd_s:.1} %; Grenzwert {plim:.0} %")));
         if ppd_s > plim {
-            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer, lim, pmv_s > 0.0);
+            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_summer, lim * 0.55, pmv_s > 0.0);
             bppd_s = bppd_s.remedy(Remedy::exactly(zone_subject(zone, path("tOpSummerC")), Quantity::new(QuantityKind::Temperature, zone.t_op_summer_c), Quantity::new(QuantityKind::Temperature, t_req),
                 loc(format!("Adjust summer θ_op to ≈{t_req:.1} °C to keep PPD ≤{plim:.0} %."), format!("Operative Sommertemperatur auf ≈{t_req:.1} °C anpassen, damit PPD ≤{plim:.0} %."))));
         }
@@ -895,7 +986,7 @@ fn evaluate_zone(doc: &crate::Din16798Snapshot, _zi: usize, zone: &ZoneDocument,
         ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, pmv_w.abs()), Quantity::new(QuantityKind::Dimensionless, lim))
         .explanation(loc(format!("Winter PMV={pmv_w:.3} at {clo_winter:.2} clo; |PMV|≤{lim}"), format!("Winter-PMV={pmv_w:.3} bei {clo_winter:.2} clo; |PMV|≤{lim}")));
         if pmv_w.abs() > lim {
-            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter, lim, pmv_w > 0.0);
+            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter, lim * 0.55, pmv_w > 0.0);
             bp_w = bp_w.remedy(Remedy::exactly(zone_subject(zone, path("tOpWinterC")), Quantity::new(QuantityKind::Temperature, zone.t_op_winter_c), Quantity::new(QuantityKind::Temperature, t_req),
                 loc(format!("Set winter operative temperature to ≈{t_req:.1} °C so |PMV|≤{lim}."), format!("Operative Wintertemperatur auf ≈{t_req:.1} °C setzen, damit |PMV|≤{lim}."))));
         }
@@ -907,7 +998,7 @@ fn evaluate_zone(doc: &crate::Din16798Snapshot, _zi: usize, zone: &ZoneDocument,
         ).annex(doc.annex).utilization(Quantity::new(QuantityKind::Dimensionless, ppd_w), Quantity::new(QuantityKind::Dimensionless, plim))
         .explanation(loc(format!("Winter PPD={ppd_w:.1} %; limit {plim:.0} %"), format!("Winter-PPD={ppd_w:.1} %; Grenzwert {plim:.0} %")));
         if ppd_w > plim {
-            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter, lim, pmv_w > 0.0);
+            let t_req = invert_t_op_for_pmv(zone.rh_percent, zone.air_speed_m_s, zone.metabolic_rate_met, clo_winter, lim * 0.55, pmv_w > 0.0);
             bppd_w = bppd_w.remedy(Remedy::exactly(zone_subject(zone, path("tOpWinterC")), Quantity::new(QuantityKind::Temperature, zone.t_op_winter_c), Quantity::new(QuantityKind::Temperature, t_req),
                 loc(format!("Adjust winter θ_op to ≈{t_req:.1} °C to keep PPD ≤{plim:.0} %."), format!("Operative Wintertemperatur auf ≈{t_req:.1} °C anpassen, damit PPD ≤{plim:.0} %."))));
         }
@@ -1343,7 +1434,11 @@ fn evaluate_envelope(doc: &crate::Din16798Snapshot, _annex: &annex_params::Annex
             "din16798-7.cellar", "DIN EN 16798-7", ClauseId::new("EN 16798-7", "§6.2", "cellar"),
             SubjectRef::new("", "cellarVentilationM3H", loc("Cellar", "Keller")),
             loc("Cellar ventilation", "Kellerlüftung"),
-        ).annex(doc.annex).minimum(Quantity::new(QuantityKind::VentilationRate, doc.cellar_ventilation_m3_h), Quantity::new(QuantityKind::VentilationRate, req));
+        ).annex(doc.annex).minimum(Quantity::new(QuantityKind::VentilationRate, doc.cellar_ventilation_m3_h), Quantity::new(QuantityKind::VentilationRate, req))
+         .explanation(loc(
+            format!("Cellar ventilation {v:.1} m³/h vs required {req:.1} m³/h for {a:.1} m².", v=doc.cellar_ventilation_m3_h, req=req, a=doc.cellar_area_m2),
+            format!("Kellerlüftung {v:.1} m³/h gegenüber erforderlich {req:.1} m³/h für {a:.1} m².", v=doc.cellar_ventilation_m3_h, req=req, a=doc.cellar_area_m2),
+         ));
         if doc.cellar_ventilation_m3_h < req {
             bc = bc.remedy(Remedy::at_least(SubjectRef::new("", "cellarVentilationM3H", loc("Cellar", "Keller")), Quantity::new(QuantityKind::VentilationRate, doc.cellar_ventilation_m3_h), Quantity::new(QuantityKind::VentilationRate, req),
                 loc(format!("Raise cellar ventilation to at least {req:.1} m³/h."), format!("Kellerlüftung auf mindestens {req:.1} m³/h erhöhen."))));

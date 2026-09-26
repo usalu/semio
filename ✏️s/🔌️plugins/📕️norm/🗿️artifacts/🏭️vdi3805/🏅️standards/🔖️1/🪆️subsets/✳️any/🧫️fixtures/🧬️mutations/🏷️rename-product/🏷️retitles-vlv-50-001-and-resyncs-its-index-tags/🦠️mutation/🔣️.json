@@ -1,7 +1,7 @@
 {
   "RenameProduct": {
     "id": "VLV-50-001",
-    "new_title": [
+    "newTitle": [
       {
         "locale": "de",
         "text": "Regelventil DN50"

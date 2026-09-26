@@ -22,6 +22,7 @@ component-app-assembly = []
 pack = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
+semio-framework-job = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-binary = { workspace = true }

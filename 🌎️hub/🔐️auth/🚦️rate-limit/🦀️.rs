@@ -1,5 +1,6 @@
 //! 🚦️ The hub's own per-principal and per-remote-address token buckets, in front of the credential
-//! sign-in, directory-command, invite-redemption and socket-grant routes.
+//! sign-in, directory-command, invite-redemption and socket-grant routes, and behind every agent session's document
+//! commands (`agent-command`: the volume of committed tool calls an agent pushes through its document sockets).
 //!
 //! Schema authority: [`🔣️.json`](../🧬️schema/🔣️.json) `$defs/AuthRateLimitPolicyV1` and
 //! `$defs/AuthRateLimitClassV1`. The bucket is a millisecond-budget formulation: a class costs
@@ -30,14 +31,18 @@ impl RateLimitClockV1 for SystemRateLimitClockV1 {
     }
 }
 
-/// 🏷️ The four rate-limited route families.
+/// 🏷️ The five rate-limited families: four routes and the agent document-command lane.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum RateLimitClassV1 {
     Auth,
     DirectoryCommand,
     InviteRedemption,
     SocketGrant,
+    AgentCommand,
 }
+
+/// 🧾️ Every class, in the schema enum's order — what the laws hold the schema and the policy table against.
+pub const RATE_LIMIT_CLASSES: [RateLimitClassV1; 5] = [RateLimitClassV1::Auth, RateLimitClassV1::DirectoryCommand, RateLimitClassV1::InviteRedemption, RateLimitClassV1::SocketGrant, RateLimitClassV1::AgentCommand];
 
 impl RateLimitClassV1 {
     pub fn as_str(self) -> &'static str {
@@ -46,6 +51,7 @@ impl RateLimitClassV1 {
             Self::DirectoryCommand => "directory-command",
             Self::InviteRedemption => "invite-redemption",
             Self::SocketGrant => "socket-grant",
+            Self::AgentCommand => "agent-command",
         }
     }
 
@@ -56,6 +62,7 @@ impl RateLimitClassV1 {
             Self::DirectoryCommand => RateLimitPolicyV1 { burst: 60, cost_ms: 100 },
             Self::InviteRedemption => RateLimitPolicyV1 { burst: 10, cost_ms: 6_000 },
             Self::SocketGrant => RateLimitPolicyV1 { burst: 30, cost_ms: 200 },
+            Self::AgentCommand => RateLimitPolicyV1 { burst: 120, cost_ms: 250 },
         }
     }
 }
@@ -196,6 +203,27 @@ impl HubRateLimiterV1 {
             }
         }
         RateLimitDecisionV1::Refused { retry_after_ms: worst }
+    }
+
+    /// ⏳️ Paces one request instead of refusing it outright: admits it as soon as every subject's bucket holds its cost,
+    /// waiting through `wait(ms)` for exactly the refill each refusal names, at most `patience_ms` in total. A request
+    /// the buckets cannot admit within that patience is refused with the wait it still needs.
+    pub async fn admit_paced<W, F>(&self, class: RateLimitClassV1, subjects: &[RateLimitSubjectV1], patience_ms: u64, mut wait: W) -> RateLimitDecisionV1
+    where
+        W: FnMut(u64) -> F,
+        F: std::future::Future<Output = ()>,
+    {
+        let mut waited_ms = 0u64;
+        loop {
+            match self.admit(class, subjects) {
+                RateLimitDecisionV1::Admitted => return RateLimitDecisionV1::Admitted,
+                RateLimitDecisionV1::Refused { retry_after_ms } if waited_ms.saturating_add(retry_after_ms) <= patience_ms => {
+                    wait(retry_after_ms).await;
+                    waited_ms = waited_ms.saturating_add(retry_after_ms);
+                }
+                refused => return refused,
+            }
+        }
     }
 }
 

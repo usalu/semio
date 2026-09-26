@@ -40,6 +40,16 @@ async fn composite_flattens_a_pixel_layer_back_to_its_own_canvas() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn composite_preserves_centered_pixels_at_negative_coordinates() {
+    let mut document=document_with_solid_layer(12,34,56,255,3,2);
+    if let RasterLayerNode::Pixel {transform,..}=&mut document.layers[0] {transform.x=-40.0;transform.y=-20.0;}
+    let composite=raster_composite_image(&document).unwrap();
+    assert_eq!((composite.width,composite.height),(3,2));
+    assert_eq!(composite.frames[0].rgba8,[12,34,56,255].repeat(6));
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+}
+
+#[semio_framework_async_macros::async_test]
 async fn composite_refuses_a_visible_adjustment_layer_with_a_reason() {
     let mut document = document_with_solid_layer(1, 2, 3, 255, 2, 2);
     document.layers.push(crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment"));

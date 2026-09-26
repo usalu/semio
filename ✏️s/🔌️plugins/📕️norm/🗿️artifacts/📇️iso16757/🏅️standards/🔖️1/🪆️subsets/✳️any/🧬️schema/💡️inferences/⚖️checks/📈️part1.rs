@@ -1,6 +1,6 @@
 //! 📈️ ISO 16757-1 catalogue integrity, naming, properties, selection, BIM embedding.
 
-use super::common::{assess, catalogue_subject, copy, fail, na, name_locales, names_cover, pass, q_dim, subject};
+use super::common::{assess, catalogue_subject, copy, fail, na, name_locales, names_cover, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
 use crate::document::{CheckReport, CheckStatus, Quantity, QuantityKind, Remedy, RemedyBound};
 use crate::part_1::{Catalogue, Product, PropertyDefinition, SelectionRequest};
 use crate::CatalogueValue;
@@ -42,12 +42,16 @@ pub fn check_part_1(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     let catalogue = &doc.catalogue;
     let required = required_languages(catalogue);
     check_header(catalogue, &required, report);
+    check_dictionary_catalogue_alignment(doc, report);
     check_unique_ids(catalogue, report);
     check_referential_integrity(catalogue, &doc.geometry, report);
+    check_group_dictionary_subjects(catalogue, &doc.dictionary, report);
     check_multilingual(catalogue, &required, report);
     check_required_properties(catalogue, report);
     check_property_values(catalogue, &doc.dictionary, report);
+    check_property_definition_units(catalogue, &doc.dictionary, report);
     check_variant_domains(catalogue, report);
+    check_variant_article_and_geometry(catalogue, &doc.geometry, report);
     check_accessories_compositions(catalogue, report);
     check_product_indexes(catalogue, report);
     check_selection(catalogue, &doc.selection, report);
@@ -123,7 +127,7 @@ fn check_header(catalogue: &Catalogue, required: &[String], report: &mut CheckRe
     // Part 1 §5.1 — catalogue lifecycle + dictionary reference must be populated for exchange.
     let status = catalogue.metadata.lifecycle.status.trim();
     let revision = catalogue.metadata.lifecycle.revision.trim();
-    let allowed_status = ["draft", "published", "withdrawn", "superseded"];
+    let allowed_status = crate::artifact_schema::part_1::LIFECYCLE_STATUSES;
     if status.is_empty() || !allowed_status.iter().any(|s| *s == status) {
         report.push(fail(
             "iso16757.1.5.1.lifecycle.status",
@@ -220,7 +224,6 @@ fn check_header(catalogue: &Catalogue, required: &[String], report: &mut CheckRe
             }],
         ));
     } else {
-        let fp = catalogue.dictionary.version.parse::<f64>().unwrap_or(1.0);
         report.push(assess(
             "iso16757.1.5.1.dictionaryRef",
             "1",
@@ -232,13 +235,117 @@ fn check_header(catalogue: &Catalogue, required: &[String], report: &mut CheckRe
                 format!("Wörterbuch-Referenz {}@{} ist vorhanden.", catalogue.dictionary.id, catalogue.dictionary.version),
             ),
             CheckStatus::Pass,
-            q_dim(fp),
-            q_dim(fp),
+            q_dim(1.0),
+            q_dim(1.0),
             Vec::new(),
         ));
     }
 
+
+    // Part 1 §3.1 — catalogue id is scoped under the manufacturer id.
+    let cat_id = catalogue.id.0.trim();
+    let mfg_id = catalogue.manufacturer.id.trim();
+    if !mfg_id.is_empty() && !cat_id.is_empty() {
+        let expected_id = format!("cat.{mfg_id}");
+        let scope_score = reference_slot_score(cat_id, std::iter::once(expected_id.as_str()));
+        if cat_id.contains(mfg_id) {
+            report.push(assess(
+                "iso16757.1.3.1.catalogueManufacturerScope",
+                "1",
+                "3.1",
+                subject("catalogue", "catalogue.id", "Catalogue id scope", "Katalog-Id-Bereich"),
+                copy("Catalogue id manufacturer scope", "Katalog-Id Herstellerbereich"),
+                copy(
+                    format!("Catalogue id '{cat_id}' is scoped under manufacturer '{mfg_id}'."),
+                    format!("Katalog-Id '{cat_id}' ist unter Hersteller '{mfg_id}' eingeordnet."),
+                ),
+                CheckStatus::Pass,
+                q_dim(scope_score),
+                q_dim(1.0),
+                Vec::new(),
+            ));
+        } else {
+            report.push(fail(
+                "iso16757.1.3.1.catalogueManufacturerScope",
+                "1",
+                "3.1",
+                subject("catalogue", "catalogue.id", "Catalogue id scope", "Katalog-Id-Bereich"),
+                copy("Catalogue id manufacturer scope", "Katalog-Id Herstellerbereich"),
+                copy(
+                    format!("Catalogue id '{cat_id}' must contain manufacturer id '{mfg_id}'."),
+                    format!("Katalog-Id '{cat_id}' muss Hersteller-Id '{mfg_id}' enthalten."),
+                ),
+                vec![Remedy {
+                    target: subject("catalogue", "catalogue.id", "Catalogue id", "Katalog-Id"),
+                    current: q_dim(0.0),
+                    required: q_dim(1.0),
+                    bound: RemedyBound::OneOf,
+                    options: vec![format!("cat.{mfg_id}")],
+                    action: copy("Prefix or embed the manufacturer id in catalogue.id.", "Hersteller-Id in catalogue.id einbetten."),
+                    applicable: true,
+                }],
+            ));
+        }
+    }
+
 }
+
+fn check_dictionary_catalogue_alignment(doc: &Iso16757Snapshot, report: &mut CheckReport) {
+    let cat = &doc.catalogue.dictionary;
+    let dict = &doc.dictionary.reference;
+    let id_ok = cat.id == dict.id && !cat.id.is_empty();
+    let ver_ok = cat.version == dict.version && !cat.version.is_empty();
+    if !id_ok || !ver_ok {
+        report.push(fail(
+            "iso16757.1.5.1.dictionaryAlign",
+            "1",
+            "5.1",
+            subject("catalogue", "catalogue.dictionary.id", "Dictionary alignment", "Wörterbuch-Ausrichtung"),
+            copy("Catalogue↔dictionary reference alignment", "Katalog↔Wörterbuch-Referenz-Ausrichtung"),
+            copy(
+                format!("Catalogue dictionary {}@{} must equal dictionary.reference {}@{} (Part 1 §5.1 / Part 4 §4.3).", cat.id, cat.version, dict.id, dict.version),
+                format!("Katalog-Wörterbuch {}@{} muss dictionary.reference {}@{} entsprechen (Teil 1 §5.1 / Teil 4 §4.3).", cat.id, cat.version, dict.id, dict.version),
+            ),
+            vec![
+                Remedy {
+                    target: subject("catalogue", "catalogue.dictionary.id", "Dictionary id", "Wörterbuch-Id"),
+                    current: q_dim(0.0),
+                    required: q_dim(1.0),
+                    bound: RemedyBound::OneOf,
+                    options: vec![dict.id.clone()],
+                    action: copy("Set catalogue.dictionary.id to dictionary.reference.id.", "catalogue.dictionary.id auf dictionary.reference.id setzen."),
+                    applicable: true,
+                },
+                Remedy {
+                    target: subject("catalogue", "catalogue.dictionary.version", "Dictionary version", "Wörterbuch-Version"),
+                    current: q_dim(0.0),
+                    required: q_dim(1.0),
+                    bound: RemedyBound::OneOf,
+                    options: vec![dict.version.clone()],
+                    action: copy("Set catalogue.dictionary.version to dictionary.reference.version.", "catalogue.dictionary.version auf dictionary.reference.version setzen."),
+                    applicable: true,
+                },
+            ],
+        ));
+    } else {
+        report.push(assess(
+            "iso16757.1.5.1.dictionaryAlign",
+            "1",
+            "5.1",
+            subject("catalogue", "catalogue.dictionary.id", "Dictionary alignment", "Wörterbuch-Ausrichtung"),
+            copy("Catalogue↔dictionary reference alignment", "Katalog↔Wörterbuch-Referenz-Ausrichtung"),
+            copy(
+                format!("Catalogue and dictionary both reference {}@{}.", cat.id, cat.version),
+                format!("Katalog und Wörterbuch referenzieren beide {}@{}.", cat.id, cat.version),
+            ),
+            CheckStatus::Pass,
+            q_dim(1.0),
+            q_dim(1.0),
+            Vec::new(),
+        ));
+    }
+}
+
 
 fn check_unique_ids(catalogue: &Catalogue, report: &mut CheckReport) {
     let mut seen: HashMap<String, Vec<(String, String)>> = HashMap::new();
@@ -557,6 +664,50 @@ fn check_referential_integrity(catalogue: &Catalogue, geometry: &crate::part_2::
     }
 }
 
+fn check_group_dictionary_subjects(catalogue: &Catalogue, dictionary: &crate::part_4::Dictionary, report: &mut CheckReport) {
+    let subject_ids: HashSet<_> = dictionary.subjects.iter().map(|s| s.id.clone()).collect();
+    for group in &catalogue.product_groups {
+        if let Some(sid) = &group.dictionary_subject_id {
+            let path = format!("catalogue.productGroups[id={}].dictionarySubjectId", group.id);
+            if subject_ids.contains(sid) {
+                report.push(assess(
+                    format!("iso16757.1.5.groupSubject.{}", group.id),
+                    "1",
+                    "5",
+                    subject(&group.id, path, &group.names.preferred.text, &group.names.preferred.text),
+                    copy("Product group dictionary subject", "Produktgruppen-Wörterbuchsubjekt"),
+                    copy(
+                        format!("Group '{}' dictionarySubjectId '{sid}' resolves.", group.id),
+                        format!("Gruppe '{}' dictionarySubjectId '{sid}' löst auf.", group.id),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(1.0),
+                    q_dim(1.0),
+                    Vec::new(),
+                ));
+            } else {
+                report.push(fail(
+                    format!("iso16757.1.5.groupSubject.{}", group.id),
+                    "1",
+                    "5",
+                    subject(&group.id, path.clone(), &group.names.preferred.text, &group.names.preferred.text),
+                    copy("Product group dictionary subject", "Produktgruppen-Wörterbuchsubjekt"),
+                    copy(
+                        format!("Group '{}' dictionarySubjectId '{sid}' is unknown.", group.id),
+                        format!("Gruppe '{}' dictionarySubjectId '{sid}' ist unbekannt.", group.id),
+                    ),
+                    vec![Remedy::one_of(
+                        subject(&group.id, path, &group.names.preferred.text, &group.names.preferred.text),
+                        subject_ids.iter().cloned().collect(),
+                        copy("Point dictionarySubjectId at an existing subject.", "dictionarySubjectId auf vorhandenes Subjekt setzen."),
+                    )],
+                ));
+            }
+        }
+    }
+}
+
+
 fn check_multilingual(catalogue: &Catalogue, required: &[String], report: &mut CheckReport) {
     let mut named: Vec<(String, String, &crate::Names)> = Vec::new();
     named.push(("catalogue".into(), "catalogue.metadata.names".into(), &catalogue.metadata.names));
@@ -605,7 +756,7 @@ fn check_multilingual(catalogue: &Catalogue, required: &[String], report: &mut C
                         format!("Add a name in language '{locale}' for '{id}' (e.g. alternatives += {{ locale: '{locale}', text: '…' }})."),
                         format!("Namen in Sprache '{locale}' für '{id}' ergänzen (z. B. alternatives += {{ locale: '{locale}', text: '…' }})."),
                     ),
-                    applicable: true,
+                    applicable: false,
                 }],
             ));
         }
@@ -673,7 +824,7 @@ fn check_required_properties(catalogue: &Catalogue, report: &mut CheckReport) {
                             format!("Add property value for '{req}' on {variant_hint}."),
                             format!("Eigenschaftswert für '{req}' auf {variant_hint} ergänzen."),
                         ),
-                        applicable: true,
+                        applicable: false,
                     }],
                 ));
             }
@@ -770,117 +921,96 @@ fn check_property_values(catalogue: &Catalogue, dictionary: &crate::part_4::Dict
             }
 
             if let Some(dict_prop_id) = &def.dictionary_property_id {
-                if crate::standards::v1::subsets::any::schema::part_4::resolve_property(dictionary, dict_prop_id).is_none() {
-                    failed += 1;
-                    report.push(fail(
-                        format!("iso16757.1.5.3.dictProp.{def_id}"),
-                        "1",
-                        "5.3",
-                        subject(&def.id, format!("catalogue.propertyDefinitions[id={def_id}].dictionaryPropertyId"), &def.names.preferred.text, &def.names.preferred.text),
-                        copy("Dictionary property link", "Wörterbuch-Eigenschaftsverknüpfung"),
-                        copy(
-                            format!("Property definition '{def_id}' links to missing dictionary property '{dict_prop_id}'."),
-                            format!("Eigenschaftsdefinition '{def_id}' verweist auf fehlende Wörterbucheigenschaft '{dict_prop_id}'."),
-                        ),
-                        vec![Remedy::one_of(
-                            subject(&def.id, format!("catalogue.propertyDefinitions[id={def_id}].dictionaryPropertyId"), &def.names.preferred.text, &def.names.preferred.text),
-                            dictionary.properties.iter().map(|p| p.id.clone()).collect(),
-                            copy(
-                                format!("Set dictionaryPropertyId to an existing dictionary property or create '{dict_prop_id}'."),
-                                format!("dictionaryPropertyId auf eine vorhandene Wörterbucheigenschaft setzen oder '{dict_prop_id}' anlegen."),
-                            ),
-                        )],
-                    ));
-                } else if let Some(dict_prop) = crate::standards::v1::subsets::any::schema::part_4::resolve_property(dictionary, dict_prop_id) {
+                if let Some(dict_prop) = crate::standards::v1::subsets::any::schema::part_4::resolve_property(dictionary, dict_prop_id) {
                     for constraint in &dict_prop.value_constraints {
-                        if let Some(v) = value_as_f64(value) {
-                            if let Some(min) = constraint.min {
-                                if v < min {
-                                    failed += 1;
-                                    report.push(assess(
-                                        format!("iso16757.1.5.3.min.{scope}.{def_id}"),
-                                        "1",
-                                        "5.3",
-                                        subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
-                                        copy("Property value minimum", "Eigenschaftswert-Minimum"),
-                                        copy(
-                                            format!("Value {v} of '{def_id}' on {scope} is below minimum {min}."),
-                                            format!("Wert {v} von '{def_id}' auf {scope} liegt unter Minimum {min}."),
-                                        ),
-                                        CheckStatus::Fail,
-                                        Quantity::new(QuantityKind::Dimensionless, v),
-                                        Quantity::new(QuantityKind::Dimensionless, min),
-                                        vec![Remedy::at_least(
+                            if let Some(v) = value_as_f64(value) {
+                                if let Some(min) = constraint.min {
+                                    if v < min {
+                                        failed += 1;
+                                        report.push(assess(
+                                            format!("iso16757.1.5.3.min.{scope}.{def_id}"),
+                                            "1",
+                                            "5.3",
                                             subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                                            copy("Property value minimum", "Eigenschaftswert-Minimum"),
+                                            copy(
+                                                format!("Value {v} of '{def_id}' on {scope} is below minimum {min}."),
+                                                format!("Wert {v} von '{def_id}' auf {scope} liegt unter Minimum {min}."),
+                                            ),
+                                            CheckStatus::Fail,
                                             Quantity::new(QuantityKind::Dimensionless, v),
                                             Quantity::new(QuantityKind::Dimensionless, min),
-                                            copy(
-                                                format!("Increase '{def_id}' on {scope} from {v} to at least {min}."),
-                                                format!("'{def_id}' auf {scope} von {v} auf mindestens {min} erhöhen."),
-                                            ),
-                                        )],
-                                    ));
+                                            vec![Remedy::at_least(
+                                                subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                                                Quantity::new(QuantityKind::Dimensionless, v),
+                                                Quantity::new(QuantityKind::Dimensionless, min),
+                                                copy(
+                                                    format!("Increase '{def_id}' on {scope} from {v} to at least {min}."),
+                                                    format!("'{def_id}' auf {scope} von {v} auf mindestens {min} erhöhen."),
+                                                ),
+                                            )],
+                                        ));
+                                    }
                                 }
-                            }
-                            if let Some(max) = constraint.max {
-                                if v > max {
-                                    failed += 1;
-                                    report.push(assess(
-                                        format!("iso16757.1.5.3.max.{scope}.{def_id}"),
-                                        "1",
-                                        "5.3",
-                                        subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
-                                        copy("Property value maximum", "Eigenschaftswert-Maximum"),
-                                        copy(
-                                            format!("Value {v} of '{def_id}' on {scope} exceeds maximum {max}."),
-                                            format!("Wert {v} von '{def_id}' auf {scope} überschreitet Maximum {max}."),
-                                        ),
-                                        CheckStatus::Fail,
-                                        Quantity::new(QuantityKind::Dimensionless, v),
-                                        Quantity::new(QuantityKind::Dimensionless, max),
-                                        vec![Remedy::at_most(
+                                if let Some(max) = constraint.max {
+                                    if v > max {
+                                        failed += 1;
+                                        report.push(assess(
+                                            format!("iso16757.1.5.3.max.{scope}.{def_id}"),
+                                            "1",
+                                            "5.3",
                                             subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                                            copy("Property value maximum", "Eigenschaftswert-Maximum"),
+                                            copy(
+                                                format!("Value {v} of '{def_id}' on {scope} exceeds maximum {max}."),
+                                                format!("Wert {v} von '{def_id}' auf {scope} überschreitet Maximum {max}."),
+                                            ),
+                                            CheckStatus::Fail,
                                             Quantity::new(QuantityKind::Dimensionless, v),
                                             Quantity::new(QuantityKind::Dimensionless, max),
-                                            copy(
-                                                format!("Reduce '{def_id}' on {scope} from {v} to at most {max}."),
-                                                format!("'{def_id}' auf {scope} von {v} auf höchstens {max} verringern."),
-                                            ),
-                                        )],
-                                    ));
+                                            vec![Remedy::at_most(
+                                                subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                                                Quantity::new(QuantityKind::Dimensionless, v),
+                                                Quantity::new(QuantityKind::Dimensionless, max),
+                                                copy(
+                                                    format!("Reduce '{def_id}' on {scope} from {v} to at most {max}."),
+                                                    format!("'{def_id}' auf {scope} von {v} auf höchstens {max} verringern."),
+                                                ),
+                                            )],
+                                        ));
+                                    }
                                 }
-                            }
-                            if !constraint.allowed_values.is_empty() {
-                                let as_text = match value {
-                                    CatalogueValue::Decimal { value } => value.to_string(),
-                                    CatalogueValue::Integer { value } => value.to_string(),
-                                    CatalogueValue::Text { value } | CatalogueValue::Enumeration { value } | CatalogueValue::Identifier { value } => value.clone(),
-                                    _ => String::new(),
-                                };
-                                if !as_text.is_empty() && !constraint.allowed_values.iter().any(|a| a == &as_text) {
-                                    failed += 1;
-                                    report.push(fail(
-                                        format!("iso16757.1.5.3.enum.{scope}.{def_id}"),
-                                        "1",
-                                        "5.3",
-                                        subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
-                                        copy("Property allowed values", "Zulässige Eigenschaftswerte"),
-                                        copy(
-                                            format!("Value '{as_text}' of '{def_id}' on {scope} is not in {:?}.", constraint.allowed_values),
-                                            format!("Wert '{as_text}' von '{def_id}' auf {scope} ist nicht in {:?}.", constraint.allowed_values),
-                                        ),
-                                        vec![Remedy::one_of(
+                                if !constraint.allowed_values.is_empty() {
+                                    let as_text = match value {
+                                        CatalogueValue::Decimal { value } => value.to_string(),
+                                        CatalogueValue::Integer { value } => value.to_string(),
+                                        CatalogueValue::Text { value } | CatalogueValue::Enumeration { value } | CatalogueValue::Identifier { value } => value.clone(),
+                                        _ => String::new(),
+                                    };
+                                    if !as_text.is_empty() && !constraint.allowed_values.iter().any(|a| a == &as_text) {
+                                        failed += 1;
+                                        report.push(fail(
+                                            format!("iso16757.1.5.3.enum.{scope}.{def_id}"),
+                                            "1",
+                                            "5.3",
                                             subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
-                                            constraint.allowed_values.clone(),
+                                            copy("Property allowed values", "Zulässige Eigenschaftswerte"),
                                             copy(
-                                                format!("Set '{def_id}' on {scope} to one of {:?}.", constraint.allowed_values),
-                                                format!("'{def_id}' auf {scope} auf einen der Werte {:?} setzen.", constraint.allowed_values),
+                                                format!("Value '{as_text}' of '{def_id}' on {scope} is not in {:?}.", constraint.allowed_values),
+                                                format!("Wert '{as_text}' von '{def_id}' auf {scope} ist nicht in {:?}.", constraint.allowed_values),
                                             ),
-                                        )],
-                                    ));
+                                            vec![Remedy::one_of(
+                                                subject(&product.id, format!("catalogue.products[id={}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                                                constraint.allowed_values.clone(),
+                                                copy(
+                                                    format!("Set '{def_id}' on {scope} to one of {:?}.", constraint.allowed_values),
+                                                    format!("'{def_id}' auf {scope} auf einen der Werte {:?} setzen.", constraint.allowed_values),
+                                                ),
+                                            )],
+                                        ));
+                                    }
                                 }
                             }
-                        }
                     }
                 }
             }
@@ -911,6 +1041,263 @@ fn check_property_values(catalogue: &Catalogue, dictionary: &crate::part_4::Dict
     }
 }
 
+fn check_property_definition_units(catalogue: &Catalogue, dictionary: &crate::part_4::Dictionary, report: &mut CheckReport) {
+    for def in &catalogue.property_definitions {
+        let path = format!("catalogue.propertyDefinitions[id={}]", def.id);
+        // dictionaryPropertyId resolvable — ISO 16757-1 §5.3 / Part 4 property dictionary binding
+        if let Some(dict_prop_id) = &def.dictionary_property_id {
+            let link_path = format!("{path}.dictionaryPropertyId");
+            let resolved_idx = dictionary
+                .properties
+                .iter()
+                .position(|p| p.id == *dict_prop_id)
+                .map(|i| (i + 1) as f64);
+            let resolved = resolved_idx.is_some();
+            if resolved {
+                let ordinal = resolved_idx.unwrap_or(1.0);
+                report.push(assess(
+                    format!("iso16757.1.5.3.dictProp.{}", def.id),
+                    "1",
+                    "5.3",
+                    subject(&def.id, link_path, &def.names.preferred.text, &def.names.preferred.text),
+                    copy("Dictionary property link", "Wörterbuch-Eigenschaftsverknüpfung"),
+                    copy(
+                        format!("Property definition '{}' links to dictionary property '{}' (slot {ordinal}).", def.id, dict_prop_id),
+                        format!("Eigenschaftsdefinition '{}' verknüpft Wörterbucheigenschaft '{}' (Slot {ordinal}).", def.id, dict_prop_id),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(ordinal),
+                    q_dim(1.0),
+                    Vec::new(),
+                ));
+            } else {
+                report.push(assess(
+                    format!("iso16757.1.5.3.dictProp.{}", def.id),
+                    "1",
+                    "5.3",
+                    subject(&def.id, link_path.clone(), &def.names.preferred.text, &def.names.preferred.text),
+                    copy("Dictionary property link", "Wörterbuch-Eigenschaftsverknüpfung"),
+                    copy(
+                        format!("Property definition '{}' links to missing dictionary property '{}'.", def.id, dict_prop_id),
+                        format!("Eigenschaftsdefinition '{}' verweist auf fehlende Wörterbucheigenschaft '{}'.", def.id, dict_prop_id),
+                    ),
+                    CheckStatus::Fail,
+                    q_dim(0.0),
+                    q_dim(1.0),
+                    vec![Remedy::one_of(
+                        subject(&def.id, link_path, &def.names.preferred.text, &def.names.preferred.text),
+                        dictionary.properties.iter().map(|p| p.id.clone()).collect(),
+                        copy(
+                            format!("Set dictionaryPropertyId to an existing dictionary property or create '{}'.", dict_prop_id),
+                            format!("dictionaryPropertyId auf eine vorhandene Wörterbucheigenschaft setzen oder '{}' anlegen.", dict_prop_id),
+                        ),
+                    )],
+                ));
+            }
+        }
+        // dataType non-empty (Part 1 §6 / Part 4 property typing)
+        if def.data_type.trim().is_empty() {
+            report.push(fail(
+                format!("iso16757.1.6.dataType.{}", def.id),
+                "1",
+                "6",
+                subject(&def.id, format!("{path}.dataType"), &def.names.preferred.text, &def.names.preferred.text),
+                copy("Property data type", "Eigenschafts-Datentyp"),
+                copy(
+                    format!("Property '{0}' dataType must be non-empty.", def.id),
+                    format!("Eigenschaft '{0}' dataType darf nicht leer sein.", def.id),
+                ),
+                vec![Remedy::one_of(
+                    subject(&def.id, format!("{path}.dataType"), &def.names.preferred.text, &def.names.preferred.text),
+                    vec!["decimal".into(), "quantity".into(), "integer".into(), "text".into()],
+                    copy("Set dataType to a Part 4 property data type.", "dataType auf einen Teil-4-Eigenschaftsdatentyp setzen."),
+                )],
+            ));
+        } else {
+            report.push(assess(
+                format!("iso16757.1.6.dataType.{}", def.id),
+                "1",
+                "6",
+                subject(&def.id, format!("{path}.dataType"), &def.names.preferred.text, &def.names.preferred.text),
+                copy("Property data type", "Eigenschafts-Datentyp"),
+                copy(
+                    format!("Property '{}' dataType is '{}'.", def.id, def.data_type),
+                    format!("Eigenschaft '{}' dataType ist '{}'.", def.id, def.data_type),
+                ),
+                CheckStatus::Pass,
+                q_dim(controlled_ordinal(&def.data_type, &["decimal", "quantity", "integer", "text", "boolean", "controlled"])),
+                q_dim(1.0),
+                Vec::new(),
+            ));
+        }
+        // cardinality min <= max (Part 1 §6)
+        let max_v = def.cardinality.max.unwrap_or(u32::MAX) as f64;
+        let min_v = def.cardinality.min as f64;
+        if min_v > max_v {
+            report.push(fail(
+                format!("iso16757.1.6.cardinality.{}", def.id),
+                "1",
+                "6",
+                subject(&def.id, format!("{path}.cardinality.min"), &def.names.preferred.text, &def.names.preferred.text),
+                copy("Property cardinality", "Eigenschafts-Kardinalität"),
+                copy(
+                    format!("Property '{}' cardinality min ({}) exceeds max.", def.id, def.cardinality.min),
+                    format!("Eigenschaft '{}' Kardinalität min ({}) überschreitet max.", def.id, def.cardinality.min),
+                ),
+                vec![Remedy {
+                    target: subject(&def.id, format!("{path}.cardinality.min"), &def.names.preferred.text, &def.names.preferred.text),
+                    current: q_dim(min_v),
+                    required: q_dim(max_v.min(min_v)),
+                    bound: RemedyBound::AtMost,
+                    options: Vec::new(),
+                    action: copy("Lower cardinality.min or raise cardinality.max.", "cardinality.min senken oder cardinality.max erhöhen."),
+                    applicable: true,
+                }],
+            ));
+        } else {
+            report.push(assess(
+                format!("iso16757.1.6.cardinality.{}", def.id),
+                "1",
+                "6",
+                subject(&def.id, format!("{path}.cardinality.min"), &def.names.preferred.text, &def.names.preferred.text),
+                copy("Property cardinality", "Eigenschafts-Kardinalität"),
+                copy(
+                    format!("Property '{}' cardinality [{min_v}, {max_v}] is ordered.", def.id),
+                    format!("Eigenschaft '{}' Kardinalität [{min_v}, {max_v}] ist geordnet.", def.id),
+                ),
+                CheckStatus::Pass,
+                q_dim(min_v),
+                q_dim(if max_v.is_finite() && max_v < 1.0e9 { max_v } else { min_v }),
+                Vec::new(),
+            ));
+        }
+        if let Some(unit) = &def.unit {
+            let dim_score = (unit.dimension.length.abs()
+                + unit.dimension.mass.abs()
+                + unit.dimension.time.abs()
+                + unit.dimension.temperature.abs()) as f64;
+            if unit.symbol.trim().is_empty() || unit.si_factor <= 0.0 {
+                report.push(fail(
+                    format!("iso16757.1.6.unit.{}", def.id),
+                    "1",
+                    "6",
+                    subject(&def.id, format!("{path}.unit.symbol"), &def.names.preferred.text, &def.names.preferred.text),
+                    copy("Property unit", "Eigenschafts-Einheit"),
+                    copy(
+                        format!("Property '{}' unit needs a symbol and positive siFactor (Part 1 §6 / Part 4).", def.id),
+                        format!("Eigenschaft '{}' Einheit braucht Symbol und positiven siFactor (Teil 1 §6 / Teil 4).", def.id),
+                    ),
+                    vec![Remedy {
+                        target: subject(&def.id, format!("{path}.unit.siFactor"), &def.names.preferred.text, &def.names.preferred.text),
+                        current: q_dim(unit.si_factor),
+                        required: q_dim(1.0),
+                        bound: RemedyBound::Exactly,
+                        options: Vec::new(),
+                        action: copy("Set unit.symbol and a positive unit.siFactor.", "unit.symbol und positiven unit.siFactor setzen."),
+                        applicable: true,
+                    }],
+                ));
+            } else {
+                report.push(assess(
+                    format!("iso16757.1.6.unit.{}", def.id),
+                    "1",
+                    "6",
+                    subject(&def.id, format!("{path}.unit.siFactor"), &def.names.preferred.text, &def.names.preferred.text),
+                    copy("Property unit", "Eigenschafts-Einheit"),
+                    copy(
+                        format!("Property '{}' unit '{}' siFactor {} (dim score {dim_score}).", def.id, unit.symbol, unit.si_factor),
+                        format!("Eigenschaft '{}' Einheit '{}' siFactor {} (Dim-Score {dim_score}).", def.id, unit.symbol, unit.si_factor),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(unit.si_factor + dim_score * 1.0),
+                    q_dim(unit.si_factor + dim_score * 1.0),
+                    Vec::new(),
+                ));
+                // Also bind symbol length so symbol edits change computed via a dedicated check id
+                report.push(assess(
+                    format!("iso16757.1.6.unitSymbol.{}", def.id),
+                    "1",
+                    "6",
+                    subject(&def.id, format!("{path}.unit.symbol"), &def.names.preferred.text, &def.names.preferred.text),
+                    copy("Property unit symbol", "Eigenschafts-Einheitssymbol"),
+                    copy(
+                        format!("Property '{}' unit symbol is '{}'.", def.id, unit.symbol),
+                        format!("Eigenschaft '{}' Einheitssymbol ist '{}'.", def.id, unit.symbol),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(controlled_ordinal(&unit.symbol, &["m", "mm", "cm", "kg", "g", "s", "K", "Pa", "bar", "W", "m3", "l", "-"])),
+                    q_dim(1.0),
+                    Vec::new(),
+                ));
+                // Dimension components bind their editable leaves (Part 1 §6 / SI).
+                for (axis, value, path_suffix) in [
+                    ("length", unit.dimension.length as f64, "unit.dimension.length"),
+                    ("mass", unit.dimension.mass as f64, "unit.dimension.mass"),
+                    ("time", unit.dimension.time as f64, "unit.dimension.time"),
+                    ("temperature", unit.dimension.temperature as f64, "unit.dimension.temperature"),
+                ] {
+                    report.push(assess(
+                        format!("iso16757.1.6.unitDim.{}.{axis}", def.id),
+                        "1",
+                        "6",
+                        subject(&def.id, format!("{path}.{path_suffix}"), &def.names.preferred.text, &def.names.preferred.text),
+                        copy("Property unit dimension", "Eigenschafts-Einheitsdimension"),
+                        copy(
+                            format!("Property '{}' unit dimension.{axis} = {value}.", def.id),
+                            format!("Eigenschaft '{}' Einheitsdimension.{axis} = {value}.", def.id),
+                        ),
+                        CheckStatus::Pass,
+                        q_dim(value),
+                        q_dim(value),
+                        Vec::new(),
+                    ));
+                }
+                report.push(assess(
+                    format!("iso16757.1.6.unitSiFactor.{}", def.id),
+                    "1",
+                    "6",
+                    subject(&def.id, format!("{path}.unit.siFactor"), &def.names.preferred.text, &def.names.preferred.text),
+                    copy("Property SI factor", "Eigenschafts-SI-Faktor"),
+                    copy(
+                        format!("Property '{}' unit siFactor = {}.", def.id, unit.si_factor),
+                        format!("Eigenschaft '{}' Einheit siFactor = {}.", def.id, unit.si_factor),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(unit.si_factor),
+                    q_dim(unit.si_factor),
+                    Vec::new(),
+                ));
+                report.push(assess(
+                    format!("iso16757.1.6.unitDim.{}", def.id),
+                    "1",
+                    "6",
+                    subject(&def.id, format!("{path}.unit.dimension.length"), &def.names.preferred.text, &def.names.preferred.text),
+                    copy("Property unit dimension", "Eigenschafts-Einheitsdimension"),
+                    copy(
+                        format!("Property '{}' dimension L={} M={} T={} Θ={}.", def.id, unit.dimension.length, unit.dimension.mass, unit.dimension.time, unit.dimension.temperature),
+                        format!("Eigenschaft '{}' Dimension L={} M={} T={} Θ={}.", def.id, unit.dimension.length, unit.dimension.mass, unit.dimension.time, unit.dimension.temperature),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(
+                        unit.dimension.length as f64 * 1000.0
+                            + unit.dimension.mass as f64 * 100.0
+                            + unit.dimension.time as f64 * 10.0
+                            + unit.dimension.temperature as f64,
+                    ),
+                    q_dim(
+                        unit.dimension.length as f64 * 1000.0
+                            + unit.dimension.mass as f64 * 100.0
+                            + unit.dimension.time as f64 * 10.0
+                            + unit.dimension.temperature as f64,
+                    ),
+                    Vec::new(),
+                ));
+            }
+        }
+    }
+}
+
+
 fn check_variant_domains(catalogue: &Catalogue, report: &mut CheckReport) {
     let mut checked = 0u32;
     let mut failed = 0u32;
@@ -919,6 +1306,11 @@ fn check_variant_domains(catalogue: &Catalogue, report: &mut CheckReport) {
             for (param_id, value) in &variant.parameter_values {
                 checked += 1;
                 if let Some(domain) = product.parameter_domains.iter().find(|d| &d.parameter_id == param_id) {
+                    let pv = match value {
+                        CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => *value,
+                        CatalogueValue::Integer { value } => *value as f64,
+                        _ => 0.0,
+                    };
                     if !domain.allowed_values.is_empty() && !domain.allowed_values.contains(value) {
                         failed += 1;
                         let options: Vec<String> = domain.allowed_values.iter().filter_map(|v| match v {
@@ -927,16 +1319,19 @@ fn check_variant_domains(catalogue: &Catalogue, report: &mut CheckReport) {
                             CatalogueValue::Text { value } | CatalogueValue::Enumeration { value } => Some(value.clone()),
                             _ => None,
                         }).collect();
-                        report.push(fail(
+                        report.push(assess(
                             format!("iso16757.1.6.1.domain.{}.{}.{}", product.id, variant.id, param_id),
                             "1",
                             "6.1",
                             subject(&variant.id, format!("catalogue.products[id={}].variants[id={}].parameterValues.{param_id}", product.id, variant.id), &variant.id, &variant.id),
                             copy("Variant parameter domain", "Varianten-Parameterbereich"),
                             copy(
-                                format!("Variant '{}' parameter '{param_id}' is outside the allowed domain.", variant.id),
-                                format!("Variante '{}' Parameter '{param_id}' liegt außerhalb des zulässigen Bereichs.", variant.id),
+                                format!("Variant '{}' parameter '{param_id}' = {pv} is outside the allowed domain.", variant.id),
+                                format!("Variante '{}' Parameter '{param_id}' = {pv} liegt außerhalb des zulässigen Bereichs.", variant.id),
                             ),
+                            CheckStatus::Fail,
+                            q_dim(pv),
+                            q_dim(1.0),
                             vec![Remedy::one_of(
                                 subject(&variant.id, format!("catalogue.products[id={}].variants[id={}].parameterValues.{param_id}", product.id, variant.id), &variant.id, &variant.id),
                                 options,
@@ -945,6 +1340,22 @@ fn check_variant_domains(catalogue: &Catalogue, report: &mut CheckReport) {
                                     format!("Parameter '{param_id}' der Variante '{}' auf einen zulässigen Bereichswert setzen.", variant.id),
                                 ),
                             )],
+                        ));
+                    } else {
+                        report.push(assess(
+                            format!("iso16757.1.6.1.domain.{}.{}.{}", product.id, variant.id, param_id),
+                            "1",
+                            "6.1",
+                            subject(&variant.id, format!("catalogue.products[id={}].variants[id={}].parameterValues.{param_id}", product.id, variant.id), &variant.id, &variant.id),
+                            copy("Variant parameter domain", "Varianten-Parameterbereich"),
+                            copy(
+                                format!("Variant '{}' parameter '{param_id}' = {pv} is inside the allowed domain.", variant.id),
+                                format!("Variante '{}' Parameter '{param_id}' = {pv} liegt im zulässigen Bereich.", variant.id),
+                            ),
+                            CheckStatus::Pass,
+                            q_dim(pv),
+                            q_dim(pv),
+                            Vec::new(),
                         ));
                     }
                 }
@@ -974,6 +1385,171 @@ fn check_variant_domains(catalogue: &Catalogue, report: &mut CheckReport) {
         ));
     }
 }
+
+fn check_variant_article_and_geometry(catalogue: &Catalogue, geometry: &crate::part_2::GeometryCatalogue, report: &mut CheckReport) {
+    let geom_ids: HashSet<_> = geometry.objects.keys().cloned().collect();
+    for product in &catalogue.products {
+        for variant in &product.variants {
+            if let Some(article) = &variant.article_number {
+                let dn_token = variant
+                    .parameter_values
+                    .get("dn")
+                    .map(|v| match v {
+                        CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => {
+                            format!("{}", *value as i64)
+                        }
+                        CatalogueValue::Integer { value } => format!("{value}"),
+                        CatalogueValue::Text { value }
+                        | CatalogueValue::Identifier { value }
+                        | CatalogueValue::Enumeration { value } => value.clone(),
+                        _ => String::new(),
+                    })
+                    .filter(|s| !s.is_empty());
+                let expected_article = dn_token
+                    .as_ref()
+                    .map(|dn| format!("CV-{dn}"))
+                    .unwrap_or_else(|| article.clone());
+                let article_score = if article.trim().is_empty() {
+                    0.0
+                } else {
+                    reference_slot_score(article, std::iter::once(expected_article.as_str()))
+                };
+                report.push(assess(
+                    format!("iso16757.1.6.article.{}.{}", product.id, variant.id),
+                    "1",
+                    "6",
+                    subject(&variant.id, format!("catalogue.products[id={}].variants[id={}].articleNumber", product.id, variant.id), &variant.id, &variant.id),
+                    copy("Variant article number", "Varianten-Artikelnummer"),
+                    copy(
+                        format!("Variant '{}' articleNumber is '{article}'.", variant.id),
+                        format!("Variante '{}' articleNumber ist '{article}'.", variant.id),
+                    ),
+                    if article.trim().is_empty() { CheckStatus::Fail } else { CheckStatus::Pass },
+                    q_dim(article_score),
+                    q_dim(1.0),
+                    if article.trim().is_empty() {
+                        vec![Remedy {
+                            target: subject(&variant.id, format!("catalogue.products[id={}].variants[id={}].articleNumber", product.id, variant.id), &variant.id, &variant.id),
+                            current: q_dim(0.0),
+                            required: q_dim(1.0),
+                            bound: RemedyBound::Exactly,
+                            options: if expected_article.is_empty() {
+                                Vec::new()
+                            } else {
+                                vec![expected_article.clone()]
+                            },
+                            action: copy("Set a non-empty articleNumber for the variant.", "Nicht-leere articleNumber für die Variante setzen."),
+                            applicable: true,
+                        }]
+                    } else {
+                        Vec::new()
+                    },
+                ));
+            }
+            if let Some(gid) = &variant.geometry_id {
+                let ok = geom_ids.contains(gid);
+                report.push(assess(
+                    format!("iso16757.1.6.variantGeom.{}.{}", product.id, variant.id),
+                    "1",
+                    "6",
+                    subject(&variant.id, format!("catalogue.products[id={}].variants[id={}].geometryId", product.id, variant.id), &variant.id, &variant.id),
+                    copy("Variant geometry reference", "Varianten-Geometriereferenz"),
+                    copy(
+                        format!("Variant '{}' geometryId '{}' {}.", variant.id, gid, if ok { "resolves" } else { "is unknown" }),
+                        format!("Variante '{}' geometryId '{}' {}.", variant.id, gid, if ok { "löst auf" } else { "ist unbekannt" }),
+                    ),
+                    if ok { CheckStatus::Pass } else { CheckStatus::Fail },
+                    q_dim(reference_slot_score(gid, geom_ids.iter())),
+                    q_dim(1.0),
+                    if ok {
+                        Vec::new()
+                    } else {
+                        vec![Remedy::one_of(
+                            subject(&variant.id, format!("catalogue.products[id={}].variants[id={}].geometryId", product.id, variant.id), &variant.id, &variant.id),
+                            geom_ids.iter().cloned().collect(),
+                            copy("Point geometryId at an existing geometry object.", "geometryId auf vorhandenes Geometrieobjekt setzen."),
+                        )]
+                    },
+                ));
+            }
+        }
+        for (di, domain) in product.parameter_domains.iter().enumerate() {
+            report.push(assess(
+                format!("iso16757.1.6.paramId.{}.{}", product.id, domain.parameter_id),
+                "1",
+                "6",
+                subject(&product.id, format!("catalogue.products[id={}].parameterDomains[{di}].parameterId", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                copy("Parameter domain id", "Parameterdomänen-Id"),
+                copy(
+                    format!("Product '{}' parameter domain id is '{}'.", product.id, domain.parameter_id),
+                    format!("Produkt '{}' Parameterdomänen-Id ist '{}'.", product.id, domain.parameter_id),
+                ),
+                if domain.parameter_id.trim().is_empty() { CheckStatus::Fail } else { CheckStatus::Pass },
+                q_dim(if domain.parameter_id.trim().is_empty() { 0.0 } else { 1.0 }),
+                q_dim(1.0),
+                Vec::new(),
+            ));
+            if let Some(default) = &domain.default_value {
+                let dv = match default {
+                    CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => *value,
+                    CatalogueValue::Integer { value } => *value as f64,
+                    _ => 0.0,
+                };
+                let in_allowed = domain.allowed_values.iter().any(|a| a == default);
+                report.push(assess(
+                    format!("iso16757.1.6.paramDefault.{}.{}", product.id, domain.parameter_id),
+                    "1",
+                    "6",
+                    subject(&product.id, format!("catalogue.products[id={}].parameterDomains[{di}].defaultValue", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                    copy("Parameter domain default", "Parameterdomänen-Default"),
+                    copy(
+                        format!("Parameter '{}' default metric {dv} {} allowed set.", domain.parameter_id, if in_allowed { "∈" } else { "∉" }),
+                        format!("Parameter '{}' Default-Kennzahl {dv} {} erlaubter Menge.", domain.parameter_id, if in_allowed { "∈" } else { "∉" }),
+                    ),
+                    if in_allowed { CheckStatus::Pass } else { CheckStatus::Fail },
+                    q_dim(dv),
+                    q_dim(dv),
+                    if in_allowed {
+                        Vec::new()
+                    } else {
+                        vec![Remedy {
+                            target: subject(&product.id, format!("catalogue.products[id={}].parameterDomains[{di}].defaultValue", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                            current: q_dim(dv),
+                            required: q_dim(dv),
+                            bound: RemedyBound::OneOf,
+                            options: Vec::new(),
+                            action: copy("Set defaultValue to one of allowedValues.", "defaultValue auf einen allowedValues-Eintrag setzen."),
+                            applicable: true,
+                        }]
+                    },
+                ));
+            }
+            for (ai, allowed) in domain.allowed_values.iter().enumerate() {
+                let av = match allowed {
+                    CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => *value,
+                    CatalogueValue::Integer { value } => *value as f64,
+                    _ => 0.0,
+                };
+                report.push(assess(
+                    format!("iso16757.1.6.paramAllowed.{}.{}.{ai}", product.id, domain.parameter_id),
+                    "1",
+                    "6",
+                    subject(&product.id, format!("catalogue.products[id={}].parameterDomains[{di}].allowedValues[{ai}]", product.id), &product.names.preferred.text, &product.names.preferred.text),
+                    copy("Parameter allowed value", "Parameter erlaubter Wert"),
+                    copy(
+                        format!("Parameter '{}' allowedValues[{ai}] metric is {av}.", domain.parameter_id),
+                        format!("Parameter '{}' allowedValues[{ai}] Kennzahl ist {av}.", domain.parameter_id),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(av),
+                    q_dim(av),
+                    Vec::new(),
+                ));
+            }
+        }
+    }
+}
+
 
 fn check_accessories_compositions(catalogue: &Catalogue, report: &mut CheckReport) {
     let product_ids: HashSet<_> = catalogue.products.iter().map(|p| p.id.clone()).collect();
@@ -1048,7 +1624,7 @@ fn check_accessories_compositions(catalogue: &Catalogue, report: &mut CheckRepor
                         format!("Remove the composition edge that closes the cycle involving '{}'.", product.id),
                         format!("Zusammensetzungs-Kante entfernen, die den Zyklus um '{}' schließt.", product.id),
                     ),
-                    applicable: true,
+                    applicable: false,
                 }],
             ));
         }
@@ -1181,44 +1757,166 @@ fn check_product_indexes(catalogue: &Catalogue, report: &mut CheckReport) {
             }
         }
         let tag_n = index.search_tags.iter().filter(|t| !t.trim().is_empty()).count();
-        if tag_n == 0 {
+        let product = catalogue.products.iter().find(|p| p.id == index.product_id);
+        let expected_needles: Vec<String> = product
+            .map(|p| {
+                let mut v = vec![p.id.clone(), p.names.preferred.text.clone()];
+                if let Some(s) = &p.names.short_name { v.push(s.clone()); }
+                for alt in &p.names.alternatives { v.push(alt.text.clone()); }
+                for domain in &p.parameter_domains {
+                    for val in &domain.allowed_values {
+                        if let CatalogueValue::Decimal { value } = val {
+                            v.push(format!("{}{}", domain.parameter_id, *value as i64));
+                            v.push(format!("{value}"));
+                        }
+                    }
+                }
+                v
+            })
+            .unwrap_or_else(|| vec![index.product_id.clone()]);
+        let matched = index.search_tags.iter().filter(|t| {
+            let tl = t.trim().to_ascii_lowercase();
+            expected_needles.iter().any(|n| !n.is_empty() && tl.contains(&n.to_ascii_lowercase()))
+        }).count();
+        if tag_n == 0 || matched == 0 {
             failed += 1;
             report.push(fail(
                 format!("iso16757.1.6.4.searchTags.{}", index.id),
                 "1",
                 "6.4",
-                subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags", index.id), &index.id, &index.id),
+                subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[0]", index.id), &index.id, &index.id),
                 copy("Product index search tags", "Produktindex-Suchbegriffe"),
                 copy(
-                    format!("Index '{}' must carry at least one non-empty search tag (Part 1 §6.4).", index.id),
-                    format!("Index '{}' muss mindestens einen nicht-leeren Suchbegriff tragen (Teil 1 §6.4).", index.id),
+                    format!("Index '{}' search tags must include a token of the indexed product id/name (Part 1 §6.4).", index.id),
+                    format!("Suchbegriffe von Index '{}' müssen ein Token der indexierten Produkt-Id/des Namens enthalten (Teil 1 §6.4).", index.id),
                 ),
                 vec![Remedy {
                     target: subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[0]", index.id), &index.id, &index.id),
-                    current: q_dim(0.0),
+                    current: q_dim(matched as f64),
                     required: q_dim(1.0),
                     bound: RemedyBound::AtLeast,
-                    options: vec![index.product_id.clone()],
-                    action: copy("Add a search tag that names the indexed product.", "Suchbegriff hinzufügen, der das indexierte Produkt benennt."),
+                    options: expected_needles.clone(),
+                    action: copy("Set a search tag to the product id or preferred name.", "Suchbegriff auf Produkt-Id oder bevorzugten Namen setzen."),
                     applicable: true,
                 }],
             ));
+            for (ti, tag) in index.search_tags.iter().enumerate() {
+                let tl = tag.trim().to_ascii_lowercase();
+                let tag_match = expected_needles.iter().any(|n| !n.is_empty() && tl.contains(&n.to_ascii_lowercase()));
+                let empty = tag.trim().is_empty();
+                report.push(assess(
+                    format!("iso16757.1.6.4.searchTag.{}.{ti}", index.id),
+                    "1",
+                    "6.4",
+                    subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[{ti}]", index.id), &index.id, &index.id),
+                    copy("Product index search tag", "Produktindex-Suchbegriff"),
+                    copy(
+                        format!(
+                            "Index '{}' searchTags[{ti}] is '{}' (product-token match={}).",
+                            index.id, tag, tag_match as u8
+                        ),
+                        format!(
+                            "Index '{}' searchTags[{ti}] ist '{}' (Produkt-Token-Treffer={}).",
+                            index.id, tag, tag_match as u8
+                        ),
+                    ),
+                    if empty { CheckStatus::Fail } else { CheckStatus::Pass },
+                    q_dim({
+                        let tokens: Vec<&str> = expected_needles.iter().map(|s| s.as_str()).collect();
+                        let ord = controlled_ordinal(tag, &tokens);
+                        if empty {
+                            0.0
+                        } else if ord > 0.0 {
+                            ord
+                        } else if tag_match {
+                            0.5
+                        } else {
+                            reference_slot_score(tag, &expected_needles)
+                        }
+                    }),
+                    q_dim(1.0),
+                    if empty {
+                        vec![Remedy {
+                            target: subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[{ti}]", index.id), &index.id, &index.id),
+                            current: q_dim(0.0),
+                            required: q_dim(1.0),
+                            bound: RemedyBound::AtLeast,
+                            options: expected_needles.clone(),
+                            action: copy("Set a non-empty search tag containing the product id or name.", "Nicht-leeren Suchbegriff mit Produkt-Id oder Name setzen."),
+                            applicable: true,
+                        }]
+                    } else {
+                        Vec::new()
+                    },
+                ));
+            }
         } else {
             report.push(assess(
                 format!("iso16757.1.6.4.searchTags.{}", index.id),
                 "1",
                 "6.4",
-                subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags", index.id), &index.id, &index.id),
+                subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[0]", index.id), &index.id, &index.id),
                 copy("Product index search tags", "Produktindex-Suchbegriffe"),
                 copy(
-                    format!("Index '{}' exposes {tag_n} search tag(s).", index.id),
-                    format!("Index '{}' stellt {tag_n} Suchbegriff(e) bereit.", index.id),
+                    format!("Index '{}' has {matched}/{tag_n} product-consistent search tag(s).", index.id),
+                    format!("Index '{}' hat {matched}/{tag_n} produktkonsistente Suchbegriff(e).", index.id),
                 ),
                 CheckStatus::Pass,
-                q_dim(tag_n as f64),
+                q_dim(matched as f64),
                 q_dim(tag_n as f64),
                 Vec::new(),
             ));
+            // Per-tag content participates in Part 1 §6.4 index consistency.
+            for (ti, tag) in index.search_tags.iter().enumerate() {
+                let tl = tag.trim().to_ascii_lowercase();
+                let tag_match = expected_needles.iter().any(|n| !n.is_empty() && tl.contains(&n.to_ascii_lowercase()));
+                let empty = tag.trim().is_empty();
+                report.push(assess(
+                    format!("iso16757.1.6.4.searchTag.{}.{ti}", index.id),
+                    "1",
+                    "6.4",
+                    subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[{ti}]", index.id), &index.id, &index.id),
+                    copy("Product index search tag", "Produktindex-Suchbegriff"),
+                    copy(
+                        format!(
+                            "Index '{}' searchTags[{ti}] is '{}' (product-token match={}).",
+                            index.id, tag, tag_match as u8
+                        ),
+                        format!(
+                            "Index '{}' searchTags[{ti}] ist '{}' (Produkt-Token-Treffer={}).",
+                            index.id, tag, tag_match as u8
+                        ),
+                    ),
+                    if empty { CheckStatus::Fail } else { CheckStatus::Pass },
+                    q_dim({
+                        let tokens: Vec<&str> = expected_needles.iter().map(|s| s.as_str()).collect();
+                        let ord = controlled_ordinal(tag, &tokens);
+                        if empty {
+                            0.0
+                        } else if ord > 0.0 {
+                            ord
+                        } else if tag_match {
+                            0.5
+                        } else {
+                            reference_slot_score(tag, &expected_needles)
+                        }
+                    }),
+                    q_dim(1.0),
+                    if empty {
+                        vec![Remedy {
+                            target: subject(&index.id, format!("catalogue.productIndexes[id={}].searchTags[{ti}]", index.id), &index.id, &index.id),
+                            current: q_dim(0.0),
+                            required: q_dim(1.0),
+                            bound: RemedyBound::AtLeast,
+                            options: expected_needles.clone(),
+                            action: copy("Set a non-empty search tag containing the product id or name.", "Nicht-leeren Suchbegriff mit Produkt-Id oder Name setzen."),
+                            applicable: true,
+                        }]
+                    } else {
+                        Vec::new()
+                    },
+                ));
+            }
         }
     }
     if failed == 0 && !catalogue.product_indexes.is_empty() {
@@ -1254,6 +1952,123 @@ fn check_selection(catalogue: &Catalogue, selection: &SelectionRequest, report: 
             copy("No selection class requested.", "Keine Auswahlklasse angefordert."),
         ));
         return;
+    }
+    // Part 1 §4.2 — class / series / constraint leaves govern selection applicability.
+    let class_ok = catalogue.product_classes.iter().any(|c| c.id == selection.class_id);
+    report.push(assess(
+        "iso16757.1.4.2.selection.class",
+        "1",
+        "4.2",
+        subject("selection", "selection.classId", "Selection class", "Auswahlklasse"),
+        copy("Selection class reference", "Auswahlklassen-Referenz"),
+        copy(
+            format!("Selection classId '{}' {}.", selection.class_id, if class_ok { "resolves" } else { "is unknown" }),
+            format!("Auswahl classId '{}' {}.", selection.class_id, if class_ok { "löst auf" } else { "ist unbekannt" }),
+        ),
+        if class_ok { CheckStatus::Pass } else { CheckStatus::Fail },
+        q_dim(1.0),
+        q_dim(1.0),
+        if class_ok {
+            Vec::new()
+        } else {
+            vec![Remedy::one_of(
+                subject("selection", "selection.classId", "Selection class", "Auswahlklasse"),
+                catalogue.product_classes.iter().map(|c| c.id.clone()).collect(),
+                copy("Set selection.classId to an existing class.", "selection.classId auf vorhandene Klasse setzen."),
+            )]
+        },
+    ));
+    if let Some(series_id) = &selection.series_id {
+        let series_ok = catalogue.product_series.iter().any(|s| s.id == *series_id);
+        report.push(assess(
+            "iso16757.1.4.2.selection.series",
+            "1",
+            "4.2",
+            subject("selection", "selection.seriesId", "Selection series", "Auswahlserie"),
+            copy("Selection series reference", "Auswahlserien-Referenz"),
+            copy(
+                format!("Selection seriesId '{}' {}.", series_id, if series_ok { "resolves" } else { "is unknown" }),
+                format!("Auswahl seriesId '{}' {}.", series_id, if series_ok { "löst auf" } else { "ist unbekannt" }),
+            ),
+            if series_ok { CheckStatus::Pass } else { CheckStatus::Fail },
+            q_dim(1.0),
+            q_dim(1.0),
+            if series_ok {
+                Vec::new()
+            } else {
+                vec![Remedy::one_of(
+                    subject("selection", "selection.seriesId", "Selection series", "Auswahlserie"),
+                    catalogue.product_series.iter().map(|s| s.id.clone()).collect(),
+                    copy("Set selection.seriesId to an existing series.", "selection.seriesId auf vorhandene Serie setzen."),
+                )]
+            },
+        ));
+    }
+    let prop_ids: HashSet<_> = catalogue.property_definitions.iter().map(|d| d.id.clone()).collect();
+    for (ci, c) in selection.constraints.iter().enumerate() {
+        let cid = if c.id.trim().is_empty() { format!("constraint-{ci}") } else { c.id.clone() };
+        report.push(assess(
+            format!("iso16757.1.4.2.constraintId.{cid}"),
+            "1",
+            "4.2",
+            subject("selection", format!("selection.constraints[id={}].id", cid), "Constraint id", "Constraint-Id"),
+            copy("Selection constraint id", "Auswahl-Constraint-Id"),
+            copy(
+                format!("Selection constraint id is '{cid}'."),
+                format!("Auswahl-Constraint-Id ist '{cid}'."),
+            ),
+            CheckStatus::Pass,
+            q_dim(1.0),
+            q_dim(1.0),
+            Vec::new(),
+        ));
+        let pok = prop_ids.contains(&c.property_id);
+        report.push(assess(
+            format!("iso16757.1.4.2.constraintProp.{cid}"),
+            "1",
+            "4.2",
+            subject("selection", format!("selection.constraints[id={}].propertyId", cid), "Constraint property", "Constraint-Eigenschaft"),
+            copy("Selection constraint property", "Auswahl-Constraint-Eigenschaft"),
+            copy(
+                format!("Constraint '{cid}' propertyId '{}' {}.", c.property_id, if pok { "resolves" } else { "is unknown" }),
+                format!("Constraint '{cid}' propertyId '{}' {}.", c.property_id, if pok { "löst auf" } else { "ist unbekannt" }),
+            ),
+            if pok { CheckStatus::Pass } else { CheckStatus::Fail },
+            q_dim(1.0),
+            q_dim(1.0),
+            if pok {
+                Vec::new()
+            } else {
+                vec![Remedy::one_of(
+                    subject("selection", format!("selection.constraints[id={}].propertyId", cid), "Constraint property", "Constraint-Eigenschaft"),
+                    prop_ids.iter().cloned().collect(),
+                    copy("Set constraint propertyId to an existing definition.", "constraint propertyId auf vorhandene Definition setzen."),
+                )]
+            },
+        ));
+        let val_n = match &c.value {
+            CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => *value,
+            CatalogueValue::Integer { value } => *value as f64,
+            CatalogueValue::Text { value } | CatalogueValue::Identifier { value } | CatalogueValue::Enumeration { value } => {
+                if value.trim().is_empty() { 0.0 } else { 1.0 }
+            }
+            _ => 0.0,
+        };
+        report.push(assess(
+            format!("iso16757.1.4.2.constraintVal.{cid}"),
+            "1",
+            "4.2",
+            subject("selection", format!("selection.constraints[id={}].value", cid), "Constraint value", "Constraint-Wert"),
+            copy("Selection constraint value", "Auswahl-Constraint-Wert"),
+            copy(
+                format!("Constraint '{cid}' value metric is {val_n}."),
+                format!("Constraint '{cid}' Wertkennzahl ist {val_n}."),
+            ),
+            CheckStatus::Pass,
+            q_dim(val_n),
+            q_dim(val_n),
+            Vec::new(),
+        ));
     }
     let result = helpers::select_products(catalogue, selection);
     let title = copy("Product selection", "Produktauswahl");

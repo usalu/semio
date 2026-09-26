@@ -1,0 +1,94 @@
+{
+  "schema": "semio.store.document-echo-suppression/v1",
+  "hubCatchUpOrigin": "hub.catch-up",
+  "vectors": [
+    {
+      "id": "a-late-joiner-applies-the-whole-tail-even-when-it-names-the-joiners-own-actor",
+      "socketActor": "hub.v1.joiner",
+      "steps": [
+        {
+          "frame": {
+            "kind": "tail",
+            "origin": "hub.v1.joiner",
+            "envelopes": [
+              { "mutationId": "edit-a1#0", "actor": "hub.v1.alice" },
+              { "mutationId": "edit-b1#0", "actor": "hub.v1.bob" },
+              { "mutationId": "edit-a2#0", "actor": "hub.v1.alice" }
+            ]
+          },
+          "expectApplied": ["edit-a1#0", "edit-b1#0", "edit-a2#0"]
+        },
+        {
+          "frame": { "kind": "relay", "origin": "hub.v1.bob", "envelopes": [{ "mutationId": "edit-b2#0", "actor": "hub.v1.bob" }] },
+          "expectApplied": ["edit-b2#0"]
+        }
+      ]
+    },
+    {
+      "id": "the-hubs-declared-catch-up-origin-changes-nothing",
+      "socketActor": "hub.v1.joiner",
+      "steps": [
+        {
+          "frame": {
+            "kind": "tail",
+            "origin": "hub.catch-up",
+            "envelopes": [
+              { "mutationId": "edit-a1#0", "actor": "hub.v1.alice" },
+              { "mutationId": "edit-b1#0", "actor": "hub.v1.bob" }
+            ]
+          },
+          "expectApplied": ["edit-a1#0", "edit-b1#0"]
+        }
+      ]
+    },
+    {
+      "id": "the-same-user-on-a-second-device-applies-the-first-devices-edits",
+      "socketActor": "hub.v1.user-one",
+      "steps": [
+        {
+          "frame": {
+            "kind": "tail",
+            "origin": "hub.catch-up",
+            "envelopes": [
+              { "mutationId": "edit-laptop1#0", "actor": "hub.v1.user-one" },
+              { "mutationId": "edit-laptop2#0", "actor": "hub.v1.user-one" }
+            ]
+          },
+          "expectApplied": ["edit-laptop1#0", "edit-laptop2#0"]
+        },
+        {
+          "frame": { "kind": "relay", "origin": "hub.v1.user-one", "envelopes": [{ "mutationId": "edit-laptop3#0", "actor": "hub.v1.user-one" }] },
+          "expectApplied": ["edit-laptop3#0"]
+        }
+      ]
+    },
+    {
+      "id": "a-genuine-echo-is-applied-exactly-once",
+      "socketActor": "hub.v1.writer",
+      "steps": [
+        { "authored": ["edit-own1#0", "edit-own2#0"] },
+        {
+          "frame": { "kind": "relay", "origin": "hub.v1.writer", "envelopes": [{ "mutationId": "edit-own1#0", "actor": "hub.v1.writer" }, { "mutationId": "edit-own2#0", "actor": "hub.v1.writer" }] },
+          "expectApplied": []
+        },
+        {
+          "frame": { "kind": "relay", "origin": "hub.v1.peer", "envelopes": [{ "mutationId": "edit-peer1#0", "actor": "hub.v1.peer" }] },
+          "expectApplied": ["edit-peer1#0"]
+        },
+        {
+          "frame": {
+            "kind": "tail",
+            "origin": "hub.catch-up",
+            "envelopes": [
+              { "mutationId": "edit-own1#0", "actor": "hub.v1.writer" },
+              { "mutationId": "edit-peer1#0", "actor": "hub.v1.peer" },
+              { "mutationId": "edit-own2#0", "actor": "hub.v1.writer" },
+              { "mutationId": "edit-peer2#0", "actor": "hub.v1.peer" }
+            ]
+          },
+          "expectApplied": ["edit-peer2#0"]
+        }
+      ]
+    }
+  ]
+}

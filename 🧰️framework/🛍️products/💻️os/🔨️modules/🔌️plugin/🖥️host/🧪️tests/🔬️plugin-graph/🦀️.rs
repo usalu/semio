@@ -3,7 +3,7 @@ use super::*;
 async fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> PluginManifest {
     let mut dependencies = Vec::with_capacity(deps.len());
     for (id, req) in deps {
-        dependencies.push(semio_framework::PluginDependency::new(*id, semio_framework::VersionReq::parse(req).unwrap()));
+        dependencies.push(semio_framework::PluginDependency::new(*id, semio_framework::VersionPin::parse(req).unwrap()));
     }
     PluginManifest {
         plugin_id: plugin_id.to_string(),
@@ -27,7 +27,7 @@ async fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> Plug
 async fn contribution_block_separates_missing_owner_from_version_mismatch_from_undeclared() {
     let graph = PluginGraph::new();
     graph.register(manifest("cad", "1.0.0", &[]).await).await.unwrap();
-    graph.register(manifest("aec", "1.0.0", &[("cad", "^1.0.0")]).await).await.unwrap();
+    graph.register(manifest("aec", "1.0.0", &[("cad", "=1.0.0")]).await).await.unwrap();
     assert_eq!(graph.contribution_block("aec", "cad").await.unwrap(), None, "a declared, satisfied dependency blocks nothing");
 
     let (code, _) = graph.contribution_block("ghost", "cad").await.unwrap().expect("an unloaded contributor is blocked");
@@ -51,7 +51,7 @@ async fn contribution_block_separates_missing_owner_from_version_mismatch_from_u
 async fn load_order_respects_a_real_dependency_edge() {
     let graph = PluginGraph::new();
     graph.register(manifest("base", "1.0.0", &[]).await).await.unwrap();
-    graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")]).await).await.unwrap();
+    graph.register(manifest("dependent", "1.0.0", &[("base", "=1.0.0")]).await).await.unwrap();
     assert_eq!(graph.load_order().await.unwrap(), vec!["base".to_string(), "dependent".to_string()]);
     assert_eq!(graph.dependents("base").await.unwrap(), vec!["dependent".to_string()]);
 }
@@ -59,7 +59,7 @@ async fn load_order_respects_a_real_dependency_edge() {
 #[semio_framework_async_macros::async_test]
 async fn register_rejects_a_missing_dependency() {
     let graph = PluginGraph::new();
-    let error = graph.register(manifest("dependent", "1.0.0", &[("missing", "*")]).await).await.unwrap_err();
+    let error = graph.register(manifest("dependent", "1.0.0", &[("missing", "=1.0.0")]).await).await.unwrap_err();
     assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::MissingDependency { .. })));
     assert!(!graph.is_registered("dependent").await.unwrap(), "a rejected registration must not partially commit");
 }
@@ -68,7 +68,7 @@ async fn register_rejects_a_missing_dependency() {
 async fn register_rejects_a_version_mismatch() {
     let graph = PluginGraph::new();
     graph.register(manifest("base", "1.0.0", &[]).await).await.unwrap();
-    let error = graph.register(manifest("dependent", "1.0.0", &[("base", "^2.0.0")]).await).await.unwrap_err();
+    let error = graph.register(manifest("dependent", "1.0.0", &[("base", "=2.0.0")]).await).await.unwrap_err();
     assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
 }
 
@@ -76,9 +76,9 @@ async fn register_rejects_a_version_mismatch() {
 async fn a_later_registration_that_would_close_a_cycle_is_rejected() {
     let graph = PluginGraph::new();
     graph.register(manifest("a", "1.0.0", &[]).await).await.unwrap();
-    graph.register(manifest("b", "1.0.0", &[("a", "*")]).await).await.unwrap();
+    graph.register(manifest("b", "1.0.0", &[("a", "=1.0.0")]).await).await.unwrap();
     // Re-registering "a" (as if hot-reloading it) to depend on "b" would close a -> b -> a.
-    let error = graph.register(manifest("a", "1.0.0", &[("b", "*")]).await).await.unwrap_err();
+    let error = graph.register(manifest("a", "1.0.0", &[("b", "=1.0.0")]).await).await.unwrap_err();
     assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::Cycle { .. })));
 }
 
@@ -86,7 +86,7 @@ async fn a_later_registration_that_would_close_a_cycle_is_rejected() {
 async fn unload_is_refused_while_a_dependent_is_registered() {
     let graph = PluginGraph::new();
     graph.register(manifest("base", "1.0.0", &[]).await).await.unwrap();
-    graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")]).await).await.unwrap();
+    graph.register(manifest("dependent", "1.0.0", &[("base", "=1.0.0")]).await).await.unwrap();
     let error = graph.guard_unload("base").await.unwrap_err();
     assert!(matches!(error, PluginGraphError::UnloadBlocked { .. }));
     graph.unregister("dependent").await.unwrap();
@@ -94,11 +94,13 @@ async fn unload_is_refused_while_a_dependent_is_registered() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn hot_reload_is_rejected_when_it_would_break_a_live_dependents_version_requirement() {
+async fn hot_reload_is_rejected_when_it_would_break_a_live_dependents_pin() {
     let graph = PluginGraph::new();
     graph.register(manifest("base", "1.0.0", &[]).await).await.unwrap();
-    graph.register(manifest("dependent", "1.0.0", &[("base", "^1.0.0")]).await).await.unwrap();
+    graph.register(manifest("dependent", "1.0.0", &[("base", "=1.0.0")]).await).await.unwrap();
     let error = graph.prepare_hot_reload(&manifest("base", "2.0.0", &[]).await).await.unwrap_err();
     assert!(matches!(error, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })));
-    graph.prepare_hot_reload(&manifest("base", "1.1.0", &[]).await).await.expect("a caret-compatible bump must still validate");
+    let bump = graph.prepare_hot_reload(&manifest("base", "1.1.0", &[]).await).await.unwrap_err();
+    assert!(matches!(bump, PluginGraphError::Graph(semio_framework::DependencyGraphError::VersionMismatch { .. })), "an exact pin admits no bump at all");
+    graph.prepare_hot_reload(&manifest("base", "1.0.0", &[]).await).await.expect("reloading the pinned version must still validate");
 }

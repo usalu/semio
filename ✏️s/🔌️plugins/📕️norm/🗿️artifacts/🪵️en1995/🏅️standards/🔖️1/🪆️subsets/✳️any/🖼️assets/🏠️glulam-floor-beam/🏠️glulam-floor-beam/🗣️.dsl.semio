@@ -1,0 +1,8 @@
+semio norm.en1995.dsl v1
+annex=de
+members [id:TEXT label-en:TEXT label-de:TEXT role:ENUM strength-class:TEXT service-class:UINT support:ENUM b-m:QTY h-m:QTY span-m:QTY support-length-m:QTY bearing-length-m:QTY buckling-length-y-m:QTY buckling-length-z-m:QTY lateral-restraint-spacing-m:QTY notch-depth-m:QTY notch-distance-m:QTY m-crit-nm:NUM mass-kg-per-m:NUM mass-kg-per-m2:NUM damping-xi:NUM fire-duration-s:QTY bridge-n-obs:NUM bridge-t-l-years:NUM bridge-beta:NUM bridge-a:NUM bridge-b:NUM bridge-crowd-per-m2:NUM actions:TABLE] {
+  beam-B1 "Main glulam floor beam B1" "Hauptträger BSH Decke B1" floor GL28h 1 simply-supported 0.2m 0.4m 5m 0.15m 0.15m 5m 1.5m 1.5m 0m 0m 180000 120 450 0.04 0s 0 0 0 0 0 0 [ {id=g kind=permanent category="" load-duration=permanent q-line-n-per-m=2500 f-point-n=0N m-k-nm=0 v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} {id=q kind=imposed category=A load-duration=medium q-line-n-per-m=3000 f-point-n=0N m-k-nm=0 v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} ]
+}
+connections [id:TEXT label-en:TEXT label-de:TEXT fastener-type:TEXT strength-class:TEXT service-class:UINT diameter-m:QTY number:UINT rows:UINT spacing-m:QTY edge-distance-m:QTY end-distance-m:QTY t1-m:QTY t2-m:QTY steel-plate:BOOL steel-plate-thickness-m:QTY shear-planes:UINT f-u-k:QTY actions:TABLE] {
+  conn-C1 "Bolt group at support" "Schraubverbund am Auflager" bolt GL28h 1 0.012m 8 2 0.09m 0.048m 0.096m 0.2m 0.2m false 0m 1 400000000Pa [ {id=g kind=permanent load-duration=permanent f-k-n=8000N} {id=q kind=imposed load-duration=medium f-k-n=10000N} ]
+}

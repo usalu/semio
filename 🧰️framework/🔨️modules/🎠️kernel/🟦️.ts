@@ -569,27 +569,27 @@ export type PluginRegistryEntry = {
 };
 
 /** 🔗️ Widens a {@link PluginCatalogTarget.dependsOn} plugin-id list (the crate's declared runtime
- * dependencies, carried without version info) into `PluginRegistryEntry.dependencies` — each id gets
- * the always-satisfied `*` requirement so {@link resolvePluginLoadOrder}/
- * {@link validatePluginDependencyGraph} can validate presence and detect cycles from the registry's
- * pre-build view, which has no `VersionReq` to read; the real requirement travels on the loaded
- * manifest's own `dependencies` once the plugin's descriptor is available. */
+ * dependencies, carried without version info) into `PluginRegistryEntry.dependencies` — each edge
+ * carries only its id, so {@link resolvePluginLoadOrder}/{@link validatePluginDependencyGraph}
+ * validate presence and detect cycles from the registry's pre-build view, which has no pin to read;
+ * the exact pin travels on the loaded manifest's own `dependencies` once the plugin's descriptor is
+ * available. */
 function dependsOnToPluginDependencies(dependsOn: readonly string[] | undefined): readonly PluginDependency[] | undefined {
-  return dependsOn?.map((pluginId) => ({ pluginId, version: "*" }));
+  return dependsOn?.map((pluginId) => ({ pluginId }));
 }
 
 //#region 🔖️PluginDependency
-/** 🔢️ A frozen `major.minor.patch` version requirement string — one of `*`, `=X.Y.Z`, `^X.Y.Z`,
- * `~X.Y.Z`, `>=X.Y.Z` (contract freeze §3). Mirrors Rust `VersionReq`'s `Display`/`Serialize`
- * wire form exactly; parsing/matching stays server-side (Rust `resolve_load_order` et al.) — this
- * type only lets the browser host read/display/round-trip the requirement string. */
-export type VersionReq = string;
+/** 📌️ An exact dependency pin string, `=X.Y.Z` — the only form a manifest declares, because a trusted
+ * catalog admits only exact pins inside its closure. Mirrors Rust `VersionPin`'s `Display`/`Serialize`
+ * wire form exactly. */
+export type VersionPin = string;
 
-/** 🔗️ One direct plugin dependency — mirrors Rust `PluginDependency`
- * (`🛂️manifest/🦀️.rs`). */
+/** 🔗️ One direct plugin dependency — mirrors Rust `PluginDependency` (`🛂️manifest/🦀️.rs`). A
+ * registry-derived edge carries no `version` (the pre-build view has none to read); a manifest-derived
+ * edge carries its exact pin. */
 export type PluginDependency = {
   readonly pluginId: string;
-  readonly version: VersionReq;
+  readonly version?: VersionPin;
 };
 //#endregion 🔖️PluginDependency
 
@@ -1233,12 +1233,12 @@ export type PluginCatalogTarget = {
   readonly consumes: readonly string[];
   /** 🔗️ Direct RUNTIME plugin dependency ids — the sibling plugins whose own actor this one needs
    * loaded beside it, declared in `[package.metadata.semio].depends-on` (`extends` target first for an
-   * extension) and mirrored by the builder's `.depends_on(id, VersionReq)`. A Cargo `[dependencies]`
+   * extension) and mirrored by the builder's `.depends_on(id, VersionPin)`. A Cargo `[dependencies]`
    * link on another plugin crate is a build-time rlib link and is NOT one of these. Mirrors the
    * generated `PluginBuildTarget.dependsOn` (ticket
    * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS §W2-C report). No
-   * `VersionReq` travels with these (the registry's pre-build view has none to derive it from) —
-   * `resolvePlaygroundBoot` maps each id to a `"*"` requirement, which is enough for
+   * pin travels with these (the registry's pre-build view has none to derive it from) —
+   * `resolvePlaygroundBoot` maps each id to a versionless edge, which is enough for
    * {@link PluginGraph} to validate presence/cycles and compute load order. */
   readonly dependsOn?: readonly string[];
   /** 🎬️ The declared activation events in `📓️design-abi.md` §2's dash-separated string form
@@ -2904,95 +2904,28 @@ export interface PluginSource {
    * {@link PluginModuleUnavailableError} means "not from here". */
   acquireModule(pluginId: string, rebuiltAt: number | undefined, acquisition: PluginModuleAcquisition): Promise<PluginModuleAcquired>;
   /** Subscribes to availability events; returns an unsubscribe function. Fires an immediate `snapshot`
-   * on subscribe against sources that support it (the dev source's SSE endpoint always sends one —
-   * and when the page-shared stream is already open, its cached snapshot is replayed instead, which is
-   * the same observable input). */
+   * on subscribe against sources that support it (the dev source's watch stream sends one on every fresh
+   * open, including after a reconnect that could not resume). */
   subscribe(listener: (event: PluginSourceEvent) => void): () => void;
 }
 
-/** @emoji 📡️ One live `EventSource` shared by every subscriber of the same watch URL on this page. */
-type SharedWatchStream = {
-  readonly source: EventSource;
-  readonly listeners: Set<(data: string) => void>;
-  /** 🗃️ The raw `data` string of the LAST `snapshot` seen on this stream (unparsed, unnormalized), kept
-   * so a LATE subscriber still receives the connect-time snapshot the endpoint only sends once. */
-  lastSnapshotData: string | undefined;
+/** @emoji 📡️ One availability stream the source's owner opened for it: every raw event goes to `listener`; answers the
+ * unsubscribe. The owner decides the transport (the `s` shell: one route of its page's stream channel, so no watch holds an
+ * HTTP/1.1 connection of its origin); the kernel only reads events. */
+export type PluginSourceWatch = (listener: (event: unknown) => void) => () => void;
+
+const pluginSourceEventOf = (event: unknown): PluginSourceEvent | undefined => {
+  if (typeof event !== "object" || event === null) return undefined;
+  const row = event as { readonly kind?: unknown; readonly plugins?: unknown; readonly pluginId?: unknown; readonly rebuiltAt?: unknown };
+  if (row.kind === "snapshot" && Array.isArray(row.plugins)) return event as PluginSourceEvent;
+  if (row.kind === "built" && typeof row.pluginId === "string" && typeof row.rebuiltAt === "number") return event as PluginSourceEvent;
+  return undefined;
 };
 
-/** @emoji 📡️ Page-wide registry of open watch streams, keyed by watch URL. Module-level on purpose:
- * every `FrameworkOsShell` on a page shares one entry per URL. */
-const sharedWatchStreams = new Map<string, SharedWatchStream>();
-
-/**
- * @emoji 📡️ Subscribes to a server-sent watch endpoint through a page-shared `EventSource`.
- *
- * 🧮️ WHY (ticket 26/08/28 demonstrator, measured 2026-09-17): every shell used to open its OWN
- * `EventSource` per watch URL, so an N-shell page held 2·N permanent streams. The dev server speaks
- * HTTP/1.1 and Chromium allows SIX connections per origin: with three shells the six idle SSE streams
- * consume the whole per-origin budget and EVERY later fetch of that page (plugin descriptors,
- * `.core.wasm`) queues behind them — shell 3 and every later pane sit in "booting" forever with no
- * console output. Sharing one stream per URL makes the cost O(1) per page instead of O(shells).
- *
- * 📬️ The first subscriber opens the stream; later ones attach as listeners and are replayed the cached
- * `snapshot` (via `queueMicrotask`, so the caller's `subscribe` has returned first — a synchronous
- * replay would re-enter the caller mid-subscribe). The dev/extension endpoints only send a snapshot at
- * connect time, and the shell's install pump depends on receiving one, so a late subscriber MUST NOT
- * wait for the next build. `built`/`installed` events are fanned out live to every listener.
- *
- * ♻️ Unsubscribing removes the listener; the last one out closes the `EventSource` and drops the entry,
- * so a later subscription opens a fresh stream. `onerror` is deliberately unhandled (exactly as before
- * this packet): `EventSource` reconnects on its own and the endpoint answers every reconnect with a
- * full snapshot, which is fanned out like any other event — consumers drop replays themselves
- * (ShellHost's `pluginAvailabilityRouteV1`).
- *
- * 🧪️ `EventSource` is unavailable under plain node, so this is a harmless no-op there (matches every
- * other browser-only feature detection in this module). */
-function subscribeSharedWatchStream(watchUrl: string, onData: (data: string) => void): () => void {
-  if (typeof EventSource === "undefined") return () => {};
-  let stream = sharedWatchStreams.get(watchUrl);
-  if (!stream) {
-    const opened: SharedWatchStream = { source: new EventSource(watchUrl), listeners: new Set(), lastSnapshotData: undefined };
-    opened.source.onmessage = (event: MessageEvent) => {
-      const data = typeof event.data === "string" ? event.data : String(event.data);
-      // 🗃️ Parsed ONLY to decide whether this event is the snapshot worth caching — every listener does
-      // its own parse (and owns its own malformed-event warning), so a malformed frame still reaches
-      // them and still warns exactly once per subscriber, as before sharing.
-      try {
-        const parsed = JSON.parse(data) as { readonly kind?: string };
-        if (parsed && parsed.kind === "snapshot") opened.lastSnapshotData = data;
-      } catch {
-        // not cacheable — listeners warn below
-      }
-      for (const listener of [...opened.listeners]) listener(data);
-    };
-    sharedWatchStreams.set(watchUrl, opened);
-    stream = opened;
-  }
-  const entry = stream;
-  entry.listeners.add(onData);
-  const cached = entry.lastSnapshotData;
-  if (cached !== undefined) {
-    queueMicrotask(() => {
-      if (entry.listeners.has(onData)) onData(cached);
-    });
-  }
-  let released = false;
-  return () => {
-    if (released) return;
-    released = true;
-    entry.listeners.delete(onData);
-    if (entry.listeners.size > 0) return;
-    entry.source.close();
-    if (sharedWatchStreams.get(watchUrl) === entry) sharedWatchStreams.delete(watchUrl);
-  };
-}
-
-/** @emoji 🔌️ `PluginSource` backed by an injected dev catalog and its owner's explicit watch URL.
- * `subscribe` attaches to the page-shared stream for `watchUrl` ({@link subscribeSharedWatchStream}) —
- * N shells on one page hold ONE `EventSource` per URL, not N. `EventSource` is unavailable under
- * vitest/node, so `subscribe` there is a harmless no-op (matches every other browser-only feature
- * detection in this module). */
-export function createDevPluginSource(registry: readonly PluginRegistryEntry[], watchUrl: string): PluginSource {
+/** @emoji 🔌️ `PluginSource` backed by an injected dev catalog and the availability stream its owner opens for it
+ * ({@link PluginSourceWatch}); every subscription is its own stream, and an event that is not an availability event is
+ * refused with one warning. */
+export function createDevPluginSource(registry: readonly PluginRegistryEntry[], watch: PluginSourceWatch): PluginSource {
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
   const bootVersion = Date.now();
   return {
@@ -3009,12 +2942,10 @@ export function createDevPluginSource(registry: readonly PluginRegistryEntry[], 
       return { moduleUrl: `${entry.moduleUrl}${separator}v=${stamp}`, rebuiltAt: stamp };
     },
     subscribe(listener) {
-      return subscribeSharedWatchStream(watchUrl, (data) => {
-        try {
-          listener(JSON.parse(data) as PluginSourceEvent);
-        } catch (error) {
-          console.warn(`[DEBUG] plugin source "dev" dropped a malformed watch frame from ${watchUrl}`, error);
-        }
+      return watch((event) => {
+        const availability = pluginSourceEventOf(event);
+        if (availability === undefined) console.warn("plugin source \"dev\" refused a watch event that is not an availability event", event);
+        else listener(availability);
       });
     },
   };
@@ -3081,12 +3012,11 @@ export function extensionRegistryFromCatalog(catalog: PluginCatalog): readonly P
   }));
 }
 
-/** @emoji 🧩️ `PluginSource` backed by an extension catalog and its owner's explicit watch URL.
- * Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
- * add artifacts under each extension id without changing this list. `subscribe` shares one
- * `EventSource` per watch URL across the page ({@link subscribeSharedWatchStream}) and normalizes the
- * extension wire vocabulary per listener. */
-export function createExtensionSource(catalog: PluginCatalog, watchUrl: string): PluginSource {
+/** @emoji 🧩️ `PluginSource` backed by an extension catalog and the install stream its owner opens for it
+ * ({@link PluginSourceWatch}). Catalog rows come from the injected {@link PluginCatalog}'s `extensions`; runtime installs
+ * add artifacts under each extension id without changing this list. `subscribe` normalizes the extension wire vocabulary
+ * per listener. */
+export function createExtensionSource(catalog: PluginCatalog, watch: PluginSourceWatch): PluginSource {
   const registry = extensionRegistryFromCatalog(catalog);
   const byId = new Map(registry.map((entry) => [entry.pluginId, entry] as const));
   return {
@@ -3100,12 +3030,15 @@ export function createExtensionSource(catalog: PluginCatalog, watchUrl: string):
       return { moduleUrl: rebuiltAt === undefined ? entry.moduleUrl : `${entry.moduleUrl}?v=${rebuiltAt}`, rebuiltAt };
     },
     subscribe(listener) {
-      return subscribeSharedWatchStream(watchUrl, (data) => {
+      return watch((event) => {
+        let normalized: PluginSourceEvent | undefined;
         try {
-          const normalized = extensionSourceEventToPluginSourceEvent(JSON.parse(data) as ExtensionSourceWireEvent);
-          if (normalized) listener(normalized);
+          normalized = extensionSourceEventToPluginSourceEvent(event as ExtensionSourceWireEvent);
         } catch (error) {
-                  }
+          console.warn("plugin source \"extensions\" refused a watch event that is not an install event", error);
+          return;
+        }
+        if (normalized) listener(normalized);
       });
     },
   };
@@ -3331,7 +3264,7 @@ export type PluginGraphNode = {
  * cycle ⇒ plugin load rejected with a typed error"). */
 export type PluginGraphError =
   | { readonly code: "transaction.dependency-missing"; readonly pluginId: string; readonly dependsOn: string }
-  | { readonly code: "transaction.version-mismatch"; readonly pluginId: string; readonly dependsOn: string; readonly required: VersionReq; readonly actual: string }
+  | { readonly code: "transaction.version-mismatch"; readonly pluginId: string; readonly dependsOn: string; readonly required: VersionPin; readonly actual: string }
   | { readonly code: "transaction.cycle"; readonly members: readonly string[] };
 
 type ParsedVersion = { readonly major: number; readonly minor: number; readonly patch: number };
@@ -3343,69 +3276,27 @@ function parseVersion(raw: string | undefined): ParsedVersion | null {
   return { major: Number(match[1]), minor: Number(match[2]), patch: Number(match[3]) };
 }
 
-function compareVersions(a: ParsedVersion, b: ParsedVersion): number {
-  if (a.major !== b.major) return a.major - b.major;
-  if (a.minor !== b.minor) return a.minor - b.minor;
-  return a.patch - b.patch;
+/** 🔢️ Parses the one pin form, `=X.Y.Z`. Mirrors Rust `VersionPin::parse`'s accepted syntax exactly: every
+ * range (`*`, `^`, `~`, `>=`, a bare triple) is refused. */
+function parseVersionPin(raw: VersionPin): ParsedVersion | null {
+  const match = /^=(\d+\.\d+\.\d+)$/.exec(raw.trim());
+  return match ? parseVersion(match[1]) : null;
 }
 
-type ParsedVersionReq =
-  | { readonly kind: "any" }
-  | { readonly kind: "exact"; readonly version: ParsedVersion }
-  | { readonly kind: "caret"; readonly version: ParsedVersion }
-  | { readonly kind: "tilde"; readonly version: ParsedVersion }
-  | { readonly kind: "atLeast"; readonly version: ParsedVersion };
-
-/** 🔢️ Parses the frozen version-requirement grammar (contract freeze §3): `*`, `=X.Y.Z`, `^X.Y.Z`,
- * `~X.Y.Z`, `>=X.Y.Z`. Mirrors Rust `VersionReq::parse`'s accepted syntax exactly. */
-function parseVersionReq(raw: VersionReq): ParsedVersionReq | null {
-  const trimmed = raw.trim();
-  if (trimmed === "*") return { kind: "any" };
-  const opMatch = /^(=|\^|~|>=)(\d+\.\d+\.\d+)$/.exec(trimmed);
-  if (!opMatch) return null;
-  const version = parseVersion(opMatch[2]);
-  if (!version) return null;
-  switch (opMatch[1]) {
-    case "=":
-      return { kind: "exact", version };
-    case "^":
-      return { kind: "caret", version };
-    case "~":
-      return { kind: "tilde", version };
-    case ">=":
-      return { kind: "atLeast", version };
-    default:
-      return null;
-  }
-}
-
-/** ✅️ True when `actual` (a plain `major.minor.patch` string) satisfies `requirement`. An
- * unparseable `actual`/`requirement` is treated as unsatisfied — never throws, matching the "typed
+/** ✅️ True when `actual` (a plain `major.minor.patch` string) is exactly the pinned version. An
+ * unparseable `actual`/`pin` — a range included — is unsatisfied and never throws, matching the "typed
  * error, never a panic" law the Rust planner's law tests hold `PlanError` to (contract freeze §1 law 4). */
-export function versionSatisfies(actual: string, requirement: VersionReq): boolean {
-  const req = parseVersionReq(requirement);
-  if (!req) return false;
-  if (req.kind === "any") return true;
+export function versionSatisfies(actual: string, pin: VersionPin): boolean {
+  const required = parseVersionPin(pin);
   const version = parseVersion(actual);
-  if (!version) return false;
-  if (req.kind === "exact") return compareVersions(version, req.version) === 0;
-  if (req.kind === "atLeast") return compareVersions(version, req.version) >= 0;
-  if (req.kind === "tilde") {
-    return version.major === req.version.major && version.minor === req.version.minor && version.patch >= req.version.patch;
-  }
-  // caret — leading-zero-tier semver semantics: the first nonzero component of the REQUIREMENT pins
-  // the upper bound; when every component is zero, only that exact version matches.
-  if (compareVersions(version, req.version) < 0) return false;
-  if (req.version.major > 0) return version.major === req.version.major;
-  if (req.version.minor > 0) return version.major === 0 && version.minor === req.version.minor;
-  return version.major === 0 && version.minor === 0 && version.patch === req.version.patch;
+  return required !== null && version !== null && version.major === required.major && version.minor === required.minor && version.patch === required.patch;
 }
 
 /** 🧯 Validates every node's declared `dependencies` resolve (present, version-satisfying) — does
  * NOT detect cycles (see {@link resolvePluginLoadOrder}, which layers cycle detection on top only
- * once every missing/mismatched edge has already been reported). A node with no `version` skips the
- * version check for edges pointing at it (nothing to compare against) rather than failing closed.
- * Mirrors Rust `validate_dependency_graph`. */
+ * once every missing/mismatched edge has already been reported). A node with no `version`, or an edge
+ * with no pin (the registry's pre-build view), skips the version check (nothing to compare) rather than
+ * failing closed. Mirrors Rust `validate_dependency_graph`. */
 export function validatePluginDependencyGraph(nodes: readonly PluginGraphNode[]): readonly PluginGraphError[] {
   const byId = new Map(nodes.map((node) => [node.pluginId, node] as const));
   const errors: PluginGraphError[] = [];
@@ -3416,7 +3307,7 @@ export function validatePluginDependencyGraph(nodes: readonly PluginGraphNode[])
         errors.push({ code: "transaction.dependency-missing", pluginId: node.pluginId, dependsOn: dependency.pluginId });
         continue;
       }
-      if (target.version !== undefined && !versionSatisfies(target.version, dependency.version)) {
+      if (dependency.version !== undefined && target.version !== undefined && !versionSatisfies(target.version, dependency.version)) {
         errors.push({ code: "transaction.version-mismatch", pluginId: node.pluginId, dependsOn: dependency.pluginId, required: dependency.version, actual: target.version });
       }
     }

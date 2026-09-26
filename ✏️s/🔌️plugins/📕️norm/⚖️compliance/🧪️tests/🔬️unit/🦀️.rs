@@ -144,7 +144,7 @@ async fn localized_copy_resolves_en_and_de() {
 
 #[semio_framework_async_macros::async_test]
 async fn check_report_value_round_trip_matches_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎫️fixtures/🔬️check-report/🔣️.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️check-report/🔣️.json")).expect("fixture");
     let report = sample_fixture_report();
     let encoded = serde_json::to_value(&report).expect("serialize");
     assert_eq!(encoded, fixture);

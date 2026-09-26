@@ -39,6 +39,7 @@ import {
   TreeCheckbox,
   Tree,
   VirtualFileSystem,
+  buildVirtualFileSystemSceneRows,
   borderElementClass,
   borderNormalTopClass,
   catalogueTreeDragController,
@@ -73,6 +74,7 @@ import {
   type TreeWindowRowMeasure,
   type UiLabel,
   type UiTranslationKey,
+  type VirtualFileSystemNode,
 } from "@semio-tech/ui-react";
 import { domSizePx, uiSpacingRem } from "@semio-tech/ui-styling";
 import {
@@ -817,7 +819,29 @@ export function parseSceneJsonField<T>(encoded: string): T {
   return JSON.parse(encoded) as T;
 }
 
-function VirtualFileSystemHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
+export function virtualFileSystemNavigation(row: Pick<VirtualFileSystemNode, "navigateUri">): { readonly action: string; readonly args: Readonly<Record<string, string>> } | null {
+  const uri = row.navigateUri;
+  if (!uri) return null;
+  if (uri.startsWith("os://instance/")) {
+    const instanceId = uri.slice("os://instance/".length);
+    return instanceId ? { action: "openInstance", args: { instanceId } } : null;
+  }
+  if (uri.startsWith("os://export/")) {
+    const [instanceId, format, ...rest] = uri.slice("os://export/".length).split("/");
+    return instanceId && format && rest.length === 0 ? { action: "exportMedia", args: { instanceId, format } } : null;
+  }
+  if (uri.startsWith("/spaces/")) {
+    const [spaceId, ...rest] = uri.slice("/spaces/".length).split("/");
+    return spaceId && rest.length === 0 ? { action: "navigateVirtualFileSystemNode", args: { spaceId } } : null;
+  }
+  if (uri.startsWith("studio:")) {
+    const spaceId = uri.slice("studio:".length);
+    return spaceId ? { action: "navigateVirtualFileSystemNode", args: { spaceId } } : null;
+  }
+  return null;
+}
+
+export function VirtualFileSystemHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.virtualFileSystem;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
@@ -828,9 +852,11 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
   };
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
   const shellContextMenuFallback = useShellContextMenuFallback();
+  const rawRows = useMemo(() => scene ? parseSceneJsonField<VirtualFileSystemNode[]>(scene.rowsJson) : [], [scene?.rowsJson]);
+  const [expandedRowIds, setExpandedRowIds] = useState<ReadonlySet<string>>(() => new Set(rawRows.filter((row) => row.hasChildren).map((row) => row.id)));
+  const rows = useMemo(() => buildVirtualFileSystemSceneRows(rawRows, expandedRowIds), [expandedRowIds, rawRows]);
   if (!scene) return <div className="semio-vfs-empty">{emptySceneLabel}</div>;
   const schema = parseSceneJsonField<Parameters<typeof VirtualFileSystem>[0]["schema"]>(scene.schemaJson);
-  const rows = parseSceneJsonField<Parameters<typeof VirtualFileSystem>[0]["rows"]>(scene.rowsJson);
   const selectedRowIds = scene.selectedRowIdsJson ? parseSceneJsonField<string[]>(scene.selectedRowIdsJson) : undefined;
   return (
     <>
@@ -841,6 +867,16 @@ function VirtualFileSystemHost({ node, onAction, requestContextMenu }: Component
         selectedRowIds={selectedRowIds}
         emptyMessage={scene.emptyMessage !== undefined ? wireLabel(scene.emptyMessage) : undefined}
         dragDrop={scene.dragDropEnabled ? { enabled: true } : undefined}
+        onToggleExpand={(rowId) => setExpandedRowIds((current) => {
+          const next = new Set(current);
+          if (next.has(rowId)) next.delete(rowId);
+          else next.add(rowId);
+          return next;
+        })}
+        onRowDoubleClick={(row) => {
+          const navigation = virtualFileSystemNavigation(row);
+          if (navigation) dispatch(navigation.action, { ...navigation.args });
+        }}
         onSelectionChange={(ids) => onAction({ controllerId: node.controllerId, action: "selectRows", args: { surfaceId: node.surfaceId, ids } })}
         onRowContextMenu={(row, index, event) => {
           if (!requestContextMenu) return;
@@ -1328,7 +1364,7 @@ function SelectView({ record, context }: { readonly record: UiNodeRecord; readon
 function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
   if (component.appearance === "checkbox") return <TreeCheckbox id={nodeDomId(context.store, record)} checked={component.on} disabled={record.disabled} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
-  return <Toggle id={nodeDomId(context.store, record)} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+  return <Toggle id={nodeDomId(context.store, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={record.disabled} aria-label={record.accessibility.label ?? component.text ?? undefined} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
 function KeyValueListView({ record }: { readonly record: UiNodeRecord }) {

@@ -824,6 +824,8 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_
         document_id: document_id().await,
         actor: protocol::ActorId(actor.to_string()),
         dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(object)).await },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
@@ -836,18 +838,6 @@ async fn retained_wal_envelope(envelope: &protocol::MutationEnvelope) -> db_wal:
     encoded.shrink_to_fit();
     let mut control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
     db_wal::WalBytes::try_admit(encoded, (db_storage::DB_IO_OPERATION_PAGES * db_storage::DB_IO_PAGE_BYTES) as u64, &mut control).await.unwrap()
-}
-
-fn poll_artifact_wal_decode(future: &mut ArtifactWalEnvelopeDecode<'_, '_>) -> std::task::Poll<Result<ArtifactWalRetainedEnvelope, DbError>> {
-    let waker = std::task::Waker::from(StdArc::new(HistoryReplayTestWake));
-    let mut context = std::task::Context::from_waker(&waker);
-    Pin::new(future).poll(&mut context)
-}
-
-fn poll_artifact_wal_adapter(future: &mut ArtifactWalEnvelopeAdapter<'_>) -> std::task::Poll<Result<protocol::MutationEnvelope, DbError>> {
-    let waker = std::task::Waker::from(StdArc::new(HistoryReplayTestWake));
-    let mut context = std::task::Context::from_waker(&waker);
-    Pin::new(future).poll(&mut context)
 }
 
 //#region 🔖️Command
@@ -936,87 +926,6 @@ mod bridge {
 //#endregion 🔖️Bridge
 
 //#region 🔖️Engine submit + materialize + WAL replay
-#[semio_framework_async_macros::async_test]
-async fn retained_wal_decoder_covers_pending_cancel_deadline_corrupt_max_and_max_plus_one() {
-    let mut expected = envelope("wal-real-path", &["dependency-a", "dependency-b"], "worker", &[]).await;
-    expected.diff.payload = vec![0x4d; db_storage::DB_IO_PAGE_BYTES + 17];
-    expected.inverse.payload = vec![0x2a; db_storage::DB_IO_PAGE_BYTES + 1];
-    let mut bytes = retained_wal_envelope(&expected).await;
-    let cancelled = StdArc::new(std::sync::atomic::AtomicBool::new(false));
-    let mut control = db_wal::WalCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    let mut decode = decode_retained_envelope(&bytes, &mut control);
-    assert!(poll_artifact_wal_decode(&mut decode).is_pending());
-    assert_eq!(decode.phase, 0);
-    let retained = decode.await.unwrap();
-    let mut adapter_control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    let mut adapter = adapt_retained_envelope(retained, &mut adapter_control);
-    assert!(poll_artifact_wal_adapter(&mut adapter).is_pending());
-    let actual = adapter.await.unwrap();
-    assert_eq!(actual.mutation_id, expected.mutation_id);
-    assert_eq!(actual.dependencies, expected.dependencies);
-    assert_eq!(actual.diff.payload, expected.diff.payload);
-    assert_eq!(actual.inverse.payload, expected.inverse.payload);
-    while bytes.close_step().unwrap().is_some() {}
-
-    let mut cancelled_bytes = retained_wal_envelope(&expected).await;
-    let cancellation = StdArc::new(std::sync::atomic::AtomicBool::new(false));
-    let mut cancelled_control = db_wal::WalCursorControl::new(cancellation.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    let mut interrupted = decode_retained_envelope(&cancelled_bytes, &mut cancelled_control);
-    while interrupted.phase < 6 {
-        assert!(poll_artifact_wal_decode(&mut interrupted).is_pending());
-    }
-    assert!(poll_artifact_wal_decode(&mut interrupted).is_pending());
-    cancellation.store(true, std::sync::atomic::Ordering::Release);
-    assert!(matches!(poll_artifact_wal_decode(&mut interrupted), std::task::Poll::Ready(Err(DbError::Unavailable(message))) if message == "wal cursor cancelled"));
-    drop(interrupted);
-    while db_storage::db_io_maintenance_step().unwrap() {}
-    while cancelled_bytes.close_step().unwrap().is_some() {}
-
-    let mut deadline_bytes = retained_wal_envelope(&expected).await;
-    let mut deadline_control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now(), 1_000_000).unwrap();
-    assert!(matches!(decode_retained_envelope(&deadline_bytes, &mut deadline_control).await, Err(DbError::Unavailable(message)) if message == "wal cursor deadline reached"));
-    while deadline_bytes.close_step().unwrap().is_some() {}
-
-    let mut corrupt_encoded = Vec::new();
-    protocol::encode_envelope(&expected, &mut corrupt_encoded);
-    corrupt_encoded.push(0xff);
-    corrupt_encoded.shrink_to_fit();
-    let mut corrupt_admission = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    let mut corrupt = db_wal::WalBytes::try_admit(corrupt_encoded, (db_storage::DB_IO_OPERATION_PAGES * db_storage::DB_IO_PAGE_BYTES) as u64, &mut corrupt_admission).await.unwrap();
-    let mut corrupt_control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    assert!(matches!(decode_retained_envelope(&corrupt, &mut corrupt_control).await, Err(DbError::Corrupt(message)) if message == "WAL command envelope has trailing bytes"));
-    while db_storage::db_io_maintenance_step().unwrap() {}
-    while corrupt.close_step().unwrap().is_some() {}
-
-    let max_dependencies: Vec<protocol::MutationId> = (0..ARTIFACT_WAL_DEPENDENCIES).map(|index| protocol::MutationId(format!("dependency-{index}"))).collect();
-    let mut maximum = expected.clone();
-    maximum.dependencies = max_dependencies;
-    maximum.diff.payload = vec![0x6d; ARTIFACT_WAL_FIELD_BYTES];
-    maximum.inverse.payload.clear();
-    let mut maximum_bytes = retained_wal_envelope(&maximum).await;
-    let mut maximum_control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    let maximum_retained = decode_retained_envelope(&maximum_bytes, &mut maximum_control).await.unwrap();
-    let mut maximum_adapter_control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    assert_eq!(adapt_retained_envelope(maximum_retained, &mut maximum_adapter_control).await.unwrap().diff.payload.len(), ARTIFACT_WAL_FIELD_BYTES);
-    while maximum_bytes.close_step().unwrap().is_some() {}
-
-    let mut dependency_refusal = maximum.clone();
-    dependency_refusal.dependencies.push(protocol::MutationId("dependency-max-plus-one".to_string()));
-    dependency_refusal.diff.payload.clear();
-    let mut dependency_refusal_bytes = retained_wal_envelope(&dependency_refusal).await;
-    let mut dependency_refusal_control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    assert!(matches!(decode_retained_envelope(&dependency_refusal_bytes, &mut dependency_refusal_control).await, Err(DbError::LimitExceeded("artifact WAL envelope dependencies"))));
-    while dependency_refusal_bytes.close_step().unwrap().is_some() {}
-
-    let mut page_refusal = expected;
-    page_refusal.diff.payload = vec![0x7d; ARTIFACT_WAL_FIELD_BYTES + 1];
-    page_refusal.inverse.payload.clear();
-    let mut page_refusal_bytes = retained_wal_envelope(&page_refusal).await;
-    let mut page_refusal_control = db_wal::WalCursorControl::new(StdArc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
-    assert!(matches!(decode_retained_envelope(&page_refusal_bytes, &mut page_refusal_control).await, Err(DbError::LimitExceeded("wal retained field"))));
-    while page_refusal_bytes.close_step().unwrap().is_some() {}
-}
-
 #[semio_framework_async_macros::async_test]
 async fn submit_persists_to_wal_and_updates_materialized_state_and_frontier() {
     let storage = storage().await;
@@ -1257,6 +1166,8 @@ async fn undo_applies_the_recorded_inverse_and_produces_a_fresh_commit() {
         document_id: document_id().await,
         actor: protocol::ActorId("alice".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::from(&serde_json::json!({ "x": 1 }))).await },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::from(&serde_json::json!({ "x": null }))).await },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),

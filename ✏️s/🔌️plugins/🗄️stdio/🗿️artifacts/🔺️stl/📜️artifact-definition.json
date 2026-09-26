@@ -50,7 +50,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.stl.standard.ascii.codec.native-document.v1", "status": "implemented", "from": "s.stdio.stl.standard.ascii.dialect.source", "to": "s.stdio.stl.standard.ascii.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.stl.v1", "artifact_kind": "stdio.stl", "artifact_schema": "stdio.stl", "extension": "stl", "pack_schema_hash": "9c38a62ba3264c36c89a1e9aef6c3d993ce4419a13bbbdd15583d3e78e395440", "runtime_capability_id": "s.stdio.stl.standard.ascii.codec.codec-stdio-stl-extension-stl.v1" } }
+    { "id": "s.stdio.stl.standard.ascii.codec.native-document.v1", "status": "implemented", "from": "s.stdio.stl.standard.ascii.dialect.source", "to": "s.stdio.stl.standard.ascii.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.stl.v1", "artifact_kind": "s.stdio.stl", "artifact_schema": "stdio.stl", "extension": "stl", "pack_schema_hash": "9c38a62ba3264c36c89a1e9aef6c3d993ce4419a13bbbdd15583d3e78e395440", "runtime_capability_id": "s.stdio.stl.standard.ascii.codec.codec-stdio-stl-extension-stl.v1" } }
   ],
   "mutations": [],
   "inferences": [],

@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
 /** 🌍️ GIS plugin package command router. */
-import { join } from "node:path";
 import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, devToolingEnv, buildBudgetMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { ComponentColdMapPatchCheckScript, ComponentColdMapPatchNativeCheckScript } from "../../🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 import { DurableThreeStoreAssemblyCheckScript, DurableThreeStoreAssemblyNativeCheckScript } from "../../🧪️tests/🗄️durable-three-store-assembly/🟦️.ts";
 import { MapCreateRegionGroupCheckScript, MapCreateRegionGroupNativeCheckScript } from "../../🧪️tests/🧩️map-create-region-group/🟦️.ts";
@@ -13,12 +11,6 @@ class TestScript extends BundleScript {
     const { rest } = resolveTestLevel(segments);
     await proveGisNativeCodecReceipts(this.repoRoot);
     await runCargoTestBudgeted(["semio-s-plugin-gis"], this.repoRoot, rest);
-  }
-}
-
-class DescribeScript extends BundleScript {
-  run(): void {
-    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-gis", join(this.root, "..", "..")));
   }
 }
 
@@ -33,7 +25,6 @@ class NativeCodecProjectionScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir)
   .register("native-codec-projection", NativeCodecProjectionScript)
   .register("test", TestScript)
-  .register("describe", DescribeScript)
   .register("native-codec-check", NativeCodecCheckScript)
   .register("map-create-region-group-check", MapCreateRegionGroupCheckScript)
   .register("map-create-region-group-native-check", MapCreateRegionGroupNativeCheckScript)

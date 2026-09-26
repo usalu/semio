@@ -70,7 +70,7 @@ mod tests;
 /// ©️ En1994Snapshot → CheckReport — complete composite structure assessment.
 use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 use crate::standards::v1::subsets::any::schema::{part_1_1, part_1_2, part_2, part_column, part_en1990, part_slab, AnnexParams};
-use crate::{CompositeBeam, CompositeColumn, CompositeSlab, SteelSection};
+use crate::{CharacteristicAction, CompositeBeam, CompositeColumn, CompositeSlab, SteelSection};
 
 fn lc(en: impl Into<String>, de: impl Into<String>) -> LocalizedCopy {
     LocalizedCopy::new(en, de)
@@ -168,8 +168,16 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     ));
     if m_ed > m_rd {
         bending = bending
-            .remedy(Remedy::at_most(beam_ref(&beam, "actions[id=Q-office].qAreaPa"), Quantity::new(QuantityKind::Dimensionless, 2.0e3), Quantity::new(QuantityKind::Dimensionless, 2.0e3 * m_rd / m_ed.max(1.0)),
-                lc("Reduce imposed floor load.", "Nutzlast reduzieren.")))
+            .remedy({
+                let q_leaf = if beam.actions.iter().any(|a| a.id == "Q-office") {
+                    "actions[id=Q-office].qAreaPa".to_string()
+                } else if let Some(a) = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9) {
+                    format!("actions[id={}].qAreaPa", a.id)
+                } else { "spanM".into() };
+                let q_cur = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9).map(|a| a.q_area_pa.abs()).unwrap_or(2.0e3);
+                Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_cur * m_rd / m_ed.max(1.0) * 0.95),
+                lc("Reduce imposed floor load.", "Nutzlast reduzieren."))
+            })
             .remedy(Remedy::at_least(beam_ref(&beam, "slabThicknessM"), Quantity::length_m(beam.slab_thickness_m), Quantity::length_m((beam.slab_thickness_m * m_ed / m_rd.max(1.0)).min(0.30)),
                 lc("Increase slab thickness.", "Plattendicke erhöhen.")));
         let heavier = SteelSection::heavier_heb_options(&beam.steel.designation);
@@ -257,7 +265,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     )
     .minimum(Quantity::new(QuantityKind::Dimensionless, eta), Quantity::new(QuantityKind::Dimensionless, eta_min))
     .annex(annex)
-    .explanation(lc(format!("η = {eta:.3} (n_f={n_f}), η_min = {eta_min:.3}."), format!("η = {eta:.3} (n_f={n_f}), η_min = {eta_min:.3}.")));
+    .explanation(lc(format!("η = {eta:.3} (n_f={n_f}), η_min = {eta_min:.3}."), format!("η = {eta:.3} (n_f={n_f}), η_min = {eta_min:.3}. (DE-NA)")));
     if eta < eta_min {
         let n_need = ((eta_min * n_req as f64).ceil() as u32).max(n_f + 1);
         eta_chk = eta_chk.remedy(Remedy::at_least(beam_ref(&beam, "studs.totalCount"), Quantity::new(QuantityKind::Dimensionless, beam.studs.total_count as f64), Quantity::new(QuantityKind::Dimensionless, n_need as f64),
@@ -292,7 +300,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     )
     .utilization(Quantity::new(QuantityKind::Force, v_l_ed), Quantity::new(QuantityKind::Force, v_l_rd))
     .annex(annex)
-    .explanation(lc(format!("V_L,Ed = {:.1} kN, V_L,Rd = {:.1} kN.", v_l_ed / 1e3, v_l_rd / 1e3), format!("V_L,Ed = {:.1} kN, V_L,Rd = {:.1} kN.", v_l_ed / 1e3, v_l_rd / 1e3)));
+    .explanation(lc(format!("V_L,Ed = {:.1} kN, V_L,Rd = {:.1} kN.", v_l_ed / 1e3, v_l_rd / 1e3), format!("V_L,Ed = {:.1} kN, V_L,Rd = {:.1} kN. (DE-NA)", v_l_ed / 1e3, v_l_rd / 1e3)));
     if v_l_ed > v_l_rd {
         let as_need = beam.transverse_as_m2_per_m * v_l_ed / v_l_rd.max(1.0);
         vl = vl.remedy(Remedy::at_least(beam_ref(&beam, "transverseAsM2PerM"), Quantity::new(QuantityKind::Area, beam.transverse_as_m2_per_m), Quantity::new(QuantityKind::Area, as_need),
@@ -348,7 +356,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
     .annex(annex)
     .explanation(lc(
         format!("{}: σ_a = {:.1} MPa ≤ 0.9 f_y = {:.1} MPa.", sls_char.label_en, sigma_a / 1e6, sigma_lim / 1e6),
-        format!("{}: σ_a = {:.1} MPa ≤ 0.9 f_y = {:.1} MPa.", sls_char.label_de, sigma_a / 1e6, sigma_lim / 1e6),
+        format!("{}: σ_a = {:.1} MPa ≤ 0.9 f_y = {:.1} MPa. (DE-NA)", sls_char.label_de, sigma_a / 1e6, sigma_lim / 1e6),
     ));
     if sigma_a > sigma_lim {
         let q_owned = if beam.actions.iter().any(|a| a.id == "Q-office") {
@@ -380,7 +388,15 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
         format!("{}: δ = {:.1} mm, Grenze L/250 = {:.1} mm.", sls_freq.label_de, delta * 1000.0, delta_lim * 1000.0),
     ));
     if delta > delta_lim {
-        sls = sls.remedy(Remedy::at_most(beam_ref(&beam, "actions[id=Q-office].qAreaPa"), Quantity::new(QuantityKind::Dimensionless, 2e3), Quantity::new(QuantityKind::Dimensionless, 2e3 * delta_lim / delta),
+        let q_leaf = if beam.actions.iter().any(|a| a.id == "Q-office") {
+            "actions[id=Q-office].qAreaPa".to_string()
+        } else if let Some(a) = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9) {
+            format!("actions[id={}].qAreaPa", a.id)
+        } else {
+            "spanM".into()
+        };
+        let q_cur = beam.actions.iter().find(|a| a.q_area_pa.abs() > 1e-9).map(|a| a.q_area_pa.abs()).unwrap_or(2e3);
+        sls = sls.remedy(Remedy::at_most(beam_ref(&beam, &q_leaf), Quantity::new(QuantityKind::Dimensionless, q_cur), Quantity::new(QuantityKind::Dimensionless, q_cur * delta_lim / delta * 0.95),
             lc("Reduce imposed load or increase stiffness.", "Nutzlast reduzieren oder Steifigkeit erhöhen.")));
     }
     report.push(sls.build());
@@ -418,7 +434,7 @@ fn evaluate_beam(report: &mut CheckReport, doc: &En1994Snapshot, beam: &Composit
 
 fn evaluate_column(report: &mut CheckReport, doc: &En1994Snapshot, col: &CompositeColumn) {
     let annex = doc.annex;
-    let uls = part_en1990::uls_composite(&col.actions, col.length_m, "simply_supported", 1.0, annex);
+    let uls = part_en1990::uls_column(&col.actions, annex);
     let n_ed = uls.n_n.abs();
     let m_ed = uls.m_nm.abs().max(uls.m_hog_nm.abs());
     let subject = SubjectRef::new(col.id.clone(), col_path(col, "actions"), lc(format!("Column {}", col.id), format!("Stütze {}", col.id)));
@@ -537,7 +553,7 @@ fn evaluate_slab(report: &mut CheckReport, doc: &En1994Snapshot, slab: &Composit
     )
     .utilization(Quantity::new(QuantityKind::Force, v_ed), Quantity::new(QuantityKind::Force, v_l))
     .annex(annex)
-    .explanation(lc(format!("v_Ed = {:.1} kN/m, v_l,Rd = {:.1} kN/m.", v_ed / 1e3, v_l / 1e3), format!("v_Ed = {:.1} kN/m, v_l,Rd = {:.1} kN/m.", v_ed / 1e3, v_l / 1e3)));
+    .explanation(lc(format!("v_Ed = {:.1} kN/m, v_l,Rd = {:.1} kN/m.", v_ed / 1e3, v_l / 1e3), format!("v_Ed = {:.1} kN/m, v_l,Rd = {:.1} kN/m. (DE-NA)", v_ed / 1e3, v_l / 1e3)));
     if v_ed > v_l {
         vl = vl.remedy(Remedy::at_least(SubjectRef::new(slab.id.clone(), slab_path(slab, "sheeting.thicknessM"), label.clone()), Quantity::length_m(slab.sheeting.thickness_m), Quantity::length_m(slab.sheeting.thickness_m * v_ed / v_l.max(1.0)),
             lc("Increase sheeting thickness or m-k parameters.", "Profilblechdicke oder m-k-Parameter erhöhen.")));
@@ -553,12 +569,58 @@ fn evaluate_slab(report: &mut CheckReport, doc: &En1994Snapshot, slab: &Composit
     )
     .utilization(Quantity::new(QuantityKind::Force, v_ed), Quantity::new(QuantityKind::Force, v_rd))
     .annex(annex)
-    .explanation(lc(format!("v_Ed = {:.1} kN/m, v_Rd,c = {:.1} kN/m.", v_ed / 1e3, v_rd / 1e3), format!("v_Ed = {:.1} kN/m, v_Rd,c = {:.1} kN/m.", v_ed / 1e3, v_rd / 1e3)));
+    .explanation(lc(
+        format!("v_Ed = {:.1} kN/m, v_Rd,c = {:.1} kN/m.", v_ed / 1e3, v_rd / 1e3),
+        format!("v_Ed = {:.1} kN/m, v_Rd,c = {:.1} kN/m. (DE-NA)", v_ed / 1e3, v_rd / 1e3),
+    ));
     if v_ed > v_rd {
         vv = vv.remedy(Remedy::at_least(SubjectRef::new(slab.id.clone(), slab_path(slab, "concreteThicknessM"), label), Quantity::length_m(slab.concrete_thickness_m), Quantity::length_m(slab.concrete_thickness_m * v_ed / v_rd.max(1.0)),
             lc("Increase slab thickness.", "Plattendicke erhöhen.")));
     }
     report.push(vv.build());
+}
+
+
+fn push_dual_source_action_check(report: &mut CheckReport, annex: AnnexChoice, member_id: &str, path: &str, action: &CharacteristicAction) {
+    let fatigue_load = action.kind == "fatigue" && (action.q_area_pa.abs() > 1e-12 || action.f_k_n.abs() > 1e-12);
+    let dual = action.kind != "fatigue" && action.q_area_pa.abs() > 1e-12 && action.f_k_n.abs() > 1e-12;
+    let bad = dual || fatigue_load;
+    let util = if bad { 2.0 } else { 0.0 };
+    let leaf = if action.f_k_n.abs() > 1e-12 || action.kind == "fatigue" { "fKN" } else { "qAreaPa" };
+    let mut chk = CheckResult::assess(
+        format!("en1994.action.single-source.{member_id}.{}", action.id),
+        "DIN EN 1990",
+        ClauseId::new("EN 1990", "§6.1", "6.1"),
+        SubjectRef::new(member_id, format!("{path}.{leaf}"), lc(format!("Action {}", action.id), format!("Einwirkung {}", action.id))),
+        lc("Single characteristic load source", "Eine charakteristische Lastquelle"),
+    )
+    .utilization(Quantity::new(QuantityKind::Dimensionless, util), Quantity::new(QuantityKind::Dimensionless, 1.0))
+    .annex(annex)
+    .explanation(lc(
+        if fatigue_load {
+            format!("Fatigue action {} must not carry qAreaPa/fKN; use Δσ_k/Δτ_k only.", action.id)
+        } else if dual {
+            format!("Action {} sets both qAreaPa and fKN; keep exactly one characteristic source.", action.id)
+        } else {
+            format!("Action {} uses a single characteristic source (area or point force).", action.id)
+        },
+        if fatigue_load {
+            format!("Ermüdungseinwirkung {} darf kein qAreaPa/fKN tragen; nur Δσ_k/Δτ_k.", action.id)
+        } else if dual {
+            format!("Einwirkung {} setzt qAreaPa und fKN; genau eine charakteristische Quelle belassen.", action.id)
+        } else {
+            format!("Einwirkung {} nutzt eine charakteristische Quelle (Fläche oder Einzellast).", action.id)
+        },
+    ));
+    if bad {
+        chk = chk.remedy(Remedy::at_most(
+            SubjectRef::new(member_id, format!("{path}.fKN"), lc(format!("Action {}", action.id), format!("Einwirkung {}", action.id))),
+            Quantity::new(QuantityKind::Force, action.f_k_n),
+            Quantity::new(QuantityKind::Force, 0.0),
+            lc("Clear the conflicting force field.", "Konfliktierende Kraftgröße löschen."),
+        ));
+    }
+    report.push(chk.build());
 }
 
 pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
@@ -570,9 +632,19 @@ pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
             .not_applicable(lc("No beams, columns or slabs to assess.", "Keine Träger, Stützen oder Decken zur Bewertung.")).annex(annex).build());
         return report;
     }
-    for beam in &document.beams { evaluate_beam(&mut report, document, beam); }
+    for beam in &document.beams {
+        for action in &beam.actions {
+            push_dual_source_action_check(&mut report, annex, &beam.id, &format!("beams[id={}].actions[id={}]", beam.id, action.id), action);
+        }
+        evaluate_beam(&mut report, document, beam);
+    }
     for col in &document.columns { evaluate_column(&mut report, document, col); }
-    for slab in &document.slabs { evaluate_slab(&mut report, document, slab); }
+    for slab in &document.slabs {
+        for action in &slab.actions {
+            push_dual_source_action_check(&mut report, annex, &slab.id, &format!("slabs[id={}].actions[id={}]", slab.id, action.id), action);
+        }
+        evaluate_slab(&mut report, document, slab);
+    }
 
     let steel_h = document.beams.first().map(|b| b.steel.height_m).unwrap_or(0.3);
     let deck = document.beams.first().map(|b| b.sheeting.profile.as_str()).unwrap_or("trapezoidal");
@@ -647,7 +719,10 @@ pub fn evaluate(document: &En1994Snapshot) -> CheckReport {
                 ClauseId::new("EN 1994-2", "§6.8.3", "6.8.3"), beam_ref(beam, "studs.diameterM"),
                 lc("Stud fatigue Δτ (FLM3)", "Bolzenermüdung Δτ (FLM3)"))
             .utilization(Quantity::new(QuantityKind::Stress, dtau), Quantity::new(QuantityKind::Stress, stud_lim)).annex(annex)
-            .explanation(lc(format!("FLM3 Δτ = {:.1} MPa, Δτ_c = {:.1} MPa.", dtau / 1e6, stud_lim / 1e6), format!("FLM3 Δτ = {:.1} MPa, Δτ_c = {:.1} MPa.", dtau / 1e6, stud_lim / 1e6)));
+            .explanation(lc(
+                format!("FLM3 Δτ = {:.1} MPa, Δτ_c = {:.1} MPa.", dtau / 1e6, stud_lim / 1e6),
+                format!("FLM3 Δτ = {:.1} MPa, Δτ_c = {:.1} MPa. (DE-NA)", dtau / 1e6, stud_lim / 1e6),
+            ));
             if dtau > stud_lim {
                 sf = sf.remedy(Remedy::at_least(beam_ref(beam, "studs.diameterM"), Quantity::length_m(beam.studs.diameter_m), Quantity::length_m(beam.studs.diameter_m * (dtau / stud_lim).sqrt()),
                     lc("Increase stud diameter.", "Bolzendurchmesser erhöhen.")));

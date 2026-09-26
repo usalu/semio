@@ -70,3 +70,22 @@ None.
 | Semantic mutations | `change-element-orientation-deg`, `…-inclination-deg`, `…-delta-ug/uf/ur`, `change-thermal-bridge-bb2-type`, `change-zone-window-orientation`, `…-inclination-deg`, `change-layer-application-type`, `…-compressive-class` (full pipeline: leaf/diff/inverse/OpText/OpBinary/protocol tags) |
 | Inputs render en+de | `📥️inputs/…/🔬️unit` asserts field-meta labels/choices for climate, bb2Type, applicationType |
 
+
+## Round 3 — Wave D blockers (CORRECTION 14:42 / 14:54)
+
+**Runner:** `bun nx run @semio-tech/norm-din4108-rs:test --skip-nx-cache -- --no-fail-fast`  
+**Summary:** `Summary [   2.520s] 96 tests run: 96 passed, 0 skipped`  
+**Taxonomy:** `bun nx run @semio-tech/norm-plugin:mutation-leaf-taxonomy-generate` → 547 payloads
+
+| # | Blocker | Mapping |
+|---|---------|---------|
+| 1 | Perturbation signature drops `explanation.en` | `🧬️schema/🎪️tests/⚖️compliance/🦀️.rs` `check_signature` → `(id, status, computed, limit, utilization)` only; `every_editable_leaf_perturbation_changes_some_check_on_default_snapshot` |
+| 2 | DIN 4108-10 water/tensile/acoustic in pass/fail | `part_10::{min_water_for,min_tensile_for,min_acoustic_for,check_application}` — Table 1 class ranks in score; test `din4108_10_property_classes_affect_status_or_utilization` |
+| 3 | Glaser `climate` selects BC | `part_3::{glaser_winter_t_ext_c,glaser_summer_t_ext_c}` + facade azimuth; test `glaser_climate_changes_condensation_or_limit` |
+| 4 | Referential integrity Fail + `one_of` | `💡️inferences/🦀️.rs` `push_referential_integrity` before clause checks; tests `dangling_material_id_*`, `dangling_zone_id_*`, `duplicate_element_id_*` |
+| 5 | Opaque `zoneId` → zone H_T | `part_2::{zone_transmission_ht_wk,check_zone_transmission_loss}`; second zone `zone-utility`; test `moving_opaque_zone_id_changes_zone_transmission_loss` |
+| 6 | Catalogue reference tables | `✏️editor/📌️panels/📚️catalogue/🦀️.rs` `reference_tables()` — design-λ (`part_4::DESIGN_LAMBDA_ROWS`), Table 3 (`part_2::TABLE3_R_MIN_ROWS`), 4108-10 (`application_property_row`); `render(..., windows)`; tests `design_lambda_table_matches_part4_const`, `catalogue_design_lambda_matches_evaluated_limit` |
+
+### Leaves re-wired after signature tighten
+
+Inclination → ISO 6946 R_si; orientation → Glaser BC + dry sd_req; usage → summer N/A unless residential; density → `check_surface_mass`; segment layers average declared μ/ρ with segments; softwood/osb in design-λ catalogue.

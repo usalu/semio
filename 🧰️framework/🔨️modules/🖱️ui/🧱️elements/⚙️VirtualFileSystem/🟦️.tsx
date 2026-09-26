@@ -19,6 +19,7 @@ import { Table, type TableColumn, type TableProps, type HierarchicalRowData, typ
 import { type TreeSelectionMode, normalizeTreeSelectedIds, getTreeNextSelectionState } from "../🌳️Tree/🟦️.tsx";
 import { useLabel, useUiTranslation } from "../🏷️Label/🟦️.tsx";
 import { Icon } from "../🔣️Icons/🟦️.tsx";
+import { formatHostTemporalValueV1 } from "../../🧬️contract/🕰️host-temporal-format/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 📁️VirtualFileSystem
@@ -115,6 +116,7 @@ export interface FileNode {
   readonly parentId?: string | null;
   readonly hasChildren?: boolean;
   readonly icon?: string;
+  readonly navigateUri?: string;
   readonly descriptorValues?: Readonly<Record<string, FileNodeDescriptorValue>>;
 }
 
@@ -125,7 +127,6 @@ export type VirtualFileSystemNode = FileNode;
 export interface VirtualFileSystemRow extends FileNode, HierarchicalRowData {
   readonly level: number;
   readonly isExpanded?: boolean;
-  readonly navigateUri?: string;
 }
 
 /** @emoji 📁️ Props for {@link VirtualFileSystem} — a hierarchical {@link Table} for virtual file tree nodes. */
@@ -230,28 +231,13 @@ export function buildVirtualFileSystemDescriptorValues(
   return values;
 }
 
-/** @emoji 🗓️ Formats a VFS timestamp without delegating calendar or relative-time behavior to a package dependency. */
+/** @emoji 🗓️ Formats a VFS timestamp through the shared host-temporal presentation contract. */
 export function formatVirtualFileSystemTime(date: Date, presentation: "date" | "datetime" | "relative", locale: string, now: Date = new Date()): string {
-  if (presentation === "relative") {
-    const seconds = (date.getTime() - now.getTime()) / 1_000;
-    const absoluteSeconds = Math.abs(seconds);
-    const [amount, unit]: readonly [number, Intl.RelativeTimeFormatUnit] =
-      absoluteSeconds < 60
-        ? [Math.round(seconds), "second"]
-        : absoluteSeconds < 3_600
-          ? [Math.round(seconds / 60), "minute"]
-          : absoluteSeconds < 86_400
-            ? [Math.round(seconds / 3_600), "hour"]
-            : absoluteSeconds < 2_592_000
-              ? [Math.round(seconds / 86_400), "day"]
-              : absoluteSeconds < 31_536_000
-                ? [Math.round(seconds / 2_592_000), "month"]
-                : [Math.round(seconds / 31_536_000), "year"];
-    return new Intl.RelativeTimeFormat(locale, { numeric: "always" }).format(amount, unit);
-  }
-  const pad = (value: number) => String(value).padStart(2, "0");
-  const calendarDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-  return presentation === "date" ? calendarDate : `${calendarDate} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return formatHostTemporalValueV1(
+    { id: "vfs", source: { kind: "epochMs", timestampMs: date.valueOf() }, format: presentation === "datetime" ? "dateTime" : presentation },
+    now.valueOf(),
+    [locale],
+  );
 }
 
 /** @emoji 📁️ Renders one descriptor cell for a {@link VirtualFileSystemRow}. */
@@ -395,24 +381,25 @@ export function isVirtualFileSystemRemoteIcon(icon: string): boolean {
   return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("data:") || trimmed.startsWith("/") || trimmed.startsWith("./");
 }
 
+function appendVirtualFileSystemVisibleRow(rows: VirtualFileSystemRow[], node: VirtualFileSystemNode, level: number, childrenByParentId: ReadonlyMap<string, readonly VirtualFileSystemNode[]>, expandedIds: ReadonlySet<string>): void {
+  const children = childrenByParentId.get(node.id);
+  const hasChildren = node.hasChildren ?? Boolean(children?.length);
+  const expanded = hasChildren && expandedIds.has(node.id);
+  rows.push({
+    ...node,
+    level,
+    parentId: node.parentId ?? undefined,
+    hasChildren,
+    isExpanded: expanded,
+  });
+  if (!expanded) return;
+  if (!children?.length) return;
+  for (const child of children) appendVirtualFileSystemVisibleRow(rows, child, level + 1, childrenByParentId, expandedIds);
+}
+
 /** @emoji 📁️ DFS-flattens visible rows: only children of expanded parents in `childrenByParentId`. */
 export function buildVirtualFileSystemVisibleRows(rootId: string, childrenByParentId: ReadonlyMap<string, readonly VirtualFileSystemNode[]>, expandedIds: ReadonlySet<string>, root?: VirtualFileSystemNode): VirtualFileSystemRow[] {
   const rows: VirtualFileSystemRow[] = [];
-  const visit = (node: VirtualFileSystemNode, level: number) => {
-    const hasChildren = Boolean(node.hasChildren);
-    const expanded = hasChildren && expandedIds.has(node.id);
-    rows.push({
-      ...node,
-      level,
-      parentId: node.parentId ?? undefined,
-      hasChildren,
-      isExpanded: expanded,
-    });
-    if (!expanded) return;
-    const children = childrenByParentId.get(node.id);
-    if (!children?.length) return;
-    for (const child of children) visit(child, level + 1);
-  };
   const rootNode = root ?? {
     id: rootId,
     fileNodeKindId: "root",
@@ -421,7 +408,28 @@ export function buildVirtualFileSystemVisibleRows(rootId: string, childrenByPare
   };
   const rootChildren = childrenByParentId.get(rootNode.id);
   if (rootChildren?.length) {
-    for (const child of rootChildren) visit(child, 0);
+    for (const child of rootChildren) appendVirtualFileSystemVisibleRow(rows, child, 0, childrenByParentId, expandedIds);
+  }
+  return rows;
+}
+
+/** @emoji 🌲️ Flattens the raw tree carried by a virtual-file-system scene into renderer-local visible rows. */
+export function buildVirtualFileSystemSceneRows(nodes: readonly VirtualFileSystemNode[], expandedIds: ReadonlySet<string>): VirtualFileSystemRow[] {
+  const childrenByParentId = new Map<string, VirtualFileSystemNode[]>();
+  const roots: VirtualFileSystemNode[] = [];
+  for (const node of nodes) {
+    if (node.parentId == null || node.parentId === "") roots.push(node);
+    else {
+      const siblings = childrenByParentId.get(node.parentId) ?? [];
+      siblings.push(node);
+      childrenByParentId.set(node.parentId, siblings);
+    }
+  }
+  const rows: VirtualFileSystemRow[] = [];
+  for (const root of roots) {
+    if (root.fileNodeKindId === "root") {
+      for (const child of childrenByParentId.get(root.id) ?? []) appendVirtualFileSystemVisibleRow(rows, child, 0, childrenByParentId, expandedIds);
+    } else appendVirtualFileSystemVisibleRow(rows, root, 0, childrenByParentId, expandedIds);
   }
   return rows;
 }
@@ -539,6 +547,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
                 data-vfs-expand
                 className="inline-flex size-small shrink-0 items-center justify-center rounded text-element hover:bg-hover-interactive-fill hover:text-emphasized"
                 aria-label={row.isExpanded ? collapseLabel : expandLabel}
+                aria-expanded={row.isExpanded}
                 onClick={(event) => {
                   event.stopPropagation();
                   onToggleExpand?.(row.id);

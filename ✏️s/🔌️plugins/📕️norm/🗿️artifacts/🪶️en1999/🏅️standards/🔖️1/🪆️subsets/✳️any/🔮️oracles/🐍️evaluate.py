@@ -114,14 +114,22 @@ def span_factor(support: str):
     return 1.0 / 8.0, 0.5
 
 def char_effects(mem, a):
+    L = max(mem.get("length", 0.0), 1e-6)
+    w = a.get("gKLine", 0.0) + a.get("qKLine", 0.0)
+    n = a.get("nK", 0.0); vy = a.get("vYK", 0.0); vz = a.get("vZK", 0.0)
+    my = a.get("mYK", 0.0); mz = a.get("mZK", 0.0)
+    support = mem.get("support", "simplySupported")
     if a.get("source") == "udl":
-        L = max(mem.get("length", 0.0), 1e-6)
-        km, kv = span_factor(mem.get("support", "simplySupported"))
-        w = a.get("gKLine", 0.0) + a.get("qKLine", 0.0)
-        m = w * L * L * km
-        v = w * L * kv
-        return (a.get("nK", 0.0), a.get("vYK", 0.0), v + a.get("vZK", 0.0), m + a.get("mYK", 0.0), a.get("mZK", 0.0))
-    return (a.get("nK", 0.0), a.get("vYK", 0.0), a.get("vZK", 0.0), a.get("mYK", 0.0), a.get("mZK", 0.0))
+        km, kv = span_factor(support)
+        return (n, vy, w * L * kv + vz, w * L * L * km + my, mz)
+    if support == "cantilever":
+        km_p, kv_p = 1.0, 1.0
+    elif support == "continuous":
+        km_p, kv_p = 1.0 / 8.0, 0.5
+    else:
+        km_p, kv_p = 1.0 / 4.0, 0.5
+    return (n, vy, w * kv_p + vz, w * L * km_p + my, mz)
+
 
 def scale(e, f):
     return tuple(x * f for x in e)
@@ -240,7 +248,10 @@ def evaluate(doc):
         if mem is not None:
             _n, _vy, _vz, m_y, _mz = governing(mem, annex)
             de = de * (1.0 + abs(m_y) / 1.0e6)
-        rd = fatigue_strength(dc, m1, m2, n) / gmf
+        N_D = 5e6
+        rd_n = fatigue_strength(dc, m1, m2, n)
+        rd_m2 = fatigue_strength(dc, m1, m2, max(n, N_D * 1.01))
+        rd = (0.9 * rd_n + 0.1 * rd_m2) / gmf
         checks.append({"id": f"en1999.1-3.fat.{fat['id']}", "utilization": (de / rd) if rd else 0.0})
     # SLS deflection / stress (quasi-permanent / characteristic)
     for mem in doc.get("members", []):
@@ -296,8 +307,10 @@ def evaluate(doc):
         cid = conn["id"]
         proxy = {"id": cid, "length": 1.0, "support": "simplySupported", "actions": conn.get("actions", [])}
         n_ed, vy, vz, my, mz = governing(proxy, annex)
-        v_ed = max(abs(vz), abs(vy))
-        demand = max(v_ed, abs(n_ed))
+        m_ed = abs(my) + abs(mz)
+        v_ed = abs(vy) + abs(vz) + m_ed / 0.50
+        n_ed = abs(n_ed) + 0.25 * m_ed / 0.50
+        demand = v_ed + n_ed
         mid = conn.get("materialId")
         mat = ALLOYS.get(mats.get(mid, {}).get("designation", ""), {})
         fu = mat.get("fu", 310e6)
@@ -316,7 +329,8 @@ def evaluate(doc):
         alpha_d = max(0.0, min(e1/(3*d) if d else 0.0, (p1/(3*d) - 0.25) if d else 0.0, 1.0))
         k1 = min(2.5, 2.8*(gauge/d)-1.7) if d else 0.0
         fb = n * k1 * alpha_d * fu * d * tplate / 1.25 if d and tplate else 0.0
-        frd = min(fv, fb) if fv and fb else (fv or fb)
+        pitch_factor = max(0.80, min(1.25, 0.85 + 0.05 * (p1 / d if d else 0.0)))
+        frd = ((fv * fb) / (fv + fb) if (fv > 0 and fb > 0) else (fv or fb or 0.0)) * pitch_factor
         if conn.get("kind") in ("bolted", "combined"):
             checks.append({"id": f"en1999.8.5.bolt.{cid}", "utilization": (demand / frd) if frd else 0.0})
         welds = conn.get("welds", {})
@@ -335,7 +349,7 @@ def evaluate(doc):
             fw *= factor
             checks.append({"id": f"en1999.8.6.weld.{cid}", "utilization": (demand / fw) if fw else 0.0})
 
-    # Cold-formed local
+    # Cold-formed (EN 1999-1-4) via EN 1990 governing effects
     for sheet in doc.get("coldFormed", []):
         des = mats.get(sheet["materialId"], {}).get("designation")
         if des not in ALLOYS: continue
@@ -343,20 +357,54 @@ def evaluate(doc):
         eps = epsilon(mat["fo"])
         beta = sheet["width"] / sheet["thickness"] if sheet["thickness"] else 1e9
         limit = 22.0 * eps
-        checks.append({"id": f"en1999.1-4.local.{sheet['id']}", "utilization": ((beta/eps) / limit) if limit else 0.0})
-    # Shell buckle
+        checks.append({"id": f"en1999.1-4.local.{sheet['id']}", "utilization": ((beta / eps) / limit) if limit else 0.0})
+        span = max(sheet.get("span", 1.0), 1e-6)
+        proxy = {"id": sheet["id"], "length": span, "support": "simplySupported", "actions": sheet.get("actions", [])}
+        n_ed, vy_ed, vz_ed, my_ed, mz_ed = governing(proxy, annex)
+        m_ed = my_ed + mz_ed
+        v_ed = (vy_ed**2 + vz_ed**2)**0.5
+        rho = 1.0 if beta <= limit else min(1.0, limit / beta)
+        b_eff = rho * sheet["width"]
+        wel = b_eff * sheet["thickness"] ** 2 / 4.0
+        m_rd = wel * mat["fo"] / GAMMA_M1
+        a_eff = b_eff * sheet["thickness"]
+        if sheet.get("welded"):
+            a_eff *= min(mat["rho_o"], mat["rho_u"])
+        n_rd = a_eff * mat["fo"] / GAMMA_M1
+        checks.append({"id": f"en1999.1-4.bend.{sheet['id']}", "utilization": abs(m_ed) / m_rd if m_rd else 0.0})
+        checks.append({"id": f"en1999.1-4.axial.{sheet['id']}", "utilization": abs(n_ed) / n_rd if n_rd else 0.0})
+        a_v = sheet["thickness"] * sheet["width"]
+        v_rd = a_v * mat["fo"] / (GAMMA_M1 * 3.0 ** 0.5)
+        checks.append({"id": f"en1999.1-4.shear.{sheet['id']}", "utilization": v_ed / v_rd if v_rd else 0.0})
+        u_i = (abs(n_ed) / n_rd + abs(m_ed) / m_rd) if n_rd and m_rd else 0.0
+        checks.append({"id": f"en1999.1-4.nm.{sheet['id']}", "utilization": u_i})
+    # Shell buckle / ring / shear from characteristic actions via EN 1990 ULS
     for shell in doc.get("shells", []):
         des = mats.get(shell["materialId"], {}).get("designation")
         if des not in ALLOYS: continue
         mat = ALLOYS[des]
         r, th = shell["radius"], shell["thickness"]
+        L = shell.get("length", th)
+        proxy = {"id": shell["id"], "length": L, "support": "simplySupported", "actions": shell.get("actions", [])}
+        sx_ed, vy_ed, vz_ed, my_ed, mz_ed = governing(proxy, annex)
+        sth_ed = my_ed if abs(my_ed) >= abs(mz_ed) else mz_ed
+        tau_ed = vz_ed if abs(vz_ed) >= abs(vy_ed) else vy_ed
         sx_rcr = 0.605 * E * (th / r) if r else 0.0
+        sth_rcr = 0.92 * E * (th / r) * (r / L)**0.5 if r and L else 0.0
+        tau_rcr = 0.75 * E * (th / r) * (r / L)**0.75 if r and L else 0.0
         lam = (mat["fo"] / sx_rcr)**0.5 if sx_rcr else 0.0
         alpha, beta_s, lam0 = 0.62, 0.60, 0.20
         phi = 0.5 * (1 + alpha * (lam - lam0) + beta_s * lam**2)
         chi = min(1.0, 1.0 / (phi + max(0.0, phi*phi - beta_s*lam**2)**0.5))
         sx_rd = chi * sx_rcr / GAMMA_M1
-        checks.append({"id": f"en1999.1-5.buckle.{shell['id']}", "utilization": abs(shell["sigmaXEd"]) / sx_rd if sx_rd else 0.0})
+        checks.append({"id": f"en1999.1-5.buckle.{shell['id']}", "utilization": abs(sx_ed) / sx_rd if sx_rd else 0.0})
+        lam_th = (mat["fo"] / sth_rcr)**0.5 if sth_rcr else 0.0
+        phi_th = 0.5 * (1 + alpha * (lam_th - lam0) + beta_s * lam_th**2)
+        chi_th = min(1.0, 1.0 / (phi_th + max(0.0, phi_th*phi_th - beta_s*lam_th**2)**0.5))
+        sth_rd = chi_th * min(sth_rcr, mat["fo"]) / GAMMA_M1 if sth_rcr else 0.0
+        checks.append({"id": f"en1999.1-5.ring.{shell['id']}", "utilization": abs(sth_ed) / sth_rd if sth_rd else 0.0})
+        tau_rd = tau_rcr / GAMMA_M1 if tau_rcr else 0.0
+        checks.append({"id": f"en1999.1-5.shear.{shell['id']}", "utilization": abs(tau_ed) / tau_rd if tau_rd else 0.0})
     return {"checks": checks}
 
 if __name__ == "__main__":

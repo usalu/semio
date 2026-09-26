@@ -227,6 +227,19 @@ fn the_window_options_chip_registers_both_sides_of_its_fold() {
     shell.measures_folded.insert("pane-top".into(), true);
     shell.window_measures_documents.clear();
     let (folded_ids, glass) = paint(&mut shell);
+    let semantic = shell.chrome_accessibility_nodes(&shell.pane_overlay_hits);
+    let fixture = pane_fixture();
+    for (chip, folded, disabled) in shell.window_pane_chips("pane-top") {
+        if disabled {
+            continue;
+        }
+        let key = chip.control_id("pane-top", folded);
+        let node = semantic.iter().find(|node| node.key == key).expect("painted pane chip accessibility");
+        let declared = fixture["paneChips"].as_array().unwrap().iter().find(|row| chip_of(row["chip"].as_str().unwrap()) == chip).unwrap();
+        assert_eq!(node.role, "button");
+        assert_eq!(node.label.as_deref(), declared["label"]["en"].as_str());
+        assert!(node.pressed.is_none() && node.checked.is_none() && node.selected.is_none());
+    }
     assert_eq!(glass, shell.window_pane_chips("pane-top").len(), "🪟️ every MOUNTED chip is its own glass region (no world surface, so no projection chip)");
     assert!(!folded_ids.iter().any(|id| id.starts_with("framework.window.paneTop.measures.")), "🎛️ a window that projects no measures mounts the chip DISABLED and registers no hit");
     shell.measures_folded.insert("pane-top".into(), false);

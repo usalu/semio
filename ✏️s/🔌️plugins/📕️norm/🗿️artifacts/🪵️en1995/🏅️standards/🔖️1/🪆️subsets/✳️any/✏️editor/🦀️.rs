@@ -1,8 +1,8 @@
-//! ðªµï¸ EN 1995 play app â the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
+//! 🪵️ EN 1995 play app — the `ArtifactApp` impl (dispatch-only), the aggregated command enum and
 //! the manifest stitch.
 //!
-//! Everything substantive lives in a taxonomy node: command bodies in `ð®ï¸commands/*`, the two surfaces
-//! in `ð­ï¸modes/âï¸edit/ðªï¸windows/*`, panel trees in `ðï¸panels/*`, compliance compute in
+//! Everything substantive lives in a taxonomy node: command bodies in `🎮️commands/*`, the two surfaces
+//! in `🎭️modes/✏️edit/🪟️windows/*`, panel trees in `📌️panels/*`, compliance compute in
 //! the sibling command/panel/window nodes moved here too, and everything the fifteen norm apps share verbatim (config,
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
@@ -23,22 +23,22 @@ use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 use semio_framework_plugin::app::Dialect;
 use store::EngineHandles;
 
-//#region ðï¸Constants
-/// ð·ï¸ This standard's display name â the app label, its artifact-kind name and the catalogue headline.
+//#region 🔖️Constants
+/// 🏷️ This standard's display name — the app label, its artifact-kind name and the catalogue headline.
 pub const LABEL: &str = "EN 1995";
-/// ðï¸ The playground/registry variant key â every body key, window id and schema is derived from it.
+/// 🆔️ The playground/registry variant key — every body key, window id and schema is derived from it.
 pub const VARIANT: &str = "en1995";
 /// 🆔️ Retained-command / UI action controller id.
 pub const CONTROLLER_ID: &str = "s.norm.en1995@1/*#editor";
 pub const DOCUMENT_SCHEMA: &str = "semio.norm.en1995/v1";
-//#endregion ðï¸Constants
+//#endregion 🔖️Constants
 
-//#region ðï¸Commands
+//#region 🔖️Commands
 semio_framework_plugin::app_commands! {
-    /// ð¯ï¸ `En1995PlayApp::Command` â the SOLE dispatch surface for this app's own behavior, covering every
+    /// 🎯️ `En1995PlayApp::Command` — the SOLE dispatch surface for this app's own behavior, covering every
     /// action `create_en1995_app` declares. Row order IS the binary variant ordinal (appending is safe,
     /// reordering is a wire-format break) and each row's two literals are the camelCase manifest action
-    /// id and the kebab `#[dsl(key)]` wire keyword respectively â both copied verbatim off the
+    /// id and the kebab `#[dsl(key)]` wire keyword respectively — both copied verbatim off the
     /// pre-migration enum, never derived from one another.
     pub enum En1995Command for En1995Snapshot, En1995Mutation, NoConfig, NoConfigMutation {
         "setSnapshot" as "set-snapshot" => set_snapshot::ReplaceSnapshot,
@@ -51,9 +51,9 @@ semio_framework_plugin::app_commands! {
         "applyRemedy" as "apply-remedy" => apply_remedy::ApplyRemedy,
     }
 }
-//#endregion ðï¸Commands
+//#endregion 🔖️Commands
 
-//#region ðï¸En1995PlayApp
+//#region 🔖️En1995PlayApp
 #[derive(Default)]
 pub struct En1995PlayApp;
 
@@ -153,22 +153,22 @@ impl ArtifactEditor for En1995PlayApp {
         .map(semio_framework_plugin::built_to_component_tree)
     }
 
-    //#region ðï¸MediaPorts
-    /// ðï¸ `"report:out"`/`"artifact:out"` â see `crate::app_surface::export_media`, which all fifteen apps
+    //#region 🔖️MediaPorts
+    /// 🎞️ `"report:out"`/`"artifact:out"` — see `crate::app_surface::export_media`, which all fifteen apps
     /// share (overriding this method shadows the SDK default entirely, so `"artifact:out"` is
     /// re-implemented there rather than left unreachable).
     fn export_media(port: &str, doc: &ArtifactView<'_, En1995Snapshot>) -> Result<Media, MediaError> {
         crate::app_surface::export_media::<En1995Family>(port, VARIANT, DOCUMENT_SCHEMA, doc.snapshot)
     }
 
-    /// ðï¸ `"model:in"`/`"artifact:in"` â see `crate::app_surface::import_media`.
+    /// 🎞️ `"model:in"`/`"artifact:in"` — see `crate::app_surface::import_media`.
     fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, En1995Snapshot>) -> Result<Emit<En1995Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         let base = doc.snapshot.clone();
         crate::app_surface::import_media(port, media, move |snapshot: En1995Snapshot| En1995Mutation::from_snapshot(&base, &snapshot))
     }
-    //#endregion ðï¸MediaPorts
+    //#endregion 🔖️MediaPorts
 }
-//#endregion ðï¸En1995PlayApp
+//#endregion 🔖️En1995PlayApp
 
 //#region 🧵️RetainedCommands
 crate::norm_owned_tool_job_factory!(En1995BoundedCommandJobFactory, En1995PlayApp);
@@ -213,7 +213,7 @@ impl crate::document::NormFamily for En1995Family {
 pub type Host = NormHost<En1995Family>;
 //#endregion 🧩️ComplianceFamily
 
-//#region ðï¸Manifest
+//#region 🔖️Manifest
 pub fn create_en1995_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::EN1995_DIALECT)
             .document(["semio", "norm", VARIANT])
@@ -293,13 +293,13 @@ pub fn create_en1995_app() -> semio_framework_plugin::AppDefinition {
             .action_describe("setActiveExample", LocalizedLabel::native("Loads one of the bundled EN 1995 (Eurocode 5, timber structures) examples into the open compliance document, replacing its inputs, by example id.", "Lädt eines der mitgelieferten Beispiele nach EN 1995 (Eurocode 5, Holzbau) in das offene Nachweisdokument und ersetzt dessen Eingaben, anhand der Beispiel-Id."))
             .build_definition()
 }
-//#endregion ðï¸Manifest
+//#endregion 🔖️Manifest
 
-//#region ð§ªï¸UnitTests
+//#region 🧪️UnitTests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
-//#endregion ð§ªï¸UnitTests
+//#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
 #[path = "📚️examples/🎬️demo-session/🦀️.rs"]

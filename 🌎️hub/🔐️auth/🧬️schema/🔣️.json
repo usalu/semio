@@ -184,7 +184,8 @@
         "auth",
         "directory-command",
         "invite-redemption",
-        "socket-grant"
+        "socket-grant",
+        "agent-command"
       ]
     },
     "AuthRateLimitPolicyV1": {

@@ -32,9 +32,11 @@ export type UiAccessibilityProjectionNodeV1 = {
   readonly actionable: boolean;
   readonly focused: boolean;
   readonly checked: boolean | null;
+  readonly pressed: boolean | null;
   readonly selected: boolean | null;
   readonly expanded: boolean | null;
   readonly editable: boolean;
+  readonly multiline: boolean;
   readonly controls: string | null;
   readonly activeDescendant: string | null;
   readonly level: number | null;
@@ -87,7 +89,7 @@ export function uiAccessibilityRoleV1(component: Component, activatable: boolean
     case "select":
       return "combobox";
     case "toggle":
-      return component.appearance === "checkbox" ? "checkbox" : "switch";
+      return component.appearance === "checkbox" ? "checkbox" : "button";
     case "keyValueList":
       return "list";
     case "slider":
@@ -178,12 +180,22 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
   const bindings = record.bindings ?? [];
   const activatable = bindings.some((binding) => binding.trigger === "activate");
   const accessibility = (record.accessibility ?? {}) as Partial<AccessibilitySpec>;
+  const componentLabel = record.component.type === "button" || record.component.type === "treeItem" || record.component.type === "table" ? record.component.label : null;
+  const treeItem = record.component.type === "treeItem" ? record.component : null;
+  const treeItemHasOrdinaryChild = treeItem !== null && (record.children ?? []).some((child) => child !== treeItem.inlineToolbar && child !== treeItem.detail);
+  const expanded = record.component.type === "select"
+    ? false
+    : record.component.type === "treeSection"
+      ? record.component.defaultOpen ?? true
+      : record.component.type === "treeItem" && (record.component.defaultOpen != null || treeItemHasOrdinaryChild)
+        ? record.component.defaultOpen ?? true
+        : null;
   return {
     nodeId: record.id,
     key: record.key,
     role: uiAccessibilityRoleV1(record.component, activatable),
     depth,
-    label: accessibility.label ?? (record.component.type === "treeItem" || record.component.type === "table" ? record.component.label : null),
+    label: accessibility.label ?? componentLabel,
     description: accessibility.description ?? null,
     live: accessibility.live ?? "off",
     shortcut: accessibility.shortcut ?? null,
@@ -192,10 +204,12 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     focusable: uiAccessibilityIsFocusableV1(record.component, activatable),
     actionable: activatable || bindings.length > 0,
     focused: false,
-    checked: record.component.type === "toggle" ? record.component.on : null,
+    checked: record.component.type === "toggle" && record.component.appearance === "checkbox" ? record.component.on : null,
+    pressed: record.component.type === "toggle" && record.component.appearance !== "checkbox" ? record.component.on : null,
     selected: null,
-    expanded: record.component.type === "select" ? false : record.component.type === "treeSection" || record.component.type === "treeItem" ? record.component.defaultOpen ?? true : null,
+    expanded,
     editable: false,
+    multiline: false,
     controls: null,
     activeDescendant: null,
     level: record.component.type === "treeItem" ? depth + 1 : null,

@@ -962,6 +962,8 @@ export type Paint2dScene = {
   readonly activeUtility: string;
   readonly brushSize: number;
   readonly brushOpacity: number;
+  readonly brushColor: string;
+  readonly brushHardness: number;
   readonly viewMode: string;
   readonly compositeViewportJson?: string;
   /** 🚚️ The spine's lane manifest — see {@link PAINT2D_SCENE_LANES}. */

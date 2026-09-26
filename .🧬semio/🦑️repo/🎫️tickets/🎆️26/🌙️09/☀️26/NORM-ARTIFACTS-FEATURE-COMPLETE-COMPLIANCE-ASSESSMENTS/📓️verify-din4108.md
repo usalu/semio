@@ -10,73 +10,65 @@
 |-------|---------|----------|
 | **Round 1** | **FAIL** | 13 |
 | **Round 2** | **FAIL** | 6 |
-| **Round 3** | **FAIL** | **5** |
+| **Round 3** | **FAIL** | 5 |
+| **Round 4** | **PASS** | 0 |
 
 ---
 
-## Round 3
+## Round 4
 
-**Verifier:** read-only Wave D Round 3  
-**Impl claim:** `📓️impl-din4108.md` — Round 2 section claims all 6 blockers cleared, 88/88 passed  
+**Verifier:** read-only Wave D Round 4  
+**Impl claim:** `📓️impl-din4108.md` — Round 3 section claims all 5 blockers cleared, 96/96 passed  
 **Test runs (this round):**
 
 | Target | Command | Summary |
 |--------|---------|---------|
-| `@semio-tech/norm-din4108-rs:test` | `bun nx run … --skip-nx-cache -- --no-fail-fast` | `88 tests run: 88 passed, 0 skipped` |
+| `@semio-tech/norm-din4108-rs:test` | `bun nx run … --skip-nx-cache -- --no-fail-fast` | `96 tests run: 96 passed, 0 skipped` |
 | `@semio-tech/norm-artifact-contract-rs:test` | `bun nx run … --skip-nx-cache` | `51 tests run: 51 passed, 0 skipped` |
 
-**Logs:** `🗑️generated/verify-din4108/test-r3-din4108.txt` (summary tail; full nx output on runner)
+**Logs:** `🗑️generated/verify-din4108/test-r4-din4108.txt`, `🗑️generated/verify-din4108/test-r4-contract.txt`
 
-**VERDICT: FAIL (5 blocking)**
+**VERDICT: PASS (0 blocking)**
 
-Round 3 clears **5 of 6** Round-2 blockers (bb2Type, segments, mutate suite, oracle vectors, DIN 4108-10). The perturbation harness exists and runs green, but **CORRECTION 14:42** re-audit finds the signature still folds in `explanation.en`, several editable leaves are read only into explanation text, and reference ids are silently absorbed (NotApplicable / no check) instead of failing referential-integrity with remedies. The prior `📓️audit-perturbation-gaming.md` **CLEAN** verdict for 🧱️ din4108 is **overturned**.
+Round 4 re-checks every Round-3 blocker and ADDENDA 14:54/14:42/14:37. All five Round-3 blockers are cleared with file:line evidence; perturbation signature is exactly `(id, status, computed, limit, utilization)`; DIN 4108-10 Table 1 classes, Glaser climate BC, referential integrity, zone H_T aggregation, and catalogue tables are normatively wired and tested. No `let _ =` gaming in evaluate/inference; no fingerprint/epsilon field folds; 96/96 + 51/51 executed with zero skipped.
 
 ---
 
-### Round-2 blocking items — re-check
+### Round-3 blocking items — re-check
 
-| # | Round-2 item | Round 3 | Evidence |
+| # | Round-3 item | Round 4 | Evidence |
 |---|--------------|---------|----------|
-| **1** | Scope-aware perturbation test on `compliant_etics_dwelling()` + timber; signature `(id, status, computed, limit, utilization)`; no explanation-only / ratio slack / over-exemptions | **FAIL** | Test exists: `every_editable_leaf_perturbation_changes_some_check_on_default_snapshot` (`🧬️schema/🧪️tests/⚖️compliance/🦀️.rs:506–544`). **`check_signature` includes `c.explanation.en` as 6th tuple field** (`:428–439`) — violates CORRECTION 14:42; explanation-only edits satisfy the test. Spot-check ignored leaves on default opaque walls: `elements[].layers[].waterClass` / `tensileClass` / `acousticClass` echoed only in `part_10::check_application` explanations (`🦀️.rs:1634–1641`) — **not** in `pass` logic (`:1617–1621` uses only `applicationType` + `compressiveClass`). `elements[].zoneId` on opaque elements only in Table 3 / U explanations (`:641`, `:1214`), not in R/U math. Walk uses `collect_leaf_paths` with `[id=…]` for all array items (`:179–215`) — OK. No ratio slack. Entity-`id` exemptions only (`:447–450`, `:507–508`) — OK. |
-| **2** | `thermalBridges[].bb2Type` read normatively (`conform` vs `custom`/`detailed`) | **PASS** | `bb_2::bb2_category` (`🦀️.rs:1371–1377`); `delta_u_wb_limit` reads categories (`:1384–1396`); per-bridge `check_bridge_category` (`:1494–1544`); wired in `evaluate` (`💡️inferences/🦀️.rs:181–184`). Test `flipping_bb2_type_on_default_bridge_changes_report` (`compliance/🦀️.rs:547–555`). |
-| **3** | Segment `lambda` / `fraction` / `sd_m` (Glaser) / `materialId` when `segments[]` non-empty; timber test | **PASS** | `layer_resistance_lower` §6.7 (`🦀️.rs:305–360`); `layer_mu_eq` → `sd_m` (`:868–879`, `:905`); `part_4::check_segment_design_lambda` (`:1092–1143`); `layer_surface_mass_kg_m2` (`:429–434`). Test `timber_segment_lambda_and_density_affect_checks` (`compliance/🦀️.rs:558–574`). |
-| **4** | No empty mutate stub; cucumber kind count = enum | **PASS** | `mutate_suite_every_kind_fixture_changes_leaf_and_inverse_restores` (`🧪️tests/🧱️mutate-din4108-1/🦀️.rs:24–65`) — applies fixture, asserts inverse restore, covers all `KINDS`. `🥒️.feature:12` “43 kinds”. 43 fixture directories under `🎫️fixtures/🧬️mutations/`. |
-| **5** | Oracle `fixtureCoverage.vectors` = `KINDS.len()` | **PASS** | `🔮️oracles/🔣️.json:52` `vectors: 43`; `KINDS` has 43 entries (`🧬️mutations/🦀️.rs:98–142`). Lock test `oracle_manifest_mutation_vectors_match_kinds_len` (`compliance/🦀️.rs:609–624`). |
-| **6** | DIN 4108-10 application-class check implemented + tested | **PASS** | `part_10::{APPLICATION_TYPES,required_application_types,check_application}` (`🦀️.rs:1549–1659`); emitted in `evaluate` (`💡️inferences/🦀️.rs:138`). Test `din4108_10_wrong_application_fails_and_remedy_passes` (`compliance/🦀️.rs:577–606`) — DAD on wall eps → Fail + `one_of` WAP/WAB/WAA/WH remedy flips pass. |
+| **1** | Perturbation signature `(id, status, computed, limit, utilization)` only; no explanation-only / ratio slack / over-exemptions | **PASS** | `check_signature` 5-tuple — no `explanation.en` (`🧬️schema/🧪️tests/⚖️compliance/🦀️.rs:428–443`). `every_editable_leaf_perturbation_changes_some_check_on_default_snapshot` green on default + timber (`:504–543`). Entity-`id` exemptions only (`:446–450`, `:506–508`). `rg "let _ ="` under `💡️inferences` → 0; evaluate path clean. `rg "fingerprint\|1e-9 \*\|1e-12 \*"` under family evaluate code → 0. |
+| **2** | DIN 4108-10 water/tensile/acoustic classes normative (Table 1) | **PASS** | `part_10::{min_water_for,min_tensile_for,min_acoustic_for,check_application}` — `ok_w`/`ok_t`/`ok_a` in `pass` logic and class ranks in `minimum(score, need)` utilization (`🦀️.rs:1894–1925`). Test `din4108_10_property_classes_affect_status_or_utilization` (`compliance/🦀️.rs:627–648`) — wk/tk/sh perturbations change signature. |
+| **3** | Glaser `climate` selects boundary conditions / numerics | **PASS** | `part_3::{glaser_winter_t_ext_c,glaser_summer_t_ext_c}` read `ClimateZoneDe` design temps (`🦀️.rs:1116–1127`); `check_glaser` uses them in `t_ext_w`/`t_ext_s` condensate math (`:1155–1160`). Test `glaser_climate_changes_condensation_or_limit` Zone2→Zone1 (`compliance/🦀️.rs:701–710`). |
+| **4** | Dangling `materialId`/`zoneId` → Fail + en/de + `one_of`; duplicate ids → Fail | **PASS** | `push_referential_integrity` before clause checks (`💡️inferences/🦀️.rs:157–239`); `push_dangling_ref` Fail + distinct en/de explanation + `Remedy::one_of` (`:127–151`). Tests `dangling_material_id_fails_referential_integrity`, `dangling_zone_id_fails_referential_integrity`, `duplicate_element_id_fails_integrity` (`compliance/🦀️.rs:652–684`). Dangling ids no longer silently NotApplicable — integrity Fail emitted first. |
+| **5** | Opaque `elements[].zoneId` in normative computation | **PASS** | `part_2::{zone_transmission_ht_wk,check_zone_transmission_loss}` filter opaque elements by `zone_id` (`🦀️.rs:632–669`); wired in `evaluate` (`💡️inferences/🦀️.rs:244`). Default snapshot has `zone-living` + `zone-utility` (`📸️snapshot/🦀️.rs:59–78`). Test `moving_opaque_zone_id_changes_zone_transmission_loss` (`compliance/🦀️.rs:687–697`). |
+| **6** | `reference_tables()` non-empty; shared const; evaluated limit = cell | **PASS** | `✏️editor/📌️panels/📚️catalogue/🦀️.rs:20–101` — 3 tables from `part_4::DESIGN_LAMBDA_ROWS`, `part_2::TABLE3_R_MIN_ROWS`, `part_10::CATALOGUE_APPLICATION_TYPES` with clause ids, distinct en/de titles, units. Tests `design_lambda_table_matches_part4_const`, `catalogue_design_lambda_matches_evaluated_limit` (`catalogue/🧪️tests/🔬️unit/🦀️.rs:34–43`; `compliance/🦀️.rs:714–722`). |
 
 ---
 
-### CORRECTION 14:42 — additional blocking (this round)
+### ADDENDA 14:54 / 14:42 / 14:37 — re-check
 
 | Requirement | Result | Evidence |
 |-------------|--------|----------|
-| No `let _ =` dummy bindings in evaluate/inference | **PASS** | `rg "let _ ="` under `🧬️schema/💡️inferences` → 0; evaluate path clean. (Mutation inverse `let _ = base` excluded per audit convention.) |
-| Perturbation signature excludes explanation | **FAIL** | `check_signature` 6-tuple ends with `c.explanation.en` (`compliance/🦀️.rs:428–439`). |
-| No epsilon / fingerprint gaming in computed values | **PASS** | `rg "fingerprint\|1e-9 \*\|1e-12 \*"` under family evaluate code → 0. |
-| Dangling `*Id` → Fail referential-integrity + `one_of` remedy | **FAIL** | Unknown `materialId` → `NotApplicable` (`part_4::check_design_lambda` `:1046–1059`; segment `:1100–1113`) — no Fail, no `one_of` over catalogue ids. Dangling `elements[].zoneId` silently drops window/door contribution in `s_vorhanden_with_elements` filter (`part_2` `:598`) with no integrity check. |
-| Duplicate entity ids → Fail | **FAIL** | `evaluate` (`💡️inferences/🦀️.rs:86–186`) emits no duplicate-id scan across `zones` / `elements` / `layers` / `windows` / `bridges` / `segments`. |
-| Identical en/de prose | **PASS** (spot) | Explanations use distinct German (`Klima`, `Grenze`, `Wärmebrücke`, …) vs English (`Climate`, `limit`, `Bridge`, …) — e.g. Glaser `:976–983`, bb2 `:1515–1516`. |
-| Facet parity (no `unknown` / `Record<string, unknown>` on snapshot) | **PASS** | `📸️snapshot/🟦️.ts` fully typed interfaces; `📸️snapshot/🔣️.json` — no `unknown` / `_placeholder`. Parser-guard `unknown` in `📝️text/🟦️.ts` is codec infrastructure, not snapshot schema. |
-| No skip hatches in python/jsonschema tests | **PASS** | `validate_snapshot.py` — no `skip`/`pytest.mark`; `jsonschema_validates_default_and_failing_snapshots` asserts concrete field values (`compliance/🦀️.rs:415–422`). |
+| **14:54** Catalogue tables non-empty, shared numbers | **PASS** | See blocker #6 above. |
+| **14:42** No `let _ =` in evaluate/inference | **PASS** | `rg "let _ ="` under `🧬️schema/💡️inferences` → 0. Mutation inverse stubs excluded per convention. |
+| **14:42** Signature excludes explanation | **PASS** | `check_signature` 5-tuple only (`compliance/🦀️.rs:428–443`). |
+| **14:42** Dangling `*Id` → Fail + `one_of` | **PASS** | `push_dangling_ref` (`💡️inferences/🦀️.rs:127–151`). |
+| **14:42** Duplicate ids → Fail | **PASS** | `push_duplicate_ids` (`💡️inferences/🦀️.rs:88–124`). |
+| **14:42** Identical en/de prose | **PASS** | Spot-check: integrity (`'…does not reference…'` / `'…verweist auf kein gültiges Ziel.'`), Glaser (`Climate` / `Klima`), zone H_T (`Zone transmission` / `Zonaler Transmissionswärmeverlust`). |
+| **14:37** No fingerprint / field epsilon gaming | **PASS** | `rg` clean on evaluate path; Glaser `1e-9` dry-out tolerance is inside normative pass logic (`🦀️.rs:1166`) — acceptable. |
+| **14:37** Perturbation asserts status/computed/limit/utilization | **PASS** | Signature uses all four numeric fields via `to_bits()`; test compares full signature. |
 
 ---
 
 ### `📓️audit-perturbation-gaming.md` 🧱️ din4108 — re-check
 
-| Audit claim | Round 3 |
+| Audit claim | Round 4 |
 |-------------|---------|
-| **CLEAN (0 instances)** | **OVERTURNED → GAMING (4+)** |
-| Signature `(id, status, computed.to_bits())` | **Stale** — actual signature adds `limit`, `utilization`, and **`explanation.en`** (`compliance/🦀️.rs:428–439`). |
-| Spot-check leaves normative | **Incomplete** — `waterClass` / `tensileClass` / `acousticClass` / Glaser `climate` label / opaque `zoneId` are explanation-only on default subject. |
-
-**Gaming instances (evaluate path):**
-
-| File:line | Pattern |
-|-----------|---------|
-| `🦀️.rs:934`, `:976–983` | `climate` → `climate_label` in Glaser explanation only; BC/computed unchanged |
-| `🦀️.rs:1634–1641` | `water_class` / `tensile_class` / `acoustic_class` in explanation only; pass uses `application_type` + `compressive_class` only (`:1617–1621`) |
-| `🦀️.rs:641`, `:1214` | `element.zone_id` echoed in Table 3 / U explanations for opaque walls — not in R/U limits |
-| `compliance/🦀️.rs:428–439` | Perturbation signature accepts explanation-only diffs |
+| **CLEAN (0 instances)** | **CONFIRMED** — prior Round-3 overturn resolved. |
+| Signature `(id, status, computed.to_bits())` | **Stale in audit doc** — actual signature is 5-tuple incl. limit + utilization (`compliance/🦀️.rs:428–439`). Implementation correct; audit text not updated (non-blocking). |
+| Spot-check leaves normative | **Complete** — water/tensile/acoustic, climate, zoneId, materialId all normative or integrity-gated. |
 
 ---
 
@@ -84,68 +76,65 @@ Round 3 clears **5 of 6** Round-2 blockers (bb2Type, segments, mutate suite, ora
 
 | # | Self-check | Result | Evidence |
 |---|------------|--------|----------|
-| 1 | Human en+de choice labels | **PASS** | `field-meta/🦀️.rs:9–58` (`NormFieldChoice`). |
+| 1 | Human en+de choice labels | **PASS** | `field-meta/🦀️.rs` (`NormFieldChoice`). |
 | 2 | Every editable leaf has meta + iteration test | **PASS** | `field_meta_covers_every_editable_leaf_on_default_snapshot` (`compliance/🦀️.rs:237–287`). |
 | 3 | Structured editor, not JSON dump | **PASS** | `📥️inputs/🦀️.rs` + `din4108_field_meta`. |
 | 4 | `[id=…]` paths + resolve test | **PASS** | `compliance/🦀️.rs:290–309`. |
-| 5 | ≥2 fail→pass remedy tests | **PASS** | Thickness, n50, summer (`compliance/🦀️.rs:319–367`). |
-| 6 | DSL decode + complies / fail_count ≥ 2 | **PASS** | Example tests (Round 2 check 7). |
+| 5 | ≥2 fail→pass remedy tests | **PASS** | Thickness, n50, summer, DIN 4108-10 (`compliance/🦀️.rs:319–367`, `:576–605`). |
+| 6 | DSL decode + complies / fail_count ≥ 2 | **PASS** | Example tests (Round 2). |
 | 7 | Python oracle ±0.5 % + jsonschema | **PASS** | `compliance/🦀️.rs:371–423`. |
-| 8 | Facets regenerated, real diff/inverse | **PASS** | Typed snapshot TS; 43 mutation fixture triads. |
-| 9 | No tautologies / hardcodes / ignored fields | **FAIL** | `waterClass` / `tensileClass` / `acousticClass` ignored normatively; Glaser `climate` echo; dangling `materialId`/`zoneId` absorbed. |
-| 10 | No trivial tests | **PASS** | Mutate suite + perturbation are substantive (signature flaw is implementation, not empty test). |
+| 8 | Facets regenerated, real diff/inverse | **PASS** | 43 mutation kinds; mutate suite (`🧪️tests/🧱️mutate-din4108-1/🦀️.rs`). |
+| 9 | No tautologies / hardcodes / ignored fields | **PASS** | Round-3 ignored-field gaps closed (blockers #2–#5). |
+| 10 | No trivial tests | **PASS** | Perturbation, integrity, catalogue-lock tests assert concrete values. |
 | 11 | Semantic mutation verbs | **PASS** | 43 domain verbs (`🧬️mutations/🦀️.rs:98–142`). |
 | 12 | Dynamic localized issue text | **PASS** | Distinct en/de with interpolated numbers. |
 
 ---
 
-### Wave-D check table (Round 3)
+### Wave-D check table (Round 4)
 
 | # | Check | Result | Evidence |
 |---|--------|--------|----------|
-| 1 | Subject completeness | **FAIL** | Perturbation + integrity gaps above; `water`/`tensile`/`acoustic` classes editable but not read for pass/fail. |
-| 2 | Clause coverage | **PASS** | 4108-2/3/4/7, ISO 6946, Bbl.2, **4108-10** all reached in `evaluate`. |
-| 3 | Numerics | **PASS** | Round 2 hand derivations still valid (U, S, R, f_Rsi, timber R). |
-| 4 | Applicability | **PASS** | Transparent/window → N/A; empty lists → explicit Fail. |
+| 1 | Subject completeness | **PASS** | Hierarchical envelope; all Round-3 leaf/integrity gaps closed. |
+| 2 | Clause coverage | **PASS** | 4108-2/3/4/7, ISO 6946, Bbl.2, 4108-10 + integrity checks in `evaluate`. |
+| 3 | Numerics | **PASS** | Round 2 hand derivations still valid (U, S, R, f_Rsi, timber R); oracle ±0.5 % test green. |
+| 4 | Applicability | **PASS** | Transparent/window → N/A with reason; empty lists → explicit Fail. |
 | 5 | National annex | **PASS** (N/A) | DIN national; all checks `AnnexChoice::De`. |
 | 6 | Report quality | **PASS** | `[id=…]` paths; remedy-flip tests; localized en/de. |
 | 7 | Examples | **PASS** | Compliant + failing DSL decode tests. |
 | 7b | Inputs UX | **PASS** | Field meta + structured editor. |
-| 8 | Mutations & schema | **PASS** | 43 kinds; facets aligned. |
-| 9 | Tests | **PASS** (runner) / **FAIL** (14:42 harness) | 88/88 executed; perturbation signature + integrity gaps. |
-| 10 | Stubs | **PASS** | No empty mutate stub; no `todo!` in compliance path. |
+| 8 | Mutations & schema | **PASS** | 43 kinds; facets aligned; oracle lock. |
+| 9 | Tests | **PASS** | 96/96 + 51/51 executed, 0 skipped. |
+| 10 | Stubs | **PASS** | No `todo!`/`stub`/`placeholder` in compliance evaluate path. |
 
 ---
 
 ## Blocking fix list
 
-1. **`🧬️schema/🧪️tests/⚖️compliance/🦀️.rs` — `check_signature`** — Remove `c.explanation.en` from the comparison tuple; signature must be exactly `(check_id, status, computed.to_bits(), limit.to_bits(), utilization.to_bits())` sorted by id. Re-run perturbation test; fix any leaves that then fail.
-
-2. **`🧬️schema/🦀️.rs` — `part_10::check_application`** — Wire `water_class`, `tensile_class`, and `acoustic_class` into normative pass/fail per DIN 4108-10 Table 1 property-class rules (not only explanation echo), **or** remove them from the editable snapshot if out of scope. Add unit test proving perturbing each class changes `status` or `utilization`.
-
-3. **`🧬️schema/🦀️.rs` — `part_3::check_glaser`** — Either use `climate` in boundary selection / limit logic normatively, **or** stop binding `climate_label` into explanation (`:934`, `:976–983`) and drop `climate` parameter if Annex A BC are fixed.
-
-4. **`🧬️schema/💡️inferences/🦀️.rs` + `🦀️.rs` — referential integrity** — Before clause checks, emit explicit **Fail** checks (en+de explanation, `one_of` remedy over valid target ids) when: (a) `layers[].materialId` or `segments[].materialId` is not in `part_4::design_lambda` catalogue; (b) `elements[].zoneId` does not match any `zones[].id`; (c) duplicate `id` within any entity list. Dangling perturbation must change **status/computed/limit/utilization**, not silently flip to NotApplicable. Add tests: dangling `materialId`, dangling `zoneId`, duplicate `elements[].id`.
-
-5. **`🧬️schema/🦀️.rs` — opaque `elements[].zoneId`** — If zone linkage is in scope, use `zone_id` in at least one normative computation for opaque elements (e.g. aggregate reporting), not only explanation strings on Table 3 / U checks (`:641`, `:1214`).
+None.
 
 ---
 
 ## Non-blocking observations
 
-- Round-2 functional landings (bb2Type categories, ISO 6946 §6.7 segments, 43-kind mutate suite, oracle vector lock, DIN 4108-10 check + remedy) are solid and tested.
-- `oracle manifest` rationale text still says “33 kinds” in places (`🔮️oracles/🔣️.json:17`) while `vectors` and `KINDS` are 43 — cosmetic doc drift only (lock test passes).
-- `softwood` segment `materialId` is absent from `design_lambda` catalogue (`🦀️.rs:1020–1035`) — currently NotApplicable; referential fix (#4) should clarify catalogue vs Fail.
-- Glaser `1e-9` in dry-out comparison (`:965`) is a numerical tolerance inside normative pass logic — acceptable.
+- `📓️audit-perturbation-gaming.md` 🧱️ din4108 section still documents a 3-field signature and predates Round-3/4 fixes — cosmetic doc drift only.
+- `🔮️oracles/🔣️.json` rationale text may still say “33 kinds” in places while `vectors` and `KINDS` are 43 — lock test passes.
+- `check_design_lambda` still emits `NotApplicable` for unknown `materialId` (`🦀️.rs:1277–1290`) when integrity is bypassed; integrity Fail precedes it in `evaluate` so dangling ids are covered.
+- `elements[].zoneId` still echoed in Table 3 / U explanations (`🦀️.rs:807`, `:1445`) in addition to normative zone H_T — redundant prose, not gaming.
 - Inputs render test remains weak (`contains(':')`) — editor wiring is real.
+- Glaser `1e-9` dry-out comparison (`🦀️.rs:1166`) is numerical tolerance inside normative pass logic — acceptable.
 
 ---
 
 ## Prior rounds (archived)
 
+### Round 3 summary
+
+**VERDICT: FAIL (5 blocking)** — perturbation signature included `explanation.en`; water/tensile/acoustic/Glaser climate/zoneId explanation-only; missing referential integrity; empty catalogue tables.
+
 ### Round 2 summary
 
-**VERDICT: FAIL (6 blocking)** — see git history / prior content. Cleared 10/13 Round-1 items; remaining: perturbation absent, ignored leaves, mutate stub, stale oracle vectors, DIN 4108-10 scope gap.
+**VERDICT: FAIL (6 blocking)** — perturbation absent, ignored leaves, mutate stub, stale oracle vectors, DIN 4108-10 scope gap.
 
 ### Round 1 summary
 

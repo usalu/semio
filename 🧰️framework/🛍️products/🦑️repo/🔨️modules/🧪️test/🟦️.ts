@@ -11,6 +11,7 @@ import { createHash } from "node:crypto";
 import { constants, cpSync, existsSync, linkSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { opendir, readFile as readFileAsync } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
 import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, getSemioRoot, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -654,6 +655,29 @@ export function oraclePackages(entry: OracleEntry): string[] {
   return oracleLinkedPackages(entry).map((linked) => linked.package);
 }
 
+/**
+ * 🧭️ The case adapter language an oracle runs in: a `native` reference is driven from the adapter its
+ * entry names in `hostImplementation`, a `javascript` package from the TypeScript adapter, anything
+ * else from the adapter of its own ecosystem. `undefined` when a native reference names no host.
+ */
+export function oracleImplementation(entry: OracleEntry): Implementation | undefined {
+  return (entry.ecosystem === "native" ? entry.hostImplementation : entry.ecosystem === "javascript" ? "typescript" : entry.ecosystem) as Implementation | undefined;
+}
+
+/**
+ * 🚪️ The one entry point each language host loads an adapter through — the signature the generated
+ * entrypoint calls (`🖥️host/🏗️materialization/🟦️.ts`) or the attribute the interpreted host reads
+ * (`🖥️host/🐍️.py`, `🖥️host/🟦️.ts`). A file without it is a standalone script whose rows never
+ * execute in either role.
+ */
+export const ADAPTER_ENTRY_POINTS: Readonly<Record<Implementation, { signature: string; pattern: RegExp }>> = {
+  rust: { signature: "`pub fn adapter() -> Adapter`", pattern: /^pub fn adapter\(\)\s*->\s*(?:[A-Za-z_][\w]*::)*Adapter\b/m },
+  typescript: { signature: "`export default defineTestAdapter({ implementation: \"typescript\", … })`", pattern: /^export default defineTestAdapter\(/m },
+  go: { signature: "`func Adapter() *host.Adapter`", pattern: /^func Adapter\(\)\s*\*host\.Adapter\b/m },
+  python: { signature: "`def adapter() -> Adapter`", pattern: /^def adapter\(\)/m },
+  dotnet: { signature: "`static class Adapter { static Semio.Repo.Test.Adapter Create() }`", pattern: /\bstatic\s+Semio\.Repo\.Test\.Adapter\s+Create\(\)/ },
+};
+
 /** 📇️ A recorded decision that a capability legitimately has no credible reference implementation. */
 export type NoOracleDecision = Readonly<{ id: string; capabilities: readonly string[]; rationale: string; substitutes: readonly string[]; coversMutations?: boolean; referenceSurvey?: ReferenceSurvey }>;
 
@@ -861,6 +885,9 @@ function strictMutationCatalogs(value: unknown, owner: string, manifestPath: str
  */
 export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path?: string; version?: string; module?: string; features?: readonly string[]; rationale?: string }>;
 
+/** 🧩️ Features a generated SUBJECT host enables on the owner's own package — a subject whose surface is feature-gated. */
+export type SubjectFeatures = Readonly<{ implementation: Implementation; features: readonly string[]; rationale: string }>;
+
 /** 🧩️ The name a host imports a contributed package by — the declared module, else the package name. */
 export function oracleHostModule(entry: OracleHostPackage): string {
   return entry.module ?? entry.package.replace(/-/g, "_");
@@ -879,6 +906,8 @@ export type TestContribution = Readonly<{
   noOracleDecisions: readonly NoOracleDecision[];
   comparisonProfiles: readonly ComparisonProfileSpec[];
   oracleHostPackages: readonly OracleHostPackage[];
+  /** 🧩️ Features the subject host enables on this owner's package; never the oracle's. */
+  subjectFeatures: readonly SubjectFeatures[];
   /** 🦠️ The mutation vocabularies this owner claims exhaustive coverage of. */
   mutationCatalogs: readonly MutationCatalog[];
   /** 🧬️ The authoritative subset-scoped mutation manifests this owner declares. */
@@ -921,6 +950,7 @@ const CONTRIBUTION_RECORD_DEFINITIONS: Readonly<Record<string, string>> = {
   comparisonPipelines: "ComparisonPipeline",
   toleranceProfiles: "ToleranceProfile",
   oracleHostPackages: "OracleHostPackage",
+  subjectFeatures: "SubjectFeatures",
   mutationManifests: "MutationManifest",
   fixtureManifests: "FixtureManifest",
 };
@@ -964,6 +994,7 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
     comparisonPipelines: (parsed.comparisonPipelines as ComparisonPipeline[] | undefined) ?? [],
     toleranceProfiles: (parsed.toleranceProfiles as ToleranceProfile[] | undefined) ?? [],
     oracleHostPackages: (parsed.oracleHostPackages as OracleHostPackage[] | undefined) ?? [],
+    subjectFeatures: (parsed.subjectFeatures as SubjectFeatures[] | undefined) ?? [],
     mutationCatalogs,
     mutationManifests: (parsed.mutationManifests as MutationManifest[] | undefined) ?? [],
     fixtureManifests: ((parsed.fixtureManifests as FixtureManifest[] | undefined) ?? []).map((fixture) => ({ ...fixture, manifestDir: fixture.manifestDir ?? manifestDir })),
@@ -1052,6 +1083,16 @@ export function profileTable(registry: OracleRegistry): ReadonlyMap<string, Comp
 /** 🧩️ The native oracle packages one owner's adapters may reach, walking up to the nearest contributor. */
 export function oracleHostPackagesFor(registry: OracleRegistry, owner: string, implementation: Implementation): OracleHostPackage[] {
   return packagesForOwner(registry.contributions, owner, implementation);
+}
+
+/**
+ * 🧩️ The features the generated SUBJECT host enables on the owner's own package: the union of what the owner and
+ * each ancestor contribution declares for `implementation`, sorted. Empty for an owner that declares none.
+ */
+export function subjectFeaturesFor(registry: OracleRegistry, owner: string, implementation: Implementation): string[] {
+  const segments = owner.split("/");
+  const ancestors = new Set(segments.map((_, index) => segments.slice(0, index + 1).join("/")));
+  return [...new Set(registry.contributions.filter((entry) => ancestors.has(entry.owner) || entry.owner === ".").flatMap((entry) => entry.subjectFeatures).filter((entry) => entry.implementation === implementation).flatMap((entry) => entry.features))].sort();
 }
 //#endregion 📇️Registry
 
@@ -1665,6 +1706,11 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
   if (Object.keys(discovered.adapters).length === 0) {
     breaches.push(breach("testing/contract", "no-adapter", scope, "Test case has no implementation adapter", "A feature with no adapter can never execute, so it silently contributes zero coverage.", `Add at least one ${Object.values(testAdapterFilenames(taxonomy)).join(" / ")} adapter.`));
   }
+  for (const [implementation, adapterPath] of Object.entries(discovered.adapters) as [Implementation, string][]) {
+    const entry = ADAPTER_ENTRY_POINTS[implementation];
+    if (entry.pattern.test(readFileSync(join(repoRoot, adapterPath), "utf8"))) continue;
+    breaches.push(breach("testing/contract", "adapter-entry-point-missing", adapterPath, `The ${implementation} adapter defines no ${entry.signature}`, "A host loads an adapter only through its language's entry point. A file without one is a standalone script: every row it was meant to answer is reported as a host problem instead of a result, in both roles, and the case contributes zero parity.", `Define ${entry.signature} and register a handler for every scenario the feature declares in that language's role.`));
+  }
 
   const feature = parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8"));
   for (const error of feature.errors) breaches.push(breach("testing/contract", "feature-syntax", discovered.featurePath, error, "The feature file must parse under the repository's restricted Gherkin profile.", "Fix the feature file syntax."));
@@ -1685,6 +1731,13 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
     breaches.push(breach("testing/oracle", "unknown-no-oracle-decision", discovered.featurePath, `Unknown no-oracle decision @no-oracle-${feature.noOracleDecision}`, "A no-oracle decision must be recorded with its rationale and substitutes, not asserted inline.", "Add the decision to the registry's noOracleDecisions."));
   }
   const oracleEntry = registry.oracles.find((entry) => entry.id === feature.oracle);
+  const oracleLanguage = oracleEntry === undefined ? undefined : oracleImplementation(oracleEntry);
+  if (oracleEntry && oracleLanguage !== undefined && discovered.adapters[oracleLanguage] === undefined) {
+    const differential = feature.scenarios.filter((scenario) => scenario.mode === "differential").length;
+    const adapterKey = Object.entries(taxonomy.testImplementationIds).find(([, id]) => id === oracleLanguage)?.[0];
+    const adapterFilename = adapterKey === undefined ? oracleLanguage : (testAdapterFilenames(taxonomy)[adapterKey] ?? oracleLanguage);
+    breaches.push(breach("testing/oracle", "oracle-adapter-missing", discovered.featurePath, `Oracle ${oracleEntry.id} runs in the ${oracleLanguage} adapter, which this case does not have — ${differential} @mode-differential scenario(s) are compared against nothing`, "The oracle role is dispatched to the adapter of the oracle's own language. Without that adapter the phase records a problem instead of a result, so every differential row stays unexecuted while the case keeps claiming the reference.", `Add the ${adapterFilename} adapter registering the oracle handlers, or declare the oracle that actually runs.`));
+  }
   if (oracleEntry && feature.comparison && !oracleEntry.comparisonProfiles.includes(feature.comparison)) {
     breaches.push(breach("testing/oracle", "oracle-profile-mismatch", discovered.featurePath, `Oracle ${oracleEntry.id} does not declare comparison profile ${feature.comparison}`, "An oracle can only be trusted for the projections it was surveyed against.", `Use one of ${oracleEntry.comparisonProfiles.join(", ")}, or extend the registry entry deliberately.`));
   }
@@ -7782,6 +7835,6 @@ export function formatCoverageQuestions(registry: OracleRegistry, rows: readonly
 //#region 🧭️Root
 /** 📁️ Repository root, resolved from this package's own location. */
 export function repoRootFromHere(): string {
-  return findRepoRoot(dirname(decodeURIComponent(new URL(import.meta.url).pathname)));
+  return findRepoRoot(dirname(fileURLToPath(import.meta.url)));
 }
 //#endregion 🧭️Root

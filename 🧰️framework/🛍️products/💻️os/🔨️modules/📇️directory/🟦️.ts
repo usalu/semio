@@ -241,4 +241,13 @@ export function isDirectoryCommandKind<K extends DirectoryCommand["kind"]>(comma
 export function isDirectoryStreamMessageKind<K extends DirectoryStreamMessage["kind"]>(message: DirectoryStreamMessage, kind: K): message is Extract<DirectoryStreamMessage, { kind: K }> {
   return message.kind === kind;
 }
+
+/** ⏰️ What one live directory frame asks of a page-projected reader (Home): `origin` re-reads the directory from the first
+ * event (the reader's visible set moved retroactively — its own access changed — or a lagged checkpoint needs a
+ * rebootstrap), `next-page` fetches the page after the held frontier, `none` leaves the projection alone. Law: fixture
+ * `🌎️hub/🧫️fixtures/🔑️directory-access-changed-v1`. */
+export function directoryStreamWakeV1(message: DirectoryStreamMessage): "origin" | "next-page" | "none" {
+  if (message.kind === "access-changed" || message.kind === "rebootstrap-required") return "origin";
+  return message.kind === "event" || message.kind === "heartbeat" ? "next-page" : "none";
+}
 //#endregion 🔖️TypeGuards

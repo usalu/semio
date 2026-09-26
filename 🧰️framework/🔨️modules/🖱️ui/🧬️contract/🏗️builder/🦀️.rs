@@ -1620,6 +1620,8 @@ impl From<TreeItemBuilder> for BuiltNode {
                 dimmed: builder.dimmed,
                 window: builder.window,
                 granularity: builder.granularity,
+                inline_toolbar: None,
+                detail: None,
                 row_actions: builder.row_actions,
             }),
         )

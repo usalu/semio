@@ -299,6 +299,77 @@ def declared_lanes(diff):
     return lanes
 
 
+# region 🧭️Adapter
+LEAVES = ("before", "mutation", "diff", "outcome", "after")
+
+
+def variant_of(kind):
+    """🐫️ `change-tile-media` → `ChangeTileMedia`, the externally tagged payload's single key."""
+    return "".join(word.capitalize() for word in kind.split("-"))
+
+
+def committed(ctx):
+    """🧫️ The committed quintet of this scenario's row, read through the plan's declared fixtures."""
+    spec = ctx.doc_json()
+    if spec["kind"] != ctx.row():
+        raise AssertionError("scenario %s: the doc string names %r" % (ctx.scenario["id"], spec["kind"]))
+    return {leaf: json.loads(ctx.fixture_bytes(spec[leaf]).decode("utf-8")) for leaf in LEAVES}
+
+
+def adapter():
+    """🧭️ The platform entry point. The reference answers in the ORACLE role only, by Scenario Outline base id —
+    registering it as a subject too would make it its own subject and manufacture a green self-comparison. Every law
+    the standalone replay checks is asserted in role, per row, before the parity phase compares the document it answers."""
+    from semio_repo_test import Adapter, Outcome
+
+    def answer(document):
+        return Outcome(document, raw=json.dumps(document, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+    def mutate_oracle(ctx):
+        kind, leaves = ctx.row(), committed(ctx)
+        if list(leaves["mutation"]) != [variant_of(kind)]:
+            raise AssertionError("mutate-%s: the committed payload declares %r" % (kind, list(leaves["mutation"])))
+        produced, messages = apply_mutation(leaves["before"], leaves["mutation"])
+        if produced != leaves["after"]:
+            raise AssertionError("mutate-%s: the reference's after-snapshot differs from the committed one" % kind)
+        declared = [row["code"] for row in leaves["outcome"].get("messages", [])]
+        if sorted(messages) != sorted(declared):
+            raise AssertionError("mutate-%s: diagnostics %r differ from the committed %r" % (kind, messages, declared))
+        if produced == leaves["before"] and "mutation.no-op" not in declared:
+            raise AssertionError("mutate-%s: the vector does not move the document and its outcome declares no no-op" % kind)
+        return answer(produced)
+
+    def inverse_oracle(ctx):
+        kind, leaves = ctx.row(), committed(ctx)
+        moved, declared = moved_lanes(leaves["before"], leaves["after"]), declared_lanes(leaves["diff"])
+        if moved - declared:
+            raise AssertionError("inverse-%s: lanes %r moved but the committed diff does not declare them" % (kind, sorted(moved - declared)))
+        if declared - moved:
+            raise AssertionError("inverse-%s: the committed diff declares lanes %r on which nothing differs" % (kind, sorted(declared - moved)))
+        restored, _ = apply_mutation(leaves["before"], leaves["mutation"])
+        for step in inverse(leaves["before"], leaves["mutation"]):
+            restored, _ = apply_mutation(restored, step)
+        if restored != leaves["before"]:
+            raise AssertionError("inverse-%s: the reference's own inverse did not restore the before-snapshot" % kind)
+        return answer(restored)
+
+    def identity_oracle(ctx):
+        uri = ctx.step_fixture_uris()[0]
+        committed_bytes = ctx.fixture_bytes(uri)
+        document = json.loads(committed_bytes.decode("utf-8"))
+        buffer = decode_base64(document["input"]["pixels"])
+        if len(buffer) != document["input"]["width"] * document["input"]["height"]:
+            raise AssertionError("identity-round-trip: the pixel buffer is %d bytes, not width * height" % len(buffer))
+        if encode_base64(buffer) != document["input"]["pixels"]:
+            raise AssertionError("identity-round-trip: re-encoding the decoded pixel buffer changed it")
+        return answer(document)
+
+    return Adapter("python").oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", identity_oracle)
+
+
+# endregion 🧭️Adapter
+
+
 def read(directory, *leaf):
     with open(os.path.join(directory, *leaf), encoding="utf-8") as handle:
         return json.load(handle)

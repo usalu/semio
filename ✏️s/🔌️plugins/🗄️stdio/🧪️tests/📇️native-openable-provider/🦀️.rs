@@ -131,7 +131,7 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️registry/🧫️fixtures/📇️native-catalog-surface/🧪️commitment.json"))).unwrap();
     let contribution = native_artifact_catalog_contribution().unwrap();
     let original = serde_json::to_value(&contribution).unwrap();
-    println!("[DEBUG] native-catalog-payload={}", serde_json::to_string(&original["payload"]).unwrap());
+    println!("native-catalog-payload={}", serde_json::to_string(&original["payload"]).unwrap());
     assert_eq!(original["topic"], fixture["topic"]);
     assert_eq!(original["payload"]["definitions"].as_array().unwrap().len(), 36);
     assert_eq!(original["payload"]["codecs"].as_array().unwrap().len(), 26);

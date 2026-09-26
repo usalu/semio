@@ -29,7 +29,10 @@ bytemuck = { version = "1.24.0", features = ["derive"] }
 taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "grid", "taffy_tree"] }
 # 🖋️ CPU-side text only: shaping/fallback (parley) and glyph rasterization into our own atlas (swash).
 # The GPU copy of that atlas belongs to whichever backend is active — this crate never touches a device.
-parley = { version = "0.5.0" }
+# Fonts are embedded bytes only, so parley runs `no_std` + `libm`: its default `system`/`std` features add
+# fontique's path/mmap font sources, which link `std::fs` and make every guest that shapes text import
+# `wasi:filesystem` — an interface no closed browser actor admits (`boundaries` forbids `memmap2`).
+parley = { version = "0.5.0", default-features = false, features = ["libm"] }
 swash = { version = "0.2.6", default-features = false, features = ["render", "std"] }
 
 [dev-dependencies]

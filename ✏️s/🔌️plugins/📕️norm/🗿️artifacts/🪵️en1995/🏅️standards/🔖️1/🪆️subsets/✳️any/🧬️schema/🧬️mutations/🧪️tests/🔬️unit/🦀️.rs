@@ -103,6 +103,99 @@ fn from_snapshot_reaches_every_variant() {
     }
 }
 
+/// ↩️ The external bridges round-trip every kind through JSON, apply it silently, and invert it exactly.
+#[test]
+fn bridges_round_trip_apply_and_invert_every_kind() {
+    let base = En1995Snapshot::compliant_building_beam();
+    for mutation in every_mutation() {
+        assert_eq!(decode_en1995_mutation_json(&encode_en1995_mutation_json(&mutation)).expect("decodes"), mutation);
+        let (after, messages) = apply_en1995_mutation(&base, &mutation).expect("applies");
+        assert!(messages.is_empty(), "{mutation:?}: {messages:?}");
+        assert_ne!(after, base, "{mutation:?} must be observable");
+        let mut restored = after;
+        for step in inverse_en1995_mutation(&mutation, &base) {
+            restored = apply_en1995_mutation(&restored, &step).expect("inverse step applies").0;
+        }
+        assert_eq!(restored, base, "{mutation:?}: inverse must restore the base");
+    }
+}
+
+fn fixtures_root() -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations")
+}
+
+/// 🗂️ `(kind, fixture scenario folder)` for every kind, named by the committed `en1995-1-any` catalog.
+fn catalog_vector_dirs() -> Vec<(&'static str, std::path::PathBuf)> {
+    let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../🔮️oracles/🔣️.json")).expect("oracle manifest");
+    let vectors = manifest["mutationCatalogs"].as_array().and_then(|c| c.iter().find(|c| c["id"] == "en1995-1-any")).and_then(|c| c["vectors"].as_array()).expect("en1995-1-any vectors");
+    KINDS
+        .iter()
+        .map(|kind| {
+            let vector = vectors.iter().find(|v| v["mutationId"] == *kind).unwrap_or_else(|| panic!("{kind} missing from catalog"));
+            let scenario = vector["scenarios"][0]["directoryName"].as_str().expect("scenario directory");
+            (*kind, fixtures_root().join(vector["mutationDirectoryName"].as_str().expect("mutation directory")).join(scenario))
+        })
+        .collect()
+}
+
+fn text_at(dir: &std::path::Path, facet: &str) -> String {
+    let path = dir.join(facet).join("🔣️.json");
+    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
+}
+
+macro_rules! decoded {
+    ($ty:ty, $dir:expr, $facet:expr, $kind:expr) => {
+        pack::json::from_json_str::<$ty>(&text_at($dir, $facet)).unwrap_or_else(|e| panic!("{} {}: {e}", $kind, $facet))
+    };
+}
+
+/// ♻️ `EN1995_REGEN_MUTATION_VECTORS=1` rewrites one before/mutation/diff/after/outcome vector per kind in the production JSON codec.
+#[test]
+fn regen_mutation_vectors() {
+    if std::env::var("EN1995_REGEN_MUTATION_VECTORS").ok().as_deref() != Some("1") {
+        return;
+    }
+    let pretty = |compact: String| serde_json::to_string_pretty(&serde_json::from_str::<serde_json::Value>(&compact).expect("codec json")).unwrap() + "\n";
+    let base = En1995Snapshot::compliant_building_beam();
+    let _ = std::fs::remove_dir_all(fixtures_root());
+    for (mutation, (_, dir)) in every_mutation().into_iter().zip(catalog_vector_dirs()) {
+        let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &base);
+        let after = protocol::MutationDiff::apply(outcome.diff(), &base).expect("applies");
+        let facets = [
+            ("📸️snapshot/⬅️before", pack::json::to_json_string(&base)),
+            ("📸️snapshot/➡️after", pack::json::to_json_string(&after)),
+            ("🦠️mutation", pack::json::to_json_string(&mutation)),
+            ("🔺️diff", pack::json::to_json_string(outcome.diff())),
+            ("🎯️outcome", format!("{{\"status\":\"{}\"}}", if after == base { "no-op" } else { "applied" })),
+        ];
+        for (facet, compact) in facets {
+            let folder = dir.join(facet);
+            std::fs::create_dir_all(&folder).unwrap();
+            std::fs::write(folder.join("🔣️.json"), pretty(compact)).unwrap();
+        }
+    }
+}
+
+/// 🧫️ Every committed vector replays through the production codec: the mutation decodes, applies to `before`, and yields exactly `diff` and `after`.
+#[test]
+fn committed_mutation_vectors_replay_for_every_kind() {
+    let dirs = catalog_vector_dirs();
+    let on_disk = std::fs::read_dir(fixtures_root()).expect("fixtures root").count();
+    assert_eq!(on_disk, KINDS.len(), "one fixture folder per kind, no leftovers");
+    for ((kind, dir), expected) in dirs.into_iter().zip(every_mutation()) {
+        let before = decoded!(En1995Snapshot, &dir, "📸️snapshot/⬅️before", kind);
+        let mutation = decoded!(En1995Mutation, &dir, "🦠️mutation", kind);
+        assert_eq!(mutation, expected, "{kind} mutation");
+        assert_eq!(<En1995Mutation as SemanticMutation<En1995Snapshot>>::semantics(&mutation).kind, kind);
+        let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &before);
+        assert!(outcome.worst_level().is_none(), "{kind}: {:?}", outcome.messages());
+        assert_eq!(outcome.diff(), &decoded!(En1995Diff, &dir, "🔺️diff", kind), "{kind} diff");
+        let after = protocol::MutationDiff::apply(outcome.diff(), &before).expect("applies");
+        assert_eq!(after, decoded!(En1995Snapshot, &dir, "📸️snapshot/➡️after", kind), "{kind} after");
+        assert!(text_at(&dir, "🎯️outcome").contains("\"applied\""), "{kind} outcome");
+    }
+}
+
 /// 🔀 A whole-example switch (`set-snapshot`) is expressible as a mutation list.
 #[test]
 fn from_snapshot_carries_between_examples() {

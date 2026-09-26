@@ -47,6 +47,38 @@ pub fn refusal_code(status: u16) -> Option<&'static str> {
     Some(HUB_REFUSAL_STATUS_CODES.iter().find(|(known, _)| *known == status).map_or("refused", |(_, code)| code))
 }
 
+/// 🔖️ The `schema` of one `HubCredentialRefusalV1` body.
+pub const HUB_CREDENTIAL_REFUSAL_SCHEMA: &str = "semio.hub.credential-refusal/v1";
+
+/// 🔑️ The `WWW-Authenticate` challenge a `HubCredentialRefusalV1` answer names (RFC 6750 §3.1).
+pub const HUB_CREDENTIAL_REFUSAL_CHALLENGE: &str = "Bearer error=\"invalid_token\"";
+
+/// 🗣️ `HubCredentialRefusalMessageV1`: the notice of a refused presented credential, en and de.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+pub struct HubCredentialRefusalMessageV1 {
+    pub en: &'static str,
+    pub de: &'static str,
+}
+
+/// 🚪️ `HubCredentialRefusalV1`: the body of the `401` a route that also answers anonymously gives a presented credential
+/// that does not authenticate (malformed, forged, expired or revoked alike), so the caller learns its session ended
+/// instead of silently reading the anonymous view.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize)]
+pub struct HubCredentialRefusalV1 {
+    pub schema: &'static str,
+    pub status: u16,
+    pub code: &'static str,
+    pub message: HubCredentialRefusalMessageV1,
+}
+
+/// 🎫️ The one `HubCredentialRefusalV1` every credential-optional route answers.
+pub const HUB_CREDENTIAL_REFUSAL: HubCredentialRefusalV1 = HubCredentialRefusalV1 {
+    schema: HUB_CREDENTIAL_REFUSAL_SCHEMA,
+    status: 401,
+    code: "unauthenticated",
+    message: HubCredentialRefusalMessageV1 { en: "Your sign-in is no longer valid. Sign in again.", de: "Ihre Anmeldung ist nicht mehr gültig. Bitte melden Sie sich erneut an." },
+};
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

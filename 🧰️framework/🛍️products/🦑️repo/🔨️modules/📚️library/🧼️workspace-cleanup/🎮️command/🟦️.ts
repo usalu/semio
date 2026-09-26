@@ -1,16 +1,16 @@
 import { existsSync, rmSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { join, relative, resolve } from "node:path";
 import { coverageDir } from "../../🟦️.ts";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
 import { orchestratorBudgetOpts, runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
+import { processTableSnapshot } from "../../🏃️process/📋️process-table/🟦️.ts";
 import { Script } from "../../🏃️process/🧭️routing/🟦️.ts";
 import { runTaxonomyCliWorkflow } from "../../🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts";
 import { cleanCollectMarkerOnlyFolderRemovals } from "../🔍️marker-only-folders/🟦️.ts";
 import { cleanProtectedPrefixes, cleanProjectRemovals, CLEAN_PROTECTION_VIEW } from "../🛡️protection/🟦️.ts";
 import { cleanRemovePath, runWorkspaceClean } from "../🗑️removal/🟦️.ts";
-import { cleanKillStrayProcesses } from "../🧟️stray-processes/🟦️.ts";
+import { ACTIVE_SEMIO_TECH_BUILD, cleanKillStrayProcesses } from "../🧟️stray-processes/🟦️.ts";
 
 /**
  * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never
@@ -93,8 +93,12 @@ export class CleanScript extends Script {
 
   /** ⚡️Bounds the shared cache root through its own owner instead of size-sweeping it — `clean` never walks or deletes under it directly. */
   private runCachePrune(dry: boolean): void {
-    const processes = spawnSync("ps", ["-axo", "command="], { encoding: "utf8", windowsHide: true });
-    if (typeof processes.stdout === "string" && /\bnx(?:\.js)?\s+run\s+['"]?@semio-tech\//.test(processes.stdout)) {
+    const processes = processTableSnapshot();
+    if (!processes) {
+      console.log(`[clean] cache-prune skipped: the process table is unreadable, so an active Semio Tech build cannot be ruled out`);
+      return;
+    }
+    if (processes.some((row) => ACTIVE_SEMIO_TECH_BUILD.test(row.command))) {
       console.log(`[clean] cache-prune skipped active Semio Tech build`);
       return;
     }

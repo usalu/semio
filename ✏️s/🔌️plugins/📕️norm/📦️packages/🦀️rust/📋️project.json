@@ -65,18 +65,6 @@
         "forwardAllArgs": true
       }
     },
-    "describe": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts describe",
-        "forwardAllArgs": true
-      },
-      "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🛂️.descriptor.semio",
-        "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🔣️.json"
-      ]
-    },
     "component-budget-check": {
       "executor": "nx:run-commands",
       "options": {

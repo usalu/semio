@@ -3105,7 +3105,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const entries: PluginRegistryEntry[] = [
           { pluginId: "a", moduleUrl: "https://x/a.js", dependencies: [] },
           { pluginId: "b", moduleUrl: "https://x/b.js", dependencies: [] },
-          { pluginId: "c", moduleUrl: "https://x/c.js", dependencies: [{ pluginId: "a", version: "*" }] },
+          { pluginId: "c", moduleUrl: "https://x/c.js", dependencies: [{ pluginId: "a" }] },
         ];
         const resultPromise = loadPluginModulesInDependencyOrder(entries, { loadModule, concurrency: 4 });
         await flushMicrotasks();
@@ -3147,7 +3147,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const entries: PluginRegistryEntry[] = [
           { pluginId: "a", moduleUrl: "https://x/a.js", dependencies: [] },
           { pluginId: "b", moduleUrl: "https://x/b.js", dependencies: [] },
-          { pluginId: "c", moduleUrl: "https://x/c.js", dependencies: [{ pluginId: "a", version: "*" }] },
+          { pluginId: "c", moduleUrl: "https://x/c.js", dependencies: [{ pluginId: "a" }] },
         ];
         const result = await loadPluginModulesInDependencyOrder(entries, { loadModule, concurrency: 4 });
         expect(result.handles.map((handle) => handle.pluginId)).toEqual(["b"]);
@@ -3184,7 +3184,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         };
         const entries: PluginRegistryEntry[] = [
           { pluginId: "a", moduleUrl: "https://x/a.js", dependencies: [] },
-          { pluginId: "b", moduleUrl: "https://x/b.js", dependencies: [{ pluginId: "a", version: "*" }] },
+          { pluginId: "b", moduleUrl: "https://x/b.js", dependencies: [{ pluginId: "a" }] },
         ];
         const result = await loadPluginModulesInDependencyOrder(entries, { loadModule, signal: controller.signal });
         // "a" (already in flight when abort fired) settles normally; "b" (level 1, not yet started) never starts.

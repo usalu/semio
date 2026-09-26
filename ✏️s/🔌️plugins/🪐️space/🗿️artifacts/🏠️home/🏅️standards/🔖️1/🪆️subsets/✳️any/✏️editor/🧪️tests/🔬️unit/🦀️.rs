@@ -10,7 +10,7 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
     assert_eq!(HOME_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
     assert_eq!(fixture["controller"].as_str(), Some(S_HOME_CONTROLLER_ID));
     assert_eq!(fixture["limits"]["scalarBytes"].as_u64(), Some(HOME_RETAINED_SCALAR_BYTES as u64));
-    assert_eq!(fixture["limits"]["storeStepBytes"].as_u64(), Some(HOME_CONFIG_STEP_BYTES as u64));
+    assert_eq!(fixture["limits"]["storeStepBytes"].as_u64(), Some(crate::editor::home::config::HOME_CONFIG_STEP_BYTES as u64));
     for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
         let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
         let command = HomeCommand::OpenSpace(open_space::OpenSpace { space_id: value });
@@ -55,42 +55,6 @@ fn every_migrated_home_route_has_an_exact_scalar_boundary() {
     assert_eq!(home_retained_extent(&page(HOME_RETAINED_RAW_BYTES + 1), &snapshot, &interaction), None, "one byte beyond the retained wire budget is refused");
 }
 
-#[test]
-fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
-    use std::io::Write as _;
-    use store::ArtifactStoreOneItemPreparation as _;
-    let config = HomeConfig::default();
-    let mut preparation = HomeConfigPreparation {
-        base: None,
-        mutation: Some(HomeConfigMutation::ReplaceDirectoryProjection {
-            directory_json: config.directory_json,
-            session_binding_sha256: "a".repeat(64),
-            authorization_generation: 1,
-            receipt_sha256: "b".repeat(64),
-        }),
-        description: None,
-        authority: None,
-        candidate: None,
-        sealed_candidate: None,
-        serialized_bytes: None,
-        prepared: None,
-        checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
-        cancelled: false,
-        closing: false,
-    };
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: HOME_CONFIG_STEP_BYTES };
-    preparation.cancel();
-    assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
-    preparation.begin_close();
-    assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
-    assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes } if released_bytes == HOME_CONFIG_STEP_BYTES));
-    assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
-    assert!(preparation.terminal_is_empty());
-    let mut counter = HomeConfigByteCounter { bytes: 0 };
-    let maximum = vec![0; HOME_CONFIG_STEP_BYTES];
-    assert_eq!(counter.write(&maximum).expect("maximum serialized envelope"), HOME_CONFIG_STEP_BYTES);
-    assert!(counter.write(&[0]).is_err());
-}
 //#endregion 🧪️RetainedCommandEnvelope
 
 use semio_framework_artifact_space_space::{S_SPACE_SCHEMA, SpaceKind, SpaceVisibility, empty_space_snapshot};

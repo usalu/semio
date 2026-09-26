@@ -337,10 +337,9 @@ export const CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND = "s.wfc.bitmap";
 export const CLIENT_E2E_PINNED_INFERENCE_SCHEMA = "s.wfc.bitmap.solve";
 
 /** 📁️ Where every plugin component is staged, and in which order a profile wins — the TypeScript
- * twin of `PLUGIN_WASM_TARGET_DIR`/`PLUGIN_WASM_PROFILE_DIRS` in `🌉️mcp/🏠️workspace/🦀️.rs`, so the
+ * twin of `PLUGIN_COMPONENT_PROFILE_DIRS` in `🌉️mcp/🏠️workspace/🦀️.rs`, so the
  * preflight looks in exactly the places the gateway will look. */
-const PLUGIN_WASM_TARGET_REL = ".🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2";
-const PLUGIN_WASM_PROFILE_DIRS = ["wasm-dev", "wasm-release"] as const;
+const PLUGIN_COMPONENT_PROFILE_DIRS = ["dist/component-dev", "dist/component-release"] as const;
 const PLUGIN_REGISTRY_REL = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json";
 
 /** 🧾️ What the preflight found for one pinned plugin: whether its component is staged AND is the
@@ -372,12 +371,12 @@ export function verifyStagedPluginComponent(repoRoot: string, pluginId: string):
   try {
     declaredWasmSha256 = (JSON.parse(readFileSync(descriptorPath, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256;
   } catch (error) {
-    return { ok: false, detail: `\`${pluginId}\` has no readable committed descriptor at ${descriptorPath} (${String(error)}) — describe it: \`cd ${row.cratePath} && bun ./📜️script.ts describe\`` };
+    return { ok: false, detail: `\`${pluginId}\` has no readable committed descriptor at ${descriptorPath} (${String(error)}) — describe it: \`bun nx run-many -t describe --projects <the Nx project of ${row.cratePath}>\`` };
   }
   if (!declaredWasmSha256) return { ok: false, detail: `\`${pluginId}\`'s committed descriptor declares no \`hashes.wasmSha256\`, so a staged component cannot be checked against it` };
   const tried: string[] = [];
-  for (const profile of PLUGIN_WASM_PROFILE_DIRS) {
-    const candidate = posix.join(repoRoot, PLUGIN_WASM_TARGET_REL, profile, row.wasmOut);
+  for (const profile of PLUGIN_COMPONENT_PROFILE_DIRS) {
+    const candidate = posix.join(repoRoot, row.cratePath, profile, row.wasmOut);
     tried.push(candidate);
     let bytes: Buffer;
     try {
@@ -389,7 +388,7 @@ export function verifyStagedPluginComponent(repoRoot: string, pluginId: string):
     if (staged === declaredWasmSha256) return { ok: true, detail: `${pluginId}: ${profile}/${row.wasmOut} ${bytes.length} B, sha256 ${staged.slice(0, 12)}… matches its committed descriptor` };
     return {
       ok: false,
-      detail: `${pluginId}: the staged ${profile}/${row.wasmOut} (${bytes.length} B, sha256 ${staged.slice(0, 12)}…) is NOT the build its committed descriptor describes (${declaredWasmSha256.slice(0, 12)}…) — the catalog would type this verb from a descriptor that no longer describes the guest that runs it; re-describe it: \`cd ${row.cratePath} && bun ./📜️script.ts describe\``,
+      detail: `${pluginId}: the staged ${profile}/${row.wasmOut} (${bytes.length} B, sha256 ${staged.slice(0, 12)}…) is NOT the build its committed descriptor describes (${declaredWasmSha256.slice(0, 12)}…) — the catalog would type this verb from a descriptor that no longer describes the guest that runs it; re-describe it: \`bun nx run-many -t describe --projects <the Nx project of ${row.cratePath}>\``,
     };
   }
   return { ok: false, detail: `${pluginId}: no compiled component is staged (tried ${tried.join(", ")}) — build it: \`bun nx run @semio-tech/framework-os-dev:build -- ${pluginId}\`` };

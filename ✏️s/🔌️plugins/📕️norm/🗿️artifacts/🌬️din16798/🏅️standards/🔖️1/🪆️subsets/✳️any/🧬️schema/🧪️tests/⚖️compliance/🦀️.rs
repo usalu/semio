@@ -366,7 +366,7 @@ fn jsonschema_validates_compliant_and_noncompliant_snapshots() {
     assert!(schema.exists(), "{}", schema.display());
     let tmp = ticket_generated();
     let _ = std::fs::create_dir_all(&tmp);
-    let validate = family_any_dir().join("🧬️schema/🧪️tests/⚖️compliance/validate_snapshot.py");
+    let validate = family_any_dir().join("🔮️oracles/🧬️snapshot-schema/🐍️.py");
     for (name, doc) in [("compliant", Din16798Snapshot::compliant_office()), ("noncompliant", Din16798Snapshot::noncompliant_office())] {
         let snap = tmp.join(format!("{name}.schema.snap.json"));
         std::fs::write(&snap, serde_json::to_string_pretty(&doc).unwrap()).unwrap();
@@ -441,6 +441,48 @@ fn dangling_vent_system_id_fail_apply_remedy_to_pass() {
     let after = check_full_environment(&doc);
     let again = after.checks.iter().find(|c| c.id == check.id).unwrap();
     assert_eq!(again.status, CheckStatus::Pass);
+}
+
+#[test]
+fn duplicate_zone_id_fails_integrity() {
+    let mut doc = Din16798Snapshot::compliant_office();
+    let mut twin = doc.zones[0].clone();
+    twin.name = "Clone office".into();
+    doc.zones.push(twin);
+    let report = check_full_environment(&doc);
+    let check = report
+        .checks
+        .iter()
+        .find(|c| c.id == "din16798.integrity.duplicate.zones.zone-office")
+        .expect("duplicate zone id check");
+    assert_eq!(check.status, CheckStatus::Fail);
+    assert!(check.subject.path.contains("zones[id=zone-office].id"));
+    let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable OneOf");
+    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(!remedy.options.is_empty());
+    assert!(!remedy.options.iter().any(|o| o == "zone-office"));
+    assert_ne!(check.explanation.en, check.explanation.de);
+}
+
+#[test]
+fn duplicate_vent_system_id_fails_integrity() {
+    let mut doc = Din16798Snapshot::compliant_office();
+    let mut twin = doc.vent_systems[0].clone();
+    twin.name = "Clone AHU".into();
+    doc.vent_systems.push(twin);
+    let report = check_full_environment(&doc);
+    let check = report
+        .checks
+        .iter()
+        .find(|c| c.id == "din16798.integrity.duplicate.ventSystems.vent-central")
+        .expect("duplicate vent system id check");
+    assert_eq!(check.status, CheckStatus::Fail);
+    assert!(check.subject.path.contains("ventSystems[id=vent-central].id"));
+    let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable OneOf");
+    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(!remedy.options.is_empty());
+    assert!(!remedy.options.iter().any(|o| o == "vent-central"));
+    assert_ne!(check.explanation.en, check.explanation.de);
 }
 
 #[test]
@@ -599,7 +641,6 @@ fn editable_leaves_perturb_at_least_one_check_across_examples() {
 
     let mut adaptive = Din16798Snapshot::compliant_office();
     adaptive.zones[0].comfort_model = "adaptive".into();
-    adaptive.zones[0].vent_method = "method_2_limit_concentration".into();
     adaptive.theta_rm_c = 18.0;
 
     let mut seen_theta_rm = false;

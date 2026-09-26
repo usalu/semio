@@ -340,13 +340,72 @@
     },
 
     "TrustedCatalogGuestResidencyV1": {
-      "description": "How much compiled guest code one hub keeps resident, and how many guests a catalog load verifies at once. Every compiled guest is charged its component's byte length; a guest compiled for a codec call makes room by releasing the least recently used guests no call holds, and nothing is released for having been idle, so a guest documents keep using stays resident however long it waits between calls. A released guest compiles again on its next use.",
+      "description": "How much compiled guest code one hub keeps resident, which guests stay, and how many guests a catalog load verifies at once. Every compiled guest is charged its component's byte length against the operator's budget (`OS_HUB_GUEST_RESIDENCY_BYTES`, default 256 MiB). A newly compiled guest that fits stays resident. One that does not fit stays only when it has been used more often than every guest it would release — the least recently used guests no call holds, taken in that order — and otherwise serves the calls that hold it without staying resident. Access counts are capped and all halve together after a declared number of accesses per registered guest, so a round-robin over more guests than fit keeps a stable resident set instead of recompiling every guest on every use, while a workload that moved on displaces the guests it left. Nothing is released for having been idle, and a released guest compiles again from its re-verified bytes on its next use.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["residentComponentBytesMaximum", "concurrentVerifications"],
+      "required": ["residentComponentBytes", "concurrentVerifications", "accessCountCeiling", "accessCountAgingPerGuest"],
       "properties": {
-        "residentComponentBytesMaximum": { "const": 268435456, "description": "Most component bytes whose compiled guests stay resident beyond the ones running calls hold (256 MiB)." },
-        "concurrentVerifications": { "const": 4, "description": "Most codec rows a catalog load interprets at once to verify their pack-schema hashes, each on its own instance; rows of one package share that package's one compile, dropped with its last row, and the largest components start first. The hub uses the smaller of this and half its available cores, at least one." }
+        "residentComponentBytes": { "type": "integer", "minimum": 0, "maximum": 17179869184, "default": 268435456, "description": "Most component bytes whose compiled guests stay resident beyond the ones running calls hold; configured by `OS_HUB_GUEST_RESIDENCY_BYTES` (decimal bytes, default 256 MiB, at most 16 GiB). `0` keeps nothing resident: every call compiles its guest." },
+        "concurrentVerifications": { "const": 4, "description": "Most codec rows a catalog load interprets at once to verify their pack-schema hashes, each on its own instance; rows of one package share that package's one compile, dropped with its last row, and the largest components start first. The hub uses the smaller of this and half its available cores, at least one." },
+        "accessCountCeiling": { "const": 15, "description": "The highest access count admission compares; a guest used more often counts as this many, so a once-hot guest cannot outlast a new workload for long." },
+        "accessCountAgingPerGuest": { "const": 16, "description": "Every guest's access count halves after this many accesses per registered guest." }
+      }
+    },
+
+    "TrustedCatalogGuestResidencyStateV1": {
+      "description": "What one hub's compiled-guest residency holds now and has done since the hub started, as its admin observability route reports it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["budgetBytes", "registeredGuests", "residentGuests", "residentBytes", "hits", "compiles", "admitted", "bypassed", "released", "compileMicros"],
+      "properties": {
+        "budgetBytes": { "type": "integer", "minimum": 0, "maximum": 17179869184, "description": "The configured `residentComponentBytes`." },
+        "registeredGuests": { "type": "integer", "minimum": 0, "description": "Guest-codec packages of the loaded catalog." },
+        "residentGuests": { "type": "integer", "minimum": 0, "description": "Compiled guests resident now, counting ones a call is compiling or holding." },
+        "residentBytes": { "type": "integer", "minimum": 0, "description": "The component bytes the resident guests are charged." },
+        "hits": { "type": "integer", "minimum": 0, "description": "Codec calls served by a compiled guest that was already resident or held." },
+        "compiles": { "type": "integer", "minimum": 0, "description": "Codec calls that compiled their guest." },
+        "admitted": { "type": "integer", "minimum": 0, "description": "Compiles whose guest stayed resident." },
+        "bypassed": { "type": "integer", "minimum": 0, "description": "Compiles whose guest served only the calls that held it, because it had been used less often than the guests it would have released." },
+        "released": { "type": "integer", "minimum": 0, "description": "Resident guests released to make room." },
+        "compileMicros": { "type": "integer", "minimum": 0, "description": "Wall time spent compiling guests, in microseconds." }
+      }
+    },
+
+    "TrustedCatalogPackagePhaseV1": {
+      "description": "Where one selected package stands: `pending` (not read yet), `reading` (its component, descriptor, browser actor and plugin module are read and their digests checked), `staged` (every file verified; codec rows no memory pinned wait for their component's answer), `verifying` (its component is interpreting those rows now), `ready` (every codec row pinned), `refused` (its component answered a row differently from the trust record, or could not be compiled: every codec call of the package is refused).",
+      "enum": ["pending", "reading", "staged", "verifying", "ready", "refused"]
+    },
+
+    "TrustedCatalogPackageProgressV1": {
+      "description": "One selected package's place in its catalog's load and verification.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pluginId", "componentBytes", "phase", "rows", "rowsPinned", "rowsVerified"],
+      "properties": {
+        "pluginId": { "$ref": "#/$defs/identity" },
+        "componentBytes": { "type": "integer", "minimum": 0 },
+        "phase": { "$ref": "#/$defs/TrustedCatalogPackagePhaseV1" },
+        "rows": { "type": "integer", "minimum": 0, "description": "Codec rows the package declares." },
+        "rowsPinned": { "type": "integer", "minimum": 0, "description": "Rows pinned without interpreting the component: a linked native codec answers them, or this engine remembered verifying them." },
+        "rowsVerified": { "type": "integer", "minimum": 0, "description": "Rows pinned by interpreting the component's own `pack-schema-hash`." }
+      }
+    },
+
+    "TrustedCatalogLoadProgressV1": {
+      "description": "How far a hub's trusted catalog has come: the load (files read and digests checked, until the hub serves) and the verification of codec rows no memory pinned, which runs in the background once the hub serves and before the first codec call of each package. Counts only — no estimate of the time left.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["packages", "packagesTotal", "packagesReady", "packagesRefused", "componentBytesTotal", "componentBytesRead", "rowsTotal", "rowsPinned", "rowsVerified"],
+      "properties": {
+        "packages": { "type": "array", "maxItems": 256, "items": { "$ref": "#/$defs/TrustedCatalogPackageProgressV1" } },
+        "packagesTotal": { "type": "integer", "minimum": 0 },
+        "packagesReady": { "type": "integer", "minimum": 0 },
+        "packagesRefused": { "type": "integer", "minimum": 0 },
+        "componentBytesTotal": { "type": "integer", "minimum": 0 },
+        "componentBytesRead": { "type": "integer", "minimum": 0 },
+        "rowsTotal": { "type": "integer", "minimum": 0 },
+        "rowsPinned": { "type": "integer", "minimum": 0 },
+        "rowsVerified": { "type": "integer", "minimum": 0 }
       }
     },
 

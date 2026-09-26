@@ -9,7 +9,7 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
   implement design-code FORMULAE and speak no interchange format at all, so not one of them could be
   authoritative over this subset's `Iso16757Mutation` vocabulary. The second producer a differential
   comparison needs is therefore a second IMPLEMENTATION, and `🐍️.py` beside this file is
-  it: all 21 kinds of this vocabulary, written in Python from the repository's own written
+  it: all 29 kinds of this vocabulary, written in Python from the repository's own written
   specification of what a semantic mutation means — `📓️taxonomy.md`'s verb table, naming mechanics
   ("New-value fields are `new_<field>`") and addressing convention ("Inverse always computed from
   `base`", "Missing target ⇒ `inverse` returns `Vec::new()`"), and `📓️derivation-rules.md`'s shape
@@ -26,8 +26,8 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
   path below is a declared `asset://` fixture, so neither side holds a transcription that could
   drift. Unlike the twelve Eurocode subsets, this vocabulary is almost entirely COLLECTION work:
   `create`/`delete`/`rename` triples over `products`, `product-groups`, `property-definitions` and
-  `subjects`, plus `add`/`remove-selection-constraint` and `replace-part-number-rule`. Nine of the
-  twenty-one kinds mint or destroy an id-keyed entity, so a second implementation has to agree on
+  `subjects`, plus `add`/`remove-selection-constraint` and `replace-part-number-rule`. Seventeen of the
+  twenty-nine kinds mint or destroy an id-keyed entity, so a second implementation has to agree on
   identity and on membership order, not merely on a number — which is why this subset, and not its
   scalar siblings, is where the carrier divergence below actually shows up. Each side then asserts
   the same three laws in role — the applied document must BE the committed after-snapshot; an
@@ -104,6 +104,14 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
       | retire-property-definition  | 🧽️retire-property-definition           | 🚫️removes-the-height-property-definition                     |
       | introduce-subject              | 🌳️introduce-subject           | 🌳️appends-a-towel-radiator-subject-under-the-radiator-parent |
       | retire-subject              | ✂️retire-subject           | 🚫️removes-the-radiator-subject-from-the-dictionary           |
+      | introduce-product-class        | 🏷️introduce-product-class           | 🏷️appends-a-towel-radiator-class                          |
+      | retire-product-class           | 🗑️retire-product-class           | 🗑️removes-the-panel-radiator-class                          |
+      | introduce-product-series       | 📚introduce-product-series           | 📚appends-a-pr-plus-series                                   |
+      | retire-product-series          | 🗑️retire-product-series           | 🗑️removes-the-pr-series                                      |
+      | introduce-product-index        | 🔎introduce-product-index           | 🔎appends-a-pr600-index                                      |
+      | retire-product-index           | 🗑️retire-product-index           | 🗑️removes-the-pr600-index                                     |
+      | introduce-geometry-object      | 📐introduce-geometry-object           | 📐appends-a-pr600-geometry                                   |
+      | retire-geometry-object         | 🗑️retire-geometry-object           | 🗑️removes-the-pr600-geometry                                  |
 
   @id-inverse
   @level-exhaustive
@@ -138,6 +146,14 @@ Feature: Apply every typed ISO 16757 mutation against an independent Python impl
       | retire-property-definition  | 🧽️retire-property-definition           | 🚫️removes-the-height-property-definition                     |
       | introduce-subject              | 🌳️introduce-subject           | 🌳️appends-a-towel-radiator-subject-under-the-radiator-parent |
       | retire-subject              | ✂️retire-subject           | 🚫️removes-the-radiator-subject-from-the-dictionary           |
+      | introduce-product-class        | 🏷️introduce-product-class           | 🏷️appends-a-towel-radiator-class                          |
+      | retire-product-class           | 🗑️retire-product-class           | 🗑️removes-the-panel-radiator-class                          |
+      | introduce-product-series       | 📚introduce-product-series           | 📚appends-a-pr-plus-series                                   |
+      | retire-product-series          | 🗑️retire-product-series           | 🗑️removes-the-pr-series                                      |
+      | introduce-product-index        | 🔎introduce-product-index           | 🔎appends-a-pr600-index                                      |
+      | retire-product-index           | 🗑️retire-product-index           | 🗑️removes-the-pr600-index                                     |
+      | introduce-geometry-object      | 📐introduce-geometry-object           | 📐appends-a-pr600-geometry                                   |
+      | retire-geometry-object         | 🗑️retire-geometry-object           | 🗑️removes-the-pr600-geometry                                  |
 
   @id-identity-round-trip
   @level-long

@@ -45,15 +45,6 @@
       "kind": "length"
     },
     {
-      "path": "members[].actions[].nEd",
-      "label": {
-        "en": "Axial force N_Ed",
-        "de": "Normalkraft N_Ed"
-      },
-      "unit": "N",
-      "kind": "force"
-    },
-    {
       "path": "members[].actions[].mYEd",
       "label": {
         "en": "Bending moment M_y,Ed",
@@ -107,15 +98,6 @@
       "kind": "length"
     },
     {
-      "path": "coldFormed[].mEd",
-      "label": {
-        "en": "Sheet moment M_Ed",
-        "de": "Blechmoment M_Ed"
-      },
-      "unit": "N\u00b7m",
-      "kind": "moment"
-    },
-    {
       "path": "shells[].thickness",
       "label": {
         "en": "Shell thickness t",
@@ -123,24 +105,6 @@
       },
       "unit": "m",
       "kind": "length"
-    },
-    {
-      "path": "shells[].sigmaXEd",
-      "label": {
-        "en": "Meridional stress \u03c3_x,Ed",
-        "de": "Meridianspannung \u03c3_x,Ed"
-      },
-      "unit": "Pa",
-      "kind": "stress"
-    },
-    {
-      "path": "shells[].sigmaThetaEd",
-      "label": {
-        "en": "Circumferential stress \u03c3_\u03b8,Ed",
-        "de": "Umfangsspannung \u03c3_\u03b8,Ed"
-      },
-      "unit": "Pa",
-      "kind": "stress"
     }
   ]
 }

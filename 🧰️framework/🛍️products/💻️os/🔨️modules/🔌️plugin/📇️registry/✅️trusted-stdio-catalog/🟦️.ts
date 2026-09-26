@@ -173,7 +173,7 @@ export function stdioComponentAdmission(repoRoot: string): TrustedStdioComponent
 export function buildTrustedStdioCatalogV1(repoRoot = getWorkspaceRoot(), entries?: readonly PluginRegistryEntry[], receipts?: readonly TrustedStdioNativeCodecReceiptV1[]): TrustedStdioCatalogV1 {
   const codecs = verifyStdioNativeCodecReceipts(receipts ?? loadFirstPartyStdioNativeCodecReceipts(repoRoot, entries));
   if (codecs.length !== 26) throw new Error(`stdio native codec catalog must contain 26 receipts, found ${codecs.length}`);
-  const json = codecs.find((row) => row.artifactKind === "stdio.json");
+  const json = codecs.find((row) => row.artifactKind === "s.stdio.json");
   if (!json || json.factoryId !== "stdio.native.json.v1") throw new Error("stdio.json native codec is absent");
   return {
     schemaVersion: 1,

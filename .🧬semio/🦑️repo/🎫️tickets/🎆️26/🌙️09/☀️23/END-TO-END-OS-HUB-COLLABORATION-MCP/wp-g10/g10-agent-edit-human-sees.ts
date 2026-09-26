@@ -14,7 +14,8 @@ import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "/Use
 import { createSpaceCommandV1 } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 
-const [SHELL = "http://127.0.0.1:6530", HUB = "http://127.0.0.1:7800", LOCALE = "en", OUT = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-g10-logs"] = process.argv.slice(2);
+const [SHELL = "http://127.0.0.1:6530", HUB, LOCALE = "en", OUT = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-g10-logs"] = process.argv.slice(2);
+if (!HUB) throw new Error("usage: bun g10-agent-edit-human-sees.ts <shellOrigin> <hubOrigin> [en|de] [outDir] — no default hub (7800 belongs to W2)");
 /** 🔢️ `ServerFrame::Commands`'s tag byte (`🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs`, `encode_server_frame`). */
 const SERVER_FRAME_COMMANDS_TAG = 3;
 const AGENT_WORD = LOCALE === "de" ? "KI-Agent" : "AI agent";

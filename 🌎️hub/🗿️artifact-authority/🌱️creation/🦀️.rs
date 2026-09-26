@@ -70,17 +70,15 @@ async fn materialize_selected_genesis<C: TrustedArtifactCatalog>(catalog: &C, re
         if context.now_ms() > directory::os_directory::schema::DOCUMENT_OPEN_MAX_SAFE_INTEGER { return Err(AuthorityError::ResourceLimit("genesis publication clock")); }
         let limits = context.limits();
         if limits.max_pair_bytes == 0 || limits.max_pair_bytes > super::AUTHORITY_MAX_PAIR_BYTES || limits.max_operations == 0 || limits.max_operations > super::AUTHORITY_MAX_OPERATIONS || limits.max_operation_bytes == 0 || limits.max_operation_bytes > super::AUTHORITY_MAX_OPERATION_BYTES { return Err(AuthorityError::InvalidLimits); }
-        context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 1, total_units: 5 })?;
+        context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 1, total_units: 4 })?;
         let codec = catalog.resolve(&identity).await?;
         if codec.identity() != &identity || request.kind_id != identity.artifact_kind { return Err(AuthorityError::CodecIdentityMismatch); }
-        context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: 2, total_units: 5 })?;
+        context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: 2, total_units: 4 })?;
         let pair: ArtifactPair = codec.initial_pair(&request.scope.document_id, &dialect, context).await?;
         if pair.pack.is_empty() || pair.spr.is_empty() { return Err(AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: "genesis requires a complete nonempty pair".into() }); }
-        super::validate_pair_budget(&pair, limits, ArtifactValidationStage::Input)?;
-        codec.validate_pair(&pair, ArtifactValidationStage::Input, context).await?;
-        context.report(AuthorityProgress { stage: AuthorityProgressStage::InputValidated, completed_units: 3, total_units: 5 })?;
+        super::validate_pair_budget(&pair, limits, ArtifactValidationStage::Output)?;
         codec.validate_pair(&pair, ArtifactValidationStage::Output, context).await?;
-        context.report(AuthorityProgress { stage: AuthorityProgressStage::OutputValidated, completed_units: 4, total_units: 5 })?;
+        context.report(AuthorityProgress { stage: AuthorityProgressStage::OutputValidated, completed_units: 3, total_units: 4 })?;
         let descriptor = DocumentDescriptor {
             space_id: request.scope.space_id.clone(), document_id: request.scope.document_id.clone(), artifact_kind: identity.artifact_kind, artifact_schema: identity.artifact_schema,
             owner: DocumentOwner { plugin_id: identity.plugin_id, package_id: identity.package_id, version: identity.version, package_hash: identity.package_hash },
@@ -98,7 +96,7 @@ async fn materialize_selected_genesis<C: TrustedArtifactCatalog>(catalog: &C, re
             scope: request.scope, checkpoint_id: ArtifactHash([0; 32]), parent_checkpoint_id: None, descriptor_digest_v1, pack: super::blob_reference(&pair.pack)?, spr: super::blob_reference(&pair.spr)?, aggregate_sha256: ArtifactHash(aggregate.finalize()), published_at_ms,
         };
         checkpoint.checkpoint_id = ArtifactHash(Sha256::digest(&super::checkpoint_id_encoding_v1(&checkpoint)?));
-        context.report(AuthorityProgress { stage: AuthorityProgressStage::Derived, completed_units: 5, total_units: 5 })?;
+        context.report(AuthorityProgress { stage: AuthorityProgressStage::Derived, completed_units: 4, total_units: 4 })?;
         Ok(ArtifactGenesisCandidate { descriptor, candidate: CheckpointCandidate { checkpoint, pair } })
 }
 

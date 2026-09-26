@@ -43,7 +43,7 @@ use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
     close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_prepare_platform_slices, db_io_transfer_list, db_io_write_observed_bytes_range, register_db_io_backend,
-    register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation,
+    register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task_admitted, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation,
     DbIoAsyncDriverRuntime, DbIoExecutionStep, DbIoExecutorMode, DbIoExternalBytes, DbIoLeaseResult, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo,
     LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, DB_IO_PAGE_BYTES,
 };
@@ -1254,6 +1254,11 @@ impl Neo4jStorage {
     }
 
     async fn connect_owned(worker_pool: Arc<WorkerPool>, uri: DbIoText, config: neo4rs::Config) -> Result<Self, DbStorageOpenRejected> {
+        crate::db_storage::open_db_io_backend_admitted(&worker_pool, || Self::connect_owned_once(worker_pool.clone(), uri.clone(), config.clone())).await
+    }
+
+    /// @emoji 🎯️ One Neo4j backend open attempt, refused at once when the backend capacity is taken.
+    async fn connect_owned_once(worker_pool: Arc<WorkerPool>, uri: DbIoText, config: neo4rs::Config) -> Result<Self, DbStorageOpenRejected> {
         let rollback = DbIoBackendRollbackReservation::try_reserve()?;
         let pool_use = worker_pool.acquire_use().map_err(|error| DbError::Unavailable(format!("Neo4j DB I/O backend WorkerPool use rejected: {error:?}")))?;
         let executor = Box::new(Neo4jDbIoExecutor::new(config, uri.clone()));
@@ -1266,7 +1271,7 @@ impl Neo4jStorage {
     }
 
     async fn execute(&self, task: DbIoTask) -> Result<DbIoResult, DbError> {
-        let mut operation = submit_db_io_task(task).map_err(|(error, _)| error)?;
+        let mut operation = submit_db_io_task_admitted(task).await?;
         operation.start_async_native_on_lane_io().await?;
         operation.finish().await
     }

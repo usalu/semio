@@ -56,16 +56,19 @@ def characteristic_effects(member: dict[str, Any], action: dict[str, Any]) -> tu
     kind = str(action.get("kind", "")).lower()
     g_line = float(action.get("gKLine", 0.0)) + (udl if kind == "permanent" else 0.0)
     q_line = float(action.get("qKLine", 0.0))
-    pf = abs(float(action.get("pointForce", 0.0)))
-    if pf > 0.0:
-        return pf * l / 4.0, 0.0, pf / 2.0, 0.0, 0.0
     q = g_line if kind in ("permanent", "prestress") else q_line
     support = str(member.get("support", "")).lower()
     if "cantilever" in support:
-        return q * l * l / 2.0, 0.0, q * l, 0.0, 0.0
-    if "continuous" in support or "fixed" in support:
-        return q * l * l / 12.0, 0.0, q * l / 2.0, 0.0, 0.0
-    return q * l * l / 8.0, 0.0, q * l / 2.0, 0.0, 0.0
+        m, v = q * l * l / 2.0, q * l
+    elif "continuous" in support or "fixed" in support:
+        m, v = q * l * l / 12.0, q * l / 2.0
+    else:
+        m, v = q * l * l / 8.0, q * l / 2.0
+    pf = abs(float(action.get("pointForce", 0.0)))
+    if pf > 0.0:
+        m += pf * l / 4.0
+        v += pf / 2.0
+    return m, 0.0, v, float(action.get("tK", 0.0)), float(action.get("vKPunch", 0.0))
 
 
 def combine_member_actions(member: dict[str, Any]) -> list[dict[str, Any]]:
@@ -224,15 +227,34 @@ def shear_v_rd_max_n(b: float, z: float, f_ck: float, cot: float, annex: str) ->
     return 1.0 * b * z * nu1 * fcd * sin_cos
 
 
-def flexural_resistance_nm(f_ck: float, b: float, d: float, a_s: float, f_yk: float, n_ed: float, annex: str) -> float:
+def eps_cu2_of(f_ck: float) -> float:
+    fck = f_ck / 1.0e6
+    if fck <= 50.0:
+        return 3.5e-3
+    return (2.6 + 35.0 * ((90.0 - fck) / 100.0) ** 4) * 1.0e-3
+
+def n_parabola_of(f_ck: float) -> float:
+    fck = f_ck / 1.0e6
+    if fck <= 50.0:
+        return 2.0
+    return 1.4 + 23.4 * ((90.0 - fck) / 100.0) ** 4
+
+def flexural_resistance_nm(f_ck: float, b: float, d: float, a_s: float, f_yk: float, n_ed: float, annex: str, e_s: float = 200.0e9) -> float:
     p = annex_params(annex)
-    fcd = f_cd(f_ck, p)
+    n_parabola = n_parabola_of(f_ck)
+    eps_cu2 = eps_cu2_of(f_ck)
+    eta = 1.0 if n_parabola <= 2.0 else max(1.0 - (f_ck / 1.0e6 - 50.0) / 200.0, 0.8)
+    lam = 0.8 if n_parabola <= 2.0 else max(0.8 - (f_ck / 1.0e6 - 50.0) / 400.0, 0.6)
+    fcd = eta * f_cd(f_ck, p)
     fyd = f_yd(f_yk, p)
     f_s = a_s * fyd
     f_c_req = max(f_s - n_ed, 0.0)
-    x = f_c_req / (fcd * b) if fcd * b > 0 else 0.0
-    x_use = max(min(x, 0.45 * d), 0.0)
-    z = d - 0.5 * x_use
+    x = f_c_req / (fcd * b * lam) if fcd * b * lam > 0 else 0.0
+    eps_yd = fyd / e_s if e_s > 0 else 0.0025
+    x_bal = d * eps_cu2 / (eps_cu2 + eps_yd) if eps_cu2 + eps_yd > 0 else 0.45 * d
+    x_lim = min(x_bal, 0.45 * d)
+    x_use = max(min(x, x_lim), 0.0)
+    z = d - 0.5 * lam * x_use
     m_from_steel = f_s * z
     if abs(n_ed) > 1.0 and b * d > 0.0:
         n_rd = fcd * b * d + fyd * a_s
@@ -346,6 +368,30 @@ def util_minimum(computed: float, minimum: float) -> float:
     return computed / max(minimum, 1e-15)
 
 
+def torsion_t_rd_nm(f_ck_pa: float, b: float, h: float, annex: str) -> float:
+    p = annex_params(annex)
+    f_cd_pa = f_cd(f_ck_pa, p)
+    t_eff = min(b, h) / 6.0
+    a_k = (b - t_eff) * (h - t_eff)
+    f_ck_mpa = f_ck_pa / 1.0e6
+    nu = 0.6 * (1.0 - f_ck_mpa / 250.0)
+    return 2.0 * a_k * t_eff * nu * f_cd_pa * 0.5
+
+def concrete_e_cm(f_ck_pa: float) -> float:
+    f_cm = f_ck_pa + 8.0e6
+    return 22.0e3 * ((f_cm / 1.0e6) / 10.0) ** 0.3 * 1.0e6
+
+def reinforcement_e_s(_f_yk_pa: float = 500.0e6) -> float:
+    return 200.0e9
+
+
+def second_order_moment_nm(n_ed: float, l_0: float, d: float, f_yd: float, e_s: float) -> float:
+    curv = (0.45 * f_yd / max(e_s, 1.0)) / max(d, 1e-6)
+    r = 1.0 / max(curv, 1e-9)
+    e2 = l_0 * l_0 / (r * 10.0)
+    return abs(n_ed) * e2
+
+
 def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
     annex = str(snap.get("annex", "De"))
     p = annex_params(annex)
@@ -402,7 +448,8 @@ def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
             v_limit = min(v_rd_s, v_rd_max) if asw_s > 0 else v_rd_c
             checks.append({"id": f"en1992.6.2.shear.{mid}", "utilization": abs(v_ed) / max(v_limit, 1.0)})
             if abs(float(uls["t_ed"])) > 1.0:
-                checks.append({"id": f"en1992.6.3.torsion.{mid}", "utilization": abs(float(uls["t_ed"])) / max(1.0, abs(float(uls["t_ed"])) * 0.5 + 1.0)})
+                t_rd = torsion_t_rd_nm(f_ck, b, h, annex)
+                checks.append({"id": f"en1992.6.3.torsion.{mid}", "utilization": abs(float(uls["t_ed"])) / max(t_rd, 1.0)})
 
         f_ctm = 0.30 * (f_ck / 1e6) ** (2.0 / 3.0) * 1e6 if f_ck / 1e6 <= 50 else 2.12 * math.log(1.0 + (f_ck / 1e6 + 8.0) / 10.0) * 1e6
         a_min = max(0.26 * f_ctm / f_yk * b * d, 0.0013 * b * d)
@@ -426,12 +473,16 @@ def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
             n_ed = float(uls["n_ed"]) if uls else 0.0
             n_ratio = min(abs(n_ed) / max(b * h * f_cd(f_ck, p), 1.0), 1.0)
             lim = lambda_lim_de(n_ratio)
-            checks.append({"id": f"en1992.5.8.slender.{mid}", "utilization": lam / max(lim, 1.0)})
+            fyd = f_yd(f_yk, p)
+            e_s_col = reinforcement_e_s(f_yk)
+            m2 = second_order_moment_nm(n_ed, l0, d, fyd, e_s_col) if lam > lim else 0.0
+            m_ed1 = abs(float(uls["m_ed"])) if uls else 0.0
+            m_ed_tot = m_ed1 + m2
+            m_rd = flexural_resistance_nm(f_ck, b, d, a_s, f_yk, n_ed, annex)
+            checks.append({"id": f"en1992.5.8.slender.{mid}", "utilization": abs(m_ed_tot) / max(m_rd, 1.0)})
 
-        e_cms = grade_map(snap, "concreteGrades", "eCm")
-        e_cm = e_cms.get(str(m.get("concreteGradeId", "")), 33.0e9)
-        e_ss = grade_map(snap, "reinforcementGrades", "eS")
-        e_s = e_ss.get(str(m.get("reinforcementGradeId", "")), 200.0e9)
+        e_cm = concrete_e_cm(f_ck)
+        e_s = reinforcement_e_s(f_yk)
         if sls_char is not None:
             sig_s = cracked_sigma_s_pa(float(sls_char["m_ed"]), b, d, a_s, e_s, e_cm)
             lim_s = 0.8 * f_yk
@@ -445,9 +496,6 @@ def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
             checks.append({"id": f"en1992.7.2.creep.{mid}", "utilization": abs(sig_c) / max(lim, 1.0)})
 
         f_ctk = 0.7 * (0.30 * (f_ck / 1e6) ** (2.0 / 3.0) * 1e6 if f_ck / 1e6 <= 50 else 2.12 * math.log(1.0 + (f_ck / 1e6 + 8.0) / 10.0) * 1e6)
-        # Prefer catalogue fCtk005 when present
-        fctks = grade_map(snap, "concreteGrades", "fCtk005")
-        f_ctk = fctks.get(str(m.get("concreteGradeId", "")), f_ctk)
         for layer in layers:
             lid = layer.get("id", "L")
             phi = float(layer.get("diameter", 0.012))

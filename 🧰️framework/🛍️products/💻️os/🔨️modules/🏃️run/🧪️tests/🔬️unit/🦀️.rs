@@ -607,7 +607,7 @@ async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
     let descriptor_path = repo_root.join("✏️s/🔌️plugins/🗒️note/🛂️.descriptor.semio");
     assert!(descriptor_path.is_file(), "committed note descriptor missing at {}", descriptor_path.display());
 
-    let candidate_wasm_paths = [repo_root.join("target/wasm32-wasip2/wasm-dev/semio_s_plugin_note.wasm"), repo_root.join("target/wasm32-wasip2/wasm-release/semio_s_plugin_note.wasm")];
+    let candidate_wasm_paths = ["component-dev", "component-release"].map(|profile| repo_root.join("✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust/dist").join(profile).join("semio_s_plugin_note.wasm"));
     let Some(wasm_path) = candidate_wasm_paths.into_iter().find(|path| path.is_file()) else {
         eprintln!("[DEBUG] note_plugin_manifest_loads_from_its_committed_descriptor: SKIPPED — no compiled note wasm in any candidate location");
         return;

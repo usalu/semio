@@ -660,7 +660,7 @@ async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::causal::Mutation
 
 async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::causal::MutationEnvelope>, crate::ProtocolError> {
     let count = crate::wire::read_varint_u64(bytes, pos)?;
-    let mut out = Vec::with_capacity(count as usize);
+    let mut out = Vec::with_capacity((count as usize).min(bytes.len()));
     for _ in 0..count {
         out.push(crate::causal::decode_envelope(bytes, pos)?);
     }

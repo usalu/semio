@@ -175,19 +175,33 @@ async fn merge_runs_of_zero_runs_is_empty() {
 
 //#region 🔖️IndexKind
 #[semio_framework_async_macros::async_test]
-async fn run_id_round_trips_kind_and_sequence_for_every_kind() {
+async fn run_id_round_trips_kind_sequence_and_entry_count_for_every_kind() {
     for kind in IndexKind::ALL {
         for sequence in [0u64, 1, SEQUENCE_MASK] {
-            let run_id = make_run_id(kind, sequence).expect("make_run_id");
-            assert_eq!(kind_tag_of_run_id(run_id), kind.tag());
-            assert_eq!(sequence_of_run_id(run_id), sequence);
+            for entries in [1usize, 2, MAX_RUN_ENTRIES as usize] {
+                let run_id = make_run_id(kind, sequence, entries).expect("make_run_id");
+                assert_eq!(namespace_of_run_id(run_id), run_namespace(kind));
+                assert_eq!(sequence_of_run_id(run_id), sequence);
+                assert_eq!(entries_of_run_id(run_id), entries as u64);
+                assert!(run_id < 1 << 63, "a run id stays a positive SQL integer");
+            }
         }
     }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn run_id_rejects_sequence_overflowing_the_namespace() {
-    assert!(matches!(make_run_id(IndexKind::Command, SEQUENCE_MASK + 1), Err(DbError::LimitExceeded(_))));
+async fn run_ids_order_by_kind_then_sequence() {
+    let older = make_run_id(IndexKind::Command, 7, MAX_RUN_ENTRIES as usize).unwrap();
+    let newer = make_run_id(IndexKind::Command, 8, 1).unwrap();
+    let other_kind = make_run_id(IndexKind::ActorSeq, 0, 1).unwrap();
+    assert!(older < newer && newer < other_kind);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn run_id_rejects_sequence_overflow_and_entry_counts_outside_one_run() {
+    assert!(matches!(make_run_id(IndexKind::Command, SEQUENCE_MASK + 1, 1), Err(DbError::LimitExceeded(_))));
+    assert!(matches!(make_run_id(IndexKind::Command, 0, 0), Err(DbError::LimitExceeded(_))));
+    assert!(matches!(make_run_id(IndexKind::Command, 0, MAX_RUN_ENTRIES as usize + 1), Err(DbError::LimitExceeded(_))));
 }
 //#endregion 🔖️IndexKind
 

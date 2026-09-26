@@ -64,7 +64,7 @@ pub const AVI_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.avi", standar
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.avi".into(),
+        id: "s.stdio.avi".into(),
         name: "Avi".into(),
         source_format: STDIO_AVI_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

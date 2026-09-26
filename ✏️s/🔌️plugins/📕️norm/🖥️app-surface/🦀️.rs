@@ -385,11 +385,7 @@ fn value_at_mut<'a>(root: &'a mut dsl::DslValue, segments: &[PathSegment], path_
                 cursor = &mut entries[index].1;
             }
             PathSegment::Index(_) | PathSegment::Id(_) => {
-                let dsl::DslValue::Array(items) = cursor else {
-                    return Err(format!("expected array before list selector in path '{path_hint}'"));
-                };
-                let index = resolve_list_index(items, segment, path_hint)?;
-                cursor = &mut items[index];
+                cursor = resolve_collection_mut(cursor, segment, path_hint)?;
             }
         }
     }
@@ -410,15 +406,56 @@ fn value_at<'a>(root: &'a dsl::DslValue, segments: &[PathSegment], path_hint: &s
                 cursor = value;
             }
             PathSegment::Index(_) | PathSegment::Id(_) => {
-                let dsl::DslValue::Array(items) = cursor else {
-                    return Err(format!("expected array before list selector in path '{path_hint}'"));
-                };
-                let index = resolve_list_index(items, segment, path_hint)?;
-                cursor = &items[index];
+                cursor = resolve_collection(cursor, segment, path_hint)?;
             }
         }
     }
     Ok(cursor)
+}
+
+/// 🧭 Resolve `[index]` / `[id=…]` on arrays, or `[id=…]` on map objects keyed by entity id.
+fn resolve_collection_mut<'a>(cursor: &'a mut dsl::DslValue, segment: &PathSegment, path_hint: &str) -> Result<&'a mut dsl::DslValue, String> {
+    match cursor {
+        dsl::DslValue::Array(items) => {
+            let index = resolve_list_index(items, segment, path_hint)?;
+            Ok(&mut items[index])
+        }
+        dsl::DslValue::Object(entries) => {
+            let PathSegment::Id(id) = segment else {
+                return Err(format!("expected array before numeric index in path '{path_hint}'"));
+            };
+            if let Some(index) = entries.iter().position(|(key, _)| key == id) {
+                return Ok(&mut entries[index].1);
+            }
+            if let Some(index) = entries.iter().position(|(_, value)| object_id_field(value) == Some(id.as_str())) {
+                return Ok(&mut entries[index].1);
+            }
+            Err(format!("unknown map/list element id '{id}' in path '{path_hint}'"))
+        }
+        _ => Err(format!("expected array or map before list selector in path '{path_hint}'")),
+    }
+}
+
+fn resolve_collection<'a>(cursor: &'a dsl::DslValue, segment: &PathSegment, path_hint: &str) -> Result<&'a dsl::DslValue, String> {
+    match cursor {
+        dsl::DslValue::Array(items) => {
+            let index = resolve_list_index(items, segment, path_hint)?;
+            Ok(&items[index])
+        }
+        dsl::DslValue::Object(entries) => {
+            let PathSegment::Id(id) = segment else {
+                return Err(format!("expected array before numeric index in path '{path_hint}'"));
+            };
+            if let Some((_, value)) = entries.iter().find(|(key, _)| key == id) {
+                return Ok(value);
+            }
+            if let Some((_, value)) = entries.iter().find(|(_, value)| object_id_field(value) == Some(id.as_str())) {
+                return Ok(value);
+            }
+            Err(format!("unknown map/list element id '{id}' in path '{path_hint}'"))
+        }
+        _ => Err(format!("expected array or map before list selector in path '{path_hint}'")),
+    }
 }
 
 /// 🔎 Reads the value at `path` (supports `[index]` and `[id=…]`).
@@ -657,15 +694,47 @@ pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usi
     if path.is_empty() {
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-empty-path"), format!("remedy {remedy_index} on '{check_id}' has empty target path")));
     }
+    let current = get_value_at_path(tree, &path).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))?;
     let value = match remedy.bound {
         RemedyBound::OneOf => {
             let option = remedy
                 .options
                 .get(option_index)
                 .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-option"), format!("option {option_index} missing on OneOf remedy {remedy_index} for '{check_id}'")))?;
-            dsl::DslValue::String(option.clone())
+            match current {
+                dsl::DslValue::Bool(_) => dsl::DslValue::Bool(option.eq_ignore_ascii_case("true") || option == "1"),
+                dsl::DslValue::Number(dsl::Number::UInt(_)) => {
+                    let parsed = option.parse::<u64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not a u64 for '{path}'")))?;
+                    dsl::DslValue::uint(parsed)
+                }
+                dsl::DslValue::Number(dsl::Number::Int(_)) => {
+                    let parsed = option.parse::<i64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not an i64 for '{path}'")))?;
+                    dsl::DslValue::int(parsed)
+                }
+                dsl::DslValue::Number(dsl::Number::Float(_)) => {
+                    let parsed = option.parse::<f64>().map_err(|_| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-option-type"), format!("OneOf option '{option}' is not a float for '{path}'")))?;
+                    dsl::DslValue::float(parsed)
+                }
+                _ => dsl::DslValue::String(option.clone()),
+            }
         }
-        _ => dsl::DslValue::float(remedy.required.value),
+        _ => match current {
+            dsl::DslValue::Bool(_) => dsl::DslValue::Bool(remedy.required.value >= 0.5),
+            dsl::DslValue::Number(dsl::Number::UInt(_)) => {
+                if !remedy.required.value.is_finite() || remedy.required.value < 0.0 {
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-uint"), format!("required {} is not a u64 for '{path}'", remedy.required.value)));
+                }
+                dsl::DslValue::uint(remedy.required.value.round() as u64)
+            }
+            dsl::DslValue::Number(dsl::Number::Int(_)) => {
+                if !remedy.required.value.is_finite() {
+                    return Err(Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-int"), format!("required {} is not an i64 for '{path}'", remedy.required.value)));
+                }
+                dsl::DslValue::int(remedy.required.value.round() as i64)
+            }
+            dsl::DslValue::String(_) => dsl::DslValue::String(format!("{}", remedy.required.value)),
+            _ => dsl::DslValue::float(remedy.required.value),
+        },
     };
     set_value_at_path(tree, &path, value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("norm.value-path"), error))
 }

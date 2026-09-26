@@ -1,24 +1,65 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["schema", "presentedChrome", "settingsTabStrip", "transportCredits"],
+  "required": [
+    "schema",
+    "presentedChrome",
+    "settingsTabStrip",
+    "transportCredits",
+    "chromePressedSemantics",
+    "textEditor"
+  ],
   "properties": {
-    "schema": { "const": "semio.renderer.wgpu.accessibility-interaction.v1" },
+    "schema": {
+      "const": "semio.renderer.wgpu.accessibility-interaction.v1"
+    },
     "presentedChrome": {
       "type": "object",
-      "required": ["firstEpoch", "successorEpoch", "controls", "generationRule"],
+      "required": [
+        "firstEpoch",
+        "successorEpoch",
+        "controls",
+        "generationRule"
+      ],
       "properties": {
-        "firstEpoch": { "type": "integer", "minimum": 1 },
-        "successorEpoch": { "type": "integer", "minimum": 1 },
-        "controls": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/namedId" } },
+        "firstEpoch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "successorEpoch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "controls": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/namedId"
+          }
+        },
         "generationRule": {
           "type": "object",
-          "required": ["controlId", "firstRect", "sameChromeRect", "changedChromeRect"],
+          "required": [
+            "controlId",
+            "firstRect",
+            "sameChromeRect",
+            "changedChromeRect"
+          ],
           "properties": {
-            "controlId": { "type": "string", "minLength": 1 },
-            "firstRect": { "$ref": "#/$defs/rect" },
-            "sameChromeRect": { "$ref": "#/$defs/rect" },
-            "changedChromeRect": { "$ref": "#/$defs/rect" }
+            "controlId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "firstRect": {
+              "$ref": "#/$defs/rect"
+            },
+            "sameChromeRect": {
+              "$ref": "#/$defs/rect"
+            },
+            "changedChromeRect": {
+              "$ref": "#/$defs/rect"
+            }
           },
           "additionalProperties": false
         }
@@ -27,43 +68,259 @@
     },
     "settingsTabStrip": {
       "type": "object",
-      "required": ["availableWidth", "activeId", "tabs", "tailIds"],
+      "required": [
+        "role",
+        "stateAttribute",
+        "pressedFollowsSelectionWhenFolded",
+        "availableWidth",
+        "activeId",
+        "tabs",
+        "tailIds"
+      ],
       "properties": {
-        "availableWidth": { "type": "number", "exclusiveMinimum": 0 },
-        "activeId": { "type": "string", "minLength": 1 },
-        "tabs": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "$ref": "#/$defs/namedId" } },
-        "tailIds": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+        "role": {
+          "const": "button"
+        },
+        "stateAttribute": {
+          "const": "aria-pressed"
+        },
+        "pressedFollowsSelectionWhenFolded": {
+          "const": true
+        },
+        "availableWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "activeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tabs": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/namedId"
+          }
+        },
+        "tailIds": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
       },
       "additionalProperties": false
     },
     "transportCredits": {
       "type": "object",
       "description": "Addresses the frame transport and the Worker admit or refuse by credits alone; liveness is the renderer's `rejections`.",
-      "required": ["note", "admitted", "refused"],
+      "required": [
+        "note",
+        "admitted",
+        "refused"
+      ],
       "properties": {
-        "note": { "type": "string", "minLength": 1 },
-        "admitted": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/creditRow" } },
-        "refused": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/creditRow" } }
+        "note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "admitted": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/creditRow"
+          }
+        },
+        "refused": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/creditRow"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "chromePressedSemantics": {
+      "type": "object",
+      "required": [
+        "stateAttribute",
+        "fullscreen",
+        "utility"
+      ],
+      "properties": {
+        "stateAttribute": {
+          "const": "aria-pressed"
+        },
+        "fullscreen": {
+          "type": "object",
+          "required": [
+            "id",
+            "label",
+            "pressed"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pressed": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "utility": {
+          "type": "object",
+          "required": [
+            "button",
+            "toggle",
+            "collection"
+          ],
+          "properties": {
+            "button": {
+              "type": "object",
+              "required": [
+                "id",
+                "label"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            "toggle": {
+              "type": "object",
+              "required": [
+                "id",
+                "label",
+                "pressed"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "pressed": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "collection": {
+              "type": "object",
+              "required": [
+                "id",
+                "label"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "textEditor": {
+      "type": "object",
+      "required": [
+        "role",
+        "label",
+        "value",
+        "multiline",
+        "editable",
+        "readOnly"
+      ],
+      "properties": {
+        "role": { "const": "textbox" },
+        "label": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" },
+        "multiline": { "const": true },
+        "editable": { "const": true },
+        "readOnly": { "const": false }
       },
       "additionalProperties": false
     }
   },
   "$defs": {
-    "rect": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } },
+    "rect": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
     "creditRow": {
       "type": "object",
-      "required": ["id", "wire"],
+      "required": [
+        "id",
+        "wire"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
         "wire": {
           "type": "object",
-          "required": ["kind", "windowId", "windowGeneration", "nodeId", "nodeKey"],
+          "required": [
+            "kind",
+            "windowId",
+            "windowGeneration",
+            "nodeId",
+            "nodeKey"
+          ],
           "properties": {
-            "kind": { "enum": ["accessibility-focus", "accessibility-blur", "accessibility-activate"] },
-            "windowId": { "type": "string" },
-            "windowGeneration": { "type": "number" },
-            "nodeId": { "type": "number" },
-            "nodeKey": { "type": "string" }
+            "kind": {
+              "enum": [
+                "accessibility-focus",
+                "accessibility-blur",
+                "accessibility-activate"
+              ]
+            },
+            "windowId": {
+              "type": "string"
+            },
+            "windowGeneration": {
+              "type": "number"
+            },
+            "nodeId": {
+              "type": "number"
+            },
+            "nodeKey": {
+              "type": "string"
+            }
           },
           "additionalProperties": false
         }
@@ -72,10 +329,19 @@
     },
     "namedId": {
       "type": "object",
-      "required": ["id", "label"],
+      "required": [
+        "id",
+        "label"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "label": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
       },
       "additionalProperties": false
     }

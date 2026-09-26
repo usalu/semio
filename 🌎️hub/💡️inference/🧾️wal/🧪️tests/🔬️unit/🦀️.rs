@@ -216,21 +216,23 @@ pub(in crate::inference) fn envelope(fixture: &serde_json::Value) -> protocol::M
         document_id: protocol::ArtifactId(source["documentId"].as_str().unwrap().into()),
         actor: protocol::ActorId(source["actor"].as_str().unwrap().into()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(source["diff"]["schema"].as_str().unwrap().into()), payload: decode_hex(source["diff"]["payloadHex"].as_str().unwrap()) },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(source["inverse"]["schema"].as_str().unwrap().into()), payload: decode_hex(source["inverse"]["payloadHex"].as_str().unwrap()) },
         timestamp: protocol::HybridLogicalTimestamp { actor: source["timestamp"]["actor"].as_u64().unwrap(), physical_ms: source["timestamp"]["physicalMs"].as_u64().unwrap(), logical: source["timestamp"]["logical"].as_u64().unwrap() },
     }
 }
 
+/// 🧾️ The receipt names the decision the log actually committed, which for the altered-envelope
+/// trace is the re-sealed one. The target still names the approval's own proposal and command, so
+/// the replay finds an admissible decision at its receipt that does not bind the approval —
+/// "absent", the answer the trace asserts — instead of a corrupt container.
 fn target(fixture: &serde_json::Value, trace: &serde_json::Value, durable: &DurableFixtureRecord) -> InferenceWalTargetV1 {
     let mut scope = scope(fixture);
     if let Some(space_id) = trace["spaceId"].as_str() {
         scope.space_id = space_id.into();
     }
-    // 🧾️ The receipt names the decision the log actually committed, which for the altered-envelope
-    // trace is the re-sealed one. The target still names the approval's own proposal and command, so
-    // the replay finds an admissible decision at its receipt that does not bind the approval —
-    // "absent", the answer the trace asserts — instead of a corrupt container.
     let altered = trace["records"].as_array().is_some_and(|records| records.iter().any(|record| record["bytes"] == "altered-target"));
     let committed = if altered { &durable.altered_record } else { &durable.record };
     InferenceWalTargetV1 {
@@ -455,6 +457,11 @@ pub(in crate::inference) async fn committed_fixture_witness() -> (CommittedInfer
     (witness, fence)
 }
 
+/// 🎭️ The hostile bytes are a DURABLE DECISION PACK, not a bare command envelope. An event in
+/// the receipt transaction that is not a pack is exactly the `missing-command` trace, whose
+/// frozen answer is "absent" — so a bare envelope could never prove this law's claim. What the
+/// law does claim is that matching `command_hash` against the committed bytes buys nothing:
+/// the canonical container and the receipt's own decision hash still refuse.
 #[tokio::test]
 async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_commands() {
     let fixture = fixture();
@@ -468,11 +475,6 @@ async fn inference_wal_proof_rejects_hash_matched_noncanonical_or_wrong_actor_co
         if !["trailing", "overlong-varint", "different-actor"].contains(&change) {
             continue;
         }
-        // 🎭️ The hostile bytes are a DURABLE DECISION PACK, not a bare command envelope. An event in
-        // the receipt transaction that is not a pack is exactly the `missing-command` trace, whose
-        // frozen answer is "absent" — so a bare envelope could never prove this law's claim. What the
-        // law does claim is that matching `command_hash` against the committed bytes buys nothing:
-        // the canonical container and the receipt's own decision hash still refuse.
         let mut bytes = match change {
             "different-actor" => durable.wrong_actor_record.canonical_pack().to_vec(),
             _ => durable.record.canonical_pack().to_vec(),

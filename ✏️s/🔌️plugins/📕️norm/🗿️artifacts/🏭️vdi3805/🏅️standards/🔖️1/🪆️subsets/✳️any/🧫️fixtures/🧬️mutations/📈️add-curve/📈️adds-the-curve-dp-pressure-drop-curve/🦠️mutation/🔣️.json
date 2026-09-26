@@ -2,17 +2,17 @@
   "AddCurve": {
     "curve": {
       "id": "curve.dp",
-      "x_unit": {
+      "xUnit": {
         "symbol": "%",
-        "kind": "Dimensionless",
+        "kind": "dimensionless",
         "delta": true,
-        "si_factor": 0.01
+        "siFactor": 0.01
       },
-      "y_unit": {
+      "yUnit": {
         "symbol": "kPa",
-        "kind": "Pressure",
+        "kind": "pressure",
         "delta": true,
-        "si_factor": 1000.0
+        "siFactor": 1000.0
       },
       "points": [
         {

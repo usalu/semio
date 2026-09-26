@@ -24,6 +24,7 @@ import {
   parseHubSessionMintResultV1,
   runHubSignInV1,
   runHubSignOutV1,
+  HUB_SESSION_SIGN_OUT_PATH_V1,
   selectHubConnectionV1,
   selectedHubConnectionV1,
   upsertHubConnectionV1,
@@ -49,6 +50,7 @@ import {
   inviteRedemptionErrorFromStatusV1,
   parseInviteTokenV1,
   spaceMemberPresenceV1,
+  spaceRowsAfterEventsV1,
   spaceRowsV1,
   type InviteRedemptionErrorCodeV1,
   type SpaceBrowserPhaseV1,
@@ -402,10 +404,12 @@ export interface HubConnectionPortV1 {
   readonly bootstrapOrigin: string;
   readonly deviceInstanceId: string;
   readonly clientClass: HubSignInClientClassV1;
-  /** 🎫️ The session a previous page load of this browsing context left behind, if any. Its presence
-   * is what turns a reload into a re-bootstrap rather than a sign-in form; the hub still has the
-   * last word, because the hook confirms it with one `GET /auth/sessions/me` before believing it. */
-  readonly restoredCapability?: Readonly<{ userId: string }> | null;
+  /** 🎫️ The session this browsing context holds at the moment of asking — the one a previous page load left behind, or
+   * the one an earlier mount of this surface minted. Read on every mount, so a surface reopened after a sign-in starts
+   * signed in instead of saying "Not signed in to a hub" above the signed-in human's own spaces (ticket 26/09/23 U5, G10 S4
+   * relay: the value used to be captured when the port was built, before anyone had signed in). The hub still has the last
+   * word: the hook confirms it with one `GET /auth/sessions/me` before believing it. */
+  heldCapability?(): Readonly<{ userId: string }> | null;
   listSpaces(origin: string, signal: AbortSignal): Promise<readonly DirectorySpaceListEntryV1[]>;
   /** 👥️ `GET /directory/spaces/{id}` — the hub's own administration page, whose `members` window is
    * the only authoritative roster. A non-member's hub answers `404`, which reaches the caller as an
@@ -420,8 +424,8 @@ export interface HubConnectionPortV1 {
   /** 🤖️ `POST /auth/agent-delegations` — the one call that ever yields a delegation capability, and
    * it yields it exactly once. The receipt is handed straight to the pane and never stored. */
   createAgentDelegation(origin: string, body: string, signal: AbortSignal): Promise<AgentDelegationReceiptV1>;
-  /** 🤖️ `DELETE /auth/agent-delegations/{id}` — withdrawal, which cascades to every live agent
-   * session minted from it. */
+  /** 🤖️ `POST /auth/agent-delegations/{id}/revoke` — the withdrawal command, which cascades to every
+   * live agent session minted from it. */
   revokeAgentDelegation(origin: string, delegationId: string, signal: AbortSignal): Promise<void>;
   /** 📄️ Hands the human a file to save. Separate from the clipboard port because a credential must
    * end up in a file the agent can read, not in a paste buffer. */
@@ -719,10 +723,13 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
       });
   }, [captureOperationOwner, operationOwnerCurrent, portRef]);
 
+  /** 👥️ Follows the space the shell has open. The one-time credential belongs to its delegation's space and is dropped
+   * only when a DIFFERENT space opens: a session re-established under the pane passes through "no space" and back, and
+   * clearing it there threw away a credential the human had not saved yet, mid "Set up MCP client" (G10 S4 relay). */
   const watchSpaceMembers = useCallback((spaceId: string | null) => {
     setWatchedSpaceId(spaceId);
     loadMembers(spaceId);
-    setAgentCredential(null);
+    setAgentCredential((value) => (value === null || spaceId === null || value.receipt.spaceId === spaceId ? value : null));
     loadDelegations(spaceId);
   }, [loadDelegations, loadMembers]);
 
@@ -738,6 +745,9 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
         .then((receipt) => {
           if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
           onReceipt(receipt);
+          const userId = session.userId;
+          if (userId !== null) setRows((current) => spaceRowsAfterEventsV1(current, receipt.events, userId));
+          setSpacesPhase("ready");
           loadSpaces(owner);
           loadMembers(watchedSpaceIdRef.current, owner);
         })
@@ -746,7 +756,7 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
           setSpacesPhase("failed");
         });
     },
-    [captureOperationOwner, loadMembers, loadSpaces, operationOwnerCurrent, portRef, watchedSpaceIdRef],
+    [captureOperationOwner, loadMembers, loadSpaces, operationOwnerCurrent, portRef, session.userId, watchedSpaceIdRef],
   );
 
   useEffect(() => {
@@ -754,14 +764,14 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
     return () => spacesAbort.current?.abort();
   }, [connection.id, loadSpaces]);
 
-  /** ♻️ Re-bootstrap after a reload: the port restored a capability this browsing context minted
-   * earlier, so the session is presumed live only until the hub's own `me` answer confirms or
-   * refuses it. Mount-only — a later sign-out must not resurrect the session it just ended. */
+  /** ♻️ Re-bootstrap on mount: the browsing context already holds a session (a reload, or this surface reopened after a
+   * sign-in), so it is presumed live only until the hub's own `me` answer confirms or refuses it. Mount-only — a later
+   * sign-out must not resurrect the session it just ended. */
   useEffect(() => {
-    const restored = portRef.current.restoredCapability;
-    if (!restored || rebootstrapped.current) return;
+    const held = portRef.current.heldCapability?.() ?? null;
+    if (held === null || rebootstrapped.current) return;
     rebootstrapped.current = true;
-    dispatchSession({ kind: "minted", userId: restored.userId, expiresAtMs: null });
+    dispatchSession({ kind: "minted", userId: held.userId, expiresAtMs: null });
     readAuthority();
   }, [portRef, readAuthority, rebootstrapped]);
 
@@ -1044,36 +1054,40 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
       });
   }, [captureOperationOwner, loadDelegations, operationOwnerCurrent, portRef, watchedSpaceIdRef]);
 
+  /** 📄️ Saves the credential file. Like the install below, the outcome belongs to the delegation it was asked for. */
   const downloadAgentCredential = useCallback(() => {
-    const owner = captureOperationOwner();
     const current = agentCredential;
     const save = portRef.current.saveFile;
     if (current === null || save === undefined) {
       setAgentCredential((value) => (value === null ? value : { ...value, save: "failed" }));
       return;
     }
-    void save(current.file)
-      .then(() => { if (operationOwnerCurrent(owner)) setAgentCredential((value) => (value === null ? value : { ...value, save: "saved" })); })
-      .catch(() => { if (operationOwnerCurrent(owner)) setAgentCredential((value) => (value === null ? value : { ...value, save: "failed" })); });
-  }, [agentCredential, captureOperationOwner, operationOwnerCurrent, portRef]);
+    const saved = (outcome: HubAgentCredentialV1["save"]) => setAgentCredential((value) => (value === null || value.receipt.delegationId !== current.receipt.delegationId ? value : { ...value, save: outcome }));
+    void save(current.file).then(() => saved("saved"), () => saved("failed"));
+  }, [agentCredential, portRef]);
 
   const dismissAgentCredential = useCallback(() => setAgentCredential(null), []);
 
+  /** 🔌️ Installs the credential for MCP clients. The install is owned by the delegation it writes, not by the connection
+   * generation: the file is on disk the moment the host answers, so the pane must say so while that delegation's
+   * credential is shown — dropping a late answer left the button disabled at `installing` for good although the file was
+   * written (G10 S4 relay, 2 of 3 runs on hub 7800). A credential dismissed, withdrawn or replaced meanwhile ignores it. */
   const installAgentMcpClient = useCallback(() => {
-    const owner = captureOperationOwner();
     const current = agentCredential;
     const install = portRef.current.installAgentCredential;
     if (current === null) return;
+    const origin = connectionRef.current.origin;
     const mcpClient = (next: HubAgentMcpClientV1) => setAgentCredential((value) => (value === null || value.receipt.delegationId !== current.receipt.delegationId ? value : { ...value, mcpClient: next }));
     if (install === undefined) {
       mcpClient({ phase: "unavailable", config: null });
       return;
     }
     mcpClient({ phase: "installing", config: null });
-    void install(agentCredentialInstallRequestV1(current.receipt, owner.origin), new AbortController().signal)
-      .then((installed) => { if (operationOwnerCurrent(owner)) mcpClient({ phase: "ready", config: agentMcpClientConfigJsonV1(agentMcpClientConfigV1(current.receipt, owner.origin, installed)) }); })
-      .catch((error: unknown) => { if (operationOwnerCurrent(owner)) mcpClient({ phase: error instanceof AgentCredentialInstallUnavailableV1 ? "unavailable" : "failed", config: null }); });
-  }, [agentCredential, captureOperationOwner, operationOwnerCurrent, portRef]);
+    void install(agentCredentialInstallRequestV1(current.receipt, origin), new AbortController().signal).then(
+      (installed) => mcpClient({ phase: "ready", config: agentMcpClientConfigJsonV1(agentMcpClientConfigV1(current.receipt, origin, installed)) }),
+      (error: unknown) => mcpClient({ phase: error instanceof AgentCredentialInstallUnavailableV1 ? "unavailable" : "failed", config: null }),
+    );
+  }, [agentCredential, connectionRef, portRef]);
 
   const copyAgentMcpClientConfig = useCallback(() => {
     const config = agentCredential?.mcpClient.config ?? null;
@@ -1199,9 +1213,30 @@ export interface HubFetchResponseV1 {
   text(): Promise<string>;
 }
 
-/** 🌐️ Builds the real port over an injected request function. The minted capability is captured in
- * this closure and sent as `Authorization: Bearer …` (AU1 §1.1); it is never returned, stored or
- * placed in a URL, so no caller — including React — can read it back out. */
+/** 🎫️ The one place a hub session capability is held for the fetch port. The shell backs it with the capability it
+ * remembers for the browsing context, so a sign-in in the hub pane, the dev serve's own local session and the hub refusing
+ * the capability are all one value — the port reads it on every request and never keeps a second copy that could go
+ * stale. `write` is the port announcing a mint, a sign-out or a refusal. */
+export interface HubConnectionCapabilityCellV1 {
+  read(): Readonly<{ token: string; userId: string }> | null;
+  write(next: Readonly<{ token: string; userId: string }> | null): void;
+}
+
+/** 🎫️ A capability cell that is only this closure — what a port without a shell behind it uses. */
+export function hubConnectionCapabilityCellV1(initial: Readonly<{ token: string; userId: string }> | null): HubConnectionCapabilityCellV1 {
+  let held = initial;
+  return {
+    read: () => held,
+    write: (next) => {
+      held = next;
+    },
+  };
+}
+
+/** 🌐️ Builds the real port over an injected request function. The capability is read from its
+ * {@link HubConnectionCapabilityCellV1} on every request and sent as `Authorization: Bearer …` (AU1 §1.1);
+ * the port never returns it, and the hook only ever learns whose it is ({@link HubConnectionPortV1.heldCapability}),
+ * so React state never holds the token. */
 export function createHubConnectionFetchPortV1(options: {
   readonly request: (url: string, init: Readonly<{ method: string; headers: Record<string, string>; body?: string }>, signal: AbortSignal) => Promise<HubFetchResponseV1>;
   readonly storage: HubConnectionStorageV1 | null;
@@ -1217,23 +1252,15 @@ export function createHubConnectionFetchPortV1(options: {
   /** 🔌️ Installs a delegation's credential for MCP clients; see {@link HubConnectionPortV1.installAgentCredential}. */
   readonly installAgentCredential?: (request: AgentCredentialInstallRequestV1, signal: AbortSignal) => Promise<AgentCredentialInstallReceiptV1>;
   readonly uninstallAgentCredential?: (delegationId: string) => Promise<void>;
-  /** 🎫️ The capability a previous page load minted and this context remembered, restored so a
-   * reload continues the same hub session instead of asking for the password again. */
-  readonly restoredCapability?: Readonly<{ token: string; userId: string }> | null;
-  /** 📣️ Announces every change of the capability this port holds — a mint, a sign-out, or the hub
-   * refusing it. The shell is what remembers it and what hands it to the credential-owning worker;
-   * this port stays the only thing that ever puts it on a wire. */
-  readonly onCapability?: (capability: Readonly<{ token: string; userId: string }> | null) => void;
+  /** 🎫️ Where the capability lives. Without one the port keeps it in its own closure. */
+  readonly capability?: HubConnectionCapabilityCellV1;
 }): HubConnectionPortV1 {
-  let capability: string | null = options.restoredCapability?.token ?? null;
-  const announce = (next: Readonly<{ token: string; userId: string }> | null): void => {
-    capability = next?.token ?? null;
-    options.onCapability?.(next);
+  const cell = options.capability ?? hubConnectionCapabilityCellV1(null);
+  const announce = (next: Readonly<{ token: string; userId: string }> | null): void => cell.write(next);
+  const authorized = (json: boolean): Record<string, string> => {
+    const held = cell.read();
+    return { ...(json ? { "content-type": "application/json" } : {}), ...(held === null ? {} : { authorization: `Bearer ${held.token}` }) };
   };
-  const authorized = (json: boolean): Record<string, string> => ({
-    ...(json ? { "content-type": "application/json" } : {}),
-    ...(capability === null ? {} : { authorization: `Bearer ${capability}` }),
-  });
   const answer = async (response: HubFetchResponseV1): Promise<{ status: number; body: string; retryAfterHeader: string | null }> => ({
     status: response.status,
     body: await response.text(),
@@ -1244,7 +1271,10 @@ export function createHubConnectionFetchPortV1(options: {
     storage: options.storage,
     deviceInstanceId: options.deviceInstanceId,
     clientClass: options.clientClass,
-    restoredCapability: options.restoredCapability ? { userId: options.restoredCapability.userId } : null,
+    heldCapability: () => {
+      const held = cell.read();
+      return held === null ? null : { userId: held.userId };
+    },
     ...(options.writeClipboard === undefined ? {} : { writeClipboard: options.writeClipboard }),
     signIn: {
       mint: async (origin, body, signal) => {
@@ -1265,7 +1295,7 @@ export function createHubConnectionFetchPortV1(options: {
         return result;
       },
       end: async (origin, signal) => {
-        const result = await answer(await options.request(`${origin}/auth/sessions/me`, { method: "DELETE", headers: authorized(false) }, signal));
+        const result = await answer(await options.request(`${origin}${HUB_SESSION_SIGN_OUT_PATH_V1}`, { method: "POST", headers: authorized(false) }, signal));
         announce(null);
         return result;
       },
@@ -1303,7 +1333,7 @@ export function createHubConnectionFetchPortV1(options: {
       return parseAgentDelegationReceiptV1(text);
     },
     revokeAgentDelegation: async (origin, delegationId, signal) => {
-      const response = await options.request(`${origin}${agentDelegationRevokePathV1(delegationId)}`, { method: "DELETE", headers: authorized(false) }, signal);
+      const response = await options.request(`${origin}${agentDelegationRevokePathV1(delegationId)}`, { method: "POST", headers: authorized(false) }, signal);
       if (response.status !== 204) throw new AgentDelegationRefusalV1(agentDelegationErrorFromResponseV1(response.status, await response.text()));
     },
     ...(options.saveFile === undefined ? {} : { saveFile: options.saveFile }),

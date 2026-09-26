@@ -41,6 +41,9 @@ insert_before(WRITER, "#[semio_framework_async_macros::async_test]\nasync fn for
 files[f"{JACK}/🎮️commands/✏️text-edit/🦀️.rs"] = read(f"{HERE}/jack-text-edit.rs")
 insert_before(f"{JACK}/🧪️tests/🔬️unit/🦀️.rs", "#[semio_framework_async_macros::async_test]\nasync fn graph_scene_has_lod_json() {", read(f"{HERE}/jack-law.rs"))
 replace(VCS_EDIT, "                Emit::mutations(operations)\n", "                Emit::amend(operations, VCS_TEXT_TYPING_COALESCE_KEY)\n")
+VCS_EDITOR = f"{ROOT}/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor"
+replace(f"{VCS_EDITOR}/🦀️.rs", "                return Ok(Some(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) }));\n", "                return Ok(Some(if mutations.is_empty() { Emit::default() } else { Emit::amend(mutations, crate::editor::vcs::commands::edit::VCS_TEXT_TYPING_COALESCE_KEY) }));\n")
+insert_before(f"{VCS_EDITOR}/🧪️tests/🔬️unit/🦀️.rs", "//#endregion 🔖️CommandSurface\n", read(f"{HERE}/vcs-law.rs").lstrip("\n") + "\n")
 insert_before(VCS_EDIT, "pub(crate) fn text_edit_operations(", "/// ⌨️ The coalesce key of a typing run in the vcs text editor: every keystroke amends the run's one edit, so typing is one\n/// undo step and never spends the store's fixed applied-edit ledger one keystroke at a time (ticket 26/09/23 F1).\npub(crate) const VCS_TEXT_TYPING_COALESCE_KEY: &str = \"vcs-text-typing\";\n\n")
 
 if problems:

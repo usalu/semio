@@ -1058,15 +1058,14 @@ mod browser_ephemeral {
 
 /// 🧬️ The browser's [`ComponentDocumentCodec`](semio_framework_os_kernel::os_store::ComponentDocumentCodec):
 /// the mounted program's jco component answering `world actor`'s `codec` interface through the JS
-/// bridge (`codecPackSchemaHash`/`codecGenesis`/`codecPrintMirror`, `🐚️plugin-bridge/🟦️.ts`), on a live
-/// instance's shard actor — the twin of the native `OwnedComponentDocumentCodec` a wgpu shell registers
-/// in `create_app`. With it the mounted component IS the kind identity of a hub document (no
-/// execution-target lease, no component SHA-256 equality with the catalog) and a hub-bound open seeds
-/// the guest from the genesis the component mints (ticket 26/09/23 slices WG8 + WG7).
+/// bridge (`codecPackSchemaHash`/`codecPrintMirror`, `🐚️plugin-bridge/🟦️.ts`), on a live instance's shard
+/// actor — the twin of the native `OwnedComponentDocumentCodec` a wgpu shell registers in `create_app`. With it
+/// the mounted component IS the kind identity of a hub document (ticket 26/09/23 slices WG8 + WG7); the document
+/// itself opens on the hub's canonical checkpoint pair, on every shell (slice WG10).
 #[cfg(target_arch = "wasm32")]
 mod browser_component_codec {
-    use super::{call_js, Array, JsCast, JsValue, Rc, Reflect};
-    use semio_framework_os_kernel::os_store::{self, ArtifactTextFiles, ComponentDocumentCodec, ComponentDocumentCodecFuture, ComponentDocumentGenesis, VcsError};
+    use super::{call_js, Array, JsCast, JsValue, Rc};
+    use semio_framework_os_kernel::os_store::{self, ArtifactTextFiles, ComponentDocumentCodec, ComponentDocumentCodecFuture, VcsError};
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::sync::{Arc, OnceLock};
@@ -1123,15 +1122,6 @@ mod browser_component_codec {
                 let mirror = answer.dyn_into::<Array>().map_err(|_| fault("mirror is not a tuple".into()))?;
                 let text = |index: u32| mirror.get(index).as_string().ok_or_else(|| fault(format!("mirror half {index} is not text")));
                 Ok(ArtifactTextFiles { dsl: text(0)?, ops: text(1)? })
-            })
-        }
-
-        fn genesis<'a>(&'a self, document_id: &'a str) -> ComponentDocumentCodecFuture<'a, ComponentDocumentGenesis> {
-            Box::pin(async move {
-                let fault = |error: String| VcsError::ValidationFailed(format!("component codec.genesis({}): {error}", self.schema));
-                let answer = self.call("codecGenesis", &Array::of2(&JsValue::from_str(&self.schema), &JsValue::from_str(document_id))).await.map_err(fault)?;
-                let half = |name: &str| Reflect::get(&answer, &JsValue::from_str(name)).map_err(|_| fault(format!("genesis has no {name}"))).and_then(|value| bytes(&value, name).map_err(fault));
-                Ok(ComponentDocumentGenesis { pack: half("pack")?, spr: half("spr")? })
             })
         }
     }
@@ -1458,6 +1448,11 @@ pub fn js_plugin_install_door_available() -> bool {
 }
 
 #[cfg(target_arch = "wasm32")]
+pub fn js_extension_install_door_available() -> bool {
+    js_plugin_install_door("semioWgpuInstallExtension").is_some()
+}
+
+#[cfg(target_arch = "wasm32")]
 fn js_plugin_install_door(name: &str) -> Option<Function> {
     Reflect::get(&js_sys::global(), &JsValue::from_str(name)).ok().and_then(|value| value.dyn_into::<Function>().ok())
 }
@@ -1478,6 +1473,31 @@ pub async fn install_js_plugin(plugin_id: &str) -> Result<ProgramBridgeEntry, St
         None => result,
     };
     ProgramBridgeEntry::from_js(plugin_id.to_string(), handle).map_err(|error| format!("plugin {plugin_id}: {error}"))
+}
+
+#[cfg(target_arch = "wasm32")]
+pub async fn install_js_extension(record_json: &str, extension_id: &str, version: &str) -> Result<ProgramBridgeEntry, String> {
+    let door = js_plugin_install_door("semioWgpuInstallExtension").ok_or_else(|| "this isolate installs no semioWgpuInstallExtension door".to_string())?;
+    let result = door.call1(&JsValue::NULL, &JsValue::from_str(record_json)).map_err(|error| format!("extension {extension_id}: {}", describe_js_rejection(&error)))?;
+    let handle = match result.dyn_ref::<js_sys::Promise>() {
+        Some(promise) => JsFuture::from(promise.clone()).await.map_err(|error| format!("extension {extension_id}: {}", describe_js_rejection(&error)))?,
+        None => result,
+    };
+    let entry = ProgramBridgeEntry::from_js(extension_id.to_string(), handle).map_err(|error| format!("extension {extension_id}: {error}"))?;
+    if entry.manifest.plugin_id != extension_id || entry.manifest.version != version {
+        return Err(format!("extension {extension_id}: loaded manifest identity/version mismatch"));
+    }
+    Ok(entry)
+}
+
+#[cfg(target_arch = "wasm32")]
+pub async fn retire_js_extension(extension_id: &str) -> Result<(), String> {
+    let door = js_plugin_install_door("semioWgpuRetireExtension").ok_or_else(|| "this isolate installs no semioWgpuRetireExtension door".to_string())?;
+    let result = door.call1(&JsValue::NULL, &JsValue::from_str(extension_id)).map_err(|error| format!("extension {extension_id}: {}", describe_js_rejection(&error)))?;
+    if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+        JsFuture::from(promise.clone()).await.map_err(|error| format!("extension {extension_id}: {}", describe_js_rejection(&error)))?;
+    }
+    Ok(())
 }
 
 /// 🛑️ Withdraws an in-flight [`install_js_plugin`] request so its awaited promise settles now rather

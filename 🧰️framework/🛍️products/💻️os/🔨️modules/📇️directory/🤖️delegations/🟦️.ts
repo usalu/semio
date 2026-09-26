@@ -28,10 +28,11 @@ export const AGENT_DELEGATION_PAGE_MAX_V1 = 256;
 /** ⏳️ The lifetimes the pane offers: a working day, a week (the hub's own default) and a month. */
 export const AGENT_DELEGATION_TTL_CHOICES_SECS_V1 = [86400, 604800, 2592000] as const;
 
-/** 🗑️ Revoking one delegation. The id is a capability-free identifier, so it travels in the path. */
+/** 🚫️ The revoke command for one delegation (`POST`, empty body). The id is a capability-free
+ * identifier, so it travels in the path. */
 export function agentDelegationRevokePathV1(delegationId: string): string {
   if (delegationId.length === 0 || delegationId.length > 256 || /\p{Cc}/u.test(delegationId)) throw new Error("directory.delegations.invalid-delegation");
-  return `${AGENT_DELEGATION_PATH_V1}/${encodeURIComponent(delegationId)}`;
+  return `${AGENT_DELEGATION_PATH_V1}/${encodeURIComponent(delegationId)}/revoke`;
 }
 
 /** 📋️ Listing this human's delegations in one space. */

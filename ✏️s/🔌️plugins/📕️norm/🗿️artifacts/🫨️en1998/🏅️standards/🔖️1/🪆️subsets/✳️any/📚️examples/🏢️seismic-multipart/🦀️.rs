@@ -5,7 +5,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "seismic-multipart";
 pub const ICON: &str = "file";
-pub const PRIMARY_TEXT: &str = "";
+pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/🏢️seismic-multipart/🏢️seismic-multipart/🗣️.dsl.semio");
 
 pub fn label() -> LocalizedLabel {
     LocalizedLabel::native(

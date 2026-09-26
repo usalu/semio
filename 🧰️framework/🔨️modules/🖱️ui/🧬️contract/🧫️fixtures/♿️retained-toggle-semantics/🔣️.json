@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "button-toggle-publishes-pressed",
+      "component": { "type": "toggle", "appearance": "button", "on": true, "icon": "pin", "text": "Pinned" },
+      "accessibleLabel": "Pinned",
+      "expected": { "role": "button", "elementType": "button", "stateAttribute": "aria-pressed", "stateValue": true, "absentAttribute": "aria-checked" }
+    },
+    {
+      "id": "checkbox-toggle-publishes-checked",
+      "component": { "type": "toggle", "appearance": "checkbox", "on": false, "icon": "check", "text": "Enabled" },
+      "accessibleLabel": "Enabled",
+      "expected": { "role": "checkbox", "elementType": "input", "stateAttribute": "aria-checked", "stateValue": false, "absentAttribute": "aria-pressed" }
+    }
+  ]
+}

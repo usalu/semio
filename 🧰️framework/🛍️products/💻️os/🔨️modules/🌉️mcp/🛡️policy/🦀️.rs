@@ -23,6 +23,17 @@ use std::sync::Arc;
 /// `secrets:<name>`) expand to a `<prefix>*` wildcard grant here — [`AgentPrincipal::grants`] treats a
 /// `<prefix>*` entry as "every concrete scope under this prefix", matching `🧪️conformance`'s own
 /// `KNOWN_SCOPE_PREFIXES` four-family list.
+///
+/// 💡️ Local ADMISSION only: it grants the four hub-backed inference job tools the right to be
+/// CALLED by this connection. It is never hub authorization — the hub re-runs its own live
+/// `Author`/session/authorization-generation predicate on accept, claim, every checkpoint,
+/// offer, read, cancel and approval, and an `Admin` is not implicitly allowed there.
+///
+/// 💬️ Writing PROSE into the shell's agent panel is neither of its neighbours: it changes no
+/// shell state, opens no window and navigates nothing (so `ui.control`'s four grants are all
+/// wrong for it), yet it does write into a surface a human reads (so `ui.observe` is too weak).
+/// Its own row, expanding to one capability of its own, is the honest shape — and it means a
+/// read-only agent granted `ui.observe,conversation.write` can still answer the human.
 pub const MCP_SCOPE_TABLE: &[(&str, &[&str])] = &[
     ("workspace.read", &["registry.query", "artifacts.read"]),
     ("artifact.read", &["artifacts.read"]),
@@ -31,23 +42,10 @@ pub const MCP_SCOPE_TABLE: &[(&str, &[&str])] = &[
     ("artifact.write", &["artifacts.write", "jobs.spawn"]),
     ("document.write", &["artifacts.write", "jobs.spawn"]),
     ("documents.write", &["artifacts.write", "jobs.spawn"]),
-    //#region 💡️Inference
-    // 💡️ Local ADMISSION only: it grants the four hub-backed inference job tools the right to be
-    // CALLED by this connection. It is never hub authorization — the hub re-runs its own live
-    // `Author`/session/authorization-generation predicate on accept, claim, every checkpoint,
-    // offer, read, cancel and approval, and an `Admin` is not implicitly allowed there.
     ("inference.execute", &["artifacts.read", "artifacts.write", "jobs.spawn"]),
-    //#endregion 💡️Inference
     ("ui.observe", &["shell.observe"]),
     ("ui.control", &["shell.control", "ui.window", "ui.dialog", "shell.navigate"]),
-    //#region 💬️Conversation
-    // 💬️ Writing PROSE into the shell's agent panel is neither of its neighbours: it changes no
-    // shell state, opens no window and navigates nothing (so `ui.control`'s four grants are all
-    // wrong for it), yet it does write into a surface a human reads (so `ui.observe` is too weak).
-    // Its own row, expanding to one capability of its own, is the honest shape — and it means a
-    // read-only agent granted `ui.observe,conversation.write` can still answer the human.
     ("conversation.write", &["shell.converse"]),
-    //#endregion 💬️Conversation
     ("ui.raw-control", &["shell.raw"]),
     ("clipboard.read", &["shell.clipboard"]),
     ("clipboard.write", &["shell.clipboard"]),

@@ -73,6 +73,8 @@ fn paint2d_scene(surface_id: &str, active_utility: &str, selection: &[&str]) -> 
         active_utility: active_utility.into(),
         brush_size: 12.0,
         brush_opacity: 0.8,
+        brush_color: "#e07020".into(),
+        brush_hardness: 0.25,
         view_mode: "composite".into(),
         composite_viewport_json: None,
         lanes: Vec::new(),
@@ -113,6 +115,19 @@ fn layer_hit_point(surface_id: &str, bounds: Rect) -> Option<(f32, f32)> {
 
 fn drain(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     crate::collect_fixture_actions(input)
+}
+
+fn drain_editor_actions_accepted(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+    let _ = drive_text_editor_outbox_step(input).expect("editor outbox drive");
+    let mut actions = Vec::new();
+    while let Some(action) = input.take_action_step().expect("action authority") {
+        let queued = action.into_envelope().expect("action envelope");
+        if let Some(receipt) = queued.receipt {
+            settle_text_editor_action_receipt(receipt, TextEditorActionOutcome::Accepted);
+        }
+        actions.push(queued.descriptor);
+    }
+    actions
 }
 
 #[test]
@@ -248,17 +263,17 @@ fn text_editor_window_attaches_the_editor_host_and_a_key_commits_the_react_actio
     let mut input = InputState::<ActionDescriptor>::default();
     let modifiers = PointerModifiers::default();
     assert!(text_editor_apply_key_into(&scene, &KeyAction::Char("!".into()), &modifiers, &mut input).expect("bounded publish"), "a printable key is consumed by the focused editor");
-    let actions = drain(&mut input);
+    let actions = drain_editor_actions_accepted(&mut input);
 
     let names: Vec<&str> = actions.iter().map(|action| action.action.as_str()).collect();
-    assert_eq!(names, vec!["textSelect", "textEdit"], "every keystroke commits the SAME ordered pair React's TextEditor dispatches");
+    assert_eq!(names, vec!["textEdit", "textSelect"], "the edited document precedes its selection");
     let edit = actions.iter().find(|action| action.action == "textEdit").expect("textEdit");
     let fields = action_fields(edit);
-    assert_eq!(fields.iter().find(|(key, _)| key == "document").map(|(_, value)| value.as_str()), Some("alpha!"), "the edit carries the whole projected document, not a delta");
+    assert_eq!(fields.iter().find(|(key, _)| key == "text").map(|(_, value)| value.as_str()), Some("alpha!"), "the edit carries the current document in the authored action field");
     assert_eq!(fields.iter().find(|(key, _)| key == "surfaceId").map(|(_, value)| value.as_str()), Some(surface_id));
     let select = actions.iter().find(|action| action.action == "textSelect").expect("textSelect");
-    let select_fields = action_fields(select);
-    assert_eq!(select_fields.iter().find(|(key, _)| key == "selectionJson").map(|(_, value)| value.as_str()), Some(r#"{"start":6,"end":6}"#), "the caret lands past the inserted glyph");
+    let select_fields = serde_json::to_value(select.args.as_ref().unwrap()).expect("selection args");
+    assert_eq!(select_fields, json!({ "surfaceId": surface_id, "start": 6, "end": 6 }));
 
     drop_engine_surface(surface_id);
 }
@@ -280,6 +295,241 @@ fn text_editor_refuses_the_keys_the_shell_owns() {
     assert!(drain(&mut input).is_empty());
 
     drop_engine_surface(surface_id);
+}
+
+#[test]
+fn text_editor_renderer_keys_match_the_actual_react_fixture() {
+    let _serialized = engine_surface_law_guard();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).expect("neutral keyboard fixture");
+    for law in fixture["rendererKeys"].as_array().expect("renderer keys") {
+        let id = law["id"].as_str().unwrap();
+        drop_engine_surface(id);
+        let mut scene = text_editor_scene(id, law["text"].as_str().unwrap());
+        let editor = scene.text_editor.as_mut().unwrap();
+        editor.selection_json = Some(json!({ "start": law["selection"][0], "end": law["selection"][1] }).to_string());
+        editor.settings_json = Some(json!({ "tabSize": law["tabSize"].as_u64().unwrap_or(2) }).to_string());
+        editor.newline_gates_json = law.get("newlineGates").map(Value::to_string);
+        assert!(sync_engine_scene(&scene, "text-key-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
+        let key = match law["key"].as_str().unwrap() {
+            "ArrowLeft" => KeyAction::ArrowLeft, "ArrowDown" => KeyAction::ArrowDown,
+            "Home" => KeyAction::Home, "End" => KeyAction::End, "Tab" => KeyAction::Tab,
+            "Enter" => KeyAction::Enter, " " => KeyAction::Space(true), key => KeyAction::Char(key.into()),
+        };
+        let modifiers = PointerModifiers { shift: law["shift"].as_bool().unwrap_or(false), alt: law["alt"].as_bool().unwrap_or(false), ..Default::default() };
+        let mut input = InputState::<ActionDescriptor>::default();
+        assert_eq!(text_editor_apply_key_into(&scene, &key, &modifiers, &mut input).expect("bounded key"), !modifiers.alt, "{id}");
+        ENGINE_SURFACES.with(|cell| {
+            let map = cell.borrow();
+            let host = map.get(id).unwrap().editor.as_ref().unwrap();
+            assert_eq!(host.text(), law["expect"]["text"].as_str().unwrap(), "{id}");
+            assert_eq!(json!([host.anchor(), host.caret()]), law["expect"]["selection"], "{id}");
+        });
+        let actions = if law["operation"].is_null() { drain(&mut input) } else { drain_editor_actions_accepted(&mut input) };
+        let expected = match law["operation"].as_str() { Some("insertText") => vec!["textEdit", "textSelect"], Some(_) => vec!["textSelect"], None => vec![] };
+        assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), expected, "{id}");
+        if let Some(select) = actions.last() {
+            assert_eq!(serde_json::to_value(select.args.as_ref().unwrap()).unwrap(), json!({ "surfaceId": id, "start": law["expect"]["selection"][0], "end": law["expect"]["selection"][1] }), "{id}");
+        }
+        drop_engine_surface(id);
+    }
+}
+
+#[test]
+fn text_editor_outbox_preserves_local_echo_during_temporary_action_credit_pressure() {
+    let _serialized = engine_surface_law_guard();
+    let id = "text-editor-action-credits";
+    drop_engine_surface(id);
+    let scene = text_editor_scene(id, "alpha");
+    assert!(sync_engine_scene(&scene, "editor-credit-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
+    let mut input = InputState::<ActionDescriptor>::default();
+    for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
+        input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
+    }
+    assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::Char("!".into()), &PointerModifiers::default(), &mut input), Ok(true));
+    assert_eq!(drive_text_editor_outbox_step(&mut input), Ok(false));
+    assert!(has_pending_text_editor_outbox());
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let host = map.get(id).unwrap().editor.as_ref().unwrap();
+        assert_eq!((host.text(), host.anchor(), host.caret()), ("alpha!", 6, 6));
+    });
+    let _ = drain(&mut input);
+    let actions = drain_editor_actions_accepted(&mut input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
+    assert!(!has_pending_text_editor_outbox());
+    assert_eq!(text_editor_apply_key_into(&scene, &KeyAction::ArrowLeft, &PointerModifiers::default(), &mut input), Ok(true));
+    let actions = drain_editor_actions_accepted(&mut input);
+    assert_eq!(actions.len(), 1);
+    let selection = actions.last().unwrap();
+    assert_eq!(selection.action, "textSelect");
+    assert_eq!(serde_json::to_value(selection.args.as_ref().unwrap()).unwrap(), json!({ "surfaceId": id, "start": 5, "end": 5 }));
+    drop_engine_surface(id);
+}
+
+#[test]
+fn text_editor_receipts_match_the_neutral_first_latest_refusal_and_read_only_laws() {
+    let _serialized = engine_surface_law_guard();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/📮️delivery/🔣️.json"))).expect("neutral delivery fixture");
+    for law in fixture["cases"].as_array().expect("delivery cases") {
+        let id = law["id"].as_str().unwrap();
+        drop_engine_surface(id);
+        let scene = text_editor_scene(id, law["initial"].as_str().unwrap());
+        assert!(sync_engine_scene(&scene, "editor-delivery-law", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
+        let mut input = InputState::<ActionDescriptor>::default();
+        let typed = law["typed"].as_array().unwrap();
+        assert!(text_editor_apply_key_into(&scene, &KeyAction::Char(typed[0].as_str().unwrap().into()), &PointerModifiers::default(), &mut input).unwrap());
+        assert!(drive_text_editor_outbox_step(&mut input).unwrap());
+        let first_edit = input.take_action_step().unwrap().unwrap().into_envelope().unwrap();
+        let mut dispatched = vec![format!("textEdit:{}", serde_json::to_value(first_edit.descriptor.args.as_ref().unwrap()).unwrap()["text"].as_str().unwrap())];
+        assert_eq!(dispatched, law["expected"][0].as_array().unwrap().iter().map(|row| row.as_str().unwrap().to_owned()).collect::<Vec<_>>(), "{id}: leading edit");
+        for value in &typed[1..] {
+            assert!(text_editor_apply_key_into(&scene, &KeyAction::Char(value.as_str().unwrap().into()), &PointerModifiers::default(), &mut input).unwrap());
+        }
+        let first_receipt = first_edit.receipt.unwrap();
+        let accepted = law["outcome"] == "accepted";
+        settle_text_editor_action_receipt(
+            first_receipt,
+            if accepted { TextEditorActionOutcome::Accepted } else { TextEditorActionOutcome::Refused(law["outcome"].as_str().unwrap()) },
+        );
+        let first_selection = input.take_action_step().unwrap().unwrap().into_envelope().unwrap();
+        if accepted {
+            let args = serde_json::to_value(first_selection.descriptor.args.as_ref().unwrap()).unwrap();
+            dispatched.push(format!("textSelect:{}:{}", args["start"], args["end"]));
+            settle_text_editor_action_receipt(first_selection.receipt.unwrap(), TextEditorActionOutcome::Accepted);
+        } else {
+            settle_text_editor_action_receipt(first_selection.receipt.unwrap(), TextEditorActionOutcome::Cancelled);
+        }
+        if drive_text_editor_outbox_step(&mut input).unwrap() {
+            let latest_edit = input.take_action_step().unwrap().unwrap().into_envelope().unwrap();
+            let args = serde_json::to_value(latest_edit.descriptor.args.as_ref().unwrap()).unwrap();
+            dispatched.push(format!("textEdit:{}", args["text"].as_str().unwrap()));
+            assert_eq!(dispatched, law["expected"][1].as_array().unwrap().iter().map(|row| row.as_str().unwrap().to_owned()).collect::<Vec<_>>(), "{id}: latest edit");
+            settle_text_editor_action_receipt(latest_edit.receipt.unwrap(), TextEditorActionOutcome::Accepted);
+            let latest_selection = input.take_action_step().unwrap().unwrap().into_envelope().unwrap();
+            let args = serde_json::to_value(latest_selection.descriptor.args.as_ref().unwrap()).unwrap();
+            dispatched.push(format!("textSelect:{}:{}", args["start"], args["end"]));
+            settle_text_editor_action_receipt(latest_selection.receipt.unwrap(), TextEditorActionOutcome::Accepted);
+        }
+        assert_eq!(dispatched, law["expected"][2].as_array().unwrap().iter().map(|row| row.as_str().unwrap().to_owned()).collect::<Vec<_>>(), "{id}: settled pair");
+        let text = ENGINE_SURFACES.with(|cell| cell.borrow().get(id).unwrap().editor.as_ref().unwrap().text().to_owned());
+        let expected_text = if accepted { format!("{}{}", law["initial"].as_str().unwrap(), typed.iter().map(|row| row.as_str().unwrap()).collect::<String>()) } else { law["initial"].as_str().unwrap().to_owned() };
+        assert_eq!(text, expected_text, "{id}: local echo");
+        assert_eq!(text_editor_is_read_only(&scene), law["readOnly"].as_bool().unwrap(), "{id}: refusal mode");
+        drop_engine_surface(id);
+    }
+}
+
+#[test]
+fn text_editor_scene_echoes_never_overwrite_newer_unsent_local_text() {
+    let _serialized = engine_surface_law_guard();
+    let id = "text-editor-local-echo";
+    drop_engine_surface(id);
+    let mut scene = text_editor_scene(id, "a");
+    let bounds = Rect::new(0.0, 0.0, 480.0, 320.0);
+    assert!(sync_engine_scene(&scene, "editor-echo-law", bounds, &Theme::default()));
+    let mut input = InputState::<ActionDescriptor>::default();
+    assert!(text_editor_apply_key_into(&scene, &KeyAction::Char("b".into()), &PointerModifiers::default(), &mut input).unwrap());
+    assert!(drive_text_editor_outbox_step(&mut input).unwrap());
+    assert!(text_editor_apply_key_into(&scene, &KeyAction::Char("c".into()), &PointerModifiers::default(), &mut input).unwrap());
+    assert!(!sync_text_editor_scene(&scene, bounds, &Theme::default()), "an identical stale scene costs no sync and cannot revert local text");
+    scene.text_editor.as_mut().unwrap().buffer = "ab".into();
+    assert!(sync_text_editor_scene(&scene, bounds, &Theme::default()));
+    let text = ENGINE_SURFACES.with(|cell| cell.borrow().get(id).unwrap().editor.as_ref().unwrap().text().to_owned());
+    assert_eq!(text, "abc", "the first edit's echo acknowledges it without overwriting unsent latest text");
+    scene.text_editor.as_mut().unwrap().buffer = "external".into();
+    assert!(sync_text_editor_scene(&scene, bounds, &Theme::default()));
+    let text = ENGINE_SURFACES.with(|cell| cell.borrow().get(id).unwrap().editor.as_ref().unwrap().text().to_owned());
+    assert_eq!(text, "external", "an unrelated guest buffer remains an authoritative external edit");
+    drop_engine_surface(id);
+}
+
+#[test]
+fn text_editor_delivery_state_matches_the_neutral_local_echo_ledger() {
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/✏️TextEditor/🧫️fixtures/🔁️local-echo/🔣️.json"))).expect("neutral local echo fixture");
+    for law in fixture["cases"].as_array().unwrap() {
+        let id = law["id"].as_str().unwrap();
+        let mut state = TextEditorDeliveryState::default();
+        let mut shown = law["initial"].as_str().unwrap().to_owned();
+        let mut guest = shown.clone();
+        let mut sequence = 1_u64;
+        assert!(state.reconcile_buffer(&shown));
+        for event in law["events"].as_array().unwrap() {
+            if let Some(text) = event["local"].as_str() {
+                if !state.read_only {
+                    assert!(!state.guest_has_text(text), "{id}: fixture local must require textEdit");
+                    shown = text.to_owned();
+                    state.offer(TextEditorDeliverySnapshot { controller_id: "writer".into(), surface_id: id.into(), text: shown.clone(), start: shown.len(), end: shown.len() });
+                    let token = std::num::NonZeroU64::new(sequence).unwrap();
+                    assert!(state.note_dispatched(EngineSurfaceToken { slot: 0, generation: 1 }, token, true, true));
+                    state.active = None;
+                    sequence += 1;
+                }
+            }
+            if let Some(text) = event["typed"].as_str() {
+                if !state.read_only {
+                    shown = text.to_owned();
+                    state.offer(TextEditorDeliverySnapshot { controller_id: "writer".into(), surface_id: id.into(), text: shown.clone(), start: shown.len(), end: shown.len() });
+                }
+            }
+            if let Some(text) = event["echo"].as_str() {
+                guest = text.to_owned();
+                if state.reconcile_buffer(text) {
+                    shown = text.to_owned();
+                }
+            }
+            if let Some(text) = event["refuse"].as_str() {
+                let reason = event["reason"].as_str().unwrap_or("dispatch-failed");
+                if matches!(reason, "undeclared-action" | "viewer-read-only") {
+                    state.read_only = true;
+                }
+                if state.remove_pending_echo(text) && state.pending_echoes.is_empty() {
+                    shown = guest.clone();
+                }
+            }
+            assert_eq!(shown, event["expect"].as_str().unwrap(), "{id}: visible text");
+            assert_eq!(state.pending_echoes.iter().map(String::as_str).collect::<Vec<_>>(), event["pending"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>(), "{id}: pending echo ledger");
+            if let Some(read_only) = event["readOnly"].as_bool() {
+                assert_eq!(state.read_only, read_only, "{id}: refusal mode");
+            }
+        }
+    }
+}
+
+#[test]
+fn text_editor_production_key_route_replays_chromiums_neutral_typing_sequences() {
+    let _serialized = engine_surface_law_guard();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).unwrap();
+    for law in fixture["sequences"].as_array().unwrap() {
+        let id = law["id"].as_str().unwrap();
+        drop_engine_surface(id);
+        let mut scene = text_editor_scene(id, law["text"].as_str().unwrap());
+        scene.text_editor.as_mut().unwrap().selection_json = Some(json!({ "start": law["selection"][0], "end": law["selection"][1] }).to_string());
+        assert!(sync_engine_scene(&scene, "text-input-oracle", Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
+        let mut input = InputState::<ActionDescriptor>::default();
+        for step in law["steps"].as_array().unwrap() {
+            let keys = if let Some(text) = step["type"].as_str() {
+                text.chars().map(|ch| match ch { '\n' => KeyAction::Enter, ' ' => KeyAction::Space(true), ch => KeyAction::Char(ch.to_string()) }).collect::<Vec<_>>()
+            } else if let Some(text) = step["paste"].as_str().or_else(|| step["compose"].as_str()) {
+                vec![KeyAction::Char(text.into())]
+            } else {
+                vec![match step["key"].as_str().unwrap() {
+                    "ArrowLeft" => KeyAction::ArrowLeft, "ArrowRight" => KeyAction::ArrowRight, "ArrowUp" => KeyAction::ArrowUp, "ArrowDown" => KeyAction::ArrowDown,
+                    "Home" => KeyAction::Home, "End" => KeyAction::End, "Backspace" => KeyAction::Backspace, "Delete" => KeyAction::Delete, key => panic!("unexpected key {key}"),
+                }]
+            };
+            for key in keys {
+                assert!(text_editor_apply_key_into(&scene, &key, &PointerModifiers::default(), &mut input).expect("bounded key"), "{id}");
+                let _ = drain_editor_actions_accepted(&mut input);
+            }
+        }
+        ENGINE_SURFACES.with(|cell| {
+            let map = cell.borrow();
+            let host = map.get(id).unwrap().editor.as_ref().unwrap();
+            assert_eq!(host.text(), law["expect"]["text"].as_str().unwrap(), "{id}");
+            assert_eq!(json!([host.text()[..host.anchor()].chars().count(), host.text()[..host.caret()].chars().count()]), law["expect"]["selection"], "{id}");
+        });
+        drop_engine_surface(id);
+    }
 }
 
 //#region Paint2dMarqueeAndNavigatorTests
@@ -405,3 +655,37 @@ fn paint2d_navigator_middle_drag_pans_the_content_camera() {
     drop_engine_surface(surface_id);
 }
 //#endregion Paint2dMarqueeAndNavigatorTests
+
+/// 🪟️ The retained paint binds exact editor tokens, and document retirement preserves sibling hosts.
+#[test]
+fn text_editor_phase_four_binding_retires_the_closed_host_and_preserves_its_sibling() {
+    let _serialized = engine_surface_law_guard();
+    let text = |id: &str| ENGINE_SURFACES.with(|cell| cell.borrow().get(id).and_then(|entry| entry.editor.as_ref()).map(|host| host.text().to_owned()));
+    use super::engine_surface_attach_tests::{close_retained_surface_fixture, paint_retained_surface_in_window};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).unwrap();
+    let law = &fixture["hostLifecycle"];
+    let window_a = law["closingWindow"].as_str().unwrap();
+    let window_b = law["siblingWindow"].as_str().unwrap();
+    let bounds = Rect::new(0.0, 0.0, 400.0, 240.0);
+    let scene_a = text_editor_scene(law["surfaceId"].as_str().unwrap(), law["text"].as_str().unwrap());
+    let scene_b = text_editor_scene(law["surfaceId"].as_str().unwrap(), law["text"].as_str().unwrap());
+    let painted_a = paint_retained_surface_in_window(&scene_a, bounds, window_a);
+    let painted_b = paint_retained_surface_in_window(&scene_b, bounds, window_b);
+    let token_a = engine_surface_token(&painted_a.owner.host_id).expect("first editor was painted and bound");
+    let token_b = engine_surface_token(&painted_b.owner.host_id).expect("sibling editor was painted and bound");
+    assert_ne!(token_a, token_b);
+    close_retained_surface_fixture(window_a);
+    assert_eq!(engine_surface_token(&painted_a.owner.host_id), None);
+    assert_eq!(engine_surface_token_at(usize::from(token_a.slot)), Ok(None));
+    assert_eq!(engine_surface_token(&painted_b.owner.host_id), Some(token_b));
+    assert_eq!(engine_surface_token_at(usize::from(token_b.slot)), Ok(Some(token_b)));
+    assert_eq!(text(&painted_b.owner.host_id).as_deref(), law["expect"]["siblingText"].as_str());
+    let successor = text_editor_scene(law["surfaceId"].as_str().unwrap(), law["expect"]["successorText"].as_str().unwrap());
+    let painted_successor = paint_retained_surface_in_window(&successor, bounds, window_a);
+    let successor_token = engine_surface_token(&painted_successor.owner.host_id).expect("the reopened window owns a new editor generation");
+    assert_ne!(successor_token, token_a);
+    assert_eq!(text(&painted_successor.owner.host_id).as_deref(), law["expect"]["successorText"].as_str());
+    assert_eq!(text(&painted_b.owner.host_id).as_deref(), law["expect"]["siblingText"].as_str());
+    close_retained_surface_fixture(window_a);
+    close_retained_surface_fixture(window_b);
+}

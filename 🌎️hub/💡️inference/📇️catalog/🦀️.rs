@@ -127,13 +127,13 @@ fn gis_map_binding_digest(projection: &GisMapFrozenBindingV1) -> Result<String, 
     Ok(sha256(&bytes))
 }
 
+/// 🎯️ The GIS Map target is resolved BY KIND, not as "the sole open target". A generation that
+/// admits more than one creatable kind (ticket 26/09/18: the open-target SET, and the
+/// stdio+gis+note catalog that first uses it) has no sole target, so `selected_document_open()`
+/// answers None there and every inference on such a catalog was denied.
+/// `artifact_creation_selection` is the same unambiguity rule scoped to one kind: exactly one
+/// writable editor target whose codec identity this generation verified.
 fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, native: ArtifactInferenceService) -> Result<Option<Arc<VerifiedGisMapArtifactBindingV1>>, InferenceErrorV1> {
-    // 🎯️ The GIS Map target is resolved BY KIND, not as "the sole open target". A generation that
-    // admits more than one creatable kind (ticket 26/09/18: the open-target SET, and the
-    // stdio+gis+note catalog that first uses it) has no sole target, so `selected_document_open()`
-    // answers None there and every inference on such a catalog was denied.
-    // `artifact_creation_selection` is the same unambiguity rule scoped to one kind: exactly one
-    // writable editor target whose codec identity this generation verified.
     let Some(selection) = catalog.artifact_creation_selection("s.gis.gismap") else { return Ok(None) };
     if selection.package.plugin_id != "gis" || selection.package.package_id != "semio:gis" {
         return Ok(None);

@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 /** 🐳️ The devcontainer fields this bootstrap contract reads. */
 interface DevcontainerConfig {
   readonly postCreateCommand: readonly string[];
-  readonly features: Readonly<Record<string, { readonly version?: string }>>;
+  readonly features: Readonly<Record<string, { readonly version?: string; readonly moby?: boolean }>>;
 }
 
 /** 🚀️ Verifies the image's pinned runtime acquisition before application dependency synchronization. */
@@ -27,6 +27,7 @@ export function testContainerRuntimeBootstrap(workspace: string): void {
   assert.ok(rootTargets["deps-wasm"].dependsOn.includes("deps-trunk"), "Both rust-toolchain.toml wasm targets must be installed by one prerequisite chain");
   assert.equal(config.features["ghcr.io/devcontainers/features/rust:1"]?.version, "none", "rust-toolchain.toml is the only toolchain pin");
   assert.ok(!Object.keys(config.features).some((key) => /\/nx:/.test(key)), "Nx must come from the repository's locked bootstrap");
+  assert.deepEqual(config.features[fixture.dockerDaemonFeature.id], fixture.dockerDaemonFeature.options, "Hub backends publish on 127.0.0.1, so the devcontainer needs its own Docker daemon (docker-in-docker, Docker CE on Ubuntu noble), not the host's socket");
   assert.equal(JSON.parse(readFileSync(join(workspace, "package.json"), "utf8")).packageManager, `bun@${fixture.bun}`);
   assert.ok(dockerfile.includes(`ARG BUN_VERSION=${fixture.bun}\n`));
   assert.ok(dockerfile.includes(`ARG NODE_VERSION=${fixture.node}\n`));

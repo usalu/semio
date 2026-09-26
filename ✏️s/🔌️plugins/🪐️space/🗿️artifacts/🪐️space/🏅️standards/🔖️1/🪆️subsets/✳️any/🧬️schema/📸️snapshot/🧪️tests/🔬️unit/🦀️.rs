@@ -18,8 +18,8 @@ async fn mint_artifact_id_probes_past_a_collision() {
 
 #[semio_framework_async_macros::async_test]
 async fn table_row_projects_the_seven_worker_brief_columns_in_the_viewers_language() {
-    assert_eq!(SpaceIndexTableLabels::NATIVE_EN.columns(), ["ID", "Name", "Kind", "Subset", "Updated", "Updated By", "Presence"]);
-    assert_eq!(SpaceIndexTableLabels::NATIVE_DE.columns(), ["ID", "Name", "Art", "Teilmenge", "Aktualisiert", "Aktualisiert von", "Anwesenheit"]);
+    assert_eq!(SpaceIndexTableLabels::NATIVE_EN.columns(), ["Name", "ID", "Kind", "Subset", "Updated", "Updated By", "Presence"]);
+    assert_eq!(SpaceIndexTableLabels::NATIVE_DE.columns(), ["Name", "ID", "Art", "Teilmenge", "Aktualisiert", "Aktualisiert von", "Anwesenheit"]);
     let row = SpaceArtifactRow {
         id: "artifact-1".into(),
         name: "First".into(),
@@ -31,7 +31,7 @@ async fn table_row_projects_the_seven_worker_brief_columns_in_the_viewers_langua
         updated_at_ms: 1_790_370_316_130,
         updated_by: "user:2".into(),
     };
-    assert_eq!(SpaceIndexTableLabels::NATIVE_EN.row(&row, "user:9"), ["artifact-1", "First", "s.draw.draw", "*", "2026-09-25 21:05 UTC", "user:2", "user:9"].map(String::from));
+    assert_eq!(SpaceIndexTableLabels::NATIVE_EN.row(&row, "user:9"), ["First", "artifact-1", "s.draw.draw", "*", "2026-09-25 21:05 UTC", "user:2", "user:9"].map(String::from));
     assert_eq!(SpaceIndexTableLabels::NATIVE_DE.row(&row, "")[4], "25.09.2026, 21:05 UTC");
 }
 

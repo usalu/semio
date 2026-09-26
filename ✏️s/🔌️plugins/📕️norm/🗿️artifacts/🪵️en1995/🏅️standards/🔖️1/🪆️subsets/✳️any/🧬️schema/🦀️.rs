@@ -186,18 +186,6 @@ semio_framework_plugin::derive_artifact_facets!(
 #[path = "⚖️timber/🦀️.rs"]
 mod timber;
 pub use timber::*;
-
-/// ♻️ Compatibility aliases for older test module paths.
-pub mod part_1_1 {
-    pub use super::timber::*;
-}
-pub mod part_1_2 {
-    pub use super::timber::*;
-}
-pub mod part_2 {
-    pub use super::timber::*;
-}
-pub mod na_de {}
 //#endregion 🔖️ComplianceHelpers
 
 //#region 🧪️ComplianceTests

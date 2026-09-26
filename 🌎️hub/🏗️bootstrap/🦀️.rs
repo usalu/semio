@@ -27,7 +27,7 @@ use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCrea
 use directory::os_directory::{
     self, descriptor_digest_v1, directory_command_sha256, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1,
     AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, ConnectionView, DocumentCheckInPhaseV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_MAX_BYTES, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
-    DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1,
+    DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1,
     DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1,
     DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor,
     DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1,
@@ -59,6 +59,9 @@ use semio_hub::artifact_authority::creation::{ArtifactCreationActorV1, ArtifactC
 use semio_hub::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use semio_hub::artifact_authority::trusted_catalog::{NativeCodecProviderSourceV1, TrustedCatalogAsset, TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedTrustedCatalog};
 use semio_hub::artifact_authority::trusted_catalog::plugin_module::plugin_module_content_type;
+use semio_hub::artifact_authority::trusted_catalog::schema::{TrustedCatalogGuestResidencyV1, TrustedCatalogLoadProgressV1, GUEST_RESIDENCY_BYTES_ENV};
+use semio_hub::artifact_authority::trusted_catalog::TrustedCatalogLoadProgressCellV1;
+use semio_hub::observability::{HubObservabilityV1, HubRouteMetricsV1};
 #[cfg(test)]
 use semio_hub::artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, ImmutableArtifactBlobStore};
 use semio_hub::artifact_authority::check_in::{
@@ -264,18 +267,44 @@ impl StartupCatalogControl {
 }
 
 /// @emoji 📈️ The latest progress a booting hub's startup work reported — what `/readyz` shows as
-/// `startup` while the trusted catalog loads, so a waiting caller sees a hub that is advancing.
+/// `startup` while the trusted catalog loads, so a waiting caller sees a hub that is advancing — and the
+/// catalog's per-package progress, which the loaded catalog keeps reporting into for its background
+/// verification.
 #[derive(Clone, Default)]
-struct StartupProgressCellV1(Arc<Mutex<Option<AuthorityProgress>>>);
+struct StartupProgressCellV1 {
+    latest: Arc<Mutex<Option<AuthorityProgress>>>,
+    catalog: Arc<TrustedCatalogLoadProgressCellV1>,
+}
 
 impl StartupProgressCellV1 {
     fn observe(&self, progress: AuthorityProgress) {
-        *self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(progress);
+        *self.latest.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(progress);
     }
 
     fn latest(&self) -> Option<HubStartupProgressV1> {
-        self.0.lock().unwrap_or_else(std::sync::PoisonError::into_inner).map(|progress| HubStartupProgressV1 { stage: progress.stage.code(), completed_units: progress.completed_units, total_units: progress.total_units })
+        let latest = *self.latest.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let catalog = Some(self.catalog.snapshot()).filter(|catalog| !catalog.packages.is_empty());
+        latest.map(|progress| HubStartupProgressV1 { stage: progress.stage.code(), completed_units: progress.completed_units, total_units: progress.total_units, catalog })
     }
+}
+
+/// @emoji 🔐️ The catalog's background verification: once the hub serves, every package whose codec rows no
+/// memory pinned at load is pinned against its component, smallest first, reporting into the same progress the
+/// admin observability route reads; a codec call that reaches a package first verifies it itself. One
+/// `server.catalog.publication` record names the outcome.
+async fn verify_pending_catalog_guests(catalog: Arc<VerifiedTrustedCatalog>, tracer: Tracer, cancellation: StartupCancellationV1, progress: StartupProgressCellV1) {
+    let control = StartupCatalogControl::new(tracer.clone(), cancellation, progress);
+    let started = std::time::Instant::now();
+    let outcome = match OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &control) {
+        Ok(context) => catalog.verify_pending_guests(&context).await,
+        Err(error) => Err(error),
+    };
+    let verified = catalog.load_progress();
+    let mut record = TraceRecord::new("server.catalog.publication", if outcome.is_ok() && verified.packages_refused == 0 { TraceOutcome::Ok } else { TraceOutcome::Refused });
+    record.level = TraceLevel::Info;
+    record.duration_us = Some(started.elapsed().as_micros().min(u128::from(u64::MAX)) as u64);
+    record.detail = Some(format!("background-verification packages-ready={}/{} refused={} rows-verified={} rows-pinned={} outcome={}", verified.packages_ready, verified.packages_total, verified.packages_refused, verified.rows_verified, verified.rows_pinned, outcome.map_or_else(|error| error.to_string(), |()| "done".into())));
+    tracer.emit(record);
 }
 
 /// @emoji 🚪️ Raised once the launcher's pipe is gone. Every startup step that can run for minutes —
@@ -328,6 +357,10 @@ impl AuthorityOperationControl for StartupCatalogControl {
         record.level = TraceLevel::Info;
         record.detail = Some(format!("stage={:?} {}/{}", progress.stage, progress.completed_units, progress.total_units));
         self.tracer.emit(record);
+    }
+
+    fn catalog_progress(&self) -> Option<Arc<TrustedCatalogLoadProgressCellV1>> {
+        Some(Arc::clone(&self.progress.catalog))
     }
 }
 
@@ -2112,8 +2145,8 @@ struct HubState {
     /// @emoji 🛡️ Contract §C0 `OS_HUB_ADMIN_DIR`: the admin SPA's static asset root. Lane 2-E owns
     /// the actual `/admin` file-serving handler (and its 503-if-missing stub) — this lane only
     /// carries the resolved path through `HubState` so that handler has something to read.
-    // 🌵️ Unread until 2-E's handler lands and calls `state.admin_dir` — not dead code, just not
-    // wired to a route yet (explicitly out of this lane's scope, see the doc above).
+    /// 🌵️ Unread until 2-E's handler lands and calls `state.admin_dir` — not dead code, just not
+    /// wired to a route yet (explicitly out of this lane's scope, see the doc above).
     #[allow(dead_code)]
     admin_dir: std::path::PathBuf,
     /// @emoji 📡️ Command-lane + preview-lane fan-out, one `broadcast::Sender` per v1 scope key —
@@ -2172,6 +2205,9 @@ struct HubState {
     /// `OS_HUB_MERGE_POLICY` (see `merge_policy_from_env`'s doc), never per-connection/per-space,
     /// matching `protocol::MergePolicy`'s own "local/authority state, never on the wire" law.
     merge_policy: protocol::MergePolicy,
+    /// @emoji 🛣️ Every matched route's answers by class and latency, keyed by method and route template —
+    /// the per-route table `GET /admin/api/observability` reads.
+    route_metrics: Arc<HubRouteMetricsV1>,
     /// @emoji 📝️ The structured observer every route reports through — a level, a sink and the
     /// per-event counter table `GET /admin/api/observability` reads. Configured from
     /// `SEMIO_TRACE_LEVEL`/`SEMIO_TRACE_SINK` at boot; a test injects a capturing one and asserts
@@ -2702,13 +2738,16 @@ struct HubReadinessV1 {
 }
 
 /// @emoji 📈️ How far a booting hub's startup work has come: the stage its trusted catalog load last
-/// reported and that stage's units. Present only while the hub starts.
-#[derive(Clone, Copy, Serialize)]
+/// reported and that stage's units, and the catalog's per-package phases, bytes and rows once it has
+/// selected its packages. Present only while the hub starts.
+#[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct HubStartupProgressV1 {
     stage: &'static str,
     completed_units: u64,
     total_units: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    catalog: Option<TrustedCatalogLoadProgressV1>,
 }
 
 /// 🧭️ One named readiness gate that is holding `status` at `not-ready`, with the stable reason code a
@@ -3487,6 +3526,13 @@ async fn issue_document_open_plan(
     .unwrap_or_else(|_| Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded)))
 }
 
+/// 🧭️ The pinned revision is a witness of issue order, not a freeze on the whole directory:
+/// demanding equality made every outstanding plan die on the next directory append anywhere on
+/// the hub — another space's invite, a rename, an unrelated membership edit — so a member's live
+/// socket was closed 4401 by an event that had nothing to do with it. What a plan may never do is
+/// claim a revision the directory has not reached: that pin is forged and stays refused. Whether
+/// this caller still holds this scope is decided by membership and session revocation on their own
+/// paths, which is what closes a removed member's socket in the very same exchange.
 async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: String, headers: HeaderMap, state: HubState, body: Bytes) -> Result<Json<DocumentSocketGrantReceiptV1>, DocumentOpenPlanRouteError> {
     let content_types = headers.get_all(axum::http::header::CONTENT_TYPE);
     if !socket_text_bounded(&space_id)
@@ -3533,13 +3579,6 @@ async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: S
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
     let directory_revision = state.directory.head_seq().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
-    // 🧭️ The pinned revision is a witness of issue order, not a freeze on the whole directory:
-    // demanding equality made every outstanding plan die on the next directory append anywhere on
-    // the hub — another space's invite, a rename, an unrelated membership edit — so a member's live
-    // socket was closed 4401 by an event that had nothing to do with it. What a plan may never do is
-    // claim a revision the directory has not reached: that pin is forged and stays refused. Whether
-    // this caller still holds this scope is decided by membership and session revocation on their own
-    // paths, which is what closes a removed member's socket in the very same exchange.
     if authority.revalidation.directory_revision > directory_revision || authority.revalidation.membership_generation > directory_revision {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
@@ -4092,6 +4131,9 @@ async fn db_io_pages_into_http_bytes(mut pages: db::db_storage::DbIoPages) -> Re
     Ok(Bytes::from(body))
 }
 
+/// 🔏️ The path hash is client-supplied (content-addressed URL); a mismatch against the
+/// storage-computed hash means the client sent the wrong bytes for that address — a bad
+/// request, distinct from a document CAS conflict.
 async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<BlobRecord>, StatusCode> {
     if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref(), HubAccessActionV1::BlobWrite).await {
         return Err(StatusCode::UNAUTHORIZED);
@@ -4101,9 +4143,6 @@ async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: Heade
     let pages = db::db_storage::db_io_copy_pages(body.as_ref()).map_err(|error| db_error_status(&error))?.await.map_err(|error| db_error_status(&error))?;
     let computed = state.db.storage().await.payload().await.put(pages).await.map_err(|error| db_error_status(&error))?;
     let computed_hex = computed.to_string();
-    // The path hash is client-supplied (content-addressed URL); a mismatch against the
-    // storage-computed hash means the client sent the wrong bytes for that address — a bad
-    // request, distinct from a document CAS conflict.
     if computed_hex != hash {
         return Err(StatusCode::BAD_REQUEST);
     }
@@ -4740,6 +4779,13 @@ fn socket_grant_from_protocol_header(headers: &HeaderMap) -> Result<SocketGrantC
     SocketGrantCapability::parse(grant).map_err(|_| StatusCode::UNAUTHORIZED)
 }
 
+/// 🧭️ The pinned revision is a witness of issue order, not a freeze on the whole directory:
+/// demanding equality made every outstanding plan die on the next directory append anywhere on
+/// the hub — another space's invite, a rename, an unrelated membership edit — so a member's live
+/// socket was closed 4401 by an event that had nothing to do with it. What a plan may never do is
+/// claim a revision the directory has not reached: that pin is forged and stays refused. Whether
+/// this caller still holds this scope is decided by membership and session revocation on their own
+/// paths, which is what closes a removed member's socket in the very same exchange.
 async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRecordV1, surface: Option<&str>) -> SocketBindingValidityV1 {
     let Some(authority) = record.document_plan.as_deref() else { return SocketBindingValidityV1::Active };
     if !state.readiness.features.open_plan || !state.readiness.features.open_plan_exchange {
@@ -4793,13 +4839,6 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
         Ok(Ok(revision)) => revision,
         Ok(Err(_)) | Err(_) => return SocketBindingValidityV1::Unavailable,
     };
-    // 🧭️ The pinned revision is a witness of issue order, not a freeze on the whole directory:
-    // demanding equality made every outstanding plan die on the next directory append anywhere on
-    // the hub — another space's invite, a rename, an unrelated membership edit — so a member's live
-    // socket was closed 4401 by an event that had nothing to do with it. What a plan may never do is
-    // claim a revision the directory has not reached: that pin is forged and stays refused. Whether
-    // this caller still holds this scope is decided by membership and session revocation on their own
-    // paths, which is what closes a removed member's socket in the very same exchange.
     if authority.revalidation.directory_revision > directory_revision || authority.revalidation.membership_generation > directory_revision {
         #[cfg(test)]
         return record_document_plan_refusal(DocumentPlanRefusalV1::DirectoryRevisionDiffers);
@@ -4963,6 +5002,12 @@ fn engine_frontier_to_wire(frontier: &db::db_engine::Frontier, head_edit_id: Str
     RuntimeFrontierSummary { document_id: frontier.document.clone(), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
 }
 
+/// @emoji 🔁️ The origin this hub stamps on every catch-up tail (hello and `FrontierAdvertise`): a declared hub identity, never the receiving socket's actor — a
+/// tail carries anyone's edits, and a replica that read its own actor there discarded the whole history as its own echo (ticket
+/// 26/09/23 session 12, run s12i). Replicas suppress echoes by operation identity; this names the tail. Pinned to
+/// `🏪️store/🧫️fixtures/document-echo-suppression-v1` `hubCatchUpOrigin`.
+const HUB_CATCH_UP_ORIGIN: &str = "hub.catch-up";
+
 /// @emoji 📨️ Submits one batch and returns its `Ack` plus the `Commands` relay for peers. The caller
 /// holds the document's write gate, so the frontier read first is exactly the one the submit starts
 /// from: a receipt that does not advance `commit_seq` is the engine's idempotent replay of an
@@ -5015,8 +5060,16 @@ async fn admit_writes(gate: &db::security::SecurityGate, principal: &db::securit
 /// commands were merely waiting for their fsync, as `authorization-unavailable`, and never sent their Ack.
 const DOCUMENT_SOCKET_FRAME_DEADLINE: std::time::Duration = std::time::Duration::from_secs(30);
 
+/// ⏳️ How long an agent's document `Commands` frame waits for its session's `agent-command` budget before it is refused
+/// (the MCP gateway's relay-acknowledgement wait): pacing keeps an honest agent's commits whole, and the wait sits before the
+/// socket re-reads its authority, so a revocation that lands while a frame waits still fences it.
+const AGENT_COMMAND_PATIENCE_MS: u64 = 10_000;
+
 /// @emoji 📨️ Handles one decoded `ClientFrame` for an already-authenticated v1 socket session.
 /// session. Returns `false` when the session should close (`Bye`, or a send failure).
+///
+/// 🪙️ Command-lane credit-based flow control: no server-side congestion control implemented
+/// this wave (matches `framework/sync`'s client, which also accepts and ignores this frame).
 #[allow(clippy::too_many_arguments)]
 async fn handle_client_frame(
     state: &HubState,
@@ -5066,7 +5119,7 @@ async fn handle_client_frame(
                 return sender.send(error_frame("frontier-document-mismatch", "advertised frontier names a different document than this socket").await).await.is_ok();
             }
             let core_document = db_core_document_id(db_id);
-            match db::sync::handle_frontier_advertise(&state.db.storage().await.wal().await, core_document, &frontier, actor.clone()).await {
+            match db::sync::handle_frontier_advertise(&state.db.storage().await.wal().await, core_document, &frontier, ActorId(HUB_CATCH_UP_ORIGIN.into())).await {
                 Ok(Some(catch_up)) => sender.send(encode(&catch_up, document_id).await).await.is_ok(),
                 Ok(None) => true,
                 Err(_) => true,
@@ -5080,8 +5133,6 @@ async fn handle_client_frame(
             let _ = state.refresh_document_presence(key, space_id, document_id, &actor.0, socket_live_id, peer, state.presence_now()).await;
             true
         }
-        // 🪙️ Command-lane credit-based flow control: no server-side congestion control implemented
-        // this wave (matches `framework/sync`'s client, which also accepts and ignores this frame).
         ClientFrame::CreditGrant { .. } => true,
         ClientFrame::Bye => false,
         ClientFrame::SocketHelloV1 { .. } => {
@@ -5091,6 +5142,42 @@ async fn handle_client_frame(
     }
 }
 
+/// 🤖️ ticket 26/09/18 slice M6b — M6 §4's remaining step. The actor id stays the opaque,
+/// per-session `hub.v1.<sha256>` the hub minted, which is what keeps per-actor undo separating an
+/// agent's edits from the delegating human's; only the NAME a collaborator reads changes, from
+/// that human's display name to the agent's own delegation label.
+///
+/// 🎨️ Contract §C7.3: acquired after successful SocketHelloV1 admission and before `Welcome`, released at
+/// handler exit (every early-return path below releases it explicitly; the loop-exit cleanup
+/// releases it on a clean disconnect).
+///
+/// 🔒️ Per-connection `SecurityGate` compiled from the hub's one declared access policy: this
+/// connection's roles read and write exactly what `document.read`/`document.write` permit in
+/// this space's kind (an archive denies every write). A space whose kind cannot be read compiles
+/// to no grant at all. `TenantId` reuses the space id: every scope this gate ever evaluates
+/// belongs to exactly this one space/document connection.
+///
+/// 🧭️ The client advertises its frontier by the document id it opened; the db layer compares it
+/// against this hub's internal key, so it is re-keyed here — and a frontier that names any other
+/// document is refused outright rather than silently overwritten with the one we wanted.
+///
+/// 🎨️ Contract §C7.3: sent exactly once per connection, after `Welcome` (and its follow-up
+/// bootstrap frames) and before any `Presence` frame.
+///
+/// 🔁️ Join replay: a roster delta is only ever published when SOME peer's bytes change, so a
+/// socket that attaches after the roster settled would stay blind to every peer already on it
+/// until one of them moved. Measured (ticket 26/09/18 slice PR1,
+/// `🗑️generated/pr1-before-hub-socket.txt` run A): two seconds after the late joiner's socket
+/// opened it had received ZERO presence frames while the first human's roster already listed a
+/// peer — C3 §3.4's asymmetry, from the hub's own side. The snapshot is taken under the same
+/// publication gate every delta holds, so this replay can never be older than the first delta
+/// this socket receives, and it is the ONE non-delta roster frame the wire carries.
+///
+/// 🦵️ Admin kick: only a session the directory actually recorded gets a live `Notify` registered
+/// under its `syncSessionId` (see `session_kicks`' own doc) — a session that failed to record
+/// (e.g. directory hiccup) falls back to a `Notify` nobody can ever reach, i.e. un-kickable, which
+/// matches this crate's generally forgiving stance on directory-write failures elsewhere in this
+/// handler.
 async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, surface: String, state: HubState, socket_admission: SocketGrantAdmissionV1) {
     let (mut sender, mut receiver) = socket.split();
     let Some(mut drain) = state.socket_drain.admit() else {
@@ -5121,6 +5208,10 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         }
     };
 
+    let agent_command_subject = match &auth {
+        AuthOutcome::Session { session_id, session_kind, .. } if session_kind.is_agent() => Some(RateLimitSubjectV1::principal(session_id)),
+        _ => None,
+    };
     let (user_id, role, auth_session_id, authorization_generation, principal_kind) = match &auth {
         AuthOutcome::Session { user_id, role, session_id, authorization_generation, session_kind } => (
             Some(user_id.clone()),
@@ -5140,10 +5231,6 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         Some(user_id) => tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_user(user_id)).await.ok().and_then(Result::ok).flatten(),
         None => None,
     };
-    // 🤖️ ticket 26/09/18 slice M6b — M6 §4's remaining step. The actor id stays the opaque,
-    // per-session `hub.v1.<sha256>` the hub minted, which is what keeps per-actor undo separating an
-    // agent's edits from the delegating human's; only the NAME a collaborator reads changes, from
-    // that human's display name to the agent's own delegation label.
     let agent_delegation = match (&socket_grant.subject, principal_kind) {
         (SocketSubjectV1::Session { device_instance_id, user_id, .. }, protocol::PresencePrincipalKind::Agent) => agent_delegation_for_session(&state, &space_id, user_id, device_instance_id).await,
         _ => None,
@@ -5171,16 +5258,8 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         return;
     }
     let key = document_scope_key_v1(&scope);
-    // 🎨️ Contract §C7.3: acquired after successful SocketHelloV1 admission and before `Welcome`, released at
-    // handler exit (every early-return path below releases it explicitly; the loop-exit cleanup
-    // releases it on a clean disconnect).
     let color = state.acquire_color(&space_id, &actor.0);
 
-    // 🔒️ Per-connection `SecurityGate` compiled from the hub's one declared access policy: this
-    // connection's roles read and write exactly what `document.read`/`document.write` permit in
-    // this space's kind (an archive denies every write). A space whose kind cannot be read compiles
-    // to no grant at all. `TenantId` reuses the space id: every scope this gate ever evaluates
-    // belongs to exactly this one space/document connection.
     let space_kind = state.directory.get_space(&space_id).await.ok().flatten().map(|space| space.kind);
     let access_roles = auth.access_roles();
     let granted: Vec<db::security::Action> = [(HubAccessActionV1::DocumentRead, db::security::Action::Read), (HubAccessActionV1::DocumentWrite, db::security::Action::Write)]
@@ -5208,9 +5287,6 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         }
     };
 
-    // 🧭️ The client advertises its frontier by the document id it opened; the db layer compares it
-    // against this hub's internal key, so it is re-keyed here — and a frontier that names any other
-    // document is refused outright rather than silently overwritten with the one we wanted.
     let mut frontier = frontier;
     if let Some(advertised) = frontier.as_mut() {
         if !wire_frontier_to_db(advertised, &document_id, &db_id) {
@@ -5221,7 +5297,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     }
 
     let session_id = directory::os_identity::time_ordered_id();
-    let mut hello_session = match state.db.hello(db_id.clone(), frontier, session_id, actor.clone(), 64 * 1024).await {
+    let mut hello_session = match state.db.hello(db_id.clone(), frontier, session_id, ActorId(HUB_CATCH_UP_ORIGIN.into()), 64 * 1024).await {
         Ok(session) => session,
         Err(error) => {
             let _ = sender.send(error_frame("storage", error.to_string()).await).await;
@@ -5340,8 +5416,6 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
             }
         }
     }
-    // 🎨️ Contract §C7.3: sent exactly once per connection, after `Welcome` (and its follow-up
-    // bootstrap frames) and before any `Presence` frame.
     let session_frame = encode(&ServerFrame::Session { actor: actor.0.clone(), color }, &document_id).await;
     let _session_authority = match socket_live_authority(&state, &socket_grant, &socket_live.id).await {
         Ok(admission) => admission,
@@ -5380,14 +5454,6 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     drop(_session_authority);
 
     let fanout = state.fanout_for(&key);
-    // 🔁️ Join replay: a roster delta is only ever published when SOME peer's bytes change, so a
-    // socket that attaches after the roster settled would stay blind to every peer already on it
-    // until one of them moved. Measured (ticket 26/09/18 slice PR1,
-    // `🗑️generated/pr1-before-hub-socket.txt` run A): two seconds after the late joiner's socket
-    // opened it had received ZERO presence frames while the first human's roster already listed a
-    // peer — C3 §3.4's asymmetry, from the hub's own side. The snapshot is taken under the same
-    // publication gate every delta holds, so this replay can never be older than the first delta
-    // this socket receives, and it is the ONE non-delta roster frame the wire carries.
     let Some((mut broadcast_rx, replay)) = state.subscribe_with_presence_replay(&key).await else {
         let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "presence-unavailable".into() }))).await;
         let _ = state.close_presence_for_live(&key, &space_id, &document_id, &actor.0, &socket_live.id).await;
@@ -5414,11 +5480,6 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         let view = connection_view(&state, session).await;
         state.directory_service.publish(DirectoryStreamMessage::Connection { phase: DirectoryConnectionPhase::Opened, connection: view });
     }
-    // 🦵️ Admin kick: only a session the directory actually recorded gets a live `Notify` registered
-    // under its `syncSessionId` (see `session_kicks`' own doc) — a session that failed to record
-    // (e.g. directory hiccup) falls back to a `Notify` nobody can ever reach, i.e. un-kickable, which
-    // matches this crate's generally forgiving stance on directory-write failures elsewhere in this
-    // handler.
     let kick = match &sync_session {
         Some(session) => {
             let notify = Arc::new(tokio::sync::Notify::new());
@@ -5462,6 +5523,17 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                             let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
                             break;
                         };
+                        if let (ClientFrame::Commands { batch_id, .. }, Some(subject)) = (&frame, agent_command_subject) {
+                            let paced = state.rate_limits.admit_paced(RateLimitClassV1::AgentCommand, &[subject], AGENT_COMMAND_PATIENCE_MS, |ms| tokio::time::sleep(std::time::Duration::from_millis(ms))).await;
+                            if let RateLimitDecisionV1::Refused { retry_after_ms } = paced {
+                                let frontier = best_effort_frontier(&handle).await;
+                                let ack = ServerFrame::Ack { batch_id: *batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: format!("rate-limited: retry after {retry_after_ms} ms"), messages: Vec::new() }) }], frontier };
+                                if sender.send(encode(&ack, &document_id).await).await.is_err() {
+                                    break;
+                                }
+                                continue;
+                            }
+                        }
                             #[cfg(test)]
                             if let Some(live_gate) = &state.live_gate {
                                 live_gate.socket_command_received.add_permits(1);
@@ -5824,6 +5896,27 @@ async fn resolve_optional_bearer_user(state: &HubState, headers: &HeaderMap) -> 
     let capability = bearer(headers).and_then(|token| SessionCapability::parse(&token).ok()).ok_or(StatusCode::UNAUTHORIZED)?;
     let session = state.directory.authenticate_session(&capability).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.ok_or(StatusCode::UNAUTHORIZED)?;
     Ok(Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability }))
+}
+
+/// @emoji 🚪️ The refusal of a route that also answers anonymously ([`resolve_optional_bearer_user`]): its `401` means a
+/// PRESENTED credential did not authenticate, so it answers the typed, localized `HubCredentialRefusalV1` body with the
+/// RFC 6750 `invalid_token` challenge (audit s13 os-frontend §4.17) — the client learns its session ended instead of
+/// reading the anonymous view. Every other status stays a bare, signed refusal.
+struct CredentialOptionalRefusalV1(StatusCode);
+
+impl From<StatusCode> for CredentialOptionalRefusalV1 {
+    fn from(status: StatusCode) -> Self {
+        Self(status)
+    }
+}
+
+impl IntoResponse for CredentialOptionalRefusalV1 {
+    fn into_response(self) -> Response {
+        if self.0 != StatusCode::UNAUTHORIZED {
+            return self.0.into_response();
+        }
+        (StatusCode::UNAUTHORIZED, [(axum::http::header::WWW_AUTHENTICATE, semio_hub::refusal::HUB_CREDENTIAL_REFUSAL_CHALLENGE)], Json(semio_hub::refusal::HUB_CREDENTIAL_REFUSAL)).into_response()
+    }
 }
 
 /// 🪪️ An admitted command keeps the exact authenticated session, not a reusable user identity.
@@ -6299,6 +6392,9 @@ async fn get_space_artifact_creation_catalog(Path(space_id): Path<String>, Origi
     }
 }
 
+/// 🧗️ No socket is waiting on what follows: the route has already answered 202 and the
+/// client polls the durable status. Its bound is therefore the stall bound, fed by the
+/// guest codec's own fuel progress, never the calendar.
 #[cfg(feature = "native-artifact-execution")]
 async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     if uri.query().is_some()
@@ -6350,9 +6446,6 @@ async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(
         let authority = state.artifact_creation_commit_authority.clone();
         let execution_tracer = state.tracer.clone();
         reservation.activate(async move {
-            // 🧗️ No socket is waiting on what follows: the route has already answered 202 and the
-            // client polls the durable status. Its bound is therefore the stall bound, fed by the
-            // guest codec's own fuel progress, never the calendar.
             let context = match OperationContext::stall_bounded(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_STALL_BOUND_MS, AuthorityLimits::maximum(), control.as_ref()) {
                 Ok(context) => context,
                 Err(error) => {
@@ -6471,12 +6564,6 @@ async fn load_all_directory_events<S: DirectoryEventPageSource + ?Sized>(directo
     Ok(events)
 }
 
-/// @emoji 📇️ Rebuilds `DirectoryReadModel` from the bounded complete public event suffix.
-async fn load_read_model(state: &HubState) -> Result<DirectoryReadModel, StatusCode> {
-    let events = load_all_directory_events(state.directory.as_ref(), 0).await.map_err(directory_error_status)?;
-    Ok(os_directory::fold_all(DirectoryReadModel::default(), &events).await)
-}
-
 fn role_wire(role: SpaceRole) -> DirectorySpaceRole {
     match role {
         SpaceRole::Author => DirectorySpaceRole::Author,
@@ -6512,36 +6599,8 @@ fn connection_view_with_email(state: &HubState, session: &SyncSessionRecord, ema
     }
 }
 
-/// @emoji 📄️ Durable directory descriptors enriched with each opened DB handle's current
-/// frontier; unopened documents retain the descriptor's authoritative bootstrap frontier.
-async fn documents_for_space(state: &HubState, space_id: &str) -> Vec<DocumentView> {
-    let mut views = Vec::new();
-    let Ok(descriptors) = state.directory.list_document_descriptors(space_id).await else { return views };
-    for descriptor in descriptors {
-        views.push(document_view(state, descriptor).await);
-    }
-    views
-}
-
-/// 📖️ Builds the public catalog directly from durable descriptors, never from the
-/// current-frontier [`DocumentView`] used by members and D1.
-async fn public_documents_for_space(state: &HubState, space_id: &str) -> Result<Vec<PublicDocumentCatalogEntryV1>, StatusCode> {
-    Ok(state
-        .directory
-        .list_document_descriptors(space_id)
-        .await
-        .map_err(directory_error_status)?
-        .into_iter()
-        .map(|descriptor| PublicDocumentCatalogEntryV1 {
-            document_id: descriptor.document_id,
-            artifact_kind: descriptor.artifact_kind,
-            artifact_schema: descriptor.artifact_schema,
-            owner: descriptor.owner,
-            pack_schema_hash: descriptor.pack_schema_hash,
-        })
-        .collect())
-}
-
+/// @emoji 📄️ One durable directory descriptor enriched with its opened DB handle's current frontier; an unopened
+/// document retains the descriptor's authoritative bootstrap frontier.
 async fn document_view(state: &HubState, descriptor: DocumentDescriptor) -> DocumentView {
     let db_id = db_artifact_id(&DocumentScope::new(&descriptor.space_id, &descriptor.document_id));
     let frontier = match state.db.document(&db_id).await {
@@ -6550,18 +6609,6 @@ async fn document_view(state: &HubState, descriptor: DocumentDescriptor) -> Docu
     }
     .unwrap_or((descriptor.bootstrap_frontier.head_seq, descriptor.bootstrap_frontier.commit_seq, descriptor.bootstrap_frontier.epoch));
     DocumentView { descriptor, head_seq: frontier.0, commit_seq: frontier.1, epoch: frontier.2 }
-}
-
-/// @emoji 🏠️ Fills a folded `DirectorySpace`'s `SpaceView` with the two fields the pure fold cannot
-/// know: the CALLING user's own `role` (server-filled per request, never derived by `fold`) and the
-/// live `document_count`/`active_connections` (owned by `db`'s catalog and the directory's sync
-/// sessions respectively, neither of which the directory event log itself tracks).
-async fn space_view(state: &HubState, space: &os_directory::DirectorySpace, caller: Option<&AuthedUser>) -> SpaceView {
-    let mut view = space.view.clone();
-    view.role = caller.and_then(|user| space.members.iter().find(|member| member.user_id == user.user_id).map(|member| member.role));
-    view.document_count = documents_for_space(state, &view.id).await.len() as u32;
-    view.active_connections = state.directory.list_active_sync_sessions(Some(&view.id), ACTIVE_SYNC_SESSION_READ_MAX).await.map(|sessions| sessions.len() as u32).unwrap_or(0);
-    view
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -6588,34 +6635,32 @@ fn directory_space_access_decision(public: bool, role: Option<DirectorySpaceRole
     }
 }
 
-fn public_space_view(space: &os_directory::DirectorySpace, document_count: usize) -> PublicSpaceViewV1 {
+fn public_space_view(space: SpaceView) -> PublicSpaceViewV1 {
     PublicSpaceViewV1 {
-        id: space.view.id.clone(),
-        name: space.view.name.clone(),
-        kind: space.view.kind,
-        visibility: space.view.visibility,
-        member_count: space.view.member_count,
-        document_count: u32::try_from(document_count).unwrap_or(u32::MAX),
-        created_at_ms: space.view.created_at_ms,
-        updated_at_ms: space.view.updated_at_ms,
+        id: space.id,
+        name: space.name,
+        kind: space.kind,
+        visibility: space.visibility,
+        member_count: space.member_count,
+        document_count: space.document_count,
+        created_at_ms: space.created_at_ms,
+        updated_at_ms: space.updated_at_ms,
     }
 }
 
-async fn member_space_view(state: &HubState, space: &os_directory::DirectorySpace, role: DirectorySpaceRole) -> MemberSpaceViewV1 {
-    let document_count = documents_for_space(state, &space.view.id).await.len() as u32;
-    let active_connections = state.directory.list_active_sync_sessions(Some(&space.view.id), ACTIVE_SYNC_SESSION_READ_MAX).await.map(|sessions| sessions.len() as u32).unwrap_or(0);
+fn member_space_view(space: SpaceView, role: DirectorySpaceRole) -> MemberSpaceViewV1 {
     MemberSpaceViewV1 {
-        id: space.view.id.clone(),
-        name: space.view.name.clone(),
-        kind: space.view.kind,
-        visibility: space.view.visibility,
-        owner_user_id: space.view.owner_user_id.clone(),
+        id: space.id,
+        name: space.name,
+        kind: space.kind,
+        visibility: space.visibility,
+        owner_user_id: space.owner_user_id,
         role,
-        member_count: space.view.member_count,
-        document_count,
-        active_connections,
-        created_at_ms: space.view.created_at_ms,
-        updated_at_ms: space.view.updated_at_ms,
+        member_count: space.member_count,
+        document_count: space.document_count,
+        active_connections: space.active_connections,
+        created_at_ms: space.created_at_ms,
+        updated_at_ms: space.updated_at_ms,
     }
 }
 
@@ -6876,37 +6921,24 @@ async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(
     Ok((StatusCode::ACCEPTED, DirectoryJson(receipt)))
 }
 
-async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectorySpaceListEntryV1>>, StatusCode> {
+/// @emoji 🏘️ The caller's space list: every public space and every space it belongs to, ordered by id, from ONE
+/// directory query ([`HubDirectory::list_visible_space_summaries`]) whatever the number of spaces, documents or
+/// events. It used to fold the whole directory event log and then, per visible space, list its documents (mounting
+/// each one for its frontier just to count them) and its sessions — 25–58 s for a member of 82 spaces on hub 7800
+/// (ticket 26/09/23 WG8). Counts and `updatedAtMs` are the space administration route's own (the same summary row).
+async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectorySpaceListEntryV1>>, CredentialOptionalRefusalV1> {
     let caller = resolve_optional_bearer_user(&state, &headers).await?;
-    let model = load_read_model(&state).await?;
-    let mut views = Vec::new();
-    for space in model.spaces.values() {
-        let role = caller.as_ref().and_then(|user| space.members.iter().find(|member| member.user_id == user.user_id).map(|member| member.role));
-        match directory_space_access_decision(space.view.visibility == DirectorySpaceVisibility::Public, role) {
+    let summaries = state.directory.list_visible_space_summaries(caller.as_ref().map(|caller| caller.user_id.as_str())).await.map_err(directory_error_status)?;
+    let mut views = Vec::with_capacity(summaries.len());
+    for (summary, role) in summaries {
+        let space = admin_space_summary_view(summary)?;
+        match directory_space_access_decision(space.visibility == DirectorySpaceVisibility::Public, role.map(role_wire)) {
             DirectorySpaceAccessDecisionV1::Hidden => {}
-            DirectorySpaceAccessDecisionV1::Public => {
-                let documents = public_documents_for_space(&state, &space.view.id).await?;
-                views.push(DirectorySpaceListEntryV1::Public { space: public_space_view(space, documents.len()) });
-            }
-            DirectorySpaceAccessDecisionV1::Member => {
-                views.push(DirectorySpaceListEntryV1::Member { space: member_space_view(&state, space, DirectorySpaceRole::Spectator).await });
-            }
-            DirectorySpaceAccessDecisionV1::Author => {
-                views.push(DirectorySpaceListEntryV1::Author { space: member_space_view(&state, space, DirectorySpaceRole::Author).await });
-            }
+            DirectorySpaceAccessDecisionV1::Public => views.push(DirectorySpaceListEntryV1::Public { space: public_space_view(space) }),
+            DirectorySpaceAccessDecisionV1::Member => views.push(DirectorySpaceListEntryV1::Member { space: member_space_view(space, DirectorySpaceRole::Spectator) }),
+            DirectorySpaceAccessDecisionV1::Author => views.push(DirectorySpaceListEntryV1::Author { space: member_space_view(space, DirectorySpaceRole::Author) }),
         }
     }
-    views.sort_by(|left, right| {
-        let left = match left {
-            DirectorySpaceListEntryV1::Public { space } => &space.id,
-            DirectorySpaceListEntryV1::Member { space } | DirectorySpaceListEntryV1::Author { space } => &space.id,
-        };
-        let right = match right {
-            DirectorySpaceListEntryV1::Public { space } => &space.id,
-            DirectorySpaceListEntryV1::Member { space } | DirectorySpaceListEntryV1::Author { space } => &space.id,
-        };
-        left.cmp(right)
-    });
     Ok(DirectoryJson(views))
 }
 
@@ -7151,12 +7183,12 @@ fn seal_space_administration_page_v1(
 /// 🏛️ One bounded, receipt-bound administration projection of exactly one space. Every row is read
 /// through a safe backend projection; the caller's role is re-read after the page reads and before
 /// the response is handed out, so a revocation or downgrade answers 401/403 instead of a stale page.
-async fn get_directory_space(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectorySpaceAdministrationPageV1>, StatusCode> {
+async fn get_directory_space(Path(space_id): Path<String>, OriginalUri(uri): OriginalUri, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<DirectorySpaceAdministrationPageV1>, CredentialOptionalRefusalV1> {
     let cursor = space_administration_request_admission(&uri)?;
     let operation = build_directory_space_administration_page_v1(&state, &space_id, cursor.as_deref(), &headers);
     match tokio::time::timeout(std::time::Duration::from_millis(DIRECTORY_SPACE_ADMINISTRATION_DEADLINE_MS), operation).await {
-        Ok(result) => result.map(DirectoryJson),
-        Err(_) => Err(StatusCode::GATEWAY_TIMEOUT),
+        Ok(result) => result.map(DirectoryJson).map_err(CredentialOptionalRefusalV1),
+        Err(_) => Err(CredentialOptionalRefusalV1(StatusCode::GATEWAY_TIMEOUT)),
     }
 }
 
@@ -7392,11 +7424,26 @@ async fn revalidate_directory_event_page_caller(state: &HubState, caller: &Authe
     Ok(current)
 }
 
-async fn directory_event_page_event_visible(state: &HubState, event: &DirectoryEvent, caller: &AuthedUser) -> Result<bool, StatusCode> {
-    let Some(space_id) = event.space_id.as_deref() else { return Ok(event.user_id.as_deref() == Some(caller.user_id.as_str())) };
-    let Some(space) = state.directory.get_space(space_id).await.map_err(directory_error_status)? else { return Ok(false) };
-    let role = state.directory.get_role(space_id, &caller.user_id).await.map_err(directory_error_status)?.map(role_wire);
-    Ok(directory_space_access_decision(space.visibility == "public", role).is_member())
+/// @emoji 🧑‍🤝‍🧑 The spaces `user_id` is a member of, read ONCE per event page: raw directory events are member-only
+/// ([`event_visible`]), so this set decides every row of the page. The page used to read the space and the caller's
+/// role per event — two directory round trips per row, 256 for a full page (ticket 26/09/23 WG8).
+async fn directory_member_space_ids(state: &HubState, user_id: &str) -> Result<BTreeSet<String>, StatusCode> {
+    Ok(state.directory.list_spaces_for_user(user_id).await.map_err(directory_error_status)?.into_iter().map(|(space, _)| space.id).collect())
+}
+
+fn directory_event_page_event_visible(member_spaces: &BTreeSet<String>, event: &DirectoryEvent, caller: &AuthedUser) -> bool {
+    match event.space_id.as_deref() {
+        Some(space_id) => member_spaces.contains(space_id),
+        None => event.user_id.as_deref() == Some(caller.user_id.as_str()),
+    }
+}
+
+/// @emoji 📏️ An upper bound of the sealed page's JSON length: `envelope_bytes` is the page with no events at its
+/// widest (`throughSeqInclusive` = `u64::MAX`, `hasMore` = `false`), plus each event's own JSON and one comma between
+/// two. A page within this bound fits without sealing it; only a page near the limit is sealed exactly, so building a
+/// page is linear in its rows (every row used to re-seal the whole page so far: quadratic).
+fn directory_event_page_bytes_bound(envelope_bytes: usize, event_bytes: usize, events: usize) -> usize {
+    envelope_bytes.saturating_add(event_bytes).saturating_add(events.saturating_sub(1))
 }
 
 fn seal_directory_event_page_v1(binding: [u8; 32], generation: u64, after: u64, through: u64, has_more: bool, events: Vec<DirectoryEvent>) -> Result<DirectoryEventPageV1, DirectoryEventPageErrorV1> {
@@ -7433,41 +7480,59 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
     control.checkpoint()?;
     let caller = revalidate_directory_event_page_caller(state, caller, binding).await?;
     control.checkpoint()?;
+    let member_spaces = directory_member_space_ids(state, &caller.user_id).await?;
+    control.checkpoint()?;
+    let envelope = DirectoryEventPageV1 {
+        schema: "semio.directory.event-page.v1".into(),
+        session_binding_sha256: os_directory::hex_lower(&binding),
+        authorization_generation: caller.authorization_generation,
+        after_seq_exclusive: after,
+        through_seq_inclusive: u64::MAX,
+        has_more: false,
+        events: Vec::new(),
+        receipt_sha256: "0".repeat(64),
+    };
+    let envelope_bytes = directory::os_pack::json::to_json_string(&envelope).len();
     let raw_len = raw.len();
     let mut through = after;
     let mut events = Vec::new();
+    let mut event_bytes = 0usize;
     let mut stopped_for_bytes = false;
     for event in raw {
         control.checkpoint()?;
         if event.seq <= through || validate_directory_event_page_event(&event).is_err() {
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
-        let visible = directory_event_page_event_visible(state, &event, &caller).await?;
-        control.checkpoint()?;
-        if !visible {
-            match seal_directory_event_page_v1(binding, caller.authorization_generation, after, event.seq, true, events.clone()) {
-                Ok(_) => through = event.seq,
+        if !directory_event_page_event_visible(&member_spaces, &event, &caller) {
+            if directory_event_page_bytes_bound(envelope_bytes, event_bytes, events.len()) > DIRECTORY_EVENT_PAGE_MAX_BYTES {
+                match seal_directory_event_page_v1(binding, caller.authorization_generation, after, event.seq, true, events.clone()) {
+                    Ok(_) => {}
+                    Err(DirectoryEventPageErrorV1::TooLarge) => {
+                        stopped_for_bytes = true;
+                        break;
+                    }
+                    Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+                }
+            }
+            through = event.seq;
+            continue;
+        }
+        let bytes = directory::os_pack::json::to_json_string(&event).len();
+        if directory_event_page_bytes_bound(envelope_bytes, event_bytes.saturating_add(bytes), events.len() + 1) > DIRECTORY_EVENT_PAGE_MAX_BYTES {
+            let mut candidate = events.clone();
+            candidate.push(event.clone());
+            match seal_directory_event_page_v1(binding, caller.authorization_generation, after, event.seq, true, candidate) {
+                Ok(_) => {}
                 Err(DirectoryEventPageErrorV1::TooLarge) => {
                     stopped_for_bytes = true;
                     break;
                 }
                 Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
             }
-            continue;
         }
-        let mut candidate = events.clone();
-        candidate.push(event.clone());
-        match seal_directory_event_page_v1(binding, caller.authorization_generation, after, event.seq, true, candidate) {
-            Ok(_) => {
-                events.push(event);
-                through = events.last().map_or(through, |event| event.seq);
-            }
-            Err(DirectoryEventPageErrorV1::TooLarge) => {
-                stopped_for_bytes = true;
-                break;
-            }
-            Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
-        }
+        through = event.seq;
+        event_bytes = event_bytes.saturating_add(bytes);
+        events.push(event);
     }
     seal_directory_event_page_v1(binding, caller.authorization_generation, after, through, stopped_for_bytes || raw_len == DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, events).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
@@ -7543,40 +7608,23 @@ async fn directory_message_visible(state: &HubState, message: &DirectoryStreamMe
         DirectoryStreamMessage::Event { event } => event_visible(state, event, Some(caller)).await,
         DirectoryStreamMessage::Connection { connection, .. } => directory_space_access_for_user(state, &connection.space_id, Some(&caller.user_id)).await.is_member(),
         DirectoryStreamMessage::Presence { space_id, .. } => directory_space_access_for_user(state, space_id, Some(&caller.user_id)).await.is_member(),
-        DirectoryStreamMessage::Heartbeat { .. } => false,
+        DirectoryStreamMessage::Heartbeat { .. } | DirectoryStreamMessage::AccessChanged { .. } => false,
         DirectoryStreamMessage::RebootstrapRequired { control } => directory_space_access_for_user(state, &control.scope.space_id, Some(&caller.user_id)).await.is_member(),
     }
 }
 
-async fn visibility_filter_events(state: &HubState, events: Vec<DirectoryEvent>, caller: Option<&AuthedUser>) -> Vec<DirectoryEvent> {
-    let mut visible = Vec::with_capacity(events.len());
-    let mut access_by_space = BTreeMap::new();
-    for event in events {
-        let allowed = match event.space_id.as_deref() {
-            None => caller.is_some_and(|caller| event.user_id.as_deref() == Some(caller.user_id.as_str())),
-            Some(space_id) => {
-                let access = match access_by_space.get(space_id) {
-                    Some(access) => *access,
-                    None => {
-                        let access = directory_space_access_for_user(state, space_id, caller.map(|caller| caller.user_id.as_str())).await;
-                        access_by_space.insert(space_id.to_string(), access);
-                        access
-                    }
-                };
-                access.is_member()
-            }
-        };
-        if allowed {
-            visible.push(event);
-        }
-    }
-    visible
+/// @emoji 👁️ Keeps the events `caller` may read — its own space-less events and every event of a space it belongs
+/// to — deciding the whole page from ONE membership read (it used to read the space and the role per distinct space).
+async fn visibility_filter_events(state: &HubState, events: Vec<DirectoryEvent>, caller: Option<&AuthedUser>) -> Result<Vec<DirectoryEvent>, StatusCode> {
+    let Some(caller) = caller else { return Ok(Vec::new()) };
+    let member_spaces = directory_member_space_ids(state, &caller.user_id).await?;
+    Ok(events.into_iter().filter(|event| directory_event_page_event_visible(&member_spaces, event, caller)).collect())
 }
 
-async fn get_directory_events(Query(query): Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, StatusCode> {
+async fn get_directory_events(Query(query): Query<EventsQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectoryEvent>>, CredentialOptionalRefusalV1> {
     let caller = resolve_optional_bearer_user(&state, &headers).await?;
     let events = state.directory.events_since(query.since.unwrap_or(0), query.limit.unwrap_or(500)).await.map_err(directory_error_status)?;
-    Ok(DirectoryJson(visibility_filter_events(&state, events, caller.as_ref()).await))
+    Ok(DirectoryJson(visibility_filter_events(&state, events, caller.as_ref()).await?))
 }
 
 /// 🌐️ Outbound global telemetry borrows a space authority without indexing the global lease by it.
@@ -7586,7 +7634,37 @@ fn directory_stream_message_space(message: &DirectoryStreamMessage) -> Option<&s
         DirectoryStreamMessage::Connection { connection, .. } => Some(&connection.space_id),
         DirectoryStreamMessage::Presence { space_id, .. } => Some(space_id),
         DirectoryStreamMessage::RebootstrapRequired { control } => Some(&control.scope.space_id),
-        DirectoryStreamMessage::Heartbeat { .. } => None,
+        DirectoryStreamMessage::Heartbeat { .. } | DirectoryStreamMessage::AccessChanged { .. } => None,
+    }
+}
+
+/// 🔑️ The `access-changed` frame one delivered-or-skipped directory event owes a GLOBAL directory socket's own reader
+/// ([`directory_access_change_for_reader`]); scoped sockets and non-session subjects owe none.
+fn directory_reader_access_change(record: &SocketGrantRecordV1, created_on_socket: &BTreeSet<String>, message: &DirectoryStreamMessage) -> Option<DirectoryStreamMessage> {
+    let (SocketAudienceV1::Directory { .. }, SocketSubjectV1::Session { user_id, .. }) = (&record.audience, &record.subject) else { return None };
+    directory_access_change_for_reader(user_id, created_on_socket, message)
+}
+
+/// 🔑️ A grant or redemption naming `reader_user_id` for a space whose `space.created` the socket never delivered to it
+/// (the space's earlier events became readable behind the reader's cursor), or a removal naming it (its events became
+/// unreadable) — the reader's visible directory moved, so it re-reads from the origin. Law: fixture `🔑️access-changed-v1`.
+fn directory_access_change_for_reader(reader_user_id: &str, created_on_socket: &BTreeSet<String>, message: &DirectoryStreamMessage) -> Option<DirectoryStreamMessage> {
+    let DirectoryStreamMessage::Event { event } = message else { return None };
+    let (space_id, change) = match &event.body {
+        os_directory::DirectoryEventBody::MemberUpserted { space_id, user_id: member, .. } | os_directory::DirectoryEventBody::InviteRedeemed { space_id, user_id: member, .. } if member == reader_user_id && !created_on_socket.contains(space_id) => (space_id, os_directory::DirectoryAccessChange::Granted),
+        os_directory::DirectoryEventBody::MemberRemoved { space_id, user_id: member } if member == reader_user_id => (space_id, os_directory::DirectoryAccessChange::Revoked),
+        _ => return None,
+    };
+    Some(DirectoryStreamMessage::AccessChanged { space_id: space_id.clone(), change })
+}
+
+/// 🏗️ Remembers every space whose `space.created` a global directory socket delivered, so a membership in it is not an
+/// access change for that reader (it already read the space from its first event).
+fn note_directory_space_created(created_on_socket: &mut BTreeSet<String>, message: &DirectoryStreamMessage) {
+    if let DirectoryStreamMessage::Event { event } = message {
+        if let os_directory::DirectoryEventBody::SpaceCreated { space_id, .. } = &event.body {
+            created_on_socket.insert(space_id.clone());
+        }
     }
 }
 
@@ -7608,7 +7686,7 @@ fn directory_message_bindings(record: &SocketGrantRecordV1, message: &DirectoryS
 async fn socket_directory_membership_visibility(state: &HubState, record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> SocketBindingValidityV1 {
     let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return SocketBindingValidityV1::Unauthorized };
     let Some(space_id) = directory_stream_message_space(message) else {
-        return if matches!(message, DirectoryStreamMessage::Event { event } if event.user_id.as_deref() == Some(user_id.as_str())) { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized };
+        return if matches!(message, DirectoryStreamMessage::AccessChanged { .. }) || matches!(message, DirectoryStreamMessage::Event { event } if event.user_id.as_deref() == Some(user_id.as_str())) { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized };
     };
     match state.directory.get_space(space_id).await {
         Ok(Some(_)) => {}
@@ -7649,7 +7727,7 @@ fn directory_message_matches_scope(scope: &DocumentScope, message: &DirectoryStr
         },
         DirectoryStreamMessage::Connection { connection, .. } => connection.space_id == scope.space_id && connection.document_id == scope.document_id,
         DirectoryStreamMessage::Presence { space_id, document_id, .. } => space_id == &scope.space_id && document_id == &scope.document_id,
-        DirectoryStreamMessage::Heartbeat { .. } => false,
+        DirectoryStreamMessage::Heartbeat { .. } | DirectoryStreamMessage::AccessChanged { .. } => false,
         DirectoryStreamMessage::RebootstrapRequired { control } => control.scope == *scope,
     }
 }
@@ -7911,21 +7989,28 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
         }
     };
     let mut last_replayed = since;
+    let mut created_on_socket = BTreeSet::new();
     for event in replay {
         let seq = event.seq;
         let message = DirectoryStreamMessage::Event { event: Box::new(event) };
-        match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, delivery_space_id, delivery_epoch, &message).await {
-            ScopedDirectoryFrameDecisionV1::Deliver => {
-                last_replayed = last_replayed.max(seq);
-            }
-            ScopedDirectoryFrameDecisionV1::SkipUnrelated => {}
-            ScopedDirectoryFrameDecisionV1::CloseUnauthorized => {
-                let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
-                return;
-            }
-            ScopedDirectoryFrameDecisionV1::CloseUnavailable => {
-                let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
-                return;
+        let access = directory_reader_access_change(&record, &created_on_socket, &message);
+        for frame in std::iter::once(&message).chain(access.as_ref()) {
+            match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, delivery_space_id, delivery_epoch, frame).await {
+                ScopedDirectoryFrameDecisionV1::Deliver => {
+                    if matches!(frame, DirectoryStreamMessage::Event { .. }) {
+                        last_replayed = last_replayed.max(seq);
+                        note_directory_space_created(&mut created_on_socket, frame);
+                    }
+                }
+                ScopedDirectoryFrameDecisionV1::SkipUnrelated => {}
+                ScopedDirectoryFrameDecisionV1::CloseUnauthorized => {
+                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                    return;
+                }
+                ScopedDirectoryFrameDecisionV1::CloseUnavailable => {
+                    let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                    return;
+                }
             }
         }
     }
@@ -7975,19 +8060,31 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
                     if seq.is_some_and(|seq| seq <= last_replayed) {
                         continue;
                     }
-                    match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, delivery_space_id, delivery_epoch, &message).await {
-                        ScopedDirectoryFrameDecisionV1::Deliver => {
-                            if let Some(seq) = seq { last_replayed = last_replayed.max(seq); }
+                    let access = directory_reader_access_change(&record, &created_on_socket, &message);
+                    let mut closed = false;
+                    for frame in std::iter::once(&message).chain(access.as_ref()) {
+                        match send_socket_directory_message(&mut sender, &state, &record, &live_lease.id, delivery_space_id, delivery_epoch, frame).await {
+                            ScopedDirectoryFrameDecisionV1::Deliver => {
+                                if matches!(frame, DirectoryStreamMessage::Event { .. }) {
+                                    if let Some(seq) = seq { last_replayed = last_replayed.max(seq); }
+                                    note_directory_space_created(&mut created_on_socket, frame);
+                                }
+                            }
+                            ScopedDirectoryFrameDecisionV1::SkipUnrelated => {}
+                            ScopedDirectoryFrameDecisionV1::CloseUnauthorized => {
+                                let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
+                                closed = true;
+                                break;
+                            }
+                            ScopedDirectoryFrameDecisionV1::CloseUnavailable => {
+                                let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
+                                closed = true;
+                                break;
+                            }
                         }
-                        ScopedDirectoryFrameDecisionV1::SkipUnrelated => {}
-                        ScopedDirectoryFrameDecisionV1::CloseUnauthorized => {
-                            let _ = sender.send(Message::Close(Some(CloseFrame { code: 4401, reason: "unauthorized".into() }))).await;
-                            break;
-                        }
-                        ScopedDirectoryFrameDecisionV1::CloseUnavailable => {
-                            let _ = sender.send(Message::Close(Some(CloseFrame { code: 1013, reason: "authorization-unavailable".into() }))).await;
-                            break;
-                        }
+                    }
+                    if closed {
+                        break;
                     }
                 }
                 Err(broadcast::error::RecvError::Lagged(_)) => {
@@ -8080,12 +8177,16 @@ async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Re
     Ok(Json(response))
 }
 
-/// @emoji 🗑️ `DELETE /auth/sessions/me` — self sign-out. Revocation is a directory fact, and the
-/// same revocation is applied to the server instance's live session set: a key removed from one
-/// and left in the other is a key that still opens a door somewhere, so the two move together or
-/// the caller learns the sign-out did not complete.
-async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
+/// @emoji 🚪️ `POST /auth/sessions/me/sign-out` — the self sign-out command. Revocation is a
+/// directory fact, and the same revocation is applied to the server instance's live session set: a
+/// key removed from one and left in the other is a key that still opens a door somewhere, so the two
+/// move together or the caller learns the sign-out did not complete.
+async fn post_session_sign_out(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> StatusCode {
     let span = state.span("server.auth.session.revoke");
+    if !body.is_empty() {
+        span.refused("malformed-request");
+        return StatusCode::BAD_REQUEST;
+    }
     let Some(token) = bearer(&headers) else {
         span.refused("no-bearer");
         return StatusCode::UNAUTHORIZED;
@@ -8527,13 +8628,24 @@ async fn get_agent_delegations(headers: HeaderMap, Query(query): Query<AgentDele
     }
 }
 
-/// @emoji 🤖️ `DELETE /auth/agent-delegations/{id}` — withdrawal. The delegation row and its
-/// `agent-delegation-revoked` fact are written in one transaction, and every live agent session
+/// @emoji 🤖️ `POST /auth/agent-delegations/{id}/revoke` — the withdrawal command. The delegation
+/// row and its `agent-delegation-revoked` fact are written in one transaction, and every live agent session
 /// minted from it is revoked with the same `authorization_generation` bump an ordinary sign-out
 /// performs — so open socket grants and document plans die with it and the agent's next frame is
 /// closed `4401`. A delegation that is not this human's is `403`, never `404`.
-async fn delete_agent_delegation(Path(delegation_id): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+///
+/// The withdrawal is linearized against the agent's own work: once the revocation is durable, the
+/// route holds every revoked session's binding exclusively before it answers. A frame the agent had
+/// already admitted (holding those bindings shared) finishes first — its edit precedes the
+/// withdrawal —, and every frame after it re-reads the revoked session and is refused. So `204` means
+/// no further edit of that agent can be accepted and its sockets are closing (ticket 26/09/23 G10 S4:
+/// on 7800 a connected agent was refused in one run and still edited in the other).
+async fn post_agent_delegation_revoke(Path(delegation_id): Path<String>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let span = state.span("server.auth.agent.revoke");
+    if !body.is_empty() {
+        span.refused("malformed-request");
+        return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
+    }
     let session = match delegating_principal(&state, &headers).await {
         Ok(session) => session,
         Err(code) => {
@@ -8548,15 +8660,17 @@ async fn delete_agent_delegation(Path(delegation_id): Path<String>, headers: Hea
     let correlation_id = directory::os_identity::time_ordered_id();
     match state.directory.revoke_agent_delegation(&delegation_id, &session.user_id, "delegation-revoked-by-owner", &correlation_id, now_ms()).await {
         Ok(Some(revoked)) => {
+            let bindings: Vec<SocketBindingKeyV1> = revoked.iter().map(|entry| SocketBindingKeyV1::Session(entry.id.clone())).collect();
+            let fence = tokio::time::timeout(DOCUMENT_SOCKET_FRAME_DEADLINE, state.socket_binding_gates.acquire(bindings.iter().cloned().map(|binding| (binding, SocketBindingModeV1::Exclusive)).collect())).await;
             let mut forgotten = Ok(());
-            for entry in &revoked {
-                let binding = SocketBindingKeyV1::Session(entry.id.clone());
+            for (entry, binding) in revoked.iter().zip(bindings) {
                 state.socket_grants.invalidate_binding(binding.clone());
                 state.document_open_plans.invalidate_binding(&binding);
                 if let Err(error) = state.forget_instance_session(&entry.id).await {
                     forgotten = Err(error);
                 }
             }
+            drop(fence);
             if let Err(error) = forgotten {
                 span.failed(&format!("instance-session-forget-{error:?}"));
                 return agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None);
@@ -8723,7 +8837,7 @@ async fn rate_limit_middleware(State(state): State<HubState>, request: axum::ext
 /// @emoji 🏷️ Which rate-limit family a request belongs to, by method and path alone.
 fn rate_limit_class(method: &axum::http::Method, path: &str) -> Option<RateLimitClassV1> {
     match (method, path) {
-        (&axum::http::Method::POST, semio_hub::auth::SESSION_MINT_ROUTE) | (&axum::http::Method::POST, semio_hub::auth::CREDENTIAL_ROUTE) | (&axum::http::Method::DELETE, semio_hub::auth::SESSION_ME_ROUTE) => Some(RateLimitClassV1::Auth),
+        (&axum::http::Method::POST, semio_hub::auth::SESSION_MINT_ROUTE) | (&axum::http::Method::POST, semio_hub::auth::CREDENTIAL_ROUTE) | (&axum::http::Method::POST, semio_hub::auth::SESSION_SIGN_OUT_ROUTE) => Some(RateLimitClassV1::Auth),
         (&axum::http::Method::POST, "/directory/commands") => Some(RateLimitClassV1::DirectoryCommand),
         (&axum::http::Method::POST, path) if path.starts_with("/directory/invites/") && path.ends_with("/redeem") => Some(RateLimitClassV1::InviteRedemption),
         (&axum::http::Method::POST, path) if path.ends_with("/socket-grants") => Some(RateLimitClassV1::SocketGrant),
@@ -8881,7 +8995,7 @@ fn apply_cors_headers(headers: &mut HeaderMap, origin: Option<&axum::http::Heade
             headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS, axum::http::HeaderValue::from_static("true"));
         }
     }
-    headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_METHODS, axum::http::HeaderValue::from_static("GET, POST, PUT, HEAD, DELETE, OPTIONS"));
+    headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_METHODS, axum::http::HeaderValue::from_static("GET, POST, PUT, HEAD, OPTIONS"));
     headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_HEADERS, axum::http::HeaderValue::from_static("authorization, content-type"));
 }
 //#endregion 🔖️Directory
@@ -9851,12 +9965,12 @@ async fn admin_intents(headers: HeaderMap, axum::extract::ConnectInfo(peer): axu
     }
 }
 
+/// 🌵️ `extensions_root` is `{data_dir}/extension-modules` (see `main`'s own construction) — its
+/// parent is `data_dir` itself, the nearest thing `HubState` carries to `OS_HUB_DATA`'s root.
 async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<serde_json::Value>, StatusCode> {
     let _principal = authenticate_admin_principal(&state, &headers, Some(peer)).await?;
     let counts = state.directory.admin_overview_counts().await.map_err(directory_error_status)?;
     let head_seq = state.directory.head_seq().await.map_err(directory_error_status)?;
-    // 🌵️ `extensions_root` is `{data_dir}/extension-modules` (see `main`'s own construction) — its
-    // parent is `data_dir` itself, the nearest thing `HubState` carries to `OS_HUB_DATA`'s root.
     let data_dir_bytes = state.extensions_root.parent().map(dir_size).unwrap_or(0);
     let response = serde_json::json!({
         "counts": { "spaces": counts.spaces, "users": counts.users, "connections": counts.connections },
@@ -9871,47 +9985,35 @@ async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): ax
     Ok(Json(response))
 }
 
-/// @emoji 📝️ The per-event table one tracer has accumulated since boot, as the JSON
-/// `GET /admin/api/observability` answers with.
+/// @emoji 📝️ What `GET /admin/api/observability` answers ([`HubObservabilityV1`]): the per-event table one
+/// tracer has accumulated since boot, the per-route answer table, the compiled-guest residency and the DB I/O
+/// census.
 ///
 /// Counters, never records. Replaying the record stream over HTTP would put one tenant's
 /// principals, space ids and artifact ids behind another operator's single admin capability, and it
-/// is not what the question "what is failing, how often, and how slow is it" needs — the table
-/// answers that, and the records themselves go to the sink the operator configured, which is where
-/// their retention and access policy already lives.
+/// is not what the question "what is failing, how often, and how slow is it" needs — the tables
+/// answer that, and the records themselves go to the sink the operator configured, which is where
+/// their retention and access policy already lives. Routes are keyed by their template, never a
+/// concrete path, for the same reason.
 ///
 /// `declaredEvents` ships the vocabulary alongside the live rows so a dashboard can show a declared
 /// event that has not fired yet as a zero rather than as a missing series, and `droppedEvents` is
 /// the bounded table's own overflow count — non-zero means some event name is being built from
 /// request data, which is itself the thing to alert on.
-fn observability_view(tracer: &Tracer) -> serde_json::Value {
-    let rows: Vec<serde_json::Value> = tracer
-        .counters()
-        .into_iter()
-        .map(|EventCount { event, counters }| {
-            let (p50_us, p95_us, p99_us) = counters.percentiles_us();
-            serde_json::json!({
-                "event": event,
-                "started": counters.started,
-                "ok": counters.ok,
-                "refused": counters.refused,
-                "failed": counters.failed,
-                "cancelled": counters.cancelled,
-                "total": counters.total(),
-                "samples": counters.samples(),
-                "p50Us": p50_us,
-                "p95Us": p95_us,
-                "p99Us": p99_us,
-            })
-        })
-        .collect();
-    serde_json::json!({
-        "schema": "semio.hub.observability/v1",
-        "level": tracer.level().as_str(),
-        "droppedEvents": tracer.dropped_event_count(),
-        "declaredEvents": SERVER_SPAN_EVENTS,
-        "rows": rows,
-    })
+fn observability_view(tracer: &Tracer, routes: &HubRouteMetricsV1, catalog: Option<&VerifiedTrustedCatalog>) -> HubObservabilityV1 {
+    HubObservabilityV1::read(tracer, routes, catalog, HUB_PROCESS_START.elapsed().as_millis().min(u128::from(u64::MAX)) as u64)
+}
+
+/// @emoji 🛣️ Counts every answer of a matched route under its method and route template, with the time the
+/// route took to answer — the per-route table of `GET /admin/api/observability`. It runs inside routing
+/// (`route_layer`), so the template is known and a concrete path never becomes a key.
+async fn route_metrics_middleware(State(metrics): State<Arc<HubRouteMetricsV1>>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+    let method = request.method().as_str().to_string();
+    let route = request.extensions().get::<axum::extract::MatchedPath>().map_or_else(|| "unmatched".to_string(), |matched| matched.as_str().to_string());
+    let started = std::time::Instant::now();
+    let response = next.run(request).await;
+    metrics.observe(&method, &route, response.status().as_u16(), started.elapsed().as_micros().min(u128::from(u64::MAX)) as u64);
+    response
 }
 
 /// @emoji 📝️ `GET /admin/api/observability` — behind `authenticate_admin_principal`, exactly like
@@ -9919,7 +10021,7 @@ fn observability_view(tracer: &Tracer) -> serde_json::Value {
 /// internals unauthenticated. See [`observability_view`] for why the body is counters.
 async fn admin_observability(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<serde_json::Value>, StatusCode> {
     let _principal = authenticate_admin_principal(&state, &headers, Some(peer)).await?;
-    let response = observability_view(&state.tracer);
+    let response = observability_view(&state.tracer, &state.route_metrics, state.verified_catalog.as_deref());
     if serde_json::to_vec(&response).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.len() > ADMIN_RESPONSE_MAX_BYTES {
         return Err(StatusCode::PAYLOAD_TOO_LARGE);
     }
@@ -10444,7 +10546,7 @@ impl GisMapApprovalIngressAuthorityV1 for HubGisMapApprovalIngressAuthorityV1 {
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
-async fn revalidate_gis_map_approval_delivery(state: &HubState, authority: &HubGisMapApprovalIngressAuthorityV1) -> Result<(), InferenceRouteErrorV1> {
+async fn revalidate_gis_map_approval_authority(state: &HubState, authority: &HubGisMapApprovalIngressAuthorityV1) -> Result<(), InferenceRouteErrorV1> {
     revalidate_directory_caller(state, &authority.caller).await.map_err(|status| if status == StatusCode::SERVICE_UNAVAILABLE { InferenceRouteErrorV1::Unavailable } else { InferenceRouteErrorV1::Denied })?;
     let role =
         tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_role(&authority.scope.space_id, &authority.caller.user_id)).await.map_err(|_| InferenceRouteErrorV1::Unavailable)?.map_err(|_| InferenceRouteErrorV1::Unavailable)?;
@@ -10470,7 +10572,7 @@ async fn acquire_gis_map_approval_ingress(state: &HubState, scope: DocumentScope
     .await
     .map_err(|_| InferenceRouteErrorV1::Unavailable)?;
     let authority = Arc::new(HubGisMapApprovalIngressAuthorityV1 { scope, caller, _guards: guards });
-    revalidate_gis_map_approval_delivery(state, &authority).await?;
+    revalidate_gis_map_approval_authority(state, &authority).await?;
     Ok(authority)
 }
 
@@ -10549,6 +10651,11 @@ async fn post_inference_gis_map_job_cancel(Path((space_id, document_id, job_id))
     }
 }
 
+/// @emoji 🗳️ Approves one offered proposal. The caller's authority is validated once at ingress and its bindings stay
+/// held (shared) until the answer is sent, so no revocation can interleave with the commit; once the commit is
+/// durable the answer is its receipt. A second directory check after the commit could only fail for availability
+/// (a 2 s directory read on a loaded hub) and answered `503 inference.unavailable` for a committed approval — the
+/// document advanced while the caller was told nothing happened (ticket 26/09/23 G10, 7800 quartet runs 3/5/6).
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id)): Path<(String, String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
@@ -10560,16 +10667,15 @@ async fn post_inference_gis_map_job_approval(Path((space_id, document_id, job_id
         Ok(ingress) => ingress,
         Err(error) => return inference_error_response(error),
     };
-    let context = InferenceApprovalRouteContextV1 { route, ingress: ingress.clone() };
+    let context = InferenceApprovalRouteContextV1 { route, ingress };
     match semio_hub::inference::runtime::approve_gis_map_job(context, &job_id, &body).await {
-        Ok(receipt) => match revalidate_gis_map_approval_delivery(&state, &ingress).await {
-            Ok(()) => Json(receipt).into_response(),
-            Err(error) => inference_error_response(error),
-        },
+        Ok(receipt) => Json(receipt).into_response(),
         Err(error) => inference_error_response(error),
     }
 }
 
+/// @emoji ↩️ Undoes one approval under the same ingress law as [`post_inference_gis_map_job_approval`]: a durable
+/// undo is answered with its receipt.
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
     let token = bearer(&headers);
@@ -10581,12 +10687,9 @@ async fn post_inference_gis_map_approval_undo(Path((space_id, document_id)): Pat
         Ok(ingress) => ingress,
         Err(error) => return inference_error_response(error),
     };
-    let context = InferenceApprovalRouteContextV1 { route, ingress: ingress.clone() };
+    let context = InferenceApprovalRouteContextV1 { route, ingress };
     match semio_hub::inference::runtime::undo_gis_map_approval(context, &body).await {
-        Ok(receipt) => match revalidate_gis_map_approval_delivery(&state, &ingress).await {
-            Ok(()) => Json(receipt).into_response(),
-            Err(error) => inference_error_response(error),
-        },
+        Ok(receipt) => Json(receipt).into_response(),
         Err(error) => inference_error_response(error),
     }
 }
@@ -10625,6 +10728,15 @@ fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
     router
 }
 
+/// 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
+/// for why this must cover the whole router, not just `/directory/*`.
+/// 🚦️ Inside the CORS layer, so a refused request never reaches a handler and its `429`
+/// still leaves through `cors_middleware` with the headers a browser needs to read it.
+///
+/// 🛡️ Outermost: a request a trusted proxy reports as cleartext is refused before CORS, rate
+/// limiting or any handler sees it — a compromised transport is not a per-route question.
+///
+/// 🚧️ Outermost of all: every answer, the transport refusal included, leaves typed and signed.
 fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: ForwardedTlsTrustV1) -> Router {
     std::sync::LazyLock::force(&HUB_PROCESS_START);
     artifact_creation_routes(inference_routes(Router::new()))
@@ -10632,9 +10744,10 @@ fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: For
         .route("/readyz", get(get_readyz))
         .route(semio_hub::auth::SESSION_MINT_ROUTE, post(post_auth_session).layer(DefaultBodyLimit::max(semio_hub::auth::SIGN_IN_REQUEST_MAX_BYTES)))
         .route(semio_hub::auth::CREDENTIAL_ROUTE, post(post_auth_credential).layer(DefaultBodyLimit::max(semio_hub::auth::CREDENTIAL_CHANGE_REQUEST_MAX_BYTES)))
-        .route("/auth/sessions/me", get(get_session_me).delete(delete_session_me))
+        .route("/auth/sessions/me", get(get_session_me))
+        .route("/auth/sessions/me/sign-out", post(post_session_sign_out).layer(DefaultBodyLimit::max(0)))
         .route(semio_hub::auth::agent::AGENT_DELEGATION_ROUTE, post(post_agent_delegation).get(get_agent_delegations).layer(DefaultBodyLimit::max(semio_hub::auth::agent::AGENT_DELEGATION_REQUEST_MAX_BYTES)))
-        .route("/auth/agent-delegations/{id}", axum::routing::delete(delete_agent_delegation))
+        .route(semio_hub::auth::agent::AGENT_DELEGATION_REVOKE_ROUTE, post(post_agent_delegation_revoke).layer(DefaultBodyLimit::max(0)))
         .route(semio_hub::auth::agent::AGENT_SESSION_ROUTE, post(post_agent_session).layer(DefaultBodyLimit::max(semio_hub::auth::agent::AGENT_SESSION_REQUEST_MAX_BYTES)))
         .route("/directory/commands", post(post_directory_commands).layer(DefaultBodyLimit::max(DIRECTORY_COMMAND_REQUEST_MAX_BYTES)))
         .route("/directory/spaces", get(get_directory_spaces))
@@ -10679,16 +10792,10 @@ fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: For
         .route("/spaces/{space_id}/documents/{id}/execution-target/component", post(issue_document_execution_target_component))
         .route("/spaces/{space_id}/documents/{id}/execution-target/descriptor", post(issue_document_execution_target_descriptor))
         .route("/spaces/{space_id}/documents/{id}/execution-target/browser-actor", post(issue_document_execution_target_browser_actor))
-        // 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
-        // for why this must cover the whole router, not just `/directory/*`.
-        // 🚦️ Inside the CORS layer, so a refused request never reaches a handler and its `429`
-        // still leaves through `cors_middleware` with the headers a browser needs to read it.
+        .route_layer(axum::middleware::from_fn_with_state(state.route_metrics.clone(), route_metrics_middleware))
         .layer(axum::middleware::from_fn_with_state(state.clone(), rate_limit_middleware))
         .layer(axum::middleware::from_fn_with_state(cross_origin, cors_middleware))
-        // 🛡️ Outermost: a request a trusted proxy reports as cleartext is refused before CORS, rate
-        // limiting or any handler sees it — a compromised transport is not a per-route question.
         .layer(axum::middleware::from_fn_with_state(forwarded_tls, transport_security_middleware))
-        // 🚧️ Outermost of all: every answer, the transport refusal included, leaves typed and signed.
         .layer(axum::middleware::from_fn_with_state(state.tracer.clone(), refusal_middleware))
         .with_state(state)
 }
@@ -11029,6 +11136,44 @@ fn main() -> Result<(), HubError> {
 }
 
 /// @emoji 🚪️ The hub process: CLI verbs first, then the configured server until a termination signal.
+///
+/// 🔐️ Read before the startup gate rather than next to its first use: whether the hub's own
+/// credential authority is enabled is *the* thing that decides whether production may boot, and
+/// `CredentialSignInPolicyV1::from_env` reads nothing but the environment.
+///
+/// 🪪️ The external-IdP seam. No adapter ships in this repository; production reaches its identity
+/// requirement through `credential_sign_in` instead — see `validate_auth_startup`.
+///
+/// 📝️ Observability is configured before the first subsystem that reports, so the trusted-catalog
+/// load, the artifact-CAS sweep and the creation-recovery loop all report onto the same tracer the
+/// routes later use — a tracer built after them would have silently lost every boot record.
+///
+/// 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
+/// got its `disconnected_at` because a previous process was killed mid-connection.
+///
+/// ⏳️ The artifact-CAS coordinator handshake is startup work no client is waiting on, so it takes
+/// the same no-progress bound as the catalog load above rather than a second wall-clock budget.
+///
+/// 🤖️ One bounded read of the real method, never a declared capability flag beside it: a backend
+/// that carries the family's erroring default answers `Err(Backend)` here and a backend that
+/// implements it answers an empty page, so `features.mcpWorkspace` cannot drift from what
+/// `POST /auth/agent-sessions` would actually do on the next request.
+///
+/// 🗄️ Hub as instance #1 of the server product. Its four roles open under `{OS_HUB_DATA}/instance`
+/// — inside the same root the directory, the artifact CAS and the extension mirror live in, so one
+/// backup or one `rm -rf` covers the whole hub and no second data location has to be documented.
+/// Auth + directory modules are registered on the framework gateway here; hub's own router, which
+/// owns the document socket, merges with that router below.
+///
+/// 🗣️ The startup banner is NOT a log line and is deliberately not routed through the tracer: it
+/// is this process's announcement of its own readiness, its exact text is pinned by
+/// `the_startup_line_names_the_bound_address_when_ready` and read by the collaboration harness,
+/// and it must survive `SEMIO_TRACE_SINK=none`. The same fact is additionally reported as a
+/// structured `server.readiness` record, so a collector sees it without parsing prose.
+///
+/// 🚰️ Last, and after the router is already refusing connections: a final pass over whatever the
+/// in-flight requests committed on their way out, so nothing is left acknowledged-but-undelivered
+/// in the outbox across the restart.
 async fn serve() -> Result<(), HubError> {
     let arguments = std::env::args_os().skip(1).collect::<Vec<_>>();
     if credential_command::dispatch(&arguments).await? {
@@ -11042,12 +11187,8 @@ async fn serve() -> Result<(), HubError> {
     let mode = HubMode::from_environment(bind)?;
     let cross_origin = CrossOriginPolicyV1::from_environment(bind)?;
     let forwarded_tls = ForwardedTlsTrustV1::from_environment()?;
-    // 🔐️ Read before the startup gate rather than next to its first use: whether the hub's own
-    // credential authority is enabled is *the* thing that decides whether production may boot, and
-    // `CredentialSignInPolicyV1::from_env` reads nothing but the environment.
+    let guest_residency = TrustedCatalogGuestResidencyV1::configured(std::env::var(GUEST_RESIDENCY_BYTES_ENV).ok().as_deref()).map_err(|detail| HubError::ArtifactAuthority(AuthorityError::Catalog(detail)))?;
     let credential_sign_in = CredentialSignInPolicyV1::from_env().map_err(|error| HubError::UnsafeAuthConfiguration(error.to_string()))?;
-    // 🪪️ The external-IdP seam. No adapter ships in this repository; production reaches its identity
-    // requirement through `credential_sign_in` instead — see `validate_auth_startup`.
     let identity_verifier: Option<Arc<dyn IdentityAssertionVerifier>> = None;
     let bootstrap_control = Arc::new(HubBootstrapControl::new());
     let local_bootstrap: Option<Arc<dyn LocalBootstrapTransport>> = if mode == HubMode::Development {
@@ -11066,9 +11207,6 @@ async fn serve() -> Result<(), HubError> {
     let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = Some(&native_codec_providers);
     #[cfg(not(feature = "native-artifact-execution"))]
     let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = None;
-    // 📝️ Observability is configured before the first subsystem that reports, so the trusted-catalog
-    // load, the artifact-CAS sweep and the creation-recovery loop all report onto the same tracer the
-    // routes later use — a tracer built after them would have silently lost every boot record.
     let tracer = Tracer::from_environment();
     let startup_cancellation = StartupCancellationV1::default();
     let addr = SocketAddr::new(bind, port);
@@ -11112,17 +11250,16 @@ async fn serve() -> Result<(), HubError> {
     };
     let trusted_catalog_stalled = matches!(startup_artifact_authority, StartupArtifactAuthority::Stalled);
     let artifact_authority = startup_artifact_authority.configured();
+    if let Some(configured) = artifact_authority.as_ref() {
+        configured.catalog.configure_guest_residency(guest_residency);
+    }
     let db = Arc::new(connect_db(&data_dir).await?);
     let served: Result<(usize, Result<(), HubError>), HubError> = async {
         let directory = connect_directory(&data_dir).await?;
-        // 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
-        // got its `disconnected_at` because a previous process was killed mid-connection.
         directory.close_all_sync_sessions().await?;
         let directory_service = Arc::new(DirectoryService::new(directory.clone(), 1024));
         let artifact_cas = connect_artifact_cas(&data_dir).await?;
         let startup_control = StartupCatalogControl::new(tracer.clone(), startup_cancellation.clone(), startup_progress.clone());
-        // ⏳️ The artifact-CAS coordinator handshake is startup work no client is waiting on, so it takes
-        // the same no-progress bound as the catalog load above rather than a second wall-clock budget.
         let startup_context = OperationContext::stall_bounded(TRUSTED_CATALOG_STARTUP_STALL_BOUND_MS, AuthorityLimits::maximum(), &startup_control)?;
         let artifact_cas_coordinator_id = directory.artifact_cas_coordinator_id().await?;
         artifact_cas.configure_coordinator(artifact_cas_coordinator_id, &startup_context).await?;
@@ -11134,10 +11271,6 @@ async fn serve() -> Result<(), HubError> {
         std::fs::create_dir_all(&extensions_root)?;
         let artifact_authority_ready = artifact_authority.is_some();
         let open_plan_ready = artifact_authority.as_ref().is_some_and(|configured| configured.catalog.open_target_count() > 0);
-        // 🤖️ One bounded read of the real method, never a declared capability flag beside it: a backend
-        // that carries the family's erroring default answers `Err(Backend)` here and a backend that
-        // implements it answers an empty page, so `features.mcpWorkspace` cannot drift from what
-        // `POST /auth/agent-sessions` would actually do on the next request.
         let agent_delegation_ready = directory.list_agent_delegations(AGENT_DELEGATION_READINESS_PROBE_SCOPE, AGENT_DELEGATION_READINESS_PROBE_SCOPE, 1).await.is_ok();
         let verified_catalog = artifact_authority.as_ref().map(|configured| configured.catalog.clone());
         #[cfg(feature = "native-artifact-execution")]
@@ -11202,11 +11335,6 @@ async fn serve() -> Result<(), HubError> {
         let admin_cursor_key = SessionCapability::mint()?.secret_digest();
         let space_administration_cursor_key = SessionCapability::mint()?.secret_digest();
         let merge_policy = merge_policy_from_env(&tracer);
-        // 🗄️ Hub as instance #1 of the server product. Its four roles open under `{OS_HUB_DATA}/instance`
-        // — inside the same root the directory, the artifact CAS and the extension mirror live in, so one
-        // backup or one `rm -rf` covers the whole hub and no second data location has to be documented.
-        // Auth + directory modules are registered on the framework gateway here; hub's own router, which
-        // owns the document socket, merges with that router below.
         let (instance, framework_router) = compose_hub_server(&data_dir, directory.clone()).await?;
         let socket_drain = Arc::new(HubSocketDrainV1::default());
         tracer.emit({
@@ -11217,6 +11345,7 @@ async fn serve() -> Result<(), HubError> {
         let check_ins = Arc::new(DocumentCheckInJobs::default());
         let state = HubState {
             tracer: tracer.clone(),
+            route_metrics: Arc::default(),
             instance,
             db: db.clone(),
             artifact_cas,
@@ -11279,6 +11408,7 @@ async fn serve() -> Result<(), HubError> {
         let listener = tokio::net::TcpListener::from_std(bound)?;
         boot_server.hand_over().await;
         let saga_drain = SagaDrainSupervisor::start(state.instance.clone(), state.tracer.clone(), SAGA_DRAIN_INTERVAL);
+        let catalog_verification = state.verified_catalog.clone().map(|catalog| tokio::spawn(verify_pending_catalog_guests(catalog, tracer.clone(), startup_cancellation.clone(), startup_progress.clone())));
         let admin_operation_tasks = state.admin_operation_tasks.clone();
         #[cfg(feature = "native-artifact-execution")]
         let artifact_creation_tasks = state.artifact_creation_tasks.clone();
@@ -11286,11 +11416,6 @@ async fn serve() -> Result<(), HubError> {
             let control: Arc<dyn IdentityVerificationControl> = bootstrap_control.clone();
             tokio::spawn(serve_local_bootstrap(transport, directory, control))
         });
-        // 🗣️ The startup banner is NOT a log line and is deliberately not routed through the tracer: it
-        // is this process's announcement of its own readiness, its exact text is pinned by
-        // `the_startup_line_names_the_bound_address_when_ready` and read by the collaboration harness,
-        // and it must survive `SEMIO_TRACE_SINK=none`. The same fact is additionally reported as a
-        // structured `server.readiness` record, so a collector sees it without parsing prose.
         eprintln!("{}", startup_readiness_line(&state.readiness, &addr));
         eprintln!("[INFO] bind scope {bind_scope} ({addr}), cross-origin policy {}, trusted forwarding {}", cross_origin.label(), forwarded_tls.label());
         state.note(
@@ -11353,9 +11478,10 @@ async fn serve() -> Result<(), HubError> {
         #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
         let inference_close_result: Result<(), HubError> = Ok(());
         artifact_maintenance.shutdown().await;
-        // 🚰️ Last, and after the router is already refusing connections: a final pass over whatever the
-        // in-flight requests committed on their way out, so nothing is left acknowledged-but-undelivered
-        // in the outbox across the restart.
+        if let Some(verification) = catalog_verification {
+            verification.abort();
+            let _ = verification.await;
+        }
         saga_drain.shutdown().await;
         Ok((retained_sockets, result.and(inference_close_result)))
     }

@@ -1825,6 +1825,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-pixels"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-deflate",
+]
+
+[[package]]
 name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
@@ -2006,6 +2013,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-kernel",
+ "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
@@ -2040,6 +2048,7 @@ name = "semio-s-artifact-stdio-bmp"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -2082,6 +2091,7 @@ name = "semio-s-artifact-stdio-dwg"
 version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -2098,6 +2108,7 @@ name = "semio-s-artifact-stdio-dxf"
 version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -2113,6 +2124,7 @@ name = "semio-s-artifact-stdio-gif"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -2129,6 +2141,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -2177,6 +2190,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -2227,6 +2241,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
@@ -2242,6 +2257,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",

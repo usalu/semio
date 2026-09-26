@@ -67,7 +67,7 @@ pub const JPG_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg"
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.jpg".into(),
+        id: "s.stdio.jpg".into(),
         name: "Jpg".into(),
         source_format: STDIO_JPG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

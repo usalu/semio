@@ -95,8 +95,8 @@ fn contains_layer(node: &RasterLayerNode, target_id: &str) -> bool {
 fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> protocol::MutationApplyResult<()> {
     let invalid = match node {
         RasterLayerNode::Pixel { .. } => patch.adjustment_kind.is_some(),
-        RasterLayerNode::Group { .. } => patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some(),
-        RasterLayerNode::Adjustment { .. } => patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some(),
+        RasterLayerNode::Group { .. } => patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some(),
+        RasterLayerNode::Adjustment { .. } => patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some(),
     };
     if invalid {
         return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch contains fields unsupported by the target layer kind"));
@@ -107,7 +107,17 @@ fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> pro
 fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> RasterLayerPatch {
     let mut inverse = RasterLayerPatch::default();
     match node {
-        RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, width, height, .. } => {
+        RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, width, height, image_key, .. } => {
+            if let Some(content) = &patch.pixel_content {
+                inverse.pixel_content = Some(crate::RasterPixelContent { image_key: image_key.clone(), width: *width, height: *height });
+                *image_key = content.image_key.clone();
+                *width = content.width;
+                *height = content.height;
+            }
+            if let Some(value) = &patch.pixel_transform {
+                inverse.pixel_transform = Some(transform.clone());
+                *transform = value.clone();
+            }
             if let Some(value) = &patch.name {
                 inverse.name = Some(name.clone());
                 *name = value.clone();
@@ -492,6 +502,8 @@ fn absorb_layer_patch(dst: &mut RasterLayerPatch, src: RasterLayerPatch) {
     take!(width);
     take!(height);
     take!(adjustment_kind);
+    take!(pixel_content);
+    take!(pixel_transform);
 }
 
 /// 🧩️ Sequential coalesce of two layer deltas. `apply` runs the phases `removed → patched → moved →

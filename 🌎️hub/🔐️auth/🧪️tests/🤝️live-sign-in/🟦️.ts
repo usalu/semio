@@ -204,7 +204,8 @@ try {
   check("8 a change without the current password is refused", (await call("POST", "/auth/credentials", { token: reMint.json.token, body: { schema: "semio.hub.auth.credential-change/v1", currentPassword: "not the current one", newPassword: "yet another phrase here" } })).status, 401);
 
   // 9️⃣ sign out
-  check("9 sign-out status", (await call("DELETE", "/auth/sessions/me", { token: boToken })).status, 204);
+  check("9 sign-out status", (await call("POST", "/auth/sessions/me/sign-out", { token: boToken })).status, 204);
+  check("9 sessions are never deleted as a resource", (await call("DELETE", "/auth/sessions/me", { token: boToken })).status, 405);
   check("9 the signed-out capability is gone", (await call("GET", "/auth/sessions/me", { token: boToken })).status, 401);
 
   // 🔟 rate-limit lockout, last because it empties the bucket for this address

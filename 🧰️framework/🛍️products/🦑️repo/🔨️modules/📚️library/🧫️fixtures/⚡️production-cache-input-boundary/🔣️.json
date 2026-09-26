@@ -16,9 +16,9 @@
       "test": true
     },
     {
-      "id": "shared-runner-fixture",
+      "id": "owner-tree-fixture",
       "role": "fixture",
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔏️inputs/🧫️fixtures/🔏️receipt/🔣️.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧫️fixtures/🌱️artifact-creation/🔣️.json",
       "production": false,
       "test": true
     },
@@ -30,9 +30,9 @@
       "test": true
     },
     {
-      "id": "production-asset",
+      "id": "owner-tree-schema",
       "role": "asset",
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖼️assets/💉️ticket-important-exact-mutations/🔣️.json",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json",
       "production": true,
       "test": true
     },

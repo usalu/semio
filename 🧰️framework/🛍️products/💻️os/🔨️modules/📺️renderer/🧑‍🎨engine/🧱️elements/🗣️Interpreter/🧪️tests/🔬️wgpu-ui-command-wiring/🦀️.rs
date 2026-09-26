@@ -1,5 +1,18 @@
 use super::*;
 
+fn collect_text_editor_actions_accepted(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+    let _ = crate::engine_canvas::drive_text_editor_outbox_step(input).expect("text editor outbox");
+    let mut actions = Vec::new();
+    while let Some(action) = input.take_action_step().expect("action authority") {
+        let queued = action.into_envelope().expect("action envelope");
+        if let Some(receipt) = queued.receipt {
+            crate::engine_canvas::settle_text_editor_action_receipt(receipt, crate::engine_canvas::TextEditorActionOutcome::Accepted);
+        }
+        actions.push(queued.descriptor);
+    }
+    actions
+}
+
 #[test]
 fn retained_document_close_queue_is_bounded_and_same_window_replacement_costs_no_credit() {
     let mut queue = UiDocumentCloseQueue::default();
@@ -535,10 +548,19 @@ fn focus_rebase_document_with_ink(window_id: &str, generation: u64, kind: ui_wgp
             let surface = match kind {
                 ui_wgpu::wgpu::SurfaceKind::Canvas2d => ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Canvas2d, &ui_wgpu::wgpu::Canvas2dScene::base(0.0, 0.0, 1.0, "[]".into())).unwrap(),
                 ui_wgpu::wgpu::SurfaceKind::TextEditor => ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::TextEditor, &ui_wgpu::wgpu::TextEditorScene::base("focus".into(), None, None)).unwrap(),
+                ui_wgpu::wgpu::SurfaceKind::Table => ui_wgpu::wgpu::encode_surface_doc(
+                    ui_contract::SurfaceKind::Table,
+                    &ui_wgpu::wgpu::TableScene::base(
+                        serde_json::json!([{ "id": "count", "label": "Count" }]).to_string(),
+                        serde_json::json!([{ "id": "r1", "count": { "kind": "stepper", "value": 2.0, "min": 0.0, "max": 5.0, "step": 0.5, "action": { "controllerId": "focus-rebase", "action": "setCount", "args": { "objectId": "r1" } } } }])
+                            .to_string(),
+                    ),
+                )
+                .unwrap(),
                 ui_wgpu::wgpu::SurfaceKind::InkCanvas => {
                     ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::InkCanvas, &ink.cloned().unwrap_or_else(|| ui_wgpu::wgpu::InkCanvasScene::base("[]".into(), "pen".into(), "document".into(), true))).unwrap()
                 }
-                _ => panic!("focus rebase fixture supports Canvas and editor surfaces"),
+                _ => panic!("focus rebase fixture supports Canvas, Table and editor surfaces"),
             };
             record.component = ui_contract::Component::Surface(surface);
         }
@@ -1107,6 +1129,280 @@ fn stale_window_close_cannot_clear_a_successor_text_editor_focus() {
 }
 
 #[test]
+fn text_editor_focus_transfers_only_on_primary_presses_outside_its_mounted_target() {
+    let window = "text-editor-primary-focus";
+    let node = seed_scene_window(window, "editor", ui_wgpu::wgpu::SurfaceKind::TextEditor);
+    let target = retained_scene_target(window, node).expect("mounted editor target");
+    focus_text_editor(window, target.window_generation, node, &target.host_id);
+    for (down, button) in [(false, 0), (true, 1), (true, 2)] {
+        assert!(!blur_focused_text_editor_for_pointer(None, down, button));
+        assert!(FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().is_some()));
+    }
+    assert!(!blur_focused_text_editor_for_pointer(Some(&target), true, 0));
+    assert!(blur_focused_text_editor_for_pointer(None, true, 0));
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(!apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("x".into()), &Default::default(), &mut input));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+    focus_text_editor(window, target.window_generation, node, &target.host_id);
+    let mut successor = target.clone();
+    successor.window_generation += 1;
+    assert!(blur_focused_text_editor_for_pointer(Some(&successor), true, 0));
+    assert!(FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().is_none()));
+}
+
+#[test]
+fn text_editor_space_reaches_the_focused_editor_before_the_runtime_pan_modifier() {
+    use std::future::Future;
+    let _serialized = crate::engine_canvas::engine_surface_law_guard();
+    let law: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).unwrap();
+    let law = law["rendererKeys"].as_array().unwrap().iter().find(|law| law["id"] == "space-is-a-printable-key").unwrap();
+    let window = "text-editor-runtime-space";
+    let UiNode::ComponentScene(mut scene) = component_scene_ui(window, ui_wgpu::wgpu::SurfaceKind::TextEditor) else { unreachable!() };
+    scene.text_editor = Some(ui_wgpu::wgpu::TextEditorScene::base(law["text"].as_str().unwrap().into(), None, Some(serde_json::json!({ "start": law["selection"][0], "end": law["selection"][1] }).to_string())));
+    let node = seed_scene_window_with(window, UiNode::ComponentScene(scene));
+    let target = retained_scene_target(window, node).unwrap();
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let UiNode::ComponentScene(scene) = &engine.tree(window).unwrap().node(node).unwrap().spec.0 else { unreachable!() };
+        assert!(crate::engine_canvas::sync_engine_scene(scene, window, Rect::new(0.0, 0.0, 480.0, 320.0), &Theme::default()));
+    });
+    focus_text_editor(window, target.window_generation, node, &target.host_id);
+    let mut runtime = crate::AppInteractionState {
+        shell: crate::shell::ShellState::new(Vec::new(), "text-editor-runtime-space".into()), input: Default::default(), theme: Default::default(), theme_dark: false,
+        last_pointer_x: 0.0, last_pointer_y: 0.0, pointer_down: false, pointer_button: 0, pointer_capture: Default::default(), modifiers: Default::default(), space_pressed: false,
+        wheel_zoom_deadline_ms: 0.0, caret_blink_at_ms: 0.0, caret_blink_visible: true, text_streams: std::array::from_fn(|_| None), text_fault: None,
+        frame_fault: None, text_cancel_pending: false, last_sync_pump_ms: 0.0,
+    };
+    {
+        let mut key = Box::pin(runtime.handle_key(ui_wgpu::wgpu::KeyAction::Space(true), Default::default()));
+        assert!(key.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())).is_ready());
+    }
+    assert!(!runtime.space_pressed);
+    let actions = collect_text_editor_actions_accepted(&mut runtime.input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
+    assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], law["expect"]["text"]);
+    assert_eq!(serde_json::to_value(actions[1].args.as_ref().unwrap()).unwrap(), serde_json::json!({ "surfaceId": target.surface_id, "start": law["expect"]["selection"][0], "end": law["expect"]["selection"][1] }));
+    assert!(blur_focused_text_editor_for_pointer(None, true, 0));
+    for pressed in [true, false] {
+        {
+            let mut key = Box::pin(runtime.handle_key(ui_wgpu::wgpu::KeyAction::Space(pressed), Default::default()));
+            assert!(key.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())).is_ready());
+        }
+        assert_eq!(runtime.space_pressed, pressed);
+        assert!(crate::collect_fixture_actions(&mut runtime.input).is_empty());
+    }
+    crate::engine_canvas::retire_engine_surface_fixture(&target.host_id);
+    assert!(request_ui_document_close(window));
+    for _ in 0..262_144 {
+        if !ui_document_close_pending() { break; }
+        assert!(close_ui_document_one());
+    }
+    assert!(!ui_document_close_pending());
+}
+
+#[test]
+fn focused_text_editor_clipboard_composition_and_accessibility_share_the_accepted_host() {
+    let _serialized = crate::engine_canvas::engine_surface_law_guard();
+    let law: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json"))).unwrap();
+    let paste = law["sequences"].as_array().unwrap().iter().find(|law| law["id"] == "a-paste-replaces-the-selection").unwrap();
+    let window = "text-editor-clipboard-ime-accessibility";
+    let UiNode::ComponentScene(mut scene) = component_scene_ui(window, ui_wgpu::wgpu::SurfaceKind::TextEditor) else { unreachable!() };
+    scene.text_editor = Some(ui_wgpu::wgpu::TextEditorScene::base(
+        paste["text"].as_str().unwrap().into(),
+        None,
+        Some(serde_json::json!({ "start": paste["selection"][0], "end": paste["selection"][1] }).to_string()),
+    ));
+    let node = seed_scene_window_with(window, UiNode::ComponentScene(scene));
+    let target = retained_scene_target(window, node).unwrap();
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let UiNode::ComponentScene(scene) = &engine.tree(window).unwrap().node(node).unwrap().spec.0 else { unreachable!() };
+        assert!(crate::engine_canvas::sync_engine_scene(scene, window, Rect::new(10.0, 20.0, 480.0, 320.0), &Theme::default()));
+    });
+    focus_text_editor(window, target.window_generation, node, &target.host_id);
+    MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow_mut().clear());
+    let chord = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+
+    assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("c".into()), &chord, &mut input));
+    assert_eq!(MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow().clone()), ["b"]);
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "copy publishes no guest action");
+
+    let pasted = paste["steps"][0]["paste"].as_str().unwrap();
+    assert!(apply_focused_text_editor_text(pasted, &mut input));
+    let actions = collect_text_editor_actions_accepted(&mut input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
+    assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], paste["expect"]["text"]);
+    assert_eq!(serde_json::to_value(actions[1].args.as_ref().unwrap()).unwrap()["start"], paste["expect"]["selection"][0]);
+
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window);
+    publish_accessibility_visible_documents();
+    let textbox = published_accessibility_nodes_for_test(window).into_iter().find(|node| node.role == "textbox").expect("accepted TextEditor textbox");
+    assert_eq!(textbox.label.as_deref(), Some("Editor"));
+    assert_eq!(textbox.value_text.as_deref(), paste["expect"]["text"].as_str());
+    assert!(textbox.focusable && textbox.actionable && textbox.focused && textbox.editable && textbox.multiline && textbox.rect.is_some());
+    assert!(dispatch_accessibility_event(window, target.window_generation, textbox.node_id, &textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Value("日本".into()), &mut input).is_some());
+    let actions = collect_text_editor_actions_accepted(&mut input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
+    assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], "日本");
+
+    assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("a".into()), &chord, &mut input));
+    assert_eq!(collect_text_editor_actions_accepted(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textSelect"]);
+    assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("x".into()), &chord, &mut input));
+    assert_eq!(MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow().clone()), ["b", "日本"]);
+    let actions = collect_text_editor_actions_accepted(&mut input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
+    assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], "");
+
+    MOCK_CLIPBOARD_READ.with(|cell| *cell.borrow_mut() = Some("clipboard".into()));
+    assert!(apply_focused_text_editor_key(&ui_wgpu::wgpu::KeyAction::Char("v".into()), &chord, &mut input));
+    let actions = collect_text_editor_actions_accepted(&mut input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["textEdit", "textSelect"]);
+    assert_eq!(serde_json::to_value(actions[0].args.as_ref().unwrap()).unwrap()["text"], "clipboard");
+
+    assert!(start_focused_text_editor_stream(701, 8).unwrap());
+    assert!(push_focused_text_editor_stream(701, "retired").unwrap());
+    FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
+    assert!(!commit_focused_text_editor_stream(701, &mut input), "a delayed stream cannot edit after focus retires");
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+}
+
+fn table_stepper_scene_node(value: f64) -> UiNode {
+    let mut node = component_scene_ui("table-stepper-focus", ui_wgpu::wgpu::SurfaceKind::Table);
+    let UiNode::ComponentScene(scene) = &mut node else { unreachable!() };
+    scene.controller_id = "sourcing-curation".into();
+    scene.table = Some(ui_wgpu::wgpu::TableScene::base(
+        serde_json::json!([{ "id": "curated", "label": "Curated" }]).to_string(),
+        serde_json::json!([{ "id": "beam-glulam-gl24h", "curated": { "kind": "stepper", "value": value, "min": 0.0, "max": 5.0, "step": 0.5, "action": { "controllerId": "sourcing-curation", "action": "curationSetCount", "args": { "objectId": "beam-glulam-gl24h" } } } }]).to_string(),
+    ));
+    node
+}
+
+#[test]
+fn accepted_table_stepper_centre_owns_navigation_keys_and_a_missing_row_retires_focus() {
+    let window_id = "accepted-table-stepper-focus";
+    let node = seed_scene_window_with(window_id, table_stepper_scene_node(2.0));
+    let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let y = theme.control_height * 1.33 + theme.control_height * 0.5;
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    apply_scene_ui_command(
+        window_id,
+        node,
+        ui_wgpu::wgpu::SurfaceKind::Table,
+        rect,
+        &ui_wgpu::wgpu::UiEvent::PointerDown { x: 100.0, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+        Some(ui_render::PointerId(17)),
+        &mut input,
+    );
+    assert!(drive_scene_interaction_step(&mut input));
+    assert!(FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().is_some_and(|focus| focus.window_id == window_id && focus.row_id == "beam-glulam-gl24h" && focus.column_id == "curated")));
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window_id);
+    publish_accessibility_visible_documents();
+    let spinbutton = published_accessibility_nodes_for_test(window_id).into_iter().find(|node| node.role == "spinbutton").expect("accepted Table stepper spinbutton");
+    assert_eq!(spinbutton.label.as_deref(), Some("Curated"));
+    assert_eq!((spinbutton.value_min, spinbutton.value_now, spinbutton.value_max, spinbutton.value_text.as_deref()), (Some(0.0), Some(2.0), Some(5.0), Some("2")));
+    assert!(spinbutton.focusable && spinbutton.actionable && spinbutton.focused && spinbutton.rect.is_some());
+    let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
+    assert!(dispatch_accessibility_event(window_id, generation, spinbutton.node_id, &spinbutton.key, ui_wgpu::wgpu::AccessibilityUiEvent::Blur, &mut input).is_some());
+    assert!(FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().is_none()));
+    assert!(dispatch_accessibility_event(window_id, generation, spinbutton.node_id, &spinbutton.key, ui_wgpu::wgpu::AccessibilityUiEvent::Focus, &mut input).is_some());
+
+    assert!(apply_focused_table_stepper_key(&ui_wgpu::wgpu::KeyAction::PageUp, &mut input));
+    let actions = crate::collect_fixture_actions(&mut input);
+    assert_eq!(actions.len(), 1);
+    let args = actions[0].args.as_ref().expect("stepper args");
+    assert_eq!(args.get("objectId").and_then(semio_framework::DslValue::as_str), Some("beam-glulam-gl24h"));
+    assert_eq!(args.get("delta").and_then(semio_framework::DslValue::as_f64), Some(3.0));
+    assert!(!apply_focused_table_stepper_key(&ui_wgpu::wgpu::KeyAction::Enter, &mut input), "an unrelated key remains available to the generic shell route");
+
+    FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow_mut().as_mut().expect("focused Table stepper").row_id = "retired-row".into());
+    assert!(!apply_focused_table_stepper_key(&ui_wgpu::wgpu::KeyAction::ArrowUp, &mut input));
+    assert!(FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().is_none()));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+}
+
+#[test]
+fn accepted_vfs_controls_publish_localized_buttons_and_reject_a_retired_row_action() {
+    let window_id = "accepted-vfs-controls";
+    let host_id = "accepted-vfs-host";
+    let mut scene_node = component_scene_ui(host_id, ui_wgpu::wgpu::SurfaceKind::VirtualFileSystem);
+    let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
+    scene.controller_id = "vfs-controller".into();
+    scene.virtual_file_system = Some(ui_wgpu::wgpu::VirtualFileSystemScene {
+        schema_json: "{}".into(),
+        rows_json: serde_json::json!([
+            { "id": "folder", "name": "Modelle", "hasChildren": true },
+            { "id": "successor", "name": "Nachfolger" }
+        ])
+        .to_string(),
+        selected_row_ids_json: None,
+        hovered_row_id: None,
+        empty_message: None,
+        drag_drop_enabled: None,
+    });
+    let node = seed_scene_window_with(window_id, scene_node);
+    let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
+    let row = crate::scenes::VfsAccessibilityControl {
+        key: format!("{host_id}.vfs.folder"),
+        row_id: "folder".into(),
+        label: "Modelle".into(),
+        kind: crate::scenes::VfsAccessibilityControlKind::Row,
+        rect: Rect::new(0.0, 40.0, 320.0, 24.0),
+        expanded: None,
+    };
+    let chevron = crate::scenes::VfsAccessibilityControl {
+        key: format!("{host_id}.vfs.chevron.folder"),
+        row_id: "folder".into(),
+        label: "Einklappen".into(),
+        kind: crate::scenes::VfsAccessibilityControlKind::Chevron,
+        rect: Rect::new(8.0, 40.0, 14.0, 24.0),
+        expanded: Some(true),
+    };
+    crate::scenes::stage_vfs_accessibility_controls(host_id, vec![row, chevron]);
+    crate::scenes::seal_vfs_accessibility_candidates(801);
+    crate::scenes::acknowledge_vfs_accessibility_candidates(801);
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window_id);
+    publish_accessibility_visible_documents();
+    let nodes = published_accessibility_nodes_for_test(window_id);
+    let folder = nodes.iter().find(|node| node.key == format!("{host_id}.vfs.folder")).expect("accepted VFS row button");
+    let toggle = nodes.iter().find(|node| node.key == format!("{host_id}.vfs.chevron.folder")).expect("accepted VFS chevron button");
+    assert_eq!((folder.role.as_str(), folder.label.as_deref(), folder.focusable, folder.actionable), ("button", Some("Modelle"), true, true));
+    assert_eq!((toggle.role.as_str(), toggle.label.as_deref(), toggle.expanded), ("button", Some("Einklappen"), Some(true)));
+
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation, toggle.node_id, &toggle.key, ui_wgpu::wgpu::AccessibilityUiEvent::Focus, &mut input).is_some());
+    assert!(apply_focused_vfs_control_key(&ui_wgpu::wgpu::KeyAction::Enter, &mut input));
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "chevron keyboard activation owns renderer-local expansion only");
+    assert!(dispatch_accessibility_event(window_id, generation, folder.node_id, &folder.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    assert_eq!(crate::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["selectRows"]);
+
+    let successor = crate::scenes::VfsAccessibilityControl {
+        key: format!("{host_id}.vfs.successor"),
+        row_id: "successor".into(),
+        label: "Nachfolger".into(),
+        kind: crate::scenes::VfsAccessibilityControlKind::Row,
+        rect: Rect::new(0.0, 40.0, 320.0, 24.0),
+        expanded: None,
+    };
+    crate::scenes::stage_vfs_accessibility_controls(host_id, vec![successor]);
+    crate::scenes::seal_vfs_accessibility_candidates(802);
+    crate::scenes::acknowledge_vfs_accessibility_candidates(802);
+    assert!(!apply_focused_vfs_control_key(&ui_wgpu::wgpu::KeyAction::Enter, &mut input));
+    assert!(FOCUSED_VFS_CONTROL.with(|cell| cell.borrow().is_none()), "a row missing from the newly accepted semantic frame retires focus");
+    assert!(dispatch_accessibility_event(window_id, generation, folder.node_id, &folder.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(), "the stale accepted address cannot dispatch");
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window_id);
+    publish_accessibility_visible_documents();
+    let successor = published_accessibility_nodes_for_test(window_id).into_iter().find(|node| node.key == format!("{host_id}.vfs.successor")).expect("successor accepted row");
+    assert!(dispatch_accessibility_event(window_id, generation, successor.node_id, &successor.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    assert_eq!(crate::collect_fixture_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["selectRows"]);
+}
+
+#[test]
 fn presented_editor_text_focus_rebases_only_after_same_host_pixels_are_accepted() {
     let window_id = "presented-text-focus-rebase";
     let kind = ui_wgpu::wgpu::SurfaceKind::TextEditor;
@@ -1126,6 +1422,35 @@ fn presented_editor_text_focus_rebases_only_after_same_host_pixels_are_accepted(
     assert!(acknowledge_presented_input(503));
     assert!(FOCUSED_TEXT_EDITOR.with(|cell| cell.borrow().as_ref().is_some_and(|focus| focus.node == successor && focus.host_id == host_id)), "accepted pixels rebase the same mounted Text editor focus");
     FOCUSED_TEXT_EDITOR.with(|cell| *cell.borrow_mut() = None);
+}
+
+#[test]
+fn presented_table_stepper_focus_rebases_only_after_same_host_pixels_are_accepted() {
+    let window_id = "presented-table-stepper-focus-rebase";
+    let kind = ui_wgpu::wgpu::SurfaceKind::Table;
+    assert!(publish_focus_rebase_document(window_id, 1, 521, kind, &[2]).is_none());
+    drive_focus_rebase_reconcile(window_id, 1);
+    reconcile_focus_rebase_document(window_id, 2, kind, &[2, 3]);
+    let old = stage_new_focus_rebase_document(window_id, 3, 522, kind, &[2, 4]);
+    assert!(acknowledge_presented_input(522));
+    let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
+    let host_id = retained_scene_host_id(window_id, old);
+    focus_table_stepper(window_id, generation, old, &host_id, crate::scenes::TableStepperFocusTarget { row_id: "r1".into(), column_id: "count".into() });
+
+    let successor = stage_focus_rebase_document(window_id, 4, 523, kind, &[2, 3, 4]);
+    assert_ne!(old, successor);
+    assert!(FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().is_some_and(|focus| focus.node == old && focus.host_id == host_id)), "candidate construction cannot mutate accepted focus");
+    assert!(acknowledge_presented_input(523));
+    assert!(FOCUSED_TABLE_STEPPER.with(|cell| cell.borrow().as_ref().is_some_and(|focus| focus.node == successor && focus.host_id == host_id)), "accepted pixels rebase the same Table stepper focus");
+
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(apply_focused_table_stepper_key(&ui_wgpu::wgpu::KeyAction::End, &mut input));
+    let actions = crate::collect_fixture_actions(&mut input);
+    assert_eq!(actions.len(), 1);
+    let args = actions[0].args.as_ref().expect("stepper args");
+    assert_eq!(args.get("objectId").and_then(semio_framework::DslValue::as_str), Some("r1"));
+    assert_eq!(args.get("delta").and_then(semio_framework::DslValue::as_f64), Some(3.0));
+    FOCUSED_TABLE_STEPPER.with(|cell| *cell.borrow_mut() = None);
 }
 
 #[test]

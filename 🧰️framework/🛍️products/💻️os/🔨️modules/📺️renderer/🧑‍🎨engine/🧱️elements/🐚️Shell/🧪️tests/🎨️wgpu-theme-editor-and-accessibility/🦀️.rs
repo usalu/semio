@@ -494,9 +494,77 @@ fn chrome_controls_publish_accessible_names_and_shortcuts() {
     assert_eq!(nodes[0].label.as_deref(), Some("Editor"), "♿️ the announced name is the text the chip painted");
     assert_eq!(nodes[0].role, "button", "♿️ a navbar item announces as a button, as React's element does");
     assert_eq!(nodes[0].shortcut.as_deref(), Some(format_keybinding_shortcut("mod+alt+e").as_str()), "⌨️ `aria-keyshortcuts` comes from this session's own remappable table");
-    assert_eq!(nodes[1].role, "tab", "♿️ a panel tab announces as a tab");
+    assert_eq!(nodes[1].role, "button", "♿️ PanelTabBar publishes pressed buttons");
+    assert_eq!(nodes[1].pressed, Some(false));
+    assert!(nodes[1].selected.is_none());
     assert!(nodes[1].label.is_some(), "♿️ a control that painted no label still gets a name rather than none");
     assert!(nodes.iter().all(|node| node.actionable && node.focusable), "♿️ a chrome target is always actionable");
+}
+
+/// 🔘️ Fullscreen and utility chrome publish React Toggle's button/pressed semantics on the exact
+/// hit ids their retained painters register; plain utility actions keep labels without pressed state.
+#[test]
+fn fullscreen_and_utility_painters_publish_reacts_pressed_buttons_on_their_actual_hit_ids() {
+    let fixture = accessibility_fixture();
+    let semantics = &fixture["chromePressedSemantics"];
+    let action = ActionDescriptor { controller_id: "fixture".into(), action: "activate".into(), args: None };
+    let utilities = vec![
+        ui_wgpu::wgpu::utility_button("save", "circle".into(), semantics["utility"]["button"]["label"].as_str().expect("button label"), action.clone()),
+        ui_wgpu::wgpu::utility_toggle("grid", "circle".into(), semantics["utility"]["toggle"]["label"].as_str().expect("toggle label"), semantics["utility"]["toggle"]["pressed"].as_bool().expect("toggle pressed"), action),
+        ui_wgpu::wgpu::utility_collection("views", "circle".into(), semantics["utility"]["collection"]["label"].as_str().expect("collection label"), vec![]),
+    ];
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut chrome = ShellChromeBuildState::default();
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let theme = Theme::light();
+    with_chrome_control_names(|names| names.clear());
+
+    let fullscreen = &semantics["fullscreen"];
+    let fullscreen_item = ChromeGroupItem {
+        control_id: fullscreen["id"].as_str().expect("fullscreen id"),
+        icon_id: Some("minimize-2"),
+        label: Some(fullscreen["label"].as_str().expect("fullscreen label")),
+        active: fullscreen["pressed"].as_bool().expect("fullscreen pressed"),
+        disabled: false,
+        kind: HitKind::Toggle,
+    };
+    let fullscreen_rect = Rect::new(0.0, 0.0, retained_chrome_group_item_width(&mut atlas, &theme, &fullscreen_item).expect("fullscreen width"), theme.control_height);
+    let mut fullscreen_phase = 0;
+    let mut fullscreen_glyph = RetainedGlyphCursor::default();
+    loop {
+        match render_retained_chrome_group_item_step(&mut fullscreen_phase, &mut fullscreen_glyph, &mut draw, &mut atlas, &icons, &mut input, &theme, fullscreen_rect, &fullscreen_item, true) {
+            RetainedChromeGroupStep::Pending => {}
+            RetainedChromeGroupStep::Complete => break,
+            RetainedChromeGroupStep::Fault => panic!("fullscreen paint"),
+        }
+    }
+
+    let mut x = fullscreen_rect.w + theme.gap_standard;
+    let mut cursor = ShellChromeChildCursor::default();
+    for utility in &utilities {
+        loop {
+            match render_utility_node_step(&mut cursor, &mut chrome, &mut draw, &mut atlas, &icons, &mut input, &theme, x, 0.0, theme.control_height, utility, &HashMap::new()).expect("utility paint") {
+                Some((next_x, _)) => {
+                    x = next_x;
+                    break;
+                }
+                None => {}
+            }
+        }
+    }
+
+    let nodes = shell.chrome_accessibility_nodes(input.staged_hits());
+    for row in [fullscreen, &semantics["utility"]["button"], &semantics["utility"]["toggle"], &semantics["utility"]["collection"]] {
+        let id = row["id"].as_str().expect("control id");
+        let node = nodes.iter().find(|node| node.key == id).unwrap_or_else(|| panic!("missing {id}"));
+        assert_eq!(node.role, "button", "{id}");
+        assert_eq!(node.label.as_deref(), row["label"].as_str(), "{id}");
+        assert_eq!(node.pressed, row.get("pressed").and_then(Value::as_bool), "{id}");
+        assert!(node.checked.is_none(), "{id} uses aria-pressed rather than aria-checked");
+    }
 }
 
 #[test]
@@ -528,30 +596,36 @@ fn field_and_engagement_labels_reach_focusable_child_controls() {
 }
 
 #[test]
-fn accessibility_activation_updates_settings_switch_and_active_tab_projection() {
+fn accessibility_activation_updates_settings_pressed_button_projection() {
     let fixture = accessibility_fixture();
     let selection = &fixture["nestedPanelSelection"];
     let mut shell = shell_with_nested_app_settings();
+    shell.anchor_state_mut(PanelAnchor::BottomRight).path.clear();
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some(FRAMEWORK_SETTINGS_PANEL_ID.into()), kind: HitKind::Toggle, drag_axis: None, drag_data: None });
     shell.publish_retained_hit_registry(&mut input);
     let initial = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("settings projection");
-    assert_eq!(initial.checked, Some(false));
+    assert_eq!(initial.pressed, Some(false));
+    assert_eq!(initial.role, "button");
+    assert!(initial.checked.is_none());
     let target =
         ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: initial.node_id, node_key: initial.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("settings activation"));
-    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].checked, Some(true), "the Settings branch switch reflects its now-visible anchor");
+    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].pressed, Some(true), "the Settings branch button reflects its now-visible anchor");
+    shell.anchor_state_mut(PanelAnchor::BottomRight).visible = false;
+    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].pressed, fixture["settingsTabStrip"]["pressedFollowsSelectionWhenFolded"].as_bool(), "folding removes the active fill while retaining React's pressed selection");
 
     assert_eq!(shell.reveal_dock_tab(FRAMEWORK_SETTINGS_THEME_TAB_ID), Some(PanelAnchor::BottomRight));
     let mut input = InputState::default();
     input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 1.0, 1.0), event: None, control_id: Some(FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()), kind: HitKind::PanelTab, drag_axis: None, drag_data: None });
     shell.publish_retained_hit_registry(&mut input);
     let general = shell.chrome_accessibility_nodes(input.hits()).into_iter().next().expect("general projection");
-    assert_eq!(general.selected, Some(false));
+    assert_eq!(general.pressed, Some(false));
+    assert!(general.selected.is_none());
     let target =
         ui_render::AccessibilityTarget { window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: shell.presented_chrome_accessibility_generation, node_id: general.node_id, node_key: general.key };
     assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("general activation"));
-    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].selected, Some(true), "the activated General leaf publishes aria-selected=true");
+    assert_eq!(shell.chrome_accessibility_nodes(input.hits())[0].pressed, Some(true), "the activated General leaf publishes aria-pressed=true");
     let expected: Vec<&str> = selection["expectedPath"].as_array().expect("expected path").iter().map(|id| id.as_str().expect("path id")).collect();
     assert_eq!(shell.anchor_state(PanelAnchor::BottomRight).path.iter().map(String::as_str).collect::<Vec<_>>(), expected);
     assert_ne!(shell.anchor_state(PanelAnchor::BottomRight).active_tab(), selection["appFirstLeafId"].as_str());
@@ -701,7 +775,12 @@ fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessi
     assert!(pointer_ids.len() < expected.len(), "the constrained pointer row exposes only nonempty clipped chips");
     let semantic = shell.chrome_accessibility_nodes(input.hits());
     for id in &expected {
-        assert!(semantic.iter().any(|node| node.key == *id), "the presented semantic catalogue retains {id} outside the pointer clip");
+        let node = semantic.iter().find(|node| node.key == *id).expect("every declared Settings control survives pointer clipping");
+        assert_eq!(node.role, contract["role"].as_str().unwrap());
+        let wire = serde_json::to_value(node).unwrap();
+        assert_eq!(wire["pressed"].as_bool(), Some(*id == contract["activeId"].as_str().unwrap()));
+        assert!(node.selected.is_none());
+        assert!(node.checked.is_none());
     }
 
     let tail_id = contract["tailIds"][1].as_str().unwrap();
@@ -720,6 +799,36 @@ fn a_constrained_settings_strip_retains_all_semantic_tabs_and_reveals_an_accessi
     shell.paint_anchor_tab_bar(anchor, &mut draw, &mut atlas, &icons, &mut input, &theme, panel);
     shell.publish_retained_hit_registry(&mut input);
     assert!(input.hits().iter().any(|hit| hit.kind == HitKind::PanelTab && hit.control_id.as_deref() == Some(tail_id)), "the next accepted pointer row reveals the accessibility-selected tail");
+}
+
+#[test]
+fn mobile_panel_buttons_publish_their_painted_names_and_pressed_state_once() {
+    let fixture = accessibility_fixture();
+    let contract = &fixture["settingsTabStrip"];
+    let mut shell = settings_toggle_shell();
+    shell.screen_w = 390.0;
+    shell.mobile_panel_visible = true;
+    shell.mobile_panel_path = vec![contract["activeId"].as_str().unwrap().into()];
+    shell.anchor_state_mut(PanelAnchor::BottomRight).visible = true;
+    shell.anchor_state_mut(PanelAnchor::BottomRight).path = vec![FRAMEWORK_SETTINGS_PANEL_ID.into(), FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into()];
+    let tabs = contract["tabs"].as_array().unwrap().iter().take(2).enumerate().map(|(order, row)| DockTabNode::leaf(row["id"].as_str().unwrap(), row["label"].as_str().unwrap(), "settings", order as i32)).collect::<Vec<_>>();
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let mut input = InputState::default();
+    shell.paint_mobile_tab_bar(&mut draw, &mut atlas, &IconAtlas::default(), &mut input, &Theme::default(), Rect::new(0.0, 0.0, 390.0, 40.0), &tabs);
+    shell.publish_retained_hit_registry(&mut input);
+    let nodes = shell.chrome_accessibility_nodes(input.hits());
+    for tab in tabs {
+        let key = format!("shell.panel.tab.mobile.{}", tab.id);
+        let matching = nodes.iter().filter(|node| node.key == key).collect::<Vec<_>>();
+        assert_eq!(matching.len(), 1);
+        let node = matching[0];
+        assert_eq!(node.label.as_deref(), Some(tab.label.as_str()));
+        assert_eq!(node.role, contract["role"].as_str().unwrap());
+        assert_eq!(node.pressed, Some(tab.id == contract["activeId"].as_str().unwrap()));
+        assert!(node.checked.is_none() && node.selected.is_none());
+        assert!(!nodes.iter().any(|node| node.key == tab.id), "desktop catalogue entries are not mounted in the mobile panel");
+    }
 }
 
 /// ⚖️ LAW (§B14): a bound chrome control carries its chord INLINE, like React's `ControlHotkeyBadge`
@@ -757,4 +866,130 @@ fn the_flagged_keybinding_rows_match_reacts_registry() {
         let action = ui_wgpu::wgpu::KeyAction::Char(key.to_string());
         assert_eq!(shell_edit_verb_for(&action, &modifiers), Some(expected), "⌨️ {chord} is React's framework-universal history tail");
     }
+}
+
+#[test]
+fn accepted_dock_names_match_painted_instance_titles_and_localized_react_actions() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🪟️dock-accessible-names/🔣️.json")).expect("dock names fixture");
+    for locale in fixture["locales"].as_array().expect("locales") {
+        for layout in ["split", "maximized", "stacked"] {
+            let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+            let maximized = layout == "maximized";
+            let stacked = layout == "stacked";
+            let stacked_active = fixture["stackedActiveId"].as_str().unwrap();
+            shell.locale_id = locale["id"].as_str().unwrap().into();
+            shell.screen_w = 1280.0;
+            shell.screen_h = 720.0;
+            if stacked {
+                shell.dock.root = crate::dock::DockNode::Stack {
+                    windows: shell.dock.window_instances().into_iter().map(|(id, kind)| crate::dock::DockStackTab::instance(id, kind, ui_wgpu::wgpu::WindowStackCorner::TopLeft)).collect(),
+                    active: stacked_active.into(),
+                };
+            }
+            if maximized {
+                shell.dock.toggle_maximize(&vec![0]);
+            }
+            with_chrome_control_names(|names| names.clear());
+            let mut input = InputState::<ActionDescriptor>::default();
+            let mut draw = DrawList::default();
+            let mut atlas = FontAtlas::builtin();
+            let icons = IconAtlas::default();
+            let theme = Theme::light();
+            let bounds = Rect::new(0.0, 0.0, 1280.0, 720.0);
+            let mut overlay = None;
+            let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+            let mut cursor = ShellChromeChildCursor { phase: 1, rect: Some(bounds), ..Default::default() };
+            shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world);
+            shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world);
+            for index in 0..shell.dock_window_plan.len() {
+                cursor.item = index;
+                cursor.phase = 3;
+                shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world);
+            }
+            cursor.phase = 5;
+            shell.render_main_window_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, bounds, &mut world);
+            assert!(shell.presented_chrome_accessibility.is_empty());
+            shell.publish_retained_input_for_test(&mut input, &theme);
+            let published = shell.presented_chrome_accessibility.clone();
+            for window in fixture["windows"].as_array().unwrap().iter().take(if maximized { 1 } else { 2 }) {
+                let id = window["id"].as_str().unwrap();
+                let title = window["title"].as_str().unwrap();
+                let body = published.iter().find(|node| node.key == id);
+                if !stacked || id == stacked_active {
+                    let body = body.expect("published body");
+                    assert_eq!(body.label.as_deref(), Some(title));
+                    assert_eq!(body.role, fixture["semantics"]["panelRole"].as_str().unwrap());
+                    assert_eq!(body.actionable, fixture["semantics"]["panelActionable"].as_bool().unwrap());
+                } else {
+                    assert!(body.is_none(), "inactive tabs share the mounted stack panel");
+                }
+                let select = published.iter().find(|node| node.key.starts_with("dock.tab.") && node.key.ends_with(id)).expect("published tab");
+                assert_eq!(select.label.as_deref(), Some(title));
+                assert_eq!(select.role, fixture["semantics"]["tabRole"].as_str().unwrap());
+                assert_eq!(select.selected, Some(!stacked || id == stacked_active));
+                assert_eq!(select.controls.as_deref(), Some(if stacked { stacked_active } else { id }));
+                for action in ["focus", "close", "drag"] {
+                    let key = format!("{}.{}", select.key, action);
+                    if stacked && action == "focus" {
+                        assert!(!published.iter().any(|node| node.key == key));
+                        continue;
+                    }
+                    let expected = locale[if action == "focus" && maximized { "unfocus" } else { action }].as_str().unwrap().replace("{{target}}", title);
+                    let control = published.iter().find(|node| node.key == key).expect("published dock action");
+                    assert_eq!(control.label.as_deref(), Some(expected.as_str()), "{}:{key}", shell.locale_id);
+                }
+            }
+            shell.locale_id = "candidate-only".into();
+            with_chrome_control_names(|names| names.clear());
+            assert_eq!(shell.presented_chrome_accessibility, published, "unaccepted candidate cannot relabel the displayed frame");
+        }
+    }
+}
+
+#[test]
+fn a_discarded_chrome_walk_cannot_exhaust_successor_accessible_names() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let theme = Theme::light();
+    let mut input = InputState::<ActionDescriptor>::default();
+    with_chrome_control_names(|names| names.clear());
+    note_chrome_control_name("accepted", Some("Accepted label"));
+    input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 20.0, 20.0), event: None, control_id: Some("accepted".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+    shell.publish_retained_input_for_test(&mut input, &theme);
+    let accepted = shell.presented_chrome_accessibility.clone();
+    let accepted_generation = shell.presented_chrome_accessibility_generation;
+    for index in 0..SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY {
+        note_chrome_control_name(&format!("discarded.{index}"), Some("Discarded label"));
+    }
+    while input.retire_hit_step() {}
+    input.register_hit(HitTarget { rect: Rect::new(30.0, 0.0, 20.0, 20.0), event: None, control_id: Some("discarded.0".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+    let discarded = shell.seal_presented_input_candidate(&theme).expect("sealed chrome candidate");
+    assert_eq!(shell.presented_chrome_accessibility, accepted);
+    assert!(shell.discard_presented_input_candidate(discarded));
+    assert!(!shell.acknowledge_presented_input(&mut input, discarded), "late acknowledgement cannot publish discarded chrome");
+    assert_eq!(shell.presented_chrome_accessibility, accepted);
+    assert_eq!(shell.presented_chrome_accessibility_generation, accepted_generation);
+    assert_eq!(input.hit_at(10.0, 10.0).and_then(|hit| hit.control_id.as_deref()), Some("accepted"));
+    assert!(input.hit_at(40.0, 10.0).is_none());
+    let mut cursor = ShellChromeFrameCursor::default();
+    cursor.phase = ShellChromeFramePhase::FrameSetup;
+    let mut draw = DrawList::default();
+    let mut overlay = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut world = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+    shell.render_chrome_step(&mut cursor, &mut draw, &mut overlay, &mut atlas, &icons, &mut input, &theme, &mut world);
+    assert!(with_chrome_control_names(|names| names.is_empty()));
+    assert_eq!(shell.presented_chrome_accessibility, accepted);
+    note_chrome_control_name("successor", Some("Successor label"));
+    while input.retire_hit_step() {}
+    input.register_hit(HitTarget { rect: Rect::new(0.0, 0.0, 20.0, 20.0), event: None, control_id: Some("successor".into()), kind: HitKind::Button, drag_axis: None, drag_data: None });
+    shell.publish_retained_input_for_test(&mut input, &theme);
+    let current = &shell.presented_chrome_accessibility;
+    assert!(current.iter().any(|node| node.key == "successor" && node.label.as_deref() == Some("Successor label")));
+    assert!(!current.iter().any(|node| node.key.starts_with("discarded.") || node.key == "accepted"));
+    let successor = current.clone();
+    let successor_generation = shell.presented_chrome_accessibility_generation;
+    assert!(!shell.acknowledge_presented_input(&mut input, discarded));
+    assert_eq!(shell.presented_chrome_accessibility, successor);
+    assert_eq!(shell.presented_chrome_accessibility_generation, successor_generation);
 }

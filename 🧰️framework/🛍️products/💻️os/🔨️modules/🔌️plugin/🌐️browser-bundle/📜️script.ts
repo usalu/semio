@@ -42,6 +42,155 @@ const browserActorAsyncImports = Object.freeze([
   "wasi:io/streams#[method]output-stream.blocking-write-zeroes-and-flush", "wasi:io/streams#[method]output-stream.blocking-splice",
 ]);
 
+export type BrowserActorImportAdmissionV1 = Readonly<{ admitted: readonly string[]; refused: readonly string[] }>;
+
+/** 🔖️ The admitted spelling the pinned codegen maps one imported interface to: the exact admitted name, else the one admitted
+ * version of the same interface that is semver-compatible with it (`0.x` pins the minor), else none. */
+function browserActorAdmittedSpelling(name: string): string | undefined {
+  if (browserActorInterfaces.includes(name)) return name;
+  const split = (value: string) => {
+    const at = value.lastIndexOf("@");
+    const version = at < 0 ? undefined : /^(\d+)\.(\d+)\.(\d+)$/.exec(value.slice(at + 1));
+    return { base: at < 0 ? value : value.slice(0, at), major: version?.[1], minor: version?.[2] };
+  };
+  const imported = split(name);
+  if (imported.major === undefined) return undefined;
+  const compatible = browserActorInterfaces.filter(candidate => {
+    const admitted = split(candidate);
+    return admitted.base === imported.base && admitted.major === imported.major && (imported.major !== "0" || admitted.minor === imported.minor);
+  });
+  return compatible.length === 1 ? compatible[0] : undefined;
+}
+
+/** 🛂️ The root imports of one component that the browser codegen must bind (every imported instance whose type exports a function
+ * or a resource, and every root function), each mapped to its admitted spelling or refused. It reads only the component's own type,
+ * import, alias and export sections and never runs codegen, so a publication checks every package's deliverable in milliseconds before
+ * any release build; the closed-actor build asserts the codegen's own import manifest equals it.
+ * @see https://github.com/WebAssembly/component-model/blob/main/design/mvp/Binary.md */
+export function browserActorImportAdmissionV1(component: Uint8Array): BrowserActorImportAdmissionV1 {
+  const denied = (): never => { throw new Error("browser actor import admission: malformed component"); };
+  if (!(component instanceof Uint8Array) || component.byteLength < 8 || ![0, 97, 115, 109, 13, 0, 1, 0].every((value, index) => component[index] === value)) return denied();
+  let at = 8;
+  const byte = (): number => (at < component.byteLength ? component[at++]! : denied());
+  const u32 = (): number => {
+    let result = 0, shift = 0, next: number;
+    do { next = byte(); if (shift > 28) denied(); result += (next & 0x7f) * 2 ** shift; shift += 7; } while (next & 0x80);
+    return result;
+  };
+  const skipLeb = (): void => { while (byte() & 0x80); };
+  const text = (): string => {
+    const length = u32();
+    if (at + length > component.byteLength) denied();
+    const value = new TextDecoder("utf-8", { fatal: true }).decode(component.subarray(at, at + length));
+    at += length;
+    return value;
+  };
+  const vector = (each: () => void): void => { for (let count = u32(); count > 0; count--) each(); };
+  const optional = (each: () => void): void => { const flag = byte(); if (flag === 1) each(); else if (flag !== 0) denied(); };
+  const externName = (): string => (byte() <= 1 ? text() : denied());
+  const externDesc = (): Readonly<{ kind: "func" | "resource" | "instance" | "type" | "other"; index: number }> => {
+    const sort = byte();
+    if (sort === 0x00) { if (byte() !== 0x11) denied(); return { kind: "other", index: u32() }; }
+    if (sort === 0x01) return { kind: "func", index: u32() };
+    if (sort === 0x02) { if (byte() === 0x00) u32(); else skipLeb(); return { kind: "other", index: 0 }; }
+    if (sort === 0x03) return byte() === 0x00 ? { kind: "type", index: u32() } : { kind: "resource", index: 0 };
+    if (sort === 0x04) return { kind: "other", index: u32() };
+    if (sort === 0x05) return { kind: "instance", index: u32() };
+    return denied();
+  };
+  const alias = (): boolean => {
+    const sort = byte();
+    if (sort === 0x00) byte();
+    const target = byte();
+    if (target === 0x00 || target === 0x01) { u32(); text(); } else if (target === 0x02) { u32(); u32(); } else denied();
+    return sort === 0x03;
+  };
+  const coreType = (): void => {
+    const form = byte();
+    if (form === 0x60) { vector(skipLeb); vector(skipLeb); return; }
+    if (form !== 0x50) return denied();
+    vector(() => {
+      const declaration = byte();
+      if (declaration === 0x01) return coreType();
+      if (declaration === 0x02) { byte(); if (byte() !== 0x01) denied(); u32(); u32(); return; }
+      if (declaration !== 0x00 && declaration !== 0x03) return denied();
+      if (declaration === 0x00) text();
+      text();
+      const kind = byte();
+      if (kind === 0x00) u32();
+      else if (kind === 0x04) { byte(); u32(); }
+      else if (kind === 0x01) { skipLeb(); const flags = byte(); u32(); if (flags & 1) u32(); }
+      else if (kind === 0x02) { const flags = byte(); u32(); if (flags & 1) u32(); }
+      else if (kind === 0x03) { skipLeb(); byte(); }
+      else denied();
+    });
+  };
+  const valueType = (): void => {
+    const form = byte();
+    if ((form >= 0x73 && form <= 0x7f) || form === 0x64) return;
+    if (form === 0x72) return vector(() => { text(); skipLeb(); });
+    if (form === 0x71) return vector(() => { text(); optional(skipLeb); if (byte() !== 0x00) denied(); });
+    if (form === 0x70 || form === 0x6b) return skipLeb();
+    if (form === 0x67) { skipLeb(); u32(); return; }
+    if (form === 0x6f) return vector(skipLeb);
+    if (form === 0x6e || form === 0x6d) return vector(() => void text());
+    if (form === 0x6a) { optional(skipLeb); optional(skipLeb); return; }
+    if (form === 0x69 || form === 0x68) return void u32();
+    if (form === 0x66 || form === 0x65) return optional(skipLeb);
+    return denied();
+  };
+  const declarations = (nested: "instance" | "component"): boolean => {
+    let bearing = false;
+    vector(() => {
+      const declaration = byte();
+      if (declaration === 0x00) return coreType();
+      if (declaration === 0x01) return void definedType();
+      if (declaration === 0x02) return void alias();
+      if (declaration === 0x03 && nested === "component") { externName(); externDesc(); return; }
+      if (declaration !== 0x04) return denied();
+      externName();
+      const { kind } = externDesc();
+      if (kind === "func" || kind === "resource") bearing = true;
+    });
+    return bearing;
+  };
+  const definedType = (): boolean => {
+    const form = component[at];
+    if (form === 0x42) { at++; return declarations("instance"); }
+    if (form === 0x41) { at++; declarations("component"); return false; }
+    if (form === 0x40 || form === 0x43) {
+      at++;
+      vector(() => { text(); skipLeb(); });
+      const results = byte();
+      if (results === 0x00) skipLeb(); else if (results === 0x01) vector(() => { text(); skipLeb(); }); else denied();
+      return false;
+    }
+    if (form === 0x3f || form === 0x3e) { at++; if (byte() !== 0x7f) denied(); optional(() => void u32()); if (form === 0x3e) optional(() => void u32()); return false; }
+    valueType();
+    return false;
+  };
+  const bearingTypes: boolean[] = [];
+  const bound = new Set<string>();
+  while (at < component.byteLength) {
+    const section = byte(), size = u32(), end = at + size;
+    if (end > component.byteLength) denied();
+    if (section === 7) vector(() => void bearingTypes.push(definedType()));
+    else if (section === 6) vector(() => { if (alias()) bearingTypes.push(false); });
+    else if (section === 10) vector(() => {
+      const name = externName();
+      const { kind, index } = externDesc();
+      if (kind === "type" || kind === "resource") bearingTypes.push(false);
+      if (kind === "func" || (kind === "instance" && (index < bearingTypes.length ? bearingTypes[index] : denied()))) bound.add(name);
+    });
+    else if (section === 11) vector(() => { externName(); const sort = byte(); if (sort === 0x00) byte(); u32(); optional(() => void externDesc()); if (sort === 0x03) bearingTypes.push(false); });
+    if (section === 6 || section === 7 || section === 10 || section === 11) { if (at !== end) denied(); }
+    at = end;
+  }
+  const admitted = new Set<string>(), refused = new Set<string>();
+  for (const name of bound) { const spelling = browserActorAdmittedSpelling(name); if (spelling) admitted.add(spelling); else refused.add(name); }
+  return Object.freeze({ admitted: Object.freeze([...admitted].sort()), refused: Object.freeze([...refused].sort()) });
+}
+
 type BrowserActorCodegenManifest = Readonly<{ version: "1.34.0"; runtime: "bun@1.3.14"; importInterfaces: readonly string[]; files: readonly string[] }>;
 
 /** 🛂️ Admits exact canonical generated-file and interface names independently of the codegen subprocess. */
@@ -265,6 +414,8 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     const componentSha256 = createHash("sha256").update(snapshot).digest("hex");
     control.progress?.("snapshot", snapshot.byteLength, snapshot.byteLength);
     check();
+    const imports = browserActorImportAdmissionV1(snapshot);
+    if (imports.refused.length > 0) throw new Error(`browser actor artifact: unsupported import interface ${imports.refused.join(", ")}`);
     const executable = exactExecutableFingerprint(realpathSync(process.execPath), { cancelled: control.cancelled, progress: (completed, total) => control.progress?.("policy", completed, total) });
     const policyInputs = captureBrowserCodegenPolicyInputs(actorRuntime, check);
     const scratchRoot = evidenceRoot ?? process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
@@ -331,6 +482,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     if (canonicalJson(exactExecutableFingerprint(executable.path, { cancelled: control.cancelled })) !== canonicalJson(executable)) throw new Error("browser actor artifact: build runtime changed");
     if (generated.status !== 0) throw new Error(`browser actor artifact: codegen ${generated.reason}: ${generated.stderr.slice(0, 4096)}`);
     const manifest = parseBrowserActorCodegenManifest(JSON.parse(generated.stdout));
+    if (canonicalJson(manifest.importInterfaces) !== canonicalJson(imports.admitted)) throw new Error("browser actor artifact: import admission differs from codegen");
     control.progress?.("codegen", snapshot.byteLength, snapshot.byteLength);
     const admission = { remaining: browserActorMaximumBytes };
     const evidenceDirectory = evidence;
@@ -710,6 +862,7 @@ async function instantiateFreshComponent(imports, control = {}) {
 /** 🧬️ The exact bag handed to `createBrowserBundleTests` — `typeof` of the live bindings, so it cannot drift. */
 export type BrowserBundleTestDependencies = Readonly<{
   readonly browserActorAsyncImports: typeof browserActorAsyncImports;
+  readonly browserActorImportAdmissionV1: typeof browserActorImportAdmissionV1;
   readonly browserActorInterfaces: typeof browserActorInterfaces;
   readonly browserBundleValidator: typeof browserBundleValidator;
   readonly buildBrowserCodegenModule: typeof buildBrowserCodegenModule;
@@ -738,7 +891,7 @@ export type BrowserBundleTestDependencies = Readonly<{
   readonly ts: typeof ts;
   readonly writeFileSync: typeof writeFileSync;
 }>;
-const createBrowserBundleTestsInstance = createBrowserBundleTests({ browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+const createBrowserBundleTestsInstance = createBrowserBundleTests({ browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 export const testClosedBrowserComponentFactory = createBrowserBundleTestsInstance.testClosedBrowserComponentFactory;
 const testBrowserCodegenCapsule = createBrowserBundleTestsInstance.testBrowserCodegenCapsule;
 const testBrowserCodegenSources = createBrowserBundleTestsInstance.testBrowserCodegenSources;

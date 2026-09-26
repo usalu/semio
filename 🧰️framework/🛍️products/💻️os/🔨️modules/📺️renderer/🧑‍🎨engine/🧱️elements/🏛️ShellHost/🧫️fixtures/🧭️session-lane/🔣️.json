@@ -1,5 +1,5 @@
 {
-  "note": "Shell session lane (ticket 26/09/23 U5): route applications and session re-establishments run one at a time in request order; a route waiting at the end of the lane absorbs later route requests (latest wins); nothing is dropped; a failure settles only its own requests. Steps: route <uri> | job <name> request work; finish <name> | fail <name> settle the application running now. `started` is the order applications began; `requests` is each request step's outcome in step order. `routes`: whether a shell URI addresses an overlay (`/hub`, opened on the spot and never queued) or a session route (queued on the lane).",
+  "note": "Shell session lane (ticket 26/09/23 U5): route applications and session re-establishments run one at a time in request order; a route waiting at the end of the lane absorbs later route requests (latest wins); nothing is dropped; a failure settles only its own requests. Steps: route <uri> | job <name> request work; finish <name> | fail <name> settle the application running now. `started` is the order applications began; `requests` is each request step's outcome in step order. `routes`: whether a shell URI addresses an overlay (`/hub`, opened on the spot and never queued) or a session route (queued on the lane). `sessionRoutes`: the route the session stands at for a shell URI and the route it was at before (an overlay keeps the route it was opened over). `identities`: where the hub identity stands for a shell state. `admissions`: whether a session route applies under an identity resolution (a space route waits for the human it is opened for, or opens offline when the hub does not answer).",
   "scenarios": [
     {
       "id": "route-asked-mid-flight-runs-after-it",
@@ -232,6 +232,651 @@
     {
       "uri": "/hub/other",
       "overlay": false
+    }
+  ],
+  "sessionRoutes": [
+    {
+      "uri": "/spaces/s1",
+      "underlying": null,
+      "expected": {
+        "overlay": false,
+        "sessionRoute": "/spaces/s1"
+      }
+    },
+    {
+      "uri": "/hub",
+      "underlying": "/spaces/s1",
+      "expected": {
+        "overlay": true,
+        "sessionRoute": "/spaces/s1"
+      }
+    },
+    {
+      "uri": "/hub?from=palette",
+      "underlying": "/spaces/s1/studio",
+      "expected": {
+        "overlay": true,
+        "sessionRoute": "/spaces/s1/studio"
+      }
+    },
+    {
+      "uri": "/hub",
+      "underlying": null,
+      "expected": {
+        "overlay": true,
+        "sessionRoute": null
+      }
+    },
+    {
+      "uri": "/",
+      "underlying": "/spaces/s1",
+      "expected": {
+        "overlay": false,
+        "sessionRoute": "/"
+      }
+    },
+    {
+      "uri": "/spaces/s2",
+      "underlying": "/spaces/s1",
+      "expected": {
+        "overlay": false,
+        "sessionRoute": "/spaces/s2"
+      }
+    },
+    {
+      "uri": "/hub/other",
+      "underlying": "/spaces/s1",
+      "expected": {
+        "overlay": false,
+        "sessionRoute": "/hub/other"
+      }
+    }
+  ],
+  "identities": [
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": false,
+        "refused": false,
+        "confirmed": false,
+        "offline": false
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": false,
+        "refused": false,
+        "confirmed": false,
+        "offline": true
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": false,
+        "refused": false,
+        "confirmed": true,
+        "offline": false
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": false,
+        "refused": false,
+        "confirmed": true,
+        "offline": true
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": false,
+        "refused": true,
+        "confirmed": false,
+        "offline": false
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": false,
+        "refused": true,
+        "confirmed": false,
+        "offline": true
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": false,
+        "refused": true,
+        "confirmed": true,
+        "offline": false
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": false,
+        "refused": true,
+        "confirmed": true,
+        "offline": true
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": true,
+        "refused": false,
+        "confirmed": false,
+        "offline": false
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": true,
+        "refused": false,
+        "confirmed": false,
+        "offline": true
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": true,
+        "refused": false,
+        "confirmed": true,
+        "offline": false
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": true,
+        "refused": false,
+        "confirmed": true,
+        "offline": true
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": true,
+        "refused": true,
+        "confirmed": false,
+        "offline": false
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": true,
+        "refused": true,
+        "confirmed": false,
+        "offline": true
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": true,
+        "refused": true,
+        "confirmed": true,
+        "offline": false
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": false,
+        "sessionHeld": true,
+        "refused": true,
+        "confirmed": true,
+        "offline": true
+      },
+      "expected": "local-only"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": false,
+        "refused": false,
+        "confirmed": false,
+        "offline": false
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": false,
+        "refused": false,
+        "confirmed": false,
+        "offline": true
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": false,
+        "refused": false,
+        "confirmed": true,
+        "offline": false
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": false,
+        "refused": false,
+        "confirmed": true,
+        "offline": true
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": false,
+        "refused": true,
+        "confirmed": false,
+        "offline": false
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": false,
+        "refused": true,
+        "confirmed": false,
+        "offline": true
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": false,
+        "refused": true,
+        "confirmed": true,
+        "offline": false
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": false,
+        "refused": true,
+        "confirmed": true,
+        "offline": true
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": true,
+        "refused": false,
+        "confirmed": false,
+        "offline": false
+      },
+      "expected": "pending"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": true,
+        "refused": false,
+        "confirmed": false,
+        "offline": true
+      },
+      "expected": "hub-unavailable"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": true,
+        "refused": false,
+        "confirmed": true,
+        "offline": false
+      },
+      "expected": "signed-in"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": true,
+        "refused": false,
+        "confirmed": true,
+        "offline": true
+      },
+      "expected": "signed-in"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": true,
+        "refused": true,
+        "confirmed": false,
+        "offline": false
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": true,
+        "refused": true,
+        "confirmed": false,
+        "offline": true
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": true,
+        "refused": true,
+        "confirmed": true,
+        "offline": false
+      },
+      "expected": "signed-out"
+    },
+    {
+      "state": {
+        "hubConfigured": true,
+        "sessionHeld": true,
+        "refused": true,
+        "confirmed": true,
+        "offline": true
+      },
+      "expected": "signed-out"
+    }
+  ],
+  "admissions": [
+    {
+      "route": "/",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/",
+      "identity": "signed-out",
+      "expected": "apply"
+    },
+    {
+      "route": "/",
+      "identity": "pending",
+      "expected": "apply"
+    },
+    {
+      "route": "/",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/",
+      "identity": "hub-unavailable",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1",
+      "identity": "signed-out",
+      "expected": "await-sign-in"
+    },
+    {
+      "route": "/spaces/s1",
+      "identity": "pending",
+      "expected": "await-identity"
+    },
+    {
+      "route": "/spaces/s1",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1",
+      "identity": "hub-unavailable",
+      "expected": "apply-offline"
+    },
+    {
+      "route": "/spaces/s1/studio",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1/studio",
+      "identity": "signed-out",
+      "expected": "await-sign-in"
+    },
+    {
+      "route": "/spaces/s1/studio",
+      "identity": "pending",
+      "expected": "await-identity"
+    },
+    {
+      "route": "/spaces/s1/studio",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1/studio",
+      "identity": "hub-unavailable",
+      "expected": "apply-offline"
+    },
+    {
+      "route": "/spaces/s1/studio/instances/i1",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1/studio/instances/i1",
+      "identity": "signed-out",
+      "expected": "await-sign-in"
+    },
+    {
+      "route": "/spaces/s1/studio/instances/i1",
+      "identity": "pending",
+      "expected": "await-identity"
+    },
+    {
+      "route": "/spaces/s1/studio/instances/i1",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1/studio/instances/i1",
+      "identity": "hub-unavailable",
+      "expected": "apply-offline"
+    },
+    {
+      "route": "/spaces/s1?tab=members",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1?tab=members",
+      "identity": "signed-out",
+      "expected": "await-sign-in"
+    },
+    {
+      "route": "/spaces/s1?tab=members",
+      "identity": "pending",
+      "expected": "await-identity"
+    },
+    {
+      "route": "/spaces/s1?tab=members",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/s1?tab=members",
+      "identity": "hub-unavailable",
+      "expected": "apply-offline"
+    },
+    {
+      "route": "/spaces",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces",
+      "identity": "signed-out",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces",
+      "identity": "pending",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces",
+      "identity": "hub-unavailable",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/",
+      "identity": "signed-out",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/",
+      "identity": "pending",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/spaces/",
+      "identity": "hub-unavailable",
+      "expected": "apply"
+    },
+    {
+      "route": "/spacesx/s1",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/spacesx/s1",
+      "identity": "signed-out",
+      "expected": "apply"
+    },
+    {
+      "route": "/spacesx/s1",
+      "identity": "pending",
+      "expected": "apply"
+    },
+    {
+      "route": "/spacesx/s1",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/spacesx/s1",
+      "identity": "hub-unavailable",
+      "expected": "apply"
+    },
+    {
+      "route": "/hub/other",
+      "identity": "local-only",
+      "expected": "apply"
+    },
+    {
+      "route": "/hub/other",
+      "identity": "signed-out",
+      "expected": "apply"
+    },
+    {
+      "route": "/hub/other",
+      "identity": "pending",
+      "expected": "apply"
+    },
+    {
+      "route": "/hub/other",
+      "identity": "signed-in",
+      "expected": "apply"
+    },
+    {
+      "route": "/hub/other",
+      "identity": "hub-unavailable",
+      "expected": "apply"
+    }
+  ],
+  "admissionLabels": [
+    {
+      "admission": "await-identity",
+      "locale": "en",
+      "text": "Opening this space as soon as the hub confirms your session…",
+      "action": null
+    },
+    {
+      "admission": "await-identity",
+      "locale": "de",
+      "text": "Dieser Space öffnet sich, sobald der Hub deine Sitzung bestätigt…",
+      "action": null
+    },
+    {
+      "admission": "await-sign-in",
+      "locale": "en",
+      "text": "Sign in to the hub to open this space.",
+      "action": "Sign in"
+    },
+    {
+      "admission": "await-sign-in",
+      "locale": "de",
+      "text": "Melde dich beim Hub an, um diesen Space zu öffnen.",
+      "action": "Anmelden"
+    },
+    {
+      "admission": "apply-offline",
+      "locale": "en",
+      "text": "The hub is not answering — this space opens with what this device has.",
+      "action": null
+    },
+    {
+      "admission": "apply-offline",
+      "locale": "de",
+      "text": "Der Hub antwortet nicht — dieser Space öffnet sich mit dem, was dieses Gerät hat.",
+      "action": null
     }
   ]
 }

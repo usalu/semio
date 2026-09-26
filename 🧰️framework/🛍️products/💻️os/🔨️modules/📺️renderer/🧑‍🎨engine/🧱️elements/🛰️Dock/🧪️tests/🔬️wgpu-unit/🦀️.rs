@@ -206,7 +206,7 @@ fn dock_stack_glass_and_hits_exist_only_on_owned_chips() {
     let icon_ids = HashMap::new();
     let layout = layout_stack_cap(&tabs(&["a", "b"]), &labels, &icon_ids, &mut atlas, &theme, bounds, 0);
     let gap_point = (bounds.x + bounds.w * 0.5, bounds.y + theme.control_height * 0.5);
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     dock.paint_chrome(&mut ctx, bounds, false);
     assert_eq!(draw.glass_regions.len(), 1, "one top-left corner group chip for both tabs");
     assert!(!draw.glass_regions.iter().any(|region| Rect::new(region.rect[0], region.rect[1], region.rect[2], region.rect[3]).contains(gap_point.0, gap_point.1)));
@@ -246,7 +246,7 @@ fn dock_cap_depth_is_control_plus_padding_with_inset_actions_and_active_fill() {
     assert_eq!(silhouette.safe_body_rect().y, bounds.y + cap_depth);
     let active_rect = layout.groups.iter().flat_map(|group| &group.tabs).find(|tab| tab.window_id == "a").expect("active tab").rect;
 
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     dock.paint_chrome(&mut ctx, bounds, false);
     let selected = [theme.selected.r, theme.selected.g, theme.selected.b, theme.selected.a];
     assert!(
@@ -290,7 +290,7 @@ fn dock_stack_content_fills_full_bounds_through_one_silhouette_clip() {
     let mut draw = DrawList::default();
     let labels = HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
     let icon_ids = HashMap::new();
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     dock.paint_chrome(&mut ctx, bounds, true);
     let fill = draw
         .layers
@@ -316,7 +316,7 @@ fn resize_hits_win_over_later_scroll_region() {
     let mut draw = DrawList::default();
     let labels = HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
     input.register_hit(HitTarget { rect: canvas, event: None, control_id: Some("content.scroll".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &IconAtlas::default(), input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &HashMap::new() };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &IconAtlas::default(), input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &HashMap::new(), control_names: None };
     dock.register_resize_hits(&mut ctx, canvas);
     input.publish_hits();
     let hit = input.hit_at(200.0, 150.0).expect("split hit");
@@ -865,7 +865,7 @@ fn painted_tab_control_ids(dock: &DockState, labels: &HashMap<String, String>) -
     let mut input = InputState::<ActionDescriptor>::default();
     let mut draw = DrawList::default();
     let icon_ids = HashMap::new();
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: labels, window_icon_ids: &icon_ids };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: labels, window_icon_ids: &icon_ids, control_names: None };
     dock.paint_chrome(&mut ctx, Rect::new(0.0, 0.0, 600.0, 400.0), false);
     input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).filter(|id| id.starts_with("dock.tab.")).collect()
 }
@@ -1102,7 +1102,7 @@ fn split_resize_gutter_hit_is_twenty_pixels_centred_on_the_seam() {
     let mut input = InputState::<ActionDescriptor>::default();
     let mut draw = DrawList::default();
     let labels = HashMap::new();
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &IconAtlas::default(), input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &HashMap::new() };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &IconAtlas::default(), input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &HashMap::new(), control_names: None };
     dock.register_resize_hits(&mut ctx, canvas);
     let hit = input.staged_hits().iter().find(|target| target.kind == HitKind::DockSplit).expect("split hit on the seam");
     assert_eq!(hit.control_id.as_deref(), Some("dock.split..0"));
@@ -1236,7 +1236,7 @@ fn the_active_stack_paints_a_silhouette_focus_border() {
         let mut draw = DrawList::default();
         let labels = HashMap::from([("a".to_string(), "A".to_string()), ("b".to_string(), "B".to_string())]);
         let icon_ids = HashMap::new();
-        let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+        let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
         dock.paint_chrome(&mut ctx, Rect::new(0.0, 0.0, 600.0, 400.0), false);
         draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| instance.rect[2] <= theme.stroke_hairline || instance.rect[3] <= theme.stroke_hairline).count()
     };
@@ -1341,7 +1341,7 @@ fn themed_axis_geometry_matches_the_shared_react_fixture() {
     let icons = IconAtlas::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let icon_ids = HashMap::new();
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     dock.register_resize_hits(&mut ctx, canvas);
     let split_hits = input.staged_hits().iter().filter(|hit| hit.kind == HitKind::DockSplit).collect::<Vec<_>>();
     assert_eq!(split_hits.len(), 2, "📐️ root and nested axes each publish one resize target");

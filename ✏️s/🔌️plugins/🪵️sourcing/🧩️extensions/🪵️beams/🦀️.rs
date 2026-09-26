@@ -13,7 +13,7 @@ const HOST_APP_ID: &str = "sourcing-curation";
 // bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request. See R9.
 fn bundle() -> ExtensionBundle {
     let module = BeamsModule;
-    let bundle = ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Beams", "0.1.0").extends("sourcing").depends_on("sourcing", semio_framework::VersionReq::Any);
+    let bundle = ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Beams", env!("CARGO_PKG_VERSION")).extends("sourcing").depends_on("sourcing", semio_framework::tree_pin!());
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
     // extension only contributes a topic (`sourcing.module`).
     let bundle = bundle.mode(ExecutionMode::Declarative);

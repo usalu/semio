@@ -1,0 +1,332 @@
+{
+  "schema": "semio.hub.directory-access-changed-fixture.v1",
+  "readerUserId": "u-reader",
+  "cases": [
+    {
+      "id": "granted-a-space-created-before-the-reader-cursor",
+      "createdOnSocket": [],
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 48,
+          "id": "event-48",
+          "hlc": {
+            "physicalMs": 48,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-old",
+          "userId": "u-reader",
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "sp-old",
+            "userId": "u-reader",
+            "role": "author"
+          },
+          "recordedAtMs": 48
+        }
+      },
+      "frame": {
+        "kind": "access-changed",
+        "spaceId": "sp-old",
+        "change": "granted"
+      }
+    },
+    {
+      "id": "creator-membership-in-a-space-created-on-this-socket",
+      "createdOnSocket": [
+        "sp-new"
+      ],
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 52,
+          "id": "event-52",
+          "hlc": {
+            "physicalMs": 52,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-new",
+          "userId": "u-reader",
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "sp-new",
+            "userId": "u-reader",
+            "role": "author"
+          },
+          "recordedAtMs": 52
+        }
+      },
+      "frame": null
+    },
+    {
+      "id": "invite-redeemed-by-the-reader",
+      "createdOnSocket": [],
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 60,
+          "id": "event-60",
+          "hlc": {
+            "physicalMs": 60,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-invite",
+          "userId": "u-reader",
+          "body": {
+            "kind": "invite.redeemed",
+            "spaceId": "sp-invite",
+            "userId": "u-reader",
+            "inviteId": "invite-1",
+            "role": "spectator"
+          },
+          "recordedAtMs": 60
+        }
+      },
+      "frame": {
+        "kind": "access-changed",
+        "spaceId": "sp-invite",
+        "change": "granted"
+      }
+    },
+    {
+      "id": "reader-removed",
+      "createdOnSocket": [],
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 61,
+          "id": "event-61",
+          "hlc": {
+            "physicalMs": 61,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-old",
+          "userId": "u-reader",
+          "body": {
+            "kind": "member.removed",
+            "spaceId": "sp-old",
+            "userId": "u-reader"
+          },
+          "recordedAtMs": 61
+        }
+      },
+      "frame": {
+        "kind": "access-changed",
+        "spaceId": "sp-old",
+        "change": "revoked"
+      }
+    },
+    {
+      "id": "reader-removed-from-a-space-created-on-this-socket",
+      "createdOnSocket": [
+        "sp-new"
+      ],
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 62,
+          "id": "event-62",
+          "hlc": {
+            "physicalMs": 62,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-new",
+          "userId": "u-reader",
+          "body": {
+            "kind": "member.removed",
+            "spaceId": "sp-new",
+            "userId": "u-reader"
+          },
+          "recordedAtMs": 62
+        }
+      },
+      "frame": {
+        "kind": "access-changed",
+        "spaceId": "sp-new",
+        "change": "revoked"
+      }
+    },
+    {
+      "id": "another-human-granted",
+      "createdOnSocket": [],
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 63,
+          "id": "event-63",
+          "hlc": {
+            "physicalMs": 63,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-old",
+          "userId": "u-other",
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "sp-old",
+            "userId": "u-other",
+            "role": "author"
+          },
+          "recordedAtMs": 63
+        }
+      },
+      "frame": null
+    },
+    {
+      "id": "another-human-removed",
+      "createdOnSocket": [],
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 64,
+          "id": "event-64",
+          "hlc": {
+            "physicalMs": 64,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-old",
+          "userId": "u-other",
+          "body": {
+            "kind": "member.removed",
+            "spaceId": "sp-old",
+            "userId": "u-other"
+          },
+          "recordedAtMs": 64
+        }
+      },
+      "frame": null
+    },
+    {
+      "id": "space-created",
+      "createdOnSocket": [],
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 65,
+          "id": "event-65",
+          "hlc": {
+            "physicalMs": 65,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-fresh",
+          "body": {
+            "kind": "space.created",
+            "spaceId": "sp-fresh",
+            "name": "Fresh",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          },
+          "recordedAtMs": 65
+        }
+      },
+      "frame": null
+    },
+    {
+      "id": "heartbeat",
+      "createdOnSocket": [],
+      "message": {
+        "kind": "heartbeat",
+        "headSeq": 65
+      },
+      "frame": null
+    }
+  ],
+  "wakes": [
+    {
+      "id": "access-granted-rereads-from-the-origin",
+      "message": {
+        "kind": "access-changed",
+        "spaceId": "sp-old",
+        "change": "granted"
+      },
+      "wake": "origin"
+    },
+    {
+      "id": "access-revoked-rereads-from-the-origin",
+      "message": {
+        "kind": "access-changed",
+        "spaceId": "sp-old",
+        "change": "revoked"
+      },
+      "wake": "origin"
+    },
+    {
+      "id": "event-fetches-the-next-page",
+      "message": {
+        "kind": "event",
+        "event": {
+          "seq": 66,
+          "id": "event-66",
+          "hlc": {
+            "physicalMs": 66,
+            "logical": 0
+          },
+          "actor": {
+            "kind": "user",
+            "id": "user:u-owner#hub-rest"
+          },
+          "spaceId": "sp-old",
+          "userId": "u-other",
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "sp-old",
+            "userId": "u-other",
+            "role": "author"
+          },
+          "recordedAtMs": 66
+        }
+      },
+      "wake": "next-page"
+    },
+    {
+      "id": "heartbeat-fetches-the-next-page",
+      "message": {
+        "kind": "heartbeat",
+        "headSeq": 66
+      },
+      "wake": "next-page"
+    },
+    {
+      "id": "presence-is-not-a-page",
+      "message": {
+        "kind": "presence",
+        "spaceId": "sp-old",
+        "documentId": "doc",
+        "actors": []
+      },
+      "wake": "none"
+    }
+  ]
+}

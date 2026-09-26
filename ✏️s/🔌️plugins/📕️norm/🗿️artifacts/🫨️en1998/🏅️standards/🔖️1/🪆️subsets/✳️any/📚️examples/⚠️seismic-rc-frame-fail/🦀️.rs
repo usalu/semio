@@ -5,7 +5,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "seismic-rc-frame-fail";
 pub const ICON: &str = "file";
-pub const PRIMARY_TEXT: &str = "";
+pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/⚠️seismic-rc-frame-fail/⚠️seismic-rc-frame-fail/🗣️.dsl.semio");
 
 pub fn label() -> LocalizedLabel {
     LocalizedLabel::native("Seismic RC frame (DE zone 2, failing)", "Erdbeben-Stahlbetonrahmen (DE Zone 2, nicht konform)")

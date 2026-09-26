@@ -1,12 +1,8 @@
 {
   "ChangeProductConfiguration": {
     "id": "VLV-50-001",
-    "new_configuration": {
+    "newConfiguration": {
       "id": "cfg.VLV-50-001",
-      "geometry_ref": "geom.valve.50",
-      "function_refs": [
-        "curve-kvs"
-      ],
       "attributes": {
         "kind": "valveHeating",
         "dn": 80,
@@ -15,7 +11,11 @@
         "connectionType": "flange",
         "authorityMin": 0.3,
         "authorityMax": 0.7
-      }
+      },
+      "geometryRef": "geom-valve-50",
+      "functionRefs": [
+        "curve-kvs"
+      ]
     }
   }
 }

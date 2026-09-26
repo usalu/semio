@@ -1,0 +1,6 @@
+{
+  "extends": "../../🧰️framework/🛍️products/💻️os/tsconfig.json",
+  "compilerOptions": { "incremental": false, "tsBuildInfoFile": null },
+  "include": [],
+  "files": ["../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⌨️text-input-oracle/🟦️.ts"]
+}

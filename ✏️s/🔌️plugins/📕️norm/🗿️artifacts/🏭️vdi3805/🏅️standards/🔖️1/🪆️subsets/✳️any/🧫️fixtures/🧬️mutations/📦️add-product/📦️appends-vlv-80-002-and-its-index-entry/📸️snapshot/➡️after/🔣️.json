@@ -1,26 +1,27 @@
 {
   "catalog": {
     "file": {
-      "header_version": "3805",
+      "headerVersion": "3805",
       "manufacturer": "DEMO",
-      "building_system_number": {
-        "system_code": "420",
+      "buildingSystemNumber": {
+        "systemCode": "420",
         "subsystem": "10",
         "sequence": 1
       },
       "created": "2023-06-01",
       "charset": "UTF-8",
-      "record_count": 2,
+      "recordCount": 2,
       "extensions": {
         "fields": {}
       }
     },
     "products": [
       {
+        "id": "VLV-50-001",
         "identity": {
-          "manufacturer_code": "DEMO",
-          "product_group": "HV",
-          "article_number": "VLV-50-001"
+          "manufacturerCode": "DEMO",
+          "productGroup": "HV",
+          "articleNumber": "VLV-50-001"
         },
         "title": [
           {
@@ -50,10 +51,6 @@
         ],
         "configuration": {
           "id": "cfg.VLV-50-001",
-          "geometry_ref": "geom.valve.50",
-          "function_refs": [
-            "curve-kvs"
-          ],
           "attributes": {
             "kind": "valveHeating",
             "dn": 50,
@@ -62,20 +59,24 @@
             "connectionType": "flange",
             "authorityMin": 0.3,
             "authorityMax": 0.7
-          }
+          },
+          "geometryRef": "geom-valve-50",
+          "functionRefs": [
+            "curve-kvs"
+          ]
         },
         "accessories": [],
         "components": [],
         "extensions": {
           "fields": {}
-        },
-        "id": "VLV-50-001"
+        }
       },
       {
+        "id": "VLV-80-002",
         "identity": {
-          "manufacturer_code": "DEMO",
-          "product_group": "HV",
-          "article_number": "VLV-80-002"
+          "manufacturerCode": "DEMO",
+          "productGroup": "HV",
+          "articleNumber": "VLV-80-002"
         },
         "title": [
           {
@@ -91,8 +92,6 @@
         "records": [],
         "configuration": {
           "id": "cfg.VLV-80-002",
-          "geometry_ref": null,
-          "function_refs": [],
           "attributes": {
             "kind": "valveHeating",
             "dn": 80,
@@ -101,14 +100,15 @@
             "connectionType": "flange",
             "authorityMin": 0.3,
             "authorityMax": 0.7
-          }
+          },
+          "geometryRef": null,
+          "functionRefs": []
         },
         "accessories": [],
         "components": [],
         "extensions": {
           "fields": {}
-        },
-        "id": "VLV-80-002"
+        }
       }
     ],
     "extensions": {
@@ -116,7 +116,7 @@
     }
   },
   "editionProfile": {
-    "8": "Legacy"
+    "8": "legacy"
   },
   "correctionAsOf": {
     "year": 2024,
@@ -126,7 +126,7 @@
   "index": {
     "entries": [
       {
-        "product_id": "VLV-50-001",
+        "productId": "VLV-50-001",
         "sheet": 2,
         "tags": [
           "Stellventil DN50",
@@ -135,7 +135,7 @@
         "dn": 50
       },
       {
-        "product_id": "VLV-80-002",
+        "productId": "VLV-80-002",
         "sheet": 2,
         "tags": [
           "Stellventil DN80",
@@ -146,15 +146,15 @@
     ]
   },
   "geometry": {
-    "geom.valve.50": {
-      "id": "geom.valve.50",
+    "geom-valve-50": {
+      "id": "geom-valve-50",
       "bbox": {
-        "min_x": 0.0,
-        "min_y": 0.0,
-        "min_z": 0.0,
-        "max_x": 0.25,
-        "max_y": 0.5,
-        "max_z": 0.125
+        "minX": 0.0,
+        "minY": 0.0,
+        "minZ": 0.0,
+        "maxX": 0.25,
+        "maxY": 0.5,
+        "maxZ": 0.125
       },
       "connections": [
         {
@@ -170,7 +170,7 @@
             0.0,
             0.0
           ],
-          "diameter_mm": 50.0
+          "diameterMm": 50.0
         },
         {
           "id": "out",
@@ -185,7 +185,7 @@
             0.0,
             0.0
           ],
-          "diameter_mm": 50.0
+          "diameterMm": 50.0
         }
       ],
       "parameters": {
@@ -196,17 +196,17 @@
   "curves": {
     "curve-kvs": {
       "id": "curve-kvs",
-      "x_unit": {
+      "xUnit": {
         "symbol": "%",
-        "kind": "Dimensionless",
+        "kind": "dimensionless",
         "delta": true,
-        "si_factor": 0.01
+        "siFactor": 0.01
       },
-      "y_unit": {
+      "yUnit": {
         "symbol": "m3/h",
-        "kind": "Volume",
+        "kind": "volume",
         "delta": false,
-        "si_factor": 1.0
+        "siFactor": 1.0
       },
       "points": [
         {
@@ -219,5 +219,11 @@
         }
       ]
     }
+  },
+  "limits": {
+    "maxFileBytes": 4194304,
+    "maxRecords": 100000,
+    "maxFieldLength": 8192,
+    "maxNestingDepth": 32
   }
 }

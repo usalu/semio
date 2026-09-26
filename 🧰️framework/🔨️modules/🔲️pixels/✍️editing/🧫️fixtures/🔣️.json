@@ -1,0 +1,454 @@
+{
+  "image": {
+    "width": 2,
+    "height": 2,
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      255,
+      0,
+      255,
+      0,
+      0,
+      255,
+      128,
+      10,
+      20,
+      30,
+      0
+    ]
+  },
+  "cases": [
+    {
+      "name": "Box blur clamps edges and averages opaque neighbors",
+      "image": {"width":3,"height":1,"pixels":[0,0,0,255,90,90,90,255,180,180,180,255]},
+      "operation": {"kind":"blur","value":1},
+      "expected": [30,30,30,255,90,90,90,255,150,150,150,255]
+    },
+    {
+      "name": "Sharpen preserves alpha and clamps channel values",
+      "image": {"width":3,"height":1,"pixels":[0,0,0,255,90,90,90,255,180,180,180,255]},
+      "operation": {"kind":"sharpen","value":1},
+      "expected": [0,0,0,255,90,90,90,255,210,210,210,255]
+    },
+    {
+      "name": "Grayscale uses sRGB luminance coefficients",
+      "operation": {"kind":"grayscale"},
+      "expected": [54,54,54,255,182,182,182,255,18,18,18,128,19,19,19,0]
+    },
+    {
+      "name": "Asymmetric rotation exchanges width and height",
+      "image": {"width":3,"height":1,"pixels":[0,0,0,255,90,90,90,255,180,180,180,255]},
+      "operation": {"kind":"rotateClockwise"},
+      "width":1,"height":3,
+      "expected": [0,0,0,255,90,90,90,255,180,180,180,255]
+    },
+    {
+      "name": "Brush paints an interpolated segment with one opacity application",
+      "operation": {"kind":"stroke","points":[[0.5,0.5],[1.5,0.5],[0.5,0.5]],"size":1,"opacity":0.5,"hardness":1,"color":[255,0,0,255],"erase":false},
+      "expected": [255,0,0,255,128,128,0,255,0,0,255,128,10,20,30,0]
+    },
+    {
+      "name": "Partial selection fill keeps straight alpha color",
+      "operation": {"kind":"fill","color":[255,0,0,255]},
+      "selection": [0,0,0,128],
+      "expected": [255,0,0,255,0,255,0,255,0,0,255,128,255,0,0,128]
+    },
+    {
+      "name": "Invert RGB while preserving alpha",
+      "operation": {
+        "kind": "invert"
+      },
+      "expected": [
+        0,
+        255,
+        255,
+        255,
+        255,
+        0,
+        255,
+        255,
+        255,
+        255,
+        0,
+        128,
+        245,
+        235,
+        225,
+        0
+      ]
+    },
+    {
+      "name": "Flip horizontally",
+      "operation": {
+        "kind": "flipHorizontal"
+      },
+      "expected": [
+        0,
+        255,
+        0,
+        255,
+        255,
+        0,
+        0,
+        255,
+        10,
+        20,
+        30,
+        0,
+        0,
+        0,
+        255,
+        128
+      ]
+    },
+    {
+      "name": "Flip vertically",
+      "operation": {
+        "kind": "flipVertical"
+      },
+      "expected": [
+        0,
+        0,
+        255,
+        128,
+        10,
+        20,
+        30,
+        0,
+        255,
+        0,
+        0,
+        255,
+        0,
+        255,
+        0,
+        255
+      ]
+    },
+    {
+      "name": "Rotate clockwise",
+      "operation": {
+        "kind": "rotateClockwise"
+      },
+      "expected": [
+        0,
+        0,
+        255,
+        128,
+        255,
+        0,
+        0,
+        255,
+        10,
+        20,
+        30,
+        0,
+        0,
+        255,
+        0,
+        255
+      ]
+    },
+    {
+      "name": "Rotate counterclockwise",
+      "operation": {
+        "kind": "rotateCounterclockwise"
+      },
+      "expected": [
+        0,
+        255,
+        0,
+        255,
+        10,
+        20,
+        30,
+        0,
+        255,
+        0,
+        0,
+        255,
+        0,
+        0,
+        255,
+        128
+      ]
+    },
+    {
+      "name": "Crop top-right pixel",
+      "operation": {
+        "kind": "crop",
+        "x": 1,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "expected": [
+        0,
+        255,
+        0,
+        255
+      ]
+    },
+    {
+      "name": "Selection protects unselected pixels",
+      "operation": {
+        "kind": "invert"
+      },
+      "selection": [
+        255,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        0,
+        255,
+        255,
+        255,
+        0,
+        255,
+        0,
+        255,
+        0,
+        0,
+        255,
+        128,
+        10,
+        20,
+        30,
+        0
+      ]
+    },
+    {
+      "name": "Empty selection changes nothing",
+      "operation": {
+        "kind": "clear"
+      },
+      "selection": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        255,
+        0,
+        0,
+        255,
+        0,
+        255,
+        0,
+        255,
+        0,
+        0,
+        255,
+        128,
+        10,
+        20,
+        30,
+        0
+      ]
+    },
+    {
+      "name": "Clear removes color and alpha",
+      "operation": {
+        "kind": "clear"
+      },
+      "expected": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Opaque fill replaces selected pixels",
+      "operation": {
+        "kind": "fill",
+        "color": [
+          12,
+          34,
+          56,
+          255
+        ]
+      },
+      "selection": [
+        0,
+        255,
+        0,
+        0
+      ],
+      "expected": [
+        255,
+        0,
+        0,
+        255,
+        12,
+        34,
+        56,
+        255,
+        0,
+        0,
+        255,
+        128,
+        10,
+        20,
+        30,
+        0
+      ]
+    },
+    {
+      "name": "Identity gamma",
+      "operation": {
+        "kind": "gamma",
+        "value": 1
+      },
+      "expected": [
+        255,
+        0,
+        0,
+        255,
+        0,
+        255,
+        0,
+        255,
+        0,
+        0,
+        255,
+        128,
+        10,
+        20,
+        30,
+        0
+      ]
+    },
+    {
+      "name": "Binary threshold uses luminance",
+      "operation": {
+        "kind": "threshold",
+        "value": 128
+      },
+      "expected": [
+        0,
+        0,
+        0,
+        255,
+        255,
+        255,
+        255,
+        255,
+        0,
+        0,
+        0,
+        128,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "selections": [
+    {
+      "name": "Rectangle selects pixel centers",
+      "shape": {
+        "kind": "rectangle",
+        "x": 1,
+        "y": 0,
+        "width": 1,
+        "height": 2
+      },
+      "expected": [
+        0,
+        255,
+        0,
+        255
+      ]
+    },
+    {
+      "name": "Ellipse includes pixel centers inside its radius",
+      "width": 3,
+      "height": 3,
+      "shape": {
+        "kind": "ellipse",
+        "x": 0,
+        "y": 0,
+        "width": 3,
+        "height": 3
+      },
+      "expected": [
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "Polygon selects left column",
+      "shape": {
+        "kind": "polygon",
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ]
+      },
+      "expected": [
+        255,
+        0,
+        255,
+        0
+      ]
+    },
+    {
+      "name": "Reverse rectangle drag",
+      "shape": {
+        "kind": "rectangle",
+        "x": 2,
+        "y": 2,
+        "width": -1,
+        "height": -2
+      },
+      "expected": [
+        0,
+        255,
+        0,
+        255
+      ]
+    }
+  ]
+}

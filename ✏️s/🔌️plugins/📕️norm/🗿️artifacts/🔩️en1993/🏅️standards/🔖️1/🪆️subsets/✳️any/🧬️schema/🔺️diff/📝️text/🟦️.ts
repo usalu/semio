@@ -1,6 +1,8 @@
 /** 📝️ Text representation for `norm.en1993.diff`. */
 export type En1993DiffText = string;
 
+import type { En1993Snapshot } from "../../📸️snapshot/🟦️.ts";
+
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
 export class normEn1993DiffTextGuardRefusal extends Error {
@@ -17,8 +19,8 @@ type normEn1993DiffTextGuardTextBounds = { readonly minLength?: number; readonly
 type normEn1993DiffTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normEn1993DiffTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normEn1993DiffTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normEn1993DiffTextGuardReject(at, "value is not an object");
+export const normEn1993DiffTextGuardObject = (value: unknown, at: string): Readonly<En1993Snapshot> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as En1993Snapshot) : normEn1993DiffTextGuardReject(at, "value is not an object");
 export const normEn1993DiffTextGuardArray = (value: unknown, at: string, bounds: normEn1993DiffTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normEn1993DiffTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normEn1993DiffTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -48,6 +50,6 @@ export const normEn1993DiffTextGuardConstant = <T extends string | number | bool
   value === expected ? expected : normEn1993DiffTextGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseEn1993DiffText(value: unknown, at = "$"): En1993DiffText {
+export function parseEn1993DiffText(value: unknown, at = "$"): Readonly<En1993Snapshot> {
   return normEn1993DiffTextGuardObject(value, `${at}`);
 }

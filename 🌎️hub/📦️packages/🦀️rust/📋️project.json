@@ -897,6 +897,16 @@
       },
       "outputs": []
     },
+    "trusted-catalog-preflight": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-catalog-preflight",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "trusted-catalog-bootstrap": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1057,6 +1067,24 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts dev postgres"
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-neo4j": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "build-dev-postgres",
+        {
+          "target": "build",
+          "projects": [
+            "os-hub-admin"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts dev neo4j"
       },
       "cache": false,
       "continuous": true

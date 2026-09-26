@@ -171,7 +171,12 @@ async fn set_snapshot_commits_a_host_backed_report() {
     context::dispatch(&mut app, En1993Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1993Snapshot::default() })).await;
     context::dispatch(&mut app, En1993Command::Evaluate(evaluate::Evaluate {})).await;
     let host = NormHost::<En1993Family>::from_artifact(app.snapshot().expect("projection"));
-    assert!(!host.report().checks.is_empty());
+    let report = host.report();
+    assert!(
+        report.checks.iter().any(|c| c.id.starts_with("en1993.")),
+        "default evaluate must emit en1993.* checks, got {:?}",
+        report.checks.iter().map(|c| c.id.as_str()).collect::<Vec<_>>()
+    );
     context::close(&mut app);
 }
 
@@ -227,7 +232,11 @@ async fn report_out_exports_the_computed_check_report() {
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
     let report: crate::document::CheckReport = pack::json::from_json_str(&json).expect("report json parses");
-    assert!(!report.checks.is_empty());
+    assert!(
+        report.checks.iter().any(|c| c.id.contains("en1993")),
+        "report:out must include at least one en1993 check id, got count={}",
+        report.checks.len()
+    );
     context::close(&mut app);
 }
 //#endregion ðï¸Behavior

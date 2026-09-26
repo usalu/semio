@@ -13,7 +13,8 @@
 //! `commandFieldOrder`, `inviteTokens` and `redemptionStatusCodes` tables drive both this module's
 //! tests and the React twin's.
 
-use semio_framework_os_kernel::os_directory::{DirectoryCommand, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility};
+use semio_framework_os_kernel::os_directory::{DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility};
+use std::collections::{BTreeMap, BTreeSet};
 use ui_wgpu::wgpu::Locale;
 
 //#region 🔖️Routes
@@ -106,9 +107,127 @@ fn space_row(entry: &DirectorySpaceListEntryV1) -> SpaceRow {
 /// public), each group most-recently-updated first, ties broken by id. Total and deterministic, so
 /// two renderers and two devices agree byte for byte.
 pub fn space_rows(entries: &[DirectorySpaceListEntryV1]) -> Vec<SpaceRow> {
-    let mut rows: Vec<SpaceRow> = entries.iter().map(space_row).collect();
+    sorted_space_rows(entries.iter().map(space_row).collect())
+}
+
+fn sorted_space_rows(mut rows: Vec<SpaceRow>) -> Vec<SpaceRow> {
     rows.sort_by(|left, right| left.access.cmp(&right.access).then(right.updated_at_ms.cmp(&left.updated_at_ms)).then(left.id.cmp(&right.id)));
     rows
+}
+
+/// 🌱️ A space created inside the folded events: what its `space.created` stated, and who joined it since.
+struct CreatedSpace {
+    name: String,
+    kind: DirectorySpaceKind,
+    visibility: DirectorySpaceVisibility,
+    members: BTreeSet<String>,
+}
+
+/// 🎭️ The access class a membership role gives the caller: `author` lists as `author`, `spectator` as `member`.
+fn member_access(role: DirectorySpaceRole) -> SpaceAccess {
+    match role {
+        DirectorySpaceRole::Author => SpaceAccess::Author,
+        DirectorySpaceRole::Spectator => SpaceAccess::Member,
+    }
+}
+
+/// 🧾️ Read-your-writes for the space list: folds the directory events of one command receipt (in receipt
+/// order) into the caller's rows, so a space the caller just created, renamed, archived, joined, left or
+/// deleted shows at once, whatever the list query answers (it lags, fails or outlives the transport's bound
+/// on a loaded hub — measured on hub 7800: `GET /directory/spaces` 25–58 s for 82 spaces, ticket 26/09/23
+/// WG8). Only what an event states exactly is applied: a membership change of another user on a listed
+/// space keeps its member count until the next list, which replaces the rows wholesale. Mirrors the
+/// directory read-model fold (`semio_framework_os_kernel::os_directory::fold`) projected onto the caller;
+/// the React twin is `spaceRowsAfterEventsV1` (`📇️directory/🏘️spaces/🟦️.ts`), both held to the shared
+/// fixture's `receiptFolds`.
+pub fn space_rows_after_events(rows: &[SpaceRow], events: &[DirectoryEvent], user_id: &str) -> Vec<SpaceRow> {
+    let mut next = rows.to_vec();
+    let mut created: BTreeMap<String, CreatedSpace> = BTreeMap::new();
+    for event in events {
+        let at_ms = event.recorded_at_ms;
+        match &event.body {
+            DirectoryEventBody::SpaceCreated { space_id, name, space_kind, visibility, owner_user_id } if owner_user_id == user_id => {
+                created.insert(space_id.clone(), CreatedSpace { name: name.clone(), kind: *space_kind, visibility: *visibility, members: BTreeSet::new() });
+            }
+            DirectoryEventBody::SpaceRenamed { space_id, name } => touch_space_row(&mut next, space_id, at_ms, |row| row.name = name.clone()),
+            DirectoryEventBody::SpaceVisibilityChanged { space_id, visibility } => touch_space_row(&mut next, space_id, at_ms, |row| row.visibility = *visibility),
+            DirectoryEventBody::SpaceArchived { space_id } => touch_space_row(&mut next, space_id, at_ms, |row| {
+                row.kind = DirectorySpaceKind::Archive;
+                if row.role == Some(DirectorySpaceRole::Author) {
+                    row.role = Some(DirectorySpaceRole::Spectator);
+                    row.access = SpaceAccess::Member;
+                }
+            }),
+            DirectoryEventBody::SpaceDeleted { space_id } => next.retain(|row| row.id != *space_id),
+            DirectoryEventBody::MemberUpserted { space_id, user_id: member, role } => join_space_row(&mut next, &mut created, user_id, space_id, member, *role, at_ms, false),
+            DirectoryEventBody::InviteRedeemed { space_id, user_id: member, role, .. } => join_space_row(&mut next, &mut created, user_id, space_id, member, *role, at_ms, true),
+            DirectoryEventBody::MemberRemoved { space_id, user_id: member } => {
+                if let Some(fresh) = created.get_mut(space_id) {
+                    fresh.members.remove(member);
+                }
+                let Some(index) = next.iter().position(|row| row.id == *space_id) else { continue };
+                if member == user_id && next[index].visibility != DirectorySpaceVisibility::Public {
+                    next.remove(index);
+                    continue;
+                }
+                let row = &mut next[index];
+                if member == user_id {
+                    row.access = SpaceAccess::Public;
+                    row.role = None;
+                    row.active_connections = 0;
+                }
+                row.member_count = row.member_count.saturating_sub(1);
+                row.updated_at_ms = at_ms;
+            }
+            DirectoryEventBody::DocumentAnnounced { descriptor } => touch_space_row(&mut next, &descriptor.space_id, at_ms, |row| row.document_count += 1),
+            _ => {}
+        }
+    }
+    sorted_space_rows(next)
+}
+
+fn touch_space_row(rows: &mut [SpaceRow], space_id: &str, at_ms: i64, change: impl FnOnce(&mut SpaceRow)) {
+    if let Some(row) = rows.iter_mut().find(|row| row.id == space_id) {
+        change(row);
+        row.updated_at_ms = at_ms;
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn join_space_row(rows: &mut Vec<SpaceRow>, created: &mut BTreeMap<String, CreatedSpace>, user_id: &str, space_id: &str, member: &str, role: DirectorySpaceRole, at_ms: i64, redeemed: bool) {
+    let fresh = created.get_mut(space_id).map(|fresh| {
+        fresh.members.insert(member.to_string());
+        &*fresh
+    });
+    let listed = rows.iter().position(|row| row.id == space_id);
+    match (listed, fresh) {
+        (None, Some(fresh)) if member == user_id => rows.push(SpaceRow {
+            id: space_id.to_string(),
+            name: fresh.name.clone(),
+            kind: fresh.kind,
+            visibility: fresh.visibility,
+            access: member_access(role),
+            role: Some(role),
+            member_count: fresh.members.len() as u32,
+            document_count: 0,
+            active_connections: 0,
+            updated_at_ms: at_ms,
+        }),
+        (Some(index), fresh) => {
+            let row = &mut rows[index];
+            row.member_count = match fresh {
+                Some(fresh) => fresh.members.len() as u32,
+                None if (member == user_id && row.access == SpaceAccess::Public) || (member != user_id && redeemed) => row.member_count + 1,
+                None => row.member_count,
+            };
+            if member == user_id {
+                row.access = member_access(role);
+                row.role = Some(role);
+            }
+            row.updated_at_ms = at_ms;
+        }
+        _ => {}
+    }
 }
 
 /// 🔎️ Case-insensitive substring filter over name and id. An empty query keeps every row.

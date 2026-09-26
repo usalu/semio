@@ -1,0 +1,6 @@
+{
+  "ChangeMemberFireDuration": {
+    "memberId": "beam-B1",
+    "newValue": 1800.0
+  }
+}

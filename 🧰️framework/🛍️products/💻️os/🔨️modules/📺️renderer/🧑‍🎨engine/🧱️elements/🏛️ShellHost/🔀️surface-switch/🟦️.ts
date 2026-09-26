@@ -431,6 +431,59 @@ export function shellRouteIsOverlayV1(uri: string): boolean {
   return (uri.split(/[?#]/u, 1)[0] ?? "/") === SHELL_HUB_ROUTE;
 }
 
+/** 🪟️ The route the SESSION stands at for a shell URI: the URI itself, or — while an overlay is open — the route the
+ * overlay was opened over. The shell keeps that route while `/hub` is shown, so a session replaced under the overlay (a
+ * sign-in re-establishing Home for the new human) is brought back to it; the route effect used to skip every overlay URI,
+ * which left the human on Home behind the hub pane, the agent pane unbound (`data-semio-hub-agent-space=""`) and their
+ * delegation unreachable (ticket 26/09/23 U5, G10 S4 relay). Rows: `🧫️fixtures/🧭️session-lane/🔣️.json` `sessionRoutes`. */
+export function shellSessionRouteV1(uri: string, underlying: string | null): Readonly<{ overlay: boolean; sessionRoute: string | null }> {
+  const overlay = shellRouteIsOverlayV1(uri);
+  return { overlay, sessionRoute: overlay ? underlying : uri };
+}
+
+/** 🪪️ Where the shell's hub identity stands. `local-only`: no hub configured. `signed-out`: no session, or the hub refused
+ * the one held. `pending`: a session is held and the hub has not confirmed it yet. `signed-in`: the hub confirmed it and the
+ * shell's identity names the same human. `hub-unavailable`: a session is held but the hub is not answering, so it cannot be
+ * confirmed. Rows: `🧫️fixtures/🧭️session-lane/🔣️.json` `identities`. */
+export type ShellIdentityResolutionV1 = "local-only" | "signed-out" | "pending" | "signed-in" | "hub-unavailable";
+
+export function shellIdentityResolutionV1(state: Readonly<{ hubConfigured: boolean; sessionHeld: boolean; refused: boolean; confirmed: boolean; offline: boolean }>): ShellIdentityResolutionV1 {
+  if (!state.hubConfigured) return "local-only";
+  if (!state.sessionHeld || state.refused) return "signed-out";
+  if (state.confirmed) return "signed-in";
+  return state.offline ? "hub-unavailable" : "pending";
+}
+
+/** 🚪️ Whether a session route may be applied under an identity resolution. A space route addresses hub data, so it waits
+ * for the human it is opened for: applied before a restored session was confirmed, the space mounted, the confirmation
+ * re-established Home for the "new" human ~5–7 s later and the route mounted the space a second time — closing
+ * everything opened in between (`space index opening failed: document closed`, C10 relay). `await-identity` holds it until
+ * the hub confirms, `await-sign-in` until the human signs in, and `apply-offline` is the typed path of a hub that does not
+ * answer: the space opens from what this device holds instead of waiting for a link that may not come back soon. Every
+ * other route applies at once. Rows: `🧫️fixtures/🧭️session-lane/🔣️.json` `admissions`. */
+export type ShellRouteAdmissionV1 = "apply" | "apply-offline" | "await-identity" | "await-sign-in";
+
+export function shellRouteAdmissionV1(route: string, identity: ShellIdentityResolutionV1): ShellRouteAdmissionV1 {
+  if (!/^\/spaces\/[^/?#]+(?:[/?#]|$)/u.test(route) || identity === "local-only" || identity === "signed-in") return "apply";
+  if (identity === "hub-unavailable") return "apply-offline";
+  return identity === "pending" ? "await-identity" : "await-sign-in";
+}
+
+/** 🚪️ What the shell says while a space route waits or opens without its hub, in both languages; `action` names the
+ * control that ends the wait, if the human has one. No default language: `locale` picks, and only an unknown locale reads
+ * English. */
+export const SHELL_ROUTE_ADMISSION_LABELS: Readonly<Record<Exclude<ShellRouteAdmissionV1, "apply">, Readonly<{ en: string; de: string; action: Readonly<{ en: string; de: string }> | null }>>> = {
+  "await-identity": { en: "Opening this space as soon as the hub confirms your session…", de: "Dieser Space öffnet sich, sobald der Hub deine Sitzung bestätigt…", action: null },
+  "await-sign-in": { en: "Sign in to the hub to open this space.", de: "Melde dich beim Hub an, um diesen Space zu öffnen.", action: { en: "Sign in", de: "Anmelden" } },
+  "apply-offline": { en: "The hub is not answering — this space opens with what this device has.", de: "Der Hub antwortet nicht — dieser Space öffnet sich mit dem, was dieses Gerät hat.", action: null },
+};
+
+export function shellRouteAdmissionTextV1(admission: Exclude<ShellRouteAdmissionV1, "apply">, locale: string): Readonly<{ text: string; action: string | null }> {
+  const label = SHELL_ROUTE_ADMISSION_LABELS[admission];
+  const de = locale === "de";
+  return { text: de ? label.de : label.en, action: label.action === null ? null : de ? label.action.de : label.action.en };
+}
+
 /** 🧭️ The ONE lane for everything that replaces the shell's session from outside a user gesture: applying the
  * route and re-establishing the session for a new human. Jobs run one at a time in request order; a route
  * request waiting at the END of the lane absorbs a later one (latest wins), so a burst of re-renders costs one

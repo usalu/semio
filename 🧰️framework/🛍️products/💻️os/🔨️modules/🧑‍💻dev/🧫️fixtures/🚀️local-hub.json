@@ -1,0 +1,552 @@
+{
+  "note": "Development hub path (ticket 26/09/23 U5, coordinator rule 23): an explicitly named hub is JOIN-ONLY (a serve waits with a localized status and gives up after a declared bound, never starts a hub); only the default hub is started, behind an owner lease per port and data root; the owner republishes a catalog the current hub cannot load. `roles`: explicit hub url → role. `locales`: POSIX locale variables → terminal language. `statuses`: every status and its exact en/de line. `leases`: records the lease reader accepts (`valid`) or refuses (`invalid`), which the schema `DevHubLeaseV1` must classify the same way. `catalogs`: a data root's trusted catalog (pointer + generation header) → freshness (`absent` / `current` / `stale` with the reason's leading words). `joins`: a fake hub that binds after `bindsAfterMs` (null: never) and the join bound → outcome. `owns`: the default-hub path under a lease state and port state → whether an owner is spawned, the status kinds reported, and the outcome.",
+  "roles": [
+    {
+      "explicit": "http://127.0.0.1:7800",
+      "role": "join"
+    },
+    {
+      "explicit": "http://127.0.0.1:8787",
+      "role": "join"
+    },
+    {
+      "explicit": null,
+      "role": "own"
+    },
+    {
+      "explicit": "",
+      "role": "own"
+    },
+    {
+      "explicit": "   ",
+      "role": "own"
+    }
+  ],
+  "locales": [
+    {
+      "env": {
+        "LANG": "de_DE.UTF-8"
+      },
+      "locale": "de"
+    },
+    {
+      "env": {
+        "LANG": "de"
+      },
+      "locale": "de"
+    },
+    {
+      "env": {
+        "LC_MESSAGES": "de_CH.UTF-8",
+        "LANG": "en_US.UTF-8"
+      },
+      "locale": "de"
+    },
+    {
+      "env": {
+        "LC_ALL": "en_US.UTF-8",
+        "LANG": "de_DE.UTF-8"
+      },
+      "locale": "en"
+    },
+    {
+      "env": {
+        "LANG": "dev"
+      },
+      "locale": "en"
+    },
+    {
+      "env": {},
+      "locale": "en"
+    }
+  ],
+  "statuses": [
+    {
+      "status": {
+        "kind": "waiting",
+        "hubUrl": "http://127.0.0.1:7800",
+        "waitedMs": 10400,
+        "boundMs": 120000
+      },
+      "en": "[dev-local-hub] waiting for the hub at http://127.0.0.1:7800 (10 of 120 s) — this serve never starts a hub there",
+      "de": "[dev-local-hub] warte auf den Hub unter http://127.0.0.1:7800 (10 von 120 s) — dieser Serve startet dort keinen eigenen Hub"
+    },
+    {
+      "status": {
+        "kind": "joined",
+        "hubUrl": "http://127.0.0.1:7800"
+      },
+      "en": "[dev-local-hub] joined the hub at http://127.0.0.1:7800",
+      "de": "[dev-local-hub] mit dem Hub unter http://127.0.0.1:7800 verbunden"
+    },
+    {
+      "status": {
+        "kind": "gave-up",
+        "hubUrl": "http://127.0.0.1:7800",
+        "waitedMs": 120000
+      },
+      "en": "[dev-local-hub] the hub at http://127.0.0.1:7800 did not answer within 120 s — continuing local-first; the shell connects once it answers",
+      "de": "[dev-local-hub] der Hub unter http://127.0.0.1:7800 hat nach 120 s nicht geantwortet — es geht lokal weiter; die Shell verbindet sich, sobald er antwortet"
+    },
+    {
+      "status": {
+        "kind": "owned",
+        "hubUrl": "http://127.0.0.1:8787",
+        "pid": 4242
+      },
+      "en": "[dev-local-hub] the hub at http://127.0.0.1:8787 is already owned by process 4242 — waiting for it",
+      "de": "[dev-local-hub] der Hub unter http://127.0.0.1:8787 gehört bereits Prozess 4242 — warte auf ihn"
+    },
+    {
+      "status": {
+        "kind": "port-taken",
+        "hubUrl": "http://127.0.0.1:8787"
+      },
+      "en": "[dev-local-hub] http://127.0.0.1:8787 is held by another process — not starting a second hub",
+      "de": "[dev-local-hub] http://127.0.0.1:8787 ist von einem anderen Prozess belegt — kein zweiter Hub"
+    },
+    {
+      "status": {
+        "kind": "starting",
+        "hubUrl": "http://127.0.0.1:8787",
+        "pid": 4243
+      },
+      "en": "[dev-local-hub] started the hub owner (process 4243) for http://127.0.0.1:8787",
+      "de": "[dev-local-hub] Hub-Besitzer (Prozess 4243) für http://127.0.0.1:8787 gestartet"
+    },
+    {
+      "status": {
+        "kind": "catalog-stale",
+        "dataDir": "/data/hub-dev",
+        "reason": "format 2 ≠ 3"
+      },
+      "en": "[dev-local-hub] the catalog in /data/hub-dev is out of date (format 2 ≠ 3) — republishing it",
+      "de": "[dev-local-hub] der Katalog in /data/hub-dev ist veraltet (format 2 ≠ 3) — wird neu veröffentlicht"
+    },
+    {
+      "status": {
+        "kind": "catalog-publishing",
+        "line": "stage=GuestCodecExecuting 12/40"
+      },
+      "en": "[dev-local-hub] publishing the catalog: stage=GuestCodecExecuting 12/40",
+      "de": "[dev-local-hub] Katalog wird veröffentlicht: stage=GuestCodecExecuting 12/40"
+    },
+    {
+      "status": {
+        "kind": "catalog-published",
+        "dataDir": "/data/hub-dev"
+      },
+      "en": "[dev-local-hub] published the catalog in /data/hub-dev",
+      "de": "[dev-local-hub] Katalog in /data/hub-dev veröffentlicht"
+    },
+    {
+      "status": {
+        "kind": "catalog-cancelled",
+        "dataDir": "/data/hub-dev"
+      },
+      "en": "[dev-local-hub] catalog publication cancelled — /data/hub-dev keeps its previous generation",
+      "de": "[dev-local-hub] Katalogveröffentlichung abgebrochen — /data/hub-dev behält seine bisherige Generation"
+    },
+    {
+      "status": {
+        "kind": "no-broker",
+        "hubUrl": "http://127.0.0.1:7800",
+        "dataDir": "/data/hub-dev"
+      },
+      "en": "[dev-local-hub] http://127.0.0.1:7800 has no session broker for /data/hub-dev — sign in through the shell",
+      "de": "[dev-local-hub] http://127.0.0.1:7800 hat keinen Sitzungsvermittler für /data/hub-dev — melde dich in der Shell an"
+    },
+    {
+      "status": {
+        "kind": "session",
+        "hubUrl": "http://127.0.0.1:8787",
+        "userId": "usr_dev",
+        "profileId": "developer"
+      },
+      "en": "[dev-local-hub] ready at http://127.0.0.1:8787 as usr_dev (developer)",
+      "de": "[dev-local-hub] bereit unter http://127.0.0.1:8787 als usr_dev (developer)"
+    }
+  ],
+  "leases": {
+    "valid": [
+      {
+        "pid": 4242,
+        "port": 8787,
+        "dataDir": "/data/hub-dev",
+        "hubUrl": "http://127.0.0.1:8787",
+        "acquiredAt": 1790000000000
+      },
+      {
+        "pid": 1,
+        "port": 1,
+        "dataDir": "/d",
+        "hubUrl": "https://hub.example.org",
+        "acquiredAt": 0
+      }
+    ],
+    "invalid": [
+      {
+        "pid": 0,
+        "port": 8787,
+        "dataDir": "/data/hub-dev",
+        "hubUrl": "http://127.0.0.1:8787",
+        "acquiredAt": 1
+      },
+      {
+        "pid": 4242,
+        "port": 8787.5,
+        "dataDir": "/data/hub-dev",
+        "hubUrl": "http://127.0.0.1:8787",
+        "acquiredAt": 1
+      },
+      {
+        "pid": 4242,
+        "port": 8787,
+        "hubUrl": "http://127.0.0.1:8787",
+        "acquiredAt": 1
+      },
+      {
+        "pid": "4242",
+        "port": 8787,
+        "dataDir": "/data/hub-dev",
+        "hubUrl": "http://127.0.0.1:8787",
+        "acquiredAt": 1
+      },
+      {
+        "pid": 4242,
+        "port": 8787,
+        "dataDir": "/data/hub-dev",
+        "hubUrl": "http://127.0.0.1:8787"
+      }
+    ]
+  },
+  "catalogs": [
+    {
+      "name": "no catalog yet",
+      "pointer": null,
+      "header": null,
+      "expected": "absent",
+      "reason": null
+    },
+    {
+      "name": "current format with every package key",
+      "pointer": {
+        "profileId": "local-stdio-gis-open-v1",
+        "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bundleSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "publicationRevision": "2"
+      },
+      "header": {
+        "schemaVersion": 3,
+        "profiles": [
+          {
+            "id": "local-stdio-gis-open-v1"
+          }
+        ],
+        "packages": [
+          {
+            "pluginId": "stdio",
+            "packageId": "semio:stdio",
+            "version": "0.1.0",
+            "role": "plugin",
+            "dependencies": [],
+            "component": {
+              "path": "packages/stdio/component.wasm"
+            },
+            "descriptor": {
+              "path": "packages/stdio/descriptor.semio"
+            },
+            "executionProtocol": {
+              "appChannelVersion": 17
+            },
+            "browserActor": {
+              "kind": "closed-browser-actor"
+            },
+            "pluginModule": {
+              "path": "packages/stdio/plugin-module.json"
+            },
+            "nativeCodecs": [],
+            "openTargets": []
+          },
+          {
+            "pluginId": "gis",
+            "packageId": "semio:gis",
+            "version": "0.1.0",
+            "role": "plugin",
+            "dependencies": [],
+            "component": {
+              "path": "packages/gis/component.wasm"
+            },
+            "descriptor": {
+              "path": "packages/gis/descriptor.semio"
+            },
+            "executionProtocol": {
+              "appChannelVersion": 17
+            },
+            "browserActor": {
+              "kind": "closed-browser-actor"
+            },
+            "pluginModule": {
+              "path": "packages/gis/plugin-module.json"
+            },
+            "nativeCodecs": [],
+            "openTargets": []
+          }
+        ]
+      },
+      "expected": "current",
+      "reason": null
+    },
+    {
+      "name": "format 2 without plugin modules (the zero-touch dev catalog of 26/09/23)",
+      "pointer": {
+        "profileId": "local-stdio-gis-note-open-v1",
+        "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bundleSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "publicationRevision": "1"
+      },
+      "header": {
+        "schemaVersion": 2,
+        "profiles": [
+          {
+            "id": "local-stdio-gis-note-open-v1"
+          }
+        ],
+        "packages": [
+          {
+            "pluginId": "gis",
+            "packageId": "semio:gis",
+            "version": "0.1.0",
+            "role": "plugin",
+            "dependencies": [],
+            "component": {
+              "path": "packages/gis/component.wasm"
+            },
+            "descriptor": {
+              "path": "packages/gis/descriptor.semio"
+            },
+            "executionProtocol": {
+              "appChannelVersion": 17
+            },
+            "browserActor": {
+              "kind": "closed-browser-actor"
+            },
+            "nativeCodecs": [],
+            "openTargets": []
+          },
+          {
+            "pluginId": "note",
+            "packageId": "semio:note",
+            "version": "0.1.0",
+            "role": "plugin",
+            "dependencies": [],
+            "component": {
+              "path": "packages/note/component.wasm"
+            },
+            "descriptor": {
+              "path": "packages/note/descriptor.semio"
+            },
+            "executionProtocol": {
+              "appChannelVersion": 17
+            },
+            "browserActor": {
+              "kind": "closed-browser-actor"
+            },
+            "nativeCodecs": [],
+            "openTargets": []
+          }
+        ]
+      },
+      "expected": "stale",
+      "reason": "format 2 ≠ 3"
+    },
+    {
+      "name": "format 3 whose package lacks its plugin module",
+      "pointer": {
+        "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "header": {
+        "schemaVersion": 3,
+        "profiles": [
+          {
+            "id": "p"
+          }
+        ],
+        "packages": [
+          {
+            "pluginId": "stdio",
+            "packageId": "semio:stdio",
+            "version": "0.1.0",
+            "role": "plugin",
+            "dependencies": [],
+            "component": {
+              "path": "packages/stdio/component.wasm"
+            },
+            "descriptor": {
+              "path": "packages/stdio/descriptor.semio"
+            },
+            "executionProtocol": {
+              "appChannelVersion": 17
+            },
+            "browserActor": {
+              "kind": "closed-browser-actor"
+            },
+            "pluginModule": {
+              "path": "packages/stdio/plugin-module.json"
+            },
+            "nativeCodecs": [],
+            "openTargets": []
+          },
+          {
+            "pluginId": "gis",
+            "packageId": "semio:gis",
+            "version": "0.1.0",
+            "role": "plugin",
+            "dependencies": [],
+            "component": {
+              "path": "packages/gis/component.wasm"
+            },
+            "descriptor": {
+              "path": "packages/gis/descriptor.semio"
+            },
+            "executionProtocol": {
+              "appChannelVersion": 17
+            },
+            "browserActor": {
+              "kind": "closed-browser-actor"
+            },
+            "nativeCodecs": [],
+            "openTargets": []
+          }
+        ]
+      },
+      "expected": "stale",
+      "reason": "package gis has no pluginModule"
+    },
+    {
+      "name": "pointer naming no generation",
+      "pointer": {
+        "generationId": "not-a-digest"
+      },
+      "header": null,
+      "expected": "stale",
+      "reason": "current.json names no generation"
+    },
+    {
+      "name": "pointer to a generation that is not on disk",
+      "pointer": {
+        "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "header": null,
+      "expected": "stale",
+      "reason": "generation aaaaaaaaaaaa is unreadable"
+    },
+    {
+      "name": "format 3 without packages",
+      "pointer": {
+        "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "header": {
+        "schemaVersion": 3,
+        "profiles": [
+          {
+            "id": "p"
+          }
+        ],
+        "packages": []
+      },
+      "expected": "stale",
+      "reason": "no profiles or packages"
+    }
+  ],
+  "joins": [
+    {
+      "name": "a hub that binds after the serve started is joined",
+      "bindsAfterMs": 400,
+      "boundMs": 8000,
+      "expected": "joined"
+    },
+    {
+      "name": "a hub that is already up is joined at once",
+      "bindsAfterMs": 0,
+      "boundMs": 8000,
+      "expected": "joined"
+    },
+    {
+      "name": "a hub that never binds is given up after the bound, and nothing binds its port",
+      "bindsAfterMs": null,
+      "boundMs": 1200,
+      "expected": "gave-up"
+    }
+  ],
+  "owns": [
+    {
+      "name": "no owner, free port: one owner is started and joined once it binds",
+      "lease": "none",
+      "portInUse": false,
+      "readyAfterPolls": 3,
+      "expected": {
+        "spawned": 1,
+        "statuses": [
+          "starting",
+          "joined"
+        ],
+        "up": true
+      }
+    },
+    {
+      "name": "a live owner that has not bound yet: waited for, never a second owner",
+      "lease": "live",
+      "portInUse": false,
+      "readyAfterPolls": 3,
+      "expected": {
+        "spawned": 0,
+        "statuses": [
+          "owned",
+          "joined"
+        ],
+        "up": true
+      }
+    },
+    {
+      "name": "a stale owner (process gone), free port: taken over by one new owner",
+      "lease": "stale",
+      "portInUse": false,
+      "readyAfterPolls": 2,
+      "expected": {
+        "spawned": 1,
+        "statuses": [
+          "starting",
+          "joined"
+        ],
+        "up": true
+      }
+    },
+    {
+      "name": "a port someone else holds: no owner, typed refusal",
+      "lease": "none",
+      "portInUse": true,
+      "readyAfterPolls": null,
+      "expected": {
+        "spawned": 0,
+        "statuses": [
+          "port-taken"
+        ],
+        "up": false
+      }
+    },
+    {
+      "name": "the hub already answers: joined, nothing started",
+      "lease": "none",
+      "portInUse": true,
+      "readyAfterPolls": 0,
+      "expected": {
+        "spawned": 0,
+        "statuses": [
+          "joined"
+        ],
+        "up": true
+      }
+    }
+  ]
+}

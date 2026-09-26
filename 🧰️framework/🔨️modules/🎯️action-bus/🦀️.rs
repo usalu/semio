@@ -42,6 +42,13 @@ impl ToolPayload {
     fn downcast<T: Send + 'static>(self) -> Result<T, ToolJobFactoryError> {
         self.value.downcast::<T>().map(|value| *value).map_err(|_| ToolJobFactoryError::new(format!("tool payload '{}' has the wrong Rust payload type", self.schema_id)))
     }
+
+    /// 🔓️ Takes back the typed payload a builder put in, or hands this payload back unchanged when it carries
+    /// another type — the agent lane's prepare phase reads a retained route's work without dispatching it.
+    pub fn into_inner<T: Send + 'static>(self) -> Result<T, Self> {
+        let schema_id = self.schema_id;
+        self.value.downcast::<T>().map(|value| *value).map_err(|value| Self { schema_id, value })
+    }
 }
 
 pub struct ToolOperationSpec {

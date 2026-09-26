@@ -151,6 +151,10 @@ pub fn apply_en1992_mutation(base: &En1992Snapshot, mutation: &En1992Mutation) -
 pub fn inverse_en1992_mutation(mutation: &En1992Mutation, base: &En1992Snapshot) -> Vec<En1992Mutation> {
     <En1992Mutation as protocol::Mutation<En1992Snapshot>>::inverse(mutation, base)
 }
+/// 📥️ Decodes one committed mutation JSON document into [`En1992Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
+pub fn decode_en1992_mutation_json(text: &str) -> Result<En1992Mutation, String> {
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
+}
 //#endregion 🌉️ExternalCodecBridge
 
 //#region 🧪️Tests
@@ -162,7 +166,4 @@ mod tests;
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture;
 //#endregion 🧪️Tests

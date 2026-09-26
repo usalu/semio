@@ -12,7 +12,7 @@ pub(crate) mod context {
     
     pub type NormApp = VcsArtifactApp<EditorApp<En1995PlayApp>>;
     
-    /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
+    /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
         let mut app = new_app_with_registry::<EditorApp<En1995PlayApp>>(en1995_manifest_for_tests).await;
         semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
@@ -77,8 +77,8 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
     assert_eq!(classified, definition.window_kinds.len() * crate::app_surface::NORM_RETAINED_TOOL_IDS.len());
 }
 
-//#region ðï¸CommandSurface
-/// ð¯ï¸ One value per `En1995Command` row â the whole-command-surface laws below iterate it, so a new row
+//#region 🔖️CommandSurface
+/// 🎯️ One value per `En1995Command` row — the whole-command-surface laws below iterate it, so a new row
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<En1995Command> {
     vec![
@@ -100,7 +100,7 @@ async fn command_ids_cover_every_row_and_are_unique() {
     assert_eq!(ids, vec!["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample"]);
 }
 
-/// ð§·ï¸ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
+/// 🧷️ The permanent wire guard: every row round-trips text↔binary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
@@ -112,10 +112,10 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
     }
 }
 
-/// ð§·ï¸ Pins the exact pre-migration bytes for the rows whose shape the `app_commands!` decomposition
-/// could have silently rewritten â the fieldless `Evaluate` (was a unit variant) and both `Option`
+/// 🧷️ Pins the exact pre-migration bytes for the rows whose shape the `app_commands!` decomposition
+/// could have silently rewritten — the fieldless `Evaluate` (was a unit variant) and both `Option`
 /// cases of `SetSelectedCheckIndex`. Hex copied verbatim from the ticket's
-/// `ð§ªï¸wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
+/// `🧪️wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
 /// of the three payload shapes involves the per-standard `En1995Snapshot`.
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
@@ -124,9 +124,9 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
     assert_eq!(hex(&En1995Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01020001000402");
     assert_eq!(hex(&En1995Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01020000");
 }
-//#endregion ðï¸CommandSurface
+//#endregion 🔖️CommandSurface
 
-//#region ðï¸Manifest
+//#region 🔖️Manifest
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_en1995_app();
@@ -138,7 +138,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::app_surface::artifact_kind_id(VARIANT)));
 }
 
-/// ðï¸ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
+/// 🔌️ Port recipe: every norm app declares `model:in`/`report:out` alongside the implicit document
 /// ports, and `report:out` is pinned to this family's already-declared artifact kind.
 #[semio_framework_async_macros::async_test]
 async fn declares_model_in_and_report_out_ports() {
@@ -163,17 +163,43 @@ async fn every_declared_body_key_renders() {
     }
     context::close(&mut app);
 }
-//#endregion ðï¸Manifest
+//#endregion 🔖️Manifest
 
-//#region ðï¸Behavior
+//#region 🔖️Behavior
 #[semio_framework_async_macros::async_test]
 async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, En1995Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1995Snapshot::default() })).await;
     let mut host = NormHost::<En1995Family>::from_artifact(app.snapshot().expect("projection"));
     host.evaluate();
-    assert!(!host.report().checks.is_empty());
+    let ids: Vec<&str> = host.report().checks.iter().map(|check| check.id.as_str()).collect();
+    for prefix in ["en1995.6.1.6.bending.", "en1995.7.3.f1.", "en1995.8.2.2.johansen.", "en1995.8.spacing.a1."] {
+        assert!(ids.iter().any(|id| id.starts_with(prefix)), "evaluate must emit a {prefix}* check, got {ids:?}");
+    }
+    assert!(host.report().complies());
     context::close(&mut app);
+}
+
+/// 📚️ Every bundled example loads through `setActiveExample` and evaluates to its declared verdict.
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_loads_every_bundled_example() {
+    let mut app = context::app_with_registry().await;
+    for (id, complies) in [("glulam-floor-beam", true), ("glulam-footbridge", true), ("multi-fail-timber", false), ("overloaded-footbridge", false)] {
+        context::dispatch(&mut app, En1995Command::SetActiveExample(set_active_example::SetActiveExample { example_id: id.into() })).await;
+        let snapshot = app.snapshot().expect("projection");
+        let mut host = NormHost::<En1995Family>::from_artifact(snapshot);
+        host.evaluate();
+        assert_eq!(host.report().complies(), complies, "{id}: failing {:?}", host.report().failing().map(|c| c.id.clone()).collect::<Vec<_>>());
+    }
+    assert!(host_has_failure_prefix(&app.snapshot().expect("projection"), "en1995.2."));
+    context::close(&mut app);
+}
+
+fn host_has_failure_prefix(snapshot: &En1995Snapshot, prefix: &str) -> bool {
+    let mut host = NormHost::<En1995Family>::from_artifact(snapshot.clone());
+    host.evaluate();
+    let found = host.report().failing().any(|check| check.id.starts_with(prefix));
+    found
 }
 
 #[semio_framework_async_macros::async_test]
@@ -185,7 +211,7 @@ async fn evaluate_recommits_the_current_projection_without_changing_it() {
     context::close(&mut app);
 }
 
-/// ð§®ï¸ `setSelectedCheckIndex` is Results-window-config-only â it must dispatch cleanly and never touch the document.
+/// 🧮️ `setSelectedCheckIndex` is Results-window-config-only — it must dispatch cleanly and never touch the document.
 #[semio_framework_async_macros::async_test]
 async fn selected_check_index_is_a_config_only_edit() {
     let mut app = context::app_with_registry().await;
@@ -196,7 +222,7 @@ async fn selected_check_index_is_a_config_only_edit() {
     context::close(&mut app);
 }
 
-/// ð§¬ï¸ Kind-discipline wrapper: the real registry enforces that View actions never emit document
+/// 🧬️ Kind-discipline wrapper: the real registry enforces that View actions never emit document
 /// operations.
 #[semio_framework_async_macros::async_test]
 async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
@@ -218,7 +244,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     context::close(&mut app);
 }
 
-/// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
+/// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
@@ -232,4 +258,4 @@ async fn report_out_exports_the_computed_check_report() {
     assert!(!checks.is_empty());
     context::close(&mut app);
 }
-//#endregion ðï¸Behavior
+//#endregion 🔖️Behavior

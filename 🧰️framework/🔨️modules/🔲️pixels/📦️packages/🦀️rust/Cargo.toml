@@ -19,3 +19,5 @@ semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀
 
 [dev-dependencies]
 png = "0.17.16"
+serde_json = { workspace = true }
+image = { version = "0.25", default-features = false }

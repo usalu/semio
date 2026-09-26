@@ -198,10 +198,11 @@ impl TreeRowMetrics {
     }
 
     pub fn for_item(mut self, item: &UiTreeItemNode) -> Self {
-        self.control_height = match item.control.as_ref() {
-            Some(UiControlNode::Input(_) | UiControlNode::Select(_)) => self.control_height_small,
-            Some(_) => self.standard_control_height,
-            None => 0.0,
+        self.control_height = match (item.control.as_ref(), item.inline_toolbar.as_ref()) {
+            (_, Some(_)) => self.control_height_small,
+            (Some(UiControlNode::Input(_) | UiControlNode::Select(_)), None) => self.control_height_small,
+            (Some(_), None) => self.standard_control_height,
+            (None, None) => 0.0,
         };
         self.row_height = self.row_height.max(self.control_height);
         self

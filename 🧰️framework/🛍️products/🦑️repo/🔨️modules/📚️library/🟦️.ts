@@ -2700,7 +2700,7 @@ export function spawnBunx(args: string[], cwd: string, env: NodeJS.ProcessEnv = 
 
 /** 🥖️Spawns `bun` asynchronously; exits with child code. */
 export function spawnBun(args: string[], cwd: string, env: NodeJS.ProcessEnv = process.env): void {
-  const child = spawn(process.execPath, bunArgsForVite(args), { cwd, env, shell: true, stdio: "inherit" });
+  const child = spawn(process.execPath, bunArgsForVite(args), { cwd, env, shell: false, stdio: "inherit", windowsHide: true });
   child.on("exit", (code) => process.exit(code ?? 0));
   child.on("error", (error) => {
     console.error(error);

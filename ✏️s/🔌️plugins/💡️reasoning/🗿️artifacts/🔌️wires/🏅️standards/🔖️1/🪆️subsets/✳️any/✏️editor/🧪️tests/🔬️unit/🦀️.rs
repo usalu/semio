@@ -124,6 +124,7 @@ pub(crate) mod context {
 use super::*;
 use crate::editor::wires::unit_tests::context::{metabolism_app, new_app, render};
 use semio_framework_plugin::EditorApp;
+use serde_json::Value;
 
 const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retained-command-routes.json");
 
@@ -253,9 +254,9 @@ async fn graph_interaction_domain_is_declared_flat_and_scoped_to_the_canvas_wind
 #[semio_framework_async_macros::async_test]
 async fn wires_select_action_args_shapes_interaction_select_payload() {
     let args = wires_select_action_args(&["node-1".to_string()], WIRES_GRANULARITY_NODE, "replace");
-    assert_eq!(args["domainId"], WIRES_INTERACTION_GRAPH);
-    assert_eq!(args["merge"], "replace");
-    assert_eq!(args["method"], "pick");
+    assert_eq!(args["domainId"].as_str(), Some(WIRES_INTERACTION_GRAPH));
+    assert_eq!(args["merge"].as_str(), Some("replace"));
+    assert_eq!(args["method"].as_str(), Some("pick"));
     assert!(args["targets"].as_str().expect("targets json").contains("node-1"));
     assert!(args["targets"].as_str().expect("targets json").contains(WIRES_GRANULARITY_NODE));
 }

@@ -16,6 +16,7 @@
             "deleteLayer",
             "dropLayerKind",
             "duplicateLayer",
+            "editPixels",
             "moveLayer",
             "patchLayer",
             "patchLayers",
@@ -31,6 +32,8 @@
           ],
           "routes": [
             "setActiveUtility",
+            "setBrushColor",
+            "setBrushHardness",
             "setBrushOpacity",
             "setBrushSize",
             "setCamera",

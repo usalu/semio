@@ -17,38 +17,37 @@ member-actions [id:TEXT member-id:TEXT load-case-id:TEXT action:REC] {
   act-b1-g member-b1 g-permanent {n=2100000 vy=0 vz=296000 my=333000 mz=0 t=0}
   act-b1-q member-b1 q-imposed {n=0 vy=0 vz=0 my=0 mz=0 t=0}
 }
-joints [id:TEXT kind:TEXT member-id:TEXT bolt-class:TEXT bolt-diameter:NUM bolt-rows:UINT bolts-per-row:UINT pitch:NUM gauge:NUM end-distance:NUM edge-distance:NUM shear-planes:UINT plate-thickness:NUM plate-fu:NUM weld-throat:NUM weld-length:NUM weld-fu:NUM weld-grade:TEXT category:TEXT friction-mu:NUM preload-force:NUM slip-factor-ks:NUM friction-surfaces:UINT] {
-  joint-j1 bolted member-b1 10.9 0.024 2 2 0.07 0.07 0.03 0.04 1 0.012 550000000.0 0 0 550000000.0 S460 A 0.5 0 1 1
-  actions [id:TEXT load-case-id:TEXT shear:NUM tension:NUM] {
-  jf-1 g-permanent 213333 0
-  }
-  joint-w1 welded member-b1 "" 0 0 0 0 0 0 0 0 0 0 0.003 0.08 550000000.0 S460 A 0.5 0 1 1
-  actions [id:TEXT load-case-id:TEXT shear:NUM tension:NUM] {
-  jf-1 g-permanent 100000 0
-  }
+joints [id:TEXT kind:TEXT member-id:TEXT bolt-class:TEXT bolt-diameter:NUM bolt-rows:UINT bolts-per-row:UINT pitch:NUM gauge:NUM end-distance:NUM edge-distance:NUM shear-planes:UINT plate-thickness:NUM plate-fu:NUM weld-throat:NUM weld-length:NUM weld-fu:NUM weld-grade:TEXT actions:TABLE category:TEXT friction-mu:NUM preload-force:NUM slip-factor-ks:NUM friction-surfaces:UINT] {
+  joint-j1 bolted member-b1 "10.9" 0.024 2 2 0.07 0.07 0.03 0.04 1 0.012 550000000.0 0 0 550000000.0 S460 [ {id=jf-1 load-case-id=g-permanent shear=213333 tension=0} ] A 0.5 0 1 1
+  joint-w1 welded member-b1 "" 0 0 0 0 0 0 0 0 0 0 0.003 0.08 550000000.0 S460 [ {id=jf-w1 load-case-id=g-permanent shear=100000 tension=0} ] A 0.5 0 1 1
 }
-fatigue-details [id:TEXT member-id:TEXT category:UINT method:TEXT] {
-  fat-1 member-b1 90 safe_life
-  spectrum [id:TEXT delta-sigma:NUM cycles:NUM] {
-  fb-1 95000000.0 2000000.0
-  }
+fatigue-details [id:TEXT member-id:TEXT category:UINT method:TEXT spectrum:TABLE] {
+  fat-1 member-b1 90 safe_life [ {id=fb-1 delta-sigma=95000000.0 cycles=2000000.0} ]
 }
-fire-exposures [id:TEXT member-id:TEXT rating:TEXT protection-thickness:NUM section-factor:NUM mu0:NUM protection-conductivity:NUM protection-density:NUM protection-specific-heat:NUM] {
-  fire-1 member-b1 r30 0.008 180 0.75 0.2 800 1700
+fire-exposures [id:TEXT member-id:TEXT rating:TEXT protection-thickness:NUM section-factor:NUM mu0:NUM design-temperature:NUM protection-conductivity:NUM protection-density:NUM protection-specific-heat:NUM] {
+  fire-1 member-b1 r30 0.008 180 0.75 550.0 0.2 800 1700
 }
-cold-formed-members [id:TEXT b-bar:NUM thickness:NUM k-sigma:NUM psi:NUM fy:NUM gross-resistance:NUM] {
+cold-formed-members [id:TEXT b-bar:NUM thickness:NUM k-sigma:NUM psi:NUM fy:NUM gross-resistance:NUM actions:TABLE] {
+  cf-1 0.08 0.003 4.0 1.0 350000000.0 80000.0 [ {id=cf-g load-case-id=g-permanent force=20000.0} ]
 }
-plated-panels [id:TEXT a:NUM b:NUM thickness:NUM fy:NUM k-sigma:NUM] {
+plated-panels [id:TEXT a:NUM b:NUM thickness:NUM fy:NUM k-sigma:NUM actions:TABLE] {
+  pp-1 1.2 0.6 0.012 355000000.0 4.0 [ {id=pp-g load-case-id=g-permanent force=50000000.0} ]
 }
 silo-shells [id:TEXT thickness:NUM radius:NUM depth:NUM k:NUM gamma:NUM fy:NUM] {
+  silo-1 0.008 3.0 6.0 0.5 9000.0 355000000.0
 }
-tension-components [id:TEXT f-uk:NUM f-k:NUM] {
+tension-components [id:TEXT f-uk:NUM f-k:NUM actions:TABLE] {
+  ten-1 500000.0 400000.0 [ {id=ten-g load-case-id=g-permanent force=100000.0} ]
 }
 bridge-fatigue [id:TEXT member-id:TEXT lambda:NUM phi2:NUM delta-sigma-p:NUM category:UINT method:TEXT] {
+  br-1 member-b1 0.8 1.0 40000000.0 71 damage_tolerant
 }
-tower-legs [id:TEXT member-id:TEXT force-coefficient:NUM dynamic-factor:NUM] {
+tower-legs [id:TEXT member-id:TEXT force-coefficient:NUM dynamic-factor:NUM actions:TABLE] {
+  tw-1 member-b1 1.0 1.0 [ {id=tw-g load-case-id=g-permanent force=500000.0} {id=tw-w load-case-id=w-wind force=200000.0} ]
 }
-piles [id:TEXT section-id:TEXT material-id:TEXT driving-stress:NUM embedded-length:NUM shaft-perimeter:NUM] {
+piles [id:TEXT section-id:TEXT material-id:TEXT driving-stress:NUM embedded-length:NUM shaft-perimeter:NUM actions:TABLE] {
+  pile-1 sec-heb240 mat-s355 200000000.0 8.0 0.96 [ {id=pile-g load-case-id=g-permanent force=800000.0} ]
 }
-crane-runways [id:TEXT member-id:TEXT wheel-contact-length:NUM dispersion:NUM web-thickness:NUM fy:NUM phi:NUM] {
+crane-runways [id:TEXT member-id:TEXT wheel-contact-length:NUM dispersion:NUM web-thickness:NUM fy:NUM phi:NUM actions:TABLE] {
+  crane-1 member-b1 0.1 0.05 0.01 355000000.0 1.25 [ {id=cr-q load-case-id=q-imposed force=50000.0} ]
 }

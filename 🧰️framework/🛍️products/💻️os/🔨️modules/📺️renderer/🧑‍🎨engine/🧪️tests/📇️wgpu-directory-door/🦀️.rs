@@ -2,7 +2,7 @@
 //! encodes, the answer shapes the page may hand back, and the source law that the lanes this seam
 //! exists for are no longer compiled out of the browser build.
 
-use super::{decode_directory_door_response, encode_directory_door_request, DIRECTORY_DOOR_OP};
+use super::{decode_directory_door_response, encode_directory_door_binary_request, encode_directory_door_request, DIRECTORY_DOOR_OP};
 use semio_framework_os_kernel::os_directory::client::{HttpMethod, TransportError};
 
 const SHELL_SOURCE: &str = include_str!("../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
@@ -30,9 +30,9 @@ fn a_command_post_carries_its_sealed_json_body_and_bearer_verbatim() {
 }
 
 #[test]
-fn a_delete_verb_spells_the_fetch_vocabulary() {
-    let encoded = encode_directory_door_request(HttpMethod::Delete, "https://hub.example/directory/spaces/space-a", None, None).expect("encodes");
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).expect("valid json")["method"], "DELETE");
+fn a_get_verb_spells_the_fetch_vocabulary() {
+    let encoded = encode_directory_door_request(HttpMethod::Get, "https://hub.example/auth/sessions/me", None, None).expect("encodes");
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&encoded).expect("valid json")["method"], "GET");
 }
 
 #[test]
@@ -78,10 +78,33 @@ fn an_unreadable_answer_is_refused() {
 }
 
 #[test]
+fn a_binary_read_names_its_accept_and_carries_no_body() {
+    let encoded = encode_directory_door_binary_request("/_semio/hub/spaces/s/documents/d/active-checkpoint/pair", Some("session.v1.abc"), "application/vnd.semio.canonical-checkpoint-pair.v1").expect("encodes");
+    let value: serde_json::Value = serde_json::from_str(&encoded).expect("valid json");
+    assert_eq!((value["op"].as_str(), value["method"].as_str(), value["bearer"].as_str()), (Some(DIRECTORY_DOOR_OP), Some("GET"), Some("session.v1.abc")));
+    assert_eq!(value["accept"], "application/vnd.semio.canonical-checkpoint-pair.v1");
+    assert!(value.get("body").is_none());
+}
+
+#[test]
+fn a_byte_answer_decodes_its_base64_body_exactly() {
+    let bytes: Vec<u8> = (0..=255).collect();
+    let answer = serde_json::json!({ "status": 200, "bodyBase64": semio_framework_io_base64::base64_standard_encode(&bytes) }).to_string();
+    let response = decode_directory_door_response(&answer).expect("decodes");
+    assert_eq!((response.status, response.body), (200, bytes));
+}
+
+#[test]
+fn an_answer_with_both_a_text_and_a_byte_body_is_refused() {
+    assert!(decode_directory_door_response(r#"{"status":200,"body":"x","bodyBase64":"eA=="}"#).is_err());
+    assert!(decode_directory_door_response(r#"{"status":200,"bodyBase64":"%%%"}"#).is_err(), "a byte body that is not base64 is refused");
+}
+
+#[test]
 fn a_round_trip_preserves_every_field() {
     let encoded = encode_directory_door_request(HttpMethod::Post, "https://hub.example/directory/commands", Some("bearer"), Some(b"{}")).expect("encodes");
     let decoded: super::DirectoryDoorRequestV1 = serde_json::from_str(&encoded).expect("decodes");
-    assert_eq!(decoded, super::DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.into(), method: "POST".into(), url: "https://hub.example/directory/commands".into(), bearer: Some("bearer".into()), body: Some("{}".into()) });
+    assert_eq!(decoded, super::DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.into(), method: "POST".into(), url: "https://hub.example/directory/commands".into(), bearer: Some("bearer".into()), body: Some("{}".into()), accept: None });
 }
 //#endregion 🧪️Wire
 

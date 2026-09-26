@@ -173,10 +173,6 @@ impl crate::os_store::ComponentDocumentCodec for FixtureComponentCodec {
     fn print_mirror<'a>(&'a self, _pack: &'a [u8], _spr: &'a [u8]) -> crate::os_store::ComponentDocumentCodecFuture<'a, crate::os_store::ArtifactTextFiles> {
         Box::pin(async move { Err(crate::os_store::VcsError::Deserialize("fixture component prints no mirror".into())) })
     }
-
-    fn genesis<'a>(&'a self, _document_id: &'a str) -> crate::os_store::ComponentDocumentCodecFuture<'a, crate::os_store::ComponentDocumentGenesis> {
-        Box::pin(async move { Err(crate::os_store::VcsError::ValidationFailed("fixture component mints no genesis".into())) })
-    }
 }
 
 /// 🧪️ A kind whose owning component a host mounted takes its identity from that component — asked the
@@ -219,6 +215,8 @@ fn sized_envelope(index: usize, payload_bytes: usize) -> crate::os_spr::Mutation
         document_id: crate::os_spr::ArtifactId("doc-a".into()),
         actor: crate::os_spr::ActorId("hub.v1.actor".into()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("block.2d".into()), payload: vec![7; payload_bytes] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("block.2d".into()), payload: Vec::new() },
         timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 1),

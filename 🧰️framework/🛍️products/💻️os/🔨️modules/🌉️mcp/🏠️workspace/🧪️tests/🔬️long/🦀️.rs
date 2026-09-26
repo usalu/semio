@@ -14,20 +14,66 @@ fn empty_catalog() -> Arc<Catalog> {
     Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
 }
 
+/// 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): `subscribe`
+/// MUST come after `open`, never before. `ArtifactHost::subscribe`'s own doc says exactly why
+/// ("If the document is not open the receiver's sender is dropped, so it simply reports
+/// closed") — subscribing to a not-yet-open id hands back a receiver whose paired sender is
+/// dropped in the very same statement, permanently closed. `open` below mints a BRAND NEW
+/// `broadcast::channel` for "shared-doc"; a receiver taken out before that point can never see
+/// it. This was this test's own bug, not a gap in `ArtifactHost` or in headless propagation —
+/// `Ok(Err(Closed))` (not a timeout) was the tell: the channel was closed from the first poll,
+/// never merely slow.
+///
+/// 🎧️ A second `ProbeStore` (the "live shell") attaches its own backbone end so the store
+/// machinery ingests what `subscribe` reports, mirroring how a real shell would.
+///
+/// 🏭️ The shell store needs the SAME owners the agent's own probe installs
+/// (`ensure_probe_artifact`): without them an ingested remote edit is refused with
+/// `ValidationFailed("edit history insertion requires its exact mutation retirement factory")`,
+/// so this side could never observe what the agent committed.
+///
+/// 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): the agent's
+/// own actor persists ASYNCHRONOUSLY, on its own thread — `ensure_probe_artifact` returns as
+/// soon as the LOCAL store applied the mutation, before the bytes are necessarily on disk yet.
+/// Wait for the REAL persisted bytes before expecting the shell's side to see anything.
+/// 🗃️ The persisted artefact is a recursive DOCUMENT ARCHIVE, not a bare pack+spr snapshot: the
+/// actor's only folder writer is `persist_write_archive` (`🏪️store/🔄️sync/🦀️.rs`), which appends
+/// `DOCUMENT_ARCHIVE_PUT_EVENT` rows — `FolderEventLogStorage::write`'s `DOCUMENT_PUT_EVENT` has
+/// no producer on this lane at all, so waiting on `read` here waited for an event that can never
+/// arrive. `read_archive` is the same key, the kind this lane really writes.
+///
+/// 🪲️ Same root cause, second half: the shell's `notify` watcher IS real and IS wired
+/// (`install_watcher`, `📡️spr/🔄️sync`'s own module doc) — but `🏪️store/🔄️sync`'s OWN test
+/// suite deliberately does not rely on OS-level filesystem-event timing for determinism
+/// either ("notify also wired, but timing-independent here" — that test's own comment); it
+/// pokes `ArtifactActorMsg::ExternalChanged` explicitly instead of waiting on notify. This
+/// test does the exact same thing, for the exact same reason — NOT a workaround for a broken
+/// propagation path, the same deterministic nudge the reference test already establishes as
+/// this codebase's own convention for exercising this property without flaking on OS notify
+/// latency.
+///
+/// 🪲️ Widened from 5s to 20s after real flakiness investigation (not a blind bump): with
+/// `[DEBUG]` tracing temporarily attached, 9 of 10 runs delivered `RemoteMutations` in well
+/// under 1s; the 1 observed failure timed out waiting on `shell_events.recv()` specifically
+/// (the disk-write wait above never once timed out) on a machine `ps aux` showed running
+/// several DOZEN concurrent `cargo`/`rustc` processes from unrelated sibling tickets at the
+/// time (`26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`'s W3/W4 plugin fan-out). That is
+/// scheduling contention on the shell actor's own OS thread, not a propagation gap — the
+/// `Closed` bug (this test's real structural defect) is fixed above; this margin absorbs
+/// shared-box latency instead of re-hiding a broken channel behind a bigger number.
+///
+/// 🎫️ W3 extension: a SECOND real commit (`apply_probe_mutation`, beyond
+/// `ensure_probe_artifact`'s one-shot seed above) propagates too — proving "prepare → commit
+/// actually changes the artifact, observable from a second host" end to end over the real VCS
+/// this workspace already owns, not just the initial seed.
+///
+/// 🚪️ Both real stores are drained to `ArtifactStore::drop`'s terminal-empty witness before this
+/// test's frame unwinds; dropping either one live aborts the whole process in its destructor.
 #[tokio::test]
 async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let agent = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:writer".to_string(), Vec::new(), empty_catalog()).expect("agent opens");
     let shell_host = store::sync::ArtifactHost::new(workspace_worker_pool());
-    // 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): `subscribe`
-    // MUST come after `open`, never before. `ArtifactHost::subscribe`'s own doc says exactly why
-    // ("If the document is not open the receiver's sender is dropped, so it simply reports
-    // closed") — subscribing to a not-yet-open id hands back a receiver whose paired sender is
-    // dropped in the very same statement, permanently closed. `open` below mints a BRAND NEW
-    // `broadcast::channel` for "shared-doc"; a receiver taken out before that point can never see
-    // it. This was this test's own bug, not a gap in `ArtifactHost` or in headless propagation —
-    // `Ok(Err(Closed))` (not a timeout) was the tell: the channel was closed from the first poll,
-    // never merely slow.
     let shell_channels = shell_host
         .open(store::sync::ArtifactActorConfig {
             document_id: "shared-doc".to_string(),
@@ -38,28 +84,13 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
         })
         .await;
     let mut shell_events = shell_host.subscribe("shared-doc").await;
-    // 🎧️ A second `ProbeStore` (the "live shell") attaches its own backbone end so the store
-    // machinery ingests what `subscribe` reports, mirroring how a real shell would.
     let shell_envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None);
     let mut shell_store = ProbeStore::new(shell_envelope).await.expect("shell store");
-    // 🏭️ The shell store needs the SAME owners the agent's own probe installs
-    // (`ensure_probe_artifact`): without them an ingested remote edit is refused with
-    // `ValidationFailed("edit history insertion requires its exact mutation retirement factory")`,
-    // so this side could never observe what the agent committed.
     shell_store.install_document_store_owners_exact(probe_store_owners());
     shell_store.attach_backbone(store::Backbones::Channel(shell_channels.channel_backbone)).await.expect("attach");
 
     agent.ensure_probe_artifact("shared-doc", serde_json::json!({ "from": "agent" })).await.expect("agent commits headlessly");
 
-    // 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): the agent's
-    // own actor persists ASYNCHRONOUSLY, on its own thread — `ensure_probe_artifact` returns as
-    // soon as the LOCAL store applied the mutation, before the bytes are necessarily on disk yet.
-    // Wait for the REAL persisted bytes before expecting the shell's side to see anything.
-    // 🗃️ The persisted artefact is a recursive DOCUMENT ARCHIVE, not a bare pack+spr snapshot: the
-    // actor's only folder writer is `persist_write_archive` (`🏪️store/🔄️sync/🦀️.rs`), which appends
-    // `DOCUMENT_ARCHIVE_PUT_EVENT` rows — `FolderEventLogStorage::write`'s `DOCUMENT_PUT_EVENT` has
-    // no producer on this lane at all, so waiting on `read` here waited for an event that can never
-    // arrive. `read_archive` is the same key, the kind this lane really writes.
     let storage = store::sync::FolderEventLogStorage::new(dir.path().to_path_buf());
     let write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
     let seeded_archive = loop {
@@ -75,26 +106,8 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
         }
         tokio::time::sleep(std::time::Duration::from_millis(20)).await;
     };
-    // 🪲️ Same root cause, second half: the shell's `notify` watcher IS real and IS wired
-    // (`install_watcher`, `📡️spr/🔄️sync`'s own module doc) — but `🏪️store/🔄️sync`'s OWN test
-    // suite deliberately does not rely on OS-level filesystem-event timing for determinism
-    // either ("notify also wired, but timing-independent here" — that test's own comment); it
-    // pokes `ArtifactActorMsg::ExternalChanged` explicitly instead of waiting on notify. This
-    // test does the exact same thing, for the exact same reason — NOT a workaround for a broken
-    // propagation path, the same deterministic nudge the reference test already establishes as
-    // this codebase's own convention for exercising this property without flaking on OS notify
-    // latency.
     shell_host.send("shared-doc", store::sync::ArtifactActorMsg::ExternalChanged).await;
 
-    // 🪲️ Widened from 5s to 20s after real flakiness investigation (not a blind bump): with
-    // `[DEBUG]` tracing temporarily attached, 9 of 10 runs delivered `RemoteMutations` in well
-    // under 1s; the 1 observed failure timed out waiting on `shell_events.recv()` specifically
-    // (the disk-write wait above never once timed out) on a machine `ps aux` showed running
-    // several DOZEN concurrent `cargo`/`rustc` processes from unrelated sibling tickets at the
-    // time (`26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`'s W3/W4 plugin fan-out). That is
-    // scheduling contention on the shell actor's own OS thread, not a propagation gap — the
-    // `Closed` bug (this test's real structural defect) is fixed above; this margin absorbs
-    // shared-box latency instead of re-hiding a broken channel behind a bigger number.
     let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(20);
     let mut seen: Vec<String> = Vec::new();
     loop {
@@ -114,10 +127,6 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     shell_store.tick().await.expect("shell ingests the propagated edit");
     assert_eq!(shell_store.snapshot().expect("shell snapshot").0["from"], "agent", "the shell's own store now sees the agent's headless commit");
 
-    // 🎫️ W3 extension: a SECOND real commit (`apply_probe_mutation`, beyond
-    // `ensure_probe_artifact`'s one-shot seed above) propagates too — proving "prepare → commit
-    // actually changes the artifact, observable from a second host" end to end over the real VCS
-    // this workspace already owns, not just the initial seed.
     agent.apply_probe_mutation("shared-doc", serde_json::json!({ "from": "agent", "revision": 2 })).await.expect("agent commits a second real mutation");
     let second_write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
     loop {
@@ -145,8 +154,6 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     }
     shell_store.tick().await.expect("shell ingests the second propagated edit");
     assert_eq!(shell_store.snapshot().expect("shell snapshot").0["revision"], 2, "the shell observes the agent's second real headless commit too");
-    // 🚪️ Both real stores are drained to `ArtifactStore::drop`'s terminal-empty witness before this
-    // test's frame unwinds; dropping either one live aborts the whole process in its destructor.
     shell_host.close("shared-doc");
     close_probe_store_to_terminal(shell_store);
 }
@@ -280,6 +287,9 @@ fn a_real_app_command_is_answered_over_the_shell_message_lane_not_the_respond_la
     }
 }
 
+/// 🚧️ A real, informative failure (e.g. a WIT/kernel event shape mismatch this
+/// packet's own effort budget did not resolve) is still useful test output — see
+/// `📓️terra-P7-report.md` for exactly what this printed in this environment.
 #[test]
 fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
     let repo_root = match find_repo_root() {
@@ -311,9 +321,6 @@ fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
             println!("[P7] note activation: app_id={} actor={:?} turn_status={} effects={} fuel_used={}", outcome.app_id, outcome.actor, outcome.turn_status, outcome.effects_emitted, outcome.fuel_used);
         }
         Err(error) => {
-            // 🚧️ A real, informative failure (e.g. a WIT/kernel event shape mismatch this
-            // packet's own effort budget did not resolve) is still useful test output — see
-            // `📓️terra-P7-report.md` for exactly what this printed in this environment.
             println!("[P7] note activation did not complete: {error:?}");
         }
     }
@@ -381,6 +388,21 @@ fn history_stamp(channel: &mut PluginArtifactChannel, instance: u32) -> String {
 /// without effect (a second `PureCommand` whose ops are dropped leaves the head where it was).
 ///
 /// Skipped with a clear message when `note.wasm` is not built — never a fabricated pass.
+///
+/// 🧮️ **Exactly once**, stated as a count rather than as a diff. `transaction_commit` lands this
+///    member's whole prepared roster as ONE `Edit` and records ONE command row, so a cursor of
+///    exactly 1 over a document that had none is the assertion that a second application never
+///    happened — which is the failure mode routing `prepare` through the shell's applying
+///    dispatch lane would produce (`RoutingArtifactChannel` caches one guest per plugin, so the
+///    prepare-time apply and the commit-time apply would land on the same store).
+///
+/// ↩️ **One undo is enough**, stated as the refusal of a second. The document bytes cannot say
+///    this: `note` is event-sourced, so the revert is itself appended to the `.spr` sidecar and
+///    the stream GROWS (measured here: 223 → 671 on the commit → 765 on the undo). What does say
+///    it is `VcsArtifactApp::transaction_undo`'s own precondition — it refuses unless the store's
+///    TAIL edit belongs to the named group — so a second undo of the same group must be refused
+///    by name. Had the commit applied twice, the group would still own the tail and this would
+///    succeed.
 #[test]
 fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
     let Ok(repo_root) = find_repo_root() else {
@@ -440,25 +462,12 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
     println!("[WR4] commit: {committed:?}");
     let after_commit = document_witness(&mut channel, 0);
     assert_ne!(baseline, after_commit, "COMMIT APPLIED NOTHING: the one phase that is supposed to mutate left the document at {baseline}");
-    // 🧮️ **Exactly once**, stated as a count rather than as a diff. `transaction_commit` lands this
-    //    member's whole prepared roster as ONE `Edit` and records ONE command row, so a cursor of
-    //    exactly 1 over a document that had none is the assertion that a second application never
-    //    happened — which is the failure mode routing `prepare` through the shell's applying
-    //    dispatch lane would produce (`RoutingArtifactChannel` caches one guest per plugin, so the
-    //    prepare-time apply and the commit-time apply would land on the same store).
     assert_eq!(history_stamp(&mut channel, 0), format!("1@transaction:{txn}"), "APPLIED MORE THAN ONCE: exactly one transaction was committed, so exactly one command row may exist");
 
     let undone = channel.exchange(0, vec![AppCommand::TransactionUndo { group_id: txn.clone() }]).expect("the guest undoes its own transaction group");
     println!("[WR4] undo: {undone:?}");
     let after_undo = document_witness(&mut channel, 0);
     println!("[WR4] after undo: {after_undo} (commit was {after_commit}, baseline {baseline})");
-    // ↩️ **One undo is enough**, stated as the refusal of a second. The document bytes cannot say
-    //    this: `note` is event-sourced, so the revert is itself appended to the `.spr` sidecar and
-    //    the stream GROWS (measured here: 223 → 671 on the commit → 765 on the undo). What does say
-    //    it is `VcsArtifactApp::transaction_undo`'s own precondition — it refuses unless the store's
-    //    TAIL edit belongs to the named group — so a second undo of the same group must be refused
-    //    by name. Had the commit applied twice, the group would still own the tail and this would
-    //    succeed.
     let twice = channel.exchange(0, vec![AppCommand::TransactionUndo { group_id: txn.clone() }]);
     println!("[WR4] second undo of the same group: {twice:?}");
     let refusal = twice.expect_err("a group with one application left has nothing for a second undo to walk back");

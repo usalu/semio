@@ -1,0 +1,40 @@
+{
+  "schema": "semio.ui.diff-view-produced-surface.v1",
+  "before": "title: Drill\nstatus: draft\nowner: team",
+  "after": "title: Drill\nstatus: ready\nowner: team\nreviewed: true",
+  "mode": "unified",
+  "language": "yaml",
+  "expected": [
+    { "kind": "equal", "text": "title: Drill" },
+    { "kind": "remove", "text": "status: draft" },
+    { "kind": "add", "text": "status: ready" },
+    { "kind": "equal", "text": "owner: team" },
+    { "kind": "add", "text": "reviewed: true" }
+  ],
+  "conflicts": [
+    {
+      "id": "conflict-open",
+      "quarantined": true,
+      "code": "mergeQuarantined",
+      "message": "Incoming edits require review",
+      "after": "{\n  \"operation\": \"replace-joint\"\n}",
+      "accept": "Accept",
+      "discard": "Discard"
+    },
+    {
+      "id": "conflict-degraded",
+      "quarantined": false,
+      "code": "mergeDegraded",
+      "message": "Applied edits require acknowledgement",
+      "after": "// degraded edits: edit-7, edit-9",
+      "accept": "Accept",
+      "discard": "Discard"
+    }
+  ],
+  "selectedConflictId": "conflict-open",
+  "producer": {
+    "windowId": "playbook-changes",
+    "bodyKey": "playbook.play.changes",
+    "surfaceKind": "diffView"
+  }
+}

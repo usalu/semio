@@ -7,5 +7,11 @@
   "strictMode": null,
   "index": null,
   "geometry": null,
-  "curves": null
+  "curves": null,
+  "limits": {
+    "maxFileBytes": 1048576,
+    "maxRecords": 4096,
+    "maxFieldLength": 512,
+    "maxNestingDepth": 8
+  }
 }

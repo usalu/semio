@@ -239,3 +239,56 @@ fn a_row_summary_names_the_access_class_the_member_count_and_who_is_here() {
     assert!(summary.contains('1'), "{summary}");
     assert_ne!(summary, space_row_summary(&rows[0], Locale::De));
 }
+
+fn fixture_row(value: &serde_json::Value) -> SpaceRow {
+    let decode = |key: &str| value[key].to_string();
+    SpaceRow {
+        id: value["id"].as_str().expect("row id").to_string(),
+        name: value["name"].as_str().expect("row name").to_string(),
+        kind: dsl::os_pack::json::from_json_str(&decode("kind")).expect("row kind"),
+        visibility: dsl::os_pack::json::from_json_str(&decode("visibility")).expect("row visibility"),
+        access: [SpaceAccess::Author, SpaceAccess::Member, SpaceAccess::Public].into_iter().find(|access| value["access"] == access.as_str()).expect("row access"),
+        role: (!value["role"].is_null()).then(|| dsl::os_pack::json::from_json_str(&decode("role")).expect("row role")),
+        member_count: value["memberCount"].as_u64().expect("member count") as u32,
+        document_count: value["documentCount"].as_u64().expect("document count") as u32,
+        active_connections: value["activeConnections"].as_u64().expect("active connections") as u32,
+        updated_at_ms: value["updatedAtMs"].as_i64().expect("updated at"),
+    }
+}
+
+fn fixture_events(value: &serde_json::Value) -> Vec<DirectoryEvent> {
+    dsl::os_pack::json::from_json_str(&value.to_string()).expect("the fold's events decode as directory events")
+}
+
+/// 🧾️ Read-your-writes: every `receiptFolds` case of the shared fixture — the React twin
+/// (`spaceRowsAfterEventsV1`) is held to the same table by its vitest suite.
+#[test]
+fn a_command_receipts_events_fold_into_my_rows_exactly_as_the_shared_fixture_states() {
+    let folds = fixture()["receiptFolds"].as_array().expect("receiptFolds").clone();
+    assert!(folds.len() >= 11);
+    for fold in &folds {
+        let rows: Vec<SpaceRow> = fold["rows"].as_array().expect("rows").iter().map(fixture_row).collect();
+        let expected: Vec<SpaceRow> = fold["expected"].as_array().expect("expected").iter().map(fixture_row).collect();
+        let user_id = fold["userId"].as_str().expect("user id");
+        assert_eq!(space_rows_after_events(&rows, &fixture_events(&fold["events"]), user_id), expected, "{}", fold["id"]);
+    }
+}
+
+/// 📇️ The fold is the directory read model (`os_directory::fold`) projected onto the caller: on the golden
+/// log every space the caller is a member of is listed with the read model's name, kind, visibility,
+/// member and document counts, the caller's own role and the last update.
+#[test]
+fn the_receipt_fold_agrees_with_the_directory_read_model_on_the_golden_log() {
+    let golden = fixture()["receiptFolds"].as_array().expect("receiptFolds").iter().find(|fold| fold["id"] == "the-golden-directory-log-folds-to-the-read-models-view-of-its-owner").cloned().expect("golden fold");
+    let events = fixture_events(&golden["events"]);
+    let user_id = golden["userId"].as_str().expect("user id");
+    let model = events.iter().fold(semio_framework_os_kernel::os_directory::DirectoryReadModel::default(), semio_framework_os_kernel::os_directory::fold);
+    let rows = space_rows_after_events(&[], &events, user_id);
+    let mine: Vec<_> = model.spaces.values().filter(|space| space.members.iter().any(|member| member.user_id == user_id)).collect();
+    assert_eq!(rows.iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), mine.iter().map(|space| space.view.id.as_str()).collect::<Vec<_>>());
+    for space in mine {
+        let row = rows.iter().find(|row| row.id == space.view.id).expect("listed");
+        let role = space.members.iter().find(|member| member.user_id == user_id).map(|member| member.role);
+        assert_eq!((row.name.as_str(), row.kind, row.visibility, row.member_count, row.document_count, row.role, row.updated_at_ms), (space.view.name.as_str(), space.view.kind, space.view.visibility, space.view.member_count, space.view.document_count, role, space.view.updated_at_ms));
+    }
+}

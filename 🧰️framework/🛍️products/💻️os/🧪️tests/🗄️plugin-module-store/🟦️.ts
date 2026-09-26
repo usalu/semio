@@ -240,9 +240,14 @@ describe("🌎️ hub plugin source on the store", () => {
     await acquire(state, repair);
     expect(state.notices).toEqual([{ kind: "reinstalling", pluginId: "note" }]);
     expect(repair.downloads).toEqual(["🗒️note/🌉️bridge.js"]);
-    const { acquired } = await acquire(state, hub(generationB, ["noteB"], { offline: true }));
-    expect((await serveStoredPluginModuleFileV1(state.cache, origin, acquired.moduleUrl)).status).toBe(200);
-    await expect(acquire(device(), hub(generationB, ["noteB"], { offline: true }))).rejects.toBeInstanceOf(PluginModuleUnavailableError);
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      const { acquired } = await settle(acquire(state, hub(generationB, ["noteB"], { offline: true })));
+      expect((await serveStoredPluginModuleFileV1(state.cache, origin, acquired.moduleUrl)).status).toBe(200);
+      await expect(settle(acquire(device(), hub(generationB, ["noteB"], { offline: true })))).rejects.toBeInstanceOf(PluginModuleUnavailableError);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("names a full store with a notice and commits nothing", async () => {
@@ -361,6 +366,38 @@ describe("🌎️ hub plugin source on the store", () => {
         const bytes = Object.values(fixture.bundles.noteB.contents as Record<string, string>).reduce((sum, value) => sum + value.length / 2, 0);
         expect(progress.at(-1)?.completedBytes, String(transient)).toBe(bytes);
       }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("reads the catalog index and a bundle manifest again after a declared transient answer, and ends a refused read at once", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const catalog = async (served: ReturnType<typeof hub>) => {
+      vi.stubGlobal("fetch", served.fetch);
+      try {
+        return await settle(source(device()).catalog(new AbortController().signal));
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    };
+    try {
+      const indexPath = `${HUB_PLUGIN_MODULE_ROUTE}`;
+      const once = flaky(hub(generationB, ["noteB"]), indexPath, 1, 503);
+      expect((await catalog(once))?.generationId, "one 503 on the index is asked again").toBe(generationB);
+      expect(once.fetches).toHaveLength(2);
+      const reset = flaky(hub(generationB, ["noteB"]), indexPath, 1, "reset");
+      expect((await catalog(reset))?.generationId, "a connection lost before any answer is asked again").toBe(generationB);
+      const refused = flaky(hub(generationB, ["noteB"]), indexPath, 1, 404);
+      expect(await catalog(refused), "a 404 is final").toBeNull();
+      expect(refused.fetches).toHaveLength(1);
+      const always = flaky(hub(generationB, ["noteB"]), indexPath, 99, 503);
+      expect(await catalog(always)).toBeNull();
+      expect(always.fetches).toHaveLength(PLUGIN_MODULE_TRANSFER_RETRY_V1.maxAttempts);
+      const manifest = flaky(hub(generationB, ["noteB"]), `/${fixture.bundles.noteB.entry.bundleSha256}`, 1, 502);
+      const { acquired } = await settle(acquire(device(), manifest));
+      expect(acquired.moduleUrl, "one 502 on the manifest is asked again").toBe(storedPluginModuleUrlV1(generationB, fixture.bundles.noteB.entry.bundleSha256, "🗒️note/🌉️bridge.js"));
+      expect(manifest.fetches).toHaveLength(2);
     } finally {
       vi.useRealTimers();
     }

@@ -16,6 +16,7 @@ pub(crate) const LAYOUT_DEPTH_CREDITS: usize = 64;
 pub(crate) const LAYOUT_ATLAS_PAGE_CREDITS: usize = 4;
 pub(crate) const LAYOUT_ATLAS_PAGE_BYTES: usize = 16 * 1024;
 const DEFAULT_TEXT_SIZE_PX: f32 = 14.0;
+pub(crate) const TREE_DETAIL_HEIGHT: f32 = 160.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum MountedLayoutFault {
@@ -153,6 +154,9 @@ pub(crate) fn live_tree_item_height(tree: &UiTree, id: NodeId, item: &UiTreeItem
         return 0.0;
     }
     let mut height = metrics.for_item(item).row_height;
+    if tree_item_detail_node(tree, id).is_some() {
+        height += TREE_DETAIL_HEIGHT;
+    }
     if depth >= TREE_ROW_MAX_DEPTH || !tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) {
         return height;
     }
@@ -161,6 +165,17 @@ pub(crate) fn live_tree_item_height(tree: &UiTree, id: NodeId, item: &UiTreeItem
         height += live_tree_item_height(tree, child_id, child, metrics, depth + 1);
     }
     height
+}
+
+fn tree_item_detail_node(tree: &UiTree, item: NodeId) -> Option<NodeId> {
+    let document = tree.document()?;
+    let record = document.record(tree.document_id(item)?)?;
+    let ui_contract::Component::TreeItem(props) = &record.component else { return None };
+    tree.document_node(props.detail?)
+}
+
+fn is_tree_item_detail(tree: &UiTree, child: NodeId, parent: NodeId) -> bool {
+    tree_item_detail_node(tree, parent) == Some(child)
 }
 
 pub(crate) fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &crate::wgpu::component::ui::UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
@@ -585,10 +600,14 @@ impl MountedLayoutJob {
         };
         let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
         let tree_inline_control = matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. }));
+        let tree_detail = parent.and_then(|index| self.nodes.get(index)).is_some_and(|owner| is_tree_item_detail(tree, id, owner.id));
         let popup_overlay_row = tree.is_open_select_popup_row(id);
         let kind = if popup_overlay_row {
             LayoutNodeKind::OverlayRow { rect: FlexRect { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height } }
         } else {
+            if tree_detail {
+                LayoutNodeKind::TreeDetail { height: TREE_DETAIL_HEIGHT }
+            } else {
             match &node.spec.0 {
                 UiNode::Text(_) => LayoutNodeKind::Text,
                 UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: retained_tree_height(tree, id, tree_node, &self.row_metrics), reversed: root_reversed },
@@ -615,6 +634,7 @@ impl MountedLayoutJob {
                 // `📓️w14b-generation3d-labels-preview-layout.md`).
                 UiNode::Progress(_) => LayoutNodeKind::Control { height: crate::wgpu::chrome::SIZE_TINY, label_padding: None },
                 _ => LayoutNodeKind::Leaf,
+            }
             }
         };
         let index = self.nodes.len();

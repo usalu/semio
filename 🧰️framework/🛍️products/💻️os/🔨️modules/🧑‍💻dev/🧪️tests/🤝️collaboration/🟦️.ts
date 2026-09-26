@@ -72,7 +72,7 @@ import type { LocalProfile } from "../../../../../../../🌎️hub/🚀️local-
 
 import { issueLocalCredential } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 
-import { ensureTrustedCatalog } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
+import { devHubCatalogBootstrapPublisherV1, devHubLocaleV1, devHubStatusTextV1, ensureCurrentTrustedCatalogV1 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 
 import { decodeClientFrame } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
 
@@ -213,12 +213,13 @@ function collabScanPort(envVar: string, taken: Set<number>): number {
 /** 🗄️ The hub's `OS_HUB_DATA` for this run: a fresh directory by default, so the event-sourced directory this scenario
  * asserts against starts empty and STEP 1's "a NEW row appeared" is a real claim. Only its `trusted-catalog/` is copied,
  * from the ONE canonical collaboration catalog root the hub's own `os-hub:trusted-catalog-bootstrap` publishes
- * ({@link ensureTrustedCatalog}; built once, reused by every later run) — never spaces, documents, sessions or presence.
+ * ({@link ensureCurrentTrustedCatalogV1}; built once, republished only when the current hub could not load it, reused by every
+ * later run) — never spaces, documents, sessions or presence.
  * `S_COLLAB_HUB_DATA` overrides the whole directory for a deliberate warm-state run.
  *
  * Both branches return a REALPATH: the hub's trusted-catalog loader opens its root component by component with
  * `O_NOFOLLOW`, and macOS's `TMPDIR` lives under the `/var` → `private/var` symlink. */
-function collabHubDataDir(): string {
+async function collabHubDataDir(): Promise<string> {
   const explicit = process.env.S_COLLAB_HUB_DATA;
   if (explicit) {
     mkdirSync(explicit, { recursive: true });
@@ -226,7 +227,7 @@ function collabHubDataDir(): string {
   }
   const dir = realpathSync(mkdtempSync(join(realpathSync(tmpdir()), "semio-collab-hub-")));
   const canonical = join(repoRoot, ".🧬semio", "🌐hub", "collab-catalog");
-  ensureTrustedCatalog(repoRoot, canonical);
+  await ensureCurrentTrustedCatalogV1(canonical, devHubCatalogBootstrapPublisherV1(repoRoot), { report: (status) => console.log(devHubStatusTextV1(status, devHubLocaleV1())) });
   cpSync(join(canonical, "trusted-catalog"), join(dir, "trusted-catalog"), { recursive: true });
   console.log(`[collab-e2e] seeded the hub's trusted catalog from ${canonical}`);
   return dir;
@@ -759,11 +760,11 @@ async function collabAssertPeerCursorMoves(opts: {
   let moved = first;
   while (Date.now() < deadline) {
     moved = await collabWaitForPeerCursor(opts.observer, 500);
-    if (Math.hypot(moved.left - first.left, moved.top - first.top) > 4) break;
+    if (moved.count > 0 && Math.hypot(moved.left - first.left, moved.top - first.top) > 4) break;
   }
   spaceE2eAssert(
-    Math.hypot(moved.left - first.left, moved.top - first.top) > 4,
-    `${opts.label}: peer cursor did not move (before=${JSON.stringify(first)}, after=${JSON.stringify(moved)})`,
+    moved.count > 0 && Math.hypot(moved.left - first.left, moved.top - first.top) > 4,
+    `${opts.label}: peer cursor did not move while painted (before=${JSON.stringify(first)}, after=${JSON.stringify(moved)})`,
   );
   return `${opts.label}: peer-cursor moved from (${first.left.toFixed(1)},${first.top.toFixed(1)}) to (${moved.left.toFixed(1)},${moved.top.toFixed(1)})`;
 }
@@ -1394,7 +1395,7 @@ async function runCollabE2eVerify(): Promise<void> {
   const user2Port = collabScanPort("S_COLLAB_USER2_PORT", taken);
   console.log(`[collab-e2e] ports: hub=${hubPort}${external ? " (external)" : ""} user1=${user1Port} user2=${user2Port}`);
 
-  const hubDataDir = external ? "" : collabHubDataDir();
+  const hubDataDir = external ? "" : await collabHubDataDir();
   const user1DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u1-"));
   const user2DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u2-"));
 

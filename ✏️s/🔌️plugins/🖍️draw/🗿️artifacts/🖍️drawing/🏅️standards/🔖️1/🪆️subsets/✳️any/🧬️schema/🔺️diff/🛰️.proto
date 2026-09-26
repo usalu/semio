@@ -16,6 +16,7 @@ message DrawingLayerAddition {
   semio.s.draw.drawing.artifact.DrawingLayerNode layer = 3;
 }
 message DrawingLayerPatchEntry { string id = 1; DrawingLayerPatch patch = 2; }
+message DrawingPathSegments { repeated semio.s.draw.drawing.artifact.PathSegment values = 1; }
 message DrawingLayerPatch {
   optional bool visible = 1;
   optional bool locked = 2;
@@ -28,6 +29,7 @@ message DrawingLayerPatch {
   optional string boolean_operation = 9;
   optional string trace_params_json = 10;
   optional string layer_json = 11;
+  optional DrawingPathSegments path_segments = 12;
 }
 message DrawingDiff {
   optional semio.s.draw.drawing.artifact.DrawingArtifact artifact = 1;

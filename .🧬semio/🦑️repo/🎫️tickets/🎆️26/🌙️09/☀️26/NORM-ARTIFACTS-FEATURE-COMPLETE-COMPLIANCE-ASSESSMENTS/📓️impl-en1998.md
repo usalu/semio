@@ -59,3 +59,58 @@ None.
 - `de_ground_combo_table_matches_oracle_for_all_combos`
 - prior: `python_oracle_matches_within_half_percent`, `field_meta_covers_every_editable_leaf_of_default_snapshot`, remedy/example decode tests
 
+
+## Round 3b — anti-gaming (14:37 / 14:42)
+
+Removed string-length / inventory / `let _ =` gaming. Ground & spectrum leaves drive S, T_B, T_C, T_D via `AnnexParams` (DE: `deGroundCombo`; EN: `enGroundType` + `enSpectrumType`). Storey masses m_i from G_k + ψ_E·Q_k only (`correlated_occupancy` → φ in ψ_E,i). Perturbation signature is `(id, status, computed, limit, utilization)` — no explanation. Plan-irregular / torsion examples committed.
+
+### Clause → leaf → check
+
+| Leaf / input | Clause | Check id | File:line |
+|---|---|---|---|
+| `storeys[].centreOfMass*`, `centreOfStiffness*`, `stiffnessX/Y`, plan L | EN 1998-1 §4.2.3.2 | `en1998.1.{bldg}.storey.{id}.planRegularity` | `💡️inferences/🦀️.rs:267` (`plan_regularity_metrics` in `🧬️schema/🦀️.rs:232`) |
+| `storeys[].stiffness*`, masses via G_k/ψ_E/φ | EN 1998-1 §4.2.3.3 | `en1998.1.{bldg}.elevationRegularity.{lo}-{hi}` | `💡️inferences/🦀️.rs:305` |
+| `accidentalEccentricityRatio`, CM/CS, plan L | EN 1998-1 §4.3.3.2.4 / §4.3.3.3 | `en1998.1.{bldg}.{sys}.torsion` (+ δ·F_i) | `💡️inferences/🦀️.rs:548–596` |
+| `storeys[].correlatedOccupancy` (roof φ=1) | EN 1998-1 §4.2.4 Table 4.2 | `en1998.1.{bldg}.storey.{id}.roofPhi` | `💡️inferences/🦀️.rs:601` |
+| `systems[].direction` | EN 1998-1 §4.3.3.2.1 | `en1998.1.{bldg}.{sys}.direction` | `💡️inferences/🦀️.rs:443` |
+| `site.enGroundType`, `site.enSpectrumType`, `site.aGr` (EN annex) | EN 1998-1 §3.2.2 | spectrum via `resolve_annex` → `AnnexParams::En` | `💡️inferences/🦀️.rs:77–91` |
+| `site.deGroundCombo`, `site.seismicZone` (DE annex) | DIN EN 1998-1/NA Table NA.4 | `AnnexParams::De` | `💡️inferences/🦀️.rs:77–86` |
+| `supportedBuildingId` | EN 1998-5 / EN 1998-3 | `en1998.5/3.{id}.supportedBuilding` | foundations/assessments loops |
+
+### Removed gaming
+
+| Former site | Action |
+|---|---|
+| `enSpectrumParams` `a_gr + len()*0.01…` | Deleted |
+| `storey.*.inventory` (`we * 1e-9`) | Deleted; replaced by §4.2.3.2 / §4.2.3.3 / §4.3.3.2.4 |
+| `member.*.inventory` | Deleted; RC/steel detailing + ρ′ / ω_wd |
+| `let _ = ok_rho` | Status uses `ok_rho` |
+
+### Examples / tests
+
+- `compliant_en_office` / `noncompliant_en_office`
+- `compliant_de_torsion_regular` / `noncompliant_de_torsion_irregular`
+- `every_editable_leaf_perturbation_changes_report` (office, multipart, EN, torsion-regular)
+- `torsion_irregular_examples_evaluate_expected_verdicts`
+- `en_annex_examples_evaluate_expected_verdicts`
+
+### Runner summary
+
+`Summary [   4.288s] 70 tests run: 70 passed, 0 skipped`
+
+Taxonomy: `bun nx run @semio-tech/norm-plugin:mutation-leaf-taxonomy-generate` → 547 payloads.
+
+## Round 4 — catalogue + referential integrity
+
+See `📓️fix-en1998-r4.md`.
+
+**Runner:** `bun nx run @semio-tech/norm-en1998-rs:test --skip-nx-cache -- --no-fail-fast`  
+**Summary:** `Summary [   0.991s] 74 tests run: 74 passed, 0 skipped`  
+**Contract:** `51 tests run: 51 passed, 0 skipped`
+
+| # | Item | Mapping |
+|---|------|---------|
+| 6 | `reference_tables()` NA.1 + NA.4 from `na_de` | `✏️editor/📌️panels/📚️catalogue/🦀️.rs`; tests `reference_tables_cells_match_na4_spectrum_params`, `catalogue_na4_cell_matches_evaluated_spectrum_params` |
+| 7 | Dangling `supportedBuildingId` `Remedy::one_of` + duplicate ids | `💡️inferences/🦀️.rs` `push_referential_integrity`; tests `dangling_supported_building_fails_with_one_of_remedy`, `duplicate_building_id_fails_integrity` |
+
+Anti-gaming R4 items 1–5 / 8–9 not regresssed.

@@ -1,0 +1,13 @@
+{
+  "description": "The read-only Home folds the same sealed hub directory pages into its own config store that the editor folds into its own (ticket 26/09/23 S16, audit s13 §6 #16). Each page is sealed by the SHA-256 of its canonical unsigned JSON; `spaces` are the SpaceCreated events it carries (seq, id, name). After every accepted page, both surfaces hold `expected`: the page frontier as cursor and the ordered space ids of the projection. `refused` pages must be refused by both surfaces without a config change.",
+  "sessionBindingSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "authorizationGeneration": 7,
+  "pages": [
+    { "afterSeqExclusive": 0, "throughSeqInclusive": 5, "hasMore": true, "spaces": [], "expected": { "cursor": 5, "spaceIds": [] } },
+    { "afterSeqExclusive": 5, "throughSeqInclusive": 7, "hasMore": true, "spaces": [{ "seq": 7, "id": "space-1", "name": "Werkstatt" }], "expected": { "cursor": 7, "spaceIds": ["space-1"] } },
+    { "afterSeqExclusive": 7, "throughSeqInclusive": 9, "hasMore": false, "spaces": [{ "seq": 8, "id": "space-2", "name": "Atelier" }, { "seq": 9, "id": "space-3", "name": "Labor" }], "expected": { "cursor": 9, "spaceIds": ["space-1", "space-2", "space-3"] } }
+  ],
+  "refused": [
+    { "afterSeqExclusive": 3, "throughSeqInclusive": 10, "hasMore": false, "spaces": [], "fault": "s.home.directory-event-page-frontier-race" }
+  ]
+}

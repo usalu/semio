@@ -1,72 +1,48 @@
-//! 🧪️ Subset-level oracle replay — the Rust half of the `🥒️.feature`/`🐍️.py`/`🦀️.rs` triplet. It
-//! walks the committed fixture tree off disk (never a hardcoded case list) so a vector added to the
-//! table cannot leave this half behind, and replays each one through the artifact's own algebra.
+//! 🦀️ wfc grid2d 1 exhaustive mutation case — Rust adapter, the SUBJECT half.
+//!
+//! The oracle half is `🐍️.py` beside this file, an independent Python second implementation of the same fourteen
+//! kinds. This adapter replays each committed quintet the scenario's doc string addresses through this subset's
+//! production codec and `Mutation` implementation (`grid2d_mutation_report_json`) and asserts, in role, the laws of
+//! `law::vector`: the applied snapshot is the committed after-snapshot, the produced delta is the committed `🔺️diff`,
+//! the diagnostics are the committed `🎯️outcome`'s, the vector moves the document, and the mutation's own inverse
+//! restores the before-snapshot. The parity phase then compares the snapshot it answers with the reference's.
+//!
+//! @see ../../../../../../../../🗄️stdio/🔮️oracles/⚖️law/🧬️vector/🦀️.rs
 
-use crate::diff::Grid2dDiff;
-use crate::mutations::{apply_grid2d_mutation, inverse_grid2d_mutation, Grid2dMutation, KINDS};
-use crate::schema::snapshot::Grid2dSnapshot;
+use semio_repo_test_host::Adapter;
 
-const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../");
+//#region 🔖️Subject
+#[cfg(feature = "sut")]
+mod subject {
+    use semio_repo_test_host::{Context, Outcome};
+    use semio_s_plugin_stdio_test_oracle::law::vector::{self, Leaves};
+    use semio_s_artifact_wfc_grid2d::standards::v1::subsets::any::schema::mutations::{grid2d_mutation_report_json};
 
-fn fixtures() -> std::path::PathBuf {
-    std::path::Path::new(ROOT).join("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations")
-}
-
-fn read(case: &std::path::Path, leaf: &str) -> String {
-    std::fs::read_to_string(case.join(leaf)).unwrap_or_else(|error| panic!("{}: {error}", case.join(leaf).display()))
-}
-
-fn cases() -> Vec<std::path::PathBuf> {
-    let mut out = Vec::new();
-    let mut kinds: Vec<_> = std::fs::read_dir(fixtures()).expect("fixture root reads").filter_map(Result::ok).map(|entry| entry.path()).filter(|path| path.is_dir()).collect();
-    kinds.sort();
-    for kind in kinds {
-        let mut scenarios: Vec<_> = std::fs::read_dir(&kind).expect("kind reads").filter_map(Result::ok).map(|entry| entry.path()).filter(|path| path.is_dir()).collect();
-        scenarios.sort();
-        out.extend(scenarios);
+    fn report(leaves: &Leaves) -> Result<String, String> {
+        grid2d_mutation_report_json(&leaves.before, &leaves.mutation, &leaves.after)
     }
-    out
-}
 
-#[test]
-fn the_committed_tree_covers_every_declared_kind() {
-    assert_eq!(std::fs::read_dir(fixtures()).expect("fixture root reads").filter_map(Result::ok).filter(|entry| entry.path().is_dir()).count(), KINDS.len());
-    assert!(!cases().is_empty());
-}
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let leaves = Leaves::read(ctx)?;
+        let applied = vector::mutate(ctx.row()?, &report(&leaves)?, &leaves.vector(true))?;
+        Ok(Outcome::with_raw(applied.to_string().into_bytes(), applied))
+    }
 
-#[test]
-fn every_committed_vector_replays_forward_and_back() {
-    for case in cases() {
-        let label = case.display().to_string();
-        let before: Grid2dSnapshot = dsl::json::from_json_str(&read(&case, "📸️snapshot/⬅️before/🔣️.json")).unwrap_or_else(|error| panic!("{label}: before decodes: {error}"));
-        let after: Grid2dSnapshot = dsl::json::from_json_str(&read(&case, "📸️snapshot/➡️after/🔣️.json")).unwrap_or_else(|error| panic!("{label}: after decodes: {error}"));
-        let mutation: Grid2dMutation = dsl::json::from_json_str(&read(&case, "🦠️mutation/🔣️.json")).unwrap_or_else(|error| panic!("{label}: mutation decodes: {error}"));
-        let committed: Grid2dDiff = dsl::json::from_json_str(&read(&case, "🔺️diff/🔣️.json")).unwrap_or_else(|error| panic!("{label}: diff decodes: {error}"));
-
-        let produced = <Grid2dMutation as protocol::Mutation<Grid2dSnapshot>>::diff(&mutation, &before);
-        assert_eq!(produced.diff(), &committed, "{label}: produced diff differs from the committed one");
-
-        let mut walked = before.clone();
-        apply_grid2d_mutation(&mut walked, &mutation).unwrap_or_else(|error| panic!("{label}: forward applies: {error}"));
-        assert_eq!(walked, after, "{label}: forward did not reach the committed after-snapshot");
-
-        for step in inverse_grid2d_mutation(&before, &mutation) {
-            apply_grid2d_mutation(&mut walked, &step).unwrap_or_else(|error| panic!("{label}: inverse step applies: {error}"));
-        }
-        assert_eq!(walked, before, "{label}: inverse did not restore the before-snapshot");
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let leaves = Leaves::read(ctx)?;
+        let restored = vector::inverse(ctx.row()?, &report(&leaves)?)?;
+        Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
     }
 }
+//#endregion 🔖️Subject
 
-#[test]
-fn every_committed_vector_is_canonical_json() {
-    for case in cases() {
-        let label = case.display().to_string();
-        for leaf in ["📸️snapshot/⬅️before/🔣️.json", "📸️snapshot/➡️after/🔣️.json"] {
-            let text = read(&case, leaf);
-            let decoded: Grid2dSnapshot = dsl::json::from_json_str(&text).unwrap_or_else(|error| panic!("{label}/{leaf}: decodes: {error}"));
-            let reencoded: serde_json::Value = serde_json::from_str(&dsl::json::to_json_string(&decoded)).expect("re-encodes");
-            let original: serde_json::Value = serde_json::from_str(&text).expect("reparses");
-            assert_eq!(reencoded, original, "{label}/{leaf}: committed JSON is not canonical");
-        }
-    }
+//#region 🔖️Registration
+/// 🧭️ Registration by Scenario Outline base id; each handler reads its kind from the row and its vector from the
+/// row's doc string. The subject half is `sut`-gated so the oracle-only build never links the subset crate.
+pub fn adapter() -> Adapter {
+    let built = Adapter::new("rust");
+    #[cfg(feature = "sut")]
+    let built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
+    built
 }
+//#endregion 🔖️Registration

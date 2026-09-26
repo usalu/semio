@@ -1,7 +1,11 @@
 //! 🏗️ Playbook play app — the `builder` mode: the app's only mode, a single-window Blockly-like builder.
 
+use crate::editor::playbook::modes::builder::windows::activity as activity_window;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
-use semio_framework_plugin::{create_default_layout, LocalizedLabel, ModeDefinition, WindowLayout};
+use crate::editor::playbook::modes::builder::windows::changes as changes_window;
+use crate::editor::playbook::modes::builder::windows::source as source_window;
+use crate::editor::playbook::modes::builder::windows::steps as steps_window;
+use semio_framework_plugin::{create_tab_stack_layout, LocalizedLabel, ModeDefinition, WindowLayout};
 
 pub const PLAYBOOK_PLAY_MODE_BUILDER: &str = "builder";
 
@@ -14,7 +18,16 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ The app's default window layout — this mode is the app's `default_mode_id`, so its layout IS the
 /// app-level `default_layout`.
 pub fn layout() -> WindowLayout {
-    create_default_layout(&[builder_window::PLAYBOOK_PLAY_WINDOW_BUILDER.into()], "row", None, None)
+    create_tab_stack_layout(
+        &[
+            builder_window::PLAYBOOK_PLAY_WINDOW_BUILDER.into(),
+            steps_window::PLAYBOOK_PLAY_WINDOW_STEPS.into(),
+            changes_window::PLAYBOOK_PLAY_WINDOW_CHANGES.into(),
+            activity_window::PLAYBOOK_PLAY_WINDOW_ACTIVITY.into(),
+            source_window::PLAYBOOK_PLAY_WINDOW_SOURCE.into(),
+        ],
+        None,
+    )
 }
 //#endregion 🔖️Definition
 

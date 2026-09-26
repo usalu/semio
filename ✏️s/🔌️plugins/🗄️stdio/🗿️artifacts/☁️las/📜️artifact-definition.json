@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.las.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.las.standard.1-0.dialect.source", "to": "s.stdio.las.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.las.v1", "artifact_kind": "stdio.las", "artifact_schema": "stdio.las", "extension": "las", "pack_schema_hash": "1017f34238855d14c9d3a101bc57759bf369905c897d91db23e44bb1cc7ef199", "runtime_capability_id": "s.stdio.las.standard.1-0.codec.codec-stdio-las-extension-las.v1" } }
+    { "id": "s.stdio.las.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.las.standard.1-0.dialect.source", "to": "s.stdio.las.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.las.v1", "artifact_kind": "s.stdio.las", "artifact_schema": "stdio.las", "extension": "las", "pack_schema_hash": "1017f34238855d14c9d3a101bc57759bf369905c897d91db23e44bb1cc7ef199", "runtime_capability_id": "s.stdio.las.standard.1-0.codec.codec-stdio-las-extension-las.v1" } }
   ],
   "mutations": [],
   "inferences": [],

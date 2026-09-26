@@ -1,0 +1,6 @@
+{
+  "ChangeConnectionSteelPlate": {
+    "connectionId": "conn-C1",
+    "newValue": true
+  }
+}

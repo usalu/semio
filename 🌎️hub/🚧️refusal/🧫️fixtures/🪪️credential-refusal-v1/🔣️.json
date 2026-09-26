@@ -1,0 +1,71 @@
+{
+  "schema": "semio.hub.credential-refusal-fixture/v1",
+  "description": "Every route that also answers anonymously, and the one answer each gives a PRESENTED credential that does not authenticate. An absent credential gets the anonymous view (`anonymousStatus`); a malformed, forged (well-formed, never issued) or revoked bearer gets `answer` — never the anonymous view, and the same answer for all three, so a credential cannot be probed. `{publicSpace}` is a public space the law creates. `invalidBodies` are near misses a client must refuse (Ajv oracle).",
+  "routes": [
+    {
+      "path": "/directory/spaces",
+      "anonymousStatus": 200
+    },
+    {
+      "path": "/directory/events",
+      "anonymousStatus": 200
+    },
+    {
+      "path": "/directory/spaces/{publicSpace}",
+      "anonymousStatus": 200
+    }
+  ],
+  "presented": [
+    "malformed",
+    "forged",
+    "revoked"
+  ],
+  "answer": {
+    "status": 401,
+    "refusal": "unauthenticated",
+    "challenge": "Bearer error=\"invalid_token\"",
+    "body": {
+      "schema": "semio.hub.credential-refusal/v1",
+      "status": 401,
+      "code": "unauthenticated",
+      "message": {
+        "en": "Your sign-in is no longer valid. Sign in again.",
+        "de": "Ihre Anmeldung ist nicht mehr gültig. Bitte melden Sie sich erneut an."
+      }
+    }
+  },
+  "invalidBodies": [
+    {
+      "schema": "semio.hub.credential-refusal/v1",
+      "status": 401,
+      "code": "unauthenticated",
+      "message": {
+        "en": "Your sign-in is no longer valid. Sign in again."
+      }
+    },
+    {
+      "schema": "semio.hub.credential-refusal/v1",
+      "status": 403,
+      "code": "unauthenticated",
+      "message": {
+        "en": "Your sign-in is no longer valid. Sign in again.",
+        "de": "Ihre Anmeldung ist nicht mehr gültig. Bitte melden Sie sich erneut an."
+      }
+    },
+    {
+      "schema": "semio.hub.credential-refusal/v1",
+      "status": 401,
+      "code": "unauthenticated",
+      "message": {
+        "en": "Your sign-in is no longer valid. Sign in again.",
+        "de": "Ihre Anmeldung ist nicht mehr gültig. Bitte melden Sie sich erneut an."
+      },
+      "session": "leak"
+    },
+    {
+      "schema": "semio.hub.refusal/v1",
+      "status": 401,
+      "code": "unauthenticated"
+    }
+  ]
+}

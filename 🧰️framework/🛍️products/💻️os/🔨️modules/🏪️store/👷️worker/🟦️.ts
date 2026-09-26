@@ -9,6 +9,8 @@
 
 import { parseDirectorySessionAuthorityJsonV1, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES, type DirectorySessionAuthorityV1 } from "../../📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts";
 import { parseDirectoryEventPageV1, type DirectoryEvent } from "../../📇️directory/🧬️schema/🟦️.ts";
+import { directoryStreamWakeV1 } from "../../📇️directory/🟦️.ts";
+import { StreamMuxPortEndpointV1, type StreamMuxEndpointV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 
 import type {
   ArtifactBootstrapControl,
@@ -50,12 +52,15 @@ import type {
   DocumentSocketGrantReceiptV1,
   SocketGrantReceiptV1,
 } from "../../../🟦️";
-import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresenceInteraction, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
+import { ArtifactBootstrapAssembler, DEFAULT_ARTIFACT_BOOTSTRAP_LIMITS, DOCUMENT_BACKBONE_RETENTION_LIMITS, HISTORY_TRANSITION_DIFF_SCHEMA, decodeClientFrame, decodePresenceInteraction, decodePresencePeer, decodeServerFrame, decodeDocumentBackboneEnvelopeBatchExact, encodeClientFrame, encodeDocumentBackboneEnvelopeBatchExact, encodePresencePeer, encodeServerFrame, extractServerCommandsDocumentBackboneBatchExact } from "@semio-tech/framework-replication";
 import {
+  DEV_STREAM_ROUTES,
   DirectoryClient,
   DirectoryCommandError,
   DirectoryHttpError,
   DOCUMENT_LINK_ACCESS_REFUSED_STATUSES,
+  admitRemoteEnvelopes,
+  noteAuthoredEnvelopeIds,
   HUB_RECONNECT_MAX_MS,
   HUB_RECONNECT_MIN_MS,
   createSocketGrantIssuerV1,
@@ -157,6 +162,7 @@ import {
   DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
   DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES,
   DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1,
+  admitCanonicalCheckpointPairV1,
   decodeCanonicalCheckpointPairV1,
   directoryCommandErrorIsTransient,
   directoryAdministrationCommandAllowedV1,
@@ -311,6 +317,10 @@ if (workerScope) {
       attachHubSessionPort(Reflect.get(messageEvent.data, "port") as MessagePort);
       return;
     }
+    if (typeof messageEvent.data === "object" && messageEvent.data !== null && Reflect.get(messageEvent.data, "kind") === "semio-stream-mux-port" && Reflect.get(messageEvent.data, "port") instanceof MessagePort) {
+      installStreamMuxEndpoint(new StreamMuxPortEndpointV1(Reflect.get(messageEvent.data, "port") as MessagePort));
+      return;
+    }
     // 🛡️ React DevTools and other injectors postMessage into every Worker; ignore non-wire traffic.
     if (!isBackboneWorkerWireMessage(messageEvent.data)) return;
     const request = decodeWorkerRequest(messageEvent.data);
@@ -367,10 +377,10 @@ export type BackboneWorkerTestDependencies = {
   readonly IDENTITY_CONFIG_SCHEMA: typeof IDENTITY_CONFIG_SCHEMA;
   readonly PENDING_MUTATIONS_QUEUE_LIMIT: typeof PENDING_MUTATIONS_QUEUE_LIMIT;
   readonly SANITY_POLL_MIN_MS: typeof SANITY_POLL_MIN_MS;
-  readonly SSE_RECONNECT_MAX_MS: typeof SSE_RECONNECT_MAX_MS;
   readonly SUSTAINED_HEALTHY_MS: typeof SUSTAINED_HEALTHY_MS;
   readonly VerifiedColdDocumentPair: typeof VerifiedColdDocumentPair;
   readonly abortArtifactBootstrap: typeof abortArtifactBootstrap;
+  readonly installStreamMuxEndpoint: typeof installStreamMuxEndpoint;
   readonly artifactBootstrapFailure: typeof artifactBootstrapFailure;
   readonly artifactState: typeof artifactState;
   readonly artifacts: typeof artifacts;
@@ -470,19 +480,12 @@ export type BackboneWorkerTestDependencies = {
 /** 🛰️ Must match `framework/os/core/js/index.ts`'s `BACKBONE_ENDPOINT_PATH`. */
 const FOLDER_ENDPOINT_PATH = "/semio-backbone";
 const CANONICAL_BOOTSTRAP_FOLDER_MIRROR_PATH = `${FOLDER_ENDPOINT_PATH}/canonical-bootstrap`;
-/** 🛟️ Sanity-fallback poll cadence (finding 1): SSE is the primary wake signal now, so this only
- * ever fires while {@link ArtifactState.sseHealthy} is `false` — a slow, jittered self-heal for
- * "the SSE stream looks fine but nothing has arrived in a while", not the primary path. Jittered
- * per tick (not a fixed `setInterval`) so many documents reconnecting/self-healing together never
+/** 🛟️ Sanity-fallback poll cadence (finding 1): the folder's change stream is the primary wake signal, so this only
+ * ever fires while {@link ArtifactState.watchHealthy} is `false` — a slow, jittered self-heal while no stream is open, not
+ * the primary path. Jittered per tick (not a fixed `setInterval`) so many documents self-healing together never
  * synchronize into a request burst. */
 const SANITY_POLL_MIN_MS = 24_000;
 const SANITY_POLL_MAX_MS = 36_000;
-/** 🔁️ SSE reconnect backoff (finding 2) — deliberately faster/tighter than the hub's
- * {@link HUB_RECONNECT_MIN_MS}/{@link HUB_RECONNECT_MAX_MS}: losing the folder watch stream is
- * cheap to retry (a GET, no handshake state) and {@link SANITY_POLL_MIN_MS}'s fallback is the
- * user-visible safety net either way. */
-const SSE_RECONNECT_MIN_MS = 1_000;
-const SSE_RECONNECT_MAX_MS = 30_000;
 /** ⏱️ Caps how long any single folder/blob fetch can hang (finding 3) — composed with
  * {@link fetchWithTimeout} so a stalled dev-middleware response can never pin a document forever. */
 const FOLDER_FETCH_TIMEOUT_MS = 15_000;
@@ -495,13 +498,13 @@ const ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES = 4_096;
 const EXECUTION_TARGET_DIAGNOSTIC_MAX_BYTES = 1_024;
 // 🔁️ HUB_RECONNECT_MIN_MS/MAX_MS moved to `🟦️.ts`'s `🔖️HubBinding` region (imported above)
 // — single source of truth shared with `DirectoryClient.stream`'s reconnect loop.
-/** ♻️ Coordinator follow-up (finding 4b): how long a hub OR SSE connection must stay open before a
+/** ♻️ Coordinator follow-up (finding 4b): how long a hub connection must stay open before a
  * SUBSEQUENT drop is allowed to reset that transport's backoff back near its floor, instead of
  * continuing to grow from whatever `retryWithJitteredBackoff` attempt count it was already on.
  * Deliberately NOT "the socket opened" — a server that accepts a connection and immediately drops
  * it in a fast loop must still see the backoff climb (that IS the failure mode the backoff exists
  * for), so the threshold has to be comfortably longer than any such instant-drop cycle. Half of
- * {@link HUB_RECONNECT_MAX_MS}/{@link SSE_RECONNECT_MAX_MS} (both 30s): long enough that no
+ * {@link HUB_RECONNECT_MAX_MS} (30s): long enough that no
  * single accept-then-drop attempt could plausibly cross it, short enough that a connection which
  * has been genuinely healthy for a modest stretch still gets credit before its next blip. */
 const SUSTAINED_HEALTHY_MS = 15_000;
@@ -514,7 +517,7 @@ const SUSTAINED_HEALTHY_MS = 15_000;
  * lifecycle — connect, stay open, eventually close) through {@link retryWithJitteredBackoff}
  * forever, but as a LOOP of fresh calls rather than one long-lived call. `attempt` resolving is
  * this loop's signal that the connection stayed open long enough to count as sustainedly healthy
- * before it (ordinarily) closed — see {@link connectHubOnce}/{@link connectSseOnce} — so the NEXT
+ * before it (ordinarily) closed — see {@link connectHubOnce} — so the NEXT
  * cycle starts a brand-new {@link retryWithJitteredBackoff} call with its own zeroed internal
  * attempt/backoff state, rather than inheriting a large accumulated delay from earlier, already-
  * resolved blips. `attempt` rejecting (a close before sustained health) is absorbed entirely
@@ -577,11 +580,9 @@ export type ArtifactState = {
    * `ReturnType<typeof setTimeout>`, not `setInterval`, because each tick schedules its OWN next
    * delay with fresh jitter rather than ticking on a fixed period. */
   sanityPollTimer: ReturnType<typeof setTimeout> | null;
-  /** 📡️ Explicit "is the folder SSE stream currently up" flag (finding 2) — {@link startSanityPolling}
-   * reads this to decide whether a given tick actually revalidates or is a no-op, and it is this
-   * file's only source of truth for that question (never inferred from `EventSource.readyState`,
-   * which a fake `EventSource` test double need not implement). */
-  sseHealthy: boolean;
+  /** 📡️ Explicit "is the folder's change stream open" flag — set when the `backbone.folder` stream opens (fresh or
+   * resumed), cleared when it ends; {@link startSanityPolling} reads it to decide whether a tick revalidates. */
+  watchHealthy: boolean;
   /** 🥇️ Single-flight folder revalidation (finding 1) — built once per document with
    * {@link latestWins} over {@link pollFolderOnce}, so the SSE `onmessage` wake, the sanity-poll
    * tick, and an `externalChanged` local message all share the SAME in-flight guard and can never
@@ -2269,7 +2270,7 @@ class DocumentBrowserActorReservation {
               if (browserActorColdStatus(result).kind !== "idle") throw new Error("actor-document-port.unexpected-cold-ingress");
               await this.driveTurnResult(result, child, () => this.assertDocumentOwnerCurrent());
               result = null;
-              await this.refreshPanelSurfaces(child, () => this.assertDocumentOwnerCurrent());
+              await this.refreshDocumentSurfaces(child, () => this.assertDocumentOwnerCurrent(), false);
             } finally {
               if (result !== null) wipeBrowserActorValue(result);
             }
@@ -2344,9 +2345,12 @@ class DocumentBrowserActorReservation {
   async dispatchAction(raw: BrowserActorActionRequestV1): Promise<BrowserActorActionResultV1> {
     const request = parseBrowserActorActionRequestV1(raw);
     let invoked = false;
+    console.warn(`[DEBUG] c11 act start seq=${request.actionSequence} kind=${request.payload.kind} t=${Date.now()} patch=${this.pendingUiPatch !== null} refresh=${this.viewRefresh !== null}`);
     try {
       await this.awaitUiQuiescence();
+      console.warn(`[DEBUG] c11 act quiet seq=${request.actionSequence} t=${Date.now()}`);
       return await this.enqueueTurn(async () => {
+        console.warn(`[DEBUG] c11 act turn seq=${request.actionSequence} t=${Date.now()}`);
         // 🩹️ Offers are acknowledged inside the turn that made them, so this is null at a turn boundary today; it is
         // awaited (never refused) so the contract holds if an offer ever outlives its turn.
         if (this.pendingUiPatch !== null) await this.pendingUiPatch.settled;
@@ -2404,11 +2408,13 @@ class DocumentBrowserActorReservation {
           }
           if (terminal !== "command-complete") throw new Error("action-command-ingress-unconfirmed");
         }
+        console.warn(`[DEBUG] c11 act applied seq=${request.actionSequence} frames=${publication.frames} mutations=${mutationCount} t=${Date.now()}`);
         if (publication.frames !== 1) throw new Error("action-publication-mismatch");
-        await this.refreshPanelSurfaces(child, () => this.assertDocumentOwnerCurrent());
+        await this.refreshDocumentSurfaces(child, () => this.assertDocumentOwnerCurrent(), command !== null || mutationCount > 0);
         return browserActorActionDisposition(request, "guest-applied", mutationCount, parseBrowserActorHostEffectBytesV1(publication.hostEffects), undefined, parseBrowserActorHistoryPatchBytesV1(publication.historyPatches));
       });
     } catch (error) {
+      console.warn(`[DEBUG] c11 act error seq=${request.actionSequence} invoked=${invoked} t=${Date.now()} ${error instanceof Error ? error.stack ?? error.message : String(error)}`);
       const explicitRefusal = error instanceof Error && error.message === "action-guest-refused";
       if (invoked && !explicitRefusal) this.close();
       const reason = error instanceof Error && /^(action-owner-mismatch|action-child-unavailable|action-guest-refused)$/u.test(error.message) ? error.message : invoked ? "action-state-unconfirmed" : "action-refused";
@@ -2668,14 +2674,7 @@ class DocumentBrowserActorReservation {
     assertCurrent();
     const hostView = this.state.browserActorViewState;
     if (hostView === null) throw new Error("document browser actor: missing host view context");
-    const visible: BrowserActorChildValue[] = [
-      ...this.lease.renderSurfaces().windows.map((window): BrowserActorChildValue => {
-        const viewState = windowViewContext(hostView, window.key);
-        if (!viewState || viewState.activeWindowKindId !== window.key) throw new Error("document browser actor: unknown host window instance");
-        return { tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface: window.key }, bodyKey: window.bodyKey, viewState: encodePackValue(viewState) } };
-      }),
-      ...this.panelVisibleEvents(lifetime, hostView),
-    ];
+    const visible: BrowserActorChildValue[] = [...this.windowVisibleEvents(lifetime, hostView), ...this.panelVisibleEvents(lifetime, hostView)];
     for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
       assertCurrent();
       let result: BrowserActorChildValue | null = await this.invokePoll(child, turn === 0 ? visible : [{ tag: "wake" }], null, assertCurrent);
@@ -2696,6 +2695,15 @@ class DocumentBrowserActorReservation {
     throw new Error("document browser actor: render turn limit");
   }
 
+  /** 🪟️ One `surface-visible` per verified window, each in its own window context of `hostView`. */
+  private windowVisibleEvents(lifetime: ActorInstanceLifetime, hostView: ResolvedPluginViewState): BrowserActorChildValue[] {
+    return this.lease.renderSurfaces().windows.map((window): BrowserActorChildValue => {
+      const viewState = windowViewContext(hostView, window.key);
+      if (!viewState || viewState.activeWindowKindId !== window.key) throw new Error("document browser actor: unknown host window instance");
+      return { tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface: window.key }, bodyKey: window.bodyKey, viewState: encodePackValue(viewState) } };
+    });
+  }
+
   /** 🗂️ One `surface-visible` per verified panel body, each in the panel context of `hostView` (a fresh encoding per
    * event: one buffer shared by two events is a `value alias` the child boundary refuses). */
   private panelVisibleEvents(lifetime: ActorInstanceLifetime, hostView: ResolvedPluginViewState): BrowserActorChildValue[] {
@@ -2703,22 +2711,25 @@ class DocumentBrowserActorReservation {
     return this.lease.renderSurfaces().panels.map((panel) => ({ tag: "surface-visible", val: { surface: { instance: lifetime.instanceId, surface: panel.key }, bodyKey: panel.bodyKey, viewState: encodePackValue(panelView) } }));
   }
 
-  /** 🗂️ Re-projects every verified panel body after a turn that may have changed the document (an action, a remote or
-   * corrective backbone delivery). On a document change the guest re-renders only its mounted WINDOW
-   * (`plugin_instance_background_surfaces`: app-level panels only when no window is mounted); the local lane gets its
-   * panels back because the Shell's refresh re-requests every panel after each action. This is that request for the
-   * actor lane — without it an open inspector stayed at its last projection until the next view change (ticket
-   * 26/09/23 C10, run `c10gp14e`). Unchanged panels answer no patch. */
-  private async refreshPanelSurfaces(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> {
+  /** 🗂️ Re-projects the document's rendered surfaces after a turn that may have changed the document — the actor lane's
+   * twin of the Shell's refresh, which re-takes every window and panel after each local action. Every verified panel
+   * body always (on a document change the guest re-renders only its mounted WINDOW: without this an open inspector
+   * stayed at its last projection, ticket 26/09/23 C10 run `c10gp14e`); every verified window too when `windows` —
+   * after an app command or a mutating action, whose turn does not re-render the author's own window: the author saw
+   * its own edit only on its next action (~20 s later, C11 `c11self4`) while the peer saw it at once from the relay.
+   * Unchanged surfaces answer no patch. */
+  private async refreshDocumentSurfaces(child: DocumentBrowserActorChild, assertCurrent: () => void, windows: boolean): Promise<void> {
     const lifetime = this.lifetime,
       hostView = this.renderedViewState;
-    if (lifetime === null || hostView === null || this.lease.renderSurfaces().panels.length === 0) return;
-    const result = await this.invokePoll(child, this.panelVisibleEvents(lifetime, hostView), null, assertCurrent);
+    if (lifetime === null || hostView === null) return;
+    const events = [...(windows ? this.windowVisibleEvents(lifetime, hostView) : []), ...this.panelVisibleEvents(lifetime, hostView)];
+    if (events.length === 0) return;
+    const result = await this.invokePoll(child, events, null, assertCurrent);
     if (browserActorColdStatus(result).kind !== "idle") {
       wipeBrowserActorValue(result);
-      throw new Error("document browser actor: unexpected cold ingress during panel refresh");
+      throw new Error("document browser actor: unexpected cold ingress during surface refresh");
     }
-    if ((await this.driveTurnResult(result, child, assertCurrent)) !== 0) throw new Error("document browser actor: panel refresh mutated the document");
+    if ((await this.driveTurnResult(result, child, assertCurrent)) !== 0) throw new Error("document browser actor: surface refresh mutated the document");
   }
 
   private captureUiPatch(value: BrowserActorChildValue, lifetime: ActorInstanceLifetime) {
@@ -2757,12 +2768,14 @@ class DocumentBrowserActorReservation {
     const settled = result.then(() => undefined);
     settled.catch(() => {});
     this.pendingUiPatch = { offer, resolve, reject, timer, settled };
+    console.warn(`[DEBUG] c11 patch offer t=${Date.now()} surfaces=${offer.patches.map((patch) => `${patch.surface}@${patch.revision}`).join(",")}`);
     post({ ...offer, clientInstanceId: this.state.openClientInstanceId });
     return result;
   }
 
   settleUiPatch(result: BrowserActorUiPatchResultV1): void {
     const pending = this.pendingUiPatch;
+    console.warn(`[DEBUG] c11 patch result t=${Date.now()} pending=${pending !== null} verdicts=${result.verdicts.map((verdict) => `${verdict.surface}:${verdict.outcome}`).join(",")}`);
     if (pending === null || !browserActorUiPatchOwnerMatchesV1(pending.offer, result)) return;
     clearTimeout(pending.timer);
     this.pendingUiPatch = null;
@@ -3553,12 +3566,19 @@ function decodePackPayload(bytes: ArrayLike<number>): PackValue {
 /** 🌉️ Converts this fallback's local, camelCase {@link MutationEnvelope} into the snake_case
  * {@link WireMutationEnvelope} `protocol_wire::ClientFrame::Commands`/`ServerFrame::Commands`
  * carry — the TS twin of the Rust actor's `to_wire_envelope`. */
+/** 🔁️ A server envelope's operation identity, whichever of the two shapes the frame carries. */
+function wireEnvelopeId(envelope: WireMutationEnvelope | { readonly id?: string }): string {
+  return "mutation_id" in envelope ? String(envelope.mutation_id) : String(envelope.id ?? "");
+}
+
 function toWireEnvelope(envelope: MutationEnvelope, timestamp: WireMutationEnvelope["timestamp"], actor = envelope.actor): WireMutationEnvelope {
   return {
     mutation_id: envelope.id,
     document_id: envelope.document,
     actor,
     dependencies: [...(envelope.deps ?? [])],
+    observed: null,
+    target: [],
     diff: { schema: envelope.diff.schemaId, payload: encodePackPayload(envelope.diff.payload) },
     inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackPayload(envelope.inverse.inverseDiff.payload) },
     timestamp,
@@ -3617,6 +3637,8 @@ function exactWireEnvelope(envelope: WireMutationEnvelope): ExactWireMutationEnv
     document_id: envelope.document_id,
     actor: envelope.actor,
     dependencies: envelope.dependencies,
+    observed: envelope.observed,
+    target: envelope.target,
     diff: { schema: envelope.diff.schema, payload: Uint8Array.from(envelope.diff.payload) },
     inverse: { schema: envelope.inverse.schema, payload: Uint8Array.from(envelope.inverse.payload) },
     timestamp: {
@@ -3797,7 +3819,7 @@ async function pollFolderOnce(state: ArtifactState, binding: Extract<Persistence
 
 /** 🛟️ Slow, jittered sanity fallback (finding 1): reschedules itself with fresh jitter every tick
  * (a recursive `setTimeout`, not `setInterval`, since the delay must vary tick to tick) and only
- * actually revalidates when {@link ArtifactState.sseHealthy} is `false` — SSE is the primary wake,
+ * actually revalidates when {@link ArtifactState.watchHealthy} is `false` — the change stream is the primary wake,
  * this is the self-heal for "SSE looks fine but nothing has arrived in a while" or "SSE never
  * managed to open at all". Every revalidation goes through the same `latestWins`-wrapped
  * {@link ArtifactState.revalidateFolder} the SSE wake uses, so a tick can never overlap a
@@ -3810,70 +3832,43 @@ function startSanityPolling(state: ArtifactState): void {
   };
   const tick = (): void => {
     if (state.closed) return;
-    if (!state.sseHealthy) void state.revalidateFolder();
+    if (!state.watchHealthy) void state.revalidateFolder();
     scheduleNext();
   };
   scheduleNext();
 }
 
-/** 🔌️ One SSE connection attempt (finding 2) — resolves either once {@link ArtifactState.docAbort}
- * fires (a clean shutdown) OR once an ordinary close follows at least {@link SUSTAINED_HEALTHY_MS}
- * of unbroken uptime (coordinator follow-up, finding 4b: tells {@link reconnectForever} this cycle
- * counts as healthy, so the NEXT reconnect starts with a fresh, reset backoff); rejects on every
- * OTHER close/error (closed before reaching sustained health) so the caller's
- * {@link retryWithJitteredBackoff} loop keeps backing off within the SAME call, never resetting,
- * for a server that accepts and immediately drops connections in a loop.
- * {@link ArtifactState.sseHealthy} is the ONLY place "is SSE up" is recorded — set `true` on open,
- * `false` on every close, so {@link startSanityPolling}'s fallback always has an accurate read. */
-function connectSseOnce(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    if (state.docAbort.signal.aborted) {
-      reject(state.docAbort.signal.reason ?? new Error("backbone-worker: document closed"));
-      return;
-    }
-    let source: EventSource;
-    try {
-      source = new EventSource(`${FOLDER_ENDPOINT_PATH}/watch?uri=${encodeURIComponent(`folder://${binding.path}`)}`);
-    } catch (error) {
-      reject(error);
-      return;
-    }
-    let sustainedHealthTimer: ReturnType<typeof setTimeout> | null = null;
-    let sustainedHealthReached = false;
-    const onAbort = (): void => source.close();
-    state.docAbort.signal.addEventListener("abort", onAbort, { once: true });
-    source.onopen = () => {
-      state.sseHealthy = true;
-      sustainedHealthTimer = setTimeout(() => {
-        sustainedHealthReached = true;
-      }, SUSTAINED_HEALTHY_MS);
-    };
-    source.onmessage = () => {
-      void state.revalidateFolder();
-    };
-    source.onerror = () => {
-      state.docAbort.signal.removeEventListener("abort", onAbort);
-      if (sustainedHealthTimer != null) clearTimeout(sustainedHealthTimer);
-      state.sseHealthy = false;
-      source.close();
-      if (state.docAbort.signal.aborted || sustainedHealthReached) {
-        resolve();
-        return;
-      }
-      reject(new Error("backbone-worker: folder sse dropped"));
-    };
-  });
+/** 🔀️ The page's stream channel as this worker reaches it (a port the shell transfers once, `semio-stream-mux-port`); `null`
+ * until it arrives, in which case a folder falls back to its sanity poll. */
+let streamMuxEndpoint: StreamMuxEndpointV1 | null = null;
+
+/** 🧷️ Installs the endpoint every later folder watch opens its change stream on. */
+function installStreamMuxEndpoint(endpoint: StreamMuxEndpointV1 | null): void {
+  streamMuxEndpoint = endpoint;
 }
 
-/** 👁️ External-change watch (findings 1 + 2 + 4b): an immediate bootstrap read, a persistent SSE
- * connection with jittered, reset-after-sustained-health reconnect ({@link connectSseOnce} via
- * {@link reconnectForever}), and the slow sanity-poll fallback ({@link startSanityPolling}) that
- * only does real work while SSE is down. SSE is now the primary wake signal — the old
- * unconditional 1.5s poll is gone. */
+/** 👁️ External-change watch: an immediate bootstrap read, the folder's `backbone.folder` change stream on the page's stream
+ * channel (every notice revalidates, and so does a fresh open — notices may have been missed while it was down; a resumed
+ * open replays exactly the missed ones) and the slow sanity poll ({@link startSanityPolling}), which only works while no
+ * stream is open. A notice's credit returns only when its revalidation settled, so a slow read is backpressure, not a queue. */
 function watchFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>): void {
-  void state.revalidateFolder(); // 🚀 bootstrap read; doesn't wait on SSE handshake or poll cadence.
+  void state.revalidateFolder();
   startSanityPolling(state);
-  void reconnectForever(state.docAbort.signal, () => connectSseOnce(state, binding), SSE_RECONNECT_MIN_MS, SSE_RECONNECT_MAX_MS);
+  streamMuxEndpoint?.open(
+    DEV_STREAM_ROUTES.backboneFolder,
+    `folder://${binding.path}`,
+    {
+      opened: (mode) => {
+        state.watchHealthy = true;
+        if (mode === "fresh") void state.revalidateFolder();
+      },
+      data: () => state.revalidateFolder(),
+      end: () => {
+        state.watchHealthy = false;
+      },
+    },
+    { signal: state.docAbort.signal },
+  );
 }
 
 async function writeFolder(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "folder", dataClass: "persistedLocalOnly" }>, archive: readonly number[]): Promise<void> {
@@ -4071,6 +4066,7 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
   }
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
+  console.warn(`[DEBUG] c11 relay batch=${batchId} envelopes=${envelopes.length} ids=${envelopes.map((envelope) => envelope.id).join(",")} t=${Date.now()}`);
   const wireEnvelopes = envelopes.map((envelope) => {
     const exact = state.exactLocalEnvelopes.get(envelope)?.envelope;
     const timestamp = nextWireTimestamp(state);
@@ -4080,6 +4076,8 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
       document_id: exact.document_id,
       actor: state.actor,
       dependencies: [...exact.dependencies],
+      observed: exact.observed,
+      target: [...exact.target],
       diff: { schema: exact.diff.schema, payload: Array.from(exact.diff.payload) },
       inverse: { schema: exact.inverse.schema, payload: Array.from(exact.inverse.payload) },
       timestamp,
@@ -4716,8 +4714,7 @@ async function seedColdPairFromCanonicalCheckpoint(state: ArtifactState, resumeT
   );
   assertCurrent();
   const pair = decodeCanonicalCheckpointPairV1(body);
-  if (pair.scope.spaceId !== binding.spaceId || pair.scope.documentId !== state.config.documentId) throw new Error("canonical checkpoint pair: scope mismatch");
-  if (executionTargetHex(Uint8Array.from(pair.activeCheckpointId)) !== checkpoint.checkpointId) throw new Error("canonical checkpoint pair: checkpoint mismatch");
+  admitCanonicalCheckpointPairV1(pair, { spaceId: binding.spaceId, documentId: state.config.documentId }, checkpoint);
   const frontier: WireFrontierSummary = {
     document_id: pair.baselineFrontier.documentId,
     head_edit_ordinal: pair.baselineFrontier.headEditOrdinal,
@@ -4876,24 +4873,19 @@ async function handleHubFrame(
       rejectArtifactBootstrap(state, new Error("tail arrived before artifact bootstrap completion"));
       return;
     }
-    if (frame.Commands.origin !== state.actor) {
-      const fresh = frame.Commands.envelopes.filter((envelope) => {
-        const id = "mutation_id" in envelope ? String(envelope.mutation_id) : String((envelope as { id?: string }).id ?? "");
-        if (!id || state.ingestedMutationIds.has(id)) return false;
-        state.ingestedMutationIds.add(id);
-        return true;
-      });
-      if (fresh.length > 0 && commandBatch === null) throw new Error("document backbone: exact server command batch missing");
-      if (fresh.length > 0 && commandBatch !== null) {
-        if (state.pendingMutations.length > 0) state.remoteFoldedOverLocal = true;
-        const message = encodeBackboneMessage({ kind: "mutations", envelopes: commandBatch }),
-          reservation = state.browserActorReservation;
-        if (reservation === null && documentAwaitsBrowserActor(state)) retainBackboneBeforeBrowserActor(state, message);
-        else if (reservation === null) emitEvent(state, { kind: "documentBackbone", message });
-        else {
-          try { await reservation.receiveBackbone(message); }
-          catch (error) { reservation.close(); throw error; }
-        }
+    const fresh = admitRemoteEnvelopes(state.ingestedMutationIds, frame.Commands.envelopes, wireEnvelopeId);
+    if (fresh.length > 0 && commandBatch === null) throw new Error("document backbone: exact server command batch missing");
+    if (fresh.length > 0 && commandBatch !== null) {
+      if (state.pendingMutations.length > 0) state.remoteFoldedOverLocal = true;
+      const admitted = new Set(fresh.map(wireEnvelopeId)),
+        batch = fresh.length === frame.Commands.envelopes.length ? commandBatch : encodeDocumentBackboneEnvelopeBatchExact(decodeDocumentBackboneEnvelopeBatchExact(commandBatch).filter((envelope) => admitted.has(envelope.mutation_id))),
+        message = encodeBackboneMessage({ kind: "mutations", envelopes: batch }),
+        reservation = state.browserActorReservation;
+      if (reservation === null && documentAwaitsBrowserActor(state)) retainBackboneBeforeBrowserActor(state, message);
+      else if (reservation === null) emitEvent(state, { kind: "documentBackbone", message });
+      else {
+        try { await reservation.receiveBackbone(message); }
+        catch (error) { reservation.close(); throw error; }
       }
     }
     state.frontier = frame.Commands.frontier;
@@ -5526,13 +5518,12 @@ function openDirectoryBootstrapLive(owner: DirectoryBootstrapOwner, since: numbe
   const stream = owner.client.streamAcknowledged(since, (message) => {
     if (directoryBootstrap !== owner || owner.abort.signal.aborted) return;
     void flushDirectoryQueue();
-    const rebootstrap = message.kind === "rebootstrap-required";
-    const wakesProjection = rebootstrap || message.kind === "event" || message.kind === "heartbeat";
-    if (!wakesProjection) {
+    const wake = directoryStreamWakeV1(message);
+    if (wake === "none") {
       post({ kind: "directory-message", message });
       return;
     }
-    const after = owner.machine.wake(rebootstrap);
+    const after = owner.machine.wake(wake === "origin");
     if (after === null) return;
     owner.stream?.close();
     owner.stream = null;
@@ -7099,7 +7090,7 @@ function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId
     linkShortageTimer: null,
     browserActorViewState: null,
     sanityPollTimer: null,
-    sseHealthy: false,
+    watchHealthy: false,
     revalidateFolder: async () => {}, // 🔧 replaced below once a folder binding exists.
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
     outbox: [],
@@ -7226,6 +7217,7 @@ function admitLocalMutations(
     state.pendingDocumentBackboneBytes += exactMessageBytes;
     state.pendingDocumentBackboneMessages += 1;
   }
+  noteAuthoredEnvelopeIds(state.ingestedMutationIds, envelopes.map((envelope, index) => exactEnvelopes?.[index]?.mutation_id ?? envelope.id));
   state.pendingMutations.push(...envelopes);
   setStatus(state, { pendingMutations: state.pendingMutations.length });
   if (exactEnvelopes === null || !hubBinding(state.config)) state.channel.postMessage(channelMessage);
@@ -7477,9 +7469,9 @@ if (import.meta.vitest) {
     get workerPostTestSink() { return workerPostTestSink; },
     set workerPostTestSink(value: typeof workerPostTestSink) { workerPostTestSink = value; },
   };
-  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionFetch, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionFetch, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
   const { registerBackboneParityTests } = await import("../🔄️sync/🧪️tests/🔬️backbone-parity/🟦️.ts");
-  await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, import.meta.url);
+  await registerBackboneParityTests(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, import.meta.url);
 
 }
 //#endregion 🧪️Tests

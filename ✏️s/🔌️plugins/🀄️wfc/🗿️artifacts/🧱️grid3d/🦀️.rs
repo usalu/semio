@@ -565,7 +565,4 @@ mod mount_contract;
 #[path = "🧪️tests/🔬️store-fixture/🦀️.rs"]
 mod store_fixture;
 
-#[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mutate-wfc-grid3d-1/🦀️.rs"]
-mod mutate_wfc_grid3d_1;
 //#endregion 🧪️Tests

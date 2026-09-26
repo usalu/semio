@@ -10,17 +10,17 @@
   "curves": {
     "curve-kvs": {
       "id": "curve-kvs",
-      "x_unit": {
+      "xUnit": {
         "symbol": "%",
-        "kind": "Dimensionless",
+        "kind": "dimensionless",
         "delta": true,
-        "si_factor": 0.01
+        "siFactor": 0.01
       },
-      "y_unit": {
+      "yUnit": {
         "symbol": "m3/h",
-        "kind": "Volume",
+        "kind": "volume",
         "delta": false,
-        "si_factor": 1.0
+        "siFactor": 1.0
       },
       "points": [
         {
@@ -37,5 +37,6 @@
         }
       ]
     }
-  }
+  },
+  "limits": null
 }

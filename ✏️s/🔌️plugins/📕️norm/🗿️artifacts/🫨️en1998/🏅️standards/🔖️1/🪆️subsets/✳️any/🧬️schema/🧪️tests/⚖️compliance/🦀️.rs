@@ -677,6 +677,86 @@ async fn en_annex_examples_evaluate_expected_verdicts() {
     assert!(fails >= 2, "EN fail_count={fails}");
 }
 
+
+
+#[semio_framework_async_macros::async_test]
+async fn catalogue_na4_cell_matches_evaluated_spectrum_params() {
+    use crate::app_surface::CatalogueCell;
+    use crate::editor::en1998::panels::catalogue::reference_tables;
+    use crate::standards::v1::subsets::any::schema::{na_de, AnnexParams};
+
+    let snap = En1998Snapshot::compliant_de_office();
+    let combo = na_de::GroundCombo::from(snap.site.de_ground_combo);
+    let annex = AnnexParams::De {
+        zone: na_de::SeismicZone::from(snap.site.seismic_zone),
+        combo,
+    };
+    let (_a_g, s, tb, tc, td) = annex.ground_params();
+    let label = match combo {
+        na_de::GroundCombo::AR => "A-R",
+        na_de::GroundCombo::BR => "B-R",
+        na_de::GroundCombo::CR => "C-R",
+        na_de::GroundCombo::BT => "B-T",
+        na_de::GroundCombo::CT => "C-T",
+        na_de::GroundCombo::CS => "C-S",
+    };
+    let tables = reference_tables();
+    let na4 = tables.iter().find(|t| t.id == "table-na-4-ground-combos").expect("catalogue NA.4");
+    assert_ne!(na4.title_en, na4.title_de);
+    let row = na4.rows.iter().find(|r| r.id == label).expect(label);
+    let CatalogueCell::Number { value: cell_s, .. } = &row.cells[1] else { panic!("S cell") };
+    let CatalogueCell::Number { value: cell_tb, .. } = &row.cells[2] else { panic!("TB cell") };
+    let CatalogueCell::Number { value: cell_tc, .. } = &row.cells[3] else { panic!("TC cell") };
+    let CatalogueCell::Number { value: cell_td, .. } = &row.cells[4] else { panic!("TD cell") };
+    assert!((*cell_s - s).abs() <= 0.005 * s.max(1.0), "S catalogue={cell_s} evaluated={s}");
+    assert!((*cell_tb - tb).abs() <= 1e-9);
+    assert!((*cell_tc - tc).abs() <= 1e-9);
+    assert!((*cell_td - td).abs() <= 1e-9);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn duplicate_building_id_fails_integrity() {
+    use crate::document::RemedyBound;
+
+    let mut snap = En1998Snapshot::compliant_de_office();
+    let twin = snap.buildings[0].clone();
+    snap.buildings.push(twin);
+    let report = inferences::evaluate(&snap);
+    let dup = report
+        .checks
+        .iter()
+        .find(|c| c.id.contains("integrity.duplicate.buildings") && c.status == CheckStatus::Fail)
+        .expect("duplicate building Fail");
+    assert!(!dup.remedies.is_empty());
+    assert!(dup.remedies.iter().any(|r| r.bound == RemedyBound::OneOf));
+    assert_ne!(dup.explanation.en, dup.explanation.de);
+    assert!(!report.complies());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn dangling_supported_building_fails_with_one_of_remedy() {
+    use crate::document::RemedyBound;
+
+    let mut snap = En1998Snapshot::compliant_de_multipart();
+    assert!(!snap.foundations.is_empty() || !snap.assessments.is_empty());
+    if let Some(f) = snap.foundations.first_mut() {
+        f.supported_building_id = "missing-building".into();
+    }
+    if let Some(a) = snap.assessments.first_mut() {
+        a.supported_building_id = "missing-building".into();
+    }
+    let report = inferences::evaluate(&snap);
+    let href = report
+        .checks
+        .iter()
+        .find(|c| c.id.contains("supportedBuilding") && c.status == CheckStatus::Fail)
+        .expect("dangling supportedBuilding Fail");
+    let remedy = href.remedies.iter().find(|r| r.bound == RemedyBound::OneOf).expect("one_of remedy");
+    assert!(!remedy.options.is_empty());
+    assert!(remedy.options.iter().any(|id| snap.buildings.iter().any(|b| b.id == *id)));
+    assert_ne!(href.explanation.en, href.explanation.de);
+}
+
 fn family_any_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
 }

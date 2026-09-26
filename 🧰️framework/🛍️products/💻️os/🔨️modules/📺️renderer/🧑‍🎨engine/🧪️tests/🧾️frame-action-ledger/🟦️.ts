@@ -16,6 +16,28 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import Ajv2020 from "ajv/dist/2020";
+import receiptFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json";
+import receiptSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/🧾️correlated-action-receipts/🔣️.json";
+
+it("correlates receipt refusals independently of identical action payloads", () => {
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(receiptSchema);
+  expect(validate(receiptFixture), JSON.stringify(validate.errors)).toBe(true);
+  const refused = new Set<number>();
+  const dispatched: string[] = [];
+  const cancelled: string[] = [];
+  for (const receipt of structuredClone(receiptFixture.receipts)) {
+    const identity = `${receipt.token}:${receipt.member}`;
+    if (refused.has(receipt.token)) cancelled.push(identity);
+    else {
+      dispatched.push(identity);
+      if (receipt.token === receiptFixture.refusedToken && receipt.abort) refused.add(receipt.token);
+    }
+  }
+  expect(dispatched).toEqual(receiptFixture.dispatch);
+  expect(cancelled).toEqual(receiptFixture.cancelled);
+  expect(receiptFixture.receipts.toReversed().map(receipt => `${receipt.token}:${receipt.member}`)).toEqual(receiptFixture.closed);
+});
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixturePath = resolve(here, "../../🧫️fixtures/🧾️frame-action-ledger/🔣️.json");

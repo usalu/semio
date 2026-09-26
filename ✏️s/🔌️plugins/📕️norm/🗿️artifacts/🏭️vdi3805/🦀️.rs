@@ -48,6 +48,7 @@ pub fn text_in(variants: &[LocalizedText], locale: &str) -> String {
 /// `VdiUnit` boundary via `From`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum VdiQuantityKind {
     Dimensionless,
     Length,
@@ -130,6 +131,8 @@ impl From<QuantityKind> for VdiQuantityKind {
 /// 📐️ VDI 3805 unit with absolute vs delta semantics.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct VdiUnit {
     pub symbol: String,
     pub kind: VdiQuantityKind,
@@ -186,16 +189,18 @@ impl dsl::DslField for VdiValue {
     }
 }
 
-/// 🧩️ Lossless extension bag for unknown fields.
+/// 🧩️ Typed extension bag (`string → string`) matching JSON Schema `ExtensionFields.fields`.
 #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ExtensionBag {
-    pub fields: BTreeMap<String, dsl::DslValue>,
+    pub fields: BTreeMap<String, String>,
 }
 
 /// 🆔️ Product identity within a manufacturer catalogue.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ProductIdentity {
     pub manufacturer_code: String,
@@ -206,6 +211,7 @@ pub struct ProductIdentity {
 /// 🏭️ Manufacturer file header and payload references.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ManufacturerFile {
     pub header_version: String,
@@ -220,6 +226,8 @@ pub struct ManufacturerFile {
 /// 🔗️ Accessory relationship between products.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct AccessoryLink {
     pub accessory_id: String,
     pub required: bool,
@@ -229,6 +237,8 @@ pub struct AccessoryLink {
 /// 🧱️ Composition relationship (`hasPart`).
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct CompositionLink {
     pub component_id: String,
     pub quantity: u32,
@@ -237,6 +247,7 @@ pub struct CompositionLink {
 /// 🔒️ Security limits for untrusted manufacturer files.
 #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SecurityLimits {
     pub max_file_bytes: usize,
@@ -259,12 +270,55 @@ impl SecurityLimits {
         Ok(())
     }
 }
+
+/// 🏷️ Connection-type codes shared by catalogue tables, field-meta, and evaluate (VDI 3805-1 §6.2).
+pub const CONNECTION_TYPE_CODES: &[&str] = &["flange", "thread", "weld", "press"];
+/// 🏷️ Connection-type rows: code, en, de.
+pub const CONNECTION_TYPE_ROWS: &[(&str, &str, &str)] = &[
+    ("flange", "Flanged", "Flansch"),
+    ("thread", "Threaded", "Gewinde"),
+    ("weld", "Welded", "Schweißanschluss"),
+    ("press", "Press fit", "Pressverbindung"),
+];
+/// 🏷️ PN pressure-class codes (DIN EN 1092 / VDI 3805 product sheets §4).
+pub const PRESSURE_CLASS_CODES: &[&str] = &["PN6", "PN10", "PN16", "PN25", "PN40"];
+/// 🏷️ PN rows with nominal bar pressure for catalogue cells.
+pub const PRESSURE_CLASS_ROWS: &[(&str, f64)] = &[("PN6", 6.0), ("PN10", 10.0), ("PN16", 16.0), ("PN25", 25.0), ("PN40", 40.0)];
+/// 🏷️ Filter classes Blatt 19 (ISO 16890 / EN 779 legacy — VDI 3805-19 Table 1).
+pub const FILTER_CLASS_CODES: &[&str] = &["G4", "M5", "M6", "F7", "F8", "F9", "ePM1", "ePM2_5", "ePM10"];
+/// 🏷️ Filter-class rows: code, en, de.
+pub const FILTER_CLASS_ROWS: &[(&str, &str, &str)] = &[
+    ("G4", "Coarse G4", "Grob G4"),
+    ("M5", "Medium M5", "Mittel M5"),
+    ("M6", "Medium M6", "Mittel M6"),
+    ("F7", "Fine F7", "Fein F7"),
+    ("F8", "Fine F8", "Fein F8"),
+    ("F9", "Fine F9", "Fein F9"),
+    ("ePM1", "ePM1 85%", "ePM1 85 %"),
+    ("ePM2_5", "ePM2.5 70%", "ePM2,5 70 %"),
+    ("ePM10", "ePM10 50%", "ePM10 50 %"),
+];
+/// 🏷️ Generic type_code tokens (VDI 3805 multi-profile sheets §4.1).
+pub const TYPE_CODE_CODES: &[&str] = &["STD", "STD-A", "STD-B", "TYPE-A", "TYPE-B", "TYPE-C", "DEFAULT"];
+/// 📏 Blatt-sourced numeric domains used by evaluate and catalogue (min, max).
+pub const SHEET_NUMERIC_BOUNDS_19_AIRFLOW: (f64, f64) = (1e-5, 50.0);
+pub const SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA: (f64, f64) = (0.0, 5000.0);
+pub const SHEET_NUMERIC_BOUNDS_53_COP: (f64, f64) = (1.0, 10.0);
+pub const SHEET_NUMERIC_BOUNDS_DN: (f64, f64) = (6.0, 600.0);
+pub const SHEET_NUMERIC_BOUNDS_DN_PIPE: (f64, f64) = (6.0, 1200.0);
+pub const SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M: (f64, f64) = (0.006, 2.0);
+pub const SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M: (f64, f64) = (0.0005, 0.1);
+pub const SHEET_NUMERIC_BOUNDS_VOLUME_M3: (f64, f64) = (0.001, 500.0);
+pub const SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N: (f64, f64) = (0.0, 1.0e7);
+pub const SHEET_NUMERIC_BOUNDS_53_HEAT_W: (f64, f64) = (100.0, 5.0e6);
+pub const SHEET_NUMERIC_BOUNDS_53_DN: (f64, f64) = (6.0, 300.0);
 // #endregion Shared
 
 // #region Schema
 /// 📄️ Sheet identifier (1…100).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(transparent)]
 pub struct SheetId(pub u16);
 
@@ -295,6 +349,7 @@ impl dsl::DslField for SheetId {
 /// 📅️ Edition identifier (year + month).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct EditionId {
     pub year: u16,
     pub month: u8,
@@ -313,6 +368,7 @@ impl EditionId {
 /// 📊️ Schema lifecycle status.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum SchemaStatus {
     Published,
     Checked,
@@ -333,6 +389,7 @@ impl SchemaStatus {
 /// 🏷️ Building-services domain filter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum Domain {
     Heating,
     Ventilation,
@@ -594,6 +651,7 @@ impl SchemaCatalog {
 /// 🏗️ Parsed building-system number (Anlagenkennzeichen).
 #[derive(Clone, Debug, PartialEq, Eq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct BuildingSystemNumber {
     pub system_code: String,
@@ -619,6 +677,7 @@ impl BuildingSystemNumber {
 /// 📇️ Record family identifier (010…970.41).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(transparent)]
 pub struct RecordFamilyId(pub String);
 
@@ -845,6 +904,7 @@ impl RecordFamilyId {
 /// 📄️ One semicolon-delimited native record.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct NativeRecord {
     pub family: RecordFamilyId,
@@ -925,6 +985,8 @@ pub struct HeatGeneratorAttributes {
 pub struct GenericAttribute {
     pub key: String,
     pub value: String,
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[value(default)]
     pub unit: Option<String>,
 }
 
@@ -1015,6 +1077,7 @@ impl dsl::DslField for SheetAttributes {
 /// ⚙️ Product configuration block.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Configuration {
     pub id: String,
@@ -1026,6 +1089,7 @@ pub struct Configuration {
 /// 📦️ Catalogue product in Part 1 hierarchy.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct CatalogueProduct {
     pub id: String,
@@ -1046,6 +1110,7 @@ pub struct CatalogueProduct {
 /// 📚️ Manufacturer catalogue document (Part 1).
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ManufacturerCatalog {
     pub file: ManufacturerFile,
@@ -1065,6 +1130,7 @@ impl ManufacturerCatalog {
 /// 📦️ Axis-aligned bounding box [m].
 #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct BoundingBox {
     pub min_x: f64,
@@ -1092,6 +1158,7 @@ impl BoundingBox {
 /// 🔌️ Connection point on product geometry.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ConnectionPoint {
     pub id: String,
@@ -1105,6 +1172,7 @@ pub struct ConnectionPoint {
 /// 🧊️ Parametric geometry definition.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ParametricGeometry {
     pub id: String,
@@ -1130,6 +1198,8 @@ impl ParametricGeometry {
 /// 📈️ Characteristic curve point.
 #[derive(Clone, Copy, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
 pub struct CurvePoint {
     pub x: f64,
     pub y: f64,
@@ -1138,6 +1208,7 @@ pub struct CurvePoint {
 /// 📉️ Characteristic curve with linear interpolation.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct CharacteristicCurve {
     pub id: String,
@@ -1174,6 +1245,7 @@ impl CharacteristicCurve {
 /// 🔍️ Product index entry.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct CatalogIndexEntry {
     pub product_id: String,
@@ -1185,6 +1257,7 @@ pub struct CatalogIndexEntry {
 /// 📚️ Searchable catalogue index.
 #[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct CatalogIndex {
     #[dsl(table)]
@@ -1193,7 +1266,7 @@ pub struct CatalogIndex {
 
 impl CatalogIndex {
     pub fn from_catalog(catalog: &ManufacturerCatalog) -> Self {
-        let entries = catalog
+        let mut entries: Vec<CatalogIndexEntry> = catalog
             .products
             .iter()
             .map(|p| CatalogIndexEntry {
@@ -1203,6 +1276,7 @@ impl CatalogIndex {
                 dn: p.configuration.attributes.dn(),
             })
             .collect();
+        entries.sort_by(|a, b| a.product_id.cmp(&b.product_id));
         Self { entries }
     }
 
@@ -1225,6 +1299,7 @@ impl CatalogIndex {
 /// 🩺️ Validation diagnostic with severity.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct Diagnostic {
     pub field: String,
     pub message: String,
@@ -1234,6 +1309,7 @@ pub struct Diagnostic {
 /// ⚠️ Diagnostic severity.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum Severity {
     Info,
     Warning,
@@ -1260,6 +1336,7 @@ impl Diagnostic {
 /// 📅️ Edition profile selection for multi-profile sheets.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub enum EditionProfileChoice {
     Legacy,
     Current,
@@ -1269,6 +1346,8 @@ pub enum EditionProfileChoice {
 pub const VDI3805_EXTENSION: &str = "vdi3805";
 
 /// 📕️ Conforming manufacturer dataset — sheet-2 DN50 control valve with closed Part 1 graph.
+
+
 pub fn reference_fixture() -> Vdi3805Snapshot {
     conforming_valve_dataset()
 }
@@ -1282,7 +1361,7 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
         building_system_number: bsn,
         created: "2023-06-01".into(),
         charset: "UTF-8".into(),
-        record_count: 9,
+        record_count: 11,
         extensions: ExtensionBag::default(),
     };
     let attributes = SheetAttributes::ValveHeating(ValveHeatingAttributes::from_kvs_m3_h(50, 4.5, "PN16", "flange", 0.3, 0.7));
@@ -1295,12 +1374,12 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
             NativeRecord { family: RecordFamilyId(RecordFamilyId::R100.to_string()), fields: vec!["100".into(), "DEMO".into(), "HV".into(), "VLV-50-001".into(), "2".into()], extensions: ExtensionBag::default() },
             NativeRecord {
                 family: RecordFamilyId(RecordFamilyId::R110.to_string()),
-                fields: vec!["110".into(), "cfg.VLV-50-001".into(), "geom.valve.50".into(), "curve-kvs".into()],
+                fields: vec!["110".into(), "cfg.VLV-50-001".into(), "geom-valve-50".into(), "curve-kvs".into()],
                 extensions: ExtensionBag::default(),
             },
             NativeRecord {
                 family: RecordFamilyId(RecordFamilyId::R200.to_string()),
-                fields: vec!["200".into(), "geom.valve.50".into(), "0.15".into(), "0.20".into(), "0.10".into()],
+                fields: vec!["200".into(), "geom-valve-50".into(), "0.15".into(), "0.20".into(), "0.10".into()],
                 extensions: ExtensionBag::default(),
             },
             NativeRecord {
@@ -1333,7 +1412,7 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
                 extensions: ExtensionBag::default(),
             },
         ],
-        configuration: Configuration { id: "cfg.VLV-50-001".into(), attributes, geometry_ref: Some("geom.valve.50".into()), function_refs: vec!["curve-kvs".into()] },
+        configuration: Configuration { id: "cfg.VLV-50-001".into(), attributes, geometry_ref: Some("geom-valve-50".into()), function_refs: vec!["curve-kvs".into()] },
         accessories: Vec::new(),
         components: Vec::new(),
         extensions: ExtensionBag::default(),
@@ -1388,13 +1467,12 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
     let mut product = product;
     product.accessories = vec![AccessoryLink { accessory_id: "ACT-01".into(), required: true, quantity: 1 }];
     product.components = vec![CompositionLink { component_id: "ACT-01".into(), quantity: 1 }];
-    let catalog = ManufacturerCatalog { file: file.clone(), products: vec![product, accessory], extensions: ExtensionBag::default() };
+    let mut catalog = ManufacturerCatalog { file: file.clone(), products: vec![product, accessory], extensions: ExtensionBag::default() };
 
-    let index = CatalogIndex::from_catalog(&catalog);
     let geometry = BTreeMap::from([(
-        "geom.valve.50".into(),
+        "geom-valve-50".into(),
         ParametricGeometry {
-            id: "geom.valve.50".into(),
+            id: "geom-valve-50".into(),
             bbox: BoundingBox::from_size(0.15, 0.20, 0.10),
             connections: vec![ConnectionPoint {
                 id: "in".into(),
@@ -1415,6 +1493,8 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
             points: vec![CurvePoint { x: 0.0, y: 0.0 }, CurvePoint { x: 100.0, y: 4.5 }],
         },
     )]);
+    catalog.file.record_count = catalog.products.iter().map(|p| p.records.len() as u32).sum();
+    let index = CatalogIndex::from_catalog(&catalog);
     Vdi3805Snapshot {
         catalog,
         edition_profile: BTreeMap::new(),
@@ -1423,13 +1503,13 @@ pub fn conforming_valve_dataset() -> Vdi3805Snapshot {
         index,
         geometry,
         curves,
+        limits: SecurityLimits::default(),
     }
 }
 
 /// ❌️ Non-conforming dataset with multiple Part 1 + Blatt 2 violations for remediation tests.
 pub fn nonconforming_valve_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_valve_dataset();
-    doc.catalog.file.record_count = 3;
     doc.catalog.file.record_count = 3;
     if let SheetAttributes::ValveHeating(ref mut attrs) = doc.catalog.products[0].configuration.attributes {
         attrs.dn = 47;
@@ -1476,7 +1556,6 @@ pub fn nonconforming_valve_dataset() -> Vdi3805Snapshot {
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
 }
-
 /// 📋 Assessed operative Blätter that require committed examples (CORRECTION 13:43 + Wave D Round 3).
 pub const ASSESSED_BLATT_SHEETS: &[u16] = &[2, 3, 4, 5, 6, 7, 8, 16, 19, 53, 60];
 
@@ -1495,12 +1574,18 @@ fn base_header() -> ManufacturerFile {
 fn generic_product(article: &str, sheet: u16, group: &str, title_de: &str, title_en: &str, attrs: Vec<(&str, &str)>) -> CatalogueProduct {
     let mut fields = vec!["210".into()];
     let mut entries = Vec::new();
+    // R100 product_group is also mirrored into 210/Generic so attributes↔records sync stays Pass.
+    if !attrs.iter().any(|(k, _)| k.eq_ignore_ascii_case("product_group")) {
+        fields.push("product_group".into());
+        fields.push(group.into());
+        entries.push(GenericAttribute { key: "product_group".into(), value: group.into(), unit: None });
+    }
     for (k, v) in &attrs {
         fields.push((*k).into());
         fields.push((*v).into());
         entries.push(GenericAttribute { key: (*k).into(), value: (*v).into(), unit: None });
     }
-    let mut records = vec![
+    let records = vec![
         NativeRecord {
             family: RecordFamilyId(RecordFamilyId::R100.to_string()),
             fields: vec!["100".into(), "DEMO".into(), group.into(), article.into(), sheet.to_string()],
@@ -1513,7 +1598,6 @@ fn generic_product(article: &str, sheet: u16, group: &str, title_de: &str, title
             extensions: ExtensionBag::default(),
         },
     ];
-    let _ = &mut records;
     CatalogueProduct {
         id: article.into(),
         identity: ProductIdentity { manufacturer_code: "DEMO".into(), product_group: group.into(), article_number: article.into() },
@@ -1545,6 +1629,7 @@ fn snapshot_with_products(products: Vec<CatalogueProduct>) -> Vdi3805Snapshot {
         index,
         geometry: BTreeMap::new(),
         curves: BTreeMap::new(),
+        limits: SecurityLimits::default(),
     }
 }
 
@@ -1553,6 +1638,7 @@ pub fn conforming_blatt_3_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_valve_dataset();
     doc.catalog.products[0].id = "RAD-600".into();
     doc.catalog.products[0].identity.article_number = "RAD-600".into();
+    doc.catalog.products[0].configuration.id = format!("cfg.RAD-600");
     doc.catalog.products[0].sheet = SheetId(3);
     doc.catalog.products[0].title = bilingual("Heizkörper 600", "Radiator 600");
     doc.catalog.products[0].configuration.attributes = SheetAttributes::Radiator(RadiatorAttributes {
@@ -1563,7 +1649,12 @@ pub fn conforming_blatt_3_dataset() -> Vdi3805Snapshot {
         depth_m: 0.1,
         connection_type: "flange".into(),
     });
+    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
     crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc.catalog.products[0].configuration.geometry_ref = None;
     doc.catalog.products[0].configuration.function_refs.clear();
     doc.geometry.clear();
@@ -1572,7 +1663,6 @@ pub fn conforming_blatt_3_dataset() -> Vdi3805Snapshot {
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
 }
-
 /// ❌️ Non-conforming Blatt-3 radiator (≥2 fails).
 pub fn nonconforming_blatt_3_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_blatt_3_dataset();
@@ -1581,15 +1671,17 @@ pub fn nonconforming_blatt_3_dataset() -> Vdi3805Snapshot {
         a.standard_output_w = 0.0;
         a.connection_type.clear();
     }
+    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
     crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc
 }
-
 /// ✅️ Conforming Blatt-5 pump example.
 pub fn conforming_blatt_5_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_valve_dataset();
     doc.catalog.products[0].id = "PMP-50".into();
     doc.catalog.products[0].identity.article_number = "PMP-50".into();
+    doc.catalog.products[0].configuration.id = format!("cfg.PMP-50");
     doc.catalog.products[0].sheet = SheetId(5);
     doc.catalog.products[0].title = bilingual("Heizungspumpe DN50", "Heating pump DN50");
     doc.catalog.products[0].configuration.attributes = SheetAttributes::PumpHeating(PumpHeatingAttributes {
@@ -1599,14 +1691,24 @@ pub fn conforming_blatt_5_dataset() -> Vdi3805Snapshot {
         nominal_head_m: 6.0,
         motor_power_w: 750.0,
         hydraulic_efficiency: 0.45,
-        qh_curve_ref: Some("curve-kvs".into()),
+        qh_curve_ref: Some("curve-qh".into()),
     });
+    doc.catalog.products[0].configuration.function_refs = vec!["curve-qh".into()];
+    if let Some(old) = doc.curves.remove("curve-kvs") {
+        let mut qh = old;
+        qh.id = "curve-qh".into();
+        qh.x_unit = VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01);
+        qh.y_unit = VdiUnit::absolute("m", VdiQuantityKind::Length, 1.0);
+        qh.points = vec![CurvePoint { x: 0.0, y: 8.0 }, CurvePoint { x: 50.0, y: 6.0 }, CurvePoint { x: 100.0, y: 2.0 }];
+        doc.curves.insert("curve-qh".into(), qh);
+    }
+    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
     crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc.catalog.file.record_count = doc.catalog.products.iter().map(|p| p.records.len() as u32).sum();
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
 }
-
 /// ❌️ Non-conforming Blatt-5 pump.
 pub fn nonconforming_blatt_5_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_blatt_5_dataset();
@@ -1614,15 +1716,17 @@ pub fn nonconforming_blatt_5_dataset() -> Vdi3805Snapshot {
         a.nominal_flow_m3_s = 0.0;
         a.hydraulic_efficiency = 1.5;
     }
+    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
     crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc
 }
-
 /// ✅️ Conforming Blatt-6 heat generator.
 pub fn conforming_blatt_6_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_valve_dataset();
     doc.catalog.products[0].id = "HG-24".into();
     doc.catalog.products[0].identity.article_number = "HG-24".into();
+    doc.catalog.products[0].configuration.id = format!("cfg.HG-24");
     doc.catalog.products[0].sheet = SheetId(6);
     doc.catalog.products[0].title = bilingual("Wärmeerzeuger 24 kW", "Heat generator 24 kW");
     doc.catalog.products[0].configuration.attributes = SheetAttributes::HeatGenerator(HeatGeneratorAttributes {
@@ -1631,7 +1735,9 @@ pub fn conforming_blatt_6_dataset() -> Vdi3805Snapshot {
         flow_temp_max_c: 80.0,
         return_temp_min_c: 40.0,
     });
+    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
     crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc.catalog.products[0].configuration.geometry_ref = None;
     doc.catalog.products[0].configuration.function_refs.clear();
     doc.geometry.clear();
@@ -1640,7 +1746,6 @@ pub fn conforming_blatt_6_dataset() -> Vdi3805Snapshot {
     doc.index = CatalogIndex::from_catalog(&doc.catalog);
     doc
 }
-
 /// ❌️ Non-conforming Blatt-6 heat generator.
 pub fn nonconforming_blatt_6_dataset() -> Vdi3805Snapshot {
     let mut doc = conforming_blatt_6_dataset();
@@ -1649,10 +1754,11 @@ pub fn nonconforming_blatt_6_dataset() -> Vdi3805Snapshot {
         a.fuel_type.clear();
         a.return_temp_min_c = 95.0;
     }
+    crate::standards::v1::subsets::any::schema::sync_identity_into_records(&mut doc.catalog.products[0]);
     crate::standards::v1::subsets::any::schema::sync_typed_attributes_into_records(&mut doc.catalog.products[0]);
+    crate::standards::v1::subsets::any::schema::sync_titles_into_records(&mut doc.catalog.products[0]);
     doc
 }
-
 /// ✅️ Conforming operative Blatt snapshot for sheets that use GenericAttributes + Blatt code lists.
 pub fn conforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
     match sheet {
@@ -1725,7 +1831,7 @@ pub fn conforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
             vec![("product_group", "GEN"), ("type_code", "DEFAULT"), ("dn", "50")],
         )]),
     }
-}
+    }
 
 /// ❌️ Non-conforming counterpart for an assessed Blatt (≥2 fails with remedies).
 pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
@@ -1766,7 +1872,7 @@ pub fn nonconforming_blatt_dataset(sheet: u16) -> Vdi3805Snapshot {
             doc
         }
     }
-}
+    }
 
 /// 📚 All conforming assessed-Blatt examples for oracle + perturbation subjects.
 pub fn all_conforming_blatt_examples() -> Vec<(u16, Vdi3805Snapshot)> {
@@ -1995,6 +2101,16 @@ pub mod standards {
                             pub use component::*;
                         }
                         #[path = "."]
+                        pub mod change_limits {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-limits/🦀️.rs"]
+                            mod component;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-limits/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-limits/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            pub use component::*;
+                        }
+                        #[path = "."]
                         pub mod change_manufacturer_file {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-manufacturer-file/🦀️.rs"]
                             mod component;
@@ -2004,6 +2120,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                         }
+#[path = "."]
                         #[path = "."]
                         pub mod rename_product {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-product/🦀️.rs"]
@@ -2232,6 +2349,126 @@ pub mod examples {
     #[path = "."]
     pub mod nonconforming {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌶️nonconforming/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_3 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-3/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_3_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-3-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_4 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-4/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_4_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-4-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_5 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-5/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_5_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-5-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_6 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-6/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_6_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-6-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_7 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-7/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_7_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-7-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_8 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-8/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_8_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-8-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_16 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-16/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_16_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-16-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_19 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-19/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_19_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-19-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_53 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-53/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_53_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-53-fail/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_60 {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-60/🦀️.rs"]
+        mod component;
+        pub use component::*;
+    }
+    #[path = "."]
+    pub mod blatt_60_fail {
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-60-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }

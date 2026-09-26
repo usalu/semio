@@ -25,7 +25,8 @@ identical) — plus the measured speedup.
 
 usage (every mode takes --root <repository copy> to patch a copy instead of the tree): q1-interpreter-speed.py            dry run
        q1-interpreter-speed.py --apply    write the tree (post-publish window only)
-       q1-interpreter-speed.py --scratch [package…]   patched COPY under wp-h10/target/q1-scratch vs the tree's interpreter
+       q1-interpreter-speed.py --scratch [package…]   the tree's interpreter vs the patched text, over catalog B2's codec rows
+       q1-interpreter-speed.py --sweep <before.rs> <after.rs> [package…]   the same identity sweep between two interpreter files
 """
 import json, os, pathlib, subprocess, sys, time
 
@@ -290,26 +291,36 @@ def patched():
         text = text.replace(old, new)
     return text
 
-text = patched()
-print(f"hunks OK: {len(HUNKS)} in {INTERPRETER.name}")
+text = None if "--sweep" in sys.argv else patched()
+if text is not None:
+    print(f"hunks OK: {len(HUNKS)} in {INTERPRETER.name}")
 if "--apply" in sys.argv:
     INTERPRETER.write_text(text, encoding="utf-8")
     print("applied — now: nice -n 15 cargo test -p semio-framework-plugin-host --lib -- interpreter; hub + MCP laws; wasm32 not affected (host-only module)")
-elif "--scratch" in sys.argv:
-    scratch = H10 / "target/q1-scratch"
-    scratch.mkdir(parents=True, exist_ok=True)
-    (scratch / "interpreter.rs").write_text(text.replace('#[path = "🧪️tests/🔬️unit/🦀️.rs"]', f'#[path = "{INTERPRETER.parent}/🧪️tests/🔬️unit/🦀️.rs"]'), encoding="utf-8")
-    probe = (H10 / "q1-interpreter/main.rs").read_text(encoding="utf-8").replace('#[path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🦀️.rs"]', f'#[path = "{scratch}/interpreter.rs"]')
-    (scratch / "main.rs").write_text(probe, encoding="utf-8")
-    (scratch / "Cargo.toml").write_text('[package]\nname = "h10-owned-probe-q1"\nversion = "0.0.0"\nedition = "2021"\npublish = false\n\n[workspace]\n\n[[bin]]\nname = "h10-owned-probe-q1"\npath = "main.rs"\n\n[profile.release]\nopt-level = 3\ndebug = false\n', encoding="utf-8")
-    env = dict(os.environ, CARGO_TARGET_DIR=str(H10 / "target"), CARGO_INCREMENTAL="0")
-    for crate in (H10 / "q1-interpreter", scratch):
-        result = subprocess.run(["nice", "-n", "15", "cargo", "build", "--release"], cwd=crate, env=env)
-        if result.returncode != 0:
-            raise SystemExit(result.returncode)
-    old, new = H10 / "target/release/h10-owned-probe", H10 / "target/release/h10-owned-probe-q1"
+elif "--scratch" in sys.argv or "--sweep" in sys.argv:
+    if "--sweep" in sys.argv:
+        at = sys.argv.index("--sweep")
+        before_source, after_source = pathlib.Path(sys.argv[at + 1]).read_text(encoding="utf-8"), pathlib.Path(sys.argv[at + 2]).read_text(encoding="utf-8")
+    else:
+        before_source, after_source = INTERPRETER.read_text(encoding="utf-8"), text
+    tests = f'#[path = "{INTERPRETER.parent}/🧪️tests/🔬️unit/🦀️.rs"]'
+    probe = (H10 / "q1-interpreter/main.rs").read_text(encoding="utf-8")
+    marker = '#[path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🦀️.rs"]'
+    assert probe.count(marker) == 1, "probe interpreter path marker"
+    binaries = {}
+    for label, source in (("before", before_source), ("after", after_source)):
+        crate = H10 / f"target/q1-{label}"
+        crate.mkdir(parents=True, exist_ok=True)
+        (crate / "interpreter.rs").write_text(source.replace('#[path = "🧪️tests/🔬️unit/🦀️.rs"]', tests), encoding="utf-8")
+        (crate / "main.rs").write_text(probe.replace(marker, f'#[path = "{crate}/interpreter.rs"]'), encoding="utf-8")
+        (crate / "Cargo.toml").write_text(f'[package]\nname = "h10-owned-probe-{label}"\nversion = "0.0.0"\nedition = "2021"\npublish = false\n\n[workspace]\n\n[[bin]]\nname = "h10-owned-probe-{label}"\npath = "main.rs"\n\n[profile.release]\nopt-level = 3\ndebug = false\n', encoding="utf-8")
+        env = dict(os.environ, CARGO_TARGET_DIR=str(H10 / "target"), CARGO_INCREMENTAL="0")
+        if subprocess.run(["nice", "-n", "15", "cargo", "build", "--release"], cwd=crate, env=env).returncode != 0:
+            raise SystemExit(f"probe build failed: {label}")
+        binaries[label] = H10 / f"target/release/h10-owned-probe-{label}"
+    old, new = binaries["before"], binaries["after"]
     bundle = json.loads((CATALOG / "trusted-catalog.json").read_text(encoding="utf-8"))
-    wanted = [argument for argument in sys.argv[2:] if not argument.startswith("--")]
+    wanted = [argument for argument in sys.argv[(sys.argv.index("--sweep") + 3 if "--sweep" in sys.argv else 2):] if not argument.startswith("--")]
     failures = 0
     for package in bundle["packages"]:
         if wanted and package["packageId"].split(":")[-1] not in wanted:

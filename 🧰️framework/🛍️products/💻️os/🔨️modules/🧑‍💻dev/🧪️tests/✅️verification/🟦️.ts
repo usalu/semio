@@ -46,6 +46,12 @@ import { CATALOG_SMOKE_DEFAULT_OUT_REL, catalogSmokeExitCode, runCatalogSmokeVer
 
 import { runCollabE2eVerify } from "../🤝️collaboration/🟦️.ts";
 
+import { runProgramMatrixCli } from "../🧮️program-matrix/🟦️.ts";
+
+import { runTwoHumanCli } from "../👥️two-human/🟦️.ts";
+
+import { runConnectionBudgetCli } from "../🔀️connection-budget/🟦️.ts";
+
 import { PluginCapabilityLintScript } from "../🧹️capability-policy/🟦️.ts";
 
 
@@ -59,6 +65,18 @@ class VerifyScript extends BundleScript {
     const timeoutMs = Number(process.env.S_STUDIO_E2E_TIMEOUT_MS ?? 300_000);
     if (segments[0] === "collab") {
       await runCollabE2eVerify();
+      return;
+    }
+    if (segments[0] === "two-human") {
+      await runTwoHumanCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/👥️two-human"), segments.slice(1));
+      return;
+    }
+    if (segments[0] === "connections") {
+      await runConnectionBudgetCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🔀️connection-budget"), segments.slice(1));
+      return;
+    }
+    if (segments[0] === "matrix") {
+      await runProgramMatrixCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🧮️program-matrix"), segments.slice(1));
       return;
     }
     if (segments[0] === "e2e") {

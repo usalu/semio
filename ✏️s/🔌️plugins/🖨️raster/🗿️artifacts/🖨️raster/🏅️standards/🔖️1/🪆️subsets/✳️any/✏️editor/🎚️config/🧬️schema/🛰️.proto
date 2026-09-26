@@ -28,4 +28,8 @@ message RasterConfig {
   // @state config
   RasterCamera camera = 6;
   // @state config
+  string brush_color = 7;
+  // @state config
+  double brush_hardness = 8;
+  // @state config
 }

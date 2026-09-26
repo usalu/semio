@@ -594,7 +594,7 @@ function withNativePreparation(project, workspaceRoot, contracts, cache = new Ma
   const generatorTargets = new Set(Object.values(contracts).flatMap((contract) => [contract.target, contract.previewTarget, contract.checkTarget]));
   const plans = new Map();
   for (const [name, target] of Object.entries(project.targets)) {
-    if (!/^(?:build|check|lint|test|wasm|native|component|extension-package|package|font-tool|bench)(?:-|$)/.test(name) || generatorTargets.has(`${project.name}:${name}`)) continue;
+    if (!/^(?:build|check|lint|test|wasm|native|component|describe|extension-package|package|font-tool|bench)(?:-|$)/.test(name) || generatorTargets.has(`${project.name}:${name}`)) continue;
     const tests = /^(?:test|bench)(?:-|$)/.test(name);
     if (!plans.has(tests)) plans.set(tests, nativePreparation(nativeRoot, workspaceRoot, contracts, tests, cache, closures));
     const selected = plans.get(tests);
@@ -653,6 +653,16 @@ function declaredSourceInputs(json, workspaceRoot) {
   return groups;
 }
 
+/**
+ * 🚧️ Nx plans a task's `!{workspaceRoot}/…` negations against the workspace positives of its expanded inputs; with none, a
+ * negation plans every other workspace file. A native source list names its files literally, so without a workspace positive
+ * (a workspace-root crate) it keeps only its project-rooted negations.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/⚡️workspace-negation-closure/🟦️.ts
+ */
+function workspaceNegationClosed(inputs) {
+  return inputs.some((input) => typeof input === "string" && input.startsWith("{workspaceRoot}/")) ? inputs : inputs.filter((input) => typeof input !== "string" || !input.startsWith("!{workspaceRoot}/"));
+}
+
 /** 📥️ Shared command implementation and host identity are inputs of every script-backed task. */
 function projectInputs(json, root, workspaceRoot, facts, scripts) {
   const nativeRoot = json.metadata?.nativeRoot ?? root;
@@ -689,7 +699,7 @@ function projectInputs(json, root, workspaceRoot, facts, scripts) {
     if (owner !== root) inputs.push(`!{workspaceRoot}/${owner}/**/${directory}/**/*`);
   }
   if (owner !== runner) inputs.push(`!{workspaceRoot}/${runner}/**/🧪️tests/**/*`);
-  const production = ["default", "!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*", "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
+  const production = ["!{projectRoot}/**/🧪️tests/**/*", "!{projectRoot}/**/🧫️fixtures/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*", "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
   if (owner !== root) production.push(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`, `!{workspaceRoot}/${owner}/**/🧫️fixtures/**/*`);
   const declarations = json.namedInputs ?? {};
   const exclusions = [];
@@ -715,7 +725,7 @@ function projectInputs(json, root, workspaceRoot, facts, scripts) {
   const artifactSources = artifactTypeScript ? [...relativeScriptInputs([artifactSource], workspaceRoot, scripts), "{projectRoot}/package.json", ...exclusions] : [];
   const javascript = POLICY.toolchains.javascript;
   const artifactCommandSources = artifactTypeScript ? [...relativeScriptInputs([join(workspaceRoot, root, SCRIPT_BASENAME)], workspaceRoot, scripts), `{workspaceRoot}/bunfig.toml`, { externalDependencies: ["typescript"] }, ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime })), { runtime: 'node -p "process.platform.concat(process.arch)"' }] : [];
-  return { ...declarations, ...declaredSourceInputs(json, workspaceRoot), default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...production, ...(declarations.production ?? [])], nativeSources: [...native(nativeSources, true), ...(declarations.nativeSources ?? [])], nativeTestSources: [...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])], ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) };
+  return { ...declarations, ...declaredSourceInputs(json, workspaceRoot), default: [...inputs, ...(declarations.default ?? []), ...exclusions], production: [...inputs, ...(declarations.default ?? []), ...exclusions, ...production, ...(declarations.production ?? [])], nativeSources: workspaceNegationClosed([...native(nativeSources, true), ...(declarations.nativeSources ?? [])]), nativeTestSources: workspaceNegationClosed([...native(nativeTests), ...(declarations.nativeSources ?? []), ...(declarations.nativeTestSources ?? [])]), ...(artifactTypeScript ? { artifactSources: [...artifactSources, ...(declarations.artifactSources ?? [])], artifactCommandSources: [...artifactCommandSources, ...(declarations.artifactCommandSources ?? [])] } : {}) };
 }
 
 /**
@@ -791,7 +801,7 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
   };
   for (const [name, target] of Object.entries(withLeveledTestTargets(declared))) {
     const policy = targetPolicy(name, targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target }, root, ownsScript));
-    const nativeTarget = nativeProject && /^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
+    const nativeTarget = nativeProject && (/^(build|wasm|native|test(?:-(?:quick|long|exhaustive))?$|lint|check$)/.test(name) || name === "describe" && Boolean(declared["component-dev"])) || policy.options?.command?.includes("⚡️caching/🦀️cargo/📜️script.ts");
     const artifactTarget = artifactTypeScript && /^(?:build|check|test(?:-(?:quick|long|exhaustive))?)$/.test(name);
     if (nativeTarget) {
       policy.inputs = [name.startsWith("test") ? "nativeTestSources" : "nativeSources", name.startsWith("test") ? "^nativeTestSources" : "^nativeSources", ...internCommandSources(nativeTargetCommandInputs(policy, workspaceRoot, commandInputs, scripts)), ...(name.startsWith("component-") ? [{ env: "SEMIO_PLUGIN_SYMBOLS" }] : []), ...nativeLockInputs(policy.options?.command)];
@@ -887,7 +897,15 @@ function componentTargets(root, workspaceRoot, commandInputs) {
   const moduleDirectory = moduleCatalog.modules.find((row) => metadata.component.package === `semio:${row.pluginId}`)?.directoryName;
   if (!moduleDirectory || moduleDirectory.includes("/") || moduleDirectory.includes("\\") || [".", ".."].includes(moduleDirectory)) throw new Error(`Component needs an authored deployment directory: ${path}`);
   commandInputs ??= nativeCommandInputs(workspaceRoot);
-  return Object.fromEntries(["dev", "release"].flatMap((profile) => [[`component-${profile}`, {
+  const ownerRoot = nxPath(join(root, "..", ".."));
+  const describe = {
+    executor: DEFAULT_EXECUTOR,
+    cache: false,
+    dependsOn: ["component-dev"],
+    outputs: [`{workspaceRoot}/${ownerRoot}/🛂️.descriptor.semio`, `{workspaceRoot}/${ownerRoot}/🔣️.json`],
+    options: { cwd: ".", command: `bun ${JSON.stringify("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts")} component --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },
+  };
+  return Object.fromEntries([["describe", describe], ...["dev", "release"].flatMap((profile) => [[`component-${profile}`, {
     executor: DEFAULT_EXECUTOR,
     cache: true,
     parallelism: false,
@@ -901,7 +919,7 @@ function componentTargets(root, workspaceRoot, commandInputs) {
     inputs: ["production", "^production", { dependentTasksOutputFiles: "**/*" }, `{workspaceRoot}/${webRoot}/**/*.{ts,json}`, `{workspaceRoot}/${webSourceRoot}/**/*.ts`, `!{workspaceRoot}/${webSourceRoot}/**/🧪️tests/**/*.ts`, `{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/🛂️actor-exports/🔣️.json`, `{workspaceRoot}/${deployment}/*.json`, `!{workspaceRoot}/${webRoot}/dist/**/*`],
     outputs: [`{workspaceRoot}/${webRoot}/dist/${profile}/🔌️plugin-modules/${moduleDirectory}`],
     options: { cwd: ".", command: `bun ${JSON.stringify(`${webRoot}/📜️script.ts`)} materialize ${profile} --manifest ${JSON.stringify(nxPath(relative(workspaceRoot, path)))}` },
-  }]]));
+  }]])]);
 }
 
 /** @emoji 🧭️ Repo-root-relative plugin owner directory for a playground crate path. */

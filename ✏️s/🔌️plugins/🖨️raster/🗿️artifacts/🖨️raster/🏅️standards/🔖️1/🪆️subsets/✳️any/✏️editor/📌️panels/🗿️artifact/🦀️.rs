@@ -69,11 +69,11 @@ fn add_row(kind: &str, label: LabelText, icon: &str) -> UiAssemblyResult<BuiltNo
 ///
 /// 🪟️ Recursive: a `Group` is a windowed container of its own at every depth, so an expanded group
 /// costs the first paint one slice instead of its whole subtree.
-fn layer_tree_item(windows: &TreeWindows<'_>, layer: &RasterLayerNode) -> UiAssemblyResult<BuiltNode> {
+fn layer_tree_item(windows: &TreeWindows<'_>, layer: &RasterLayerNode, labels: &RasterPlayLabels) -> UiAssemblyResult<BuiltNode> {
     let (description, icon_id) = match layer {
-        RasterLayerNode::Pixel { .. } => ("pixel", "image"),
-        RasterLayerNode::Group { .. } => ("group", "folder"),
-        RasterLayerNode::Adjustment { .. } => ("adjustment", "sliders-horizontal"),
+        RasterLayerNode::Pixel { .. } => (labels.pixel_layer.as_str(), "image"),
+        RasterLayerNode::Group { .. } => (labels.group_layer.as_str(), "folder"),
+        RasterLayerNode::Adjustment { .. } => (labels.adjustment_layer.as_str(), "sliders-horizontal"),
     };
     let row_id = layer_row_id(layer);
     let item = ui::tree_item(ui_label(layer_name(layer))?)
@@ -85,7 +85,7 @@ fn layer_tree_item(windows: &TreeWindows<'_>, layer: &RasterLayerNode) -> UiAsse
         .draggable(true)
         .dimmed(!layer_visible(layer));
     match layer {
-        RasterLayerNode::Group { children, .. } => tree_window_item(windows, item, &row_id, true, children, |child| layer_tree_item(windows, child)),
+        RasterLayerNode::Group { children, .. } => tree_window_item(windows, item, &row_id, true, children, |child| layer_tree_item(windows, child, labels)),
         _ => item.default_open(false).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "raster layer row admission failed")),
     }
 }
@@ -101,7 +101,7 @@ pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &Raste
     PanelTreeBuilder::new(RASTER_TREE_PREFIX)?
         .window_section(windows, RASTER_TREE_PREFIX, Some(ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, &rows, |row| match row {
             LayersRow::Add(kind, label, icon) => add_row(kind, *label, icon),
-            LayersRow::Layer(layer) => layer_tree_item(windows, layer),
+            LayersRow::Layer(layer) => layer_tree_item(windows, layer, labels),
         })?
         .interaction_domain(RASTER_PLAY_CONTROLLER_ID, RASTER_INTERACTION_DOMAIN)?
         .build()

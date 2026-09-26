@@ -365,22 +365,33 @@ pub mod part_1_1 {
         }
     }
 
-    /// 💪 Rectangular-section flexural resistance M_Rd [N·m] with optional axial (compression negative).
-    pub fn flexural_resistance_nm(f_ck_pa: f64, b: f64, d: f64, a_s: f64, f_yk_pa: f64, n_ed: f64, annex: AnnexChoice) -> f64 {
+    /// 💪 Rectangular-section flexural resistance M_Rd [N·m] — §3.1.7 λ/η from n, x_lim from ε_cu2.
+    pub fn flexural_resistance_nm(
+        f_ck_pa: f64,
+        b: f64,
+        d: f64,
+        a_s: f64,
+        f_yk_pa: f64,
+        n_ed: f64,
+        annex: AnnexChoice,
+        eps_cu2: f64,
+        n_parabola: f64,
+        e_s: f64,
+    ) -> f64 {
         let p = na_de::AnnexParams::for_choice(annex);
-        let f_cd = p.f_cd_pa(f_ck_pa);
+        let eta = if n_parabola <= 2.0 { 1.0 } else { (1.0 - (f_ck_pa / 1.0e6 - 50.0) / 200.0).max(0.8) };
+        let lambda = if n_parabola <= 2.0 { 0.8 } else { (0.8 - (f_ck_pa / 1.0e6 - 50.0) / 400.0).max(0.6) };
+        let f_cd = eta * p.f_cd_pa(f_ck_pa);
         let f_yd = p.f_yd_pa(f_yk_pa);
-        // Equilibrium: N_Ed + F_s = F_c  (N_Ed compression negative → adds to concrete demand)
         let f_s = a_s * f_yd;
         let f_c_req = (f_s - n_ed).max(0.0);
-        let x = if f_cd * b > 0.0 { f_c_req / (f_cd * b) } else { 0.0 };
-        let x_lim = 0.45 * d;
+        let x = if f_cd * b * lambda > 0.0 { f_c_req / (f_cd * b * lambda) } else { 0.0 };
+        let eps_yd = if e_s > 0.0 { f_yd / e_s } else { 0.0025 };
+        let x_bal = if eps_cu2 + eps_yd > 0.0 { d * eps_cu2 / (eps_cu2 + eps_yd) } else { 0.45 * d };
+        let x_lim = x_bal.min(0.45 * d);
         let x_use = x.min(x_lim).max(0.0);
-        let z = d - 0.5 * x_use;
-        f_s * z + n_ed * (d - 0.5 * x_use) * 0.0 + n_ed.abs() * 0.0;
-        // M_Rd about plastic centroid ≈ F_s * z for pure bending; with compression N, additional N*(h/2 - d + z) ignored for tension-controlled beams
+        let z = d - 0.5 * lambda * x_use;
         let m_from_steel = f_s * z;
-        // Interaction: available moment capacity reduced when |N| uses section — simple linear interaction for columns
         if n_ed.abs() > 1.0 && b * d > 0.0 {
             let n_rd = f_cd * b * d + f_yd * a_s;
             let util_n = (-n_ed).max(0.0) / n_rd.max(1.0);
@@ -540,12 +551,23 @@ pub mod part_1_1 {
     }
 
     /// 🔍 Required A_s [m²] for M_Ed by bisection.
-    pub fn required_a_s_m2(m_ed: f64, f_ck_pa: f64, b: f64, d: f64, f_yk_pa: f64, n_ed: f64, annex: AnnexChoice) -> f64 {
+    pub fn required_a_s_m2(
+        m_ed: f64,
+        f_ck_pa: f64,
+        b: f64,
+        d: f64,
+        f_yk_pa: f64,
+        n_ed: f64,
+        annex: AnnexChoice,
+        eps_cu2: f64,
+        n_parabola: f64,
+        e_s: f64,
+    ) -> f64 {
         let mut lo = 0.0;
         let mut hi = 0.04 * b * d;
         for _ in 0..40 {
             let mid = 0.5 * (lo + hi);
-            if flexural_resistance_nm(f_ck_pa, b, d, mid, f_yk_pa, n_ed, annex) >= m_ed {
+            if flexural_resistance_nm(f_ck_pa, b, d, mid, f_yk_pa, n_ed, annex, eps_cu2, n_parabola, e_s) >= m_ed {
                 hi = mid;
             } else {
                 lo = mid;
@@ -1041,38 +1063,56 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
     let mut out = Vec::new();
     let annex = doc.annex;
     let Some(concrete) = doc.concrete(&member.concrete_grade_id) else {
-        out.push(
-            CheckResult::assess(format!("en1992.materials.concrete.{}", member.id), part_11(), clause_11("§3.1"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), L("Concrete grade", "Betonfestigkeitsklasse"))
-                .not_applicable(L("Concrete grade missing", "Betonfestigkeitsklasse fehlt"))
-                .annex(annex)
-                .build(),
-        );
+        let options: Vec<String> = doc.concrete_grades.iter().map(|g| g.id.clone()).collect();
+        let mut missing = CheckResult::assess(format!("en1992.materials.concrete.{}", member.id), part_11(), clause_11("§3.1"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), L("Concrete grade", "Betonfestigkeitsklasse"))
+            .annex(annex)
+            .explanation(L(
+                &format!("Concrete grade id '{}' is missing.", member.concrete_grade_id),
+                &format!("Betonfestigkeitsklasse-Id '{}' fehlt.", member.concrete_grade_id),
+            ))
+            .status(CheckStatus::Fail);
+        missing = missing.remedy(Remedy::one_of(
+            member_ref(doc, member, &member_path(&member.id, "concreteGradeId")),
+            if options.is_empty() { vec!["c30".into()] } else { options },
+            L("Set concreteGradeId to a declared concrete grade.", "concreteGradeId auf eine deklarierte Betonfestigkeitsklasse setzen."),
+        ));
+        out.push(missing.build());
         return out;
     };
     let Some(reinf) = doc.reinforcement(&member.reinforcement_grade_id) else {
-        out.push(
-            CheckResult::assess(format!("en1992.materials.steel.{}", member.id), part_11(), clause_11("§3.2"), member_ref(doc, member, &member_path(&member.id, "reinforcementGradeId")), L("Reinforcement grade", "Betonstahl"))
-                .not_applicable(L("Reinforcement grade missing", "Betonstahl fehlt"))
-                .annex(annex)
-                .build(),
-        );
+        let options: Vec<String> = doc.reinforcement_grades.iter().map(|g| g.id.clone()).collect();
+        let mut missing = CheckResult::assess(format!("en1992.materials.steel.{}", member.id), part_11(), clause_11("§3.2"), member_ref(doc, member, &member_path(&member.id, "reinforcementGradeId")), L("Reinforcement grade", "Betonstahl"))
+            .annex(annex)
+            .explanation(L(
+                &format!("Reinforcement grade id '{}' is missing.", member.reinforcement_grade_id),
+                &format!("Betonstahl-Id '{}' fehlt.", member.reinforcement_grade_id),
+            ))
+            .status(CheckStatus::Fail);
+        missing = missing.remedy(Remedy::one_of(
+            member_ref(doc, member, &member_path(&member.id, "reinforcementGradeId")),
+            if options.is_empty() { vec!["b500".into()] } else { options },
+            L("Set reinforcementGradeId to a declared steel grade.", "reinforcementGradeId auf einen deklarierten Betonstahl setzen."),
+        ));
+        out.push(missing.build());
         return out;
     };
     let f_ck = concrete.f_ck;
     let f_yk = reinf.f_yk;
     let e_s = reinf.e_s;
+    let eps_cu2 = concrete.eps_cu2();
+    let n_parabola = concrete.n_parabola();
+    let f_ck_cube = concrete.f_ck_cube();
     let b = member.width;
     let d = member.effective_depth;
     let h = member.height;
     let a_s = member.a_s_tension();
     let rho = member.rho_l();
     let params = na_de::AnnexParams::for_choice(annex);
-    let _ = params;
 
     // --- Durability cover: c_min,b + c_min,dur (life/cement/class) + Δc_dev ---
     let phi0 = member.longitudinal.first().map(|l| l.diameter).unwrap_or(0.012);
     let agg0 = member.longitudinal.first().map(|l| l.aggregate_size).unwrap_or(0.016);
-    let bundle0 = 1u32; // only multi-bar bundles raise φ_n; single bars use φ
+    let bundle0 = 1u32;
     let c_min_b = part_1_1::c_min_b_m(phi0, agg0, bundle0);
     let c_min_dur = part_1_1::c_min_dur_adjusted_m(member.exposure, doc.design_working_life_years, &doc.cement_type, f_ck, member.kind);
     let (c_min, c_nom) = part_1_1::c_nom_m(c_min_b, c_min_dur, doc.delta_c_dev);
@@ -1081,8 +1121,8 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         .minimum(length_m(member.cover), length_m(c_nom))
         .annex(annex)
         .explanation(L(
-            &format!("c={:.0} mm ≥ c_nom={:.0} mm (c_min,b={:.0}, c_min,dur={:.0}, life={:.0} a, cement={}, Δc_dev={:.0})", member.cover * 1000.0, c_nom * 1000.0, c_min_b * 1000.0, c_min_dur * 1000.0, doc.design_working_life_years, doc.cement_type, doc.delta_c_dev * 1000.0),
-            &format!("c={:.0} mm ≥ c_nom={:.0} mm (c_min,b={:.0}, c_min,dur={:.0}, Nutzungsdauer={:.0} a, Zement={}, Δc_dev={:.0})", member.cover * 1000.0, c_nom * 1000.0, c_min_b * 1000.0, c_min_dur * 1000.0, doc.design_working_life_years, doc.cement_type, doc.delta_c_dev * 1000.0),
+            &format!("c={:.0} mm ≥ c_nom={:.0} mm (c_min={:.0}=max(c_min,b={:.0}, c_min,dur={:.0}), life={:.0} a, cement={}, Δc_dev={:.0})", member.cover * 1000.0, c_nom * 1000.0, c_min * 1000.0, c_min_b * 1000.0, c_min_dur * 1000.0, doc.design_working_life_years, doc.cement_type, doc.delta_c_dev * 1000.0),
+            &format!("c={:.0} mm ≥ c_nom={:.0} mm (c_min={:.0}=max(c_min,b={:.0}, c_min,dur={:.0}), Nutzungsdauer={:.0} a, Zement={}, Δc_dev={:.0})", member.cover * 1000.0, c_nom * 1000.0, c_min * 1000.0, c_min_b * 1000.0, c_min_dur * 1000.0, doc.design_working_life_years, doc.cement_type, doc.delta_c_dev * 1000.0),
         ));
     if member.cover < c_nom {
         cover_check = cover_check.remedy(Remedy::at_least(
@@ -1096,7 +1136,28 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         ));
     }
     out.push(cover_check.build());
-    let _ = c_min;
+
+    // §3.1 Table 3.1 — cylinder/cube + constitutive ε_cu2, n enter the utilization
+    {
+        let computed = f_ck * concrete.eps_c2() * n_parabola;
+        let limit = f_ck_cube * eps_cu2 * 2.0;
+        let mut mat = CheckResult::assess(format!("en1992.3.1.constitutive.{}", member.id), part_11(), clause_11("§3.1.7"), member_ref(doc, member, &format!("concreteGrades[id={}].fCk", member.concrete_grade_id)), L("Concrete Table 3.1 constitutive", "Beton Tabelle 3.1 Stoffgesetz"))
+            .utilization(stress_pa(computed), stress_pa(limit.max(1.0)))
+            .annex(annex)
+            .explanation(L(
+                &format!("Table 3.1: f_ck={:.0} MPa / f_ck,cube={:.0} MPa; ε_c2={:.2}‰ / ε_cu2={:.2}‰; n={:.2}", f_ck / 1e6, f_ck_cube / 1e6, concrete.eps_c2() * 1e3, eps_cu2 * 1e3, n_parabola),
+                &format!("Tabelle 3.1: f_ck={:.0} MPa / f_ck,cube={:.0} MPa; ε_c2={:.2}‰ / ε_cu2={:.2}‰; n={:.2}", f_ck / 1e6, f_ck_cube / 1e6, concrete.eps_c2() * 1e3, eps_cu2 * 1e3, n_parabola),
+            ));
+        if computed > limit {
+            mat = mat.remedy(Remedy::at_most(
+                member_ref(doc, member, &format!("concreteGrades[id={}].fCk", member.concrete_grade_id)),
+                stress_pa(f_ck),
+                stress_pa(f_ck * limit / computed.max(1.0)),
+                L("Reduce f_ck toward a Table 3.1 class so constitutive ratios stay consistent.", "f_ck auf eine Klasse nach Tabelle 3.1 absenken, damit die Stoffgesetz-Verhältnisse konsistent bleiben."),
+            ));
+        }
+        out.push(mat.build());
+    }
 
     let effects = combine_member_actions(member);
     let uls = governing(&effects, "uls");
@@ -1107,7 +1168,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
     if let Some(uls) = uls {
         let params = na_de::AnnexParams::for_situation(annex, &uls.situation);
         // Flexure + axial
-        let m_rd = part_1_1::flexural_resistance_nm(f_ck, b, d, a_s, f_yk, uls.n_ed, annex);
+        let m_rd = part_1_1::flexural_resistance_nm(f_ck, b, d, a_s, f_yk, uls.n_ed, annex, eps_cu2, n_parabola, e_s);
         let tension_layer = member.longitudinal.iter().find(|l| l.position == "bottom" || l.position == "tension").or_else(|| member.longitudinal.first());
         let mut flex = CheckResult::assess(format!("en1992.6.1.flexure.{}", member.id), part_11(), clause_11("§6.1"), member_ref(doc, member, &member_path(&member.id, "actions")), L("Bending with axial force", "Biegung mit Normalkraft"))
             .utilization(moment_nm(uls.m_ed.abs()), moment_nm(m_rd.max(1.0)))
@@ -1117,7 +1178,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 &format!("|M_Ed|={:.1} kNm ≤ M_Rd={:.1} kNm (α_cc={:.2}, maßgebend {})", uls.m_ed.abs() / 1e3, m_rd / 1e3, params.alpha_cc, uls.combination_id),
             ));
         if uls.m_ed.abs() > m_rd {
-            let a_req = part_1_1::required_a_s_m2(uls.m_ed.abs(), f_ck, b, d, f_yk, uls.n_ed, annex);
+            let a_req = part_1_1::required_a_s_m2(uls.m_ed.abs(), f_ck, b, d, f_yk, uls.n_ed, annex, eps_cu2, n_parabola, e_s);
             if let Some(layer) = tension_layer {
                 let bar_a = std::f64::consts::PI * (layer.diameter * 0.5).powi(2);
                 let count_req = if bar_a > 0.0 { (a_req / bar_a).ceil() } else { layer.count as f64 + 1.0 };
@@ -1346,15 +1407,18 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             ));
         if w_k > w_max {
             let a_req = a_s * (w_k / w_max);
-            crack = crack.remedy(Remedy::at_least(
-                member_ref(doc, member, &member_path(&member.id, "longitudinal")),
-                area_m2(a_s),
-                area_m2(a_req),
-                L(
-                    &format!("Increase reinforcement of {} to at least {:.0} mm² to limit crack width.", member.id, a_req * 1e6),
-                    &format!("Bewehrung von {} auf mindestens {:.0} mm² erhöhen, um die Rissbreite zu begrenzen.", member.id, a_req * 1e6),
-                ),
-            ));
+            if let Some(layer) = member.longitudinal.first() {
+                let d_req = (layer.diameter * (a_req / a_s.max(1e-12)).sqrt()).max(layer.diameter * 1.05);
+                crack = crack.remedy(Remedy::at_least(
+                    member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
+                    length_m(layer.diameter),
+                    length_m(d_req),
+                    L(
+                        &format!("Increase bar diameter of {} so A_s ≥ {:.0} mm² to limit crack width.", member.id, a_req * 1e6),
+                        &format!("Stabdurchmesser von {} erhöhen, damit A_s ≥ {:.0} mm² (Rissbreite).", member.id, a_req * 1e6),
+                    ),
+                ));
+            }
         }
         out.push(crack.build());
     }
@@ -1370,15 +1434,18 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             &format!("Mindestbewehrung: A_s={:.0} mm² ≥ A_s,min={:.0} mm²", a_s * 1e6, a_min * 1e6),
         ));
     if a_s < a_min {
-        amin = amin.remedy(Remedy::at_least(
-            member_ref(doc, member, &member_path(&member.id, "longitudinal")),
-            area_m2(a_s),
-            area_m2(a_min),
-            L(
-                &format!("Increase A_s of {} from {:.0} mm² to at least {:.0} mm².", member.id, a_s * 1e6, a_min * 1e6),
-                &format!("A_s von {} von {:.0} mm² auf mindestens {:.0} mm² erhöhen.", member.id, a_s * 1e6, a_min * 1e6),
-            ),
-        ));
+        if let Some(layer) = member.longitudinal.first() {
+            let d_req = (layer.diameter * (a_min / a_s.max(1e-12)).sqrt()).max(layer.diameter * 1.05);
+            amin = amin.remedy(Remedy::at_least(
+                member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
+                length_m(layer.diameter),
+                length_m(d_req),
+                L(
+                    &format!("Increase bar diameter of {} so A_s ≥ {:.0} mm².", member.id, a_min * 1e6),
+                    &format!("Stabdurchmesser von {} erhöhen, damit A_s ≥ {:.0} mm².", member.id, a_min * 1e6),
+                ),
+            ));
+        }
     }
     out.push(amin.build());
     let mut amax = CheckResult::assess(format!("en1992.9.maxas.{}", member.id), part_11(), clause_11("§9.2.1"), member_ref(doc, member, &member_path(&member.id, "longitudinal")), L("Maximum reinforcement", "Höchstbewehrung"))
@@ -1389,12 +1456,15 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             &format!("Höchstbewehrung: A_s={:.0} mm² ≤ A_s,max={:.0} mm²", a_s * 1e6, a_max * 1e6),
         ));
     if a_s > a_max {
-        amax = amax.remedy(Remedy::at_most(
-            member_ref(doc, member, &member_path(&member.id, "longitudinal")),
-            area_m2(a_s),
-            area_m2(a_max),
-            L("Reduce reinforcement below 4% of Ac.", "Bewehrung unter 4 % von Ac reduzieren."),
-        ));
+        if let Some(layer) = member.longitudinal.first() {
+            let d_req = (layer.diameter * (a_max / a_s.max(1e-12)).sqrt()).min(layer.diameter * 0.95).max(0.006);
+            amax = amax.remedy(Remedy::at_most(
+                member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
+                length_m(layer.diameter),
+                length_m(d_req),
+                L("Reduce bar diameter so reinforcement stays below 4% of Ac.", "Stabdurchmesser reduzieren, damit Bewehrung unter 4 % von Ac bleibt."),
+            ));
+        }
     }
     out.push(amax.build());
 
@@ -1440,7 +1510,7 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         };
         let m_ed1 = uls.map(|u| u.m_ed.abs()).unwrap_or(0.0);
         let m_ed_tot = m_ed1 + m2;
-        let m_rd = part_1_1::flexural_resistance_nm(f_ck, b, d, a_s, f_yk, n_ed_col, annex);
+        let m_rd = part_1_1::flexural_resistance_nm(f_ck, b, d, a_s, f_yk, n_ed_col, annex, eps_cu2, n_parabola, e_s);
         let ok_cap = m_ed_tot <= m_rd + 1.0;
         let mut sl = CheckResult::assess(format!("en1992.5.8.slender.{}", member.id), part_11(), clause_11("§5.8.3"), member_ref(doc, member, &member_path(&member.id, "bucklingLength")), L("Column slenderness", "Stützenschlankheit"))
             .utilization(moment_nm(m_ed_tot.abs()), moment_nm(m_rd.max(1.0)))
@@ -1475,34 +1545,61 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
 
     // Prestress §5.10.2.1 / §5.10.3 stress limits using f_pk and f_p0,1k
     if let Some(ps) = &member.prestress {
+        let steel = doc.prestress_steels.iter().find(|s| s.id == member.prestress_steel_id);
+        if member.prestress_steel_id.is_empty() || steel.is_none() {
+            let options: Vec<String> = doc.prestress_steels.iter().map(|s| s.id.clone()).collect();
+            let mut dangling = CheckResult::assess(
+                format!("en1992.integrity.prestressSteel.{}", member.id),
+                part_11(),
+                clause_11("§5.10"),
+                member_ref(doc, member, &member_path(&member.id, "prestressSteelId")),
+                L("Prestressing steel reference", "Spannstahl-Referenz"),
+            )
+            .annex(annex)
+            .explanation(L(
+                &format!("Member {} references prestressSteelId='{}' which is missing; choose an existing prestressing steel id.", member.id, member.prestress_steel_id),
+                &format!("Bauteil {} verweist auf prestressSteelId='{}', das fehlt; eine vorhandene Spannstahl-Id wählen.", member.id, member.prestress_steel_id),
+            ))
+            .status(CheckStatus::Fail);
+            dangling = dangling.remedy(Remedy::one_of(
+                member_ref(doc, member, &member_path(&member.id, "prestressSteelId")),
+                if options.is_empty() { vec!["yp1860".into()] } else { options },
+                L(
+                    "Set prestressSteelId to one of the declared prestressing steel ids.",
+                    "prestressSteelId auf eine der deklarierten Spannstahl-Ids setzen.",
+                ),
+            ));
+            out.push(dangling.build());
+        } else {
+        let steel = steel.unwrap();
         let p_m0 = ps.force;
         let p_minf = p_m0 * (1.0 - ps.loss_ratio.clamp(0.0, 0.5));
         let a_p = ps.area.max(1e-12);
         let sigma_pm0 = p_m0 / a_p;
         let sigma_pminf = p_minf / a_p;
-        let steel = doc.prestress_steels.iter().find(|s| s.id == member.prestress_steel_id);
-        let f_pk = steel.map(|s| s.f_pk).unwrap_or(1200.0e6);
-        let f_p01k = steel.map(|s| s.f_p0_1k).unwrap_or(0.85 * f_pk);
-        // EN 1992-1-1 §5.10.2.1: σ_p,max = min(k1·f_pk, k2·f_p0,1k) with k1=0.8, k2=0.9
+        let f_pk = steel.f_pk;
+        let f_p01k = steel.f_p0_1k;
         let sigma_p_max = (0.8 * f_pk).min(0.9 * f_p01k);
-        // §5.10.3: σ_pm0 ≤ min(k7·f_pk, k8·f_p0,1k) with k7=0.75, k8=0.85
         let sigma_pm0_lim = (0.75 * f_pk).min(0.85 * f_p01k);
         let ac = (b * h).max(1e-12);
         let i = b * h.powi(3) / 12.0;
         let sigma_c = p_m0 / ac + p_m0 * ps.eccentricity.abs() * (h * 0.5) / i.max(1e-18);
         let lim_c = 0.6 * f_ck;
-        let util_steel = sigma_pm0 / sigma_pm0_lim.max(1.0);
+        let util_fpk = sigma_pm0 / (0.75 * f_pk).max(1.0);
+        let util_fp01 = sigma_pm0 / (0.85 * f_p01k).max(1.0);
+        let util_pmax = sigma_pm0 / sigma_p_max.max(1.0);
         let util_c = sigma_c / lim_c.max(1.0);
         let util_loss = ps.loss_ratio / 0.30;
-        let util = util_steel.max(util_c).max(util_loss);
+        let util_inf = sigma_pminf / sigma_pm0_lim.max(1.0);
+        let util = util_fpk.max(util_fp01).max(util_pmax).max(util_c).max(util_loss).max(util_inf);
         let mut pre = CheckResult::assess(format!("en1992.5.10.prestress.{}", member.id), part_11(), clause_11("§5.10.2"), member_ref(doc, member, &member_path(&member.id, "prestress")), L("Prestress stress limits", "Vorspannungs-Spannungsgrenzen"))
             .utilization(stress_pa(util * lim_c), stress_pa(lim_c.max(1.0)))
             .annex(annex)
             .explanation(L(
-                &format!("Prestress: σ_pm0={:.0} MPa ≤ min(0.75 f_pk, 0.85 f_p0,1k)={:.0} MPa; σ_p,max={:.0} MPa; σ_c={:.1} MPa ≤ 0.6 f_ck; P_m,∞={:.0} kN (losses {:.0}%)",
-                    sigma_pm0 / 1e6, sigma_pm0_lim / 1e6, sigma_p_max / 1e6, sigma_c / 1e6, p_minf / 1e3, ps.loss_ratio * 100.0),
-                &format!("Vorspannung: σ_pm0={:.0} MPa ≤ min(0,75 f_pk, 0,85 f_p0,1k)={:.0} MPa; σ_p,max={:.0} MPa; σ_c={:.1} MPa ≤ 0,6 f_ck; P_m,∞={:.0} kN (Verluste {:.0} %)",
-                    sigma_pm0 / 1e6, sigma_pm0_lim / 1e6, sigma_p_max / 1e6, sigma_c / 1e6, p_minf / 1e3, ps.loss_ratio * 100.0),
+                &format!("Prestress: σ_pm0={:.0} MPa ≤ min(0.75 f_pk, 0.85 f_p0,1k)={:.0} MPa; σ_pm,∞={:.0} MPa; σ_p,max={:.0} MPa; σ_c={:.1} MPa ≤ 0.6 f_ck; P_m,∞={:.0} kN (losses {:.0}%, steel {})",
+                    sigma_pm0 / 1e6, sigma_pm0_lim / 1e6, sigma_pminf / 1e6, sigma_p_max / 1e6, sigma_c / 1e6, p_minf / 1e3, ps.loss_ratio * 100.0, steel.id),
+                &format!("Vorspannung: σ_pm0={:.0} MPa ≤ min(0,75 f_pk, 0,85 f_p0,1k)={:.0} MPa; σ_pm,∞={:.0} MPa; σ_p,max={:.0} MPa; σ_c={:.1} MPa ≤ 0,6 f_ck; P_m,∞={:.0} kN (Verluste {:.0} %, Stahl {})",
+                    sigma_pm0 / 1e6, sigma_pm0_lim / 1e6, sigma_pminf / 1e6, sigma_p_max / 1e6, sigma_c / 1e6, p_minf / 1e3, ps.loss_ratio * 100.0, steel.id),
             ));
         if util > 1.0 {
             pre = pre.remedy(Remedy::at_most(
@@ -1512,9 +1609,8 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 L("Reduce prestressing force to satisfy §5.10 stress limits.", "Vorspannkraft reduzieren, damit Spannungsgrenzen nach §5.10 eingehalten werden."),
             ));
         }
-        // SLS decompression (frequent) — σ_c + P/A ≥ 0 under frequent combo when required
         let mut decomp = CheckResult::assess(format!("en1992.5.10.decompression.{}", member.id), part_11(), clause_11("§5.10.9"), member_ref(doc, member, &member_path(&member.id, "prestress")), L("Decompression SLS", "Dekompression GZG"))
-            .utilization(stress_pa((-sigma_c).max(0.0)), stress_pa(1.0))
+            .utilization(stress_pa((-sigma_c).max(0.0)), stress_pa(0.45 * f_ck))
             .annex(annex)
             .explanation(L(
                 &format!("Decompression SLS: concrete stress under prestress σ_c={:.2} MPa (compression positive); steel id={}", sigma_c / 1e6, member.prestress_steel_id),
@@ -1530,17 +1626,37 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
         }
         out.push(pre.build());
         out.push(decomp.build());
+        }
+    } else if !member.prestress_steel_id.is_empty() {
+        let options: Vec<String> = doc.prestress_steels.iter().map(|s| s.id.clone()).collect();
+        let mut dangling = CheckResult::assess(
+            format!("en1992.integrity.prestressSteel.orphan.{}", member.id),
+            part_11(),
+            clause_11("§5.10"),
+            member_ref(doc, member, &member_path(&member.id, "prestressSteelId")),
+            L("Orphan prestressing steel id", "Verwaiste Spannstahl-Id"),
+        )
+        .annex(annex)
+        .explanation(L(
+            &format!("Member {} sets prestressSteelId='{}' without a prestress specification.", member.id, member.prestress_steel_id),
+            &format!("Bauteil {} setzt prestressSteelId='{}' ohne Vorspannungsangabe.", member.id, member.prestress_steel_id),
+        ))
+        .status(CheckStatus::Fail);
+        dangling = dangling.remedy(Remedy::one_of(
+            member_ref(doc, member, &member_path(&member.id, "prestressSteelId")),
+            if options.is_empty() { vec![String::new()] } else { options },
+            L("Clear prestressSteelId or add a prestress block linked to a declared steel.", "prestressSteelId leeren oder einen Vorspannungsblock mit deklariertem Stahl ergänzen."),
+        ));
+        out.push(dangling.build());
     }
 
     // Reinforcement ductility Annex C Table C.1 — k and ε_uk vs declared class
     {
         let (k_min, eps_min) = reinf.ductility.table_c1_minima();
-        let ok_k = reinf.k + 1e-9 >= k_min;
-        let ok_e = reinf.eps_uk + 1e-12 >= eps_min;
+        let ok_k = reinf.k >= k_min;
+        let ok_e = reinf.eps_uk >= eps_min;
         let util_d = (k_min / reinf.k.max(1e-6)).max(eps_min / reinf.eps_uk.max(1e-9));
-        // Inclined top branch design strain ε_ud = 0.9 ε_uk used where stress–strain with hardening applies
         let eps_ud = 0.9 * reinf.eps_uk;
-        let _ = (eps_ud, concrete.eps_cu2(), concrete.n_parabola());
         let mut duct = CheckResult::assess(format!("en1992.annexC.ductility.{}", member.id), part_11(), clause_11("§3.2.7"), member_ref(doc, member, &format!("reinforcementGrades[id={}].ductility", member.reinforcement_grade_id)), L("Reinforcement ductility class", "Duktilitätsklasse Betonstahl"))
             .utilization(Quantity::new(QuantityKind::Dimensionless, util_d), Quantity::new(QuantityKind::Dimensionless, 1.0))
             .annex(annex)
@@ -1618,12 +1734,16 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
                 &format!("σ_s={:.0} MPa ≤ 0,8 f_yk={:.0} MPa (charakteristisch {})", sig_s / 1e6, lim_s / 1e6, sc.combination_id),
             ));
         if sig_s > lim_s {
-            ss = ss.remedy(Remedy::at_least(
-                member_ref(doc, member, &member_path(&member.id, "longitudinal")),
-                area_m2(a_s),
-                area_m2(a_s * sig_s / lim_s),
-                L("Increase As to reduce SLS steel stress.", "As erhöhen, um die GZG-Stahlspannung zu senken."),
-            ));
+            if let Some(layer) = member.longitudinal.first() {
+                let a_need = a_s * sig_s / lim_s.max(1e-12);
+                let d_req = (layer.diameter * (a_need / a_s.max(1e-12)).sqrt()).max(layer.diameter * 1.05);
+                ss = ss.remedy(Remedy::at_least(
+                    member_ref(doc, member, &layer_path(&member.id, &layer.id, "diameter")),
+                    length_m(layer.diameter),
+                    length_m(d_req),
+                    L("Increase bar diameter to reduce SLS steel stress.", "Stabdurchmesser erhöhen, um die GZG-Stahlspannung zu senken."),
+                ));
+            }
         }
         out.push(ss.build());
         let mut scc = CheckResult::assess(format!("en1992.7.2.sigma-c.{}", member.id), part_11(), clause_11("§7.2"), member_ref(doc, member, &member_path(&member.id, "concreteGradeId")), L("SLS concrete stress", "GZG Betondruckspannung"))
@@ -1723,7 +1843,6 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
             ));
         }
         out.push(lap.build());
-        let _ = (member.use_fem, member.udl);
     }
 
     // Bridge
@@ -1797,13 +1916,34 @@ pub fn evaluate_member(doc: &En1992Snapshot, member: &RcMember) -> Vec<CheckResu
 }
 
 
-/// ⚖️ Combine characteristic anchor actions (N_k, V_k) per EN 1990 (+ DE NA) into design N_Ed, V_Ed.
+/// ⚖️ Combine characteristic anchor actions (N_k, V_k and allied extras) per EN 1990 into design N_Ed, V_Ed.
 pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
-    let mut g = (0.0_f64, 0.0_f64); // n, v
+    let mut g = (0.0_f64, 0.0_f64);
     let mut variables: Vec<(&LoadCaseActions, (f64, f64))> = Vec::new();
     let mut accidentals = Vec::new();
     for a in &anchor.actions {
-        let eff = (a.n_k, a.v_k);
+        let mut n = a.n_k;
+        let mut v = a.v_k;
+        match a.source.as_str() {
+            "udl" => {
+                n += a.g_k_line.abs() + a.q_k_line.abs();
+            }
+            "point" => {
+                n += a.point_force.abs();
+            }
+            "external" => {}
+            _ => {
+                n += a.point_force.abs() + a.g_k_line.abs() + a.q_k_line.abs();
+            }
+        }
+        if anchor.h_ef > 0.0 {
+            n += a.m_k.abs() / anchor.h_ef;
+        }
+        if anchor.c1 > 0.0 {
+            v += a.t_k.abs() / anchor.c1;
+        }
+        v += a.v_k_punch.abs();
+        let eff = (n, v);
         match a.kind.as_str() {
             "permanent" | "prestress" => { g.0 += eff.0; g.1 += eff.1; }
             "accidental" => accidentals.push((a, eff)),
@@ -1831,6 +1971,19 @@ pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
             out.push(DesignEffects {
                 m_ed: 0.0, n_ed: n, v_ed: v, t_ed: 0.0, v_ed_punch: 0.0,
                 combination_id: format!("ULS-6.10b-{}", lead_a.id), situation: "uls".into(),
+            });
+            let (_, _, psi2) = psi_factors(&lead_a.category);
+            let mut n_qp = g.0 + psi2 * lead_e.0;
+            let mut v_qp = g.1 + psi2 * lead_e.1;
+            for (j, (oa, oe)) in variables.iter().enumerate() {
+                if j == lead_i { continue; }
+                let (_, _, p2) = psi_factors(&oa.category);
+                n_qp += p2 * oe.0;
+                v_qp += p2 * oe.1;
+            }
+            out.push(DesignEffects {
+                m_ed: 0.0, n_ed: n_qp, v_ed: v_qp, t_ed: 0.0, v_ed_punch: 0.0,
+                combination_id: format!("SLS-qp-{}", lead_a.id), situation: "sls_qp".into(),
             });
         }
     }
@@ -1886,6 +2039,26 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
         ));
     }
     out.push(s.build());
+
+    if let Some(sls) = governing(&effects, "sls_qp") {
+        let n_sls = sls.n_ed.max(0.0);
+        let n_rd_sls = anchor.a_s * anchor.f_yk / 1.15;
+        let mut ss = CheckResult::assess(format!("en1992-4.steel.sls.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].actions", anchor.id), label.clone()), L("Anchor steel SLS (ψ₂)", "Dübel Stahlzug GZG (ψ₂)"))
+            .utilization(force_n(n_sls), force_n(n_rd_sls.max(1.0)))
+            .annex(annex)
+            .explanation(L(
+                &format!("Anchor SLS: N_Ed,qp={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_sls / 1e3, n_rd_sls / 1e3, sls.combination_id),
+                &format!("Dübel GZG: N_Ed,qp={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_sls / 1e3, n_rd_sls / 1e3, sls.combination_id),
+            ));
+        if n_sls > n_rd_sls {
+            ss = ss.remedy(Remedy::at_least(
+                SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()),
+                area_m2(anchor.a_s), area_m2(anchor.a_s * n_sls / n_rd_sls),
+                L("Increase anchor steel area for SLS.", "Dübelstahlquerschnitt für GZG erhöhen."),
+            ));
+        }
+        out.push(ss.build());
+    }
 
     let n_rd_c = part_4::cone_resistance_n(anchor.f_ck, anchor.h_ef, anchor.cracked);
     let mut c = CheckResult::assess(format!("en1992-4.cone.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.5", "7.2.1.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), L("Concrete cone", "Betonausbruchkegel"))

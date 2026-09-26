@@ -81,7 +81,7 @@
         "completedUnits",
         "totalUnits"
       ],
-      "description": "📈️ How far a booting hub's startup work has come: the stage its trusted-catalog load last reported and that stage's units. Present only while the hub starts, when every component gate is closed with `hub-starting` and the artifact authority with `trusted-catalog-loading`.",
+      "description": "📈️ How far a booting hub's startup work has come: the stage its trusted-catalog load last reported and that stage's units, and — once the load selected its packages — every package's phase, component bytes and codec rows (`catalog`, counts only, no estimate of the time left). Present only while the hub starts, when every component gate is closed with `hub-starting` and the artifact authority with `trusted-catalog-loading`.",
       "properties": {
         "stage": {
           "type": "string",
@@ -95,6 +95,9 @@
         "totalUnits": {
           "type": "integer",
           "minimum": 0
+        },
+        "catalog": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json#/$defs/TrustedCatalogLoadProgressV1"
         }
       }
     },

@@ -4,21 +4,24 @@ package semio.s.norm.en1993.artifact;
 
 message SteelMaterial { string id = 1; string grade = 2; double fy = 3; double fu = 4; double e_modulus = 5; double g_modulus = 6; string subgrade = 7; string kind = 8; }
 message SteelSection { string id = 1; string designation = 2; string kind = 3; double h = 4; double b = 5; double tw = 6; double tf = 7; double r = 8; double area = 9; double shear_area_y = 10; double shear_area_z = 11; double iy = 12; double iz = 13; double it = 14; double iw = 15; double w_el_y = 16; double w_el_z = 17; double w_pl_y = 18; double w_pl_z = 19; double area_net = 20; }
-message SteelMember { string id = 1; string label = 2; string member_type = 3; string section_id = 4; string material_id = 5; double length = 6; double buckling_length_y = 7; double buckling_length_z = 8; double ltb_length = 9; double ltb_restraint_spacing = 10; string load_application = 11; double end_moment_ratio_psi = 12; string moment_diagram = 13; double deflection_limit_ratio = 14; }
+message SteelMember { string id = 1; string label = 2; string member_type = 3; string section_id = 4; string material_id = 5; double length = 6; double buckling_length_y = 7; double buckling_length_z = 8; double ltb_length = 9; double ltb_restraint_spacing = 10; string load_application = 11; double end_moment_ratio_psi = 12; string moment_diagram = 13; double deflection_limit_ratio = 14; string analysis = 15; }
 message DesignAction { double n = 1; double vy = 2; double vz = 3; double my = 4; double mz = 5; double t = 6; }
 message LoadCase { string id = 1; string name = 2; string kind = 3; string category = 4; }
 message MemberAction { string id = 1; string member_id = 2; string load_case_id = 3; DesignAction action = 4; }
-message SteelJoint { string id = 1; string kind = 2; string member_id = 3; string bolt_class = 4; double bolt_diameter = 5; uint32 bolt_rows = 6; uint32 bolts_per_row = 7; double pitch = 8; double end_distance = 9; double edge_distance = 10; uint32 shear_planes = 11; double plate_thickness = 12; double plate_fu = 13; double weld_throat = 14; double weld_length = 15; double weld_fu = 16; string weld_grade = 17; double shear_force = 18; double tension_force = 19; string category = 20; double friction_mu = 21; double preload_force = 22; double slip_factor_ks = 23; uint32 friction_surfaces = 24; }
-message FatigueDetail { string id = 1; string member_id = 2; uint32 category = 3; double delta_sigma = 4; double cycles = 5; string method = 6; }
+message ForceAction { string id = 1; string load_case_id = 2; double force = 3; }
+message JointForceAction { string id = 1; string load_case_id = 2; double shear = 3; double tension = 4; }
+message FatigueBand { string id = 1; double delta_sigma = 2; double cycles = 3; }
+message SteelJoint { string id = 1; string kind = 2; string member_id = 3; string bolt_class = 4; double bolt_diameter = 5; uint32 bolt_rows = 6; uint32 bolts_per_row = 7; double pitch = 8; double gauge = 9; double end_distance = 10; double edge_distance = 11; uint32 shear_planes = 12; double plate_thickness = 13; double plate_fu = 14; double weld_throat = 15; double weld_length = 16; double weld_fu = 17; string weld_grade = 18; repeated JointForceAction actions = 19; string category = 20; double friction_mu = 21; double preload_force = 22; double slip_factor_ks = 23; uint32 friction_surfaces = 24; }
+message FatigueDetail { string id = 1; string member_id = 2; uint32 category = 3; string method = 4; repeated FatigueBand spectrum = 5; }
 message FireExposure { string id = 1; string member_id = 2; string rating = 3; double protection_thickness = 4; double section_factor = 5; double mu0 = 6; double design_temperature = 7; double protection_conductivity = 8; double protection_density = 9; double protection_specific_heat = 10; }
-message ColdFormedMember { string id = 1; double b_bar = 2; double thickness = 3; double k_sigma = 4; double psi = 5; double n_k = 6; double fy = 7; double gross_resistance = 8; }
-message PlatedPanel { string id = 1; double a = 2; double b = 3; double thickness = 4; double sigma_k = 5; double fy = 6; double k_sigma = 7; }
+message ColdFormedMember { string id = 1; double b_bar = 2; double thickness = 3; double k_sigma = 4; double psi = 5; double fy = 6; double gross_resistance = 7; repeated ForceAction actions = 8; }
+message PlatedPanel { string id = 1; double a = 2; double b = 3; double thickness = 4; double fy = 5; double k_sigma = 6; repeated ForceAction actions = 7; }
 message SiloShell { string id = 1; double thickness = 2; double radius = 3; double depth = 4; double k = 5; double gamma = 6; double fy = 7; }
-message TensionComponent { string id = 1; double f_uk = 2; double f_k = 3; double n_k = 4; }
+message TensionComponent { string id = 1; double f_uk = 2; double f_k = 3; repeated ForceAction actions = 4; }
 message BridgeFatigue { string id = 1; string member_id = 2; double lambda = 3; double phi2 = 4; double delta_sigma_p = 5; uint32 category = 6; string method = 7; }
-message TowerLeg { string id = 1; string member_id = 2; double force_coefficient = 3; double dynamic_factor = 4; double n_k = 5; }
-message SteelPile { string id = 1; string section_id = 2; string material_id = 3; double driving_stress = 4; double soil_reduction = 5; double embedded_length = 6; double shaft_perimeter = 7; double n_k = 8; }
-message CraneRunway { string id = 1; string member_id = 2; double wheel_force_k = 3; double wheel_contact_length = 4; double dispersion = 5; double web_thickness = 6; double fy = 7; }
+message TowerLeg { string id = 1; string member_id = 2; double force_coefficient = 3; double dynamic_factor = 4; repeated ForceAction actions = 5; }
+message SteelPile { string id = 1; string section_id = 2; string material_id = 3; double driving_stress = 4; double embedded_length = 5; double shaft_perimeter = 6; repeated ForceAction actions = 7; }
+message CraneRunway { string id = 1; string member_id = 2; double wheel_contact_length = 3; double dispersion = 4; double web_thickness = 5; double fy = 6; double phi = 7; repeated ForceAction actions = 8; }
 
 message En1993Artifact {
   string annex = 1;

@@ -1,34 +1,82 @@
 use super::*;
 
+async fn admitted_wal_bytes(mut bytes: Vec<u8>) -> db_wal::WalBytes {
+    bytes.shrink_to_fit();
+    let mut control = db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000).unwrap();
+    db_wal::WalBytes::try_admit(bytes, (db_storage::DB_IO_OPERATION_PAGES * db_storage::DB_IO_PAGE_BYTES) as u64, &mut control).await.unwrap()
+}
+
+fn decode_control(cancelled: bool, stall: std::time::Duration) -> db_wal::WalCursorControl {
+    db_wal::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(cancelled)), std::time::Instant::now() + stall, 1_000_000).unwrap()
+}
+
+async fn decoded_wal_command(bytes: Vec<u8>, control: &mut db_wal::WalCursorControl) -> Result<protocol::MutationEnvelope, DbError> {
+    let mut admitted = admitted_wal_bytes(bytes).await;
+    let decoded = decode_wal_command(&admitted, control);
+    while admitted.close_step().unwrap().is_some() {}
+    while db_storage::db_io_maintenance_step().unwrap() {}
+    decoded
+}
+
+/// 📜️ The one WAL command decoder reads, in one step, exactly what the protocol codec (the reference
+/// implementation) reads from the same bytes — one-page and gathered multi-page records, many
+/// dependencies, non-ASCII ids — reads a record's id alone, and refuses a cancelled or expired
+/// control, trailing bytes, a truncated record and a count the record cannot hold.
 #[semio_framework_async_macros::async_test]
-async fn sync_retained_reads_resume_neutral_varints_without_renewing_overall_deadline() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../📝️wal/🧫️fixtures/📖️retained-decoder/🔣️.json")).unwrap();
-    let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let expired = std::sync::atomic::AtomicBool::new(false);
-    for row in fixture["varints"].as_array().unwrap().iter().filter(|row| !row["value"].is_null()) {
-        let hex = row["hex"].as_str().unwrap();
-        let input: Vec<_> = (0..hex.len()).step_by(2).map(|offset| u8::from_str_radix(&hex[offset..offset + 2], 16).unwrap()).collect();
-        let mut control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536).unwrap();
-        let mut bytes = db_wal::WalBytes::try_admit(input, 16, &mut control).await.unwrap();
-        let mut cursor = bytes.cursor();
-        control.replenish(std::time::Instant::now(), 1).unwrap();
-        let mut attempts = 0;
-        let actual = database_sync_hello_read(&mut control, &cancelled, &expired, |control| {
-            attempts += 1;
-            cursor.varint(control)
-        })
-        .await
-        .unwrap();
-        assert!(attempts >= 2);
-        assert_eq!(actual, row["value"].as_str().unwrap().parse::<u64>().unwrap());
-        while bytes.close_step().unwrap().is_some() {}
+async fn wal_command_decoder_agrees_with_the_protocol_codec_and_refuses_what_a_record_cannot_hold() {
+    let stall = std::time::Duration::from_secs(30);
+    let mut pages = sample_envelope("wal-real-path", 1).await;
+    pages.dependencies = vec![protocol::MutationId("dependency-a".to_string()), protocol::MutationId("dependency-b".to_string())];
+    pages.diff.payload = vec![0x4d; db_storage::DB_IO_PAGE_BYTES + 17];
+    pages.inverse.payload = vec![0x2a; db_storage::DB_IO_PAGE_BYTES + 1];
+    let mut many = sample_envelope("übergänge-✓", 2).await;
+    many.dependencies = (0..512).map(|index| protocol::MutationId(format!("dependency-{index}"))).collect();
+    many.observed = Some(protocol::MutationId("dependency-7".to_string()));
+    many.target = vec!["features".to_string(), "ü".to_string()];
+    let mut maximum = sample_envelope("maximum", 3).await;
+    maximum.diff.payload = vec![0x6d; (db_storage::DB_IO_OPERATION_PAGES - 1) * db_storage::DB_IO_PAGE_BYTES];
+    for envelope in [sample_envelope("plain", 0).await, pages.clone(), many, maximum] {
+        let encoded = encode_command_envelope(&envelope).await;
+        let reference = protocol::decode_envelope(&encoded, &mut 0).unwrap();
+        let decoded = decoded_wal_command(encoded, &mut decode_control(false, stall)).await.unwrap();
+        assert_eq!(decoded, reference);
+        assert_eq!(decoded, envelope);
+        let mut admitted = admitted_wal_bytes(encode_command_envelope(&envelope).await).await;
+        assert_eq!(wal_command_id(&admitted, &mut decode_control(false, stall)).unwrap(), envelope.mutation_id.0);
+        while admitted.close_step().unwrap().is_some() {}
     }
-    let mut control = db_wal::WalCursorControl::new(cancelled.clone(), std::time::Instant::now(), 1).unwrap();
-    expired.store(true, std::sync::atomic::Ordering::Release);
-    assert!(matches!(database_sync_hello_read(&mut control, &cancelled, &expired, |_| Ok(())).await, Err(DbError::Timeout(_))));
-    expired.store(false, std::sync::atomic::Ordering::Release);
-    cancelled.store(true, std::sync::atomic::Ordering::Release);
-    assert!(matches!(database_sync_hello_read(&mut control, &cancelled, &expired, |_| Ok(())).await, Err(DbError::Closed)));
+    let encoded = encode_command_envelope(&pages).await;
+    assert!(matches!(decoded_wal_command(encoded.clone(), &mut decode_control(true, stall)).await, Err(DbError::Unavailable(message)) if message == "wal cursor cancelled"));
+    assert!(matches!(decoded_wal_command(encoded.clone(), &mut decode_control(false, std::time::Duration::ZERO)).await, Err(DbError::Unavailable(message)) if message == "wal cursor deadline reached"));
+    let mut trailing = encoded.clone();
+    trailing.push(0xff);
+    assert!(matches!(decoded_wal_command(trailing, &mut decode_control(false, stall)).await, Err(DbError::Corrupt(message)) if message == "wal command envelope has trailing bytes"));
+    assert!(matches!(decoded_wal_command(encoded[..encoded.len() - 5].to_vec(), &mut decode_control(false, stall)).await, Err(DbError::Corrupt(_))));
+    let overcounted = vec![1, b'm', 1, b'd', 1, b'a', 0xff, 0xff, 0x03];
+    assert!(matches!(decoded_wal_command(overcounted, &mut decode_control(false, stall)).await, Err(DbError::Corrupt(_))));
+}
+
+/// 🧾️ A retained hello decodes only the commands its replica lacks: every earlier command is
+/// counted and hashed into the same frontier the whole-WAL replay derives, and the last command's
+/// id is the server head whether or not it was decoded.
+#[semio_framework_async_macros::async_test]
+async fn retained_hello_replay_decodes_only_the_replicas_missing_tail() {
+    let storage = MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap();
+    let document: ArtifactId = "doc-tail".into();
+    seed_wal(&storage, &document, 6).await;
+    let ordinary = replay_sync_state(&storage, document.clone()).await.unwrap();
+    let storage = db_storage::DbBackend::Memory(storage);
+    for replica_head in [0u64, 4, 6] {
+        let mut ledger = DatabaseSyncHelloBackingLedger::default();
+        let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let expired = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let progress = std::sync::atomic::AtomicU8::new(0);
+        let mut replay = replay_sync_state_retained(&storage, document.clone(), replica_head, cancelled.clone(), expired.clone(), &mut ledger, &progress).await.unwrap();
+        assert_eq!(replay.frontier, ordinary.frontier);
+        assert_eq!(replay.head_edit_id, "op-5");
+        assert_eq!(replay.tail, ordinary.commands[replica_head as usize..].to_vec());
+        database_sync_hello_close_tail(&mut replay.tail, &mut ledger, &cancelled, &expired).await.unwrap();
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -48,11 +96,11 @@ async fn sync_replay_ignores_neutral_aborted_command_snapshot_and_cas() {
     let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let expired = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let progress = std::sync::atomic::AtomicU8::new(0);
-    let mut retained = replay_sync_state_retained(&storage, document, cancelled, expired, &mut ledger, &progress).await.unwrap();
-    assert!(retained.commands.is_empty());
+    let mut retained = replay_sync_state_retained(&storage, document, 0, cancelled, expired, &mut ledger, &progress).await.unwrap();
+    assert!(retained.tail.is_empty());
     assert_eq!(retained.floor_head_seq, 0);
     assert_eq!(retained.frontier, ordinary.frontier);
-    database_sync_hello_retire_vec(&mut retained.commands, &mut ledger).unwrap();
+    database_sync_hello_retire_vec(&mut retained.tail, &mut ledger).unwrap();
     assert_eq!(ledger.items, 0);
     assert_eq!(ledger.bytes, 0);
 }
@@ -68,6 +116,8 @@ async fn sample_envelope(id: &str, seq: u64) -> protocol::MutationEnvelope {
         document_id: protocol::ArtifactId("doc-1".to_string()),
         actor: protocol::ActorId("actor-1".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
         timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
@@ -738,7 +788,7 @@ fn retained_sync_hello_cumulative_actual_backing_rejects_max_plus_one_without_mu
 #[test]
 fn retained_sync_hello_predebits_envelope_clone_and_overallocation_before_owner_construction() {
     let mut ledger = DatabaseSyncHelloBackingLedger::default();
-    let mut bytes = database_sync_hello_allocate_envelope_vec::<u8>(&mut ledger, 4_096).unwrap();
+    let mut bytes = database_sync_hello_allocate_vec::<u8>(&mut ledger, 4_096, "database sync hello law backing").unwrap();
     assert_eq!(ledger.items, 1);
     assert_eq!(ledger.bytes, bytes.capacity());
     database_sync_hello_retire_vec(&mut bytes, &mut ledger).unwrap();
@@ -747,7 +797,7 @@ fn retained_sync_hello_predebits_envelope_clone_and_overallocation_before_owner_
     assert_ne!(source.as_ptr(), owner.as_ptr());
     assert_eq!(ledger.bytes, owner.capacity());
     let before = (ledger.items, ledger.bytes);
-    assert!(database_sync_hello_allocate_envelope_vec::<u8>(&mut ledger, DATABASE_SYNC_HELLO_MAX_BYTES).is_err());
+    assert!(database_sync_hello_allocate_vec::<u8>(&mut ledger, DATABASE_SYNC_HELLO_MAX_BYTES, "database sync hello law backing").is_err());
     assert_eq!((ledger.items, ledger.bytes), before);
 }
 

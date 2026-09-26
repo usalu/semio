@@ -1,6 +1,6 @@
 
 //! 🔗️ Ticket 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS
-//! lane W0-C: `Version`/`VersionReq` parse+match matrix, dependency-graph toposort/cycle/
+//! lane W0-C: `Version`/`VersionPin` parse+match matrix, dependency-graph toposort/cycle/
 //! validation, and manifest serde round-trips (absent-field defaults included).
 use super::*;
 
@@ -20,7 +20,11 @@ async fn manifest(plugin_id: &str, version: &str, dependencies: Vec<PluginDepend
     }
 }
 
-//#region 🔖️VersionAndVersionReq
+//#region 🔖️VersionAndVersionPin
+fn pin(major: u64, minor: u64, patch: u64) -> VersionPin {
+    VersionPin(Version::new(major, minor, patch))
+}
+
 #[semio_framework_async_macros::async_test]
 async fn version_parses_valid_triples_and_rejects_malformed_input() {
     assert_eq!(Version::parse("1.2.3").unwrap(), Version::new(1, 2, 3));
@@ -40,75 +44,65 @@ async fn version_ord_matches_semver_precedence() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn version_req_parses_all_five_grammar_forms_and_rejects_unknown_operators() {
-    assert_eq!(VersionReq::parse("*").unwrap(), VersionReq::Any);
-    assert_eq!(VersionReq::parse("=1.2.3").unwrap(), VersionReq::Exact(Version::new(1, 2, 3)));
-    assert_eq!(VersionReq::parse("^1.2.3").unwrap(), VersionReq::Caret(Version::new(1, 2, 3)));
-    assert_eq!(VersionReq::parse("~1.2.3").unwrap(), VersionReq::Tilde(Version::new(1, 2, 3)));
-    assert_eq!(VersionReq::parse(">=1.2.3").unwrap(), VersionReq::AtLeast(Version::new(1, 2, 3)));
-    assert!(matches!(VersionReq::parse("1.2.3").unwrap_err(), VersionReqParseError::UnknownOperator(_)));
-    assert!(matches!(VersionReq::parse("^1.x.3").unwrap_err(), VersionReqParseError::Version(_)));
+async fn version_pin_parses_only_the_exact_form_and_refuses_every_range() {
+    assert_eq!(VersionPin::parse("=1.2.3").unwrap(), pin(1, 2, 3));
+    assert_eq!(VersionPin::parse(" =0.1.0 ").unwrap(), pin(0, 1, 0));
+    for range in ["*", "^1.2.3", "~1.2.3", ">=1.2.3", "1.2.3", ""] {
+        assert!(matches!(VersionPin::parse(range).unwrap_err(), VersionPinParseError::NotExact(_)), "{range:?} must be refused");
+    }
+    assert!(matches!(VersionPin::parse("=1.x.3").unwrap_err(), VersionPinParseError::Version(_)));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn version_req_display_round_trips_through_parse() {
-    for raw in ["*", "=1.2.3", "^1.2.3", "~1.2.3", ">=1.2.3"] {
-        let parsed = VersionReq::parse(raw).unwrap();
+async fn version_pin_display_round_trips_through_parse() {
+    for raw in ["=0.1.0", "=1.2.3"] {
+        let parsed = VersionPin::parse(raw).unwrap();
         assert_eq!(parsed.to_string(), raw);
-        assert_eq!(VersionReq::parse(&parsed.to_string()).unwrap(), parsed);
+        assert_eq!(VersionPin::parse(&parsed.to_string()).unwrap(), parsed);
     }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn version_req_matches_exact_and_at_least() {
-    let exact = VersionReq::parse("=1.2.3").unwrap();
+async fn version_pin_matches_only_its_exact_version() {
+    let exact = pin(1, 2, 3);
     assert!(exact.matches(&Version::new(1, 2, 3)));
-    assert!(!exact.matches(&Version::new(1, 2, 4)));
-
-    let at_least = VersionReq::parse(">=1.2.3").unwrap();
-    assert!(at_least.matches(&Version::new(1, 2, 3)));
-    assert!(at_least.matches(&Version::new(2, 0, 0)));
-    assert!(!at_least.matches(&Version::new(1, 2, 2)));
-
-    assert!(VersionReq::Any.matches(&Version::new(0, 0, 0)));
+    for other in [Version::new(1, 2, 4), Version::new(1, 2, 2), Version::new(1, 3, 0), Version::new(2, 0, 0), Version::new(0, 0, 0)] {
+        assert!(!exact.matches(&other), "{exact} must not match {other}");
+    }
+    assert!(exact.matches_raw("1.2.3"));
+    assert!(!exact.matches_raw("1.2"));
+    assert!(!exact.matches_raw("not-a-version"));
 }
 
 #[semio_framework_async_macros::async_test]
-async fn version_req_matches_caret_semantics_across_leading_zero_tiers() {
-    let caret_major = VersionReq::parse("^1.2.3").unwrap();
-    assert!(caret_major.matches(&Version::new(1, 2, 3)));
-    assert!(caret_major.matches(&Version::new(1, 9, 0)), "caret allows minor/patch bumps under the same major");
-    assert!(!caret_major.matches(&Version::new(1, 2, 2)), "caret forbids going below the required version");
-    assert!(!caret_major.matches(&Version::new(2, 0, 0)), "caret forbids a major bump");
-
-    let caret_zero_major = VersionReq::parse("^0.2.3").unwrap();
-    assert!(caret_zero_major.matches(&Version::new(0, 2, 3)));
-    assert!(caret_zero_major.matches(&Version::new(0, 2, 9)), "0.x caret allows patch bumps within the same minor");
-    assert!(!caret_zero_major.matches(&Version::new(0, 3, 0)), "0.x caret forbids a minor bump");
-
-    let caret_zero_minor = VersionReq::parse("^0.0.3").unwrap();
-    assert!(caret_zero_minor.matches(&Version::new(0, 0, 3)));
-    assert!(!caret_zero_minor.matches(&Version::new(0, 0, 4)), "0.0.x caret pins the exact patch");
+async fn version_pin_of_tree_accepts_only_a_strict_triple() {
+    assert_eq!(VersionPin::of_tree("0.1.0"), pin(0, 1, 0));
+    assert_eq!(VersionPin::of_tree("12.30.4"), pin(12, 30, 4));
+    for malformed in ["0.1", "0.1.0.1", "0.1.0-alpha", "", ".1.0", "0..0"] {
+        assert!(std::panic::catch_unwind(|| VersionPin::of_tree(malformed)).is_err(), "{malformed:?} must not pin");
+    }
+    assert_eq!(crate::tree_pin!(), VersionPin::parse(concat!("=", env!("CARGO_PKG_VERSION"))).unwrap());
 }
 
 #[semio_framework_async_macros::async_test]
-async fn version_req_matches_tilde_semantics() {
-    let tilde = VersionReq::parse("~1.2.3").unwrap();
-    assert!(tilde.matches(&Version::new(1, 2, 3)));
-    assert!(tilde.matches(&Version::new(1, 2, 9)), "tilde allows patch bumps");
-    assert!(!tilde.matches(&Version::new(1, 3, 0)), "tilde forbids a minor bump");
-    assert!(!tilde.matches(&Version::new(1, 2, 2)), "tilde forbids going below the required patch");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn plugin_dependency_serde_round_trips_as_a_plain_string() {
-    let dependency = PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap());
+async fn plugin_dependency_serde_round_trips_as_an_exact_pin_string() {
+    let dependency = PluginDependency::new("cad", pin(1, 0, 0));
     let json = serde_json::to_value(&dependency).unwrap();
-    assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "^1.0.0" }));
+    assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "=1.0.0" }));
     let round_tripped: PluginDependency = serde_json::from_value(json).unwrap();
     assert_eq!(round_tripped, dependency);
+    assert_eq!(<PluginDependency as FromValue>::from_value(dependency.to_value()).unwrap(), dependency);
 }
-//#endregion 🔖️VersionAndVersionReq
+
+#[semio_framework_async_macros::async_test]
+async fn a_range_dependency_is_refused_on_every_decode_path() {
+    for range in ["*", "^0.1.0", "~0.1.0", ">=0.1.0", "0.1.0"] {
+        assert!(serde_json::from_value::<PluginDependency>(serde_json::json!({ "pluginId": "cad", "version": range })).is_err(), "serde must refuse {range:?}");
+        let value = DslValue::object([("pluginId".to_string(), DslValue::String("cad".into())), ("version".to_string(), DslValue::String(range.into()))]);
+        assert!(<PluginDependency as FromValue>::from_value(value).is_err(), "the descriptor codec must refuse {range:?}");
+    }
+}
+//#endregion 🔖️VersionAndVersionPin
 
 //#region 🔖️DependencyGraphTests
 #[semio_framework_async_macros::async_test]
@@ -116,9 +110,9 @@ async fn resolve_load_order_toposorts_a_diamond() {
     // base <- {left, right} <- top: two valid topological orders exist; the tie-break must
     // deterministically pick `left` before `right`.
     let manifests = vec![
-        manifest("top", "1.0.0", vec![PluginDependency::new("left", VersionReq::Any), PluginDependency::new("right", VersionReq::Any)]).await,
-        manifest("left", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]).await,
-        manifest("right", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]).await,
+        manifest("top", "1.0.0", vec![PluginDependency::new("left", pin(1, 0, 0)), PluginDependency::new("right", pin(1, 0, 0))]).await,
+        manifest("left", "1.0.0", vec![PluginDependency::new("base", pin(1, 0, 0))]).await,
+        manifest("right", "1.0.0", vec![PluginDependency::new("base", pin(1, 0, 0))]).await,
         manifest("base", "1.0.0", vec![]).await,
     ];
     let order = resolve_load_order(&manifests).unwrap();
@@ -127,7 +121,7 @@ async fn resolve_load_order_toposorts_a_diamond() {
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_load_order_is_deterministic_regardless_of_input_order() {
-    let forward = vec![manifest("a", "1.0.0", vec![]).await, manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await, manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await];
+    let forward = vec![manifest("a", "1.0.0", vec![]).await, manifest("b", "1.0.0", vec![PluginDependency::new("a", pin(1, 0, 0))]).await, manifest("c", "1.0.0", vec![PluginDependency::new("a", pin(1, 0, 0))]).await];
     let mut shuffled = forward.clone();
     shuffled.reverse();
     assert_eq!(resolve_load_order(&forward).unwrap(), resolve_load_order(&shuffled).unwrap());
@@ -136,24 +130,24 @@ async fn resolve_load_order_is_deterministic_regardless_of_input_order() {
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_load_order_reports_missing_dependency() {
-    let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", VersionReq::Any)]).await];
+    let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", pin(1, 0, 0))]).await];
     let error = resolve_load_order(&manifests).unwrap_err();
     assert_eq!(error, DependencyGraphError::MissingDependency { plugin_id: "a".into(), depends_on: "ghost".into() });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_load_order_reports_version_mismatch() {
-    let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap())]).await, manifest("b", "1.0.0", vec![]).await];
+    let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("b", pin(2, 0, 0))]).await, manifest("b", "1.0.0", vec![]).await];
     let error = resolve_load_order(&manifests).unwrap_err();
-    assert_eq!(error, DependencyGraphError::VersionMismatch { plugin_id: "a".into(), depends_on: "b".into(), required: "^2.0.0".into(), actual: "1.0.0".into() });
+    assert_eq!(error, DependencyGraphError::VersionMismatch { plugin_id: "a".into(), depends_on: "b".into(), required: "=2.0.0".into(), actual: "1.0.0".into() });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn resolve_load_order_names_every_member_of_a_cycle() {
     let manifests = vec![
-        manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]).await,
-        manifest("b", "1.0.0", vec![PluginDependency::new("c", VersionReq::Any)]).await,
-        manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await,
+        manifest("a", "1.0.0", vec![PluginDependency::new("b", pin(1, 0, 0))]).await,
+        manifest("b", "1.0.0", vec![PluginDependency::new("c", pin(1, 0, 0))]).await,
+        manifest("c", "1.0.0", vec![PluginDependency::new("a", pin(1, 0, 0))]).await,
     ];
     let error = resolve_load_order(&manifests).unwrap_err();
     match error {
@@ -176,9 +170,9 @@ async fn resolve_load_order_accepts_a_self_satisfying_empty_graph() {
 async fn dependents_returns_direct_dependents_sorted() {
     let manifests = vec![
         manifest("a", "1.0.0", vec![]).await,
-        manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await,
-        manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await,
-        manifest("d", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]).await,
+        manifest("b", "1.0.0", vec![PluginDependency::new("a", pin(1, 0, 0))]).await,
+        manifest("c", "1.0.0", vec![PluginDependency::new("a", pin(1, 0, 0))]).await,
+        manifest("d", "1.0.0", vec![PluginDependency::new("b", pin(1, 0, 0))]).await,
     ];
     assert_eq!(dependents(&manifests, "a"), vec!["b".to_string(), "c".to_string()]);
     assert_eq!(dependents(&manifests, "b"), vec!["d".to_string()]);
@@ -237,7 +231,7 @@ async fn artifact_contribution_descriptor_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn plugin_manifest_with_dependencies_and_contributions_round_trips() {
     let manifest = PluginManifest {
-        dependencies: vec![PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap())],
+        dependencies: vec![PluginDependency::new("cad", pin(1, 0, 0))],
         contributions: vec![ArtifactContributionDescriptor { artifact_kind: "s.cad.building".into(), mutations: Vec::new(), inferences: Vec::new() }],
         ..manifest("aec-building", "0.1.0", Vec::new()).await
     };

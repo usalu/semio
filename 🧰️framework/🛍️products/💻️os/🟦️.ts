@@ -140,6 +140,20 @@ export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
 /** 🛰️ Dev-server-proxied backbone endpoint path for `file://`/`folder://` uris; shared with the dev host shim (`framework/os/dev/script.ts`) so both stay in sync on the same literal. */
 export const BACKBONE_ENDPOINT_PATH = "/semio-backbone";
 
+/** 🔀️ The dev serve's stream channel (`semio.io.stream-mux/v1`): the ONE WebSocket a page holds to its serve origin for every
+ * long-lived stream, so none of them occupies one of the six HTTP/1.1 connections a browser allows per origin. */
+export const STREAM_MUX_PATH = "/semio-stream-mux";
+
+/** 🛣️ The routes the dev serve publishes on {@link STREAM_MUX_PATH}: staged plugin availability (snapshot + `built`),
+ * installed extensions (snapshot + `installed`/`uninstalled`), one plugin's activation job (progress, cancellation) and the
+ * change notices of one `folder://` backbone. */
+export const DEV_STREAM_ROUTES = Object.freeze({
+  pluginModules: "plugin-modules.watch",
+  extensionModules: "extension-modules.watch",
+  pluginActivation: "plugin-modules.activation",
+  backboneFolder: "backbone.folder",
+} as const);
+
 export type BackboneKind = "file" | "folder" | "remote" | "unknown";
 
 export type ArtifactBackboneRef = {
@@ -4458,12 +4472,24 @@ export function documentLinkTransition(link: DocumentLink, event: DocumentLinkEv
   if (event.kind === "refused") return { kind: "revoked", atMs: event.nowMs };
   if (event.kind === "restored") return { kind: "linked" };
   if (event.kind === "failed") {
-    if (link.kind === "linked") return { kind: "unlinked", sinceMs: event.nowMs, backoffMs: policy.reconnectMinMs, retryAtMs: event.nowMs + policy.reconnectMinMs };
+    if (link.kind === "linked") return { kind: "unlinked", sinceMs: event.nowMs, backoffMs: policy.reconnectMinMs, retryAtMs: documentLinkRetryAtMs(event.nowMs, event.nowMs, policy.reconnectMinMs, policy) };
     if (event.nowMs - link.sinceMs >= policy.shortageBoundMs) return { kind: "expired", sinceMs: link.sinceMs, atMs: event.nowMs };
     const backoffMs = Math.min(Math.max(link.backoffMs * 2, policy.reconnectMinMs), policy.reconnectMaxMs);
-    return { kind: "unlinked", sinceMs: link.sinceMs, backoffMs, retryAtMs: event.nowMs + backoffMs };
+    return { kind: "unlinked", sinceMs: link.sinceMs, backoffMs, retryAtMs: documentLinkRetryAtMs(link.sinceMs, event.nowMs, backoffMs, policy) };
   }
-  return link.kind === "unlinked" && event.nowMs - link.sinceMs >= policy.shortageBoundMs ? { kind: "expired", sinceMs: link.sinceMs, atMs: event.nowMs } : link;
+  return link.kind === "unlinked" && event.nowMs >= documentLinkCeilingAtMs(link.sinceMs, policy) ? { kind: "expired", sinceMs: link.sinceMs, atMs: event.nowMs } : link;
+}
+
+/** 🔁️ When the next attempt of a shortage that began at `sinceMs` is due: one backoff after `nowMs`, never past the bound — twin of
+ * the kernel's `DocumentLinkShortagePolicy::retry_at`. */
+export function documentLinkRetryAtMs(sinceMs: number, nowMs: number, backoffMs: number, policy: DocumentLinkShortagePolicy = DOCUMENT_LINK_SHORTAGE_POLICY): number {
+  return Math.min(nowMs + backoffMs, sinceMs + policy.shortageBoundMs);
+}
+
+/** ⏳️ The instant a shortage that began at `sinceMs` ends although no attempt answered: the bound plus one capped backoff — twin of
+ * the kernel's `DocumentLinkShortagePolicy::ceiling_at`. */
+export function documentLinkCeilingAtMs(sinceMs: number, policy: DocumentLinkShortagePolicy = DOCUMENT_LINK_SHORTAGE_POLICY): number {
+  return sinceMs + policy.shortageBoundMs + policy.reconnectMaxMs;
 }
 
 /** 🚦️ The status code a shell shows for a link. */
@@ -4476,9 +4502,9 @@ export function documentLinkAdmitsLocalEdits(link: DocumentLink): boolean {
   return link.kind === "linked" || link.kind === "unlinked";
 }
 
-/** ⏳️ When an unlinked link expires unless it relinks first. */
+/** ⏳️ The latest instant an unlinked link can live: its ceiling. A failed attempt at the bound ends it earlier. */
 export function documentLinkExpiresAtMs(link: DocumentLink, policy: DocumentLinkShortagePolicy = DOCUMENT_LINK_SHORTAGE_POLICY): number | undefined {
-  return link.kind === "unlinked" ? link.sinceMs + policy.shortageBoundMs : undefined;
+  return link.kind === "unlinked" ? documentLinkCeilingAtMs(link.sinceMs, policy) : undefined;
 }
 
 if (import.meta.vitest) {
@@ -4486,6 +4512,53 @@ if (import.meta.vitest) {
   await registerDocumentLinkShortageTests(import.meta.vitest, { DOCUMENT_LINK_ACCESS_REFUSED_STATUSES, DOCUMENT_LINK_SHORTAGE_POLICY, DOCUMENT_LINK_STATUS_TEXT, documentLinkAdmitsLocalEdits, documentLinkExpiresAtMs, documentLinkOpened, documentLinkStatus, documentLinkTransition });
 }
 //#endregion 🔌️DocumentLinkShortage
+
+//#region 🔁️DocumentEchoSuppression
+/** 🔁️ The envelopes of one server `Commands` frame a replica applies — the TS twin of the kernel's `admit_remote_envelopes`. Echo
+ * suppression is by operation identity, never by frame origin: an envelope is applied unless its id is one this replica authored or
+ * already applied, and every admitted id is recorded. A frame is never discarded whole — the hub's hello catch-up tail carries anyone's
+ * edits, the joiner's own earlier device included (ticket 26/09/23 session 12, run s12i: late joiners saw no history).
+ * @see ./🔨️modules/🏪️store/🔄️sync/🧬️schema/document-echo-suppression/🔣️.json */
+export function admitRemoteEnvelopes<T>(known: Set<string>, envelopes: readonly T[], idOf: (envelope: T) => string): T[] {
+  return envelopes.filter((envelope) => {
+    const id = idOf(envelope);
+    if (!id || known.has(id)) return false;
+    known.add(id);
+    return true;
+  });
+}
+
+/** 🔁️ Records the operations this replica authored, so their echo is never applied a second time. */
+export function noteAuthoredEnvelopeIds(known: Set<string>, ids: Iterable<string>): void {
+  for (const id of ids) if (id) known.add(id);
+}
+
+if (import.meta.vitest) {
+  const { registerDocumentEchoSuppressionTests } = await import("./🧪️tests/🔁️document-echo-suppression/🟦️.ts");
+  await registerDocumentEchoSuppressionTests(import.meta.vitest, { admitRemoteEnvelopes, noteAuthoredEnvelopeIds });
+}
+//#endregion 🔁️DocumentEchoSuppression
+
+//#region 🔑️DirectoryAccessChanged
+if (import.meta.vitest) {
+  const { registerDirectoryAccessChangedTests } = await import("./🧪️tests/🔑️directory-access-changed/🟦️.ts");
+  await registerDirectoryAccessChangedTests(import.meta.vitest);
+}
+//#endregion 🔑️DirectoryAccessChanged
+
+//#region 📤️OutboundAnnouncement
+if (import.meta.vitest) {
+  const { registerOutboundAnnouncementTests } = await import("./🧪️tests/📤️outbound-announcement/🟦️.ts");
+  await registerOutboundAnnouncementTests(import.meta.vitest);
+}
+//#endregion 📤️OutboundAnnouncement
+
+//#region ⚔️ConcurrentWrite
+if (import.meta.vitest) {
+  const { registerConcurrentWriteTests } = await import("./🧪️tests/⚔️concurrent-write/🟦️.ts");
+  await registerConcurrentWriteTests(import.meta.vitest);
+}
+//#endregion ⚔️ConcurrentWrite
 
 // 🎫️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet `web-directory`, coordinator
 // follow-up on finding 2 — CLAUDE.md "support short connection-shortages [...] not freeze the app"
@@ -5171,6 +5244,7 @@ export {
   HUB_SESSION_MINT_REQUEST_MAX_BYTES,
   HUB_SESSION_MINT_RESPONSE_MAX_BYTES,
   HUB_SESSION_ME_PATH_V1,
+  HUB_SESSION_SIGN_OUT_PATH_V1,
   HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES,
   HUB_SIGN_IN_EMAIL_MAX_BYTES,
   HUB_SIGN_IN_EMAIL_MIN_BYTES,

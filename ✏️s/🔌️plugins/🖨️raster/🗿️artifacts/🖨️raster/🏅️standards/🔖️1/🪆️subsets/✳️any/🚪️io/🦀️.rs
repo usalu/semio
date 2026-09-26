@@ -421,7 +421,8 @@ fn collect_placements(layers: &[RasterLayerNode], assets: &crate::RasterOwnedMap
                 if box_width <= 0.0 || box_height <= 0.0 || image.width == 0 || image.height == 0 {
                     continue;
                 }
-                out.push(RasterPlacement { image, matrix: RasterAffine::from_transform(transform).then(parent), width: box_width, height: box_height, alpha: parent_alpha * opacity, blend: RasterBlend::parse(blend_mode)? });
+                let centered=RasterAffine {e:-box_width/2.0,f:-box_height/2.0,..RasterAffine::IDENTITY};
+                out.push(RasterPlacement { image, matrix: centered.then(RasterAffine::from_transform(transform)).then(parent), width: box_width, height: box_height, alpha: parent_alpha * opacity, blend: RasterBlend::parse(blend_mode)? });
             }
             RasterLayerNode::Group { visible, opacity, blend_mode, transform, children, .. } => {
                 if !*visible {
@@ -452,9 +453,9 @@ fn collect_placements(layers: &[RasterLayerNode], assets: &crate::RasterOwnedMap
 /// `s.stdio.semio/v1/image` snapshot — the ONE hub every real pixel export in this subset then
 /// hands to stdio's own png/bmp/gif/jpg/tiff serializer.
 ///
-/// 📐️ Canvas: the union of every placement's device-space axis-aligned bounding box, anchored at
-/// the origin (a layer painted at a negative coordinate is clipped, matching the editor's own
-/// origin-anchored composite viewport). Sampling is nearest-neighbour through each placement's
+/// 📐️ Canvas: the union of every placement's device-space axis-aligned bounding box, including
+/// negative coordinates. Layers are centered on their transforms, matching the editor compositor.
+/// Sampling is nearest-neighbour through each placement's
 /// inverse matrix, so translation, non-uniform scale and rotation are all honoured exactly.
 ///
 /// 🚧️ Honest limitations, each of which is an `Err` and never a silent approximation: a visible
@@ -469,8 +470,10 @@ pub fn raster_composite_image(document: &RasterSnapshot) -> Result<SemioImageSna
         return Err("no visible pixel layer with materialized image content: there is nothing to flatten into a raster composite".into());
     }
 
-    let mut max_x = 0.0f64;
-    let mut max_y = 0.0f64;
+    let mut min_x = f64::INFINITY;
+    let mut min_y = f64::INFINITY;
+    let mut max_x = f64::NEG_INFINITY;
+    let mut max_y = f64::NEG_INFINITY;
     for placement in &placements {
         for (x, y) in [(0.0, 0.0), (placement.width, 0.0), (0.0, placement.height), (placement.width, placement.height)] {
             let (device_x, device_y) = placement.matrix.apply(x, y);
@@ -479,10 +482,12 @@ pub fn raster_composite_image(document: &RasterSnapshot) -> Result<SemioImageSna
             }
             max_x = max_x.max(device_x);
             max_y = max_y.max(device_y);
+            min_x = min_x.min(device_x);
+            min_y = min_y.min(device_y);
         }
     }
-    let width = (max_x.ceil().max(1.0)) as u64;
-    let height = (max_y.ceil().max(1.0)) as u64;
+    let width = ((max_x-min_x).ceil().max(1.0)) as u64;
+    let height = ((max_y-min_y).ceil().max(1.0)) as u64;
     if width > RASTER_COMPOSITE_MAX_SIDE as u64 || height > RASTER_COMPOSITE_MAX_SIDE as u64 || width * height > RASTER_COMPOSITE_MAX_PIXELS {
         return Err(format!("composite canvas {width}x{height} exceeds this encoder's {RASTER_COMPOSITE_MAX_SIDE} px side / {RASTER_COMPOSITE_MAX_PIXELS} px area budget"));
     }
@@ -505,13 +510,13 @@ pub fn raster_composite_image(document: &RasterSnapshot) -> Result<SemioImageSna
             min_device = (min_device.0.min(device_x), min_device.1.min(device_y));
             max_device = (max_device.0.max(device_x), max_device.1.max(device_y));
         }
-        let x0 = min_device.0.floor().max(0.0) as u32;
-        let y0 = min_device.1.floor().max(0.0) as u32;
-        let x1 = (max_device.0.ceil().max(0.0) as u64).min(width as u64) as u32;
-        let y1 = (max_device.1.ceil().max(0.0) as u64).min(height as u64) as u32;
+        let x0 = (min_device.0-min_x).floor().max(0.0) as u32;
+        let y0 = (min_device.1-min_y).floor().max(0.0) as u32;
+        let x1 = ((max_device.0-min_x).ceil().max(0.0) as u64).min(width as u64) as u32;
+        let y1 = ((max_device.1-min_y).ceil().max(0.0) as u64).min(height as u64) as u32;
         for y in y0..y1 {
             for x in x0..x1 {
-                let (u, v) = inverse.apply(x as f64 + 0.5, y as f64 + 0.5);
+                let (u, v) = inverse.apply(x as f64 + 0.5 + min_x, y as f64 + 0.5 + min_y);
                 if u < 0.0 || v < 0.0 || u >= placement.width || v >= placement.height {
                     continue;
                 }

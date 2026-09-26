@@ -241,6 +241,9 @@ fn gis_inference_sqlite_concurrent_connections_have_one_durable_request_winner()
     std::fs::remove_file(&path).unwrap();
 }
 
+/// ⏱️ One operation control bounds ONE query: its 1 000 ms lifetime is an `Instant` deadline, so
+/// sharing a single control across the restart, the WAL witness build and the reconciliation
+/// measures fleet wall clock instead of bounding a read, and answers `Expired` on load alone.
 #[tokio::test]
 async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_exactly_once() {
     let fixture = fixture();
@@ -280,9 +283,6 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
     assert!(ledger.pending_approvals(None, &super::super::InferenceOperationControlV1::new(1000, 5).unwrap()).unwrap().rows.is_empty());
     drop(ledger);
     let reopened = InferenceJobLedgerV1::open(&path).unwrap();
-    // ⏱️ One operation control bounds ONE query: its 1 000 ms lifetime is an `Instant` deadline, so
-    // sharing a single control across the restart, the WAL witness build and the reconciliation
-    // measures fleet wall clock instead of bounding a read, and answers `Expired` on load alone.
     let control = || super::super::InferenceOperationControlV1::new(1000, 5).unwrap();
     assert!(reopened.pending_approvals(None, &control()).unwrap().rows.is_empty(), "an abandoned request survives restart without blocking the document");
     let revived = reopened.prepare_approval(&receipt.job_id, &selected, &hash, &command, 1006).unwrap();

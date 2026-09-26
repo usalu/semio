@@ -16,6 +16,8 @@ use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::io::Write as _;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::{Arc, Mutex, OnceLock};
 use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
 use ui_wgpu::wgpu::Rect;
 use ui_wgpu::wgpu::Rgba;
@@ -376,6 +378,165 @@ struct InkEditState {
 }
 
 #[derive(Clone, Debug, Default)]
+struct HostTemporalPresentation {
+    request: Option<ui_contract::HostTemporalFormatRequestV1>,
+    request_generation: u64,
+    pending_generation: Option<u64>,
+    candidate: Option<ui_contract::HostTemporalFormatReplyV1>,
+    candidate_epoch: Option<u64>,
+    queued_candidate: Option<ui_contract::HostTemporalFormatReplyV1>,
+    accepted: Option<ui_contract::HostTemporalFormatReplyV1>,
+    last_request_ms: f64,
+}
+
+fn host_temporal_requests_match(left: &ui_contract::HostTemporalFormatRequestV1, right: &ui_contract::HostTemporalFormatRequestV1) -> bool {
+    left.values == right.values && (left.now_ms == right.now_ms || !left.values.iter().any(|value| value.format == ui_contract::HostTemporalFormatV1::Relative))
+}
+
+impl HostTemporalPresentation {
+    fn observe(&mut self, request: &ui_contract::HostTemporalFormatRequestV1) -> Option<u64> {
+        let relative = request.values.iter().any(|value| value.format == ui_contract::HostTemporalFormatV1::Relative);
+        let values_changed = self.request.as_ref().is_none_or(|current| current.values != request.values);
+        if values_changed {
+            self.request = Some(request.clone());
+            self.request_generation = self.request_generation.wrapping_add(1).max(1);
+            self.pending_generation = None;
+            self.candidate = None;
+            self.candidate_epoch = None;
+            self.queued_candidate = None;
+            self.accepted = None;
+            self.last_request_ms = 0.0;
+        } else if relative && self.request.as_ref().is_some_and(|current| current.now_ms.abs_diff(request.now_ms) >= 1_000) && self.pending_generation.is_none() && self.candidate.is_none() && self.queued_candidate.is_none() {
+            self.request = Some(request.clone());
+        }
+        if relative && self.request.as_ref().is_some_and(|current| current.now_ms != request.now_ms) {
+            return None;
+        }
+        if request.values.is_empty() || self.pending_generation.is_some() || self.candidate.is_some() || self.queued_candidate.is_some() {
+            return None;
+        }
+        let now = crate::app_now_ms();
+        if self.last_request_ms > 0.0 && now - self.last_request_ms < 1_000.0 {
+            return None;
+        }
+        if self.accepted.is_some() && now - self.last_request_ms < if relative { 1_000.0 } else { 60_000.0 } {
+            return None;
+        }
+        self.request_generation = self.request_generation.wrapping_add(1).max(1);
+        self.pending_generation = Some(self.request_generation);
+        self.last_request_ms = now;
+        Some(self.request_generation)
+    }
+
+    fn latest_profile_revision(&self) -> u64 {
+        self.accepted.iter().chain(self.candidate.iter()).chain(self.queued_candidate.iter()).map(|reply| reply.profile.profile_revision).max().unwrap_or(0)
+    }
+
+    fn publish(&mut self, generation: u64, request: &ui_contract::HostTemporalFormatRequestV1, reply: ui_contract::HostTemporalFormatReplyV1) -> bool {
+        if self.pending_generation != Some(generation) || self.request.as_ref().is_none_or(|current| !host_temporal_requests_match(current, request)) {
+            return false;
+        }
+        self.pending_generation = None;
+        if !reply.matches(request) || reply.profile.profile_revision < self.latest_profile_revision() {
+            return false;
+        }
+        if self.candidate_epoch.is_some() {
+            self.queued_candidate = Some(reply);
+        } else {
+            self.candidate = Some(reply);
+        }
+        true
+    }
+
+    fn refuse(&mut self, generation: u64) {
+        if self.pending_generation == Some(generation) {
+            self.pending_generation = None;
+        }
+    }
+
+    fn visible(&self) -> Option<&ui_contract::HostTemporalFormatReplyV1> {
+        self.candidate.as_ref().or(self.accepted.as_ref())
+    }
+
+    fn seal(&mut self, epoch: u64) {
+        if self.candidate.is_some() && self.candidate_epoch.is_none() {
+            self.candidate_epoch = Some(epoch);
+        }
+    }
+
+    fn acknowledge(&mut self, epoch: u64) {
+        if self.candidate_epoch != Some(epoch) {
+            return;
+        }
+        self.accepted = self.candidate.take();
+        self.candidate = self.queued_candidate.take();
+        self.candidate_epoch = None;
+    }
+
+    fn discard(&mut self, epoch: u64) {
+        if self.candidate_epoch == Some(epoch) {
+            self.candidate_epoch = None;
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum VfsAccessibilityControlKind {
+    Row,
+    Chevron,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct VfsAccessibilityControl {
+    pub(crate) key: String,
+    pub(crate) row_id: String,
+    pub(crate) label: String,
+    pub(crate) kind: VfsAccessibilityControlKind,
+    pub(crate) rect: Rect,
+    pub(crate) expanded: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default)]
+struct VfsAccessibilityPresentation {
+    candidate: Option<Vec<VfsAccessibilityControl>>,
+    candidate_epoch: Option<u64>,
+    queued_candidate: Option<Vec<VfsAccessibilityControl>>,
+    accepted: Vec<VfsAccessibilityControl>,
+}
+
+impl VfsAccessibilityPresentation {
+    fn stage(&mut self, controls: Vec<VfsAccessibilityControl>) {
+        if self.candidate_epoch.is_some() {
+            self.queued_candidate = Some(controls);
+        } else {
+            self.candidate = Some(controls);
+        }
+    }
+
+    fn seal(&mut self, epoch: u64) {
+        if self.candidate.is_some() && self.candidate_epoch.is_none() {
+            self.candidate_epoch = Some(epoch);
+        }
+    }
+
+    fn acknowledge(&mut self, epoch: u64) {
+        if self.candidate_epoch != Some(epoch) {
+            return;
+        }
+        self.accepted = self.candidate.take().unwrap_or_default();
+        self.candidate = self.queued_candidate.take();
+        self.candidate_epoch = None;
+    }
+
+    fn discard(&mut self, epoch: u64) {
+        if self.candidate_epoch == Some(epoch) {
+            self.candidate = self.queued_candidate.take();
+            self.candidate_epoch = None;
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default)]
 struct SceneSurfaceState {
     mount_owner: Option<crate::interpreter::ScenePointerTarget>,
     engine_token: Option<engine_canvas::EngineSurfaceToken>,
@@ -406,6 +567,8 @@ struct SceneSurfaceState {
     ink_marquee_points: Vec<(f32, f32)>,
     ink_edit: Option<InkEditState>,
     text_editor_ui: TextEditorUiState,
+    host_temporal: HostTemporalPresentation,
+    vfs_accessibility: VfsAccessibilityPresentation,
     //#region GenericPointerDispatch
     last_pointer_pos: (f32, f32),
     //#endregion GenericPointerDispatch
@@ -463,6 +626,23 @@ fn retire_scene_target(target: &mut Option<crate::interpreter::ScenePointerTarge
         }
     }
     *target = None;
+    true
+}
+
+fn retire_host_temporal_reply(reply: &mut Option<ui_contract::HostTemporalFormatReplyV1>, text: &mut String) -> bool {
+    let Some(owner) = reply.as_mut() else { return false };
+    if let Some(label) = owner.labels.pop() {
+        *text = label.text;
+        return true;
+    }
+    if owner.labels.capacity() != 0 {
+        owner.labels = Vec::new();
+        return true;
+    }
+    if retire_scene_text(&mut owner.profile.locale) || retire_scene_text(&mut owner.profile.time_zone) {
+        return true;
+    }
+    *reply = None;
     true
 }
 
@@ -600,6 +780,49 @@ impl SceneSurfaceRetirement {
             return false;
         }
         let state = &mut self.owner.value;
+        for reply in [&mut state.host_temporal.candidate, &mut state.host_temporal.queued_candidate, &mut state.host_temporal.accepted] {
+            if retire_host_temporal_reply(reply, &mut self.text) {
+                return false;
+            }
+        }
+        if let Some(request) = state.host_temporal.request.as_mut() {
+            if let Some(value) = request.values.pop() {
+                self.text = value.id;
+                return false;
+            }
+            if request.values.capacity() != 0 {
+                request.values = Vec::new();
+                return false;
+            }
+            state.host_temporal.request = None;
+            return false;
+        }
+        for controls in [&mut state.vfs_accessibility.candidate, &mut state.vfs_accessibility.queued_candidate] {
+            if let Some(entries) = controls.as_mut() {
+                if let Some(entry) = entries.pop() {
+                    self.values.push(SceneValueRetirement::Text(entry.key));
+                    self.values.push(SceneValueRetirement::Text(entry.row_id));
+                    self.values.push(SceneValueRetirement::Text(entry.label));
+                    return false;
+                }
+                if entries.capacity() != 0 {
+                    *entries = Vec::new();
+                    return false;
+                }
+                *controls = None;
+                return false;
+            }
+        }
+        if let Some(entry) = state.vfs_accessibility.accepted.pop() {
+            self.values.push(SceneValueRetirement::Text(entry.key));
+            self.values.push(SceneValueRetirement::Text(entry.row_id));
+            self.values.push(SceneValueRetirement::Text(entry.label));
+            return false;
+        }
+        if state.vfs_accessibility.accepted.capacity() != 0 {
+            state.vfs_accessibility.accepted = Vec::new();
+            return false;
+        }
         if let Some(draft) = state.text_editor_ui.rename.as_mut() {
             if retire_scene_text(&mut draft.text) {
                 return false;
@@ -1207,6 +1430,26 @@ static SCENE_CAMERA_DISPATCH_DEADLINES_MS: WorkerCell<HashMap<String, SceneCamer
 #[cfg(not(target_arch = "wasm32"))]
 static SCENE_CAMERA_DISPATCH_FAULT: WorkerCell<Option<&'static str>> = WorkerCell::new();
 
+#[cfg(not(target_arch = "wasm32"))]
+pub trait NativeHostTemporalFormatter: Send + Sync {
+    fn format_temporal_values(&self, request: &ui_contract::HostTemporalFormatRequestV1) -> Result<ui_contract::HostTemporalFormatReplyV1, String>;
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static NATIVE_HOST_TEMPORAL_FORMATTER: OnceLock<Mutex<Option<Arc<dyn NativeHostTemporalFormatter>>>> = OnceLock::new();
+
+/// 🖥️ Installs the native application's operating-system temporal formatter. The renderer owns only
+/// the neutral request/reply and never synthesizes locale or time-zone data.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn install_native_host_temporal_formatter(formatter: Arc<dyn NativeHostTemporalFormatter>) {
+    *NATIVE_HOST_TEMPORAL_FORMATTER.get_or_init(|| Mutex::new(None)).lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(formatter);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn native_host_temporal_formatter() -> Option<Arc<dyn NativeHostTemporalFormatter>> {
+    NATIVE_HOST_TEMPORAL_FORMATTER.get_or_init(|| Mutex::new(None)).lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+}
+
 #[derive(Clone, Debug, PartialEq)]
 enum SceneListTransferSource {
     TableRow { row_id: String, mime: String, payload: String },
@@ -1372,13 +1615,9 @@ pub(crate) fn retire_scene_identity(owner: &crate::interpreter::ScenePointerTarg
     if owner.kind == ui_wgpu::wgpu::SurfaceKind::TiledMap {
         #[cfg(test)]
         let before = SCENE_STATE.with(|cell| {
-            cell.borrow().get(&owner.host_id).map(|state| {
-                (
-                    state.mount_owner.as_ref().is_some_and(|current| current.same_component_host(owner)),
-                    state.map_interaction_owner.as_ref().is_some_and(|current| current.same_component_host(owner)),
-                    state.drag.is_some(),
-                )
-            })
+            cell.borrow()
+                .get(&owner.host_id)
+                .map(|state| (state.mount_owner.as_ref().is_some_and(|current| current.same_component_host(owner)), state.map_interaction_owner.as_ref().is_some_and(|current| current.same_component_host(owner)), state.drag.is_some()))
         });
         let _interaction = retire_tiled_map_scene_identity(owner);
         #[cfg(test)]
@@ -2959,12 +3198,32 @@ fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext
 }
 
 /// 🎞️ Advances one retained scene identifier scalar or one pre-admitted chrome output item.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct VirtualFileSystemChromeLabels {
+    pub name: &'static str,
+    pub no_file_system_nodes: &'static str,
+    pub expand: &'static str,
+    pub collapse: &'static str,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SceneChromeLabels {
+    pub virtual_file_system: VirtualFileSystemChromeLabels,
+}
+
+impl SceneChromeLabels {
+    pub const fn english() -> Self {
+        Self { virtual_file_system: VirtualFileSystemChromeLabels { name: "Name", no_file_system_nodes: "No file system nodes", expand: "Expand", collapse: "Collapse" } }
+    }
+}
+
 /// 🧩️ The per-frame engine state the retained scene paint needs beyond its own draw list: the shell's
 /// `World3dState` map (a `World3d` surface's host, addressed there by every pick/asset/authority
 /// ladder) and this frame's `World3dBuildContext` (built in `FrameBuildPhase::WorldResources`, drained
 /// again in `FrameBuildPhase::WorldTransfer`). Borrowed for exactly one chrome walk and never stored —
 /// the same reason `Ui::frame` takes its `SceneHost` as a parameter rather than owning one.
 pub struct SceneEngineHosts<'a> {
+    pub chrome_labels: SceneChromeLabels,
     pub world3d_states: &'a mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
     pub world_resources: &'a mut infinite_world::world::World3dBuildContext,
     /// 🪟️ The window instance whose body this walk is painting — the retention authority every
@@ -2995,7 +3254,7 @@ pub fn render_component_scene_step(
             SurfaceKind::Canvas2d => return render_canvas_2d_step(scene, bounds, ctx, cursor),
             SurfaceKind::InkCanvas => return render_ink_canvas_step(scene, bounds, ctx, cursor),
             SurfaceKind::IconRender => return render_icon_render_step(scene, bounds, ctx, cursor, hosts),
-            kind if scene_kind_is_list(kind) => return render_list_scene_step(scene, bounds, ctx, cursor, hosts.window_id, driver_drag, document_generation),
+            kind if scene_kind_is_list(kind) => return render_list_scene_step(scene, bounds, ctx, cursor, hosts.chrome_labels, hosts.window_id, driver_drag, document_generation),
             _ => {}
         }
     }
@@ -3125,14 +3384,7 @@ pub fn render_component_scene_step(
             if scene.component_kind == SurfaceKind::NodeGraph {
                 let Some(graph) = scene.node_graph.as_ref() else { return cursor.finish() };
                 let Some(item) = graph.find_items.get(cursor.item()) else { return cursor.finish() };
-                let find = ShellFindItem {
-                    id: item.id.clone(),
-                    label: item.label.clone(),
-                    description: None,
-                    category: Some(item.category.clone()),
-                    surface_id: scene.surface_id.clone(),
-                    node_id: item.id.clone(),
-                };
+                let find = ShellFindItem { id: item.id.clone(), label: item.label.clone(), description: None, category: Some(item.category.clone()), surface_id: scene.surface_id.clone(), node_id: item.id.clone() };
                 if try_push_find_item(find).is_err() || cursor.advance_item().is_err() {
                     return ui_wgpu::wgpu::ScenePaintStep::Fault;
                 }
@@ -3167,6 +3419,7 @@ fn render_list_scene_step(
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
+    chrome_labels: SceneChromeLabels,
     window_id: &str,
     driver_drag: UiDriverDrag,
     document_generation: u64,
@@ -3178,7 +3431,7 @@ fn render_list_scene_step(
     }
     match scene.component_kind {
         SurfaceKind::Table => render_table(scene, bounds, ctx, driver_drag),
-        SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx),
+        SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx, chrome_labels.virtual_file_system),
         SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
         SurfaceKind::BlockList => render_block_list(scene, bounds, ctx, driver_drag),
         SurfaceKind::DiffView => render_diff_view(scene, bounds, ctx),
@@ -3682,6 +3935,139 @@ fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<Action
         }
         TableCellPayload::Text { .. } | TableCellPayload::Number { .. } => None,
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct TableStepperFocusTarget {
+    pub(crate) row_id: String,
+    pub(crate) column_id: String,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct TableStepperAccessibilityCell {
+    pub(crate) key: String,
+    pub(crate) label: String,
+    pub(crate) target: TableStepperFocusTarget,
+    pub(crate) rect: Rect,
+    pub(crate) min: f64,
+    pub(crate) max: f64,
+    pub(crate) value: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum TableStepperKeyOutcome {
+    Unhandled,
+    Consumed,
+}
+
+/** 🎯️ Resolves the read-only centre of one painted Table stepper into its stable row/column
+ * address. The same metrics and scroll authority as `table_hit` are used, so keyboard focus can
+ * only be armed for the cell the accepted frame actually presented. */
+pub(crate) fn table_stepper_focus_target(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, driver_drag: UiDriverDrag) -> Option<TableStepperFocusTarget> {
+    if !inner.contains(x, y) {
+        return None;
+    }
+    let theme = scene_input_theme();
+    let table = scene.table.as_ref()?;
+    let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
+    let metrics = table_metrics(inner, columns.len(), &theme);
+    if !metrics.body.contains(x, y) {
+        return None;
+    }
+    let column_index = usize::try_from(((x - inner.x) / metrics.col_w.max(1.0)).floor() as i64).ok()?;
+    let column = columns.get(column_index)?;
+    let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
+    let scroll = scroll_offset(&scene.host_id, "body");
+    let row_index = usize::try_from(((y - metrics.body.y + scroll) / metrics.row_h.max(1.0)).floor() as i64).ok()?;
+    let row = rows.get(row_index)?;
+    let row_id = table_row_id(row, row_index);
+    let draggable = table.row_drag_mime.is_some() && row.get("_drag").is_some();
+    let row_y = metrics.body.y + row_index as f32 * metrics.row_h - scroll;
+    let cell_rect = table_cell_rect(inner, row_y, column_index, &metrics, driver_drag, draggable);
+    if !cell_rect.contains(x, y) || !matches!(serde_json::from_value::<TableCellPayload>(row.get(&column.id)?.clone()).ok()?, TableCellPayload::Stepper { .. }) {
+        return None;
+    }
+    let segment = (cell_rect.w / 3.0).max(1.0);
+    (usize::try_from(((x - cell_rect.x) / segment).floor() as i64).ok()? == 1).then(|| TableStepperFocusTarget { row_id, column_id: column.id.clone() })
+}
+
+/** ♿️ Projects every visible stepper readout from the exact accepted Table geometry. These
+ * virtual spinbuttons fill the semantic gap left by a `Component::Surface` document leaf, whose
+ * authored accessibility record can only describe the surface as a whole. */
+pub(crate) fn table_stepper_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableStepperAccessibilityCell> {
+    let Some(table) = scene.table.as_ref() else { return Vec::new() };
+    let Ok(columns) = serde_json::from_str::<Vec<TableColumn>>(&table.columns_json) else { return Vec::new() };
+    let Ok(rows) = serde_json::from_str::<Vec<Value>>(&table.rows_json) else { return Vec::new() };
+    let theme = scene_input_theme();
+    let metrics = table_metrics(inner, columns.len(), &theme);
+    let scroll = scroll_offset(&scene.host_id, "body");
+    let mut cells = Vec::new();
+    for (row_index, row) in rows.iter().enumerate() {
+        let row_y = metrics.body.y + row_index as f32 * metrics.row_h - scroll;
+        if row_y + metrics.row_h <= metrics.body.y || row_y >= metrics.body.y + metrics.body.h {
+            continue;
+        }
+        let row_id = table_row_id(row, row_index);
+        let draggable = table.row_drag_mime.is_some() && row.get("_drag").is_some();
+        for (column_index, column) in columns.iter().enumerate() {
+            let Some(cell) = row.get(&column.id) else { continue };
+            let Ok(TableCellPayload::Stepper { value, min, max, .. }) = serde_json::from_value::<TableCellPayload>(cell.clone()) else { continue };
+            let cell_rect = table_cell_rect(inner, row_y, column_index, &metrics, driver_drag, draggable);
+            let segment = cell_rect.w / 3.0;
+            let rect = Rect::new(cell_rect.x + segment, cell_rect.y, segment, cell_rect.h);
+            cells.push(TableStepperAccessibilityCell {
+                key: format!("{}.row.{}.{}.stepper", scene.host_id, row_id, column.id),
+                label: column.label.clone(),
+                target: TableStepperFocusTarget { row_id: row_id.clone(), column_id: column.id.clone() },
+                rect,
+                min,
+                max,
+                value,
+            });
+        }
+    }
+    cells
+}
+
+/** ⌨️ Re-resolves a focused Table stepper against the current accepted scene before every key,
+ * clamps the React key delta to the live bounds, and publishes the cell's current descriptor. A
+ * missing row/column or a cell that is no longer a stepper returns `None`, retiring stale focus. */
+pub(crate) fn table_stepper_apply_key(
+    scene: &UiComponentSceneNode,
+    row_id: &str,
+    column_id: &str,
+    key: &ui_wgpu::wgpu::KeyAction,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Option<Result<TableStepperKeyOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    let table = scene.table.as_ref()?;
+    let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
+    if !columns.iter().any(|column| column.id == column_id) {
+        return None;
+    }
+    let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
+    let (_, row) = rows.iter().enumerate().find(|(index, row)| table_row_id(row, *index) == row_id)?;
+    let TableCellPayload::Stepper { value, min, max, step, action } = serde_json::from_value::<TableCellPayload>(row.get(column_id)?.clone()).ok()? else {
+        return None;
+    };
+    let requested = match key {
+        ui_wgpu::wgpu::KeyAction::ArrowUp | ui_wgpu::wgpu::KeyAction::ArrowRight => step,
+        ui_wgpu::wgpu::KeyAction::ArrowDown | ui_wgpu::wgpu::KeyAction::ArrowLeft => -step,
+        ui_wgpu::wgpu::KeyAction::PageUp => step * 10.0,
+        ui_wgpu::wgpu::KeyAction::PageDown => -step * 10.0,
+        ui_wgpu::wgpu::KeyAction::Home => min - value,
+        ui_wgpu::wgpu::KeyAction::End => max - value,
+        _ => return Some(Ok(TableStepperKeyOutcome::Unhandled)),
+    };
+    if requested == 0.0 {
+        return Some(Ok(TableStepperKeyOutcome::Unhandled));
+    }
+    let delta = (value + requested).clamp(min, max) - value;
+    if delta != 0.0 {
+        if let Err(fault) = write_scene_action(input, &merge_action_args(&action, json!({ "delta": delta }))) {
+            return Some(Err(fault));
+        }
+    }
+    Some(Ok(TableStepperKeyOutcome::Consumed))
 }
 
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::Table`: a sortable header band, a stepper
@@ -4488,13 +4874,138 @@ struct EventFeedEntryJson {
     tone: Option<String>,
 }
 
-fn event_feed_time_of_day_utc(timestamp_ms: i64) -> String {
-    let ms_in_day = timestamp_ms.rem_euclid(86_400_000);
-    let total_seconds = ms_in_day / 1000;
-    let hours = total_seconds / 3600;
-    let minutes = (total_seconds % 3600) / 60;
-    let seconds = total_seconds % 60;
-    format!("{hours:02}:{minutes:02}:{seconds:02}")
+fn host_temporal_now_ms() -> i64 {
+    crate::app_now_ms() as i64
+}
+
+fn event_feed_time_id(timestamp_ms: i64) -> String {
+    format!("event-feed:{timestamp_ms}")
+}
+
+fn event_feed_time_request(entries: &[EventFeedEntryJson]) -> ui_contract::HostTemporalFormatRequestV1 {
+    let mut values = Vec::new();
+    for timestamp_ms in entries.iter().map(|entry| entry.timestamp_ms).filter(|timestamp_ms| (ui_contract::HOST_TEMPORAL_FORMAT_MIN_TIMESTAMP_MS..=ui_contract::HOST_TEMPORAL_FORMAT_MAX_TIMESTAMP_MS).contains(timestamp_ms)) {
+        let id = event_feed_time_id(timestamp_ms);
+        if !values.iter().any(|value: &ui_contract::HostTemporalValueV1| value.id == id) {
+            values.push(ui_contract::HostTemporalValueV1 { id, source: ui_contract::HostTemporalSourceV1::EpochMs { timestamp_ms }, format: ui_contract::HostTemporalFormatV1::Time });
+        }
+        if values.len() == ui_contract::HOST_TEMPORAL_FORMAT_MAX_VALUES {
+            break;
+        }
+    }
+    ui_contract::HostTemporalFormatRequestV1 { now_ms: host_temporal_now_ms(), values }
+}
+
+fn publish_host_temporal_reply(token: AdmittedSurfaceToken, generation: u64, request: &ui_contract::HostTemporalFormatRequestV1, reply: ui_contract::HostTemporalFormatReplyV1) -> bool {
+    SCENE_STATE.with(|cell| cell.borrow_mut().get_token_mut(token).is_some_and(|state| state.host_temporal.publish(generation, request, reply)))
+}
+
+fn refuse_host_temporal_reply(token: AdmittedSurfaceToken, generation: u64) {
+    SCENE_STATE.with(|cell| {
+        if let Some(state) = cell.borrow_mut().get_token_mut(token) {
+            state.host_temporal.refuse(generation);
+        }
+    });
+}
+
+fn host_temporal_reply(host_id: &str, request: &ui_contract::HostTemporalFormatRequestV1) -> Option<ui_contract::HostTemporalFormatReplyV1> {
+    if !request.validate() {
+        return None;
+    }
+    let pending = SCENE_STATE.with(|cell| {
+        let mut surfaces = cell.borrow_mut();
+        let generation = surfaces.get_or_insert_with(host_id.to_string(), SceneSurfaceState::default).and_then(|state| state.host_temporal.observe(request))?;
+        Some((surfaces.token(host_id)?, generation))
+    });
+    if let Some((token, generation)) = pending {
+        #[cfg(target_arch = "wasm32")]
+        {
+            let host_id = host_id.to_string();
+            let request = request.clone();
+            crate::spawn_app_task(async move {
+                let envelope = json!({ "op": "format-temporal-values", "nowMs": request.now_ms, "values": &request.values }).to_string();
+                match crate::shell::host_io_call(&envelope, None).await.ok().and_then(|answer| serde_json::from_str::<ui_contract::HostTemporalFormatReplyV1>(&answer).ok()) {
+                    Some(reply) => {
+                        let _ = publish_host_temporal_reply(token, generation, &request, reply);
+                    }
+                    None => refuse_host_temporal_reply(token, generation),
+                }
+            });
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        match native_host_temporal_formatter().and_then(|formatter| formatter.format_temporal_values(request).ok()) {
+            Some(reply) => {
+                let _ = publish_host_temporal_reply(token, generation, request, reply);
+            }
+            None => refuse_host_temporal_reply(token, generation),
+        }
+    }
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).and_then(|state| state.host_temporal.visible().cloned()).filter(|reply| reply.matches(request)))
+}
+
+pub(crate) fn seal_host_temporal_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.host_temporal.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn acknowledge_host_temporal_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.host_temporal.acknowledge(epoch);
+        }
+    });
+}
+
+pub(crate) fn discard_host_temporal_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.host_temporal.discard(epoch);
+        }
+    });
+}
+
+pub(crate) fn stage_vfs_accessibility_controls(host_id: &str, controls: Vec<VfsAccessibilityControl>) {
+    mutate_scene_state(host_id, |state| state.vfs_accessibility.stage(controls));
+}
+
+pub(crate) fn accepted_vfs_accessibility_controls(host_id: &str) -> Vec<VfsAccessibilityControl> {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.vfs_accessibility.accepted.clone()).unwrap_or_default())
+}
+
+pub(crate) fn vfs_accessibility_control_survives_candidate(host_id: &str, target: &VfsAccessibilityFocusTarget, epoch: u64) -> bool {
+    SCENE_STATE.with(|cell| {
+        let surfaces = cell.borrow();
+        let Some(presentation) = surfaces.get(host_id).map(|state| &state.vfs_accessibility) else { return false };
+        let controls = if presentation.candidate_epoch == Some(epoch) { presentation.candidate.as_deref().unwrap_or_default() } else { presentation.accepted.as_slice() };
+        controls.iter().any(|control| control.row_id == target.row_id && control.kind == target.kind)
+    })
+}
+
+pub(crate) fn seal_vfs_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.vfs_accessibility.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn acknowledge_vfs_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.vfs_accessibility.acknowledge(epoch);
+        }
+    });
+}
+
+pub(crate) fn discard_vfs_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.vfs_accessibility.discard(epoch);
+        }
+    });
 }
 
 fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
@@ -4540,6 +5051,8 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         return render_placeholder("event-feed", bounds, ctx);
     };
     let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).unwrap_or_default();
+    let time_request = event_feed_time_request(&entries);
+    let time_reply = host_temporal_reply(&scene.host_id, &time_request);
     let inner = bounds;
     let pad = theme.padding_standard;
     let row_h = theme.control_height;
@@ -4591,10 +5104,10 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
             }
         }
 
-        if entry.timestamp_ms != 0 {
-            let time_label = event_feed_time_of_day_utc(entry.timestamp_ms);
-            draw_text(ctx, &time_label, title_x, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
-            title_x += 56.0;
+        if let Some(time_label) = time_reply.as_ref().and_then(|reply| reply.label(&event_feed_time_id(entry.timestamp_ms))) {
+            let time_width = ctx.atlas.measure_text(time_label, theme.font_size_small).0;
+            draw_text(ctx, time_label, title_x, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
+            title_x += time_width + pad * 0.5;
         }
         draw_text(ctx, &entry.title, title_x, y + row_h * 0.65, theme.font_size_small, title_tone_color);
         if let Some(detail) = &entry.detail {
@@ -9036,6 +9549,10 @@ pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[
 struct VfsDescriptorKind {
     #[serde(default)]
     presentation: String,
+    #[serde(default)]
+    name: String,
+    #[serde(default)]
+    format: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -9055,6 +9572,39 @@ struct VfsDescriptorColumn {
     descriptor_kind_id: String,
 }
 
+#[derive(Default)]
+struct VfsFileNodeKinds(Vec<(String, VfsFileNodeKind)>);
+
+impl VfsFileNodeKinds {
+    fn values(&self) -> impl Iterator<Item = &VfsFileNodeKind> {
+        self.0.iter().map(|(_, value)| value)
+    }
+
+    fn get(&self, id: &str) -> Option<&VfsFileNodeKind> {
+        self.0.iter().find(|(key, _)| key == id).map(|(_, value)| value)
+    }
+}
+
+impl<'de> Deserialize<'de> for VfsFileNodeKinds {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct OrderedKinds;
+        impl<'de> serde::de::Visitor<'de> for OrderedKinds {
+            type Value = VfsFileNodeKinds;
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a file node kind object in authored column-binding order")
+            }
+            fn visit_map<M: serde::de::MapAccess<'de>>(self, mut map: M) -> Result<Self::Value, M::Error> {
+                let mut kinds = Vec::new();
+                while let Some(entry) = map.next_entry()? {
+                    kinds.push(entry);
+                }
+                Ok(VfsFileNodeKinds(kinds))
+            }
+        }
+        deserializer.deserialize_map(OrderedKinds)
+    }
+}
+
 #[derive(Deserialize)]
 struct VfsSchema {
     #[serde(rename = "descriptorColumnIds", default)]
@@ -9062,7 +9612,7 @@ struct VfsSchema {
     #[serde(rename = "descriptorKinds", default)]
     descriptor_kinds: HashMap<String, VfsDescriptorKind>,
     #[serde(rename = "fileNodeKinds", default)]
-    file_node_kinds: HashMap<String, VfsFileNodeKind>,
+    file_node_kinds: VfsFileNodeKinds,
 }
 
 fn vfs_glyph_icon<'a>(schema: &'a VfsSchema, row: &Value) -> &'a str {
@@ -9079,26 +9629,26 @@ fn vfs_glyph_icon<'a>(schema: &'a VfsSchema, row: &Value) -> &'a str {
 
 fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<ActionDescriptor> {
     let uri = row.get("navigateUri").and_then(|v| v.as_str())?;
-    if uri.starts_with("os://instance/") {
+    if let Some(instance_id) = uri.strip_prefix("os://instance/").filter(|id| !id.is_empty()) {
         return Some(scene_action(
             scene,
             "openInstance",
             json!({
                 "surfaceId": scene.surface_id,
-                "instanceId": uri.trim_start_matches("os://instance/"),
+                "instanceId": instance_id,
             }),
         ));
     }
-    if uri.starts_with("os://export/") {
-        let parts: Vec<&str> = uri.split('/').collect();
-        if parts.len() >= 5 {
+    if let Some(target) = uri.strip_prefix("os://export/") {
+        let parts: Vec<&str> = target.split('/').collect();
+        if parts.len() == 2 && parts.iter().all(|part| !part.is_empty()) {
             return Some(scene_action(
                 scene,
                 "exportMedia",
                 json!({
                     "surfaceId": scene.surface_id,
-                    "instanceId": parts[2],
-                    "format": parts[4],
+                    "instanceId": parts[0],
+                    "format": parts[1],
                 }),
             ));
         }
@@ -9176,37 +9726,90 @@ fn build_vfs_visible_rows(rows: &[Value], expanded_ids: &BTreeSet<String>) -> Ve
     visible
 }
 
+fn vfs_descriptor_binding<'a>(schema: &'a VfsSchema, column_id: &str) -> Option<(&'a VfsDescriptorColumn, &'a VfsDescriptorKind)> {
+    schema.file_node_kinds.values().find_map(|kind| {
+        let column = kind.descriptors.iter().find(|column| column.id == column_id)?;
+        schema.descriptor_kinds.get(&column.descriptor_kind_id).map(|kind| (column, kind))
+    })
+}
+
 fn vfs_descriptor_label(schema: &VfsSchema, column_id: &str) -> String {
-    for kind in schema.file_node_kinds.values() {
-        if let Some(col) = kind.descriptors.iter().find(|c| c.id == column_id) {
-            if !col.label.is_empty() {
-                return col.label.clone();
+    vfs_descriptor_binding(schema, column_id).map(|(column, kind)| if column.label.is_empty() { kind.name.clone() } else { column.label.clone() }).unwrap_or_default()
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum VfsDescriptorValue<'a> {
+    Text(&'a str),
+    Time { iso: &'a str, format: &'a str },
+    Avatar { name: &'a str, icon: Option<&'a str> },
+}
+
+fn vfs_descriptor_value<'a>(schema: &'a VfsSchema, row: &'a Value, column_id: &str) -> Option<VfsDescriptorValue<'a>> {
+    let row_kind = schema.file_node_kinds.get(row.get("fileNodeKindId")?.as_str()?)?;
+    if !row_kind.descriptors.iter().any(|column| column.id == column_id) {
+        return None;
+    }
+    let (_, kind) = vfs_descriptor_binding(schema, column_id)?;
+    let value = row.get("descriptorValues")?.get(column_id)?;
+    if value.get("presentation")?.as_str()? != kind.presentation {
+        return None;
+    }
+    match kind.presentation.as_str() {
+        "text" => Some(VfsDescriptorValue::Text(value.get("text")?.as_str()?)),
+        "time" => Some(VfsDescriptorValue::Time { iso: value.get("iso")?.as_str()?, format: kind.format.as_deref().unwrap_or("datetime") }),
+        "avatar" => Some(VfsDescriptorValue::Avatar { name: value.get("name")?.as_str()?, icon: value.get("icon").and_then(Value::as_str).filter(|value| !value.is_empty()) }),
+        _ => None,
+    }
+}
+
+fn vfs_avatar_initials(name: &str) -> String {
+    name.trim().split(' ').take(2).filter_map(|part| part.chars().next()).flat_map(char::to_uppercase).take(2).collect()
+}
+
+fn vfs_temporal_format(format: &str) -> ui_contract::HostTemporalFormatV1 {
+    match format {
+        "date" => ui_contract::HostTemporalFormatV1::Date,
+        "relative" => ui_contract::HostTemporalFormatV1::Relative,
+        _ => ui_contract::HostTemporalFormatV1::DateTime,
+    }
+}
+
+fn vfs_time_label(host_id: &str, column_id: &str, iso: &str, format: &str) -> Option<String> {
+    SCENE_STATE.with(|cell| {
+        let surfaces = cell.borrow();
+        let temporal = &surfaces.get(host_id)?.host_temporal;
+        let request = temporal.request.as_ref()?;
+        let reply = temporal.visible()?;
+        request
+            .values
+            .iter()
+            .find(|value| value.id.starts_with(&format!("vfs:{column_id}:")) && value.format == vfs_temporal_format(format) && matches!(&value.source, ui_contract::HostTemporalSourceV1::Iso { iso: value_iso } if value_iso == iso))
+            .and_then(|value| reply.label(&value.id))
+            .map(str::to_string)
+    })
+}
+
+fn vfs_temporal_request(schema: &VfsSchema, visible_rows: &[VfsVisibleRow], descriptor_ids: &[String], body: Rect, row_h: f32, scroll: f32, now_ms: i64) -> Option<ui_contract::HostTemporalFormatRequestV1> {
+    let mut values = Vec::new();
+    for (row_index, entry) in visible_rows.iter().enumerate() {
+        let y = body.y + row_index as f32 * row_h - scroll;
+        if y + row_h < body.y || y > body.y + body.h {
+            continue;
+        }
+        for column_id in descriptor_ids {
+            let Some(VfsDescriptorValue::Time { iso, format }) = vfs_descriptor_value(schema, &entry.row, column_id) else {
+                continue;
+            };
+            let temporal_format = vfs_temporal_format(format);
+            let duplicate = values.iter().any(|value: &ui_contract::HostTemporalValueV1| {
+                value.id.starts_with(&format!("vfs:{column_id}:")) && value.format == temporal_format && matches!(&value.source, ui_contract::HostTemporalSourceV1::Iso { iso: value_iso } if value_iso == iso)
+            });
+            if !duplicate && values.len() < ui_contract::HOST_TEMPORAL_FORMAT_MAX_VALUES {
+                values.push(ui_contract::HostTemporalValueV1 { id: format!("vfs:{column_id}:{}", values.len()), source: ui_contract::HostTemporalSourceV1::Iso { iso: iso.to_string() }, format: temporal_format });
             }
         }
     }
-    column_id.to_string()
-}
-
-fn vfs_descriptor_value(schema: &VfsSchema, row: &Value, column_id: &str) -> String {
-    let raw = row
-        .get("descriptorValues")
-        .and_then(|values| values.get(column_id))
-        .map(|v| match v {
-            Value::String(s) => s.clone(),
-            other => other.to_string(),
-        })
-        .unwrap_or_default();
-    let kind_id = schema.file_node_kinds.values().flat_map(|kind| kind.descriptors.iter()).find(|col| col.id == column_id).map(|col| col.descriptor_kind_id.as_str()).unwrap_or("text");
-    let presentation = schema.descriptor_kinds.get(kind_id).map(|k| k.presentation.as_str()).unwrap_or("text");
-    if presentation == "time" {
-        if let Ok(ms) = raw.parse::<f64>() {
-            let secs = (ms / 1000.0) as i64;
-            let mins = secs / 60;
-            let hours = mins / 60;
-            return format!("{:02}:{:02}:{:02}", hours, mins % 60, secs % 60);
-        }
-    }
-    raw
+    (!values.is_empty()).then_some(ui_contract::HostTemporalFormatRequestV1 { now_ms, values })
 }
 
 /// 📐️ A virtual file system's fixed metrics — the ONE derivation the paint and the pointer path share.
@@ -9224,6 +9827,68 @@ fn vfs_metrics(inner: Rect, theme: &Theme) -> VfsMetrics {
 
 fn vfs_row_id(row: &Value) -> String {
     row.get("id").and_then(Value::as_str).unwrap_or_default().to_string()
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct VfsAccessibilityFocusTarget {
+    pub(crate) row_id: String,
+    pub(crate) kind: VfsAccessibilityControlKind,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum VfsAccessibilityKeyOutcome {
+    Unhandled,
+    Consumed,
+}
+
+fn accepted_vfs_control(host_id: &str, target: &VfsAccessibilityFocusTarget) -> Option<VfsAccessibilityControl> {
+    accepted_vfs_accessibility_controls(host_id).into_iter().find(|control| control.row_id == target.row_id && control.kind == target.kind)
+}
+
+pub(crate) fn vfs_accessibility_focus_target(scene: &UiComponentSceneNode, x: f32, y: f32) -> Option<VfsAccessibilityFocusTarget> {
+    if scene.component_kind != SurfaceKind::VirtualFileSystem {
+        return None;
+    }
+    let controls = accepted_vfs_accessibility_controls(&scene.host_id);
+    controls
+        .iter()
+        .find(|control| control.kind == VfsAccessibilityControlKind::Chevron && control.rect.contains(x, y))
+        .or_else(|| controls.iter().find(|control| control.kind == VfsAccessibilityControlKind::Row && control.rect.contains(x, y)))
+        .map(|control| VfsAccessibilityFocusTarget { row_id: control.row_id.clone(), kind: control.kind })
+}
+
+pub(crate) fn vfs_accessibility_activate(scene: &UiComponentSceneNode, target: &VfsAccessibilityFocusTarget, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+    let _control = accepted_vfs_control(&scene.host_id, target)?;
+    match target.kind {
+        VfsAccessibilityControlKind::Chevron => {
+            toggle_vfs_row_expanded(&scene.host_id, &target.row_id);
+            Some(Ok(()))
+        }
+        VfsAccessibilityControlKind::Row => {
+            if scene.virtual_file_system.is_none() {
+                return None;
+            }
+            let ordered: Vec<String> = accepted_vfs_accessibility_controls(&scene.host_id).into_iter().filter(|control| control.kind == VfsAccessibilityControlKind::Row).map(|control| control.row_id).collect();
+            if !ordered.iter().any(|row_id| row_id == &target.row_id) {
+                return None;
+            }
+            let ids = vfs_selection_for_click(&scene.host_id, &target.row_id, &ordered, false, false);
+            Some(write_scene_action(input, &scene_action(scene, "selectRows", json!({ "surfaceId": scene.surface_id, "ids": ids }))))
+        }
+    }
+}
+
+pub(crate) fn vfs_accessibility_apply_key(
+    scene: &UiComponentSceneNode,
+    target: &VfsAccessibilityFocusTarget,
+    key: &ui_wgpu::wgpu::KeyAction,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Option<Result<VfsAccessibilityKeyOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
+    accepted_vfs_control(&scene.host_id, target)?;
+    if target.kind != VfsAccessibilityControlKind::Chevron || !matches!(key, ui_wgpu::wgpu::KeyAction::Enter | ui_wgpu::wgpu::KeyAction::Space(true)) {
+        return Some(Ok(VfsAccessibilityKeyOutcome::Unhandled));
+    }
+    vfs_accessibility_activate(scene, target, input).map(|outcome| outcome.map(|()| VfsAccessibilityKeyOutcome::Consumed))
 }
 
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::VirtualFileSystem`: a row's expand chevron, or
@@ -9285,12 +9950,12 @@ fn double_click_action(scene: &UiComponentSceneNode, _target: &str, inner: Rect,
 /// 🗂️ Renders `SurfaceKind::VirtualFileSystem`: a header band of descriptor columns over an
 /// expansion-aware, multi-selectable row tree — the port of `VirtualFileSystemHost` in
 /// `🗣️Interpreter/🟦️.tsx` plus `@semio-tech/ui-react`'s own `VirtualFileSystem`.
-fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, labels: VirtualFileSystemChromeLabels) {
     let theme = ctx.theme;
     let Some(vfs) = &scene.virtual_file_system else {
         return render_placeholder("virtual-file-system", bounds, ctx);
     };
-    let schema: VfsSchema = serde_json::from_str(&vfs.schema_json).unwrap_or(VfsSchema { descriptor_column_ids: vec![], descriptor_kinds: HashMap::new(), file_node_kinds: HashMap::new() });
+    let schema: VfsSchema = serde_json::from_str(&vfs.schema_json).unwrap_or(VfsSchema { descriptor_column_ids: vec![], descriptor_kinds: HashMap::new(), file_node_kinds: VfsFileNodeKinds::default() });
     let rows: Vec<Value> = serde_json::from_str(&vfs.rows_json).unwrap_or_default();
     let root_expand_ids: Vec<String> = rows.iter().filter(|row| row.get("hasChildren").and_then(|v| v.as_bool()).unwrap_or(false)).filter_map(|row| row.get("id").and_then(|v| v.as_str()).map(str::to_string)).collect();
     seed_vfs_expanded(&scene.host_id, &root_expand_ids);
@@ -9301,22 +9966,26 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
     let metrics = vfs_metrics(inner, theme);
     let (header_h, row_h, pad) = (metrics.header_h, metrics.row_h, metrics.pad);
     let name_col_w = inner.w * 0.32;
-    let descriptor_ids: Vec<String> = schema.descriptor_column_ids.clone();
+    let descriptor_ids: Vec<String> = schema.descriptor_column_ids.iter().filter(|id| vfs_descriptor_binding(&schema, id).is_some()).cloned().collect();
     let descriptor_col_w = if descriptor_ids.is_empty() { 0.0 } else { (inner.w - name_col_w) / descriptor_ids.len() as f32 };
     ctx.draw.push_solid([inner.x, inner.y, inner.w, header_h], theme.panel);
-    draw_text(ctx, "Name", inner.x + pad, inner.y + header_h * 0.65, theme.font_size_small, theme.text_muted);
+    draw_text(ctx, labels.name, inner.x + pad, inner.y + header_h * 0.65, theme.font_size_small, theme.text_muted);
     for (index, column_id) in descriptor_ids.iter().enumerate() {
         let x = inner.x + name_col_w + index as f32 * descriptor_col_w;
         draw_text(ctx, &vfs_descriptor_label(&schema, column_id), x + pad, inner.y + header_h * 0.65, theme.font_size_small, theme.text_muted);
     }
     let body = metrics.body;
     let scroll = scroll_offset(&scene.host_id, "vfs");
+    let mut accessibility_controls = Vec::with_capacity(list_visible_row_capacity(body, row_h).saturating_mul(2));
+    if let Some(request) = vfs_temporal_request(&schema, &visible_rows, &descriptor_ids, body, row_h, scroll, host_temporal_now_ms()) {
+        let _ = host_temporal_reply(&scene.host_id, &request);
+    }
     ctx.input.register_hit(HitTarget { rect: body, event: None, control_id: Some(scroll_key(&scene.host_id, "vfs")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     ctx.draw.push_scissor(body);
     reserve_list_rows(ctx, list_visible_row_capacity(body, row_h));
     let hovered_row = scene_hovered_control_id(&scene.host_id).or_else(|| vfs.hovered_row_id.clone()).or_else(|| ctx.input.hovered_id.clone());
     if visible_rows.is_empty() {
-        let message = vfs.empty_message.as_deref().unwrap_or("No file system nodes");
+        let message = vfs.empty_message.as_deref().unwrap_or(labels.no_file_system_nodes);
         draw_text(ctx, message, body.x + pad, body.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
     }
     for (row_index, entry) in visible_rows.iter().enumerate() {
@@ -9329,6 +9998,8 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
         let control_id = format!("{}.vfs.{}", scene.host_id, row_id);
         let row_rect = Rect::new(body.x, y, body.w, row_h);
         let selected_row = selected.contains(&row_id);
+        let name = row.get("name").and_then(|v| v.as_str()).unwrap_or("—");
+        accessibility_controls.push(VfsAccessibilityControl { key: control_id.clone(), row_id: row_id.clone(), label: name.to_string(), kind: VfsAccessibilityControlKind::Row, rect: row_rect, expanded: None });
         let hovered = hovered_row.as_deref() == Some(control_id.as_str());
         if selected_row {
             ctx.draw.push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.selected);
@@ -9339,12 +10010,22 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
         let mut name_x = body.x + pad + entry.level as f32 * 14.0;
         if entry.has_children {
             let chevron = if entry.expanded { "chevron-down" } else { "chevron-right" };
+            let chevron_id = format!("{}.vfs.chevron.{}", scene.host_id, row_id);
+            let chevron_rect = Rect::new(name_x, y, 14.0, row_h);
             if let Some(icons) = ctx.icons {
                 if let Some(uv) = icons.icon_uv(chevron) {
                     ctx.draw.push_textured([name_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, foreground_on_fill(theme, theme.text_element, selected_row, hovered));
                 }
             }
-            ctx.input.register_hit(HitTarget { rect: Rect::new(name_x, y, 14.0, row_h), event: None, control_id: Some(format!("{}.vfs.chevron.{}", scene.host_id, row_id)), kind: HitKind::Generic, drag_axis: None, drag_data: None });
+            ctx.input.register_hit(HitTarget { rect: chevron_rect, event: None, control_id: Some(chevron_id.clone()), kind: HitKind::Generic, drag_axis: None, drag_data: None });
+            accessibility_controls.push(VfsAccessibilityControl {
+                key: chevron_id,
+                row_id: row_id.clone(),
+                label: if entry.expanded { labels.collapse } else { labels.expand }.to_string(),
+                kind: VfsAccessibilityControlKind::Chevron,
+                rect: chevron_rect,
+                expanded: Some(entry.expanded),
+            });
             name_x += 14.0;
         }
         let icon_id = vfs_glyph_icon(&schema, row);
@@ -9354,16 +10035,42 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
             }
         }
         name_x += 18.0;
-        let name = row.get("name").and_then(|v| v.as_str()).unwrap_or("—");
         draw_text(ctx, name, name_x, y + row_h * 0.65, theme.font_size_small, if selected_row || hovered { theme.active_foreground } else { theme.text });
         for (col_index, column_id) in descriptor_ids.iter().enumerate() {
             let x = body.x + name_col_w + col_index as f32 * descriptor_col_w;
-            let value = vfs_descriptor_value(&schema, row, column_id);
-            draw_text(ctx, &value, x + pad, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, selected_row, hovered));
+            let color = foreground_on_fill(theme, theme.text_muted, selected_row, hovered);
+            match vfs_descriptor_value(&schema, row, column_id) {
+                Some(VfsDescriptorValue::Text(text)) => draw_text(ctx, text, x + pad, y + row_h * 0.65, theme.font_size_small, color),
+                Some(VfsDescriptorValue::Time { iso, format }) => {
+                    let label = vfs_time_label(&scene.host_id, column_id, iso, format).unwrap_or_else(|| iso.to_string());
+                    draw_text(ctx, &label, x + pad, y + row_h * 0.65, theme.font_size_small, color);
+                }
+                Some(VfsDescriptorValue::Avatar { name, icon }) => {
+                    let size = theme.control_height_small.min(row_h);
+                    let rect = Rect::new(x + pad, y + (row_h - size) * 0.5, size, size);
+                    ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.panel_border, size * 0.5);
+                    let image = icon.and_then(|icon| {
+                        let image_id = format!("{}.vfs.avatar.{}.{}", scene.host_id, row_id, column_id);
+                        crate::interpreter::current_ui_image_key(&image_id, icon)
+                    });
+                    let inside = [rect.x + 1.0, rect.y + 1.0, rect.w - 2.0, rect.h - 2.0];
+                    if let Some(key) = image {
+                        ctx.draw.push_rounded_raster_quad(&key, inside, [0.0, 0.0, 1.0, 1.0], 1.0, (size - 2.0) * 0.5);
+                    } else {
+                        ctx.draw.push_rounded(inside, theme.muted, (size - 2.0) * 0.5);
+                        let initials = vfs_avatar_initials(name);
+                        let width = ctx.atlas.measure_text(&initials, theme.font_size_small).0;
+                        draw_text(ctx, &initials, rect.x + (size - width) * 0.5, y + row_h * 0.65, theme.font_size_small, theme.text);
+                    }
+                }
+                None => {}
+            }
         }
         let drag_data = vfs.drag_drop_enabled.unwrap_or(false).then(|| HashMap::from([("application/x-semio-vfs-node".to_string(), serde_json::to_string(row).unwrap_or_default())]));
         ctx.input.register_hit(HitTarget { rect: row_rect, event: None, control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data });
     }
+    accessibility_controls.retain(|control| ctx.input.staged_hits().iter().any(|hit| hit.control_id.as_deref() == Some(control.key.as_str()) && hit.rect == control.rect));
+    stage_vfs_accessibility_controls(&scene.host_id, accessibility_controls);
     ctx.draw.pop_scissor();
 }
 

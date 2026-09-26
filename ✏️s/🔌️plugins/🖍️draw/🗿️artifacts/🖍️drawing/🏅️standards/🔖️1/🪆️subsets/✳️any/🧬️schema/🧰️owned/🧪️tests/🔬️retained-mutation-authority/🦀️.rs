@@ -1451,3 +1451,58 @@ fn retained_drawing_committed_candidate_finishes_exact_owner_return_after_late_c
         drain_snapshot(source);
     }
 }
+
+#[test]
+fn retained_path_geometry_mutation_preserves_appearance_and_retires_segments() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🧫️fixtures/🔣️.json"))).unwrap();
+    let before: Vec<PathSegment> = serde_json::from_value(fixture["before"].clone()).unwrap();
+    let after: Vec<PathSegment> = serde_json::from_value(fixture["after"].clone()).unwrap();
+    let mut layer = crate::schema::create_drawing_path_layer("Curve", before);
+    crate::schema::layer_base_mut(&mut layer).opacity = 0.4;
+    let id = crate::schema::layer_id(&layer).to_string();
+    let source = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let mutation = crate::mutations::update_path_geometry(id, after.clone());
+    let result = apply(source, &mutation).expect("retained geometry mutation applies");
+    let DrawingLayerNode::Path(path) = &result.layers[0] else { panic!("Expected path") };
+    assert_eq!(path.segments, after);
+    assert_eq!(path.base.opacity, 0.4);
+    drain_snapshot(result);
+    drain_mutation(mutation);
+}
+
+#[test]
+fn retained_path_edit_cancellation_preserves_the_entire_document() {
+    initialize_drawing_mutation_arena_pool_for_test();
+    let layer = crate::schema::create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0,0.0] }, PathSegment::Line { to: [10.0,0.0] }]);
+    let id = crate::schema::layer_id(&layer).to_string();
+    let mut source = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let expected = source.clone();
+    let mutation = crate::mutations::update_path_geometry(id, vec![PathSegment::Move { to: [5.0,5.0] }, PathSegment::Line { to: [20.0,20.0] }]);
+    let operation = semio_framework_job::OperationId(8_090);
+    let generation = semio_framework_job::Generation(90);
+    let mut authority = borrowed_candidate(operation,generation).unwrap();
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut sequence = 0;
+    for _ in 0..100_000 {
+        if authority.segments_clone.as_ref().is_some_and(|clone| clone.index == 1) { break; }
+        let mut context = semio_framework_job::StepContext::new(operation,generation,semio_framework_job::StepBudget::new(1,u64::MAX),cancel.clone(),semio_framework_job::default_now_us,&mut sequence);
+        assert!(!authority.step(&mut source,&mutation,&mut context).unwrap());
+    }
+    assert_eq!(authority.segments_clone.as_ref().unwrap().index,1);
+    cancel.cancel_now();
+    let mut context = semio_framework_job::StepContext::new(operation,generation,semio_framework_job::StepBudget::new(1,u64::MAX),cancel,semio_framework_job::default_now_us,&mut sequence);
+    assert_eq!(authority.step(&mut source,&mutation,&mut context),Err("drawing-store.mutation-candidate-cancelled"));
+    close_candidate(&mut authority,Some(&mut source));
+    assert_eq!(source,expected);
+    drain_snapshot(source);
+    drain_snapshot(expected);
+    drain_mutation(mutation);
+}
+
+#[test]
+fn retained_path_geometry_digest_distinguishes_control_points() {
+    assert_mutation_digest_distinct(
+        crate::mutations::update_path_geometry("path".into(),vec![PathSegment::Cubic { ctrl1: [1.0,2.0], ctrl2: [3.0,4.0], to: [5.0,6.0] }]),
+        crate::mutations::update_path_geometry("path".into(),vec![PathSegment::Cubic { ctrl1: [2.0,2.0], ctrl2: [3.0,4.0], to: [5.0,6.0] }]),
+    );
+}

@@ -8,6 +8,8 @@
  * every facet of the drawing artifact agrees on the same `DrawingLayerNode`/`DrawingImageAsset`/
  * `DrawingArtboard`/`DrawingArtifact`. */
 import {
+  parsePathSegment,
+  type PathSegment,
   parseDrawingArtifact,
   parseDrawingArtboard,
   parseDrawingImageAsset,
@@ -84,6 +86,7 @@ export interface DrawingLayerPatch {
   booleanOperation?: string;
   traceParamsJson?: string;
   layerJson?: string;
+  pathSegments?: PathSegment[];
 }
 
 //#region 🚪️Parsers
@@ -198,5 +201,6 @@ export function parseDrawingLayerPatch(value: unknown, at = "$"): DrawingLayerPa
     booleanOperation: text("booleanOperation"),
     traceParamsJson: text("traceParamsJson"),
     layerJson: text("layerJson"),
+    pathSegments: row["pathSegments"] == null ? undefined : drawingDrawingDiffGuardArray(row["pathSegments"], `${at}.pathSegments`).map((item, index) => parsePathSegment(item, `${at}.pathSegments[${index}]`)),
   };
 }

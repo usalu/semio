@@ -1,0 +1,705 @@
+[
+  {
+    "name": "enable-gradient",
+    "before": null,
+    "edit": {
+      "kind": "type",
+      "value": "linearGradient"
+    },
+    "after": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "interpolate-new-stop",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "addStop",
+      "offset": 0.25
+    },
+    "after": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0.25,
+          "color": [
+            0.25,
+            0.25,
+            0.25,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "preserve-stops-on-type-change",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "type",
+      "value": "radialGradient"
+    },
+    "after": {
+      "kind": "radialGradient",
+      "cx": 50,
+      "cy": 50,
+      "r": 50,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "edit-gradient-end",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "coordinate",
+      "axis": "x2",
+      "value": 250
+    },
+    "after": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 250,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "edit-stop-color",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "color",
+      "index": 0,
+      "value": "#f00"
+    },
+    "after": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "edit-stop-alpha",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "alpha",
+      "index": 1,
+      "value": 0.3
+    },
+    "after": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            0.3
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "disable-fill",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "type",
+      "value": "none"
+    },
+    "after": null
+  },
+  {
+    "name": "solid-alpha",
+    "before": {
+      "kind": "solid",
+      "color": [
+        0.2,
+        0.4,
+        0.8,
+        1
+      ]
+    },
+    "edit": {
+      "kind": "alpha",
+      "value": 0.5
+    },
+    "after": {
+      "kind": "solid",
+      "color": [
+        0.2,
+        0.4,
+        0.8,
+        0.5
+      ]
+    }
+  },
+  {
+    "name": "reject-last-stop-removal",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "removeStop",
+      "index": 0
+    },
+    "error": true
+  },
+  {
+    "name": "reject-wrong-gradient-coordinate",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "coordinate",
+      "axis": "r",
+      "value": 30
+    },
+    "error": true
+  },
+  {
+    "name": "reject-negative-radius",
+    "before": {
+      "kind": "radialGradient",
+      "cx": 50,
+      "cy": 50,
+      "r": 50,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "coordinate",
+      "axis": "r",
+      "value": -1
+    },
+    "error": true
+  },
+  {
+    "name": "reject-missing-stop",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "color",
+      "index": 5,
+      "value": "#fff"
+    },
+    "error": true
+  },
+  {
+    "name": "reposition-stop",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0.25,
+          "color": [
+            0.25,
+            0.25,
+            0.25,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "offset",
+      "index": 1,
+      "value": 0.8
+    },
+    "after": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0.8,
+          "color": [
+            0.25,
+            0.25,
+            0.25,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "remove-interior-stop",
+    "before": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0.25,
+          "color": [
+            0.25,
+            0.25,
+            0.25,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "edit": {
+      "kind": "removeStop",
+      "index": 1
+    },
+    "after": {
+      "kind": "linearGradient",
+      "x1": 0,
+      "y1": 0,
+      "x2": 100,
+      "y2": 0,
+      "stops": [
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 1,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    }
+  }
+]

@@ -62,7 +62,7 @@ fn computers_manifest() -> JsonValue {
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
 // bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request. See R9.
 fn bundle() -> ExtensionBundle {
-    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Energy", "0.1.0").extends("cad").depends_on("cad", semio_framework::VersionReq::Any);
+    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Energy", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
     // extension only contributes a topic (`cad.computer`).
     let bundle = bundle.mode(ExecutionMode::Declarative);

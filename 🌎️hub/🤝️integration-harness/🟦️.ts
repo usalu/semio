@@ -12,11 +12,17 @@
 
 import Ajv from "ajv";
 import { type ChildProcessByStdio, spawn } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { createServer } from "node:net";
 import { join } from "node:path";
 import type { Readable } from "node:stream";
+import { randomBytes } from "node:crypto";
 import { cargoTargetDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { decodeServerFrame, encodeClientFrame } from "../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
+import { parseDocumentSocketGrantReceiptV1 } from "../../🧰️framework/🛍️products/💻️os/🟦️.ts";
+import { createSpaceCommandV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+import { sealSpaceArtifactCreateV1 } from "../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { isDiscoverySkipDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 export { getWorkspaceRoot } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -177,6 +183,20 @@ export function resolveHubBinaryPath(repoRoot: string): string {
   return join(cargoTargetDirectory(repoRoot), "debug", name);
 }
 
+/** 🗂️ Copies a published trusted catalog (`trusted-catalog/current.json` + its generation) into a fresh data root. */
+export function hubSeedTrustedCatalog(catalogRoot: string, dataRoot: string): string {
+  const source = join(catalogRoot, "trusted-catalog");
+  const current = join(source, "current.json");
+  if (!existsSync(current)) throw new Error(`no published trusted catalog at ${source}; publish one first (launch row 🛠️dev🗄️os-hub publishes the development catalog into .🧬semio/🌐hub/hub-dev)`);
+  const generation = String((JSON.parse(readFileSync(current, "utf8")) as { generationId?: unknown }).generationId ?? "");
+  if (!/^[0-9a-f]{64}$/u.test(generation)) throw new Error(`${current} names no generation`);
+  const target = join(dataRoot, "trusted-catalog");
+  mkdirSync(join(target, "generations"), { recursive: true, mode: 0o700 });
+  cpSync(join(source, "generations", generation), join(target, "generations", generation), { recursive: true });
+  cpSync(current, join(target, "current.json"));
+  return generation;
+}
+
 export type HubOptions = {
   readonly repoRoot: string;
   readonly dataDir: string;
@@ -248,3 +268,119 @@ export async function startHub(options: HubOptions): Promise<HubHandle> {
   return { port, baseUrl, wsBaseUrl, stdout: () => stdout, stderr: () => stderr, stop };
 }
 //#endregion 🔖️Hub
+
+//#region 🔖️ProbeClient
+/** 🧑‍💻️ A hub probe client acting exactly as a signed-in human's browser does over HTTP and the document socket: credential
+ * sign-in, the directory's `create-space` command, the server-owned artifact creation, the open plan, and chained edits
+ * over one document socket. Shared by the hub's operational drills (backup/restore, residency). */
+export type HubProbeAnswer = { readonly status: number; readonly text: string; readonly json: any; readonly bytes: Uint8Array };
+
+/** 🌐️ One JSON call against `origin`, bounded to two minutes. */
+export async function hubProbeCall(origin: string, method: string, path: string, token?: string, body?: string, accept?: string): Promise<HubProbeAnswer> {
+  const response = await fetch(`${origin}${path}`, { method, headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), ...(token ? { authorization: `Bearer ${token}` } : {}), ...(accept ? { accept } : {}) }, ...(body === undefined ? {} : { body }), signal: AbortSignal.timeout(120_000) });
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const text = new TextDecoder().decode(bytes);
+  let json: any = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = null;
+  }
+  return { status: response.status, text, json, bytes };
+}
+
+/** 🔑️ Credential sign-in as a browser client; answers the session token. */
+export async function hubProbeSignIn(origin: string, email: string, password: string, device: string): Promise<string> {
+  const answer = await hubProbeCall(origin, "POST", "/auth/sessions", undefined, JSON.stringify({ schema: "semio.hub.auth.credential-sign-in/v1", email, password, deviceInstanceId: `${device}${randomBytes(10).toString("hex")}`, clientClass: "browser" }));
+  if (answer.status !== 200 || typeof answer.json?.token !== "string") throw new Error(`sign-in ${answer.status} ${answer.text.slice(0, 200)}`);
+  return answer.json.token;
+}
+
+/** 🏘️ Creates a private studio space through the directory command and answers its id. */
+export async function hubProbeCreateSpace(origin: string, token: string, name: string): Promise<string> {
+  const answer = await hubProbeCall(origin, "POST", "/directory/commands", token, directoryCommandRequestJson(sealDirectoryCommandRequestV1(randomBytes(16).toString("hex"), createSpaceCommandV1(name, "studio", "private"))));
+  const spaceId = answer.json?.events?.find((event: any) => event?.body?.kind === "space.created")?.body?.spaceId;
+  if (answer.status !== 202 || typeof spaceId !== "string") throw new Error(`create-space ${answer.status} ${answer.text.slice(0, 300)}`);
+  return spaceId;
+}
+
+/** 🗂️ The space's creation catalog: its generation and creatable kinds. */
+export async function hubProbeCreationCatalog(origin: string, token: string, spaceId: string): Promise<{ generationId: string; kinds: { kindId: string; schema: string }[] }> {
+  const answer = await hubProbeCall(origin, "GET", `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`, token);
+  if (answer.status !== 200) throw new Error(`creation catalog ${answer.status} ${answer.text.slice(0, 300)}`);
+  return { generationId: String(answer.json?.catalogGenerationId ?? ""), kinds: (answer.json?.kinds ?? []) as { kindId: string; schema: string }[] };
+}
+
+/** 🌱️ Runs the server-owned creation of one `kindId` document to `ready` and answers its artifact id and duration. */
+export async function hubProbeCreateArtifact(origin: string, token: string, spaceId: string, generationId: string, kindId: string, name: string, budgetMs = 1_800_000): Promise<{ artifactId: string; ms: number }> {
+  const route = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
+  const requestId = randomBytes(16).toString("hex");
+  const started = Date.now();
+  const accepted = await hubProbeCall(origin, "POST", route, token, JSON.stringify(sealSpaceArtifactCreateV1({ requestId, expectedCatalogGenerationId: generationId, kindId, name })));
+  if (accepted.status !== 202) throw new Error(`creation ${accepted.status} ${accepted.text.slice(0, 300)}`);
+  let state = accepted.json;
+  while (["accepted", "preparing", "indeterminate"].includes(state?.phase) && Date.now() - started < budgetMs) {
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 500));
+    state = (await hubProbeCall(origin, "GET", `${route}/${requestId}`, token)).json;
+  }
+  if (state?.phase !== "ready") throw new Error(`creation of ${kindId} ended ${JSON.stringify(state).slice(0, 300)}`);
+  return { artifactId: String(state.ready.artifactId), ms: Date.now() - started };
+}
+
+/** 🧭️ Asks for the editor open plan of one document (the hub loads the kind's package to answer it). */
+export async function hubProbeOpenPlan(origin: string, token: string, spaceId: string, documentId: string, client: string): Promise<HubProbeAnswer> {
+  return hubProbeCall(origin, "POST", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/open-plan`, token, JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId }, clientInstanceId: client }));
+}
+
+/** 📡️ One open document socket: its Welcome frame, chained opaque edits and close. */
+export type HubProbeDocument = Readonly<{ welcome: any; edit: (index: number, previous: string) => Promise<string>; close: () => void }>;
+
+/** 📡️ Opens one document over the plan → socket grant → socket hello path and answers once it is welcomed. */
+export async function hubProbeOpenDocument(origin: string, token: string, spaceId: string, documentId: string, client: string): Promise<HubProbeDocument> {
+  const scope = `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}`;
+  const plan = await hubProbeOpenPlan(origin, token, spaceId, documentId, client);
+  if (plan.status !== 200) throw new Error(`open-plan ${plan.status} ${plan.text.slice(0, 300)}`);
+  const grant = await hubProbeCall(origin, "POST", `${scope}/socket-grants`, token, JSON.stringify({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.json.receipt }));
+  if (grant.status !== 200) throw new Error(`socket-grant ${grant.status} ${grant.text.slice(0, 300)}`);
+  const granted = parseDocumentSocketGrantReceiptV1(grant.json);
+  const socket = new WebSocket(`${origin.replace(/^http/u, "ws")}/scopes/${encodeURIComponent(`${spaceId}/${documentId}`)}/document/ws?surface=${encodeURIComponent(plan.json.surface.surfaceId)}`, ["semio.session.v1", token]);
+  socket.binaryType = "arraybuffer";
+  const frames: any[] = [];
+  const waiters: ((frame: any) => void)[] = [];
+  socket.addEventListener("message", (event) => {
+    if (!(event.data instanceof ArrayBuffer)) return;
+    const frame = decodeServerFrame(new Uint8Array(event.data)).frame as any;
+    if ("Commands" in frame || "Presence" in frame) return;
+    frames.push(frame);
+    for (const waiter of [...waiters]) waiter(frame);
+  });
+  const waitFrame = (matches: (frame: any) => boolean, label: string, budgetMs = 60_000): Promise<any> =>
+    new Promise((resolveFrame, rejectFrame) => {
+      const hit = frames.find(matches);
+      if (hit) return resolveFrame(hit);
+      const onFrame = (frame: any): void => {
+        if (!matches(frame)) return;
+        clearTimeout(timer);
+        waiters.splice(waiters.indexOf(onFrame), 1);
+        resolveFrame(frame);
+      };
+      waiters.push(onFrame);
+      const timer = setTimeout(() => rejectFrame(new Error(`missing ${label}; last frames ${JSON.stringify(frames.slice(-3)).slice(0, 400)}`)), budgetMs);
+    });
+  for (let tick = 0; tick < 400 && socket.readyState === WebSocket.CONNECTING; tick += 1) await new Promise((resolveDelay) => setTimeout(resolveDelay, 50));
+  if (socket.readyState !== WebSocket.OPEN) throw new Error("document socket did not open");
+  const packSchemaHash = [...(String(plan.json.artifact.packSchemaHash).match(/../gu) ?? [])].map((pair) => Number.parseInt(pair, 16));
+  socket.send(encodeClientFrame({ SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: plan.json.artifact.schema, pack_schema_hash: packSchemaHash, resume_token: null, frontier: null } }, "command"));
+  const welcome = await waitFrame((frame) => "Welcome" in frame || "Error" in frame, "Welcome");
+  if ("Error" in welcome) throw new Error(`refused: ${JSON.stringify(welcome.Error)}`);
+  const edit = async (index: number, previous: string): Promise<string> => {
+    const mutationId = `probe-${documentId}-${index}`;
+    socket.send(encodeClientFrame({ Commands: { batch_id: index + 1, envelopes: [{ mutation_id: mutationId, document_id: documentId, actor: granted.actorId, dependencies: previous ? [previous] : [], observed: null, target: [], diff: { schema: plan.json.artifact.schema, payload: Array.from(new TextEncoder().encode(`probe:${index}:${"b".repeat(512)}`)) }, inverse: { schema: plan.json.artifact.schema, payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 } }] } }, "command"));
+    const acked = await waitFrame((frame) => "Ack" in frame && frame.Ack.batch_id === index + 1, `Ack ${index}`);
+    if (!JSON.stringify(acked.Ack.stages).includes("Accepted")) throw new Error(`edit ${index} not accepted: ${JSON.stringify(acked.Ack)}`);
+    return mutationId;
+  };
+  return { welcome: welcome.Welcome, edit, close: () => socket.close(1000, "probe") };
+}
+//#endregion 🔖️ProbeClient
+

@@ -10,6 +10,8 @@ fn sample_envelope(actor: &str) -> MutationEnvelope {
         document_id: protocol::ArtifactId("doc-1".to_string()),
         actor: protocol::ActorId(actor.to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Vec::new() },
         // 🪡 `HybridLogicalTimestamp::new` is `async fn` in an out-of-scope crate

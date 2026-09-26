@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/retained-toggle-semantics-v1.json",
+  "title": "Retained Toggle Semantics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "appearance", "on", "icon", "text"],
+      "properties": {
+        "type": { "const": "toggle" },
+        "appearance": { "enum": ["button", "checkbox"] },
+        "on": { "type": "boolean" },
+        "icon": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "text": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "elementType", "stateAttribute", "stateValue", "absentAttribute"],
+      "properties": {
+        "role": { "enum": ["button", "checkbox"] },
+        "elementType": { "enum": ["button", "input"] },
+        "stateAttribute": { "enum": ["aria-pressed", "aria-checked"] },
+        "stateValue": { "type": "boolean" },
+        "absentAttribute": { "enum": ["aria-pressed", "aria-checked"] }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "component", "accessibleLabel", "expected"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "component": { "$ref": "#/$defs/component" },
+        "accessibleLabel": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "expected": { "$ref": "#/$defs/expected" }
+      }
+    }
+  }
+}

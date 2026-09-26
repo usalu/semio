@@ -48,23 +48,27 @@ mod commands;
 //#endregion 🎮️Commands
 
 //#region 🌊️FlowExtensions
-/// 🌊️ `(slug, extension id, label, version)` for every flow extension this plugin installs. The
+/// 🌊️ `(slug, extension id, label)` for every flow extension this plugin installs. The
 /// slug is the only free variable in a declaration: the contribution id is
 /// `s.procedural.flow-extension.<slug>` and the native executable is
 /// `semio.s.plugin.flow.extension.<slug>`, so the table states each extension once instead of
-/// spelling those three strings out nine times. `🎮️commands` reads the same table to answer
+/// spelling those three strings out nine times. Every extension is a member of this tree, so its
+/// version is [`FLOW_EXTENSION_VERSION`]. `🎮️commands` reads the same table to answer
 /// `listFlowExtensions`.
-pub(crate) const FLOW_EXTENSIONS: [(&str, &str, &str, &str); 9] = [
-    ("brep", "brep", "Brep", "0.3.0"),
-    ("math", "math", "Math", "0.1.0"),
-    ("primitive", "core", "Core", "0.1.0"),
-    ("logic", "logic", "Logic", "0.1.0"),
-    ("dictionary", "dictionary", "Dictionary", "0.1.0"),
-    ("list", "list", "List", "0.1.0"),
-    ("text", "text", "Text", "0.1.0"),
-    ("draw", "draw", "Draw", "0.1.0"),
-    ("bim", "bim", "Bim", "0.1.0"),
+pub(crate) const FLOW_EXTENSIONS: [(&str, &str, &str); 9] = [
+    ("brep", "brep", "Brep"),
+    ("math", "math", "Math"),
+    ("primitive", "core", "Core"),
+    ("logic", "logic", "Logic"),
+    ("dictionary", "dictionary", "Dictionary"),
+    ("list", "list", "List"),
+    ("text", "text", "Text"),
+    ("draw", "draw", "Draw"),
+    ("bim", "bim", "Bim"),
 ];
+
+/// 📌️ The version every flow extension of [`FLOW_EXTENSIONS`] is built at — the tree's own workspace version.
+pub(crate) const FLOW_EXTENSION_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// 🪪️ The stable contribution id one roster row is declared under.
 pub(crate) fn flow_extension_declaration_id(slug: &str) -> String {
@@ -75,9 +79,9 @@ pub(crate) fn flow_extension_declaration_id(slug: &str) -> String {
 fn flow_extension_declarations() -> Result<Vec<FlowExtensionDeclaration>, PluginAssemblyError> {
     FLOW_EXTENSIONS
         .iter()
-        .map(|(slug, extension, label, version)| {
+        .map(|(slug, extension, label)| {
             let native = format!("semio.s.plugin.flow.extension.{slug}");
-            FlowExtensionDeclaration::new(flow_extension_declaration_id(slug), FlowExtensionManifest::new(*extension, *label, *version)?, FlowExtensionExecutableIdentity::native(native.clone(), native, "register")?)
+            FlowExtensionDeclaration::new(flow_extension_declaration_id(slug), FlowExtensionManifest::new(*extension, *label, FLOW_EXTENSION_VERSION)?, FlowExtensionExecutableIdentity::native(native.clone(), native, "register")?)
         })
         .collect()
 }

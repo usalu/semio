@@ -33,6 +33,28 @@ pub const GISTERRAIN_DIALECT: semio_framework_plugin::Dialect = semio_framework_
 // Registration call site removed from `🎛️apps/🧊️3d/🦀️.rs`'s `create_gis3d_app()`
 // (`.artifact_kind(mesh_artifact_kind())`).
 
+//#region 🔹ArtifactKind
+/// 🏔️ The canonical GIS terrain artifact-kind declaration: one id with its dialect and its native codec receipt
+/// (`s.gis.gisterrain`), so the hub's one open-target rule pairs it with the terrain editor and viewer; the payload
+/// schema stays `gis.terrain`.
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: GISTERRAIN_DIALECT.artifact_kind.into(),
+        name: "3D Terrain".into(),
+        source_format: GIS_3D_TERRAIN_SCHEMA.into(),
+        component_kind: "gisterrain".into(),
+        dimension: "3d".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::ThreeD, form: semio_framework_plugin::MediaForm::Mesh },
+        schema: GIS_3D_TERRAIN_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: standards::v1::subsets::any::io::export_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
+        import_stdio_kinds: standards::v1::subsets::any::io::import_stdio_kinds().iter().map(|kind| (*kind).to_owned()).collect(),
+    }
+}
+//#endregion 🔹ArtifactKind
+
 //#region 🔖️MeshComposition
 /// 🕸️ Deterministic content-addressed CHILD handle for the terrain's composed mesh — same
 /// `(child_id, target)` for identical `(exaggeration, imported_features_json)`, a different pair

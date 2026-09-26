@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.obj.standard.3-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.obj.standard.3-0.dialect.source", "to": "s.stdio.obj.standard.3-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.obj.v1", "artifact_kind": "stdio.obj", "artifact_schema": "stdio.obj", "extension": "obj", "pack_schema_hash": "c66960b9a3ae9b20cd6acc31c344d39b0f217b8d2423bb39082baa8c8bfba787", "runtime_capability_id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1" } }
+    { "id": "s.stdio.obj.standard.3-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.obj.standard.3-0.dialect.source", "to": "s.stdio.obj.standard.3-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.obj.v1", "artifact_kind": "s.stdio.obj", "artifact_schema": "stdio.obj", "extension": "obj", "pack_schema_hash": "c66960b9a3ae9b20cd6acc31c344d39b0f217b8d2423bb39082baa8c8bfba787", "runtime_capability_id": "s.stdio.obj.standard.3-0.codec.codec-stdio-obj-extension-obj.v1" } }
   ],
   "mutations": [],
   "inferences": [],

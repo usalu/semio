@@ -1,0 +1,43 @@
+{
+  "annex": null,
+  "artifact": null,
+  "connections": {
+    "values": [
+      {
+        "actions": [
+          {
+            "fKN": 8000.0,
+            "id": "g",
+            "kind": "permanent",
+            "loadDuration": "permanent"
+          },
+          {
+            "fKN": 10000.0,
+            "id": "q",
+            "kind": "imposed",
+            "loadDuration": "medium"
+          }
+        ],
+        "diameterM": 0.012,
+        "edgeDistanceM": 0.048,
+        "endDistanceM": 0.096,
+        "fUK": 400000000.0,
+        "fastenerType": "bolt",
+        "id": "conn-C1",
+        "labelDe": "Schraubverbund am Auflager",
+        "labelEn": "Bolt group at support",
+        "number": 8,
+        "rows": 2,
+        "serviceClass": 1,
+        "shearPlanes": 1,
+        "spacingM": 0.09,
+        "steelPlate": false,
+        "steelPlateThicknessM": 0.0,
+        "strengthClass": "GL28h",
+        "t1M": 0.2,
+        "t2M": 0.22
+      }
+    ]
+  },
+  "members": null
+}

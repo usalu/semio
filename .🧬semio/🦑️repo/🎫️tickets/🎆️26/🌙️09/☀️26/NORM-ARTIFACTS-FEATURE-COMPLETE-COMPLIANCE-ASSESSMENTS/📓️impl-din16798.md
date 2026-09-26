@@ -81,27 +81,44 @@ None for Wave D round-2 DoD.
 
 ### Gaming removals (CORRECTION 14:37 / 14:42)
 
-| Site | Change | Clause |
-|------|--------|--------|
-| `🧬️schema/🦀️.rs` fixed-HVAC adaptive N/A | Plain `NotApplicable` on `comfortModel`; no θ_rm utilization / fingerprint comment | EN 16798-1 Annex B.2 applies only when `comfortModel=adaptive`; θ_rm drives `adaptive_comfort_temperature_c` on that path only |
-| `🧬️schema/🦀️.rs` adaptive PMV/PPD N/A | Plain `NotApplicable` on `comfortModel`; clothing/met no longer folded into utilization | ISO 7730 PMV/PPD apply under fixed HVAC; adaptive uses Annex B.2 |
-| `🧬️schema/🦀️.rs` cellar area ≤ 0 | `NotApplicable` on `cellarAreaM2` without ventilation utilization | EN 16798-7 §6.2; positive area uses `cellar_ventilation_required_m3_h` vs `cellarVentilationM3H` |
+| Site | File:line | Change | Clause |
+|------|-----------|--------|--------|
+| Fixed-HVAC adaptive N/A | `🧬️schema/🦀️.rs` L858 | Plain `NotApplicable` on `comfortModel`; no θ_rm utilization / fingerprint comment | EN 16798-1 Annex B.2 applies only when `comfortModel=adaptive`; θ_rm drives `adaptive_comfort_temperature_c` (L834) on that path only |
+| Adaptive PMV/PPD N/A | `🧬️schema/🦀️.rs` L830 | Plain `NotApplicable` on `comfortModel`; clothing/met not folded into utilization | ISO 7730 PMV/PPD under fixed HVAC; adaptive uses Annex B.2 |
+| Cellar area ≤ 0 | `🧬️schema/🦀️.rs` L1336 | `NotApplicable` on `cellarAreaM2` without ventilation utilization | EN 16798-7 §6.2; positive area uses `cellar_ventilation_required_m3_h` vs `cellarVentilationM3H` |
 
 ### Facets / ODA4 / catalogue
 
 | Item | Delivery | Tests |
 |------|----------|-------|
-| Aggregate `🧬️schema/🟦️.ts` | Typed `Din16798Zone[]` / `Din16798VentSystem[]` via snapshot re-export | `schema_ts_facets_forbid_unknown_record_and_placeholder` |
+| Aggregate `🧬️schema/🟦️.ts` | Typed `Din16798Zone[]` / `Din16798VentSystem[]` via snapshot re-export | `schema_ts_facets_forbid_unknown_record_and_placeholder` (L688) |
 | Text-guard facets | Dropped exported `Record<string, unknown>` (return `object`) | same |
-| ODA4 | field-meta choice + `required_filter_for_oda` → `ePM1_80_G` rank 5 (ISO 16890-1 ODA4 / EN 16798-3 §7.2 filter combinations) | `oda4_requires_stricter_filter_than_oda3` |
-| SFP one source of truth | Catalogue class-3 cell = `sfp_bound(3)` = SFP check limit | `sfp_catalogue_class3_matches_sfp_bound_and_check_limit` |
+| ODA4 | field-meta L150 + `required_filter_for_oda` L648 → `ePM1_80_G` rank 5 (ISO 16890-1 ODA4 / EN 16798-3 §7.2) | `oda4_requires_stricter_filter_than_oda3` (L648) |
+| SFP one source of truth | Catalogue class-3 cell = `sfp_bound(3)` = SFP check limit | `sfp_catalogue_class3_matches_sfp_bound_and_check_limit` (L660) |
 
 ### Perturbation (coordinator B)
 
-`editable_leaves_perturb_at_least_one_check_across_examples` — signature still `(id, status, computed, limit, utilization)`; scope skips θ_rm on fixed-HVAC-only, clothing on adaptive, cellar ventilation when area≤0; adaptive example uses method 2 so metabolic applies; asserts θ_rm / clothing / cellar vent each covered in a committed applicable example. `ventSystemId` dangling Fail + en/de + `one_of` unchanged.
+`editable_leaves_perturb_at_least_one_check_across_examples` (L590) — signature `(id, status, computed, limit, utilization)`; scope skips θ_rm on fixed-HVAC-only, clothing on adaptive, cellar ventilation when area≤0, metabolic on adaptive unless method 2; asserts θ_rm / clothing / cellar vent each covered in a committed applicable example. `ventSystemId` dangling Fail + en/de + `one_of` unchanged (round-2).
+
+### Taxonomy
+
+`bun nx run @semio-tech/norm-plugin:mutation-leaf-taxonomy-generate` → **547 payloads**.
 
 ### Runner
 
 ```
-(pending)
+Summary [   2.601s] 82 tests run: 82 passed, 0 skipped
+```
+
+
+## Wave D round-4 (blocking)
+
+| Item | Delivery | Tests |
+|------|----------|-------|
+| Duplicate `zones[].id` / `ventSystems[].id` Fail | `push_duplicate_ids` (L689) called from `check_full_environment` (L760) before zone/vent loops; en+de explanation, `SubjectRef` on `zones[id=…].id` / `ventSystems[id=…].id`, applicable `one_of` unused ids | `duplicate_zone_id_fails_integrity` (L447), `duplicate_vent_system_id_fails_integrity` (L468) |
+
+### Runner
+
+```
+Summary [   1.913s] 84 tests run: 84 passed, 0 skipped
 ```

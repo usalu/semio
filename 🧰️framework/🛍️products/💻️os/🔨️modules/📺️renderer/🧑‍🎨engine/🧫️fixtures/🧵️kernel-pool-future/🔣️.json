@@ -61,5 +61,72 @@
         3
       ]
     }
-  ]
+  ],
+  "turnFairness": {
+    "sliceFuel": 50000000,
+    "sliceWallMs": 100,
+    "requestsBetweenSlices": 1,
+    "gaps": [
+      {
+        "id": "another-instances-commands-run-in-the-gap",
+        "head": "exchangeCommands",
+        "headInstance": 2,
+        "busy": 1,
+        "served": true,
+        "cancels": false
+      },
+      {
+        "id": "the-busy-instances-own-commands-wait-for-its-turn",
+        "head": "exchangeCommands",
+        "headInstance": 1,
+        "busy": 1,
+        "served": false,
+        "cancels": false
+      },
+      {
+        "id": "a-close-waits-for-a-whole-request-boundary",
+        "head": "destroyApp",
+        "headInstance": 2,
+        "busy": 1,
+        "served": false,
+        "cancels": false
+      },
+      {
+        "id": "a-realm-close-cancels-the-mid-flight-turn",
+        "head": "closeRealm",
+        "headInstance": 0,
+        "busy": 1,
+        "served": false,
+        "cancels": true
+      },
+      {
+        "id": "an-empty-queue-leaves-the-turn-alone",
+        "head": null,
+        "headInstance": 0,
+        "busy": 1,
+        "served": false,
+        "cancels": false
+      }
+    ],
+    "abandonment": [
+      {
+        "id": "dropped-while-queued-is-a-cancel",
+        "admitted": true,
+        "delivered": false,
+        "abandoned": true
+      },
+      {
+        "id": "dropped-after-its-outcome-is-not",
+        "admitted": true,
+        "delivered": true,
+        "abandoned": false
+      },
+      {
+        "id": "dropped-before-admission-has-nothing-to-cancel",
+        "admitted": false,
+        "delivered": false,
+        "abandoned": false
+      }
+    ]
+  }
 }

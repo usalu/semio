@@ -318,6 +318,67 @@ def inverse(document, mutation):
 # endregion 🔖️Algebra
 
 
+# region 🔖️Adapter
+LEAVES = ("before", "mutation", "diff", "outcome", "after")
+"""🧫️ The five committed files a scenario's doc string addresses."""
+
+
+def variant_of(kind):
+    """🐫️ `change-tile-media` → `ChangeTileMedia`, the externally tagged payload's single key."""
+    return "".join(word.capitalize() for word in kind.split("-"))
+
+
+def committed(ctx):
+    """🧫️ The committed quintet of this scenario's row, read through the plan's declared fixtures."""
+    spec = ctx.doc_json()
+    if spec["kind"] != ctx.row():
+        raise AssertionError("scenario %s: the doc string names %r" % (ctx.scenario["id"], spec["kind"]))
+    return {leaf: json.loads(ctx.fixture_bytes(spec[leaf]).decode("utf-8")) for leaf in LEAVES}
+
+
+def adapter():
+    """🧭️ The platform entry point. The reference answers in the ORACLE role only, by Scenario Outline base id —
+    registering it as a subject too would make it its own subject and manufacture a green self-comparison. Every law
+    `replay()` checks is asserted in role, per row, before the parity phase compares the document it answers."""
+    from semio_repo_test import Adapter, Outcome
+
+    def answer(document):
+        return Outcome(document, raw=json.dumps(document, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+    def mutate_oracle(ctx):
+        kind, leaves = ctx.row(), committed(ctx)
+        if list(leaves["mutation"]) != [variant_of(kind)]:
+            raise AssertionError("mutate-%s: the committed payload declares %r" % (kind, list(leaves["mutation"])))
+        produced, messages = mutate(leaves["before"], leaves["mutation"])
+        if produced != leaves["diff"]:
+            raise AssertionError("mutate-%s: the produced diff differs from the committed 🔺️diff" % kind)
+        declared = [(row["level"], row["code"]) for row in leaves["outcome"].get("messages", [])]
+        if [(row["level"], row["code"]) for row in messages] != declared:
+            raise AssertionError("mutate-%s: diagnostics %r differ from the committed 🎯️outcome %r" % (kind, messages, declared))
+        after = apply_diff(leaves["before"], produced)
+        if after != leaves["after"]:
+            raise AssertionError("mutate-%s: the produced diff does not carry before to the committed after-snapshot" % kind)
+        if after == leaves["before"] and ("warning", "mutation.no-op") not in declared:
+            raise AssertionError("mutate-%s: the vector does not move the document and its outcome declares no no-op" % kind)
+        return answer(after)
+
+    def inverse_oracle(ctx):
+        kind, leaves = ctx.row(), committed(ctx)
+        produced, _ = mutate(leaves["before"], leaves["mutation"])
+        restored = apply_diff(leaves["before"], produced)
+        for step in inverse(leaves["before"], leaves["mutation"]):
+            step_diff, _ = mutate(restored, step)
+            restored = apply_diff(restored, step_diff)
+        if restored != leaves["before"]:
+            raise AssertionError("inverse-%s: the reference's own inverse did not restore the before-snapshot" % kind)
+        return answer(restored)
+
+    return Adapter("python").oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle)
+
+
+# endregion 🔖️Adapter
+
+
 # region 🔖️Replay
 FIXTURES = pathlib.Path(__file__).resolve().parents[1].parent / "🧫️fixtures" / "🧬️mutations"
 

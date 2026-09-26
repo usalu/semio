@@ -1,0 +1,6 @@
+{
+  "ChangeConnectionStrengthClass": {
+    "connectionId": "conn-C1",
+    "newValue": "C24"
+  }
+}

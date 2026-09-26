@@ -250,8 +250,8 @@ fn python_oracle_and_jsonschema_agree_within_half_percent() {
         .join("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
         .canonicalize()
         .expect("family any root");
-    let oracle = any.join("🧪️tests/⚖️compliance-oracle/🐍️.py");
-    let validate = any.join("🧪️tests/⚖️compliance-oracle/validate_snapshot.py");
+    let oracle = any.join("🔮️oracles/⚖️compliance/🐍️.py");
+    let validate = any.join("🔮️oracles/🧬️snapshot-schema/🐍️.py");
     let schema = any.join("🧬️schema/📸️snapshot/🔣️.json");
     let compliant = any.join("🖼️assets/✅️heb240-compliant/snapshot.json");
     assert!(oracle.is_file(), "missing oracle at {oracle:?}");
@@ -371,15 +371,27 @@ fn perturb_every_editable_leaf_in_committed_examples_changes_a_check() {
     ];
     for snap in examples {
         let base = check_full_steel_structure(&snap);
-        let base_sig: Vec<_> = base.checks.iter().map(|c| (c.id.clone(), format!("{:?}", c.status), (c.utilization * 1e6).round() as i64)).collect();
+        let base_sig: Vec<_> = base
+            .checks
+            .iter()
+            .map(|c| {
+                (
+                    c.id.clone(),
+                    format!("{:?}", c.status),
+                    (c.computed.value * 1e6).round() as i64,
+                    (c.limit.value * 1e6).round() as i64,
+                    (c.utilization * 1e6).round() as i64,
+                )
+            })
+            .collect();
         let value = serde_json::to_value(&snap).expect("json");
         let mut paths = Vec::new();
         walk_leaves("", &value, &mut |path| {
             if path.is_empty() {
                 return;
             }
-            // Skip pure identity/label leaves that are descriptive entity labels
-            if path.ends_with(".id") || path.ends_with(".label") || path.ends_with(".name") || path.ends_with(".designation") {
+            let leaf = path.rsplit('.').next().unwrap_or(path);
+            if matches!(leaf, "id" | "name" | "title" | "label" | "labelEn" | "labelDe") {
                 return;
             }
             paths.push(path.to_string());
@@ -387,28 +399,108 @@ fn perturb_every_editable_leaf_in_committed_examples_changes_a_check() {
         let mut unchanged = Vec::new();
         for path in &paths {
             let mut tree = value.clone();
-            // Navigate and perturb
-            let parts: Vec<&str> = path.split('.').collect();
-            // Use serde_json pointer-ish via recursive set
             if !perturb_value(&mut tree, path) {
                 continue;
             }
             let Ok(perturbed) = serde_json::from_value::<En1993Snapshot>(tree) else { continue };
             let rep = check_full_steel_structure(&perturbed);
-            let sig: Vec<_> = rep.checks.iter().map(|c| (c.id.clone(), format!("{:?}", c.status), (c.utilization * 1e6).round() as i64)).collect();
+            let sig: Vec<_> = rep
+                .checks
+                .iter()
+                .map(|c| {
+                    (
+                        c.id.clone(),
+                        format!("{:?}", c.status),
+                        (c.computed.value * 1e6).round() as i64,
+                        (c.limit.value * 1e6).round() as i64,
+                        (c.utilization * 1e6).round() as i64,
+                    )
+                })
+                .collect();
             if sig == base_sig {
                 unchanged.push(path.clone());
             }
         }
-        // Scope-aware: allow a small set of catalogue geometry leaves that only feed remedies options
-        let allowed = unchanged.iter().filter(|p| {
-            p.contains("sections[") && (p.ends_with(".r") || p.ends_with(".it") || p.ends_with(".iw") || p.ends_with(".gModulus") || p.contains(".gModulus"))
-        }).count();
         assert!(
-            unchanged.len() <= allowed + 3,
-            "too many editable leaves do not influence checks: {unchanged:?}"
+            unchanged.is_empty(),
+            "editable leaves do not influence checks: {unchanged:?}"
         );
     }
+}
+
+#[test]
+fn dangling_member_section_material_and_load_case_refs_fail() {
+    let mut doc = En1993Snapshot::compliant_heb240_frame();
+    doc.members[0].section_id = "sec-missing".into();
+    let report = check_full_steel_structure(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.members") && c.id.contains("sectionId") && matches!(c.status, CheckStatus::Fail)));
+
+    let mut doc = En1993Snapshot::compliant_heb240_frame();
+    doc.members[0].material_id = "mat-missing".into();
+    let report = check_full_steel_structure(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.members") && c.id.contains("materialId") && matches!(c.status, CheckStatus::Fail)));
+
+    let mut doc = En1993Snapshot::compliant_heb240_frame();
+    doc.member_actions[0].member_id = "member-missing".into();
+    let report = check_full_steel_structure(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.memberActions") && c.id.contains("memberId") && matches!(c.status, CheckStatus::Fail)));
+
+    let mut doc = En1993Snapshot::compliant_heb240_frame();
+    doc.member_actions[0].load_case_id = "lc-missing".into();
+    let report = check_full_steel_structure(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.memberActions") && c.id.contains("loadCaseId") && matches!(c.status, CheckStatus::Fail)));
+
+    let mut doc = En1993Snapshot::compliant_heb240_frame();
+    doc.joints[0].member_id = "member-missing".into();
+    let report = check_full_steel_structure(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.joints") && c.id.contains("memberId") && matches!(c.status, CheckStatus::Fail)));
+}
+
+#[test]
+fn duplicate_entity_ids_fail_integrity() {
+    let mut doc = En1993Snapshot::compliant_heb240_frame();
+    let dup = doc.members[0].clone();
+    doc.members.push(dup);
+    let report = check_full_steel_structure(&doc);
+    assert!(report.checks.iter().any(|c| c.id.contains("integrity.duplicate.members") && matches!(c.status, CheckStatus::Fail)));
+}
+
+#[test]
+fn design_temperature_changes_fire_check_limit_or_utilization() {
+    let base = En1993Snapshot::compliant_heb240_frame();
+    let base_rep = check_full_steel_structure(&base);
+    let base_fire: Vec<_> = base_rep
+        .checks
+        .iter()
+        .filter(|c| c.id.contains("1-2"))
+        .map(|c| ((c.limit.value * 1e6).round() as i64, (c.utilization * 1e6).round() as i64, format!("{:?}", c.status)))
+        .collect();
+    let mut doc = base.clone();
+    doc.fire_exposures[0].design_temperature = 750.0;
+    let rep = check_full_steel_structure(&doc);
+    let fire: Vec<_> = rep
+        .checks
+        .iter()
+        .filter(|c| c.id.contains("1-2"))
+        .map(|c| ((c.limit.value * 1e6).round() as i64, (c.utilization * 1e6).round() as i64, format!("{:?}", c.status)))
+        .collect();
+    assert_ne!(base_fire, fire, "designTemperature must change a fire check limit or utilization");
+}
+
+#[test]
+fn class_four_section_fails_classification_with_section_remedy() {
+    let mut doc = En1993Snapshot::compliant_heb240_frame();
+    if let Some(sec) = doc.sections.iter_mut().find(|s| s.id == "sec-heb240") {
+        sec.tf = 0.006;
+        sec.tw = 0.005;
+        sec.b = 0.300;
+        sec.h = 0.400;
+        sec.kind = "weldedI".into();
+    }
+    let report = check_full_steel_structure(&doc);
+    let class_check = report.checks.iter().find(|c| c.id.contains("5.2.class")).expect("class row");
+    assert!(matches!(class_check.status, CheckStatus::Fail), "class 4 must Fail, got {:?}", class_check.status);
+    assert!(!class_check.remedies.is_empty(), "class 4 must offer a section one_of remedy");
 }
 
 fn perturb_value(tree: &mut serde_json::Value, path: &str) -> bool {
@@ -622,3 +714,31 @@ fn multi_part_examples_populate_all_eight_entity_lists() {
     assert!(!bad.crane_runways.is_empty());
 }
 
+
+
+#[test]
+fn member_type_gates_buckling_and_ltb_checks() {
+    let mut doc = En1993Snapshot::compliant_heb240_frame();
+    doc.members[0].member_type = "beamColumn".into();
+    let full = check_full_steel_structure(&doc);
+    assert!(full.checks.iter().any(|c| c.id.contains("6.3.1.nb")), "beamColumn must run flexural buckling");
+    assert!(full.checks.iter().any(|c| c.id.contains("6.3.2.mb")), "beamColumn must run LTB when My present");
+
+    doc.members[0].member_type = "tie".into();
+    let tie = check_full_steel_structure(&doc);
+    assert!(
+        tie.checks.iter().all(|c| !c.id.contains("6.3.1.nb") && !c.id.contains("6.3.2.mb") && !c.id.contains("6.2.4.n")),
+        "tie must skip buckling, LTB and compression"
+    );
+    assert!(tie.checks.len() < full.checks.len(), "tie must emit fewer member ULS checks than beamColumn");
+
+    doc.members[0].member_type = "beam".into();
+    let beam = check_full_steel_structure(&doc);
+    assert!(beam.checks.iter().all(|c| !c.id.contains("6.3.1.nb")), "beam skips flexural buckling");
+    assert!(beam.checks.iter().any(|c| c.id.contains("6.3.2.mb")), "beam keeps LTB");
+
+    doc.members[0].member_type = "column".into();
+    let column = check_full_steel_structure(&doc);
+    assert!(column.checks.iter().any(|c| c.id.contains("6.3.1.nb")), "column keeps flexural buckling");
+    assert!(column.checks.iter().all(|c| !c.id.contains("6.3.2.mb")), "column skips LTB");
+}

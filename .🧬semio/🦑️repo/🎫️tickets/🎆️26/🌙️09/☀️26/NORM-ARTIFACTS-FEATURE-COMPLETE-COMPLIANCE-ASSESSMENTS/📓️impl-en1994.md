@@ -1,62 +1,63 @@
-# Impl — EN 1994 (`🧩️en1994`) — Round 2
+# Impl — EN 1994 (`🧩️en1994`) — Round 3
 
 ## Subject (SI, hierarchical)
 - `En1994Snapshot`: annex, structureKind, steelFYPa, beams[], columns[], slabs[], fireRating, insulationThicknessM, fatigueDetail
-- **Beams**: span, spacing, support (`simply_supported` | `continuous_2_span`), construction (propped/unpropped), steel section, slab, sheeting, studs (incl. `spacingM`), crack fields, `actions[]`
-- **Columns**: kind (encased / concrete_filled / partially_encased), outerSizeM, wallThicknessM, sections, `actions[]`
-- **Slabs**: support, sheeting (thickness → A_p), m-k, `actions[]`
-- **CharacteristicAction**: kind/category/stage + qAreaPa / qLineNPerM / mKNm / vKN / nKN / fatigue Δσ_k / Δτ_k
-- Hand-typed M_Ed / V_Ed / N_Ed **removed**
+- **CharacteristicAction** (area-only source of truth): `qAreaPa` × member tributary width → line load in `part_en1990::action_internals` (`🧬️schema/🦀️.rs` action_internals). Removed `qLineNPerM`.
+- Columns may carry externally analysed characteristic `nKN` / `mKNm` when `qAreaPa == 0`.
+- Scoped helpers: `En1994Snapshot::unpropped_building`, `custom_plate_building`, `bridge_girder`, `fire_demanding` (`📸️snapshot/🦀️.rs`).
 
 ## Combinations (`part_en1990`)
-- ULS 6.10 (composite + construction stages), SLS characteristic / quasi-permanent, fire 6.11 with ψ_fi
-- Span + support analysis (simply supported / continuous 2-span) or external m_k/v_k/n_k
-- Governing combination label reported per check; propped vs unpropped (construction steel-alone + LTB)
-- Bridges: FLM3 Δσ / Δτ (or fatigue action overrides)
+| Mode | EN 1990 | Governs |
+|------|---------|---------|
+| ULS 6.10 | γ_G/γ_Q ψ₀ | ULS M/V/N, construction, columns |
+| SLS characteristic | ψ₀ | §7.2.2 steel stress (`en1994.7.2.2.stress.*`) |
+| SLS frequent | ψ₁ lead + ψ₂ acc | §7.3.1 deflection (`en1994.7.3.1.deflection.*`) |
+| SLS quasi-permanent | ψ₂ | §7.4 crack with n_L (`en1994.7.4.crack.*`) |
+| Fire 6.11 | ψ_fi | fire combination demand |
 
-## Checks (clause · remedy)
-| Part | Clause | Check id | Remedy |
-|------|--------|----------|--------|
-| 1-1 | §5.4.1.2 | beff | spacing |
-| 1-1 | §5.5 / EN 1993-1-1 Table 5.2 | class | tw/tf |
-| 1-1 | §6.2.1.3 | mrd | actions / slab / steel OneOf |
-| 1-1 | §6.2.1 / §9.3 | construction | construction q |
-| 1-1 | §6.6.5.5 | spacing | studs.spacingM |
-| 1-1 | §6.6.3.1 | prd | stud count / spacing |
-| 1-1 | §6.6.1.2 | etamin | stud count |
-| 1-1 | §6.2.2 | vpl | tw (+ shear buckling) |
-| 1-1 | §6.6.6 | vlrd | transverse As |
-| 1-1 | §6.4 | ltb | ltbLength (unpropped/hogging) |
-| 1-1 | §7.3.1 | deflection | SLS QP actions |
-| 1-1 | §7.4 | crack | As / bar spacing |
-| 1-1 | §6.7.3 | npl / mn | kind, wallThickness, actions N_k |
-| 1-1 | §9.3 / §9.7 | sheeting / mrd / mk / vrd | thickness, As, concrete |
-| 1-2 | §4.2 / §4.3 | insulation / theta | insulation |
-| 2 | §6.8 | delta-sigma / stud | FLM3 / diameter |
+## Round-3 blocking fixes
+1. Catalogue `render_catalogue(examples, tables, locale, controller_id, windows)` — already on B2 API (`✏️editor/📌️panels/📚️catalogue/🦀️.rs`).
+2. TS facets typed: `CompositeBeam` / `Column` / `Slab` / `CharacteristicAction` in `🧬️schema/🟦️.ts` + `📸️snapshot/🟦️.ts`; graphql/proto/json-schema nested; test `ts_snapshot_facets_have_no_unknown_and_match_rust_leaves`.
+3. Leaf test `every_editable_leaf_affects_at_least_one_check` — scope-aware (default / unpropped / custom-plate / bridge / fire / column forces); asserts status+computed+limit+utilization; no fingerprint gaming; label exemptions only.
+4. SLS frequent combination + checks wired (table above).
+5. Removed `let _ = sls_char`; stress check uses `sls_char`.
+6. Single-source area loads; fixtures/DSL `qAreaPa` restored for permanents.
 
-## DE/EN
-- γ_Mf bridge fatigue: DE 1.35 vs EN 1.15; other NDPs aligned in AnnexParams
+## Non-blocking
+- Stud Δτ uses annex `γ_Mf` (`part_2::stud_fatigue_resistance_pa(n, annex)`).
+- Column N–M: `α_M` 0.9/0.8 + `moment_resistance_at_n` polygon (`part_column`, §6.7.3.6).
+- Custom plate: `SteelSection::custom_plate` + `En1994Snapshot::custom_plate_building` for leaf geometry.
 
-## Examples
-- `🏢composite-floor-beam` complies; `🏢composite-floor-beam-failing` fail≥2; `🌉️composite-bridge-girder` runs EN 1994-2 fatigue
-
-## Tests
-- Leaf perturbation: every editable leaf (excl. name/title, catalogue plate geometry under resolve, bridge-only fatigue, unused zero companions, propped-only LTB length) changes ≥1 check
-- Oracle ±0.5 % + jsonschema; mutation kinds renamed to action/geometry verbs
+## Tests (proof)
+| Item | Test name |
+|------|-----------|
+| Leaf coverage | `every_editable_leaf_affects_at_least_one_check` |
+| TS parity | `ts_snapshot_facets_have_no_unknown_and_match_rust_leaves` |
+| Annex γ_Mf | `de_vs_en_bridge_fatigue_gamma_mf` (+ annex assert inside leaf test) |
+| Examples | `passing_example_dsl_complies`, `failing_example_dsl_does_not_comply_with_named_ids`, `bridge_example_runs_fatigue_checks` |
+| Oracle / schema | existing oracle ±0.5% + jsonschema |
 
 ## Runner
 ```
-Summary [   2.918s] 72 tests run: 72 passed, 0 skipped
+Summary [   5.463s] 74 tests run: 74 passed, 0 skipped
 ```
 `bun nx run @semio-tech/norm-en1994-rs:test --skip-nx-cache -- --no-fail-fast`
 
-## Round-2 CORRECTION 13:43 closeout
-- Characteristic actions + EN 1990(+DE NA) combos; governing label; propped/unpropped; FLM3
-- `studs.spacingM` → §6.6.5.5 + η; `columns[].kind` → §6.7.3; `twM`/`tfM` → class/A_v/buckling/M_pl; `sheeting.thicknessM` → A_p / construction / m-k·τ_u / §9.7
-- Leaf mutation coverage test green; parallel-rib k_t = 1.0×t_fac; default rib width 35 mm so non-parallel k_t < 1 for leaf sensitivity
+
+## Round-4 blocking fixes
+1. Catalogue `reference_tables()` publishes γ_G/γ_Q (shared `part_en1990::GAMMA_*` / `gamma_g`/`gamma_q`), ψ₀/ψ₁/ψ₂ (shared `psi_factors`), and stud spacing min/max (shared `part_1_1::STUD_SPACING_*` / `stud_spacing_limits_m`). Test `reference_tables_cells_match_psi_and_gamma_i_sources` asserts cells equal evaluate sources; empty tables no longer allowed.
+2. Removed `let _ = annex` in `gamma_g`/`gamma_q` — both branch on `AnnexChoice`. Bridge fatigue annex walk + γ_Mf DE/EN divergence remain the normative annex proof (`bridge-fatigue` scope walks `annex`).
+3. Beam/slab force duplicates removed: `CharacteristicAction` keeps `qAreaPa` or sole `fKN` (never both — `en1994.action.single-source.*`); columns use `ColumnAction` with `nKN`/`mKNm` only. Perturbation adds `failing-beam` scope from `composite-floor-beam-failing`; pred exemptions are labels only (plus catalogue steel geom overwrite / scope routing).
+4. `validate_snapshot.py` fails hard if `jsonschema` is missing. Python oracle compares η / η_min / utilization for `etamin` (no shape-skip hatch).
+
+## Runner (Round 4)
+```
+Summary [   1.430s] 75 tests run: 75 passed, 0 skipped
+```
+`bun nx run @semio-tech/norm-en1994-rs:test --skip-nx-cache -- --no-fail-fast`
 
 ## Remaining gaps
-None
+None for Round-4 blockers.
 
 ## Requests to coordinator
 None

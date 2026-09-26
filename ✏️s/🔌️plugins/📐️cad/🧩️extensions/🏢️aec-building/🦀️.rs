@@ -90,7 +90,7 @@ fn computers_manifest() -> JsonValue {
 // that same file); bridged here via `semio_framework::io::resolve_ready`, matching that established
 // idiom. See this packet's lease-request asking the SDK owner to revert these to sync directly.
 fn bundle() -> ExtensionBundle {
-    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", "0.1.0").extends("cad").depends_on("cad", semio_framework::VersionReq::parse("^0.1.0").expect("valid version req"));
+    let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
     // extension only contributes a topic (`cad.computer`) and, onto cad's OWN `s.cad.cad`
     // artifact, one composite mutation + one inference (both dispatched by the host through

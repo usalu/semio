@@ -19,7 +19,10 @@ import fixtureSchema from "../../../../../../📇️directory/🔐️sign-in/�
 import {
   HUB_AUTH_ERROR_SCHEMA_V1,
   HUB_CONNECTION_BOOK_MAX_ENTRIES,
+  HUB_SESSION_ME_PATH_V1,
+  HUB_SESSION_MINT_PATH_V1,
   HUB_SESSION_MINT_REQUEST_MAX_BYTES,
+  HUB_SESSION_SIGN_OUT_PATH_V1,
   HUB_SIGN_IN_REQUEST_SCHEMA_V1,
   HUB_SIGN_IN_TEXT_V1,
   LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1,
@@ -61,7 +64,7 @@ import localSessionFixture from "../../../../../../📇️directory/🎫️local
 import localSessionSchema from "../../../../../../📇️directory/🎫️local-session/🧬️.schema.json";
 import { localHubSessionAnswerV1, parseLocalHubSessionAnswerV1, type LocalHubSessionV1 } from "../../../../../../📇️directory/🎫️local-session/🟦️.ts";
 import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1 } from "../../🟦️.tsx";
-import { useHubConnection, type HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
+import { createHubConnectionFetchPortV1, useHubConnection, type HubConnectionPortV1 } from "../../../🔗️HubConnection/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 afterEach(cleanup);
@@ -158,6 +161,7 @@ describe("hub sign-in contract", () => {
     expect(equal(HUB_SIGN_IN_TEXT_V1, fixture.presentation.text)).toBe(true);
     for (const locale of fixture.presentation.locales) expect(equal(hubSignInTextV1(locale), fixture.presentation.text[locale as "en" | "de"])).toBe(true);
     expect(() => hubSignInTextV1("fr")).toThrow("hub.sign-in.locale-unsupported");
+    expect([HUB_SESSION_MINT_PATH_V1, HUB_SESSION_ME_PATH_V1, HUB_SESSION_SIGN_OUT_PATH_V1]).toStrictEqual([fixture.mintPath, fixture.sessionPath, fixture.signOutPath]);
     expect(Object.keys(HUB_SIGN_IN_TEXT_V1.en).sort()).toStrictEqual(Object.keys(HUB_SIGN_IN_TEXT_V1.de).sort());
     for (const locale of ["en", "de"] as const) for (const value of Object.values(HUB_SIGN_IN_TEXT_V1[locale])) expect(value.length).toBeGreaterThan(0);
   });
@@ -662,6 +666,58 @@ describe("useHubConnection sign-in lane", () => {
     await waitFor(() => expect(view.container.querySelector('[data-testid="phase"]')?.textContent).toBe("signed-out"));
     expect(view.container.querySelector('[data-testid="user"]')?.textContent).toBe("");
   });
+});
+
+/** 🎫️ LAW (ticket 26/09/23 U5, G10 S4 relay): the fetch port reads the session the browsing context holds on every
+ * request and on every mount. It used to capture it when the shell built the port — before any sign-in — so the hub pane
+ * reopened after an in-pane sign-in said "Not signed in to a hub" above the signed-in human's own spaces, and a session the
+ * shell adopted later was never sent. Testing Library drives the surface as the oracle for what the human reads. */
+describe("the hub fetch port's held session", () => {
+  it("starts every later mount signed in and sends the session the shell holds on each request, without a rebuild", async () => {
+    const OTHER = `session.v1.${"f".repeat(32)}.${"e".repeat(64)}`;
+    const requests: { readonly url: string; readonly authorization: string | null }[] = [];
+    const shell: { held: Readonly<{ token: string; userId: string }> | null } = { held: null };
+    const answer = (status: number, body: string) => ({ status, headers: { get: () => null }, text: async () => body });
+    const port = createHubConnectionFetchPortV1({
+      request: async (url, init) => {
+        const authorization = init.headers.authorization ?? null;
+        requests.push({ url, authorization });
+        if (url.endsWith("/auth/sessions") && init.method === "POST") return answer(200, minted().body);
+        if (url.endsWith("/auth/sessions/me")) return answer(200, authorityBody(authorization === `Bearer ${OTHER}` ? "usr_bo" : "usr_ada"));
+        if (url.endsWith("/directory/spaces")) return answer(200, "[]");
+        return answer(404, "");
+      },
+      storage: memoryStorage(),
+      bootstrapOrigin: "http://127.0.0.1:7777",
+      deviceInstanceId: "device-u5-held",
+      clientClass: "browser",
+      parseSpaces: () => [],
+      sealCommand: () => {
+        throw new Error("unused");
+      },
+      capability: { read: () => shell.held, write: (next) => void (shell.held = next) },
+    });
+    expect(port.heldCapability?.() ?? null).toBeNull();
+    const first = render(<HookHarness port={port} />);
+    expect(first.container.querySelector('[data-testid="phase"]')?.textContent).toBe("signed-out");
+    fireEvent.change(first.container.querySelector<HTMLInputElement>('input[type="email"]')!, { target: { value: "ada@example.org" } });
+    fireEvent.change(first.container.querySelector<HTMLInputElement>('input[type="password"]')!, { target: { value: "correct horse" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    await waitFor(() => expect(first.container.querySelector('[data-testid="display"]')?.textContent).toBe("Ada"));
+    expect(shell.held).toEqual({ token: TOKEN, userId: "usr_ada" });
+    expect(port.heldCapability?.()).toEqual({ userId: "usr_ada" });
+    first.unmount();
+    const reopened = render(<HookHarness port={port} />);
+    await waitFor(() => expect(reopened.container.querySelector('[data-testid="phase"]')?.textContent).toBe("signed-in"));
+    expect(reopened.container.querySelector('[data-testid="user"]')?.textContent).toBe("usr_ada");
+    expect(reopened.container.textContent?.includes("Not signed in to a hub.") ?? false, "a reopened pane never reads signed out while the session is held").toBe(false);
+    await waitFor(() => expect(requests.filter((row) => row.url.endsWith("/directory/spaces")).at(-1)?.authorization).toBe(`Bearer ${TOKEN}`));
+    reopened.unmount();
+    shell.held = { token: OTHER, userId: "usr_bo" };
+    const adopted = render(<HookHarness port={port} />);
+    await waitFor(() => expect(adopted.container.querySelector('[data-testid="user"]')?.textContent).toBe("usr_bo"));
+    expect(requests.filter((row) => row.url.endsWith("/auth/sessions/me")).at(-1)?.authorization, "a session the shell adopted elsewhere is the one sent").toBe(`Bearer ${OTHER}`);
+  }, 30_000);
 });
 //#endregion 🔗️Hook
 

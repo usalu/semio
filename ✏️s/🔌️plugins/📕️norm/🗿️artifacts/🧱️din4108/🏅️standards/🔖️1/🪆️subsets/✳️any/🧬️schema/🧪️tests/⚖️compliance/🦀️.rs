@@ -74,7 +74,7 @@ async fn summer_heat_s_vorh_includes_orientation_and_inclination() {
     assert!((s_zul - table).abs() < 1e-12);
     let with_extras = part_2::s_zul_full('B', "heavy", "moderate", true, true);
     assert!((with_extras - (table + 0.03 + 0.04)).abs() < 1e-12);
-    let check = part_2::check_summer_heat(zone, crate::document::ClimateZoneDe::Zone2, &snap.elements);
+    let check = part_2::check_summer_heat(zone, crate::document::ClimateZoneDe::Zone2, &snap.elements, &snap.usage);
     assert_eq!(check.status, CheckStatus::Pass);
 }
 
@@ -401,7 +401,7 @@ async fn jsonschema_validates_default_and_failing_snapshots() {
     assert!(schema.exists(), "{}", schema.display());
     let tmp = ticket_generated();
     let _ = std::fs::create_dir_all(&tmp);
-    let validate = family_any_dir().join("🧬️schema/🧪️tests/⚖️compliance/validate_snapshot.py");
+    let validate = family_any_dir().join("🔮️oracles/🧬️snapshot-schema/🐍️.py");
     for (name, doc) in [("default", Din4108Snapshot::default()), ("failing", Din4108Snapshot::failing_thin_insulation())] {
         let snap = tmp.join(format!("{name}.schema.snap.json"));
         let json = serde_json::to_string_pretty(&doc).unwrap();

@@ -34,6 +34,11 @@ impl MutationKind<WriterSnapshot, WriterMutation> for RenameWriter {
         super::inverse::inverse(self, base)
     }
 
+    /// 🎯️ The writer's identity. Concurrent writers of the same field conflict; writers of different fields never do.
+    fn target(&self) -> Vec<String> {
+        vec!["id".to_string()]
+    }
+
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(&format!("Rename document to \"{}\"", self.new_id), &format!("Dokument in \"{}\" umbenennen", self.new_id))
     }

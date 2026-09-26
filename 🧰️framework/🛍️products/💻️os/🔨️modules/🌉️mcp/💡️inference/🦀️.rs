@@ -228,13 +228,18 @@ pub fn lookup_inference(declared: &[DeclaredInference], inference_schema: &str) 
 /// `semio_framework_plugin_host::ArtifactInferenceRouter`) runs any declared service for real. This
 /// stays retryable because a later packet that caches a document-derived canonical payload per
 /// artifact turns this exact read into a hit with no change to the discovery path above.
+///
+/// 🔗️ An artifact-bound inference HAS a request body for this artifact — the gateway can
+/// build it — but building it means running the guest, which a READ must not do on its
+/// own budget. So the refusal is now an instruction with everything in it.
+///
+/// 📜️ The published contract travels WITH the refusal, so a client that asked for a value
+/// and got a gap learns in the same round trip what to call and what to send — instead of
+/// having to find `inference_list` and correlate the row itself.
 fn execution_not_wired_error(item: &DeclaredInference) -> GatewayError {
     GatewayError::new(
         GatewayErrorCode::PluginUnavailable,
         match item.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()) {
-            // 🔗️ An artifact-bound inference HAS a request body for this artifact — the gateway can
-            // build it — but building it means running the guest, which a READ must not do on its
-            // own budget. So the refusal is now an instruction with everything in it.
             Some(binding) => format!(
                 "`{}/{}` is declared, executable and artifact-bound: run it with `inference_run {{ artifactKind, inferenceSchema, artifactId }}` — this gateway binds the artifact's document into `payload.{}` for you. A READ does not spend guest time on its own",
                 item.artifact_kind, item.inference_schema, binding.field
@@ -248,9 +253,6 @@ fn execution_not_wired_error(item: &DeclaredInference) -> GatewayError {
         "owner": item.owner,
         "runWith": "inference_run",
         "pluginId": item.route_plugin_id(),
-        // 📜️ The published contract travels WITH the refusal, so a client that asked for a value
-        // and got a gap learns in the same round trip what to call and what to send — instead of
-        // having to find `inference_list` and correlate the row itself.
         "payload": item.payload,
     }))
     .retryable()
@@ -1987,6 +1989,11 @@ fn run_guest_inference(workspace: &Arc<HeadlessWorkspace>, actions: &crate::acti
 /// `inference_submit`, resolved through the same service model. A guest service runs here, in its
 /// plugin's guest; a hub-executed service is submitted to the hub and its events are followed to a
 /// terminal page. Nothing is committed: an offered proposal is returned, never applied.
+///
+/// 🎫️ The job is minted BEFORE the contract is checked, and that ordering is load-bearing:
+/// `JobRegistry::begin` binds the id to this call's `_meta.progressToken`, so every step from
+/// here on — including a REFUSAL — is pushed to the client as `notifications/progress` and is
+/// readable afterwards with `job_get`/`job_cancel`.
 fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_json::Value) -> CallToolResult {
     if let Err(error) = authorize_inference(context.policy(), context.principal, &inference_run_capability()) {
         return CallToolResult::tool_error(&error);
@@ -2018,10 +2025,6 @@ fn inference_run_handler(context: &InferenceToolContext<'_>, arguments: serde_js
     let arguments = merge_inference_run_fields(arguments.clone(), serde_json::json!({ "cancellationId": cancellation_id }));
     let cancel = crate::actions::InferenceCancel::default();
 
-    // 🎫️ The job is minted BEFORE the contract is checked, and that ordering is load-bearing:
-    // `JobRegistry::begin` binds the id to this call's `_meta.progressToken`, so every step from
-    // here on — including a REFUSAL — is pushed to the client as `notifications/progress` and is
-    // readable afterwards with `job_get`/`job_cancel`.
     let jobs = crate::ui::job_registry();
     let job_id = jobs.begin("inference.run");
     let base = serde_json::json!({

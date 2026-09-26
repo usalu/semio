@@ -78,6 +78,31 @@ impl ArtifactOwnedToolJobFactory for Mp3EditorExampleFactory {
     type Owner = EditorApp<Mp3Editor>;
     const TOOL_IDS: &'static [&'static str] = STDIO_MP3_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = STDIO_MP3_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_MP3_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
+}
+//#region 🔖️Editor
+#[derive(Default, Clone, Copy)]
+pub struct Mp3Editor;
+
+impl ArtifactEditor for Mp3Editor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
+    type Snapshot = Mp3Snapshot;
+    type Mutation = Mp3Mutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Presence = NoPresence;
+    type PresenceMutation = NoPresenceMutation;
+    type Transient = NoTransient;
+    type TransientMutation = NoTransientMutation;
+    type Command = Mp3EditCommand;
+
+    const DIALECT: Dialect = MP3_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_MP3_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<Mp3Editor>,
@@ -104,31 +129,6 @@ impl ArtifactOwnedToolJobFactory for Mp3EditorExampleFactory {
     }
     fn command_id(command: &Self::Command) -> &'static str { mp3Editor_command_id(command) }
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { mp3Editor_command_from_action(action, args) }
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_MP3_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
-}
-//#region 🔖️Editor
-#[derive(Default, Clone, Copy)]
-pub struct Mp3Editor;
-
-impl ArtifactEditor for Mp3Editor {
-    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
-    }
-    type Snapshot = Mp3Snapshot;
-    type Mutation = Mp3Mutation;
-    type Config = NoConfig;
-    type ConfigMutation = NoConfigMutation;
-    type Draft = NoDraft;
-    type DraftMutation = NoDraftMutation;
-    type Presence = NoPresence;
-    type PresenceMutation = NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
-    type Command = Mp3EditCommand;
-
-    const DIALECT: Dialect = MP3_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = STDIO_MP3_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> Self::Snapshot {
         Mp3Snapshot::default()
@@ -168,6 +168,7 @@ pub fn create_mp3_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(MP3_DIALECT).document(["semio", "mp3"]).icon_id("play").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
+        .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
         .build_definition()
 }

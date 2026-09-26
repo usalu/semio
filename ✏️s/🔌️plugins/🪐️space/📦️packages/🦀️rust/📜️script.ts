@@ -567,16 +567,6 @@ class InteractiveJobCatalogCheckScript extends BundleScript {
   }
 }
 
-/** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
- * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
- * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
-class DescribeScript extends BundleScript {
-  async run(): Promise<void> {
-    const { describePluginComponent } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts");
-    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-space", join(this.root, "..", "..")));
-  }
-}
-
 
 /** 🗃️ Proves PersistenceDataClass routing (WP-C6). */
 export function persistenceDataClassOracle(repoRoot: string): number {
@@ -618,7 +608,7 @@ class PersistenceDataClassCheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("plugin-identity-check", PluginIdentityCheckScript).register("persistence-data-class-check", PersistenceDataClassCheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("plugin-identity-check", PluginIdentityCheckScript).register("persistence-data-class-check", PersistenceDataClassCheckScript);
 
 registerPlaygroundSiteBuildCommands(router);
 

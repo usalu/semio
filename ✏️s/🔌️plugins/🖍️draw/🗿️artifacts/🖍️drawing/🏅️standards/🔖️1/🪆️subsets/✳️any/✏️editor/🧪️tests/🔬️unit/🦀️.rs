@@ -567,8 +567,64 @@ async fn settled(app: &mut DrawingApp, command: DrawingCommand, meta: &semio_fra
     (result, receipt)
 }
 
+/// 📸️ Loads test geometry through the same retained envelope owner as the host.
+fn load_drawing_fixture(app: &mut DrawingApp, snapshot: &DrawingSnapshot) {
+    use store::ArtifactPack;
+    let pack = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let wire = serde_json::to_vec(&serde_json::json!({
+        "schema": DRAWING_DOCUMENT_SCHEMA, "id": snapshot.id,
+        "vcs": { "initialSnapshot": pack, "edits": [], "changes": [], "checkpoints": [], "alternatives": [] },
+        "editMessages": [], "conflicts": []
+    })).unwrap();
+    let handle = admit_drawing_envelope(app, &wire);
+    assert_eq!(drive_drawing_load(app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready, "fixture admission: {:?}", app.artifact_store_replacement_refusal(handle));
+    assert!(app.acknowledge_artifact_store_replacement(handle).unwrap());
+    assert_eq!(app.snapshot().unwrap(), *snapshot);
+}
+
 fn assert_one_artifact_publication(receipt: &artifact_laws::TypedOperationFixtureReceipt) {
     assert_artifact_publication_units(receipt, 1);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
+    for cancelled in [true, false] {
+        let (mut app, mut meta) = inline_selection_app().await;
+        meta.view_state.as_mut().unwrap().active_utility_id = Some("selectDirect".into());
+        let layer = crate::schema::create_drawing_shape_layer_rect("Drag target");
+        let id = layer_id(&layer).to_string();
+        let snapshot = DrawingSnapshot { id: "direct-drag".into(), layers: vec![layer], ..Default::default() };
+        load_drawing_fixture(&mut app, &snapshot);
+        settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
+        let before = app.snapshot().unwrap();
+        let view = meta.view_state.as_ref().unwrap();
+        let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, view).await.unwrap());
+        let records: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).unwrap();
+        let original = records.iter().find(|record| record["id"] == id).unwrap()["transform"].clone();
+        let (_, down) = settled(&mut app, DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, ..Default::default() }), &meta).await;
+        assert!(!down.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
+        assert_eq!(app.snapshot().unwrap(), before);
+        let (_, moved) = settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 430.0, y: 320.0, width: 800.0, height: 600.0, samples: vec![[410.0,310.0],[430.0,320.0]] }), &meta).await;
+        assert!(!moved.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
+        assert_eq!(app.snapshot().unwrap(), before);
+        let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, view).await.unwrap());
+        let records: Vec<serde_json::Value> = serde_json::from_str(&scene.layers_json).unwrap();
+        let preview = &records.iter().find(|record| record["id"] == id).unwrap()["transform"];
+        assert_eq!(preview[4].as_f64().unwrap(), original[4].as_f64().unwrap() + 30.0);
+        assert_eq!(preview[5].as_f64().unwrap(), original[5].as_f64().unwrap() + 20.0);
+        let (_, released) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 430.0, y: 320.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled }), &meta).await;
+        if cancelled {
+            assert!(!released.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
+            assert_eq!(app.snapshot().unwrap(), before);
+        } else {
+            assert_one_artifact_publication(&released);
+            let after = app.snapshot().unwrap();
+            let transform = &crate::schema::layer_base(&after.layers[0]).transform;
+            assert_eq!(transform.x, 30.0);
+            assert_eq!(transform.y, 20.0);
+        }
+        eprintln!("[DEBUG] retained direct drag preview/release verified; cancelled={cancelled}");
+    }
 }
 
 fn assert_artifact_publication_units(receipt: &artifact_laws::TypedOperationFixtureReceipt, expected_completions: usize) {
@@ -833,6 +889,40 @@ async fn add_layer_undo_round_trip_through_wrapper() {
     let mut app = drawing_app().await;
     let before = app.snapshot().unwrap().layers.len();
     artifact_laws::assert_undo_redo_round_trip(&mut *app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn path_join_and_conversion_each_undo_as_one_edit() {
+    use crate::schema::geometry::editing::{edit_path,PathEdit,SegmentType};
+    for edit in [PathEdit::Join { index:1,other:2 },PathEdit::Convert { index:1,target:SegmentType::Cubic }] {
+        let mut app=drawing_app().await;
+        let before=vec![crate::PathSegment::Move { to:[0.0,0.0] },crate::PathSegment::Line { to:[10.0,0.0] },crate::PathSegment::Move { to:[20.0,0.0] },crate::PathSegment::Line { to:[30.0,0.0] }];
+        let after=edit_path(&before,&edit).unwrap();
+        let layer=crate::schema::create_drawing_path_layer("Editable",before.clone());
+        let id=layer_id(&layer).to_string();
+        let snapshot=DrawingSnapshot { id:"path-history".into(),layers:vec![layer],..Default::default() };
+        load_drawing_fixture(&mut app,&snapshot);
+        let command=DrawingCommand::EditPath(edit_path::EditPath { layer_id:id,edit:Box::new(edit) });
+        artifact_laws::assert_undo_redo_round_trip(&mut *app,command,|app| {
+            let snapshot=app.snapshot().unwrap();
+            let DrawingLayerNode::Path(path)=&snapshot.layers[0] else { panic!("Expected path") };
+            path.segments.clone()
+        },before,after).await;
+    }
+    eprintln!("[DEBUG] path joins and conversions restore exact geometry through one undo and redo");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn shape_conversion_restores_the_primitive_with_one_undo() {
+    let mut app=drawing_app().await;
+    let layer=crate::schema::create_drawing_shape_layer_rect("Convert me");
+    let id=layer_id(&layer).to_string();
+    let before=DrawingSnapshot { id:"conversion-history".into(),layers:vec![layer],..Default::default() };
+    load_drawing_fixture(&mut app,&before);
+    let mut after=before.clone();
+    for mutation in edit_selection::plan(&before,&[id.clone()],"toPath").unwrap() { crate::mutations::apply_drawing_mutation(&mut after,&mutation).unwrap(); }
+    artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::EditSelection(edit_selection::EditSelection { operation:"toPath".into(),ids:vec![id] }),|app|app.snapshot().unwrap(),before,after).await;
+    eprintln!("[DEBUG] shape conversion and its identity survive one undo/redo cycle");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -1105,6 +1195,9 @@ fn every_command() -> Vec<DrawingCommand> {
         DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}),
         DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}),
         DrawingCommand::ExportDocument(export_document::ExportDocument { format: "pdf".into() }),
+        DrawingCommand::EditSelection(edit_selection::EditSelection { operation: "group".into(), ids: vec!["a".into(), "b".into()] }),
+        DrawingCommand::EditPath(edit_path::EditPath { layer_id: "path".into(), edit: Box::new(crate::schema::geometry::editing::PathEdit::Reverse) }),
+        DrawingCommand::EditFill(edit_fill::EditFill { layer_id: "a".into(), edit: Box::new(crate::schema::fill::FillEdit::Type { value: crate::schema::fill::FillType::LinearGradient }) }),
     ]
 }
 
@@ -1171,6 +1264,9 @@ async fn every_command_row_prints_starting_with_its_wire_keyword() {
         "canvas-commit-draft",
         "canvas-escape",
         "export-document",
+        "edit-selection",
+        "edit-path",
+        "edit-fill",
     ];
     for (command, keyword) in every_command().into_iter().zip(expected_keywords) {
         let printed = command.print_op();
@@ -1189,7 +1285,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory as _;
 
     assert_eq!(DRAWING_GESTURE_TOOL_IDS.len(), 6);
-    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 19);
+    assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 22);
     let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).copied().collect::<Vec<_>>();
     routes.sort_unstable();
     let mut declared = every_command().into_iter().map(|command| command.command_id()).collect::<Vec<_>>();

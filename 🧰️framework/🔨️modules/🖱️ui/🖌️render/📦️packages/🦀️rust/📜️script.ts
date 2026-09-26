@@ -16,6 +16,7 @@ const FORBIDDEN_DEPENDENCIES: ReadonlyArray<readonly [string, string]> = [
   ["wgpu", "belongs to the browser backend target only — natively we hand-write D3D12/Metal/Vulkan"],
   ["winit", "windowing belongs to semio-framework-ui-host"],
   ["semio-framework-actor", "the renderer must not own or link the actor kernel"],
+  ["memmap2", "fontique path/mmap font sources link std::fs, so every guest that shapes text would import wasi:filesystem, which no closed browser actor admits (fonts are embedded bytes)"],
 ];
 
 //#region 🔖️test

@@ -1,0 +1,110 @@
+{
+  "schema": "semio.acceptance.goal-plan/v1",
+  "id": "repo-goal-2026-09",
+  "title": { "en": "Repository goal: os s frontend, hub backend, collaboration, AI over the semio MCP", "de": "Repository-Ziel: os-s-Oberfläche, Hub-Backend, Zusammenarbeit, KI über das semio-MCP" },
+  "steps": [
+    {
+      "id": "hub-fresh",
+      "title": { "en": "The hub under test runs the current tree", "de": "Der geprüfte Hub läuft auf dem aktuellen Stand" },
+      "mode": "serial",
+      "gatesRest": true,
+      "checks": [
+        { "id": "hub-build-freshness", "title": { "en": "Hub build matches the source tree", "de": "Hub-Build entspricht dem Quellstand" }, "criteria": ["1.3", "2.5"], "project": "os-hub-ts", "target": "hub-freshness", "args": ["--hub", "{hub}"], "requires": ["hub"], "browsers": 0 }
+      ]
+    },
+    {
+      "id": "hub-laws",
+      "title": { "en": "Hub launch check and full hub law suite", "de": "Hub-Startprüfung und vollständige Hub-Gesetzessuite" },
+      "mode": "serial",
+      "gatesRest": true,
+      "checks": [
+        { "id": "hub-launch", "title": { "en": "Local bootstrap launch check", "de": "Prüfung des lokalen Bootstrap-Starts" }, "criteria": ["2.1"], "project": "os-hub", "target": "local-bootstrap-launch-check", "args": [], "requires": [], "browsers": 0 },
+        { "id": "hub-laws-all-features", "title": { "en": "Hub and db laws, all features", "de": "Hub- und DB-Gesetze, alle Features" }, "criteria": ["2.2", "2.3"], "project": "os-hub", "target": "test-all-features", "args": [], "requires": ["backends"], "browsers": 0 }
+      ]
+    },
+    {
+      "id": "backends-and-boot",
+      "title": { "en": "Group A: postgres and neo4j documents, cold boot of s", "de": "Gruppe A: Dokumente auf postgres und neo4j, Kaltstart von s" },
+      "mode": "parallel",
+      "gatesRest": false,
+      "checks": [
+        { "id": "two-client-postgres", "title": { "en": "Two clients on one postgres document", "de": "Zwei Clients auf einem postgres-Dokument" }, "criteria": ["2.4", "2.10"], "project": "os-hub-ts", "target": "two-client-e2e", "args": ["postgres"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": ["backends"], "browsers": 0 },
+        { "id": "document-growth-postgres", "title": { "en": "Document growth on postgres", "de": "Dokumentwachstum auf postgres" }, "criteria": ["2.4"], "project": "os-hub-ts", "target": "document-growth-e2e", "args": ["postgres"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": ["backends"], "browsers": 0 },
+        { "id": "two-client-neo4j", "title": { "en": "Two clients on one neo4j document", "de": "Zwei Clients auf einem neo4j-Dokument" }, "criteria": ["2.4", "2.10"], "project": "os-hub-ts", "target": "two-client-e2e", "args": ["neo4j"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": ["backends"], "browsers": 0 },
+        { "id": "document-growth-neo4j", "title": { "en": "Document growth on neo4j", "de": "Dokumentwachstum auf neo4j" }, "criteria": ["2.4"], "project": "os-hub-ts", "target": "document-growth-e2e", "args": ["neo4j"], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": ["backends"], "browsers": 0 },
+        { "id": "s-cold-boot", "title": { "en": "Cold boot of the s React shell", "de": "Kaltstart der s-React-Shell" }, "criteria": ["1.1"], "project": "@semio-tech/framework-os-dev", "target": "cold-boot-check-s", "args": [], "requires": [], "browsers": 1 }
+      ]
+    },
+    {
+      "id": "frontend",
+      "title": { "en": "Group B: every kind in s, en and de, accessibility, capability texts", "de": "Gruppe B: jede Art in s, en und de, Barrierefreiheit, Fähigkeitstexte" },
+      "mode": "parallel",
+      "gatesRest": false,
+      "checks": [
+        { "id": "program-matrix-en", "title": { "en": "Editor and viewer matrix, English", "de": "Editor- und Betrachtermatrix, Englisch" }, "criteria": ["1.1", "1.6", "5.2"], "project": "@semio-tech/framework-os-dev", "target": "program-matrix", "args": ["{serve}", "--tag", "goal-en", "--locale", "en", "--roles", "editor,viewer"], "requires": ["serve"], "browsers": 1 },
+        { "id": "program-matrix-de", "title": { "en": "Editor matrix, German", "de": "Editormatrix, Deutsch" }, "criteria": ["1.6", "5.2"], "project": "@semio-tech/framework-os-dev", "target": "program-matrix", "args": ["{serve}", "--tag", "goal-de", "--locale", "de", "--roles", "editor"], "requires": ["serve"], "browsers": 1 },
+        { "id": "foreign-kind", "title": { "en": "Hub documents created, edited, undone and redone per kind", "de": "Hub-Dokumente je Art angelegt, bearbeitet, rückgängig gemacht und wiederholt" }, "criteria": ["1.4", "1.5"], "project": "@semio-tech/framework-os-dev", "target": "s-host-foreign-kind-s", "args": ["{serve}", "--tag", "goal"], "requires": ["serve"], "browsers": 1 },
+        { "id": "pinch-a11y", "title": { "en": "Pinch, diagram contrast and accessibility", "de": "Pinch-Geste, Diagrammkontrast und Barrierefreiheit" }, "criteria": ["5.3"], "project": "@semio-tech/framework-os-dev", "target": "s-host-pinch-diagram-contrast-s", "args": ["{serve}", "--tag", "goal"], "requires": ["serve"], "browsers": 1 },
+        { "id": "capability-audit", "title": { "en": "Every capability carries en and de descriptions", "de": "Jede Fähigkeit trägt Beschreibungen auf Englisch und Deutsch" }, "criteria": ["4.2"], "project": "@semio-tech/framework-os-mcp-rs", "target": "capability-audit-check", "args": [], "requires": [], "browsers": 0 }
+      ]
+    },
+    {
+      "id": "collaboration-react",
+      "title": { "en": "Two humans in the React shell", "de": "Zwei Menschen in der React-Shell" },
+      "mode": "serial",
+      "gatesRest": false,
+      "checks": [
+        { "id": "two-human-en", "title": { "en": "Two browser users on one hub, every creatable kind, English", "de": "Zwei Browser-Nutzer auf einem Hub, jede anlegbare Art, Englisch" }, "criteria": ["3.1", "3.4", "3.9", "3.11"], "project": "@semio-tech/framework-os-dev", "target": "two-human", "args": ["--hub", "{hub}", "--serve", "{serve}", "--locale", "en"], "env": { "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}", "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}", "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}", "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}" }, "requires": ["hub", "serve"], "browsers": 2 },
+        { "id": "two-human-de", "title": { "en": "Two browser users on one hub, German", "de": "Zwei Browser-Nutzer auf einem Hub, Deutsch" }, "criteria": ["3.1", "5.2"], "project": "@semio-tech/framework-os-dev", "target": "two-human", "args": ["--hub", "{hub}", "--serve", "{serve}", "--locale", "de"], "env": { "SEMIO_TWO_HUMAN_USER1_EMAIL": "{user1Email}", "SEMIO_TWO_HUMAN_USER1_PASSWORD": "{user1Password}", "SEMIO_TWO_HUMAN_USER2_EMAIL": "{user2Email}", "SEMIO_TWO_HUMAN_USER2_PASSWORD": "{user2Password}" }, "requires": ["hub", "serve"], "browsers": 2 },
+        { "id": "collab-e2e", "title": { "en": "Collaboration story on a fresh local hub", "de": "Zusammenarbeitsgeschichte auf einem frischen lokalen Hub" }, "criteria": ["3.1"], "project": "@semio-tech/framework-os-dev", "target": "collab-e2e", "args": [], "requires": [], "browsers": 2 }
+      ]
+    },
+    {
+      "id": "collaboration-wgpu-and-agents",
+      "title": { "en": "Group C: wgpu shells and agents on the hub", "de": "Gruppe C: wgpu-Shells und Agenten auf dem Hub" },
+      "mode": "parallel",
+      "gatesRest": false,
+      "checks": [
+        { "id": "wgpu-live-collaboration", "title": { "en": "Two native wgpu shells collaborate", "de": "Zwei native wgpu-Shells arbeiten zusammen" }, "criteria": ["3.5"], "project": "@semio-tech/framework-renderer-wgpu", "target": "hub-live-collaboration-check", "args": [], "env": { "SEMIO_HUB_LIVE_ORIGIN": "{hub}", "SEMIO_HUB_LIVE_EMAIL": "{user1Email}", "SEMIO_HUB_LIVE_PASSWORD": "{user1Password}", "SEMIO_HUB_LIVE_PEER_EMAIL": "{user2Email}", "SEMIO_HUB_LIVE_PEER_PASSWORD": "{user2Password}" }, "requires": ["hub"], "browsers": 0 },
+        { "id": "wgpu-live-journey", "title": { "en": "wgpu shell hub journey", "de": "Hub-Weg der wgpu-Shell" }, "criteria": ["3.2"], "project": "@semio-tech/framework-renderer-wgpu", "target": "hub-live-journey-check", "args": [], "env": { "SEMIO_HUB_LIVE_ORIGIN": "{hub}", "SEMIO_HUB_LIVE_EMAIL": "{user1Email}", "SEMIO_HUB_LIVE_PASSWORD": "{user1Password}" }, "requires": ["hub"], "browsers": 0 },
+        { "id": "mcp-hub-agent-participant", "title": { "en": "A human sees an agent's edit live", "de": "Ein Mensch sieht die Bearbeitung eines Agenten live" }, "criteria": ["3.12"], "project": "@semio-tech/framework-os-mcp-rs", "target": "hub-agent-participant-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "OS_MCP_HUB_EMAIL": "{user1Email}", "OS_MCP_HUB_PASSWORD": "{user1Password}" }, "requires": ["hub"], "browsers": 1 },
+        { "id": "mcp-agent-reply", "title": { "en": "Agent reply reaches the shell", "de": "Antwort des Agenten erreicht die Shell" }, "criteria": ["4.7"], "project": "@semio-tech/framework-os-mcp-rs", "target": "agent-reply-check", "args": [], "env": { "S_OS_MCP_LIVE_SHELL_URL": "{serve}" }, "requires": ["serve"], "browsers": 1 }
+      ]
+    },
+    {
+      "id": "ai-over-mcp",
+      "title": { "en": "AI over the semio MCP: live agent loop, plugin coverage, user path", "de": "KI über das semio-MCP: Live-Agentenschleife, Plugin-Abdeckung, Nutzerweg" },
+      "mode": "serial",
+      "gatesRest": false,
+      "checks": [
+        { "id": "mcp-live-agent-loop-en", "title": { "en": "Live agent loop, English", "de": "Live-Agentenschleife, Englisch" }, "criteria": ["4.3"], "project": "@semio-tech/framework-os-mcp-rs", "target": "live-agent-loop-check", "args": [], "env": { "S_OS_MCP_LIVE_SHELL_URL": "{serve}" }, "requires": ["serve"], "browsers": 1 },
+        { "id": "mcp-live-agent-loop-de", "title": { "en": "Live agent loop, German", "de": "Live-Agentenschleife, Deutsch" }, "criteria": ["4.3", "5.2"], "project": "@semio-tech/framework-os-mcp-rs", "target": "live-agent-loop-check", "args": [], "env": { "S_OS_MCP_LIVE_SHELL_URL": "{serve}", "S_OS_MCP_LIVE_LOCALE": "de" }, "requires": ["serve"], "browsers": 1 },
+        { "id": "mcp-plugin-coverage", "title": { "en": "Every installed kind created and mutated over the semio MCP", "de": "Jede installierte Art über das semio-MCP angelegt und verändert" }, "criteria": ["4.8"], "project": "@semio-tech/framework-os-mcp-rs", "target": "plugin-coverage-check", "args": [], "requires": [], "browsers": 0 },
+        { "id": "mcp-user-path-en", "title": { "en": "A user's AI-client path over the semio MCP, English", "de": "Der KI-Client-Weg eines Nutzers über das semio-MCP, Englisch" }, "criteria": ["4.4", "4.7"], "project": "@semio-tech/framework-os-mcp-rs", "target": "user-path-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "S_OS_MCP_LIVE_SHELL_URL": "{serve}", "S_OS_MCP_LIVE_LOCALE": "en", "OS_MCP_HUB_EMAIL": "{user1Email}", "OS_MCP_HUB_PASSWORD": "{user1Password}" }, "requires": ["hub", "serve"], "browsers": 1 },
+        { "id": "mcp-user-path-de", "title": { "en": "A user's AI-client path over the semio MCP, German", "de": "Der KI-Client-Weg eines Nutzers über das semio-MCP, Deutsch" }, "criteria": ["4.4", "5.2"], "project": "@semio-tech/framework-os-mcp-rs", "target": "user-path-check", "args": [], "env": { "OS_MCP_HUB_ORIGIN": "{hub}", "S_OS_MCP_LIVE_SHELL_URL": "{serve}", "S_OS_MCP_LIVE_LOCALE": "de", "OS_MCP_HUB_EMAIL": "{user1Email}", "OS_MCP_HUB_PASSWORD": "{user1Password}" }, "requires": ["hub", "serve"], "browsers": 1 }
+      ]
+    },
+    {
+      "id": "hub-operations",
+      "title": { "en": "Hub operations: backup and restore, reopen storm, residency", "de": "Hub-Betrieb: Sicherung und Wiederherstellung, Wiederöffnungssturm, Residenz" },
+      "mode": "serial",
+      "gatesRest": false,
+      "checks": [
+        { "id": "hub-backup-restore", "title": { "en": "Backup and restore drill", "de": "Übung Sicherung und Wiederherstellung" }, "criteria": ["2.11"], "project": "os-hub-ts", "target": "backup-restore-drill", "args": [], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": [], "browsers": 0 },
+        { "id": "hub-reopen-storm", "title": { "en": "Grown documents reopen within the Welcome bound", "de": "Gewachsene Dokumente öffnen innerhalb der Welcome-Grenze" }, "criteria": ["2.6"], "project": "os-hub-ts", "target": "reopen-storm-check", "args": [], "env": { "OS_HUB_BINARY": "{hubBinary}" }, "requires": [], "browsers": 0 },
+        { "id": "hub-residency", "title": { "en": "Resident memory of the hub under test", "de": "Resident-Speicher des geprüften Hubs" }, "criteria": ["2.7"], "project": "os-hub-ts", "target": "residency-watch", "args": ["--hub", "{hub}"], "requires": ["hub"], "browsers": 0 }
+      ]
+    },
+    {
+      "id": "compliance",
+      "title": { "en": "Compliance: dependencies, placeholders, reachable commands", "de": "Konformität: Abhängigkeiten, Platzhalter, erreichbare Befehle" },
+      "mode": "serial",
+      "gatesRest": false,
+      "checks": [
+        { "id": "dependencies-literal-external", "title": { "en": "No production dependency on an external library", "de": "Keine Produktionsabhängigkeit von einer externen Bibliothek" }, "criteria": ["1.10", "5.9"], "project": "workspace", "target": "verify-dependencies-literal-external", "args": [], "requires": [], "browsers": 0 },
+        { "id": "production-placeholders", "title": { "en": "No unimplemented or todo placeholder in production Rust", "de": "Kein unimplemented- oder todo-Platzhalter in produktivem Rust" }, "criteria": ["1.9"], "project": "workspace", "target": "verify", "args": ["production-placeholders"], "requires": [], "browsers": 0 },
+        { "id": "command-reachability", "title": { "en": "Every declared command is reachable from a control", "de": "Jeder deklarierte Befehl ist über ein Bedienelement erreichbar" }, "criteria": ["1.8"], "project": "workspace", "target": "verify", "args": ["interactivity", "commands"], "requires": [], "browsers": 0 }
+      ]
+    }
+  ]
+}

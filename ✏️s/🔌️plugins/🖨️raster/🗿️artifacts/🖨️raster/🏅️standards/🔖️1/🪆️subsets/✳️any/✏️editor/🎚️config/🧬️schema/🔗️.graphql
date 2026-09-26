@@ -12,6 +12,8 @@ type RasterConfigViewportSize {
 type RasterConfig {
   brushSize: Float! @state(class: CONFIG)
   brushOpacity: Float! @state(class: CONFIG)
+  brushColor: String! @state(class: CONFIG)
+  brushHardness: Float! @state(class: CONFIG)
   compositeViewport: RasterConfigViewportSize @state(class: CONFIG)
   camera: RasterCamera! @state(class: CONFIG)
 }

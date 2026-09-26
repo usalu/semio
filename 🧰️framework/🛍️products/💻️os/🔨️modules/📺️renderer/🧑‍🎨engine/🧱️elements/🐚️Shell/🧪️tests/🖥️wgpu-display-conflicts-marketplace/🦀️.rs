@@ -69,25 +69,33 @@ struct DisplayTreeSceneHost;
 impl ui_wgpu::wgpu::SceneHost for DisplayTreeSceneHost {
     fn paint_slot_step(
         &mut self,
-        _slot: &ui_wgpu::wgpu::SceneSlot<'_>,
-        _cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
+        slot: &ui_wgpu::wgpu::SceneSlot<'_>,
+        cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
         _draw: &mut ui_wgpu::wgpu::DrawList,
         _atlas: &mut ui_wgpu::wgpu::FontAtlas,
         _icons: Option<&ui_wgpu::wgpu::IconAtlas>,
     ) -> ui_wgpu::wgpu::ScenePaintStep {
-        ui_wgpu::wgpu::ScenePaintStep::Fault
+        match cursor.bind(slot.node) {
+            Ok(true) => cursor.finish(),
+            Ok(false) => ui_wgpu::wgpu::ScenePaintStep::Pending,
+            Err(_) => ui_wgpu::wgpu::ScenePaintStep::Fault,
+        }
     }
 }
 
 fn settle_display_tree(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu::FontAtlas, witness: u64) {
-    engine.set_viewport(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, 300.0, 240.0);
+    settle_tree_surface(engine, atlas, FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, witness);
+}
+
+fn settle_tree_surface(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu::FontAtlas, surface: &str, witness: u64) {
+    engine.set_viewport(surface, 300.0, 240.0);
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
     let operation = semio_framework_job::allocate_operation_id();
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     let reconciled = (0..16_384).any(|_| {
         let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(witness), semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
-        match engine.step_document_reconcile(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, "framework", &mut cx) {
+        match engine.step_document_reconcile(surface, "framework", &mut cx) {
             ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Pending => false,
             ui_wgpu::wgpu::reconcile::UiDocumentReconcileStep::Complete => true,
             step => panic!("Display branch reconcile answered {step:?}"),
@@ -101,17 +109,17 @@ fn settle_display_tree(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu
                 break;
             }
         }
-        if !engine.layout_is_dirty(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID) {
+        if !engine.layout_is_dirty(surface) {
             break;
         }
-        engine.request_layout(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID);
+        engine.request_layout(surface);
     }
-    assert!(!engine.layout_is_dirty(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID), "Display branch layout settles");
+    assert!(!engine.layout_is_dirty(surface), "retained Tree layout settles");
     for _ in 0..131_072 {
-        match engine.frame_step::<DisplayTreeSceneHost>(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, 300.0, 240.0, atlas, None, None) {
+        match engine.frame_step::<DisplayTreeSceneHost>(surface, 300.0, 240.0, atlas, None, None) {
             ui_wgpu::wgpu::UiFrameStep::Pending => {}
             ui_wgpu::wgpu::UiFrameStep::Ready => {
-                assert!(engine.seal_presented_input_candidate(witness, &[FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.to_string()]));
+                assert!(engine.seal_presented_input_candidate(witness, &[surface.to_string()]));
                 assert!(engine.acknowledge_presented_input(witness));
                 return;
             },
@@ -223,7 +231,7 @@ fn the_conflicts_leaf_paints_the_live_roster_and_reacts_resolution_pair() {
     let keys = published_keys(&shell, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui());
     assert!(keys.iter().any(|key| key.ends_with("framework.settings.conflicts.empty.row")), "⚖️ an empty roster is React's own unavailable row");
 
-    shell.open_conflicts = vec![ShellConflictRow { id: "conflict-1".into(), quarantined: true, code: "mergeQuarantined".into(), message: "two actors edited the same joint".into() }];
+    shell.open_conflicts = vec![ShellConflictRow { id: "conflict-1".into(), quarantined: true, code: "mergeQuarantined".into(), message: "two actors edited the same joint".into(), preview_after: r#"{\n  "incoming": true\n}"#.into() }];
     shell.selected_conflict_id = Some("conflict-1".into());
     let node = shell.build_settings_conflicts_ui();
     let keys = published_keys(&shell, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &node);
@@ -292,6 +300,46 @@ fn the_marketplace_leaf_offers_reacts_install_reload_and_uninstall_verbs() {
 }
 
 #[test]
+fn the_marketplace_projects_the_store_record_under_its_declared_host_with_enablement_and_uninstall() {
+    let mut shell = display_shell();
+    let record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
+    let host = shell.plugins.first().expect("fixture host").plugin_id.clone();
+    shell.project_extension_record(ShellExtensionStoreRecord { extends_host: host.clone(), ..record.clone() }).expect("record admits");
+    let keys = published_keys(&shell, FRAMEWORK_MARKETPLACE_TAB_ID, &shell.build_marketplace_ui());
+    for id in [
+        "framework.marketplace.extensions.install".to_string(),
+        "framework.marketplace.extensions.install.url".to_string(),
+        "framework.marketplace.extensions.install.file".to_string(),
+        format!("framework.marketplace.plugin.{host}.extension.{}", record.extension_id),
+        format!("framework.marketplace.extension.{}.enable", record.extension_id),
+        format!("framework.marketplace.extension.{}.uninstall", record.extension_id),
+    ] {
+        assert!(keys.iter().any(|key| key.ends_with(&id)), "the Store projection keeps React's Marketplace id {id}, got {keys:?}");
+    }
+    assert_eq!(shell.extensions.len(), 1);
+    assert!(shell.extensions[0].enabled);
+    assert_eq!(shell.extensions[0].load_status, ShellExtensionLoadStatus::Available);
+}
+
+#[test]
+fn the_marketplace_keeps_orphaned_and_failed_store_packages_visible_without_executable_controls() {
+    let mut shell = display_shell();
+    let mut record: ShellExtensionStoreRecord = serde_json::from_str(include_str!("../../../../../../🔌️plugin/🏪️store/📥️installation/🧫️fixtures/🔣️.json")).expect("the neutral Store record fixture");
+    record.extends_host = "missing.host".into();
+    shell.project_extension_record(record.clone()).expect("record admits");
+    shell.extensions[0].load_status = ShellExtensionLoadStatus::Failed("fixture load fault".into());
+    let node = shell.build_marketplace_ui();
+    let keys = published_keys(&shell, FRAMEWORK_MARKETPLACE_TAB_ID, &node);
+    assert!(keys.iter().any(|key| key.ends_with("framework.marketplace.missing-host.missing.host")), "an absent declared host has its own visible React-parity section, got {keys:?}");
+    assert!(keys.iter().any(|key| key.ends_with(&format!("framework.marketplace.plugin.missing.host.extension.{}", record.extension_id))), "the failed Store package remains visible under its declared host");
+    let records = panel_ui_records(FRAMEWORK_MARKETPLACE_TAB_ID, &node).expect("the orphaned package projects");
+    let extension_id = record.extension_id;
+    let enable = records.iter().find(|record| record.key.as_str().ends_with(&format!("framework.marketplace.extension.{extension_id}.enable"))).expect("the enable control remains visible");
+    assert!(enable.disabled, "a failed package cannot be enabled until it admits a program");
+    assert!(records.iter().any(|record| record.key.as_str().ends_with(&format!("framework.marketplace.extension.{extension_id}.uninstall")) && !record.disabled), "a failed package remains uninstallable");
+}
+
+#[test]
 fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
     let mut shell = display_shell();
@@ -301,7 +349,9 @@ fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
         id: source["id"].as_str().unwrap().into(),
         quarantined: source["quarantined"].as_bool().unwrap(),
         code: source["code"].as_str().unwrap().into(),
-        message: source["message"].as_str().unwrap().into(),
+        message: source["message"].as_str().unwrap().into(), preview_after: r#"{
+  "incoming": true
+}"#.into(),
     }];
     shell.selected_conflict_id = None;
     let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).unwrap();
@@ -309,6 +359,8 @@ fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
     assert_eq!(records.iter().filter(|record| matches!(record.component, ui_contract::Component::TreeItem(_))).count(), fixture["expected"]["rowCount"].as_u64().unwrap() as usize);
     let row = records.iter().find(|record| record.key.as_str().ends_with(row_id)).unwrap();
     let toolbar = row.children.iter().filter_map(|id| records.iter().find(|record| record.id == *id)).find(|record| matches!(&record.component, ui_contract::Component::Container(props) if props.role == ui_contract::ContainerRole::Toolbar)).expect("the conflict row owns its inline toolbar before selection");
+    let ui_contract::Component::TreeItem(props) = &row.component else { panic!("the conflict is one TreeItem row") };
+    assert_eq!(props.inline_toolbar, Some(toolbar.id), "the row explicitly identifies its semantic inline toolbar");
     assert!(matches!(&toolbar.layout, ui_contract::LayoutSpec::Stack(layout) if layout.axis == ui_contract::Axis::Horizontal));
     for expected in fixture["controls"].as_array().unwrap() {
         let key = format!("{row_id}.{}", expected["suffix"].as_str().unwrap());
@@ -318,5 +370,120 @@ fn conflict_resolution_buttons_are_inline_controls_before_row_selection() {
         assert!(!button.disabled);
         assert!(toolbar.children.iter().any(|id| *id == button.id));
         assert!(button.bindings.iter().any(|binding| binding.trigger == ui_contract::Trigger::Activate && binding.action.name.as_str() == "resolveConflict"));
+    }
+}
+
+#[test]
+fn selected_conflict_owns_a_real_diff_view_detail_in_the_accepted_frame() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView producer fixture");
+    let mut shell = display_shell();
+    shell.locale_id = "en".into();
+    shell.open_conflicts = fixture["conflicts"]
+        .as_array()
+        .expect("conflict rows")
+        .iter()
+        .map(|row| ShellConflictRow {
+            id: row["id"].as_str().unwrap().into(),
+            quarantined: row["quarantined"].as_bool().unwrap(),
+            code: row["code"].as_str().unwrap().into(),
+            message: row["message"].as_str().unwrap().into(),
+            preview_after: row["after"].as_str().unwrap().into(),
+        })
+        .collect();
+    shell.selected_conflict_id = Some(fixture["selectedConflictId"].as_str().unwrap().into());
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).expect("conflicts project");
+    let selected = records.iter().find(|record| record.key.as_str().ends_with(fixture["selectedConflictId"].as_str().unwrap())).expect("selected conflict row");
+    let ui_contract::Component::TreeItem(selected_props) = &selected.component else { panic!("selected conflict remains one TreeItem") };
+    let detail_id = selected_props.detail.expect("selected row explicitly owns its detail");
+    assert!(selected.children.iter().any(|child| *child == detail_id), "detail is a direct semantic child");
+    let detail = records.iter().find(|record| record.id == detail_id).expect("related detail record");
+    let ui_contract::Component::Surface(surface) = &detail.component else { panic!("detail relation targets a Surface") };
+    assert_eq!(surface.kind, ui_contract::SurfaceKind::DiffView);
+    let scene: ui_wgpu::wgpu::DiffViewScene = ui_wgpu::wgpu::decode_surface_doc(surface).expect("DiffView scene decodes");
+    assert_eq!(scene.after, fixture["conflicts"][0]["after"].as_str().unwrap());
+    assert!(records.iter().filter(|record| matches!(&record.component, ui_contract::Component::TreeItem(props) if props.detail.is_some())).count() == 1, "only the selected conflict owns a detail");
+
+    let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+        generation: 1,
+        surface: SurfaceId::try_from(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID).unwrap(),
+        revision: ui_contract::UiRevision(1),
+        root: records.first().expect("conflict document root").id,
+        layout_epoch: 0,
+        node_count: records.len(),
+    })
+    .expect("conflict document header");
+    for record in records {
+        document.try_upsert_record(record).expect("conflict record admits");
+    }
+    let mut engine = ui_wgpu::wgpu::Ui::new();
+    assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);
+    let hit = (0..240)
+        .step_by(4)
+        .flat_map(|y| (0..300).step_by(4).map(move |x| (x as f32, y as f32)))
+        .find_map(|(x, y)| engine.scene_at(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, x, y))
+        .expect("accepted frame exposes the selected DiffView slot");
+    assert_eq!(hit.kind, ui_wgpu::wgpu::SurfaceKind::DiffView);
+    assert!(hit.rect.w > 0.0 && hit.rect.h > 0.0, "the accepted detail slot has real geometry: {:?}", hit.rect);
+}
+
+#[test]
+fn conflict_resolution_buttons_share_the_row_and_win_its_pointer_band() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).unwrap();
+    let mut shell = display_shell();
+    shell.locale_id = "en".into();
+    let source = &fixture["conflict"];
+    shell.open_conflicts = vec![ShellConflictRow {
+        id: source["id"].as_str().unwrap().into(),
+        quarantined: source["quarantined"].as_bool().unwrap(),
+        code: source["code"].as_str().unwrap().into(),
+        message: source["message"].as_str().unwrap().into(), preview_after: r#"{
+  "incoming": true
+}"#.into(),
+    }];
+    let records = panel_ui_records(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, &shell.build_settings_conflicts_ui()).expect("conflict controls project");
+    let mut document = ui_wgpu::wgpu::tree::UiDocumentTree::new(ui_contract::UiDocumentLeaseHeader {
+        generation: 1,
+        surface: SurfaceId::try_from(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID).unwrap(),
+        revision: ui_contract::UiRevision(1),
+        root: records.first().expect("conflict document root").id,
+        layout_epoch: 0,
+        node_count: records.len(),
+    })
+    .expect("conflict document header");
+    for record in records {
+        document.try_upsert_record(record).expect("conflict record admits");
+    }
+    let mut engine = ui_wgpu::wgpu::Ui::new();
+    assert!(engine.publish_document(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, document));
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    settle_tree_surface(&mut engine, &mut atlas, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, 1);
+
+    let row_id = fixture["rowId"].as_str().unwrap();
+    let hits = engine.window_hit_targets(FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID);
+    let row_index = hits.iter().position(|hit| hit.kind == ui_wgpu::wgpu::HitKind::TreeItem && hit.control_id.ends_with(row_id)).expect("one conflict row hit");
+    let row = hits[row_index].rect;
+    let mut button_indices = Vec::new();
+    for expected in fixture["controls"].as_array().unwrap() {
+        let key = format!("{row_id}.{}", expected["suffix"].as_str().unwrap());
+        let index = hits.iter().position(|hit| hit.kind == ui_wgpu::wgpu::HitKind::Button && hit.control_id.ends_with(&key)).unwrap_or_else(|| panic!("{key} publishes a Button hit"));
+        let button = hits[index].rect;
+        assert!(index > row_index, "the descendant Button is registered after the row so reverse hit-testing resolves it first");
+        assert!(button.w > 0.0 && button.h > 0.0 && button.x >= row.x && button.y >= row.y && button.x + button.w <= row.x + row.w && button.y + button.h <= row.y + row.h, "{key} stays inside the one row: button={button:?}, row={row:?}");
+        button_indices.push(index);
+    }
+    let first = hits[button_indices[0]].rect;
+    let second = hits[button_indices[1]].rect;
+    assert!((first.y - second.y).abs() < 0.01 && (first.h - second.h).abs() < 0.01 && first.x + first.w <= second.x + 0.01, "the labeled Buttons form one horizontal toolbar: {first:?}, {second:?}");
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    for hit in hits {
+        input.register_hit(hit.to_hit_target());
+    }
+    input.publish_hits();
+    for index in button_indices {
+        let button = hits[index].rect;
+        let resolved = input.hit_at(button.x + button.w * 0.5, button.y + button.h * 0.5).expect("button centre resolves");
+        assert_eq!(resolved.kind, ui_wgpu::wgpu::HitKind::Button, "the row selection target does not steal the inline Button");
     }
 }

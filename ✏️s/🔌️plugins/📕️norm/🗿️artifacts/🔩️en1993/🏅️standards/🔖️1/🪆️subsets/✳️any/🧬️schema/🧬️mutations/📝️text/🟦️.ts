@@ -1,6 +1,8 @@
 /** 📝️ Text representation for `norm.en1993.mutations`. */
 export type En1993MutationsText = string;
 
+import type { En1993Snapshot } from "../../📸️snapshot/🟦️.ts";
+
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
 export class normEn1993MutationsTextGuardRefusal extends Error {
@@ -17,8 +19,8 @@ type normEn1993MutationsTextGuardTextBounds = { readonly minLength?: number; rea
 type normEn1993MutationsTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normEn1993MutationsTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normEn1993MutationsTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normEn1993MutationsTextGuardReject(at, "value is not an object");
+export const normEn1993MutationsTextGuardObject = (value: unknown, at: string): Readonly<En1993Snapshot> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as En1993Snapshot) : normEn1993MutationsTextGuardReject(at, "value is not an object");
 export const normEn1993MutationsTextGuardArray = (value: unknown, at: string, bounds: normEn1993MutationsTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normEn1993MutationsTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normEn1993MutationsTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);
@@ -48,6 +50,6 @@ export const normEn1993MutationsTextGuardConstant = <T extends string | number |
   value === expected ? expected : normEn1993MutationsTextGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
-export function parseEn1993MutationsText(value: unknown, at = "$"): En1993MutationsText {
+export function parseEn1993MutationsText(value: unknown, at = "$"): Readonly<En1993Snapshot> {
   return normEn1993MutationsTextGuardObject(value, `${at}`);
 }

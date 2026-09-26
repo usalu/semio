@@ -988,7 +988,7 @@ impl Iso16757Snapshot {
             },
         );
         let catalogue = part_1::Catalogue {
-            id: CatalogueId("cat.demo".into()),
+            id: CatalogueId("cat.mfg-demo".into()),
             metadata: part_1::CatalogueMetadata {
                 names: Names { preferred: LocalizedText { locale: "en".into(), text: "Demo HVAC catalogue".into() }, short_name: Some("Demo".into()), alternatives: vec![LocalizedText { locale: "de".into(), text: "Demo TGA-Katalog".into() }] },
                 lifecycle: Lifecycle { revision: "1".into(), status: "published".into(), valid_from: None, valid_to: None },
@@ -1033,7 +1033,7 @@ impl Iso16757Snapshot {
                 }],
                 static_properties: Vec::new(),
             }],
-            product_indexes: vec![part_1::ProductIndex { id: "index-cv50".into(), product_id: "product-cv".into(), variant_id: Some("variant-50".into()), search_tags: vec!["valve".into(), "dn50".into()] }],
+            product_indexes: vec![part_1::ProductIndex { id: "index-cv50".into(), product_id: "product-cv".into(), variant_id: Some("variant-50".into()), search_tags: vec!["CV-50".into(), "product-cv".into(), "dn50".into()] }],
             property_definitions: vec![part_1::PropertyDefinition {
                 id: "prop-dn".into(),
                 names: Names { preferred: LocalizedText { locale: "en".into(), text: "Nominal diameter".into() }, short_name: None, alternatives: vec![LocalizedText { locale: "de".into(), text: "Nennweite".into() }] },

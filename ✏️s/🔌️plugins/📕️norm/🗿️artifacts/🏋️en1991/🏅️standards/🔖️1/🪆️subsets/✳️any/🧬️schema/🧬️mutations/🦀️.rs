@@ -505,3 +505,21 @@ impl En1991Mutation {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog_tests;
+
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes one committed mutation JSON document into [`En1991Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
+pub fn decode_en1991_mutation_json(text: &str) -> Result<En1991Mutation, String> {
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
+}
+/// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+pub fn apply_en1991_mutation(base: &En1991Snapshot, mutation: &En1991Mutation) -> Result<(En1991Snapshot, Vec<String>), String> {
+    let raised = <En1991Mutation as protocol::Mutation<En1991Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = <En1991Diff as protocol::MutationDiff<En1991Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+/// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+pub fn inverse_en1991_mutation(mutation: &En1991Mutation, base: &En1991Snapshot) -> Vec<En1991Mutation> {
+    <En1991Mutation as protocol::Mutation<En1991Snapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge

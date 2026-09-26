@@ -58,7 +58,7 @@ export function buildPlaygroundSession(variant: string, projection: GeneratedCat
       moduleUrl: `${entry.role === "extension" ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(entry.pluginId)}/${MODULE_BRIDGE_FILE}`,
       contributes: entry.contributes,
       consumes: entry.consumes,
-      dependencies: entry.dependsOn.map((pluginId) => ({ pluginId, version: "*" })),
+      dependencies: entry.dependsOn.map((pluginId) => ({ pluginId })),
     })),
   };
 }
@@ -76,7 +76,7 @@ export type PlaygroundSessionPlugin = {
 \treadonly moduleUrl: string;
 \treadonly contributes: readonly string[];
 \treadonly consumes: readonly string[];
-\treadonly dependencies: readonly { readonly pluginId: string; readonly version: string }[];
+\treadonly dependencies: readonly { readonly pluginId: string }[];
 };
 
 export type PlaygroundSession = {

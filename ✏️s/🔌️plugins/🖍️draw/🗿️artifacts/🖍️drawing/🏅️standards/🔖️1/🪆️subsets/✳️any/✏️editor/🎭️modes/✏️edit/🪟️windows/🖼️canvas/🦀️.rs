@@ -86,12 +86,15 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
 /// records this function used to bake into `layersJson` are gone; the client renders that highlight
 /// itself from the framework's own interaction state now.
 pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    let scene_nodes = flatten_drawing_document_to_scene_nodes(document);
+    let mut scene_nodes = flatten_drawing_document_to_scene_nodes(document);
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
     records.push(DslValue::object([("id".to_string(), DslValue::String("meta:utility".to_string())), ("role".to_string(), DslValue::String("meta".to_string())), ("utility".to_string(), DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
-    for node in &scene_nodes {
+    for node in &mut scene_nodes {
+        if let Some((layer_id,delta)) = &preview.translation {
+            if node.id == *layer_id { node.transform[4] += delta[0]; node.transform[5] += delta[1]; }
+        }
         records.push(dsl::ToValue::to_value(node));
     }
     if preview.phase == DrawingGesturePreviewPhase::Marquee {
@@ -100,7 +103,12 @@ pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowCo
         let y = ctx.start[1].min(ctx.cursor[1]);
         let width = (ctx.cursor[0] - ctx.start[0]).abs();
         let height = (ctx.cursor[1] - ctx.start[1]).abs();
-        let segments = vec![PathSegment::Move { to: [x, y] }, PathSegment::Line { to: [x + width, y] }, PathSegment::Line { to: [x + width, y + height] }, PathSegment::Line { to: [x, y + height] }, PathSegment::Close];
+        let segments = if ctx.method == "lasso" {
+            let mut segments=ctx.points.iter().enumerate().map(|(index,point)| if index==0 { PathSegment::Move { to: *point } } else { PathSegment::Line { to: *point } }).collect::<Vec<_>>();
+            segments.push(PathSegment::Line { to: ctx.cursor });
+            segments.push(PathSegment::Close);
+            segments
+        } else { vec![PathSegment::Move { to: [x, y] }, PathSegment::Line { to: [x + width, y] }, PathSegment::Line { to: [x + width, y + height] }, PathSegment::Line { to: [x, y + height] }, PathSegment::Close] };
         records.push(overlay_record("overlay:marquee", [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &segments, Some(DRAWING_OVERLAY_MARQUEE_FILL), DRAWING_OVERLAY_MARQUEE_STROKE, 1.0));
     } else if preview.phase == DrawingGesturePreviewPhase::Shape {
         let ctx = &preview.context;

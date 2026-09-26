@@ -1,4 +1,5 @@
 /** 📝️ Text representation for `norm.en1999.mutations`. */
+import type { En1999Mutation } from "../🟦️.ts";
 export type En1999MutationsText = string;
 
 //#region 🚪️Parsers
@@ -17,8 +18,8 @@ type normEn1999MutationsTextGuardTextBounds = { readonly minLength?: number; rea
 type normEn1999MutationsTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normEn1999MutationsTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normEn1999MutationsTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normEn1999MutationsTextGuardReject(at, "value is not an object");
+export const normEn1999MutationsTextGuardObject = (value: unknown, at: string): Readonly<En1999Mutation> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as En1999Mutation) : normEn1999MutationsTextGuardReject(at, "value is not an object");
 export const normEn1999MutationsTextGuardArray = (value: unknown, at: string, bounds: normEn1999MutationsTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normEn1999MutationsTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normEn1999MutationsTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);

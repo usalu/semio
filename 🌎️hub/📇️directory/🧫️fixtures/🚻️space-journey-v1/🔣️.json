@@ -324,8 +324,8 @@
     {
       "id": "author-self-revokes",
       "actor": "a",
-      "route": "/auth/sessions/me",
-      "method": "DELETE",
+      "route": "/auth/sessions/me/sign-out",
+      "method": "POST",
       "expect": {
         "kind": "status",
         "status": 204,
@@ -450,7 +450,7 @@
     "/directory/socket/v1",
     "/directory/spaces/{space_id}/documents/{document_id}/socket-grants",
     "/directory/spaces/{space_id}/documents/{document_id}/socket/v1",
-    "/auth/sessions/me",
+    "/auth/sessions/me/sign-out",
     "/spaces/{space_id}/documents/{id}/open-plan"
   ]
 }

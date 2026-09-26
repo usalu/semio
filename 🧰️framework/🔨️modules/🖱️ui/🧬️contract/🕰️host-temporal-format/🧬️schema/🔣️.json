@@ -1,0 +1,331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/host-temporal-format.v1.json",
+  "$defs": {
+    "TimestampMs": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "HourCycle": {
+      "enum": [
+        "h11",
+        "h12",
+        "h23",
+        "h24"
+      ]
+    },
+    "Format": {
+      "enum": [
+        "time",
+        "date",
+        "dateTime",
+        "relative"
+      ]
+    },
+    "Source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "timestampMs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "epochMs"
+            },
+            "timestampMs": {
+              "$ref": "#/$defs/TimestampMs"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "iso"
+          ],
+          "properties": {
+            "kind": {
+              "const": "iso"
+            },
+            "iso": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          }
+        }
+      ]
+    },
+    "Value": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "format"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "source": {
+          "$ref": "#/$defs/Source"
+        },
+        "format": {
+          "$ref": "#/$defs/Format"
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nowMs",
+        "values"
+      ],
+      "properties": {
+        "nowMs": {
+          "$ref": "#/$defs/TimestampMs"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/Value"
+          }
+        }
+      }
+    },
+    "HostRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "nowMs",
+        "values"
+      ],
+      "properties": {
+        "op": {
+          "const": "format-temporal-values"
+        },
+        "nowMs": {
+          "$ref": "#/$defs/TimestampMs"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/Value"
+          }
+        }
+      }
+    },
+    "Profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "locale",
+        "timeZone",
+        "hourCycle",
+        "profileRevision"
+      ],
+      "properties": {
+        "locale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "timeZone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "hourCycle": {
+          "$ref": "#/$defs/HourCycle"
+        },
+        "profileRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "Label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "text"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "Reply": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "labels"
+      ],
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/Profile"
+        },
+        "labels": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/Label"
+          }
+        }
+      }
+    },
+    "FixtureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "locales",
+        "timeZone",
+        "nowMs",
+        "values",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "locales": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "timeZone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "nowMs": {
+          "$ref": "#/$defs/TimestampMs"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/Value"
+          }
+        },
+        "expected": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 64,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases",
+        "stale",
+        "isoGrammar"
+      ],
+      "properties": {
+        "schema": {
+          "const": "host-temporal-format.v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/FixtureCase"
+          }
+        },
+        "stale": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "acceptedProfileRevision",
+            "staleProfileRevision"
+          ],
+          "properties": {
+            "acceptedProfileRevision": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "staleProfileRevision": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "isoGrammar": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "valid",
+            "invalid"
+          ],
+          "properties": {
+            "valid": {
+              "type": "array",
+              "minItems": 5,
+              "items": {
+                "$ref": "#/$defs/CanonicalIso"
+              }
+            },
+            "invalid": {
+              "type": "array",
+              "minItems": 5,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          }
+        }
+      }
+    },
+    "CanonicalIso": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}(?:$|T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2}))$"
+    }
+  },
+  "$ref": "#/$defs/Fixture"
+}

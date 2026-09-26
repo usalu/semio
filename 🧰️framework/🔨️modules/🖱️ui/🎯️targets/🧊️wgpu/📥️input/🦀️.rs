@@ -116,6 +116,10 @@ pub enum KeyAction {
     ArrowRight,
     ArrowUp,
     ArrowDown,
+    Home,
+    End,
+    PageUp,
+    PageDown,
     Function(u8),
     Tab,
     Space(bool),
@@ -590,10 +594,17 @@ impl<E: Clone> InputState<E> {
     }
 
     pub fn close_step(&mut self) -> Result<bool, ui_contract::TextEditFault> {
+        self.close_step_with_receipt(|_| {})
+    }
+
+    pub fn close_step_with_receipt(&mut self, on_receipt: impl FnOnce(crate::wgpu::ActionQueueReceipt)) -> Result<bool, ui_contract::TextEditFault> {
         if self.hits.close_step() {
             return Ok(false);
         }
-        if self.pending_actions.pop_back().is_some() {
+        if let Some(action) = self.pending_actions.pop_back() {
+            if let Some(receipt) = action.receipt() {
+                on_receipt(receipt);
+            }
             return Ok(false);
         }
         if !self.pending_actions.close_claim_step() {

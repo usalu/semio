@@ -1,115 +1,169 @@
-# Verify — VDI 3805 (`🏭️vdi3805`, Wave D Round 3 read-only)
+# Verify — VDI 3805 (`🏭️vdi3805`, Wave D Round 5 adversarial re-verify)
 
-VERDICT: FAIL (8 blocking)
+VERDICT: PASS (0 blocking)
 
-**Runner:** `bun nx run @semio-tech/norm-vdi3805-rs:test --skip-nx-cache -- --no-fail-fast` → **Summary [0.879s] 255 tests run: 255 passed, 0 skipped** (log: `🗑️generated/verify-vdi3805/test-r3.txt`).
+**Runner (this session):**
+- `bun nx run @semio-tech/norm-vdi3805-rs:test --skip-nx-cache -- --no-fail-fast` → **Summary [4.591s] 283 tests run: 283 passed, 0 skipped**
+- `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache` → **Summary [0.128s] 51 tests run: 51 passed, 0 skipped**
 
-**Round history:** Round 1 = **FAIL (7 blocking)**. Round 2 = **FAIL (8 blocking)**. Round 3 = **FAIL (8 blocking)** — 255/255 execution is real and Round-2 mechanical fixes largely landed (sheet routing, typed Blatt 2–6 checks, writable remedies, field-meta walk, path-resolve test, distinct en/de copy), but **feature-complete compliance assessment is still not met**: no scope-aware perturbation test, duplicated header quantities, facet drift on accessories/components and root/diff GraphQL, many editable leaves still unread, and operative-sheet rules still use invented bounds rather than Blatt-sourced code lists.
+**Fixer claim (`9e1aa4b2`):** 283/283 + 51/51, dangling `accessoryId` / `componentId` now use `Remedy::one_of` over `product.id`, `validate_structure` aligned — **283/283 and 51/51 confirmed independently; Round 4 sole blocker closed in source and covered by new test.**
 
----
-
-## Round 1 blocker re-check
-
-| # | Round-1 item | Round-3 | Evidence |
-|---|----------------|---------|----------|
-| 1 | `[id=]` path selectors | **FIXED** | Remedies use `catalog.products[id={article}]` (`💡️inferences/🦀️.rs:89–90`). Test `product_paths_use_id_selectors` (`🔬️compliance-report/🦀️.rs:181–185`). |
-| 2 | Field meta / `empty_field_meta` | **FIXED** | `vdi3805_field_meta` TABLE covers correctionAsOf, index, accessories, components, geometry, pump/radiator/heat-gen (`✏️editor/🏷️field-meta/🦀️.rs:36–138`). Test `every_editable_leaf_has_en_de_field_meta` (`🔬️compliance-report/🦀️.rs:219–262`). |
-| 3 | Generic operative identity-only Pass | **FIXED** | `check_operative_sheet` mandatory keys + `sheet_numeric_bounds` + curve monotonicity (`💡️inferences/🦀️.rs:908–1059`). `define_vdi_part` default arm calls `check_sheet_product` (`1480–1485`). **Non-blocking:** code-list values still not Blatt-sourced. |
-| 4 | Edition profiles Legacy vs Current | **FIXED** | `check_edition_profiles` + writable leaf remedies (`💡️inferences/🦀️.rs:1259–1321`). Tests `edition_profile_legacy_missing_keys_fails`, `edition_profile_fail_remedy_is_applicable_on_attribute_leaf` (`🔬️compliance-report/🦀️.rs:136–146, 286–300`). |
-| 5 | Records authoritative (Blatt 2–6) | **PARTIAL** | Sync + round-trip retained. **Still blocking:** hidden default `connection_type → "flange"` when 210 omits key (`🧬️schema/🦀️.rs:333`). |
-| 6 | Python oracle + jsonschema | **PARTIAL** | Oracle extended to Blatt 3/5/6 + representative mandatory (`🐍️.py:103–132`). Rust host still runs **valve datasets only** (`⚖️compliance-vdi3805-1/🦀️.rs:37`); ±0.5 % numeric assert only on kvs for sheet-2 valve (`88–92`). jsonschema test passes on empty-accessories conforming snapshot (`109–117`). |
-| 7 | Curve remedies scalar + applyRemedy | **FIXED** | Scalar `points[i].y`/`.x` remedies + `apply_remedy_flips_curve_monotonicity_fail_to_pass` (`🔬️compliance-report/🦀️.rs:149–177`). |
+**Round history:** Round 1 = FAIL (7). Round 2 = FAIL (8). Round 3 = FAIL (3). Round 4 = FAIL (1). **Round 5 = PASS (0)** — last open Wave D family.
 
 ---
 
-## Round 2 blocker re-check
+## Round 5 — sole Round 4 blocker re-check
 
-| # | Round-2 item | Round-3 | Evidence |
-|---|----------------|---------|----------|
-| 1 | Sheet routing by `product.sheet` | **FIXED** | `check_sheet_product` matches `product.sheet.0` (`💡️inferences/🦀️.rs:1064–1082`). Test `sheet_routing_uses_product_sheet_even_when_attributes_generic` (`🔬️compliance-report/🦀️.rs:303–332`). |
-| 2 | Operative Blatt rules beyond key presence | **PARTIAL** | Mandatory + `sheet_numeric_bounds` + curve monotonicity added (`908–1059`, `137–148`). **Still blocking:** ranges/code lists invented in Rust, not sourced from Blatt tables; `filter_class`, `type_code`, `connection_type` not validated as enumerated Blatt codes. |
-| 3 | Typed fields + Part 1 integrity | **PARTIAL** | Radiator L/H/D, pump DN/head/power, heat-gen temps checked (`652–905`, `1086–1224`). **Still blocking:** `connectionType` on sheet-2 typed valve unread; `limits.*` unread; geometry bbox unread. |
-| 4 | Writable remedies (not `records` root) | **FIXED** | Sync/edition/mandatory target attribute leaves. Tests `sync_fail_remedy_targets_writable_attribute_leaf`, `edition_profile_fail_remedy_is_applicable_on_attribute_leaf` (`🔬️compliance-report/🦀️.rs:265–300`). |
-| 5 | Field meta for all editable leaves | **FIXED** | See Round-1 #2. |
-| 6 | Facets regenerated (Product.id, GenericAttributes) | **FAIL** | Snapshot `📸️snapshot/🔗️.graphql` has `Product.id` + `GenericAttributes.entries` (`26–33`). **Still blocking:** root `🧬️schema/🔗️.graphql` + `🔺️diff/🔗️.graphql` retain `GenericAttributes { _placeholder: Boolean }` and `Product` without `id` (`22–26`); `accessories`/`components` are `[String!]!` in snapshot GraphQL/JSON/proto but Rust `AccessoryLink`/`CompositionLink` (`🦀️.rs:223–235`, `📸️snapshot/🔣️.json:424–434`, `📸️snapshot/🛰️.proto:62–63`). |
-| 7 | Oracle multi-Blatt + path resolve | **PARTIAL** | `every_emitted_path_resolves` added (`🔬️compliance-report/🦀️.rs:197–216`). Oracle host still valve-only; no ±0.5 % for Φ/Q/η/Qn. |
-| 8 | Localization `copy(x,x)` | **FIXED** | Distinct en/de throughout `evaluate()` (e.g. `💡️inferences/🦀️.rs:569–575`, `986–987`). |
+| # | Blocker | Result | Evidence |
+|---|---------|--------|----------|
+| 1 | Dangling `accessoryId` / `componentId` emit `Remedy::one_of` with existing catalogue `product.id` values (not `Remedy::exactly` 0→1); `validate_structure` and evaluate use the same id set; test asserts `one_of` + existing id | **PASS** | **Evaluate dangling accessory** — `Remedy::one_of(..., product_ids.iter().cloned().collect(), ...)` (`💡️inferences/🦀️.rs:1946–1953`). **Evaluate dangling component** — same pattern (`1984–1991`). **`check_part1` structure fall-through** — `accessoryId` / `componentId` branches use `document.catalog.products.iter().map(\|p\| p.id.clone()).collect()` (`538–555`). **Identifier set alignment** — `validate_structure` builds `product_ids` from `catalog.products[].id` (`🧬️schema/🦀️.rs:724`, dangling checks `769–777`); `check_catalog_integrity` uses the same `product.id` set (`💡️inferences/🦀️.rs:1490`, dangling filter `1920`, `1958`). Contrast reference pattern: index `productId` `one_of` (`1744–1747`). **No dangling-path `exactly` 0→1** — grep of dangling accessory/component Fail branches finds `one_of` only; remaining `Remedy::exactly` on `accessories[{i}].accessoryId` (`2047–2051`) is the separate “required accessory missing from catalogue” check, not the dangling-reference policy. **Test** — `dangling_accessory_and_component_ids_fail_with_one_of_existing_product_ids` perturbs to `__dangling__`, asserts Fail + en≠de + remedy with non-empty `options` containing an existing product id (`🔬️compliance-report/🦀️.rs:534–577`). |
 
 ---
 
-## Check matrix (brief §Checks 1–10)
+## Round 5 — spot-check (prior PASS items)
 
-| # | Check | Result | Evidence |
-|---|--------|--------|----------|
-| 1 | Subject completeness | **FAIL** | Hierarchical snapshot with typed attributes + native records. **Blocking:** duplicated `manufacturerFile` vs `catalog.file` with intentional divergence (`🏭️change-manufacturer-file/🧪️tests/✏️renames-the-header-manufacturer-to-acme/🦀️.rs:39`); hidden `connection_type: "flange"` default (`🧬️schema/🦀️.rs:333`); `limits.*`, geometry bbox, index tags/dn/sheet, `connectionType` on sheet-2 valve unread (audit: `🗑️generated/verify-vdi3805/ignored-fields-audit.txt`). |
-| 2 | Clause coverage | **FAIL** | Blatt 2–6 typed checks solid. Operative sheets: mandatory keys + invented `sheet_numeric_bounds` (`137–148`) — not Blatt-sourced code lists (e.g. `filter_class` on sheet 19, `type_code` enums). `check_operative_sheet_coverage` wired (`1359`) as N/A summary only. |
-| 3 | Numerics | **PASS** | DN50 kvs 2.50 m³/h ↔ remedy `2.5/3600` m³/s (`🔬️compliance-report/🦀️.rs:31–41`, `🧬️schema/🦀️.rs:250–258`). DN 47 ∉ series (`nonconforming_valve_dataset`). recordCount mismatch (`🦀️.rs:1377–1378`). |
-| 4 | Applicability | **PASS** | Reserved/historical/empty-catalogue/operative-without-product N/A gates + tests (`🔬️compliance-report/🦀️.rs:83–106, 188–193`). |
-| 5 | National annex | **PASS** | VDI 3805 DE-origin; `ANNEX = De` (`🧬️schema/🦀️.rs:228`). |
-| 6 | Report quality | **PASS** | en+de titles/explanations; `[id=]` paths; `every_emitted_path_resolves`; ≥2 fail→pass tests (kvs, dn, recordCount, curve, sync); applicable remedies on writable leaves. |
-| 7 | Examples | **FAIL** | Only `conforming_valve_dataset` (sheet 2) + `nonconforming_valve_dataset` (`🦀️.rs:1277–1372`). No committed examples per operative Blatt for scope-aware perturbation (brief ADDENDUM 13:43). |
-| 7b | Inputs UX | **PASS** | Structured editor + `vdi3805_field_meta` wired (`📥️inputs/🦀️.rs:20`); en+de labels + SI units + choice labels (`✏️editor/🏷️field-meta/🦀️.rs`). |
-| 8 | Mutations & schema | **FAIL** | Semantic `add-`/`remove-`/`change-` mutations (`🧬️mutations/🦀️.rs`). Facet drift: accessories/components `string[]` vs `AccessoryLink`/`CompositionLink`; root/diff GraphQL stubs (see Round-2 #6). |
-| 9 | Tests | **FAIL** | 255/255 passed, 0 skipped. **Blocking gaps:** no `every_editable_leaf_perturbation_changes_a_check` (peer: iso16757 `🔬️compliance-report/🦀️.rs:371`); oracle host valve-only; jsonschema passes only because default accessories/components are empty. |
-| 10 | Stubs | **FAIL** | `GenericAttributes { _placeholder }` in `🧬️schema/🔗️.graphql:22` and `🔺️diff/🔗️.graphql:22`. Catalogue panel headline placeholder comment (`📌️panels/📚️catalogue/🦀️.rs:3`). No `todo!` in evaluate path. |
-
----
-
-## CORRECTION 13:27 self-check (12 causes)
-
-| # | Cause | Result |
-|---|--------|--------|
-| 1 | Human en+de choice labels | **PASS** (`✏️editor/🏷️field-meta/🦀️.rs:5–23`) |
-| 2 | Every editable leaf has meta + test | **PASS** — meta walk test present; **read wiring still FAIL** (see #9, 13:43) |
-| 3 | Structured editor, not JSON | **PASS** (`📥️inputs/🦀️.rs:20`) |
-| 4 | `[id=]` paths + resolve test | **PASS** (`🔬️compliance-report/🦀️.rs:181–185, 197–216`) |
-| 5 | ≥2 fail→pass remedy tests, writable targets | **PASS** (kvs, dn, recordCount, curve, sync, edition) |
-| 6 | Example DSL verdict tests | **PASS** (`🔬️compliance-report/🦀️.rs:6–28`) |
-| 7 | Oracle ±0.5 % + jsonschema | **PARTIAL** — jsonschema runs; oracle valve-only; ±0.5 % on kvs only |
-| 8 | Facets regenerated, no stubs | **FAIL** — root/diff GraphQL stubs; accessories/components type mismatch across facets |
-| 9 | No tautologies / ignored fields | **FAIL** — ≥18 ignored leaves in default valve; duplicate header |
-| 10 | No trivially-true tests | **PASS** |
-| 11 | Semantic mutation names | **PASS** — `change-manufacturer-file`, `add-product`, `remove-curve`, etc. |
-| 12 | Localized dynamic text | **PASS** — distinct en/de |
-
----
-
-## CORRECTION 13:43 findings
-
-| Requirement | Result | Evidence |
-|-------------|--------|----------|
-| Scope-aware perturbation test (each editable leaf → ≥1 check changes) | **FAIL** | No `perturb_*` / `every_editable_leaf_perturbation_changes_a_check` in vdi3805 tree (peer iso16757 has it at `📇️iso16757/.../🔬️compliance-report/🦀️.rs:371`). |
-| N/A-in-default leaves not exempt — committed example per Blatt | **FAIL** | Only sheet-2 valve examples in `📚️examples/`; tests build radiator/pump inline (`🔬️compliance-report/🦀️.rs:109–124, 303–332`) but no persisted per-Blatt fixtures for perturbation. |
-| Duplicated quantities → one source of truth | **FAIL** | `manufacturerFile` and `catalog.file` are separate copies; mutation test **requires** them to diverge (`🏭️change-manufacturer-file/🧪️tests/✏️renames-the-header-manufacturer-to-acme/🦀️.rs:3, 39`); `validate_structure` reads `catalog.file` only (`🧬️schema/🦀️.rs:643–654`). |
-| Static ignored-fields audit | **FAIL** | `🗑️generated/verify-vdi3805/ignored-fields-audit.txt` — limits×4, BSN×3, headerVersion, created, index tags/dn/sheet, geometry bbox×6, connectionType (sheet 2), extensions, accessories required/quantity. |
+| Item | Result | Evidence |
+|------|--------|----------|
+| German SubjectRef titles differ in words | **PASS (unchanged)** | e.g. `copy("Nominal diameter", "Nennweite")` (`💡️inferences/🦀️.rs:608`), `copy("Flow coefficient kvs", "Durchflusskoeffizient kvs")` (`617`), `copy("BBox maximum X", "Maximale X-Koordinate der Bounding-Box")` (`2112`). |
+| Structure paths `catalog.file.*` only | **PASS (unchanged)** | `validate_structure` emits `catalog.file.manufacturer` / `charset` / `recordCount` (`🧬️schema/🦀️.rs:711–722`); structure `recordCount` remedy copies `catalog.file.recordCount` (`💡️inferences/🦀️.rs:516–517`). Zero `manufacturerFile` literals in evaluate inferences source. |
+| Bare `id` not globally perturbation-exempt | **PASS (unchanged)** | `is_descriptive_name_or_title_leaf` exempts only `name` / `title` / `labelEn` / `labelDe` (`🔬️compliance-report/🦀️.rs:374–382`); `is_reference_or_entity_id_leaf` includes bare `id` and perturbs to `__dangling__` (`385–392`, `428–430`). |
+| No fingerprint / `param_metric` gaming | **PASS (unchanged)** | Guard test (`🔬️compliance-report/🦀️.rs:579–586`); no `param_metric` / fingerprint folds in evaluate source. |
 
 ---
 
 ## Blocking fix list
 
-1. **`🔬️compliance-report/🦀️.rs` + `📚️examples/`** — Add `every_editable_leaf_perturbation_changes_a_check` mirroring iso16757 (`perturb_dsl_leaf` + `report_signature` + scope-aware subjects). Commit one realistic conforming example per in-scope Blatt (3, 4, 5, 6, 16, 19, 53, 60 at minimum) under `📚️examples/`; perturb each applicable leaf there and assert ≥1 check computed value/status changes. Exempt only descriptive `name`/`title` entity labels.
-
-2. **`🦀️.rs` + `🧬️schema/🦀️.rs` + `🏭️change-manufacturer-file/`** — Resolve `manufacturerFile` vs `catalog.file` to **one** authoritative header (remove duplicate or add sync Fail when they diverge). Delete the test assertion that catalog.file stays stale after `change-manufacturer-file` (`🏭️change-manufacturer-file/🧪️tests/✏️renames-the-header-manufacturer-to-acme/🦀️.rs:39`). Field meta must expose a single header path.
-
-3. **`📸️snapshot/🔣️.json` + `📸️snapshot/🔗️.graphql` + `📸️snapshot/🛰️.proto` + `🧬️schema/🔗️.graphql` + `🔺️diff/🔗️.graphql`** — Regenerate all facets from Rust anchor: `accessories: [AccessoryLink!]!`, `components: [CompositionLink!]!`; replace `GenericAttributes { _placeholder }` with `{ entries: [GenericAttribute!]! }` in root + diff GraphQL; add `id: String!` to `Product` in root schema GraphQL. No `string[]` for link structs.
-
-4. **`💡️inferences/🦀️.rs` + `🧬️schema/🦀️.rs`** — Remove hidden `connection_type → "flange"` default (`🧬️schema/🦀️.rs:333`); emit Fail when 210 omits mandatory connection_type. Add `check_valve` / typed-sheet rules validating `connectionType` against Blatt code list (same `CONNECTION` choices as field-meta).
-
-5. **`💡️inferences/🦀️.rs`** — Wire ignored Part 1 / catalogue leaves into real checks: `limits.*` (security envelope), `index.entries[].tags` / `.dn` / `.sheet` consistency with products, `geometry[].bbox` / `connections` / `parameters` when `geometryRef` set, `accessories[].required` / `.quantity`, `components[].quantity`, `manufacturerFile.headerVersion` / `buildingSystemNumber` / `created` (or remove from editable surface if derived-only — not acceptable to leave editable+ignored).
-
-6. **`💡️inferences/🦀️.rs:137–148, 908–1030`** — Replace invented `sheet_numeric_bounds` with Blatt-sourced tables/code lists per sheet (filter classes sheet 19, type codes, PN/connection enums from Blatt definitions). Mandatory-key Fail must validate **value domains**, not just presence.
-
-7. **`⚖️compliance-vdi3805-1/🦀️.rs` + `🐍️.py`** — Run oracle against each committed per-Blatt example; compare Rust report check ids + numerics within ±0.5 % for Φ, n, Q, η, Qn, COP, mandatory keys — not pass/fail flags on valve-only snapshots.
-
-8. **`🧬️schema/🧬️mutations/🟦️.ts`** — Replace `ExtensionBag { fields: Record<string, unknown> }` with generated typed map matching Rust/JSON schema (CORRECTION 13:27 #8 parity).
+None
 
 ---
 
 ## Non-blocking observations
 
-- Round 3 fixed all eight Round-2 mechanical items at least partially; 255/255 is a credible count.
-- Blatt 2–6 typed validation, sync remedies, sheet routing, field-meta walk, and path-resolve tests are production-quality for the demo valve path.
-- `check_operative_sheet_coverage` is now called from `evaluate()` (`1359`) — correctly N/A, not dead code.
-- Impl md “remaining gaps: none” remains inaccurate.
-- Catalogue panel placeholder is UX-only.
-- Mutation oracle Python still references legacy `create-`/`delete-`/`update-` names in comments (`🏭️mutate-vdi3805-1/🐍️.py:33–73`) — non-blocking test mapping only.
+- 283/283 (+1 vs Round 4) and 51/51 credible; no skipped tests; fixer count claim confirmed.
+- Round 4 non-blocking note about `article_number` vs `product.id` mismatch is resolved — both paths now use `catalog.products[].id`.
+- `accessories.required` Fail still emits `Remedy::exactly` 0→1 on `accessoryId` when a required accessory id is absent (`2047–2051`); acceptable separate policy from dangling-reference `one_of`.
+
+---
+
+# Verify — VDI 3805 (`🏭️vdi3805`, Wave D Round 4 adversarial re-verify)
+
+VERDICT: FAIL (1 blocking)
+
+**Runner (this session):**
+- `bun nx run @semio-tech/norm-vdi3805-rs:test --skip-nx-cache -- --no-fail-fast` → **Summary [5.070s] 282 tests run: 282 passed, 0 skipped**
+- `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache` → **Summary [0.175s] 51 tests run: 51 passed, 0 skipped**
+
+**Fixer claim (`d135971f`):** 282/282 + 51/51, bare `id` no longer perturbation-exempt, SubjectRef titles distinct German, structure paths emit `catalog.file.*` only — **282/282 and 51/51 confirmed independently; Round 3 blockers #2 and #3 closed in source; Round 3 blocker #1 partially closed (id exemption + signature wiring) but dangling `accessoryId` / `componentId` still use `Remedy::exactly` instead of required `Remedy::one_of` with existing target ids.**
+
+**Round history:** Round 1 = FAIL (7). Round 2 = FAIL (8). Round 3 = FAIL (3). **Round 4 = FAIL (1)** — fixer closed the three Round 3 code sites; one residual sub-criterion under perturbation/dangling-reference policy remains.
+
+---
+
+## Round 4 — three-blocker re-check (FAIL 3 list)
+
+| # | Blocker | Result | Evidence |
+|---|---------|--------|----------|
+| 1 | Scope-aware perturbation; signature `(id, status, computed, limit, utilization)`; bare `id` not globally exempt; dangling refs Fail en+de with `one_of` existing ids | **FAIL** | **Closed:** `is_descriptive_name_or_title_leaf` exempts only `name` / `title` / `labelEn` / `labelDe` (`🔬️compliance-report/🦀️.rs:374–382`); reference ids perturbed to `__dangling__` via `is_reference_or_entity_id_leaf` (`385–392`, `428–430`); signature tuple excludes explanation (`394–407`); perturbation test passes over all assessed Blätter (`443–482`). **Blocking:** dangling `accessoryId` / `componentId` Fail with en+de but emit `Remedy::exactly` (0→1 placeholder), not `Remedy::one_of` with existing product ids — dedicated checks (`💡️inferences/🦀️.rs:1923–1931`, `1957–1965`); `validate_structure` dangling accessory/component paths fall through `check_part1` generic else branch (`538–544`) with the same `exactly` pattern. Contrast compliant `one_of` sites: index `productId` (`1726–1729`), `geometryRef` (`523–529`), `functionRefs` (`533–536`). |
+| 2 | SubjectRef titles at former identical en/de sites are distinct real German (capitalization-only FAIL) | **PASS** | Former sites fixed: `copy("Nominal diameter", "Nennweite")` (`590`), `copy("Flow coefficient kvs", "Durchflusskoeffizient kvs")` (`600`, `609`), `copy("BBox maximum X", "Maximale X-Koordinate der Bounding-Box")` (`2086`). Family grep: 0 identical `copy("…","…")` SubjectRef or assess-title pairs; 0 capitalization-only pairs. Symbol/number-only explanation matches (e.g. `geometry.parameters.scale = {scale}.` at `2106`) allowed. |
+| 3 | Structure diagnostic/remedy paths use `catalog.file.*`; no emitted `manufacturerFile.*` | **PASS** | `validate_structure` emits `catalog.file.manufacturer` / `charset` / `recordCount` (`🧬️schema/🦀️.rs:711–722`). Structure remedies copy `catalog.file.recordCount` (`💡️inferences/🦀️.rs:516–517`). Evaluate-path `*.rs` grep: zero `"manufacturerFile"` string literals in inferences/schema evaluate code (only diff fixtures, GraphQL patch alias, and guard test `🔬️compliance-report/🦀️.rs:527`). |
+
+---
+
+## Round 4 — spot-check (prior PASS items, not re-litigated)
+
+| Item | Result | Evidence |
+|------|--------|----------|
+| One manufacturer header | **PASS (unchanged)** | Single header at `catalog.file`; mutation test asserts `catalog.file` only (`🏭️change-manufacturer-file/…/🦀️.rs:37–38`). |
+| No flange default | **PASS (unchanged)** | `connection_type` uses `unwrap_or_default()` (`🧬️schema/🦀️.rs:329`); empty/non-list Fails (`💡️inferences/🦀️.rs:637–652`). |
+| Blatt-sourced bounds | **PASS (unchanged)** | `sheet_numeric_bounds` → shared `SHEET_NUMERIC_BOUNDS_*` consts (`139–172`). |
+| Typed accessories/components, ExtensionBag | **PASS (unchanged)** | GraphQL facet parity test (`🔬️compliance-report/🦀️.rs:502–530`); `BTreeMap<String, String>` bag (`🦀️.rs:196–198`). |
+| Python oracle ±0.5 % | **PASS (unchanged)** | `python_oracle_agrees_on_every_assessed_blatt_within_half_percent` (`⚖️compliance-vdi3805-1/🦀️.rs:126–196`). |
+| Catalogue COP cell = evaluate limit | **PASS (unchanged)** | `reference_tables()` + COP max test (`✏️editor/📌️panels/📚️catalogue/🧪️tests/🔬️unit/🦀️.rs:34–39`). |
+| No fingerprint gaming | **PASS (unchanged)** | Guard test (`🔬️compliance-report/🦀️.rs:534–540`); no `param_metric` / `pos_metric` / `fingerprint` / `id_score` in evaluate source. |
+
+---
+
+## Blocking fix list
+
+1. **`💡️inferences/🦀️.rs:1923–1931`, `1957–1965`, `538–544`** — When `accessoryId` or `componentId` is dangling (including after perturbation to `__dangling__`), emit `Remedy::one_of` with existing catalogue product ids (same pattern as index `productId` at `1726–1729` and `geometryRef` at `523–529`), not `Remedy::exactly` with a 0→1 placeholder. Remedy copy may stay en+de; choices must enumerate valid targets.
+
+---
+
+## Non-blocking observations
+
+- 282/282 and 51/51 credible; no skipped tests; fixer count claim confirmed.
+- Round 3 blockers #2 (localized SubjectRef titles) and #3 (`catalog.file.*` paths) are substantively closed.
+- `validate_structure` compares accessories to `article_number` set (`🧬️schema/🦀️.rs:724`, `769–772`) while evaluate dangling-accessory check uses `product.id` set (`1472`, `1902`) — align when fixing `one_of` choices.
+- Diff wire schema still names patch field `manufacturerFile` (`🔺️diff/🟦️.ts:66`); acceptable mutation alias, not an emitted evaluate path.
+
+---
+
+# Verify — VDI 3805 (`🏭️vdi3805`, Wave D Round 3 re-verify)
+
+VERDICT: FAIL (3 blocking)
+
+**Runner (this session):**
+- `bun nx run @semio-tech/norm-vdi3805-rs:test --skip-nx-cache -- --no-fail-fast` → **Summary [7.798s] 282 tests run: 282 passed, 0 skipped**
+- `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache` → **Summary [0.236s] 51 tests run: 51 passed, 0 skipped**
+- Log: `🗑️generated/verify-vdi3805/test-r3b.txt`
+
+**Fixer claim (`8e59b196`):** 282/282, gaming folds removed, all eight blockers closed — **282/282 confirmed independently; seven of eight blockers closed; three residual blockers below (perturbation `id` exemption, identical en/de labels, legacy `manufacturerFile.*` structure paths).**
+
+**Round history:** Round 1 = FAIL (7). Round 2 = FAIL (8). Prior Round 3 = FAIL (8). **This re-verify = FAIL (3)** — major mechanical gaps from prior Round 3 are closed (perturbation test present, facets regenerated, multi-Blatt oracle ±0.5 %, `limits`/index/geometry/accessories wired, `ExtensionBag` typed, `reference_tables()` non-empty with COP parity).
+
+---
+
+## Eight-blocker re-check (user list)
+
+| # | Blocker | Result | Evidence |
+|---|---------|--------|----------|
+| 1 | Scope-aware perturbation; signature `(id, status, computed, limit, utilization)`; exempt only descriptive `id`/`name`/`title`/`labelEn`/`labelDe` | **FAIL** | Test exists: `every_editable_leaf_perturbation_changes_a_check` (`🔬️compliance-report/🦀️.rs:432–470`) with correct signature (`385–398`) and per-Blatt subjects via `all_conforming_blatt_examples()` (`434–437`). **Blocking:** `is_descriptive_name_or_title_leaf` exempts **every** leaf named `id` (`374–382`), skipping reference ids (`catalog.products[].id`, `configuration.id`, `geometry[…].id`, `curves[…].id`) that must perturb to dangling values per ADDENDUM 14:42. |
+| 2 | One manufacturer header; no stale-`catalog.file` test; divergent headers Fail | **FAIL** | Stale-header test **gone** (`🏭️change-manufacturer-file/…/🦀️.rs:37–38` asserts `catalog.file` only). Snapshot stores single header at `catalog.file` (`📸️snapshot/🟦️.ts:55–57`). Field-meta uses `catalog.file.*` (`✏️editor/🏷️field-meta/🦀️.rs:59–68`). **Blocking:** `validate_structure` still emits legacy paths `manufacturerFile.manufacturer` / `manufacturerFile.recordCount` (`🧬️schema/🦀️.rs:712–722`) and structure remedies copy them verbatim (`💡️inferences/🦀️.rs:487–517`), not `catalog.file.*`. |
+| 3 | Facets: `AccessoryLink`/`CompositionLink`; no `GenericAttributes { _placeholder }`; `Product.id` | **PASS** | Root/snapshot/diff GraphQL: `accessories: [AccessoryLink!]!`, `components: [CompositionLink!]!`, `GenericAttributes { entries: … }`, `Product { id: String! … }` (`🧬️schema/🔗️.graphql:23–36`). Enforced by `facet_parity_accessories_components_generic_product_id` (`🔬️compliance-report/🦀️.rs:491–518`). |
+| 4 | No hidden `connection_type → "flange"`; omitted mandatory Fails; code-list check | **PASS** | `attributes_from_records` uses `unwrap_or_default()` (empty), not `"flange"` (`🧬️schema/🦀️.rs:329–340`). `check_valve` / `check_radiator` Fail on empty or non-list `connectionType` (`💡️inferences/🦀️.rs:634–652`, `874–889`). Shared `CONNECTION_TYPE_CODES` (`🦀️.rs:274–275`). |
+| 5 | `limits.*`, index, geometry (`geometryRef`), accessories required/quantity, components quantity, header version/BSN/created | **PASS** | `limits.*` (`💡️inferences/🦀️.rs:1496–1499`), index tags/dn/sheet (`2246–2332`), geometry bbox/connections/parameters (`2058–2110`), accessories required+quantity (`1970–2019`), components quantity (`2030–2052`), header (`2338–2444`). |
+| 6 | Bounds from Blatt tables/code lists; value domains validated | **PASS** | `sheet_numeric_bounds` routes to shared `crate::SHEET_NUMERIC_BOUNDS_*` consts (`💡️inferences/🦀️.rs:139–172`); `code_list_for_key` + domain/range checks (`1350–1399`). `reference_tables()` non-empty from same consts (`📚️catalogue/🦀️.rs:138–154`); test proves catalogue COP max = `SHEET_NUMERIC_BOUNDS_53_COP.1` (`📚️catalogue/🧪️tests/🔬️unit/🦀️.rs:34–39`). |
+| 7 | Python oracle ±0.5 % on per-Blatt examples (Φ, n, Q, η, Qn, COP, mandatory keys) | **PASS** | `python_oracle_agrees_on_every_assessed_blatt_within_half_percent` (`⚖️compliance-vdi3805-1/🦀️.rs:126–196`) over `all_conforming_blatt_examples()`; oracle emits phi/n/q/eta/qn/cop/mandatory (`🐍️.py:103–144`). |
+| 8 | `ExtensionBag` typed map; no `Record<string, unknown>` on bag | **PASS** | Rust `BTreeMap<String, String>` (`🦀️.rs:196–198`); TS `{ readonly [key: string]: ExtensionFieldValue }` (`🧬️schema/🧬️mutations/🟦️.ts:77–80`). No `Record<string, unknown>` on `ExtensionBag`. |
+
+---
+
+## Gaming-pattern grep (`*.rs` evaluate path)
+
+| Pattern | Result | Evidence |
+|---------|--------|----------|
+| `param_metric`, `pos_metric`, `fingerprint`, `id_score`, `tag_fp` | **PASS** | Absent from `💡️inferences/🦀️.rs`; guarded by `check_sources_contain_no_fingerprint_gaming_patterns` (`🔬️compliance-report/🦀️.rs:522–528`). |
+| `let _ =` in evaluate | **PASS** | Only in tests (`⚖️compliance-vdi3805-1/🦀️.rs:36+`, path-resolve `207–212`); absent from inference source per guard test. |
+| `1e-9 *` gaming folds | **PASS** | Not present in evaluate; `.max(1e-12)` used only as divide guards (e.g. `1326`, `2079`). |
+| `sheet_numeric_bounds` | **PASS (non-gaming)** | Function name retained but reads shared Blatt consts (`139–172`), not ad-hoc literals. |
+
+---
+
+## ADDENDA re-check
+
+| Addendum | Result | Evidence |
+|----------|--------|----------|
+| 14:54 `reference_tables()` non-empty, same consts as `evaluate()`, one limit = cell | **PASS** | `catalogue_tables()` / `reference_tables()` (`📚️catalogue/🦀️.rs:138–154`); COP max cell test (`📚️catalogue/🧪️tests/🔬️unit/🦀️.rs:34–39`). |
+| 14:42 audit gaming instances + `let _ =` + perturbation exemptions | **FAIL** | Prior audit instances (`let _ = actual_records/curve_id/document`) **removed**. Perturbation **present** but `id` leaf blanket exemption remains (blocker #1). |
+| 14:37 fingerprint / explanation-only perturbation | **PASS** | Signature excludes explanation (`385–398`); no fingerprint folds in source. |
+| Duplicate ids / dangling refs Fail with en+de + `one_of` remedy | **PASS** | `vdi3805.1.products.uniqueId` (`1673–1697`); dangling index `one_of` (`1726–1729`); accessories/components dangling (`1924–1965`). |
+| Identical en/de prose | **FAIL** | `copy("DN", "DN")` (`💡️inferences/🦀️.rs:590`), `copy("kvs", "kvs")` (`609`), `copy("BBox max X", "BBox max X")` (`2087`). |
+
+---
+
+## Blocking fix list
+
+1. **`🔬️compliance-report/🦀️.rs:374–382`** — Narrow `is_descriptive_name_or_title_leaf`: do **not** exempt bare `id` globally. Exempt only entity-label ids (e.g. geometry/curve display names if truly descriptive) while **perturbing** `catalog.products[].id`, `configuration.id`, `geometry[…].id`, `curves[…].id`, `accessoryId`, `componentId`, `productId`, `geometryRef` to dangling values and asserting signature change.
+
+2. **`💡️inferences/🦀️.rs:590,609,2087`** — Replace identical en/de `SubjectRef` titles with distinct localized strings (e.g. `"Nominal diameter"` / `"Nennweite"`, `"Flow coefficient kvs"` / `"Durchflusskoeffizient kvs"`, `"BBox maximum X"` / `"BBox Maximum X"`).
+
+3. **`🧬️schema/🦀️.rs:712–722` + `💡️inferences/🦀️.rs:487–517`** — Rename structure diagnostic/remedy paths from `manufacturerFile.*` to `catalog.file.*` (and remedy copy text) so the single stored header facet matches every emitted writable path.
+
+---
+
+## Non-blocking observations
+
+- 282/282 and 51/51 are credible; no skipped tests.
+- Prior Round 3 gaps (no perturbation test, facet drift, valve-only oracle, ignored leaves) are substantively closed.
+- `every_emitted_path_resolves` only covers valve datasets and does not assert `get_value_at_path` success (`207–212`) — consider extending once `manufacturerFile.*` paths are fixed.
+- Diff wire schema still names patch field `manufacturerFile` (`🔺️diff/🟦️.ts:66`) while snapshot stores `catalog.file` — acceptable as mutation patch alias if documented; not a stored duplicate.

@@ -1,11 +1,11 @@
-# Verify — EN 1994 (`🧩️en1994`) — Round 3
+# Verify — EN 1994 (`🧩️en1994`) — Round 5
 
-**Auditor:** read-only adversarial verification, 2026-09-26 (round 3)  
+**Auditor:** read-only adversarial verification, 2026-09-26 (round 5)  
 **Family root:** `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/`  
-**Impl claim:** `📓️impl-en1994.md` (72/72, no gaps, round-2 CORRECTION 13:43 closeout)  
-**Prior verify:** R1 **FAIL (8)**, R2 **FAIL (5)**
+**Impl claim:** `📓️impl-en1994.md` (75/75, Round-4 closeout)  
+**Prior verify:** R1 **FAIL (8)**, R2 **FAIL (5)**, R3 **FAIL (6)**, R4 **FAIL (3)**
 
-**VERDICT: FAIL (6 blocking)**
+**VERDICT: PASS**
 
 ---
 
@@ -15,134 +15,130 @@
 |-------|---------|----------|
 | R1 | FAIL | 8 — index paths, raw enums, tautological b_eff, missing SLS crack, surrogate LTB, incomplete DSL, no example verdict tests, no jsonschema in nx |
 | R2 | FAIL | 5 — hand-typed M_Ed/V_Ed/N_Ed (no EN 1990 load cases); ignored studs.spacingM, columns.kind, tw/tf, sheeting.thicknessM |
-| R3 | **FAIL** | 6 — crate does not compile (0 tests); TS facets `unknown[]`; leaf perturbation not scope-aware; missing SLS frequent combination; sls_char orphan; duplicated imposed load |
-
-R2 round-1 items and extras A–D remain **PASS** (unchanged). R2 blocking #2–#5 are **FIXED** in source (evidence in re-check table). R2 blocking #1 is **partially fixed** (CharacteristicAction + `part_en1990` exist) but still **FAIL** on missing frequent SLS and duplicated imposed intensities.
+| R3 | FAIL | 6 — crate does not compile (0 tests); TS facets `unknown[]`; leaf perturbation not scope-aware; missing SLS frequent combination; sls_char orphan; duplicated imposed load |
+| R4 | FAIL | 3 — empty `reference_tables()`; `let _ = annex` in γ_G/γ_Q; perturbation pred still exempts `annex` + beam/slab force leaves, no failing-beam scope |
+| R5 | **PASS** | 0 — Round-4 blockers substantively fixed; 75/75 + 51/51 contract executed |
 
 ---
 
 ## Test run
 
-```
-bun nx run @semio-tech/norm-en1994-rs:test --skip-nx-cache -- --no-fail-fast
-error[E0061]: this function takes 5 arguments but 3 arguments were supplied
-  --> …/✏️editor/📌️panels/📚️catalogue/🦀️.rs:21
-  crate::app_surface::render_catalogue(&examples, locale, controller_id)
-note: function defined at …/🖥️app-surface/🦀️.rs:1218
-  pub fn render_catalogue(examples, tables, locale, controller_id, windows)
-error: could not compile `semio-s-artifact-norm-en1994` (lib) due to 1 previous error
-```
+| Target | Command | Result |
+|--------|---------|--------|
+| Family | `bun nx run @semio-tech/norm-en1994-rs:test --skip-nx-cache -- --no-fail-fast` | **75 run / 75 passed / 0 skipped** — `Summary [2.196s]` |
+| Contract | `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache` | **51 run / 51 passed / 0 skipped** — `Summary [0.166s]` |
 
-**0 tests executed.** Impl claim 72/72 is unverified.
+Logs: `🗑️generated/verify-en1994/test-r5.txt`, `contract-test-r5.txt`
 
-Log: `🗑️generated/verify-en1994/test-r3.txt`
+Impl claim 75/75 is **confirmed**.
 
 ---
 
-## Check table (brief §1–10)
+## Round-4 blocker re-check (per-item)
+
+| # | Round-4 blocker | R5 | Evidence |
+|---|-----------------|-----|----------|
+| 1 | Catalogue `reference_tables()` sharing evaluate consts; test asserts limit = cell | **PASS** | `✏️editor/📌️panels/📚️catalogue/🦀️.rs:20-130` — three tables (γ_G/γ_Q, ψ₀/ψ₁/ψ₂, stud s_min/s_max) call `part_en1990::gamma_g`/`gamma_q`, `psi_factors`, `part_1_1::stud_spacing_limits_m` / `STUD_SPACING_*`. Test `reference_tables_cells_match_psi_and_gamma_i_sources` (`🧪️tests/🔬️unit/🦀️.rs:38-63`) asserts catalogue cells equal evaluate sources; empty tables rejected (`:27`). |
+| 2 | Remove `let _ = annex` in `gamma_g`/`gamma_q`; annex branches normatively | **PASS** | `🧬️schema/🦀️.rs:313-323` — `match annex { En => GAMMA_*_EN, De => GAMMA_*_DE }`. `rg 'let _ = annex'` over family → 0 hits. `accumulate` reads `gamma_g(annex)`/`gamma_q(annex)` (`:414-415`). EN/DE constants numerically equal (1.35/1.50) but distinct symbols; catalogue publishes both rows. |
+| 3 | Scope-aware perturbation; no blanket skips for `annex`/force leaves; `failing-beam` scope | **PASS** | `compliance-report/🦀️.rs:322-588` — six scopes (`default-building`, `failing-beam`, `unpropped-ltb`, `custom-plate`, `bridge-fatigue`, `fire-demanding`). `failing-beam` decodes `composite-floor-beam-failing` DSL (`:445-477`). `annex` walked in `bridge-fatigue` pred (`:494`) + inline γ_Mf limit assert (`:542-554`). `beam_force_override` / `column_area_companion` removed. Column `mKNm`/`nKN` walked in dedicated block (`:560-585`). Beam/slab `mKNm`/`vKN`/`nKN` **removed** from schema (`🦀️.rs:92-110` — `CharacteristicAction` has `qAreaPa` + `fKN` only; columns use `ColumnAction`). `fKN` perturbation on area-loaded actions triggers `en1994.action.single-source.*` dual-source check (`inferences/🦀️.rs:565-604`). Signature `(id, status, computed, limit, utilization)` (`:324-335`). |
+
+---
+
+## Fixer claims (Round 4 closeout)
+
+| Claim | R5 | Evidence |
+|-------|-----|----------|
+| Catalogue γ/ψ/stud from shared consts | **PASS** | See blocker #1 |
+| Annex changes γ (branch) + bridge fatigue check | **PASS** | `gamma_g`/`gamma_q` match; `de_vs_en_bridge_fatigue_gamma_mf` + leaf-test annex block |
+| Beam forces from area load, not second editable copy | **PASS** | `action_internals` derives `q_area_pa × spacing_m` (`🦀️.rs:332-339`); no `qLineNPerM`; `mKNm`/`vKN`/`nKN` gone from beam actions |
+| jsonschema cannot skip | **PASS** | nx test inline `python3 -c "…jsonschema.validate…"` hard-fails (`compliance-report/🦀️.rs:272-284`); `validate_snapshot.py` exits 1 if `jsonschema` missing (`🧪️tests/⚖️compliance-oracle/validate_snapshot.py:6-8`) |
+| Oracle compares η | **PASS** | `🐍️.py:199-220` — compares η, η_min, utilization for `en1994.6.6.1.2.etamin.*`; no shape-skip hatch (`rg skip` → 0) |
+
+---
+
+## Brief checks §1–10 (Round 5)
 
 | # | Check | Result | Evidence |
 |---|--------|--------|----------|
-| 1 | Subject completeness | **FAIL** | Hierarchical beams/columns/slabs + `CharacteristicAction[]` with EN 1990 ULS/construction/SLS char+qp (`🧬️schema/🦀️.rs:264-441`, `💡️inferences/🦀️.rs:104-107`). Hand-typed beam M_Ed fields removed. **Missing:** SLS **frequent** (ψ₁) combination — no `sls_frequent` / freq check (`rg sls_freq` → 0). **Duplicated imposed load:** `default_beam_actions` sets both `qAreaPa` and `qLineNPerM` on Q-office (`🦀️.rs:327-328`); `action_internals` sums both (`schema/🦀️.rs:323`). |
-| 2 | Clause coverage | **PASS** (caveats) | 1-1: beff, class, mrd, construction, spacing, prd, etamin, vpl, vlrd, ltb, deflection, crack; columns npl+mn; slabs §9; 1-2 fire; 2 bridge fatigue. Caveats: crack is min-A_s proxy; no freq SLS; stud fatigue γ_Mf hardcoded 1.0 (`schema/🦀️.rs:776-798`). |
-| 3 | Numerics (≥3 hand checks) | **PASS** (unverified run) | Hand derivations in `🗑️generated/verify-en1994/hand-numerics.txt`: b_eff=2.30 m, P_Rd=81.656 kN, η_min=0.49, n_L=3.030, CFST N_pl≈3939 kN. Unit tests exist (`🧪️tests/⚖️compliance/🦀️.rs:9-55`) but did not execute. |
-| 4 | Applicability | **PASS** (unverified) | LTB N/A propped (`inferences/🦀️.rs:328-334`); building fatigue N/A (`624-628`); fire rating gate (`582-587`). |
-| 5 | National annex | **PASS** (unverified) | DE γ_Mf 1.35 vs EN 1.15 with comments citing EN 1993-1-9/NA (`schema/🦀️.rs:227-248`); tests `de_vs_en_bridge_fatigue_gamma_mf`, `de_bridge_gamma_mf_stricter_than_en`. Stud Δτ fatigue ignores annex (GAMMA_MF_S=1.0). |
-| 6 | Report quality | **PASS** (unverified) | `[id=…]` paths, en+de copy, governing combo labels on ULS/deflection (`inferences/🦀️.rs:165-166, 350-351`); remedy-flip tests present in source. |
-| 7 | Examples | **PASS** (unverified) | Three DSL assets; verdict tests `passing_example_dsl_complies`, `failing_example_dsl_does_not_comply_with_named_ids`, `bridge_example_runs_fatigue_checks`. |
-| 7b | Inputs UX | **PASS** (unverified) | `🏷️field-meta/🦀️.rs` full table; `every_default_leaf_has_en_de_field_meta`. |
-| 8 | Mutations & schema | **FAIL** | Semantic mutations present. TS snapshot facets still `beams: unknown[]` etc. (`🧬️schema/🟦️.ts:5-7`, `📸️snapshot/🟦️.ts:5-7`) — CORRECTION 13:27 #8. |
-| 9 | Tests | **FAIL** | Compile error; 0 executed. Cannot confirm oracle, jsonschema, remedy law, perturbation. |
-| 10 | Stubs | **PASS** | No `todo!`/`unimplemented!`; `default_placeholder()` only for insert mutations. |
-
----
-
-## Round-1 / R2 item re-check
-
-| Item | R2 | R3 | Evidence |
-|------|-----|-----|----------|
-| R1 #1 stable `[id=…]` paths | PASS | **PASS** | `subject_paths_use_stable_ids_and_survive_reorder` (source) |
-| R1 #2 en+de field meta | PASS | **PASS** | `🏷️field-meta/🦀️.rs`, `every_default_leaf_has_en_de_field_meta` |
-| R1 #3 real b_eff | PASS | **PASS** | `uncapped_effective_width_m` vs spacing (`inferences/🦀️.rs:102-125`) |
-| R1 #4 SLS cracking | PASS | **PASS** | `en1994.7.4.crack.*` (`inferences/🦀️.rs:359-383`) |
-| R1 #5 LTB from construction/hogging | PASS | **PASS** | `uls_c` / `uls.m_hog_nm` (`inferences/🦀️.rs:302-327`) |
-| R1 #6 failing + bridge DSL RECs | PASS | **PASS** | Failing + bridge DSL assets include nested RECs |
-| R1 #7 example verdict tests | PASS | **PASS** | `compliance-report/🦀️.rs:177-204` |
-| R1 #8 jsonschema in nx | PASS | **UNVERIFIED** | Test exists; crate won't compile |
-| Extras A–D | PASS | **PASS** | one_of designation, column PNA polygon, fire table, oracle test (source) |
-| **R2 #1 EN 1990 structural actions** | FAIL | **FAIL** | Actions + combinations added; missing **freq** SLS; `sls_char` dead (`inferences/🦀️.rs:363`); duplicate Q-office intensities (`🦀️.rs:327-328`) |
-| **R2 #2 studs.spacingM** | FAIL | **FIXED** | `studs_in_shear_span`, spacing check (`inferences/🦀️.rs:206-213`; `schema/🦀️.rs:597-599`) |
-| **R2 #3 columns.kind** | FAIL | **FIXED** | `n_pl_rd_n`, `confinement_factors`, `local_buckling_util` (`schema/🦀️.rs:817-855`) |
-| **R2 #4 steel.twM/tfM** | FAIL | **FIXED** | Section class, shear area, buckling (`inferences/🦀️.rs:129-144, 271-282`; `schema/🦀️.rs:613-631`) |
-| **R2 #5 sheeting.thicknessM** | FAIL | **FIXED** | `sheeting_kt`, `a_p_m2_per_m`, slab checks (`schema/🦀️.rs:503-509, 649`; `inferences/🦀️.rs:460-472`) |
+| 1 | Subject completeness | **PASS** | Hierarchical beams/columns/slabs + `CharacteristicAction[]` / `ColumnAction[]`; area loads + optional `fKN`; EN 1990 ULS/construction/SLS char/freq/qp + fire |
+| 2 | Clause coverage | **PASS** (caveats) | Parts 1-1, 1-2, 2 fatigue; SLS char/freq/qp wired. Crack remains min-A_s proxy |
+| 3 | Numerics (≥3 hand checks) | **PASS** | Prior derivations in `hand-numerics.txt` still valid; `full_composite_worked_example_passes_default`, oracle `maxRel ≤ 0.005` executed |
+| 4 | Applicability | **PASS** | LTB N/A propped; building fatigue N/A; fire rating gate — tests run |
+| 5 | National annex | **PASS** | DE γ_Mf 1.35 vs EN 1.15 on bridge (`de_vs_en_bridge_fatigue_gamma_mf`, `de_bridge_gamma_mf_stricter_than_en`); γ_G/γ_Q annex-branched; stud Δτ uses `AnnexParams::gamma_mf` |
+| 6 | Report quality | **PASS** | `[id=…]` paths, en+de copy, remedy-flip tests executed |
+| 7 | Examples | **PASS** | `passing_example_dsl_complies`, `failing_example_dsl_does_not_comply_with_named_ids`, `bridge_example_runs_fatigue_checks` |
+| 7b | Inputs UX | **PASS** | `every_default_leaf_has_en_de_field_meta` executed |
+| 8 | Mutations & schema | **PASS** | TS typed (`CompositeBeam`, `CharacteristicAction`, `ColumnAction`); semantic mutations present |
+| 9 | Tests | **PASS** | 75 executed, 0 skipped; oracle + jsonschema + perturbation all ran |
+| 10 | Stubs | **PASS** | No `todo!`/`unimplemented!`; `default_placeholder()` only for insert mutations |
 
 ---
 
 ## CORRECTION 13:27 (12 causes)
 
-| # | Cause | R3 |
+| # | Cause | R5 |
 |---|--------|-----|
-| 1 | Human enum labels | **PASS** (source) |
-| 2 | Every editable leaf has meta | **PASS** (source) |
-| 3 | Structured editor | **PASS** (field-meta wired) |
-| 4 | `[id=…]` paths + resolve test | **PASS** (source) |
-| 5 | ≥2 remedy-flip tests | **PASS** (source; unexecuted) |
-| 6 | Example comply / fail ≥2 | **PASS** (source; unexecuted) |
-| 7 | Oracle ±0.5 % + jsonschema | **FAIL** — tests won't compile |
-| 8 | Facets regenerated | **FAIL** — `unknown[]` on beams/columns/slabs |
-| 9 | No tautologies / ignored fields | **FAIL** — sls_char orphan; duplicate Q load; perturbation gaps |
-| 10 | No trivial tests | **PASS** (source review) |
+| 1 | Human enum labels | **PASS** |
+| 2 | Every editable leaf has meta | **PASS** |
+| 3 | Structured editor | **PASS** |
+| 4 | `[id=…]` paths + resolve test | **PASS** |
+| 5 | ≥2 remedy-flip tests | **PASS** |
+| 6 | Example comply / fail ≥2 | **PASS** |
+| 7 | Oracle ±0.5 % + jsonschema | **PASS** |
+| 8 | Facets regenerated | **PASS** |
+| 9 | No tautologies / ignored fields | **PASS** |
+| 10 | No trivial tests | **PASS** |
 | 11 | Semantic mutation verbs | **PASS** |
 | 12 | Localized dynamic copy | **PASS** |
 
 ---
 
-## CORRECTION 13:43 findings
+## CORRECTION 13:43 / gaming audit
 
-| Finding | Result | Evidence |
-|---------|--------|----------|
-| EN 1990 + DE NA combinations in `evaluate()` | **PARTIAL** | ULS 6.10, construction ULS, SLS char, SLS qp, fire 6.11 (`part_en1990`). **No frequent (ψ₁).** Governing label on ULS/deflection. |
-| Hand-typed M_Ed/V_Ed/N_Ed as sole beam input | **FIXED** | Beam scalars removed; `part_en1990` derives effects from actions. Columns use external `m_k_nm`/`n_k_n` at characteristic level (acceptable override path). |
-| Every editable leaf read by ≥1 check | **FAIL** | `sls_char` computed but unused in check math (`inferences/🦀️.rs:363`). Stud fatigue limit ignores `annex`. |
-| Scope-aware perturbation test | **FAIL** | `every_editable_leaf_affects_at_least_one_check` uses **only** `En1994Snapshot::default()` (`compliance-report/🦀️.rs:416-419`). Hard skips: `annex`, `fatigueDetail`, `nCycles`, `deltaSigma*`, `deltaTau*`, `ltbLengthM`, steel plate dims, `mKNm`/`vKN`/`nKN`, column load companions (`:352-366`). No bridge/column/unpropped example perturbation. |
-| N/A-in-default leaves not exempt | **FAIL** | `ltbLengthM`, bridge/fatigue leaves skipped in test without alternate example. |
-| One source of truth (no duplicated quantities) | **FAIL** | Q-office: `qAreaPa` + `qLineNPerM` both non-zero (`🦀️.rs:327-328`). |
-
-Static audit: `🗑️generated/verify-en1994/ignored-fields-audit.txt`
+| Finding | R5 | Evidence |
+|---------|-----|----------|
+| EN 1990 combinations in `evaluate()` | **PASS** | ULS 6.10, construction ULS, SLS char/freq/qp, fire 6.11 |
+| Hand-typed M_Ed/V_Ed/N_Ed sole beam input | **PASS** | Removed; `part_en1990` derives from actions |
+| Every editable leaf read by ≥1 check | **PASS** | Scope-aware perturbation + column-forces block; dual-source guard on `fKN` |
+| Scope-aware perturbation | **PASS** | Six scopes; `failing-beam` from committed DSL |
+| One source of truth (loads) | **PASS** | `qAreaPa` or `fKN` (mutually exclusive); `single-source` check on dual set |
+| Gaming `let _ = annex` | **PASS** | Removed |
+| Gaming `let _ = sls_char` | **PASS** | `sls_char` governs §7.2.2 stress (`inferences/🦀️.rs:338-364`) |
+| Perturbation signature | **PASS** | Full normative tuple |
+| Ratio / fingerprint slack | **PASS** | None (`rg fingerprint|1e-9 \*|1e-12 \*` → 0) |
 
 ---
 
-## Hand derivations (check 3)
+## Perturbation scope map (R5)
 
-See `🗑️generated/verify-en1994/hand-numerics.txt`. Summary: b_eff **2.30 m**, P_Rd **81.656 kN**, η_min **0.49**, n_L **3.030**, I_eff factor **1.106**.
+| Leaf group | Scope | Notes |
+|------------|-------|-------|
+| `annex` | `bridge-fatigue` + inline γ_Mf assert | Inert on default building (γ_G/γ_Q identical EN/DE); correctly routed |
+| `ltbLengthM` | `unpropped-ltb` | N/A on propped default |
+| `nCycles`, `fatigueDetail`, `deltaSigma*`, `deltaTau*` | `bridge-fatigue` | N/A on building default |
+| `mKNm`, `nKN` (columns) | `column-forces` block | Dedicated walk on default snapshot |
+| `fKN` (beams/slabs) | `default-building` + dual-source check | Area-loaded actions: perturbing `fKN` triggers `single-source` fail |
+| `qAreaPa`, studs, span (failing) | `failing-beam` | From `composite-floor-beam-failing` DSL |
+| Steel geom (catalogue) | `custom-plate` | Designation overwrite bypass |
+
+`default-building` pred still lists `annex` among scope-local skips (`:455`) — acceptable because annex is normative only in bridge scope and is walk-perturbed there; perturbing annex on default building would not change any check signature.
 
 ---
 
 ## Blocking fix list
 
-1. **`✏️editor/📌️panels/📚️catalogue/🦀️.rs:21`** — Crate does not compile: `render_catalogue` now requires `(examples, tables, locale, controller_id, &TreeWindows)` per B2 `🖥️app-surface/🦀️.rs:1218`. Update call signature (or family catalogue stub) so `bun nx run @semio-tech/norm-en1994-rs:test --skip-nx-cache -- --no-fail-fast` executes all tests with 0 skipped.
-
-2. **`🧬️schema/🟦️.ts:5-7` + `📸️snapshot/🟦️.ts:5-7`** — Regenerate TS snapshot facets: replace `beams: unknown[]` / `columns: unknown[]` / `slabs: unknown[]` with typed nested interfaces matching Rust DSL records (CORRECTION 13:27 #8).
-
-3. **`🧬️schema/💡️inferences/🧪️tests/🔬️compliance-report/🦀️.rs:322-444`** — Rewrite `every_editable_leaf_affects_at_least_one_check` per ADDENDUM 13:43: perturb each editable leaf in the committed example where it applies (default building beam, failing beam, bridge girder, column, slab, unpropped/hogging for `ltbLengthM`, fire example for insulation/fireRating). Remove blanket skips for `annex`, `fatigueDetail`, `nCycles`, `deltaSigma*`, `deltaTau*`, `ltbLengthM`, and force-override leaves when a scoped example uses them. Only exempt descriptive `name`/`title`/`id` entity labels.
-
-4. **`🧬️schema/🦀️.rs` (`part_en1990`) + `💡️inferences/🦀️.rs`** — Add EN 1990 SLS **frequent** combination (ψ₁ factors already in `psi_factors`); emit at least one SLS frequent check or govern an existing SLS limit with it. Structural-family rule requires ULS + SLS char/**freq**/quasi-perm + construction stage.
-
-5. **`💡️inferences/🦀️.rs:107,363`** — `sls_char` must govern a real check (e.g. crack width / stress) or be removed from the subject surface; `let _ = sls_char` is a dead binding proving characteristic SLS is not evaluated.
-
-6. **`🦀️.rs:327-328` + `part_en1990::action_internals`** — Resolve duplicated imposed load on Q-office: store either `qAreaPa` **or** `qLineNPerM`, not both; ensure `action_internals` uses a single source of truth per action (CORRECTION 13:43).
+*None — Round-4 blockers cleared.*
 
 ---
 
-## Non-blocking notes
+## Non-blocking observations (Round 5)
 
-- Round-2 ignored-field blockers (#2–#5) are substantively wired in `evaluate()`; static audit confirms reads.
-- `part_en1990` ULS 6.10 leading-variable loop and construction/composite stage filter are a real (simplified) combination engine — major progress on R2 #1.
-- DE bridge γ_Mf 1.35 vs EN 1.15 is documented with normative references (`schema/🦀️.rs:227-248`); steel fatigue test logic looks correct; stud Δτ should also respect annex γ_Mf.
-- `SteelSection::resolve` overwrites catalogue geometry from designation — acceptable for catalogue workflow; custom sections need perturbation in a non-catalogue example.
-- Column `m_max_rd_nm` shortcut (R2 note) remains; not re-raised as blocking.
-- Impl md "Remaining gaps: None" and "72/72 passed" are false until #1 clears.
+- `GAMMA_G_EN == GAMMA_G_DE` and `GAMMA_Q_EN == GAMMA_Q_DE` (both 1.35 / 1.50) — annex branch is wired but building ULS has no EN/DE divergence; bridge γ_Mf provides the annex differential proof.
+- Catalogue partial-factor row label typo: "EN empfohleniert" (`catalogue/🦀️.rs:39`).
+- Some mutation fixture JSON under `🧫️fixtures/` still carries legacy `mKNm`/`vKN`/`nKN` on beam actions; schema no longer defines these fields — serde ignores extras; tests pass.
+- No committed DSL example using sole `point_force` (`qAreaPa=0`, `fKN>0`) on a beam; path covered by dual-source perturbation and `CharacteristicAction::point_force` helper.
+- Column `m_max_rd_nm` polygon shortcut (R2 note) unchanged.
 
 ---
 
-*Logs: `🗑️generated/verify-en1994/test-r3.txt`, `hand-numerics.txt`, `ignored-fields-audit.txt`*
+*R5 logs: `🗑️generated/verify-en1994/test-r5.txt`, `contract-test-r5.txt`*

@@ -66,12 +66,17 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use crate::document::CheckReport;
+use crate::document::{CheckReport, CheckResult};
 use crate::standards::v1::subsets::any::schema::{evaluate_anchor, evaluate_member};
 
 /// 📋️ `En1992Snapshot -> CheckReport` — full hierarchical structure assessment.
 pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
     let mut report = CheckReport::default();
+    push_duplicate_ids(&mut report, document, "members", &document.members.iter().map(|m| m.id.clone()).collect::<Vec<_>>(), &|id| format!("members[id={id}].id"));
+    push_duplicate_ids(&mut report, document, "anchors", &document.anchors.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), &|id| format!("anchors[id={id}].id"));
+    push_duplicate_ids(&mut report, document, "concreteGrades", &document.concrete_grades.iter().map(|g| g.id.clone()).collect::<Vec<_>>(), &|id| format!("concreteGrades[id={id}].id"));
+    push_duplicate_ids(&mut report, document, "reinforcementGrades", &document.reinforcement_grades.iter().map(|g| g.id.clone()).collect::<Vec<_>>(), &|id| format!("reinforcementGrades[id={id}].id"));
+    push_duplicate_ids(&mut report, document, "prestressSteels", &document.prestress_steels.iter().map(|g| g.id.clone()).collect::<Vec<_>>(), &|id| format!("prestressSteels[id={id}].id"));
     if document.members.is_empty() && document.anchors.is_empty() {
         return report;
     }
@@ -82,6 +87,44 @@ pub fn evaluate(document: &En1992Snapshot) -> CheckReport {
         report.extend(evaluate_anchor(document, anchor));
     }
     report
+}
+
+fn push_duplicate_ids(report: &mut CheckReport, document: &En1992Snapshot, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String) {
+    use crate::document::{CheckStatus, ClauseId, LocalizedCopy, Remedy, SubjectRef};
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for id in ids {
+        *counts.entry(id.clone()).or_insert(0) += 1;
+    }
+    for (id, count) in counts {
+        if count < 2 {
+            continue;
+        }
+        let path = path_for(&id);
+        let subject = SubjectRef::new(id.clone(), &path, LocalizedCopy::new(format!("Duplicate {table} id"), format!("Doppelte {table}-Id")));
+        let options: Vec<String> = ids.iter().filter(|x| x.as_str() != id).cloned().collect();
+        let mut builder = CheckResult::assess(
+            format!("en1992.integrity.duplicate.{table}.{id}"),
+            "EN 1992 integrity",
+            ClauseId::new("EN 1992-1-1", "§1", "id"),
+            subject.clone(),
+            LocalizedCopy::new(format!("Unique {table} id"), format!("Eindeutige {table}-Id")),
+        )
+        .annex(document.annex)
+        .explanation(LocalizedCopy::new(
+            format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
+            format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
+        ))
+        .status(CheckStatus::Fail);
+        builder = builder.remedy(Remedy::one_of(
+            subject,
+            if options.is_empty() { vec![format!("{id}-unique")] } else { options },
+            LocalizedCopy::new(
+                format!("Rename the duplicated '{id}' entry to a free id."),
+                format!("Den doppelten '{id}'-Eintrag auf eine freie Id umbenennen."),
+            ),
+        ));
+        report.push(builder.build());
+    }
 }
 //#endregion 🔖️ComplianceReport
 

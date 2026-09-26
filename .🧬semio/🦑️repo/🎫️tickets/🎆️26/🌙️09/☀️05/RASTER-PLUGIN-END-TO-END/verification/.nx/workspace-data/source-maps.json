@@ -1,0 +1,96 @@
+{
+  ".": {
+    "root": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "name": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "tags": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "tags.npm:private": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.targetGroups": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.description": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageName": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageVersion": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageExports": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.packageMain": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "metadata.js.isInPackageManagerWorkspaces": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets": [
+      "package.json",
+      "nx/core/package-json"
+    ],
+    "targets.test-typescript": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-typescript.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-typescript.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-typescript.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-typescript.options": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-rust": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-rust.executor": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-rust.options.command": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-rust.options.cwd": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.test-rust.options": [
+      "project.json",
+      "nx/core/project-json"
+    ]
+  }
+}

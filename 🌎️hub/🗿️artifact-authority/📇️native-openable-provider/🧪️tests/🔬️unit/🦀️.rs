@@ -187,6 +187,9 @@ mod quick {
         assert!(NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), duplicate).is_err());
     }
 
+    /// 🌱️ TC3b: a native binding carries NO creation authority any more — genesis is the
+    /// component's, for every package alike, so there is nothing here to distinguish an
+    /// editor receipt from an import/export one.
     #[test]
     fn linked_provider_set_previews_only_the_selected_packages_of_a_stdio_gis_or_stdio_gis_vcs_profile() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌿️vcs-v1/🔣️.json")).unwrap();
@@ -207,9 +210,6 @@ mod quick {
                 let bindings = providers.preview(plugin_id, package_id, env!("CARGO_PKG_VERSION"), &context).expect("selected compiled provider");
                 assert_eq!(bindings.len(), count, "{}", profile["name"]);
                 assert!(bindings.iter().all(|binding| binding.package_id() == package_id));
-                // 🌱️ TC3b: a native binding carries NO creation authority any more — genesis is the
-                // component's, for every package alike, so there is nothing here to distinguish an
-                // editor receipt from an import/export one.
                 assert!(bindings.iter().all(|binding| binding.plugin_id() == plugin_id));
                 requested.push(package_id);
                 receipts += count;

@@ -57,18 +57,6 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/**/*.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts"
       ]
-    },
-    "describe": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts describe",
-        "forwardAllArgs": true
-      },
-      "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/🛂️.descriptor.semio",
-        "{workspaceRoot}/✏️s/🔌️plugins/🪵️sourcing/🧩️extensions/🪟️windows/🔣️.json"
-      ]
     }
   }
 }

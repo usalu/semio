@@ -119,9 +119,9 @@ fn every_gateway_to_shell_variant_round_trips_through_encode_decode() {
     }
 }
 
+/// ✂️ Tag 0 = Hello, which expects far more bytes than just the tag byte itself.
 #[test]
 fn decode_rejects_truncated_buffers() {
-    // Tag 0 = Hello, which expects far more bytes than just the tag byte itself.
     let hello_tag_only = vec![0u8];
     assert!(ShellToGateway::decode(&hello_tag_only).is_err());
 }

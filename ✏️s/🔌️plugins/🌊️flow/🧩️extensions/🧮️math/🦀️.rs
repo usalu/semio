@@ -582,7 +582,7 @@ pub fn extension_manifest_json() -> String {
     build_manifest_json(
         "math",
         "Math",
-        "0.2.0",
+        env!("CARGO_PKG_VERSION"),
         &neural_engine::ColdOwner::new(module_registry()),
         vec!["onStartup".into()],
         vec![],
@@ -628,7 +628,7 @@ mod extension_guest {
         let manifest_json = extension_manifest_json();
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "math", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "math", &manifest_json);
-        let bundle = ExtensionBundle::new("flow-extension-math", EXTENSION_LABEL, "0.2.0").extends("flow").depends_on("flow", semio_framework::VersionReq::Any);
+        let bundle = ExtensionBundle::new("flow-extension-math", EXTENSION_LABEL, env!("CARGO_PKG_VERSION")).extends("flow").depends_on("flow", semio_framework::tree_pin!());
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);

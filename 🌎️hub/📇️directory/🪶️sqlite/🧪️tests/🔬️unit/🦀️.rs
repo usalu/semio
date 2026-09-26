@@ -80,7 +80,6 @@ async fn document_index_neutral_transactions_survive_projection_rebuild() {
             assert!(directory.get_space("space-fixture").await.unwrap().is_none());
         }
     }
-    println!("[DEBUG] SQLite document index: neutral transactions=10 rollback=8 rebuild=2 archived-refusal=2 deleted-refusal=2");
 }
 
 fn share_descriptor(scope: &DocumentScope) -> DocumentDescriptor {

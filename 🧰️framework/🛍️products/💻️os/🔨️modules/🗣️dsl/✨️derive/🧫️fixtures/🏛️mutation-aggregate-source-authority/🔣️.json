@@ -9,7 +9,7 @@
     { "name": "outside-root", "accepted": false, "diagnostic": "directly inside" },
     { "name": "virtual-compose", "accepted": false, "diagnostic": "opaque compose path rejected before I/O" },
     { "name": "nested-nx-anchor", "accepted": false, "diagnostic": "lacks paired" },
-    { "name": "taxonomy-filename-change", "accepted": true },
+    { "name": "authority-filename-change", "accepted": true },
     { "name": "symlink-source", "accepted": false, "diagnostic": "symlink" },
     { "name": "symlink-root", "accepted": false, "diagnostic": "symlink" }
   ]

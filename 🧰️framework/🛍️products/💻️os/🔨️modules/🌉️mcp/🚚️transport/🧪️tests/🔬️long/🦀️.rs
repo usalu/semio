@@ -297,6 +297,20 @@ async fn get_with_last_event_id_resumes_after_that_id_only() {
 /// `📓️sol-P1c-packet.md`'s acceptance list names: `Hello`→`Welcome`, a `ShellState` publish, a
 /// pushed `ShellCommand` answered by a `ShellCommandResult`, a wrong-token rejection, and a bad-
 /// `Origin` rejection — all in one foreground `#[tokio::test]`, no background process left running.
+///
+/// /mcp still answers on the SAME bound socket the bridge is about to connect to — proves
+/// both endpoints really are one merged app, not two separate servers on the same port by
+/// coincidence.
+///
+/// Hello -> Welcome.
+///
+/// ShellState publish becomes visible through BridgeHandle.
+///
+/// A pushed ShellCommand reaches the client, whose ShellCommandResult becomes visible.
+///
+/// Wrong token is rejected before the upgrade completes.
+///
+/// Bad Origin is rejected before the upgrade completes.
 #[tokio::test]
 async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
     use crate::bridge::{BRIDGE_VERSION, BridgeFlags, ShellKind, ShellToGateway};
@@ -312,13 +326,9 @@ async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
         axum::serve(listener, router).await.unwrap();
     });
 
-    // /mcp still answers on the SAME bound socket the bridge is about to connect to — proves
-    // both endpoints really are one merged app, not two separate servers on the same port by
-    // coincidence.
     let mcp_client = reqwest_free_post(addr, "/mcp", "Bearer mcp-bearer", &serde_json::json!({"jsonrpc":"2.0","id":1,"method":"ping"})).await;
     assert_eq!(mcp_client, 200);
 
-    // Hello -> Welcome.
     let mut bridge_request = format!("ws://{addr}/bridge").into_client_request().unwrap();
     bridge_request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, mcp-bearer".parse().unwrap());
     let (mut socket, response) = tokio_tungstenite::connect_async(bridge_request).await.expect("client connects with protected bridge admission");
@@ -331,7 +341,6 @@ async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
     };
     assert!(matches!(crate::bridge::GatewayToShell::decode(&welcome_bytes).unwrap(), crate::bridge::GatewayToShell::Welcome { .. }));
 
-    // ShellState publish becomes visible through BridgeHandle.
     let id = bridge_handle.connections().first().copied().expect("one live connection");
     let state_frame = ShellToGateway::ShellState { revision: 1, state: vec![7] };
     socket.send(TungsteniteMessage::Binary(state_frame.clone().encode().into())).await.unwrap();
@@ -339,7 +348,6 @@ async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
     let _pong = socket.next().await.unwrap().unwrap();
     assert_eq!(bridge_handle.last_shell_state(id), Some(state_frame));
 
-    // A pushed ShellCommand reaches the client, whose ShellCommandResult becomes visible.
     let pushed = crate::bridge::GatewayToShell::ShellCommand { seq: 1, command: vec![9] };
     assert!(bridge_handle.send_to(id, pushed.clone()));
     let received_bytes = match socket.next().await.unwrap().unwrap() {
@@ -354,13 +362,11 @@ async fn bridge_is_live_on_the_same_merged_app_run_http_builds() {
     assert_eq!(bridge_handle.last_command_result(id), Some((1, true, None)));
     drop(socket);
 
-    // Wrong token is rejected before the upgrade completes.
     let mut wrong_request = format!("ws://{addr}/bridge").into_client_request().unwrap();
     wrong_request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, nope".parse().unwrap());
     let wrong_token = tokio_tungstenite::connect_async(wrong_request).await;
     assert!(wrong_token.is_err(), "a mismatched bridge token must never complete the websocket handshake");
 
-    // Bad Origin is rejected before the upgrade completes.
     let mut bad_origin_request = format!("ws://{addr}/bridge").into_client_request().unwrap();
     bad_origin_request.headers_mut().insert("sec-websocket-protocol", "semio.mcp.bridge.v1, mcp-bearer".parse().unwrap());
     bad_origin_request.headers_mut().insert("origin", "https://evil.example".parse().unwrap());

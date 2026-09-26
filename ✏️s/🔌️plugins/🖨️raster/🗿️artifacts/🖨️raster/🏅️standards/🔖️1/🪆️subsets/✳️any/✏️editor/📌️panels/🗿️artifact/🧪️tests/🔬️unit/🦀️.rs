@@ -50,7 +50,7 @@ fn oversized_document_stamps_totals_and_never_a_continuation_row() {
     assert!(json.contains("\"total\":40"), "the nested group stamps its own full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
-    assert!(json.matches("raster-play-layers.layer.").count() <= TREE_WINDOW_DEFAULT_ROWS as usize, "first paint materialises about one viewport: {json}");
+    assert!(json.matches("\"granularity\":\"layer\"").count() <= TREE_WINDOW_DEFAULT_ROWS as usize, "first paint materialises about one viewport: {json}");
 }
 
 /// 🪟️ Law (b): a container the host closed stamps its total and materialises nothing — at both levels.
@@ -61,9 +61,9 @@ fn closed_containers_stamp_totals_and_materialise_no_children() {
     assert!(json.contains("\"total\":302"), "a closed section still stamps its extent: {json}");
     assert!(!json.contains("raster-play-layers.add.pixel"), "a closed section materialises no rows: {json}");
 
-    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 0, 4), closed(&nested_key("raster-play-layers.group.group-0"))]);
+    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 0, 4), closed(&nested_key("group-0"))]);
     assert!(nested.contains("\"total\":40"), "a closed group still stamps its extent: {nested}");
-    assert!(!nested.contains("raster-play-layers.layer.nested-0"), "a closed group materialises no children: {nested}");
+    assert!(!nested.contains("nested-0"), "a closed group materialises no children: {nested}");
 }
 
 /// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the raw row id —
@@ -74,18 +74,18 @@ fn host_windows_materialise_exactly_their_slice() {
     let json = window_body(&document, vec![open(RASTER_TREE_PREFIX, 102, 10)]);
     assert!(json.contains("\"offset\":102"), "the section reports its offset: {json}");
     for index in 100..110 {
-        assert!(json.contains(&format!("raster-play-layers.layer.pixel-{index}\"")), "row {index} is inside the window: {json}");
+        assert!(json.contains(&format!("pixel-{index}\"")), "row {index} is inside the window: {json}");
     }
-    assert!(!json.contains("raster-play-layers.layer.pixel-99\""), "the row before the window stays out: {json}");
-    assert!(!json.contains("raster-play-layers.layer.pixel-110\""), "the row after the window stays out: {json}");
+    assert!(!json.contains("pixel-99\""), "the row before the window stays out: {json}");
+    assert!(!json.contains("pixel-110\""), "the row after the window stays out: {json}");
 
-    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 2, 1), open(&nested_key("raster-play-layers.group.group-0"), 12, 4)]);
+    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 2, 1), open(&nested_key("group-0"), 12, 4)]);
     assert!(nested.contains("\"offset\":12"), "the nested group reports its offset: {nested}");
     for index in 12..16 {
-        assert!(nested.contains(&format!("raster-play-layers.layer.nested-{index}\"")), "nested child {index} is inside the window: {nested}");
+        assert!(nested.contains(&format!("nested-{index}\"")), "nested child {index} is inside the window: {nested}");
     }
-    assert!(!nested.contains("raster-play-layers.layer.nested-11\""), "the nested child before the window stays out: {nested}");
-    assert!(!nested.contains("raster-play-layers.layer.nested-16\""), "the nested child after the window stays out: {nested}");
+    assert!(!nested.contains("nested-11\""), "the nested child before the window stays out: {nested}");
+    assert!(!nested.contains("nested-16\""), "the nested child after the window stays out: {nested}");
 }
 
 /// 🪟️ Law (d): the tree carries exactly ONE `interactionSelect` binding for the `"layers"` domain and

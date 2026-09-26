@@ -79,7 +79,7 @@ exchanges per run and exits on the 65th** (`LOCAL_BOOTSTRAP_REPLAY_MAX`, a non-e
 | # | Item | Status |
 |---|---|---|
 | S12-1 | Catalog B2 (9 B packages released from the current tree) → `.🧬semio/🌐hub/w2-catalog-b2` → hub 7800 on a fresh root `s12-w2-hub-7800-b2` → users + open-plan probe | **DONE** 04:35: published 03:18 (rc=0), 7800 ready 03:59:22, open plans **16/16**, coordinator messaged |
-| S12-2 | Rest (25) → `--packages all` → `.🧬semio/🌐hub/w2-catalog-all` → 7800 once onto it (`s12-w2-hub-7800-all`), probe every kind, `/readyz`, RSS | RUNNING: publish 1 failed 06:34 (demonstrator `*` pins) → root-fixed + preflight; publish 2 chain started 08:52 |
+| S12-2 | Rest (25) → `--packages all` → `.🧬semio/🌐hub/w2-catalog-all` → 7800 once onto it (`s12-w2-hub-7800-all`), probe every kind, `/readyz`, RSS | RUNNING: publish 1 failed 06:34 (demonstrator `*` pins, root-fixed + 1 s preflight); publish 2 killed 11:43 (agent cut); publish 3 failed 15:54 (disk guard pruned in-use units); relaunch queued 15:54:52; post-publish script `w2-after-all.sh` ready |
 | S12-3 | Requests inbox triage + one consolidated restage if needed | IN PROGRESS (triage) |
 | S12-4 | Rebuild convergence root fix (describe consumes component-dev bytes) + one launch row | PREPARED, dry runs clean (23 files + codemod 120 files); lands after the publish |
 | S12-5 | P1-4 `build-s-react-release` + RB1 release-bundle probes, measured | PENDING |
@@ -191,6 +191,47 @@ Rust/WIT/TOML source changed after 18:16 (measured: `find … -newermt '2026-09-
   `🔣️taxonomy.json` was edited 10:44 → the kernel unit went dirty (fingerprint cleared 10:52, recompiled 10:57 under demonstrator), so every package not yet
   built recompiles from the kernel up. Coordinator asked to freeze those files too. Structural follow-up: the derive macro should read a narrow generated
   input instead of the repo taxonomy.
+- 11:43 publish 2 SIGTERMed (exit 143) when my agent turn was cut (agent teardown kills its detached tree too); ~14:59 desktop restart killed every
+  process. **From 15:01 the coordinator owns the long chains:** publish 3 = `w2-publish-all.sh` (chain pid 28685, `publish-all-3-chain.txt`, capture
+  `publish-w2-catalog-all-2.txt`), preflight PASS 969 ms, publish started 15:01:51; 7800 resumed on the B2 root with `w2-hub-resume.sh` (hold 28673).
+  I monitor (sampler `publish-all-3-samples.txt`), root-cause failures and hand relaunch commands to the coordinator.
+- 15:03 rule-20/21 breach reported: a Cursor agent (not in our fleet) edits norm guest crates, `en1996/📦️packages/🦀️rust/{Cargo.toml,📋️project.json}` and
+  `Cargo.lock` (13:26) during publish 3; coordinator: keep running, relaunch on a norm failure (preflight costs 1 s).
+- 15:05 **post-publish sequence as ONE script** `wp-w2/w2-after-all.sh` (refuses without an rc=0 publish): current-tree os-hub build (hub mutex, NI 0) →
+  `w2-restart-7800.sh` onto `w2-catalog-all`, fresh root `s12-w2-hub-7800-all` (catalog + `guest-codec-verifications` copy, users, supervised hold, old
+  hold stopped by its stop file) → readiness ≤ 2 h → `/readyz` + idle footprint → open-plan probe over every kind → footprint after creations. Launch
+  command handed to the coordinator, with an optional warm-behind lanes command (norm excluded).
+- 15:41 7800 gen 1 (resumed on the B2 root with the 02:31 binary, which interprets every guest codec BEFORE binding) ended after 40 min with
+  `WAIT_FAIL hub readiness binding mismatch`: a /readyz answer on 127.0.0.1:7800 that was not this run (foreign runId/mode) while my hub was still
+  unbound; the supervisor stopped it and started gen 2 (hub 54029, 15:41:57). Nothing listened on 7800 at 15:45. Coordinator asked to keep 7800 free
+  fleet-wide. The hold now logs the port's listeners + its own hub pid on every WAIT_FAIL (tsc rc=0). Root fix: H10's bind-before-load binary (post-publish).
+- 15:57 **memory thrash** (measured): swap 15.4/16 GB, 35 % free, load ~90. The bootstrap's stdio cargo (25152) waited 19 min on a unit lock held by warm
+  lane d's wfc cargo (52943) whose `stdio_semio` rustc (88992) got 4 min CPU in 33 min (RSS 118 MB of ~3.9 GB, 7.6 M faults); two peer `stdio_semio` variants
+  (NI 15 wasm32-unknown-unknown renderer build 30509) + a Docker os-hub build ran alongside. Asked the coordinator to stop both warm lanes and pause the
+  heaviest peers. Lesson: warm-behind lanes help only with memory headroom; three concurrent `stdio_semio` variants (~3–4 GB each) do not fit next to the fleet.
+- 15:54 **publish 3 FAILED rc=1 (3148 s), root cause the disk guard:** `failed to write …/wasm-release/build/semio-framework-os-kernel/2f29f01eb3cb6ace/
+  fingerprint/invoked.timestamp: No such file or directory`. At 15:35:52 `📜️disk-guard.sh:20` freed 78 → 140 GiB with `find "$pkg" -mindepth 1 -maxdepth 1
+  -type d -mmin +720 -exec rm -rf`: it judges a unit by its DIRECTORY mtime (creation), so it deleted both kernel units (created 09-25 16:26/23:51, used today)
+  and every other unit created > 12 h ago, in use or not, under a running build. Fix handed to the coordinator (owner of the guard): prune only when the
+  unit's `.lock` can be taken exclusively and its newest file is older than the bound; keep the newest unit per package. Relaunch = same command.
+- 16:0x coordinator replaced the disk guard (lock-aware: exclusive `flock -n` on `<unit>/.lock`, age by the unit's newest file, keep a newer unit), killed
+  the warm lanes + WG7's wasm32-unknown-unknown build + H10's Docker build, declared rule 24 (build-quiet until DONE). **16:11:19 7800 ready again on B2**
+  (gen 2, hub 54029, 29.4 min cold interpretation). **16:11:52 publish 4 started** (chain 96896, preflight PASS 3.1 s), sampler `publish-all-4-samples.txt`.
+- 16:2x **SDK exact-pin narrowing designed** (lands in the window, step 2): `semio-framework` manifest `VersionReq` (enum `Any|Exact|Caret|Tilde|AtLeast`) →
+  `VersionPin(pub Version)` whose only wire form is `=X.Y.Z` (`VersionPinParseError::NotExact` for `*`/`^`/`~`/`>=`/bare), `matches` = equality, plus
+  `#[macro_export] tree_pin!()` = `VersionPin::of_tree(env!("CARGO_PKG_VERSION"))` expanded in the declaring crate (prepared:
+  `wp-w2/pins/version-pin.snippet.rs`). Both builders' `depends_on(id, VersionPin)`; 20 extension `VersionReq::Any` + 2 `^0.1.0` + demonstrator →
+  `semio_framework::tree_pin!()`; stdio `VersionPin(version)`; hub `dependency.version.0`; kernel `.sxt` mirror refuses non-`=` pins; TS twin
+  (`🎠️kernel/🟦️.ts`: `VersionPin` + exact `versionSatisfies`, pre-build registry edges carry ids only, version checked when a pin is present);
+  language-agnostic vectors in the existing Gherkin features `✅️satisfy-version-requirements` (exact scenario, `semver` oracle) and
+  `🚫️reject-malformed-version-input` (ranges now refused), manifest law `🔬️plugin-dependency` rewritten, host tests moved to pins.
+- **Landing-window order (after the publish is DONE and 7800 is on it):** (1) item 4: `w2-item4-apply.py --apply` + `w2-item4-describe-codemod.py --apply`,
+  compile-atomic (`cargo check -p semio-framework-os-mcp -p semio-framework-os-run --lib --tests`, `plugin-registry:generate`, registry laws
+  `🚀️launch`/`📖️generated-projection`/`🔁️rebuild`, the leases suite, `bun nx show project @semio-tech/note-plugin` for the inferred `describe`);
+  (2) SDK exact-pin narrowing (the manifest dependency type admits only `=x.y.z`, 22 extension declarations + demonstrator, the kernel `.sxt` mirror doc,
+  the manifest dependency laws, an emitter refusal); (3) ONE consolidated `rebuild-all --to verify-s` under the fleet mutex (T12 req 23 describe-all,
+  S15/T12 guest fixes, staged `s` == tree) — measured, `diverged=0` expected first try; flow_core bindings (`semio-framework-os-flow-core:wasm`, R8) in the
+  same hold; (4) item 5 `build-s-react-release` + RB1 probes.
 - 09:3x–09:5x **item 4 prepared** (`wp-w2/item4/`, applied only after the publish): `w2-item4-apply.py` (anchored edits, aborts on any missing anchor;
   dry run **23 files OK**) + `w2-item4-describe-codemod.py` (dry run **120 files, 0 problems**). Contents: (a) `describe` = ONE inferred component target
   (`📚️library/🟨️.mjs` `componentTargets`, `dependsOn: ["component-dev"]`, command `🖨️describe/…/📜️script.ts component --manifest <Cargo.toml>`), which reads

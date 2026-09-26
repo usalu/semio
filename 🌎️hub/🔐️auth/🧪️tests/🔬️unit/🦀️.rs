@@ -1,5 +1,5 @@
 use super::password::{hmac_sha256, pbkdf2_sha256, PasswordCredentialError, PasswordCredentialV1};
-use super::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitClockV1, RateLimitDecisionV1, RateLimitSubjectV1};
+use super::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitClockV1, RateLimitDecisionV1, RateLimitSubjectV1, RATE_LIMIT_CLASSES};
 use super::*;
 
 /// 🕰️ A hand-stepped clock: every rate-limit law below reads exactly the milliseconds it sets.
@@ -230,6 +230,46 @@ fn the_subject_map_stays_bounded_and_sheds_only_recovered_subjects() {
     assert!(limiter.tracked_subjects() <= 4);
     assert!(limiter.admit(RateLimitClassV1::Auth, &[held]).is_admitted(), "the held subject recovered exactly the one token the clock paid for");
     assert!(!limiter.admit(RateLimitClassV1::Auth, &[held]).is_admitted(), "and not one more — an exhausted subject is never silently reset to full");
+}
+
+#[tokio::test]
+async fn an_agent_session_is_paced_for_exactly_its_refill_and_refused_beyond_its_patience() {
+    let clock = ManualClock::new(0);
+    let limiter = HubRateLimiterV1::new(clock.clone());
+    let session = RateLimitSubjectV1::principal("agent-session-1");
+    let other = RateLimitSubjectV1::principal("agent-session-2");
+    let policy = RateLimitClassV1::AgentCommand.policy();
+    assert_eq!((policy.burst, policy.cost_ms), (120, 250), "burst 120, then one command batch per 250 ms");
+    for batch in 0..policy.burst {
+        assert!(limiter.admit(RateLimitClassV1::AgentCommand, &[session]).is_admitted(), "batch {batch} is inside the burst");
+    }
+    let waits = std::sync::Mutex::new(Vec::new());
+    let paced = limiter
+        .admit_paced(RateLimitClassV1::AgentCommand, &[session], 10_000, |ms| {
+            waits.lock().unwrap().push(ms);
+            clock.advance(i64::try_from(ms).unwrap());
+            std::future::ready(())
+        })
+        .await;
+    assert_eq!(paced, RateLimitDecisionV1::Admitted, "a paced batch is admitted once its bucket refilled");
+    assert_eq!(*waits.lock().unwrap(), vec![u64::from(policy.cost_ms)], "it waited exactly one refill, never a guess");
+    assert!(limiter.admit(RateLimitClassV1::AgentCommand, &[other]).is_admitted(), "another agent session has its own budget");
+    let impatient = limiter.admit_paced(RateLimitClassV1::AgentCommand, &[session], u64::from(policy.cost_ms) - 1, |_| std::future::ready(())).await;
+    assert_eq!(impatient, RateLimitDecisionV1::Refused { retry_after_ms: u64::from(policy.cost_ms) }, "a batch its patience cannot cover is refused with the wait it still needs");
+    assert!(limiter.admit(RateLimitClassV1::DirectoryCommand, &[session]).is_admitted(), "the agent class charges no route family");
+}
+
+#[test]
+fn every_rate_limit_class_is_a_schema_member_and_its_policy_validates() {
+    let document: serde_json::Value = serde_json::from_str(SCHEMA_MODULE).expect("hub.auth schema module");
+    let declared: Vec<&str> = document["$defs"]["AuthRateLimitClassV1"]["enum"].as_array().expect("class enum").iter().map(|class| class.as_str().expect("class name")).collect();
+    assert_eq!(declared, RATE_LIMIT_CLASSES.iter().map(|class| class.as_str()).collect::<Vec<_>>(), "the schema enum and the Rust classes are one list, in one order");
+    let validator = structural("AuthRateLimitPolicyV1");
+    for class in RATE_LIMIT_CLASSES {
+        let policy = class.policy();
+        let row = serde_json::json!({ "class": class.as_str(), "burst": policy.burst, "costMs": policy.cost_ms });
+        assert!(validator.is_valid_json(&row.to_string()), "{} policy {row} validates against AuthRateLimitPolicyV1", class.as_str());
+    }
 }
 
 const SCHEMA_MODULE: &str = include_str!("../../🧬️schema/🔣️.json");

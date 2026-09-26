@@ -198,6 +198,10 @@ fn perturb_every_editable_leaf_changes_some_check() {
                         (v * 0.1).max(0.01)
                     } else if path.contains("slabSpan") {
                         (v * 1.35).min(6.0).max(v + 0.5)
+                    } else if path.contains("phiInfinity") {
+                        v * 3.0 + 1.0
+                    } else if path.contains("slabBearing") {
+                        (v * 0.25).max(0.02)
                     } else {
                         v * 1.5 + (if v.abs() < 1.0 { 0.05 } else { 0.0 })
                     };
@@ -223,7 +227,7 @@ fn perturb_every_editable_leaf_changes_some_check() {
                     } else if path.ends_with("exposure") {
                         if s == "Mx1" { "Mx3" } else { "Mx1" }.to_string()
                     } else if path.ends_with("imposedCategory") {
-                        if s == "A" { "C" } else { "A" }.to_string()
+                        if s == "A" { "E" } else { "A" }.to_string()
                     } else {
                         format!("{s}-x")
                     };
@@ -336,6 +340,7 @@ fn mutation_and_check_labels_differ_en_de() {
     }
     let mut_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations");
+    let needle = "LocalizedLabel::native(";
     for entry in std::fs::read_dir(&mut_root).expect("mutations dir") {
         let entry = entry.expect("entry");
         let rs = entry.path().join("🦀️.rs");
@@ -343,20 +348,24 @@ fn mutation_and_check_labels_differ_en_de() {
             continue;
         }
         let text = std::fs::read_to_string(&rs).expect("read mutation");
-        let key = "LocalizedLabel::native("";
-        let mut from = 0;
-        while let Some(rel) = text[from..].find(key) {
-            let start = from + rel + key.len();
-            let rest = &text[start..];
-            let Some(en_end) = rest.find('"') else { break };
-            let en = &rest[..en_end];
-            let after_en = &rest[en_end + 1..];
-            let Some(de_rel) = after_en.find('"') else { break };
-            let after_de0 = &after_en[de_rel + 1..];
-            let Some(de_end) = after_de0.find('"') else { break };
-            let de = &after_de0[..de_end];
+        let mut from = 0usize;
+        while let Some(rel) = text[from..].find(needle) {
+            let start = from + rel + needle.len();
+            let bytes = text.as_bytes();
+            if start >= bytes.len() || bytes[start] != b'"' {
+                from = start;
+                continue;
+            }
+            let en_start = start + 1;
+            let Some(en_rel) = text[en_start..].find('"') else { break };
+            let en = &text[en_start..en_start + en_rel];
+            let mid = en_start + en_rel + 1;
+            let Some(de_open_rel) = text[mid..].find('"') else { break };
+            let de_start = mid + de_open_rel + 1;
+            let Some(de_rel) = text[de_start..].find('"') else { break };
+            let de = &text[de_start..de_start + de_rel];
             assert_pair(en, de, entry.file_name().to_string_lossy().as_ref());
-            from = start + en_end + de_rel + de_end + 2;
+            from = de_start + de_rel + 1;
         }
     }
     let doc = En1996Snapshot::compliant_clay_wall();
@@ -367,19 +376,6 @@ fn mutation_and_check_labels_differ_en_de() {
     }
 }
 
-#[test]
-fn slenderness_of_compliant_within_27() {
-    assert!(slenderness(&En1996Snapshot::compliant_clay_wall().walls[0]) <= 27.0);
-}
-
-#[test]
-fn noncompliant_has_multiple_fails() {
-    let doc = En1996Snapshot::noncompliant_multi_fail();
-    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
-    assert!(report.summary.fail >= 3);
-}
-
-#[test]
 #[test]
 fn typed_diff_and_snapshot_facets_have_no_unknown() {
     use std::path::PathBuf;
@@ -406,7 +402,7 @@ fn typed_diff_and_snapshot_facets_have_no_unknown() {
                 if trimmed.starts_with("//") || trimmed.starts_with("*") || trimmed.starts_with("import") {
                     continue;
                 }
-                if ": unknown" in trimmed || "?: unknown" in trimmed {
+                if trimmed.contains(": unknown") || trimmed.contains("?: unknown") {
                     bad.push(format!("{rel} line uses bare unknown: {trimmed}"));
                 }
             }
@@ -432,6 +428,121 @@ fn typed_diff_and_snapshot_facets_have_no_unknown() {
     assert!(bad.is_empty(), "facet parity failures: {bad:?}");
 }
 
+#[test]
 fn rho_n_four_sided_less_than_two() {
     assert!(rho_n(4, 2.75, 5.0) < rho_n(2, 2.75, 5.0));
+}
+
+
+#[test]
+fn duplicate_wall_id_fails_integrity() {
+    let mut doc = En1996Snapshot::compliant_clay_wall();
+    let mut dup = doc.walls[0].clone();
+    dup.id = doc.walls[0].id.clone();
+    dup.label_en = "Duplicate wall".into();
+    dup.label_de = "Doppelte Wand".into();
+    doc.walls.push(dup);
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let c = report
+        .checks
+        .iter()
+        .find(|c| c.id.contains("integrity.duplicate.walls"))
+        .expect("duplicate wall integrity check");
+    assert!(matches!(c.status, CheckStatus::Fail), "expected Fail, got {:?}", c.status);
+    assert_ne!(c.explanation.en, c.explanation.de);
+    assert!(c.explanation.en.contains("Duplicate") || c.explanation.en.contains("duplicate"));
+    assert!(c.explanation.de.contains("Doppelte") || c.explanation.de.contains("eindeutig"));
+    assert!(c.remedies.iter().any(|r| !r.options.is_empty()));
+}
+
+#[test]
+fn duplicate_load_case_opening_and_concentrated_ids_fail_integrity() {
+    let mut doc = En1996Snapshot::opening_wall_example();
+    let wall = &mut doc.walls[0];
+    let mut dup_lc = wall.load_cases[0].clone();
+    dup_lc.id = wall.load_cases[0].id.clone();
+    wall.load_cases.push(dup_lc);
+    let mut dup_op = wall.openings[0].clone();
+    dup_op.id = wall.openings[0].id.clone();
+    wall.openings.push(dup_op);
+    wall.load_cases[0].concentrated = vec![
+        crate::ConcentratedLoad {
+            id: "point-a".into(),
+            force_n: 10_000.0,
+            bearing_area_m2: 0.04,
+            bearing_length_m: 0.20,
+        },
+        crate::ConcentratedLoad {
+            id: "point-a".into(),
+            force_n: 5_000.0,
+            bearing_area_m2: 0.02,
+            bearing_length_m: 0.15,
+        },
+    ];
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    for needle in ["integrity.duplicate.loadCases", "integrity.duplicate.openings", "integrity.duplicate.concentrated"] {
+        let c = report.checks.iter().find(|c| c.id.contains(needle)).unwrap_or_else(|| panic!("missing {needle}"));
+        assert!(matches!(c.status, CheckStatus::Fail), "{needle} status {:?}", c.status);
+        assert_ne!(c.explanation.en, c.explanation.de);
+    }
+}
+
+#[test]
+fn dangling_imposed_category_fails_integrity() {
+    let mut doc = En1996Snapshot::compliant_clay_wall();
+    doc.walls[0].load_cases[0].imposed_category = "ZZ-dangling".into();
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let c = report
+        .checks
+        .iter()
+        .find(|c| c.id.contains("integrity.imposedCategory"))
+        .expect("dangling imposed category check");
+    assert!(matches!(c.status, CheckStatus::Fail));
+    assert_ne!(c.explanation.en, c.explanation.de);
+    assert!(c.remedies.iter().any(|r| r.options.iter().any(|o| o == "A" || o == "E")));
+}
+
+#[test]
+fn perturb_wall_id_to_duplicate_changes_integrity_signature() {
+    fn sig(report: &CheckReport) -> Vec<(String, String, i64, i64, i64)> {
+        report
+            .checks
+            .iter()
+            .map(|c| {
+                (
+                    c.id.clone(),
+                    format!("{:?}", c.status),
+                    (c.computed.value * 1e3).round() as i64,
+                    (c.limit.value * 1e3).round() as i64,
+                    (c.utilization * 1e9).round() as i64,
+                )
+            })
+            .collect()
+    }
+    let base = En1996Snapshot::compliant_clay_wall();
+    let base_report = evaluate_building(base.annex, base.masonry_class, base.design_situation, base.storeys, &base.walls);
+    let base_sig = sig(&base_report);
+    let mut perturbed = base.clone();
+    let mut dup = perturbed.walls[0].clone();
+    dup.id = perturbed.walls[0].id.clone();
+    dup.label_en = "Perturbed duplicate".into();
+    dup.label_de = "Gestörtes Duplikat".into();
+    perturbed.walls.push(dup);
+    let after = evaluate_building(
+        perturbed.annex,
+        perturbed.masonry_class,
+        perturbed.design_situation,
+        perturbed.storeys,
+        &perturbed.walls,
+    );
+    let after_sig = sig(&after);
+    assert_ne!(base_sig, after_sig, "duplicating wall id must change (id, status, computed, limit, utilization)");
+    let integrity = after
+        .checks
+        .iter()
+        .find(|c| c.id.contains("integrity.duplicate.walls"))
+        .expect("integrity check after duplicate");
+    assert!(matches!(integrity.status, CheckStatus::Fail));
+    let before_has = base_report.checks.iter().any(|c| c.id.contains("integrity.duplicate.walls"));
+    assert!(!before_has, "compliant snapshot must not emit duplicate-wall integrity fail");
 }

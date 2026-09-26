@@ -181,6 +181,22 @@ function transferBackoff(attempt: number, signal: AbortSignal): Promise<void> {
   });
 }
 
+/** 🔁️ Runs one hub transfer (the catalog index, a bundle manifest, one file) under `PluginModuleTransferRetryV1`: a transient answer
+ * is asked for again after the policy's backoff, announced through `onRetry(attempt, of)`, up to the declared attempts; any other
+ * refusal, and the last transient one, is thrown. A single slow or refused catalog read used to fail a whole hub document
+ * opening (ticket 26/09/23 S15/C10: "created, but it could not be opened" right after an index read answered 503). */
+async function withTransferRetry<T>(run: () => Promise<T>, signal: AbortSignal, onRetry: (attempt: number, of: number) => void = () => {}): Promise<T> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await run();
+    } catch (error) {
+      if (!(error instanceof TrustedPluginModuleTransientError) || attempt >= PLUGIN_MODULE_TRANSFER_RETRY_V1.maxAttempts) throw error;
+      onRetry(attempt + 1, PLUGIN_MODULE_TRANSFER_RETRY_V1.maxAttempts);
+      await transferBackoff(attempt, signal);
+    }
+  }
+}
+
 /** 🔗️ One hub file of one bundle, its path segments percent-encoded. */
 function hubFileUrl(hubMount: string, bundleSha256: string, path: string): string {
   return `${hubMount}${HUB_PLUGIN_MODULE_ROUTE}/${bundleSha256}/${path.split("/").map(encodeURIComponent).join("/")}`;
@@ -221,7 +237,7 @@ export function createHubPluginSource(options: HubPluginSourceOptionsV1): HubPlu
     );
   };
   const fetchIndex = async (signal: AbortSignal): Promise<TrustedPluginModuleIndexV1> => {
-    const bytes = await fetchBytes(`${options.hubMount}${HUB_PLUGIN_MODULE_ROUTE}`, HUB_PLUGIN_MODULE_INDEX_MAX_BYTES, signal);
+    const bytes = await withTransferRetry(() => fetchBytes(`${options.hubMount}${HUB_PLUGIN_MODULE_ROUTE}`, HUB_PLUGIN_MODULE_INDEX_MAX_BYTES, signal), signal);
     return validateTrustedPluginModuleIndexV1(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
   };
   const acquired = (record: PluginModuleStoreRecordV1): PluginModuleAcquired => {
@@ -230,7 +246,7 @@ export function createHubPluginSource(options: HubPluginSourceOptionsV1): HubPlu
   };
   /** 📜️ One bundle's manifest from the hub, held to its content address and to its index entry. */
   const fetchManifest = async (entry: TrustedPluginModuleIndexEntryV1, signal: AbortSignal): Promise<Readonly<{ manifestBytes: Uint8Array; bundle: TrustedPluginModuleBundleV1 }>> => {
-    const manifestBytes = await fetchBytes(`${options.hubMount}${HUB_PLUGIN_MODULE_ROUTE}/${entry.bundleSha256}`, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, signal);
+    const manifestBytes = await withTransferRetry(() => fetchBytes(`${options.hubMount}${HUB_PLUGIN_MODULE_ROUTE}/${entry.bundleSha256}`, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, signal), signal);
     if (manifestBytes.byteLength !== entry.bundleByteLength || (await trustedPluginModuleBundleSha256V1(manifestBytes)) !== entry.bundleSha256) throw new TrustedPluginModuleRefusalV1("trusted plugin module manifest differs from its content address");
     const bundle = decodeTrustedPluginModuleBundleV1(manifestBytes, trustedPluginModuleSourceOfEntryV1(entry));
     if (bundle.entry !== entry.entry) throw new TrustedPluginModuleRefusalV1("trusted plugin module entry differs from its index");
@@ -246,23 +262,23 @@ export function createHubPluginSource(options: HubPluginSourceOptionsV1): HubPlu
     const downloaded: (readonly [TrustedPluginModuleFileV1, Uint8Array])[] = [];
     for (const file of needed) {
       acquisition.signal.throwIfAborted();
-      let bytes: Uint8Array | null = null;
       let retry: { readonly attempt: number; readonly of: number } | undefined;
-      for (let attempt = 1; bytes === null; attempt += 1) {
-        const startedAt = completedBytes;
-        try {
-          bytes = await fetchBytes(hubFileUrl(options.hubMount, entry.bundleSha256, file.path), Math.min(file.byteLength, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES), acquisition.signal, (chunk) => {
+      const startedAt = completedBytes;
+      const bytes = await withTransferRetry(
+        () => {
+          completedBytes = startedAt;
+          return fetchBytes(hubFileUrl(options.hubMount, entry.bundleSha256, file.path), Math.min(file.byteLength, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES), acquisition.signal, (chunk) => {
             completedBytes += chunk;
             acquisition.onProgress?.({ completedBytes, totalBytes, ...(retry === undefined ? {} : { retry }) });
           });
-        } catch (error) {
-          if (!(error instanceof TrustedPluginModuleTransientError) || attempt >= PLUGIN_MODULE_TRANSFER_RETRY_V1.maxAttempts) throw error;
+        },
+        acquisition.signal,
+        (attempt, of) => {
           completedBytes = startedAt;
-          retry = { attempt: attempt + 1, of: PLUGIN_MODULE_TRANSFER_RETRY_V1.maxAttempts };
+          retry = { attempt, of };
           acquisition.onProgress?.({ completedBytes, totalBytes, retry });
-          await transferBackoff(attempt, acquisition.signal);
-        }
-      }
+        },
+      );
       if (retry !== undefined) acquisition.onProgress?.({ completedBytes, totalBytes });
       if (!(await verifyTrustedPluginModuleFileV1(file, bytes))) throw new TrustedPluginModuleRefusalV1(`trusted plugin module file ${file.path} differs from its manifest`);
       downloaded.push([file, bytes]);
@@ -332,7 +348,7 @@ export function createHubPluginSource(options: HubPluginSourceOptionsV1): HubPlu
     async list(): Promise<readonly PluginRegistryEntry[]> {
       const current = await index(new AbortController().signal);
       const rows = current?.modules.map((entry) => ({ generationId: current.generationId, entry })) ?? (await records()).map((record) => ({ generationId: record.generationId, entry: record.entry }));
-      return rows.map(({ generationId, entry }) => ({ pluginId: entry.pluginId, moduleUrl: storedPluginModuleUrlV1(generationId, entry.bundleSha256, entry.entry), dependencies: entry.dependencies.map((pluginId) => ({ pluginId, version: "*" })) }));
+      return rows.map(({ generationId, entry }) => ({ pluginId: entry.pluginId, moduleUrl: storedPluginModuleUrlV1(generationId, entry.bundleSha256, entry.entry), dependencies: entry.dependencies.map((pluginId) => ({ pluginId })) }));
     },
     async ownerOfDialect(artifactKind) {
       const current = await index(new AbortController().signal);

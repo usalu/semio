@@ -1,5 +1,5 @@
 semio norm.iso16757.dsl v1
-exchange-process=determineProduct catalogue=id=cat.demo metadata=edition-profile=fullPublished names=short-name=Demo preferred=locale=en text="Demo HVAC catalogue"
+exchange-process=determineProduct catalogue=id=cat.mfg-demo metadata=edition-profile=fullPublished names=short-name=Demo preferred=locale=en text="Demo HVAC catalogue"
 alternatives [locale:TEXT text:TEXT] {
   de "Demo TGA-Katalog"
 }
@@ -58,7 +58,7 @@ products [id:TEXT series-id:TEXT names:REC parameter-domains:LIST variants:LIST 
   ] ] [ ]
 }
 product-indexes [id:TEXT product-id:TEXT variant-id:TEXT search-tags:LIST] {
-  index-cv50 product-cv variant-50 [ valve dn50 ]
+  index-cv50 product-cv variant-50 [ CV-50 product-cv dn50 ]
 }
 property-definitions [id:TEXT names:REC data-type:TEXT unit:REC cardinality:REC kind:ENUM dictionary-property-id:TEXT] {
   prop-dn {preferred=locale=en text="Nominal diameter"

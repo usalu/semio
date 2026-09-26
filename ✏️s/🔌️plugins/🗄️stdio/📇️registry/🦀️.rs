@@ -541,8 +541,7 @@ pub(crate) fn artifact_catalog_contribution(assemblies: &[ArtifactAssembly]) -> 
 /// 🔗️ Binds consumers to the exact version of their statically linked Stdio catalog.
 #[cfg(feature = "full-artifact-catalog")]
 pub fn native_artifact_catalog_dependency() -> Result<semio_framework::PluginDependency, PluginAssemblyError> {
-    let version = semio_framework::Version::parse(env!("CARGO_PKG_VERSION")).map_err(|error| failure(format!("compiled Stdio catalog version is invalid: {error}")))?;
-    Ok(semio_framework::PluginDependency::new("stdio", semio_framework::VersionReq::Exact(version)))
+    Ok(semio_framework::PluginDependency::new("stdio", semio_framework::tree_pin!()))
 }
 
 /// 🪢️ Requires the consumer's sole dependency to equal its compiled catalog owner.

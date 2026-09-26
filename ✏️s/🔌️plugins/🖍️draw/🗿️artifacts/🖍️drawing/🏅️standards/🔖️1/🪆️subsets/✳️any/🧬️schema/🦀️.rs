@@ -410,6 +410,25 @@ fn find_drawing_layer_in_node<'a>(node: &'a DrawingLayerNode, target_id: &str) -
     None
 }
 
+pub fn selected_drawing_layers<'a>(document: &'a DrawingSnapshot, ids: &[String]) -> Vec<&'a DrawingLayerNode> {
+    flatten_drawing_layers(&document.layers).into_iter().filter(|layer| ids.iter().any(|id| id == &layer_base(layer).id || id == &drawing_play_layers_tree_row_id(layer))).collect()
+}
+
+/// 🔒️ A lock on any ancestor protects its complete subtree from interactive edits.
+pub fn drawing_layer_is_locked(document: &DrawingSnapshot, id: &str) -> bool {
+    fn visit(layers: &[DrawingLayerNode], id: &str, inherited: bool) -> Option<bool> {
+        for layer in layers {
+            let locked = inherited || layer_base(layer).locked;
+            if layer_id(layer) == id { return Some(locked); }
+            if let DrawingLayerNode::Group(group) = layer {
+                if let Some(found) = visit(&group.children, id, locked) { return Some(found); }
+            }
+        }
+        None
+    }
+    visit(&document.layers, id, false).unwrap_or(false)
+}
+
 pub fn flatten_drawing_layers(layers: &[DrawingLayerNode]) -> Vec<&DrawingLayerNode> {
     let mut out = Vec::new();
     fn walk<'a>(nodes: &'a [DrawingLayerNode], out: &mut Vec<&'a DrawingLayerNode>) {
@@ -457,17 +476,18 @@ pub fn drawing_play_layers_tree_row_id(layer: &DrawingLayerNode) -> String {
 }
 
 pub fn drawing_play_boolean_child_row_id(boolean_id: &str, child_id: &str) -> String {
-    format!("drawing-play-layers.boolean.{boolean_id}.child.{child_id}")
+    format!("drawing-play-layers.boolean-child.{}.{boolean_id}{child_id}", boolean_id.len())
 }
 
 pub fn drawing_play_layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
-    if let Some(rest) = row_id.strip_prefix("drawing-play-layers.") {
-        let parts: Vec<&str> = rest.split('.').collect();
-        if parts.len() >= 2 {
-            return Some(parts[parts.len() - 1].to_string());
-        }
+    let (kind, id) = row_id.strip_prefix("drawing-play-layers.")?.split_once('.')?;
+    if kind == "boolean-child" {
+        let (length, ids) = id.split_once('.')?;
+        let child = ids.get(length.parse::<usize>().ok()?..)?;
+        return (!child.is_empty()).then(|| child.to_string());
     }
-    None
+    if !matches!(kind, "group" | "boolean" | "trace" | "path" | "shape" | "text" | "image") || id.is_empty() { return None; }
+    Some(id.to_string())
 }
 
 pub fn layer_to_path_segments(layer: &DrawingLayerNode) -> Vec<PathSegment> {
@@ -523,51 +543,26 @@ fn shape_to_path_segments(shape: &DrawingShapeBody) -> Vec<PathSegment> {
 }
 
 pub fn drawing_layer_world_bounds(layer: &DrawingLayerNode) -> Option<(f64, f64, f64, f64)> {
-    let local = match layer {
-        DrawingLayerNode::Text(text) => {
-            let width = (text.content.len() as f64 * text.size * 0.6).max(8.0);
-            let height = (text.size * 1.2).max(8.0);
-            (text.x, text.y, width, height)
+    fn bounds(layer: &DrawingLayerNode, parent: [f64; 6]) -> Option<(f64, f64, f64, f64)> {
+        let matrix = geometry::multiply(parent, drawing_transform_to_matrix(&layer_base(layer).transform));
+        if let DrawingLayerNode::Group(group) = layer {
+            return group.children.iter().filter_map(|child| bounds(child, matrix)).reduce(|a, b| {
+                let x = a.0.min(b.0);
+                let y = a.1.min(b.1);
+                (x, y, (a.0+a.2).max(b.0+b.2)-x, (a.1+a.3).max(b.1+b.3)-y)
+            });
         }
-        DrawingLayerNode::Image(image) => (0.0, 0.0, image.width, image.height),
-        _ => {
-            let segments = layer_to_path_segments(layer);
-            if segments.is_empty() {
-                return Some((-64.0, -64.0, 128.0, 128.0));
-            }
-            let mut min_x = f64::INFINITY;
-            let mut min_y = f64::INFINITY;
-            let mut max_x = f64::NEG_INFINITY;
-            let mut max_y = f64::NEG_INFINITY;
-            for segment in &segments {
-                if let Some(to) = segment_to_point(segment) {
-                    min_x = min_x.min(to[0]);
-                    min_y = min_y.min(to[1]);
-                    max_x = max_x.max(to[0]);
-                    max_y = max_y.max(to[1]);
-                }
-            }
-            if !min_x.is_finite() {
-                return None;
-            }
-            (min_x, min_y, max_x - min_x, max_y - min_y)
-        }
-    };
-    let base = layer_base(layer);
-    let corners = [(local.0, local.1), (local.0 + local.2, local.1), (local.0 + local.2, local.1 + local.3), (local.0, local.1 + local.3)];
-    let mut xs = Vec::new();
-    let mut ys = Vec::new();
-    for (x, y) in corners {
-        let world = transform_world_point(&base.transform, x, y);
-        xs.push(world.0);
-        ys.push(world.1);
+        let rectangle = match layer {
+            DrawingLayerNode::Text(text) => Some((text.x, text.y, (text.content.chars().count() as f64 * text.size * 0.6).max(8.0), (text.size * 1.2).max(8.0))),
+            DrawingLayerNode::Image(image) => Some((0.0, 0.0, image.width, image.height)),
+            _ => None,
+        };
+        let segments = if let Some((x, y, w, h)) = rectangle {
+            vec![PathSegment::Move { to: [x,y] }, PathSegment::Line { to: [x+w,y] }, PathSegment::Line { to: [x+w,y+h] }, PathSegment::Line { to: [x,y+h] }, PathSegment::Close]
+        } else { layer_to_path_segments(layer) };
+        path_segments_bounds_with_matrix(&segments, matrix)
     }
-    Some((
-        xs.iter().copied().fold(f64::INFINITY, f64::min),
-        ys.iter().copied().fold(f64::INFINITY, f64::min),
-        xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) - xs.iter().copied().fold(f64::INFINITY, f64::min),
-        ys.iter().copied().fold(f64::NEG_INFINITY, f64::max) - ys.iter().copied().fold(f64::INFINITY, f64::min),
-    ))
+    bounds(layer, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
 }
 
 fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
@@ -603,14 +598,18 @@ fn scene_node_for_path(base: &DrawingLayerBase, segments: Vec<PathSegment>) -> D
 
 pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<DrawingSceneNode> {
     let mut out = Vec::new();
-    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], out: &mut Vec<DrawingSceneNode>) {
+    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], parent: [f64; 6], out: &mut Vec<DrawingSceneNode>) {
         for layer in layers {
             let base = layer_base(layer);
             if !base.visible {
                 continue;
             }
+            let first = out.len();
             match layer {
-                DrawingLayerNode::Group(group) => walk(doc, &group.children, out),
+                DrawingLayerNode::Group(group) => {
+                    walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), out);
+                    continue;
+                }
                 DrawingLayerNode::Boolean(boolean) => {
                     let segments = resolve_boolean_layer_segments(doc, boolean);
                     if segments.is_empty() {
@@ -668,9 +667,10 @@ pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<Dra
                     out.push(scene_node_for_path(base, segments));
                 }
             }
+            for node in &mut out[first..] { node.transform = geometry::multiply(parent, node.transform); }
         }
     }
-    walk(doc, &doc.layers, &mut out);
+    walk(doc, &doc.layers, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], &mut out);
     out
 }
 
@@ -687,39 +687,25 @@ pub fn canvas_layer_records(doc: &DrawingSnapshot) -> Vec<DrawingCanvasLayerReco
 }
 
 pub fn clone_drawing_layer_node(node: &DrawingLayerNode, name_suffix: &str) -> DrawingLayerNode {
-    let mut cloned = node.clone();
-    let id_material = |base: &DrawingLayerBase| format!("{}{name_suffix}{}", base.id, base.name).into_bytes();
-    match &mut cloned {
-        DrawingLayerNode::Shape(shape) => {
-            shape.base.id = create_drawing_id("shape", &id_material(&shape.base));
-            shape.base.name = format!("{}{name_suffix}", shape.base.name);
-        }
-        DrawingLayerNode::Path(path) => {
-            path.base.id = create_drawing_id("path", &id_material(&path.base));
-            path.base.name = format!("{}{name_suffix}", path.base.name);
-        }
-        DrawingLayerNode::Text(text) => {
-            text.base.id = create_drawing_id("text", &id_material(&text.base));
-            text.base.name = format!("{}{name_suffix}", text.base.name);
-        }
-        DrawingLayerNode::Image(image) => {
-            image.base.id = create_drawing_id("image", &id_material(&image.base));
-            image.base.name = format!("{}{name_suffix}", image.base.name);
-        }
-        DrawingLayerNode::Group(group) => {
-            group.base.id = create_drawing_id("group", &id_material(&group.base));
-            group.base.name = format!("{}{name_suffix}", group.base.name);
-            group.children = group.children.iter().map(|child| clone_drawing_layer_node(child, "")).collect();
-        }
-        DrawingLayerNode::Boolean(boolean) => {
-            boolean.base.id = create_drawing_id("boolean", &id_material(&boolean.base));
-            boolean.base.name = format!("{}{name_suffix}", boolean.base.name);
-        }
-        DrawingLayerNode::Trace(trace) => {
-            trace.base.id = create_drawing_id("trace", &id_material(&trace.base));
-            trace.base.name = format!("{}{name_suffix}", trace.base.name);
+    fn identify(node: &mut DrawingLayerNode, suffix: &str, ids: &mut BTreeMap<String, String>) {
+        let base = layer_base_mut(node);
+        let old = base.id.clone();
+        base.id = create_drawing_id("layer", format!("{old}{suffix}").as_bytes());
+        ids.insert(old, base.id.clone());
+        if let DrawingLayerNode::Group(group) = node { for child in &mut group.children { identify(child, suffix, ids); } }
+    }
+    fn references(node: &mut DrawingLayerNode, ids: &BTreeMap<String, String>) {
+        match node {
+            DrawingLayerNode::Boolean(boolean) => { for child in &mut boolean.children { if let Some(id) = ids.get(child) { *child = id.clone(); } } }
+            DrawingLayerNode::Group(group) => { for child in &mut group.children { references(child, ids); } }
+            _ => {}
         }
     }
+    let mut cloned = node.clone();
+    let mut ids = BTreeMap::new();
+    identify(&mut cloned, name_suffix, &mut ids);
+    layer_base_mut(&mut cloned).name.push_str(name_suffix);
+    references(&mut cloned, &ids);
     cloned
 }
 
@@ -895,8 +881,11 @@ fn drawing_map_point_by_matrix(matrix: [f64; 6], point: [f64; 2]) -> [f64; 2] {
 }
 
 pub fn transform_path_segments(segments: &[PathSegment], transform: &DrawingTransform) -> Vec<PathSegment> {
-    let matrix = drawing_transform_to_matrix(transform);
-    segments
+    transform_path_by_matrix(segments, drawing_transform_to_matrix(transform))
+}
+
+pub fn transform_path_by_matrix(segments: &[PathSegment], matrix: [f64; 6]) -> Vec<PathSegment> {
+    flatten_curve_segments(segments)
         .iter()
         .map(|segment| match segment {
             PathSegment::Move { to } => PathSegment::Move { to: drawing_map_point_by_matrix(matrix, *to) },
@@ -934,23 +923,29 @@ pub fn split_path_segments_by_contour(segments: &[PathSegment]) -> Vec<Vec<PathS
     contours
 }
 
+#[path = "🧮️geometry/🦀️.rs"]
+pub mod geometry;
+
 pub fn path_segments_bounds(segments: &[PathSegment]) -> Option<(f64, f64, f64, f64)> {
-    let mut min_x = f64::INFINITY;
-    let mut min_y = f64::INFINITY;
-    let mut max_x = f64::NEG_INFINITY;
-    let mut max_y = f64::NEG_INFINITY;
+    path_segments_bounds_with_matrix(segments,[1.0,0.0,0.0,1.0,0.0,0.0])
+}
+
+fn path_segments_bounds_with_matrix(segments: &[PathSegment], matrix: [f64;6]) -> Option<(f64, f64, f64, f64)> {
+    let mut min = [f64::INFINITY; 2];
+    let mut max = [f64::NEG_INFINITY; 2];
+    let mut current = [0.0; 2];
+    let mut start = current;
     for segment in segments {
-        if let Some(to) = segment_to_point(segment) {
-            min_x = min_x.min(to[0]);
-            min_y = min_y.min(to[1]);
-            max_x = max_x.max(to[0]);
-            max_y = max_y.max(to[1]);
+        if matches!(segment, PathSegment::Close) && !min[0].is_finite() { continue; }
+        let bounds = geometry::segment_bounds(segment,current,start,matrix);
+        match segment {
+            PathSegment::Move { to } => { current=*to; start=*to; }
+            PathSegment::Line { to } | PathSegment::Quad { to, .. } | PathSegment::Cubic { to, .. } | PathSegment::Arc { to, .. } => current=*to,
+            PathSegment::Close => current=start,
         }
+        for axis in 0..2 { min[axis] = min[axis].min(bounds[axis]); max[axis] = max[axis].max(bounds[axis]+bounds[axis+2]); }
     }
-    if !min_x.is_finite() {
-        return None;
-    }
-    Some((min_x, min_y, max_x - min_x, max_y - min_y))
+    min.iter().all(|n| n.is_finite()).then_some((min[0], min[1], max[0]-min[0], max[1]-min[1]))
 }
 
 pub fn filter_path_segments_by_contour_area(segments: &[PathSegment], min_area: f64) -> Vec<PathSegment> {
@@ -974,12 +969,6 @@ fn arc_ellipse_point(unit: [f64; 2], rx: f64, ry: f64, cos_phi: f64, sin_phi: f6
     [cos_phi * x - sin_phi * y + cx, sin_phi * x + cos_phi * y + cy]
 }
 
-fn arc_vector_angle(ux: f64, uy: f64, vx: f64, vy: f64) -> f64 {
-    let sign = if ux * vy - uy * vx < 0.0 { -1.0 } else { 1.0 };
-    let dot = (ux * vx + uy * vy).clamp(-1.0, 1.0);
-    sign * dot.acos()
-}
-
 fn arc_approx_unit_arc(ang1: f64, ang2: f64) -> ([f64; 2], [f64; 2], [f64; 2]) {
     let a = (4.0 / 3.0) * ((ang2 - ang1) / 4.0).tan();
     let (sin1, cos1) = ang1.sin_cos();
@@ -989,52 +978,12 @@ fn arc_approx_unit_arc(ang1: f64, ang2: f64) -> ([f64; 2], [f64; 2], [f64; 2]) {
 
 /// 🌙️ Converts one SVG endpoint-parameterized arc into cubic Bézier control triples (SVG spec F.6.5).
 fn arc_segment_to_cubics(from: [f64; 2], rx: f64, ry: f64, rotation_deg: f64, large_arc: bool, sweep: bool, to: [f64; 2]) -> Vec<([f64; 2], [f64; 2], [f64; 2])> {
-    if rx.abs() < 1e-9 || ry.abs() < 1e-9 {
-        return Vec::new();
-    }
-    let mut rx = rx.abs();
-    let mut ry = ry.abs();
-    let phi = rotation_deg.to_radians();
-    let (sin_phi, cos_phi) = phi.sin_cos();
-    let dx = (from[0] - to[0]) / 2.0;
-    let dy = (from[1] - to[1]) / 2.0;
-    let pxp = cos_phi * dx + sin_phi * dy;
-    let pyp = -sin_phi * dx + cos_phi * dy;
-    if pxp == 0.0 && pyp == 0.0 {
-        return Vec::new();
-    }
-    let lambda = (pxp * pxp) / (rx * rx) + (pyp * pyp) / (ry * ry);
-    if lambda > 1.0 {
-        let factor = lambda.sqrt();
-        rx *= factor;
-        ry *= factor;
-    }
-    let rx_sq = rx * rx;
-    let ry_sq = ry * ry;
-    let pxp_sq = pxp * pxp;
-    let pyp_sq = pyp * pyp;
-    let mut radicand = rx_sq * ry_sq - rx_sq * pyp_sq - ry_sq * pxp_sq;
-    if radicand < 0.0 {
-        radicand = 0.0;
-    }
-    radicand /= rx_sq * pyp_sq + ry_sq * pxp_sq;
-    let coef = radicand.sqrt() * if large_arc == sweep { -1.0 } else { 1.0 };
-    let centerxp = coef * (rx / ry) * pyp;
-    let centeryp = coef * -(ry / rx) * pxp;
-    let cx = cos_phi * centerxp - sin_phi * centeryp + (from[0] + to[0]) / 2.0;
-    let cy = sin_phi * centerxp + cos_phi * centeryp + (from[1] + to[1]) / 2.0;
-    let vx1 = (pxp - centerxp) / rx;
-    let vy1 = (pyp - centeryp) / ry;
-    let vx2 = (-pxp - centerxp) / rx;
-    let vy2 = (-pyp - centeryp) / ry;
-    let ang1 = arc_vector_angle(1.0, 0.0, vx1, vy1);
-    let mut ang2 = arc_vector_angle(vx1, vy1, vx2, vy2);
-    if !sweep && ang2 > 0.0 {
-        ang2 -= std::f64::consts::TAU;
-    }
-    if sweep && ang2 < 0.0 {
-        ang2 += std::f64::consts::TAU;
-    }
+    let Some(arc) = geometry::arc_geometry(from, [rx.abs(),ry.abs()], rotation_deg, large_arc, sweep, to) else { return Vec::new() };
+    let [rx, ry] = arc.radii;
+    let [cx, cy] = arc.center;
+    let (sin_phi, cos_phi) = arc.rotation.sin_cos();
+    let ang1 = arc.start;
+    let ang2 = arc.sweep;
     let mut ratio = ang2.abs() / std::f64::consts::FRAC_PI_2;
     if (1.0 - ratio).abs() < 1e-7 {
         ratio = 1.0;
@@ -1273,3 +1222,20 @@ pub use crate::DrawingImageAsset;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use crate::DrawingLayerNode;
 //#endregion 🔁️Re-exports
+
+/// 📏️ Admits finite vector coordinates and nonnegative arc radii.
+pub fn valid_path_segment(segment: &PathSegment) -> bool {
+    match segment {
+        PathSegment::Move { to } | PathSegment::Line { to } => to.iter().all(|v| v.is_finite()),
+        PathSegment::Quad { ctrl, to } => ctrl.iter().chain(to).all(|v| v.is_finite()),
+        PathSegment::Cubic { ctrl1, ctrl2, to } => ctrl1.iter().chain(ctrl2).chain(to).all(|v| v.is_finite()),
+        PathSegment::Arc { rx, ry, rotation, to, .. } => *rx >= 0.0 && *ry >= 0.0 && [*rx,*ry,*rotation,to[0],to[1]].iter().all(|v| v.is_finite()),
+        PathSegment::Close => true,
+    }
+}
+
+#[path = "🖊️stroke/🦀️.rs"]
+pub mod stroke;
+
+#[path = "🎨️fill/🦀️.rs"]
+pub mod fill;

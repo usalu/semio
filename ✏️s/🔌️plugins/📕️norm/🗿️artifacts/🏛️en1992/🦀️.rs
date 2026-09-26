@@ -194,7 +194,7 @@ impl ReinforcementGrade {
         Self { id: id.into(), name: "B500B".into(), f_yk: 500.0e6, e_s: 200.0e9, ductility: DuctilityClass::B, k: 1.08, eps_uk: 0.050 }
     }
     pub fn b500c(id: impl Into<String>) -> Self {
-        Self { id: id.into(), name: "B500C".into(), f_yk: 500.0e6, e_s: 200.0e9, ductility: DuctilityClass::C, k: 1.15, eps_uk: 0.075 }
+        Self { id: id.into(), name: "B500C".into(), f_yk: 550.0e6, e_s: 200.0e9, ductility: DuctilityClass::C, k: 1.15, eps_uk: 0.075 }
     }
 }
 

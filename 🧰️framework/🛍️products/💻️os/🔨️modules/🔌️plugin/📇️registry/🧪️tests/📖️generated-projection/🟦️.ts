@@ -89,16 +89,17 @@ describe("generated catalog projection", () => {
   });
 });
 
-/** 🔮️ Generated wasm target dir must follow .cargo/config.toml, never private uplift env. */
+/** 🔮️ Generated component paths are crate deliverables, never cargo's target directory or a private uplift. */
 describe("registry rust artifacts projection", () => {
-  test("PLUGIN_WASM_TARGET_DIR ignores private CARGO_TARGET_DIR overrides", () => {
+  test("every row resolves under its crate's dist deliverable, whatever CARGO_TARGET_DIR says", () => {
     const previous = process.env.CARGO_TARGET_DIR;
     process.env.CARGO_TARGET_DIR = "/tmp/semio-private-uplift-must-not-land-in-catalog";
     try {
-      const body = emitRustArtifacts([], getWorkspaceRoot());
-      expect(body).toContain("PLUGIN_WASM_TARGET_DIR");
-      expect(body).toContain("wasm32-wasip2");
-      expect(body).toContain("cache/cargo/target");
+      const note = { pluginId: "note", cratePath: "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_s_plugin_note.wasm" } as PluginRegistryEntry;
+      const body = emitRustArtifacts([note], getWorkspaceRoot());
+      expect(body).toContain('pub const PLUGIN_COMPONENT_PROFILE_DIRS: &[&str] = &["dist/component-dev", "dist/component-release"];');
+      expect(body).toContain('("note", "✏️s/🔌️plugins/🗒️note/📦️packages/🦀️rust", "semio_s_plugin_note.wasm"),');
+      expect(body).not.toContain("cache/cargo/target");
       expect(body).not.toContain("semio-private-uplift-must-not-land-in-catalog");
     } finally {
       if (previous === undefined) delete process.env.CARGO_TARGET_DIR;

@@ -813,6 +813,8 @@ async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
         document_id: crate::os_spr::ArtifactId("doc-f".to_string()),
         actor: crate::os_spr::ActorId("bob".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: Vec::new() },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 2, physical_ms: 100, logical: 0 },

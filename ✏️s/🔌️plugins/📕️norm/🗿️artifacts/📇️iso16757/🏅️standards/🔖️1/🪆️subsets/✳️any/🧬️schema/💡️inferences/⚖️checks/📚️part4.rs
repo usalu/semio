@@ -1,6 +1,6 @@
 //! 📚️ ISO 16757-4 dictionary structure, constraints, ISO 12006 mappings.
 
-use super::common::{assess, copy, fail, na, pass, q_dim, subject};
+use super::common::{assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
 use crate::document::{CheckReport, CheckStatus, Remedy, RemedyBound};
 use crate::CatalogueValue;
 use crate::standards::v1::subsets::any::schema::part_4 as helpers;
@@ -253,6 +253,56 @@ pub fn check_part_4(doc: &Iso16757Snapshot, report: &mut CheckReport) {
             copy("Controlled lists filter correctly and catalogue values comply.", "Kontrollierte Listen filtern korrekt und Katalogwerte entsprechen."),
         ));
     }
+
+    {
+        let subject_ids: HashSet<_> = dictionary.subjects.iter().map(|s| s.id.clone()).chain(dictionary.meta_subjects.iter().map(|s| s.id.clone())).collect();
+        for rel in &dictionary.relationships {
+            for (field, target) in [("sourceId", &rel.source_id), ("targetId", &rel.target_id)] {
+                let ok = subject_ids.contains(target);
+                report.push(assess(
+                    format!("iso16757.4.4.relEndpoint.{}.{}", rel.id, field),
+                    "4",
+                    "4.4",
+                    subject(&rel.id, format!("dictionary.relationships[id={}].{}", rel.id, field), &rel.id, &rel.id),
+                    copy("Dictionary relationship endpoint", "Wörterbuch-Beziehungsendpunkt"),
+                    copy(
+                        format!("Relationship '{}' {} '{}' {}.", rel.id, field, target, if ok { "resolves" } else { "is unknown" }),
+                        format!("Beziehung '{}' {} '{}' {}.", rel.id, field, target, if ok { "löst auf" } else { "ist unbekannt" }),
+                    ),
+                    if ok { CheckStatus::Pass } else { CheckStatus::Fail },
+                    q_dim(1.0),
+                    q_dim(1.0),
+                    if ok {
+                        Vec::new()
+                    } else {
+                        vec![Remedy::one_of(
+                            subject(&rel.id, format!("dictionary.relationships[id={}].{}", rel.id, field), &rel.id, &rel.id),
+                            subject_ids.iter().cloned().collect(),
+                            copy("Retarget relationship endpoint.", "Beziehungsendpunkt neu setzen."),
+                        )]
+                    },
+                ));
+            }
+            let max_c = rel.cardinality.max.unwrap_or(u32::MAX) as f64;
+            let min_c = rel.cardinality.min as f64;
+            report.push(assess(
+                format!("iso16757.4.4.relCard.{}", rel.id),
+                "4",
+                "4.4",
+                subject(&rel.id, format!("dictionary.relationships[id={}].cardinality.max", rel.id), &rel.id, &rel.id),
+                copy("Dictionary relationship cardinality", "Wörterbuch-Beziehungskardinalität"),
+                copy(
+                    format!("Relationship '{}' cardinality [{min_c}, {max_c}].", rel.id),
+                    format!("Beziehung '{}' Kardinalität [{min_c}, {max_c}].", rel.id),
+                ),
+                CheckStatus::Pass,
+                q_dim(min_c),
+                q_dim(if max_c < 1.0e9 { max_c } else { min_c + 1.0 }),
+                Vec::new(),
+            ));
+        }
+    }
+
 }
 
 
@@ -280,7 +330,6 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
             }],
         ));
     } else {
-        let ver = dict.reference.version.parse::<f64>().unwrap_or(1.0);
         report.push(assess(
             "iso16757.4.4.3.reference",
             "4",
@@ -292,8 +341,8 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 format!("Wörterbuch-Referenz {}@{} ist gesetzt.", dict.reference.id, dict.reference.version),
             ),
             CheckStatus::Pass,
-            q_dim(ver),
-            q_dim(ver),
+            q_dim(1.0),
+            q_dim(1.0),
             Vec::new(),
         ));
     }
@@ -322,8 +371,36 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
     for rel in &dict.relationships {
         let src_ok = subject_ids.contains(&rel.source_id);
         let tgt_ok = subject_ids.contains(&rel.target_id);
-        let card_ok = rel.cardinality.min >= 1 || rel.cardinality.max.is_some();
-        let computed = f64::from(rel.cardinality.min) + rel.cardinality.max.map(f64::from).unwrap_or(0.0);
+        let resolved = u32::from(src_ok) + u32::from(tgt_ok);
+        let card_ok = rel.cardinality.satisfies(resolved);
+
+        report.push(assess(
+            format!("iso16757.4.4.4.relationship.target.{}", rel.id),
+            "4",
+            "4.4",
+            subject(&rel.id, format!("dictionary.relationships[id={}].targetId", rel.id), &rel.id, &rel.id),
+            copy("Relationship target", "Beziehungsziel"),
+            copy(
+                format!("Relationship '{}' targetId '{}' resolution slot.", rel.id, rel.target_id),
+                format!("Beziehung '{}' targetId '{}' Auflösungsplatz.", rel.id, rel.target_id),
+            ),
+            if tgt_ok { CheckStatus::Pass } else { CheckStatus::Fail },
+            q_dim(reference_slot_score(&rel.target_id, subject_ids.iter())),
+            q_dim(1.0),
+            if tgt_ok {
+                Vec::new()
+            } else {
+                vec![Remedy {
+                    target: subject(&rel.id, format!("dictionary.relationships[id={}].targetId", rel.id), &rel.id, &rel.id),
+                    current: q_dim(0.0),
+                    required: q_dim(1.0),
+                    bound: RemedyBound::OneOf,
+                    options: subject_ids.iter().cloned().collect(),
+                    action: copy("Point targetId at an existing subject.", "targetId auf ein vorhandenes Subjekt setzen."),
+                    applicable: true,
+                }]
+            },
+        ));
         if !src_ok || !tgt_ok {
             report.push(fail(
                 format!("iso16757.4.4.4.relationship.{}", rel.id),
@@ -337,15 +414,46 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 ),
                 vec![Remedy {
                     target: subject(&rel.id, format!("dictionary.relationships[id={}].targetId", rel.id), &rel.id, &rel.id),
-                    current: q_dim(computed),
-                    required: q_dim(1.0),
+                    current: q_dim(resolved as f64),
+                    required: q_dim(2.0),
                     bound: RemedyBound::OneOf,
                     options: subject_ids.iter().cloned().collect(),
                     action: copy("Point relationship sourceId/targetId at existing subjects.", "relationship sourceId/targetId auf vorhandene Subjekte setzen."),
                     applicable: true,
                 }],
             ));
-        } else {
+        }
+        if !card_ok {
+            report.push(fail(
+                format!("iso16757.4.4.4.relationship.cardinality.{}", rel.id),
+                "4",
+                "4.4",
+                subject(&rel.id, format!("dictionary.relationships[id={}].cardinality.min", rel.id), &rel.id, &rel.id),
+                copy("Relationship cardinality", "Beziehungskardinalität"),
+                copy(
+                    format!(
+                        "Relationship '{}' resolves {resolved} endpoint(s) but cardinality.min={} requires at least that many.",
+                        rel.id, rel.cardinality.min
+                    ),
+                    format!(
+                        "Beziehung '{}' löst {resolved} Endpunkt(e) auf, cardinality.min={} verlangt mindestens so viele.",
+                        rel.id, rel.cardinality.min
+                    ),
+                ),
+                vec![Remedy {
+                    target: subject(&rel.id, format!("dictionary.relationships[id={}].cardinality.min", rel.id), &rel.id, &rel.id),
+                    current: q_dim(resolved as f64),
+                    required: q_dim(rel.cardinality.min as f64),
+                    bound: RemedyBound::AtMost,
+                    options: vec![resolved.to_string()],
+                    action: copy(
+                        format!("Lower cardinality.min to ≤ {resolved} or resolve missing relationship endpoints."),
+                        format!("cardinality.min auf ≤ {resolved} senken oder fehlende Beziehungsendpunkte auflösen."),
+                    ),
+                    applicable: true,
+                }],
+            ));
+        } else if src_ok && tgt_ok {
             report.push(assess(
                 format!("iso16757.4.4.4.relationship.{}", rel.id),
                 "4",
@@ -353,16 +461,15 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 subject(&rel.id, format!("dictionary.relationships[id={}].cardinality.min", rel.id), &rel.id, &rel.id),
                 copy("Relationship cardinality", "Beziehungskardinalität"),
                 copy(
-                    format!("Relationship '{}' {}→{} cardinality min={}.", rel.id, rel.source_id, rel.target_id, rel.cardinality.min),
-                    format!("Beziehung '{}' {}→{} Kardinalität min={}.", rel.id, rel.source_id, rel.target_id, rel.cardinality.min),
+                    format!("Relationship '{}' {}→{} satisfies cardinality min={} with {resolved} resolved endpoints.", rel.id, rel.source_id, rel.target_id, rel.cardinality.min),
+                    format!("Beziehung '{}' {}→{} erfüllt Kardinalität min={} mit {resolved} aufgelösten Endpunkten.", rel.id, rel.source_id, rel.target_id, rel.cardinality.min),
                 ),
                 CheckStatus::Pass,
-                q_dim(computed),
-                q_dim(computed),
+                q_dim(resolved as f64),
+                q_dim(rel.cardinality.min.max(1) as f64),
                 Vec::new(),
             ));
         }
-        let _ = card_ok;
     }
     for prop in &dict.properties {
         let unit_ok = prop.unit.as_ref().map(|u| !u.symbol.trim().is_empty() && u.si_factor > 0.0).unwrap_or(true);
@@ -395,17 +502,71 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 format!("iso16757.4.5.1.property.{}", prop.id),
                 "4",
                 "5.1",
-                subject(&prop.id, format!("dictionary.properties[id={}].unit.dimension.length", prop.id), &prop.id, &prop.id),
+                subject(&prop.id, format!("dictionary.properties[id={}].dataType", prop.id), &prop.id, &prop.id),
                 copy("Dictionary property typing", "Wörterbuch-Eigenschafts-Typisierung"),
                 copy(
                     format!("Property '{}' dataType '{}' siFactor={factor} dimSum={dim_sum}.", prop.id, prop.data_type),
                     format!("Eigenschaft '{}' dataType '{}' siFactor={factor} dimSum={dim_sum}.", prop.id, prop.data_type),
                 ),
                 CheckStatus::Pass,
-                q_dim(factor * 1000.0 + dim_sum as f64),
-                q_dim(factor * 1000.0 + dim_sum as f64),
+                q_dim(controlled_ordinal(&prop.data_type, &["decimal", "quantity", "integer", "text", "boolean", "controlled"]) + factor + dim_sum as f64),
+                q_dim(1.0),
                 Vec::new(),
             ));
+            if let Some(unit) = &prop.unit {
+                report.push(assess(
+                    format!("iso16757.4.5.1.propertySymbol.{}", prop.id),
+                    "4",
+                    "5.1",
+                    subject(&prop.id, format!("dictionary.properties[id={}].unit.symbol", prop.id), &prop.id, &prop.id),
+                    copy("Dictionary property unit symbol", "Wörterbuch-Eigenschafts-Einheitssymbol"),
+                    copy(
+                        format!("Property '{}' unit symbol is '{}'.", prop.id, unit.symbol),
+                        format!("Eigenschaft '{}' Einheitssymbol ist '{}'.", prop.id, unit.symbol),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(controlled_ordinal(&unit.symbol, &["m", "mm", "cm", "kg", "g", "s", "K", "Pa", "bar", "W", "m3", "l", "-"])),
+                    q_dim(1.0),
+                    Vec::new(),
+                ));
+                report.push(assess(
+                    format!("iso16757.4.5.1.propertySiFactor.{}", prop.id),
+                    "4",
+                    "5.1",
+                    subject(&prop.id, format!("dictionary.properties[id={}].unit.siFactor", prop.id), &prop.id, &prop.id),
+                    copy("Dictionary property SI factor", "Wörterbuch-Eigenschafts-SI-Faktor"),
+                    copy(
+                        format!("Property '{}' siFactor = {}.", prop.id, unit.si_factor),
+                        format!("Eigenschaft '{}' siFactor = {}.", prop.id, unit.si_factor),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(unit.si_factor),
+                    q_dim(unit.si_factor),
+                    Vec::new(),
+                ));
+                for (axis, value, path_suffix) in [
+                    ("length", unit.dimension.length as f64, "unit.dimension.length"),
+                    ("mass", unit.dimension.mass as f64, "unit.dimension.mass"),
+                    ("time", unit.dimension.time as f64, "unit.dimension.time"),
+                    ("temperature", unit.dimension.temperature as f64, "unit.dimension.temperature"),
+                ] {
+                    report.push(assess(
+                        format!("iso16757.4.5.1.propertyDim.{}.{axis}", prop.id),
+                        "4",
+                        "5.1",
+                        subject(&prop.id, format!("dictionary.properties[id={}].{path_suffix}", prop.id), &prop.id, &prop.id),
+                        copy("Dictionary property dimension", "Wörterbuch-Eigenschaftsdimension"),
+                        copy(
+                            format!("Property '{}' dimension.{axis} = {value}.", prop.id),
+                            format!("Eigenschaft '{}' Dimension.{axis} = {value}.", prop.id),
+                        ),
+                        CheckStatus::Pass,
+                        q_dim(value),
+                        q_dim(value),
+                        Vec::new(),
+                    ));
+                }
+            }
         }
         for (ci, c) in prop.value_constraints.iter().enumerate() {
             let lo = c.min.unwrap_or(f64::NEG_INFINITY);
@@ -441,6 +602,120 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
             }
         }
     }
+
+    let subject_ids: HashSet<_> = dict
+        .subjects
+        .iter()
+        .map(|s| s.id.clone())
+        .chain(dict.meta_subjects.iter().map(|s| s.id.clone()))
+        .collect();
+    for prop in &dict.properties {
+        for (si, sid) in prop.applicable_subject_ids.iter().enumerate() {
+            let path = format!("dictionary.properties[id={}].applicableSubjectIds[{si}]", prop.id);
+            if subject_ids.contains(sid) {
+                report.push(assess(
+                    format!("iso16757.4.5.applicable.{}.{}", prop.id, sid),
+                    "4",
+                    "5.1",
+                    subject(&prop.id, path, &prop.id, &prop.id),
+                    copy("Dictionary property applicable subject", "Wörterbuch-Eigenschaft anwendbares Subjekt"),
+                    copy(
+                        format!("Property '{}' applies to '{sid}'.", prop.id),
+                        format!("Eigenschaft '{}' gilt für '{sid}'.", prop.id),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim(1.0),
+                    q_dim(1.0),
+                    Vec::new(),
+                ));
+            } else {
+                report.push(fail(
+                    format!("iso16757.4.5.applicable.{}.{}", prop.id, sid),
+                    "4",
+                    "5.1",
+                    subject(&prop.id, path.clone(), &prop.id, &prop.id),
+                    copy("Dictionary property applicable subject", "Wörterbuch-Eigenschaft anwendbares Subjekt"),
+                    copy(
+                        format!("Property '{}' lists unknown subject '{sid}'.", prop.id),
+                        format!("Eigenschaft '{}' listet unbekanntes Subjekt '{sid}'.", prop.id),
+                    ),
+                    vec![Remedy::one_of(
+                        subject(&prop.id, path, &prop.id, &prop.id),
+                        subject_ids.iter().cloned().collect(),
+                        copy("Retarget applicableSubjectIds.", "applicableSubjectIds neu setzen."),
+                    )],
+                ));
+            }
+        }
+    }
+    let mut catalogue_tokens: Vec<String> = Vec::new();
+    for product in &doc.catalogue.products {
+        for variant in &product.variants {
+            for value in variant.parameter_values.values() {
+                match value {
+                    CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => {
+                        catalogue_tokens.push(format!("{}", *value as i64));
+                    }
+                    CatalogueValue::Integer { value } => catalogue_tokens.push(format!("{value}")),
+                    CatalogueValue::Text { value }
+                    | CatalogueValue::Identifier { value }
+                    | CatalogueValue::Enumeration { value } => catalogue_tokens.push(value.clone()),
+                    _ => {}
+                }
+            }
+        }
+        for domain in &product.parameter_domains {
+            for allowed in &domain.allowed_values {
+                match allowed {
+                    CatalogueValue::Decimal { value } | CatalogueValue::Quantity { value, .. } => {
+                        catalogue_tokens.push(format!("{}", *value as i64));
+                    }
+                    CatalogueValue::Integer { value } => catalogue_tokens.push(format!("{value}")),
+                    CatalogueValue::Text { value }
+                    | CatalogueValue::Identifier { value }
+                    | CatalogueValue::Enumeration { value } => catalogue_tokens.push(value.clone()),
+                    _ => {}
+                }
+            }
+        }
+    }
+    for list in &dict.controlled_lists {
+        for (vi, val) in list.values.iter().enumerate() {
+            let list_score = if val.trim().is_empty() {
+                0.0
+            } else {
+                reference_slot_score(val, catalogue_tokens.iter().map(String::as_str))
+            };
+            report.push(assess(
+                format!("iso16757.4.6.listValue.{}.{}", list.id, vi),
+                "4",
+                "6.3.2",
+                subject(&list.id, format!("dictionary.controlledLists[id={}].values[{vi}]", list.id), &list.id, &list.id),
+                copy("Controlled list value", "Kontrollierter Listenwert"),
+                copy(
+                    format!("Controlled list '{}' values[{vi}] = '{val}'.", list.id),
+                    format!("Kontrollierte Liste '{}' values[{vi}] = '{val}'.", list.id),
+                ),
+                if val.trim().is_empty() { CheckStatus::Fail } else { CheckStatus::Pass },
+                q_dim(list_score),
+                q_dim(1.0),
+                if val.trim().is_empty() {
+                    vec![Remedy {
+                        target: subject(&list.id, format!("dictionary.controlledLists[id={}].values[{vi}]", list.id), &list.id, &list.id),
+                        current: q_dim(0.0),
+                        required: q_dim(1.0),
+                        bound: RemedyBound::Exactly,
+                        options: catalogue_tokens.clone(),
+                        action: copy("Set a non-empty controlled value.", "Nicht-leeren kontrollierten Wert setzen."),
+                        applicable: true,
+                    }]
+                } else {
+                    Vec::new()
+                },
+            ));
+        }
+    }
+
     for list in &dict.controlled_lists {
         if list.values.is_empty() {
             report.push(fail(
@@ -472,8 +747,8 @@ fn check_dictionary_typing(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                     format!("Kontrollierte Liste '{}' hat {} Werte.", list.id, list.values.len()),
                 ),
                 CheckStatus::Pass,
-                q_dim(list.values.len() as f64),
-                q_dim(list.values.len() as f64),
+                q_dim(1.0),
+                q_dim(1.0),
                 Vec::new(),
             ));
         }

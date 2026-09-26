@@ -1,0 +1,57 @@
+{
+  "records": [
+    { "name": "complete check result", "definition": "checkResult", "valid": true, "value": { "schema": "semio.acceptance.check-result/v1", "check": "program-matrix-en", "status": "pass", "startedAt": "2026-09-26T20:00:00.000Z", "finishedAt": "2026-09-26T20:10:00.000Z", "durationMs": 600000, "measured": { "rows": 145, "passed": 145, "locale": "en", "fatal": false }, "summary": { "en": "145/145 programs pass", "de": "145/145 Programme bestanden" }, "evidence": ["matrix.json"] } },
+    { "name": "missing German summary", "definition": "checkResult", "valid": false, "value": { "schema": "semio.acceptance.check-result/v1", "check": "x", "status": "pass", "startedAt": "2026-09-26T20:00:00Z", "finishedAt": "2026-09-26T20:00:01Z", "durationMs": 1000, "measured": {}, "summary": { "en": "ok" }, "evidence": [] } },
+    { "name": "unknown status", "definition": "checkResult", "valid": false, "value": { "schema": "semio.acceptance.check-result/v1", "check": "x", "status": "green", "startedAt": "2026-09-26T20:00:00Z", "finishedAt": "2026-09-26T20:00:01Z", "durationMs": 1000, "measured": {}, "summary": { "en": "ok", "de": "gut" }, "evidence": [] } },
+    { "name": "extra property", "definition": "checkResult", "valid": false, "value": { "schema": "semio.acceptance.check-result/v1", "check": "x", "status": "fail", "startedAt": "2026-09-26T20:00:00Z", "finishedAt": "2026-09-26T20:00:01Z", "durationMs": 1000, "measured": {}, "summary": { "en": "no", "de": "nein" }, "evidence": [], "note": "free text" } },
+    { "name": "local timestamp", "definition": "checkResult", "valid": false, "value": { "schema": "semio.acceptance.check-result/v1", "check": "x", "status": "fail", "startedAt": "2026-09-26 20:00", "finishedAt": "2026-09-26T20:00:01Z", "durationMs": 1000, "measured": {}, "summary": { "en": "no", "de": "nein" }, "evidence": [] } },
+    { "name": "nested measured value", "definition": "checkResult", "valid": false, "value": { "schema": "semio.acceptance.check-result/v1", "check": "x", "status": "fail", "startedAt": "2026-09-26T20:00:00Z", "finishedAt": "2026-09-26T20:00:01Z", "durationMs": 1000, "measured": { "rows": { "en": 1 } }, "summary": { "en": "no", "de": "nein" }, "evidence": [] } },
+    { "name": "negative duration", "definition": "checkResult", "valid": false, "value": { "schema": "semio.acceptance.check-result/v1", "check": "x", "status": "fail", "startedAt": "2026-09-26T20:00:00Z", "finishedAt": "2026-09-26T20:00:01Z", "durationMs": -1, "measured": {}, "summary": { "en": "no", "de": "nein" }, "evidence": [] } },
+    { "name": "plan step without checks", "definition": "goalPlan", "valid": false, "value": { "schema": "semio.acceptance.goal-plan/v1", "id": "p", "title": { "en": "P", "de": "P" }, "steps": [{ "id": "s", "title": { "en": "S", "de": "S" }, "mode": "serial", "gatesRest": false, "checks": [] }] } },
+    { "name": "plan check with unknown requirement", "definition": "goalPlan", "valid": false, "value": { "schema": "semio.acceptance.goal-plan/v1", "id": "p", "title": { "en": "P", "de": "P" }, "steps": [{ "id": "s", "title": { "en": "S", "de": "S" }, "mode": "serial", "gatesRest": false, "checks": [{ "id": "c", "title": { "en": "C", "de": "C" }, "criteria": ["1.1"], "project": "workspace", "target": "verify", "args": [], "requires": ["database"], "browsers": 0 }] }] } }
+  ],
+  "runs": [
+    {
+      "name": "a failed gating step blocks every later step",
+      "options": { "hub": "http://127.0.0.1:8180", "serve": null },
+      "steps": [
+        { "id": "gate", "mode": "serial", "gatesRest": true, "checks": [{ "id": "fresh", "requires": ["hub"], "browsers": 0 }] },
+        { "id": "later", "mode": "parallel", "gatesRest": false, "checks": [{ "id": "a", "requires": [], "browsers": 0 }, { "id": "b", "requires": [], "browsers": 0 }] }
+      ],
+      "exits": { "fresh": 1, "a": 0, "b": 0 },
+      "records": {},
+      "expected": { "verdict": "fail", "statuses": { "fresh": "fail", "a": "blocked", "b": "blocked" }, "executed": ["fresh"] }
+    },
+    {
+      "name": "a missing serve blocks only the checks that need it",
+      "options": { "hub": "http://127.0.0.1:8180", "serve": null },
+      "steps": [
+        { "id": "one", "mode": "parallel", "gatesRest": false, "checks": [{ "id": "hub-only", "requires": ["hub"], "browsers": 0 }, { "id": "needs-serve", "requires": ["serve"], "browsers": 1 }] }
+      ],
+      "exits": { "hub-only": 0, "needs-serve": 0 },
+      "records": {},
+      "expected": { "verdict": "blocked", "statuses": { "hub-only": "pass", "needs-serve": "blocked" }, "executed": ["hub-only"] }
+    },
+    {
+      "name": "a harness record wins over the exit code except a pass with a nonzero exit",
+      "options": { "hub": null, "serve": null },
+      "steps": [
+        { "id": "one", "mode": "serial", "gatesRest": false, "checks": [{ "id": "recorded-fail", "requires": [], "browsers": 0 }, { "id": "lying-pass", "requires": [], "browsers": 0 }, { "id": "plain-pass", "requires": [], "browsers": 0 }] }
+      ],
+      "exits": { "recorded-fail": 0, "lying-pass": 3, "plain-pass": 0 },
+      "records": { "recorded-fail": "fail", "lying-pass": "pass" },
+      "expected": { "verdict": "fail", "statuses": { "recorded-fail": "fail", "lying-pass": "fail", "plain-pass": "pass" }, "executed": ["recorded-fail", "lying-pass", "plain-pass"] }
+    },
+    {
+      "name": "every check passing passes the goal",
+      "options": { "hub": "http://127.0.0.1:8180", "serve": "http://127.0.0.1:6680/" },
+      "steps": [
+        { "id": "gate", "mode": "serial", "gatesRest": true, "checks": [{ "id": "fresh", "requires": ["hub"], "browsers": 0 }] },
+        { "id": "browsers", "mode": "parallel", "gatesRest": false, "checks": [{ "id": "b1", "requires": ["serve"], "browsers": 1 }, { "id": "b2", "requires": ["serve"], "browsers": 1 }, { "id": "b3", "requires": ["serve"], "browsers": 2 }] }
+      ],
+      "exits": { "fresh": 0, "b1": 0, "b2": 0, "b3": 0 },
+      "records": { "b1": "pass" },
+      "expected": { "verdict": "pass", "statuses": { "fresh": "pass", "b1": "pass", "b2": "pass", "b3": "pass" }, "executed": ["fresh", "b1", "b2", "b3"] }
+    }
+  ]
+}

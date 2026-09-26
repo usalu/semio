@@ -1,8 +1,10 @@
 #!/bin/zsh
 # WG8 session 12: the cross-shell journey — native wgpu user A (Rust law) + React `s` user B (browser driver) on one hub document.
-# Usage: [CROSS_MODE=edits|cursors] zsh run-cross-shell.sh <tag> [hubOrigin] [reactUrl]   (launch detached: setopt no_bg_nice; nohup zsh run-cross-shell.sh … & disown)
+# Usage: [CROSS_MODE=edits|cursors] zsh run-cross-shell.sh <tag> <hubOrigin> <reactUrl>   (no defaults: every hub origin is passed explicitly, rule 23)
+#   (launch detached: setopt no_bg_nice; nohup zsh run-cross-shell.sh … & disown)
 # edits = block2d co-editing law, cursors = puzzle2d board-cursor law.
-TAG="$1"; HUB="${2:-http://127.0.0.1:7800}"; REACT="${3:-http://127.0.0.1:6590/}"
+TAG="$1"; HUB="$2"; REACT="$3"
+[ -n "$TAG" ] && [ -n "$HUB" ] && [ -n "$REACT" ] || { echo "usage: run-cross-shell.sh <tag> <hubOrigin> <reactUrl>"; exit 2; }
 export CROSS_MODE="${CROSS_MODE:-edits}"
 LAW=a_native_and_a_react_user_collaborate_on_one_hub_document
 [ "$CROSS_MODE" = cursors ] && LAW=a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board

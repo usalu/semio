@@ -1,0 +1,36 @@
+{
+  "$comment": "\u23f1\ufe0f The native directory transport's per-request budget (`ureq_request_budget_ms`): the caller's deadline governs, a request without one gets the unbounded backstop. Ticket 26/09/23 WG8.",
+  "unboundedRequestMs": 120000,
+  "cases": [
+    {
+      "id": "no-deadline-takes-the-backstop",
+      "deadlineMs": null,
+      "nowMs": 5000,
+      "budgetMs": 120000
+    },
+    {
+      "id": "sign-in-deadline-outlives-the-old-15s-cap",
+      "deadlineMs": 35000,
+      "nowMs": 5000,
+      "budgetMs": 30000
+    },
+    {
+      "id": "command-deadline",
+      "deadlineMs": 10000,
+      "nowMs": 5000,
+      "budgetMs": 5000
+    },
+    {
+      "id": "a-passed-deadline-still-asks-for-one-millisecond",
+      "deadlineMs": 4000,
+      "nowMs": 5000,
+      "budgetMs": 1
+    },
+    {
+      "id": "the-deadline-instant",
+      "deadlineMs": 5000,
+      "nowMs": 5000,
+      "budgetMs": 1
+    }
+  ]
+}

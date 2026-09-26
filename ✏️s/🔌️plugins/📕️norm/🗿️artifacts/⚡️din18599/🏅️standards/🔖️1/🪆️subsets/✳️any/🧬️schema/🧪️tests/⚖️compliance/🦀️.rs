@@ -260,7 +260,7 @@ fn example_assets_decode_and_match_claimed_verdict() {
         ("compliant-detached", examples::compliant_detached::PRIMARY_TEXT, true),
         ("noncompliant-detached", examples::noncompliant_detached::PRIMARY_TEXT, false),
         ("compliant-two-zone", examples::compliant_two_zone::PRIMARY_TEXT, true),
-        ("cooled-office", examples::cooled_office::PRIMARY_TEXT, true),
+        ("cooled-office", examples::cooled_office::PRIMARY_TEXT, false),
     ] {
         let doc = <crate::Din18599Snapshot as store::ArtifactDsl>::parse_dsl(text).unwrap_or_else(|e| panic!("{id} parse: {e}"));
         let report = evaluate_document(&doc);
@@ -647,6 +647,72 @@ fn walk_leaves(path: &str, value: &serde_json::Value, visit: &mut dyn FnMut(&str
         }
         _ => visit(path),
     }
+}
+
+
+#[test]
+fn duplicate_zone_id_fails_integrity() {
+    let mut doc = crate::subjects::compliant_two_zone_house();
+    assert!(doc.zones.len() >= 2);
+    let first = doc.zones[0].id.clone();
+    doc.zones[1].id = first;
+    let report = evaluate_document(&doc);
+    let fail = report
+        .checks
+        .iter()
+        .find(|c| c.id.starts_with("din18599.integrity.duplicate.zones.") && c.status == CheckStatus::Fail)
+        .expect("duplicate zone id Fail");
+    assert!(!fail.remedies.is_empty());
+    assert!(fail.remedies.iter().any(|r| r.applicable && !r.options.is_empty()));
+    assert_ne!(fail.explanation.en, fail.explanation.de);
+}
+
+#[test]
+fn duplicate_element_id_fails_integrity() {
+    let mut doc = crate::subjects::compliant_detached_house();
+    assert!(doc.elements.len() >= 1);
+    let dup = doc.elements[0].clone();
+    doc.elements.push(dup);
+    let report = evaluate_document(&doc);
+    let fail = report
+        .checks
+        .iter()
+        .find(|c| c.id.starts_with("din18599.integrity.duplicate.elements.") && c.status == CheckStatus::Fail)
+        .expect("duplicate element id Fail");
+    assert!(!fail.remedies.is_empty());
+    assert!(fail.remedies.iter().any(|r| r.applicable && !r.options.is_empty()));
+    assert_ne!(fail.explanation.en, fail.explanation.de);
+}
+
+#[test]
+fn no_identical_en_de_explanations_in_committed_examples() {
+    let examples = [
+        crate::subjects::compliant_detached_house(),
+        crate::subjects::noncompliant_detached_house(),
+        crate::subjects::compliant_two_zone_house(),
+        crate::subjects::cooled_office_building(),
+    ];
+    let mut identical = Vec::new();
+    for snap in examples {
+        let report = evaluate_document(&snap);
+        for c in &report.checks {
+            if c.explanation.en == c.explanation.de && !c.explanation.en.is_empty() {
+                let stripped: String = c.explanation.en.chars().filter(|ch| ch.is_alphabetic()).collect();
+                if !stripped.is_empty() {
+                    identical.push((c.id.clone(), c.explanation.en.clone()));
+                }
+            }
+            for rem in &c.remedies {
+                if rem.action.en == rem.action.de {
+                    let stripped: String = rem.action.en.chars().filter(|ch| ch.is_alphabetic()).collect();
+                    if !stripped.is_empty() {
+                        identical.push((format!("{}#remedy", c.id), rem.action.en.clone()));
+                    }
+                }
+            }
+        }
+    }
+    assert!(identical.is_empty(), "identical en/de text: {identical:?}");
 }
 
 fn resolve_json_path<'a>(root: &'a serde_json::Value, path: &str) -> Option<&'a serde_json::Value> {

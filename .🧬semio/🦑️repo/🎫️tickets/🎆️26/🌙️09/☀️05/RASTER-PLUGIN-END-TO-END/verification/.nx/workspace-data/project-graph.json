@@ -1,0 +1,50 @@
+{
+  "nodes": {
+    "pixels-verification": {
+      "name": "pixels-verification",
+      "type": "app",
+      "data": {
+        "root": ".",
+        "name": "pixels-verification",
+        "tags": [
+          "npm:private"
+        ],
+        "metadata": {
+          "targetGroups": {},
+          "js": {
+            "packageName": "raster-editing-verification",
+            "isInPackageManagerWorkspaces": false
+          }
+        },
+        "targets": {
+          "test-typescript": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test typescript",
+              "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "test-rust": {
+            "executor": "nx:run-commands",
+            "options": {
+              "command": "bun ./📜️script.ts test rust",
+              "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels"
+            },
+            "configurations": {},
+            "parallelism": true
+          }
+        },
+        "implicitDependencies": []
+      }
+    }
+  },
+  "externalNodes": {},
+  "dependencies": {
+    "pixels-verification": []
+  },
+  "version": "6.0",
+  "errors": [],
+  "computedAt": 1790444747116
+}

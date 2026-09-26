@@ -1,6 +1,6 @@
 //! 🧪️ `resize-geometry` fixture — `📐️doubles-the-geom-valve-50-bounding-box`.
 //!
-//! Every axis of `geom.valve.50`'s bounding box doubles (0.25/0.5/0.125 → 0.5/1.0/0.25). The builder first gates on finiteness and on `max >= min` per axis (`mutation.invariant`, fatal); this payload passes both, so only `bbox` inside the republished geometry map changes.
+//! Every axis of `geom-valve-50`'s bounding box doubles (0.25/0.5/0.125 → 0.5/1.0/0.25). The builder first gates on finiteness and on `max >= min` per axis (`mutation.invariant`, fatal); this payload passes both, so only `bbox` inside the republished geometry map changes.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -17,10 +17,10 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
-}
+    }
 fn expected_after() -> Vdi3805Snapshot {
     serde_json::from_str(AFTER).expect("after snapshot decodes")
-}
+    }
 fn mutation() -> Vdi3805Mutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
@@ -28,16 +28,16 @@ fn applied() -> Vdi3805Snapshot {
     let base = before();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &base);
     <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), &base).expect("resize-geometry applies to its committed before-snapshot")
-}
+    }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let snapshot = applied();
-    assert_eq!(snapshot.geometry["geom.valve.50"].bbox.max_x, 0.5, "resize-geometry/doubles-the-geom-valve-50-bounding-box: max_x must be 0.5");
-    assert_eq!(snapshot.geometry["geom.valve.50"].bbox.max_y, 1.0, "resize-geometry/doubles-the-geom-valve-50-bounding-box: max_y must be 1.0");
-    assert_eq!(snapshot.geometry["geom.valve.50"].bbox.max_z, 0.25, "resize-geometry/doubles-the-geom-valve-50-bounding-box: max_z must be 0.25");
-    assert_eq!(snapshot.geometry["geom.valve.50"].connections.len(), 2, "resize-geometry/doubles-the-geom-valve-50-bounding-box: resizing must leave both connection points in place");
+    assert_eq!(snapshot.geometry["geom-valve-50"].bbox.max_x, 0.5, "resize-geometry/doubles-the-geom-valve-50-bounding-box: max_x must be 0.5");
+    assert_eq!(snapshot.geometry["geom-valve-50"].bbox.max_y, 1.0, "resize-geometry/doubles-the-geom-valve-50-bounding-box: max_y must be 1.0");
+    assert_eq!(snapshot.geometry["geom-valve-50"].bbox.max_z, 0.25, "resize-geometry/doubles-the-geom-valve-50-bounding-box: max_z must be 0.25");
+    assert_eq!(snapshot.geometry["geom-valve-50"].connections.len(), 2, "resize-geometry/doubles-the-geom-valve-50-bounding-box: resizing must leave both connection points in place");
     assert_eq!(snapshot, expected_after(), "resize-geometry/doubles-the-geom-valve-50-bounding-box: applied state differs from committed after-snapshot");
 }
 
@@ -104,7 +104,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
-    assert_eq!(raised_diff.geometry.as_ref().map(|map| map["geom.valve.50"].bbox.max_y), Some(1.0), "resize-geometry/doubles-the-geom-valve-50-bounding-box: the diff must publish the geometry map carrying the new max_y");
+    assert_eq!(raised_diff.geometry.as_ref().map(|map| map["geom-valve-50"].bbox.max_y), Some(1.0), "resize-geometry/doubles-the-geom-valve-50-bounding-box: the diff must publish the geometry map carrying the new max_y");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "resize-geometry/doubles-the-geom-valve-50-bounding-box: produced diff differs from the committed 🔺️diff/🔣️.json");

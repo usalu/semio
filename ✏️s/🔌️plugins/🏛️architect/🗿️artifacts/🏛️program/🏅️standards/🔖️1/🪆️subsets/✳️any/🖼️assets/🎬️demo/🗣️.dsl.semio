@@ -142,6 +142,7 @@ surveys [header:REC survey-type:TEXT title:TEXT objectives:LIST questions:LIST t
 issues [header:REC issue-type:TEXT summary:REC issue-description:REC severity:ENUM issue-priority:ENUM reporter-id:TEXT assignee-id:TEXT affected-entity-ids:LIST root-cause:REC resolution:REC workaround:REC due-date:TEXT resolved-date:TEXT related-conflict-ids:LIST related-risk-ids:LIST decision-id:TEXT comments:LIST attachments:LIST escalation-level:TEXT] {
 }
 audit-events [header:REC action:ENUM actor-id:TEXT subject-id:TEXT subject-kind:TEXT timestamp:TEXT details:REC before-state:TEXT after-state:TEXT ip-address:TEXT client:TEXT session-id:TEXT change-record-id:TEXT trace-link:REC success:BOOL error-message:TEXT correlation-id:TEXT compliance-tags:LIST retention-until:TEXT] {
+  {id=audit-10 name="Clinic brief created" status=draft priority=preferred ownership=consultant-ids=[ ] participant-ids=[ ] tags=[ ] notes=[ ] timestamps=created="1970-01-01T00:00:00Z" updated="1970-01-01T00:00:00Z"} created _ element-4 element "2026-08-14T09:30:00Z" {text="Reception and waiting area brief authored"} _ _ _ _ _ _ _ true _ _ [ ] _
 }
 templates [header:REC template-type:TEXT sector:TEXT project-type:TEXT version:TEXT content-ref:TEXT entity-kinds:LIST default-fields:LIST checklists:LIST standards:LIST applicability:LIST author-id:TEXT approval-status:ENUM usage-count:UINT last-applied:TEXT customization-notes:LIST related-knowledge-ids:LIST benchmark-ids:LIST license:TEXT source-organization:TEXT] {
 }

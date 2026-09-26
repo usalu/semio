@@ -387,6 +387,8 @@ mod ui_node_wire_format_tests {
                 active_utility: "brush".into(),
                 brush_size: 4.0,
                 brush_opacity: 1.0,
+                brush_color: "#2878dc".into(),
+                brush_hardness: 1.0,
                 view_mode: "composite".into(),
                 composite_viewport_json: None,
                 lanes: Vec::new(),

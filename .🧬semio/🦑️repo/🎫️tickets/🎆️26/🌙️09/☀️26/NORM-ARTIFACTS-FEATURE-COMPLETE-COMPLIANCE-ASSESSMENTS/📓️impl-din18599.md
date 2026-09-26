@@ -229,3 +229,74 @@ Summary [   0.914s] 102 tests run: 102 passed, 0 skipped
 ```
 
 `bun nx run @semio-tech/norm-plugin:mutation-leaf-taxonomy-generate` → 547 payloads.
+
+
+## Round 4 — multi-fixture perturbation + climate composition (Wave D)
+
+**Summary:** `Summary [   3.745s] 109 tests run: 109 passed, 0 skipped`
+
+### Blocking item
+
+| Item | Mapping | Tests |
+|---|---|---|
+| Extend `every_editable_leaf_influences_a_check` across cooled / two-zone / detached | compliance tests — loops three subjects; per-fixture assert messages | `every_editable_leaf_influences_a_check` |
+
+### Coordinator A–E
+
+| Dec | Mapping |
+|---|---|
+| A Climate composition + payload; no climate/handle exemptions | Check `din18599.1.climate-composition` (evaluate); `assert_climate_payload_influences_checks` for θ_e/G_h; field-meta handle paths. Monthly climate edited via `update-climate` / local_owner. |
+| B Signature `(id, status, computed, limit, utilization)` | `check_sig` |
+| C Promote two-zone + cooled examples | DSL assets + `setActiveExample` `compliant-two-zone` / `cooled-office` + catalogue + verdict tests (cooled = intentional Fail ≥2) |
+| D Remove dead helpers | Removed `fan_operating_hours_a` / `lighting_power_density_limit_w_m2` |
+| E Dynamic zoneId choices | **B2 request:** no dynamic-choice hook (`NormFieldMeta` static only). `zoneId` choices None; dangling Fail + `one_of`. |
+
+### Honest gaps
+
+Round-3 “Remaining gaps: None” overstated. R4 closed multi-fixture perturbation, climate handle assessment, full signature, promoted examples. Still open: B2 dynamic zoneId select options.
+
+### Also
+
+- `din18599.2.cooling-need` keeps `thetaICoolC` normative without a plant.
+- `q_p` unclamped (PV surplus); Python oracle aligned.
+
+### Runner
+
+```
+bun nx run @semio-tech/norm-din18599-rs:test --skip-nx-cache -- --no-fail-fast
+Summary [   3.745s] 109 tests run: 109 passed, 0 skipped
+```
+
+`bun nx run @semio-tech/norm-plugin:mutation-leaf-taxonomy-generate` → norm mutation-leaf taxonomy generated: 547 payloads
+
+## Round 5 — catalogue reference tables + duplicate-id integrity (Wave C)
+
+**Summary:** `Summary [   2.435s] 113 tests run: 113 passed, 0 skipped`
+
+### Blocking items
+
+| Item | Mapping | Tests |
+|---|---|---|
+| 1 `reference_tables()` non-empty CatalogueTables from shared NormTables / Potsdam climate | `✏️editor/📌️panels/📚️catalogue/🦀️.rs` — GEG f_P, H′T, U_ref/Ū, part-4 LPD, part-10 hours/DHW, part-12 q_p,tab, Potsdam monthly; `render` takes `windows` | `reference_tables_cells_match_evaluate_sources` (detached H′T 0.40 = `din18599.geg.ht-prime` limit) |
+| 2 duplicate `zones[].id` / `elements[].id` → Fail + en/de + `one_of` free id | `🧬️schema/🦀️.rs` `push_duplicate_ids` before clause checks | `duplicate_zone_id_fails_integrity`, `duplicate_element_id_fails_integrity` |
+
+### Coordinator notes
+
+| Note | Mapping |
+|---|---|
+| A Localize `din18599.1.net-floor-area` en≠de | explanation uses Nettogrundfläche / Summe der Zonenflächen; `no_identical_en_de_explanations_in_committed_examples` |
+| B `MonthlyClimate::german_reference` ignored `ClimateZoneDe` | parameter removed — family assesses Potsdam reference only (`german_reference()` → `potsdam_reference()`) |
+
+### Honest gaps
+
+Round-4 “no gaps” overstated until catalogue tables and duplicate-id integrity landed. Round 5 closes those. Remaining non-blocking: B2 static `zoneId` choices (no dynamic-choice hook).
+
+### Runner
+
+```
+bun nx run @semio-tech/norm-din18599-rs:test --skip-nx-cache -- --no-fail-fast
+Summary [   2.435s] 113 tests run: 113 passed, 0 skipped
+```
+
+`bun nx run @semio-tech/norm-plugin:mutation-leaf-taxonomy-generate` → 547 payloads.
+

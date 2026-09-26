@@ -255,19 +255,20 @@ fn compile_component_worker() -> Result<(), String> {
     semio_framework_plugin_host::compile_component_isolated(&engine, &bytes, &out).map_err(|error| error.to_string())
 }
 
+/// 🪞️ `semio-os-mcp schemas` prints the `os.mcp` scope's whole draft-07 schema document on stdout —
+/// the generator behind `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`. It reads no
+/// environment, no filesystem and no credential, so it deliberately runs BEFORE the process-entry
+/// seal every serving mode is gated on.
+///
+/// 🧊️ `semio-os-mcp compile-component --engine <cfg> --out <cache.cwasm>` compiles the component
+/// on stdin into the compiled-code cache and exits — the isolated worker a cancellable cold
+/// compile runs in (`🏠️workspace`'s `CompileFlight`), killed when its last requester cancels. It
+/// reads no credential and serves nothing, so it runs before the process-entry seal too.
 fn main() {
-    // 🪞️ `semio-os-mcp schemas` prints the `os.mcp` scope's whole draft-07 schema document on stdout —
-    // the generator behind `bun nx run @semio-tech/framework-os-mcp-rs:schema-mirror`. It reads no
-    // environment, no filesystem and no credential, so it deliberately runs BEFORE the process-entry
-    // seal every serving mode is gated on.
     if std::env::args().nth(1).as_deref() == Some("schemas") {
         print!("{}", semio_framework_os_mcp::schema_mirror_json());
         return;
     }
-    // 🧊️ `semio-os-mcp compile-component --engine <cfg> --out <cache.cwasm>` compiles the component
-    // on stdin into the compiled-code cache and exits — the isolated worker a cancellable cold
-    // compile runs in (`🏠️workspace`'s `CompileFlight`), killed when its last requester cancels. It
-    // reads no credential and serves nothing, so it runs before the process-entry seal too.
     if std::env::args().nth(1).as_deref() == Some("compile-component") {
         std::process::exit(match compile_component_worker() {
             Ok(()) => 0,

@@ -83,15 +83,15 @@ pub struct PluginRegistryEntry {
     /// `_languageNeutralityComment`, restated in `📓️status.md`'s E1-describe entry: "descriptors
     /// live at the plugin/extension owner root ... siblings of `📦️packages`").
     pub owner_root: PathBuf,
+    /// 📦️ The component crate path relative to the repo root (`cratePath`): its `dist/component-{dev,release}` holds the
+    /// exact bytes `describe` read, so the committed descriptor describes the component this gateway runs.
+    pub crate_path: PathBuf,
     pub wasm_out: String,
 }
 
-// 🎯️ Cargo's configured deliverable root (`.cargo/config.toml`'s `build.target-dir`), joined with
-// `wasm32-wasip2` — mirrors `🔌️plugin/📇️registry/📜️script.ts`'s `emitRustArtifacts`, which bakes the
-// same resolved value (via the shared `cargoTargetDirectory` resolver) into the generated
-// `PLUGIN_WASM_TARGET_DIR` this constant duplicates; hand-kept in sync until the filed lease lands.
-const PLUGIN_WASM_TARGET_DIR: &str = ".🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2";
-const PLUGIN_WASM_PROFILE_DIRS: [&str; 2] = ["wasm-dev", "wasm-release"];
+/// 🎯️ A component's deliverables relative to its crate root, in the order a profile wins: `component-dev` is the build
+/// `describe` reads (one build per component per rebuild), `component-release` the shipped one.
+const PLUGIN_COMPONENT_PROFILE_DIRS: [&str; 2] = ["dist/component-dev", "dist/component-release"];
 
 /// 🧭️ Locates the repo root — identical algorithm to `🏃️run/🏗️bootstrap/🦀️.rs::find_repo_root` (walk up from
 /// this crate's own `CARGO_MANIFEST_DIR` for `nx.json`, `SEMIO_REPO_ROOT` override first) so a direct
@@ -116,6 +116,9 @@ pub fn find_repo_root() -> Result<PathBuf, GatewayError> {
 
 /// 📇️ Reads `🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json` — real generated registry data (not
 /// this packet's own invention), parsed narrowly for the two fields this crate needs.
+///
+/// 🎯️ `cratePath` = `<owner root>/📦️packages/🦀️rust` — two components back to the owner root,
+/// the sibling directory `🔣️.json` actually lives in (see this fn's own doc).
 pub fn load_plugin_registry(repo_root: &Path) -> Result<Vec<PluginRegistryEntry>, GatewayError> {
     let registry_path = repo_root.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
     let text = std::fs::read_to_string(&registry_path)
@@ -126,11 +129,9 @@ pub fn load_plugin_registry(repo_root: &Path) -> Result<Vec<PluginRegistryEntry>
         let plugin_id = row.get("pluginId").and_then(serde_json::Value::as_str).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, "plugin registry row missing pluginId"))?.to_string();
         let crate_path = row.get("cratePath").and_then(serde_json::Value::as_str).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("plugin registry row `{plugin_id}` missing cratePath")))?;
         let wasm_out = row.get("wasmOut").and_then(serde_json::Value::as_str).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("plugin registry row `{plugin_id}` missing wasmOut")))?.to_string();
-        // 🎯️ `cratePath` = `<owner root>/📦️packages/🦀️rust` — two components back to the owner root,
-        // the sibling directory `🔣️.json` actually lives in (see this fn's own doc).
         let owner_root =
             repo_root.join(crate_path).parent().and_then(Path::parent).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("plugin registry row `{plugin_id}` has an implausibly shallow cratePath `{crate_path}`")))?.to_path_buf();
-        entries.push(PluginRegistryEntry { plugin_id, owner_root, wasm_out });
+        entries.push(PluginRegistryEntry { plugin_id, owner_root, crate_path: PathBuf::from(crate_path), wasm_out });
     }
     Ok(entries)
 }
@@ -139,18 +140,18 @@ pub fn find_plugin_entry<'a>(entries: &'a [PluginRegistryEntry], plugin_id: &str
     entries.iter().find(|entry| entry.plugin_id == plugin_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` is not in the plugin registry")))
 }
 
-/// 🗺️ Resolves one plugin's compiled `.wasm` under `PLUGIN_WASM_TARGET_DIR/{wasm-dev,wasm-release}` —
-/// same profile-dir fallback order as `🏃️run/🏗️bootstrap/🦀️.rs::resolve_plugin_paths`.
+/// 🗺️ Resolves one plugin's component under its crate's `dist/component-{dev,release}` — the same order as
+/// `🏃️run/🏗️bootstrap/🦀️.rs::resolve_plugin_paths` and the TypeScript preflight in `🌉️mcp/🟦️.ts`.
 pub fn resolve_plugin_wasm_path(repo_root: &Path, entry: &PluginRegistryEntry) -> Result<PathBuf, GatewayError> {
     let mut tried = Vec::new();
-    for profile_dir in PLUGIN_WASM_PROFILE_DIRS {
-        let path = repo_root.join(PLUGIN_WASM_TARGET_DIR).join(profile_dir).join(&entry.wasm_out);
+    for profile_dir in PLUGIN_COMPONENT_PROFILE_DIRS {
+        let path = repo_root.join(&entry.crate_path).join(profile_dir).join(&entry.wasm_out);
         tried.push(path.display().to_string());
         if path.is_file() {
             return Ok(path);
         }
     }
-    Err(GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{}`'s compiled wasm is missing (tried: {}); build it with `bun nx run @semio-tech/framework-os-dev:build -- {}`", entry.plugin_id, tried.join(", "), entry.plugin_id)))
+    Err(GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{}`'s compiled wasm is missing (tried: {}); build its component-dev deliverable with `bun nx run-many -t describe --projects <its crate project>`", entry.plugin_id, tried.join(", "))))
 }
 //#endregion 🔖️PluginPaths
 
@@ -549,6 +550,15 @@ pub struct PluginActivationOutcome {
     pub fuel_used: u64,
 }
 
+/// 🎟️ Every capability the descriptor requests is granted with a zero token/no expiry — the REAL
+/// broker (`P6-actions-policy`'s `AgentBroker`) belongs one layer up, gating which scopes an agent
+/// principal is even allowed to request before an instance is ever opened; this is the narrowest
+/// grant shape that lets `Event::InstanceOpen` proceed for a first activation proof, not a policy
+/// decision this packet is authorized to make for real (§2 of the brief: `🛡️policy` is P6's).
+///
+/// 🎟️ `GuestRuntime::instantiate` takes the grants: under the compiled runtime the store's
+/// capability table is built with the instance, not handed to it by the first event. The same
+/// vector still travels in `Event::InstanceOpen` below, which is where the guest reads it.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn activate_plugin_instance(
     runtime: &GuestRuntimes,
@@ -563,17 +573,9 @@ pub fn activate_plugin_instance(
     let compiled = scoped_compiled_component(runtime, &entry.plugin_id, ComponentBytes::File(&wasm_path), &ActivationScope::detached())?;
 
     let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new(plugin_ordinal, 0, 1, 0));
-    // 🎟️ Every capability the descriptor requests is granted with a zero token/no expiry — the REAL
-    // broker (`P6-actions-policy`'s `AgentBroker`) belongs one layer up, gating which scopes an agent
-    // principal is even allowed to request before an instance is ever opened; this is the narrowest
-    // grant shape that lets `Event::InstanceOpen` proceed for a first activation proof, not a policy
-    // decision this packet is authorized to make for real (§2 of the brief: `🛡️policy` is P6's).
     let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
         descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
     let budget = headless_open_budget();
-    // 🎟️ `GuestRuntime::instantiate` takes the grants: under the compiled runtime the store's
-    // capability table is built with the instance, not handed to it by the first event. The same
-    // vector still travels in `Event::InstanceOpen` below, which is where the guest reads it.
     let mut instance = semio_framework_async::block_on(runtime.instantiate(&compiled, actor, &caps, &budget)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("instantiating `{}`: {error}", entry.plugin_id)))?;
 
     let open_event = semio_framework::kernel::Event::InstanceOpen {
@@ -748,11 +750,11 @@ impl PendingResponsePage {
         }
     }
 
+    /// 🧹️ A frame larger than one retirement grant is released a grant at a time, so a
+    /// faulted command's cleanup stays bounded however big the answer the guest had queued.
     fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
         let released = match self {
             Self::Frame { bytes, .. } if bytes.len() <= maximum_bytes => bytes.len(),
-            // 🧹️ A frame larger than one retirement grant is released a grant at a time, so a
-            // faulted command's cleanup stays bounded however big the answer the guest had queued.
             Self::Frame { bytes, .. } => {
                 let remaining = bytes.len() - maximum_bytes;
                 bytes.truncate(remaining);
@@ -1355,6 +1357,10 @@ impl PluginArtifactChannel {
     /// 🧭️ Ordering: the guest refuses a bind-then-load
     /// (`plugin.document-backbone.load-while-bound`), so this runs AFTER
     /// [`Self::load_session_document`], never before.
+    ///
+    /// 🧵️ A bind turn can already carry egress — the guest flushes whatever its store had
+    /// pending onto the freshly bound backbone — so it is captured here exactly as a command
+    /// turn's is, rather than left in the turn and lost.
     fn ensure_document_backbone(&mut self, instance: u32) -> Result<(), Fault> {
         if self.backbone_bindings.contains(&instance) {
             return Ok(());
@@ -1383,9 +1389,6 @@ impl PluginArtifactChannel {
             return Err(Self::not_wired("document-backbone bind", format!("the guest answered {} shell receipt(s) for one bind", receipts.len())));
         }
         semio_framework_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(receipts[0], &command).map_err(|error| Self::not_wired("document-backbone bind", error))?;
-        // 🧵️ A bind turn can already carry egress — the guest flushes whatever its store had
-        // pending onto the freshly bound backbone — so it is captured here exactly as a command
-        // turn's is, rather than left in the turn and lost.
         for effect in &turn.effects {
             if let Some(egress) = document_backbone_payload(&self.actor_label, effect) {
                 self.backbone_egress.push(egress.to_vec());
@@ -1443,6 +1446,11 @@ impl PluginArtifactChannel {
     /// `artifact_contributions[].inferences`). A plugin that declares no inference at all is a
     /// typed refusal here rather than an empty registration that would fail later with a worse
     /// message.
+    ///
+    /// 🐎️ The SAME runtime the command lane uses, not a second one: `self.compiled` carries a
+    /// `wasmtime::Component` that only its own `Engine` can instantiate. The inference lane is
+    /// still a SEPARATE guest instance on its own actor ordinal — `PluginInstanceHandle` takes
+    /// ownership of the instance it drives — it just shares the engine and the compiled code.
     fn ensure_inference_route(&mut self) -> Result<&PluginInferenceRoute, Fault> {
         if self.inference.is_none() {
             let roster: Vec<serde_json::Value> = self
@@ -1461,10 +1469,6 @@ impl PluginArtifactChannel {
             let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
             let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
                 self.descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
-            // 🐎️ The SAME runtime the command lane uses, not a second one: `self.compiled` carries a
-            // `wasmtime::Component` that only its own `Engine` can instantiate. The inference lane is
-            // still a SEPARATE guest instance on its own actor ordinal — `PluginInstanceHandle` takes
-            // ownership of the instance it drives — it just shares the engine and the compiled code.
             let runtimes = Arc::clone(&self.runtime);
             let budget = headless_inference_budget();
             let instance = semio_framework_async::block_on(semio_framework_plugin_host::GuestRuntime::instantiate(runtimes.as_ref(), &self.compiled, actor, &caps, &budget)).map_err(|error| Self::not_wired("inference instantiate", error))?;
@@ -1481,6 +1485,16 @@ impl PluginArtifactChannel {
     /// `dependsOn` results, drives the guest's `semio.infer` cold job, validates the guest's echo
     /// field-for-field and re-checks commit freshness; this function only builds the request wire
     /// and decodes the result, and reports whatever the router answers verbatim.
+    ///
+    /// 🗣️ The artifact schema's own canonical identity, exactly as the plugin committed it.
+    /// It is an `ArtifactIdentity`, which the guest validates with `ArtifactIdentity::parse`
+    /// (`🔌️plugin/🦀️.rs`, `validate_wire_request_resources`): dot-delimited segments of
+    /// `[a-z0-9_-]` only. The `<kind>@<schemaVersion>/*` form this used to send is the
+    /// CAPABILITY-id grammar, not an identity — `@`, `/` and `*` are all non-canonical
+    /// segment bytes, so every real inference died `artifact-inference.source-dialect:
+    /// identity "s.wfc.bitmap@1/*" has a non-canonical segment` before the guest ran a
+    /// single step (measured 2026-09-22, slice CE3). The version is not lost by dropping the
+    /// suffix: `artifact_schema_version` is its own field on this same request.
     fn infer_real(&mut self, command: &crate::actions::InferCommand) -> Result<crate::schema::ArtifactInferenceResultV1, Fault> {
         let declared = self
             .descriptor
@@ -1506,15 +1520,6 @@ impl PluginArtifactChannel {
             policy_version: declared.policy_version,
             revision: command.revision,
             generation: command.generation,
-            // 🗣️ The artifact schema's own canonical identity, exactly as the plugin committed it.
-            // It is an `ArtifactIdentity`, which the guest validates with `ArtifactIdentity::parse`
-            // (`🔌️plugin/🦀️.rs`, `validate_wire_request_resources`): dot-delimited segments of
-            // `[a-z0-9_-]` only. The `<kind>@<schemaVersion>/*` form this used to send is the
-            // CAPABILITY-id grammar, not an identity — `@`, `/` and `*` are all non-canonical
-            // segment bytes, so every real inference died `artifact-inference.source-dialect:
-            // identity "s.wfc.bitmap@1/*" has a non-canonical segment` before the guest ran a
-            // single step (measured 2026-09-22, slice CE3). The version is not lost by dropping the
-            // suffix: `artifact_schema_version` is its own field on this same request.
             source_dialect: declared.artifact_schema.clone(),
             policy: Vec::new(),
             budgets: crate::schema::ArtifactInferenceBudgetV1 { allocation_bytes: INFERENCE_ALLOCATION_BYTES, work_units: command.work_units.max(1), recursion_depth: INFERENCE_RECURSION_DEPTH },
@@ -1641,6 +1646,13 @@ impl PluginArtifactChannel {
 
     /// 🎬️ [`Self::ensure_instance`] under a caller's progress and cancel: a cancel observed between
     /// turns throws the half-open guest away, so the next open starts clean.
+    ///
+    /// 🎟️ The grants are handed to `instantiate` — the store's capability table is built with the
+    /// instance — and travel in `Event::InstanceOpen` as well, which is where the guest reads them.
+    ///
+    /// ⏱️ A compiled turn cut by its own ceiling is not a yield to resume from: the
+    /// instance is mid-call and unusable. Report it as the bounded budget fault it is,
+    /// rather than as a wiring fault, and throw the half-open instance away.
     fn ensure_instance_scoped(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
         if self.instances.contains_key(&instance) {
             return Ok(());
@@ -1654,8 +1666,6 @@ impl PluginArtifactChannel {
             .map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None })
             .collect();
         let budget = headless_open_budget();
-        // 🎟️ The grants are handed to `instantiate` — the store's capability table is built with the
-        // instance — and travel in `Event::InstanceOpen` as well, which is where the guest reads them.
         let mut guest = semio_framework_async::block_on(self.runtime.instantiate(&self.compiled, actor, &caps, &budget)).map_err(|error| Self::not_wired("instantiate", error))?;
         let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
             request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 },
@@ -1682,9 +1692,6 @@ impl PluginArtifactChannel {
                 Err(error) if semio_framework_plugin_host::retryable_lifecycle_turn(&error, &events) => {
                     owed.splice(0..0, events);
                 }
-                // ⏱️ A compiled turn cut by its own ceiling is not a yield to resume from: the
-                // instance is mid-call and unusable. Report it as the bounded budget fault it is,
-                // rather than as a wiring fault, and throw the half-open instance away.
                 Err(error @ (semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted)) => {
                     semio_framework_async::block_on(self.runtime.drop_instance(guest));
                     return Err(Fault { code: "budget.exceeded".to_string(), message: format!("InstanceOpen exceeded one turn's ceiling ({error}); the guest never came up") });
@@ -1710,12 +1717,13 @@ impl PluginArtifactChannel {
     /// guest acknowledges the one before it, so a command of N pages is N+1 turns. An interactive
     /// host takes those turns off its own frame loop; a headless gateway has no next frame, so it
     /// takes them here, bounded by [`COMMAND_RESUME_WALL_BUDGET`] and never unbounded.
+    ///
+    /// 🔢️ ONE sequence for the whole command, stamped into the command itself before it is
+    /// encoded. The kernel envelope and the `AppCommand` must carry the same number: the guest
+    /// answers with an `AppFrame` whose `in_reply_to` is the COMMAND's `seq`. Every call site in
+    /// this file used to pass a literal `seq: 0` while the envelope counted from 1, so even a host
+    /// reading the right lane would have correlated nothing.
     fn exchange_one_real(&mut self, instance: u32, mut real_command: store::AppCommand) -> Result<store::AppFrame, Fault> {
-        // 🔢️ ONE sequence for the whole command, stamped into the command itself before it is
-        // encoded. The kernel envelope and the `AppCommand` must carry the same number: the guest
-        // answers with an `AppFrame` whose `in_reply_to` is the COMMAND's `seq`. Every call site in
-        // this file used to pass a literal `seq: 0` while the envelope counted from 1, so even a host
-        // reading the right lane would have correlated nothing.
         let seq = self.next_seq;
         self.next_seq += 1;
         *app_command_seq_mut(&mut real_command) = seq;
@@ -1736,6 +1744,24 @@ impl PluginArtifactChannel {
     /// as a `budget.exceeded` fault and the loop above re-entered on the fault's CODE, so a real
     /// budget failure and normal paging were indistinguishable both to the loop and to the agent
     /// reading the message.
+    ///
+    /// 📄️ One retained page per turn. Under a compiled runtime every turn completes, so the
+    /// cursor always advances here; when the driver has no page left the guest is woken instead,
+    /// which is how it gets to publish its terminal acknowledgement.
+    ///
+    /// ⏱️ The suspension window is "while this guest turn runs, nobody touches the driver", so
+    /// it is closed on every arm, not just the `Ok` one: leaving the driver `Suspended` (and
+    /// linked for close) made the next turn read `!is_active`, tear the whole command down and
+    /// re-send it under a BRAND NEW `seq` while the guest still retained the owner of the
+    /// first attempt — the whole of `plugin.command-cursor-mismatch: owner is 1, the retained
+    /// owner's is 554` (ticket 26/09/18 slice A2 §6.1). The instance itself is gone either
+    /// way: a turn cut by its ceiling leaves the component mid-call and unusable.
+    ///
+    /// 🧾️ The guest's OWN reason for refusing the ingress rides in `command_ingress`, and
+    /// the cleanup below takes further turns — so it is captured on the exchange the
+    /// moment it is seen, not read again at the terminal where it no longer exists. It
+    /// used to be dropped entirely, and "faulted for seq N after bounded exact-owner
+    /// cleanup" told the agent (and every earlier slice of this ticket) nothing at all.
     fn exchange_one_turn(&mut self, instance: u32, real_command: &store::AppCommand, seq: u64) -> Result<CommandTurn, Fault> {
         if !self.rejected_command_builds.terminal_is_empty() {
             self.rejected_command_builds.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
@@ -1780,9 +1806,6 @@ impl PluginArtifactChannel {
             self.pending_exchanges.insert_admitted(PendingExchange { instance, seq, response: PendingResponsePage::Empty, ingress_fault: None });
         }
         assert_eq!(self.pending_exchanges.get(instance).expect("pending exchange was admitted").seq, seq, "the retained exchange answers the command this turn drives");
-        // 📄️ One retained page per turn. Under a compiled runtime every turn completes, so the
-        // cursor always advances here; when the driver has no page left the guest is woken instead,
-        // which is how it gets to publish its terminal acknowledgement.
         let event = self
             .pending_command_closes
             .with_driver_mut(u64::from(instance), seq, |driver| driver.next_page())
@@ -1799,13 +1822,6 @@ impl PluginArtifactChannel {
                 self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 turn
             }
-            // ⏱️ The suspension window is "while this guest turn runs, nobody touches the driver", so
-            // it is closed on every arm, not just the `Ok` one: leaving the driver `Suspended` (and
-            // linked for close) made the next turn read `!is_active`, tear the whole command down and
-            // re-send it under a BRAND NEW `seq` while the guest still retained the owner of the
-            // first attempt — the whole of `plugin.command-cursor-mismatch: owner is 1, the retained
-            // owner's is 554` (ticket 26/09/18 slice A2 §6.1). The instance itself is gone either
-            // way: a turn cut by its ceiling leaves the component mid-call and unusable.
             Err(error) => {
                 self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 self.discard_instance(instance);
@@ -1840,11 +1856,6 @@ impl PluginArtifactChannel {
                 pending.response.take(seq).map(CommandTurn::Settled)
             }
             semio_framework::kernel::CommandBatchProgress::Faulted => {
-                // 🧾️ The guest's OWN reason for refusing the ingress rides in `command_ingress`, and
-                // the cleanup below takes further turns — so it is captured on the exchange the
-                // moment it is seen, not read again at the terminal where it no longer exists. It
-                // used to be dropped entirely, and "faulted for seq N after bounded exact-owner
-                // cleanup" told the agent (and every earlier slice of this ticket) nothing at all.
                 if let Some(pending) = self.pending_exchanges.get_mut(instance) {
                     if pending.ingress_fault.is_none() {
                         pending.ingress_fault = Some(ingress_fault_text(&turn.command_ingress));
@@ -1885,6 +1896,16 @@ impl PluginArtifactChannel {
     /// host reported "the guest acknowledged command seq 1 and then went idle without publishing a
     /// response for it" (ticket 26/09/18, WR1 §5.4 → WR2; measured: the acknowledging turn published
     /// `sendMessage(shell:0, Document(in_reply_to 1), 579 B)`).
+    ///
+    /// 🏁️ `AppFrame::Done` naming this seq is a reply STAMP, not an answer of its own. Every
+    /// transaction route publishes its terminal frame AND a `Done` on the same turn
+    /// (`🔌️plugin/🦀️.rs`'s `TransactionPrepare`/`Commit`/`Rollback` arms each push both), so
+    /// admitting the second one reported "the guest published more than one frame answering seq
+    /// N" for a guest that answered exactly once — measured 2026-09-20 the first time a real
+    /// `TransactionPrepare` crossed the headless ingress. A `Done` still IS the answer for the
+    /// verbs that publish nothing else (`LoadDocument`, `TransactionUndo`/`Redo`), which is why
+    /// it is dropped only once a real frame is already held. A genuine duplicate — two answering
+    /// frames neither of which is a stamp — stays as loud as WR2 made it.
     fn admit_reply_frame(pending: &mut PendingExchange, instance: u32, seq: u64, effect: &semio_framework::kernel::Effect) {
         let Some(payload) = shell_app_frame_payload(instance, effect) else {
             return;
@@ -1892,15 +1913,6 @@ impl PluginArtifactChannel {
         let Ok(frame) = semio_framework::io::resolve_ready(store::decode_app_frame(payload)) else {
             return;
         };
-        // 🏁️ `AppFrame::Done` naming this seq is a reply STAMP, not an answer of its own. Every
-        // transaction route publishes its terminal frame AND a `Done` on the same turn
-        // (`🔌️plugin/🦀️.rs`'s `TransactionPrepare`/`Commit`/`Rollback` arms each push both), so
-        // admitting the second one reported "the guest published more than one frame answering seq
-        // N" for a guest that answered exactly once — measured 2026-09-20 the first time a real
-        // `TransactionPrepare` crossed the headless ingress. A `Done` still IS the answer for the
-        // verbs that publish nothing else (`LoadDocument`, `TransactionUndo`/`Redo`), which is why
-        // it is dropped only once a real frame is already held. A genuine duplicate — two answering
-        // frames neither of which is a stamp — stays as loud as WR2 made it.
         if matches!(frame, store::AppFrame::Done { .. }) && pending.response.holds_frame() {
             return;
         }
@@ -1922,6 +1934,10 @@ impl PluginArtifactChannel {
     /// same rule the React host applies (`commandIngressNeedsReplyStampV1`). Making it a fault here
     /// would refuse every `LoadDocument`/`TransactionUndo` the guest completed silently. What stays
     /// a fault is a guest that answers ANOTHER request, because that is a routing defect.
+    ///
+    /// 🛑️ A guest that is `Idle` with no wake pending has nothing left to do, so waiting the
+    /// rest of the wall is pointless. A `Respond` under a request id this gateway never sent
+    /// is the one shape that is still a defect worth naming.
     fn await_response(&mut self, instance: u32, seq: u64, response: &mut PendingResponsePage) -> Result<(), Fault> {
         let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
         let mut foreign: Vec<u64> = Vec::new();
@@ -1950,9 +1966,6 @@ impl PluginArtifactChannel {
                     response.admit_frame(payload);
                 }
             }
-            // 🛑️ A guest that is `Idle` with no wake pending has nothing left to do, so waiting the
-            // rest of the wall is pointless. A `Respond` under a request id this gateway never sent
-            // is the one shape that is still a defect worth naming.
             if matches!(response, PendingResponsePage::Empty) && idle {
                 if !foreign.is_empty() {
                     return Err(Fault { code: "channel.not-wired".to_string(), message: format!("the guest acknowledged command seq {seq} and answered request(s) {foreign:?} instead") });
@@ -2320,6 +2333,18 @@ fn app_media_out_ports(app: &semio_framework::AppDefinition) -> Vec<String> {
 ///
 /// ✍️ A caller that supplies the bound field itself keeps it: the binding fills a GAP, it never
 /// overwrites a body the caller authored.
+///
+/// 📦️ The one shape `INFERENCE_ARTIFACT_PACK_BASE64` names, written with the same standard
+/// alphabet the guest's `ArtifactDocumentPayload::pair()` decodes with. The gateway does not
+/// link the guest SDK (`🌉️mcp` depends on the plugin HOST, never on the plugin crate), so
+/// the encoding constant is the contract between the two halves, not a shared type.
+///
+/// 🧭️ `required` means "this inference needs SOME body and the caller cannot type one", not
+/// "this field or nothing": a published contract may offer a second carrier (`🀄️wfc`'s own
+/// request schema is `oneOf [document, snapshot]`), and a caller who stated one has already
+/// answered the requirement. Refusing an authored body here made a hand-written `snapshot`
+/// unroutable (measured 2026-09-22 21:2x) — the guest, which owns the schema, is the judge
+/// of a body that exists; this gateway only refuses an EMPTY one.
 #[cfg(not(target_arch = "wasm32"))]
 fn bind_inference_document(declared: &semio_framework::ContributedInferenceMetadata, command: &crate::actions::InferCommand) -> Result<Vec<u8>, Fault> {
     let Some(binding) = declared.payload.as_ref().and_then(|contract| contract.artifact_binding.as_ref()) else {
@@ -2343,19 +2368,9 @@ fn bind_inference_document(declared: &semio_framework::ContributedInferenceMetad
         return serde_json::to_vec(&body).map_err(|error| Fault { code: "plugin.internal".to_string(), message: format!("encoding the inference payload: {error}") });
     }
     match command.artifact_document.as_ref() {
-        // 📦️ The one shape `INFERENCE_ARTIFACT_PACK_BASE64` names, written with the same standard
-        // alphabet the guest's `ArtifactDocumentPayload::pair()` decodes with. The gateway does not
-        // link the guest SDK (`🌉️mcp` depends on the plugin HOST, never on the plugin crate), so
-        // the encoding constant is the contract between the two halves, not a shared type.
         Some(document) => {
             object.insert(binding.field.clone(), serde_json::json!({ "pack": crate::shell_channel::encode_base64(&document.pack), "spr": crate::shell_channel::encode_base64(&document.spr) }));
         }
-        // 🧭️ `required` means "this inference needs SOME body and the caller cannot type one", not
-        // "this field or nothing": a published contract may offer a second carrier (`🀄️wfc`'s own
-        // request schema is `oneOf [document, snapshot]`), and a caller who stated one has already
-        // answered the requirement. Refusing an authored body here made a hand-written `snapshot`
-        // unroutable (measured 2026-09-22 21:2x) — the guest, which owns the schema, is the judge
-        // of a body that exists; this gateway only refuses an EMPTY one.
         None if binding.required && object.is_empty() => {
             return Err(Fault {
                 code: "mutation.rejected".to_string(),
@@ -2369,13 +2384,64 @@ fn bind_inference_document(declared: &semio_framework::ContributedInferenceMetad
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ArtifactChannel for PluginArtifactChannel {
+    /// 💡️ `Infer` never touches the retained command-page lane, so it must not be gated on the
+    /// command-lane instance being open at all: it drives its own guest instance, on its own actor
+    /// ordinal, opened on first use by `ensure_inference_route`.
+    ///
+    /// 🔭️ The head is the newest APPLIED entry, not the newest entry.
+    /// `HistoryPatch.upserts` is ordered newest-first and an undo does not
+    /// remove its row — it clears `HistoryEntry.applied` — so reading
+    /// `upserts.first()` reported the identical stamp before and after
+    /// `history.undo`, and `expectedRevision` (the ONLY revision oracle an agent
+    /// has for a plugin-owned artifact) could not express that a change had been
+    /// walked back. Measured 2026-09-20 22:38 on a real `🗒️note` guest: an
+    /// `addBlock` committed, undone and redone stamped `transaction:txn_…/1`
+    /// throughout, so an optimistic-concurrency client would have re-committed
+    /// over an undo without ever seeing a `REVISION_CONFLICT`.
+    ///
+    /// 🧮️ PHASE ONE of the agent lane's two-phase contract: the guest validates, prices
+    /// and produces the ops WITHOUT applying any of them (`VcsArtifactApp::
+    /// preview_addressed_action`, whose own doc carries the soundness argument). The
+    /// frame is the SAME owner-qualified `ManifestActionInvocation` the shell's UI lane
+    /// sends on `AppCommand::Command` — one dispatch shape for both lanes — built here
+    /// from the plugin's own committed manifest, never parsed out of the capability id.
+    /// It used to be `{"capabilityId":…,"input":…}`, an opaque blob no guest could select
+    /// a command-specific pre-serde envelope from, which is exactly what the guest's
+    /// three-line refusal said (`interactive-job.missing-exact-key`).
+    ///
+    /// 🚧️ Same honesty rule: real wire call, real answer. The wire's `TransactionPrepare`
+    /// carries ONE flat `prepared_ops` list (document lane only — `transaction_prepare`'s
+    /// own signature has no config/draft parameter); a config/draft-lane prepare has no
+    /// wire representation yet, reported as such rather than silently dropped.
+    ///
+    /// 🚧️ `origin` is this port's own invented `MutationOrigin::Agent` shape — the
+    /// real wire `os_spr::MutationOrigin` has exactly three variants
+    /// (`Owner`/`Contributed`/`Transaction`), none of which represent "an agent
+    /// principal invoked this headlessly"; sending empty bytes decodes as `None`
+    /// (asserting no origin) rather than fabricating a wire shape that does not exist.
+    ///
+    /// ✅️ Real and fully generic: `TransactionCommit`/`Rollback`/`Undo`/`Redo` need only
+    /// `txn_id`/`group_id` — no plugin-specific payload, so (unlike `PureCommand`/
+    /// `TransactionPrepare`) these genuinely work against any real committed transaction.
+    ///
+    /// ✅️ Real and general: every plugin-declared inference service, not just the one
+    /// hub-backed GIS Map job. Routed through `ArtifactInferenceRouter` exactly the way
+    /// `🏃️run`'s own plugin reactor routes `job_infer`, so the guest's result is the
+    /// guest's own — this arm fabricates nothing and short-circuits nothing.
+    ///
+    /// 📤️ Real and general: the artifact's own pack bytes go in with `LoadDocument`, then
+    /// the app's own OUT port is read with `MediaOut` — the identical pair `🏃️run`'s
+    /// workflow executor drives per node (`🏃️run/🦀️.rs`'s `compute_node`). Nothing about
+    /// the exported bytes is interpreted here: `descriptor`/`data` are the guest's own.
+    ///
+    /// 🆕️ The guest's own genesis document, straight off `ReadDocument` — host-opaque
+    /// bytes this crate persists verbatim under the plugin's real schema id, which is how
+    /// `artifact_create{kind}` produces a plugin-typed artifact without this host ever
+    /// owning a plugin's document type.
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         if commands.len() != 1 {
             return Err(Self::not_wired("exchange", format!("expected exactly one command, received {}", commands.len())));
         }
-        // 💡️ `Infer` never touches the retained command-page lane, so it must not be gated on the
-        // command-lane instance being open at all: it drives its own guest instance, on its own actor
-        // ordinal, opened on first use by `ensure_inference_route`.
         if !matches!(commands.first(), Some(AppCommand::Infer(_))) {
             self.ensure_instance(instance)?;
         }
@@ -2386,16 +2452,6 @@ impl ArtifactChannel for PluginArtifactChannel {
                     store::AppFrame::HistorySnapshot { history_patch, .. } => {
                         let value = store::pack_rt::decode_wire_value(&history_patch).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
                         let patch: semio_framework::kernel::HistoryPatch = store::from_dsl_value(value).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
-                        // 🔭️ The head is the newest APPLIED entry, not the newest entry.
-                        // `HistoryPatch.upserts` is ordered newest-first and an undo does not
-                        // remove its row — it clears `HistoryEntry.applied` — so reading
-                        // `upserts.first()` reported the identical stamp before and after
-                        // `history.undo`, and `expectedRevision` (the ONLY revision oracle an agent
-                        // has for a plugin-owned artifact) could not express that a change had been
-                        // walked back. Measured 2026-09-20 22:38 on a real `🗒️note` guest: an
-                        // `addBlock` committed, undone and redone stamped `transaction:txn_…/1`
-                        // throughout, so an optimistic-concurrency client would have re-committed
-                        // over an undo without ever seeing a `REVISION_CONFLICT`.
                         AppFrame::HistorySnapshot(RevisionStamp {
                             artifact_id: self.stamped_artifact_id(),
                             head_edit_id: patch.upserts.iter().find(|entry| entry.applied).map(|entry| entry.action_id.clone()).unwrap_or_default(),
@@ -2404,15 +2460,6 @@ impl ArtifactChannel for PluginArtifactChannel {
                     }
                     other => return Err(Self::not_wired("ReadHistory", format!("unexpected real AppFrame variant {other:?}"))),
                 },
-                // 🧮️ PHASE ONE of the agent lane's two-phase contract: the guest validates, prices
-                // and produces the ops WITHOUT applying any of them (`VcsArtifactApp::
-                // preview_addressed_action`, whose own doc carries the soundness argument). The
-                // frame is the SAME owner-qualified `ManifestActionInvocation` the shell's UI lane
-                // sends on `AppCommand::Command` — one dispatch shape for both lanes — built here
-                // from the plugin's own committed manifest, never parsed out of the capability id.
-                // It used to be `{"capabilityId":…,"input":…}`, an opaque blob no guest could select
-                // a command-specific pre-serde envelope from, which is exactly what the guest's
-                // three-line refusal said (`interactive-job.missing-exact-key`).
                 AppCommand::PureCommand { capability_id, input } => {
                     let invocation = self.addressed_action_invocation(&capability_id, &input)?;
                     let command = store::pack_rt::encode_wire_value(&store::ToValue::to_value(&invocation));
@@ -2427,19 +2474,10 @@ impl ArtifactChannel for PluginArtifactChannel {
                         other => return Err(Self::not_wired("PureCommand", format!("unexpected real AppFrame variant {other:?}"))),
                     }
                 }
-                // 🚧️ Same honesty rule: real wire call, real answer. The wire's `TransactionPrepare`
-                // carries ONE flat `prepared_ops` list (document lane only — `transaction_prepare`'s
-                // own signature has no config/draft parameter); a config/draft-lane prepare has no
-                // wire representation yet, reported as such rather than silently dropped.
                 AppCommand::TransactionPrepare { txn_id, ops, label, origin: _origin } => {
                     if !ops.config.is_empty() || !ops.draft.is_empty() {
                         return Err(Self::not_wired("TransactionPrepare", "the real wire TransactionPrepare carries one flat prepared-ops list (document lane only) — config/draft-lane prepared ops have no wire representation yet"));
                     }
-                    // 🚧️ `origin` is this port's own invented `MutationOrigin::Agent` shape — the
-                    // real wire `os_spr::MutationOrigin` has exactly three variants
-                    // (`Owner`/`Contributed`/`Transaction`), none of which represent "an agent
-                    // principal invoked this headlessly"; sending empty bytes decodes as `None`
-                    // (asserting no origin) rather than fabricating a wire shape that does not exist.
                     match self.exchange_one_real(
                         instance,
                         store::AppCommand::TransactionPrepare { seq: 0, txn_id: txn_id.clone(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: ops.document, label, origin: Vec::new() },
@@ -2450,9 +2488,6 @@ impl ArtifactChannel for PluginArtifactChannel {
                         other => return Err(Self::not_wired("TransactionPrepare", format!("unexpected real AppFrame variant {other:?}"))),
                     }
                 }
-                // ✅️ Real and fully generic: `TransactionCommit`/`Rollback`/`Undo`/`Redo` need only
-                // `txn_id`/`group_id` — no plugin-specific payload, so (unlike `PureCommand`/
-                // `TransactionPrepare`) these genuinely work against any real committed transaction.
                 AppCommand::TransactionCommit { txn_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionCommit { seq: 0, txn_id: txn_id.clone() })? {
                     store::AppFrame::TransactionCommitted { txn_id, edit_id } => AppFrame::TransactionCommitted { txn_id, edit_id, relay: None },
                     store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
@@ -2468,10 +2503,6 @@ impl ArtifactChannel for PluginArtifactChannel {
                     store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
                     other => return Err(Self::not_wired("TransactionUndo", format!("unexpected real AppFrame variant {other:?}"))),
                 },
-                // ✅️ Real and general: every plugin-declared inference service, not just the one
-                // hub-backed GIS Map job. Routed through `ArtifactInferenceRouter` exactly the way
-                // `🏃️run`'s own plugin reactor routes `job_infer`, so the guest's result is the
-                // guest's own — this arm fabricates nothing and short-circuits nothing.
                 AppCommand::Infer(command) => {
                     let result = self.infer_real(&command)?;
                     AppFrame::Inferred { inference_schema: result.inference_schema, complete: result.complete, payload: result.canonical_payload }
@@ -2481,10 +2512,6 @@ impl ArtifactChannel for PluginArtifactChannel {
                     store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
                     other => return Err(Self::not_wired("TransactionRedo", format!("unexpected real AppFrame variant {other:?}"))),
                 },
-                // 📤️ Real and general: the artifact's own pack bytes go in with `LoadDocument`, then
-                // the app's own OUT port is read with `MediaOut` — the identical pair `🏃️run`'s
-                // workflow executor drives per node (`🏃️run/🦀️.rs`'s `compute_node`). Nothing about
-                // the exported bytes is interpreted here: `descriptor`/`data` are the guest's own.
                 AppCommand::ExportMedia { port, document, document_spr } => {
                     match self.exchange_one_real(instance, store::AppCommand::LoadDocument { seq: 0, pack: document, spr: document_spr })? {
                         store::AppFrame::Done { .. } => {}
@@ -2497,10 +2524,6 @@ impl ArtifactChannel for PluginArtifactChannel {
                         other => return Err(Self::not_wired("ExportMedia/MediaOut", format!("unexpected real AppFrame variant {other:?}"))),
                     }
                 }
-                // 🆕️ The guest's own genesis document, straight off `ReadDocument` — host-opaque
-                // bytes this crate persists verbatim under the plugin's real schema id, which is how
-                // `artifact_create{kind}` produces a plugin-typed artifact without this host ever
-                // owning a plugin's document type.
                 AppCommand::ReadArtifact => match self.exchange_one_real(instance, store::AppCommand::ReadDocument { seq: 0 })? {
                     store::AppFrame::Document { pack, spr, .. } => AppFrame::Artifact { pack, spr },
                     store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
@@ -2892,6 +2915,9 @@ fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvel
 ///
 /// 🔁️ Idempotent per schema: a second registration of a schema this process already serves is a
 /// no-op that still verifies the hash, so re-opening a document never stacks routes.
+///
+/// 📦️ The generic pack container extension. A guest-backed codec never reaches the folder
+/// text lane (see [`guest_compile_dsl`]), which is the only place this is read.
 #[cfg(not(target_arch = "wasm32"))]
 fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, component: &[u8], expected_pack_schema_hash: &str) -> Result<[u8; 32], GatewayError> {
     let runtime = shared_plugin_runtime()?;
@@ -2913,8 +2939,6 @@ fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, compone
     drop(routes);
     store::register_document_codec(store::ArtifactCodec {
         schema: artifact_schema.to_string(),
-        // 📦️ The generic pack container extension. A guest-backed codec never reaches the folder
-        // text lane (see [`guest_compile_dsl`]), which is the only place this is read.
         extension: "semio",
         pack_schema_hash,
         compile_dsl: guest_compile_dsl,
@@ -3063,11 +3087,12 @@ impl RoutingArtifactChannel {
     /// 🚧️ A binding with no document actor is a typed, named fault, never a silent drop: the guest
     /// HAS committed by the time these bytes exist, so "the edit went nowhere" must be something the
     /// agent is told. [`PluginArtifactBinding::backbone_blocked_by`] carries the reason.
+    ///
+    /// 🔒️ `session_artifact_for` takes the same lock, so it is called BEFORE this one is held —
+    /// `std::sync::Mutex` is not reentrant and nesting them deadlocked the very first committed
+    /// message (measured 2026-09-22, the test hung past its 60 s report threshold).
     fn relay_backbone_egress(&self, route: &AppRoute, egress: Vec<Vec<u8>>) -> Result<(Arc<HubRelay>, u64), Fault> {
         let plugin_id = route.plugin_id.as_str();
-        // 🔒️ `session_artifact_for` takes the same lock, so it is called BEFORE this one is held —
-        // `std::sync::Mutex` is not reentrant and nesting them deadlocked the very first committed
-        // message (measured 2026-09-22, the test hung past its 60 s report threshold).
         let artifact_id = self.session_artifact_for(route);
         let binding = {
             let bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -3103,13 +3128,13 @@ impl RoutingArtifactChannel {
         self.route_for(instance, commands).map(|route| route.plugin_id)
     }
 
+    /// 💡️ An inference carries no capability id, but it DOES name its own route owner
+    /// (the declared row's contributor) — so it routes directly, never through the
+    /// `instance` slot encoding `prepare_action` mints for the mutation protocol.
     fn route_for(&self, instance: u32, commands: &[AppCommand]) -> Result<AppRoute, Fault> {
         for command in commands {
             match command {
                 AppCommand::PureCommand { capability_id, .. } => return resolve_route_for_capability_in(&self.catalog, capability_id).map_err(routing_fault),
-                // 💡️ An inference carries no capability id, but it DOES name its own route owner
-                // (the declared row's contributor) — so it routes directly, never through the
-                // `instance` slot encoding `prepare_action` mints for the mutation protocol.
                 AppCommand::Infer(infer) if !infer.plugin_id.is_empty() => return Ok(AppRoute { plugin_id: infer.plugin_id.clone(), app_id: None }),
                 _ => {}
             }
@@ -3128,6 +3153,24 @@ impl RoutingArtifactChannel {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl ArtifactChannel for RoutingArtifactChannel {
+    /// 🗿️ Re-read on every exchange, never once at open: `artifact_create` binds the artifact
+    /// AFTER the channel that seeded it from the plugin's genesis was already opened, so a
+    /// stamp taken from an open-time snapshot would name nothing for the very first mutation.
+    ///
+    /// 📥️ …and the same re-read seeds the guest with the bound document itself when the binding
+    /// carries one (a hub document, whose bytes live on the hub and nowhere this guest can
+    /// reach). `load_session_document` is idempotent per instance, so a prepare/commit pair does
+    /// not reload between its two halves; an `Infer` skips it because the inference lane drives
+    /// its own guest on its own actor ordinal, which this document never belongs to.
+    ///
+    /// 🧵️ …then bind the guest's document backbone, in that order: the guest refuses a load
+    /// while bound. Until this runs the guest publishes no backbone effect at all, so a
+    /// committed transaction would answer `SUCCEEDED` and reach nobody.
+    ///
+    /// 🧵️ …and whatever the guest published on its document backbone during that exchange leaves
+    /// the process now, on the bound document's own actor mailbox. Drained on BOTH outcomes: a
+    /// command that faulted after its guest already committed still owes those envelopes to the
+    /// hub, and leaving them in the channel would hand them to the next, unrelated exchange.
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let route = self.resolved_route(self.route_for(instance, &commands)?, &ActivationScope::detached())?;
         let session_artifact_id = self.session_artifact_for(&route);
@@ -3138,27 +3181,12 @@ impl ArtifactChannel for RoutingArtifactChannel {
             channels.insert(route.clone(), channel);
         }
         let channel = channels.get_mut(&route).expect("just inserted above");
-        // 🗿️ Re-read on every exchange, never once at open: `artifact_create` binds the artifact
-        // AFTER the channel that seeded it from the plugin's genesis was already opened, so a
-        // stamp taken from an open-time snapshot would name nothing for the very first mutation.
         channel.bind_session_artifact(session_artifact_id);
-        // 📥️ …and the same re-read seeds the guest with the bound document itself when the binding
-        // carries one (a hub document, whose bytes live on the hub and nowhere this guest can
-        // reach). `load_session_document` is idempotent per instance, so a prepare/commit pair does
-        // not reload between its two halves; an `Infer` skips it because the inference lane drives
-        // its own guest on its own actor ordinal, which this document never belongs to.
         if let Some((artifact_id, document)) = session_document.filter(|_| !matches!(commands.first(), Some(AppCommand::Infer(_)))) {
             channel.load_session_document(instance, &artifact_id, &document.pack, &document.spr)?;
-            // 🧵️ …then bind the guest's document backbone, in that order: the guest refuses a load
-            // while bound. Until this runs the guest publishes no backbone effect at all, so a
-            // committed transaction would answer `SUCCEEDED` and reach nobody.
             channel.ensure_document_backbone(instance)?;
         }
         let frames = channel.exchange(instance, commands);
-        // 🧵️ …and whatever the guest published on its document backbone during that exchange leaves
-        // the process now, on the bound document's own actor mailbox. Drained on BOTH outcomes: a
-        // command that faulted after its guest already committed still owes those envelopes to the
-        // hub, and leaving them in the channel would hand them to the next, unrelated exchange.
         let egress = channel.drain_backbone_egress();
         drop(channels);
         if egress.is_empty() {
@@ -3261,25 +3289,26 @@ impl ShellRoutedArtifactChannel {
 }
 
 impl ArtifactChannel for ShellRoutedArtifactChannel {
+    /// 💡️ An inference is not a shell command and never was: `ShellArtifactChannel` refuses
+    /// `AppCommand::Infer` outright ("the gateway owns its own inference guest"), and the
+    /// headless lane's `ensure_inference_route` drives its OWN guest instance on its own actor
+    /// ordinal, holding no document the shell owns. Sending it down the shell branch made
+    /// `inference_run` answer `plugin.unavailable` for the whole of a shell-resolved session —
+    /// i.e. exactly the session an MCP client driving a live shell has (measured 2026-09-22
+    /// 22:1x, `🗑️generated/gj1-trap-probe.txt` first run). Routing it headless here is what the
+    /// refusal's own message asks a caller to do, done for them, and it splits no document:
+    /// the inference guest is not the shell's.
+    ///
+    /// 🎯️ Name the artifact's owner before dispatching, exactly as the headless lane
+    /// does: without it a capability-less leg of the mutation protocol (`ReadArtifact`,
+    /// `ReadHistory`) had nothing to resolve an instance from and refused as soon as the
+    /// shell had more than one program open.
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
-        // 💡️ An inference is not a shell command and never was: `ShellArtifactChannel` refuses
-        // `AppCommand::Infer` outright ("the gateway owns its own inference guest"), and the
-        // headless lane's `ensure_inference_route` drives its OWN guest instance on its own actor
-        // ordinal, holding no document the shell owns. Sending it down the shell branch made
-        // `inference_run` answer `plugin.unavailable` for the whole of a shell-resolved session —
-        // i.e. exactly the session an MCP client driving a live shell has (measured 2026-09-22
-        // 22:1x, `🗑️generated/gj1-trap-probe.txt` first run). Routing it headless here is what the
-        // refusal's own message asks a caller to do, done for them, and it splits no document:
-        // the inference guest is not the shell's.
         if matches!(commands.first(), Some(AppCommand::Infer(_))) {
             return self.headless.exchange(instance, commands);
         }
         match self.binding.resolve() {
             crate::shell_channel::ChannelKind::Shell => {
-                // 🎯️ Name the artifact's owner before dispatching, exactly as the headless lane
-                // does: without it a capability-less leg of the mutation protocol (`ReadArtifact`,
-                // `ReadHistory`) had nothing to resolve an instance from and refused as soon as the
-                // shell had more than one program open.
                 self.shell.pin_plugin(self.headless.plugin_id_for(instance, &commands).ok());
                 self.shell.exchange(instance, commands)
             }
@@ -3508,10 +3537,10 @@ impl std::fmt::Debug for PluginArtifactBinding {
 /// the same "release the other side before draining" order `store::sync::ArtifactHost`'s own `Drop`
 /// already follows for its actor runners.
 impl Drop for HeadlessWorkspace {
+    /// 🧵️ Bound hub documents close FIRST, before the driver: their actors hold the socket-grant
+    /// source the driver owns, and a document that is still dialling when its grant source
+    /// vanishes reconnects against nothing instead of retiring its presence row.
     fn drop(&mut self) {
-        // 🧵️ Bound hub documents close FIRST, before the driver: their actors hold the socket-grant
-        // source the driver owns, and a document that is still dialling when its grant source
-        // vanishes reconnects against nothing instead of retiring its presence row.
         #[cfg(not(target_arch = "wasm32"))]
         {
             let bound = std::mem::take(&mut *self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
@@ -3573,6 +3602,8 @@ impl HeadlessWorkspace {
         Ok(Self::new(WorkspaceOrigin::Folder { path }, principal, scopes, catalog))
     }
 
+    /// 🧩️ A hub-bound workspace runs the HUB's components, never a build tree that happens to
+    /// sit on the same disk: the hub is the authority over what code opens its documents.
     pub fn open_hub(base_url: String, space_id: String, credential: Arc<LocalHubCredential>, principal: String, scopes: Vec<String>) -> Result<Self, GatewayError> {
         remote::validate_hub_origin(&base_url, &space_id)?;
         #[cfg(not(target_arch = "wasm32"))]
@@ -3584,8 +3615,6 @@ impl HeadlessWorkspace {
             let driver = Arc::new(driver);
             let mut workspace = Self::new(WorkspaceOrigin::Hub { base_url, space_id }, principal, scopes, catalog);
             workspace.repo_root = None;
-            // 🧩️ A hub-bound workspace runs the HUB's components, never a build tree that happens to
-            // sit on the same disk: the hub is the authority over what code opens its documents.
             workspace.plugin_components = Some(PluginComponentSource::Hub(Arc::new(HubPluginComponents::new(Arc::clone(&binding), Arc::clone(&driver)))));
             workspace.artifact_host.set_local_hub_credential(credential);
             workspace.artifact_host.set_hub_socket_grant_source(grant_source);
@@ -3646,6 +3675,12 @@ impl HeadlessWorkspace {
         }
     }
 
+    /// 🗿️ A hub document of another schema is not an ERROR, it is simply not a probe document.
+    /// This used to answer a retryable `PLUGIN_UNAVAILABLE` naming the probe schema, which made
+    /// `artifact_open` of EVERY real hub document fail before it ever reached
+    /// [`Self::read_artifact_bytes`] — measured live on hub 7631 against a `gis.map` document
+    /// (ticket 26/09/18 slice M8, `📓️m8-mcp-agent-third-participant.md` §2.3 row 4). The
+    /// predicate's own name is the contract: it answers whether the probe lane owns this id.
     pub fn authenticated_probe_document_is_known(&self, artifact_id: &str) -> Result<bool, GatewayError> {
         if !matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
             return Ok(false);
@@ -3654,12 +3689,6 @@ impl HeadlessWorkspace {
         let Some(document) = snapshot.documents.values().find(|document| document.scope.document_id == artifact_id) else {
             return Ok(false);
         };
-        // 🗿️ A hub document of another schema is not an ERROR, it is simply not a probe document.
-        // This used to answer a retryable `PLUGIN_UNAVAILABLE` naming the probe schema, which made
-        // `artifact_open` of EVERY real hub document fail before it ever reached
-        // [`Self::read_artifact_bytes`] — measured live on hub 7631 against a `gis.map` document
-        // (ticket 26/09/18 slice M8, `📓️m8-mcp-agent-third-participant.md` §2.3 row 4). The
-        // predicate's own name is the contract: it answers whether the probe lane owns this id.
         Ok(document.view.descriptor.artifact_schema == PROBE_SCHEMA && document.view.descriptor.pack_schema_hash == PROBE_PACK_SCHEMA_HASH)
     }
 
@@ -3715,6 +3744,9 @@ impl HeadlessWorkspace {
     /// a byte-identical 688-char pack on both sides of it. A snapshot that cannot show the change
     /// the agent just made is worse than no snapshot, so a session-owned document is re-read from
     /// its owner and the frozen row is never consulted for it.
+    ///
+    /// 🧊️ Headless lane: the live guest instance the mutation went to, never the row frozen
+    /// at create time — see [`Self::read_live_session_artifact_bytes`].
     pub fn read_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
             let files = semio_framework::io::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
@@ -3725,8 +3757,6 @@ impl HeadlessWorkspace {
             if let Some(bytes) = self.read_session_artifact_bytes(&binding.plugin_id)? {
                 return Ok(Some(bytes));
             }
-            // 🧊️ Headless lane: the live guest instance the mutation went to, never the row frozen
-            // at create time — see [`Self::read_live_session_artifact_bytes`].
             if let Some(bytes) = self.read_live_session_artifact_bytes(&binding.plugin_id, &binding.app_id)? {
                 return Ok(Some(bytes));
             }
@@ -4088,6 +4118,10 @@ impl HeadlessWorkspace {
     /// verified. `Ok(false)` means this workspace is not hub-bound or the hub authorizes no
     /// execution target for the document — an unbound artifact stays readable, it simply has no
     /// guest to seed.
+    ///
+    /// 🔁️ Re-opening a document this session already bound must not open a SECOND actor: the
+    /// first one holds the live socket, the presence lease and the outbox that still owes the hub
+    /// this agent's envelopes. Only the canonical pair is refreshed.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn bind_hub_session_document(&self, artifact_id: &str, pack: &[u8], spr: &[u8]) -> Result<bool, GatewayError> {
         let WorkspaceOrigin::Hub { space_id, .. } = &self.origin else {
@@ -4106,9 +4140,6 @@ impl HeadlessWorkspace {
         if lease.package.plugin_id != document.view.descriptor.owner.plugin_id || lease.artifact.schema != document.view.descriptor.artifact_schema || lease.artifact.kind != document.view.descriptor.artifact_kind {
             return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "hub execution-target lease disagrees with the authenticated document descriptor"));
         }
-        // 🔁️ Re-opening a document this session already bound must not open a SECOND actor: the
-        // first one holds the live socket, the presence lease and the outbox that still owes the hub
-        // this agent's envelopes. Only the canonical pair is refreshed.
         let established = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id).filter(|binding| binding.backbone.is_some()).cloned();
         let (backbone, backbone_blocked_by, relayed, relay) = match established {
             Some(binding) => (binding.backbone, binding.backbone_blocked_by, binding.relayed, binding.relay),
@@ -4174,13 +4205,17 @@ impl HeadlessWorkspace {
         Ok(())
     }
 
+    /// 🗂️ Nothing links this kind's codec, so take it from the package itself — the
+    /// component the hub authorized, whose bytes this process already SHA-256-verified.
+    ///
+    /// 🌐️ `open` must be awaited INSIDE the reactor's context: `spawn_actor` captures
+    /// `Handle::try_current()` there, once, and every later turn of this actor is polled under
+    /// the handle it captured. Entering after the open would be entering nothing.
     #[cfg(not(target_arch = "wasm32"))]
     fn open_hub_document_actor(&self, artifact_id: &str, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, relay: Arc<HubRelay>) -> (Option<store::sync::ArtifactMailboxSender>, Option<String>) {
         let schema = lease.artifact.schema.clone();
         match semio_framework::io::resolve_ready(store::document_codec(&schema)) {
             Ok(Some(_)) => {}
-            // 🗂️ Nothing links this kind's codec, so take it from the package itself — the
-            // component the hub authorized, whose bytes this process already SHA-256-verified.
             Ok(None) => {
                 if let Err(error) = self.register_hub_document_codec(&lease) {
                     return (None, Some(error.message));
@@ -4193,9 +4228,6 @@ impl HeadlessWorkspace {
         };
         let document_key = self.origin.artifact_document_key(artifact_id);
         self.artifact_host.set_document_execution_target_lease(&document_key, lease.clone());
-        // 🌐️ `open` must be awaited INSIDE the reactor's context: `spawn_actor` captures
-        // `Handle::try_current()` there, once, and every later turn of this actor is polled under
-        // the handle it captured. Entering after the open would be entering nothing.
         let reactor = match hub_socket_reactor() {
             Ok(reactor) => reactor,
             Err(error) => return (None, Some(error.message)),
@@ -4391,21 +4423,23 @@ impl GatewayBackend for HeadlessWorkspace {
     /// that arm's own honest gap note (`PureCommand`'s guest-side handler unconditionally rejects
     /// for every currently-compiled plugin) — this is a real, non-fabricated round trip either way,
     /// never a synthesized `PLUGIN_UNAVAILABLE` short-circuit before even trying.
+    ///
+    /// 🧭️ Resolved BEFORE the adapter ever runs — `ActionAdapter::prepare` issues a bare
+    /// `ReadHistory` (no capability id) before its `PureCommand`, so `RoutingArtifactChannel` must
+    /// already be able to decode the target plugin from `instance` alone; `plugin_instance_slot`
+    /// is the SAME deterministic function it decodes with, so passing its result here (never the
+    /// old bare `0`) is what makes that first `ReadHistory` land on the right plugin.
+    ///
+    /// 🔀️ `ActionAdapter::prepare` has no `expected_revision` parameter of its own — it always
+    /// captures a fresh baseline (`report.expected_revision`) via a real `ReadHistory`. This
+    /// trait's own `expected_revision` is the CALLER's assertion of what revision it expected to
+    /// still be current; checking it here (rather than silently ignoring it) surfaces a real
+    /// `REVISION_CONFLICT` the moment a caller's assumption is already stale, instead of only at
+    /// `invoke_action` — matches `ActionAdapter::invoke_uncached`'s own revision-conflict shape.
     fn prepare_action(&self, capability_id: &str, input: serde_json::Value, expected_revision: Option<RevisionStamp>) -> Result<PreparedActionReport, GatewayError> {
-        // 🧭️ Resolved BEFORE the adapter ever runs — `ActionAdapter::prepare` issues a bare
-        // `ReadHistory` (no capability id) before its `PureCommand`, so `RoutingArtifactChannel` must
-        // already be able to decode the target plugin from `instance` alone; `plugin_instance_slot`
-        // is the SAME deterministic function it decodes with, so passing its result here (never the
-        // old bare `0`) is what makes that first `ReadHistory` land on the right plugin.
         self.resolve_plugin_for_capability(capability_id)?;
         let instance = capability_instance_slot(&self.catalog, capability_id).expect("a plugin capability of this workspace's own catalog always names a route of that catalog's own enumeration");
         let report = self.action_adapter()?.prepare(&self.catalog, &self.agent_principal(), &SessionHandle(self.session_id.clone()), capability_id, input, instance, now_ms())?;
-        // 🔀️ `ActionAdapter::prepare` has no `expected_revision` parameter of its own — it always
-        // captures a fresh baseline (`report.expected_revision`) via a real `ReadHistory`. This
-        // trait's own `expected_revision` is the CALLER's assertion of what revision it expected to
-        // still be current; checking it here (rather than silently ignoring it) surfaces a real
-        // `REVISION_CONFLICT` the moment a caller's assumption is already stale, instead of only at
-        // `invoke_action` — matches `ActionAdapter::invoke_uncached`'s own revision-conflict shape.
         if let Some(expected) = expected_revision {
             if report.expected_revision.as_ref() != Some(&expected) {
                 let actual = report.expected_revision.clone();
@@ -4416,13 +4450,13 @@ impl GatewayBackend for HeadlessWorkspace {
         Ok(report)
     }
 
+    /// 🧭️ The trailing `0` here is `ActionAdapter::invoke`'s `instance` PARAMETER, which
+    /// `invoke_uncached` only reads on its "prepare inline" branch (`request.capability_id` set,
+    /// no `prepared_handle`) — never this one, since `prepared_handle` is always `Some` below.
+    /// Every real command this call issues instead reuses `record.instance`, captured on the
+    /// resolved handle back when `prepare_action` minted it from `plugin_instance_slot` — so the
+    /// correct plugin routing already travels with the handle, not through this parameter.
     fn invoke_action(&self, prepared_handle: &str, idempotency_key: Option<&str>) -> Result<InvocationReport, GatewayError> {
-        // 🧭️ The trailing `0` here is `ActionAdapter::invoke`'s `instance` PARAMETER, which
-        // `invoke_uncached` only reads on its "prepare inline" branch (`request.capability_id` set,
-        // no `prepared_handle`) — never this one, since `prepared_handle` is always `Some` below.
-        // Every real command this call issues instead reuses `record.instance`, captured on the
-        // resolved handle back when `prepare_action` minted it from `plugin_instance_slot` — so the
-        // correct plugin routing already travels with the handle, not through this parameter.
         let request = InvokeRequest { prepared_handle: Some(prepared_handle.to_string()), capability_id: None, input: None, expected_revision: None, idempotency_key: idempotency_key.map(str::to_string), approval_handle: None };
         self.action_adapter()?.invoke(&self.catalog, &self.agent_principal(), &SessionHandle(self.session_id.clone()), request, 0, now_ms())
     }
@@ -4659,17 +4693,38 @@ impl HeadlessWorkspace {
         }))
     }
 
+    /// 🗿️ The body and the schema are both answerable for a hub document: the body from the
+    /// authenticated binding's own verified canonical pair, the schema from the descriptor
+    /// the binding already published (`DocumentDescriptor.artifact_schema` — the hub's own
+    /// authority over what this document IS, never a guess). Only `history` and `validation`
+    /// remain typed gaps, and they are gaps in the WIRE, not in this binding.
+    ///
+    /// 🪢 Two vocabularies, both published, neither collapsed into the other. `schema` is
+    /// the PACK schema (`gis.map`) — what the bytes are. `artifactKind` is the owning
+    /// app's dialect coordinate (`s.gis.gismap`, the `s.<plugin>[.<app>]` grammar
+    /// `DocumentIndexEntryV1::validate` enforces) — what a capability's `artifactKind`
+    /// filter and `capabilities_search` match on. Publishing only the schema is what made
+    /// an agent unable to match ANY verb to a hub document (M8 §5.4(1), measured live).
+    ///
+    /// 🧯️ Real answer when this workspace genuinely knows the schema (an open probe
+    /// artifact — `PROBE_SCHEMA` is this crate's own, real, no fabrication needed), a typed,
+    /// retryable gap otherwise: the real wire protocol (`store::AppCommand`, enumerated
+    /// exhaustively at `PluginArtifactChannel::exchange`'s own doc) has no
+    /// schema/describe/manifest QUERY command at all — nothing to "ask the guest" through yet
+    /// for an arbitrary plugin-backed artifact, so this names precisely what's missing rather
+    /// than fabricating a schema this workspace cannot see.
+    ///
+    /// 🧯️ Killed fabrication: this used to unconditionally answer `{"valid": true}` for ANY
+    /// artifact id, including ones this workspace has never even seen. The real wire protocol
+    /// has no validate query command either (same gap as `schema` above) — a live plugin
+    /// instance's own `validate()` is not reachable from here yet, so this is now a typed,
+    /// retryable gap naming exactly that, never a hardcoded pass.
     fn read_artifact_resource(&self, artifact_id: &str, suffix: Option<&str>, uri: &str) -> Result<Vec<ResourceContent>, GatewayError> {
         if matches!(self.origin, WorkspaceOrigin::Hub { .. }) {
             let snapshot = self.hub_snapshot()?;
             if !snapshot.documents.keys().any(|scope| scope.document_id == artifact_id) {
                 return Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")));
             }
-            // 🗿️ The body and the schema are both answerable for a hub document: the body from the
-            // authenticated binding's own verified canonical pair, the schema from the descriptor
-            // the binding already published (`DocumentDescriptor.artifact_schema` — the hub's own
-            // authority over what this document IS, never a guess). Only `history` and `validation`
-            // remain typed gaps, and they are gaps in the WIRE, not in this binding.
             match suffix {
                 None => {
                     let scope = snapshot.documents.keys().find(|scope| scope.document_id == artifact_id).cloned().ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
@@ -4677,12 +4732,6 @@ impl HeadlessWorkspace {
                     let body = self.artifact_body(artifact_id, &pack, &spr)?;
                     return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
                 }
-                // 🪢 Two vocabularies, both published, neither collapsed into the other. `schema` is
-                // the PACK schema (`gis.map`) — what the bytes are. `artifactKind` is the owning
-                // app's dialect coordinate (`s.gis.gismap`, the `s.<plugin>[.<app>]` grammar
-                // `DocumentIndexEntryV1::validate` enforces) — what a capability's `artifactKind`
-                // filter and `capabilities_search` match on. Publishing only the schema is what made
-                // an agent unable to match ANY verb to a hub document (M8 §5.4(1), measured live).
                 Some("schema") => {
                     let document = snapshot.documents.values().find(|document| document.scope.document_id == artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
                     let catalog = self.hub_catalog_snapshot()?;
@@ -4702,13 +4751,6 @@ impl HeadlessWorkspace {
                 }
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
             },
-            // 🧯️ Real answer when this workspace genuinely knows the schema (an open probe
-            // artifact — `PROBE_SCHEMA` is this crate's own, real, no fabrication needed), a typed,
-            // retryable gap otherwise: the real wire protocol (`store::AppCommand`, enumerated
-            // exhaustively at `PluginArtifactChannel::exchange`'s own doc) has no
-            // schema/describe/manifest QUERY command at all — nothing to "ask the guest" through yet
-            // for an arbitrary plugin-backed artifact, so this names precisely what's missing rather
-            // than fabricating a schema this workspace cannot see.
             Some("schema") => match (self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(artifact_id), self.plugin_artifact_binding(artifact_id)) {
                 (true, _) => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "artifactId": artifact_id, "schema": PROBE_SCHEMA }).to_string()), blob: None }]),
                 (false, Some(binding)) => Ok(vec![ResourceContent {
@@ -4728,11 +4770,6 @@ impl HeadlessWorkspace {
                 }]),
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open history in this workspace"))),
             },
-            // 🧯️ Killed fabrication: this used to unconditionally answer `{"valid": true}` for ANY
-            // artifact id, including ones this workspace has never even seen. The real wire protocol
-            // has no validate query command either (same gap as `schema` above) — a live plugin
-            // instance's own `validate()` is not reachable from here yet, so this is now a typed,
-            // retryable gap naming exactly that, never a hardcoded pass.
             Some("validation") => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{artifact_id}` cannot be validated yet — the real wire protocol has no validate query command, and no live plugin instance is reachable from this workspace to ask")).retryable()),
             Some(other) => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact sub-resource: {other}"))),
         }

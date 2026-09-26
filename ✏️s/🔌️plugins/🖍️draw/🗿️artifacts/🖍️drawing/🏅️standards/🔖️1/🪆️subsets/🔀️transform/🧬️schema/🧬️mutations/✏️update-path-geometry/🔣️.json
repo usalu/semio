@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry",
+  "semanticKind": "update-path-geometry",
+  "displayName": "Update Path Geometry",
+  "emoji": "✏️",
+  "aggregateVariant": "UpdatePathGeometry",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "update-path-geometry",
+  "binaryTag": 14,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema",
+    "typescript"
+  ]
+}

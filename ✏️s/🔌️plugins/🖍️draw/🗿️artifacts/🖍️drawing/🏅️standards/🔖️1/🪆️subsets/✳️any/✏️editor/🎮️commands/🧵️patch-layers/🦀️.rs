@@ -7,16 +7,6 @@ use crate::DrawingSnapshot;
 use dsl::{FromValue, ToValue};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-//#region 🔖️DocumentHelpers
-/// 🩹️ Parses a `PatchLayer`/`PatchLayers` wire `value` as JSON text (falling back to a plain JSON
-/// string when it isn't valid JSON) so one `String` wire field covers every heterogeneous
-/// `drawing_op_for_layer_field` value type (bool/number/string) — mirrors
-/// `shooting_protocol::ShootingCommand`'s `PatchShots`/`PatchAssets` shape.
-fn patch_value_json(value: &str) -> dsl::DslValue {
-    dsl::json::parse(value).map_or_else(|_| dsl::DslValue::String(value.to_string()), |parsed| dsl::json::to_dsl_value(&parsed))
-}
-//#endregion 🔖️DocumentHelpers
-
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-layers")]
 pub struct PatchLayers {
@@ -25,12 +15,19 @@ pub struct PatchLayers {
     pub value: String,
 }
 
-pub fn handle(payload: &PatchLayers, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &PatchLayers, doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, session: &mut DrawingSession) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let json_value = patch_value_json(&payload.value);
-    let operations: Vec<DrawingMutation> = payload.layer_ids.iter().filter_map(|id| drawing_op_for_layer_field(document, id, &payload.field, &json_value)).collect();
+    let json_value = crate::mutations::parse_layer_field_input(&payload.field, &payload.value);
+    let ids = if payload.layer_ids.is_empty() { &session.interaction.ids } else { &payload.layer_ids };
+    let selected = crate::schema::selected_drawing_layers(document, ids);
+    let mut operations = Vec::with_capacity(selected.len());
+    for layer in selected {
+        let id = crate::schema::layer_id(layer);
+        if !matches!(payload.field.as_str(), "locked" | "visible") && crate::schema::drawing_layer_is_locked(document, id) { return Err(Fault::from("The selected layer is locked")); }
+        operations.push(drawing_op_for_layer_field(document, id, &payload.field, &json_value).ok_or_else(|| Fault::from("Invalid layer field or value"))?);
+    }
     if operations.is_empty() {
         return Ok(Emit::default());
     }
-    Ok(Emit::mutations(operations))
+    Ok(Emit::commit(operations, "Edit layer properties"))
 }

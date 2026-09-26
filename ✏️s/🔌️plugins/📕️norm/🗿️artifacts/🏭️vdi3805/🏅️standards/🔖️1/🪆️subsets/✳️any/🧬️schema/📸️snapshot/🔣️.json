@@ -50,6 +50,9 @@
         "$ref": "#/$defs/CharacteristicCurve"
       },
       "x-semio-state": "artifact"
+    },
+    "limits": {
+      "$ref": "#/$defs/SecurityLimits"
     }
   },
   "$defs": {
@@ -548,34 +551,38 @@
       "additionalProperties": false,
       "required": [
         "id",
-        "x",
-        "y",
-        "z",
-        "nx",
-        "ny",
-        "nz"
+        "medium",
+        "position",
+        "direction"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
-        "x": {
-          "type": "number"
+        "medium": {
+          "type": "string"
         },
-        "y": {
-          "type": "number"
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
         },
-        "z": {
-          "type": "number"
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
         },
-        "nx": {
-          "type": "number"
-        },
-        "ny": {
-          "type": "number"
-        },
-        "nz": {
-          "type": "number"
+        "diameterMm": {
+          "type": [
+            "number",
+            "null"
+          ]
         }
       }
     },
@@ -661,16 +668,20 @@
       ],
       "properties": {
         "maxFileBytes": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "maxRecords": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "maxFieldLength": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "maxNestingDepth": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -680,7 +691,7 @@
       "required": [
         "symbol",
         "kind",
-        "si_factor",
+        "siFactor",
         "delta"
       ],
       "properties": {
@@ -690,7 +701,7 @@
         "kind": {
           "type": "string"
         },
-        "si_factor": {
+        "siFactor": {
           "type": "number"
         },
         "delta": {
@@ -713,7 +724,10 @@
           "type": "string"
         },
         "unit": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

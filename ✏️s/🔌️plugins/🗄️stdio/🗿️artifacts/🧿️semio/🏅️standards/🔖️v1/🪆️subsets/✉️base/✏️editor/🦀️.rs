@@ -131,6 +131,31 @@ impl ArtifactOwnedToolJobFactory for SemioAnyEditorExampleFactory {
     type Owner = EditorApp<SemioAnyEditor>;
     const TOOL_IDS: &'static [&'static str] = SEMIO_ANY_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_ANY_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_ANY_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
+}
+//#region 🔖️Editor
+#[derive(Default, Clone, Copy)]
+pub struct SemioAnyEditor;
+
+impl ArtifactEditor for SemioAnyEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
+    type Snapshot = SemioSnapshot;
+    type Mutation = SemioMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Presence = NoPresence;
+    type PresenceMutation = NoPresenceMutation;
+    type Transient = NoTransient;
+    type TransientMutation = NoTransientMutation;
+    type Command = SemioAnyEditCommand;
+
+    const DIALECT: Dialect = SEMIO_ANY_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = SEMIO_ANY_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<SemioAnyEditor>,
@@ -193,32 +218,6 @@ impl ArtifactOwnedToolJobFactory for SemioAnyEditorExampleFactory {
 
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { semioAnyEditor_command_from_action(action, args) }
 
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_ANY_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
-}
-//#region 🔖️Editor
-#[derive(Default, Clone, Copy)]
-pub struct SemioAnyEditor;
-
-impl ArtifactEditor for SemioAnyEditor {
-    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
-    }
-    type Snapshot = SemioSnapshot;
-    type Mutation = SemioMutation;
-    type Config = NoConfig;
-    type ConfigMutation = NoConfigMutation;
-    type Draft = NoDraft;
-    type DraftMutation = NoDraftMutation;
-    type Presence = NoPresence;
-    type PresenceMutation = NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
-    type Command = SemioAnyEditCommand;
-
-    const DIALECT: Dialect = SEMIO_ANY_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = SEMIO_ANY_DOCUMENT_SCHEMA;
-
     fn initial_snapshot() -> SemioSnapshot {
         SemioSnapshot::default()
     }
@@ -257,6 +256,7 @@ pub fn create_semio_base_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(SEMIO_ANY_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
+        .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
         .build_definition()
 }

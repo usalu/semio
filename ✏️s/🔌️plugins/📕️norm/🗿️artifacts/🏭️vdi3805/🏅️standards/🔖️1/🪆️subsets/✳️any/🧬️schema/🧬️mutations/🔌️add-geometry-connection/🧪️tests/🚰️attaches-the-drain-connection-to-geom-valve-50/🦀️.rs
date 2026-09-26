@@ -1,6 +1,6 @@
 //! 🧪️ `add-geometry-connection` fixture — `🚰️attaches-the-drain-connection-to-geom-valve-50`.
 //!
-//! A third connection point (`drain`, DN12.5, pointing -Y) is upserted onto `geom.valve.50`. The builder retains-then-pushes by `connection.id`, so a fresh id lands at the END of the list, after `in` and `out`. Because `drain` was absent in `before`, the inverse is `remove-geometry-connection`.
+//! A third connection point (`drain`, DN12.5, pointing -Y) is upserted onto `geom-valve-50`. The builder retains-then-pushes by `connection.id`, so a fresh id lands at the END of the list, after `in` and `out`. Because `drain` was absent in `before`, the inverse is `remove-geometry-connection`.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -17,10 +17,10 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
-}
+    }
 fn expected_after() -> Vdi3805Snapshot {
     serde_json::from_str(AFTER).expect("after snapshot decodes")
-}
+    }
 fn mutation() -> Vdi3805Mutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
@@ -28,13 +28,13 @@ fn applied() -> Vdi3805Snapshot {
     let base = before();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &base);
     <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), &base).expect("add-geometry-connection applies to its committed before-snapshot")
-}
+    }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let snapshot = applied();
-    let connections = &snapshot.geometry["geom.valve.50"].connections;
+    let connections = &snapshot.geometry["geom-valve-50"].connections;
     assert_eq!(connections.len(), 3, "add-geometry-connection/attaches-the-drain-connection-to-geom-valve-50: the geometry must carry three connection points");
     assert_eq!(connections[2].id, "drain", "add-geometry-connection/attaches-the-drain-connection-to-geom-valve-50: a fresh connection id is appended last, after in and out");
     assert_eq!(connections[2].diameter_mm, Some(12.5), "add-geometry-connection/attaches-the-drain-connection-to-geom-valve-50: the drain's nominal diameter must be 12.5 mm");
@@ -104,7 +104,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
-    assert_eq!(raised_diff.geometry.as_ref().map(|map| map["geom.valve.50"].connections.len()), Some(3), "add-geometry-connection/attaches-the-drain-connection-to-geom-valve-50: the diff must publish the geometry map with three connections");
+    assert_eq!(raised_diff.geometry.as_ref().map(|map| map["geom-valve-50"].connections.len()), Some(3), "add-geometry-connection/attaches-the-drain-connection-to-geom-valve-50: the diff must publish the geometry map with three connections");
     assert!(raised_diff.curves.is_none(), "add-geometry-connection/attaches-the-drain-connection-to-geom-valve-50: connection points are not characteristic curves");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");

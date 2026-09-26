@@ -16,7 +16,7 @@ fn round_trip(base: &Vdi3805Snapshot, operation: &Vdi3805Mutation) -> Vdi3805Sna
     }
     assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
     forward
-}
+    }
 
 #[semio_framework_async_macros::async_test]
 async fn change_manufacturer_file_round_trips() {
@@ -140,9 +140,9 @@ async fn geometry_lifecycle_round_trips() {
     let after_params = round_trip(&after_create, &replace_params);
     assert_eq!(after_params.geometry.get("geom.new").unwrap().parameters, params);
 
-    let delete = Vdi3805Mutation::RemoveGeometry(remove_geometry::RemoveGeometry { id: "geom.valve.50".into() });
+    let delete = Vdi3805Mutation::RemoveGeometry(remove_geometry::RemoveGeometry { id: "geom-valve-50".into() });
     let after_delete = round_trip(&base, &delete);
-    assert!(!after_delete.geometry.contains_key("geom.valve.50"));
+    assert!(!after_delete.geometry.contains_key("geom-valve-50"));
     let undo = delete.inverse(&base);
     assert_eq!(undo.len(), 1);
 }

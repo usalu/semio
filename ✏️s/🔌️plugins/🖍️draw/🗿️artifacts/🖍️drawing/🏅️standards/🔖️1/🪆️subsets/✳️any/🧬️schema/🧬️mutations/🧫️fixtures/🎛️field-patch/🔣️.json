@@ -1,0 +1,296 @@
+[
+  {
+    "patch": {
+      "field": "name",
+      "value": "Title"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "visible",
+      "value": false
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "locked",
+      "value": "false"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "opacity",
+      "value": 0.5
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "opacity",
+      "value": "bad"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "opacity",
+      "value": 1.1
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeWidth",
+      "value": -1
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeWidth",
+      "value": 2
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "fillColor",
+      "value": "#abc"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "fillColor",
+      "value": "#a"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "fillColor",
+      "value": "🔴"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "fillColor",
+      "value": "#112233"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "rotationDegrees",
+      "value": 90
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "transformX",
+      "value": 12.5
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "transformX",
+      "value": null
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "multiply"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "blendMode",
+      "value": "garbage"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "unknown",
+      "value": true
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "fillEnabled",
+      "value": false
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeEnabled",
+      "value": true
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeColor",
+      "value": "#123456"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeColor",
+      "value": "red"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "fillEnabled",
+      "value": "false"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "transformScaleX",
+      "value": 0
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "transformScaleY",
+      "value": -1
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "transformScaleX",
+      "value": 0.25
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeCap",
+      "value": "round"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeCap",
+      "value": "square"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeCap",
+      "value": "flat"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeJoin",
+      "value": "bevel"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeJoin",
+      "value": "round"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeJoin",
+      "value": "sharp"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "8 4"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": ""
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "0 0"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": ".5 2.5 1"
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "8 -4"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "NaN"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "8,4"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "1e3"
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "."
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "strokeDash",
+      "value": "1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 "
+    },
+    "accepted": false
+  }
+]

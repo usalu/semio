@@ -55,7 +55,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.csv".into(),
+        id: "s.stdio.csv".into(),
         name: "Csv".into(),
         source_format: STDIO_CSV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

@@ -71,11 +71,78 @@ fn every_component_variant_round_trips() {
         dimmed: Some(false),
         window: Some(TreeWindow { row_extent: Default::default(), total: 4096, offset: 0 }),
         granularity: Some(ui_text("piece")),
+        inline_toolbar: Some(crate::UiNodeId(42)),
+        detail: Some(crate::UiNodeId(43)),
         row_actions: crate::UiFixedList::default(),
     }));
     component_round_trips(Component::Image(ImageProps { src: ui_text("atlas://x"), alt: Some(label("alt")) }));
     component_round_trips(Component::Surface(Default::default()));
     component_round_trips(Component::Extension(ExtensionProps { extension: ui_text("plugin.app.slot"), props: Default::default() }));
+}
+
+#[test]
+fn tree_detail_relation_validates_and_copies_a_direct_diff_view_surface() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView fixture");
+    let nodes = serde_json::json!([
+        {
+            "id": 1, "key": fixture["conflicts"][0]["id"],
+            "component": { "type": "treeItem", "label": fixture["conflicts"][0]["message"], "detail": 2 },
+            "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+            "style": {}, "activity": "idle", "accessibility": {}, "children": [2]
+        },
+        {
+            "id": 2, "key": "conflict.preview", "component": { "type": "surface", "kind": "diff-view", "docSchema": "diff-view@1", "doc": { "bytes": [] } },
+            "layout": { "kind": "leaf", "width": "fill", "height": "fill" }, "style": {}, "activity": "idle", "accessibility": {}
+        }
+    ]);
+    let mut snapshot: crate::UiSnapshot = serde_json::from_value(serde_json::json!({ "surface": "diff-conflict", "revision": 1, "root": 1, "nodes": nodes, "layoutEpoch": 0 })).expect("detail snapshot");
+    assert_eq!(crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default()), Ok(()));
+    let copied = snapshot.nodes[0].credited_clone().expect("bounded credited copy");
+    let Component::TreeItem(copied) = copied.component else { panic!("copied root remains a TreeItem") };
+    assert_eq!(copied.detail, Some(crate::UiNodeId(2)));
+    assert_eq!(crate::accessibility_projection_node(&snapshot.nodes[0], 1).expanded, None, "detail content is not a disclosure subtree");
+    snapshot.nodes[1].component = Component::Button(ButtonProps { icon: ui_text("file-diff"), label: label("Preview") });
+    let violations = crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default()).expect_err("a non-Surface detail is rejected");
+    assert!(violations.iter().any(|violation| matches!(violation, crate::UiContractViolation::InvalidTreeDetail { node: crate::UiNodeId(1), detail: crate::UiNodeId(2) })));
+}
+
+#[test]
+fn inline_tree_toolbar_relation_validates_and_copies_from_the_shared_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🎛️inline-tree-controls/🔣️.json")).expect("inline controls fixture");
+    let controls = fixture["controls"].as_array().expect("fixture controls");
+    let nodes = serde_json::json!([
+        {
+            "id": 1, "key": fixture["rowId"],
+            "component": { "type": "treeItem", "label": fixture["conflict"]["message"], "inlineToolbar": 2 },
+            "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false }, "style": {}, "activity": "idle", "accessibility": {}, "children": [2]
+        },
+        {
+            "id": 2, "key": "conflict.toolbar", "component": { "type": "container", "role": fixture["expected"]["containerRole"] },
+            "layout": { "kind": "stack", "axis": fixture["expected"]["axis"], "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false }, "style": {}, "activity": "idle", "accessibility": {}, "children": [3, 4]
+        },
+        {
+            "id": 3, "key": "conflict.accept", "component": { "type": fixture["expected"]["controlComponent"], "icon": controls[0]["icon"], "label": controls[0]["label"] },
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {}
+        },
+        {
+            "id": 4, "key": "conflict.discard", "component": { "type": fixture["expected"]["controlComponent"], "icon": controls[1]["icon"], "label": controls[1]["label"] },
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {}
+        }
+    ]);
+    let mut snapshot: crate::UiSnapshot = serde_json::from_value(serde_json::json!({ "surface": "inline-conflict", "revision": 1, "root": 1, "nodes": nodes, "layoutEpoch": 0 })).expect("fixture snapshot");
+    assert_eq!(crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default()), Ok(()));
+    let copied = snapshot.nodes[0].credited_clone().expect("bounded credited copy");
+    let Component::TreeItem(copied) = copied.component else { panic!("copied root remains a TreeItem") };
+    assert_eq!(copied.inline_toolbar, Some(crate::UiNodeId(2)));
+    let projected_row = crate::accessibility_projection_node(&snapshot.nodes[0], 1);
+    assert_eq!(projected_row.expanded, None, "an inline toolbar is not a disclosure subtree");
+    for (record, expected) in snapshot.nodes.iter().skip(2).zip(controls) {
+        let projected = crate::accessibility_projection_node(record, 3);
+        assert_eq!((projected.role.as_str(), projected.label.as_deref()), ("button", expected["label"].as_str()));
+    }
+    snapshot.nodes[1].layout = crate::LayoutSpec::Stack(crate::StackLayout { axis: crate::Axis::Vertical, ..Default::default() });
+    let violations = crate::validate_snapshot(&snapshot, &crate::UiDocumentLimits::default()).expect_err("a vertical inline toolbar is rejected");
+    assert!(violations.iter().any(|violation| matches!(violation, crate::UiContractViolation::InvalidTreeInlineToolbar { node: crate::UiNodeId(1), toolbar: crate::UiNodeId(2) })));
 }
 
 #[test]

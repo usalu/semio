@@ -28,15 +28,45 @@ pub enum DrawingMutation {
     DuplicateLayer(DuplicateLayer),
     DeleteLayer(DeleteLayer),
     ReorderLayer(ReorderLayer),
+    UpdatePathGeometry(UpdatePathGeometry),
 }
 //#endregion 🔖️Mutations
 
 //#region 🔖️FieldPatch
+/// ⌨️ Decode inspector input according to its field, preserving numeric-looking text.
+pub fn parse_layer_field_input(field: &str, value: &str) -> dsl::DslValue {
+    let parsed = dsl::json::parse(value).ok().map(|parsed| dsl::json::to_dsl_value(&parsed));
+    if matches!(field, "name" | "blendMode" | "fillColor" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" | "booleanOperation") {
+        if let Some(dsl::DslValue::String(text)) = parsed { return dsl::DslValue::String(text); }
+        return dsl::DslValue::String(value.into());
+    }
+    parsed.unwrap_or_else(|| dsl::DslValue::String(value.into()))
+}
+
 /// 🎛️ Generic single-field layer editor bridge (properties panel / bulk patch commands) — maps a
 /// wire `field` name + JSON `value` onto the one semantic mutation that owns that field. Returns
 /// `None` for an unknown field or a field that doesn't apply to `layer`'s kind.
 pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: &str, value: &dsl::DslValue) -> Option<DrawingMutation> {
     let layer = find_drawing_layer(doc, layer_id)?;
+    let finite = || value.as_f64().filter(|number| number.is_finite());
+    match field {
+        "name" => { value.as_str()?; }
+        "visible" | "locked" | "fillEnabled" | "strokeEnabled" => { value.as_bool()?; }
+        "opacity" | "traceThreshold" => { if !(0.0..=1.0).contains(&finite()?) { return None; } }
+        "strokeWidth" | "traceSimplify" => { if finite()? < 0.0 { return None; } }
+        "transformX" | "transformY" | "transformRotation" | "rotationDegrees" => { finite()?; }
+        "transformScaleX" | "transformScaleY" => { if finite()? <= 0.0 { return None; } }
+        "fillColor" | "strokeColor" => {
+            let color = value.as_str()?.strip_prefix('#')?;
+            if !matches!(color.len(), 3 | 6) || !color.bytes().all(|byte| byte.is_ascii_hexdigit()) { return None; }
+        }
+        "strokeCap" => { if !matches!(value.as_str()?, "butt" | "round" | "square") { return None; } }
+        "strokeJoin" => { if !matches!(value.as_str()?, "miter" | "round" | "bevel") { return None; } }
+        "strokeDash" => { crate::schema::stroke::parse_stroke_dash(value.as_str()?).ok()?; }
+        "blendMode" => { if !matches!(value.as_str()?, "normal" | "multiply" | "screen" | "overlay" | "darken" | "lighten") { return None; } }
+        "booleanOperation" => { if !matches!(layer, DrawingLayerNode::Boolean(_)) || !matches!(value.as_str()?, "union" | "intersect" | "subtract" | "exclude") { return None; } }
+        _ => return None,
+    }
     let operation = match field {
         "name" => rename_layer(layer_id.into(), value.as_str().unwrap_or("").into()),
         "opacity" => set_layer_opacity(layer_id.into(), value.as_f64().unwrap_or(1.0)),
@@ -44,14 +74,15 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
         "locked" => set_layer_locked(layer_id.into(), value.as_bool().unwrap_or(false)),
         "blendMode" => set_layer_blend_mode(layer_id.into(), value.as_str().unwrap_or("normal").into()),
         "booleanOperation" => set_layer_boolean_operation(layer_id.into(), value.as_str().unwrap_or("union").into()),
-        "transformX" | "transformY" | "transformScaleX" | "transformScaleY" | "transformRotation" => {
+        "transformX" | "transformY" | "transformScaleX" | "transformScaleY" | "transformRotation" | "rotationDegrees" => {
             let mut transform = layer_base(layer).transform.clone();
             match field {
                 "transformX" => transform.x = value.as_f64().unwrap_or(0.0),
                 "transformY" => transform.y = value.as_f64().unwrap_or(0.0),
                 "transformScaleX" => transform.scale_x = value.as_f64().unwrap_or(1.0),
                 "transformScaleY" => transform.scale_y = value.as_f64().unwrap_or(1.0),
-                _ => transform.rotation = value.as_f64().unwrap_or(0.0),
+                "rotationDegrees" => transform.rotation = finite()?.to_radians(),
+                _ => transform.rotation = finite()?,
             }
             update_layer_transform(layer_id.into(), transform)
         }
@@ -62,9 +93,18 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
             });
             replace_layer_fill(layer_id.into(), Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }))
         }
-        "strokeWidth" => {
-            let stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: "butt".into(), join: "miter".into(), dash: None });
-            replace_layer_stroke(layer_id.into(), Some(StrokeStyle { width: value.as_f64().unwrap_or(1.0), ..stroke }))
+        "fillEnabled" => replace_layer_fill(layer_id.into(), if value.as_bool()? { Some(layer_base(layer).attributes.fill.clone().unwrap_or(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] })) } else { None }),
+        "strokeEnabled" => replace_layer_stroke(layer_id.into(), if value.as_bool()? { Some(layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: "butt".into(), join: "miter".into(), dash: None })) } else { None }),
+        "strokeWidth" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" => {
+            let mut stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: "butt".into(), join: "miter".into(), dash: None });
+            match field {
+                "strokeWidth" => stroke.width = finite()?,
+                "strokeColor" => stroke.color = hex_to_rgba(value.as_str()?, stroke.color[3]),
+                "strokeCap" => stroke.cap = value.as_str()?.into(),
+                "strokeJoin" => stroke.join = value.as_str()?.into(),
+                _ => stroke.dash = crate::schema::stroke::parse_stroke_dash(value.as_str()?).ok()?,
+            }
+            replace_layer_stroke(layer_id.into(), Some(stroke))
         }
         "traceThreshold" => {
             let DrawingLayerNode::Trace(trace) = layer else { return None };
@@ -236,6 +276,7 @@ pub const KINDS: &[&str] = &[
     "duplicate-layer",
     "delete-layer",
     "reorder-layer",
+    "update-path-geometry",
 ];
 //#endregion 🔖️Kinds
 
@@ -244,3 +285,5 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️kinds-catalog/🦀️.rs"]
 mod kinds_catalog_tests;
 //#endregion 🧪️KindsCatalog
+
+pub use crate::standards::v1::subsets::transform::schema::mutations::update_path_geometry::mutation::{update_path_geometry, UpdatePathGeometry};

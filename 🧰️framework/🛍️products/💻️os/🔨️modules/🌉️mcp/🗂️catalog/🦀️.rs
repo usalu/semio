@@ -397,6 +397,15 @@ fn is_framework_injected_action(action: &manifest::ActionDefinition) -> bool {
 /// `registry.window_action`), which `"*"` could not satisfy. Two window kinds declaring the same id
 /// with DIFFERENT definitions stay a real collision, reported as
 /// [`CatalogError::DuplicateCapabilityId`].
+///
+/// 🗒️ App-SCOPE actions (`AppDefinition.actions`) are the other half of the surface, and walking
+/// only `window_kinds` silently dropped every one of them: `🗒️note` declares all 48 of its verbs
+/// here, so `capabilities_search "delete the selected blocks"` could not find a single note
+/// capability while `🖍️draw` — which declares on its canvas window kind — worked. An app-scope
+/// action belongs to no particular window, so it addresses `"*"`, the same marker
+/// `framework_capabilities` already uses for the framework-injected verbs. A window kind that
+/// also declares the id wins (it carries a dispatchable concrete `window_kind_id`), which is why
+/// this loop runs second and skips what `seen` already holds instead of reporting a collision.
 fn app_action_verbs(app: &manifest::AppDefinition) -> Result<Vec<(&manifest::ActionDefinition, &str)>, CatalogError> {
     let mut verbs: Vec<(&manifest::ActionDefinition, &str)> = Vec::new();
     let mut seen: BTreeMap<&str, &manifest::ActionDefinition> = BTreeMap::new();
@@ -412,14 +421,6 @@ fn app_action_verbs(app: &manifest::AppDefinition) -> Result<Vec<(&manifest::Act
             }
         }
     }
-    // 🗒️ App-SCOPE actions (`AppDefinition.actions`) are the other half of the surface, and walking
-    // only `window_kinds` silently dropped every one of them: `🗒️note` declares all 48 of its verbs
-    // here, so `capabilities_search "delete the selected blocks"` could not find a single note
-    // capability while `🖍️draw` — which declares on its canvas window kind — worked. An app-scope
-    // action belongs to no particular window, so it addresses `"*"`, the same marker
-    // `framework_capabilities` already uses for the framework-injected verbs. A window kind that
-    // also declares the id wins (it carries a dispatchable concrete `window_kind_id`), which is why
-    // this loop runs second and skips what `seen` already holds instead of reporting a collision.
     for action in &app.actions {
         if seen.contains_key(action.id.as_str()) {
             continue;
@@ -848,6 +849,12 @@ pub fn compile(source: &CatalogSource, locale: Locale, terminology: Terminology)
 /// [`CatalogError::DuplicateCapabilityId`] even when the colliding pair is filtered out), so
 /// narrowing the published set can never hide a real collision; only the FINAL entry vector, and
 /// therefore `hash`, is filtered.
+///
+/// 🌱️ `artifact.create` has exactly ONE definition in a compiled catalog: `🗿️artifact`'s own
+/// invocable `artifact_create` tool when the source carries it (the live gateway always does),
+/// otherwise this module's catalog-only projection. The declared templates are an ARGUMENT of
+/// that verb, never a second capability wearing its id — which is what made a live catalog with
+/// both sources refuse to compile at all (`duplicate capability id: artifact.create`).
 pub fn compile_with_audiences(source: &CatalogSource, locale: Locale, terminology: Terminology, audiences: &[CapabilityAudience]) -> Result<Catalog, CatalogError> {
     let mut entries: BTreeMap<String, CapabilityDefinition> = BTreeMap::new();
     let mut all_apps: Vec<&manifest::AppDefinition> = Vec::new();
@@ -940,11 +947,6 @@ pub fn compile_with_audiences(source: &CatalogSource, locale: Locale, terminolog
         insert_capability(&mut entries, capability.clone())?;
     }
 
-    // 🌱️ `artifact.create` has exactly ONE definition in a compiled catalog: `🗿️artifact`'s own
-    // invocable `artifact_create` tool when the source carries it (the live gateway always does),
-    // otherwise this module's catalog-only projection. The declared templates are an ARGUMENT of
-    // that verb, never a second capability wearing its id — which is what made a live catalog with
-    // both sources refuse to compile at all (`duplicate capability id: artifact.create`).
     if !template_ids.is_empty() {
         template_ids.sort();
         template_ids.dedup();

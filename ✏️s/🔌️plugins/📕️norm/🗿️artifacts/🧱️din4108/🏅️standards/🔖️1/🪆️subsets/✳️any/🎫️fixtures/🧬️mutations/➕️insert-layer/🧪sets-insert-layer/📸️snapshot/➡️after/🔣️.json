@@ -30,6 +30,22 @@
           "shadingFc": 0.7
         }
       ]
+    },
+    {
+      "id": "zone-utility",
+      "floorAreaM2": 12.0,
+      "heaviness": "heavy",
+      "nightVentilation": "none",
+      "windows": [
+        {
+          "id": "win-utility",
+          "orientation": "N",
+          "inclinationDeg": 90.0,
+          "areaM2": 1.0,
+          "gValue": 0.5,
+          "shadingFc": 0.7
+        }
+      ]
     }
   ],
   "elements": [
@@ -176,7 +192,7 @@
     {
       "id": "floor-ground",
       "kind": "floor",
-      "zoneId": "zone-living",
+      "zoneId": "zone-utility",
       "orientationDeg": 0.0,
       "inclinationDeg": 0.0,
       "adjacent": "ground",

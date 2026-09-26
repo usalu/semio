@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.avi.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.avi.standard.1-0.dialect.source", "to": "s.stdio.avi.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.avi.v1", "artifact_kind": "stdio.avi", "artifact_schema": "stdio.avi", "extension": "semio", "pack_schema_hash": "de0d04905741068debee64bacacaf53197ac57741bd12991074e49f34ab9c690", "runtime_capability_id": "s.stdio.avi.standard.1-0.codec.codec-stdio-avi-extension-semio.v1" } }
+    { "id": "s.stdio.avi.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.avi.standard.1-0.dialect.source", "to": "s.stdio.avi.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.avi.v1", "artifact_kind": "s.stdio.avi", "artifact_schema": "stdio.avi", "extension": "semio", "pack_schema_hash": "de0d04905741068debee64bacacaf53197ac57741bd12991074e49f34ab9c690", "runtime_capability_id": "s.stdio.avi.standard.1-0.codec.codec-stdio-avi-extension-semio.v1" } }
   ],
   "mutations": [],
   "inferences": [],

@@ -175,6 +175,7 @@ impl En1993Snapshot {
                 protection_thickness: 0.020,
                 section_factor: 150.0,
                 mu0: 0.50,
+                design_temperature: 550.0,
                 protection_conductivity: 0.20,
                 protection_density: 800.0,
                 protection_specific_heat: 1700.0,

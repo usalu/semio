@@ -1,0 +1,10 @@
+{
+  "schema": "playbook.scene-showcase.v1",
+  "modeId": "builder",
+  "windows": [
+    { "windowId": "playbook-steps", "bodyKey": "playbook.play.steps", "surfaceKind": "table" },
+    { "windowId": "playbook-changes", "bodyKey": "playbook.play.changes", "surfaceKind": "diffView" },
+    { "windowId": "playbook-activity", "bodyKey": "playbook.play.activity", "surfaceKind": "eventFeed" },
+    { "windowId": "playbook-source", "bodyKey": "playbook.play.source", "surfaceKind": "textEditor" }
+  ]
+}

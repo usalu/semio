@@ -61,7 +61,7 @@
       "executable_registration": true,
       "native_factory": {
         "factory_id": "stdio.native.xml.v1",
-        "artifact_kind": "stdio.xml",
+        "artifact_kind": "s.stdio.xml",
         "artifact_schema": "stdio.xml",
         "extension": "xml",
         "pack_schema_hash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",

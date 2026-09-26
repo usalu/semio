@@ -27,6 +27,13 @@
     { "id": "serialized-page", "action": "duplicate", "expected": "pending" },
     { "id": "visible-switch", "action": "switch-visible", "expected": "retained" }
   ],
+  "ownerSurfaces": [
+    { "id": "home-editor", "visible": { "id": "s.space.home@1/*#editor", "dialect": "s.space.home", "actions": ["applyDirectoryEventPage", "createSpace"] }, "owner": true },
+    { "id": "home-viewer", "visible": { "id": "s.space.home@1/*#viewer", "dialect": "s.space.home", "actions": ["applyDirectoryEventPage"] }, "owner": true },
+    { "id": "stale-home-viewer-without-feed", "visible": { "id": "s.space.home@1/*#viewer", "dialect": "s.space.home", "actions": [] }, "owner": false },
+    { "id": "space-index", "visible": { "id": "s.space.space@1/*#editor", "dialect": "s.space.space", "actions": ["createArtifact"] }, "owner": false },
+    { "id": "foreign-app-declaring-the-verb", "visible": { "id": "s.note.note@1/*#editor", "dialect": "s.note.note", "actions": ["applyDirectoryEventPage"] }, "owner": false }
+  ],
   "labels": {
     "en": ["Updating directory", "Retrying directory update", "Directory update stopped", "Cancel directory update"],
     "de": ["Verzeichnis wird", "Verzeichnisaktualisierung", "Verzeichnisaktualisierung angehalten", "Verzeichnisaktualisierung abbrechen"]

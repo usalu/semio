@@ -38,6 +38,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/resize-layer/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-pixels/schema.json"
     }
   ]
 }

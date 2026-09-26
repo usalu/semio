@@ -77,10 +77,87 @@ fn pressure(pa: f64) -> Quantity { Quantity::new(QuantityKind::Pressure, pa) }
 fn force(n: f64) -> Quantity { Quantity::new(QuantityKind::Force, n) }
 fn temp(k: f64) -> Quantity { Quantity::new(QuantityKind::Temperature, k) }
 
+fn push_duplicate_ids(report: &mut CheckReport, document: &En1991Snapshot, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String) {
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for id in ids {
+        *counts.entry(id.clone()).or_insert(0) += 1;
+    }
+    for (id, count) in counts {
+        if count < 2 {
+            continue;
+        }
+        let path = path_for(&id);
+        let subject = SubjectRef::new(id.clone(), &path, copy(&format!("Duplicate {table} id"), &format!("Doppelte {table}-Id")));
+        let options: Vec<String> = ids.iter().filter(|x| x.as_str() != id).cloned().collect();
+        let mut builder = CheckResult::assess(
+            format!("en1991.integrity.duplicate.{table}.{id}"),
+            "EN 1991 integrity",
+            ClauseId::new("EN 1991", "§2", "id"),
+            subject.clone(),
+            copy(&format!("Unique {table} id"), &format!("Eindeutige {table}-Id")),
+        )
+        .annex(document.annex)
+        .explanation(copy(
+            &format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
+            &format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
+        ))
+        .status(crate::document::CheckStatus::Fail);
+        builder = builder.remedy(Remedy::one_of(
+            subject,
+            if options.is_empty() { vec![format!("{id}-unique")] } else { options },
+            copy(
+                &format!("Rename the duplicated '{id}' entry to a free id."),
+                &format!("Den doppelten '{id}'-Eintrag auf eine freie Id umbenennen."),
+            ),
+        ));
+        report.push(builder.build());
+    }
+}
+
+#[allow(dead_code)]
+fn push_dangling_ref(report: &mut CheckReport, document: &En1991Snapshot, check_id: String, path: String, subject_id: &str, label_en: &str, label_de: &str, current: &str, options: Vec<String>) {
+    let subject = SubjectRef::new(subject_id, &path, copy(label_en, label_de));
+    let opts = if options.is_empty() { vec![format!("{current}-missing")] } else { options };
+    report.push(
+        CheckResult::assess(
+            check_id,
+            "EN 1991 integrity",
+            ClauseId::new("EN 1991", "§2", "reference"),
+            subject.clone(),
+            copy(&format!("Referential integrity — {label_en}"), &format!("Referenzintegrität — {label_de}")),
+        )
+        .annex(document.annex)
+        .explanation(copy(
+            &format!("'{current}' does not reference an existing target; dependent checks for this row must not Pass."),
+            &format!("'{current}' verweist auf kein vorhandenes Ziel; abhängige Nachweise für diese Zeile dürfen nicht bestehen."),
+        ))
+        .status(crate::document::CheckStatus::Fail)
+        .remedy(Remedy::one_of(
+            subject,
+            opts,
+            copy(
+                &format!("Set {label_en} to one of the existing target ids."),
+                &format!("{label_de} auf eine der vorhandenen Ziel-Ids setzen."),
+            ),
+        ))
+        .build(),
+    );
+}
+
+/// 🔗 Unique entity ids + dangling cross-refs (CORRECTION 14:42). No cross-ref leaves on the subject today; helper retained for any that appear.
+fn push_referential_integrity(report: &mut CheckReport, document: &En1991Snapshot) {
+    push_duplicate_ids(report, document, "floors", &document.floors.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), &|id| format!("floors[id={id}].id"));
+    push_duplicate_ids(report, document, "selfWeightElements", &document.self_weight_elements.iter().map(|e| e.id.clone()).collect::<Vec<_>>(), &|id| format!("selfWeightElements[id={id}].id"));
+    push_duplicate_ids(report, document, "roofs", &document.roofs.iter().map(|r| r.id.clone()).collect::<Vec<_>>(), &|id| format!("roofs[id={id}].id"));
+    push_duplicate_ids(report, document, "windFaces", &document.wind_faces.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), &|id| format!("windFaces[id={id}].id"));
+    push_duplicate_ids(report, document, "accidentalCases", &document.accidental_cases.iter().map(|c| c.id.clone()).collect::<Vec<_>>(), &|id| format!("accidentalCases[id={id}].id"));
+}
+
 /// 🧪 Evaluate assumed design loads against EN 1991 / DIN EN NA required characteristic actions.
 pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
     let annex = document.annex;
     let mut report = CheckReport::default();
+    push_referential_integrity(&mut report, document);
     let storeys = document.storey_count;
 
     if document.floors.is_empty() {
@@ -93,6 +170,15 @@ pub fn check_full_actions(document: &En1991Snapshot) -> CheckReport {
         let alpha_n = part_1_1::alpha_n(&floor.category, storeys, annex);
         let remedy = if floor.assumed_qk + 1e-9 < required { Some(raise_pressure_remedy(&path, &floor.id, "imposed q_k", "Nutzlast q_k", floor.assumed_qk, required)) } else { None };
         report.push(assess_covers(&format!("en1991.1-1.imposed.{}", floor.id), "DIN EN 1991-1-1", ClauseId::new("EN 1991-1-1", "Table 6.1 / Eq. 6.1DE–6.2DE", "6.3.1"), SubjectRef::new(&floor.id, &path, copy(&format!("Floor {}", floor.id), &format!("Decke {}", floor.id))), copy("Imposed characteristic load q_k (α_A·α_n)", "Charakteristische Nutzlast q_k (α_A·α_n)"), pressure(floor.assumed_qk), pressure(required), copy(&format!("Required q_k = {:.3} kN/m² (α_A={:.3}, α_n={:.3}, A={:.1} m², n={}) for {}; assumed {:.3} kN/m².", required / 1000.0, alpha_a, alpha_n, floor.area, storeys, floor.category, floor.assumed_qk / 1000.0), &format!("Erforderliches q_k = {:.3} kN/m² (α_A={:.3}, α_n={:.3}, A={:.1} m², n={}) für {}; angenommen {:.3} kN/m².", required / 1000.0, alpha_a, alpha_n, floor.area, storeys, floor.category, floor.assumed_qk / 1000.0)), annex, remedy));
+        let assumed_f = floor.assumed_qk * floor.area;
+        let required_f = required * floor.area;
+        let path_a = format!("floors[id={}].assumedQk", floor.id);
+        let remedy_a = if floor.assumed_qk + 1e-9 < required {
+            Some(raise_force_remedy(&path_a, &floor.id, "floor imposed q_k", "Deckennutzlast q_k", floor.assumed_qk, required))
+        } else {
+            None
+        };
+        report.push(assess_covers(&format!("en1991.1-1.floor-force.{}", floor.id), "DIN EN 1991-1-1", ClauseId::new("EN 1991-1-1", "§6.3.1", "6.3.1"), SubjectRef::new(&floor.id, &path_a, copy(&format!("Floor {}", floor.id), &format!("Decke {}", floor.id))), copy("Total imposed force q_k·A", "Gesamte Nutzlastkraft q_k·A"), force(assumed_f), force(required_f), copy(&format!("Required F = q_k·A = {:.1} kN on A={:.1} m²; assumed {:.1} kN.", required_f / 1000.0, floor.area, assumed_f / 1000.0), &format!("Erforderliches F = q_k·A = {:.1} kN auf A={:.1} m²; angenommen {:.1} kN.", required_f / 1000.0, floor.area, assumed_f / 1000.0)), annex, remedy_a));
         let req_q = part_1_1::imposed_qk_concentrated_n(&floor.category, annex);
         let path_q = format!("floors[id={}].assumedQkConcentrated", floor.id);
         let remedy_q = if floor.assumed_qk_concentrated + 1e-9 < req_q { Some(raise_force_remedy(&path_q, &floor.id, "concentrated Q_k", "Einzellast Q_k", floor.assumed_qk_concentrated, req_q)) } else { None };

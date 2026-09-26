@@ -13,7 +13,11 @@ use crate::editor::playbook::commands::{add_block, add_step, move_block, move_st
 use crate::editor::playbook::config::{PlaybookConfig, PlaybookConfigMutation};
 use crate::editor::playbook::engine::{playbook_io, PlaybookChapterPayload};
 use crate::editor::playbook::modes::builder;
+use crate::editor::playbook::modes::builder::windows::activity as activity_window;
 use crate::editor::playbook::modes::builder::windows::builder as builder_window;
+use crate::editor::playbook::modes::builder::windows::changes as changes_window;
+use crate::editor::playbook::modes::builder::windows::source as source_window;
+use crate::editor::playbook::modes::builder::windows::steps as steps_window;
 use crate::flatten_playbook_blocks;
 use crate::op::{AddStep, PlaybookMutation};
 use crate::schema::default_block;
@@ -31,6 +35,11 @@ use store::EngineHandles;
 //#region 🔖️Constants
 pub use builder_window::PLAYBOOK_PLAY_BODY_BUILDER;
 pub use builder_window::PLAYBOOK_PLAY_WINDOW_BUILDER;
+pub use changes_window::PLAYBOOK_PLAY_BODY_CHANGES;
+pub use changes_window::PLAYBOOK_PLAY_WINDOW_CHANGES;
+pub use activity_window::{PLAYBOOK_PLAY_BODY_ACTIVITY, PLAYBOOK_PLAY_WINDOW_ACTIVITY};
+pub use source_window::{PLAYBOOK_PLAY_BODY_SOURCE, PLAYBOOK_PLAY_WINDOW_SOURCE};
+pub use steps_window::{PLAYBOOK_PLAY_BODY_STEPS, PLAYBOOK_PLAY_WINDOW_STEPS};
 
 /// 📥️ The step `"chapters:in"` imports land in — created on first import, reused on every later one.
 const PLAYBOOK_IMPORTED_STEP_ID: &str = "imported";
@@ -667,6 +676,10 @@ impl ArtifactEditor for PlaybookPlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_framework_plugin::built_to_component_tree(builder_window::render(doc.snapshot, cfg.snapshot)?)),
+            PLAYBOOK_PLAY_BODY_CHANGES => Ok(semio_framework_plugin::built_to_component_tree(changes_window::render(doc.snapshot)?)),
+            PLAYBOOK_PLAY_BODY_STEPS => Ok(semio_framework_plugin::built_to_component_tree(steps_window::render(doc.snapshot)?)),
+            PLAYBOOK_PLAY_BODY_ACTIVITY => Ok(semio_framework_plugin::built_to_component_tree(activity_window::render(doc.snapshot)?)),
+            PLAYBOOK_PLAY_BODY_SOURCE => Ok(semio_framework_plugin::built_to_component_tree(source_window::render(doc.snapshot)?)),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -685,6 +698,10 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .mode_def(builder::definition())
         .default_mode_id(builder::PLAYBOOK_PLAY_MODE_BUILDER)
         .window_kind_def(builder_window::definition())
+        .window_kind_def(steps_window::definition())
+        .window_kind_def(changes_window::definition())
+        .window_kind_def(activity_window::definition())
+        .window_kind_def(source_window::definition())
         .default_layout(builder::layout())
         .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
         .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))

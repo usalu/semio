@@ -1,3 +1,180 @@
+# Wave D Verification — EN 1995 (`🪵️en1995`) — Round 4
+
+**VERDICT: PASS (0 blocking)**
+
+Reviewer: adversarial Wave D (read-only). Fixer claim (`142eadd6`): `Summary [ 2.831s] 177 tests run: 177 passed, 0 skipped` and `Summary [ 0.154s] 51 tests run: 51 passed, 0 skipped`. Evidence date: 2026-09-26. Untrusted until re-run — confirmed below.
+
+---
+
+## Test runs (mandated)
+
+```text
+Summary [   2.159s] 177 tests run: 177 passed, 0 skipped
+```
+
+Command: `bun nx run @semio-tech/norm-en1995-rs:test --skip-nx-cache -- --no-fail-fast`
+
+```text
+Summary [   0.221s] 51 tests run: 51 passed, 0 skipped
+```
+
+Command: `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache`
+
+---
+
+## Round 4 — Round 3 blocking list re-check (FAIL 4)
+
+| R3 # | Issue | Round 4 | Evidence |
+|------|--------|---------|----------|
+| 1 | `SlsFrequent` + ψ₁ combos + frequent §7.2 check | **FIXED** | `ComboKind::SlsFrequent` (`⚖️timber/🦀️.rs` L612–617); `enumerate_combos()` applies ψ₁ from `psi_factors()` (`L263–281`, `L767–786`); frequent deflection check `en1995.7.2.wfreq.*` (`L1423–1440`); DE ψ₁ divergence test `sls_frequent_uses_psi1_and_de_snow_high_diverges` (`🧪️tests/⚖️compliance/🦀️.rs` L714–779). Default beam derives effects from `q_line_n_per_m` actions (`📸️snapshot/🦀️.rs` L73–99), not hand-typed `mEdNm`. |
+| 2 | Stale `📝️text/🟦️.ts` (9 kinds, `unknown`) | **FIXED** | 66-kind externally tagged union (`🧬️mutations/📝️text/🟦️.ts` L1, L347–413); no `Record<string, unknown>`; matches Rust `En1995Mutation` + `KINDS` (`🧬️mutations/🦀️.rs` L77–214, 66 entries). `InsertMember`/`RemoveMember` retain list `index` matching Rust list-splice semantics — not legacy flat-scalar CRUD. |
+| 3 | Stale binary protocol flat scalars | **FIXED** | 66 hierarchical wire records tag=0..65 (`🧬️mutations/💾️binary/📡️.protocol.semio` L14–145); no `change-m-ed-knm`, `change-w-mm3`, or other flat-scalar tags. |
+| 4 | Identical en/de combined-interaction prose | **FIXED** | Distinct German lead-in: EN `"Combined compression and bending: …"` vs DE `"Kombination Druck und Biegung: …"` (`⚖️timber/🦀️.rs` L1363–1368). Formula symbols may match; prose differs. |
+
+---
+
+## ADDENDA spot-check (unchanged from Round 3 — still PASS)
+
+| Addendum | Result | Evidence |
+|----------|--------|----------|
+| §7.3 f₁ | **PASS** | `assess_floor` computes `f1` (`⚖️timber/🦀️.rs` L1468–1498). |
+| Johansen plate/rows | **PASS** | `steel_plate_changes_capacity_and_can_make_the_check_fail` (`🧪️tests/⚖️compliance/🦀️.rs` L251–281); `connection_rows_change_johansen_capacity` (L703–710). |
+| `bucklingLengthZM` in buckling | **PASS** | `lam_z = m.buckling_length_z_m / iz` (`⚖️timber/🦀️.rs` L1341–1346). |
+| Catalogue k_mod parity | **PASS** | `reference_table_k_mod_cell_equals_evaluated_modification_factor` (`🧪️tests/⚖️compliance/🦀️.rs` L674–688). |
+| Duplicate/dangling ids → `one_of` | **PASS** | `push_duplicate_ids` + `Remedy::one_of` (`⚖️timber/🦀️.rs` L1129–1202); tests L638–670. |
+| Perturbation signature | **PASS** | `(id, status, computed, limit, utilization)` (`🧪️tests/⚖️compliance/🦀️.rs` L371–386); no `field_fingerprint`/`id_score` in family evaluate path. |
+
+---
+
+## Check summary (brief §1–10 + 7b)
+
+| # | Check | Result | Evidence |
+|---|--------|--------|----------|
+| 1 | Subject completeness | **PASS** | EN 1990 ULS + SLS char/frequent(ψ₁)/QP from `enumerate_combos()`; actions drive design effects. |
+| 2 | Clause coverage | **PASS** (obs.) | Unchanged from Round 3 spot-check. |
+| 3 | Numerics | **PASS** | Oracle ±0.5% (`🧪️tests/⚖️compliance/🦀️.rs` L329–348). |
+| 4 | Applicability | **PASS** | Role/magnitude gating throughout `assess_member`. |
+| 5 | National annex | **PASS** | DE vs EN divergence tests L55–90, L205–211, L714–779. |
+| 6 | Report quality | **PASS** | Localized paths/remedies; combined check en/de prose distinct (`⚖️timber/🦀️.rs` L1367–1368). |
+| 7 | Examples | **PASS** | Four examples decode + assert verdicts. |
+| 7b | Inputs UX | **PASS** | Structured editor + field-meta with human labels. |
+| 8 | Mutations & schema | **PASS** | Rust/TS/binary/protocol aligned at 66 kinds; diff TS typed (`🔺️diff/🟦️.ts`). |
+| 9 | Tests | **PASS** | 177 executed, 0 skipped (+1 `sls_frequent_uses_psi1_and_de_snow_high_diverges`). |
+| 10 | Stubs | **PASS** | No `todo!` on evaluate path. |
+
+---
+
+## Blocking fix list
+
+None
+
+---
+
+## Non-blocking observations
+
+- Plugin-wide `NormMutationLeafTaxonomy` `rows.maxItems: 392` vs 547 payloads — not blocking for this family.
+- `🏅️standards/🔖️1/🪆️subsets/🔣️.json` L10 `subsetPolicyRationale` still names `change-m-ed-knm` (stale prose).
+- `w_fin` uses ψ₂ from governing **characteristic** combo (`⚖️timber/🦀️.rs` L1397), not the quasi-permanent combo — verify against EN 1995-1-1 §7.2 intent.
+- Round 3 → Round 4: 176 → 177 tests; all four Round 3 blockers **confirmed fixed** in source and runner.
+
+---
+
+# Wave D Verification — EN 1995 (`🪵️en1995`) — Round 3
+
+**VERDICT: FAIL (4 blocking)**
+
+Reviewer: adversarial Wave D (read-only). Fixer claim (`de37a795`): `Summary [ 1.961s] 176 tests run: 176 passed, 0 skipped`. Evidence date: 2026-09-26. Untrusted until re-run — confirmed below.
+
+---
+
+## Test runs (mandated)
+
+```text
+Summary [   2.555s] 176 tests run: 176 passed, 0 skipped
+```
+
+Command: `bun nx run @semio-tech/norm-en1995-rs:test --skip-nx-cache -- --no-fail-fast`  
+Log: `🗑️generated/verify-en1995/test-output.txt`
+
+```text
+Summary [   0.561s] 51 tests run: 51 passed, 0 skipped
+```
+
+Command: `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache`
+
+---
+
+## Round 3 — original 12 blockers re-check
+
+| R2 # | Issue | Round 3 | Evidence |
+|------|--------|---------|----------|
+| 1 | Pre-merged design scalars / no EN 1990 combinations | **FIXED** (partial) | `CharacteristicAction` + `enumerate_combos()` (`⚖️timber/🦀️.rs` L680–811); ULS/SLS char/QP from actions (`L1258–1262`, `L1357–1387`). Default beam uses `qLineNPerM` loads (`📸️snapshot/🦀️.rs` L73–99), not member-level `mEdNm`. **Gap:** no SLS **frequent (ψ₁)** combination (see blocking #1). |
+| 2 | §7.3 `f₁ > 8 Hz` | **FIXED** | `assess_floor` computes `f1` from mass/stiffness/span (`⚖️timber/🦀️.rs` L1399–1462); check `en1995.7.3.f1.*`; example test asserts it (`📚️examples/🏠️glulam-floor-beam/🧪️tests/🧩️example/🦀️.rs` L19). |
+| 3 | `floorAVert` opaque scalar | **FIXED** | `a_vert` derived from `massKgPerM`/`massKgPerM2`, `dampingXi`, `f1` (`⚖️timber/🦀️.rs` L1417–1423); bridge uses separate crowd model (`L1564–1577`). |
+| 4 | `bucklingLengthZM` ignored | **FIXED** | `lam_z = m.buckling_length_z_m / iz` in compression buckling (`⚖️timber/🦀️.rs` L1311–1316). `supportLengthM` enters `k_c_90` (`L366–368`, `L1341–1342`). |
+| 5 | Johansen steel plate / rows | **FIXED** | `evaluate_connection` branches on `steel_plate` + `shear_planes` (`L1658–1663`); tests `steel_plate_changes_capacity_and_can_make_the_check_fail`, `connection_rows_change_johansen_capacity` (`🧪️tests/⚖️compliance/🦀️.rs` L251–282, L703–710). |
+| 6 | Bridge fatigue surrogate / duplicate ULS | **FIXED** | Annex A Wöhler `N_R = 10^(a − b·log₁₀ Δσ)`, `k_fat = (N_R/N)^(1/β)` (`⚖️timber/🦀️.rs` L1543–1562). Bridge ULS uses crowd line load `m_ed = 1.5·m_crowd`, not 1-1 `mEdNm` (`L1532–1541`). |
+| 7 | Example tests trivial | **FIXED** | All four examples decode DSL and assert verdicts (`📚️examples/*/🧪️tests/🧩️example/🦀️.rs`; compliance `compliant_examples_pass` L120–125). |
+| 8 | Strength-class wire labels | **FIXED** | `choice("C24", "C24 — softwood strength class", "C24 — Nadelholz-Festigkeitsklasse")` etc. (`✏️editor/🏷️field-meta/🦀️.rs` L13–39). |
+| 9 | No default-snapshot field-meta test | **FIXED** | `default_snapshot_every_editable_leaf_has_en_de_meta` (`🧪️tests/⚖️compliance/🦀️.rs` L232–247). |
+| 10 | Legacy flat mutation fixtures | **FIXED** | 66 hierarchical kinds (`🧬️mutations/🦀️.rs` L147+); 66 fixture dirs; `on_disk == KINDS.len()` (`🧬️mutations/🧪️tests/🔬️unit/🦀️.rs` L184). |
+| 11 | Only one remedy-apply test | **FIXED** | `remedy_increasing_height_flips_bending` + `remedy_spacing_or_compression_flips_fail` (`🧪️tests/⚖️compliance/🦀️.rs` L139–165). |
+| 12 | No path-resolution test | **FIXED** | `every_emitted_path_resolves_on_examples` (`🧪️tests/⚖️compliance/🦀️.rs` L168–184). |
+
+---
+
+## ADDENDA re-check
+
+| Addendum | Result | Evidence |
+|----------|--------|----------|
+| 14:54 catalogue | **PASS** | `reference_tables()` returns 4 tables via shared `k_mod()` (`✏️editor/📌️panels/📚️catalogue/🦀️.rs` L202–204, L87–107). Test `reference_table_k_mod_cell_equals_evaluated_modification_factor` (`🧪️tests/⚖️compliance/🦀️.rs` L674–688). |
+| 14:42 integrity | **PASS** (partial) | Duplicate member/connection/action ids → `Fail` + `Remedy::one_of` (`⚖️timber/🦀️.rs` L1099–1179); tests L638–656. Unknown strength → `one_of` tabulated classes L1219–1223, test L659–670. No cross-entity reference fields in snapshot (no `memberId` on connections) — dangling-ref scenario N/A; `strengthClass` invalid ref covered. |
+| 14:37 perturbation | **PASS** | Signature `(id, status, computed, limit, utilization)` (`🧪️tests/⚖️compliance/🦀️.rs` L371–386). No `fingerprint`/`field_fingerprint`/`id_score` in family `*.rs`. `rg "let _ ="` evaluate path: only test cleanup (`🧪️tests/⚖️compliance/🦀️.rs` L365). `perturb_every_editable_leaf_in_committed_examples_changes_a_check` L610–634. Scope skips (`scope_skips` L512–531) are role/plate-gated per CORRECTION 13:43, not whole-subtree. |
+| 14:37 identical en/de | **FAIL** | Combined interaction explanation identical en/de (`⚖️timber/🦀️.rs` L1336). |
+| 14:37 `Record<string, unknown>` | **FAIL** | `🧬️schema/🧬️mutations/📝️text/🟦️.ts` L9, L38 — stale 9-kind positional union with `unknown` nests. |
+| Coordinator item 1 (ψ₁) | **FAIL** | `ComboKind` has ULS, SLS char, SLS QP, accidental only (`⚖️timber/🦀️.rs` L611–616); `psi_factors` returns ψ₁ (`L263–278`) but no `SlsFrequent` combo or check uses ψ₁. |
+
+---
+
+## Check summary (brief §1–10 + 7b)
+
+| # | Check | Result | Evidence |
+|---|--------|--------|----------|
+| 1 | Subject completeness | **FAIL** | Hierarchical members/connections + EN 1990 eq 6.10 ULS and SLS char/QP (`⚖️timber/🦀️.rs` L680–811). **Missing SLS frequent (ψ₁).** |
+| 2 | Clause coverage | **PASS** (obs.) | §6.1–8, §7.2–7.3 (f₁, a_vert, velocity), EN 1995-2 Annex A/B, fire, Johansen 8.2.2/8.2.3, spacing. |
+| 3 | Numerics | **PASS** | Hand chain still valid; oracle ±0.5% (`🧪️tests/⚖️compliance/🦀️.rs` L329–348). |
+| 4 | Applicability | **PASS** | Role/magnitude gating throughout `assess_member`. |
+| 5 | National annex | **PASS** | DE vs EN divergence tests L55–90, L205–211. |
+| 6 | Report quality | **FAIL** | Identical en/de on combined check (`⚖️timber/🦀️.rs` L1336). Otherwise localized paths/remedies OK. |
+| 7 | Examples | **PASS** | Four examples decode + assert verdicts. |
+| 7b | Inputs UX | **PASS** | Structured editor + field-meta with human labels. |
+| 8 | Mutations & schema | **FAIL** | Rust 66 kinds + diff TS typed (`🔺️diff/🟦️.ts` L3–11). **Stale:** `🧬️mutations/📝️text/🟦️.ts` (9 kinds, `Record<string, unknown>`); `🧬️mutations/💾️binary/📡️.protocol.semio` L16+ still lists `change-m-ed-knm` flat scalars. |
+| 9 | Tests | **PASS** | 176 executed, 0 skipped; perturbation, oracle, jsonschema, remedies, paths present. |
+| 10 | Stubs | **PASS** | No `todo!` on evaluate path. |
+
+---
+
+## Blocking fix list
+
+1. **`⚖️timber/🦀️.rs` `ComboKind` + `enumerate_combos()`** — Add `SlsFrequent` using ψ₁ from `psi_factors()` (EN 1990 Table A1.1); emit at least one SLS frequent check (e.g. deflection or stress) beside existing char/QP §7.2 checks; test DE ψ₁ divergence where applicable.
+
+2. **`🧬️schema/🧬️mutations/📝️text/🟦️.ts`** — Regenerate from Rust `En1995Mutation` (66 id-addressed kinds); remove `Record<string, unknown>` member/connection nests and positional `index` CRUD shapes.
+
+3. **`🧬️schema/🧬️mutations/💾️binary/📡️.protocol.semio`** — Regenerate wire tags for all 66 hierarchical kinds; remove legacy `change-m-ed-knm`, `change-w-mm3`, … flat-scalar records.
+
+4. **`⚖️timber/🦀️.rs` L1336** — Localize combined-interaction explanation: German prose must differ from English (e.g. „Kombination Druck und Biegung“ / formula labels), not copy the identical formula string to both `loc()` arms.
+
+---
+
+## Non-blocking observations
+
+- Plugin-wide `NormMutationLeafTaxonomy` `rows.maxItems: 392` while generate emits 547 payloads (`✏️s/🔌️plugins/📕️norm/🧬️schema/🔣️.json` L964). EN 1995 nx target passes 176/176 — **not blocking for this family**.
+- `🏅️standards/🔖️1/🪆️subsets/🔣️.json` L10 `subsetPolicyRationale` still names `change-m-ed-knm` (stale prose).
+- `w_fin` uses ψ₂ from the governing **characteristic** combo (`L1364`), not the quasi-permanent combo already enumerated — verify against EN 1995-1-1 §7.2 intent.
+- Round 2 → Round 3: 84 → 176 tests; fixer claim on EN 1990 combinations, f₁, Johansen, integrity, catalogue k_mod parity, and perturbation signature **confirmed** where listed above.
+
+---
+
 # Wave D Verification — EN 1995 (`🪵️en1995`) — Round 2
 
 **VERDICT: FAIL (12 blocking)**

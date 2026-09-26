@@ -1,0 +1,21 @@
+{
+  "name": "@semio-tech/pixels",
+  "targets": {
+    "test-typescript": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🔲️pixels",
+        "command": "bun ./📜️script.ts test typescript",
+        "forwardAllArgs": true
+      }
+    },
+    "test-rust": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🔲️pixels",
+        "command": "bun ./📜️script.ts test rust",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -43,6 +43,9 @@ impl Vdi3805Diff {
             if let Some(value) = &self.curves {
                 next.curves = value.clone();
             }
+            if let Some(value) = &self.limits {
+                next.limits = value.clone();
+            }
             next
         })
     }
@@ -79,6 +82,9 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
             if let Some(value) = &self.curves {
                 next.curves = value.clone();
             }
+            if let Some(value) = &self.limits {
+                next.limits = value.clone();
+            }
             next
         })
     }
@@ -102,7 +108,8 @@ impl MutationDiff<Vdi3805Snapshot> for Vdi3805Diff {
         take!(index);
         take!(geometry);
         take!(curves);
-            }
+        take!(limits);
+    }
 }
 //#endregion 🔖️Apply
 

@@ -701,6 +701,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
 ]
 
@@ -732,8 +733,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-din16798",
- "semio-s-artifact-norm-din4108",
  "semio-s-artifact-stdio-semio",
 ]
 
@@ -765,7 +764,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-stdio-semio",
 ]
 
 [[package]]
@@ -781,7 +779,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
 ]
 
 [[package]]
@@ -812,7 +809,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1992",
 ]
 
 [[package]]
@@ -828,7 +824,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1993",
 ]
 
 [[package]]
@@ -844,8 +839,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1994",
 ]
 
 [[package]]
@@ -861,8 +854,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1995",
 ]
 
 [[package]]
@@ -878,8 +869,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1996",
 ]
 
 [[package]]
@@ -895,8 +884,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1997",
 ]
 
 [[package]]
@@ -912,8 +899,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1990",
- "semio-s-artifact-norm-en1998",
 ]
 
 [[package]]
@@ -929,7 +914,6 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
- "semio-s-artifact-norm-en1999",
 ]
 
 [[package]]

@@ -124,10 +124,12 @@ pub fn mint_artifact_id(existing: &[SpaceArtifactRow], now_ms: u64) -> String {
 
 //#region 🔖️TableProjection
 semio_framework_plugin::app_labels! {
-    /// 🗣️ The space app table's strings (worker-brief task 1: name · kind · subset · updated · updated-by ·
-    /// presence, `id` first as the row's own identity cell) — the single source both the editor's and the
-    /// viewer's `main` window render from (neutral schema-layer helper so the viewer never has to import from
-    /// `✏️editor`, `policyViewerPurityBreaches`).
+    /// 🗣️ The space app table's strings (worker-brief task 1: name · id · kind · subset · updated · updated-by ·
+    /// presence) — the single source both the editor's and the viewer's `main` window render from (neutral
+    /// schema-layer helper so the viewer never has to import from `✏️editor`, `policyViewerPurityBreaches`). The
+    /// NAME leads: the table grid names every row and every row button by its first cell ("Öffnen: Werkstattplan"),
+    /// and a leading artifact id read "Open: artifact-5bd9…" to a screen reader (ticket 26/09/23 S16); the row's
+    /// identity is its key (`artifact:<id>`), never a cell.
     pub struct SpaceIndexTableLabels {
         table_name: native_en "Artifacts", native_de "Artefakte", reuse_en "Artifacts", reuse_de "Artefakte";
         column_id: native_en "ID", native_de "ID", reuse_en "ID", reuse_de "ID";
@@ -146,13 +148,13 @@ semio_framework_plugin::app_labels! {
 impl SpaceIndexTableLabels {
     /// 📊️ The seven column headers, in cell order.
     pub fn columns(&self) -> [&str; 7] {
-        [self.column_id.as_str(), self.column_name.as_str(), self.column_kind.as_str(), self.column_subset.as_str(), self.column_updated.as_str(), self.column_updated_by.as_str(), self.column_presence.as_str()]
+        [self.column_name.as_str(), self.column_id.as_str(), self.column_kind.as_str(), self.column_subset.as_str(), self.column_updated.as_str(), self.column_updated_by.as_str(), self.column_presence.as_str()]
     }
 
     /// 📊️ One table row for `row` in these labels' language; `presence` is a display-ready summary (empty
     /// when the caller has no live presence data, e.g. the viewer, which folds no presence of its own).
     pub fn row(&self, row: &SpaceArtifactRow, presence: &str) -> [String; 7] {
-        [row.id.clone(), row.name.clone(), row.kind_id.clone(), row.dialect.subset.clone(), utc_minute_text(row.updated_at_ms, self.locale), row.updated_by.clone(), presence.into()]
+        [row.name.clone(), row.id.clone(), row.kind_id.clone(), row.dialect.subset.clone(), utc_minute_text(row.updated_at_ms, self.locale), row.updated_by.clone(), presence.into()]
     }
 }
 

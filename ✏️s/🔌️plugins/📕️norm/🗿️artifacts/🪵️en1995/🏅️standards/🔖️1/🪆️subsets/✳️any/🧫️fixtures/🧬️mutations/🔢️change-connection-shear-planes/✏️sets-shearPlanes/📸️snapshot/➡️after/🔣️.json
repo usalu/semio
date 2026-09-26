@@ -1,0 +1,99 @@
+{
+  "annex": "De",
+  "connections": [
+    {
+      "actions": [
+        {
+          "fKN": 8000.0,
+          "id": "g",
+          "kind": "permanent",
+          "loadDuration": "permanent"
+        },
+        {
+          "fKN": 10000.0,
+          "id": "q",
+          "kind": "imposed",
+          "loadDuration": "medium"
+        }
+      ],
+      "diameterM": 0.012,
+      "edgeDistanceM": 0.048,
+      "endDistanceM": 0.096,
+      "fUK": 400000000.0,
+      "fastenerType": "bolt",
+      "id": "conn-C1",
+      "labelDe": "Schraubverbund am Auflager",
+      "labelEn": "Bolt group at support",
+      "number": 8,
+      "rows": 2,
+      "serviceClass": 1,
+      "shearPlanes": 2,
+      "spacingM": 0.09,
+      "steelPlate": false,
+      "steelPlateThicknessM": 0.0,
+      "strengthClass": "GL28h",
+      "t1M": 0.2,
+      "t2M": 0.2
+    }
+  ],
+  "members": [
+    {
+      "actions": [
+        {
+          "category": "",
+          "fC90KN": 0.0,
+          "fPointN": 0.0,
+          "id": "g",
+          "kind": "permanent",
+          "loadDuration": "permanent",
+          "mKNm": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "qLineNPerM": 2500.0,
+          "vKN": 0.0
+        },
+        {
+          "category": "A",
+          "fC90KN": 0.0,
+          "fPointN": 0.0,
+          "id": "q",
+          "kind": "imposed",
+          "loadDuration": "medium",
+          "mKNm": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "qLineNPerM": 3000.0,
+          "vKN": 0.0
+        }
+      ],
+      "bM": 0.2,
+      "bearingLengthM": 0.15,
+      "bridgeA": 0.0,
+      "bridgeB": 0.0,
+      "bridgeBeta": 0.0,
+      "bridgeCrowdPerM2": 0.0,
+      "bridgeNObs": 0.0,
+      "bridgeTLYears": 0.0,
+      "bucklingLengthYM": 5.0,
+      "bucklingLengthZM": 1.5,
+      "dampingXi": 0.04,
+      "fireDurationS": 0.0,
+      "hM": 0.4,
+      "id": "beam-B1",
+      "labelDe": "Hauptträger BSH Decke B1",
+      "labelEn": "Main glulam floor beam B1",
+      "lateralRestraintSpacingM": 1.5,
+      "mCritNm": 180000.0,
+      "massKgPerM": 120.0,
+      "massKgPerM2": 450.0,
+      "notchDepthM": 0.0,
+      "notchDistanceM": 0.0,
+      "role": "Floor",
+      "serviceClass": 1,
+      "spanM": 5.0,
+      "strengthClass": "GL28h",
+      "support": "SimplySupported",
+      "supportLengthM": 0.15
+    }
+  ]
+}

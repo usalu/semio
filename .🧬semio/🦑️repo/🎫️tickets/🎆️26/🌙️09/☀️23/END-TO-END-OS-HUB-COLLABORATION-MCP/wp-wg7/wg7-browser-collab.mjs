@@ -21,8 +21,10 @@ const outDir = join(here, "generated");
 mkdirSync(outDir, { recursive: true });
 const out = (name) => join(outDir, `collab-${tag}-${name}`);
 
-const SHELL = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6550/?plugin=note";
-const HUB = process.env.WG7_HUB ?? "http://127.0.0.1:7800";
+const SHELL_FROM_ENV = process.env.SEMIO_PROBE_URL;
+const SHELL = SHELL_FROM_ENV;
+const HUB = process.env.WG7_HUB;
+if (!HUB || !SHELL_FROM_ENV) throw new Error("WG7_HUB and SEMIO_PROBE_URL are required (rule 23: no default hub or serve port)");
 const SPACE = process.env.WG7_SPACE;
 const DOCUMENT = process.env.WG7_DOCUMENT;
 const EDIT_ACTION = process.env.WG7_EDIT_ACTION ?? "";
@@ -206,9 +208,24 @@ async function signIn(session) {
   return { opened, typedAddress, added, selected, typedEmail, typedPassword, submitted, attempts, minted: minted(), spaceRows, pill: pill ? { key: pill.key, label: pill.label } : null, auth: session.hub.filter((line) => line.includes("/auth/")) };
 }
 
+/** 🔄️ Opens the Sync card only when its dock switch is off — activating an open card's switch closes it. */
+async function openSyncCard(page) {
+  const pill = (await projection(page)).find((node) => node.key === "s-sync-status" && node.windowId === "shell.chrome");
+  return pill?.checked === true ? "open" : await activate(page, "s-sync-status", 2000);
+}
+
+/** 📏️ The hub's head for the document (its committed edit count), read as user A through the hub's own REST surface — what a
+ * joiner must show right after it attaches, however many edits came before it. */
+async function documentHead() {
+  const [user] = USERS;
+  const signIn = await fetch(`${HUB}/auth/sessions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ schema: "semio.hub.auth.credential-sign-in/v1", email: user.email, password: user.password, deviceInstanceId: `wg7head${Date.now().toString(16)}`, clientClass: "browser" }) }).then((response) => response.json());
+  const document = await fetch(`${HUB}/spaces/${encodeURIComponent(SPACE)}/documents/${encodeURIComponent(DOCUMENT)}`, { headers: { authorization: `Bearer ${signIn.token}` } }).then((response) => response.json());
+  return Number(document.head_seq ?? 0);
+}
+
 async function attach(session) {
   const { page } = session;
-  const panel = await activate(page, "s-sync-status", 2000);
+  const panel = await openSyncCard(page);
   const remote = await awaitKey(page, "framework.sync.remote", 10_000);
   const chose = remote ? await activate(page, remote, 2000) : "absent";
   const path = await awaitKey(page, "framework.sync.remote.path", 10_000);
@@ -263,6 +280,11 @@ const peers = await waitFor(b.page, (state) => state.peers.length >= 1, 30_000);
 record("4 presence shows the other user", peers.ok, { peersSeenByB: peers.last.peers });
 const blockRows = (state) => state.nodes.filter((node) => String(node.key).startsWith("note-play-block:")).map((node) => node.label);
 for (const session of sessions) await activate(session.page, "framework.panel.artifact", 3000);
+const hubHead = await documentHead();
+for (const session of sessions) {
+  const shown = await waitFor(session.page, (state) => blockRows(state).length >= hubHead, 30_000);
+  record(`4b ${session.user.label} shows the document's existing content after attach (hub head ${hubHead})`, shown.ok, { blocks: blockRows(shown.last).length, hubHead });
+}
 const before = await view(b.page);
 const addText = EDIT_ACTION || keyEndingWith(await projection(a.page), "note-play-blocks.add.text") || "";
 const edited = addText ? await activate(a.page, addText, 6000) : "no-edit-control";
@@ -299,13 +321,11 @@ const linkLine = (state) => syncCard(state).flatMap((node) => {
   const match = LINK_KEY.exec(String(node.key));
   return match ? [{ code: match[1], key: node.key }] : [];
 });
-const linkText = (state) => syncCard(state).filter((node) => node.role === "paragraph" && /Verbindung|Connection|Zugriff|access/u.test(String(node.label ?? ""))).map((node) => node.label).slice(0, 4);
+const linkText = (state) => syncCard(state).filter((node) => node.role === "paragraph" && /verbindung|connection|zugriff|access/iu.test(String(node.label ?? ""))).map((node) => node.label).slice(0, 4);
+const GERMAN_LINK_LINE = /Verbindung|Zugriff/u;
 const cardDigest = (state) => syncCard(state).map((node) => `${String(node.key).split("/").pop()}=${String(node.label ?? "").slice(0, 60)}`).slice(0, 16);
 if (process.env.WG7_OUTAGE === "1") {
-  const ensureSyncCard = async (page) => {
-    const pill = (await projection(page)).find((node) => node.key === SYNC_CARD && node.windowId === "shell.chrome");
-    if (pill?.checked !== true) await activate(page, SYNC_CARD, 2000);
-  };
+  const ensureSyncCard = openSyncCard;
   for (const session of sessions) await ensureSyncCard(session.page);
   const aBlocksOnline = blockRows(await view(a.page)).length;
   await a.context.setOffline(true);
@@ -344,6 +364,7 @@ if (process.env.WG7_OUTAGE === "1") {
   await b.page.waitForTimeout(15_000);
   await ensureSyncCard(b.page);
   const after = await view(b.page);
+  record("13d B's expiry line speaks B's browser tongue (de-DE → German)", linkText(expired.last).some((line) => GERMAN_LINK_LINE.test(line)), { texts: linkText(expired.last) });
   record("14 an expired link never relinks by itself", linkLine(after).some((row) => row.code === "link-expired") && !/live|verbunden|connected|gespeichert|persisted/iu.test(after.sync ?? ""), { link: linkLine(after), texts: linkText(after), card: cardDigest(after), sync: after.sync });
 }
 

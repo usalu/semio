@@ -5,9 +5,9 @@
 //! Three routes, all of them event-sourced through the same log sessions use
 //! (`crate::directory::AGENT_DELEGATED_EVENT` / `AGENT_DELEGATION_REVOKED_EVENT` /
 //! `AGENT_SESSION_ISSUED_EVENT`): `POST /auth/agent-delegations` (create, bearer = the delegating
-//! human's session), `GET /auth/agent-delegations?space=<id>` (list), `DELETE
-//! /auth/agent-delegations/{id}` (revoke) and `POST /auth/agent-sessions` (exchange the delegation
-//! for an agent session, bearer = the delegation capability itself).
+//! human's session), `GET /auth/agent-delegations?space=<id>` (list), `POST
+//! /auth/agent-delegations/{id}/revoke` (the revoke command) and `POST /auth/agent-sessions` (exchange
+//! the delegation for an agent session, bearer = the delegation capability itself).
 //!
 //! The delegation token is shown exactly once, at creation. It never travels in argv, in an
 //! environment variable, or in a URL: `semio-os-mcp --hub` reads it from a credential file or a
@@ -20,6 +20,7 @@ use crate::directory::model::{AgentAudience, AgentDelegationRow};
 
 /// 🛣️ The three delegation routes and the exchange route.
 pub const AGENT_DELEGATION_ROUTE: &str = "/auth/agent-delegations";
+pub const AGENT_DELEGATION_REVOKE_ROUTE: &str = "/auth/agent-delegations/{id}/revoke";
 pub const AGENT_SESSION_ROUTE: &str = "/auth/agent-sessions";
 
 pub const AGENT_DELEGATION_CREATE_SCHEMA: &str = "semio.hub.auth.agent-delegation-create/v1";

@@ -132,11 +132,17 @@ async function openDocument(spaceId, documentId) {
   let spaceAction = "already in the space";
   const artifactRow = page.locator(`[data-ui-node-key="artifact:${documentId}"]`).first();
   const spaceRow = page.locator(`[data-ui-node-key="space:${spaceId}"]`).first();
-  const landed = await Promise.race([artifactRow.waitFor({ state: "attached", timeout: 180_000 }).then(() => "artifact"), spaceRow.waitFor({ state: "attached", timeout: 180_000 }).then(() => "space")]);
+  const landed = await Promise.race([
+    artifactRow.waitFor({ state: "attached", timeout: 20_000 }).then(() => "artifact"),
+    spaceRow.waitFor({ state: "attached", timeout: 20_000 }).then(() => "space"),
+  ]).catch(() => "neither");
   if (landed === "space") {
     spaceAction = await rowAction("space", spaceId, /open/i);
-    await page.locator('[data-ui-node-key="s-space-create-artifact"]').first().waitFor({ state: "visible", timeout: 180_000 });
+  } else if (landed === "neither") {
+    spaceAction = `navigated to /spaces/${spaceId} (the Home table holds ${await page.locator('[data-ui-node-key^="space:"]').count()} attached space rows)`;
+    await page.goto(new globalThis.URL(`/spaces/${spaceId}`, URL).href, { waitUntil: "domcontentloaded", timeout: 180_000 });
   }
+  if (landed !== "artifact") await page.locator('[data-ui-node-key="s-space-create-artifact"]').first().waitFor({ state: "visible", timeout: 180_000 });
   await page.locator(`[data-ui-node-key="artifact:${documentId}"]`).first().waitFor({ state: "attached", timeout: 180_000 });
   const artifactAction = await rowAction("artifact", documentId, /open/i);
   const live = await until(240_000, (shell) => shell.syncPill && !/detached|getrennt|connecting|verbindet|backoff/i.test(shell.syncPill) && sockets.some((row) => row.url.includes("/document/ws") && row.closedAt === null));

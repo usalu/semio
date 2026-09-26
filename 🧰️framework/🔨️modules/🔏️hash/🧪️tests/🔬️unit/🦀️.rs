@@ -94,3 +94,44 @@ fn hasher_agrees_with_the_blake3_oracle_for_segmented_updates() {
     assert_eq!(ours.finalize().as_bytes(), oracle.finalize().as_bytes());
 }
 //#endregion 🧪️Blake3Oracle
+
+/// 🏎️ Every SHA-256 compression this machine can select agrees with the portable FIPS 180-4 rounds on
+/// NIST's blocks and on pseudo-random states and blocks, so hardware selection never changes a digest.
+#[test]
+fn sha256_hardware_compression_agrees_with_the_portable_rounds() {
+    let mut seed = 0x9e37_79b9_7f4a_7c15u64;
+    let mut next = || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        seed
+    };
+    for _ in 0..20_000 {
+        let mut state = [0u32; 8];
+        state.iter_mut().for_each(|word| *word = next() as u32);
+        let mut block = [0u8; 64];
+        block.iter_mut().for_each(|byte| *byte = next() as u8);
+        let (mut selected, mut portable) = (state, state);
+        sha256_compress(&mut selected, &block);
+        sha256_compress_portable(&mut portable, &block);
+        assert_eq!(selected, portable, "state {state:08x?} block {block:02x?}");
+    }
+    assert_eq!(sha256_hex(b"abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+}
+
+/// 🔬️ Third-party oracle: the `sha2` crate agrees with this crate's `Sha256` on every length class
+/// around the block and padding boundaries, whole and in uneven segments.
+#[test]
+fn sha256_agrees_with_the_sha2_oracle_across_lengths() {
+    use sha2::Digest as _;
+    for length in (0..=260).chain([511, 512, 513, 4_095, 4_096, 65_537, 1_000_003]) {
+        let input: Vec<u8> = (0..length).map(|index| (index as u32).wrapping_mul(2_654_435_761).rotate_left(7) as u8).collect();
+        let oracle: [u8; 32] = sha2::Sha256::digest(&input).into();
+        assert_eq!(Sha256::digest(&input), oracle, "length {length}");
+        let mut segmented = Sha256::new();
+        for chunk in input.chunks(37) {
+            segmented.update(chunk);
+        }
+        assert_eq!(segmented.finalize(), oracle, "segmented length {length}");
+    }
+}

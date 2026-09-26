@@ -2455,6 +2455,14 @@ pub mod ui {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[value(skip_serializing_if = "Option::is_none")]
         pub control: Option<UiControlNode>,
+        /// 🎛️ The explicitly related horizontal Toolbar and its real Button nodes.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub inline_toolbar: Option<UiStackNode>,
+        /// 🎞️ One semantic engine Surface placed below the row chrome.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub detail: Option<UiComponentSceneNode>,
         /// 👁️ Domain "eye toggle" flag: the row stays visible, dimmed, and clickable (to un-hide) —
         /// this is NOT `presence.state == Hidden`, which means not rendered at all.
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2495,6 +2503,8 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: None,
+                inline_toolbar: None,
+                detail: None,
                 dimmed: None,
                 menu: None,
                 window: None,
@@ -2777,6 +2787,7 @@ pub mod ui {
                         drag_data: None,
                         items: None,
                         control: None,
+                        inline_toolbar: None, detail: None,
                         dimmed: None,
                         menu: None,
                     }],
@@ -2808,6 +2819,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: None,
+                inline_toolbar: None, detail: None,
                 dimmed: None,
             },
             UiNode::Field(field) => {
@@ -2828,6 +2840,7 @@ pub mod ui {
                     drag_data: None,
                     items: None,
                     control: ui_node_to_control(&field.child),
+                    inline_toolbar: None, detail: None,
                     dimmed: None,
                 }
             }
@@ -2847,6 +2860,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: Some(UiControlNode::Button(button.clone())),
+                inline_toolbar: None, detail: None,
                 dimmed: None,
             },
             UiNode::Input(input) => tree_control_item(input.id.clone(), UiControlNode::Input(input.clone())),
@@ -2873,6 +2887,7 @@ pub mod ui {
                     drag_data: None,
                     items: Some(items),
                     control: None,
+                    inline_toolbar: None, detail: None,
                     dimmed: None,
                 }
             }
@@ -2897,6 +2912,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: None,
+                inline_toolbar: None, detail: None,
                 dimmed: None,
             },
             other => UiTreeItemNode {
@@ -2915,6 +2931,7 @@ pub mod ui {
                 drag_data: None,
                 items: None,
                 control: None,
+                inline_toolbar: None, detail: None,
                 dimmed: None,
             },
         }
@@ -2937,6 +2954,7 @@ pub mod ui {
             drag_data: None,
             items: None,
             control: Some(control),
+            inline_toolbar: None, detail: None,
             dimmed: None,
         }
     }

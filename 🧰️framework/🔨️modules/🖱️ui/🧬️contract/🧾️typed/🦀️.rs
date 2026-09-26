@@ -27,7 +27,7 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(TreeWindow { 0 => total: u32, 1 => offset: u32, 2 => row_extent: TreeWindowRowExtent });
         $visitor!(TreeProps { 0 => interaction_domain: Option<UiText>, 1 => presentation: TreePresentation });
         $visitor!(TreeSectionProps { 0 => label: Option<Label>, 1 => default_open: Option<bool>, 2 => window: Option<TreeWindow> });
-        $visitor!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => window: Option<TreeWindow>, 8 => granularity: Option<UiText>, 9 => row_actions: UiFixedList<RowAction> });
+        $visitor!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => window: Option<TreeWindow>, 8 => granularity: Option<UiText>, 9 => inline_toolbar: Option<UiNodeId>, 10 => row_actions: UiFixedList<RowAction>, 11 => detail: Option<UiNodeId> });
         $visitor!(TableProps { 0 => label: Label, 1 => columns: UiFixedList<Label>, 2 => actions_label: Option<Label>, 3 => window: Option<TreeWindow> });
         $visitor!(TableRowProps { 0 => cells: UiFixedList<UiText>, 1 => row_actions: UiFixedList<RowAction> });
         $visitor!(ImageProps { 0 => src: UiText, 1 => alt: Option<Label> });

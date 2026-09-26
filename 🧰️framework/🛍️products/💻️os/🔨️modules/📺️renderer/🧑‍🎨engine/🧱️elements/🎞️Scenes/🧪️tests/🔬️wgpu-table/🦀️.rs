@@ -196,6 +196,82 @@ fn stepper_cell_segments_dispatch_the_merged_delta_and_the_centre_swallows_the_r
     assert!(press(&node, 200.0, y).expect("centre hit").action.is_none(), "a stepper's read-only centre must swallow the row click");
 }
 
+fn table_key_action(key: &str) -> ui_wgpu::wgpu::KeyAction {
+    match key {
+        "ArrowUp" => ui_wgpu::wgpu::KeyAction::ArrowUp,
+        "ArrowRight" => ui_wgpu::wgpu::KeyAction::ArrowRight,
+        "ArrowDown" => ui_wgpu::wgpu::KeyAction::ArrowDown,
+        "ArrowLeft" => ui_wgpu::wgpu::KeyAction::ArrowLeft,
+        "PageUp" => ui_wgpu::wgpu::KeyAction::PageUp,
+        "PageDown" => ui_wgpu::wgpu::KeyAction::PageDown,
+        "Home" => ui_wgpu::wgpu::KeyAction::Home,
+        "End" => ui_wgpu::wgpu::KeyAction::End,
+        "Enter" => ui_wgpu::wgpu::KeyAction::Enter,
+        other => panic!("fixture key {other}"),
+    }
+}
+
+/// ⌨️ The schema-owned React oracle fixture drives the WGPU centre focus geometry and live key
+/// resolver. Every action keeps the authored args, Page/Home/End clamp at current bounds, and a row
+/// whose addressed cell changes kind invalidates the retained focus address.
+#[test]
+fn table_stepper_keyboard_matches_the_shared_react_oracle_and_revalidates_the_live_cell() {
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/⌨️table-stepper-keyboard/🔣️.json"))).expect("Table stepper keyboard fixture");
+    let cell = &fixture["cell"];
+    let action = &fixture["action"];
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    remember_scene_theme(&Theme::default());
+    for keyboard_case in fixture["cases"].as_array().expect("cases") {
+        let payload = json!({
+            "kind": "stepper",
+            "value": keyboard_case["value"],
+            "min": cell["min"],
+            "max": cell["max"],
+            "step": cell["step"],
+            "action": action,
+        });
+        let mut row = serde_json::Map::new();
+        row.insert("id".into(), cell["rowId"].clone());
+        row.insert(cell["columnId"].as_str().unwrap().into(), payload);
+        let rows = Value::Array(vec![Value::Object(row)]).to_string();
+        let node = table_scene("window:sourcing-pool", TableScene::base(columns_json(&[(cell["columnId"].as_str().unwrap(), cell["columnLabel"].as_str().unwrap(), false)]), rows));
+        let focus = table_stepper_focus_target(&node, bounds, 200.0, row_center_y(0), UiDriverDrag::Handle).expect("centre focus");
+        assert_eq!(focus.row_id, cell["rowId"].as_str().unwrap());
+        assert_eq!(focus.column_id, cell["columnId"].as_str().unwrap());
+        assert!(table_stepper_focus_target(&node, bounds, 20.0, row_center_y(0), UiDriverDrag::Handle).is_none(), "the decrement button is not the spinbutton focus target");
+        let accessible = table_stepper_accessibility_cells(&node, bounds, UiDriverDrag::Handle);
+        assert_eq!(accessible.len(), 1);
+        assert_eq!(
+            (accessible[0].label.as_str(), accessible[0].min, accessible[0].value, accessible[0].max),
+            (cell["columnLabel"].as_str().unwrap(), cell["min"].as_f64().unwrap(), keyboard_case["value"].as_f64().unwrap(), cell["max"].as_f64().unwrap())
+        );
+        assert!(accessible[0].rect.contains(200.0, row_center_y(0)), "the virtual spinbutton owns the painted centre third");
+        let mut input = InputState::<ActionDescriptor>::default();
+        let outcome = table_stepper_apply_key(&node, &focus.row_id, &focus.column_id, &table_key_action(keyboard_case["key"].as_str().unwrap()), &mut input).expect("live stepper").expect("bounded action");
+        assert_eq!(outcome == TableStepperKeyOutcome::Consumed, keyboard_case["consumed"].as_bool().unwrap(), "{}", keyboard_case["id"]);
+        let actions = drain_actions(&mut input);
+        match keyboard_case["expectedDelta"].as_f64() {
+            Some(expected) => {
+                assert_eq!(actions.len(), 1, "{}", keyboard_case["id"]);
+                let args = actions[0].args.as_ref().expect("args");
+                assert_eq!(args.get("objectId").and_then(semio_framework::DslValue::as_str), action["args"]["objectId"].as_str());
+                assert_eq!(args.get("delta").and_then(semio_framework::DslValue::as_f64), Some(expected));
+            }
+            None => assert!(actions.is_empty(), "{}", keyboard_case["id"]),
+        }
+    }
+
+    let mut changed_row = serde_json::Map::new();
+    changed_row.insert("id".into(), cell["rowId"].clone());
+    changed_row.insert(cell["columnId"].as_str().unwrap().into(), json!({ "kind": "text", "value": "retired" }));
+    let changed_rows = Value::Array(vec![Value::Object(changed_row)]).to_string();
+    let changed = table_scene("window:sourcing-pool", TableScene::base(columns_json(&[(cell["columnId"].as_str().unwrap(), cell["columnLabel"].as_str().unwrap(), false)]), changed_rows));
+    let mut input = InputState::<ActionDescriptor>::default();
+    assert!(table_stepper_apply_key(&changed, cell["rowId"].as_str().unwrap(), cell["columnId"].as_str().unwrap(), &ui_wgpu::wgpu::KeyAction::ArrowUp, &mut input).is_none());
+    assert!(table_stepper_accessibility_cells(&changed, bounds, UiDriverDrag::Handle).is_empty());
+    assert!(drain_actions(&mut input).is_empty());
+}
+
 /// 🔘️ `renderTableCell` draws only `placement: "row"` buttons in the row; a `"menu"` button belongs
 /// to the row's context menu and must not take a press meant for the row.
 #[test]

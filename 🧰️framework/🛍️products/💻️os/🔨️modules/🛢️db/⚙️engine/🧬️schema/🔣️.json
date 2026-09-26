@@ -312,6 +312,57 @@
           }
         }
       }
+    },
+    "ThroughputV1": {
+      "title": "Engine Throughput V1",
+      "description": "Write and reopen throughput laws of the db engine: the commit cost model (DB I/O census per durable commit), a concurrent growth of many documents, a solo reopen, the same documents greeted one after another on a freshly opened database and then all at once (the reopen storm). Bounds are enforced by the laws; targets are printed next to each verdict.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "workers", "payloadBytes", "costModel", "storm", "bounds", "targets"],
+      "properties": {
+        "schema": { "const": "semio.db.throughput/v1" },
+        "workers": { "type": "integer", "minimum": 1 },
+        "payloadBytes": { "type": "integer", "minimum": 1 },
+        "costModel": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["batches", "batchEdits"],
+          "properties": { "batches": { "type": "integer", "minimum": 3 }, "batchEdits": { "type": "integer", "minimum": 1 } }
+        },
+        "storm": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["documents", "batches", "batchEdits"],
+          "properties": { "documents": { "type": "integer", "minimum": 2 }, "batches": { "type": "integer", "minimum": 2 }, "batchEdits": { "type": "integer", "minimum": 1 } }
+        },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commitTasksMax", "commitTasksMeanMax", "commitIndexReadsMax", "commitTurnsPerTaskMax", "helloTasksMax", "ackLateToEarlyRatioMax", "ackToDurableAppendRatioMax", "stormToSerialTasksRatioMax", "stormToSerialRatioMax"],
+          "properties": {
+            "commitTasksMax": { "type": "integer", "minimum": 1 },
+            "commitTasksMeanMax": { "type": "number", "exclusiveMinimum": 0 },
+            "commitIndexReadsMax": { "type": "integer", "minimum": 0 },
+            "commitTurnsPerTaskMax": { "type": "integer", "minimum": 1 },
+            "helloTasksMax": { "type": "integer", "minimum": 1 },
+            "ackLateToEarlyRatioMax": { "type": "number", "exclusiveMinimum": 0 },
+            "ackToDurableAppendRatioMax": { "type": "number", "exclusiveMinimum": 0 },
+            "stormToSerialTasksRatioMax": { "type": "number", "exclusiveMinimum": 0 },
+            "stormToSerialRatioMax": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+          }
+        },
+        "targets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ackP50Ms", "ackP95Ms", "welcomeP50Ms", "welcomeMaxMs"],
+          "properties": {
+            "ackP50Ms": { "type": "integer", "minimum": 1 },
+            "ackP95Ms": { "type": "integer", "minimum": 1 },
+            "welcomeP50Ms": { "type": "integer", "minimum": 1 },
+            "welcomeMaxMs": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
     }
   }
 }

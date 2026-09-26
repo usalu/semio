@@ -20,9 +20,9 @@ fire-scenarios [id:TEXT member-id:TEXT theta-a:NUM duration-s:NUM] {
 fatigue-details [id:TEXT member-id:TEXT detail-category:TEXT delta-sigma-c:NUM delta-sigma-ed:NUM n-cycles:NUM m1:NUM m2:NUM] {
   fat-1 purlin-1 "71" 71000000 35000000 6000000 4.3 6.3
 }
-cold-formed [id:TEXT material-id:TEXT thickness:NUM width:NUM span:NUM m-ed:NUM n-ed:NUM welded:BOOL] {
-  sheet-pass mat-6082 0.005 0.08 1 40 8000 false
+cold-formed [id:TEXT material-id:TEXT thickness:NUM width:NUM span:NUM welded:BOOL actions:LIST] {
+  sheet-pass mat-6082 0.005 0.08 1 false [ id=G-sheet kind=permanent category=self source=external g-k-line=120 q-k-line=0 n-k=5926 v-y-k=0 v-z-k=0 m-y-k=29.6 m-z-k=0 ]
 }
-shells [id:TEXT material-id:TEXT radius:NUM thickness:NUM length:NUM sigma-x-ed:NUM sigma-theta-ed:NUM] {
-  shell-pass mat-6082 0.5 0.01 2 40000000 30000000
+shells [id:TEXT material-id:TEXT radius:NUM thickness:NUM length:NUM actions:LIST] {
+  shell-pass mat-6082 0.5 0.01 2 [ id=G-shell kind=permanent category=self source=external g-k-line=800 q-k-line=0 n-k=29600000 v-y-k=0 v-z-k=3700000 m-y-k=22200000 m-z-k=0 ]
 }

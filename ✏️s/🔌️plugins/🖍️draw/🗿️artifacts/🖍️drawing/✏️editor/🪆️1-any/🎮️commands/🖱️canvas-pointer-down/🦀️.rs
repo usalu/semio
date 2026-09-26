@@ -13,6 +13,41 @@ use std::sync::atomic::{AtomicU64, Ordering};
 //#region 🔖️GestureContext
 pub const DRAWING_GESTURE_PREVIEW_POINT_CAPACITY: usize = 256;
 
+/// 🪢 Bounded lasso polygon retained during incremental document traversal.
+#[derive(Clone,Debug)]
+pub struct LassoPolygon {
+    points: [[f64;2];DRAWING_GESTURE_PREVIEW_POINT_CAPACITY],
+    len: usize,
+}
+
+impl LassoPolygon {
+    fn from_points(points: &UiFixedList<[f64;2],DRAWING_GESTURE_PREVIEW_POINT_CAPACITY>, end: [f64;2]) -> Self {
+        let mut polygon=Self { points: [[0.0;2];DRAWING_GESTURE_PREVIEW_POINT_CAPACITY],len: points.len() };
+        for (index,point) in points.iter().enumerate() { polygon.points[index]=*point; }
+        if polygon.len==0 || polygon.points[polygon.len-1]!=end {
+            let index=polygon.len.min(DRAWING_GESTURE_PREVIEW_POINT_CAPACITY-1);
+            polygon.points[index]=end;
+            polygon.len=(index+1).min(DRAWING_GESTURE_PREVIEW_POINT_CAPACITY);
+        }
+        polygon
+    }
+    fn as_slice(&self) -> &[[f64;2]] { &self.points[..self.len] }
+}
+
+fn append_lasso_point(context: &mut GestureContext, point: [f64;2], spacing: f64) {
+    context.lasso_spacing=context.lasso_spacing.max(spacing).max(1e-9);
+    if let Some(previous)=context.points.get(context.points.len().saturating_sub(1)) {
+        if (point[0]-previous[0]).hypot(point[1]-previous[1])<context.lasso_spacing { return; }
+    }
+    if context.points.len()==DRAWING_GESTURE_PREVIEW_POINT_CAPACITY {
+        let retained=context.points.len()/2;
+        for index in 0..retained { let point=context.points[index*2]; context.points[index]=point; }
+        while context.points.len()>retained { context.points.pop(); }
+        context.lasso_spacing*=2.0;
+    }
+    if context.points.try_push(point).is_err() { context.points_overflowed=true; }
+}
+
 /// 🎛️ Per-gesture scratch geometry threaded through the shared `fsm` statechart below — one flat
 /// struct (XState convention: context is machine-global, never per-state) mirroring the fields the
 /// old hand-rolled `DrawingDragState` enum kept per-variant.
@@ -24,7 +59,8 @@ pub const DRAWING_GESTURE_PREVIEW_POINT_CAPACITY: usize = 256;
 /// framework-side `impl ToValue for UiFixedList`, out of this ticket's plugin-only scope.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GestureContext {
-    method: String,
+    pub(crate) method: String,
+    lasso_spacing: f64,
     merge: String,
     pub(crate) utility: String,
     pub(crate) start: [f64; 2],
@@ -39,7 +75,7 @@ pub struct GestureContext {
 /// hit-test/commit that needs the document is deferred to `DrawingSession::step_gesture` as an effect.
 #[derive(Clone, Debug)]
 pub enum GestureEffect {
-    CommitMarquee { start: [f64; 2], end: [f64; 2], active: bool, merge: String, shift: bool, ctrl: bool, meta: bool },
+    CommitMarquee { start: [f64; 2], end: [f64; 2], active: bool, merge: String, shift: bool, ctrl: bool, meta: bool, polygon: Option<LassoPolygon> },
     CommitShape { utility: String, start: [f64; 2], end: [f64; 2] },
     CommitDraft { utility: String, points: UiFixedList<[f64; 2], DRAWING_GESTURE_PREVIEW_POINT_CAPACITY> },
     CommitTrace { world: [f64; 2] },
@@ -236,6 +272,10 @@ fn commit_with_utility_reset(operations: Vec<DrawingMutation>, description: &str
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️GestureGuards
+fn utility_is_move(_ctx: &GestureContext, event: Option<&drawing_gesture::Event>) -> bool {
+    matches!(event,Some(drawing_gesture::Event::PointerDown { utility,shift:false,ctrl:false,meta:false,.. }) if utility == "selectDirect")
+}
+
 fn utility_is_marquee(_ctx: &GestureContext, event: Option<&drawing_gesture::Event>) -> bool {
     matches!(event, Some(drawing_gesture::Event::PointerDown { utility, .. }) if utility == "selectMarquee" || utility == "selectLasso")
 }
@@ -275,6 +315,9 @@ fn gesture_start_marquee(ctx: &mut GestureContext, event: Option<&drawing_gestur
         ctx.cursor = *world;
         ctx.merge = selection_merge_mode(*shift, *ctrl, *meta).into();
         ctx.active = false;
+        ctx.lasso_spacing = 0.0;
+        ctx.points = UiFixedList::default();
+        if ctx.method == "lasso" && ctx.points.try_push(*world).is_err() { ctx.points_overflowed = true; }
     }
 }
 
@@ -310,6 +353,7 @@ fn gesture_update_marquee_cursor(ctx: &mut GestureContext, event: Option<&drawin
     if let Some(drawing_gesture::Event::PointerMove { world, marquee_threshold_world }) = event {
         let distance = ((world[0] - ctx.start[0]).powi(2) + (world[1] - ctx.start[1]).powi(2)).sqrt();
         ctx.active = ctx.active || distance >= *marquee_threshold_world;
+        if ctx.method == "lasso" { append_lasso_point(ctx,*world,*marquee_threshold_world/4.0); }
         ctx.cursor = *world;
     }
 }
@@ -328,7 +372,7 @@ fn gesture_update_draft_cursor(ctx: &mut GestureContext, event: Option<&drawing_
 
 fn gesture_commit_marquee(ctx: &mut GestureContext, event: Option<&drawing_gesture::Event>, sink: &mut Vec<fsm::Command<drawing_gesture::DrawingGesture>>) {
     if let Some(drawing_gesture::Event::PointerUp { world, shift, ctrl, meta, .. }) = event {
-        sink.push(fsm::Command::Effect(GestureEffect::CommitMarquee { start: ctx.start, end: *world, active: ctx.active, merge: ctx.merge.clone(), shift: *shift, ctrl: *ctrl, meta: *meta }));
+        sink.push(fsm::Command::Effect(GestureEffect::CommitMarquee { start: ctx.start, end: *world, active: ctx.active, merge: ctx.merge.clone(), shift: *shift, ctrl: *ctrl, meta: *meta, polygon: (ctx.method == "lasso").then(|| LassoPolygon::from_points(&ctx.points,*world)) }));
     }
 }
 
@@ -381,11 +425,18 @@ fsm::statechart! {
         initial: idle;
 
         state idle {
+            on PointerDown if utility_is_move => moving_layer do gesture_start_shape;
             on PointerDown if utility_is_marquee => marqueeing do gesture_start_marquee;
             on PointerDown if utility_is_shape => shape_dragging do gesture_start_shape;
             on PointerDown if utility_is_draft => drafting do gesture_start_draft;
             on PointerDown if utility_is_trace => idle do gesture_commit_trace;
             on PointerUp if utility_is_select_direct => idle do gesture_pick_point;
+        }
+        state moving_layer {
+            on PointerMove => moving_layer do gesture_update_shape_cursor;
+            on PointerUp => idle;
+            on Escape => idle;
+            on UtilityChanged => idle;
         }
         state marqueeing {
             on PointerMove => marqueeing do gesture_update_marquee_cursor;
@@ -466,8 +517,8 @@ enum TracePointerWork {
     Enter(TracePath),
     GroupChildren { path: TracePath, next: usize },
     Visit(TracePath),
-    PathBounds { path: TracePath, next: usize, min: [f64; 2], max: [f64; 2], control_hit: bool },
-    PolygonBounds { path: TracePath, next: usize, min: [f64; 2], max: [f64; 2] },
+    PathBounds { path: TracePath, next: usize, matrix: [f64;6], current: [f64;2], start: [f64;2], min: [f64; 2], max: [f64; 2], control_hit: bool },
+    PolygonBounds { path: TracePath, next: usize, matrix: [f64;6], min: [f64; 2], max: [f64; 2] },
 }
 
 #[derive(Clone, Debug, dsl::ToValue, dsl::FromValue)]
@@ -475,6 +526,7 @@ pub(crate) struct TracePickCandidate {
     generality: i32,
     pub(crate) layer_id: String,
     image_key: Option<String>,
+    path: TracePath,
 }
 
 // No `ToValue`/`FromValue`: `work`/`hits` are framework `UiFixedList` fields with no `ToValue`
@@ -490,6 +542,7 @@ pub(crate) struct TracePointerJob {
     tolerance: f64,
     include_control_points: bool,
     marquee: Option<([f64; 2], [f64; 2], bool)>,
+    lasso: Option<LassoPolygon>,
     work: UiFixedList<TracePointerWork, TRACE_POINTER_WORK_CAPACITY>,
     pub(crate) best: Option<TracePickCandidate>,
     pub(crate) hits: UiFixedList<String, DRAWING_QUERY_HIT_CAPACITY>,
@@ -515,6 +568,7 @@ impl TracePointerJob {
             tolerance: 0.0,
             include_control_points: false,
             marquee: None,
+            lasso: None,
             work,
             best: None,
             hits: UiFixedList::default(),
@@ -544,6 +598,12 @@ impl TracePointerJob {
         job
     }
 
+    pub(crate) fn new_lasso(document: &DrawingSnapshot, polygon: LassoPolygon) -> Self {
+        let mut job=Self::new(0,document,[0.0;2]);
+        job.lasso=Some(polygon);
+        job
+    }
+
     fn push_work(&mut self, work: TracePointerWork) {
         if self.work.try_push(work).is_err() {
             self.overflowed = true;
@@ -569,8 +629,8 @@ impl TracePointerJob {
                 }
                 TracePointerWork::Enter(path) => {
                     let Some(layer) = drawing_layer_at_path(&document.layers, &path) else { continue };
+                    if !trace_layer_base(layer).visible || trace_layer_base(layer).locked { continue; }
                     if let DrawingLayerNode::Group(group) = layer {
-                        self.push_work(TracePointerWork::Visit(path));
                         self.push_work(TracePointerWork::GroupChildren { path, next: group.children.len() });
                     } else {
                         self.push_work(TracePointerWork::Visit(path));
@@ -587,36 +647,42 @@ impl TracePointerJob {
                 }
                 TracePointerWork::Visit(path) => {
                     let Some(layer) = drawing_layer_at_path(&document.layers, &path) else { continue };
+                    let Some(matrix) = trace_path_matrix(&document.layers, &path) else { continue };
                     match layer {
-                        DrawingLayerNode::Path(path_layer) if !path_layer.segments.is_empty() => self.push_work(TracePointerWork::PathBounds { path, next: 0, min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2], control_hit: false }),
+                        DrawingLayerNode::Path(path_layer) if !path_layer.segments.is_empty() => self.push_work(TracePointerWork::PathBounds { path, next: 0, matrix, current: [0.0;2], start: [0.0;2], min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2], control_hit: false }),
                         DrawingLayerNode::Shape(shape) if shape.shape_kind == "polygon" && shape.polygon.as_ref().is_some_and(|polygon| !polygon.points.is_empty()) => {
-                            self.push_work(TracePointerWork::PolygonBounds { path, next: 0, min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2] });
+                            self.push_work(TracePointerWork::PolygonBounds { path, next: 0, matrix, min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2] });
                         }
-                        _ => consider_trace_candidate(self, layer, trace_layer_world_bounds(layer), false),
+                        _ => consider_trace_candidate(self, layer, path, trace_layer_bounds_with_matrix(layer,matrix), false),
                     }
                 }
-                TracePointerWork::PathBounds { path, next, mut min, mut max, mut control_hit } => {
+                TracePointerWork::PathBounds { path, next, matrix, mut current, mut start, mut min, mut max, mut control_hit } => {
                     let Some(DrawingLayerNode::Path(path_layer)) = drawing_layer_at_path(&document.layers, &path) else { continue };
                     if let Some(segment) = path_layer.segments.get(next) {
-                        if let Some(point) = trace_segment_point(segment) {
-                            extend_trace_bounds(&mut min, &mut max, point);
+                        let bounds = crate::schema::geometry::segment_bounds(segment,current,start,matrix);
+                        extend_trace_bounds(&mut min,&mut max,[bounds[0],bounds[1]]);
+                        extend_trace_bounds(&mut min,&mut max,[bounds[0]+bounds[2],bounds[1]+bounds[3]]);
+                        match segment {
+                            PathSegment::Move { to } => { current=*to; start=*to; }
+                            PathSegment::Close => current=start,
+                            _ => { if let Some(point)=trace_segment_point(segment) { current=point; } }
                         }
-                        if self.include_control_points && trace_segment_control_hit(segment, &path_layer.base.transform, self.world, self.tolerance) {
+                        if self.include_control_points && trace_segment_control_hit(segment, matrix, self.world, self.tolerance) {
                             control_hit = true;
                         }
-                        self.push_work(TracePointerWork::PathBounds { path, next: next + 1, min, max, control_hit });
+                        self.push_work(TracePointerWork::PathBounds { path, next: next + 1, matrix, current, start, min, max, control_hit });
                     } else if min[0].is_finite() {
-                        consider_trace_candidate(self, drawing_layer_at_path(&document.layers, &path).expect("path work retains its layer"), trace_world_bounds(&path_layer.base.transform, min, max), control_hit);
+                        consider_trace_candidate(self, drawing_layer_at_path(&document.layers, &path).expect("path work retains its layer"), path, (min[0],min[1],max[0]-min[0],max[1]-min[1]), control_hit);
                     }
                 }
-                TracePointerWork::PolygonBounds { path, next, mut min, mut max } => {
+                TracePointerWork::PolygonBounds { path, next, matrix, mut min, mut max } => {
                     let Some(DrawingLayerNode::Shape(shape)) = drawing_layer_at_path(&document.layers, &path) else { continue };
                     let Some(polygon) = &shape.polygon else { continue };
                     if let Some(point) = polygon.points.get(next) {
                         extend_trace_bounds(&mut min, &mut max, *point);
-                        self.push_work(TracePointerWork::PolygonBounds { path, next: next + 1, min, max });
+                        self.push_work(TracePointerWork::PolygonBounds { path, next: next + 1, matrix, min, max });
                     } else if min[0].is_finite() {
-                        consider_trace_candidate(self, drawing_layer_at_path(&document.layers, &path).expect("polygon work retains its layer"), trace_world_bounds(&shape.base.transform, min, max), false);
+                        consider_trace_candidate(self, drawing_layer_at_path(&document.layers, &path).expect("polygon work retains its layer"), path, trace_world_bounds(matrix, min, max), false);
                     }
                 }
             }
@@ -625,9 +691,13 @@ impl TracePointerJob {
     }
 }
 
-fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode, bounds: (f64, f64, f64, f64), control_hit: bool) {
+fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode, path: TracePath, bounds: (f64, f64, f64, f64), control_hit: bool) {
     let base = trace_layer_base(layer);
     if !base.visible || base.locked {
+        return;
+    }
+    if let Some(polygon)=&job.lasso {
+        if crate::schema::geometry::selection::polygon_encloses_bounds(polygon.as_slice(),[bounds.0,bounds.1,bounds.2,bounds.3]) && job.hits.try_push(layer_id(layer).to_string()).is_err() { job.overflowed=true; }
         return;
     }
     if let Some((start, end, crossing)) = job.marquee {
@@ -645,10 +715,11 @@ fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode,
         }
         return;
     }
-    if !trace_point_in_bounds(job.world, bounds, job.tolerance) {
+    if !control_hit && !trace_point_in_bounds(job.world, bounds, job.tolerance) {
         return;
     }
     let candidate = TracePickCandidate {
+        path,
         generality: if control_hit {
             4
         } else {
@@ -664,7 +735,7 @@ fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode,
             _ => None,
         },
     };
-    if job.best.as_ref().is_none_or(|best| candidate.generality >= best.generality) {
+    if job.best.as_ref().is_none_or(|best| candidate.generality > best.generality) {
         job.best = Some(candidate);
     }
 }
@@ -679,6 +750,17 @@ fn drawing_layer_at_path<'a>(roots: &'a [DrawingLayerNode], path: &TracePath) ->
     Some(layer)
 }
 
+fn trace_path_matrix(roots: &[DrawingLayerNode], path: &TracePath) -> Option<[f64;6]> {
+    let mut layers=roots;
+    let mut matrix=[1.0,0.0,0.0,1.0,0.0,0.0];
+    for index in path.indices() {
+        let layer=layers.get(index)?;
+        matrix=crate::schema::geometry::multiply(matrix,crate::schema::drawing_transform_to_matrix(&trace_layer_base(layer).transform));
+        layers=if let DrawingLayerNode::Group(group)=layer { &group.children } else { &[] };
+    }
+    Some(matrix)
+}
+
 fn trace_segment_point(segment: &PathSegment) -> Option<[f64; 2]> {
     match segment {
         PathSegment::Move { to } | PathSegment::Line { to } | PathSegment::Quad { to, .. } | PathSegment::Cubic { to, .. } | PathSegment::Arc { to, .. } => Some(*to),
@@ -686,10 +768,7 @@ fn trace_segment_point(segment: &PathSegment) -> Option<[f64; 2]> {
     }
 }
 
-fn trace_segment_control_hit(segment: &PathSegment, transform: &crate::DrawingTransform, world: [f64; 2], tolerance: f64) -> bool {
-    let cos = transform.rotation.cos();
-    let sin = transform.rotation.sin();
-    let matrix = [transform.scale_x * cos, transform.scale_x * sin, -transform.scale_y * sin, transform.scale_y * cos, transform.x, transform.y];
+fn trace_segment_control_hit(segment: &PathSegment, matrix: [f64;6], world: [f64; 2], tolerance: f64) -> bool {
     let points = match segment {
         PathSegment::Move { to } | PathSegment::Line { to } | PathSegment::Arc { to, .. } => [Some(*to), None, None],
         PathSegment::Quad { ctrl, to } => [Some(*ctrl), Some(*to), None],
@@ -711,10 +790,7 @@ fn extend_trace_bounds(min: &mut [f64; 2], max: &mut [f64; 2], point: [f64; 2]) 
     max[1] = max[1].max(point[1]);
 }
 
-fn trace_world_bounds(transform: &crate::DrawingTransform, min: [f64; 2], max: [f64; 2]) -> (f64, f64, f64, f64) {
-    let cos = transform.rotation.cos();
-    let sin = transform.rotation.sin();
-    let matrix = [transform.scale_x * cos, transform.scale_x * sin, -transform.scale_y * sin, transform.scale_y * cos, transform.x, transform.y];
+fn trace_world_bounds(matrix: [f64;6], min: [f64; 2], max: [f64; 2]) -> (f64, f64, f64, f64) {
     let corners = [min, [max[0], min[1]], max, [min[0], max[1]]];
     let mut world_min = [f64::INFINITY; 2];
     let mut world_max = [f64::NEG_INFINITY; 2];
@@ -741,7 +817,12 @@ fn trace_layer_base(layer: &DrawingLayerNode) -> &crate::DrawingLayerBase {
     }
 }
 
+#[cfg(test)]
 fn trace_layer_world_bounds(layer: &DrawingLayerNode) -> (f64, f64, f64, f64) {
+    trace_layer_bounds_with_matrix(layer,crate::schema::drawing_transform_to_matrix(&trace_layer_base(layer).transform))
+}
+
+fn trace_layer_bounds_with_matrix(layer: &DrawingLayerNode, matrix: [f64;6]) -> (f64, f64, f64, f64) {
     let local = match layer {
         DrawingLayerNode::Text(value) => (value.x, value.y, (value.content.len() as f64 * value.size * 0.6).max(8.0), (value.size * 1.2).max(8.0)),
         DrawingLayerNode::Image(value) => (0.0, 0.0, value.width, value.height),
@@ -755,7 +836,7 @@ fn trace_layer_world_bounds(layer: &DrawingLayerNode) -> (f64, f64, f64, f64) {
         DrawingLayerNode::Path(_) => (-64.0, -64.0, 128.0, 128.0),
         DrawingLayerNode::Group(_) | DrawingLayerNode::Boolean(_) | DrawingLayerNode::Trace(_) => (-64.0, -64.0, 128.0, 128.0),
     };
-    trace_world_bounds(&trace_layer_base(layer).transform, [local.0, local.1], [local.0 + local.2, local.1 + local.3])
+    trace_world_bounds(matrix, [local.0, local.1], [local.0 + local.2, local.1 + local.3])
 }
 
 fn trace_point_in_bounds(point: [f64; 2], bounds: (f64, f64, f64, f64), tolerance: f64) -> bool {
@@ -788,10 +869,13 @@ pub struct DrawingSession {
     pub(crate) trace_pointer: Option<TracePointerJob>,
     pub(crate) point_query: Option<DrawingPointQuery>,
     pub(crate) draft_query: Option<DrawingDraftQuery>,
+    move_sample_cursor: usize,
+    pub(crate) layer_move: Option<LayerMove>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum DrawingGesturePreviewPhase {
+    Move,
     Marquee,
     Shape,
     Draft,
@@ -804,6 +888,16 @@ pub struct DrawingGesturePreview {
     pub sequence: u64,
     pub phase: DrawingGesturePreviewPhase,
     pub context: GestureContext,
+    pub translation: Option<(String,[f64;2])>,
+}
+
+pub(crate) struct LayerMove {
+    layer_id: String,
+    original: crate::DrawingTransform,
+    parent: [f64;6],
+    start: [f64;2],
+    cursor: [f64;2],
+    active: bool,
 }
 
 pub(crate) struct DrawingPointQuery {
@@ -813,6 +907,7 @@ pub(crate) struct DrawingPointQuery {
     pub(crate) merge: String,
     pub(crate) marquee: bool,
     pub(crate) traversal_complete: bool,
+    pub(crate) drag_start: Option<[f64;2]>,
     target_cursor: usize,
     targets: String,
 }
@@ -825,7 +920,7 @@ pub(crate) enum DrawingQueryPublication {
 
 impl DrawingPointQuery {
     pub(crate) fn new(command_id: &'static str, cursor: TracePointerJob, hover: bool, merge: String, marquee: bool) -> Self {
-        Self { command_id, cursor, hover, merge, marquee, traversal_complete: false, target_cursor: 0, targets: String::with_capacity(DRAWING_QUERY_TARGET_BYTES) }
+        Self { command_id, cursor, hover, merge, marquee, traversal_complete: false, drag_start: None, target_cursor: 0, targets: String::with_capacity(DRAWING_QUERY_TARGET_BYTES) }
     }
 
     pub(crate) fn publication_step(&mut self) -> DrawingQueryPublication {
@@ -916,11 +1011,55 @@ impl Default for DrawingSession {
             trace_pointer: None,
             point_query: None,
             draft_query: None,
+            move_sample_cursor: 0,
+            layer_move: None,
         }
     }
 }
 
 impl DrawingSession {
+    pub(crate) fn prepare_layer_move(&mut self, document: &DrawingSnapshot, candidate: Option<&TracePickCandidate>, start: [f64;2]) {
+        self.layer_move = candidate.and_then(|candidate| {
+            let layer = drawing_layer_at_path(&document.layers,&candidate.path)?;
+            let mut parent_path = candidate.path;
+            parent_path.len = parent_path.len.saturating_sub(1);
+            let parent = trace_path_matrix(&document.layers,&parent_path)?;
+            crate::schema::geometry::inverse(parent)?;
+            Some(LayerMove { layer_id:candidate.layer_id.clone(),original:trace_layer_base(layer).transform.clone(),parent,start,cursor:start,active:false })
+        });
+    }
+
+    pub(crate) fn move_layer_preview(&mut self, world: [f64;2]) {
+        if !world.iter().all(|value| value.is_finite()) { return; }
+        if let Some(drag) = &mut self.layer_move {
+            drag.cursor = world;
+            drag.active |= (world[0]-drag.start[0]).hypot(world[1]-drag.start[1]) >= DRAWING_MARQUEE_THRESHOLD_PX/self.window_config.viewport.zoom.max(1e-6);
+        }
+        self.preview_seq = self.preview_seq.wrapping_add(1);
+    }
+
+    pub(crate) fn finish_layer_move(&mut self, world: [f64;2], document: &DrawingSnapshot, config: &NoConfig) -> Result<Emit<DrawingMutation,NoConfigMutation>,Fault> {
+        self.move_layer_preview(world);
+        let drag = self.layer_move.take();
+        self.step_gesture(drawing_gesture::Event::PointerUp { utility:self.active_utility_id.clone(),world,shift:false,ctrl:false,meta:false },document,config);
+        let Some(drag) = drag.filter(|drag| drag.active && drag.cursor != drag.start) else { return Ok(Emit::default()); };
+        let source = &drag.original;
+        let delta = [drag.cursor[0]-drag.start[0],drag.cursor[1]-drag.start[1]];
+        let [x,y,scale_x,scale_y,rotation] = crate::schema::geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],drag.parent,delta).ok_or_else(|| Fault::from("Cannot move through a singular transform"))?;
+        Ok(Emit::commit(vec![crate::mutations::update_layer_transform(drag.layer_id,crate::DrawingTransform { x,y,scale_x,scale_y,rotation })],"Move layer"))
+    }
+
+    pub(crate) fn advance_lasso_move(&mut self, payload: &crate::editor::drawing::commands::canvas_pointer_move::CanvasPointerMove, document: &DrawingSnapshot, config: &NoConfig) -> Option<Emit<DrawingMutation,NoConfigMutation>> {
+        let [x,y]=payload.samples.get(self.move_sample_cursor).copied().unwrap_or([payload.x,payload.y]);
+        let (x,y)=canvas_point_to_world(&self.window_config.viewport,x,y,payload.width,payload.height);
+        let threshold=DRAWING_MARQUEE_THRESHOLD_PX/self.window_config.viewport.zoom.max(1e-6);
+        let emit=self.step_gesture(drawing_gesture::Event::PointerMove { world: [x,y],marquee_threshold_world: threshold },document,config);
+        self.move_sample_cursor+=1;
+        if self.move_sample_cursor<payload.samples.len() { return None; }
+        self.move_sample_cursor=0;
+        Some(emit)
+    }
+
     pub(crate) fn with_active_utility(active_utility_id: impl Into<String>) -> Self {
         Self { active_utility_id: active_utility_id.into(), ..Self::default() }
     }
@@ -950,7 +1089,9 @@ impl DrawingSession {
     }
 
     pub(crate) fn preview(&self) -> DrawingGesturePreview {
-        let phase = if self.gesture.matches("marqueeing") {
+        let phase = if self.gesture.matches("moving_layer") {
+            DrawingGesturePreviewPhase::Move
+        } else if self.gesture.matches("marqueeing") {
             DrawingGesturePreviewPhase::Marquee
         } else if self.gesture.matches("shape_dragging") {
             DrawingGesturePreviewPhase::Shape
@@ -959,7 +1100,7 @@ impl DrawingSession {
         } else {
             DrawingGesturePreviewPhase::Idle
         };
-        DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone() }
+        DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone(), translation: self.layer_move.as_ref().filter(|drag| drag.active).map(|drag| (drag.layer_id.clone(),[drag.cursor[0]-drag.start[0],drag.cursor[1]-drag.start[1]])) }
     }
 
     pub(crate) fn step_gesture_retained(
@@ -978,9 +1119,10 @@ impl DrawingSession {
         for command in sink {
             let fsm::Command::Effect(effect) = command else { continue };
             match effect {
-                GestureEffect::CommitMarquee { start, end, active, merge, shift, ctrl, meta } => {
+                GestureEffect::CommitMarquee { start, end, active, merge, shift, ctrl, meta, polygon } => {
                     if active {
-                        self.point_query = Some(DrawingPointQuery::new(command_id, TracePointerJob::new_marquee(document, start, end, end[0] < start[0]), false, merge, true));
+                        let query=if let Some(polygon)=polygon { TracePointerJob::new_lasso(document,polygon) } else { TracePointerJob::new_marquee(document,start,end,end[0]<start[0]) };
+                        self.point_query = Some(DrawingPointQuery::new(command_id, query, false, merge, true));
                     } else {
                         let tolerance = DRAWING_PICK_TOLERANCE_PX / self.window_config.viewport.zoom.max(1e-6);
                         self.point_query = Some(DrawingPointQuery::new(command_id, TracePointerJob::new_query(document, end, tolerance, false), false, selection_merge_mode(shift, ctrl, meta).into(), false));
@@ -1016,6 +1158,7 @@ impl DrawingSession {
     /// as a `Effect` on the returned `Emit` — selection itself is framework-owned now, never
     /// written back into `config`.
     pub(crate) fn step_gesture(&mut self, event: drawing_gesture::Event, document: &DrawingSnapshot, _config: &NoConfig) -> Emit<DrawingMutation, NoConfigMutation> {
+        if matches!(&event,drawing_gesture::Event::Escape | drawing_gesture::Event::UtilityChanged) { self.layer_move = None; }
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
         self.preview_seq = self.preview_seq.wrapping_add(1);

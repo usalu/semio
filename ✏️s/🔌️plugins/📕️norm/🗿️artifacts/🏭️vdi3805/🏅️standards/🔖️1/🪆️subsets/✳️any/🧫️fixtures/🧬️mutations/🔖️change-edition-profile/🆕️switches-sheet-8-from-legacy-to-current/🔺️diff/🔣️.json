@@ -3,11 +3,12 @@
   "manufacturerFile": null,
   "catalog": null,
   "editionProfile": {
-    "8": "Current"
+    "8": "current"
   },
   "correctionAsOf": null,
   "strictMode": null,
   "index": null,
   "geometry": null,
-  "curves": null
+  "curves": null,
+  "limits": null
 }

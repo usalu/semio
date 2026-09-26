@@ -11,6 +11,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     maximumEnvelopes: number;
     maximumDependenciesPerEnvelope: number;
     maximumTotalDependencies: number;
+    maximumTargetSegmentsPerEnvelope: number;
+    maximumTotalTargetSegments: number;
     maximumIdentifierBytes: number;
     maximumSchemaBytes: number;
     maximumPayloadBytes: number;
@@ -20,6 +22,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     documentId: string;
     actor: string;
     dependencies: readonly string[];
+    observed: string | null;
+    target: readonly string[];
     diff: Readonly<{ schema: string; payloadHex: string }>;
     inverse: Readonly<{ schema: string; payloadHex: string }>;
     timestamp: Readonly<{ actor: string; physicalMs: string; logical: string }>;
@@ -43,6 +47,8 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       documentId: envelope.document_id,
       actor: envelope.actor,
       dependencies: envelope.dependencies,
+      observed: envelope.observed,
+      target: envelope.target,
       diff: { schema: envelope.diff.schema, payloadHex: toHex(envelope.diff.payload) },
       inverse: { schema: envelope.inverse.schema, payloadHex: toHex(envelope.inverse.payload) },
       timestamp: { actor: envelope.timestamp.actor.toString(), physicalMs: envelope.timestamp.physical_ms.toString(), logical: envelope.timestamp.logical.toString() },

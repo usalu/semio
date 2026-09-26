@@ -18,6 +18,10 @@
 // #endregion 🧲️Header
 
 import { WGPU_HOST_STORAGE_VALUE_MAX_BYTES, wgpuHostStorageCarriesKey, type WgpuHostStorageScope } from "../🧭️boot-descriptor/🟦️.ts";
+import moduleRoutes from "../../../../../🔌️plugin/📇️registry/📦️deployment/🛣️routes.json";
+import { formatHostTemporalValuesV1, type HostTemporalFormatPageStateV1, type HostTemporalFormatRequestV1 } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts";
+
+const WGPU_EXTENSION_INSTALL_PATH = `${moduleRoutes.extension}/install`;
 
 /** 🚪️ What the shell asks the page to do. `op` is the whole vocabulary — an unknown one is refused
  * loudly rather than answered with an empty pick, which is indistinguishable from a cancelled dialog. */
@@ -26,7 +30,12 @@ export type WgpuHostIoRequest =
   | { readonly op: "request-file-open"; readonly accept: string; readonly readAs?: string; readonly multiple?: boolean }
   | { readonly op: "request-native-file-path"; readonly accept?: string }
   | { readonly op: "request-native-folder-path" }
-  | { readonly op: "directory-http"; readonly method: string; readonly url: string; readonly bearer?: string; readonly body?: string }
+  | { readonly op: "extension-store-list" }
+  | { readonly op: "extension-store-install-url"; readonly url?: string; readonly prompt?: string }
+  | { readonly op: "extension-store-install-file" }
+  | { readonly op: "extension-store-uninstall"; readonly extensionId: string }
+  | ({ readonly op: "format-temporal-values" } & HostTemporalFormatRequestV1)
+  | { readonly op: "directory-http"; readonly method: string; readonly url: string; readonly bearer?: string; readonly body?: string; readonly accept?: string }
   | { readonly op: "storage"; readonly verb: "get" | "set" | "remove"; readonly scope?: WgpuHostStorageScope; readonly key: string; readonly value?: string }
   | { readonly op: "socket"; readonly verb: "open"; readonly socketId: number; readonly url: string; readonly protocols?: readonly string[] }
   | { readonly op: "socket"; readonly verb: "send"; readonly socketId: number; readonly text?: string; readonly binary?: string }
@@ -41,7 +50,7 @@ export type WgpuHostIoRequest =
  * 🐛️ Why the page and not the Worker: the shell's isolate is the Worker that owns the
  * `OffscreenCanvas`, which has no `document` and therefore no same-site cookie jar to send. Routing
  * the fetch through the page is what makes the session cookie travel at all. */
-export type WgpuDirectoryHttpAnswer = { readonly status: number; readonly body: string } | { readonly error: string };
+export type WgpuDirectoryHttpAnswer = { readonly status: number; readonly body: string } | { readonly status: number; readonly bodyBase64: string } | { readonly error: string };
 
 /** 🗄️ One durable preference hop the shell asks the page to make against the SAME keys and value
  * encodings React's `StoragePort` uses (`🖥️platform/🟦️.ts`), so a preference survives a renderer
@@ -94,6 +103,17 @@ export const WGPU_SOCKET_SEND_MAX_BYTES = 48 * 1024;
 /** 📤️ One file a picker handed back. The NAME is half the payload: every import leaf in the repo
  * resolves the file's format from its extension, so contents alone can only be guessed at. */
 export type WgpuOpenedFile = { readonly name: string; readonly contents: string };
+
+export type WgpuInstalledExtensionRecord = {
+  readonly extensionId: string;
+  readonly directoryName: string;
+  readonly version: string;
+  readonly label: string;
+  readonly extends: string;
+  readonly moduleUrl: string;
+  readonly packageHash: string;
+  readonly installedAt: number;
+};
 
 /** 🚪️ The binding the wgpu shell calls. `bytes` carries a download's already-decoded payload (the
  * `(data, encoding) → bytes` rule is the kernel's, answered in the shell before this is reached), and the
@@ -168,6 +188,72 @@ function openFiles(accept: string, readAs: string | undefined, multiple: boolean
   });
 }
 
+function pickExtensionPackage(): Promise<Uint8Array | null> {
+  if (typeof document === "undefined") return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".sxt,.semio,application/octet-stream";
+    input.style.position = "fixed";
+    input.style.left = "-10000px";
+    document.body.appendChild(input);
+    let settled = false;
+    const settle = async (): Promise<void> => {
+      if (settled) return;
+      settled = true;
+      const file = input.files?.[0];
+      input.remove();
+      resolve(file ? new Uint8Array(await file.arrayBuffer()) : null);
+    };
+    input.onchange = () => void settle();
+    input.oncancel = () => void settle();
+    input.click();
+  });
+}
+
+function installedExtensionRecord(input: unknown): WgpuInstalledExtensionRecord {
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("extension store returned no record");
+  const row = input as Record<string, unknown>;
+  for (const key of ["extensionId", "directoryName", "version", "label", "extends", "moduleUrl", "packageHash"] as const) if (typeof row[key] !== "string" || (key !== "label" && row[key].length === 0)) throw new Error(`extension store returned invalid ${key}`);
+  if (!Number.isSafeInteger(row.installedAt) || Number(row.installedAt) < 0) throw new Error("extension store returned invalid installedAt");
+  return row as WgpuInstalledExtensionRecord;
+}
+
+async function extensionStoreFetch(init?: RequestInit, query = ""): Promise<unknown> {
+  const response = await fetch(`${WGPU_EXTENSION_INSTALL_PATH}${query}`, { credentials: "same-origin", ...init });
+  const body = await response.json() as unknown;
+  if (!response.ok) throw new Error(typeof body === "object" && body && "error" in body ? String((body as { readonly error: unknown }).error) : `extension store failed (${response.status})`);
+  return body;
+}
+
+async function extensionStoreHop(request: Extract<WgpuHostIoRequest, { readonly op: `extension-store-${string}` }>): Promise<unknown> {
+  try {
+    if (request.op === "extension-store-list") {
+      const body = await extensionStoreFetch();
+      if (!Array.isArray(body) || body.length > 256) throw new Error("extension store returned an invalid or oversized list");
+      return { extensions: body.map(installedExtensionRecord) };
+    }
+    if (request.op === "extension-store-uninstall") {
+      if (!request.extensionId) throw new Error("extensionId is required");
+      await extensionStoreFetch({ method: "DELETE" }, `?extensionId=${encodeURIComponent(request.extensionId)}`);
+      return { extensionId: request.extensionId };
+    }
+    let body: unknown;
+    if (request.op === "extension-store-install-url") {
+      const url = request.url?.trim() || (typeof window === "undefined" ? null : window.prompt(request.prompt ?? "Extension package URL")?.trim());
+      if (!url) return { cancelled: true };
+      body = await extensionStoreFetch({ method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url }) });
+    } else {
+      const bytes = await pickExtensionPackage();
+      if (!bytes) return { cancelled: true };
+      body = await extensionStoreFetch({ method: "POST", headers: { "content-type": "application/octet-stream" }, body: bytes });
+    }
+    return { extension: installedExtensionRecord(body) };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
 type FileWithNativePath = File & { readonly path?: string };
 
 /** 📂 One absolute file path for backbone attach, or `null` on cancel / when the host hides paths. */
@@ -227,8 +313,10 @@ async function directoryHttp(request: Extract<WgpuHostIoRequest, { op: "director
   const headers: Record<string, string> = {};
   if (request.body !== undefined) headers["content-type"] = "application/json";
   if (request.bearer !== undefined) headers.authorization = `Bearer ${request.bearer}`;
+  if (request.accept !== undefined) headers.accept = request.accept;
   try {
     const response = await fetch(request.url, { body: request.body, credentials: "include", headers, method: request.method });
+    if (request.accept !== undefined) return { bodyBase64: socketBytesToBase64(await response.arrayBuffer()), status: response.status };
     return { body: await response.text(), status: response.status };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };
@@ -416,11 +504,14 @@ function createSocketDoor(): (request: Extract<WgpuHostIoRequest, { op: "socket"
 /** 🚪️ The page-owned implementation of {@link WgpuHostIo}. */
 export function createWgpuPageHostIo(): WgpuHostIo {
   const socketDoor = createSocketDoor();
+  const temporalProfile: HostTemporalFormatPageStateV1 = { profileRevision: 0, profileSignature: "" };
   return async (requestJson, bytes) => {
     const request = JSON.parse(requestJson) as WgpuHostIoRequest;
+    if (request.op === "format-temporal-values") return JSON.stringify(formatHostTemporalValuesV1(request, temporalProfile));
     if (request.op === "directory-http") return JSON.stringify(await directoryHttp(request));
     if (request.op === "storage") return JSON.stringify(storageHop(request));
     if (request.op === "socket") return JSON.stringify(socketDoor(request));
+    if (request.op.startsWith("extension-store-")) return JSON.stringify(await extensionStoreHop(request as Extract<WgpuHostIoRequest, { readonly op: `extension-store-${string}` }>));
     if (request.op === "download-media-export") {
       if (!bytes) throw new Error("wgpu-host-io.download-media-export: no bytes");
       downloadBytes(request.filename, request.mimeType, bytes);

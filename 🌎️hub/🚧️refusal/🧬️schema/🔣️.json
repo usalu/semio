@@ -83,6 +83,38 @@
         "503": "unavailable",
         "504": "timeout"
       }
+    },
+    "HubCredentialRefusalV1": {
+      "description": "The body of the `401` a route that also answers anonymously gives a PRESENTED credential that does not authenticate: malformed, forged, expired and revoked bearers get this one answer, so a credential cannot be probed, and it is never downgraded to the anonymous view. Only an absent credential is answered anonymously. It carries the refusal pair plus the notice a client shows, in every supported language (no default language); the response also names `WWW-Authenticate: Bearer error=\"invalid_token\"` (RFC 6750 §3.1).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "status",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.credential-refusal/v1"
+        },
+        "status": {
+          "const": 401
+        },
+        "code": {
+          "const": "unauthenticated"
+        },
+        "message": {
+          "$ref": "#/$defs/HubCredentialRefusalMessageV1"
+        }
+      }
+    },
+    "HubCredentialRefusalMessageV1": {
+      "description": "The one notice of a `HubCredentialRefusalV1`, en and de.",
+      "const": {
+        "en": "Your sign-in is no longer valid. Sign in again.",
+        "de": "Ihre Anmeldung ist nicht mehr gültig. Bitte melden Sie sich erneut an."
+      }
     }
   }
 }

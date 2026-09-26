@@ -1,16 +1,16 @@
 {
   "catalog": {
     "file": {
-      "header_version": "3805",
+      "headerVersion": "3805",
       "manufacturer": "DEMO",
-      "building_system_number": {
-        "system_code": "420",
+      "buildingSystemNumber": {
+        "systemCode": "420",
         "subsystem": "10",
         "sequence": 1
       },
       "created": "2023-06-01",
       "charset": "UTF-8",
-      "record_count": 2,
+      "recordCount": 2,
       "extensions": {
         "fields": {}
       }
@@ -21,7 +21,7 @@
     }
   },
   "editionProfile": {
-    "8": "Legacy"
+    "8": "legacy"
   },
   "correctionAsOf": {
     "year": 2024,
@@ -32,15 +32,15 @@
     "entries": []
   },
   "geometry": {
-    "geom.valve.50": {
-      "id": "geom.valve.50",
+    "geom-valve-50": {
+      "id": "geom-valve-50",
       "bbox": {
-        "min_x": 0.0,
-        "min_y": 0.0,
-        "min_z": 0.0,
-        "max_x": 0.25,
-        "max_y": 0.5,
-        "max_z": 0.125
+        "minX": 0.0,
+        "minY": 0.0,
+        "minZ": 0.0,
+        "maxX": 0.25,
+        "maxY": 0.5,
+        "maxZ": 0.125
       },
       "connections": [
         {
@@ -56,7 +56,7 @@
             0.0,
             0.0
           ],
-          "diameter_mm": 50.0
+          "diameterMm": 50.0
         },
         {
           "id": "out",
@@ -71,7 +71,7 @@
             0.0,
             0.0
           ],
-          "diameter_mm": 50.0
+          "diameterMm": 50.0
         }
       ],
       "parameters": {
@@ -82,17 +82,17 @@
   "curves": {
     "curve-kvs": {
       "id": "curve-kvs",
-      "x_unit": {
+      "xUnit": {
         "symbol": "%",
-        "kind": "Dimensionless",
+        "kind": "dimensionless",
         "delta": true,
-        "si_factor": 0.01
+        "siFactor": 0.01
       },
-      "y_unit": {
+      "yUnit": {
         "symbol": "m3/h",
-        "kind": "Volume",
+        "kind": "volume",
         "delta": false,
-        "si_factor": 1.0
+        "siFactor": 1.0
       },
       "points": [
         {
@@ -105,5 +105,11 @@
         }
       ]
     }
+  },
+  "limits": {
+    "maxFileBytes": 4194304,
+    "maxRecords": 100000,
+    "maxFieldLength": 8192,
+    "maxNestingDepth": 32
   }
 }

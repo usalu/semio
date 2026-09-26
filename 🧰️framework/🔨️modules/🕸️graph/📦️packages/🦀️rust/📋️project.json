@@ -3,7 +3,7 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": [
+    "generatorSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/**/*manifest.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
@@ -20,6 +20,19 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{projectRoot}/**/*"
+    ],
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧪️tests/🧩️suite/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🧫️fixtures/🔣️outputs.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️catalog/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📤️publication/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📇️outputs.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🧬️schema/🔣️.json",
+      "{projectRoot}/**/*"
     ]
   },
   "targets": {
@@ -29,7 +42,10 @@
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate"
       },
-      "cache": true
+      "cache": true,
+      "inputs": [
+        "generatorSources"
+      ]
     },
     "preview-generated": {
       "executor": "nx:run-commands",
@@ -37,7 +53,10 @@
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts preview-generated"
       },
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "generatorSources"
+      ]
     },
     "check-generated": {
       "executor": "nx:run-commands",

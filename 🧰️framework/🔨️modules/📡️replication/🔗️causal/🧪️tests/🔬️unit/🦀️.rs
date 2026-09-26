@@ -108,6 +108,8 @@ fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
         document_id: crate::ids::ArtifactId("document-1".into()),
         actor: crate::ids::ActorId("actor-1".into()),
         dependencies: deps.into_iter().map(|dep| crate::ids::MutationId(dep.into())).collect(),
+        observed: None,
+        target: Vec::new(),
         diff: ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
         inverse: InverseMutation { schema: crate::ids::SchemaId("diff.v1".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
@@ -539,6 +541,8 @@ fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
         document_id: crate::ids::ArtifactId("doc-empty".into()),
         actor: crate::ids::ActorId("actor-empty".into()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: ArtifactDiff { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
         inverse: InverseMutation { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(0, 0),
@@ -582,6 +586,8 @@ fn document_backbone_batch_fixture_is_exact_bounded_and_u64_safe() {
             maximum_envelopes: limits["maximumEnvelopes"].as_u64().expect("maximumEnvelopes") as usize,
             maximum_dependencies_per_envelope: limits["maximumDependenciesPerEnvelope"].as_u64().expect("maximumDependenciesPerEnvelope") as usize,
             maximum_total_dependencies: limits["maximumTotalDependencies"].as_u64().expect("maximumTotalDependencies") as usize,
+            maximum_target_segments_per_envelope: limits["maximumTargetSegmentsPerEnvelope"].as_u64().expect("maximumTargetSegmentsPerEnvelope") as usize,
+            maximum_total_target_segments: limits["maximumTotalTargetSegments"].as_u64().expect("maximumTotalTargetSegments") as usize,
             maximum_identifier_bytes: limits["maximumIdentifierBytes"].as_u64().expect("maximumIdentifierBytes") as usize,
             maximum_schema_bytes: limits["maximumSchemaBytes"].as_u64().expect("maximumSchemaBytes") as usize,
             maximum_payload_bytes: limits["maximumPayloadBytes"].as_u64().expect("maximumPayloadBytes") as usize,
@@ -600,6 +606,8 @@ fn document_backbone_batch_fixture_is_exact_bounded_and_u64_safe() {
                         actual.dependencies.iter().map(|dependency| dependency.0.as_str()).collect::<Vec<_>>(),
                         expected["dependencies"].as_array().expect("dependencies").iter().map(|dependency| dependency.as_str().expect("dependency")).collect::<Vec<_>>()
                     );
+                    assert_eq!(actual.observed.as_ref().map(|observed| observed.0.as_str()), expected["observed"].as_str(), "{}", row["id"]);
+                    assert_eq!(actual.target.iter().map(String::as_str).collect::<Vec<_>>(), expected["target"].as_array().expect("target").iter().map(|segment| segment.as_str().expect("segment")).collect::<Vec<_>>(), "{}", row["id"]);
                     assert_eq!(actual.diff.schema.0, expected["diff"]["schema"].as_str().expect("diff schema"));
                     assert_eq!(actual.inverse.schema.0, expected["inverse"]["schema"].as_str().expect("inverse schema"));
                     assert_eq!(actual.diff.payload.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected["diff"]["payloadHex"].as_str().expect("diff payloadHex"));

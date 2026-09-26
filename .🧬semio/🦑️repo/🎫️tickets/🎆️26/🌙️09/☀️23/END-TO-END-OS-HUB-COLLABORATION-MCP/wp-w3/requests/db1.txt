@@ -1,0 +1,1 @@
+semio-framework-async — DB1 20:20: pool scheduler reads per-lane queue lengths, maintenance pending counts and the deferred-wake occupied count from atomics (written under their locks) instead of locking the global registries on every idle scan (44 % of worker time under a reopen storm). native + wasm32-wasip2 check PASS.

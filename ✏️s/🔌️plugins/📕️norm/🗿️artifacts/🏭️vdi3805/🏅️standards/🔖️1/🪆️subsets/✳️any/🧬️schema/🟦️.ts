@@ -8,7 +8,8 @@ export type SheetAttributes =
 
 export interface LocalizedText { locale: string; text: string }
 export interface BuildingSystemNumber { systemCode: string; subsystem: string; sequence: number }
-export interface ExtensionFields { fields: Record<string, string> }
+export type ExtensionFieldValue = string;
+export interface ExtensionFields { fields: { readonly [key: string]: ExtensionFieldValue } }
 export interface ManufacturerFile {
   headerVersion: string;
   manufacturer: string;
@@ -26,14 +27,16 @@ export interface Configuration {
   functionRefs: string[];
 }
 export interface ProductIdentity { manufacturerCode: string; productGroup: string; articleNumber: string }
+export interface AccessoryLink { accessoryId: string; required: boolean; quantity: number }
+export interface CompositionLink { componentId: string; quantity: number }
 export interface Product {
   identity: ProductIdentity;
   title: LocalizedText[];
   sheet: number;
   records: NativeRecord[];
   configuration: Configuration;
-  accessories: string[];
-  components: string[];
+  accessories: AccessoryLink[];
+  components: CompositionLink[];
   extensions: ExtensionFields;
 }
 export interface ManufacturerCatalog { file: ManufacturerFile; products: Product[]; extensions: ExtensionFields }
@@ -41,7 +44,7 @@ export interface EditionId { year: number; month: number }
 export interface CatalogIndexEntry { productId: string; sheet: number; tags: string[]; dn?: number | null }
 export interface CatalogIndex { entries: CatalogIndexEntry[] }
 export interface BoundingBox { minX: number; minY: number; minZ: number; maxX: number; maxY: number; maxZ: number }
-export interface GeometryConnection { id: string; x: number; y: number; z: number; nx: number; ny: number; nz: number }
+export interface GeometryConnection { id: string; medium: string; position: [number, number, number]; direction: [number, number, number]; diameterMm?: number | null }
 export interface ParametricGeometry { id: string; bbox: BoundingBox; connections: GeometryConnection[]; parameters: Record<string, number> }
 export interface CurvePoint { x: number; y: number }
 export interface CharacteristicCurve { id: string; points: CurvePoint[] }
@@ -49,8 +52,6 @@ export interface SecurityLimits { maxFileBytes: number; maxRecords: number; maxF
 
 /** 🧬️ Vdi3805 artifact schema — every field with its state class. */
 export interface Vdi3805Artifact {
-  /** @state artifact */
-  manufacturerFile: ManufacturerFile;
   /** @state artifact */
   catalog: ManufacturerCatalog;
   /** @state artifact */
@@ -66,6 +67,5 @@ export interface Vdi3805Artifact {
   /** @state artifact */
   curves: Record<string, CharacteristicCurve>;
   /** @state artifact */
-  limits: SecurityLimits;
 }
 

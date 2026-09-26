@@ -74,8 +74,9 @@ export type VdiValue =
   | { kind: "list"; items: VdiValue[] }
   | { kind: "null" };
 
+export type ExtensionFieldValue = string;
 export interface ExtensionBag {
-  fields: Record<string, string>;
+  fields: { readonly [key: string]: ExtensionFieldValue };
 }
 
 export interface BuildingSystemNumber {

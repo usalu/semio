@@ -1,30 +1,127 @@
-# 🧬️ EN 1999 mutation schema.
+# 🧬️ EN 1999 mutation schema — semantic kinds matching Rust `KINDS`.
 
-type En1999Mutation {
-  nEdKn: Float! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  aMm2: Float! @state(class: ARTIFACT)
-  wElMm3: Float! @state(class: ARTIFACT)
-  alloy: Float! @state(class: ARTIFACT)
-  chi: Float! @state(class: ARTIFACT)
-  iTMm4: Float! @state(class: ARTIFACT)
-  lCrMm: Float! @state(class: ARTIFACT)
-  thetaC: Float! @state(class: ARTIFACT)
-  deltaSigmaEd: Float! @state(class: ARTIFACT)
-  deltaSigmaC: Float! @state(class: ARTIFACT)
-  fatigueM: Float! @state(class: ARTIFACT)
-  nCycles: Float! @state(class: ARTIFACT)
-  vWeldEdKn: Float! @state(class: ARTIFACT)
-  weldThroatMm: Float! @state(class: ARTIFACT)
-  weldLengthMm: Float! @state(class: ARTIFACT)
-  betaW: Float! @state(class: ARTIFACT)
-  sheetBMm: Float! @state(class: ARTIFACT)
-  sheetTMm: Float! @state(class: ARTIFACT)
-  sheetKSigma: Float! @state(class: ARTIFACT)
-  sheetWElMm3: Float! @state(class: ARTIFACT)
-  sheetMEdKnm: Float! @state(class: ARTIFACT)
-  shellTMm: Float! @state(class: ARTIFACT)
-  shellRMm: Float! @state(class: ARTIFACT)
-  sigmaEdShellMpa: Float! @state(class: ARTIFACT)
-  annex: Float! @state(class: ARTIFACT)
+union En1999Mutation =
+    ChangeAnnex
+  | ChangeMaterials
+  | ChangeSections
+  | ChangeMembers
+  | ChangeConnections
+  | ChangeFireScenarios
+  | ChangeFatigueDetails
+  | ChangeColdFormed
+  | ChangeShells
+  | AddMember
+  | RemoveMember
+  | ChangeMemberNEd
+  | ChangeMemberMYEd
+  | ChangeMemberBucklingLength
+  | ChangeMaterialDesignation
+  | ChangePlateThickness
+  | ChangeWeldThroat
+  | ChangeBoltCount
+
+# KINDS: change-annex, change-materials, change-sections, change-members, change-connections, change-fire-scenarios, change-fatigue-details, change-cold-formed, change-shells, add-member, remove-member, change-member-n-ed, change-member-my-ed, change-member-buckling-length, change-material-designation, change-plate-thickness, change-weld-throat, change-bolt-count
+
+type ChangeAnnex {
+  # kind: "change-annex"
+  newAnnex: String! @state(class: ARTIFACT)
 }
+
+type ChangeMaterials {
+  # kind: "change-materials"
+  materials: JSON! @state(class: ARTIFACT)
+}
+
+type ChangeSections {
+  # kind: "change-sections"
+  sections: JSON! @state(class: ARTIFACT)
+}
+
+type ChangeMembers {
+  # kind: "change-members"
+  members: JSON! @state(class: ARTIFACT)
+}
+
+type ChangeConnections {
+  # kind: "change-connections"
+  connections: JSON! @state(class: ARTIFACT)
+}
+
+type ChangeFireScenarios {
+  # kind: "change-fire-scenarios"
+  fireScenarios: JSON! @state(class: ARTIFACT)
+}
+
+type ChangeFatigueDetails {
+  # kind: "change-fatigue-details"
+  fatigueDetails: JSON! @state(class: ARTIFACT)
+}
+
+type ChangeColdFormed {
+  # kind: "change-cold-formed"
+  coldFormed: JSON! @state(class: ARTIFACT)
+}
+
+type ChangeShells {
+  # kind: "change-shells"
+  shells: JSON! @state(class: ARTIFACT)
+}
+
+type AddMember {
+  # kind: "add-member"
+  index: Int! @state(class: ARTIFACT)
+  member: JSON! @state(class: ARTIFACT)
+}
+
+type RemoveMember {
+  # kind: "remove-member"
+  id: String! @state(class: ARTIFACT)
+}
+
+type ChangeMemberNEd {
+  # kind: "change-member-n-ed"
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newNK: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberMYEd {
+  # kind: "change-member-my-ed"
+  memberId: String! @state(class: ARTIFACT)
+  actionId: String! @state(class: ARTIFACT)
+  newMYK: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMemberBucklingLength {
+  # kind: "change-member-buckling-length"
+  memberId: String! @state(class: ARTIFACT)
+  axis: String! @state(class: ARTIFACT)
+  newLength: Float! @state(class: ARTIFACT)
+}
+
+type ChangeMaterialDesignation {
+  # kind: "change-material-designation"
+  materialId: String! @state(class: ARTIFACT)
+  newDesignation: String! @state(class: ARTIFACT)
+}
+
+type ChangePlateThickness {
+  # kind: "change-plate-thickness"
+  sectionId: String! @state(class: ARTIFACT)
+  elementId: String! @state(class: ARTIFACT)
+  newThickness: Float! @state(class: ARTIFACT)
+}
+
+type ChangeWeldThroat {
+  # kind: "change-weld-throat"
+  connectionId: String! @state(class: ARTIFACT)
+  newThroat: Float! @state(class: ARTIFACT)
+}
+
+type ChangeBoltCount {
+  # kind: "change-bolt-count"
+  connectionId: String! @state(class: ARTIFACT)
+  newRows: Int! @state(class: ARTIFACT)
+  newBoltsPerRow: Int! @state(class: ARTIFACT)
+}
+

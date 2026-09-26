@@ -24,7 +24,7 @@ Ports: hubs 8090–8099, serves 6590–6599; durable data `.🧬semio/🌐hub/s1
 | S12-2 | Native app presence (cursor/selection both ways, one wire, live with a React peer) + coordinator add-on: full cross-shell journey (native ↔ React `s`, one hub document) | **native half landed, laws green (01:3x)**: schema-first contract `🧬️schema/👕️canvas-presence` + fixture (publish / paint / labels en+de); wgpu twin `🧱️elements/👕️canvas-presence/🎯️targets/🧊️wgpu` (board view = scene camera + world point under the pointer; peer cursors, viewports, marks via replication's `peers_for_window`); the shell's heartbeat now carries `views`, `active_tool`, the guest's `interaction` + presence pack (native `AppFrame::Ephemeral` cache, the retired stub replaced); the chrome paints peer cursor/viewport/name chip + mark chips over every board in the hub colour; hub-admitted self identity from `Session`. Laws: Rust 3/3 + Shell 2/2 (painted board end to end), TS 5/5 (React's `puzzle2dScreenToWorld` / `peersForWindow` / `PEER_OVERLAY_LABELS`, gl-matrix `mat2d` inverse as oracle). Live cross-shell run: waits on 7800 B2. React gaps routed (C10): no `interaction` on React's heartbeat (`ephemeralSnapshot: undefined`), Board2dHost marks domain hardcoded `layer` |
 | S12-3 | B2 `Live` on catalog B2 (guest-owned block via component codec) | **PROVEN live (05:40)**: gate run 24 step 6 Live in 11 s on 7800 B2 with the hub-resolved catalog component aaf7ee82 (component codec from the mounted guest) |
 | S12-4 | `hub-live-collaboration-check` 12/12 on 7800 B2 (+ after `--packages all`); kernel store/sync, renderer, shard suites | **GREEN on 7800 B2 (08:53): 12/12, exit 0** (`s12-wg8-captures/collab-live-25.raw.txt`, generation f485bf7e…): both native shells resolve block by the serving generation, step 6 Live 10.0 s, 7 both online 0.15 s, 8 A authors 7.8 s, 9 B ingests, 10 B authors + A ingests, 11 per-actor undo, 12 offline edit 5.2 s (online 8.5 s), pump 3.0 s, stale → ready, relive 6.7 s, A ingests it. After `--packages all`: pending W2. Suites green 00:4x (kernel 572/572, shard 69/69, renderer 92/92 + kernel_runtime 41/41) |
-| S12-5 | wasm32 checks for every crate touched in s11 + s12 | queued in the wasm mutex (00:4x, `wasm-checks-3.sh`, detached pid 22376; capture `s12-wg8-captures/check-wasm-6.txt`): framework + os-kernel + plugin wasip2, os-kernel `sync` unknown-unknown, renderer unknown-unknown |
+| S12-5 | wasm32 checks for every crate touched in s11 + s12 | **GREEN (16:11, `s12-wg8-captures/check-wasm-9.txt`, after every WG8 edit)**: wasip2 `semio-framework` + `semio-framework-os-kernel` + `semio-framework-plugin` rc=0, os-kernel `--features sync` wasm32-unknown-unknown rc=0, `semio-framework-os-renderer-wgpu` wasm32-unknown-unknown rc=0 (earlier: wasip2 02:17, unknown-unknown 05:23) |
 | S12-6 | Genesis-on-open parity with WG7 / C10 (via coordinator) | not started |
 | S12-8 | Coordinator decision: a hub document's component resolves by the SERVING catalog generation (local only on equal content hash), verified, stored content-addressed, progress + cancel | **landed, laws green (04:2x); live on 7800 B2 running**: kernel resolver `📇️directory/🔌️client/🧩️execution-target-module` (`resolve_execution_target_module`: lease → local if equal SHA-256 → verified store entry → hub `execution-target/{component, descriptor}` bytes verified against the lease, stored whole via rename; `ExecutionTargetModuleStore` per-user cache dir; steps + cancel); native shell open gains phase `Resolving` (band `1/3` with the step, en+de, cancel cancels the in-flight request) and mounts the hub-resolved program (`program_bridge::load_resolved_program`, descriptor must name the lease digest). Laws: schema `🧬️schema/🧩️execution-target-module-resolution-v1` + fixture (9 cases over the hub's lease corpus) — Rust 9/9, TS oracle (Ajv + `node:crypto`) 11/11; band law en/de 1/1 |
 | S12-7 | R8 relay: hub-projection twin drift — React's fold carries U5's link axis, the Rust twin did not | **DONE (01:2x), schema-first**: schema `🧬️schema/🔗️hub-projection` gains `session` (`none`/`signedOut`/`signedIn`) + `link` (`verifying`/`reachable`/`unreachable`), states `local`/`online`, `offline` dropped (unreachable with a 3-valued link, also in React's fold); fixture 10 cases; Rust fold `hub_connection_summary(statuses, session, link)` + `HubLink`; the Shell's duplicate `ShellHubConnectionState`/`ShellHubAuthorityV1` deleted (one state enum), badge texts en/de `hub.local`/`hub.online`; laws: Rust `hub_connection:: hub_projection_workspace_tests` 42/42, TS runner (Ajv schema + independent fold + React `hubConnectionSummaryV1` as oracle) 6/6 |
@@ -247,6 +247,89 @@ Paths relative to `🧰️framework/🛍️products/💻️os/🔨️modules/` u
   (W2 now runs the `--packages all` publish in the wasm mutex). 15:03 React serve 6590 relaunched (`serve-react-6590-b.txt`),
   wasm gates re-queued (`wasm-checks-5.sh` → `check-wasm-9.txt`, behind W2's hold). Rules 20/21 (guest freeze; no edits to
   taxonomy/nx/project.json/root Cargo/`.cargo`/`📇️directory/🧬️schema`) observed: no such edits since 05:45.
+- 15:3x an external sweep deleted `wp-wg8/🗑️generated` and my private target dir `wp-wg8/target` (all ticket files re-stamped 12:50);
+  build/check logs now live in `.🧬semio/🌐hub/s12-wg8-captures/`. First relink `rc=101` (`semio-framework-os-flow` lib: `linking with
+  cc failed`, shared build-dir race), retried.
+- 15:4x rule 23 (7800 is W2's even unbound): nothing of mine listened on 7800 at ~15:41 — my only server is the React serve 6590
+  (pid 35215 → vite 35814, `S_LOCAL_ONLY=1`, so `ensureDevLocalHub` returns before it could spawn a hub; its log has no
+  `dev-local-hub` line); `hub-live-collaboration-check` boots its own hub only on `freeLoopbackPort()` (OS-chosen ephemeral port) and
+  was not run. The 7800 client defaults are gone from my runners: `run-cross-shell.sh <tag> <hubOrigin> <reactUrl>` and
+  `run-collab-live-b2.sh <hubOrigin>` refuse to start without an explicit origin; the Rust laws already require `SEMIO_HUB_LIVE_ORIGIN`.
+- 15:58 test binary relinked (`build-cross-split-3.txt`, rc=0). **wasm32 gates GREEN (`check-wasm-9.txt`, hold 15:54–16:11, mutex
+  released)**: wasip2 framework + kernel + plugin rc=0 (15:57), kernel `sync` unknown-unknown rc=0 (15:59), renderer unknown-unknown
+  rc=0 (16:11) — every WG8 edit of s11 + s12 compiles for both wasm32 targets. Rule 24 (build-quiet until publish 4): no further
+  wasm32 builds/checks from WG8.
+- 16:15 7800 ready again (B2, runId 8d0ec7a5…). Cross-shell run 8 (`CROSS_MODE=cursors`, puzzle2d) launched.
+- 16:22 **cross-shell run 8** (`cursors`): 1 ✓ only on the second attempt (first `Unreachable`), 2 ✗ — no space row after
+  `CREATE_SPACE` (`space=`, catalog idle). Measured with curl on 7800 (load ~50): mint `POST /auth/sessions` **9–46 s** (hub log
+  `server.auth.session.mint` 11–46 s), `GET /directory/spaces` **25–58 s** for user1 (82 spaces; user2: 47 spaces in 3.2 s), `me`
+  2–4 ms, `create-space` itself 5–45 ms (hub log). Two causes: (a) hub-side latency (routed: list → H9; mint is 261 ms median on the
+  current tree per H10, the post-publish binary carries it); (b) native: the kernel ureq agent has a fixed 15 s overall timeout
+  (`UREQ_HTTP_READ_TIMEOUT_MS`, `📇️directory/🔌️client` native transport) that overrides the shell's 30 s sign-in deadline and cuts the
+  list reload — sign-in answered `Unreachable`, the reload went `Stale`, and both shells rebuild the space list ONLY from that query
+  after a command (state-driven). Run 8 stopped (my pids 46840/47487/47902). Coordinator messaged; agreed.
+- 16:3x–16:51 **fix (renderer + shared contract, event-driven read-your-writes)**: a command receipt's directory events are folded into
+  the space rows at once — `spaceRowsAfterEventsV1` (`📇️directory/🏘️spaces/🟦️.ts`) and its Rust twin
+  `space_browser::space_rows_after_events` (`🏘️SpaceBrowser/🎯️targets/🧊️wgpu`): `space.created` by me + my `member.upserted` → my
+  row (role → access: author → `author`, spectator → `member`; member count from the same receipt), rename / visibility / archive
+  (author → spectator) restate a row, `space.deleted` drops it, leaving a private space drops it, leaving a public one keeps it as
+  `public`, joining a public one counts me, a redeemed invite counts a member, `document.announced` counts a document; another user's
+  `member.upserted` leaves the count to the next list (not derivable). Wired: native `flush_pending_directory_commands` folds every
+  receipt and marks the rows `Ready` before the list reload (a failed reload leaves them `Stale`, still usable); React
+  `useHubConnection.runCommand` folds the receipt into `rows` and keeps the phase `ready` (it used to fall to `loading` — rows unusable —
+  for the whole list query). Schema-first: `🏘️spaces/🧬️.schema.json` gains `receiptFolds` + `definitions.spaceRow`/`directoryEvent`;
+  fixture `🏘️spaces/🔣️.json` gains 11 cases incl. the golden directory log (`💻️os/🧫️fixtures/📇️directory/⚡️events.json`).
+  Laws: Rust `space_browser::tests` **18/18** (2 new: the fixture table; agreement with the kernel read model `os_directory::fold` on
+  the golden log), TS `hub-sign-in-spaces-check` **98/98** (2 new + Ajv strict over the extended schema; oracle: the TS read model
+  `foldAll`) — `laws-space-browser-1.txt`, `laws-hub-spaces-2.txt`.
+- 16:4x **prepared kernel patch** (rule 20, NOT applied, NOT compiled): `wp-wg8/kernel-patch-transport-deadline.py` — the native ureq
+  transport bounds only the connect; each request's overall timeout = what the caller's `OperationContext` deadline leaves (runtime
+  clock `run_io` uses), else a 120 s backstop (frees the blocking IO thread); body stall bound unchanged. Laws in the patch: shared
+  fixture `🪪️runtime/🧫️fixtures/⏱️request-budget.json` (5 cases) + a slow local server (600 ms head: served inside a 5 s deadline,
+  refused past a 200 ms one). Apply after W2's publish, then kernel native tests + wasm32 checks.
+- 16:52 **cross-shell run 9** (`cursors`, load ~30): 1 ✓ (first attempt), 2: the created space is now listed at once (receipt fold,
+  live) and the door's catalog is ready (`2d.puzzle`), but the creation trail went `accepted → indeterminate` at the native door's
+  fixed 120 s deadline (`HUB_ARTIFACT_CREATION_DEADLINE_MS`) — the hub finished it anyway: the space page lists
+  `artifact-557f1238…` (`2d.puzzle`), updated ~275 s after the space was created. The same defect S15 fixed on React (shared
+  contract `🏪️store/👷️worker/🌱️creation-polling/🔣️.json`: follow a creation while the hub answers, backoff 100 ms → 2 s, `indeterminate`
+  only after 60 s without an answer). Run 9 stopped (my pids).
+- 17:0x **native creation door on the shared polling contract** (`edit-creation-polling.py`): `HubArtifactCreation` carries
+  `last_answered_at_ms` + `polls` instead of `deadline_at_ms`; `hub_connection::space_artifact_creation_poll_delay_ms` /
+  `space_artifact_creation_unreachable` read the shared contract file (the constants `HUB_ARTIFACT_CREATION_DEADLINE_MS`/`_POLL_MS`
+  deleted); the Shell's pump marks every 2xx answer and backs off per poll. Law
+  `the_creation_door_follows_the_shared_polling_contract` (delays 0..40 recomputed from the contract's raw numbers, the bound both
+  sides). `hub_connection::` + `space_browser::` **58/58** (`laws-hub-door-1.txt`). Cross-shell creation wait 300 → 600 s.
+  Run 10 (`cursors`) launched 17:04.
+- 17:04–17:27 **cross-shell run 10** (`cursors`, load ~33): 1 ✓; 2: the door now follows the creation to the end — trail
+  `accepted → preparing → ready` (**~10 min** on the hub for a 2d.puzzle at load 33; the polling fix works live) — then the native open
+  of the hub-resolved puzzle component failed: `kernel: actor 0 stayed preempted past its 30s turn budget` (the new instance's
+  `InstanceOpen` turn, resumed after every 100 ms preemption, ran > 30 s wall in the debug test host at load 33;
+  `RUN_TURN_SETTLE_BUDGET` in `🧊️renderer/🦀️.rs`). React (B): the new space's row was never attached on Home within 180 s — Home
+  now holds ~50 spaces for user2 and the driver waited for a row off-screen. Driver fix: after 20 s without either row it follows the
+  space's deep link `/spaces/<id>` (the React shell's own hard-navigation route). Run 10 stopped (my pids).
+  **Finding (native kernel, not fixed):** one `run_turn` request monopolises the single kernel request loop for up to 30 s and then
+  reports a slow-but-progressing guest as wedged; a long `InstanceOpen` (puzzle2d: 28 MB component, debug host, loaded machine) fails
+  the open instead of showing progress. Proposal: a preempted actor yields the loop (the request is re-queued kernel-side and resumed
+  next iteration, other requests interleave), the open's band shows it, and cancellation (the caller dropping the reply) — not a
+  fixed wall budget — ends it; a guest that never finishes is then the caller's cancel, as in React's worker. Wide blast radius
+  (every native turn) → proposed to the coordinator rather than landed blind.
+- 17:28 cross-shell run 11 (`edits`, block2d) launched to measure 1–8 with the receipt fold + creation polling fixes.
+- 17:46 run 11: 1–2 ✓ (door followed the creation 613 s to `ready`, Live 5.1 s), React driver died on its own bug (the deep-link used
+  the shadowed `URL` string as a constructor) — fixed (`globalThis.URL`), run stopped.
+- 17:47–18:01 **CROSS-SHELL RUN 12 (edits, block2d, 7800 B2, load ~25–40): 8/8 PASS, law exit 0** (`cross-shell-12/`, 819 s):
+  | step | result |
+  |---|---|
+  | 1 A (native wgpu) signs in | ✓ first attempt |
+  | 2 A creates a space (listed at once via the receipt fold), seats B, creates a block2d artifact through its door and opens it | ✓ door `accepted → preparing → ready` in ~619 s (hub-side), open 19.1 s (frames ≤ 0.10 s opening / ≤ 0.21 s rendering), Live 5.8 s |
+  | 3 B (React `s`, Playwright) opens it | ✓ via the `/spaces/<id>` deep link (Home holds 47 rows), Live 11.3 s, `hub=live` |
+  | 4 presence both ways | ✓ A sees B after 1.8 s (`User Two`, colour 1), B sees A 4 ms after A's handshake (one wire: `peer:hub.v1.…`) |
+  | 5 A edits → B ingests | ✓ A 7.2 s, React 6 → 7 Handle Kinds 2 ms after the handshake |
+  | 6 B edits → A ingests | ✓ React 7 → 8 (20.2 s incl. opening the Actions pane), A's ledger shows `apply` |
+  | 7 each undoes own | ✓ A's undo reached React (8 → 7), React's own undo 7 → 6 in 61 ms, A's ledger `(addHandleKind,false),(apply,false)` after 19.6 s |
+  | 8 same-document reload converges | ✓ React reload → Home → deep link → reopened Live 9.9 s at 6 Handle Kinds (= A's state), A's next edit reached it 3 ms after (6 → 7) |
+  Cursor leg (separate law, puzzle2d board): blocked by the native long-turn limit (finding above, coordinator-approved redesign in progress).
+- 18:0x coordinator approved the long-turn redesign (fair round-robin slices, progress, only an explicit cancel ends a turn; laws: a 60 s
+  turn completes while another actor keeps answering, cancel ends it, no starvation).
 
 ## Coordination (read me, WG7 / coordinator)
 

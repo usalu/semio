@@ -20,8 +20,6 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
     semio_s_artifact_norm_contract::package_from_schema(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-use crate::document::ClimateZoneDe;
-
 // #region 🔖️Types
 /// 🏢️ Building use class for DIN V 18599-10 usage profiles / GEG reference area.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
@@ -250,8 +248,8 @@ impl MonthlyClimate {
         }
     }
 
-    pub fn german_reference(zone: ClimateZoneDe) -> Self {
-        let _ = zone;
+    /// 🌤️ German reference climate assessed for this family (Potsdam TRY monthly means).
+    pub fn german_reference() -> Self {
         Self::potsdam_reference()
     }
 }

@@ -95,6 +95,34 @@
         "command": "bun ./📜️script.ts cache-verify"
       }
     },
+    "cargo-provenance-check": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo-provenance check"
+      }
+    },
+    "cargo-provenance-repair": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo-provenance repair"
+      }
+    },
+    "test-cargo-provenance": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/📜️script.ts",
+        "{projectRoot}/🦀️cargo/**/*",
+        "{projectRoot}/🧪️tests/🧾️cargo-provenance/**/*",
+        "{projectRoot}/🧫️fixtures/🧾️cargo-provenance/**/*",
+        "{projectRoot}/🧬️schema/🧾️cargo-provenance/**/*",
+        "{workspaceRoot}/rust-toolchain.toml"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test cargo-provenance"
+      }
+    },
     "generator-inputs": {
       "executor": "nx:run-commands",
       "cache": true,

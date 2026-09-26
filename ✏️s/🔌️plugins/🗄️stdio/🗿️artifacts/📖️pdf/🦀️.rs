@@ -240,7 +240,7 @@ fn pilot_languages_1_4() -> &'static [dsl::LanguageSpec] {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.pdf".into(),
+        id: "s.stdio.pdf".into(),
         name: "Pdf".into(),
         source_format: STDIO_PDF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

@@ -15,9 +15,10 @@ import { UsersPage } from "../🙋️UsersPage/🟦️.tsx";
 import { ConnectionsPage } from "../🔗️ConnectionsPage/🟦️.tsx";
 import { DocumentsPage } from "../📃️DocumentsPage/🟦️.tsx";
 import { EventsPage } from "../📰️EventsPage/🟦️.tsx";
+import { ObservabilityPage } from "../📊️ObservabilityPage/🟦️.tsx";
 // #endregion 🔌️Adapters
 
-const ADMIN_TABS = ["overview", "spaces", "users", "connections", "documents", "events"] as const;
+const ADMIN_TABS = ["overview", "spaces", "users", "connections", "documents", "events", "observability"] as const;
 type AdminTab = (typeof ADMIN_TABS)[number];
 
 /** 🌐️ Plain locale toggle — deliberately not the shell's `UiDriver`/theme machinery (this app has no
@@ -40,7 +41,7 @@ function LocaleSwitch(): React.ReactElement {
   );
 }
 
-/** 🛡️ The whole admin SPA's tab shell — Overview/Spaces/Users/Connections/Documents/Events, gated
+/** 🛡️ The whole admin SPA's tab shell — Overview/Spaces/Users/Connections/Documents/Events/Observability, gated
  * behind `AdminSessionProvider`'s auth probe (contract §C2's admin surface). Locale switch lives in
  * the header, next to the tabs, always visible regardless of auth state. */
 export function AdminApp(): React.ReactElement {
@@ -90,6 +91,9 @@ export function AdminApp(): React.ReactElement {
           </TabsContent>
           <TabsContent value="events" className="h-full">
             <EventsPage />
+          </TabsContent>
+          <TabsContent value="observability" className="h-full">
+            <ObservabilityPage />
           </TabsContent>
         </div>
       </Tabs>

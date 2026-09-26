@@ -262,6 +262,12 @@ fn session_document_report(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str
     }))
 }
 
+/// 🌎️ Opening a HUB document is what binds it to the plugin, app and surface the hub's own
+/// execution-target lease names, and hands that binding the canonical pair just read — so
+/// every later `action_prepare` on this session runs the plugin's guest against THIS
+/// document rather than against the plugin's genesis (ticket 26/09/18 slice M10, step 1 of
+/// M8 §5.3's write path). A workspace that is not hub-bound, or a document the hub
+/// authorizes no execution target for, binds nothing and still opens.
 fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: serde_json::Value) -> CallToolResult {
     let artifact_id = match require_field(&arguments, "artifactId") {
         Ok(value) => value.to_string(),
@@ -287,12 +293,6 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
         Err(error) => CallToolResult::tool_error(&error),
         Ok(None) => CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}"))),
         Ok(Some((pack, spr))) => {
-            // 🌎️ Opening a HUB document is what binds it to the plugin, app and surface the hub's own
-            // execution-target lease names, and hands that binding the canonical pair just read — so
-            // every later `action_prepare` on this session runs the plugin's guest against THIS
-            // document rather than against the plugin's genesis (ticket 26/09/18 slice M10, step 1 of
-            // M8 §5.3's write path). A workspace that is not hub-bound, or a document the hub
-            // authorizes no execution target for, binds nothing and still opens.
             let bound = match workspace.bind_hub_session_document(&artifact_id, &pack, &spr) {
                 Ok(bound) => bound,
                 Err(error) => return CallToolResult::tool_error(&error),

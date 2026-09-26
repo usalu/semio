@@ -17,10 +17,10 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
-}
+    }
 fn expected_after() -> Vdi3805Snapshot {
     serde_json::from_str(AFTER).expect("after snapshot decodes")
-}
+    }
 fn mutation() -> Vdi3805Mutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
@@ -28,7 +28,7 @@ fn applied() -> Vdi3805Snapshot {
     let base = before();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &base);
     <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), &base).expect("change-correction-as-of applies to its committed before-snapshot")
-}
+    }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]

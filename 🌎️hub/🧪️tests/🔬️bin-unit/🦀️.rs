@@ -108,17 +108,35 @@ fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
 fn every_served_readiness_body_is_the_declared_readiness_schema() {
     let mut document: serde_json::Value = serde_json::from_str(include_str!("../../🚀️local-bootstrap/🧬️schema/🔣️.json")).expect("local-bootstrap schema module");
     document["$ref"] = serde_json::Value::String("#/$defs/LocalBootstrapReadinessV1".into());
-    let schema = semio_framework_schema::OwnedJsonSchemaValidator::compile(&document.to_string()).expect("readiness schema compiles");
+    let schema = semio_framework_schema::OwnedJsonSchemaValidator::compile_with_documents(&document.to_string(), &[semio_hub::artifact_authority::trusted_catalog::schema::TRUSTED_CATALOG_SCHEMA_JSON]).expect("readiness schema compiles");
     let run = "00112233445566778899aabbccddeeff".to_string();
     let reason = "trusted-catalog-never-published-in-this-data-root";
     let starting = hub_starting_readiness(HubMode::Production, "network", "production".into(), true, true, true);
-    let progressed = HubReadinessV1 { startup: Some(HubStartupProgressV1 { stage: AuthorityProgressStage::GuestCodecExecuting.code(), completed_units: 25_000_000, total_units: 4_000_000_000 }), ..starting.clone() };
+    let progressed = HubReadinessV1 { startup: Some(HubStartupProgressV1 { stage: AuthorityProgressStage::GuestCodecExecuting.code(), completed_units: 25_000_000, total_units: 4_000_000_000, catalog: None }), ..starting.clone() };
+    let cataloged = {
+        let cell = StartupProgressCellV1::default();
+        cell.observe(AuthorityProgress { stage: AuthorityProgressStage::CatalogLoading, completed_units: 3, total_units: 37 });
+        let package = |plugin_id: &str, phase| semio_hub::artifact_authority::trusted_catalog::schema::TrustedCatalogPackageProgressV1 { plugin_id: plugin_id.into(), component_bytes: 14_932_128, phase, rows: 2, rows_pinned: 1, rows_verified: 0 };
+        let catalog = semio_hub::artifact_authority::trusted_catalog::schema::TrustedCatalogLoadProgressV1 {
+            packages: vec![package("note", semio_hub::artifact_authority::trusted_catalog::schema::TrustedCatalogPackagePhaseV1::Staged), package("draw", semio_hub::artifact_authority::trusted_catalog::schema::TrustedCatalogPackagePhaseV1::Reading)],
+            packages_total: 2,
+            packages_ready: 0,
+            packages_refused: 0,
+            component_bytes_total: 29_864_256,
+            component_bytes_read: 14_932_128,
+            rows_total: 4,
+            rows_pinned: 2,
+            rows_verified: 0,
+        };
+        HubReadinessV1 { startup: Some(HubStartupProgressV1 { catalog: Some(catalog), ..cell.latest().expect("observed progress") }), ..starting.clone() }
+    };
     let bodies = [
         ("ready", hub_readiness(HubMode::Development, "loopback", run.clone(), true, true, true, true, true, true, false, true, reason)),
         ("blocked", hub_readiness(HubMode::Development, "loopback", run.clone(), false, false, false, false, false, false, false, false, reason)),
         ("production", declare_public_session_issuance(hub_readiness(HubMode::Production, "network", "production".into(), true, true, true, true, true, true, true, false, reason), true)),
         ("starting", starting),
         ("starting-with-progress", progressed.clone()),
+        ("starting-with-catalog-progress", cataloged),
         ("starting-development", hub_starting_readiness(HubMode::Development, "loopback", run.clone(), false, false, false)),
     ];
     for (label, body) in &bodies {
@@ -405,14 +423,14 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     let component_sha256 = os_directory::hex_lower(&Sha256::digest(component));
     let component_blake3 = blake3::hash(component).to_hex().to_string();
     let receipts = semio_s_plugin_stdio::registry::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
-    let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
+    let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
         .document(["semio", "stdio", "json"])
         .mode("view", semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
         .default_mode_id("view")
         .window_kind_def(<semio_framework_plugin::app::TreeWindowKit as semio_framework_plugin::app::WindowKit>::window_kind())
         .build_definition();
     let mut viewer = viewer;
-    viewer.artifact_kinds = semio_s_plugin_stdio::registry::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "stdio.json").collect();
+    viewer.artifact_kinds = semio_s_plugin_stdio::registry::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "s.stdio.json").collect();
     let mut manifest = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::new("stdio", "Stdio Fixture", receipts[0].package_version).manifest;
     manifest.artifact_kinds = semio_s_plugin_stdio::registry::native_codec_artifact_kinds();
     manifest.apps.push(viewer.clone());
@@ -762,6 +780,8 @@ async fn test_state_with_capacity(directory_capacity: usize, fanout_capacity: us
     test_state_with_directory(dir, directory, directory_capacity, fanout_capacity).await
 }
 
+/// 📝️ Silent by default: a law that wants records takes `observed_test_state` and swaps in a
+/// capturing tracer, so every other law pays no formatting and asserts against no log.
 async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDirectory, directory_capacity: usize, fanout_capacity: usize) -> HubState {
     let database = db::Database::open_at(hub_worker_pool(), &dir, db::Profile::Test).await.expect("open db");
     directory.seed().await.expect("seed");
@@ -781,9 +801,8 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
     #[cfg(feature = "native-artifact-execution")]
     let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
     HubState {
-        // 📝️ Silent by default: a law that wants records takes `observed_test_state` and swaps in a
-        // capturing tracer, so every other law pays no formatting and asserts against no log.
         tracer: Tracer::disabled(),
+        route_metrics: Arc::default(),
         instance: test_instance_state(&dir).await,
         db: database,
         artifact_cas,
@@ -847,6 +866,8 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
     }
 }
 
+/// 📝️ Silent by default: a law that wants records takes `observed_test_state` and swaps in a
+/// capturing tracer, so every other law pays no formatting and asserts against no log.
 async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> HubState {
     let dir = tempdir("lag-db");
     let pool = hub_worker_pool();
@@ -869,9 +890,8 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
     #[cfg(feature = "native-artifact-execution")]
     let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
     HubState {
-        // 📝️ Silent by default: a law that wants records takes `observed_test_state` and swaps in a
-        // capturing tracer, so every other law pays no formatting and asserts against no log.
         tracer: Tracer::disabled(),
+        route_metrics: Arc::default(),
         instance: test_instance_state(&dir).await,
         db: database,
         artifact_cas,
@@ -1187,6 +1207,8 @@ async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelop
         document_id: document.clone(),
         actor: ActorId("actor-1".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({ "value": id })).await.unwrap() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({})).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
@@ -1731,29 +1753,120 @@ fn every_route_answers_hostile_input_with_a_typed_signed_refusal() {
     });
 }
 
-/// 🪪️ A route that also answers anonymously never downgrades a presented credential: without one it
-/// serves the anonymous view, with a live session the caller's view, and with a revoked or forged
-/// session a signed `401` — so a client whose session ended learns it instead of reading as a stranger.
+/// 🚪️ Every route that also answers anonymously refuses a PRESENTED credential that does not authenticate with the one
+/// typed, localized answer of `🚧️refusal/🧫️fixtures/🪪️credential-refusal-v1`: `401`, `x-semio-refusal: unauthenticated`,
+/// the RFC 6750 `invalid_token` challenge and the `HubCredentialRefusalV1` body (en + de) — identical for a malformed, a
+/// forged (well-formed, never issued) and a revoked bearer, and never the anonymous view. An absent credential is still
+/// the anonymous view, and a live session is served.
 #[test]
 fn credential_optional_routes_refuse_a_revoked_or_forged_session_instead_of_answering_anonymously() {
     run_socket_test(|| async {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🚧️refusal/🧫️fixtures/🪪️credential-refusal-v1/🔣️.json")).expect("credential refusal fixture");
+        let answer = &fixture["answer"];
         let state = test_state().await;
         let session = issue_test_session(&state, "optional-caller@example.com").await;
+        let public_space = create_space_for_test(&state, &session.user_id, "Credential-optional public space", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Public).await;
         let addr = spawn_server(state.clone()).await;
-        let bearer = format!("Bearer {}", session.token);
-        for path in ["/directory/spaces", "/directory/events"] {
-            assert_eq!(raw_http_get(addr, path, &[]).await.status, 200, "{path}: no credential is the anonymous view");
-            assert_eq!(raw_http_get(addr, path, &[("Authorization", bearer.as_str())]).await.status, 200, "{path}: a live session is served");
-            let forged = raw_http_get(addr, path, &[("Authorization", "Bearer not-a-session")]).await;
-            assert_eq!(forged.status, 401, "{path}: a forged bearer is refused");
-            assert!(forged.headers.to_ascii_lowercase().contains(&format!("{}: ", semio_hub::refusal::HUB_REFUSAL_HEADER)), "{path}: the refusal is signed");
+        let live = format!("Bearer {}", session.token);
+        let forged = format!("Bearer {}", SessionCapability::mint().expect("well-formed capability").expose_once());
+        let paths: Vec<(String, u16)> = fixture["routes"].as_array().expect("routes").iter().map(|route| (route["path"].as_str().expect("path").replace("{publicSpace}", &public_space), route["anonymousStatus"].as_u64().expect("anonymous status") as u16)).collect();
+        let assert_refused = |path: &str, vector: &str, response: &RawHttpResponse| {
+            assert_eq!(u64::from(response.status), answer["status"].as_u64().unwrap(), "{path} {vector}: refused, never the anonymous view");
+            let head = response.headers.to_ascii_lowercase();
+            assert!(head.contains(&format!("{}: {}", semio_hub::refusal::HUB_REFUSAL_HEADER, answer["refusal"].as_str().unwrap())), "{path} {vector}: signed refusal: {head}");
+            assert!(head.contains(&format!("www-authenticate: {}", answer["challenge"].as_str().unwrap().to_ascii_lowercase())), "{path} {vector}: RFC 6750 challenge: {head}");
+            assert_eq!(serde_json::from_slice::<serde_json::Value>(&response.body).expect("refusal JSON"), answer["body"], "{path} {vector}: the declared localized body");
+        };
+        for (path, anonymous) in &paths {
+            assert_eq!(raw_http_get(addr, path, &[]).await.status, *anonymous, "{path}: no credential is the anonymous view");
+            assert_eq!(raw_http_get(addr, path, &[("Authorization", live.as_str())]).await.status, 200, "{path}: a live session is served");
+            for (vector, bearer) in [("malformed", "Bearer not-a-session"), ("forged", forged.as_str())] {
+                assert!(fixture["presented"].as_array().unwrap().iter().any(|name| name == vector));
+                assert_refused(path, vector, &raw_http_get(addr, path, &[("Authorization", bearer)]).await);
+            }
         }
         let authenticated = state.directory.authenticate_session(&SessionCapability::parse(&session.token).unwrap()).await.unwrap().expect("live session");
         state.directory.revoke_auth_session(&authenticated.id, "test-revocation", Some(&session.user_id), "optional-caller").await.expect("revoke");
-        for path in ["/directory/spaces", "/directory/events"] {
-            assert_eq!(raw_http_get(addr, path, &[("Authorization", bearer.as_str())]).await.status, 401, "{path}: a revoked session is refused, not served anonymously");
-            assert_eq!(raw_http_get(addr, path, &[]).await.status, 200, "{path}: the anonymous view stays open");
+        for (path, anonymous) in &paths {
+            assert_refused(path, "revoked", &raw_http_get(addr, path, &[("Authorization", live.as_str())]).await);
+            assert_eq!(raw_http_get(addr, path, &[]).await.status, *anonymous, "{path}: the anonymous view stays open");
         }
+    });
+}
+
+/// 🏘️ A member of many spaces reads its space list and its event pages in bounded time, exactly: the list is one
+/// directory query and each event page one membership read (WG8 on 7800: 25–58 s for 82 spaces, the list folded the
+/// whole event log and mounted every document). The oracle is the event-log fold (`os_directory::fold_all`): the same
+/// visible spaces, discriminators, roles, member and document counts; each answer within the declared page budget.
+#[test]
+fn a_member_of_many_spaces_reads_its_space_list_and_event_pages_within_the_page_budget() {
+    run_socket_test(|| async {
+        const SPACES: usize = 120;
+        const PAGE_BUDGET: std::time::Duration = std::time::Duration::from_millis(200);
+        let state = test_state().await;
+        let member = issue_test_session(&state, "many-spaces@example.com").await;
+        let stranger = issue_test_session(&state, "many-spaces-stranger@example.com").await;
+        for index in 0..SPACES {
+            let owner = if index % 3 == 0 { &stranger } else { &member };
+            let kind = if index % 2 == 0 { os_directory::DirectorySpaceKind::Studio } else { os_directory::DirectorySpaceKind::Atelier };
+            let visibility = if index % 4 == 0 { DirectorySpaceVisibility::Public } else { DirectorySpaceVisibility::Private };
+            let space_id = create_space_for_test(&state, &owner.user_id, &format!("Space {index:03}"), kind, visibility).await;
+            if index % 6 == 0 {
+                upsert_member_for_test(&state, &space_id, "many-spaces@example.com", DirectorySpaceRole::Spectator).await;
+            }
+            if index % 5 == 0 {
+                announce_document_for_test(&state, &space_id, &format!("many-spaces-doc-{index}")).await;
+            }
+        }
+        let events = load_all_directory_events(state.directory.as_ref(), 0).await.expect("directory events");
+        let model = os_directory::fold_all(os_directory::DirectoryReadModel::default(), &events).await;
+        let mut expected = BTreeMap::new();
+        for space in model.spaces.values() {
+            let role = space.members.iter().find(|row| row.user_id == member.user_id).map(|row| row.role);
+            let access = match directory_space_access_decision(space.view.visibility == DirectorySpaceVisibility::Public, role) {
+                DirectorySpaceAccessDecisionV1::Hidden => continue,
+                DirectorySpaceAccessDecisionV1::Public => "public",
+                DirectorySpaceAccessDecisionV1::Member => "member",
+                DirectorySpaceAccessDecisionV1::Author => "author",
+            };
+            expected.insert(space.view.id.clone(), (access, space.view.name.clone(), u64::from(space.view.member_count), space.documents.len() as u64));
+        }
+        assert!(expected.len() > 80, "the member sees most of the {SPACES} spaces: {}", expected.len());
+        let addr = spawn_server(state.clone()).await;
+        let bearer = format!("Bearer {}", member.token);
+        let mut fastest = std::time::Duration::MAX;
+        let mut listed = serde_json::Value::Null;
+        for _ in 0..3 {
+            let started = std::time::Instant::now();
+            let response = raw_http_get(addr, "/directory/spaces", &[("authorization", bearer.as_str())]).await;
+            fastest = fastest.min(started.elapsed());
+            assert_eq!(response.status, 200);
+            listed = json_body(&response);
+        }
+        let mut observed = BTreeMap::new();
+        for entry in listed.as_array().expect("space list") {
+            let space = &entry["space"];
+            observed.insert(space["id"].as_str().expect("id").to_string(), (entry["access"].as_str().expect("access"), space["name"].as_str().expect("name").to_string(), space["memberCount"].as_u64().expect("members"), space["documentCount"].as_u64().expect("documents")));
+        }
+        assert_eq!(observed, expected, "the space list equals the event-log fold");
+        assert!(fastest < PAGE_BUDGET, "the list of {} spaces answered in {fastest:?}", expected.len());
+        let mut after = 0u64;
+        let mut pages = 0usize;
+        loop {
+            let started = std::time::Instant::now();
+            let response = raw_http_get(addr, &format!("/directory/event-page/v1?after={after}"), &[("authorization", bearer.as_str())]).await;
+            let elapsed = started.elapsed();
+            assert_eq!(response.status, 200, "{}", String::from_utf8_lossy(&response.body));
+            let page = json_body(&response);
+            assert!(elapsed < PAGE_BUDGET * 2, "event page {pages} answered in {elapsed:?}");
+            pages += 1;
+            let through = page["throughSeqInclusive"].as_u64().expect("through");
+            if !page["hasMore"].as_bool().expect("has more") || through == after {
+                break;
+            }
+            after = through;
+        }
+        assert!(pages >= 2, "the event log spans several pages: {pages}");
     });
 }
 
@@ -1856,7 +1969,7 @@ async fn gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_docum
         assert!(state.socket_binding_gates.gate(binding).try_write_owned().is_err(), "the exact Hub ingress guard remains owned");
     }
     assert!(state.socket_binding_gates.document_write(&scope).try_lock_owned().is_ok(), "Hub ingress must not outer-lock the runtime document writer");
-    revalidate_gis_map_approval_delivery(&state, &authority).await.expect("fresh delivery under the retained guards");
+    revalidate_gis_map_approval_authority(&state, &authority).await.expect("fresh authority under the retained guards");
     drop(authority);
     execute_directory_command_fenced(
         &state,
@@ -1866,6 +1979,24 @@ async fn gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_docum
     .await
     .expect("demote after exact authority release");
     assert!(matches!(acquire_gis_map_approval_ingress(&state, scope, Some(&caller.token)).await, Err(InferenceRouteErrorV1::Denied)));
+}
+
+/// 🗳️ A durable approval (or undo) is answered with its receipt: once `approve_gis_map_job` /
+/// `undo_gis_map_approval` returns, the route awaits nothing that could turn the committed outcome into
+/// a refusal (G10: a post-commit directory re-check answered `503 inference.unavailable` while the
+/// document had advanced). The ingress bindings are held across the commit instead
+/// (`gis_map_approval_ingress_holds_sorted_hub_authority_without_outer_document_write`).
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+#[test]
+fn a_committed_gis_map_approval_is_answered_with_its_receipt() {
+    let source = include_str!("../../🏗️bootstrap/🦀️.rs");
+    for (route, call) in [("async fn post_inference_gis_map_job_approval(", "approve_gis_map_job(context, &job_id, &body).await"), ("async fn post_inference_gis_map_approval_undo(", "undo_gis_map_approval(context, &body).await")] {
+        let body = &source[source.find(route).expect("approval route")..];
+        let body = &body[..body.find("\n}\n").expect("route end")];
+        let after = &body[body.find(call).expect("the route commits")..];
+        assert!(after.contains("Ok(receipt) => Json(receipt).into_response(),"), "{route} answers the receipt of a durable commit");
+        assert_eq!(after.matches(".await").count(), 1, "{route} awaits nothing after the commit returns");
+    }
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -3191,6 +3322,13 @@ fn document_open_plan_receipt_exchange_admits_one_exact_bounded_secret_free_sock
 /// durable descriptor, and resolves the current trusted selection before any body: it accepts
 /// only the bounded open intent, never a package/digest/generation/path/receipt selector, serves
 /// exactly the selected bytes, and denies after a catalog rotation.
+///
+/// 🚫 Unauthenticated, foreign-scope, foreign-surface, query-smuggled, oversized and
+/// non-JSON requests never reach a byte.
+///
+/// 🔁 A rotation between reads denies every subsequent body rather than mixing generations.
+///
+/// 🚧 An unconfigured catalog advertises nothing and serves nothing.
 #[tokio::test]
 async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_catalog_before_each_body() {
     let mut state = test_state().await;
@@ -3287,8 +3425,6 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
         assert_eq!(invalid.status, 503, "actor identity/body presence mismatch");
     }
 
-    // 🚫 Unauthenticated, foreign-scope, foreign-surface, query-smuggled, oversized and
-    // non-JSON requests never reach a byte.
     for asset in ["manifest", "component", "descriptor", "browser-actor"] {
         let route = format!("{root}/{asset}");
         let anonymous = raw_http_request(addr, "POST", &route, &[("Content-Type", "application/json")], intent_body("surface.test.editor").as_bytes()).await;
@@ -3307,7 +3443,6 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
         assert!(oversized.status == 400 || oversized.status == 413, "{asset} accepted an oversized body");
     }
 
-    // 🔁 A rotation between reads denies every subsequent body rather than mixing generations.
     let mut rotated = state.clone();
     rotated.openable_catalog = Some(document_open_catalog_for_descriptor_with_generation(&descriptor, "77".repeat(32)));
     let rotated_addr = spawn_server(rotated.clone()).await;
@@ -3317,7 +3452,6 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     assert_ne!(rotated_fields.catalog.generation_id, fields.catalog.generation_id);
     assert!(!same_lease_fields_v1(&rotated_fields, &fields));
 
-    // 🚧 An unconfigured catalog advertises nothing and serves nothing.
     let mut unavailable = state.clone();
     unavailable.openable_catalog = None;
     let unavailable_addr = spawn_server(unavailable).await;
@@ -3445,7 +3579,6 @@ async fn document_open_and_execution_target_refuse_descriptor_or_index_without_g
         };
         assert_eq!((target_status, target_error.code), (StatusCode::NOT_FOUND, DocumentOpenPlanErrorCodeV1::NotFound));
     }
-    eprintln!("[DEBUG] required-checkpoint-open: descriptor-only and indexed-without-genesis refused before plan or lease");
 }
 
 #[tokio::test]
@@ -3643,7 +3776,6 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
     assert_eq!(authority.scope, scope);
     let admission = consume_document_socket_grant(&state, &subject, audience, Some("surface.test.editor")).await.expect("exact current authority consumes");
     assert_eq!(admission.record.document_plan.as_deref(), Some(authority.as_ref()));
-    eprintln!("[DEBUG] open-plan socket full parent dialect:3 substitutions denied; exact sealed selection retained");
 }
 
 #[tokio::test]
@@ -3920,7 +4052,7 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         let (mut resend, _) = connect_async(document_socket_request(&url, &token)).await.expect("resend socket");
         resend.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("resend hello");
         assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Welcome { .. }));
-        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Commands { envelopes, .. } if envelopes[0].mutation_id == committed.mutation_id), "the reconnect is caught up with the committed edit");
+        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Commands { envelopes, origin, .. } if envelopes[0].mutation_id == committed.mutation_id && origin.0 == HUB_CATCH_UP_ORIGIN), "the reconnect is caught up with the committed edit, under the hub's declared catch-up origin");
         assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Session { .. }));
         resend.send(client_binary(&ClientFrame::Commands { batch_id: 79, envelopes: vec![committed.clone()] }, Lane::Command).await).await.expect("resend after reconnect");
         let ack = next_server_frame(&mut resend).await;
@@ -3935,7 +4067,10 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         let (mut legacy, _) = connect_async(document_socket_request(&url, &token)).await.expect("legacy rejection socket");
         legacy.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("initial socket hello");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Welcome { .. }));
-        assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { .. }), "a joiner behind the head is caught up before Session");
+        assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { origin, .. } if origin.0 == HUB_CATCH_UP_ORIGIN && origin.0 != legacy_receipt.actor_id), "a joiner behind the head is caught up before Session, never under its own actor");
+        let echo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/document-echo-suppression-v1/🔣️.json")).expect("echo suppression fixture");
+        assert_eq!(echo_fixture["hubCatchUpOrigin"].as_str(), Some(HUB_CATCH_UP_ORIGIN), "the hub's catch-up origin is the fixture's declared one");
+        assert_eq!(include_str!("../../🏗️bootstrap/🦀️.rs").matches("ActorId(HUB_CATCH_UP_ORIGIN.into())").count(), 2, "the hello tail and the FrontierAdvertise catch-up both carry the declared catch-up origin");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Session { .. }));
         legacy.send(WsMessage::Binary(vec![0, 0].into())).await.expect("legacy tag-zero frame");
         assert_eq!(next_close_code(&mut legacy, false).await, 4401, "v1 rejects the legacy actor/token carrier after upgrade");
@@ -3945,7 +4080,7 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         let pending = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-a".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue pending grant").0;
         assert_eq!(pending.actor_id, receipt.actor_id, "session-derived actor is stable across grants");
 
-        assert_eq!(delete_session_me(bearer_headers(&token), State(state.clone())).await, StatusCode::NO_CONTENT);
+        assert_eq!(post_session_sign_out(bearer_headers(&token), State(state.clone()), Bytes::new()).await, StatusCode::NO_CONTENT);
         assert_eq!(next_close_code(&mut socket, false).await, 4401, "successful durable revoke immediately invalidates a live socket");
         let revoked_pending = connect_async(document_socket_request(&url, &token)).await.expect_err("pending grant invalidated by revoke");
         assert!(matches!(revoked_pending, tokio_tungstenite::tungstenite::Error::Http(response) if response.status().as_u16() == 401));
@@ -3969,7 +4104,7 @@ fn socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization() {
         let mut revoke = tokio::spawn({
             let state = state.clone();
             let token = token.clone();
-            async move { delete_session_me(bearer_headers(&token), State(state)).await }
+            async move { post_session_sign_out(bearer_headers(&token), State(state), Bytes::new()).await }
         });
         assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut revoke).await.is_err(), "revoke waits while Welcome owns the binding linearization");
         gate.socket_welcome_release.add_permits(1);
@@ -4006,7 +4141,7 @@ fn socket_grant_revoke_before_lag_authorization_reads_no_private_control() {
         fanout.send(ServerFrame::Presence { peers: vec![b"second".to_vec()] }).expect("second fanout");
         live_gate.document_release.add_permits(1);
         tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_lag_received.acquire()).await.expect("lag boundary deadline").expect("lag boundary");
-        assert_eq!(delete_session_me(bearer_headers(&token), State(state)).await, StatusCode::NO_CONTENT);
+        assert_eq!(post_session_sign_out(bearer_headers(&token), State(state), Bytes::new()).await, StatusCode::NO_CONTENT);
         live_gate.socket_lag_release.add_permits(1);
         assert_eq!(next_close_without_authority(&mut socket).await, 4401, "revoked lag path discloses no control frame");
         assert_eq!(live_gate.socket_rebootstrap_read.available_permits(), 0, "revoked lag path never enters the private checkpoint/control read");
@@ -4038,7 +4173,7 @@ fn socket_grant_revoke_before_broadcast_authorization_suppresses_frame() {
         fanout.send(ServerFrame::Presence { peers: vec![b"private-presence".to_vec()] }).expect("fanout");
         live_gate.document_release.add_permits(1);
         tokio::time::timeout(std::time::Duration::from_secs(2), live_gate.socket_broadcast_received.acquire()).await.expect("broadcast boundary deadline").expect("broadcast boundary");
-        assert_eq!(delete_session_me(bearer_headers(&token), State(state)).await, StatusCode::NO_CONTENT);
+        assert_eq!(post_session_sign_out(bearer_headers(&token), State(state), Bytes::new()).await, StatusCode::NO_CONTENT);
         live_gate.socket_broadcast_release.add_permits(1);
         assert_eq!(next_close_without_authority(&mut socket).await, 4401, "a broadcast received before a winning revoke is never disclosed afterward");
     });
@@ -4062,7 +4197,7 @@ fn socket_grant_directory_route_uses_credential_free_hello_and_revokes_live() {
             .await
             .expect("member-visible directory event");
         assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if event.space_id.as_deref() == Some(STUDIO)));
-        assert_eq!(delete_session_me(bearer_headers(&token), State(state)).await, StatusCode::NO_CONTENT);
+        assert_eq!(post_session_sign_out(bearer_headers(&token), State(state), Bytes::new()).await, StatusCode::NO_CONTENT);
         assert_eq!(next_close_code(&mut socket, false).await, 4401);
     });
 }
@@ -4450,7 +4585,6 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
             }
         }
         stop_recovery_server(state, shutdown, server).await;
-        eprintln!("[DEBUG] admin removal withdrew plan-bound presence, closed only the removed member, and survived exact file-SQLite Hub reopen for all selected target routes");
     });
 }
 
@@ -4482,7 +4616,6 @@ fn admin_intent_binding_wire_matrix_is_exact_sorted_and_self_deduplicated() {
                 .collect::<Vec<_>>()
         });
         assert_eq!(serde_json::to_value(&keys).unwrap(), row["keys"], "exact sorted binding union: {}", row["name"]);
-        eprintln!("[DEBUG] admin-intent-bindings: {} keys={keys:?}", row["name"]);
     }
 }
 
@@ -4535,7 +4668,7 @@ fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
             let mut revoke = tokio::spawn({
                 let state = state.clone();
                 let token = admin.token.clone();
-                async move { delete_session_me(bearer_headers(&token), State(state)).await }
+                async move { post_session_sign_out(bearer_headers(&token), State(state), Bytes::new()).await }
             });
             tokio::time::timeout(std::time::Duration::from_secs(5), gate.socket_session_revoke_attempted.acquire()).await.expect("short action revoke attempt deadline").expect("short action revoke attempt").forget();
             if action_first {
@@ -4572,7 +4705,6 @@ fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
                 assert!(state.directory.authenticate_share(&scope, &capability).await.expect("minted share authentication"));
             }
             state.session_kicks.remove(&sync_id);
-            eprintln!("[DEBUG] admin-short-authority: {} state={:?} physical-effects={effect} auth-audits={audit_count} secret={}", row["name"], receipt.state, secret.is_some());
         }
         drop(physical);
         stop_recovery_server(state, shutdown, server).await;
@@ -4619,7 +4751,7 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
                 let mut revoke = tokio::spawn({
                     let state = state.clone();
                     let token = admin.token.clone();
-                    async move { delete_session_me(bearer_headers(&token), State(state)).await }
+                    async move { post_session_sign_out(bearer_headers(&token), State(state), Bytes::new()).await }
                 });
                 tokio::time::timeout(std::time::Duration::from_secs(5), gate.socket_session_revoke_attempted.acquire()).await.expect("admin revoke attempt deadline").expect("admin revoke attempt").forget();
                 if command_first {
@@ -4663,7 +4795,6 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
             if row["mutated"] == false {
                 assert!(receipt.event_seq_first.is_none() && receipt.event_seq_last.is_none());
             }
-            eprintln!("[DEBUG] admin-directory-authority: {} state={:?} events={}", row["name"], receipt.state, own_events.len());
         }
 
         let self_session = issue_test_session(&state, email).await;
@@ -4677,7 +4808,6 @@ fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() 
         assert_eq!(receipt.state, AdminIntentStateV1::Succeeded);
         let capability = SessionCapability::parse(&self_session.token).unwrap();
         assert!(state.directory.authenticate_session(&capability).await.unwrap().is_none());
-        eprintln!("[DEBUG] admin-directory-authority: self-user-revocation completed without nested User ownership");
         stop_recovery_server(state, shutdown, server).await;
     });
 }
@@ -4715,7 +4845,62 @@ fn directory_global_message_bindings_decode_wire_without_indexing_unrelated_memb
     assert!(ledger.is_live(&record, &live_id), "space A revocation cannot invalidate a global lease for B");
     ledger.invalidate_binding(SocketBindingKeyV1::Session("session".into()));
     assert!(!ledger.is_live(&record, &live_id), "principal revocation remains terminal");
-    eprintln!("[DEBUG] global-directory-message-bindings: six real wire kinds, transient union, scoped isolation, global indices, principal invalidation");
+}
+
+/// 🔑️ Law over the shared `🔑️directory-access-changed-v1` fixture: exactly the membership events naming the reader owe it
+/// an `access-changed` frame — a grant or redemption only for a space this socket never delivered the creation of, every
+/// removal — and each frame borrows no space authority (it is addressed to its reader alone).
+#[test]
+fn a_membership_event_naming_the_reader_owes_it_exactly_the_fixture_access_change() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔑️directory-access-changed-v1/🔣️.json")).expect("access-changed fixture");
+    let reader = fixture["readerUserId"].as_str().expect("fixture reader");
+    for row in fixture["cases"].as_array().expect("fixture cases") {
+        let message: DirectoryStreamMessage = directory::os_pack::json::from_json_str(&row["message"].to_string()).unwrap_or_else(|error| panic!("fixture message {}: {error:?}", row["id"]));
+        let created = row["createdOnSocket"].as_array().expect("created spaces").iter().map(|space| space.as_str().expect("space id").to_owned()).collect::<std::collections::BTreeSet<_>>();
+        let expected = (!row["frame"].is_null()).then(|| directory::os_pack::json::from_json_str::<DirectoryStreamMessage>(&row["frame"].to_string()).expect("fixture frame"));
+        let owed = directory_access_change_for_reader(reader, &created, &message);
+        assert_eq!(owed, expected, "{}", row["id"]);
+        if let Some(frame) = owed {
+            assert_eq!(directory_stream_message_space(&frame), None, "an access change borrows no space authority: {}", row["id"]);
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&directory::os_pack::json::to_json_string(&frame)).expect("frame JSON"), row["frame"], "wire shape: {}", row["id"]);
+        }
+    }
+}
+
+/// 🔑️ Live on a global directory socket: a reader added to a space created before its socket is told its access
+/// changed right after the membership event (so its Home re-reads the space's earlier events); a space it creates on
+/// that socket is not an access change (it read the space from its first event); its removal is.
+#[test]
+fn a_reader_added_to_an_older_space_is_told_its_access_changed_and_its_own_new_space_is_not() {
+    run_socket_test(|| async {
+        let state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("access-changed state open deadline");
+        let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+        let owner = issue_test_session(&state, "access-owner@example.test").await;
+        let reader = issue_test_session(&state, "access-reader@example.test").await;
+        let older = create_space_for_test(&state, &owner.user_id, "Older", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let receipt = issue_directory_socket_grant(bearer_headers(&reader.token), State(state.clone()), Bytes::new()).await.expect("reader grant").0;
+        let since = state.directory.head_seq().await.expect("directory head");
+        let (mut socket, _) = connect_async(socket_request(&format!("ws://{addr}/directory/socket/v1?since={since}"), &receipt.grant)).await.expect("reader socket");
+        socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("reader hello");
+        upsert_member_for_test(&state, &older, "access-reader@example.test", DirectorySpaceRole::Author).await;
+        assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if matches!(&event.body, os_directory::DirectoryEventBody::MemberUpserted { space_id, user_id, .. } if *space_id == older && *user_id == reader.user_id)), "the membership event itself");
+        assert_eq!(next_directory_message(&mut socket).await, DirectoryStreamMessage::AccessChanged { space_id: older.clone(), change: os_directory::DirectoryAccessChange::Granted }, "then the reader's access change");
+        let own = create_space_for_test(&state, &reader.user_id, "Own", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let mut own_frames = Vec::new();
+        loop {
+            let message = next_directory_message(&mut socket).await;
+            let settled = matches!(&message, DirectoryStreamMessage::Event { event } if matches!(&event.body, os_directory::DirectoryEventBody::MemberUpserted { space_id, .. } if *space_id == own));
+            own_frames.push(message);
+            if settled {
+                break;
+            }
+        }
+        assert!(own_frames.iter().any(|message| matches!(message, DirectoryStreamMessage::Event { event } if matches!(&event.body, os_directory::DirectoryEventBody::SpaceCreated { space_id, .. } if *space_id == own))), "the creator reads its space from its first event: {own_frames:?}");
+        state.directory_service.execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#test", owner.user_id) }, DirectoryCommand::RemoveMember { space_id: older.clone(), user_id: reader.user_id.clone() }).await.expect("remove reader");
+        assert_eq!(next_directory_message(&mut socket).await, DirectoryStreamMessage::AccessChanged { space_id: older.clone(), change: os_directory::DirectoryAccessChange::Revoked }, "no AccessChanged for its own space; then its removal from the older one");
+        socket.close(None).await.expect("close reader socket");
+        stop_recovery_server(state, shutdown, server).await;
+    });
 }
 
 #[test]
@@ -4765,7 +4950,7 @@ fn directory_global_socket_delivery_and_revocation_share_one_transient_authority
                     if membership {
                         post_directory_command_for_test(addr, &token, "c00102030405060708090a0b0c0d0e0f", command).await.status
                     } else {
-                        delete_session_me(bearer_headers(&token), State(state)).await.as_u16()
+                        post_session_sign_out(bearer_headers(&token), State(state), Bytes::new()).await.as_u16()
                     }
                 }
             });
@@ -4785,6 +4970,12 @@ fn directory_global_socket_delivery_and_revocation_share_one_transient_authority
                 assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("trailing revocation deadline").expect("trailing revocation"), if membership { 202 } else { 204 });
             }
             if row["b"] == true {
+                assert_eq!(
+                    next_directory_message(&mut socket).await,
+                    DirectoryStreamMessage::AccessChanged { space_id: space_a.clone(), change: os_directory::DirectoryAccessChange::Revoked },
+                    "the removed reader is told its access to A moved before any later frame: {}",
+                    row["name"]
+                );
                 let event_b = state
                     .directory_service
                     .execute(DirectoryActor { kind: DirectoryActorKind::System, id: "system:global-message-authority".into() }, DirectoryCommand::RenameSpace { space_id: space_b.clone(), name: format!("B-{index}") })
@@ -4799,7 +4990,6 @@ fn directory_global_socket_delivery_and_revocation_share_one_transient_authority
             } else {
                 assert_eq!(u64::from(next_close_code(&mut socket, false).await), row["close"].as_u64().unwrap(), "revoked principal closes without a later message");
             }
-            eprintln!("[DEBUG] global-directory-message-authority: {} A={} B={} close={}", row["name"], row["a"], row["b"], row["close"]);
         }
         stop_recovery_server(state, shutdown, server).await;
     });
@@ -4819,7 +5009,7 @@ fn socket_directory_revoke_after_admission_suppresses_replay_without_deadlock() 
         let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("directory socket");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
         tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_directory_admitted.acquire()).await.expect("directory admission deadline").expect("directory admission");
-        assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), delete_session_me(bearer_headers(&token), State(state))).await.expect("bounded revoke"), StatusCode::NO_CONTENT,);
+        assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), post_session_sign_out(bearer_headers(&token), State(state), Bytes::new())).await.expect("bounded revoke"), StatusCode::NO_CONTENT,);
         gate.socket_directory_release.add_permits(1);
         assert_eq!(next_close_code(&mut socket, false).await, 4401, "no replay text crosses a winning revoke");
     });
@@ -5490,7 +5680,6 @@ async fn presence_normalization_matches_neutral_authority_and_no_effect_rejectio
         assert_eq!(vector["expected"]["durableWrites"], 0);
     }
     assert_eq!(state.directory.head_seq().await.expect("directory head"), head);
-    eprintln!("[DEBUG] presence normalization: 17 exact neutral admission vectors, unchanged rejected TTL, duplicate suppression, zero directory writes");
 }
 
 #[test]
@@ -5571,7 +5760,6 @@ fn presence_normalization_socket_overwrites_identity_and_rejects_without_refresh
         assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Preview { key, seq: 4, .. } if key == "presence-fifo"), "identical normalized peer does not republish");
         assert_eq!(state.presence.with(&(key, actor), |slot| slot.expect("visible slot").expires_at), deadline + std::time::Duration::from_secs(5));
         socket.close(None).await.expect("close socket");
-        eprintln!("[DEBUG] admitted plan-backed socket overwrote all identity fields, preserved five ephemerals, and rejected malformed input without visibility, TTL or directory changes");
     });
 }
 
@@ -5643,10 +5831,13 @@ fn presence_lease_reconnect_rejects_old_live_refresh_and_close() {
         assert_eq!(snapshot.actors[0].actor, second.actor_id);
         observer.close(None).await.expect("observer close");
         socket_b.close(None).await.expect("current socket close");
-        eprintln!("[DEBUG] plan-backed reconnect retained only the new live owner across stale refresh and close, observed by an independent admitted socket");
     });
 }
 
+/// 👥️ ticket 26/09/18 slice PR1: a lapsed beat lease means the app-owned EPHEMERALS are
+/// stale, never that the human left — the row a live socket contributes stays, stripped, and
+/// only `close_presence_for_live` removes it. A roster that emptied itself under an open
+/// socket is exactly what C3 §3.4 measured in two browsers.
 #[test]
 fn presence_lease_expires_server_clocked_visibility_without_socket_close() {
     run_socket_test(|| async {
@@ -5674,10 +5865,6 @@ fn presence_lease_expires_server_clocked_visibility_without_socket_close() {
         assert!(matches!(observed.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "the evaluated early tick publishes no expiry");
         clock.advance_to(PRESENCE_LEASE_TTL_MS);
         clock.evaluate_tick(false).await;
-        // 👥️ ticket 26/09/18 slice PR1: a lapsed beat lease means the app-owned EPHEMERALS are
-        // stale, never that the human left — the row a live socket contributes stays, stripped, and
-        // only `close_presence_for_live` removes it. A roster that emptied itself under an open
-        // socket is exactly what C3 §3.4 measured in two browsers.
         let stripped = state.presence_snapshot(&key).peers;
         assert_eq!(stripped.len(), 1, "an open socket keeps its admitted row past the beat lease");
         let stripped_peer = protocol::decode_presence_peer(&stripped[0]).await.expect("stripped row decodes");
@@ -5698,12 +5885,22 @@ fn presence_lease_expires_server_clocked_visibility_without_socket_close() {
         assert!(matches!(observed.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "stripping publishes exactly once per lapse");
         socket.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"revived").await }, Lane::Preview).await).await.expect("live socket refresh after visibility expiry");
         assert!(presence_frame_has_pack(next_server_frame(&mut socket).await, b"revived").await, "expiry does not close or unregister the authenticated socket");
-        eprintln!("[DEBUG] server tick barriers preserved the lease at TTL-1, stripped ephemerals exactly once at TTL while the row survived, and kept the live socket refreshable");
     });
 }
 
 /// 👥️ ticket 26/09/18 slice PR1 — presence over the hub is SYMMETRIC: a socket that attaches after
 /// the roster has settled starts from that roster instead of waiting for some other peer to move.
+///
+/// 🔁️ The joiner beats NOTHING here. Before this law a roster delta was only ever published
+/// when some peer's bytes CHANGED, so the joiner stayed blind until one of them moved —
+/// measured on this exact handler in `🗑️generated/pr1-before-hub-socket.txt` run A as
+/// `user2:n=0 frames=0` two seconds after its socket opened, while `user1` already listed a
+/// peer. That is C3 §3.4's asymmetry, read from the hub's own side.
+///
+/// 🤝️ And the settled peer learns of the join from the joiner's first beat, so both sockets
+/// end on the SAME two-row roster with one palette index each.
+///
+/// 🧹️ Closing one socket removes exactly that row from the other's roster.
 #[test]
 fn presence_join_replays_the_settled_roster_and_close_removes_exactly_one_row() {
     run_socket_test(|| async {
@@ -5728,11 +5925,6 @@ fn presence_join_replays_the_settled_roster_and_close_removes_exactly_one_row() 
         settled.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"settled").await }, Lane::Preview).await).await.expect("settled beat");
         assert!(presence_frame_has_pack(next_server_frame(&mut settled).await, b"settled").await);
 
-        // 🔁️ The joiner beats NOTHING here. Before this law a roster delta was only ever published
-        // when some peer's bytes CHANGED, so the joiner stayed blind until one of them moved —
-        // measured on this exact handler in `🗑️generated/pr1-before-hub-socket.txt` run A as
-        // `user2:n=0 frames=0` two seconds after its socket opened, while `user1` already listed a
-        // peer. That is C3 §3.4's asymmetry, read from the hub's own side.
         let (mut joining, _) = connect_async(document_socket_request(&url, &joiner_token)).await.expect("joining socket");
         joining.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("joining hello");
         assert!(matches!(next_server_frame(&mut joining).await, ServerFrame::Welcome { .. }));
@@ -5744,8 +5936,6 @@ fn presence_join_replays_the_settled_roster_and_close_removes_exactly_one_row() 
         assert_eq!(replayed.presence_pack.as_deref(), Some(b"settled".as_slice()));
         assert_eq!(replayed.surface.as_deref(), Some(plan.surface.surface_id.as_str()));
 
-        // 🤝️ And the settled peer learns of the join from the joiner's first beat, so both sockets
-        // end on the SAME two-row roster with one palette index each.
         joining.send(client_binary(&ClientFrame::Presence { peer: presence_test_peer(b"joined").await }, Lane::Preview).await).await.expect("joiner beat");
         let ServerFrame::Presence { peers: settled_view } = next_server_frame(&mut settled).await else { panic!("settled roster") };
         let ServerFrame::Presence { peers: joining_view } = next_server_frame(&mut joining).await else { panic!("joiner roster") };
@@ -5759,13 +5949,11 @@ fn presence_join_replays_the_settled_roster_and_close_removes_exactly_one_row() 
         colors.dedup();
         assert_eq!(colors.len(), 2, "each admitted session holds its own palette index");
 
-        // 🧹️ Closing one socket removes exactly that row from the other's roster.
         joining.close(None).await.expect("joiner close");
         let ServerFrame::Presence { peers: after_close } = next_server_frame(&mut settled).await else { panic!("removal roster") };
         assert_eq!(after_close.len(), 1);
         assert_eq!(protocol::decode_presence_peer(&after_close[0]).await.expect("survivor row").actor, settled_grant.actor_id);
         settled.close(None).await.expect("settled close");
-        eprintln!("[DEBUG] join replay handed the late socket the settled roster, both sockets converged on one two-colour roster, and a close removed exactly one row");
     });
 }
 
@@ -5791,7 +5979,6 @@ async fn presence_liveness_contract_matches_the_shared_fixture() {
     assert_eq!(live_row["stripsEphemeralsOnly"][0], "lease-lapse");
     assert_eq!(law("a-joiner-starts-from-the-settled-roster")["replayFramesPerJoin"].as_u64(), Some(1));
     assert_eq!(law("a-joiner-starts-from-the-settled-roster")["replayedWhenRosterEmpty"], serde_json::Value::Bool(false));
-    eprintln!("[DEBUG] presence liveness: beat {heartbeat} ms, snapshot bound {snapshot_deadline} ms, hub lease {PRESENCE_LEASE_TTL_MS} ms — {tolerated} missed beats tolerated, only a close removes a row");
 }
 
 #[tokio::test]
@@ -5854,7 +6041,6 @@ async fn presence_lease_enforces_shared_roster_bounds_and_actor_order() {
             assert!(matches!(observed.try_recv(), Err(broadcast::error::TryRecvError::Empty)));
         }
     }
-    eprintln!("[DEBUG] canonical presence ingress admitted 64 bounded actors and rejected the 65th without TTL, roster or fanout effects");
 }
 
 #[tokio::test]
@@ -5971,7 +6157,7 @@ async fn directory_command_authority_revalidates_after_durable_revocation_before
                 };
                 assert_eq!(post_directory_command_for_test(addr, &owner.token, "b00102030405060708090a0b0c0d0e0f", revocation).await.status, 202);
             }
-            "session" => assert_eq!(delete_session_me(bearer_headers(&author.token), State(state.clone())).await, StatusCode::NO_CONTENT),
+            "session" => assert_eq!(post_session_sign_out(bearer_headers(&author.token), State(state.clone()), Bytes::new()).await, StatusCode::NO_CONTENT),
             _ => unreachable!(),
         }
         let head = state.directory.head_seq().await.unwrap();
@@ -5985,7 +6171,6 @@ async fn directory_command_authority_revalidates_after_durable_revocation_before
         assert!(matches!(state.directory.claim_or_read_directory_command_receipt(&claim).await.unwrap(), DirectoryCommandClaimV1::Claimed(_)), "denied command must leave no durable claim");
         state.directory.release_directory_command_receipt(&author.user_id, request_id, &claim.command_sha256).await.unwrap();
         stop_recovery_server(state, shutdown, server).await;
-        eprintln!("[DEBUG] directory authority case={} status={} appended=0 receipt=0 target-retained=1", row["id"], response.status);
     }
 }
 
@@ -6032,7 +6217,6 @@ async fn directory_command_authority_holds_admitted_command_until_receipt_before
     assert!(matches!(&events[0].body, os_directory::DirectoryEventBody::MemberRemoved { user_id, .. } if user_id == &target.user_id));
     assert_eq!(state.directory.get_role(&space, &target.user_id).await.unwrap(), None);
     assert_eq!(state.directory.get_role(&space, &author.user_id).await.unwrap(), Some(SpaceRole::Spectator));
-    eprintln!("[DEBUG] directory authority case={} status=202 appended=1 receipt=accepted revocation-ordered=1", row["id"]);
 }
 
 #[tokio::test]
@@ -6063,7 +6247,6 @@ async fn directory_command_authority_invite_revocation_requires_the_exact_owned_
         if !exact {
             assert!(response.body.is_empty(), "cross-space response carries no foreign metadata");
         }
-        println!("[DEBUG] directory invite authority case={} status={} revoked={}", row["id"], response.status, current.revoked_at.is_some());
     }
 }
 
@@ -6151,7 +6334,6 @@ async fn directory_invite_redemption_obeys_current_space_state_and_readonly_repl
         } else if response.status != 200 {
             assert!(response.body.is_empty());
         }
-        eprintln!("[DEBUG] invite space state case={} status={} appended={} role={:?}", row["name"], response.status, appended.len(), current);
     }
 }
 
@@ -6186,7 +6368,6 @@ async fn directory_invite_redemption_scope_hint_is_capability_bound() {
         assert_eq!(state.directory.head_seq().await.unwrap(), head, "a hint writes no event");
         assert_eq!(state.directory.get_role(&space, &caller.user_id).await.unwrap(), None, "a hint grants no membership");
         assert!(state.directory.list_invites(&space).await.unwrap().iter().all(|invite| invite.accepted_at.is_none()));
-        eprintln!("[DEBUG] invite scope hint case={} capability-bound=1 mutation=0", row["name"]);
     }
     let actor = DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hint", caller.user_id) };
     state.directory_service.execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#hint-owner", owner.user_id) }, DirectoryCommand::DeleteSpace { space_id: space }).await.unwrap();
@@ -6214,7 +6395,7 @@ async fn directory_invite_redemption_revalidates_after_hint_before_fence() {
         };
         tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.unwrap().unwrap().forget();
         if row["revocation"] == "session" {
-            assert_eq!(delete_session_me(bearer_headers(&caller.token), State(state.clone())).await, StatusCode::NO_CONTENT);
+            assert_eq!(post_session_sign_out(bearer_headers(&caller.token), State(state.clone()), Bytes::new()).await, StatusCode::NO_CONTENT);
         } else {
             let command = if row["revocation"] == "archive" { DirectoryCommand::ArchiveSpace { space_id: space.clone() } } else { DirectoryCommand::DeleteSpace { space_id: space.clone() } };
             assert_eq!(post_directory_command_for_test(addr, &owner.token, &format!("{:032x}", 3000 + index), command).await.status, 202);
@@ -6227,7 +6408,6 @@ async fn directory_invite_redemption_revalidates_after_hint_before_fence() {
         assert_eq!(state.directory.head_seq().await.unwrap(), head);
         assert_eq!(state.directory.get_role(&space, &caller.user_id).await.unwrap(), None);
         assert!(state.directory.list_invites(&space).await.unwrap().iter().all(|invite| invite.accepted_at.is_none()));
-        eprintln!("[DEBUG] invite authority race={} status={} appended=0", row["name"], response.status);
     }
     shutdown.send(()).unwrap();
     tokio::time::timeout(std::time::Duration::from_secs(5), server).await.unwrap().unwrap();
@@ -6283,7 +6463,6 @@ async fn directory_invite_redemption_admitted_fence_precedes_archive() {
     assert_eq!(state.directory.get_role(&space, &caller.user_id).await.unwrap(), Some(SpaceRole::Spectator));
     shutdown.send(()).unwrap();
     tokio::time::timeout(std::time::Duration::from_secs(5), server).await.unwrap().unwrap();
-    eprintln!("[DEBUG] invite admitted-before-archive event-first=1 final-role=spectator");
 }
 
 #[tokio::test]
@@ -6298,7 +6477,6 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
         shared.issue(&SocketGrantCapability::mint().unwrap(), SocketAudienceV1::DirectoryScoped(DocumentScope::new("shared-space", "document")), format!("hub.v1.capacity-{index}"), subject, 1, 9_000).unwrap();
     }
     assert_eq!(shared.inner.lock().unwrap().records.len() as u64, capacity["accepted"].as_u64().unwrap());
-    eprintln!("[DEBUG] directory authority shared-space pending-subjects=65 subject-limit=64 global-limit=4096");
     let state = test_state().await;
     let owner = issue_test_session(&state, "authority-owner@example.com").await;
     let author = issue_test_session(&state, "authority-author@example.com").await;
@@ -6354,7 +6532,6 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
             assert_eq!(post_directory_command_for_test(addr, &owner.token, request_id, command.clone()).await.status, 202);
             assert!(still_pending(&fresh), "receipt replay must not invalidate fresh admission");
         }
-        eprintln!("[DEBUG] directory authority binding={} invalidated={} replay-preserved=1", row["id"], invalidated);
     }
 }
 
@@ -6755,8 +6932,8 @@ async fn directory_event_page_v1_route_rejects_noncanonical_query_and_stale_bear
 // back to A as a duplicate Commands frame (origin filtering is the caller's job — this test
 // only asserts B observes it, matching `framework/sync`'s own origin check).
 
-// 🔬️ `GET`/`DELETE /auth/sessions/me`: a live session resolves the caller's identity; revoking
-// it makes the SAME token unauthorized on a subsequent call.
+// 🔬️ `GET /auth/sessions/me` + `POST /auth/sessions/me/sign-out`: a live session resolves the
+// caller's identity; signing out makes the SAME token unauthorized on a subsequent call.
 #[tokio::test]
 async fn auth_sessions_me_roundtrip() {
     let state = test_state().await;
@@ -6772,7 +6949,7 @@ async fn auth_sessions_me_roundtrip() {
     assert!(me.0.session_binding_sha256.len() == 64 && me.0.session_binding_sha256.bytes().any(|byte| byte != b'0'));
     assert_eq!(me.0.canonical_json().as_deref().and_then(os_directory::schema::session_authority::DirectorySessionAuthorityV1::parse_canonical_json), Some(me.0.clone()));
 
-    assert_eq!(delete_session_me(headers.clone(), State(state.clone())).await, StatusCode::NO_CONTENT);
+    assert_eq!(post_session_sign_out(headers.clone(), State(state.clone()), Bytes::new()).await, StatusCode::NO_CONTENT);
     assert_eq!(get_session_me(headers, State(state)).await.err(), Some(StatusCode::UNAUTHORIZED));
 }
 
@@ -6956,9 +7133,10 @@ async fn signing_out_a_credential_session_revokes_it_durably() {
     let minted = json_body(&post_sign_in(addr, &sign_in_body("signout@example.com", SIGN_IN_PASSWORD)).await);
     let authorization = format!("Bearer {}", minted["token"].as_str().expect("minted token"));
     assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", authorization.as_str())]).await.status, 200);
-    assert_eq!(raw_http_request(addr, "DELETE", "/auth/sessions/me", &[("authorization", authorization.as_str())], &[]).await.status, 204);
+    assert_eq!(raw_http_request(addr, "POST", "/auth/sessions/me/sign-out", &[("authorization", authorization.as_str())], &[]).await.status, 204);
     assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", authorization.as_str())]).await.status, 401);
-    assert_eq!(raw_http_request(addr, "DELETE", "/auth/sessions/me", &[("authorization", authorization.as_str())], &[]).await.status, 401);
+    assert_eq!(raw_http_request(addr, "POST", "/auth/sessions/me/sign-out", &[("authorization", authorization.as_str())], &[]).await.status, 401);
+    assert_eq!(raw_http_request(addr, "DELETE", "/auth/sessions/me", &[("authorization", authorization.as_str())], &[]).await.status, 405, "sessions are revoked by command, never deleted as a resource");
     assert!(state.directory.list_auth_audit(32, 0).await.expect("auth audit").iter().any(|fact| fact.event_kind == "session-revoked" && fact.target_user_id.as_deref() == Some(user_id.as_str())));
 }
 
@@ -7055,6 +7233,25 @@ fn agent_session_body(audience: &str) -> Vec<u8> {
 /// delegating human's, that session authenticates an ordinary hub route with no special case, the
 /// human revokes the delegation, and afterwards BOTH the already-minted session and any further
 /// exchange are refused. The three durable facts land in the same log credential sign-in writes.
+///
+/// 1. delegate — the token is shown exactly once, and the receipt names the agent's own principal.
+///
+/// 2. the listing shows it, never its token, and reports it as not yet used.
+///
+/// 3. exchange — an ordinary session capability, whose kind is `agent`.
+///
+/// 4. use — the agent authenticates an ordinary route with no special case, and reports as an agent.
+///
+/// 4b. an agent can never delegate onward.
+///
+/// 4c. the listing now reports a last use, derived from the session it minted.
+///
+/// 5. revoke.
+///
+/// 6. refused — the already-minted session dies with the delegation (the cascade), and a further
+///    exchange is refused with the cause a caller that proved the secret is entitled to know.
+///
+/// 7. every step is a durable fact in the same log credential sign-in writes.
 #[tokio::test]
 async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
     let state = test_state().await;
@@ -7063,7 +7260,6 @@ async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
     let addr = spawn_server(state.clone()).await;
     let bearer = format!("Bearer {}", human.token);
 
-    // 1. delegate — the token is shown exactly once, and the receipt names the agent's own principal.
     let created = raw_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", bearer.as_str())], &agent_delegation_body(&space_id, "edit", 3_600)).await;
     assert_eq!(created.status, 201, "{}", String::from_utf8_lossy(&created.body));
     assert!(created.headers.to_lowercase().contains("cache-control: no-store"));
@@ -7075,7 +7271,6 @@ async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
     assert!(delegation_token.starts_with("delegation.v1.") && delegation_token.len() == 111, "{delegation_token}");
     assert_ne!(receipt["agentPrincipalId"].as_str(), Some(format!("user:{}", human.user_id).as_str()), "an agent is never its delegating human");
 
-    // 2. the listing shows it, never its token, and reports it as not yet used.
     let listed = raw_http_get(addr, &format!("/auth/agent-delegations?space={space_id}"), &[("authorization", bearer.as_str())]).await;
     assert_eq!(listed.status, 200);
     let listing = json_body(&listed);
@@ -7085,7 +7280,6 @@ async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
     assert_eq!(row["lastUsedAtMs"], serde_json::Value::Null, "a delegation that has never been exchanged reports no last use");
     assert!(!String::from_utf8_lossy(&listed.body).contains(&delegation_token), "a listing never carries the token");
 
-    // 3. exchange — an ordinary session capability, whose kind is `agent`.
     let delegation_bearer = format!("Bearer {delegation_token}");
     let minted = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("edit")).await;
     assert_eq!(minted.status, 200, "{}", String::from_utf8_lossy(&minted.body));
@@ -7095,7 +7289,6 @@ async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
     assert_eq!(session["spaceId"].as_str(), Some(space_id.as_str()));
     assert_eq!(session["audience"].as_str(), Some("edit"));
 
-    // 4. use — the agent authenticates an ordinary route with no special case, and reports as an agent.
     let agent_bearer = format!("Bearer {agent_token}");
     let me = raw_http_get(addr, "/auth/sessions/me", &[("authorization", agent_bearer.as_str())]).await;
     assert_eq!(me.status, 200, "{}", String::from_utf8_lossy(&me.body));
@@ -7103,28 +7296,22 @@ async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
     assert_eq!(authority["sessionKind"].as_str(), Some("agent"), "the agent's session names itself as one: {authority}");
     assert_eq!(authority["userId"].as_str(), Some(human.user_id.as_str()), "the agent acts under the delegating human's membership");
 
-    // 4b. an agent can never delegate onward.
     let onward = raw_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", agent_bearer.as_str())], &agent_delegation_body(&space_id, "edit", 3_600)).await;
     assert_eq!(onward.status, 403);
     assert_eq!(json_body(&onward)["error"].as_str(), Some("forbidden"));
 
-    // 4c. the listing now reports a last use, derived from the session it minted.
     let used = json_body(&raw_http_get(addr, &format!("/auth/agent-delegations?space={space_id}"), &[("authorization", bearer.as_str())]).await);
     assert!(used["delegations"][0]["lastUsedAtMs"].as_i64().is_some_and(|at| at > 0), "an exchanged delegation reports when it was last used: {used}");
 
-    // 5. revoke.
-    let revoked = raw_http_request(addr, "DELETE", &format!("/auth/agent-delegations/{delegation_id}"), &[("authorization", bearer.as_str())], &[]).await;
+    let revoked = raw_http_request(addr, "POST", &format!("/auth/agent-delegations/{delegation_id}/revoke"), &[("authorization", bearer.as_str())], &[]).await;
     assert_eq!(revoked.status, 204);
 
-    // 6. refused — the already-minted session dies with the delegation (the cascade), and a further
-    //    exchange is refused with the cause a caller that proved the secret is entitled to know.
     assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", agent_bearer.as_str())]).await.status, 401, "revoking the delegation revokes every session it minted");
     let re_exchange = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("edit")).await;
     assert_eq!(re_exchange.status, 403);
     assert_eq!(json_body(&re_exchange)["error"].as_str(), Some("delegation-revoked"));
     assert_eq!(json_body(&raw_http_get(addr, &format!("/auth/agent-delegations?space={space_id}"), &[("authorization", bearer.as_str())]).await)["delegations"][0]["revoked"].as_bool(), Some(true), "a withdrawn delegation stays visible, marked");
 
-    // 7. every step is a durable fact in the same log credential sign-in writes.
     let audit = state.directory.list_auth_audit(64, 0).await.expect("auth audit");
     for event_kind in ["agent-delegated", "agent-session-issued", "agent-delegation-revoked", "session-revoked"] {
         assert!(audit.iter().any(|fact| fact.event_kind == event_kind), "the log carries `{event_kind}`");
@@ -7172,7 +7359,7 @@ fn revoking_a_delegation_closes_the_agents_open_document_socket_and_roster_row()
         assert_eq!(roster, vec![agent_grant.actor_id.clone()], "the agent is its own roster row");
 
         let revoked_at = std::time::Instant::now();
-        let revoked = raw_http_request(addr, "DELETE", &format!("/auth/agent-delegations/{delegation_id}"), &[("authorization", bearer.as_str())], &[]).await;
+        let revoked = raw_http_request(addr, "POST", &format!("/auth/agent-delegations/{delegation_id}/revoke"), &[("authorization", bearer.as_str())], &[]).await;
         assert_eq!(revoked.status, 204);
         assert_eq!(next_close_code(&mut agent, false).await, 4401, "the agent's open document socket closes on revocation");
         let ServerFrame::Presence { peers } = next_server_frame_at(&mut human_socket, "the human sees the agent leave").await else { panic!("agent withdrawal") };
@@ -7184,6 +7371,168 @@ fn revoking_a_delegation_closes_the_agents_open_document_socket_and_roster_row()
         assert!(revoked_at.elapsed() < std::time::Duration::from_secs(5), "revocation reached the socket and the roster promptly: {:?}", revoked_at.elapsed());
         assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", agent_bearer.as_str())]).await.status, 401, "the agent's next request is refused");
         assert!(connect_async(document_socket_request(&url, &agent_token)).await.is_err(), "the revoked agent cannot open the document again");
+    });
+}
+
+/// 🤖️ A delegation withdrawn in either order against the agent's edit has one outcome (G10 S4: on 7800 a connected
+/// agent was refused in one run and still edited in the other). Withdrawn while an admitted edit is in flight: that
+/// edit finishes first and is accepted — it precedes the withdrawal —, the `DELETE` answers only after it, and the
+/// socket closes `4401`. Withdrawn first: the agent's next edit on its still-open socket is never accepted, its socket
+/// closes `4401`, the document's head does not move, and its next request is `401`.
+#[test]
+fn a_withdrawn_delegation_admits_no_agent_edit_after_it_in_either_order() {
+    run_socket_test(|| async {
+        async fn delegated_agent(state: &HubState, addr: SocketAddr, human: &TestIssuedSession, space_id: &str, document: &str) -> (String, String, String, tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>) {
+            let bearer = format!("Bearer {}", human.token);
+            let receipt = json_body(&raw_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", bearer.as_str())], &agent_delegation_body(space_id, "edit", 3_600)).await);
+            let delegation_id = receipt["delegationId"].as_str().expect("delegation id").to_string();
+            let delegation_bearer = format!("Bearer {}", receipt["token"].as_str().expect("delegation token"));
+            let minted = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("edit")).await;
+            assert_eq!(minted.status, 200, "{}", String::from_utf8_lossy(&minted.body));
+            let agent_token = json_body(&minted)["token"].as_str().expect("agent session token").to_string();
+            let grant = issue_document_socket_grant_fixture(Path((space_id.to_string(), document.to_string())), bearer_headers(&agent_token), State(state.clone())).await.expect("agent socket grant").0;
+            let (mut socket, _) = connect_async(document_socket_request(&format!("ws://{addr}/scopes/{space_id}%2F{document}/document/ws"), &agent_token)).await.expect("agent document socket");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("agent hello");
+            assert!(matches!(next_server_frame_at(&mut socket, "agent welcome").await, ServerFrame::Welcome { .. }));
+            assert!(matches!(next_server_frame_at(&mut socket, "agent session").await, ServerFrame::Session { .. }));
+            (delegation_id, agent_token, grant.actor_id, socket)
+        }
+        let state = test_state().await;
+        let human = issue_test_session(&state, "withdrawing-human@example.com").await;
+        let space_id = create_space_for_test(&state, &human.user_id, "Withdrawn agent space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+        announce_document_for_test(&state, &space_id, "withdraw-in-flight").await;
+        announce_document_for_test(&state, &space_id, "withdraw-first").await;
+        let addr = spawn_server(state.clone()).await;
+        let bearer = format!("Bearer {}", human.token);
+
+        let (delegation_id, agent_token, actor, mut agent) = delegated_agent(&state, addr, &human, &space_id, "withdraw-in-flight").await;
+        let scope = DocumentScope::new(space_id.clone(), "withdraw-in-flight");
+        let writer = state.socket_binding_gates.document_write(&scope).lock_owned().await;
+        let mut edit = sample_envelope("withdraw-in-flight-edit", &WireArtifactId("withdraw-in-flight".into())).await;
+        edit.actor = ActorId(actor.clone());
+        agent.send(client_binary(&ClientFrame::Commands { batch_id: 41, envelopes: vec![edit] }, Lane::Command).await).await.expect("in-flight agent edit");
+        let session = state.directory.authenticate_session(&SessionCapability::parse(&agent_token).expect("agent capability")).await.expect("agent session read").expect("agent session");
+        let admitted = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            while state.socket_binding_gates.gate(SocketBindingKeyV1::Session(session.id.clone())).try_write_owned().is_ok() {
+                tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+            }
+        })
+        .await;
+        assert!(admitted.is_ok(), "the agent's edit is admitted and in flight, holding its session binding");
+        let withdrawal = tokio::spawn({
+            let bearer = bearer.clone();
+            let path = format!("/auth/agent-delegations/{delegation_id}/revoke");
+            async move { raw_http_request(addr, "POST", &path, &[("authorization", bearer.as_str())], &[]).await.status }
+        });
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        assert!(!withdrawal.is_finished(), "the withdrawal waits for the edit the agent had already admitted");
+        drop(writer);
+        match next_server_frame_at(&mut agent, "in-flight edit ack").await {
+            ServerFrame::Ack { batch_id: 41, stages, .. } => assert!(matches!(stages.last(), Some(AckStage::Applied { outcome }) if matches!(outcome.as_ref(), ApplyOutcome::Accepted)), "the admitted edit precedes the withdrawal: {stages:?}"),
+            other => panic!("expected the admitted edit's Ack, got {other:?}"),
+        }
+        assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(5), withdrawal).await.expect("withdrawal deadline").expect("withdrawal task"), 204);
+        assert_eq!(next_close_code(&mut agent, false).await, 4401, "the withdrawn agent's socket closes");
+        assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", format!("Bearer {agent_token}").as_str())]).await.status, 401);
+
+        let (delegation_id, agent_token, actor, mut agent) = delegated_agent(&state, addr, &human, &space_id, "withdraw-first").await;
+        let db_id = db_artifact_id(&DocumentScope::new(space_id.clone(), "withdraw-first"));
+        let before = state.db.document(&db_id).await.expect("withdraw-first handle").frontier().await.expect("withdraw-first frontier").commit_seq;
+        assert_eq!(raw_http_request(addr, "POST", &format!("/auth/agent-delegations/{delegation_id}/revoke"), &[("authorization", bearer.as_str())], &[]).await.status, 204);
+        let mut edit = sample_envelope("withdraw-first-edit", &WireArtifactId("withdraw-first".into())).await;
+        edit.actor = ActorId(actor);
+        let _ = agent.send(client_binary(&ClientFrame::Commands { batch_id: 42, envelopes: vec![edit] }, Lane::Command).await).await;
+        let accepted = tokio::time::timeout(std::time::Duration::from_secs(3), async {
+            loop {
+                match agent.next().await {
+                    Some(Ok(WsMessage::Binary(bytes))) => {
+                        if let Ok((_, ServerFrame::Ack { batch_id: 42, stages, .. })) = protocol::decode_server_frame(&bytes).await {
+                            return stages.iter().any(|stage| matches!(stage, AckStage::Applied { outcome } if matches!(outcome.as_ref(), ApplyOutcome::Accepted)));
+                        }
+                    }
+                    Some(Ok(WsMessage::Close(_))) | None | Some(Err(_)) => return false,
+                    Some(Ok(_)) => {}
+                }
+            }
+        })
+        .await
+        .unwrap_or(false);
+        assert!(!accepted, "an edit sent after the withdrawal is never accepted");
+        let after = state.db.document(&db_id).await.expect("withdraw-first handle").frontier().await.expect("withdraw-first frontier").commit_seq;
+        assert_eq!(after, before, "the withdrawn agent's edit left the document unchanged");
+        assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", format!("Bearer {agent_token}").as_str())]).await.status, 401);
+    });
+}
+
+/// ⚔️ Two authors write the same part of one opaque document over the hub's document sockets (fixture
+/// `⚔️vigilant-concurrent-edit-v1`): a write whose author had not observed the other author's latest write to that
+/// part is concurrent with it — `Vigilant` refuses it with the typed `mutation.clamped` warning, `Normal` accepts it
+/// and reports it, a write that observed it is accepted. No write carries a dependency: `observed` is advisory.
+#[test]
+fn a_vigilant_hub_refuses_a_same_target_write_authored_without_observing_the_other_authors_latest() {
+    run_socket_test(|| async {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/⚔️vigilant-concurrent-edit-v1/🔣️.json")).expect("vigilant fixture");
+        for (index, row) in fixture["rows"].as_array().expect("rows").iter().enumerate() {
+            let name = row["name"].as_str().expect("name");
+            let mut state = test_state().await;
+            state.merge_policy = match row["policy"].as_str().expect("policy") {
+                "vigilant" => protocol::MergePolicy::Vigilant,
+                "normal" => protocol::MergePolicy::Normal,
+                other => panic!("undeclared policy {other}"),
+            };
+            let document = format!("vigilant-{index}");
+            announce_document_for_test(&state, STUDIO, &document).await;
+            let (alice, bob) = (seed_author_token(&state).await, seed_author_token(&state).await);
+            let alice_actor = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), document.clone())), bearer_headers(&alice), State(state.clone())).await.expect("alice grant").0.actor_id;
+            let bob_actor = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), document.clone())), bearer_headers(&bob), State(state.clone())).await.expect("bob grant").0.actor_id;
+            assert_ne!(alice_actor, bob_actor, "{name}: two sessions are two authors");
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/scopes/{STUDIO}%2F{document}/document/ws");
+            let (mut alice_socket, _) = connect_async(document_socket_request(&url, &alice)).await.expect("alice socket");
+            let (mut bob_socket, _) = connect_async(document_socket_request(&url, &bob)).await.expect("bob socket");
+            for socket in [&mut alice_socket, &mut bob_socket] {
+                socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello");
+                assert!(matches!(next_server_frame_at(socket, "vigilant welcome").await, ServerFrame::Welcome { .. }));
+                assert!(matches!(next_server_frame_at(socket, "vigilant session").await, ServerFrame::Session { .. }));
+            }
+            let write = |id: &str, actor: &str, observed: Option<&str>| MutationEnvelope {
+                mutation_id: protocol::MutationId(id.to_string()),
+                document_id: WireArtifactId(document.clone()),
+                actor: ActorId(actor.to_string()),
+                dependencies: Vec::new(),
+                observed: observed.map(|observed| protocol::MutationId(observed.to_string())),
+                target: vec!["text".to_string()],
+                diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test.v1".into()), payload: id.as_bytes().to_vec() },
+                inverse: protocol::InverseMutation { schema: protocol::SchemaId("test.v1".into()), payload: Vec::new() },
+                timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+            };
+            let mut outcomes = Vec::new();
+            for (author, batch, envelope) in [(0usize, 1u64, write("base", &alice_actor, None)), (1, 1, write("first", &bob_actor, Some("base"))), (0, 2, write("second", &alice_actor, row["secondObserves"].as_str()))] {
+                let socket = if author == 0 { &mut alice_socket } else { &mut bob_socket };
+                socket.send(client_binary(&ClientFrame::Commands { batch_id: batch, envelopes: vec![envelope] }, Lane::Command).await).await.expect("command");
+                loop {
+                    if let ServerFrame::Ack { batch_id, stages, .. } = next_server_frame_at(socket, "vigilant ack").await {
+                        if batch_id == batch {
+                            outcomes.push(stages.last().cloned().expect("applied stage"));
+                            break;
+                        }
+                    }
+                }
+            }
+            let accepted = |stage: &AckStage| matches!(stage, AckStage::Applied { outcome } if matches!(outcome.as_ref(), ApplyOutcome::Accepted));
+            assert!(accepted(&outcomes[0]) && accepted(&outcomes[1]), "{name}: the base and the observed first write are accepted: {outcomes:?}");
+            match row["second"].as_str().expect("second") {
+                "accepted" => assert!(accepted(&outcomes[2]), "{name}: {outcomes:?}"),
+                "refused" => match &outcomes[2] {
+                    AckStage::Applied { outcome } => match outcome.as_ref() {
+                        ApplyOutcome::Rejected { messages, .. } => assert!(messages.iter().any(|message| message.code.0 == row["code"].as_str().expect("code") && format!("{:?}", message.level).to_lowercase() == row["level"].as_str().expect("level")), "{name}: {messages:?}"),
+                        other => panic!("{name}: expected a typed refusal, got {other:?}"),
+                    },
+                    other => panic!("{name}: expected an applied stage, got {other:?}"),
+                },
+                other => panic!("undeclared outcome {other}"),
+            }
+        }
     });
 }
 
@@ -7223,7 +7572,7 @@ async fn an_agent_can_never_widen_its_own_audience_or_probe_another_humans_deleg
     assert_eq!(raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("read")).await.status, 200, "the audience that WAS delegated still mints");
 
     let stranger_bearer = format!("Bearer {}", stranger.token);
-    let stolen = raw_http_request(addr, "DELETE", &format!("/auth/agent-delegations/{delegation_id}"), &[("authorization", stranger_bearer.as_str())], &[]).await;
+    let stolen = raw_http_request(addr, "POST", &format!("/auth/agent-delegations/{delegation_id}/revoke"), &[("authorization", stranger_bearer.as_str())], &[]).await;
     assert_eq!(stolen.status, 403, "another human's delegation is forbidden, never not-found");
     let stranger_listing = json_body(&raw_http_get(addr, &format!("/auth/agent-delegations?space={space_id}"), &[("authorization", stranger_bearer.as_str())]).await);
     assert_eq!(stranger_listing["delegations"].as_array().map(Vec::len), Some(0), "a listing is per delegating human, not per space");
@@ -7521,6 +7870,9 @@ async fn a_termination_signal_stops_the_listener_and_then_drains_in_flight_work(
 }
 //#endregion 🔖️ProductionPosture
 
+#[path = "../🎲️hostile-generative/🦀️.rs"]
+mod hostile_generative;
+
 mod quick {
     use super::*;
 
@@ -7562,7 +7914,7 @@ mod quick {
             revoked.actor = ActorId(receipt.actor_id.clone());
             socket.send(client_binary(&ClientFrame::Commands { batch_id: 91, envelopes: vec![revoked] }, Lane::Command).await).await.expect("revoked command received by server");
             tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("command boundary deadline").expect("command boundary").forget();
-            assert_eq!(delete_session_me(bearer_headers(&token), State(state.clone())).await, StatusCode::NO_CONTENT);
+            assert_eq!(post_session_sign_out(bearer_headers(&token), State(state.clone()), Bytes::new()).await, StatusCode::NO_CONTENT);
             live_gate.socket_command_release.add_permits(1);
             assert_eq!(next_close_without_authority(&mut socket).await, 4401, "no Ack crosses a revoke that wins before command admission");
             let frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("frontier");
@@ -8530,11 +8882,42 @@ async fn the_observability_route_answers_an_admin_with_the_events_its_own_reques
 async fn the_observability_view_never_carries_identity_fields() {
     let (tracer, _sink) = Tracer::capturing(TraceLevel::Debug);
     tracer.span("server.document.socket").request("r-1").principal("user:ada").space("space-secret").artifact("doc-secret").ok();
-    let rendered = serde_json::to_string(&observability_view(&tracer)).expect("observability json");
+    let routes = HubRouteMetricsV1::default();
+    routes.observe("GET", "/spaces/{space_id}/documents/{id}", 200, 5);
+    let rendered = serde_json::to_string(&observability_view(&tracer, &routes, None)).expect("observability json");
     for leaked in ["user:ada", "space-secret", "doc-secret", "r-1"] {
         assert!(!rendered.contains(leaked), "`{leaked}` reached the admin route body: {rendered}");
     }
     assert!(rendered.contains("server.document.socket"), "the event name itself is the point of the table");
+    assert!(rendered.contains("/spaces/{space_id}/documents/{id}"), "a route is named by its template, never by a concrete path");
+}
+
+/// ⚖️ LAW: the admin route reports every matched route this very hub answered under its template, with its
+/// answers by class and its latency, next to the DB I/O census and the residency (null without a catalog).
+#[tokio::test]
+async fn the_observability_route_reports_the_routes_this_hub_answered_by_template() {
+    let (mut state, _sink) = observed_test_state().await;
+    let headers = authorize_test_admin(&mut state, "ops-routes@example.com").await;
+    let bearer = headers.get(axum::http::header::AUTHORIZATION).expect("admin bearer").to_str().expect("ascii bearer").to_string();
+    let addr = spawn_server(state).await;
+    for _ in 0..3 {
+        assert_eq!(bounded_http_request(addr, "GET", "/auth/sessions/me", &[("Authorization", bearer.as_str())], &[]).await.status, 200);
+    }
+    assert_eq!(bounded_http_request(addr, "GET", "/directory/spaces/space-that-is-not-here", &[("Authorization", bearer.as_str())], &[]).await.status / 100, 4);
+    let response = bounded_http_request(addr, "GET", "/admin/api/observability", &[("Authorization", bearer.as_str())], &[]).await;
+    assert_eq!(response.status, 200);
+    let body: serde_json::Value = serde_json::from_slice(&response.body).expect("observability json");
+    let module: serde_json::Value = serde_json::from_str(semio_hub::observability::HUB_OBSERVABILITY_SCHEMA_JSON).expect("observability schema");
+    let required: std::collections::BTreeSet<&str> = module["$defs"]["HubObservabilityV1"]["required"].as_array().unwrap().iter().map(|field| field.as_str().unwrap()).collect();
+    assert_eq!(body.as_object().unwrap().keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>(), required);
+    let route = |method: &str, template: &str| body["routes"].as_array().unwrap().iter().find(|row| row["method"] == method && row["route"] == template).cloned();
+    let me = route("GET", "/auth/sessions/me").expect("the session reads this test made");
+    assert_eq!((me["requests"].as_u64(), me["successes"].as_u64(), me["samples"].as_u64()), (Some(3), Some(3), Some(3)));
+    let space = route("GET", "/directory/spaces/{id}").expect("the refused space read, under its template");
+    assert_eq!(space["clientRefusals"].as_u64(), Some(1));
+    assert!(!response.body.windows(b"space-that-is-not-here".len()).any(|window| window == b"space-that-is-not-here"), "no concrete path reaches the table");
+    assert!(body["residency"].is_null(), "a hub without a catalog has no residency");
+    assert!(body["dbIo"]["tasks"].as_u64().is_some());
 }
 
 /// ⚖️ LAW: the structured readiness record carries the same gates the startup banner names, as

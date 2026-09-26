@@ -62,7 +62,7 @@
       "executable_registration": true,
       "native_factory": {
         "factory_id": "stdio.native.pptx.v1",
-        "artifact_kind": "stdio.pptx",
+        "artifact_kind": "s.stdio.pptx",
         "artifact_schema": "stdio.pptx",
         "extension": "pptx",
         "pack_schema_hash": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",

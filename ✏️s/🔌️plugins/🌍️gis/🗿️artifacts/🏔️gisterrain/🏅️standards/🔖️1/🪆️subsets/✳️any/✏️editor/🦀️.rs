@@ -732,6 +732,9 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             // `.workflow(...)` — the old `"reuse-terrain"` app-level example registration and the
             // no-op `.workflow("gis3d", …)` call are dropped here (not silently: reported in the
             // migration notes). The subset's own `📚️examples/🎬️demo` facet is the modern replacement.
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole terrain with one of the plugin's bundled terrain examples, by example id.", "Ersetzt das gesamte Gelände durch eines der mitgelieferten Geländebeispiele, anhand der Beispiel-Id."))
+            .action_describe("setExaggeration", LocalizedLabel::native("Sets the vertical exaggeration factor the terrain surface is drawn with.", "Legt den Überhöhungsfaktor fest, mit dem die Geländeoberfläche gezeichnet wird."))
+            .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
             .build_definition()
 }
 //#endregion 🔖️Manifest

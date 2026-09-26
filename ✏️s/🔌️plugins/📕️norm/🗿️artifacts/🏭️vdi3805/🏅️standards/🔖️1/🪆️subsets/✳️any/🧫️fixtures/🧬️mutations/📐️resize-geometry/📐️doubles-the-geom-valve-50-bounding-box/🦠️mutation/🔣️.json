@@ -1,13 +1,13 @@
 {
   "ResizeGeometry": {
-    "id": "geom.valve.50",
-    "new_bbox": {
-      "min_x": 0.0,
-      "min_y": 0.0,
-      "min_z": 0.0,
-      "max_x": 0.5,
-      "max_y": 1.0,
-      "max_z": 0.25
+    "id": "geom-valve-50",
+    "newBbox": {
+      "minX": 0.0,
+      "minY": 0.0,
+      "minZ": 0.0,
+      "maxX": 0.5,
+      "maxY": 1.0,
+      "maxZ": 0.25
     }
   }
 }

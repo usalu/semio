@@ -1,0 +1,21 @@
+{
+  "width": 64,
+  "height": 64,
+  "viewportWidth": 800,
+  "viewportHeight": 600,
+  "start": [
+    400,
+    300
+  ],
+  "end": [
+    410,
+    310
+  ],
+  "pixelBounds": {
+    "x": 32,
+    "y": 32,
+    "width": 10,
+    "height": 10
+  },
+  "coverage": 255
+}

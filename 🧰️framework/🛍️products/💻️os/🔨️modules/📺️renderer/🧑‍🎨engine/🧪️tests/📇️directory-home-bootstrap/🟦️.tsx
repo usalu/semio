@@ -10,6 +10,7 @@ import {
   DirectoryBootstrapStatusNotice,
   applyDirectoryEventPageBootstrapV1,
   closeDirectoryHomeOwnerV1,
+  directoryHomeOwnerAppV1,
   openDirectoryHomeOwnerV1,
   parseDirectoryProjectionReceiptV1,
   startedDirectoryOperationIdV1,
@@ -343,6 +344,24 @@ describe("retained visible Home directory bootstrap", () => {
     expect((await pending).state).toEqual({ kind: "fault", code: "directory-bootstrap.cancelled" });
     expect(posts).toEqual([{ kind: "directory-bootstrap-close", bootstrapEpoch: 3 }]);
     expect(home.subscribers()).toBe(0);
+  });
+
+  it("feeds the visible Home in either role and nothing else, equal to an AJV contains-oracle", () => {
+    const surface = (row: (typeof fixture.ownerSurfaces)[number]["visible"]) =>
+      ({ id: row.id, controllerId: row.id, dialect: { artifactKind: row.dialect, standard: "1", subset: "*" }, defaultModeId: "view", modes: [{ id: "view" }], windowKinds: [{ id: "main", actions: row.actions.map((id) => ({ id })) }] }) as unknown as AppDefinition;
+    const landing = surface({ id: "s.space.home@1/*#editor", dialect: "s.space.home", actions: ["applyDirectoryEventPage"] });
+    const oracle = new Ajv({ strict: true }).compile({
+      type: "object",
+      required: ["dialect", "actions"],
+      properties: { dialect: { const: "s.space.home" }, actions: { type: "array", contains: { const: "applyDirectoryEventPage" } } },
+    });
+    expect(fixture.ownerSurfaces.map((row) => row.id)).toEqual(["home-editor", "home-viewer", "stale-home-viewer-without-feed", "space-index", "foreign-app-declaring-the-verb"]);
+    for (const row of fixture.ownerSurfaces) {
+      const visible = surface(row.visible);
+      const owner = directoryHomeOwnerAppV1(landing, visible);
+      expect(owner === visible, row.id).toBe(row.owner);
+      expect(oracle({ dialect: row.visible.dialect, actions: row.visible.actions }), row.id).toBe(row.owner);
+    }
   });
 
   it("renders explicit accessible EN and DE status without a fallback locale", () => {

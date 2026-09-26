@@ -15464,6 +15464,29 @@ pub mod app {
         }
     }
 
+    /// 📸️ Every root one typed command is reduced against — see `VcsArtifactApp::capture_typed_command_roots`.
+    struct TypedCommandRoots<A: ArtifactApp> {
+        snapshot: std::sync::Arc<A::Snapshot>,
+        config: std::sync::Arc<A::Config>,
+        history: std::sync::Arc<HistoryView>,
+        children: std::sync::Arc<ChildContentView>,
+        draft_snapshot: std::sync::Arc<A::Draft>,
+        interaction_state: std::sync::Arc<protocol::InteractionState>,
+        interaction_hover: InteractionHoverState,
+        presence_peers: std::sync::Arc<store::PresencePeersRoot<A::Presence>>,
+        transient: std::sync::Arc<A::Transient>,
+        peer_presence: std::sync::Arc<PeerPresenceRoot>,
+        canonical_base_revision: [u8; 32],
+        base_revision: semio_framework_job::RevisionId,
+        generation: semio_framework_job::Generation,
+        config_generation: u64,
+        draft_generation: u64,
+        presence_generation: u64,
+        transient_generation: u64,
+        window_config_authority: Option<super::window_config::WindowConfigAuthority>,
+        window_transient_authority: Option<super::window_transient::WindowTransientAuthority>,
+    }
+
     /// 📬️ Operation-owned completion cell shared by an app factory's job and the exact framework
     /// commit path. It is single-assignment and consumed exactly once after freshness validation.
     pub struct ArtifactToolCompletion<A: ArtifactApp> {
@@ -28538,19 +28561,26 @@ pub mod app {
             arguments.insert("windowId".into(), DslValue::String(address.window_instance_id.clone()));
             let args = DslValue::Object(arguments.into_iter().collect());
             let command = A::command_from_action(&address.action_id, Some(&args)).await?;
-            let emit = {
-                self.refresh_cache().await?;
-                let (snapshot, config, history) = self.command_cache_inputs();
-                let draft = self.draft_store.snapshot_root();
-                let interaction_state = self.interaction_store.snapshot_root();
-                let interaction_hover = self.interaction_hover.clone();
-                let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
-                let doc = ArtifactView::new(snapshot.as_ref(), history.as_ref());
-                let cfg = ConfigView { snapshot: config.as_ref(), window: None };
-                let draft = DraftView { snapshot: draft.as_ref() };
-                let interaction = InteractionView { state: interaction_state.as_ref(), hover: &interaction_hover, peers: interaction_peers.as_ref() };
-                A::handle(&command, &doc, &cfg, &interaction, Some(&view), &draft, &store::EngineHandles::empty()).await?
-            };
+            let emit = self.preview_retained_command(Box::new(command), &proof, &ActionMeta { view_state: Some(view.clone()), ..meta.clone() }).await?;
+            let uncarried = [
+                ("owned children", !emit.child_emits.is_empty()),
+                ("a whole-document replacement", emit.effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. }))),
+                ("a file download", emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. } | Effect::IconRenderExport { .. }))),
+                ("a file request", emit.effects.iter().any(|effect| matches!(effect, Effect::RequestFileOpen { .. } | Effect::RequestMediaFrames { .. }))),
+                ("extension calls", !emit.extension_invocations.is_empty()),
+                ("follow-up tasks", !emit.tasks.is_empty()),
+            ]
+            .into_iter()
+            .filter(|(_, published)| *published)
+            .map(|(lane, _)| lane)
+            .collect::<Vec<_>>();
+            if !uncarried.is_empty() {
+                return Err(Fault::new(
+                    FaultOrigin::Framework,
+                    FaultCode::new("interactive-job.agent-lane-uncarried"),
+                    format!("action '{}' publishes {} that an agent transaction cannot carry; it runs only from the shell", address.action_id, uncarried.join(", ")),
+                ));
+            }
             if A::ROLE == AppRole::Viewer && !emit.artifact_mutations.is_empty() {
                 return Err(viewer_read_only_fault(&address.action_id));
             }
@@ -28586,6 +28616,76 @@ pub mod app {
                 ("opBytes".into(), DslValue::String(priced.to_string())),
             ]);
             Ok(result)
+        }
+
+        /// 👁️ Builds the SAME retained job the shell lane builds for this command (`A::build_tool_job` over
+        /// [`Self::capture_typed_command_roots`]), runs its own preflight and work to the emit without publishing
+        /// anything, and closes it through its own close protocol. A route whose builder answers anything but a
+        /// retained command payload is refused by name: the agent lane never substitutes other code for it.
+        async fn preview_retained_command(&mut self, command: Box<A::Command>, proof: &QualifiedToolProof, meta: &ActionMeta) -> Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault> {
+            use semio_framework_job::InteractiveJob;
+            let verb = A::command_id(&command).await.to_string();
+            let roots = self.capture_typed_command_roots(command.as_ref(), meta).await?;
+            let operation_id = self.admit_typed_operation_slot().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-capacity"), "every fixed typed-operation and segmented-output slot already owns a live operation"))?;
+            let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, roots.base_revision.0)).await;
+            let operation = semio_framework_job::Operation::new(operation_id, roots.base_revision, roots.generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
+            let completion = ArtifactToolCompletion::<A>::new();
+            let context = std::sync::Arc::new(
+                ArtifactOwnedToolJobContext::new(
+                    meta.instance_id,
+                    meta.view_state.clone(),
+                    roots.canonical_base_revision,
+                    roots.draft_generation,
+                    roots.transient_generation,
+                    ArtifactOwnedToolJobSnapshots {
+                        children: std::sync::Arc::clone(&roots.children),
+                        draft: std::sync::Arc::clone(&roots.draft_snapshot),
+                        transient: std::sync::Arc::clone(&roots.transient),
+                        window_config: roots.window_config_authority.as_ref().map(|authority| authority.snapshot.clone()),
+                        window_transient: roots.window_transient_authority.as_ref().map(|authority| authority.snapshot.clone()),
+                    },
+                )
+                .with_tool_run(self.tool_runs.view_for(meta.view_state.as_ref().and_then(|view| view.window_id.as_deref()))),
+            );
+            let key = proof.key();
+            let spec = A::build_tool_job(ArtifactOwnedToolJobRequest {
+                command,
+                raw_wire: ArtifactToolRawInput::transferred_to_factory(),
+                operation,
+                controller_id: key.controller_id,
+                tool_id: key.tool_id,
+                payload_schema_id: proof.schema_id(),
+                contract: proof.contract(),
+                decoded_items: 1,
+                app_instance_id: meta.instance_id,
+                parent_document_id: self.store.envelope().id.clone(),
+                canonical_base_revision: roots.canonical_base_revision,
+                snapshot: roots.snapshot,
+                config: roots.config,
+                window_config: roots.window_config_authority.as_ref().map(|authority| authority.snapshot.clone()),
+                history: roots.history,
+                interaction_state: roots.interaction_state,
+                interaction_hover: std::sync::Arc::new(roots.interaction_hover),
+                context,
+                instance_operation_owner: self.instance_operation_owner.clone(),
+                output_chunks: ArtifactOutputChunks::new(proof.contract().max_output_bytes),
+                completion: completion.clone(),
+            })
+            .await?
+            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-owned-builder"), format!("app-owned tool '{verb}' registered a factory but supplied no exact payload builder")))?;
+            let payload = spec.payload.into_inner::<crate::retained_command::ArtifactRetainedCommandPayload<A>>().map_err(|payload| {
+                Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.preview-unsupported"), format!("action '{verb}' runs a '{}' job the agent lane cannot preview; it runs only from the shell", payload.schema_id))
+            })?;
+            let mut job = crate::retained_command::ArtifactRetainedCommandJob::new(payload);
+            let previewed = job.preview_emit();
+            job.begin_close();
+            while !job.terminal_is_empty() {
+                if let semio_framework_job::InteractiveJobCloseStep::Blocked = job.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.preview-close"), format!("the previewed job of action '{verb}' could not close")));
+                }
+            }
+            drop(completion);
+            previewed.map(|(emit, _)| emit)
         }
 
         /// 🧩️ A typed frame IS an owner-qualified invocation — the exact wire `AppCommand::Command`
@@ -29947,6 +30047,50 @@ pub mod app {
             self.start_typed_command_operation(command, admission, meta, operation_id, None).await
         }
 
+        /// 📸️ The roots one typed command runs against, captured once and identically for the shell lane
+        /// that mounts the operation ([`Self::start_typed_command_operation`]) and for the agent lane's prepare
+        /// phase that only previews it ([`Self::preview_addressed_action`]) — so the two lanes can never run
+        /// the same verb against different state.
+        async fn capture_typed_command_roots(&mut self, command: &A::Command, meta: &ActionMeta) -> Result<TypedCommandRoots<A>, Fault> {
+            self.refresh_cache().await?;
+            let (snapshot, config, history) = self.command_cache_inputs();
+            let canonical_base_revision = self.store.content_revision();
+            let window_config_authority = self.window_config_store.capture(meta.view_state.as_ref()).await?;
+            let targeted_window_transient_view = match A::retained_window_transient_target(command) {
+                Some((window_id, expected_kind)) => {
+                    let view = meta.view_state.as_ref().ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an exact ViewModel roster"))?;
+                    let window = view.window_instances.iter().find(|window| window.id == window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an attached window instance"))?;
+                    if window.window_kind_id != expected_kind {
+                        return Err(plugin_sdk_fault("targeted window transient capture does not match the command owner's expected window kind"));
+                    }
+                    Some(view.for_window_instance(window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture lost its attached window instance"))?)
+                }
+                None => None,
+            };
+            let window_transient_authority = self.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_ref()))?;
+            Ok(TypedCommandRoots {
+                snapshot,
+                config,
+                history,
+                children: std::sync::Arc::new(ChildContentView::clone(&self.child_content_root)),
+                draft_snapshot: self.draft_store.snapshot_root(),
+                interaction_state: self.interaction_store.snapshot_root(),
+                interaction_hover: self.interaction_hover.clone(),
+                presence_peers: self.presence_store.peers_root(),
+                transient: self.transient_store.current_root(),
+                peer_presence: std::sync::Arc::clone(&self.peer_presence),
+                canonical_base_revision,
+                base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width"))),
+                generation: semio_framework_job::Generation(self.store.generation()),
+                config_generation: self.config_store.generation(),
+                draft_generation: self.draft_store.generation(),
+                presence_generation: self.presence_store.generation().await,
+                transient_generation: self.transient_store.generation().await,
+                window_config_authority,
+                window_transient_authority,
+            })
+        }
+
         async fn start_typed_command_operation(
             &mut self,
             command: Box<A::Command>,
@@ -29962,35 +30106,27 @@ pub mod app {
                 assert!(self.can_admit_typed_operation(operation_id.0), "ordinary worker cannot consume another pending operation reservation");
             }
             let verb = admission.verb.clone();
-            self.refresh_cache().await?;
-            let draft_snapshot = self.draft_store.snapshot_root();
-            let interaction_state = self.interaction_store.snapshot_root();
-            let interaction_hover = self.interaction_hover.clone();
-            let (snapshot, config, history) = self.command_cache_inputs();
-            let children = std::sync::Arc::new(ChildContentView::clone(&self.child_content_root));
-            let presence_peers = self.presence_store.peers_root();
-            let transient = self.transient_store.current_root();
-            let peer_presence = std::sync::Arc::clone(&self.peer_presence);
-            let canonical_base_revision = self.store.content_revision();
-            let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width")));
-            let generation = semio_framework_job::Generation(self.store.generation());
-            let config_generation = self.config_store.generation();
-            let draft_generation = self.draft_store.generation();
-            let presence_generation = self.presence_store.generation().await;
-            let transient_generation = self.transient_store.generation().await;
-            let window_config_authority = self.window_config_store.capture(meta.view_state.as_ref()).await?;
-            let targeted_window_transient_view = match A::retained_window_transient_target(command.as_ref()) {
-                Some((window_id, expected_kind)) => {
-                    let view = meta.view_state.as_ref().ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an exact ViewModel roster"))?;
-                    let window = view.window_instances.iter().find(|window| window.id == window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture requires an attached window instance"))?;
-                    if window.window_kind_id != expected_kind {
-                        return Err(plugin_sdk_fault("targeted window transient capture does not match the command owner's expected window kind"));
-                    }
-                    Some(view.for_window_instance(window_id).ok_or_else(|| plugin_sdk_fault("targeted window transient capture lost its attached window instance"))?)
-                }
-                None => None,
-            };
-            let window_transient_authority = self.window_transient_store.capture(targeted_window_transient_view.as_ref().or(meta.view_state.as_ref()))?;
+            let TypedCommandRoots {
+                snapshot,
+                config,
+                history,
+                children,
+                draft_snapshot,
+                interaction_state,
+                interaction_hover,
+                presence_peers,
+                transient,
+                peer_presence,
+                canonical_base_revision,
+                base_revision,
+                generation,
+                config_generation,
+                draft_generation,
+                presence_generation,
+                transient_generation,
+                window_config_authority,
+                window_transient_authority,
+            } = self.capture_typed_command_roots(command.as_ref(), meta).await?;
             // 👥️🫧️ `ArtifactApp::ephemeral`'s own contract: "Called on every dispatched command, right
             // before `handle`", "applied unconditionally and cannot fail". The migrated route hands the
             // reducer to a worker, so the only place the hook can still run BEFORE the reducer — with the
@@ -33369,9 +33505,9 @@ pub mod app {
         /// `crate::app::declarations::AppFactory`'s doc for why the definition travels with it)
         /// after typed assembly has completed.
         pub fn register_app_factory(mut self, mut app: App, factory: declarations::AppFactory<PA>) -> Self {
-            let (mut factory_definition, factory_create) = factory;
+            let mut factory = factory;
             join_framework_shared_action_dispositions(&mut app.definition);
-            join_framework_shared_action_dispositions(&mut factory_definition);
+            join_framework_shared_action_dispositions(&mut factory.definition);
             // 📚️ An example is a document of the registering surface's DIALECT, shared by every app
             // bound to it (editor and viewer alike) — never a property of this one app id.
             let dialect = app.definition.dialect.clone();
@@ -33387,12 +33523,18 @@ pub mod app {
                 }
                 self.manifest.examples.push(source.into_example_definition(dialect.clone()));
             }
-            self.apps.insert(self.manifest.apps.last().unwrap().id.clone(), (factory_definition, factory_create));
+            self.apps.insert(self.manifest.apps.last().unwrap().id.clone(), factory);
             self
         }
 
         pub fn create_app(&self, app_id: &str) -> Option<PA> {
-            self.apps.get(app_id).map(|(definition, factory)| factory(definition))
+            self.apps.get(app_id).map(|factory| (factory.create)(&factory.definition))
+        }
+
+        /// 🪪️ The document schema the registered app opens — its type's own `DOCUMENT_SCHEMA`, recorded
+        /// at registration, so nothing has to be constructed to learn it.
+        pub fn app_document_schema(&self, app_id: &str) -> Option<&'static str> {
+            self.apps.get(app_id).map(|factory| factory.document_schema)
         }
     }
 
@@ -35692,6 +35834,7 @@ pub mod app {
             pub factory: fn(&AppDefinition) -> PA,
             // 🚫️async: E4 fn-pointer slot
             pub app_schema: fn() -> Option<::semio_framework_schema::AppSchemaDescriptor>,
+            pub document_schema: &'static str,
             pub mutation_roster: Option<OwnerMutationRoster>,
             pub rights: Rights,
         }
@@ -35717,7 +35860,7 @@ pub mod app {
             if def.io.artifact_schema.is_empty() {
                 def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
             }
-            SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, mutation_roster: None, rights: Rights::Write }
+            SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, document_schema: E::DOCUMENT_SCHEMA, mutation_roster: None, rights: Rights::Write }
         }
 
         /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
@@ -35735,7 +35878,7 @@ pub mod app {
             if def.io.artifact_schema.is_empty() {
                 def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
             }
-            SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, mutation_roster: None, rights: Rights::Read }
+            SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, document_schema: V::DOCUMENT_SCHEMA, mutation_roster: None, rights: Rights::Read }
         }
 
         //#endregion 🔖️SurfaceDeclaration
@@ -35792,7 +35935,12 @@ pub mod app {
         //#region 🔖️Registration
         /// 🎭️ The definition travels WITH the bare fn pointer — same reason `SurfaceDeclaration.factory`
         /// does (a monomorphized non-capturing `fn` item cannot close over `def`).
-        pub(crate) type AppFactory<PA> = (AppDefinition, fn(&AppDefinition) -> PA);
+        pub(crate) struct AppFactory<PA> {
+            pub definition: AppDefinition,
+            // 🚫️async: E4 fn-pointer slot
+            pub create: fn(&AppDefinition) -> PA,
+            pub document_schema: &'static str,
+        }
 
         /// 🏗️ Everything `PluginBuilder::try_build` folds into its own `app_defs`/
         /// `app_schema_descriptors`/`capabilities` vectors once a declared tree commits.
@@ -36000,7 +36148,7 @@ pub mod app {
                             // and stamped with the subset's dialect there, which is what makes them
                             // resolve for the viewer surface too (`manifest::examples_for_app`).
                             let examples = if surface.definition.role == AppRole::Editor { subset.examples.to_vec() } else { Vec::new() };
-                            result.app_defs.push((App { definition: definition.clone(), examples }, (definition, surface.factory)));
+                            result.app_defs.push((App { definition: definition.clone(), examples }, AppFactory { definition, create: surface.factory, document_schema: surface.document_schema }));
                             result.app_schema_descriptors.push(surface.app_schema);
                             result.capabilities.extend(capability_rows_for(surface));
                         }
@@ -36890,54 +37038,16 @@ pub mod plugin_runtime {
         }
     }
 
-    static PLUGIN_INIT_ONCE: std::sync::Once = std::sync::Once::new();
-
-    // 🚫️async: E4 fn-pointer slot
-    static PLUGIN_BUNDLE_INSTALLER: std::sync::OnceLock<fn()> = std::sync::OnceLock::new();
-
-    /// @emoji 🧩️ Registers the embedding plugin crate's bundle installer (expanded from `plugin_exports!`).
-    pub fn register_plugin_bundle_installer(install: fn()) {
-        let _ = PLUGIN_BUNDLE_INSTALLER.set(install);
-    }
-
-    /// 🔗️ Weak default so intermediate `cdylib` links (e.g. `semio-framework-os` pulled into a
-    /// wasip2 plugin build via feature unification of `component-guest`) succeed; the embedding
-    /// plugin's `plugin_exports!` provides the strong installer override.
-    #[cfg(feature = "component-guest")]
-    #[unsafe(no_mangle)]
-    #[linkage = "weak"]
-    pub extern "C" fn semio_plugin_bundle_installer_link_shim() {}
-
-    /// Ensures the embedding plugin crate's bundle installer ran before any WIT export is served.
-    // 🚫️async: E1 pure `std::sync::Once` init consumed by `component::wasip2`'s sync `world
-    // actor` `Guest` impls (WIT-fixed, no `host-async` import exists to await in that world) — R9.
-    // Body is entirely `call_once`'s sync closure (an `E4` fn-pointer install), zero suspension.
-    pub fn ensure_plugin_initialized() {
-        PLUGIN_INIT_ONCE.call_once(|| {
-            // 🩹️ The owned hook uses only `std`, so every browser actor reports the exact Rust panic
-            // through its WASI stderr stream before the target's normal abort trap terminates it.
-            #[cfg(target_arch = "wasm32")]
-            std::panic::set_hook(Box::new(|panic| eprintln!("[DEBUG] [semio-plugin panic] {panic}")));
-            // 🧬️ A2 (design-abi.md §4): `host_port`/`HostBackboneChannel`/`set_host_backbone_channel`
-            // are deleted per `important.md`'s "Replace, never wrap" list — a process-global backbone
-            // channel cannot survive a pooled multi-instance actor. The per-instance `EffectBackbone`
-            // that replaces it is NOT implemented in this wave (the VCS `BackboneChannelPort` trait's
-            // `send`/`poll` methods are synchronous; bridging them onto the async `Effect`/`Event`
-            // request-response model needs its own design decision — see the report's `lease-request`/
-            // deferred-work section). No backbone channel is registered here; VCS backbone-dependent
-            // paths surface a real "no host backbone linked" error instead of silently no-op'ing.
-            #[cfg(feature = "component-guest")]
-            {
-                semio_plugin_bundle_installer_link_shim();
-                if let Some(install) = PLUGIN_BUNDLE_INSTALLER.get() {
-                    install();
-                }
-            }
-        });
+    /// 🩹️ Reports every guest panic through the WASI stderr stream before the target's abort trap ends
+    /// the instance. The embedding crate's runtime ensure (`plugin_exports!`/`extension_exports!`)
+    /// calls it once, before its bundle is assembled, so a panic during assembly is reported too.
+    // 🚫️async: E1 called from the sync `std::sync::Once` closure of the macro-generated runtime ensure.
+    pub fn install_guest_panic_report() {
+        #[cfg(target_arch = "wasm32")]
+        std::panic::set_hook(Box::new(|panic| eprintln!("[semio-plugin panic] {panic}")));
     }
 
     pub async fn plugin_manifest<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> PluginManifest {
-        ensure_plugin_initialized();
         if let Some(fault) = runtime.plugin_assembly_error.borrow().clone() {
             return PluginManifest {
                 plugin_id: "assembly-failed".into(),
@@ -37024,7 +37134,6 @@ pub mod plugin_runtime {
 
     /// 💡️ Lists only inference services frozen into the installed plugin assembly.
     pub async fn plugin_wire_list_artifact_inference_services<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Result<Vec<u8>, crate::app::ArtifactInferenceExecutionError> {
-        ensure_plugin_initialized();
         // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (no real suspension
         // point: the found-plugin branch resolves a frozen in-memory assembly).
         {
@@ -37036,7 +37145,6 @@ pub mod plugin_runtime {
 
     /// 💡️ Executes only an inference service frozen into the installed plugin assembly.
     pub async fn plugin_wire_artifact_infer<PA: PluginApp>(runtime: &PluginRuntime<PA>, request: &[u8]) -> Result<Vec<u8>, crate::app::ArtifactInferenceExecutionError> {
-        ensure_plugin_initialized();
         // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (no real suspension
         // point: the found-plugin branch resolves a frozen in-memory assembly).
         {
@@ -37048,7 +37156,6 @@ pub mod plugin_runtime {
 
     /// 🎯️ Lists only mutation rows frozen into the installed plugin assembly.
     pub async fn plugin_wire_list_artifact_mutations<PA: PluginApp>(runtime: &PluginRuntime<PA>) -> Vec<u8> {
-        ensure_plugin_initialized();
         // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` for both the found-plugin
         // and no-plugin-yet branches (neither has a real suspension point).
         match runtime.plugin.borrow().as_ref() {
@@ -37059,7 +37166,6 @@ pub mod plugin_runtime {
 
     /// 🎯️ Plans only a mutation service frozen into the installed plugin assembly.
     pub async fn plugin_wire_artifact_mutation_plan<PA: PluginApp>(runtime: &PluginRuntime<PA>, request: &[u8]) -> Result<Vec<u8>, Fault> {
-        ensure_plugin_initialized();
         // 🌉️ `LocalKey::with`'s closure is sync — bridged via `resolve_ready` (no real suspension
         // point: wire encode/decode plus a frozen in-memory mutation-plan lookup).
         runtime.plugin.borrow().as_ref().ok_or_else(|| plugin_internal_fault("no plugin bundle is installed"))?.wire_artifact_mutation_plan(request)
@@ -38630,56 +38736,36 @@ pub mod plugin_runtime {
         }
         let program = runtime.plugin.try_borrow().map_err(|_| plugin_internal_fault("plugin factory authority busy"))?;
         let program = program.as_ref().ok_or_else(|| plugin_internal_fault("plugin not initialized"))?;
-        let mut editor = None;
-        let mut viewer = None;
-        let mut failure: Option<Fault> = None;
-        for definition in &program.manifest.apps {
-            if failure.is_some() {
-                break;
-            }
-            let Some(app) = program.create_app(&definition.id) else { continue };
-            // 🪪️ The document schema is the primary key — it is what `store::ArtifactCodec` and the
-            // hub's trusted catalog are keyed by. The dialect's ARTIFACT KIND is admitted as a second
-            // key because it is the only document identity a package's own manifest publishes: an app
-            // definition carries `dialect.artifact_kind`, never `A::DOCUMENT_SCHEMA`. Build tooling
-            // that has nothing but a compiled descriptor therefore asks by kind, reads the schema back
-            // out of `codec.genesis`'s history, and asks everything after that by schema. A kind and a
-            // schema never collide by construction: a kind is `s.<plugin>.<artifact>` and a schema is
-            // the artifact's own `DOCUMENT_SCHEMA` spelling.
-            let schema_matches = app.artifact_schema().await == artifact_schema;
-            let owned = schema_matches || definition.dialect.artifact_kind == artifact_schema;
+        let definition = artifact_codec_owner(program, artifact_schema)?;
+        let app = program.create_app(&definition.id).ok_or_else(|| plugin_internal_fault("artifact codec owner has no registered factory"))?;
+        if app.artifact_schema().await == artifact_schema || definition.dialect.artifact_kind == artifact_schema {
+            return Ok(app);
+        }
+        close_artifact_codec_app(app)?;
+        Err(plugin_internal_fault("artifact codec owner does not open the schema its registration declares"))
+    }
+
+    /// 🪪️ The apps of `program` that own `artifact_schema`: those whose registered type opens that document
+    /// schema — the primary key `store::ArtifactCodec` and the hub's trusted catalog use — and those whose
+    /// dialect names it as an ARTIFACT KIND, the identity build tooling with nothing but a compiled
+    /// descriptor asks by (it reads the schema back out of `codec.genesis` and asks by schema after that; a
+    /// kind `s.<plugin>.<artifact>` and a `DOCUMENT_SCHEMA` never collide). Pure: nothing is constructed.
+    pub(crate) fn artifact_codec_candidates<'a, PA: PluginApp>(program: &'a Plugin<PA>, artifact_schema: &'a str) -> impl Iterator<Item = &'a crate::app::AppDefinition> + 'a {
+        program.manifest.apps.iter().filter(move |definition| program.app_document_schema(&definition.id) == Some(artifact_schema) || definition.dialect.artifact_kind == artifact_schema)
+    }
+
+    /// 🎯️ The ONE app a codec call for `artifact_schema` constructs: the owning editor — only an editor's
+    /// snapshot is the kind's creation authority — else the owning viewer. Two owners of the same role are
+    /// refused rather than resolved by order, and no owner is refused; all of it decided on the declarations.
+    pub(crate) fn artifact_codec_owner<'a, PA: PluginApp>(program: &'a Plugin<PA>, artifact_schema: &'a str) -> Result<&'a crate::app::AppDefinition, Fault> {
+        let (mut editor, mut viewer) = (None, None);
+        for definition in artifact_codec_candidates(program, artifact_schema) {
             let slot = if definition.role == semio_framework::AppRole::Editor { &mut editor } else { &mut viewer };
-            if owned && slot.is_none() {
-                *slot = Some(app);
-                continue;
-            }
-            if owned {
-                failure = Some(plugin_internal_fault("artifact codec schema resolves more than one app of the same role"));
-            }
-            // 🪦️ Reading a candidate's schema costs a whole constructed app, and a constructed app
-            // owns an `ArtifactStore` whose `Drop` asserts an exact terminal-empty shallow-shell
-            // witness. Every app this resolution builds and does not return therefore leaves through
-            // the same bounded close cursor the runtime's own instance-close job runs.
-            if let Err(error) = close_artifact_codec_app(app) {
-                failure.get_or_insert(error);
+            if slot.replace(definition).is_some() {
+                return Err(plugin_internal_fault("artifact codec schema resolves more than one app of the same role"));
             }
         }
-        let (selected, rejected) = match (editor, viewer) {
-            (Some(editor), viewer) => (Some(editor), viewer),
-            (None, viewer) => (viewer, None),
-        };
-        if let Some(rejected) = rejected {
-            if let Err(error) = close_artifact_codec_app(rejected) {
-                failure.get_or_insert(error);
-            }
-        }
-        if let Some(failure) = failure {
-            if let Some(selected) = selected {
-                close_artifact_codec_app(selected)?;
-            }
-            return Err(failure);
-        }
-        selected.ok_or_else(|| plugin_internal_fault("artifact codec schema is owned by no app of this bundle"))
+        editor.or(viewer).ok_or_else(|| plugin_internal_fault("artifact codec schema is owned by no app of this bundle"))
     }
 
     /// 🧹️ Drains one THROWAWAY codec app to its exact terminal-empty shell before releasing it —
@@ -38694,7 +38780,7 @@ pub mod plugin_runtime {
     /// `unreachable` the host reported: every `codec.genesis`, `codec.pack-schema-hash`,
     /// `codec.print-mirror` and `codec.apply-ops` call trapped, for EVERY plugin whose bundle holds
     /// more than one app — which is every plugin, since an artifact declares an editor and a viewer.
-    fn close_artifact_codec_app<PA: PluginApp>(mut app: PA) -> Result<(), Fault> {
+    pub(crate) fn close_artifact_codec_app<PA: PluginApp>(mut app: PA) -> Result<(), Fault> {
         for _ in 0..ARTIFACT_CODEC_APP_CLOSE_MAXIMUM_STEPS {
             if app.close_terminal_is_empty() {
                 return Ok(());
@@ -41473,7 +41559,10 @@ pub mod plugin_runtime {
 
             fn __semio_ensure_plugin_runtime() {
                 static ONCE: std::sync::Once = std::sync::Once::new();
-                ONCE.call_once(__semio_install_plugin_bundle);
+                ONCE.call_once(|| {
+                    $crate::plugin_runtime::install_guest_panic_report();
+                    __semio_install_plugin_bundle();
+                });
             }
 
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -41485,25 +41574,11 @@ pub mod plugin_runtime {
 
             $crate::__semio_actor_exports!(__SemioComponentGuest, __SEMIO_PLUGIN_RUNTIME, __semio_ensure_plugin_runtime, __semio_describe_component);
 
-            // 🚫️async: E4 fn-pointer slot — this fn's VALUE is stored in `PLUGIN_BUNDLE_INSTALLER:
-            // OnceLock<fn()>` via `register_plugin_bundle_installer`, so it can never itself be
-            // `async fn`; the pure bundle install remains directly callable from this fn-pointer slot.
+            // 🚫️async: E1 called from the sync `std::sync::Once` closure of `__semio_ensure_plugin_runtime`.
             fn __semio_install_plugin_bundle() {
                 __SEMIO_PLUGIN_RUNTIME.with(|runtime| {
                     $crate::plugin_runtime::install_plugin_bundle_result(runtime, ($bundle_fn)());
                 });
-            }
-
-            #[doc(hidden)]
-            #[unsafe(no_mangle)]
-            pub extern "C" fn semio_plugin_bundle_installer_link_shim() {
-                $crate::plugin_runtime::register_plugin_bundle_installer(__semio_install_plugin_bundle);
-            }
-
-            #[doc(hidden)]
-            #[unsafe(no_mangle)]
-            pub extern "C" fn semio_plugin_install_bundle() {
-                __semio_install_plugin_bundle();
             }
 
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -41511,9 +41586,8 @@ pub mod plugin_runtime {
             static _SEMIO_PLUGIN_COMPONENT_LINK: fn() = $crate::component_export_anchor;
 
             // 🛂️ E1-describe (`📓️design-abi.md` §3), path corrected by E2-builder-descriptor: freshness
-            // without wasm in the loop — natively installs the bundle (bypassing
-            // `ensure_plugin_initialized`'s `component-guest`-gated weak-linkage shim, which only
-            // fires on a real wasm build) and byte-compares `describe::describe_plugin()`'s packed
+            // without wasm in the loop — natively installs the bundle and byte-compares
+            // `describe::describe_plugin()`'s packed
             // output against the crate's checked-in `<owner>/🛂️.descriptor.semio`. Registrar ruling
             // (`📌️important.md`, this ticket): descriptors live at the plugin/extension OWNER ROOT,
             // sibling of the tracked `🛂️manifest.json` — NOT under `🤖️generated/`, which is globally
@@ -41634,9 +41708,9 @@ pub mod plugin_runtime {
             self
         }
 
-        /// 🔗️ Declares a direct plugin dependency — contract freeze §3/§4: the FIRST dependency
-        /// declared (in call order) must be the same plugin `.extends(...)` names.
-        pub fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionReq) -> Self {
+        /// 🔗️ Declares a direct plugin dependency, pinned exactly (`semio_framework::tree_pin!()`) — contract freeze §3/§4:
+        /// the FIRST dependency declared (in call order) must be the same plugin `.extends(...)` names.
+        pub fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionPin) -> Self {
             self.manifest.dependencies.push(semio_framework::PluginDependency::new(plugin_id, version));
             self.assert_extends_matches_primary_dependency();
             self
@@ -41731,44 +41805,8 @@ pub mod plugin_runtime {
         EXTENSION_ACTIVE.with(|slot| slot.set(false));
     }
 
-    // 🚫️async: E4 fn-pointer slot
-    static EXTENSION_BUNDLE_INSTALLER: std::sync::OnceLock<fn()> = std::sync::OnceLock::new();
-
-    /// 🧩️ Registers the embedding extension crate's bundle installer (expanded from `extension_exports!`).
-    pub async fn register_extension_bundle_installer(install: fn()) {
-        let _ = EXTENSION_BUNDLE_INSTALLER.set(install);
-    }
-
-    /// 🔗️ Weak default mirroring `semio_plugin_bundle_installer_link_shim` (see that symbol's own
-    /// doc comment): lets an intermediate link succeed before the embedding extension crate's
-    /// `extension_exports!` provides the strong override. Without this default AND the explicit call
-    /// below, `EXTENSION_BUNDLE_INSTALLER` is never populated — no code path ever invoked this
-    /// symbol, so `register_extension_bundle_installer` was silently never called and every real
-    /// extension's `manifest()`/`activate()` observed only the empty-default `ExtensionBundle`.
-    #[cfg(feature = "component-extension-guest")]
-    #[unsafe(no_mangle)]
-    #[linkage = "weak"]
-    pub extern "C" fn semio_extension_bundle_installer_link_shim() {}
-
-    /// Ensures the embedding extension crate's bundle installer ran before any WIT export is served
-    /// — mirrors `ensure_plugin_initialized`'s explicit weak/strong-linkage shim call.
-    async fn ensure_extension_initialized() {
-        EXTENSION_BUNDLE.with(|slot| {
-            if slot.borrow().is_none() {
-                #[cfg(feature = "component-extension-guest")]
-                unsafe {
-                    semio_extension_bundle_installer_link_shim();
-                }
-                if let Some(install) = EXTENSION_BUNDLE_INSTALLER.get() {
-                    install();
-                }
-            }
-        });
-    }
-
     /// 📦️ Returns the installed extension manifest (empty defaults when unset).
     pub async fn extension_manifest() -> ExtensionManifest {
-        ensure_extension_initialized().await;
         EXTENSION_BUNDLE.with(|slot| {
             slot.borrow().as_ref().map_or_else(
                 || ExtensionManifest {
@@ -41791,7 +41829,6 @@ pub mod plugin_runtime {
 
     /// 🚨️ Marks the extension active for subsequent `extension_invoke` calls.
     pub async fn extension_activate() -> Result<(), Fault> {
-        ensure_extension_initialized().await;
         let ready = EXTENSION_BUNDLE.with(|slot| slot.borrow().is_some());
         if !ready {
             return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.missing"), "extension bundle not installed"));
@@ -41807,7 +41844,6 @@ pub mod plugin_runtime {
 
     /// 🔀️ Dispatches `capability` to the registered handler with wire-encoded `request` bytes.
     pub async fn extension_invoke(capability: &str, request: &[u8]) -> Result<Vec<u8>, Fault> {
-        ensure_extension_initialized().await;
         if !EXTENSION_ACTIVE.with(|slot| slot.get()) {
             return Err(Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.inactive"), "extension not activated"));
         }
@@ -41853,17 +41889,6 @@ pub mod plugin_runtime {
                 $crate::describe::describe_extension_with_apps
             );
 
-            #[doc(hidden)]
-            #[unsafe(no_mangle)]
-            pub extern "C" fn semio_extension_bundle_installer_link_shim() {
-                $crate::app::resolve_ready($crate::plugin_runtime::register_extension_bundle_installer(__semio_install_plugin_bundle));
-            }
-
-            #[doc(hidden)]
-            #[unsafe(no_mangle)]
-            pub extern "C" fn semio_extension_install_bundle() {
-                __semio_install_plugin_bundle();
-            }
         };
         ($bundle_fn:expr) => {
             $crate::component_persistent_local! {
@@ -41873,6 +41898,7 @@ pub mod plugin_runtime {
             fn __semio_ensure_extension_runtime() {
                 static ONCE: std::sync::Once = std::sync::Once::new();
                 ONCE.call_once(|| {
+                    $crate::plugin_runtime::install_guest_panic_report();
                     __semio_install_extension_bundle();
                     $crate::app::resolve_ready($crate::plugin_runtime::extension_activate()).expect("installed extension activation");
                 });
@@ -41887,21 +41913,9 @@ pub mod plugin_runtime {
 
             $crate::__semio_actor_exports!(__SemioExtensionGuest, __SEMIO_EXTENSION_RUNTIME, __semio_ensure_extension_runtime, __semio_describe_component);
 
-            // 🚫️async: E4 fn-pointer slot — see `plugin_exports!`'s `__semio_install_plugin_bundle` doc.
+            // 🚫️async: E1 called from the sync `std::sync::Once` closure of `__semio_ensure_extension_runtime`.
             fn __semio_install_extension_bundle() {
                 $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(($bundle_fn)()));
-            }
-
-            #[doc(hidden)]
-            #[unsafe(no_mangle)]
-            pub extern "C" fn semio_extension_bundle_installer_link_shim() {
-                $crate::app::resolve_ready($crate::plugin_runtime::register_extension_bundle_installer(__semio_install_extension_bundle));
-            }
-
-            #[doc(hidden)]
-            #[unsafe(no_mangle)]
-            pub extern "C" fn semio_extension_install_bundle() {
-                __semio_install_extension_bundle();
             }
 
             // 🧬️ A2 (design-abi.md §1): one `world actor` for both roles now — extensions link the

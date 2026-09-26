@@ -46,6 +46,11 @@
       "agentValue": "two-client-agent"
     }
   },
+  "directoryPages": {
+    "spaces": 100,
+    "pageBudgetMs": 200,
+    "samples": 3
+  },
   "shutdown": {
     "closeCode": 1012,
     "gracefulExitWithinMs": 15000,
@@ -64,6 +69,7 @@
     "mint-two-sessions",
     "create-space",
     "admit-author-b",
+    "a-owns-100-more-spaces-space-list-and-event-pages-answer-within-the-page-budget",
     "create-note-artifact",
     "open-plan-and-socket-grants-both",
     "socket-hello-welcome-both",

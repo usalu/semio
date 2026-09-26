@@ -1272,11 +1272,74 @@ fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
     let mut cursor = FrameDeferredCursor::new(actions, true, true, true, false, 1, semio_framework_job::root_cancel_token());
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::ShellMaintenance)));
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::PumpSync)));
-    assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "one"));
-    assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "two"));
+    assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "one"));
+    assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "two"));
     assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::FlushTutorial)));
     assert!(cursor.take_next().is_none());
     assert!(cursor.terminal_is_empty());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn renderer_input_retirement_drains_ready_handback_resident_cursor_and_staged_actions() {
+    let runtime = native_reference_runtime();
+    let mut interaction = frame_maintenance_test_owner(141, 0).interaction.take().unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
+    let rows = fixture["receipts"].as_array().unwrap();
+    let mut groups = Vec::new();
+    for pair in rows.chunks(2) {
+        let mut batch = interaction.input.reserve_actions(pair.len(), pair.len() * 128).unwrap();
+        for row in pair {
+            batch.action("writer", row["action"].as_str().unwrap(), 128, |builder| {
+                builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt {
+                    token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap(),
+                })
+            }).unwrap();
+        }
+        batch.publish().unwrap();
+        let mut actions = FrameActionOwners::default();
+        for _ in pair {
+            assert!(matches!(transfer_frame_input_action(&mut interaction.input, &mut actions), Ok(FrameInputActionStep::Pending | FrameInputActionStep::Transferred)));
+        }
+        groups.push(actions);
+    }
+    let resident = groups.pop().unwrap();
+    let handback = groups.pop().unwrap();
+    let mut batch = interaction.input.reserve_actions(2, 256).unwrap();
+    for member in 0..2 {
+        batch.action("writer", "textEdit", 128, |builder| builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt {
+            token: std::num::NonZeroU64::new(fixture["stagedToken"].as_u64().unwrap()).unwrap(), member, abort_correlation_on_error: member == 0,
+        })).unwrap();
+    }
+    batch.publish().unwrap();
+    let mut staged = FrameActionOwners::default();
+    assert_eq!(transfer_frame_input_action(&mut interaction.input, &mut staged), Ok(FrameInputActionStep::Pending));
+    {
+        let mut owner = runtime.try_lock().unwrap();
+        owner.interaction = Some(interaction);
+        let returned = owner.check_out_interaction("receipt-retirement").unwrap();
+        owner.frame_actions = staged;
+        owner.pending_frame_deferred = Some(FrameDeferredCursor::new(resident, false, false, false, false, 141, semio_framework_job::root_cancel_token()));
+        let mut queue = runtime.0.completions.lock().unwrap();
+        assert!(queue.reserve_interaction());
+        queue.finish(returned_completion(141, RuntimeApply::ResumeFrameDeferred {
+            interaction: Some(returned), cursor: Some(FrameDeferredCursor::new(handback, false, false, false, false, 141, semio_framework_job::root_cancel_token())),
+        }));
+    }
+    assert!(!runtime.close_input_step());
+    assert!(runtime.try_lock().unwrap().interaction_available());
+    for step in 0..64 {
+        if runtime.close_input_step() {
+            assert!(step > 3);
+            break;
+        }
+        assert!(step < 63, "retirement must finish within its finite owner count");
+    }
+    let owner = runtime.try_lock().unwrap();
+    assert!(owner.pending_frame_deferred.is_none());
+    assert!(owner.frame_actions.is_empty());
+    assert!(owner.interaction.as_ref().unwrap().input.terminal_is_empty());
+    assert_eq!(runtime.0.completions.lock().unwrap().len(), 0);
 }
 
 #[test]
@@ -1323,14 +1386,14 @@ fn catalogue_terminal_pair_never_partially_enters_the_frame_action_owner() {
     batch.publish().unwrap();
     assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Deferred), "expected capacity pressure defers the whole source batch without faulting the frame");
     assert_eq!(input.take_action_batch_len_step(), Ok(Some(2)), "refusal retains the complete source batch at its original owner");
-    assert_eq!(actions.pop_front().unwrap().action, "occupied-0", "the previously published FIFO remains independently drainable");
+    assert_eq!(actions.pop_front().unwrap().descriptor.action, "occupied-0", "the previously published FIFO remains independently drainable");
     assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending), "one opportunity materializes only the first member into the staged owner");
     assert_eq!(input.take_action_batch_len_step(), Ok(Some(1)), "the unpublished drop remains source-owned between opportunities");
     assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Transferred));
     assert_eq!(input.take_action_batch_len_step(), Ok(None));
     let mut published = Vec::new();
     while let Some(action) = actions.pop_front() {
-        published.push(action.action);
+        published.push(action.descriptor.action);
     }
     assert_eq!(published.first().map(String::as_str), Some("occupied-1"));
     assert_eq!(published[published.len() - 2..].iter().map(String::as_str).collect::<Vec<_>>(), ["canvasDragLeave", "canvasDrop"]);
@@ -1362,7 +1425,7 @@ fn a_fault_after_staging_leave_retires_the_source_drop_before_a_later_single_dis
     assert!(faulted, "the batch fault becomes observable after bounded staged/source retirement");
     assert!(actions.is_empty(), "no terminal prefix entered the dispatch ledger");
     assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Transferred));
-    assert_eq!(actions.pop_front().unwrap().action, "later", "the independent successor remains the next dispatchable owner");
+    assert_eq!(actions.pop_front().unwrap().descriptor.action, "later", "the independent successor remains the next dispatchable owner");
     assert_eq!(input.take_action_batch_len_step(), Ok(None));
 }
 

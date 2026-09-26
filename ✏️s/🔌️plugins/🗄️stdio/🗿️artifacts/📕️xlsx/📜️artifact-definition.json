@@ -62,7 +62,7 @@
       "executable_registration": true,
       "native_factory": {
         "factory_id": "stdio.native.xlsx.v1",
-        "artifact_kind": "stdio.xlsx",
+        "artifact_kind": "s.stdio.xlsx",
         "artifact_schema": "stdio.xlsx",
         "extension": "xlsx",
         "pack_schema_hash": "52a9d42eed1d22504d190a8b6f9ab83a84b161dbf6a82d333d31c213ddff9cea",

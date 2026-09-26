@@ -1,0 +1,8 @@
+# S17 guest-linked crates whose code changed (session 13) — crate + reason
+semio-framework  VersionPin replaces VersionReq (manifest dependency = exact `=X.Y.Z` only, tree_pin!), + en/de descriptions for setHistoryCommandFilter/noteShellCommand/recordTutorial (every app's descriptor changes)
+semio-framework-os-kernel  `.sxt` PackagePluginDependency::from_json refuses non-exact pins
+semio-framework-plugin  builders' depends_on(id, VersionPin); test pins
+semio-s-plugin-procedural  flow-extension roster at the tree version (listFlowExtensions), single describe
+semio-s-plugin-demonstrator  depends_on(..., tree_pin!())
+semio-s-plugin-stdio  native_artifact_catalog_dependency via tree_pin!() (full-artifact-catalog only)
+ALL 26 extension crates (flow ×9, process ×4, cad ×4, imperative ×5, sourcing ×3, playbook-procedural)  exact parent pin tree_pin!(), own version = CARGO_PKG_VERSION (brep 0.3.0 / math 0.2.0 → tree version); descriptors MUST be re-described (committed ones carry `*`/`^0.1.0`, which the new decoder refuses → descriptor_is_fresh red until describe-all)

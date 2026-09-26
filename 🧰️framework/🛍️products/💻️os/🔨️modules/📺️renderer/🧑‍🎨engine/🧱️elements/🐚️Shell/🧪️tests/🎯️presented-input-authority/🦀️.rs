@@ -217,7 +217,7 @@ fn paint_retained_button_candidate(shell: &mut ShellState, surface: &str, docume
     let mut cursor = UiDocumentFrameCursor::default();
     let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
         let mut context = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
+        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
         let done = render_ui_document_step(&mut cursor, document, body, &mut context, surface, "s.test.presented-input", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
         assert!(done || !cursor.terminal_is_fault(), "the retained presentation document faulted in phase {}", cursor.phase_name());
         done

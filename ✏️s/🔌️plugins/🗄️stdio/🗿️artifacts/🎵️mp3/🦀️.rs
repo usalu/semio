@@ -64,7 +64,7 @@ pub const MP3_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp3", standar
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.mp3".into(),
+        id: "s.stdio.mp3".into(),
         name: "Mp3".into(),
         source_format: STDIO_MP3_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

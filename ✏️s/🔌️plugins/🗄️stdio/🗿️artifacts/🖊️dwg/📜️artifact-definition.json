@@ -87,7 +87,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.dwg.standard.ac1024.codec.native-document.v1", "status": "implemented", "from": "s.stdio.dwg.standard.ac1024.dialect.source", "to": "s.stdio.dwg.standard.ac1024.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.dwg.v1", "artifact_kind": "stdio.dwg", "artifact_schema": "stdio.dwg", "extension": "dwg", "pack_schema_hash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5", "runtime_capability_id": "s.stdio.dwg.standard.ac1018.codec.codec-stdio-dwg-extension-dwg.v1" } }
+    { "id": "s.stdio.dwg.standard.ac1024.codec.native-document.v1", "status": "implemented", "from": "s.stdio.dwg.standard.ac1024.dialect.source", "to": "s.stdio.dwg.standard.ac1024.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.dwg.v1", "artifact_kind": "s.stdio.dwg", "artifact_schema": "stdio.dwg", "extension": "dwg", "pack_schema_hash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5", "runtime_capability_id": "s.stdio.dwg.standard.ac1018.codec.codec-stdio-dwg-extension-dwg.v1" } }
   ],
   "mutations": [],
   "inferences": [],

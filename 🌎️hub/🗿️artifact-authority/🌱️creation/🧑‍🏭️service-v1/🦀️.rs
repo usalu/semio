@@ -240,6 +240,10 @@ impl ArtifactCreationServiceV1 {
         self.publish_prepared(operation, authority, &bounded).await
     }
 
+    /// 🧯️ Indeterminate is a status, not a reason. This arm is the one route out of a
+    /// prepared creation that writes no durable terminal fact, so without the sentence
+    /// the operator sees a creation stuck in `preparing` until the recovery sweep closes
+    /// it and nothing anywhere says why (ticket 26/09/18 slice HC1, hub 7681).
     async fn publish_prepared<A: ArtifactCreationCommitAuthorityV1>(&self, operation: ArtifactCreationOperationV1, authority: &A, context: &OperationContext<'_>) -> DirectoryResult<SpaceArtifactCreationStatusV1> {
         if operation.phase != SpaceArtifactCreationPhaseV1::Preparing {
             return Ok(operation.status());
@@ -255,10 +259,6 @@ impl ArtifactCreationServiceV1 {
         match CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(self.storage.clone()), publisher).publish_candidate(candidate, context).await {
             Ok(_) => Ok(self.read(&intent.actor.user_id, &intent.scope.space_id, &intent.request.request_id).await?.status()),
             Err(AuthorityError::Publication(detail)) => {
-                // 🧯️ Indeterminate is a status, not a reason. This arm is the one route out of a
-                // prepared creation that writes no durable terminal fact, so without the sentence
-                // the operator sees a creation stuck in `preparing` until the recovery sweep closes
-                // it and nothing anywhere says why (ticket 26/09/18 slice HC1, hub 7681).
                 context.control.fault(&format!("creation {} {}: genesis publication is indeterminate: {detail}", intent.scope.space_id, intent.request.request_id));
                 let current = self.read(&intent.actor.user_id, &intent.scope.space_id, &intent.request.request_id).await?;
                 if matches!(current.phase, SpaceArtifactCreationPhaseV1::Ready | SpaceArtifactCreationPhaseV1::Cancelled | SpaceArtifactCreationPhaseV1::Failed) {

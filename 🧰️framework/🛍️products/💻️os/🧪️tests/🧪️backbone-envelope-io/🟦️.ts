@@ -1513,19 +1513,20 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
   // real workspace package here exercises them under a config that DOES run, without this file taking
   // on a static dependency on `@semio-tech/framework`'s runtime exports.
   describe("@semio-tech/framework PluginGraph", () => {
-    it("validates a graph with every dependency present and version-satisfying", async () => {
+    it("validates a graph with every dependency present and exactly pinned", async () => {
       const { validatePluginDependencyGraph } = await import("@semio-tech/framework");
       expect(
         validatePluginDependencyGraph([
           { pluginId: "a", version: "1.2.3" },
-          { pluginId: "b", version: "1.0.0", dependencies: [{ pluginId: "a", version: "^1.0.0" }] },
+          { pluginId: "b", version: "1.0.0", dependencies: [{ pluginId: "a", version: "=1.2.3" }] },
+          { pluginId: "c", dependencies: [{ pluginId: "a" }] },
         ]),
       ).toEqual([]);
     });
 
     it("reports a missing dependency", async () => {
       const { validatePluginDependencyGraph } = await import("@semio-tech/framework");
-      expect(validatePluginDependencyGraph([{ pluginId: "b", dependencies: [{ pluginId: "missing", version: "*" }] }])).toEqual([
+      expect(validatePluginDependencyGraph([{ pluginId: "b", dependencies: [{ pluginId: "missing" }] }])).toEqual([
         { code: "transaction.dependency-missing", pluginId: "b", dependsOn: "missing" },
       ]);
     });
@@ -1535,9 +1536,9 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(
         validatePluginDependencyGraph([
           { pluginId: "a", version: "2.0.0" },
-          { pluginId: "b", dependencies: [{ pluginId: "a", version: "^1.0.0" }] },
+          { pluginId: "b", dependencies: [{ pluginId: "a", version: "=1.0.0" }] },
         ]),
-      ).toEqual([{ code: "transaction.version-mismatch", pluginId: "b", dependsOn: "a", required: "^1.0.0", actual: "2.0.0" }]);
+      ).toEqual([{ code: "transaction.version-mismatch", pluginId: "b", dependsOn: "a", required: "=1.0.0", actual: "2.0.0" }]);
     });
 
     it("resolves a diamond load order deterministically, tie-broken lexicographically", async () => {
@@ -1546,12 +1547,12 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         {
           pluginId: "d",
           dependencies: [
-            { pluginId: "b", version: "*" },
-            { pluginId: "c", version: "*" },
+            { pluginId: "b" },
+            { pluginId: "c" },
           ],
         },
-        { pluginId: "c", dependencies: [{ pluginId: "a", version: "*" }] },
-        { pluginId: "b", dependencies: [{ pluginId: "a", version: "*" }] },
+        { pluginId: "c", dependencies: [{ pluginId: "a" }] },
+        { pluginId: "b", dependencies: [{ pluginId: "a" }] },
         { pluginId: "a" },
       ]);
       expect(result.errors).toEqual([]);
@@ -1561,37 +1562,27 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("names every member of a cycle", async () => {
       const { resolvePluginLoadOrder } = await import("@semio-tech/framework");
       const result = resolvePluginLoadOrder([
-        { pluginId: "a", dependencies: [{ pluginId: "b", version: "*" }] },
-        { pluginId: "b", dependencies: [{ pluginId: "a", version: "*" }] },
+        { pluginId: "a", dependencies: [{ pluginId: "b" }] },
+        { pluginId: "b", dependencies: [{ pluginId: "a" }] },
       ]);
       expect(result.order).toEqual([]);
       expect(result.errors).toEqual([{ code: "transaction.cycle", members: ["a", "b"] }]);
     });
 
-    it("versionSatisfies matches the frozen grammar (*, =, ^, ~, >=), including caret's leading-zero tiers", async () => {
+    it("versionSatisfies admits only the exact pin and refuses every range", async () => {
       const { versionSatisfies } = await import("@semio-tech/framework");
-      expect(versionSatisfies("1.2.3", "*")).toBe(true);
       expect(versionSatisfies("1.2.3", "=1.2.3")).toBe(true);
       expect(versionSatisfies("1.2.4", "=1.2.3")).toBe(false);
-      expect(versionSatisfies("1.9.0", "^1.2.3")).toBe(true);
-      expect(versionSatisfies("2.0.0", "^1.2.3")).toBe(false);
-      expect(versionSatisfies("0.2.9", "^0.2.3")).toBe(true);
-      expect(versionSatisfies("0.3.0", "^0.2.3")).toBe(false);
-      expect(versionSatisfies("0.0.9", "^0.0.3")).toBe(false);
-      expect(versionSatisfies("0.0.3", "^0.0.3")).toBe(true);
-      expect(versionSatisfies("1.2.9", "~1.2.3")).toBe(true);
-      expect(versionSatisfies("1.3.0", "~1.2.3")).toBe(false);
-      expect(versionSatisfies("1.2.3", ">=1.2.3")).toBe(true);
-      expect(versionSatisfies("9.9.9", ">=1.2.3")).toBe(true);
-      expect(versionSatisfies("1.2.2", ">=1.2.3")).toBe(false);
+      expect(versionSatisfies("1.2.2", "=1.2.3")).toBe(false);
+      for (const range of ["*", "^1.2.3", "~1.2.3", ">=1.2.3", "1.2.3"]) expect(versionSatisfies("1.2.3", range)).toBe(false);
     });
 
     it("orderPluginRegistryEntries drops only the blocked entries, dependency-orders the rest", async () => {
       const { orderPluginRegistryEntries } = await import("@semio-tech/framework");
       const result = orderPluginRegistryEntries([
-        { pluginId: "b", moduleUrl: "b.js", dependencies: [{ pluginId: "a", version: "*" }] },
+        { pluginId: "b", moduleUrl: "b.js", dependencies: [{ pluginId: "a" }] },
         { pluginId: "a", moduleUrl: "a.js" },
-        { pluginId: "broken", moduleUrl: "broken.js", dependencies: [{ pluginId: "missing", version: "*" }] },
+        { pluginId: "broken", moduleUrl: "broken.js", dependencies: [{ pluginId: "missing" }] },
       ]);
       expect(result.order.map((entry) => entry.pluginId)).toEqual(["a", "b"]);
       expect(result.errors).toEqual([{ code: "transaction.dependency-missing", pluginId: "broken", dependsOn: "missing" }]);
@@ -1994,7 +1985,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
         inverseGroup = { invocationId, mutations: [mutationId], inverseMutations: [mutation.inverse] },
         mutationFrame = encodeAppFrame({ Invocation: { in_reply_to: fixture.commandRequest.actionSequence, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: Array.from(encodePackValue([mutation])), inverse_group: Array.from(encodePackValue(inverseGroup)) } }),
         mutationPublication = decodeBrowserActorCommandPublicationV1(mutationFrame, fixture.commandRequest.actionSequence),
-        envelope = { mutation_id: mutationId, actor: "actor-1", dependencies: ["prior"], diff: { schema: "demo/v1", payload: Uint8Array.from(forward) }, inverse: { schema: "demo/v1", payload: Uint8Array.from(inverse) }, timestamp: { actor: 7n, physical_ms: 8n, logical: 9n } };
+        envelope = { mutation_id: mutationId, actor: "actor-1", dependencies: ["prior"], observed: null, target: [], diff: { schema: "demo/v1", payload: Uint8Array.from(forward) }, inverse: { schema: "demo/v1", payload: Uint8Array.from(inverse) }, timestamp: { actor: 7n, physical_ms: 8n, logical: 9n } };
       expect(mutationPublication.kind).toBe("invocation");
       if (mutationPublication.kind !== "invocation") throw new Error("expected mutation invocation");
       expect(() => requireBrowserActorCommandBackboneProjectionV1(mutationPublication, [envelope])).not.toThrow();

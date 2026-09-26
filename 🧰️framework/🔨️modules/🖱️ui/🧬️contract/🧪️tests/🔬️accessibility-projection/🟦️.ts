@@ -31,6 +31,7 @@ type ExpectedRow = {
 };
 type ProgressCase = { readonly id: string; readonly component: Component; readonly fraction: number | null; readonly accessibility: { readonly role: string; readonly focusable: boolean; readonly valueMin: number | null; readonly valueMax: number | null; readonly valueNow: number | null; readonly valueText: string | null; readonly busy: boolean } };
 type Fixture = { readonly roles: readonly RoleRow[]; readonly document: { readonly nodes: readonly UiNodeRecord[] }; readonly expected: readonly ExpectedRow[]; readonly announced: readonly number[] };
+type ToggleCase = { readonly id: string; readonly component: Component; readonly accessibleLabel: string; readonly expected: { readonly role: string; readonly stateAttribute: "aria-pressed" | "aria-checked"; readonly stateValue: boolean } };
 
 /** ♿️ Answers every shared fixture row, returning how many assertions the corpus carried. */
 export function accessibilityProjectionSelfTests(): number {
@@ -44,6 +45,24 @@ export function accessibilityProjectionSelfTests(): number {
     checks += 2;
   }
   assert.equal(components.size, 19, "the fixture covers every one of the contract's 19 components");
+
+  const toggles = JSON.parse(readFileSync(fileURLToPath(new URL("../../🧫️fixtures/♿️retained-toggle-semantics/🔣️.json", import.meta.url)), "utf8")) as { readonly cases: readonly ToggleCase[] };
+  for (const [index, row] of toggles.cases.entries()) {
+    const record = {
+      id: index,
+      key: `#toggle-${index}`,
+      component: row.component,
+      layout: { kind: "leaf", width: "hug", height: "hug" },
+      style: {},
+      activity: "idle",
+      accessibility: { label: row.accessibleLabel },
+    } as UiNodeRecord;
+    const node = uiAccessibilityProjectionNodeV1(record, 0);
+    assert.equal(node.role, row.expected.role, `${row.id}: role`);
+    assert.equal(node.checked, row.expected.stateAttribute === "aria-checked" ? row.expected.stateValue : null, `${row.id}: checked`);
+    assert.equal(node.pressed, row.expected.stateAttribute === "aria-pressed" ? row.expected.stateValue : null, `${row.id}: pressed`);
+    checks += 3;
+  }
 
   const projection = fixture.expected.map((row) => {
     const record = fixture.document.nodes.find((node) => node.id === row.nodeId);
@@ -91,3 +110,5 @@ export function accessibilityProjectionSelfTests(): number {
   }
   return checks;
 }
+
+if (import.meta.main) console.log(`[DEBUG] accessibility-projection-twin checks=${accessibilityProjectionSelfTests()}`);

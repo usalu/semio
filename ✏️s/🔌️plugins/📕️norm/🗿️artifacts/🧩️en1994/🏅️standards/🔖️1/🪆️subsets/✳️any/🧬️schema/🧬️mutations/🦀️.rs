@@ -300,6 +300,17 @@ pub fn decode_en1994_mutation_json(text: &str) -> Result<En1994Mutation, String>
 pub fn encode_en1994_mutation_json(mutation: &En1994Mutation) -> String {
     pack::json::to_json_string(mutation)
 }
+/// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+pub fn apply_en1994_mutation(base: &En1994Snapshot, mutation: &En1994Mutation) -> Result<(En1994Snapshot, Vec<String>), String> {
+    let raised = <En1994Mutation as protocol::Mutation<En1994Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = <En1994Diff as protocol::MutationDiff<En1994Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+/// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+pub fn inverse_en1994_mutation(mutation: &En1994Mutation, base: &En1994Snapshot) -> Vec<En1994Mutation> {
+    <En1994Mutation as protocol::Mutation<En1994Snapshot>>::inverse(mutation, base)
+}
 //#endregion 🌉️ExternalCodecBridge
 
 #[cfg(test)]

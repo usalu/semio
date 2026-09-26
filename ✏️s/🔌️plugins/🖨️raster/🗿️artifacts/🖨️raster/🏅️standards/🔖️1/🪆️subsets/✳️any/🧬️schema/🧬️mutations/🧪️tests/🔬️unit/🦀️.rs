@@ -54,6 +54,7 @@ fn every_mutation() -> Vec<RasterMutation> {
         RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::ChangeLayerAdjustmentKind { layer_id: "adjust-1".into(), new_adjustment_kind: "curves".into() }),
         RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: "asset-1".into(), asset: RasterImageAsset { mime: "image/png".into(), data: ABC_ASSET_PNG.to_vec() } }),
         RasterMutation::RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset { asset_id: "asset-1".into() }),
+        RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels { layer_id: "l1".into(), expected_image_key: None, content: crate::RasterPixelContent { image_key: None, width: Some(256), height: Some(256) }, transform: None }),
     ]
 }
 

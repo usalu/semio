@@ -306,6 +306,12 @@ pub(crate) fn engine_surface_law_guard() -> std::sync::MutexGuard<'static, ()> {
     ENGINE_SURFACE_LAW_LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
+/// 🧹️ Retires a test's directly attached host through the bounded engine close ladder.
+#[cfg(test)]
+pub(crate) fn retire_engine_surface_fixture(host_id: &str) {
+    node_graph_attach_tests::drop_engine_surface(host_id);
+}
+
 #[cfg(test)]
 pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     let mut input = ui_wgpu::wgpu::InputState::default();
@@ -571,158 +577,4 @@ pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x:
         actions.push(events_action);
     }
     actions
-}
-
-#[cfg(test)]
-pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: KeyAction, modifiers: &PointerModifiers) -> Vec<ActionDescriptor> {
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.editor.as_mut() else {
-            return Vec::new();
-        };
-        match key {
-            KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
-                host.insert_text(&ch.to_string());
-            }
-            KeyAction::Backspace => host.backspace(),
-            KeyAction::Delete => host.delete_forward(),
-            KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
-                host.select_all();
-            }
-            _ => return Vec::new(),
-        }
-        text_editor_interaction_actions(scene, host)
-    })
-}
-
-#[cfg(test)]
-pub fn text_editor_wheel(scene: &UiComponentSceneNode, delta: f32) -> Vec<ActionDescriptor> {
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.editor.as_mut() else {
-            return Vec::new();
-        };
-        host.wheel_scroll_screen(delta as f64);
-        Vec::new()
-    })
-}
-
-#[cfg(test)]
-pub fn text_editor_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16) -> Vec<ActionDescriptor> {
-    let sx = (x - inner.x) as f64;
-    let sy = (y - inner.y) as f64;
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.editor.as_mut() else {
-            return Vec::new();
-        };
-        host.pointer_down_screen(sx, sy, button as i32);
-        text_editor_interaction_actions(scene, host)
-    })
-}
-
-#[cfg(test)]
-pub fn text_editor_pointer_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
-    let sx = (x - inner.x) as f64;
-    let sy = (y - inner.y) as f64;
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.editor.as_mut() else {
-            return Vec::new();
-        };
-        host.pointer_move_screen(sx, sy, 0);
-        text_editor_interaction_actions(scene, host)
-    })
-}
-
-#[cfg(test)]
-pub fn text_editor_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
-    let sx = (x - inner.x) as f64;
-    let sy = (y - inner.y) as f64;
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.editor.as_mut() else {
-            return Vec::new();
-        };
-        host.pointer_up_screen(sx, sy, 0);
-        text_editor_interaction_actions(scene, host)
-    })
-}
-
-#[cfg(test)]
-fn text_editor_interaction_actions(scene: &UiComponentSceneNode, host: &EditorHost) -> Vec<ActionDescriptor> {
-    vec![
-        crate::scenes::scene_action(
-            scene,
-            "textSelect",
-            json!({
-                "surfaceId": scene.surface_id,
-                "selectionJson": json!({ "start": host.anchor(), "end": host.caret() }).to_string(),
-            }),
-        ),
-        crate::scenes::scene_action(scene, "textEdit", json!({ "surfaceId": scene.surface_id, "document": host.text() })),
-    ]
-}
-
-#[cfg(test)]
-pub fn text_editor_select_span_at_screen(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
-    let sx = (x - inner.x) as f64;
-    let sy = (y - inner.y) as f64;
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.editor.as_mut() else {
-            return Vec::new();
-        };
-        host.select_span_at_screen(sx, sy);
-        text_editor_interaction_actions(scene, host)
-    })
-}
-
-#[cfg(test)]
-pub fn text_editor_set_selection(scene: &UiComponentSceneNode, anchor: usize, caret: usize) -> Vec<ActionDescriptor> {
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.editor.as_mut() else {
-            return Vec::new();
-        };
-        host.set_selection_range(anchor, caret);
-        text_editor_interaction_actions(scene, host)
-    })
-}
-
-#[cfg(test)]
-pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, prefix_start: usize, caret: usize, insert_text: &str) -> Vec<ActionDescriptor> {
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(&scene.surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.editor.as_mut() else {
-            return Vec::new();
-        };
-        host.set_selection_range(prefix_start, caret);
-        host.replace_selection(insert_text);
-        text_editor_interaction_actions(scene, host)
-    })
 }

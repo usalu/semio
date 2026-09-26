@@ -7,7 +7,9 @@
   "required": [
     "brushSize",
     "brushOpacity",
-    "camera"
+    "camera",
+    "brushColor",
+    "brushHardness"
   ],
   "properties": {
     "brushSize": {
@@ -26,6 +28,17 @@
     },
     "camera": {
       "$ref": "#/$defs/RasterCamera",
+      "x-semio-state": "config"
+    },
+    "brushColor": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "x-semio-state": "config"
+    },
+    "brushHardness": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
       "x-semio-state": "config"
     }
   },

@@ -255,24 +255,8 @@ fn sweep_dead_offers_in(directory: &Path) {
     }
 }
 
-#[cfg(unix)]
 fn write_owner_only(path: &Path, bytes: &[u8]) -> Result<(), GatewayError> {
-    use std::io::Write;
-    use std::os::unix::fs::OpenOptionsExt;
-    let mut file = std::fs::OpenOptions::new()
-        .create(true)
-        .truncate(true)
-        .write(true)
-        .mode(0o600)
-        .open(path)
-        .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot write `{}`: {error}", path.display())))?;
-    file.write_all(bytes).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-    file.flush().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))
-}
-
-#[cfg(not(unix))]
-fn write_owner_only(path: &Path, bytes: &[u8]) -> Result<(), GatewayError> {
-    std::fs::write(path, bytes).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot write `{}`: {error}", path.display())))
+    crate::owner_only::write_owner_only(path, bytes).map_err(|reason| GatewayError::new(GatewayErrorCode::Internal, reason))
 }
 //#endregion 🔖️Offer
 

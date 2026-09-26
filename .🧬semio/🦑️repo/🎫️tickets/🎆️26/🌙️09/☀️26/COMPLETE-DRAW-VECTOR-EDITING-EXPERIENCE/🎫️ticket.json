@@ -1,0 +1,10 @@
+{
+  "title": "Complete Draw Vector Editing Experience",
+  "emoji": "🖍️",
+  "status": "open",
+  "description": "Make Draw feature-complete and usable for end users: layers, paths, selection, algorithms, image editing, accessible localized UI, undo and runtime validation. Existing completeness ticket disappeared from disk during attempted MCP reopen.",
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningdraw🎯runningdrawing",
+  "sessions": [
+    "⚪4e15734b84a242d08d76e5dc4e09ff5c"
+  ]
+}

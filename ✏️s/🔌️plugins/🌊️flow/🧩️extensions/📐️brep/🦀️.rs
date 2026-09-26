@@ -2020,7 +2020,7 @@ pub async fn register(registry: &mut Registry) {
 
 /// 🛂️ Manifest JSON for host contribution install (tests + packaging metadata).
 pub async fn extension_manifest_json() -> String {
-    build_manifest_json("brep", "Brep", "0.3.0", &neural_engine::ColdOwner::new(module_registry().await), vec!["onStartup".into()], vec![], vec![], vec![])
+    build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &neural_engine::ColdOwner::new(module_registry().await), vec!["onStartup".into()], vec![], vec![], vec![])
 }
 
 pub async fn module_registry() -> Registry {
@@ -2059,7 +2059,7 @@ mod extension_guest {
         let manifest_json = semio_framework::io::resolve_ready(super::extension_manifest_json());
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
-        let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0").extends("flow").depends_on("flow", semio_framework::VersionReq::Any);
+        let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", env!("CARGO_PKG_VERSION")).extends("flow").depends_on("flow", semio_framework::tree_pin!());
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);

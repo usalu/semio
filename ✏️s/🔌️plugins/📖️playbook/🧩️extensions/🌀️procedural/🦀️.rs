@@ -942,21 +942,21 @@ fn solid_format_arg() -> ActionArgDef {
 fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
     Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID)
         .label("Playbook Module Procedural")
-        .version("0.1.0")
+        .version(env!("CARGO_PKG_VERSION"))
         .package_id("semio:playbook-module-procedural")
         // 🔗️ `MODULE_APP_ID` binds this surface to the `s.playbook.procedural` artifact kind, whose
         // canonical owner is `playbook`; `surface_dependency_breaches` refuses a manifest that
         // contributes a foreign surface without naming that owner, and the refusal arrives as the
         // `assembly-failed` stub that killed the whole `playbook` activation in `materialize dev`.
         // The sibling `ExtensionBundle` already declared the same edge — the plugin bundle did not.
-        .depends_on("playbook", VersionReq::parse("^0.1.0").expect("declared playbook version"))
+        .depends_on("playbook", semio_framework::tree_pin!())
         .foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA)
         .document_app::<ModuleApp>(resolve_ready(create_module_app())?)
         .try_build()
 }
 
 fn module_extension_bundle() -> ExtensionBundle {
-    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").depends_on("playbook", VersionReq::parse("^0.1.0").expect("declared playbook version")).mode(ExecutionMode::Isolated).contributes_topic(
+    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", env!("CARGO_PKG_VERSION")).extends("playbook").depends_on("playbook", semio_framework::tree_pin!()).mode(ExecutionMode::Isolated).contributes_topic(
         "playbook.blockKind",
         DslValue::object([
             ("appId".to_string(), DslValue::String(MODULE_APP_ID.to_string())),

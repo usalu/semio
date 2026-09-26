@@ -358,7 +358,7 @@ impl CheckBuilder {
                 status = CheckStatus::Warning;
             }
         }
-        debug_assert!(status != CheckStatus::Fail || !self.remedies.is_empty(), "Fail checks must carry at least one remedy");
+        debug_assert!(status != CheckStatus::Fail || !self.remedies.is_empty(), "Fail checks must carry at least one remedy: id={}", self.id);
         CheckResult {
             id: self.id,
             part: self.part,

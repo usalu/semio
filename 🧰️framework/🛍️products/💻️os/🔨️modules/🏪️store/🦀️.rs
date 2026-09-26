@@ -11021,15 +11021,6 @@ pub trait ComponentDocumentCodec: Send + Sync {
     fn pack_schema_hash(&self) -> ComponentDocumentCodecFuture<'_, [u8; 32]>;
     /// 📥️ `codec.print-mirror`: the pair's text mirror, which is also its validation fence.
     fn print_mirror<'a>(&'a self, pack: &'a [u8], spr: &'a [u8]) -> ComponentDocumentCodecFuture<'a, ArtifactTextFiles>;
-    /// 🌱️ `codec.genesis`: the zero-history document of `document_id` the component mints.
-    fn genesis<'a>(&'a self, document_id: &'a str) -> ComponentDocumentCodecFuture<'a, ComponentDocumentGenesis>;
-}
-
-/// 🌱️ One document's genesis pair as its owning component minted it.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ComponentDocumentGenesis {
-    pub pack: Vec<u8>,
-    pub spr: Vec<u8>,
 }
 
 /// @emoji 🧭️ The one codec a document owner resolves for a schema: the Rust codec this binary links
@@ -11081,23 +11072,6 @@ pub async fn document_kind_codec(schema: &str) -> Result<Option<DocumentKindCode
     }
     let registry = component_document_codec_registry().read().map_err(|_| DocumentCodecRegistryError::Unavailable)?;
     Ok(registry.get(schema).cloned().map(DocumentKindCodec::Component))
-}
-
-/// 🌱️ The genesis of `document_id` as the mounted component that owns `schema` mints it, refused
-/// unless it is a zero-history document of exactly that identity; `None` when no mounted component
-/// owns the kind. Creation authority is the component's, always — the hub's trusted catalog seeds a
-/// new artifact through the same export and the same check (`🌎️hub/🗿️artifact-authority/
-/// 🔏️trusted-catalog`, `initial_pair`) — so a host that opens a document on this genesis starts from
-/// the hub's own baseline, and every mutation it authors carries the document's identity.
-pub async fn component_document_genesis(schema: &str, document_id: &str) -> Result<Option<ComponentDocumentGenesis>, VcsError> {
-    let codec = component_document_codec_registry().read().map_err(|_| VcsError::ValidationFailed("component codec registry is unavailable".into()))?.get(schema).cloned();
-    let Some(codec) = codec else { return Ok(None) };
-    let genesis = codec.genesis(document_id).await?;
-    let log = crate::os_spr::decode_history(&genesis.spr, &crate::os_spr::DecodeOptions::default()).await.map_err(|error| VcsError::Deserialize(format!("component genesis history for {schema:?}: {error}")))?;
-    if log.doc_id != document_id || log.schema != schema || !log.edits.is_empty() || !log.transitions.is_empty() || !log.conflicts.is_empty() {
-        return Err(VcsError::ValidationFailed(format!("component genesis for {schema:?} is not a zero-history document {document_id:?}")));
-    }
-    Ok(Some(genesis))
 }
 
 /// @emoji 📜️ Reads the document schema id from an encoded `.spr` history log.
@@ -15286,6 +15260,7 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     phase: ArtifactStoreOneItemPublicationPhase,
     coalesce_key: Option<String>,
     outbound: bool,
+    announce_from: usize,
 }
 
 impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
@@ -17194,7 +17169,7 @@ where
             return Ok(false);
         }
         publication.outbound = false;
-        self.flush_apply_outbound().await?;
+        self.flush_apply_outbound(publication.announce_from, publication.admitted_items).await?;
         Ok(true)
     }
 
@@ -17335,6 +17310,7 @@ where
             phase: ArtifactStoreOneItemPublicationPhase::Preparing,
             coalesce_key: None,
             outbound,
+            announce_from: 0,
         })
     }
 
@@ -17506,6 +17482,7 @@ where
                     let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
                     let generation_before = self.generation;
                     if let Some(existing) = self.envelope.vcs.edits.iter_mut().find(|candidate| candidate.id == edit_id) {
+                        publication.announce_from = existing.forwards.len();
                         existing.forwards.extend(edit.forwards);
                         existing.inverse.extend(edit.inverse);
                         existing.mutation_meta.extend(edit.mutation_meta);
@@ -17531,6 +17508,7 @@ where
                 let reservation = self.reserve_edit_history_slot()?;
                 let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
                 let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, applied_edit_id, tail_edit_id, digest, .. } = *stage;
+                publication.announce_from = 0;
                 let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
                 let generation_before = self.generation;
                 let pre_snapshot = Arc::clone(&self.current);
@@ -17780,12 +17758,32 @@ where
 
     /// @emoji ✉️ `edit`'s operations as causal wire envelopes — one per forward operation.
     fn operation_envelopes(&self, edit: &Edit<Mutation>) -> Result<Vec<crate::os_spr::MutationEnvelope>, VcsError> {
-        crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &ArtifactId(self.envelope.id.clone()), &SchemaId(self.envelope.schema.clone())).map_err(|error| VcsError::Serialize(error.to_string()))
+        self.operation_envelopes_since(edit, 0)
     }
 
-    /// @emoji 📤️ Marks locally authored `operations` applied in the causal graph and queues them for
-    /// this command's outbound announcement.
-    fn announce_operations(&mut self, operations: Vec<crate::os_spr::MutationEnvelope>) -> Result<(), VcsError> {
+    /// @emoji ✂️ The envelopes of `edit`'s operations from position `from` on: the range an amend appended.
+    fn operation_envelopes_since(&self, edit: &Edit<Mutation>, from: usize) -> Result<Vec<crate::os_spr::MutationEnvelope>, VcsError> {
+        crate::os_spr::mutation_envelopes_from_edit_since::<P, Mutation>(edit, from, &ArtifactId(self.envelope.id.clone()), &SchemaId(self.envelope.schema.clone())).map_err(|error| VcsError::Serialize(error.to_string()))
+    }
+
+    /// @emoji 👁️ The newest operation of an author other than `actor` this replica has applied — how far
+    /// an operation `actor` authors now has seen the other authors' work. Remote edits join the ledger in
+    /// arrival order, which is the hub's commit order; an undone edit was seen all the same.
+    fn observed_foreign_operation(&self, actor: &str) -> Option<MutationId> {
+        let edit = self.envelope.vcs.edits.iter().rev().find(|edit| edit.actor.as_deref().is_some_and(|author| author != actor))?;
+        crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).pop()
+    }
+
+    /// @emoji 📤️ Marks locally authored `operations` applied in the causal graph, stamps each with the
+    /// foreign operation its author had observed (advisory, never an ordering constraint) and queues
+    /// them for this command's outbound announcement. Announcement happens when the command authors
+    /// them, so an edit made during a connection shortage names what its author saw THEN.
+    fn announce_operations(&mut self, mut operations: Vec<crate::os_spr::MutationEnvelope>) -> Result<(), VcsError> {
+        for operation in &mut operations {
+            if operation.observed.is_none() {
+                operation.observed = self.observed_foreign_operation(&operation.actor.0);
+            }
+        }
         for operation in &operations {
             match self.dag.seed_applied(operation.mutation_id.clone()) {
                 Ok(()) => {}
@@ -18199,7 +18197,7 @@ where
                 edit.finished_at = Some(now_iso());
             }
             let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
-            let operations = self.operation_envelopes(edit)?.split_off(announced_from);
+            let operations = self.operation_envelopes_since(edit, announced_from)?;
             self.record_edit_messages(&edit_id, messages)?;
             self.replace_current_retained(Arc::new(post))?;
             self.announce_operations(operations)?;
@@ -19166,32 +19164,24 @@ where
         result
     }
 
-    async fn flush_apply_outbound(&mut self) -> Result<(), VcsError> {
-        let Some(mut backbone) = self.backbone.take() else {
+    /// @emoji 📤️ Announces exactly the `items` operations ONE outbound batched publication appended at
+    /// position `from` of the tail applied edit, through the command outbound queue that
+    /// `flush_outbound` drains. A coalesced gesture AMENDS the tail edit the previous gesture already
+    /// announced; announcing the whole edit re-sent every earlier, already Accepted operation and the
+    /// hub refused the batch as a replay (ticket 26/09/23 C10 09:4x: `[edit-A#0, edit-B#0]` on the
+    /// second keystroke of a hub writer).
+    async fn flush_apply_outbound(&mut self, from: usize, items: usize) -> Result<(), VcsError> {
+        if self.backbone.is_none() {
             return Ok(());
-        };
-        let result = match self.envelope.vcs.edits.last() {
-            Some(edit) => {
-                let document_id = ArtifactId(self.envelope.id.clone());
-                let schema = SchemaId(self.envelope.schema.clone());
-                match crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema) {
-                    Ok(op_envelopes) => {
-                        for op_envelope in &op_envelopes {
-                            match self.dag.seed_applied(op_envelope.mutation_id.clone()) {
-                                Ok(()) => {}
-                                Err(rejected) if rejected.error == crate::os_spr::MutationDagError::Duplicate => {}
-                                Err(rejected) => return Err(VcsError::ValidationFailed(rejected.error.to_string())),
-                            }
-                        }
-                        backbone.send(BackboneMessage::Mutations { envelopes: crate::os_spr::encode_envelopes(&op_envelopes) }).await
-                    }
-                    Err(error) => Err(VcsError::Serialize(error.to_string())),
-                }
-            }
-            None => Ok(()),
-        };
-        self.replace_backbone_retained(Some(backbone))?;
-        result
+        }
+        let tail = self.applied_edit_ids.last().ok_or_else(|| VcsError::ValidationFailed("outbound batched publication has no applied tail edit".into()))?;
+        let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *tail).ok_or_else(|| VcsError::UnknownEdit(tail.clone()))?;
+        if edit.forwards.len() != from.saturating_add(items) {
+            return Err(VcsError::ValidationFailed("outbound batched publication no longer names the tail edit it appended to".into()));
+        }
+        let operations = self.operation_envelopes_since(edit, from)?;
+        self.announce_operations(operations)?;
+        self.flush_outbound().await
     }
 
     /// @emoji 🖋️ Whether `edit_id` was authored by the local actor. Unauthored (legacy) edits count

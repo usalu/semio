@@ -3,6 +3,39 @@
 
   "version": "0.2.0",
   "configurations": [
+{
+  "name": "🧪️test🖍️draw🟦️",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/draw-js:test",
+  "cwd": "${workspaceFolder}",
+  "presentation": {
+    "group": "3_dev",
+    "order": 386.4
+  }
+},
+{
+  "name": "🧪️test🖍️draw🦀️",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/draw-drawing-rs:test",
+  "cwd": "${workspaceFolder}",
+  "presentation": {
+    "group": "3_dev",
+    "order": 386.5
+  }
+},
+{
+  "name": "🔍️check🖍️draw🦀️",
+  "type": "node-terminal",
+  "request": "launch",
+  "command": "bun nx run @semio-tech/draw-drawing-rs:check",
+  "cwd": "${workspaceFolder}",
+  "presentation": {
+    "group": "3_dev",
+    "order": 386.6
+  }
+},
     {
       "name": "📚️deps print tex",
       "type": "node-terminal",
@@ -111,6 +144,17 @@
       "presentation": {
         "group": "3_dev",
         "order": -49.9
+      }
+    },
+    {
+      "name": "🏭️generate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.8
       }
     },
     {
@@ -320,6 +364,28 @@
       "presentation": {
         "group": "3_dev",
         "order": -38
+      }
+    },
+    {
+      "name": "🧪️test⚡️cache-command-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:test-cache-command-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": -11.5
+      }
+    },
+    {
+      "name": "⚖️gate🦀️cargo🧾️build-dir-provenance",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:cargo-provenance-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": -11.4
       }
     },
     {
@@ -3168,6 +3234,50 @@
       }
     },
     {
+      "name": "🧪️test🖨️raster🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/raster-js:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.7
+      }
+    },
+    {
+      "name": "🧪️test🖨️raster🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/raster-raster-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.8
+      }
+    },
+    {
+      "name": "🧪️test🔲️pixels🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pixels:test-typescript",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.9
+      }
+    },
+    {
+      "name": "🧪️test🔲️pixels🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pixels:test-rust",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.0
+      }
+    },
+    {
       "name": "🛠️dev🖨️raster⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -3496,6 +3606,79 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):8787)",
         "uriFormat": "%s/admin"
+      }
+    },
+    {
+      "name": "🛠️dev🗄️os-hub🐘️postgres",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:dev-postgres",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_HUB_PORT": "8787",
+        "OS_HUB_DATA": "${workspaceFolder}/.🧬semio/🌐hub/hub-dev-postgres/"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.002
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):8787)",
+        "uriFormat": "%s/admin"
+      }
+    },
+    {
+      "name": "🛠️dev🗄️os-hub🕸️neo4j",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:dev-neo4j",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_HUB_PORT": "8787",
+        "OS_HUB_DATA": "${workspaceFolder}/.🧬semio/🌐hub/hub-dev-neo4j/"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.003
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):8787)",
+        "uriFormat": "%s/admin"
+      }
+    },
+    {
+      "name": "🛠️dev🐳️hub-backends⬆️up",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:backend-up -- all",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.004
+      }
+    },
+    {
+      "name": "🛠️dev🐳️hub-backends🩺️status",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:backend-status -- all",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.005
+      }
+    },
+    {
+      "name": "🛠️dev🐳️hub-backends⬇️down",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:backend-down -- all",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.006
       }
     },
     {
@@ -4353,6 +4536,17 @@
       }
     },
     {
+      "name": "🛫️preflight-catalog🗄️os-hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:trusted-catalog-preflight --packages all",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.160145
+      }
+    },
+    {
       "name": "🚚️publish-catalog🗄️os-hub",
       "type": "node-terminal",
       "request": "launch",
@@ -4606,6 +4800,39 @@
       }
     },
     {
+      "name": "📦️test🪟️windows🧭️command-paths",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-windows-command-paths",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1775
+      }
+    },
+    {
+      "name": "📦️test🦀️cargo🧾️provenance",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:test-cargo-provenance",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.178
+      }
+    },
+    {
+      "name": "🧹clean🦀️cargo🧾️provenance",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:cargo-provenance-repair",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.179
+      }
+    },
+    {
       "name": "📦️check🗿️taxonomy",
       "type": "node-terminal",
       "request": "launch",
@@ -4672,7 +4899,6 @@
       }
     },
     {
-    {
       "name": "📦️generate📕️norm🪨️en1996🖼️example-assets",
       "type": "node-terminal",
       "request": "launch",
@@ -4683,6 +4909,7 @@
         "order": 206.16915
       }
     },
+    {
       "name": "📦️generate🧬️surface-schema",
       "type": "node-terminal",
       "request": "launch",
@@ -4702,6 +4929,28 @@
       "presentation": {
         "group": "4_build",
         "order": 206.1692
+      }
+    },
+    {
+      "name": "📦️generate✨️dsl-derive🧬️mutation-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-derive-rs:generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1693
+      }
+    },
+    {
+      "name": "📦️check✨️dsl-derive🧬️mutation-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-derive-rs:check-generated",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1694
       }
     },
     {
@@ -5519,6 +5768,196 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.21
+      }
+    },
+    {
+      "name": "⚖️gate🎯️repo-goal",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal -- --hub ${input:acceptanceHubUrl} --serve ${input:acceptanceServeUrl} --users ${input:acceptanceUsers}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.22
+      }
+    },
+    {
+      "name": "⚖️gate🎯️repo-goal📋️plan",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-plan",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.23
+      }
+    },
+    {
+      "name": "⚖️gate🧮️program-matrix⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- ${input:acceptanceServeUrl} --tag launch-en --locale en --roles editor,viewer",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.24
+      }
+    },
+    {
+      "name": "⚖️gate🧮️program-matrix⚛️react🌐️de",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- ${input:acceptanceServeUrl} --tag launch-de --locale de --roles editor",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.25
+      }
+    },
+    {
+      "name": "⚖️gate👥️two-human⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:two-human -- --hub ${input:acceptanceHubUrl} --serve ${input:acceptanceServeUrl} --users ${input:acceptanceUsers} --locale en",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.26
+      }
+    },
+    {
+      "name": "⚖️gate👥️two-human⚛️react🌐️de",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:two-human -- --hub ${input:acceptanceHubUrl} --serve ${input:acceptanceServeUrl} --users ${input:acceptanceUsers} --locale de",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.27
+      }
+    },
+    {
+      "name": "⚖️gate🔀️connection-budget⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:connection-budget -- ${input:acceptanceServeUrl}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.275
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🧩️plugin-coverage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:plugin-coverage-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.28
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🚶️user-path",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:user-path-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "S_OS_MCP_LIVE_SHELL_URL": "${input:acceptanceServeUrl}",
+        "S_OS_MCP_LIVE_LOCALE": "en"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.29
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🚶️user-path🌐️de",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:user-path-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "S_OS_MCP_LIVE_SHELL_URL": "${input:acceptanceServeUrl}",
+        "S_OS_MCP_LIVE_LOCALE": "de"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.3
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🛡️security",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:security-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "OS_HUB_ADMIN_CAPABILITY_FILE": "${input:acceptanceHubAdminCapability}"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.301
+      }
+    },
+    {
+      "name": "⚖️gate💾️hub-backup-restore",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:backup-restore-drill",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.31
+      }
+    },
+    {
+      "name": "⚖️gate🧠️hub-residency",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:residency-watch -- --hub ${input:acceptanceHubUrl}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.32
+      }
+    },
+    {
+      "name": "⚖️gate🏷️hub-freshness",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:hub-freshness -- --hub ${input:acceptanceHubUrl}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      }
+    },
+    {
+      "name": "⚖️gate🚧️production-placeholders",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- production-placeholders",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.34
+      }
+    },
+    {
+      "name": "⚖️gate🎛️command-reachability",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- interactivity commands",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.35
       }
     },
     {
@@ -7100,5 +7539,29 @@
       "id": "catalogFreshBuildRoot",
       "type": "promptString",
       "description": "Absolute fresh plugin catalog build root"
+    },
+    {
+      "id": "acceptanceHubUrl",
+      "type": "promptString",
+      "description": "Hub under acceptance (origin)",
+      "default": "http://127.0.0.1:7800"
+    },
+    {
+      "id": "acceptanceServeUrl",
+      "type": "promptString",
+      "description": "s React serve joined to that hub",
+      "default": "http://127.0.0.1:6070/"
+    },
+    {
+      "id": "acceptanceHubAdminCapability",
+      "type": "promptString",
+      "description": "The hub launcher's admin-capability.json (0600) for gates that read the hub's connection census",
+      "default": ""
+    },
+    {
+      "id": "acceptanceUsers",
+      "type": "promptString",
+      "description": "Optional JSON file {\"users\":[{\"email\",\"password\"}…]} with the hub's test users (empty: each gate's development users)",
+      "default": ""
     }
   ]}

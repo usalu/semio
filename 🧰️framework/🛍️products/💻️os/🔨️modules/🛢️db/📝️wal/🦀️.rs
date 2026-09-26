@@ -283,6 +283,7 @@ impl WalBytes {
             return Err(WalBytesRejected { source: source.into_value().ok(), writer: Some(writer), error });
         }
         let mut offset = 0;
+        let mut turn = WalTurn::start();
         while offset < source.as_slice().map_err(|error| WalBytesRejected { source: None, writer: None, error })?.len() {
             if let Err(error) = control.grant() {
                 return Err(WalBytesRejected { source: source.into_value().ok(), writer: Some(writer), error });
@@ -291,14 +292,14 @@ impl WalBytes {
                 Ok(written) => offset += written,
                 Err(error) => return Err(WalBytesRejected { source: source.into_value().ok(), writer: Some(writer), error }),
             }
-            semio_framework_async::yield_once().await;
+            turn.step().await;
         }
         while !source.terminal_is_empty() {
             if let Err(error) = control.grant() {
                 return Err(WalBytesRejected { source: None, writer: Some(writer), error });
             }
             let _ = source.close_step();
-            semio_framework_async::yield_once().await;
+            turn.step().await;
         }
         if let Err(error) = reservation.close_step() {
             return Err(WalBytesRejected { source: None, writer: Some(writer), error });
@@ -309,13 +310,16 @@ impl WalBytes {
         })
     }
 
-    async fn copy_for_operation(operation: u64, source: &[u8], control: &mut WalCursorControl) -> Result<Self, DbError> {
+    /// @emoji 🧺️ Stages `source` under an operation that already holds DB I/O credit, so every record
+    /// of one transaction shares one ledger slot instead of each claiming its own.
+    pub async fn copy_for_operation(operation: u64, source: &[u8], control: &mut WalCursorControl) -> Result<Self, DbError> {
         let mut writer = db_storage::DbIoPageWriter::try_reserve_for_operation(operation, source.len().div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
         let mut offset = 0;
+        let mut turn = WalTurn::start();
         while offset < source.len() {
             control.grant()?;
             offset += writer.write_fragment(&source[offset..])?;
-            semio_framework_async::yield_once().await;
+            turn.step().await;
         }
         writer.seal_retained().await.map(|pages| Self { pages }).map_err(db_storage::DbIoPageWriterRejected::into_error)
     }
@@ -341,8 +345,13 @@ impl WalBytes {
         db_storage::db_io_prepare_platform(&self.pages)?.await
     }
 
-    pub async fn hash(&self) -> [u8; 32] {
-        db_storage::db_io_hash_pages(&self.pages).await.0
+    /// 🔏️ The record's content hash in one bounded step (a record spans at most one operation's pages).
+    pub fn hash(&self) -> [u8; 32] {
+        let mut hasher = semio_framework_hash::Hasher::new();
+        for fragment in self.fragments() {
+            hasher.update(fragment);
+        }
+        *hasher.finalize().as_bytes()
     }
 
     pub fn close_step(&mut self) -> Result<Option<usize>, DbError> {
@@ -405,15 +414,29 @@ impl<'bytes> WalBytesCursor<'bytes> {
         Ok(copied)
     }
 
-    pub fn text(&mut self, maximum: u64, control: &mut WalCursorControl) -> Result<String, DbError> {
+    /// 📦️ One length-prefixed field copied out page by page; its length is checked against
+    /// `maximum` and against what the record still holds before anything is allocated.
+    pub fn field(&mut self, maximum: u64, control: &mut WalCursorControl) -> Result<Vec<u8>, DbError> {
         let mut remaining = self.begin_field(maximum, control)?;
         let mut output = Vec::with_capacity(remaining);
-        let mut fragment = [0u8; 1024];
         while remaining != 0 {
-            let copied = self.read_field_fragment(&mut remaining, &mut fragment, control)?;
-            output.extend_from_slice(&fragment[..copied]);
+            control.grant()?;
+            let page = (self.offset / db_storage::DB_IO_PAGE_BYTES) as u8;
+            let page_offset = self.offset % db_storage::DB_IO_PAGE_BYTES;
+            let fragment = self.bytes.pages.page(page).ok_or_else(|| DbError::Corrupt("wal retained field ended early".to_string()))?;
+            let copied = remaining.min(fragment.len().saturating_sub(page_offset));
+            if copied == 0 {
+                return Err(DbError::Corrupt("wal retained field cursor stalled".to_string()));
+            }
+            output.extend_from_slice(&fragment[page_offset..page_offset + copied]);
+            self.offset += copied;
+            remaining -= copied;
         }
-        String::from_utf8(output).map_err(|_| DbError::Corrupt("wal retained text is not valid utf-8".to_string()))
+        Ok(output)
+    }
+
+    pub fn text(&mut self, maximum: u64, control: &mut WalCursorControl) -> Result<String, DbError> {
+        String::from_utf8(self.field(maximum, control)?).map_err(|_| DbError::Corrupt("wal retained text is not valid utf-8".to_string()))
     }
 }
 
@@ -2110,6 +2133,31 @@ pub const WAL_REPLAY_STEP_STALL_BOUND: std::time::Duration = std::time::Duration
 
 /// ⛽️ Fuel one step of a whole-document WAL scan may spend.
 pub const WAL_REPLAY_STEP_FUEL: usize = 1_000_000;
+
+/// ⏲️ How long one cooperative turn of a WAL walk or staging copy runs before it yields to its executor.
+pub const WAL_TURN: std::time::Duration = std::time::Duration::from_millis(1);
+
+/// 🤝️ Batches bounded WAL steps into cooperative turns: a cursor `Yield`, a record close step, a
+/// decoded record or a staged fragment continues inline until the turn's time budget is spent, and
+/// only then does the caller yield once to its executor. Yielding after every frame, record and
+/// fragment handed the caller's whole future chain back to its executor thousands of times per
+/// reopened document and once per staged command of every commit.
+pub struct WalTurn {
+    ends: std::time::Instant,
+}
+
+impl WalTurn {
+    pub fn start() -> Self {
+        Self { ends: std::time::Instant::now() + WAL_TURN }
+    }
+
+    pub async fn step(&mut self) {
+        if std::time::Instant::now() >= self.ends {
+            semio_framework_async::yield_once().await;
+            self.ends = std::time::Instant::now() + WAL_TURN;
+        }
+    }
+}
 
 /// 🤝️ Keeps the source segment and current decoded body borrowed until explicit retirement.
 pub struct WalCommittedTransaction<'cursor, 'storage, S: db_storage::WalStorage> {

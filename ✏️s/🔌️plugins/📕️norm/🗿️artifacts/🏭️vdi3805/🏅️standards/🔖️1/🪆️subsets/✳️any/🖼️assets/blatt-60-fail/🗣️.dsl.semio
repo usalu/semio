@@ -1,0 +1,45 @@
+semio norm.vdi3805.dsl v1
+strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="2023-06-01" charset=UTF-8 record-count=0 building-system-number=system-code="420" subsystem="10" sequence=1 extensions=fields={
+}
+extensions=fields={
+}
+products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
+  COMP-50 {manufacturer-code=DEMO product-group=COMP article-number=COMP-50} [ {locale=de text="Kompensator DN50"} {locale=en text="Compensator DN50"} ] 60 [ {family="100" fields=[ "100" DEMO COMP COMP-50 "60" ] extensions=fields={
+  }
+  } {family="210" fields=[ "210" axial_force_n "-1" connection_type INVALID dn "-1" pressure_class INVALID product_group COMP ] extensions=fields={
+  }
+  } {family="700" fields=[ "700" de "Kompensator DN50" en "Compensator DN50" ] extensions=fields={
+  }
+  } ] {id=cfg.COMP-50 attributes={
+    entries=[ {
+      key="product_group" unit=null value="COMP"
+    }
+ {
+      key="dn" unit=null value="-1"
+    }
+ {
+      key="pressure_class" unit=null value="INVALID"
+    }
+ {
+      key="connection_type" unit=null value="INVALID"
+    }
+ {
+      key="axial_force_n" unit=null value="-1"
+    }
+    ] kind="generic"
+  }
+  function-refs=[ ]} [ ] [ ] {fields={
+  }
+  }
+}
+edition-profile={
+}
+correction-as-of=year=2024 month=1 index=
+entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
+  COMP-50 60 [ "Kompensator DN50" "Compensator DN50" ] _
+}
+geometry={
+}
+curves={
+}
+limits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32

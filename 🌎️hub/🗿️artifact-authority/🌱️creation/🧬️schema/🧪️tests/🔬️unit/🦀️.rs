@@ -146,5 +146,4 @@ fn creation_facts_follow_neutral_terminal_and_exact_pair_transitions() {
         }
         assert!(ArtifactCreationOperationV1::fold(&facts).is_err(), "{case}");
     }
-    println!("[DEBUG] creation fact reducer: neutral transitions=30 cancellation races=9 hostile identities/pairs/receipts=14 independent Node intent SHA256=1; backend persistence not executed");
 }

@@ -11,71 +11,71 @@ name = "p8-probe-harness"
 path = "main.rs"
 
 [dependencies]
-semio-framework-plugin = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"] }
-semio-framework-async = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-s-artifact-animate-presentation = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust" }
-semio-s-artifact-architect-program = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust" }
-semio-s-artifact-block-2d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-block-3d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-block-5d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-cad-cad = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust" }
-semio-s-artifact-dag-dag = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
-semio-s-artifact-demonstrator-playground = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust" }
-semio-s-artifact-draw-drawing = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust" }
-semio-s-artifact-energy-model = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust" }
-semio-s-artifact-fem-2d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-fem-3d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-flow-flow = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust" }
-semio-s-artifact-forms-forms = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust" }
-semio-s-artifact-gis-gismap = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-gis-gisterrain = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-imperative-procedure = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust" }
-semio-s-artifact-layout-layout = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust" }
-semio-s-artifact-lowpoly-lowpoly = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust" }
-semio-s-artifact-mathematical-equation = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust" }
-semio-s-artifact-norm-din16798 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust" }
-semio-s-artifact-norm-din18599 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust" }
-semio-s-artifact-norm-din4108 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1990 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1991 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1992 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1993 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1994 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1995 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1996 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1997 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1998 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1999 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust" }
-semio-s-artifact-norm-iso16757 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust" }
-semio-s-artifact-norm-vdi3805 = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust" }
-semio-s-artifact-note-note = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust" }
-semio-s-artifact-playbook-playbook = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust" }
-semio-s-artifact-procedural-generation2d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-procedural-generation3d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-process-process3d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust" }
-semio-s-artifact-puzzle-2d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-puzzle-3d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-puzzle-5d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-raster-raster = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust" }
-semio-s-artifact-reasoning-wires = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust" }
-semio-s-artifact-remodel-remodeling = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust" }
-semio-s-artifact-sequence-sequence = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust" }
-semio-s-artifact-shooting-shooting = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust" }
-semio-s-artifact-sourcing-curation = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust" }
-semio-s-artifact-space-space = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-stdio-csv = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-stdio-html = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-stdio-json = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-stdio-md = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-stdio-tsv = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-stdio-txt = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-stdio-xml = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-trinity-jack = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-trinity-rewriting = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-vcs-vcs = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust" }
-semio-s-artifact-wfc-2d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-wfc-3d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-wfc-bitmap = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-wfc-grid2d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-wfc-grid3d = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
-semio-s-artifact-writer-writer = { path = "/private/tmp/claude-501/-Users-ueli-Documents-semio/22ef121e-93af-4799-ae3e-86d044e1f6cd/scratchpad/p8-clone/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"] }
+semio-framework-async = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-s-artifact-animate-presentation = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust" }
+semio-s-artifact-architect-program = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust" }
+semio-s-artifact-block-2d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-block-3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-block-5d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-cad-cad = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust" }
+semio-s-artifact-dag-dag = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
+semio-s-artifact-demonstrator-playground = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust" }
+semio-s-artifact-fem-2d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-fem-3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-flow-flow = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust" }
+semio-s-artifact-forms-forms = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust" }
+semio-s-artifact-gis-gismap = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-gis-gisterrain = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-imperative-procedure = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust" }
+semio-s-artifact-lowpoly-lowpoly = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust" }
+semio-s-artifact-mathematical-equation = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust" }
+semio-s-artifact-norm-din16798 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust" }
+semio-s-artifact-norm-din18599 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust" }
+semio-s-artifact-norm-din4108 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1990 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1991 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1992 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1993 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1994 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1995 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1996 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1997 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1998 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1999 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust" }
+semio-s-artifact-norm-iso16757 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust" }
+semio-s-artifact-norm-vdi3805 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust" }
+semio-s-artifact-note-note = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust" }
+semio-s-artifact-playbook-playbook = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust" }
+semio-s-artifact-procedural-generation2d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-procedural-generation3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-process-process3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust" }
+semio-s-artifact-puzzle-2d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-puzzle-3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-puzzle-5d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-raster-raster = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust" }
+semio-s-artifact-reasoning-wires = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust" }
+semio-s-artifact-remodel-remodeling = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust" }
+semio-s-artifact-sequence-sequence = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust" }
+semio-s-artifact-shooting-shooting = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust" }
+semio-s-artifact-sourcing-curation = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust" }
+semio-s-artifact-space-space = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-stdio-csv = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-stdio-html = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-stdio-json = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-stdio-md = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-stdio-tsv = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-stdio-txt = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-stdio-xml = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-trinity-jack = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-trinity-rewriting = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-vcs-vcs = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust" }
+semio-s-artifact-wfc-2d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-wfc-3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-wfc-bitmap = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-wfc-grid2d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-wfc-grid3d = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust", features = ["component-app-assembly"] }
+semio-s-artifact-writer-writer = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust" }

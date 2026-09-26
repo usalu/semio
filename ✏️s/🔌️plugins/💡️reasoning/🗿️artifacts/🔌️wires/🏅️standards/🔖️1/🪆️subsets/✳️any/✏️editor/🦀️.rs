@@ -23,7 +23,6 @@ use semio_framework_plugin::{
     INTERACTION_SELECT_ACTION_ID,
 };
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use serde_json::{json, Value};
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -100,12 +99,18 @@ pub const WIRES_INTERACTION_GRAPH: &str = "graph";
 pub const WIRES_GRANULARITY_NODE: &str = "node";
 pub const WIRES_GRANULARITY_EDGE: &str = "edge";
 
-/// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` at `granularity` — shared by
-/// the canvas pointer/add commands (wrapped into a `Effect::DispatchAction`) and any document-tree
-/// row whose click should select a real canvas identity/relationship.
-pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) -> Value {
-    let targets: Vec<Value> = ids.iter().map(|id| json!({ "granularity": granularity, "id": id })).collect();
-    json!({ "domainId": WIRES_INTERACTION_GRAPH, "targets": serde_json::to_string(&targets).unwrap_or_default(), "merge": merge, "method": "pick" })
+/// 🕹️ Builds `interactionSelect`'s args for one merge over `ids` at `granularity` — shared by the canvas pointer/add
+/// commands (wrapped into a `Effect::DispatchAction`) and any document-tree row whose click should select a real canvas
+/// identity/relationship. `targets` is the JSON text of the target list, written by the in-repo JSON writer.
+pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) -> dsl::DslValue {
+    let text = |value: &str| dsl::DslValue::String(value.to_string());
+    let targets = dsl::DslValue::Array(ids.iter().map(|id| dsl::DslValue::object([("granularity".to_string(), text(granularity)), ("id".to_string(), text(id))])).collect());
+    dsl::DslValue::object([
+        ("domainId".to_string(), text(WIRES_INTERACTION_GRAPH)),
+        ("targets".to_string(), text(&dsl::os_pack::json::to_string(&dsl::os_pack::json::from_dsl_value(&targets)))),
+        ("merge".to_string(), text(merge)),
+        ("method".to_string(), text("pick")),
+    ])
 }
 
 /// 🕹️ Wraps [`wires_select_action_args`] into the redispatch effect a canvas gesture's own `handle`
@@ -114,7 +119,7 @@ pub fn wires_select_action_args(ids: &[String], granularity: &str, merge: &str) 
 /// asks the host to redispatch `interactionSelect` instead (master doc: "surfaces do geometric
 /// hit-testing and emit one batched `interactionSelect`").
 pub fn wires_select_effect(ids: &[String], granularity: &str, merge: &str) -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(112), action: INTERACTION_SELECT_ACTION_ID.into(), args: semio_framework::optional_json_to_dsl(Some(wires_select_action_args(ids, granularity, merge))), delay_ms: 0 }
+    Effect::DispatchAction { req: semio_framework_plugin::RequestId(112), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(wires_select_action_args(ids, granularity, merge)), delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
 

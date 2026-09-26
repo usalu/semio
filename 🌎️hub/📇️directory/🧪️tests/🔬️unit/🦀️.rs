@@ -975,7 +975,6 @@ async fn artifact_chunk_cas_filesystem_process_sweep_and_publication_race_preser
     drop(blobs);
     drop(service);
     std::fs::remove_dir_all(root).expect("remove process race root");
-    println!("[DEBUG] Filesystem CAS process race: dedicated genesis=1 edited successor=1 separate-process stale deletion refusal=1 exact pair readbacks=4");
 }
 
 #[tokio::test]
@@ -1123,7 +1122,6 @@ fn memory_projection_is_atomic_and_fixed_caps_reject_max_plus_one() {
     let probe = RebuildProbe { cancelled: AtomicBool::new(false), cancel_after_first: false, progress: std::sync::Mutex::new(Vec::new()) };
     checkpoint_projection_rebuild(&probe, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS).expect("rebuild exact maximum");
     assert!(checkpoint_projection_rebuild(&probe, 0, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS + 1).is_err());
-    println!("[DEBUG] Neutral checkpoint projection: genuine indexed zero-history root=1 edited children=2 indexless root refusal=1 rootless child refusal=1 late root refusal=1 atomic retention rollback=1 fixed lineage/rebuild caps=2");
 }
 
 #[test]
@@ -1215,7 +1213,6 @@ async fn artifact_chunk_cas_sqlite_and_filesystem_restart_rebuild_restore_exact_
     drop(blobs);
     drop(reopened);
     std::fs::remove_dir_all(&root).expect("remove exact restart test directory");
-    println!("[DEBUG] SQLite filesystem checkpoint restart: dedicated genesis=1 edited child=1 same-root reopen=1 exact authority/pair/ledger after rebuild=1");
 }
 
 #[tokio::test]
@@ -1548,7 +1545,6 @@ async fn invite_archive_projection_serializes_independent_service_decisions() {
         assert_eq!(probe.excluded.load(Ordering::SeqCst), row["rebuildWriterExcluded"].as_bool().unwrap(), "rebuild owns backend writer before counting events");
         drop(probe);
         assert_eq!(directory.get_role(&space, &member.id).await.unwrap(), Some(SpaceRole::Spectator));
-        eprintln!("[DEBUG] independent directory archive case={} accepted={} role=spectator rebuilt=1 connections=2", row["name"], result.is_ok());
         drop(first);
         drop(second);
         drop(directory);
@@ -1594,7 +1590,6 @@ async fn directory_command_uncertain_commit_retains_claim_and_never_reexecutes()
     assert!(matches!(retry, DirectoryCommandExecutionV1::Receipt(receipt) if receipt.events.is_empty()));
     assert_eq!(directory.head_seq().await.unwrap(), head + 1);
     assert!(matches!(messages.try_recv(), Err(tokio::sync::broadcast::error::TryRecvError::Empty)));
-    eprintln!("[DEBUG] directory uncertain commit durable=1 claim=pending repeated=0 publication=0");
 }
 
 /// 🎟️ A projection failure rolls back the accepted marker and event so the exact capability remains retryable.

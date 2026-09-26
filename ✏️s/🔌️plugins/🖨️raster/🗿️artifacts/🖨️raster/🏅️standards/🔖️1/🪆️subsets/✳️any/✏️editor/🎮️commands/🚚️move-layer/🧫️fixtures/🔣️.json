@@ -1,0 +1,263 @@
+{
+  "document": {
+    "schema": "s.raster.raster",
+    "id": "reorder",
+    "title": "Reorder",
+    "layers": [
+      {
+        "kind": "pixel",
+        "id": "a",
+        "name": "a",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        },
+        "mask": null,
+        "width": 2,
+        "height": 2,
+        "imageKey": null
+      },
+      {
+        "kind": "group",
+        "id": "group",
+        "name": "group",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        },
+        "mask": null,
+        "children": [
+          {
+            "kind": "pixel",
+            "id": "child.1",
+            "name": "child.1",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0
+            },
+            "mask": null,
+            "width": 2,
+            "height": 2,
+            "imageKey": null
+          },
+          {
+            "kind": "pixel",
+            "id": "child.2",
+            "name": "child.2",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0
+            },
+            "mask": null,
+            "width": 2,
+            "height": 2,
+            "imageKey": null
+          },
+          {
+            "kind": "group",
+            "id": "nested",
+            "name": "nested",
+            "visible": true,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0
+            },
+            "mask": null,
+            "children": []
+          }
+        ]
+      },
+      {
+        "kind": "pixel",
+        "id": "b",
+        "name": "b",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        },
+        "mask": null,
+        "width": 2,
+        "height": 2,
+        "imageKey": null
+      },
+      {
+        "kind": "pixel",
+        "id": "c",
+        "name": "c",
+        "visible": true,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0
+        },
+        "mask": null,
+        "width": 2,
+        "height": 2,
+        "imageKey": null
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "forward sibling",
+      "layerId": "a",
+      "targetRowId": "b",
+      "dropPosition": "after",
+      "parentId": null,
+      "index": 2,
+      "noOp": false
+    },
+    {
+      "name": "backward sibling",
+      "layerId": "c",
+      "targetRowId": "a",
+      "dropPosition": "before",
+      "parentId": null,
+      "index": 0,
+      "noOp": false
+    },
+    {
+      "name": "group sibling",
+      "layerId": "c",
+      "targetRowId": "group",
+      "dropPosition": "before",
+      "parentId": null,
+      "index": 1,
+      "noOp": false
+    },
+    {
+      "name": "after group",
+      "layerId": "a",
+      "targetRowId": "group",
+      "dropPosition": "after",
+      "parentId": null,
+      "index": 1,
+      "noOp": false
+    },
+    {
+      "name": "into group",
+      "layerId": "b",
+      "targetRowId": "group",
+      "dropPosition": "inside",
+      "parentId": "group",
+      "index": 3,
+      "noOp": false
+    },
+    {
+      "name": "within group",
+      "layerId": "child.1",
+      "targetRowId": "child.2",
+      "dropPosition": "after",
+      "parentId": "group",
+      "index": 1,
+      "noOp": false
+    },
+    {
+      "name": "out of group",
+      "layerId": "child.1",
+      "targetRowId": "b",
+      "dropPosition": "before",
+      "parentId": null,
+      "index": 2,
+      "noOp": false
+    },
+    {
+      "name": "into nested",
+      "layerId": "a",
+      "targetRowId": "nested",
+      "dropPosition": "inside",
+      "parentId": "nested",
+      "index": 0,
+      "noOp": false
+    },
+    {
+      "name": "already before",
+      "layerId": "a",
+      "targetRowId": "group",
+      "dropPosition": "before",
+      "parentId": null,
+      "index": 0,
+      "noOp": true
+    },
+    {
+      "name": "self",
+      "layerId": "a",
+      "targetRowId": "a",
+      "dropPosition": "after",
+      "parentId": null,
+      "index": 0,
+      "noOp": true
+    }
+  ],
+  "invalid": [
+    {
+      "layerId": "missing",
+      "targetRowId": "a",
+      "dropPosition": "after"
+    },
+    {
+      "layerId": "a",
+      "targetRowId": "missing",
+      "dropPosition": "after"
+    },
+    {
+      "layerId": "a",
+      "targetRowId": "b",
+      "dropPosition": "inside"
+    },
+    {
+      "layerId": "group",
+      "targetRowId": "nested",
+      "dropPosition": "inside"
+    },
+    {
+      "layerId": "group",
+      "targetRowId": "child.1",
+      "dropPosition": "before"
+    },
+    {
+      "layerId": "a",
+      "targetRowId": "b",
+      "dropPosition": "sideways"
+    }
+  ]
+}

@@ -79,6 +79,7 @@ mod value_round_trip_tests {
             drag_data: None,
             items: None,
             control: Some(UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog1".into(), icon_id: IconName::Save, text: None, on_change: act("toggle"), presence: UiPresence::default(), menu: None })),
+            inline_toolbar: None, detail: None,
             dimmed: Some(false),
             menu: Some(UiMenuRef { id: "menu-1".into(), args: None }),
         };

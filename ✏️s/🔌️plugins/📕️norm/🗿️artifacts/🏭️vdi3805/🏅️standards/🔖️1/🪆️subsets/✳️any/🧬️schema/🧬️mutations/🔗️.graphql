@@ -9,7 +9,6 @@ type Vdi3805Mutation {
   index: String! @state(class: ARTIFACT)
   geometry: [Vdi3805StringMapEntry!]! @state(class: ARTIFACT)
   curves: [Vdi3805StringMapEntry!]! @state(class: ARTIFACT)
-  limits: String! @state(class: ARTIFACT)
 }
 
 type Vdi3805StringMapEntry { key: String! value: String! }

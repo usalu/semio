@@ -1,6 +1,6 @@
 //! 🔄 ISO 16757-5 exchange process, part numbers, IFC/STEP, script limits.
 
-use super::common::{assess, copy, fail, na, pass, q_dim, subject};
+use super::common::{assess, copy, fail, na, pass, q_dim, subject, controlled_ordinal, reference_slot_score};
 use crate::document::{CheckReport, CheckStatus, Remedy, RemedyBound};
 use crate::part_5::{ExchangeProcess, PartNumberRule};
 use crate::artifact_schema::part_5::ScriptRuntime;
@@ -402,7 +402,7 @@ fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                     format!("Fix part-number inputs/rule so evaluation succeeds (error: {err})."),
                     format!("Teilenummer-Eingaben/Regel so korrigieren, dass die Auswertung gelingt (Fehler: {err})."),
                 ),
-                applicable: true,
+                applicable: false,
             }];
             if err.contains("timeout") || err.contains("step") || err.contains("recursion") {
                 remedies.push(Remedy::at_least(
@@ -432,16 +432,87 @@ fn check_part_number(doc: &Iso16757Snapshot, report: &mut CheckReport) {
 }
 
 fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
+    let limits = doc.script_limits;
+    // Part 5 §8 — limits always govern evaluation capacity (even when rule is not a script).
+    report.push(assess(
+        "iso16757.5.8.scriptLimits.capacity",
+        "5",
+        "8",
+        subject("scriptLimits", "scriptLimits.maxSteps", "Script limits", "Skriptgrenzen"),
+        copy("Script execution capacity", "Skriptausführungskapazität"),
+        copy(
+            format!("scriptLimits capacity steps={} recursion={} timeoutMs={}.", limits.max_steps, limits.max_recursion, limits.timeout_ms),
+            format!("scriptLimits Kapazität steps={} recursion={} timeoutMs={}.", limits.max_steps, limits.max_recursion, limits.timeout_ms),
+        ),
+        CheckStatus::Pass,
+        q_dim(f64::from(limits.max_steps)),
+        q_dim(f64::from(limits.max_recursion).max(1.0) + limits.timeout_ms as f64 / 1000.0),
+        Vec::new(),
+    ));
+    report.push(assess(
+        "iso16757.5.8.scriptLimits.recursion",
+        "5",
+        "8",
+        subject("scriptLimits", "scriptLimits.maxRecursion", "Script recursion limit", "Skript-Rekursionsschranke"),
+        copy("Script recursion limit", "Skript-Rekursionsschranke"),
+        copy(
+            format!("maxRecursion is {}.", limits.max_recursion),
+            format!("maxRecursion ist {}.", limits.max_recursion),
+        ),
+        CheckStatus::Pass,
+        q_dim(f64::from(limits.max_recursion)),
+        q_dim(f64::from(limits.max_recursion)),
+        Vec::new(),
+    ));
     match &doc.part_number_rule {
-        PartNumberRule::Script { source, .. } => {
+        PartNumberRule::Script { source, function_id, .. } => {
             let runtime = helpers::DefaultScriptRuntime;
+            if function_id.trim().is_empty() {
+                report.push(fail(
+                    "iso16757.5.8.functionId",
+                    "5",
+                    "8",
+                    subject("partNumber", "partNumberRule.function_id", "Part number function", "Teilenummer-Funktion"),
+                    copy("Part-number function id", "Teilenummer-Funktions-Id"),
+                    copy("Script part-number rule requires a non-empty function_id (Part 5 §8).", "Skript-Teilenummer-Regel erfordert nicht-leere function_id (Teil 5 §8)."),
+                    vec![Remedy {
+                        target: subject("partNumber", "partNumberRule.function_id", "Part number function", "Teilenummer-Funktion"),
+                        current: q_dim(0.0),
+                        required: q_dim(1.0),
+                        bound: RemedyBound::OneOf,
+                        options: vec!["partno".into()],
+                        action: copy("Set partNumberRule.function_id to the script entry function.", "partNumberRule.function_id auf die Skript-Einstiegsfunktion setzen."),
+                        applicable: true,
+                    }],
+                ));
+            } else {
+                report.push(assess(
+                    "iso16757.5.8.functionId",
+                    "5",
+                    "8",
+                    subject("partNumber", "partNumberRule.function_id", "Part number function", "Teilenummer-Funktion"),
+                    copy("Part-number function id", "Teilenummer-Funktions-Id"),
+                    copy(
+                        format!("Part-number function_id is '{function_id}'."),
+                        format!("Teilenummer-function_id ist '{function_id}'."),
+                    ),
+                    CheckStatus::Pass,
+                    q_dim({
+                        let allowed = ["partno", "main", "article", "sku", "orderCode"];
+                        let ord = controlled_ordinal(function_id, &allowed);
+                        if ord > 0.0 { ord } else { reference_slot_score(function_id, allowed) }
+                    }),
+                    q_dim(1.0),
+                    Vec::new(),
+                ));
+            }
             // Guard: document script must not allow division by zero when zero denominators appear
-            if source.contains("/0") || source.contains("/ 0") {
+            if source.contains("/0") || source.contains("/ 0") || source.contains("/(0)") || source.contains("/ (0)") {
                 report.push(fail(
                     "iso16757.5.8.scriptSafety",
                     "5",
                     "8",
-                    subject("partNumber", "partNumberRule", "Part number rule", "Teilenummer-Regel"),
+                    subject("partNumber", "partNumberRule.source", "Part number rule", "Teilenummer-Regel"),
                     copy("Script safety", "Skriptsicherheit"),
                     copy("Part-number script literally divides by zero.", "Teilenummer-Skript dividiert wörtlich durch null."),
                     vec![Remedy {
@@ -456,22 +527,22 @@ fn check_script_limits(doc: &Iso16757Snapshot, report: &mut CheckReport) {
                 ));
                 return;
             }
-            let limits = doc.script_limits;
-
-            // Part 5 §8 — declared scriptLimits participate in evaluation capacity.
+            // Source participates via operator/token structure (Part 5 §8) — not string length.
+            let source_ops = source.chars().filter(|c| matches!(c, '+' | '-' | '*' | '/' | '(' | ')')).count() as f64;
+            let source_idents = source.split(|c: char| !c.is_ascii_alphanumeric() && c != '_').filter(|s| !s.is_empty()).count() as f64;
             report.push(assess(
-                "iso16757.5.8.scriptLimits.capacity",
+                "iso16757.5.8.scriptSource",
                 "5",
                 "8",
-                subject("scriptLimits", "scriptLimits.maxSteps", "Script limits", "Skriptgrenzen"),
-                copy("Script execution capacity", "Skriptausführungskapazität"),
+                subject("partNumber", "partNumberRule.source", "Part number rule", "Teilenummer-Regel"),
+                copy("Part-number script source", "Teilenummer-Skriptquelle"),
                 copy(
-                    format!("scriptLimits capacity steps={} recursion={} timeoutMs={}.", limits.max_steps, limits.max_recursion, limits.timeout_ms),
-                    format!("scriptLimits Kapazität steps={} recursion={} timeoutMs={}.", limits.max_steps, limits.max_recursion, limits.timeout_ms),
+                    format!("Part-number script has {source_ops} operator(s) and {source_idents} token(s)."),
+                    format!("Teilenummer-Skript hat {source_ops} Operator(en) und {source_idents} Token."),
                 ),
                 CheckStatus::Pass,
-                q_dim(f64::from(limits.max_steps)),
-                q_dim(f64::from(limits.max_recursion).max(1.0) * 1.0 + limits.timeout_ms as f64 / 1000.0),
+                q_dim(source_ops * 100.0 + source_idents),
+                q_dim(source_ops * 100.0 + source_idents),
                 Vec::new(),
             ));
 

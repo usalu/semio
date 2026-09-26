@@ -70,6 +70,12 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
       return;
     }
+    if (segments[0] === "windows-command-paths") {
+      if (segments.length !== 1) throw new Error("Expected test windows-command-paths");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🪟️windows-command-paths/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
     if (segments[0] === "kind-only-basename") {
       if (segments.length !== 1) throw new Error("Expected test kind-only-basename");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🌳️kind-only-basename/🟦️.ts");

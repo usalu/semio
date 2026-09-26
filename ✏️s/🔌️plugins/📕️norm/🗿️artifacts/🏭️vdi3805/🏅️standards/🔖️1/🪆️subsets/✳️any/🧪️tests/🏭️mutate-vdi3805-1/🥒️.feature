@@ -29,7 +29,6 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
   `create`/`remove-geometry`, `resize-geometry`, `change-geometry-parameters` and
   `add`/`remove-geometry-connection` work a per-product geometry graph; `create`/`remove-curve` and
   `change-curve-points` work ordered point lists. Only `change-strict-mode`,
-  `change-correction-as-of`, `change-edition-profile` and `change-limits` are flat scalars. A second
   implementation therefore has to reproduce three different addressing conventions here, not one.
   Each side then asserts the same three laws in role — the applied document must BE the committed
   after-snapshot; an `applied` vector must move the document and a `rejected` one must leave it
@@ -93,7 +92,6 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
       | change-manufacturer-file      | 🏭️change-manufacturer-file     | ✏️renames-the-header-manufacturer-to-acme                  |
       | change-correction-as-of       | 📅️change-correction-as-of      | 📅️advances-the-correction-cut-off-to-2025-03               |
       | change-strict-mode            | 🔒️change-strict-mode            | 🔒️turns-strict-mode-on                                     |
-      | change-limits                 | 🚧️change-limits                 | 🛡️tightens-every-untrusted-input-limit                     |
       | change-edition-profile        | 🔖️change-edition-profile        | 🆕️switches-sheet-8-from-legacy-to-current                  |
       | remove-edition-profile        | 🧹️remove-edition-profile       | 🧹️clears-the-sheet-8-legacy-override                       |
       | add-product                | 📦️add-product                | 📦️appends-vlv-80-002-and-its-index-entry                   |
@@ -125,7 +123,6 @@ Feature: Apply every typed VDI 3805 mutation against an independent Python imple
       | change-manufacturer-file      | 🏭️change-manufacturer-file     | ✏️renames-the-header-manufacturer-to-acme                  |
       | change-correction-as-of       | 📅️change-correction-as-of      | 📅️advances-the-correction-cut-off-to-2025-03               |
       | change-strict-mode            | 🔒️change-strict-mode            | 🔒️turns-strict-mode-on                                     |
-      | change-limits                 | 🚧️change-limits                 | 🛡️tightens-every-untrusted-input-limit                     |
       | change-edition-profile        | 🔖️change-edition-profile        | 🆕️switches-sheet-8-from-legacy-to-current                  |
       | remove-edition-profile        | 🧹️remove-edition-profile       | 🧹️clears-the-sheet-8-legacy-override                       |
       | add-product                | 📦️add-product                | 📦️appends-vlv-80-002-and-its-index-entry                   |

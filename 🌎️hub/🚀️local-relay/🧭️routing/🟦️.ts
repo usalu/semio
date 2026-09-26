@@ -71,7 +71,7 @@ export function localRelayUpstreamPath(method: string, url: URL): string | undef
   const noQuery = url.search === "";
   if (method === "GET" && upstream === "/auth/sessions/me" && noQuery) return upstream;
   if (method === "POST" && upstream === "/auth/sessions" && noQuery) return upstream;
-  if (method === "DELETE" && upstream === "/auth/sessions/me" && noQuery) return upstream;
+  if (method === "POST" && upstream === "/auth/sessions/me/sign-out" && noQuery) return upstream;
   if (method === "POST" && upstream === "/auth/credentials" && noQuery) return upstream;
   if (noQuery && localRelayInviteRedemptionPath(method, upstream)) return upstream;
   if (method === "GET" && (upstream === "/directory/spaces" || /^\/directory\/spaces\/[^/]+$/u.test(upstream)) && noQuery) return upstream;

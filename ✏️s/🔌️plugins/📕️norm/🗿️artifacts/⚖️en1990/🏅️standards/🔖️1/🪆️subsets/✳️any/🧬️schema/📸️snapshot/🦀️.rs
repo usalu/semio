@@ -71,7 +71,7 @@ impl Default for En1990Snapshot {
             annex: AnnexChoice::De,
             project_id: "office-cc2".into(),
             structure_kind: "building".into(),
-            altitude_m: 0.0,
+            altitude_m: 1200.0,
             consequence_class: 2,
             reliability_class: 2,
             design_working_life_category: 4,
@@ -88,6 +88,7 @@ impl Default for En1990Snapshot {
             variables: vec![
                 VariableAction { id: "Q-office".into(), category: "office".into(), qk: 40_000.0 },
                 VariableAction { id: "Q-wind".into(), category: "wind".into(), qk: 20_000.0 },
+                VariableAction { id: "Q-snow".into(), category: "snow".into(), qk: 15_000.0 },
             ],
             accidentals: vec![],
             seismics: vec![],
@@ -112,6 +113,7 @@ impl Default for En1990Snapshot {
                 MemberEffect { member_id: "beam-B1".into(), action_id: "G-inf".into(), influence: 1.0 },
                 MemberEffect { member_id: "beam-B1".into(), action_id: "Q-office".into(), influence: 1.0 },
                 MemberEffect { member_id: "beam-B1".into(), action_id: "Q-wind".into(), influence: 1.0 },
+                MemberEffect { member_id: "beam-B1".into(), action_id: "Q-snow".into(), influence: 1.0 },
             ],
         }
     }

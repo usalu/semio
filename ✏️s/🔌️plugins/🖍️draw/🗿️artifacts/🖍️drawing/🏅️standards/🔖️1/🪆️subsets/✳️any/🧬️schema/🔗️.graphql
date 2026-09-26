@@ -29,3 +29,13 @@ type DrawingArtboard {
   width: Float!
   height: Float!
 }
+
+# ✏️ Typed path geometry shared by editing and persistence.
+type PathPoint { x: Float! y: Float! }
+type PathMove { to: PathPoint! }
+type PathLine { to: PathPoint! }
+type PathQuad { ctrl: PathPoint! to: PathPoint! }
+type PathCubic { ctrl1: PathPoint! ctrl2: PathPoint! to: PathPoint! }
+type PathArc { rx: Float! ry: Float! rotation: Float! largeArc: Boolean! sweep: Boolean! to: PathPoint! }
+type PathClose { kind: String! }
+union PathSegment = PathMove | PathLine | PathQuad | PathCubic | PathArc | PathClose

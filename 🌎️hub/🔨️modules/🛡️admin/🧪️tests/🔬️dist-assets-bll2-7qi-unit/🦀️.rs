@@ -176,6 +176,25 @@ async fn unregister_drops_the_instance_and_shrinks_actor_count() {
 /// what actually proves the `JobBudget` mechanism resumes rather than just completing once),
 /// and observes the completion reach the ORIGINATING actor as a real `Event::JobCompleted` on
 /// a LATER `execute_turn` call — not merely that `step_job` returned `Done` in isolation.
+///
+/// 🔀️ `run_job_to_completion`'s own two-arm shape (Running.../Done) but with TWO `Running`
+/// steps first — the resumability proof: a job that finished on step 1 would not
+/// distinguish "the budget mechanism resumed it" from "it happened to be a one-shot call".
+///
+/// 🔚️ Whatever `execute_turn` call eventually receives the `Event::JobCompleted` (pump 4,
+/// below) still needs a scripted outcome to return — an ordinary idle turn is enough since
+/// this test only asserts what EVENTS that call was given, not its own output.
+///
+/// Pump 1 owns only the spawning turn. The seed then advances through its finite replay
+/// admission opportunities before the first explicit job-step authority is accepted.
+///
+/// Pump 4: still no new envelope — but the Done step queued an `Event::JobCompleted` for
+/// delivery, so the actor is driven ONE more time purely to receive it.
+///
+/// 🎯️ The actual end-to-end proof: the ORIGINATING actor's `execute_turn` was, at some
+/// point, handed a real `Event::JobCompleted{job: 777, result: Ok(..)}` — not merely that
+/// `step_job` internally returned `Done` (`job_outcomes` above already showed that; this is
+/// the part M5 found completely missing: nothing delivered it back).
 #[semio_framework_async_macros::async_test]
 async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completion_reaches_the_originating_actor() {
     let mock = Arc::new(MockGuestRuntime::new().await);
@@ -188,15 +207,9 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
     let mut spawning_turn = MockGuestRuntime::idle_turn().await;
     spawning_turn.effects.push(Effect::SpawnJob { job: job_id, kind: "remodel.reconstruct".to_string(), input: b"seed-frames".to_vec(), placement: JobPlacement::Isolated });
     mock.script_turn(actor, spawning_turn).await;
-    // 🔀️ `run_job_to_completion`'s own two-arm shape (Running.../Done) but with TWO `Running`
-    // steps first — the resumability proof: a job that finished on step 1 would not
-    // distinguish "the budget mechanism resumed it" from "it happened to be a one-shot call".
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
     mock.script_job_step(actor, JobStep::Running { progress: Some(b"halfway".to_vec()) }).await;
     mock.script_job_step(actor, JobStep::Done { output: b"reconstruction-complete".to_vec() }).await;
-    // 🔚️ Whatever `execute_turn` call eventually receives the `Event::JobCompleted` (pump 4,
-    // below) still needs a scripted outcome to return — an ordinary idle turn is enough since
-    // this test only asserts what EVENTS that call was given, not its own output.
     mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
 
     let (transport, probe) = LoopbackTransport::paired().await;
@@ -205,8 +218,6 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
     let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
     shard.register(actor, instance);
 
-    // Pump 1 owns only the spawning turn. The seed then advances through its finite replay
-    // admission opportunities before the first explicit job-step authority is accepted.
     let driven1 = pump(&mut shard).await.expect("pump 1");
     assert_eq!(driven1, 1, "the spawn turn does not bypass replay admission");
     let authority = retain_replay_seed(&mut shard, actor, job_id).await;
@@ -220,8 +231,6 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
     let driven3 = pump(&mut shard).await.expect("pump 3");
     assert_eq!(driven3, 1, "the terminal Done step");
 
-    // Pump 4: still no new envelope — but the Done step queued an `Event::JobCompleted` for
-    // delivery, so the actor is driven ONE more time purely to receive it.
     let driven4 = pump(&mut shard).await.expect("pump 4");
     assert_eq!(driven4, 1, "the queued completion drives one more turn, with no job left to step");
 
@@ -256,10 +265,6 @@ async fn spawn_job_effect_is_admitted_stepped_across_multiple_pumps_and_completi
     assert!(matches!(job_outcomes[1], JobStepOutcome::PreviewReady { preview } if preview == b"halfway"));
     assert!(matches!(job_outcomes[2], JobStepOutcome::Complete { candidate } if candidate.output == b"reconstruction-complete"));
 
-    // 🎯️ The actual end-to-end proof: the ORIGINATING actor's `execute_turn` was, at some
-    // point, handed a real `Event::JobCompleted{job: 777, result: Ok(..)}` — not merely that
-    // `step_job` internally returned `Done` (`job_outcomes` above already showed that; this is
-    // the part M5 found completely missing: nothing delivered it back).
     let completed = mock.observed_events(actor).await.into_iter().find(|event| matches!(event, Event::JobCompleted { job, .. } if *job == job_id));
     match completed {
         Some(Event::JobCompleted { result: RequestOutcome::Ok(bytes), .. }) => {
@@ -435,6 +440,10 @@ async fn suspend_then_resume_round_trips_byte_identical_checkpoint_state() {
 /// `GuestRuntime::cancel_job`) and unregister its instance — after which no further `step_job`
 /// call for that job can ever happen, since the (actor, job) pair no longer exists in
 /// `running_jobs` and the actor itself is no longer registered.
+///
+/// 🎯️ A third pump proves the job is truly dead: if `running_jobs` still held it, `step_job`
+/// would be called again with an EMPTY scripted queue and fault loudly (`TurnFault::
+/// Exhausted`) rather than silently succeeding — no such outcome appears.
 #[semio_framework_async_macros::async_test]
 async fn cancel_unregisters_the_instance_and_no_further_step_job_happens() {
     let mock = Arc::new(MockGuestRuntime::new().await);
@@ -479,9 +488,6 @@ async fn cancel_unregisters_the_instance_and_no_further_step_job_happens() {
     let outcome = decode_outcome(&outbound2[0]).await;
     assert!(matches!(outcome, ShardOutcome::Cancelled { actor: reported } if reported == 41));
 
-    // 🎯️ A third pump proves the job is truly dead: if `running_jobs` still held it, `step_job`
-    // would be called again with an EMPTY scripted queue and fault loudly (`TurnFault::
-    // Exhausted`) rather than silently succeeding — no such outcome appears.
     let driven3 = pump(&mut shard).await.expect("pump 3");
     assert_eq!(driven3, 0, "nothing left to drive: no envelopes, no running_jobs, no registered instance");
     assert!(probe.take_outbound().await.is_empty(), "no further outcome of any kind for the cancelled job");
@@ -532,6 +538,11 @@ async fn actor_cancel_failure_retires_the_instance_and_reports_fault_instead_of_
 /// job admitted in the SAME pump as an `Inline` one is stepped FIRST — the shard-local routing
 /// this packet adds (see `to_step`'s own doc comment for why this is the honest in-shard-only
 /// approximation, not cross-shard dedicated placement).
+///
+/// 🔀️ Inline is pushed FIRST in spawn order, so a passing test proves the sort actually
+/// reorders by placement rather than merely preserving admission order by coincidence.
+///
+/// 🧲️ The terminal exclusive step frees the actor slot so the inline step runs next.
 #[semio_framework_async_macros::async_test]
 async fn exclusive_placement_is_stepped_before_inline_placement_admitted_the_same_pump() {
     let mock = Arc::new(MockGuestRuntime::new().await);
@@ -543,12 +554,9 @@ async fn exclusive_placement_is_stepped_before_inline_placement_admitted_the_sam
     let inline_job = 61u64;
     let exclusive_job = 62u64;
     let mut turn = MockGuestRuntime::idle_turn().await;
-    // 🔀️ Inline is pushed FIRST in spawn order, so a passing test proves the sort actually
-    // reorders by placement rather than merely preserving admission order by coincidence.
     turn.effects.push(Effect::SpawnJob { job: inline_job, kind: "a".to_string(), input: Vec::new(), placement: JobPlacement::Inline });
     turn.effects.push(Effect::SpawnJob { job: exclusive_job, kind: "b".to_string(), input: Vec::new(), placement: JobPlacement::Exclusive });
     mock.script_turn(actor, turn).await;
-    // 🧲️ The terminal exclusive step frees the actor slot so the inline step runs next.
     mock.script_job_step(actor, JobStep::Done { output: vec![6, 2] }).await;
     mock.script_job_step(actor, JobStep::Running { progress: None }).await;
 
@@ -779,6 +787,10 @@ async fn a_grants_budget_is_what_the_turn_actually_executes_under() {
 /// 🎯️ Same property for job stepping: `step_job`'s `JobBudget` comes from the SAME actor's last
 /// granted budget (point 2 of the brief: "job steps take the owning actor's last granted budget
 /// on the Maintenance lane").
+///
+/// 🔀️ An explicit `JobStep` re-arming, not a `SpawnJob` effect — simplest way to reach the
+/// step phase without depending on `RecordingRuntime::execute_turn`'s effects (it always
+/// returns none).
 #[semio_framework_async_macros::async_test]
 async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let runtime = Arc::new(RecordingRuntime::new().await);
@@ -796,9 +808,6 @@ async fn job_step_uses_the_owning_actors_last_granted_budget() {
     let mut bytes = Vec::new();
     ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await;
     probe.push_inbound(bytes).await;
-    // 🔀️ An explicit `JobStep` re-arming, not a `SpawnJob` effect — simplest way to reach the
-    // step phase without depending on `RecordingRuntime::execute_turn`'s effects (it always
-    // returns none).
     let job_bytes = {
         let envelope = Envelope {
             to: actor,
@@ -982,6 +991,11 @@ async fn empty_turns_bypass_patch_transport_while_one_populated_owner_claims_onc
 /// worst case for the OLD FIFO/HashMap-iteration-order pump — so a passing assertion that the
 /// interactive actor's `ShardOutcome::Turn` is the FIRST one sent proves the two-queue
 /// reordering actually reorders, not merely that it happens not to break the happy path.
+///
+/// 🚦 Background actors first — queued on the wire ahead of the interactive one, the exact
+/// arrival order that used to win under plain FIFO/HashMap-iteration-order draining.
+///
+/// 🚦 The interactive actor's own grant, queued LAST.
 #[semio_framework_async_macros::async_test]
 async fn an_interactive_grant_is_executed_before_background_grants_queued_the_same_pump() {
     const BACKGROUND_ACTORS: u64 = 5;
@@ -993,8 +1007,6 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
     let compiled = mock.compile(&package, &[]).await.expect("mock compile");
     let background_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background);
 
-    // 🚦 Background actors first — queued on the wire ahead of the interactive one, the exact
-    // arrival order that used to win under plain FIFO/HashMap-iteration-order draining.
     for offset in 0..BACKGROUND_ACTORS {
         let actor = ActorId(200 + offset);
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
@@ -1015,7 +1027,6 @@ async fn an_interactive_grant_is_executed_before_background_grants_queued_the_sa
         probe.push_inbound(bytes).await;
     }
 
-    // 🚦 The interactive actor's own grant, queued LAST.
     let interactive_actor = ActorId(999);
     let interactive_instance = mock.instantiate(&compiled, interactive_actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
     shard.register(interactive_actor, interactive_instance);

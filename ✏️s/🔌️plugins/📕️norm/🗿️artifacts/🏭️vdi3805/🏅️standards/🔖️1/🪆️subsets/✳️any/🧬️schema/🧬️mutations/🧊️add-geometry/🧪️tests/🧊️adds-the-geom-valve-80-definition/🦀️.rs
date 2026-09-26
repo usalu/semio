@@ -1,6 +1,6 @@
 //! 🧪️ `add-geometry` fixture — `🧊️adds-the-geom-valve-80-definition`.
 //!
-//! A second id-keyed parametric geometry is inserted into the `geometry` map. A duplicate id would be `mutation.duplicate-id` (fatal); `geom.valve.80` is fresh, so the whole map is republished with two entries.
+//! A second id-keyed parametric geometry is inserted into the `geometry` map. A duplicate id would be `mutation.duplicate-id` (fatal); `geom-valve-80` is fresh, so the whole map is republished with two entries.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -17,10 +17,10 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
-}
+    }
 fn expected_after() -> Vdi3805Snapshot {
     serde_json::from_str(AFTER).expect("after snapshot decodes")
-}
+    }
 fn mutation() -> Vdi3805Mutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
@@ -28,15 +28,15 @@ fn applied() -> Vdi3805Snapshot {
     let base = before();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &base);
     <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), &base).expect("add-geometry applies to its committed before-snapshot")
-}
+    }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let snapshot = applied();
-    assert!(snapshot.geometry.contains_key("geom.valve.80"), "add-geometry/adds-the-geom-valve-80-definition: the new geometry id must be present");
-    assert_eq!(snapshot.geometry.len(), 2, "add-geometry/adds-the-geom-valve-80-definition: the pre-existing geom.valve.50 must survive");
-    assert_eq!(snapshot.geometry["geom.valve.80"].bbox.max_y, 0.75, "add-geometry/adds-the-geom-valve-80-definition: the inserted bounding box must be the payload's");
+    assert!(snapshot.geometry.contains_key("geom-valve-80"), "add-geometry/adds-the-geom-valve-80-definition: the new geometry id must be present");
+    assert_eq!(snapshot.geometry.len(), 2, "add-geometry/adds-the-geom-valve-80-definition: the pre-existing geom-valve-50 must survive");
+    assert_eq!(snapshot.geometry["geom-valve-80"].bbox.max_y, 0.75, "add-geometry/adds-the-geom-valve-80-definition: the inserted bounding box must be the payload's");
     assert_eq!(snapshot, expected_after(), "add-geometry/adds-the-geom-valve-80-definition: applied state differs from committed after-snapshot");
 }
 

@@ -102,6 +102,17 @@ class Context:
             raise AssertionError("scenario %s expands no Scenario Outline row" % self.scenario["id"])
         return self.scenario["id"][len(outline) + 1 :]
 
+    def doc_string(self) -> str:
+        """📜️ The scenario's first doc string — the feature-owned input vector (the twin of the Rust runner's)."""
+        for step in self.scenario["steps"]:
+            if step.get("docString") is not None:
+                return step["docString"]
+        raise AssertionError("scenario %s carries no doc string" % self.scenario["id"])
+
+    def doc_json(self) -> Any:
+        """📜️ The scenario's first doc string, parsed as JSON."""
+        return json.loads(self.doc_string())
+
     def artifact(self, role: str, filename: str) -> str:
         """📦️ Absolute path to write one named result artifact to, creating parent directories."""
         directory = os.path.join(self.artifact_dir, role)

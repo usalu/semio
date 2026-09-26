@@ -1142,6 +1142,10 @@ impl<'a> Decoder<'a> {
     }
 
     fn u64(&mut self) -> Result<u64, CoreError> {
+        if let Some(&byte) = self.bytes.get(self.position).filter(|byte| **byte & 0x80 == 0) {
+            self.position += 1;
+            return Ok(u64::from(byte));
+        }
         let mut value = 0u64;
         let mut shift = 0u32;
         loop {
@@ -1170,6 +1174,11 @@ impl<'a> Decoder<'a> {
     }
 
     fn signed(&mut self, bits: u32) -> Result<i64, CoreError> {
+        if let Some(&byte) = self.bytes.get(self.position).filter(|byte| **byte & 0x80 == 0 && bits > 7) {
+            self.position += 1;
+            let value = i64::from(byte & 0x7f);
+            return Ok(if byte & 0x40 != 0 { value | (!0i64 << 7) } else { value });
+        }
         let mut value = 0i64;
         let mut shift = 0u32;
         let mut byte;
@@ -1864,30 +1873,33 @@ impl CoreInstance {
         if let Some(call) = self.pending_host_call().cloned() {
             return CoreStepOutcome::HostCall { fuel_used: used, call };
         }
+        let Some(mut machine) = self.machine.take() else { return CoreStepOutcome::Fault { fuel_used: used, error: CoreError::State("no invocation is active".into()) } };
+        let module = Arc::clone(&self.module);
         while used < fuel {
             if control.cancelled {
-                self.machine = None;
                 return CoreStepOutcome::Cancelled { fuel_used: used };
             }
-            match self.execute_instruction() {
+            match self.execute_machine(&module, &mut machine) {
                 Ok(InstructionProgress::Continue) => used += 1,
                 Ok(InstructionProgress::Host(call)) => {
                     used += 1;
+                    self.machine = Some(machine);
                     return CoreStepOutcome::HostCall { fuel_used: used, call };
                 }
                 Ok(InstructionProgress::Complete(values)) => {
                     used += 1;
-                    self.machine = None;
                     return CoreStepOutcome::Complete { fuel_used: used, values };
                 }
                 Err(error) => {
                     used += 1;
+                    self.machine = Some(machine);
                     let error = self.diagnose_fault(error);
                     self.machine = None;
                     return CoreStepOutcome::Fault { fuel_used: used, error };
                 }
             }
         }
+        self.machine = Some(machine);
         CoreStepOutcome::Yield { fuel_used: used }
     }
 
@@ -1979,12 +1991,13 @@ impl CoreInstance {
     }
 
     fn enter_function_on(&mut self, machine: &mut Machine, function: u32, arguments: Vec<Value>) -> Result<Option<HostCall>, CoreError> {
-        let declaration = self.module.functions.get(function as usize).ok_or_else(|| CoreError::Trap(format!("function {function} is out of bounds")))?.clone();
-        let function_type = self.module.function_type(function)?.clone();
+        let code = Arc::clone(&self.module);
+        let declaration = code.functions.get(function as usize).ok_or_else(|| CoreError::Trap(format!("function {function} is out of bounds")))?;
+        let function_type = code.function_type(function)?;
         check_values(&arguments, &function_type.parameters)?;
         match declaration {
             FunctionDecl::Import { module, name, .. } => {
-                let call = HostCall { id: self.next_host_call, module, name, arguments, results: function_type.results };
+                let call = HostCall { id: self.next_host_call, module: module.clone(), name: name.clone(), arguments, results: function_type.results.clone() };
                 self.next_host_call = self.next_host_call.wrapping_add(1).max(1);
                 let pending = PendingHost { call: call.clone(), stack_height: machine.values.len() };
                 machine.pending_host = Some(pending);
@@ -1993,38 +2006,29 @@ impl CoreInstance {
             FunctionDecl::Defined { locals, body, .. } => {
                 let stack_base = machine.values.len();
                 let mut all_locals = arguments;
-                all_locals.extend(locals.into_iter().map(ValueType::zero));
+                all_locals.extend(locals.iter().copied().map(ValueType::zero));
                 let end_pc = body.len().checked_sub(1).ok_or_else(|| CoreError::Validation("empty function body".into()))?;
                 machine.frames.push(Frame {
                     function,
                     pc: 0,
                     locals: all_locals,
                     stack_base,
-                    controls: vec![ControlFrame { kind: ControlKind::Function, start_pc: 0, end_pc, stack_height: stack_base, branch_types: function_type.results.clone(), result_types: function_type.results }],
+                    controls: vec![ControlFrame { kind: ControlKind::Function, start_pc: 0, end_pc, stack_height: stack_base, branch_types: function_type.results.clone(), result_types: function_type.results.clone() }],
                 });
                 Ok(None)
             }
         }
     }
 
-    fn execute_instruction(&mut self) -> Result<InstructionProgress, CoreError> {
-        let mut machine = self.machine.take().ok_or_else(|| CoreError::State("no invocation is active".into()))?;
-        let result = self.execute_machine(&mut machine);
-        if !matches!(result, Ok(InstructionProgress::Complete(_))) {
-            self.machine = Some(machine);
-        }
-        result
-    }
-
-    fn execute_machine(&mut self, machine: &mut Machine) -> Result<InstructionProgress, CoreError> {
+    fn execute_machine(&mut self, code: &CoreModule, machine: &mut Machine) -> Result<InstructionProgress, CoreError> {
         let frame_index = machine.frames.len().checked_sub(1).ok_or_else(|| CoreError::State("active invocation has no call frame".into()))?;
         let function = machine.frames[frame_index].function;
-        let (body, controls) = match self.module.functions.get(function as usize) {
-            Some(FunctionDecl::Defined { body, controls, .. }) => (body.clone(), controls.clone()),
+        let (body, controls) = match code.functions.get(function as usize) {
+            Some(FunctionDecl::Defined { body, controls, .. }) => (&body[..], &**controls),
             _ => return Err(CoreError::State("call frame points at an import".into())),
         };
         let instruction_pc = machine.frames[frame_index].pc;
-        let mut decoder = Decoder::at(&body, instruction_pc);
+        let mut decoder = Decoder::at(body, instruction_pc);
         let opcode = decoder.byte()?;
         match opcode {
             0x00 => return Err(CoreError::Trap("unreachable executed".into())),
@@ -2052,21 +2056,21 @@ impl CoreInstance {
                 }
             }
             0x05 => {
-                let control = machine.frames[frame_index].controls.last().cloned().ok_or_else(|| CoreError::Trap("else has no control frame".into()))?;
-                if control.kind != ControlKind::If {
+                let kind = machine.frames[frame_index].controls.last().map(|control| control.kind).ok_or_else(|| CoreError::Trap("else has no control frame".into()))?;
+                if kind != ControlKind::If {
                     return Err(CoreError::Trap("else is not inside an if".into()));
                 }
-                close_control(machine, &control)?;
-                machine.frames[frame_index].controls.pop();
+                let control = machine.frames[frame_index].controls.pop().expect("checked");
+                keep_results(machine, control.stack_height, &control.result_types)?;
                 decoder.position = control.end_pc + 1;
             }
             0x0b => {
-                let control = machine.frames[frame_index].controls.last().cloned().ok_or_else(|| CoreError::Trap("end has no control frame".into()))?;
-                if control.kind == ControlKind::Function {
+                let kind = machine.frames[frame_index].controls.last().map(|control| control.kind).ok_or_else(|| CoreError::Trap("end has no control frame".into()))?;
+                if kind == ControlKind::Function {
                     return self.return_frame(machine);
                 }
-                close_control(machine, &control)?;
-                machine.frames[frame_index].controls.pop();
+                let control = machine.frames[frame_index].controls.pop().expect("checked");
+                keep_results(machine, control.stack_height, &control.result_types)?;
             }
             0x0c => {
                 let depth = decoder.u32()?;
@@ -2242,12 +2246,11 @@ impl CoreInstance {
 
     fn return_frame(&mut self, machine: &mut Machine) -> Result<InstructionProgress, CoreError> {
         let frame = machine.frames.pop().ok_or_else(|| CoreError::Trap("return has no frame".into()))?;
-        let results = self.module.function_type(frame.function)?.results.clone();
-        let values = take_results(machine, frame.stack_base, &results)?;
+        let module = Arc::clone(&self.module);
+        keep_results(machine, frame.stack_base, &module.function_type(frame.function)?.results)?;
         if machine.frames.is_empty() {
-            return Ok(InstructionProgress::Complete(values));
+            return Ok(InstructionProgress::Complete(machine.values.split_off(frame.stack_base)));
         }
-        machine.values.extend(values);
         Ok(InstructionProgress::Continue)
     }
 
@@ -2255,9 +2258,13 @@ impl CoreInstance {
         let frame_index = machine.frames.len().checked_sub(1).ok_or_else(|| CoreError::Trap("branch has no frame".into()))?;
         let control_count = machine.frames[frame_index].controls.len();
         let target_index = control_count.checked_sub(depth as usize + 1).ok_or_else(|| CoreError::Trap(format!("branch depth {depth} is out of bounds")))?;
-        let target = machine.frames[frame_index].controls[target_index].clone();
-        let values = take_results(machine, target.stack_height, &target.branch_types)?;
-        machine.values.extend(values);
+        let control = &mut machine.frames[frame_index].controls[target_index];
+        let (kind, stack_height, start_pc, end_pc) = (control.kind, control.stack_height, control.start_pc, control.end_pc);
+        let branch_types = std::mem::take(&mut control.branch_types);
+        let kept = keep_results(machine, stack_height, &branch_types);
+        machine.frames[frame_index].controls[target_index].branch_types = branch_types;
+        kept?;
+        let target = BranchTargetV1 { kind, start_pc, end_pc };
         match target.kind {
             ControlKind::Loop => {
                 machine.frames[frame_index].controls.truncate(target_index + 1);
@@ -2274,9 +2281,27 @@ impl CoreInstance {
     }
 }
 
-fn close_control(machine: &mut Machine, control: &ControlFrame) -> Result<(), CoreError> {
-    let values = take_results(machine, control.stack_height, &control.result_types)?;
-    machine.values.extend(values);
+/// 🎯️ What a taken branch needs of its target once the results are in place.
+struct BranchTargetV1 {
+    kind: ControlKind,
+    start_pc: usize,
+    end_pc: usize,
+}
+
+/// 📥️ Leaves exactly `types` on top of the operand stack at `stack_height`: the same checks, in the same
+/// order and with the same traps, as [`take_results`] followed by re-pushing its values — without the
+/// intermediate copy, which every block end, branch and return used to allocate.
+fn keep_results(machine: &mut Machine, stack_height: usize, types: &[ValueType]) -> Result<(), CoreError> {
+    if stack_height > machine.values.len() {
+        return Err(CoreError::Trap("control stack height exceeds operand stack".into()));
+    }
+    let start = machine.values.len().checked_sub(types.len()).ok_or_else(|| CoreError::Trap("control results underflow the operand stack".into()))?;
+    if start < stack_height {
+        return Err(CoreError::Trap("control results overlap the outer operand stack".into()));
+    }
+    check_values(&machine.values[start..], types)?;
+    machine.values.copy_within(start.., stack_height);
+    machine.values.truncate(stack_height + types.len());
     Ok(())
 }
 

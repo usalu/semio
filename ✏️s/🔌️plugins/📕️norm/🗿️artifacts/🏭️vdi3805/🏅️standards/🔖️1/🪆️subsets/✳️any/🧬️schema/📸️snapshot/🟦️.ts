@@ -8,7 +8,8 @@ export type SheetAttributes =
 
 export interface LocalizedText { locale: string; text: string }
 export interface BuildingSystemNumber { systemCode: string; subsystem: string; sequence: number }
-export interface ExtensionFields { fields: Record<string, string> }
+export type ExtensionFieldValue = string;
+export interface ExtensionFields { fields: { readonly [key: string]: ExtensionFieldValue } }
 export interface ManufacturerFile {
   headerVersion: string;
   manufacturer: string;
@@ -26,6 +27,8 @@ export interface Configuration {
   functionRefs: string[];
 }
 export interface ProductIdentity { manufacturerCode: string; productGroup: string; articleNumber: string }
+export interface AccessoryLink { accessoryId: string; required: boolean; quantity: number }
+export interface CompositionLink { componentId: string; quantity: number }
 export interface Product {
   id: string;
   identity: ProductIdentity;
@@ -33,8 +36,8 @@ export interface Product {
   sheet: number;
   records: NativeRecord[];
   configuration: Configuration;
-  accessories: string[];
-  components: string[];
+  accessories: AccessoryLink[];
+  components: CompositionLink[];
   extensions: ExtensionFields;
 }
 export interface ManufacturerCatalog { file: ManufacturerFile; products: Product[]; extensions: ExtensionFields }
@@ -42,7 +45,7 @@ export interface EditionId { year: number; month: number }
 export interface CatalogIndexEntry { productId: string; sheet: number; tags: string[]; dn?: number | null }
 export interface CatalogIndex { entries: CatalogIndexEntry[] }
 export interface BoundingBox { minX: number; minY: number; minZ: number; maxX: number; maxY: number; maxZ: number }
-export interface GeometryConnection { id: string; x: number; y: number; z: number; nx: number; ny: number; nz: number }
+export interface GeometryConnection { id: string; medium: string; position: [number, number, number]; direction: [number, number, number]; diameterMm?: number | null }
 export interface ParametricGeometry { id: string; bbox: BoundingBox; connections: GeometryConnection[]; parameters: Record<string, number> }
 export interface CurvePoint { x: number; y: number }
 export interface CharacteristicCurve { id: string; points: CurvePoint[] }
@@ -50,8 +53,6 @@ export interface SecurityLimits { maxFileBytes: number; maxRecords: number; maxF
 
 /** 🧬️ Vdi3805 snapshot schema — artifact-lane fields only. */
 export interface Vdi3805Snapshot {
-  /** @state artifact */
-  manufacturerFile: ManufacturerFile;
   /** @state artifact */
   catalog: ManufacturerCatalog;
   /** @state artifact */
@@ -66,8 +67,6 @@ export interface Vdi3805Snapshot {
   geometry: Record<string, ParametricGeometry>;
   /** @state artifact */
   curves: Record<string, CharacteristicCurve>;
-  /** @state artifact */
-  limits: SecurityLimits;
 }
 
 //#region 🚪️Parsers
@@ -120,7 +119,6 @@ export const normVdi3805SnapshotGuardConstant = <T extends string | number | boo
 export function parseVdi3805Snapshot(value: unknown, at = "$"): Vdi3805Snapshot {
   const row = normVdi3805SnapshotGuardObject(value, at);
   return {
-    manufacturerFile: normVdi3805SnapshotGuardObject(row["manufacturerFile"], `${at}.manufacturerFile`) as unknown as ManufacturerFile,
     catalog: normVdi3805SnapshotGuardObject(row["catalog"], `${at}.catalog`) as unknown as ManufacturerCatalog,
     editionProfile: normVdi3805SnapshotGuardObject(row["editionProfile"], `${at}.editionProfile`) as Record<string, string>,
     correctionAsOf: normVdi3805SnapshotGuardObject(row["correctionAsOf"], `${at}.correctionAsOf`) as unknown as EditionId,
@@ -128,7 +126,6 @@ export function parseVdi3805Snapshot(value: unknown, at = "$"): Vdi3805Snapshot 
     index: normVdi3805SnapshotGuardObject(row["index"], `${at}.index`) as unknown as CatalogIndex,
     geometry: normVdi3805SnapshotGuardObject(row["geometry"], `${at}.geometry`) as Record<string, ParametricGeometry>,
     curves: normVdi3805SnapshotGuardObject(row["curves"], `${at}.curves`) as Record<string, CharacteristicCurve>,
-    limits: normVdi3805SnapshotGuardObject(row["limits"], `${at}.limits`) as unknown as SecurityLimits,
   };
 }
 

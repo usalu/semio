@@ -32,10 +32,14 @@ import {
   spaceMemberPresenceV1,
   spaceRowInvitableV1,
   spaceRowWritableV1,
+  spaceRowsAfterEventsV1,
   spaceRowsV1,
   type InviteRedemptionErrorCodeV1,
   type SpaceMemberPresenceV1,
+  type SpaceRowV1,
 } from "../../../../../../📇️directory/🏘️spaces/🟦️.ts";
+import { emptyDirectoryReadModel, foldAll } from "../../../../../../📇️directory/🟦️.ts";
+import type { DirectoryEvent } from "../../../../../../📇️directory/🧬️schema/🟦️.ts";
 import { SpaceBrowser, spaceBrowserPresencePeersV1 } from "../../🟦️.tsx";
 import { createHubConnectionFetchPortV1, parseHubSpaceMemberRowsV1, useHubConnection, type HubConnectionPortV1, type HubSpaceMemberRowV1 } from "../../../🔗️HubConnection/🟦️.tsx";
 import { type HubConnectionStorageV1, type HubSignInTransportV1 } from "../../../../../../📇️directory/🔐️sign-in/🟦️.ts";
@@ -222,6 +226,25 @@ describe("spaces surface contract", () => {
     expect(rows.map((row) => row.access)).toStrictEqual(fixture.accessOrder.flatMap((access) => (access === "author" ? [access, access] : [access])));
     expect(rows[3]!.role).toBeNull();
     expect(rows[3]!.activeConnections).toBe(0);
+  });
+
+  it("folds one command receipt's events into my rows exactly as the shared fixture states (read-your-writes)", () => {
+    for (const fold of fixture.receiptFolds) {
+      expect(spaceRowsAfterEventsV1(fold.rows as SpaceRowV1[], fold.events as DirectoryEvent[], fold.userId), fold.id).toStrictEqual(fold.expected);
+    }
+  });
+
+  it("agrees with the directory read model's view of the caller on the golden log", () => {
+    const golden = fixture.receiptFolds.find((fold) => fold.id === "the-golden-directory-log-folds-to-the-read-models-view-of-its-owner")!;
+    const model = foldAll(emptyDirectoryReadModel(), golden.events as DirectoryEvent[]);
+    const rows = spaceRowsAfterEventsV1([], golden.events as DirectoryEvent[], golden.userId);
+    const mine = [...model.spaces.values()].filter((space) => space.members.some((member) => member.userId === golden.userId));
+    expect(rows.map((row) => row.id)).toStrictEqual(mine.map((space) => space.view.id));
+    for (const space of mine) {
+      const row = rows.find((candidate) => candidate.id === space.view.id)!;
+      const role = space.members.find((member) => member.userId === golden.userId)!.role;
+      expect([row.name, row.kind, row.visibility, row.memberCount, row.documentCount, row.role, row.updatedAtMs]).toStrictEqual([space.view.name, space.view.kind, space.view.visibility, space.view.memberCount, space.view.documentCount, role, space.view.updatedAtMs]);
+    }
   });
 
   it("filters case-insensitively over name and id and keeps everything for an empty query", () => {

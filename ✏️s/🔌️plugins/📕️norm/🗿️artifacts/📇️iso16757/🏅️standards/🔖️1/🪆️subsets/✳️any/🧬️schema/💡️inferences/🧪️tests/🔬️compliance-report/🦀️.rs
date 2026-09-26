@@ -153,7 +153,7 @@ async fn python_compliance_oracle_matches_default_and_broken_within_half_percent
     }
 }
 
-##[semio_framework_async_macros::async_test]
+#[semio_framework_async_macros::async_test]
 async fn snapshot_validates_against_committed_json_schema() {
     let schema_path = family_snapshot_schema();
     assert!(schema_path.exists(), "missing {}", schema_path.display());
@@ -240,11 +240,85 @@ async fn typescript_facets_have_no_stub_unknown_collections() {
     assert!(hits.is_empty(), "facet stub/unknown patterns remain: {hits:?}");
 }
 
+#[test]
+fn check_sources_contain_no_fingerprint_gaming_patterns() {
+    let checks_dir = family_any_dir().join("🧬️schema/💡️inferences/⚖️checks");
+    let forbidden = [
+        "tag_fp",
+        "id_score",
+        ".bytes().map(|b| b as f64).sum",
+        ".len().max(1)",
+    ];
+    let mut hits = Vec::new();
+    for name in ["📈️part1.rs", "📐️part2.rs", "📚️part4.rs", "🔄part5.rs"] {
+        let path = checks_dir.join(name);
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+        for pat in forbidden {
+            if text.contains(pat) {
+                hits.push(format!("{name}: {pat}"));
+            }
+        }
+        let compact: String = text.chars().filter(|c| !c.is_whitespace()).collect();
+        if compact.contains(".id.len()+") && compact.contains(".version.len()") {
+            hits.push(format!("{name}: id.len()+version.len() quantity echo"));
+        }
+        let lines: Vec<&str> = text.lines().map(str::trim).collect();
+        for pair in lines.windows(2) {
+            let Some(left) = pair[0].strip_prefix("q_dim(") else { continue };
+            let Some(right) = pair[1].strip_prefix("q_dim(") else { continue };
+            let normalize = |raw: &str| -> String {
+                let mut s = raw.trim_end_matches([',', ')']).trim().to_string();
+                if let Some(stripped) = s.strip_suffix(" as f64") {
+                    s = stripped.trim().to_string();
+                }
+                if let Some(stripped) = s.strip_suffix(".max(1)") {
+                    s = stripped.trim().to_string();
+                }
+                s
+            };
+            let left_n = normalize(left);
+            let right_n = normalize(right);
+            if left_n.ends_with(".len()") && left_n == right_n {
+                hits.push(format!("{name}: same-string .len() as computed and limit ({left_n})"));
+            }
+        }
+    }
+    assert!(
+        hits.is_empty(),
+        "perturbation gaming patterns must not fold string fingerprints into computed/limit (CORRECTION 14:37): {hits:?}"
+    );
+}
+
+#[test]
+fn cucumber_mutate_feature_covers_every_rust_kind() {
+    let feature = family_any_dir().join("🧪️tests/📇️mutate-iso16757-1/🥒️.feature");
+    let text = std::fs::read_to_string(&feature).expect("read feature");
+    let rust_kinds: Vec<&str> = crate::mutations::KINDS.to_vec();
+    let mut feature_kinds = Vec::new();
+    for line in text.lines() {
+        let t = line.trim();
+        if t.starts_with('|') && !t.contains(" id ") && !t.contains("---") {
+            let cells: Vec<_> = t.split('|').map(|c| c.trim()).filter(|c| !c.is_empty()).collect();
+            if cells.len() >= 3 && cells[0].contains('-') {
+                feature_kinds.push(cells[0].to_string());
+            }
+        }
+    }
+    feature_kinds.sort();
+    feature_kinds.dedup();
+    let mut expected: Vec<String> = rust_kinds.iter().map(|s| s.to_string()).collect();
+    expected.sort();
+    assert_eq!(
+        feature_kinds,
+        expected,
+        "🥒️.feature differential Examples must list every Rust KINDS entry (currently documents 21 kinds while catalog has {})",
+        rust_kinds.len()
+    );
+}
+
 #[semio_framework_async_macros::async_test]
 async fn python_mutate_kinds_mirror_rust_kinds_exactly() {
     let rust_kinds: Vec<&str> = crate::mutations::KINDS.to_vec();
-    let py_path = family_any_dir().join("🧪️tests/📈️mutate-iso16757-1/🐍️.py");
-    // path may use different emoji — resolve via walk
     let py_path = {
         let mut found = None;
         let tests = family_any_dir().join("🧪️tests");

@@ -106,7 +106,7 @@ fn staged_actor_component() -> Option<std::path::PathBuf> {
     if let Some(component) = std::env::var_os("SEMIO_POLL_TURN_LEAK_COMPONENT") {
         return Some(std::path::PathBuf::from(component));
     }
-    let staged = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(8)?.join("target/wasm32-wasip2/wasm-dev/semio_s_plugin_procedural.wasm");
+    let staged = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().nth(8)?.join("✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/semio_s_plugin_procedural.wasm");
     staged.exists().then_some(staged)
 }
 

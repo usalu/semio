@@ -5,6 +5,7 @@
 export interface RasterEraserOptions {
   size: number;
   opacity: number;
+  hardness: number;
 }
 
 export const RASTER_PLAY_ERASER_OPTIONS_GROUP_ID = "raster-utility-options-paintEraser" as const;

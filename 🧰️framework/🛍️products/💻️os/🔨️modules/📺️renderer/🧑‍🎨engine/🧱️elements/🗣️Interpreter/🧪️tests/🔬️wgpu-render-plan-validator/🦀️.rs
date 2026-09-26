@@ -237,3 +237,15 @@ fn render_ui_image_step_paints_an_inline_data_url_instead_of_faulting() {
     let size = UI_IMAGE_SIZES.with(|cell| cell.borrow().get("inline-data-image").copied());
     assert_eq!(size, Some((4, 2)), "the natural pixel size comes from the decoded bitmap, so object-contain matches React's intrinsic aspect ratio");
 }
+
+/// 📻️ An avatar source replacement keeps fallback visible until that exact source owns decoded pixels.
+#[test]
+fn avatar_image_replacement_cannot_publish_the_previous_sources_pixels() {
+    let id = "vfs-avatar-current-source";
+    let first = format!("data:image/svg+xml,{TEST_SVG}");
+    let current = current_ui_image_key(id, &first).expect("the first avatar source is decoded");
+    assert_eq!(current_ui_image_key(id, &first), Some(current.clone()));
+    assert_eq!(current_ui_image_key(id, "data:image/svg+xml,invalid"), None);
+    assert_eq!(current_ui_image_key(id, ""), None);
+    assert_eq!(current_ui_image_key(id, &first), Some(current));
+}

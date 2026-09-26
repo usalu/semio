@@ -33,7 +33,7 @@ const hub = async (method: string, path: string, token?: string, body?: string) 
   return { status: response.status, text, json };
 };
 
-type Node = { key: string; label?: string; role?: string; disabled?: boolean; valueText?: string };
+type Node = { key: string; label?: string; role?: string; disabled?: boolean; valueText?: string; checked?: boolean };
 const projection = async (page: Page): Promise<Node[]> => {
   const raw = await page.evaluate(async () => (await (globalThis as any).semioWgpuIntrospection?.dumpAccessibility?.()) ?? "");
   try { return (JSON.parse(raw).windows ?? []).flatMap((surface: any) => surface.nodes ?? []); } catch { return []; }
@@ -120,7 +120,11 @@ try {
     live = await footer(page);
   }
   row(`1 the human (wasm32 wgpu, ${LOCALE}) signed in and holds the hub note live`, /live|connected|persisted|verbunden|gespeichert/iu.test(live.sync), JSON.stringify(live));
-  await activate(page, "framework.panel.artifact", 3000);
+  for (let attempt = 0; attempt < 3 && !keyEnding(await projection(page), "note-play-blocks.add.text"); attempt += 1) {
+    if ((await projection(page)).find((node) => node.key === "framework.panel.artifact")?.checked !== true) await activate(page, "framework.panel.artifact", 3000);
+    await awaitKey(page, "note-play-blocks.add.text", 10_000);
+  }
+  row("1b the human's Artifact panel lists the note's blocks", Boolean(keyEnding(await projection(page), "note-play-blocks.add.text")), JSON.stringify(await blocks(page)));
   const before = await blocks(page);
   const headBefore = await headOf();
 
@@ -149,7 +153,7 @@ try {
   const capabilityId = String(((search.structuredContent?.results ?? []) as any[]).map((hit) => String(hit.capabilityId ?? hit.id)).find((id) => id.endsWith(".addBlock")) ?? "");
   const prepared = await call("action_prepare", { capabilityId, input: { kind: "text" } });
   const invoked = await call("action_invoke", { preparedActionHandle: prepared.structuredContent?.preparedHandle });
-  row("4 the agent commits an edit through the semio MCP", invoked.structuredContent?.status === "SUCCEEDED", `${capabilityId} status=${invoked.structuredContent?.status ?? JSON.stringify(invoked.structuredContent ?? prepared.structuredContent).slice(0, 240)}`);
+  row("4 the agent commits an edit through the semio MCP", invoked.structuredContent?.status === "SUCCEEDED", `${capabilityId} status=${invoked.structuredContent?.status ?? JSON.stringify(invoked.structuredContent).slice(0, 240)} prepared=${JSON.stringify({ isError: prepared.isError, content: prepared.structuredContent }).slice(0, 600)}`);
   let after = await blocks(page);
   const t0 = Date.now();
   for (let tick = 0; tick < 60 && after.length <= before.length; tick += 1) {

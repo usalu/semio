@@ -41,6 +41,10 @@ pub const AUTH_ERROR_SCHEMA: &str = "semio.hub.auth.error/v1";
 /// never has to guess a deadline the mint response deliberately withholds.
 pub const SESSION_ME_ROUTE: &str = "/auth/sessions/me";
 
+/// 🚪️ Self sign-out, a command (`POST`, empty body): it appends the `session-revoked` fact for the
+/// bearer's own session. Sessions are never deleted as rows, so no route here answers `DELETE`.
+pub const SESSION_SIGN_OUT_ROUTE: &str = "/auth/sessions/me/sign-out";
+
 /// 🔁️ Self-service password change. The caller proves the current password on top of a live bearer,
 /// so a stolen session alone can never take an account over.
 pub const CREDENTIAL_ROUTE: &str = "/auth/credentials";

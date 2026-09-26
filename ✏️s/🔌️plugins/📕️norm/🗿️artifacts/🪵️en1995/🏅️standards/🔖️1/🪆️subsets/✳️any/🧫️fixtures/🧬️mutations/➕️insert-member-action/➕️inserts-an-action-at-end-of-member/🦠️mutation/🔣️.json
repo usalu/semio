@@ -1,0 +1,19 @@
+{
+  "InsertMemberAction": {
+    "action": {
+      "category": "",
+      "fC90KN": 0.0,
+      "fPointN": 0.0,
+      "id": "w",
+      "kind": "permanent",
+      "loadDuration": "permanent",
+      "mKNm": 0.0,
+      "nKN": 0.0,
+      "nTKN": 0.0,
+      "qLineNPerM": 2500.0,
+      "vKN": 0.0
+    },
+    "index": 99,
+    "memberId": "beam-B1"
+  }
+}

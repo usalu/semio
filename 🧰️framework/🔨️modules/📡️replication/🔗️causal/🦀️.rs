@@ -37,13 +37,21 @@ pub use transition::*;
 // `ToValue`/`FromValue` below, mirroring the pre-existing wire shape byte-for-byte.
 
 /// @emoji ✉️ A causally-ordered operation crossing the wire: identity, actor, dependency set, the
-/// forward diff, its precomputed inverse, and the HLC tick it was authored at.
+/// forward diff, its precomputed inverse, and the HLC tick it was authored at. `dependencies` are
+/// ordering constraints (a replica applies the operation only after every one of them); `observed`
+/// is advisory authoring context and never orders anything: the newest operation of ANOTHER author
+/// the author's replica had applied when it authored this one (`None`: none, or unknown). `target`
+/// is the structured address the operation writes, as its mutation declares it (outermost segment
+/// first; empty: the whole artifact). The hub grades a write against the other authors' writes
+/// committed after `observed` whose targets overlap (ticket 26/09/23 LD item 2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct MutationEnvelope {
     pub mutation_id: crate::ids::MutationId,
     pub document_id: crate::ids::ArtifactId,
     pub actor: crate::ids::ActorId,
     pub dependencies: Vec<crate::ids::MutationId>,
+    pub observed: Option<crate::ids::MutationId>,
+    pub target: Vec<String>,
     pub diff: ArtifactDiff,
     pub inverse: InverseMutation,
     pub timestamp: crate::ids::HybridLogicalTimestamp,
@@ -56,6 +64,8 @@ impl crate::value::ToValue for MutationEnvelope {
             ("documentId".to_string(), crate::value::ToValue::to_value(&self.document_id)),
             ("actor".to_string(), crate::value::ToValue::to_value(&self.actor)),
             ("dependencies".to_string(), crate::value::ToValue::to_value(&self.dependencies)),
+            ("observed".to_string(), crate::value::ToValue::to_value(&self.observed)),
+            ("target".to_string(), crate::value::ToValue::to_value(&self.target)),
             ("diff".to_string(), crate::value::ToValue::to_value(&self.diff)),
             ("inverse".to_string(), crate::value::ToValue::to_value(&self.inverse)),
             ("timestamp".to_string(), crate::value::ToValue::to_value(&self.timestamp)),
@@ -71,6 +81,8 @@ impl crate::value::FromValue for MutationEnvelope {
         let mut document_id = None;
         let mut actor = None;
         let mut dependencies = None;
+        let mut observed = None;
+        let mut target = None;
         let mut diff = None;
         let mut inverse = None;
         let mut timestamp = None;
@@ -80,6 +92,8 @@ impl crate::value::FromValue for MutationEnvelope {
                 "documentId" => document_id = Some(<crate::ids::ArtifactId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("documentId"))?),
                 "actor" => actor = Some(<crate::ids::ActorId as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
                 "dependencies" => dependencies = Some(<Vec<crate::ids::MutationId> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("dependencies"))?),
+                "observed" => observed = Some(<Option<crate::ids::MutationId> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("observed"))?),
+                "target" => target = Some(<Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?),
                 "diff" => diff = Some(<ArtifactDiff as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("diff"))?),
                 "inverse" => inverse = Some(<InverseMutation as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("inverse"))?),
                 "timestamp" => timestamp = Some(<crate::ids::HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("timestamp"))?),
@@ -91,6 +105,8 @@ impl crate::value::FromValue for MutationEnvelope {
             document_id: document_id.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing documentId"))?,
             actor: actor.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing actor"))?,
             dependencies: dependencies.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing dependencies"))?,
+            observed: observed.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing observed"))?,
+            target: target.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing target"))?,
             diff: diff.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing diff"))?,
             inverse: inverse.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing inverse"))?,
             timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("MutationEnvelope missing timestamp"))?,
@@ -772,18 +788,17 @@ pub trait MutationTransform<P>: crate::mutation::Mutation<P> {
 /// snapshot-vs-operations-message dedup) don't have to pay for `encode_op`/`inverse` work, and so
 /// there is exactly one place this chain is spelled out.
 pub fn mutation_ids_for_edit<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>) -> Vec<crate::ids::MutationId> {
-    let mut out = Vec::with_capacity(edit.forwards.len());
-    for (index, op) in edit.forwards.iter().enumerate() {
-        let id = match edit.mutation_meta.get(index).and_then(|m| m.mutation_id.clone()) {
+    edit.forwards.iter().enumerate().map(|(index, op)| edit_operation_mutation_id(edit, index, op)).collect()
+}
+
+fn edit_operation_mutation_id<P, Op: crate::mutation::Mutation<P>>(edit: &crate::mutation::Edit<Op>, index: usize, op: &Op) -> crate::ids::MutationId {
+    match edit.mutation_meta.get(index).and_then(|m| m.mutation_id.clone()) {
+        Some(id) => id,
+        None => match op.mutation_id() {
             Some(id) => id,
-            None => match op.mutation_id() {
-                Some(id) => id,
-                None => crate::ids::MutationId(format!("{}#{index}", edit.id)),
-            },
-        };
-        out.push(id);
+            None => crate::ids::MutationId(format!("{}#{index}", edit.id)),
+        },
     }
-    out
 }
 
 pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::mutation::OpBinary>(
@@ -791,11 +806,23 @@ pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::
     document_id: &crate::ids::ArtifactId,
     schema: &crate::ids::SchemaId,
 ) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
-    let operation_ids = mutation_ids_for_edit(edit);
-    let mut out = Vec::with_capacity(edit.forwards.len());
-    for (index, op) in edit.forwards.iter().enumerate() {
+    mutation_envelopes_from_edit_since(edit, 0, document_id, schema)
+}
+
+/// @emoji ✂️ The envelopes of `edit`'s operations from position `from` on — exactly the tail of
+/// [`mutation_envelope_from_edit`]'s answer, encoding only that tail. An edit that absorbs later
+/// operations (a coalesced typing run) is announced one appended range at a time, so re-encoding its
+/// whole history per keystroke would make a long run quadratic (ticket 26/09/23 LD item 1).
+pub fn mutation_envelopes_from_edit_since<P, Op: crate::mutation::Mutation<P> + crate::mutation::OpBinary>(
+    edit: &crate::mutation::Edit<Op>,
+    from: usize,
+    document_id: &crate::ids::ArtifactId,
+    schema: &crate::ids::SchemaId,
+) -> Result<Vec<MutationEnvelope>, crate::ProtocolError> {
+    let mut out = Vec::with_capacity(edit.forwards.len().saturating_sub(from));
+    for (index, op) in edit.forwards.iter().enumerate().skip(from) {
         let meta = edit.mutation_meta.get(index);
-        let mutation_id = operation_ids[index].clone();
+        let mutation_id = edit_operation_mutation_id(edit, index, op);
         let dependencies = match meta {
             Some(m) => m.dependencies.clone(),
             None => op.dependencies(),
@@ -824,6 +851,8 @@ pub fn mutation_envelope_from_edit<P, Op: crate::mutation::Mutation<P> + crate::
             document_id: document_id.clone(),
             actor,
             dependencies,
+            observed: None,
+            target: op.conflict_target(),
             diff: ArtifactDiff { schema: schema.clone(), payload },
             inverse: InverseMutation { schema: schema.clone(), payload: inverse_payload },
             timestamp,
@@ -853,7 +882,8 @@ fn decode_hlc(bytes: &[u8], pos: &mut usize) -> Result<crate::ids::HybridLogical
 }
 
 /// @emoji 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> |
-/// diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc`.
+/// observed (0 | 1 str) | target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str |
+/// inverse.payload bytes | hlc`.
 pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
     crate::write_str(out, &envelope.mutation_id.0);
     crate::write_str(out, &envelope.document_id.0);
@@ -861,6 +891,17 @@ pub fn encode_envelope(envelope: &MutationEnvelope, out: &mut Vec<u8>) {
     crate::wire::write_varint_u64(out, envelope.dependencies.len() as u64);
     for dependency in &envelope.dependencies {
         crate::write_str(out, &dependency.0);
+    }
+    match &envelope.observed {
+        Some(observed) => {
+            crate::wire::write_varint_u64(out, 1);
+            crate::write_str(out, &observed.0);
+        }
+        None => crate::wire::write_varint_u64(out, 0),
+    }
+    crate::wire::write_varint_u64(out, envelope.target.len() as u64);
+    for segment in &envelope.target {
+        crate::write_str(out, segment);
     }
     crate::write_str(out, &envelope.diff.schema.0);
     crate::write_bytes(out, &envelope.diff.payload);
@@ -875,16 +916,26 @@ pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope
     let document_id = crate::ids::ArtifactId(crate::read_str(bytes, pos)?);
     let actor = crate::ids::ActorId(crate::read_str(bytes, pos)?);
     let dependency_count = crate::wire::read_varint_u64(bytes, pos)?;
-    let mut dependencies = Vec::with_capacity(dependency_count as usize);
+    let mut dependencies = Vec::with_capacity((dependency_count as usize).min(bytes.len()));
     for _ in 0..dependency_count {
         dependencies.push(crate::ids::MutationId(crate::read_str(bytes, pos)?));
+    }
+    let observed = match crate::wire::read_varint_u64(bytes, pos)? {
+        0 => None,
+        1 => Some(crate::ids::MutationId(crate::read_str(bytes, pos)?)),
+        flag => return Err(crate::ProtocolError::Malformed { what: "mutation envelope", offset: *pos as u64, detail: format!("observed flag {flag}") }),
+    };
+    let target_count = crate::wire::read_varint_u64(bytes, pos)?;
+    let mut target = Vec::with_capacity((target_count as usize).min(bytes.len()));
+    for _ in 0..target_count {
+        target.push(crate::read_str(bytes, pos)?);
     }
     let diff_schema = crate::ids::SchemaId(crate::read_str(bytes, pos)?);
     let diff_payload = crate::read_bytes(bytes, pos)?;
     let inverse_schema = crate::ids::SchemaId(crate::read_str(bytes, pos)?);
     let inverse_payload = crate::read_bytes(bytes, pos)?;
     let timestamp = decode_hlc(bytes, pos)?;
-    Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp })
+    Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp })
 }
 
 /// @emoji 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
@@ -922,6 +973,7 @@ pub fn encode_envelopes(envelopes: &[MutationEnvelope]) -> Vec<u8> {
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES: usize = 262_144;
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES: usize = 8_192;
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES: usize = 8_192;
+pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS: usize = 8_192;
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES: usize = 256;
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES: usize = 256;
 pub const DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES: usize = 262_144;
@@ -934,6 +986,8 @@ pub struct DocumentBackboneBatchLimitsV1 {
     pub maximum_envelopes: usize,
     pub maximum_dependencies_per_envelope: usize,
     pub maximum_total_dependencies: usize,
+    pub maximum_target_segments_per_envelope: usize,
+    pub maximum_total_target_segments: usize,
     pub maximum_identifier_bytes: usize,
     pub maximum_schema_bytes: usize,
     pub maximum_payload_bytes: usize,
@@ -946,6 +1000,8 @@ impl Default for DocumentBackboneBatchLimitsV1 {
             maximum_envelopes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_ENVELOPES,
             maximum_dependencies_per_envelope: DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES,
             maximum_total_dependencies: DOCUMENT_BACKBONE_BATCH_MAXIMUM_DEPENDENCIES,
+            maximum_target_segments_per_envelope: DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS,
+            maximum_total_target_segments: DOCUMENT_BACKBONE_BATCH_MAXIMUM_TARGET_SEGMENTS,
             maximum_identifier_bytes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_IDENTIFIER_BYTES,
             maximum_schema_bytes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_SCHEMA_BYTES,
             maximum_payload_bytes: DOCUMENT_BACKBONE_BATCH_MAXIMUM_PAYLOAD_BYTES,
@@ -1001,6 +1057,8 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
         || limits.maximum_envelopes > ceiling.maximum_envelopes
         || limits.maximum_dependencies_per_envelope > ceiling.maximum_dependencies_per_envelope
         || limits.maximum_total_dependencies > ceiling.maximum_total_dependencies
+        || limits.maximum_target_segments_per_envelope > ceiling.maximum_target_segments_per_envelope
+        || limits.maximum_total_target_segments > ceiling.maximum_total_target_segments
         || limits.maximum_identifier_bytes > ceiling.maximum_identifier_bytes
         || limits.maximum_schema_bytes > ceiling.maximum_schema_bytes
         || limits.maximum_payload_bytes > ceiling.maximum_payload_bytes
@@ -1014,6 +1072,7 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
     let count = read_document_backbone_count(bytes, &mut position, limits.maximum_envelopes, "envelopes")?;
     let mut envelopes = Vec::with_capacity(count);
     let mut total_dependencies = 0usize;
+    let mut total_target_segments = 0usize;
     let mut total_payload_bytes = 0usize;
     for _ in 0..count {
         let mutation_id = crate::ids::MutationId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
@@ -1028,6 +1087,21 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
         for _ in 0..dependency_count {
             dependencies.push(crate::ids::MutationId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?));
         }
+        let observed_at = position;
+        let observed = match read_document_backbone_u64(bytes, &mut position)? {
+            0 => None,
+            1 => Some(crate::ids::MutationId(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?)),
+            _ => return Err(document_backbone_batch_malformed(observed_at, "observed-flag")),
+        };
+        let target_count = read_document_backbone_count(bytes, &mut position, limits.maximum_target_segments_per_envelope, "target-segments")?;
+        total_target_segments = total_target_segments.checked_add(target_count).ok_or_else(|| document_backbone_batch_limit("target-segments"))?;
+        if total_target_segments > limits.maximum_total_target_segments {
+            return Err(document_backbone_batch_limit("target-segments"));
+        }
+        let mut target = Vec::with_capacity(target_count);
+        for _ in 0..target_count {
+            target.push(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
+        }
         let diff_schema = crate::ids::SchemaId(read_document_backbone_text(bytes, &mut position, limits.maximum_schema_bytes, "schema-bytes")?);
         let diff_payload = read_document_backbone_bytes(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes), "payload-bytes")?;
         total_payload_bytes += diff_payload.len();
@@ -1035,7 +1109,7 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
         let inverse_payload = read_document_backbone_bytes(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes), "payload-bytes")?;
         total_payload_bytes += inverse_payload.len();
         let timestamp = crate::ids::HybridLogicalTimestamp { actor: read_document_backbone_u64(bytes, &mut position)?, physical_ms: read_document_backbone_u64(bytes, &mut position)?, logical: read_document_backbone_u64(bytes, &mut position)? };
-        envelopes.push(MutationEnvelope { mutation_id, document_id, actor, dependencies, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp });
+        envelopes.push(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp });
     }
     if position != bytes.len() {
         return Err(document_backbone_batch_malformed(position, "trailing-bytes"));

@@ -1,40 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/diff.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.norm.en1999.diff",
   "title": "En1999Diff",
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "x-semio-state": "artifact"
-    },
-    "annex": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "materials": {
-      "type": "array",
-      "x-semio-state": "artifact"
-    },
-    "sections": {
-      "type": "array",
-      "x-semio-state": "artifact"
-    },
-    "members": {
-      "type": "array",
-      "x-semio-state": "artifact"
-    },
-    "connections": {
-      "type": "array",
-      "x-semio-state": "artifact"
-    },
-    "fireScenarios": {
-      "type": "array",
-      "x-semio-state": "artifact"
-    },
-    "fatigueDetails": {
-      "type": "array",
-      "x-semio-state": "artifact"
-    }
+    "artifact": { "type": "object" },
+    "annex": { "type": "string" },
+    "materials": { "type": "array" },
+    "sections": { "type": "array" },
+    "members": { "type": "array" },
+    "connections": { "type": "array" },
+    "fireScenarios": { "type": "array" },
+    "fatigueDetails": { "type": "array" },
+    "coldFormed": { "type": "array" },
+    "shells": { "type": "array" }
   }
 }

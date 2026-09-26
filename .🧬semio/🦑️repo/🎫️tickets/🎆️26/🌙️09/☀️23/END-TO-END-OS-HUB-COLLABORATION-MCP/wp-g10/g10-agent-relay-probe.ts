@@ -11,7 +11,8 @@ import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "/Use
 import { createSpaceCommandV1 } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 
-const [HUB = "http://127.0.0.1:7800", ROUNDS = "3"] = process.argv.slice(2);
+const [HUB, ROUNDS = "3"] = process.argv.slice(2);
+if (!HUB) throw new Error("usage: bun g10-agent-relay-probe.ts <hubOrigin> [rounds] — no default hub (7800 belongs to W2)");
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const hub = async (method: string, path: string, token?: string, body?: string) => {
   const response = await fetch(`${HUB}${path}`, { method, headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), ...(token ? { authorization: `Bearer ${token}` } : {}) }, ...(body === undefined ? {} : { body }) });

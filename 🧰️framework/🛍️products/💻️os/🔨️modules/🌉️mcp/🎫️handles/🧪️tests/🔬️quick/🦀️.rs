@@ -62,6 +62,7 @@ fn a_handle_past_its_ttl_is_not_found_and_removed() {
     assert_eq!(table.len(), 0, "lazily-discovered expiry must remove the record");
 }
 
+/// ⏱️ Had the TTL not slid forward on the resolve above, this would now be past the original expiry
 #[test]
 fn session_handle_ttl_slides_forward_on_every_resolve() {
     let table = HandleTable::new();
@@ -69,7 +70,6 @@ fn session_handle_ttl_slides_forward_on_every_resolve() {
     let id = table.mint(HandleKind::Session, owner.clone(), Attachment::None, serde_json::Value::Null, 0);
     let almost_expired = HandleKind::Session.default_ttl_ms() - 1;
     table.resolve(&id, &owner, almost_expired).unwrap();
-    // had the TTL not slid forward on the resolve above, this would now be past the original expiry
     let would_have_been_expired = HandleKind::Session.default_ttl_ms() + 1;
     table.resolve(&id, &owner, would_have_been_expired).unwrap();
 }

@@ -611,3 +611,19 @@ fn glass_alpha_and_blur_are_formula_derived_per_level() {
     assert!(theme.glass(Level::Base).blur_px < theme.glass(Level::Menu).blur_px);
     assert_eq!(theme.surface(Level::Panel), theme.level_bg[Level::Panel.index()]);
 }
+
+/// 📻️ The image sample owns the avatar radius without changing ordinary raster geometry.
+#[test]
+fn rounded_avatar_rasters_keep_their_radius_through_the_draw_packet() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧱️elements/⚙️VirtualFileSystem/🧫️fixtures/🧾️descriptors/🔣️.json")).unwrap();
+    let law = &fixture["avatarGeometry"];
+    let rect: [f32; 4] = serde_json::from_value(law["rect"].clone()).unwrap();
+    let uv: [f32; 4] = serde_json::from_value(law["uv"].clone()).unwrap();
+    let mut draw = DrawList::default();
+    draw.push_rounded_raster_quad("avatar", rect, uv, law["alpha"].as_f64().unwrap() as f32, law["oversizedRadius"].as_f64().unwrap() as f32);
+    draw.push_raster_quad("ordinary", rect, uv, 1.0);
+    assert_eq!(draw.layers[0].raster_instances[0].1.params[0], law["radius"].as_f64().unwrap() as f32);
+    assert_eq!(draw.layers[0].raster_instances[0].1.rect, rect);
+    assert_eq!(draw.layers[0].raster_instances[0].1.uv_rect, uv);
+    assert_eq!(draw.layers[0].raster_instances[1].1.params[0], 0.0);
+}

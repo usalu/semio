@@ -19,7 +19,8 @@
         "mu0": 0.5,
         "protectionConductivity": 0.2,
         "protectionDensity": 800.0,
-        "protectionSpecificHeat": 1700.0
+        "protectionSpecificHeat": 1700.0,
+        "designTemperature": 550.0
       }
     ]
   },

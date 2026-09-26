@@ -2,6 +2,7 @@ semio norm.din4108.dsl v1
 climate-zone=zone2 usage=residential t-int-c=20 rh-int=0.5 has-mechanical-ventilation=true airtightness-n50=1.5 bb2-details-conform=true
 zones [id:TEXT floor-area-m2:QTY heaviness:TEXT night-ventilation:TEXT windows:TABLE] {
   zone-living 80m2 heavy moderate [ {id=win-south orientation=S inclination-deg=90deg area-m2=8m2 g-value=0.5 shading-fc=0.5} {id=win-east orientation=E inclination-deg=90deg area-m2=4m2 g-value=0.5 shading-fc=0.7} ]
+  zone-utility 12m2 heavy none [ {id=win-utility orientation=N inclination-deg=90deg area-m2=1m2 g-value=0.5 shading-fc=0.7} ]
 }
 elements [id:TEXT kind:TEXT zone-id:TEXT orientation-deg:NUM inclination-deg:NUM adjacent:TEXT area-m2:QTY delta-u-g:NUM delta-u-f:NUM delta-u-r:NUM layers:TABLE] {
   wall-north wall zone-living 0 90 exterior 40m2 0 0 0 [ {id=plaster-int material-id=gypsum_plaster thickness-m=0.015m lambda=0.7 mu=10 density=1400 application-type="" compressive-class="" water-class="" tensile-class="" acoustic-class=""
@@ -27,7 +28,7 @@ elements [id:TEXT kind:TEXT zone-id:TEXT orientation-deg:NUM inclination-deg:NUM
   segments [id:TEXT material-id:TEXT fraction:NUM lambda:NUM mu:NUM density:NUM] {
   }
   } ]
-  floor-ground floor zone-living 0 0 ground 80m2 0 0 0 [ {id=screed material-id=screed thickness-m=0.05m lambda=1.4 mu=50 density=2000 application-type="" compressive-class="" water-class="" tensile-class="" acoustic-class=""
+  floor-ground floor zone-utility 0 0 ground 80m2 0 0 0 [ {id=screed material-id=screed thickness-m=0.05m lambda=1.4 mu=50 density=2000 application-type="" compressive-class="" water-class="" tensile-class="" acoustic-class=""
   segments [id:TEXT material-id:TEXT fraction:NUM lambda:NUM mu:NUM density:NUM] {
   }
   } {id=xps material-id=xps thickness-m=0.1m lambda=0.035 mu=100 density=35 application-type=DEO compressive-class=dk water-class=wd tensile-class=tf acoustic-class=sm

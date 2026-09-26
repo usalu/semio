@@ -1,4 +1,6 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.norm.en1999.mutation",
   "title": "En1999Mutation",
   "kinds": [
     "change-annex",
@@ -8,6 +10,8 @@
     "change-connections",
     "change-fire-scenarios",
     "change-fatigue-details",
+    "change-cold-formed",
+    "change-shells",
     "add-member",
     "remove-member",
     "change-member-n-ed",

@@ -1,12 +1,13 @@
 import { randomBytes } from "node:crypto";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { chmodSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import type { Duplex } from "node:stream";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { protectOwnerOnly } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
@@ -28,7 +29,6 @@ export const LOCAL_READINESS_STALL_BOUND_MS = 30_000;
 export const TRUSTED_CATALOG_READINESS_STALL_BOUND_MS = 300_000;
 
 export type LocalHubRunAllocationOperations = Readonly<{
-  platform: NodeJS.Platform;
   makeTemporaryDirectory: (prefix: string) => string;
   protectDirectory: (path: string) => void;
   removeDirectory: (path: string) => void;
@@ -72,16 +72,15 @@ export type LocalHubRun = {
 };
 
 const nativeAllocationOperations: LocalHubRunAllocationOperations = {
-  platform: process.platform,
   makeTemporaryDirectory: (prefix) => mkdtempSync(prefix),
-  protectDirectory: (path) => chmodSync(path, 0o700),
+  protectDirectory: (path) => protectOwnerOnly(path, "directory"),
   removeDirectory: (path) => rmSync(path, { recursive: true, force: true }),
 };
 
 /** 📁 Allocates one private local-Hub root through an injectable, owned filesystem boundary. */
 export function allocateLocalHubRunRoot(parent = tmpdir(), operations: LocalHubRunAllocationOperations = nativeAllocationOperations): Readonly<{ path: string; remove: () => void }> {
   const path = operations.makeTemporaryDirectory(join(parent, "semio-hub-run-"));
-  if (operations.platform !== "win32") operations.protectDirectory(path);
+  operations.protectDirectory(path);
   return { path, remove: () => operations.removeDirectory(path) };
 }
 
@@ -151,6 +150,272 @@ export function hubDevPostgresBinaryPath(root: string, staging: HubDevBinaryStag
   if (status !== 0 || !existsSync(path)) throw new Error(`Missing Nx-staged PostgreSQL os-hub dev binary: ${path}; staging it through \`bun nx run ${HUB_DEV_POSTGRES_BINARY_TARGET}\` exited with status ${status}`);
   return path;
 }
+
+/** 🧾️ The `semio.cargo.binary-sources/v1` record every hub staging verb writes beside the `os-hub` executable. */
+export const HUB_BINARY_SOURCES_FILE = "os-hub.sources.json";
+
+/** 🔎️ The pid of the process listening on `port`. */
+export function listeningProcessId(port: number): number {
+  if (process.platform === "win32") {
+    const answer = spawnSync("netstat", ["-ano", "-p", "TCP"], { encoding: "utf8" });
+    const row = answer.stdout.split(/\r?\n/u).find((line) => new RegExp(`:${port}\\s+\\S+\\s+LISTENING\\s+\\d+`, "u").test(line));
+    const pid = Number(row?.trim().split(/\s+/u).at(-1));
+    if (!Number.isInteger(pid) || pid <= 0) throw new Error(`no process listens on port ${port}`);
+    return pid;
+  }
+  const answer = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN", "-t"], { encoding: "utf8" });
+  const pid = Number(answer.stdout.trim().split("\n")[0]);
+  if (!Number.isInteger(pid) || pid <= 0) throw new Error(`no process listens on port ${port} (lsof status ${answer.status})`);
+  return pid;
+}
+
+//#region 🔖️BackendServers
+/** 🗄️ The external durable backends a hub runs on besides the built-in `fs`/`sqlite` pair. */
+export type HubBackendName = "postgres" | "neo4j";
+
+/** 🐳️ One backend server as its `🌎️hub/compose.yaml` service declares it: the container port, the readiness
+ * probe and query client (the server's own tools, run inside the container), and the hub environment that
+ * points BOTH durable halves (document store and directory) at a server reachable on `host:port`. */
+export type HubBackendDefinition = Readonly<{
+  service: HubBackendName;
+  containerPort: number;
+  ready: readonly string[];
+  client: readonly string[];
+  env: (host: string, port: number) => Readonly<Record<string, string>>;
+}>;
+
+/** 📜️ Every external backend, keyed by name. Credentials are the compose service's own development values. */
+export const HUB_BACKENDS: Readonly<Record<HubBackendName, HubBackendDefinition>> = Object.freeze({
+  postgres: Object.freeze({
+    service: "postgres",
+    containerPort: 5432,
+    ready: Object.freeze(["pg_isready", "--username=semio", "--dbname=semio"]),
+    client: Object.freeze(["psql", "--username=semio", "--dbname=semio", "--tuples-only", "--no-align", "--command"]),
+    env: (host: string, port: number) => {
+      const url = `postgres://semio:semio@${host}:${port}/semio`;
+      return { OS_HUB_STORAGE_BACKEND: "postgres", OS_HUB_DATABASE_URL: url, OS_HUB_DIRECTORY_BACKEND: "postgres", OS_HUB_DIRECTORY_DATABASE_URL: url };
+    },
+  }),
+  neo4j: Object.freeze({
+    service: "neo4j",
+    containerPort: 7687,
+    ready: Object.freeze(["cypher-shell", "--username", "neo4j", "--password", "semio-hub", "RETURN 1"]),
+    client: Object.freeze(["cypher-shell", "--username", "neo4j", "--password", "semio-hub", "--format", "plain"]),
+    env: (host: string, port: number) => {
+      const uri = `bolt://${host}:${port}`;
+      return { OS_HUB_STORAGE_BACKEND: "neo4j", OS_HUB_NEO4J_URI: uri, OS_HUB_NEO4J_USER: "neo4j", OS_HUB_NEO4J_PASSWORD: "semio-hub", OS_HUB_DIRECTORY_BACKEND: "neo4j", OS_HUB_DIRECTORY_NEO4J_URI: uri, OS_HUB_DIRECTORY_NEO4J_USER: "neo4j", OS_HUB_DIRECTORY_NEO4J_PASSWORD: "semio-hub" };
+    },
+  }),
+});
+
+/** 🔎️ Narrows one argv word to a backend name, naming every accepted value when it is none. */
+export function hubBackendName(value: string | undefined): HubBackendName {
+  if (value === "postgres" || value === "neo4j") return value;
+  throw new Error(`expected a hub backend (${Object.keys(HUB_BACKENDS).join(" | ")}), got ${JSON.stringify(value ?? "")}`);
+}
+
+/** 🏷️ Where the ONE shared development server of a backend lives: its compose project and container. Every
+ * consumer — `os-hub-ts:backend-up`, `os-hub:dev-postgres`/`dev-neo4j` and the pg/neo4j gates — reuses it; a gate
+ * isolates itself through {@link claimHubBackend}, never through a second server. */
+export type HubBackendIdentity = Readonly<{ name: HubBackendName; project: string; container: string }>;
+
+/** 🏷️ The identity of the shared development server of `name`. */
+export function hubBackendIdentity(name: HubBackendName): HubBackendIdentity {
+  const project = `semio-hub-backend-${name}`;
+  return Object.freeze({ name, project, container: project });
+}
+
+/** 🐘️ A running, ready backend server: its identity, the loopback port its container port is published on, the
+ * hub environment that selects it, and the in-container query client a gate counts live WAL writers with. */
+export type HubBackendServer = Readonly<{ identity: HubBackendIdentity; host: string; port: number; env: Readonly<Record<string, string>>; client: readonly string[] }>;
+
+/** 📈️ One observable step of a backend start (`engine` answered, `start` in progress, `ready`), with the seconds spent. */
+export type HubBackendProgress = Readonly<{ name: HubBackendName; phase: "engine" | "start" | "ready"; elapsedSeconds: number }>;
+
+/** 🎛️ Start options: cancellation (the half-started container is removed) and a progress sink. */
+export type HubBackendStartOptions = Readonly<{ signal?: AbortSignal; onProgress?: (progress: HubBackendProgress) => void; readinessBoundMs?: number }>;
+
+/** ⏳ How long a started container may stay unready before the start fails — the neo4j JVM measured ~25 s cold. */
+export const HUB_BACKEND_READINESS_BOUND_MS = 180_000;
+
+/** 🐳️ The container engine CLI. Cross-platform story: Docker Desktop on macOS and Windows, Docker Engine on
+ * Linux, and docker-in-docker inside the devcontainer — in every case the engine publishes on THIS process's
+ * loopback, so the server is always `127.0.0.1:<port>` and no host resolution differs by platform. */
+export const HUB_BACKEND_ENGINE = "docker";
+
+/** 🌐️ The loopback host every backend is published on and reached through. */
+export const HUB_BACKEND_HOST = "127.0.0.1";
+
+type EngineResult = Readonly<{ status: number; stdout: string; stderr: string }>;
+
+function engine(repoRoot: string, args: readonly string[], options: Readonly<{ inherit?: boolean; signal?: AbortSignal }> = {}): Promise<EngineResult> {
+  return new Promise((resolveRun, rejectRun) => {
+    if (options.signal?.aborted) return rejectRun(new Error("hub backend start cancelled"));
+    const child = spawn(HUB_BACKEND_ENGINE, [...args], { cwd: repoRoot, shell: false, stdio: ["ignore", options.inherit ? "inherit" : "pipe", options.inherit ? "inherit" : "pipe"] });
+    const out: Buffer[] = [];
+    const err: Buffer[] = [];
+    child.stdout?.on("data", (chunk: Buffer) => out.push(chunk));
+    child.stderr?.on("data", (chunk: Buffer) => err.push(chunk));
+    const abort = (): void => void child.kill("SIGTERM");
+    options.signal?.addEventListener("abort", abort, { once: true });
+    child.once("error", (error) => {
+      options.signal?.removeEventListener("abort", abort);
+      rejectRun(new Error(`${HUB_BACKEND_ENGINE} is not runnable (${error.message}); install Docker Desktop (macOS, Windows), Docker Engine (Linux) or the devcontainer docker-in-docker feature`));
+    });
+    child.once("close", (status) => {
+      options.signal?.removeEventListener("abort", abort);
+      if (options.signal?.aborted) return rejectRun(new Error("hub backend start cancelled"));
+      resolveRun({ status: status ?? -1, stdout: Buffer.concat(out).toString("utf8"), stderr: Buffer.concat(err).toString("utf8") });
+    });
+  });
+}
+
+function composeArgs(repoRoot: string, identity: HubBackendIdentity): string[] {
+  return ["compose", "--file", join(repoRoot, "🌎️hub", "compose.yaml"), "--project-name", identity.project, "--profile", identity.name];
+}
+
+/** 🩺️ The engine's server version, or a thrown error that names how to install one on this platform. */
+export async function hubBackendEngineVersion(repoRoot: string): Promise<string> {
+  const probe = await engine(repoRoot, ["info", "--format", "{{.ServerVersion}}"]);
+  if (probe.status !== 0) throw new Error(`the ${HUB_BACKEND_ENGINE} daemon does not answer (${probe.stderr.trim() || `status ${probe.status}`}); start Docker Desktop (macOS, Windows) or the Docker Engine service (Linux)`);
+  return probe.stdout.trim();
+}
+
+/** 🔭️ The live server of `identity`: running, published and answering its own readiness probe — or `undefined`.
+ * Docker is the only record of it: nothing is cached on disk that could disagree with the engine. */
+export async function hubBackendStatus(repoRoot: string, identity: HubBackendIdentity): Promise<HubBackendServer | undefined> {
+  const definition = HUB_BACKENDS[identity.name];
+  const running = await engine(repoRoot, ["inspect", "--format", "{{.State.Running}}", identity.container]);
+  if (running.status !== 0 || running.stdout.trim() !== "true") return undefined;
+  const published = await engine(repoRoot, ["port", identity.container, `${definition.containerPort}/tcp`]);
+  const port = Number(/:(\d+)\s*$/m.exec(published.stdout.trim())?.[1]);
+  if (published.status !== 0 || !Number.isInteger(port) || port <= 0) return undefined;
+  if ((await engine(repoRoot, ["exec", identity.container, ...definition.ready])).status !== 0) return undefined;
+  return Object.freeze({ identity, host: HUB_BACKEND_HOST, port, env: Object.freeze(definition.env(HUB_BACKEND_HOST, port)), client: Object.freeze([HUB_BACKEND_ENGINE, "exec", identity.container, ...definition.client]) });
+}
+
+/** 🧹️ Removes the container and the compose project's volumes of `identity`; a missing server is not an error.
+ * Synchronous, so a gate's `process.once("exit")` teardown can call it. */
+export function stopHubBackend(repoRoot: string, identity: HubBackendIdentity): void {
+  spawnSync(HUB_BACKEND_ENGINE, ["rm", "--force", identity.container], { cwd: repoRoot, stdio: "ignore", shell: false });
+  spawnSync(HUB_BACKEND_ENGINE, [...composeArgs(repoRoot, identity), "down", "--volumes", "--remove-orphans"], { cwd: repoRoot, stdio: "ignore", shell: false });
+}
+
+/** 🚀️ Returns the ready server of `identity`, starting it from its compose service when none runs. The image pull
+ * streams the engine's own progress; the readiness wait reports every 5 s and is bounded by
+ * {@link HUB_BACKEND_READINESS_BOUND_MS}. Cancellation or a failed start removes the half-started container. */
+export async function ensureHubBackend(repoRoot: string, identity: HubBackendIdentity, options: HubBackendStartOptions = {}): Promise<HubBackendServer> {
+  const started = Date.now();
+  const report = (phase: HubBackendProgress["phase"]): void => options.onProgress?.({ name: identity.name, phase, elapsedSeconds: Math.round((Date.now() - started) / 1000) });
+  report("engine");
+  await hubBackendEngineVersion(repoRoot);
+  const existing = await hubBackendStatus(repoRoot, identity);
+  if (existing) return existing;
+  const definition = HUB_BACKENDS[identity.name];
+  try {
+    await engine(repoRoot, ["rm", "--force", identity.container]);
+    report("start");
+    const port = await freeLoopbackPort();
+    const run = await engine(repoRoot, [...composeArgs(repoRoot, identity), "run", "--detach", "--rm", "--name", identity.container, "--publish", `${HUB_BACKEND_HOST}:${port}:${definition.containerPort}`, definition.service], { inherit: true, signal: options.signal });
+    if (run.status !== 0) throw new Error(`the ${identity.name} compose service did not start (status ${run.status})`);
+    const bound = options.readinessBoundMs ?? HUB_BACKEND_READINESS_BOUND_MS;
+    let reported = 0;
+    for (;;) {
+      if (options.signal?.aborted) throw new Error("hub backend start cancelled");
+      const server = await hubBackendStatus(repoRoot, identity);
+      if (server) {
+        report("ready");
+        return server;
+      }
+      const elapsed = Date.now() - started;
+      if (elapsed > bound) throw new Error(`${identity.name} did not answer ${definition.ready[0]} within ${Math.round(bound / 1000)} s`);
+      if (elapsed - reported >= 5_000) {
+        reported = elapsed;
+        report("start");
+      }
+      await new Promise<void>((resolveDelay) => setTimeout(resolveDelay, 1000));
+    }
+  } catch (error) {
+    stopHubBackend(repoRoot, identity);
+    throw error;
+  }
+}
+/** 🗝️ One gate run's claim on the shared server: the hub environment and writer-probe client scoped to what the run
+ * owns, and a synchronous `release` (safe inside a `process.once("exit")` handler). */
+export type HubBackendClaim = Readonly<{ server: HubBackendServer; env: Readonly<Record<string, string>>; client: readonly string[]; release: () => void }>;
+
+/** 🗝️ The file that serialises neo4j claims: Community edition serves exactly one database, so a claim owns the
+ * whole server. It records the owning pid; a lease whose pid is gone is taken over. */
+export function hubBackendLeasePath(repoRoot: string, name: HubBackendName): string {
+  return join(repoRoot, ".🧬semio", "🌐hub", `backend-${name}.lease`);
+}
+
+function processAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "EPERM";
+  }
+}
+
+function takeLease(path: string): boolean {
+  mkdirSync(dirname(path), { recursive: true });
+  try {
+    writeFileSync(path, String(process.pid), { flag: "wx" });
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    const owner = Number(readFileSync(path, "utf8").trim());
+    if (Number.isInteger(owner) && owner > 0 && processAlive(owner)) return false;
+    rmSync(path, { force: true });
+    return takeLease(path);
+  }
+}
+
+/** 🗝️ Claims the shared server of `name` for one gate run `owner` (letters, digits, `_`). postgres: a fresh
+ * database `semio_run_<owner>` on the shared server, dropped on release. neo4j: the exclusive lease
+ * ({@link hubBackendLeasePath}, waited for with progress and cancellation), then every node is deleted so the run
+ * starts on an empty graph — a neo4j gate resets the shared development graph. */
+export async function claimHubBackend(repoRoot: string, name: HubBackendName, owner: string, options: HubBackendStartOptions = {}): Promise<HubBackendClaim> {
+  if (!/^[a-z0-9_]{1,40}$/.test(owner)) throw new Error(`hub backend claim owner must match [a-z0-9_]{1,40}, got ${JSON.stringify(owner)}`);
+  const server = await ensureHubBackend(repoRoot, hubBackendIdentity(name), options);
+  const exec = [HUB_BACKEND_ENGINE, "exec", server.identity.container];
+  const run = (args: readonly string[]): number => spawnSync(args[0]!, args.slice(1), { cwd: repoRoot, stdio: "ignore", shell: false }).status ?? -1;
+  if (name === "postgres") {
+    const database = `semio_run_${owner}`;
+    const admin = [...exec, "psql", "--username=semio", "--dbname=semio", "--command"];
+    run([...admin, `DROP DATABASE IF EXISTS ${database} WITH (FORCE)`]);
+    if (run([...admin, `CREATE DATABASE ${database}`]) !== 0) throw new Error(`could not create the run database ${database} on ${server.identity.container}`);
+    const url = `postgres://semio:semio@${server.host}:${server.port}/${database}`;
+    return Object.freeze({
+      server,
+      env: Object.freeze({ ...server.env, OS_HUB_DATABASE_URL: url, OS_HUB_DIRECTORY_DATABASE_URL: url }),
+      client: Object.freeze([...exec, "psql", "--username=semio", `--dbname=${database}`, "--tuples-only", "--no-align", "--command"]),
+      release: () => void run([...admin, `DROP DATABASE IF EXISTS ${database} WITH (FORCE)`]),
+    });
+  }
+  const lease = hubBackendLeasePath(repoRoot, name);
+  const started = Date.now();
+  let reported = 0;
+  while (!takeLease(lease)) {
+    if (options.signal?.aborted) throw new Error("hub backend claim cancelled");
+    if (Date.now() - reported >= 10_000) {
+      reported = Date.now();
+      options.onProgress?.({ name, phase: "start", elapsedSeconds: Math.round((reported - started) / 1000) });
+    }
+    await new Promise<void>((resolveDelay) => setTimeout(resolveDelay, 1000));
+  }
+  const release = (): void => {
+    if (existsSync(lease) && readFileSync(lease, "utf8").trim() === String(process.pid)) rmSync(lease, { force: true });
+  };
+  if (run([...exec, ...HUB_BACKENDS.neo4j.client, "MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS"]) !== 0) {
+    release();
+    throw new Error(`could not reset the shared neo4j graph on ${server.identity.container}`);
+  }
+  return Object.freeze({ server, env: server.env, client: server.client, release });
+}
+//#endregion 🔖️BackendServers
 
 /** 🚀 Starts one loopback Hub and completes its authenticated local-bootstrap handshake. */
 export async function startLocalHub(repoRoot: string, root: string, profiles: readonly LocalProfile[], options: LocalHubStartOptions = {}): Promise<LocalHubRun> {

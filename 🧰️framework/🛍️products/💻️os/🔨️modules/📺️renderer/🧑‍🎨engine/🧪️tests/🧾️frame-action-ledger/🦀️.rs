@@ -19,6 +19,46 @@ const FIXTURE: &str = include_str!("../../🧫️fixtures/🧾️frame-action-le
 const RENDERER_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 const FRAME_JOB_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
 
+#[test]
+fn frame_action_refusal_cancels_only_the_correlated_successor_with_identical_payloads() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
+    let rows = fixture["receipts"].as_array().unwrap();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut batch = input.reserve_actions(rows.len(), rows.len() * 256).unwrap();
+    for row in rows {
+        batch.action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
+            builder.set_receipt(ui_wgpu::wgpu::ActionQueueReceipt { token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })?;
+            builder.begin_object(None)?;
+            builder.string(Some("surfaceId"), fixture["surface"].as_str().unwrap())?;
+            builder.string(Some("text"), fixture["text"].as_str().unwrap())?;
+            builder.end_container()
+        }).unwrap();
+    }
+    batch.publish().unwrap();
+    let mut actions = FrameActionOwners::default();
+    for _ in rows {
+        assert!(matches!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending | FrameInputActionStep::Transferred)));
+    }
+    let mut cursor = FrameDeferredCursor::new(actions, false, false, false, false, 1, semio_framework_job::root_cancel_token());
+    let mut dispatched = Vec::new();
+    let mut cancelled = Vec::new();
+    while let Some(FrameDeferredWork::Action(action)) = cursor.take_next() {
+        let receipt = action.receipt.unwrap();
+        let identity = format!("{}:{}", receipt.token, receipt.member);
+        if action.cancelled {
+            cancelled.push(identity);
+        } else {
+            dispatched.push(identity);
+            if receipt.token.get() == fixture["refusedToken"].as_u64().unwrap() && receipt.abort_correlation_on_error {
+                cursor.actions.cancel_correlation(receipt.token);
+            }
+        }
+    }
+    assert_eq!(serde_json::json!(dispatched), fixture["dispatch"]);
+    assert_eq!(serde_json::json!(cancelled), fixture["cancelled"]);
+    assert!(cursor.terminal_is_empty());
+}
+
 /// 🧾️ One fixture row's frame runtime: the ledger its `owner` declares, the deferred owner a
 /// completion mints from it, and the two answers the row is scored on.
 struct Replay {
@@ -53,7 +93,7 @@ impl Replay {
             return;
         }
         while let Some(action) = self.candidate.pop_front() {
-            self.lost.push(action.action);
+            self.lost.push(action.descriptor.action);
         }
     }
 
@@ -85,8 +125,8 @@ impl Replay {
                 };
                 match cursor.take_next() {
                     Some(FrameDeferredWork::Action(action)) => {
-                        assert_eq!(Some(action.action.as_str()), expected, "{row} step {index}: the owner hands the shell the action the fixture names");
-                        self.dispatched.push(action.action);
+                        assert_eq!(Some(action.descriptor.action.as_str()), expected, "{row} step {index}: the owner hands the shell the action the fixture names");
+                        self.dispatched.push(action.descriptor.action);
                     }
                     None => {
                         assert!(expected.is_none(), "{row} step {index}: the owner still owes {expected:?}");
@@ -140,13 +180,13 @@ fn a_live_deferred_owner_drains_before_a_new_complete_source_batch_installs() {
     input.reserve_action("fixture", "later", 16).unwrap().publish().unwrap();
     assert_eq!(transfer_frame_input_action(&mut input, &mut later), Ok(FrameInputActionStep::Transferred));
     assert_eq!(transfer_frame_input_action(&mut input, &mut later), Ok(FrameInputActionStep::Transferred));
-    assert!(matches!(live.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "earlier"));
+    assert!(matches!(live.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "earlier"));
     assert!(live.take_next().is_none());
     assert!(live.terminal_is_empty());
     let mut next = FrameDeferredCursor::new(later, false, false, false, false, 2, semio_framework_job::root_cancel_token());
-    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "canvasDragLeave"));
-    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "canvasDrop"));
-    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "later"));
+    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "canvasDragLeave"));
+    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "canvasDrop"));
+    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.descriptor.action == "later"));
     assert!(next.take_next().is_none());
     assert!(next.terminal_is_empty());
     assert!(!RENDERER_SOURCE.contains("frame completion found an unclosed deferred owner"));

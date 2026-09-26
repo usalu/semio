@@ -18,13 +18,13 @@ mod artifact_contribution_tests {
         let descriptor = descriptor_with_mutation("s.dep.target", "dep.document#contributor:add-thing", "add-thing").await;
         let error = register_contributions("contributor", &[], std::slice::from_ref(&descriptor)).expect_err("missing dependency must be rejected");
         assert!(matches!(error, ContributionRegistrationError::DependencyNotDeclared { owner, .. } if owner == "dep"));
-        let dependencies = vec![semio_framework::PluginDependency::new("dep", semio_framework::VersionReq::Any)];
+        let dependencies = vec![semio_framework::PluginDependency::new("dep", semio_framework::tree_pin!())];
         register_contributions("contributor", &dependencies, std::slice::from_ref(&descriptor)).expect("direct dependency must be accepted");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn id_namespacing_rejects_a_collision_with_an_owner_kind() {
-        let dependencies = vec![semio_framework::PluginDependency::new("dep", semio_framework::VersionReq::Any)];
+        let dependencies = vec![semio_framework::PluginDependency::new("dep", semio_framework::tree_pin!())];
         let bare = descriptor_with_mutation("s.dep.target", "dep.document#add-thing", "add-thing").await;
         let error = register_contributions("contributor", &dependencies, std::slice::from_ref(&bare)).expect_err("bare owner-shaped id must be rejected");
         assert!(matches!(error, ContributionRegistrationError::CollidesWithOwnerKind(id) if id == "dep.document#add-thing"));

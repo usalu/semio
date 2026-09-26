@@ -1112,6 +1112,11 @@ impl DrawList {
     }
 
     pub fn push_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
+        self.push_rounded_raster_quad(key, rect, uv_rect, alpha, 0.0);
+    }
+
+    /// 📻️ An image quad whose sampled pixels are clipped to its rounded CSS-style boundary.
+    pub fn push_rounded_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32, radius: f32) {
         let Some(bytes) = key.len().checked_add(size_of::<UiInstance>()) else {
             let _ = self.claim_retained_output(usize::MAX, usize::MAX);
             return;
@@ -1119,7 +1124,9 @@ impl DrawList {
         if !self.claim_retained_output(1, bytes) {
             return;
         }
-        self.active_raster_instances().push((key.to_string(), UiInstance::raster(rect, uv_rect, alpha)));
+        let mut instance = UiInstance::raster(rect, uv_rect, alpha);
+        instance.params[0] = radius.max(0.0).min(rect[2].min(rect[3]).max(0.0) * 0.5);
+        self.active_raster_instances().push((key.to_string(), instance));
     }
 
     pub fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {

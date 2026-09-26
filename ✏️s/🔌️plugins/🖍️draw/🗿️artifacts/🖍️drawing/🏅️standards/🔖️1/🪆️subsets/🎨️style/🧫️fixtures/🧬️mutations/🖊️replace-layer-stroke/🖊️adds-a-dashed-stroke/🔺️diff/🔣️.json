@@ -20,7 +20,8 @@
           "strokeJson": "{\"color\":[0.0,0.0,0.0,1.0],\"width\":2.0,\"cap\":\"round\",\"join\":\"bevel\",\"dash\":[4.0,2.0]}",
           "booleanOperation": null,
           "traceParamsJson": null,
-          "layerJson": null
+          "layerJson": null,
+          "pathSegments": null
         }
       }
     ],

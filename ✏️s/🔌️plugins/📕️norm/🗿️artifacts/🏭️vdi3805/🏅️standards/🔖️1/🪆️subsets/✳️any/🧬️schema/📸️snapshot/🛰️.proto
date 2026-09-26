@@ -69,11 +69,10 @@ message EditionId { int32 year = 1; int32 month = 2; }
 message CatalogIndexEntry { string product_id = 1; uint32 sheet = 2; repeated string tags = 3; optional uint32 dn = 4; }
 message CatalogIndex { repeated CatalogIndexEntry entries = 1; }
 message BoundingBox { double min_x = 1; double min_y = 2; double min_z = 3; double max_x = 4; double max_y = 5; double max_z = 6; }
-message GeometryConnection { string id = 1; double x = 2; double y = 3; double z = 4; double nx = 5; double ny = 6; double nz = 7; }
+message GeometryConnection { string id = 1; string medium = 2; repeated double position = 3; repeated double direction = 4; optional double diameter_mm = 5; }
 message ParametricGeometry { string id = 1; BoundingBox bbox = 2; repeated GeometryConnection connections = 3; map<string, double> parameters = 4; }
 message CurvePoint { double x = 1; double y = 2; }
 message CharacteristicCurve { string id = 1; repeated CurvePoint points = 2; }
-message SecurityLimits { uint64 max_file_bytes = 1; uint32 max_records = 2; uint32 max_field_length = 3; uint32 max_nesting_depth = 4; }
 
 message Vdi3805Snapshot {
   // @state artifact

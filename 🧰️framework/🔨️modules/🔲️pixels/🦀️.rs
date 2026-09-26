@@ -348,7 +348,13 @@ mod deflate {
     /// lookahead, emitted as a single final fixed-Huffman block (RFC1951 BTYPE=1).
     fn deflate_raw(data: &[u8]) -> Vec<u8> {
         let mut writer = BitWriter::new();
-        writer.write_bits(0b011, 3);
+        write_fixed_block(&mut writer, data, true);
+        writer.align_byte();
+        writer.out
+    }
+
+    fn write_fixed_block(writer: &mut BitWriter, data: &[u8], final_block: bool) {
+        writer.write_bits(if final_block { 0b011 } else { 0b010 }, 3);
         let literal_codes = build_codes(&fixed_lit_lengths());
         let distance_codes = build_codes(&fixed_dist_lengths());
         let mut head = vec![-1i32; HASH_SIZE];
@@ -411,8 +417,36 @@ mod deflate {
         }
         let (code, bits) = literal_codes[256];
         writer.write_bits(code, bits);
-        writer.align_byte();
-        writer.out
+    }
+
+    pub(super) struct ZlibEncodeCursor {
+        writer: BitWriter,
+        adler_a: u32,
+        adler_b: u32,
+        started: bool,
+    }
+
+    impl ZlibEncodeCursor {
+        pub(super) fn new() -> Self {
+            Self { writer: BitWriter::new(), adler_a: 1, adler_b: 0, started: false }
+        }
+
+        pub(super) fn push(&mut self, data: &[u8], final_block: bool) -> Vec<u8> {
+            if !self.started {
+                self.writer.out.extend_from_slice(&[0x78, 0x01]);
+                self.started = true;
+            }
+            for &byte in data {
+                self.adler_a = (self.adler_a + u32::from(byte)) % 65521;
+                self.adler_b = (self.adler_b + self.adler_a) % 65521;
+            }
+            write_fixed_block(&mut self.writer, data, final_block);
+            if final_block {
+                self.writer.align_byte();
+                self.writer.out.extend_from_slice(&((self.adler_b << 16) | self.adler_a).to_be_bytes());
+            }
+            std::mem::take(&mut self.writer.out)
+        }
     }
     //#endregion Compress
 
@@ -898,6 +932,9 @@ pub fn encode_png(image: &RasterImage) -> Result<Vec<u8>, RasterError> {
     let compressed = deflate::zlib_compress(&idat);
     Ok(assemble_png(image.width, image.height, 6, 8, &compressed))
 }
+
+#[path = "📷️png/✍️encode/🦀️.rs"]
+pub mod png_encoding;
 
 /// 📤️ Encodes row-major big-endian 16-bit grayscale samples as a 16-bit grayscale PNG (color
 /// type 0), for lossless heightfield/DSM-style export.

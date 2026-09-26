@@ -269,15 +269,31 @@ pub struct AnnexParams {
     pub gamma_mf: f64,
 }
 
+/// 📐️ Shared EN 1993-1-1 partial factors (also published by catalogue `reference_tables`).
+pub const GAMMA_M0_EN: f64 = 1.0;
+pub const GAMMA_M1_EN: f64 = 1.0;
+pub const GAMMA_M2_EN: f64 = 1.25;
+pub const GAMMA_M3_EN: f64 = 1.25;
+pub const GAMMA_MF_EN: f64 = 1.15;
+pub const GAMMA_M0_DE: f64 = 1.0;
+pub const GAMMA_M1_DE: f64 = 1.1;
+pub const GAMMA_M2_DE: f64 = 1.25;
+pub const GAMMA_M3_DE: f64 = 1.25;
+pub const GAMMA_MF_DE: f64 = 1.15;
+/// 🧮 EN 1990 STR combination factors (identical EN recommended / DE NA).
+pub const GAMMA_G_STR: f64 = 1.35;
+pub const GAMMA_Q_STR: f64 = 1.50;
+pub const XI_STR: f64 = 0.85;
+
 impl AnnexParams {
     /// 🇪🇺 EN recommended values.
     pub fn en() -> Self {
-        Self { choice: AnnexChoice::En, gamma_m0: 1.0, gamma_m1: 1.0, gamma_m2: 1.25, gamma_m3: 1.25, gamma_mf: 1.15 }
+        Self { choice: AnnexChoice::En, gamma_m0: GAMMA_M0_EN, gamma_m1: GAMMA_M1_EN, gamma_m2: GAMMA_M2_EN, gamma_m3: GAMMA_M3_EN, gamma_mf: GAMMA_MF_EN }
     }
 
     /// 🇩🇪 DIN EN 1993-1-1/NA: γ_M1 = 1.1.
     pub fn de() -> Self {
-        Self { choice: AnnexChoice::De, gamma_m0: 1.0, gamma_m1: 1.1, gamma_m2: 1.25, gamma_m3: 1.25, gamma_mf: 1.15 }
+        Self { choice: AnnexChoice::De, gamma_m0: GAMMA_M0_DE, gamma_m1: GAMMA_M1_DE, gamma_m2: GAMMA_M2_DE, gamma_m3: GAMMA_M3_DE, gamma_mf: GAMMA_MF_DE }
     }
 
     pub fn for_choice(choice: AnnexChoice) -> Self {
@@ -1132,11 +1148,26 @@ pub mod part_6 {
 }
 
 fn next_section_options(current: &SteelSection, need_area: f64, need_wpl: f64) -> Vec<String> {
-    rolled_heb_catalogue()
+    let mut opts: Vec<String> = rolled_heb_catalogue()
         .into_iter()
         .filter(|s| s.area + 1e-12 >= need_area && s.w_pl_y + 1e-12 >= need_wpl && s.id != current.id)
         .map(|s| s.id)
-        .collect()
+        .collect();
+    if opts.is_empty() {
+        opts = rolled_heb_catalogue()
+            .into_iter()
+            .filter(|s| (s.area > current.area + 1e-12 || s.w_pl_y > current.w_pl_y + 1e-12) && s.id != current.id)
+            .map(|s| s.id)
+            .collect();
+    }
+    if opts.is_empty() {
+        if let Some(best) = rolled_heb_catalogue().into_iter().max_by(|a, b| a.area.partial_cmp(&b.area).unwrap_or(std::cmp::Ordering::Equal)) {
+            if best.id != current.id {
+                opts.push(best.id);
+            }
+        }
+    }
+    opts
 }
 
 fn find_material<'a>(doc: &'a En1993Snapshot, id: &str) -> Option<&'a crate::SteelMaterial> {
@@ -1166,9 +1197,9 @@ fn psi_factors(category: &str, annex: AnnexChoice) -> (f64, f64, f64) {
     }
 }
 
-/// 🧮 EN 1990 γ_G / γ_Q / ξ (Eq. 6.10a/b) — STR values (DE NA = EN recommended).
-fn gamma_factors(_annex: AnnexChoice) -> (f64, f64, f64) {
-    (1.35, 1.50, 0.85)
+/// 🧮 EN 1990 γ_G / γ_Q / ξ (Eq. 6.10a/b) — STR values identical for EN recommended and DE NA.
+fn gamma_factors() -> (f64, f64, f64) {
+    (GAMMA_G_STR, GAMMA_Q_STR, XI_STR)
 }
 
 /// 🧮 Combined scalar design effect from characteristic forces linked to load cases.
@@ -1177,6 +1208,32 @@ struct CombinedScalar {
     combination_id: String,
     situation: String,
     value: f64,
+}
+
+
+/// 🧩 Normalize memberType (beam / column / beamColumn / brace / tie) for check gating.
+fn member_kind(raw: &str) -> String {
+    raw.to_ascii_lowercase().replace(['_', '-'], "")
+}
+
+fn kind_allows_flexural_buckling(kind: &str) -> bool {
+    !matches!(kind, "beam" | "tie")
+}
+
+fn kind_allows_ltb(kind: &str) -> bool {
+    !matches!(kind, "column" | "brace" | "tie")
+}
+
+fn kind_allows_bending(kind: &str) -> bool {
+    !matches!(kind, "brace" | "tie")
+}
+
+fn kind_allows_compression(kind: &str) -> bool {
+    kind != "tie"
+}
+
+fn kind_allows_member_interaction(kind: &str) -> bool {
+    matches!(kind, "beamcolumn" | "column") || kind.is_empty()
 }
 
 fn combine_scalar_forces(document: &En1993Snapshot, forces: &[(String, f64)]) -> Vec<CombinedScalar> {
@@ -1189,7 +1246,7 @@ fn combine_scalar_forces(document: &En1993Snapshot, forces: &[(String, f64)]) ->
             _ => variables.push((lc, *force)),
         }
     }
-    let (gamma_g, gamma_q, xi) = gamma_factors(document.annex);
+    let (gamma_g, gamma_q, xi) = gamma_factors();
     let mut out = Vec::new();
     if variables.is_empty() {
         if g.abs() > 0.0 {
@@ -1246,7 +1303,7 @@ fn combine_member_actions(document: &En1993Snapshot, member_id: &str) -> Vec<Com
             _ => variables.push((lc, row.action.clone())),
         }
     }
-    let (gamma_g, gamma_q, xi) = gamma_factors(document.annex);
+    let (gamma_g, gamma_q, xi) = gamma_factors();
     let mut out = Vec::new();
     if variables.is_empty() {
         if g.n.abs() + g.my.abs() + g.vz.abs() > 0.0 {
@@ -1316,10 +1373,217 @@ fn governing_effects<'a>(effects: &'a [CombinedEffects], sit: &str) -> Option<&'
     })
 }
 
+
+fn push_duplicate_ids(report: &mut CheckReport, annex: AnnexChoice, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String) {
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for id in ids {
+        *counts.entry(id.clone()).or_insert(0) += 1;
+    }
+    for (id, count) in counts {
+        if count < 2 {
+            continue;
+        }
+        let path = path_for(&id);
+        let subject = SubjectRef::new(id.clone(), &path, loc(&format!("Duplicate {table} id"), &format!("Doppelte {table}-Id")));
+        let options: Vec<String> = ids.iter().filter(|x| x.as_str() != id).cloned().collect();
+        let mut builder = CheckResult::assess(
+            format!("en1993.integrity.duplicate.{table}.{id}"),
+            "EN 1993 integrity",
+            ClauseId::new("EN 1993", "§1", "id"),
+            subject.clone(),
+            loc(&format!("Unique {table} id"), &format!("Eindeutige {table}-Id")),
+        )
+        .annex(annex)
+        .explanation(loc(
+            &format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
+            &format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
+        ))
+        .status(CheckStatus::Fail);
+        builder = builder.remedy(Remedy::one_of(
+            subject,
+            if options.is_empty() { vec![format!("{id}-unique")] } else { options },
+            loc(
+                &format!("Rename the duplicated '{id}' entry to a free id."),
+                &format!("Den doppelten '{id}'-Eintrag auf eine freie Id umbenennen."),
+            ),
+        ));
+        report.push(builder.build());
+    }
+}
+
+fn push_dangling_ref(report: &mut CheckReport, annex: AnnexChoice, check_id: String, path: String, subject_id: &str, label_en: &str, label_de: &str, current: &str, options: Vec<String>) {
+    let subject = SubjectRef::new(subject_id, &path, loc(label_en, label_de));
+    let opts = if options.is_empty() { vec![format!("{current}-missing")] } else { options };
+    report.push(
+        CheckResult::assess(
+            check_id,
+            "EN 1993 integrity",
+            ClauseId::new("EN 1993", "§1", "reference"),
+            subject.clone(),
+            loc(&format!("Referential integrity — {label_en}"), &format!("Referenzintegrität — {label_de}")),
+        )
+        .annex(annex)
+        .explanation(loc(
+            &format!("'{current}' does not reference an existing target; dependent checks for this row must not Pass."),
+            &format!("'{current}' verweist auf kein vorhandenes Ziel; abhängige Nachweise für diese Zeile dürfen nicht bestehen."),
+        ))
+        .status(CheckStatus::Fail)
+        .remedy(Remedy::one_of(
+            subject,
+            opts,
+            loc(
+                &format!("Set {label_en} to one of the existing target ids."),
+                &format!("{label_de} auf eine der vorhandenen Ziel-Ids setzen."),
+            ),
+        ))
+        .build(),
+    );
+}
+
+fn push_referential_integrity(report: &mut CheckReport, document: &En1993Snapshot) {
+    let annex = document.annex;
+    let material_ids: Vec<String> = document.materials.iter().map(|m| m.id.clone()).collect();
+    let section_ids: Vec<String> = document.sections.iter().map(|s| s.id.clone()).collect();
+    let member_ids: Vec<String> = document.members.iter().map(|m| m.id.clone()).collect();
+    let load_case_ids: Vec<String> = document.load_cases.iter().map(|l| l.id.clone()).collect();
+    let action_ids: Vec<String> = document.member_actions.iter().map(|a| a.id.clone()).collect();
+
+    push_duplicate_ids(report, annex, "materials", &material_ids, &|id| format!("materials[id={id}].id"));
+    push_duplicate_ids(report, annex, "sections", &section_ids, &|id| format!("sections[id={id}].id"));
+    push_duplicate_ids(report, annex, "members", &member_ids, &|id| format!("members[id={id}].id"));
+    push_duplicate_ids(report, annex, "loadCases", &load_case_ids, &|id| format!("loadCases[id={id}].id"));
+    push_duplicate_ids(report, annex, "memberActions", &action_ids, &|id| format!("memberActions[id={id}].id"));
+    push_duplicate_ids(report, annex, "joints", &document.joints.iter().map(|j| j.id.clone()).collect::<Vec<_>>(), &|id| format!("joints[id={id}].id"));
+    push_duplicate_ids(report, annex, "fatigueDetails", &document.fatigue_details.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), &|id| format!("fatigueDetails[id={id}].id"));
+    push_duplicate_ids(report, annex, "fireExposures", &document.fire_exposures.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), &|id| format!("fireExposures[id={id}].id"));
+    push_duplicate_ids(report, annex, "coldFormedMembers", &document.cold_formed_members.iter().map(|c| c.id.clone()).collect::<Vec<_>>(), &|id| format!("coldFormedMembers[id={id}].id"));
+    push_duplicate_ids(report, annex, "platedPanels", &document.plated_panels.iter().map(|p| p.id.clone()).collect::<Vec<_>>(), &|id| format!("platedPanels[id={id}].id"));
+    push_duplicate_ids(report, annex, "siloShells", &document.silo_shells.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("siloShells[id={id}].id"));
+    push_duplicate_ids(report, annex, "tensionComponents", &document.tension_components.iter().map(|t| t.id.clone()).collect::<Vec<_>>(), &|id| format!("tensionComponents[id={id}].id"));
+    push_duplicate_ids(report, annex, "bridgeFatigue", &document.bridge_fatigue.iter().map(|b| b.id.clone()).collect::<Vec<_>>(), &|id| format!("bridgeFatigue[id={id}].id"));
+    push_duplicate_ids(report, annex, "towerLegs", &document.tower_legs.iter().map(|t| t.id.clone()).collect::<Vec<_>>(), &|id| format!("towerLegs[id={id}].id"));
+    push_duplicate_ids(report, annex, "piles", &document.piles.iter().map(|p| p.id.clone()).collect::<Vec<_>>(), &|id| format!("piles[id={id}].id"));
+    push_duplicate_ids(report, annex, "craneRunways", &document.crane_runways.iter().map(|c| c.id.clone()).collect::<Vec<_>>(), &|id| format!("craneRunways[id={id}].id"));
+
+    let designations: Vec<String> = rolled_heb_catalogue().into_iter().map(|s| s.designation).collect();
+    for section in &document.sections {
+        if !designations.iter().any(|d| d == &section.designation) {
+            push_dangling_ref(
+                report,
+                annex,
+                format!("en1993.integrity.sections.{}.designation", section.id),
+                format!("sections[id={}].designation", section.id),
+                &section.id,
+                "Section designation",
+                "Querschnittsbezeichnung",
+                &section.designation,
+                designations.clone(),
+            );
+        }
+    }
+
+    for member in &document.members {
+        if !section_ids.iter().any(|id| id == &member.section_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.members.{}.sectionId", member.id), format!("members[id={}].sectionId", member.id), &member.id, "Member sectionId", "Bauteil sectionId", &member.section_id, section_ids.clone());
+        }
+        if !material_ids.iter().any(|id| id == &member.material_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.members.{}.materialId", member.id), format!("members[id={}].materialId", member.id), &member.id, "Member materialId", "Bauteil materialId", &member.material_id, material_ids.clone());
+        }
+    }
+    for action in &document.member_actions {
+        if !member_ids.iter().any(|id| id == &action.member_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.memberActions.{}.memberId", action.id), format!("memberActions[id={}].memberId", action.id), &action.id, "Action memberId", "Einwirkung memberId", &action.member_id, member_ids.clone());
+        }
+        if !load_case_ids.iter().any(|id| id == &action.load_case_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.memberActions.{}.loadCaseId", action.id), format!("memberActions[id={}].loadCaseId", action.id), &action.id, "Action loadCaseId", "Einwirkung loadCaseId", &action.load_case_id, load_case_ids.clone());
+        }
+    }
+    for joint in &document.joints {
+        if !member_ids.iter().any(|id| id == &joint.member_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.joints.{}.memberId", joint.id), format!("joints[id={}].memberId", joint.id), &joint.id, "Joint memberId", "Anschluss memberId", &joint.member_id, member_ids.clone());
+        }
+        for ja in &joint.actions {
+            if !load_case_ids.iter().any(|id| id == &ja.load_case_id) {
+                push_dangling_ref(report, annex, format!("en1993.integrity.joints.{}.actions.{}.loadCaseId", joint.id, ja.id), format!("joints[id={}].actions[id={}].loadCaseId", joint.id, ja.id), &joint.id, "Joint action loadCaseId", "Anschluss-Einwirkung loadCaseId", &ja.load_case_id, load_case_ids.clone());
+            }
+        }
+    }
+    for fat in &document.fatigue_details {
+        if !member_ids.iter().any(|id| id == &fat.member_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.fatigueDetails.{}.memberId", fat.id), format!("fatigueDetails[id={}].memberId", fat.id), &fat.id, "Fatigue memberId", "Ermüdung memberId", &fat.member_id, member_ids.clone());
+        }
+    }
+    for fire in &document.fire_exposures {
+        if !member_ids.iter().any(|id| id == &fire.member_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.fireExposures.{}.memberId", fire.id), format!("fireExposures[id={}].memberId", fire.id), &fire.id, "Fire memberId", "Brand memberId", &fire.member_id, member_ids.clone());
+        }
+    }
+    for br in &document.bridge_fatigue {
+        if !member_ids.iter().any(|id| id == &br.member_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.bridgeFatigue.{}.memberId", br.id), format!("bridgeFatigue[id={}].memberId", br.id), &br.id, "Bridge memberId", "Brücke memberId", &br.member_id, member_ids.clone());
+        }
+    }
+    for tower in &document.tower_legs {
+        if !member_ids.iter().any(|id| id == &tower.member_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.towerLegs.{}.memberId", tower.id), format!("towerLegs[id={}].memberId", tower.id), &tower.id, "Tower memberId", "Turm memberId", &tower.member_id, member_ids.clone());
+        }
+        for fa in &tower.actions {
+            if !load_case_ids.iter().any(|id| id == &fa.load_case_id) {
+                push_dangling_ref(report, annex, format!("en1993.integrity.towerLegs.{}.actions.{}.loadCaseId", tower.id, fa.id), format!("towerLegs[id={}].actions[id={}].loadCaseId", tower.id, fa.id), &tower.id, "Tower action loadCaseId", "Turm-Einwirkung loadCaseId", &fa.load_case_id, load_case_ids.clone());
+            }
+        }
+    }
+    for pile in &document.piles {
+        if !section_ids.iter().any(|id| id == &pile.section_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.piles.{}.sectionId", pile.id), format!("piles[id={}].sectionId", pile.id), &pile.id, "Pile sectionId", "Pfahl sectionId", &pile.section_id, section_ids.clone());
+        }
+        if !material_ids.iter().any(|id| id == &pile.material_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.piles.{}.materialId", pile.id), format!("piles[id={}].materialId", pile.id), &pile.id, "Pile materialId", "Pfahl materialId", &pile.material_id, material_ids.clone());
+        }
+        for fa in &pile.actions {
+            if !load_case_ids.iter().any(|id| id == &fa.load_case_id) {
+                push_dangling_ref(report, annex, format!("en1993.integrity.piles.{}.actions.{}.loadCaseId", pile.id, fa.id), format!("piles[id={}].actions[id={}].loadCaseId", pile.id, fa.id), &pile.id, "Pile action loadCaseId", "Pfahl-Einwirkung loadCaseId", &fa.load_case_id, load_case_ids.clone());
+            }
+        }
+    }
+    for crane in &document.crane_runways {
+        if !member_ids.iter().any(|id| id == &crane.member_id) {
+            push_dangling_ref(report, annex, format!("en1993.integrity.craneRunways.{}.memberId", crane.id), format!("craneRunways[id={}].memberId", crane.id), &crane.id, "Crane memberId", "Kranbahn memberId", &crane.member_id, member_ids.clone());
+        }
+        for fa in &crane.actions {
+            if !load_case_ids.iter().any(|id| id == &fa.load_case_id) {
+                push_dangling_ref(report, annex, format!("en1993.integrity.craneRunways.{}.actions.{}.loadCaseId", crane.id, fa.id), format!("craneRunways[id={}].actions[id={}].loadCaseId", crane.id, fa.id), &crane.id, "Crane action loadCaseId", "Kranbahn-Einwirkung loadCaseId", &fa.load_case_id, load_case_ids.clone());
+            }
+        }
+    }
+    for cf in &document.cold_formed_members {
+        for fa in &cf.actions {
+            if !load_case_ids.iter().any(|id| id == &fa.load_case_id) {
+                push_dangling_ref(report, annex, format!("en1993.integrity.coldFormedMembers.{}.actions.{}.loadCaseId", cf.id, fa.id), format!("coldFormedMembers[id={}].actions[id={}].loadCaseId", cf.id, fa.id), &cf.id, "Cold-formed action loadCaseId", "Kaltprofil-Einwirkung loadCaseId", &fa.load_case_id, load_case_ids.clone());
+            }
+        }
+    }
+    for pp in &document.plated_panels {
+        for fa in &pp.actions {
+            if !load_case_ids.iter().any(|id| id == &fa.load_case_id) {
+                push_dangling_ref(report, annex, format!("en1993.integrity.platedPanels.{}.actions.{}.loadCaseId", pp.id, fa.id), format!("platedPanels[id={}].actions[id={}].loadCaseId", pp.id, fa.id), &pp.id, "Plated action loadCaseId", "Beulpanel-Einwirkung loadCaseId", &fa.load_case_id, load_case_ids.clone());
+            }
+        }
+    }
+    for ten in &document.tension_components {
+        for fa in &ten.actions {
+            if !load_case_ids.iter().any(|id| id == &fa.load_case_id) {
+                push_dangling_ref(report, annex, format!("en1993.integrity.tensionComponents.{}.actions.{}.loadCaseId", ten.id, fa.id), format!("tensionComponents[id={}].actions[id={}].loadCaseId", ten.id, fa.id), &ten.id, "Tension action loadCaseId", "Zugglied-Einwirkung loadCaseId", &fa.load_case_id, load_case_ids.clone());
+            }
+        }
+    }
+}
+
 pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
     let annex = document.annex;
     let mut params = AnnexParams::for_choice(annex);
     let mut report = CheckReport::default();
+    push_referential_integrity(&mut report, document);
 
     if document.members.is_empty()
         && document.joints.is_empty()
@@ -1352,11 +1616,11 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
     for member in &document.members {
         let Some(section) = find_section(document, &member.section_id) else { continue };
         let Some(material) = find_material(document, &member.material_id) else { continue };
+        let kind = member_kind(&member.member_type);
         let class = part_1_1::section_class_rolled_i(section, material.fy);
 
-        // Classification (informational; class 4 uses effective properties below)
-        report.push(
-            CheckResult::assess(
+        {
+            let mut b = CheckResult::assess(
                 format!("en1993.5.2.class.{}", member.id),
                 "DIN EN 1993-1-1",
                 ClauseId::new("EN 1993-1-1", "5", "5.2"),
@@ -1365,11 +1629,24 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
             )
             .annex(annex)
             .explanation(loc(
-                &format!("Section {} is class {} per Table 5.2{}.", section.designation, class, if class == 4 { " — effective A_eff/W_eff per EN 1993-1-5" } else { "" }),
-                &format!("Querschnitt {} ist Klasse {} nach Tabelle 5.2{}.", section.designation, class, if class == 4 { " — wirksame A_eff/W_eff nach EN 1993-1-5" } else { "" }),
-            ))
-            .build(),
-        );
+                &format!("Section {} is class {} per Table 5.2{}.", section.designation, class, if class == 4 { " — effective A_eff/W_eff per EN 1993-1-5; class 4 is not admitted without effective section redesign" } else { "" }),
+                &format!("Querschnitt {} ist Klasse {} nach Tabelle 5.2{}.", section.designation, class, if class == 4 { " — wirksame A_eff/W_eff nach EN 1993-1-5; Klasse 4 ist ohne wirksamen Querschnitt unzulässig" } else { "" }),
+            ));
+            if class > 3 {
+                let a_eff = part_1_1::effective_area_class4(section, material.fy);
+                b = b.utilization(dimensionless(section.area), dimensionless(a_eff.max(1e-12)));
+                let options = next_section_options(section, section.area, section.w_pl_y);
+                b = b.remedy(Remedy::one_of(
+                    subject_member(member, &format!("members[id={}].sectionId", member.id)),
+                    options.clone(),
+                    loc(
+                        &format!("Select a class ≤ 3 section; options: {}.", options.join(", ")),
+                        &format!("Querschnitt Klasse ≤ 3 wählen; Optionen: {}.", options.join(", ")),
+                    ),
+                ));
+            }
+            report.push(b.build());
+        }
 
         if member.analysis.eq_ignore_ascii_case("plastic") && class > 1 {
             let mut b = CheckResult::assess(
@@ -1462,6 +1739,7 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
 
             // 6.2.4 compression / 6.2.3 tension
             if a.n >= 0.0 {
+            if kind_allows_compression(&kind) {
                 let mut builder = CheckResult::assess(
                     format!("en1993.6.2.4.n.{}", action_row.combination_id),
                     "DIN EN 1993-1-1",
@@ -1478,16 +1756,19 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                 if a.n > n_rd {
                     let a_req = a.n * params.gamma_m0 / material.fy;
                     let options = next_section_options(section, a_req, w_y);
+                    if !options.is_empty() {
                     builder = builder.remedy(Remedy::one_of(
                         subject_member(member, &format!("members[id={}].sectionId", member.id)),
                         options.clone(),
                         loc(
-                            &format!("Select a larger section (≥ {:.0} cm²); options: {}.", a_req * 1e4, options.join(", ")),
-                            &format!("Größeren Querschnitt wählen (≥ {:.0} cm²); Optionen: {}.", a_req * 1e4, options.join(", ")),
+                            &format!("Upsize section: {}.", options.join(", ")),
+                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
                         ),
                     ));
                 }
+                }
                 report.push(builder.build());
+            }
             } else {
                 let n_t_rd = part_1_1::net_tension_resistance_n(section.area, section.area_net, material.fy, material.fu, params);
                 let n_t = -a.n;
@@ -1520,7 +1801,7 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
             }
 
             // 6.2.5 bending My
-            {
+            if kind_allows_bending(&kind) {
                 let mut builder = CheckResult::assess(
                     format!("en1993.6.2.5.my.{}", action_row.combination_id),
                     "DIN EN 1993-1-1",
@@ -1537,14 +1818,16 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                 if a.my.abs() > m_y_rd_red {
                     let w_req = a.my.abs() * params.gamma_m0 / material.fy;
                     let options = next_section_options(section, section.area, w_req);
+                    if !options.is_empty() {
                     builder = builder.remedy(Remedy::one_of(
                         subject_member(member, &format!("members[id={}].sectionId", member.id)),
                         options.clone(),
                         loc(
-                            &format!("Increase W_pl,y to ≥ {:.0} cm³ via section: {}.", w_req * 1e6, options.join(", ")),
-                            &format!("W_pl,y auf ≥ {:.0} cm³ erhöhen; Querschnitt: {}.", w_req * 1e6, options.join(", ")),
+                            &format!("Upsize section: {}.", options.join(", ")),
+                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
                         ),
                     ));
+                }
                 }
                 report.push(builder.build());
             }
@@ -1610,20 +1893,22 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                 ));
                 if eta > 1.0 {
                     let options = next_section_options(section, section.area * eta, w_y * eta);
+                    if !options.is_empty() {
                     builder = builder.remedy(Remedy::one_of(
                         subject_member(member, &format!("members[id={}].sectionId", member.id)),
                         options.clone(),
                         loc(
-                            &format!("Upsize section for M+N: {}.", options.join(", ")),
-                            &format!("Querschnitt für M+N vergrößern: {}.", options.join(", ")),
+                            &format!("Upsize section: {}.", options.join(", ")),
+                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
                         ),
                     ));
+                }
                 }
                 report.push(builder.build());
             }
 
             // 6.3.1 flexural buckling — χ computed, never user-supplied
-            if a.n > 0.0 {
+            if a.n > 0.0 && kind_allows_flexural_buckling(&kind) {
                 let mut builder = CheckResult::assess(
                     format!("en1993.6.3.1.nb.{}", action_row.combination_id),
                     "DIN EN 1993-1-1",
@@ -1697,7 +1982,7 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
             }
 
             // 6.3.2 LTB
-            if a.my.abs() > 0.0 {
+            if a.my.abs() > 0.0 && kind_allows_ltb(&kind) {
                 let mut builder = CheckResult::assess(
                     format!("en1993.6.3.2.mb.{}", action_row.combination_id),
                     "DIN EN 1993-1-1",
@@ -1774,7 +2059,7 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
             }
 
             // 6.3.3 interaction 6.61/6.62
-            if a.n > 0.0 || a.my.abs() > 0.0 || a.mz.abs() > 0.0 {
+            if kind_allows_member_interaction(&kind) && (a.n > 0.0 || a.my.abs() > 0.0 || a.mz.abs() > 0.0) {
                 let n_rk = section.area * material.fy;
                 let (kyy, kyz, kzy, kzz) = part_1_1::interaction_kij(a.n, n_rk, lambda_y, lambda_z, member.end_moment_ratio_psi, class);
                 let (eta61, eta62) = part_1_1::interaction_eta(a.n, n_b_rd_y, n_b_rd_z, a.my, a.mz, m_b_rd.max(m_y_rd_red), m_z_rd, kyy, kyz, kzy, kzz);
@@ -1794,14 +2079,16 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
                 ));
                 if eta > 1.0 {
                     let options = next_section_options(section, section.area * eta, w_y * eta);
+                    if !options.is_empty() {
                     builder = builder.remedy(Remedy::one_of(
                         subject_member(member, &format!("members[id={}].sectionId", member.id)),
                         options.clone(),
                         loc(
-                            &format!("Upsize section for member interaction: {}.", options.join(", ")),
-                            &format!("Querschnitt für Bauteilinteraktion vergrößern: {}.", options.join(", ")),
+                            &format!("Upsize section: {}.", options.join(", ")),
+                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
                         ),
                     ));
+                }
                 }
                 report.push(builder.build());
             }
@@ -1832,14 +2119,16 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
             ));
             if delta > limit {
                 let options = next_section_options(section, section.area, w_y);
-                builder = builder.remedy(Remedy::one_of(
-                    subject_member(member, &format!("members[id={}].sectionId", member.id)),
-                    options.clone(),
-                    loc(
-                        &format!("Increase stiffness via section: {}.", options.join(", ")),
-                        &format!("Steifigkeit durch Querschnitt erhöhen: {}.", options.join(", ")),
-                    ),
-                ));
+                if !options.is_empty() {
+                    builder = builder.remedy(Remedy::one_of(
+                        subject_member(member, &format!("members[id={}].sectionId", member.id)),
+                        options.clone(),
+                        loc(
+                            &format!("Upsize section: {}.", options.join(", ")),
+                            &format!("Querschnitt vergrößern: {}.", options.join(", ")),
+                        ),
+                    ));
+                }
             }
             report.push(builder.build());
         }
@@ -2136,7 +2425,7 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
     // Fire 1-2
     for fire in &document.fire_exposures {
         let rating = part_1_2::parse_rating(&fire.rating);
-        let theta_a = part_1_2::steel_temperature_c(
+        let theta_heating = part_1_2::steel_temperature_c(
             rating,
             fire.section_factor,
             fire.protection_thickness,
@@ -2144,6 +2433,7 @@ pub fn check_full_steel_structure(document: &En1993Snapshot) -> CheckReport {
             fire.protection_density,
             fire.protection_specific_heat,
         );
+        let theta_a = fire.design_temperature.max(theta_heating);
         let theta_cr = part_1_2::critical_temperature_c(fire.mu0);
         let t_req = part_1_2::required_protection_thickness(
             rating,

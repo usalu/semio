@@ -2,10 +2,11 @@
 @no-oracle-wfc-bitmap-mount-contract-statement
 @comparison-ordered-json-v1
 Feature: The bitmap subset mounts the identities, windows and examples it declares
-  The committed `../../🧫️fixtures/🧩️mount-contract/🔣️.json` is the language-agnostic statement of
+  The committed `shared://🧩️mount-contract/🔣️.json` is the language-agnostic statement of
   what this subset mounts. `🦀️.rs` beside this file is its Rust half — it reads the real manifests
-  the plugin builder produces — and `🐍️.py` is a second reader that links nothing of this repository
-  and checks the same statement against the kind directories on disk.
+  the plugin builder produces — while `🐍️.py` and `🟦️.ts` are second readers that link nothing of
+  this repository: the Python one checks the statement against the kind directories on disk, the
+  TypeScript one checks its canonical forms.
 
   @id-surface-ids
   @level-fundamental

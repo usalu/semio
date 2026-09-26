@@ -95,7 +95,7 @@ pub fn module_registry() -> Registry {
 
 //#region 🔖️Bundle
 const EXTENSION_ID: &str = "imperative-extension-text";
-const MODULE_VERSION: &str = "0.1.0";
+const MODULE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn imperative_module_contribution() -> semio_framework::ProgramContributionEntry {
     let registry = module_registry();
@@ -115,7 +115,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
 fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Text", MODULE_VERSION)
-        .extends("imperative").depends_on("imperative", semio_framework::VersionReq::Any)
+        .extends("imperative").depends_on("imperative", semio_framework::tree_pin!())
         .mode(semio_framework_plugin::ExecutionMode::Linked)
         .handler(imperative_extension_sdk::IMPERATIVE_MODULE_EVALUATE_CAPABILITY, |request| {
             imperative_extension_sdk::evaluate_invoke(&module_registry(), request).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("extension.evaluate"), message))

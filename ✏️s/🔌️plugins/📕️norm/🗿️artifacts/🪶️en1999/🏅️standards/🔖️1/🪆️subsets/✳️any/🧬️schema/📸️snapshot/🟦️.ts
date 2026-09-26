@@ -110,9 +110,8 @@ export type ColdFormedSheet = {
   thickness: number;
   width: number;
   span: number;
-  mEd: number;
-  nEd: number;
   welded: boolean;
+  actions: MemberAction[];
 };
 
 export type AluminiumShell = {
@@ -121,8 +120,7 @@ export type AluminiumShell = {
   radius: number;
   thickness: number;
   length: number;
-  sigmaXEd: number;
-  sigmaThetaEd: number;
+  actions: MemberAction[];
 };
 
 export type En1999Snapshot = {

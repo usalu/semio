@@ -1,0 +1,51 @@
+{
+  "schema": "drawing.inspector.v1",
+  "cases": [
+    {
+      "name": "empty-selection",
+      "selection": [],
+      "expectedFields": []
+    },
+    {
+      "name": "raw-layer-selection",
+      "selection": [
+        "shape.a"
+      ],
+      "expectedFields": [
+        "name",
+        "visible",
+        "locked",
+        "opacity",
+        "blendMode",
+        "fillColor",
+        "strokeWidth",
+        "transformX",
+        "transformY",
+        "transformScaleX",
+        "transformScaleY",
+        "transformRotation",
+        "strokeCap",
+        "strokeJoin",
+        "strokeDash"
+      ]
+    },
+    {
+      "name": "tree-row-selection",
+      "selection": [
+        "drawing-play-layers.shape.shape.a"
+      ],
+      "expectedFields": [
+        "name",
+        "opacity",
+        "transformX"
+      ]
+    },
+    {
+      "name": "stale-selection",
+      "selection": [
+        "missing"
+      ],
+      "expectedFields": []
+    }
+  ]
+}

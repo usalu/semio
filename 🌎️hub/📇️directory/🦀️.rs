@@ -3172,6 +3172,12 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>>;
     async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>>;
     async fn list_admin_space_summaries_page(&self, space_id: Option<&str>, offset: usize, limit: usize) -> DirectoryResult<Vec<AdminSpaceSummaryRecord>>;
+    /// @emoji 🏘️ Every space `user_id` may list — each public space and each space it is a member of —
+    /// with its role there and the counts of [`HubDirectory::list_admin_space_summaries_page`], ordered by
+    /// id, in ONE backend round trip. `GET /directory/spaces` used to fold the whole directory event log
+    /// and then query every visible space's documents (mounting each document for its frontier) and
+    /// sessions one by one: 25–58 s for a member of 82 spaces on hub 7800 (ticket 26/09/23 WG8).
+    async fn list_visible_space_summaries(&self, user_id: Option<&str>) -> DirectoryResult<Vec<(AdminSpaceSummaryRecord, Option<SpaceRole>)>>;
     async fn list_admin_space_members_page(&self, space_id: &str, offset: usize, limit: usize) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>>;
     /// @emoji 🧑️‍🤝️‍🧑️ The current member roster — `decide` reads this to enforce the atelier/
     /// archive laws and to compute `archive-space`'s demote-every-author events.
@@ -3337,9 +3343,9 @@ pub trait HubDirectory: Send + Sync + 'static {
     //#endregion
 
     //#region Invites
-    // 🎟️ Not event-sourced (contract's decider laws) — only redemption is (`invite.redeemed`, see
-    // `DirectoryService::redeem_invite`). `create_invite`/`revoke_invite` are called directly by
-    // `decide` as its one documented write exception (`//#region 🔖️Decider`).
+    /// 🎟️ Not event-sourced (contract's decider laws) — only redemption is (`invite.redeemed`, see
+    /// `DirectoryService::redeem_invite`). `create_invite`/`revoke_invite` are called directly by
+    /// `decide` as its one documented write exception (`//#region 🔖️Decider`).
     async fn issue_invite_as(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedInvite>;
     async fn issue_invite_as_with_admin_effect(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedInvite>;
     async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
@@ -3735,6 +3741,17 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.list_admin_space_summaries_page(space_id, offset, limit).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.list_admin_space_summaries_page(space_id, offset, limit).await,
+        }
+    }
+
+    async fn list_visible_space_summaries(&self, user_id: Option<&str>) -> DirectoryResult<Vec<(AdminSpaceSummaryRecord, Option<SpaceRole>)>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_visible_space_summaries(user_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_visible_space_summaries(user_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_visible_space_summaries(user_id).await,
         }
     }
 

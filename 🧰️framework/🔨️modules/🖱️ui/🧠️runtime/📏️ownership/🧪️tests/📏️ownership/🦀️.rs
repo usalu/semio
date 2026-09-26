@@ -34,6 +34,8 @@ fn icon_node(icon: bool) -> crate::TreeNode {
             dimmed: None,
             window: None,
             granularity: None,
+            inline_toolbar: None,
+            detail: None,
             row_actions: Default::default(),
         }),
     )

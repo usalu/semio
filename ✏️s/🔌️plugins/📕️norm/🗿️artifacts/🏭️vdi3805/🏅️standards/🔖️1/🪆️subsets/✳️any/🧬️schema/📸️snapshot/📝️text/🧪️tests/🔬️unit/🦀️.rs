@@ -25,7 +25,19 @@ async fn regenerate_example_dsl_assets_when_env_set() {
     let non = assets.join("🌶️nonconforming/🗣️.dsl.semio");
     std::fs::write(&demo, encode_vdi3805_dsl(&conforming_valve_dataset())).expect("write demo dsl");
     std::fs::write(&non, encode_vdi3805_dsl(&nonconforming_valve_dataset())).expect("write nonconforming dsl");
-    eprintln!("[DEBUG] regenerated {} and {}", demo.display(), non.display());
+    use crate::{conforming_blatt_dataset, nonconforming_blatt_dataset, ASSESSED_BLATT_SHEETS};
+    for sheet in ASSESSED_BLATT_SHEETS {
+        if *sheet == 2 {
+            continue;
+        }
+        let ok_dir = assets.join(format!("blatt-{sheet}"));
+        let bad_dir = assets.join(format!("blatt-{sheet}-fail"));
+        std::fs::create_dir_all(&ok_dir).ok();
+        std::fs::create_dir_all(&bad_dir).ok();
+        std::fs::write(ok_dir.join("🗣️.dsl.semio"), encode_vdi3805_dsl(&conforming_blatt_dataset(*sheet))).expect("write ok blatt");
+        std::fs::write(bad_dir.join("🗣️.dsl.semio"), encode_vdi3805_dsl(&nonconforming_blatt_dataset(*sheet))).expect("write bad blatt");
+    }
+    eprintln!("[DEBUG] regenerated {} and {} plus {} assessed Blätter", demo.display(), non.display(), ASSESSED_BLATT_SHEETS.len());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -41,10 +53,6 @@ async fn regenerate_mutation_fixtures_when_env_set() {
     for kind_dir in std::fs::read_dir(&fixtures).expect("mutations fixtures") {
         let kind_dir = kind_dir.expect("kind entry").path();
         if !kind_dir.is_dir() {
-            continue;
-        }
-        // `change-limits` is unmounted (import-only SecurityLimits — not snapshot state).
-        if kind_dir.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.contains("change-limits")) {
             continue;
         }
         for case_dir in std::fs::read_dir(&kind_dir).expect("case dirs") {

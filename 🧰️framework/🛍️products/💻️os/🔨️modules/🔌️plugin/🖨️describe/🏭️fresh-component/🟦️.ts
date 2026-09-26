@@ -1,14 +1,15 @@
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { createRequire } from "node:module";
 import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { devToolingEnv, parseExtensionCargoManifest, readStableBuildFile, resolveWorkspaceBin, runExactCargoLawProcess } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, devToolingEnv, readStableBuildFile, resolveWorkspaceBin, runExactCargoLawProcess } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { createFreshComponentTests } from "../🧪️tests/🆕️fresh-component/🟦️.ts";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { verifyFreshCatalogPackageV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
-import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_DESCRIPTOR_MAX_BYTES, FRESH_IO_CHUNK_BYTES, CRATE_NAME, buildPluginComponent, cargoTargetRoot, extractPluginCore, freshWasmArtifactSize, pluginWasmArtifactPath } from "../🏗️component-build/🟦️.ts";
+import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_DESCRIPTOR_MAX_BYTES, FRESH_IO_CHUNK_BYTES, CRATE_NAME, extractPluginCore, freshWasmArtifactSize, pluginWasmArtifactPath } from "../🏗️component-build/🟦️.ts";
 import { emitOwnerDescriptorPairV1, type DescriptorEmissionControlV1 } from "../🛂️descriptor-emission/🟦️.ts";
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshCheckpoint, freshPathIsWithin, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1, type FreshBuildControlV1, type FreshComponentLeaseV1, type FreshComponentProducedV1, type FreshComponentReceiptV1, type FreshComponentRequestV1 } from "../🧾️source-epoch/🟦️.ts";
 
@@ -310,41 +311,42 @@ export async function produceFreshComponentV1<T>(
   }
 }
 
-/** @emoji 🛂️ Shared implementation for a plugin/extension crate's own `📜️script.ts describe` command
- * (D0-descriptor-plumbing, `📌️important.md`): builds `packageName`'s `wasm32-wasip2` component — no
- * extra `--features component-guest` flag needed, every plugin crate's own `Cargo.toml` already
- * enables it unconditionally on its `semio-framework-plugin` dependency, confirmed empirically (no
- * plugin crate exposes a feature literally named `component-guest` of its own; passing that flag to
- * `cargo build -p <plugin>` fails with "does not contain this feature") — then runs the real emitter
- * (`describe_component`, `🖨️describe/📦️packages/🦀️rust/🦀️.rs`) against the built wasm, writing
- * `🛂️.descriptor.semio` + `🔣️.json` straight into `ownerRoot` (the plugin/extension owner
- * root, sibling of the tracked `🛂️manifest.json` — NOT `🤖️generated/`, which is gitignored). One
- * shared function so every migrated plugin crate's own `describe` command stays a thin two-line
- * wrapper around it rather than duplicating the build+emit sequence 33 times. */
-export function describePluginComponent(repoRoot: string, packageName: string, ownerRoot: string, control: DescriptorEmissionControlV1 = {}): number {
-  const artifactRoot = cargoTargetRoot(repoRoot);
-  const component = buildPluginComponent(repoRoot, packageName);
-  const scratch = mkdtempSync(join(artifactRoot, ".semio-describe-core-"));
+/** @emoji 🛂️ The ONE describe route of every plugin and extension component (the inferred Nx `describe` target, which
+ * `dependsOn` `component-dev`): reads the exact bytes `component-dev` staged at `<crate>/dist/component-dev/<crate>.wasm`,
+ * extracts its core with jco and re-emits `🛂️.descriptor.semio` + `🔣️.json` at the owner root (`<owner>/📦️packages/🦀️rust`
+ * is the crate). No build happens here, so the committed descriptor, the `materialize-dev` staging (which reads the same
+ * deliverable) and every consumer that resolves `dist/component-dev` describe one build by construction. */
+export function describeComponentDeliverable(repoRoot: string, manifest: string, control: DescriptorEmissionControlV1 = {}): number {
+  const manifestPath = resolve(repoRoot, manifest);
   try {
-    const core = extractPluginCore(repoRoot, component, scratch, packageName.replace(/-/g, "_"));
-    const receipt = emitOwnerDescriptorPairV1(repoRoot, { rawComponentPath: component, extractedCorePath: core, ownerRoot, artifactRoot }, control);
-    console.log(`described ${receipt.pluginId} (${receipt.role} ${receipt.packageId}@${receipt.version}) -> ${relative(repoRoot, receipt.ownerRoot)} (wasm=${receipt.rawSha256} core=${receipt.coreSha256} descriptor=${receipt.descriptorSha256})`);
-    return 0;
+    const cargo = createRequire(import.meta.url)("@iarna/toml").parse(readFileSync(manifestPath, "utf8")) as { package?: { name?: string; metadata?: { component?: { package?: string }; semio?: { role?: string } } } };
+    const packageName = cargo.package?.name;
+    if (!packageName || !cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package.metadata.semio?.role ?? "")) throw new Error(`${manifest} is not a plugin or extension component manifest`);
+    const crateRoot = dirname(manifestPath);
+    const deliverableRoot = join(crateRoot, "dist");
+    const component = join(deliverableRoot, "component-dev", `${packageName.replace(/-/g, "_")}.wasm`);
+    if (!existsSync(component)) throw new Error(`no component-dev deliverable at ${relative(repoRoot, component)}; describe runs through Nx, which builds component-dev first`);
+    const scratch = mkdtempSync(join(deliverableRoot, ".semio-describe-core-"));
+    try {
+      const core = extractPluginCore(repoRoot, component, scratch, packageName.replace(/-/g, "_"));
+      const receipt = emitOwnerDescriptorPairV1(repoRoot, { rawComponentPath: component, extractedCorePath: core, ownerRoot: resolve(crateRoot, "..", ".."), artifactRoot: deliverableRoot }, control);
+      console.log(`described ${receipt.pluginId} (${receipt.role} ${receipt.packageId}@${receipt.version}) from ${relative(repoRoot, component)} -> ${relative(repoRoot, receipt.ownerRoot)} (wasm=${receipt.rawSha256} core=${receipt.coreSha256} descriptor=${receipt.descriptorSha256})`);
+      return 0;
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
   } catch (error) {
-    console.error(`describe ${packageName} failed: ${(error as Error).message}`);
+    console.error(`describe ${manifest} failed: ${(error as Error).message}`);
     return 1;
-  } finally {
-    rmSync(scratch, { recursive: true, force: true });
   }
 }
 
-/** @emoji 🧩 The shared extension `describe` route: the same owner receipt contract as a plugin's, with
- * the crate identity read from the extension's own `[package]`/`[package.metadata.component]` block and
- * the owner root taken as the extension root (the `.sxt` runtime package that `package` builds is a
- * separate artifact and never a descriptor source). */
-export function describeExtensionComponent(repoRoot: string, rsDir: string, control: DescriptorEmissionControlV1 = {}): number {
-  const manifest = parseExtensionCargoManifest(join(resolve(rsDir), "Cargo.toml"), repoRoot);
-  return describePluginComponent(repoRoot, manifest.packageName, resolve(rsDir, "..", ".."), control);
+/** @emoji 🛂️ `describe component --manifest <Cargo.toml>`: the command the inferred Nx `describe` target of every component runs. */
+export class DescribeComponentScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length !== 2 || segments[0] !== "--manifest") throw new Error("usage: component --manifest <Cargo.toml>");
+    process.exit(describeComponentDeliverable(this.repoRoot, segments[1]!));
+  }
 }
 /** 🧬️ The exact bag handed to `createFreshComponentTests` — `typeof` of the live bindings, so it cannot drift. */
 export type FreshComponentTestDependencies = Readonly<{

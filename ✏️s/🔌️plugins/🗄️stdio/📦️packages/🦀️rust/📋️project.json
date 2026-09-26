@@ -89,18 +89,6 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json"
       ]
     },
-    "describe": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts describe",
-        "forwardAllArgs": true
-      },
-      "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🛂️.descriptor.semio",
-        "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🔣️.json"
-      ]
-    },
     "catalog-root": {
       "executor": "nx:run-commands",
       "options": {

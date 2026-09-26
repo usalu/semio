@@ -560,6 +560,28 @@ pub fn sample_plugin() -> ProgramSnapshot {
     }];
     program.benchmarks = benchmarks_child_from_records(&program.benchmarks_payload);
 
+    program.audit_events.push(AuditEvent {
+        header: EntityHeader::new(EntityId::new_serial("audit", "audit"), "Clinic brief created"),
+        action: AuditAction::Created,
+        actor_id: None,
+        subject_id: reception_id,
+        subject_kind: "element".into(),
+        timestamp: "2026-08-14T09:30:00Z".into(),
+        details: TextField::plain("Reception and waiting area brief authored"),
+        before_state: None,
+        after_state: None,
+        ip_address: None,
+        client: None,
+        session_id: None,
+        change_record_id: None,
+        trace_link: None,
+        success: true,
+        error_message: None,
+        correlation_id: None,
+        compliance_tags: Vec::new(),
+        retention_until: None,
+    });
+
     program
 }
 // #endregion

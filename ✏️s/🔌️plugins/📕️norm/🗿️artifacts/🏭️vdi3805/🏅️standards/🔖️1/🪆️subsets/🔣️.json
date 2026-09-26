@@ -2,9 +2,7 @@
   "artifact": "s.norm.vdi3805",
   "standard": "1",
   "subsets": {
-    "catalog": {
-      "name": "The manufacturer catalogue itself — manufacturer file, the product list (create/rename/remove-product, change-product-configuration), edition/correction bookkeeping (change/remove-edition-profile, change-correction-as-of) and validation posture (change-strict-mode, change-limits). Distinct from `geometry` and `curves`, which key their own registers by product id rather than living as fields of one product record."
-    },
+    "catalog": {},
     "geometry": {
       "name": "The `geometry` register — keyed `ParametricGeometry` entries (add-geometry, remove-geometry, resize-geometry, change-geometry-parameters, add/remove-geometry-connection), organized in the artifact's own `🦀️.rs` under its own `Geometry` code region, separate from `Part1`'s catalogue types."
     },

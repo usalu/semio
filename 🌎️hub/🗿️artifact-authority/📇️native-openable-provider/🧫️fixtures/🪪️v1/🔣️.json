@@ -10,7 +10,7 @@
     "descriptorProjectionSha256": "9116b35f4d40ed475adf56f2c557ccb4c2ce1e823f15f2a52b65672b26b3fb15"
   },
   "openTarget": {
-    "artifactKind": "stdio.json",
+    "artifactKind": "s.stdio.json",
     "artifactSchema": "stdio.json",
     "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
     "surfaceId": "s.stdio.json@rfc8259/*#viewer",

@@ -98,3 +98,11 @@ Session-11 rules (`📓️session-11-preamble.md`) apply unless overridden here.
 22. **Coordinator-owned chains (15:0x):** an agent's usage cut tears down its process tree (W2's publish 2 died with exit 143 at
     11:43 when W2 was cut). Multi-hour chains (catalog publishes, restages, hub 7800 holds) are launched by the COORDINATOR
     (`python3 wp-w2/w2-detach.py <log> <cmd…>`); agents prepare the exact command and hand it over, then monitor.
+23. **Port 7800 is W2's even while unbound (15:4x):** the B2 binary loads its catalog for ~40 min BEFORE binding; at ~15:41 a
+    foreign process answered on 127.0.0.1:7800 and forced a supervisor restart. No test, serve, probe or hub of any slice may
+    bind or default to 7800 — pass your slice port explicitly (check `OS_HUB_*`/`--port` defaults in harnesses you run).
+24. **Build-quiet during the `--packages all` publish (16:0x until W2/coordinator report DONE):** publish 3 failed at 15:54 when a
+    concurrent cargo removed a wasm-release kernel unit under the bootstrap, and swap reached 15.4/16 GB with three stdio_semio
+    variants compiling. Until DONE: NO wasm32 builds or checks of any kind (the `wasmshort` lane is closed; the `wasm` mutex is
+    the publish's), and no native build/test that COMPILES stdio or plugin crates anew. Native hub/db/mcp/renderer checks and
+    tests that only relink are fine with `nice -n 15`. Live browser/hub testing is fine.

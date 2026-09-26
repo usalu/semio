@@ -29,7 +29,7 @@ pub use schema::{
     descriptor_digest_encoding_v1, descriptor_digest_v1, directory_command_sha256, hex_lower, lease_fields_from_plan_v1, mint_directory_command_request_id, same_lease_fields_v1, validate_directory_event_page_event, AdminConnectionSnapshotV1,
     AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1,
     ArtifactBlobRef, ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, ArtifactRetention, CheckpointId, ConnectionView, DescriptorDigestError, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
-    DirectoryCommandResultV1, DirectoryConnectionPhase, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
+    DirectoryAccessChange, DirectoryCommandResultV1, DirectoryConnectionPhase, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectorySessionAuthorityV1, DirectorySessionKindV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
     DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageErrorV1,
     DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentBrowserActorSourceV1,
     DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, DocumentDescriptor, DocumentExecutionProtocolV1, EditedArtifactFrontierV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetLocaleV1, DocumentExecutionTargetStatusCodeV1,
@@ -43,6 +43,7 @@ pub use schema::{
 };
 pub use schema::{DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, MemberView, SpaceView, UserView};
 pub use schema::{DirectoryIndexedDocumentViewV1, DocumentIndexEntryV1};
+pub use schema::{decode_canonical_checkpoint_pair_v1, CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1, CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1};
 
 //#region 🔖️ReadModel
 /// 🏠️ One projected space: its `SpaceView` plus the current member roster.

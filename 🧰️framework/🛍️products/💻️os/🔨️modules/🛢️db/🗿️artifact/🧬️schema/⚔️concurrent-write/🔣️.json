@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/db/concurrent-write/v1.json",
+  "title": "Concurrent Write Grading V1",
+  "description": "How the database grades a write it commits against the other authors' writes: only a write committed after the operation the author `observed` (advisory authoring context, never an ordering constraint) and by another actor is concurrent with it; a concurrent write conflicts when both touch the same fields (the database reads a path-map diff) or, for diffs opaque to it, when their declared targets overlap (an empty target is the whole artifact). A conflict is `mutation.clamped` (Warning): `normal` accepts the write with the message, `vigilant` refuses it. History transitions are never graded and never conflict.",
+  "$defs": {
+    "Id": { "type": "string", "minLength": 1 },
+    "Write": {
+      "title": "Committed Write",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "actor", "observed", "writes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "actor": { "$ref": "#/$defs/Id" },
+        "observed": { "anyOf": [{ "$ref": "#/$defs/Id" }, { "type": "null" }], "description": "The newest operation of another author the author had applied." },
+        "writes": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["target"], "properties": { "target": { "type": "array", "items": { "type": "string", "minLength": 1 } } }, "description": "An opaque (plugin) diff and the target its mutation declares." },
+            { "type": "object", "additionalProperties": false, "required": ["paths"], "properties": { "paths": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }, "description": "A path-map diff the database reads." },
+            { "type": "object", "additionalProperties": false, "required": ["transition"], "properties": { "transition": { "const": true } }, "description": "A history transition (undo, redo, checkpoint)." }
+          ]
+        }
+      }
+    },
+    "Commit": {
+      "title": "Commit Step",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["write", "outcome", "codes"],
+      "properties": {
+        "write": { "$ref": "#/$defs/Write" },
+        "outcome": { "enum": ["accepted", "refused"] },
+        "codes": { "type": "array", "items": { "enum": ["mutation.clamped"] }, "description": "Every message code the submit reports, in order." }
+      }
+    },
+    "Vector": {
+      "title": "Grading Vector",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "policy", "commits"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Id" },
+        "policy": { "enum": ["normal", "vigilant"] },
+        "commits": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Commit" } }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "vectors"],
+  "properties": {
+    "schema": { "const": "semio.db.concurrent-write/v1" },
+    "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Vector" } }
+  }
+}

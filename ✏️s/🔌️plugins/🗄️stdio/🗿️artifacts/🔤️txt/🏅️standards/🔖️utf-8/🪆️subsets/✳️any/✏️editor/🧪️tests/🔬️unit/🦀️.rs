@@ -12,6 +12,14 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
     assert_eq!(<TxtEditor as ArtifactEditor>::DIALECT, TXT_EDITOR_DIALECT);
 }
 
+/// 🎯️ LAW: the editor declares the artifact kind it edits (the artifact's own `artifact_kind()`), which is
+/// what the hub's one open-target rule (`app_opens_kind`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`)
+/// pairs with this editor and the viewer of its dialect — so a text document can be created and opened as a hub document.
+#[semio_framework_async_macros::async_test]
+async fn the_editor_declares_the_artifact_kind_it_edits() {
+    assert_eq!(create_txt_editor().artifact_kinds, vec![crate::artifact_kind()]);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn editor_declares_the_text_window() {
     let def = create_txt_editor();

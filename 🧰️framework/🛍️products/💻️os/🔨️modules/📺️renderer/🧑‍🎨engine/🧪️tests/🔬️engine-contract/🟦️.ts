@@ -1,10 +1,15 @@
+import vfsDescriptorFixture from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🧫️fixtures/🧾️descriptors/🔣️.json";
+import { renderVirtualFileSystemDescriptorCell, type DescriptorKind, type FileNodeDescriptorValue } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/⚙️VirtualFileSystem/🟦️.tsx";
 import gizmoTipBoundsFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json";
+import textInputFixture from "../../../../../../../🔨️modules/✍️editor/🧫️fixtures/⌨️text-input/🔣️.json";
+import editorDeliveryFixture from "../../🧱️elements/✏️TextEditor/🧫️fixtures/📮️delivery/🔣️.json";
+import editorDeliverySchema from "../../🧱️elements/✏️TextEditor/🧬️schema/📮️delivery/🔣️.json";
 import { act as reactAct, createElement, useLayoutEffect, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
 import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
 import { applyPatch } from "fast-json-patch";
-import { COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, Layout, TreeContext, TreeItem, UIDialog, UiDriverProvider, chromePanelSafeArea, childElementId, closestCenter, createTutorialClock, deriveTreeDragRoles, isElementId, singleTreeLeaf, treeDataActivation, uiI18n, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
+import { COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, Layout, buildVirtualFileSystemSceneRows, TreeContext, TreeItem, UIDialog, UiDriverProvider, chromePanelSafeArea, childElementId, closestCenter, createTutorialClock, deriveTreeDragRoles, isElementId, singleTreeLeaf, treeDataActivation, uiI18n, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
 import { createWorldProjectionTemplates, worldCameraReportTargetV1, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
@@ -38,7 +43,7 @@ import { createContinuationScheduler, createVirtualContinuationHost } from "../.
 import { SHARD_RUNTIME_DIAGNOSTICS_KEY, SHARD_WORKER_DIAGNOSTICS_PARAM, SHARD_WORKER_URL, shardWorkerUrl } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 /** 🗣️ The resolver every `makeEffectDispatchOne` owner passes — the shell's `resolvedTargetViewState`, reduced to what a test session needs: both host preferences always stamped. */
 const resolvedViewStateFixture = (session: { readonly viewState?: unknown }) => parseResolvedPluginViewState({ ...(session.viewState as Record<string, unknown> | undefined), locale: "en", terminology: "native" }) as never;
-import { openSurfaceContextMenu, uiNodeDomId } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
+import { openSurfaceContextMenu, uiNodeDomId, VirtualFileSystemHost, virtualFileSystemNavigation } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json";
@@ -54,6 +59,10 @@ import viewport2dSchema from "../../../../../../../🔨️modules/🖱️ui/🪟
 import viewportPoseFixture from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧫️fixtures/🪟️poses/🔣️.json";
 import treeDragHandleFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🌳️tree-drag-handles/🔣️.json";
 import sceneListTransferFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json" with { type: "json" };
+import tableStepperKeyboardFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/⌨️table-stepper-keyboard/🔣️.json" with { type: "json" };
+import tableStepperKeyboardSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/⌨️table-stepper-keyboard/🔣️.json" with { type: "json" };
+import virtualFileSystemInteractionFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json" with { type: "json" };
+import virtualFileSystemInteractionSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️schema/📁️virtual-file-system-interaction/🔣️.json" with { type: "json" };
 import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectOwnerIsCurrentV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
@@ -6546,6 +6555,176 @@ describe("framework renderer hosts", () => {
     }
   });
 
+  it("retires only the closed React text editor and remounts a fresh sibling generation", async () => {
+    const law = textInputFixture.hostLifecycle;
+    const sessions = [law.text, law.text, law.expect.successorText].map(text => ({
+      attachCanvas: vi.fn(async () => {}), setSize: () => {}, renderFrame: () => {}, syncFromSceneJson: () => {}, syncFromScenePack: () => {},
+      setText: () => {}, text: () => text, caret: () => text.length, anchor: () => text.length, setCanvasThemeJson: () => {}, free: vi.fn(),
+    }));
+    let index = 0;
+    const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockImplementation(async () => sessions[index++] as unknown as flowSessionLoader.EditorWasmSession);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const editor = (window: string, buffer: string) => createElement(TextEditorHost, {
+      key: window,
+      node: { type: "componentScene", surfaceId: law.surfaceId, controllerId: window, componentKind: "text-editor", textEditor: { buffer, language: "jack" } }, onAction: noopAction,
+    });
+    const view = render(createElement("div", null, editor(law.closingWindow, law.text), editor(law.siblingWindow, law.text)));
+    try {
+      await waitFor(() => expect(sessions[1].attachCanvas).toHaveBeenCalledOnce());
+      const before = view.container.querySelectorAll(".semio-text-editor-host").length;
+      view.rerender(createElement("div", null, editor(law.siblingWindow, law.text)));
+      expect(view.container.querySelectorAll(".semio-text-editor-host").length).toBe(law.expect.survivingHosts);
+      expect(before - view.container.querySelectorAll(".semio-text-editor-host").length).toBe(law.expect.closedHosts);
+      expect(view.container.querySelector("textarea")?.value).toBe(law.expect.siblingText);
+      expect(sessions[1].attachCanvas).toHaveBeenCalledOnce();
+      view.rerender(createElement("div", null, editor(law.closingWindow, law.expect.successorText), editor(law.siblingWindow, law.text)));
+      await waitFor(() => expect(sessions[2].attachCanvas).toHaveBeenCalledOnce());
+      expect(Array.from(view.container.querySelectorAll("textarea"), area => area.value)).toEqual([law.expect.successorText, law.expect.siblingText]);
+      expect(sessions[1].attachCanvas).toHaveBeenCalledOnce();
+      expect(factory).toHaveBeenCalledTimes(3);
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      bounds.mockRestore();
+    }
+  });
+
+  it("validates the neutral editor delivery contract with Ajv", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(editorDeliverySchema);
+    expect(validate(editorDeliveryFixture), JSON.stringify(validate.errors)).toBe(true);
+  });
+
+  for (const law of editorDeliveryFixture.cases) it(`settles actual React editor delivery: ${law.id}`, async () => {
+    const { decodePackValue } = await import("@semio-tech/framework-os");
+    let text = law.initial;
+    let caret = text.length;
+    const session = {
+      attachCanvas: vi.fn(async () => {}), setSize: () => {}, renderFrame: () => {}, syncFromSceneJson: () => {}, setText: () => {},
+      syncFromScenePack: (pack: Uint8Array) => {
+        const scene = decodePackValue(pack) as { buffer?: string; selectionJson?: string };
+        if (scene.buffer !== undefined) text = scene.buffer;
+        if (scene.selectionJson !== undefined) caret = JSON.parse(scene.selectionJson).end;
+      },
+      text: () => text, caret: () => caret, anchor: () => caret, setCanvasThemeJson: () => {}, free: () => {},
+      insertText: (value: string) => { text = text.slice(0, caret) + value + text.slice(caret); caret += value.length; },
+    };
+    const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session as unknown as flowSessionLoader.EditorWasmSession);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const completions: Array<(outcome: unknown) => void> = [];
+    const dispatched: string[] = [];
+    const onAction = vi.fn((action: { action: string; args?: Record<string, unknown> }) => {
+      dispatched.push(action.action === "textEdit" ? `textEdit:${action.args?.text}` : `textSelect:${action.args?.start}:${action.args?.end}`);
+      return action.action === "textEdit" ? new Promise(resolve => completions.push(resolve)) : Promise.resolve(undefined);
+    });
+    const view = render(createElement(TextEditorHost, {
+      node: { type: "componentScene", surfaceId: "writer.delivery", controllerId: "writer", componentKind: "text-editor", textEditor: {
+        buffer: law.initial, selectionJson: JSON.stringify({ start: caret, end: caret }),
+      } }, onAction,
+    }));
+    try {
+      await waitFor(() => expect(session.attachCanvas).toHaveBeenCalledOnce());
+      await reactAct(async () => { await Promise.resolve(); });
+      const area = view.container.querySelector("textarea")!;
+      for (const key of law.typed) fireEvent.keyDown(area, { key });
+      expect(dispatched).toEqual(law.expected[0]);
+      await reactAct(async () => { completions.shift()!(law.outcome === "accepted" ? undefined : { kind: "refused", reason: law.outcome }); });
+      await waitFor(() => expect(dispatched).toEqual(law.expected[1]));
+      if (completions.length) await reactAct(async () => { completions.shift()!(undefined); });
+      await waitFor(() => expect(dispatched).toEqual(law.expected[2]));
+      expect(area.getAttribute("aria-readonly")).toBe(String(law.readOnly));
+      expect(text).toBe(law.outcome === "accepted" ? law.initial + law.typed.join("") : law.initial);
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      bounds.mockRestore();
+    }
+  });
+
+  for (const law of textInputFixture.rendererKeys) it(`routes the actual React text editor key: ${law.id}`, async () => {
+    const attachCanvas = vi.fn(async () => {});
+    let text = law.text;
+    let selection = law.selection;
+    const operations = Object.fromEntries(["moveLeft", "moveRight", "moveUp", "moveDown", "moveLineStart", "moveLineEnd", "insertText"].map(name => [name, vi.fn(() => {
+      text = law.expect.text;
+      selection = law.expect.selection;
+    })]));
+    const session = {
+      attachCanvas, setSize: () => {}, renderFrame: () => {}, syncFromSceneJson: () => {}, syncFromScenePack: () => {}, setText: () => {}, text: () => text,
+      caret: () => selection[1], anchor: () => selection[0], setCanvasThemeJson: () => {}, free: () => {},
+      tabInsertText: () => " ".repeat(law.tabSize ?? 2), ...operations,
+    } as unknown as flowSessionLoader.EditorWasmSession;
+    const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const onAction = vi.fn(async () => undefined);
+    const view = render(createElement(TextEditorHost, {
+      node: { type: "componentScene", surfaceId: "writer.keys", controllerId: "writer", componentKind: "text-editor", textEditor: {
+        buffer: law.text, language: "jack", selectionJson: JSON.stringify({ start: law.selection[0], end: law.selection[1] }),
+        newlineGatesJson: law.newlineGates === undefined ? undefined : JSON.stringify(law.newlineGates),
+      } }, onAction,
+    }));
+    try {
+      await waitFor(() => expect(attachCanvas).toHaveBeenCalledOnce());
+      await reactAct(async () => { await Promise.resolve(); });
+      const area = view.container.querySelector("textarea")!;
+      fireEvent.keyDown(area, { key: law.key, shiftKey: law.shift ?? false, altKey: law.alt ?? false });
+      if (law.operation !== null) {
+        expect(operations[law.operation]).toHaveBeenCalledWith(law.argument);
+        await waitFor(() => expect(onAction).toHaveBeenCalledWith({ controllerId: "writer", action: "textSelect", args: { surfaceId: "writer.keys", start: law.expect.selection[0], end: law.expect.selection[1] } }));
+        const actions = onAction.mock.calls.map(([action]) => action);
+        expect(actions.map(action => action.action)).toEqual(law.operation === "insertText" ? ["textEdit", "textSelect"] : ["textSelect"]);
+        if (law.operation === "insertText") expect(actions[0].args).toEqual({ surfaceId: "writer.keys", text: law.expect.text });
+      } else {
+        for (const operation of Object.values(operations)) expect(operation).not.toHaveBeenCalled();
+        expect(onAction).not.toHaveBeenCalled();
+      }
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      bounds.mockRestore();
+    }
+  });
+
+  for (const stepKind of ["paste", "compose"] as const) it(`routes the actual React text editor ${stepKind} event through the shared text-input fixture`, async () => {
+    const law = textInputFixture.sequences.find(sequence => sequence.steps.some(step => step[stepKind] !== undefined))!;
+    const committed = law.steps.find(step => step[stepKind] !== undefined)![stepKind]!;
+    let text = law.text;
+    let selection = law.selection;
+    const commit = vi.fn(() => {
+      text = law.expect.text;
+      selection = law.expect.selection;
+    });
+    const session = {
+      attachCanvas: vi.fn(async () => {}), setSize: () => {}, renderFrame: () => {}, syncFromSceneJson: () => {}, syncFromScenePack: () => {}, setText: () => {}, text: () => text,
+      caret: () => selection[1], anchor: () => selection[0], setCanvasThemeJson: () => {}, free: () => {}, replaceSelection: commit, insertText: commit,
+    } as unknown as flowSessionLoader.EditorWasmSession;
+    const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const onAction = vi.fn(async () => undefined);
+    const view = render(createElement(TextEditorHost, {
+      node: { type: "componentScene", surfaceId: `writer.${stepKind}`, controllerId: "writer", componentKind: "text-editor", textEditor: { buffer: law.text, selectionJson: JSON.stringify({ start: law.selection[0], end: law.selection[1] }) } }, onAction,
+    }));
+    try {
+      await waitFor(() => expect(session.attachCanvas).toHaveBeenCalledOnce());
+      const area = view.container.querySelector("textarea")!;
+      expect(area.getAttribute("aria-label")).toBe("Editor");
+      expect(area.getAttribute("aria-readonly")).toBe("false");
+      const event = new Event(stepKind === "paste" ? "paste" : "compositionend", { bubbles: true, cancelable: true });
+      if (stepKind === "paste") Object.defineProperty(event, "clipboardData", { value: { getData: (type: string) => type === "text/plain" ? committed : "" } });
+      else Object.defineProperty(event, "data", { value: committed });
+      await reactAct(async () => { area.dispatchEvent(event); });
+      await waitFor(() => expect(onAction).toHaveBeenCalledTimes(2));
+      expect(commit).toHaveBeenCalledWith(committed);
+      expect(onAction.mock.calls.map(([action]) => action)).toEqual([
+        { controllerId: "writer", action: "textEdit", args: { surfaceId: `writer.${stepKind}`, text: law.expect.text } },
+        { controllerId: "writer", action: "textSelect", args: { surfaceId: `writer.${stepKind}`, start: law.expect.selection[0], end: law.expect.selection[1] } },
+      ]);
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      bounds.mockRestore();
+    }
+  });
+
   it("renders text editor host with hover/newline/rename scene fields", () => {
     const markup = renderToStaticMarkup(
       createElement(TextEditorHost, {
@@ -6771,6 +6950,37 @@ describe("framework renderer hosts", () => {
     expect(tableStepperClampedDelta(1, { value: 5, min: 0, max: 5 })).toBe(0);
   });
 
+  it("matches the shared Table stepper keyboard fixture through the actual React spinbutton", () => {
+    const validate = new Ajv2020({ strict: true }).compile(tableStepperKeyboardSchema);
+    expect(validate(tableStepperKeyboardFixture), JSON.stringify(validate.errors)).toBe(true);
+    const { cell, action } = tableStepperKeyboardFixture;
+    for (const keyboardCase of tableStepperKeyboardFixture.cases) {
+      const onAction = vi.fn();
+      const node = {
+        type: "componentScene" as const,
+        surfaceId: "window:sourcing-pool",
+        controllerId: action.controllerId,
+        componentKind: "table" as const,
+        table: {
+          columnsJson: JSON.stringify([{ id: cell.columnId, label: cell.columnLabel }]),
+          rowsJson: JSON.stringify([{ id: cell.rowId, [cell.columnId]: { kind: "stepper", value: keyboardCase.value, min: cell.min, max: cell.max, step: cell.step, action } }]),
+        },
+      };
+      const mounted = render(createElement(UiDriverProvider, { driver: DEFAULT_UI_DRIVER }, createElement(TableHost, { node: node as never, onAction: onAction as never })));
+      const readout = mounted.container.querySelector(`[id="${node.surfaceId}.${cell.rowId}.${cell.columnId}"]`);
+      if (!readout) throw new Error(`missing ${keyboardCase.id} spinbutton`);
+      const propagated = fireEvent.keyDown(readout, { key: keyboardCase.key });
+      expect(!propagated, keyboardCase.id).toBe(keyboardCase.consumed);
+      if (keyboardCase.expectedDelta === null) {
+        expect(onAction, keyboardCase.id).not.toHaveBeenCalled();
+      } else {
+        expect(onAction, keyboardCase.id).toHaveBeenCalledOnce();
+        expect(onAction, keyboardCase.id).toHaveBeenCalledWith({ ...action, args: { ...action.args, delta: keyboardCase.expectedDelta } });
+      }
+      mounted.unmount();
+    }
+  });
+
   it("renders vcs history host with an ancestor graph fork", () => {
     const columns = [
       {
@@ -6871,7 +7081,7 @@ describe("framework renderer hosts", () => {
             selectionJson: "[]",
             activeUtility: "selectMarquee",
             brushSize: 24,
-            brushOpacity: 1,
+            brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,
             viewMode: "composite",
           },
         },
@@ -6909,7 +7119,7 @@ describe("framework renderer hosts", () => {
     const view = render(createElement(Paint2dHost, {
       node: { type: "componentScene", surfaceId: "raster.cancel", controllerId: "raster", componentKind: "paint-2d", paint2d: {
         documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}', assetsJson: "{}", cameraJson: '{"x":0,"y":0,"zoom":1}',
-        selectionJson: "[]", activeUtility: "paintBrush", brushSize: 24, brushOpacity: 1, viewMode: "composite",
+        selectionJson: "[]", activeUtility: "paintBrush", brushSize: 24, brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1, viewMode: "composite",
       } }, onAction,
     }));
     try {
@@ -6949,7 +7159,7 @@ describe("framework renderer hosts", () => {
       node: { type: "componentScene", surfaceId: "raster.play.viewport", controllerId: "raster-play", componentKind: "paint-2d", paint2d: {
         documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}', assetsJson: "{}", cameraJson: '{"x":0,"y":0,"zoom":1}',
         selectionJson: JSON.stringify(vector.expected.selected ? [vector.update.nodeKey] : []), hoveredId: vector.expected.hovered ? vector.update.nodeKey : undefined,
-        activeUtility: "selectMarquee", brushSize: 24, brushOpacity: 1, viewMode: "composite",
+        activeUtility: "selectMarquee", brushSize: 24, brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1, viewMode: "composite",
       } }, onAction: noopAction,
     });
     const view = render(content(presenceOverlayFixture.cases[0]!));
@@ -6981,7 +7191,7 @@ describe("framework renderer hosts", () => {
             selectionJson: "[]",
             activeUtility: "selectMarquee",
             brushSize: 24,
-            brushOpacity: 1,
+            brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,
             viewMode: "composite",
           },
         },
@@ -7008,7 +7218,7 @@ describe("framework renderer hosts", () => {
             selectionJson: "[]",
             activeUtility: "selectMarquee",
             brushSize: 24,
-            brushOpacity: 1,
+            brushOpacity: 1, brushColor: "#2878dc", brushHardness: 1,
             viewMode: "navigator",
             compositeViewportJson: '{"width":640,"height":480}',
           },
@@ -7035,11 +7245,85 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("semio-paint-2d-empty");
   });
 
+  it("validates and flattens the shared raw virtual file system interaction law", () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(virtualFileSystemInteractionSchema);
+    expect(validate(virtualFileSystemInteractionFixture), JSON.stringify(validate.errors)).toBe(true);
+    for (const vector of virtualFileSystemInteractionFixture.visibility) {
+      const rows = buildVirtualFileSystemSceneRows(virtualFileSystemInteractionFixture.rows, new Set(vector.expandedRowIds));
+      expect(rows.map((row) => row.id), vector.id).toEqual(vector.visibleRowIds);
+      expect(rows.map((row) => row.level), vector.id).toEqual(vector.levels);
+    }
+    for (const vector of virtualFileSystemInteractionFixture.navigation) {
+      const row = virtualFileSystemInteractionFixture.rows.find((candidate) => candidate.id === vector.rowId)!;
+      expect(virtualFileSystemNavigation(row), vector.rowId).toEqual(vector.action ? { action: vector.action, args: vector.args } : null);
+    }
+  });
+
+  it("mounts localized raw virtual file system controls, owns expansion, and dispatches navigateUri only on double-click", async () => {
+    const previousLocale = uiI18n.resolvedLanguage || uiI18n.language;
+    await uiI18n.changeLanguage("en");
+    const onAction = vi.fn();
+    const view = render(createElement(VirtualFileSystemHost, {
+      node: {
+        type: "componentScene",
+        surfaceId: "vfs.interaction",
+        controllerId: "vfs-controller",
+        componentKind: "virtual-file-system",
+        virtualFileSystem: {
+          schemaJson: JSON.stringify({
+            fileNodeKinds: {
+              root: { id: "root", name: "Root", descriptors: [] },
+              branch: { id: "branch", name: "Branch", descriptors: [] },
+              leaf: { id: "leaf", name: "Leaf", descriptors: [] },
+            },
+            descriptorKinds: {},
+            descriptorColumnIds: [],
+          }),
+          rowsJson: JSON.stringify(virtualFileSystemInteractionFixture.rows),
+        },
+      },
+      onAction,
+    }));
+    try {
+      const folder = view.container.querySelector('tr[data-row-id="folder"]') as HTMLElement;
+      expect(folder).toBeTruthy();
+      expect(view.container.querySelector('tr[data-row-id="instance"]')).toBeTruthy();
+      const toggle = folder.querySelector("button[data-vfs-expand]") as HTMLButtonElement;
+      const english = virtualFileSystemInteractionFixture.chrome.find((pack) => pack.locale === "en")!;
+      expect(toggle.getAttribute("aria-label")).toBe(english.collapse);
+      expect(toggle.getAttribute("aria-expanded")).toBe("true");
+      fireEvent.click(toggle);
+      expect(view.container.querySelector('tr[data-row-id="instance"]')).toBeNull();
+      const collapsedToggle = view.container.querySelector('tr[data-row-id="folder"] button[data-vfs-expand]') as HTMLButtonElement;
+      expect(collapsedToggle.getAttribute("aria-label")).toBe(english.expand);
+      expect(collapsedToggle.getAttribute("aria-expanded")).toBe("false");
+      fireEvent.click(collapsedToggle);
+      const instance = view.container.querySelector('tr[data-row-id="instance"]') as HTMLElement;
+      expect(instance).toBeTruthy();
+      fireEvent.click(instance, { detail: 1 });
+      fireEvent.click(instance, { detail: 2 });
+      expect(onAction).toHaveBeenLastCalledWith({
+        controllerId: "vfs-controller",
+        action: "openInstance",
+        args: { surfaceId: "vfs.interaction", instanceId: "inst-7" },
+      });
+      expect(onAction.mock.calls.filter(([action]) => action.action === "selectRows")).toHaveLength(1);
+      const german = virtualFileSystemInteractionFixture.chrome.find((pack) => pack.locale === "de")!;
+      await reactAct(async () => {
+        await uiI18n.changeLanguage("de");
+      });
+      expect((view.container.querySelector('tr[data-row-id="folder"] button[data-vfs-expand]') as HTMLButtonElement).getAttribute("aria-label")).toBe(german.collapse);
+    } finally {
+      view.unmount();
+      await uiI18n.changeLanguage(previousLocale);
+    }
+  });
+
   it("interprets virtual file system component scenes", async () => {
     // 🧬️ MIGRATION: `Component::Surface`'s single `SurfaceProps.doc` (a pack-encoded opaque payload)
     // replaces the old `componentScene`/`virtualFileSystem` field pair — `surfacePropsToComponentSceneNode`
     // (Interpreter/🟦️.tsx) decodes `doc.bytes` back into the exact scene sub-field shape
-    // `VirtualFileSystemHost` (unowned, unchanged) already reads.
+    // `VirtualFileSystemHost` reads.
     const doc = {
       schemaJson: JSON.stringify({
         fileNodeKinds: { instance: { id: "instance", name: "Instance", descriptors: [] } },
@@ -13168,4 +13452,21 @@ it("the neutral gizmo head corpus matches Three sprite scale and circle bounds",
     geometry.dispose();
     sprite.material.dispose();
   }
+});
+
+
+describe("shared VFS descriptor presentation", () => {
+  for (const law of vfsDescriptorFixture.cases) it(`renders the actual React VFS descriptor ${law.id}`, () => {
+    const kind = vfsDescriptorFixture.kinds[law.kind as keyof typeof vfsDescriptorFixture.kinds] as DescriptorKind;
+    const value = law.value === null ? undefined : law.value as FileNodeDescriptorValue;
+    const view = render(createElement("div", null, renderVirtualFileSystemDescriptorCell(kind, value, "en-US")));
+    try {
+      expect(view.container.textContent).toBe(law.expect.text);
+      if (value?.presentation === "avatar" && kind.presentation === "avatar") {
+        expect(view.container.querySelector('[data-slot="avatar-fallback"]')?.getAttribute("aria-label")).toBe(law.expect.name);
+        expect(view.container.querySelector('[data-slot="avatar"]')?.classList.contains("rounded-full")).toBe(true);
+        if (value.icon) expect(view.container.querySelector("img")?.getAttribute("src")).toBe(law.expect.icon);
+      }
+    } finally { view.unmount(); }
+  });
 });

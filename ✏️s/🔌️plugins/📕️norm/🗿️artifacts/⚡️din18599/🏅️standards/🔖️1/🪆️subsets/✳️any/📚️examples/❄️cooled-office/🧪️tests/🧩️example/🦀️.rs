@@ -5,7 +5,8 @@ async fn primary_asset_decodes_and_evaluates_claimed_verdict() {
     let text = crate::examples::cooled_office::PRIMARY_TEXT;
     let doc = <crate::Din18599Snapshot as ArtifactDsl>::parse_dsl(text).expect("parse cooled-office");
     let report = evaluate_document(&doc);
-    assert!(report.complies(), "fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
+    assert!(!report.complies(), "expected cooling/office fixture to fail");
+    assert!(report.failing().count() >= 2, "fail_count={}", report.failing().count());
 }
 
 #[semio_framework_async_macros::async_test]

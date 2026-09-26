@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/table-stepper-keyboard.json",
+  "title": "Table Stepper Keyboard",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "cell", "action", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cell": { "$ref": "#/$defs/cell" },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controllerId", "action", "args"],
+      "properties": {
+        "controllerId": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 },
+        "args": { "type": "object" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "key", "value", "consumed", "expectedDelta"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "key": { "enum": ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft", "PageUp", "PageDown", "Home", "End", "Enter"] },
+          "value": { "type": "number" },
+          "consumed": { "type": "boolean" },
+          "expectedDelta": { "type": ["number", "null"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rowId", "columnId", "columnLabel", "min", "max", "step"],
+      "properties": {
+        "rowId": { "type": "string", "minLength": 1 },
+        "columnId": { "type": "string", "minLength": 1 },
+        "columnLabel": { "type": "string", "minLength": 1 },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "step": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

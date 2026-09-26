@@ -85,6 +85,12 @@ fn principal(scopes: &[&str]) -> AgentPrincipal {
 }
 
 //#region 🔖️PreviewVsCommit
+/// 🪞️ The exact PureCommand op payload (preview) and the exact TransactionPrepare op payload
+/// (commit) sent over the wire must be byte-identical — asserted on the recorded frame log, not
+/// on internal state. `MockArtifactChannel::handle` derives its `PureCommand` Emit bytes
+/// deterministically from `(capability_id, input)`, so reconstructing the expected bytes here
+/// (rather than reading them back off a response, which the command-only frame log does not
+/// carry) is exact, not approximate.
 #[test]
 fn preview_ops_and_the_ops_actually_committed_are_the_same_bytes() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -98,12 +104,6 @@ fn preview_ops_and_the_ops_actually_committed_are_the_same_bytes() {
     let report = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 1).unwrap();
     assert_eq!(report.status, InvocationStatus::Succeeded);
 
-    // The exact PureCommand op payload (preview) and the exact TransactionPrepare op payload
-    // (commit) sent over the wire must be byte-identical — asserted on the recorded frame log, not
-    // on internal state. `MockArtifactChannel::handle` derives its `PureCommand` Emit bytes
-    // deterministically from `(capability_id, input)`, so reconstructing the expected bytes here
-    // (rather than reading them back off a response, which the command-only frame log does not
-    // carry) is exact, not approximate.
     let log = channel.frame_log();
     assert!(log.iter().any(|(_, command)| matches!(command, AppCommand::PureCommand { .. })), "a PureCommand was sent during preview");
     let expected_op = serde_json::to_vec(&serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": {"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]} })).unwrap();
@@ -144,6 +144,10 @@ fn an_action_whose_preview_produced_no_operation_commits_nothing_and_says_so() {
 //#endregion 🔖️NoChange
 
 //#region 🔖️RevisionConflict
+/// ⚔️ Simulate a concurrent edit landing between prepare and invoke.
+///
+/// Only a ReadHistory (a pure read) may have been sent after the staleness became detectable —
+/// no TransactionPrepare/TransactionCommit anywhere in the whole log.
 #[test]
 fn stale_expected_revision_is_a_revision_conflict_with_no_mutation_sent() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -153,7 +157,6 @@ fn stale_expected_revision_is_a_revision_conflict_with_no_mutation_sent() {
 
     let prepared = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]}), 0, 0).unwrap();
 
-    // Simulate a concurrent edit landing between prepare and invoke.
     channel.bump_generation(0);
     let before_invoke = channel.frame_log().len();
 
@@ -162,14 +165,14 @@ fn stale_expected_revision_is_a_revision_conflict_with_no_mutation_sent() {
     assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
 
     let log = channel.frame_log();
-    // Only a ReadHistory (a pure read) may have been sent after the staleness became detectable —
-    // no TransactionPrepare/TransactionCommit anywhere in the whole log.
     assert!(!log.iter().any(|(_, command)| matches!(command, AppCommand::TransactionPrepare { .. } | AppCommand::TransactionCommit { .. })), "a mutation command was sent despite a stale expectedRevision: {log:?}");
     assert!(log.len() > before_invoke, "invoke must have issued at least the ReadHistory recheck");
 }
 //#endregion 🔖️RevisionConflict
 
 //#region 🔖️Idempotency
+/// 🔁️ A replay with a DIFFERENT prepared handle in the request would normally re-resolve, but the
+/// idempotency key alone must short-circuit before any channel command is sent a second time.
 #[test]
 fn idempotent_replay_performs_exactly_one_mutation() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -185,8 +188,6 @@ fn idempotent_replay_performs_exactly_one_mutation() {
     let commits_after_first = channel.frame_log().iter().filter(|(_, command)| matches!(command, AppCommand::TransactionCommit { .. })).count();
     assert_eq!(commits_after_first, 1);
 
-    // A replay with a DIFFERENT prepared handle in the request would normally re-resolve, but the
-    // idempotency key alone must short-circuit before any channel command is sent a second time.
     let second = adapter.invoke(&catalog, &principal, &session, InvokeRequest { idempotency_key: Some("key-1".into()), ..request }, 0, 2).unwrap();
     assert!(second.replayed);
     assert_eq!(second.invocation_id, first.invocation_id);
@@ -267,12 +268,13 @@ fn approval_gate_blocks_a_destructive_capability_without_approval_and_proceeds_w
 //#endregion 🔖️ApprovalGateBlocksThenProceeds
 
 //#region 🔖️ScopeDenialAudited
+/// 🚫️ No scopes granted at all
 #[test]
 fn a_capability_whose_scopes_exceed_the_principals_is_permission_denied_and_audited() {
     let (adapter, _channel, _handles, audit) = harness(AutoApprovePolicy::Never);
     let catalog = real_fixture_catalog();
     let session = SessionHandle::new("sess_1");
-    let principal = principal(&[]); // no scopes granted at all
+    let principal = principal(&[]);
 
     let error = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]}), 0, 0).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::PermissionDenied);
@@ -301,6 +303,7 @@ fn cancel_drops_a_prepared_handle() {
 //#endregion 🔖️Cancel
 
 //#region 🔖️InstanceBusy
+/// 🚧️ Occupy instance 0 with an externally-pending transaction that never clears.
 #[test]
 fn instance_busy_retries_then_precondition_failed() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -308,7 +311,6 @@ fn instance_busy_retries_then_precondition_failed() {
     let session = SessionHandle::new("sess_1");
     let principal = principal(&["artifact.write"]);
 
-    // Occupy instance 0 with an externally-pending transaction that never clears.
     let _ = channel
         .clone()
         .exchange(0, vec![AppCommand::TransactionPrepare { txn_id: "external".into(), ops: PreparedOps::default(), label: "external".into(), origin: MutationOrigin::Agent { principal: "someone-else".into(), invocation_id: "x".into() } }]);
@@ -323,6 +325,9 @@ fn instance_busy_retries_then_precondition_failed() {
 //#endregion 🔖️InstanceBusy
 
 //#region 🔖️GenerationMismatch
+/// 🕰️ Force the LOW-LEVEL commit to see a stale base_generation without going through the upfront
+/// expectedRevision recheck (which used the freshly re-read current revision as `expected`) —
+/// bump AFTER our own ReadHistory recheck would run, by scripting a commit-time fault directly.
 #[test]
 fn a_concurrent_edit_between_prepare_and_commit_is_a_revision_conflict() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -331,9 +336,6 @@ fn a_concurrent_edit_between_prepare_and_commit_is_a_revision_conflict() {
     let principal = principal(&["artifact.write"]);
 
     let prepared = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]}), 0, 0).unwrap();
-    // Force the LOW-LEVEL commit to see a stale base_generation without going through the upfront
-    // expectedRevision recheck (which used the freshly re-read current revision as `expected`) —
-    // bump AFTER our own ReadHistory recheck would run, by scripting a commit-time fault directly.
     channel.force_commit_fault(0, Fault { code: "transaction.generation-mismatch".into(), message: "base generation stale".into() });
 
     let error = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 1).unwrap_err();
@@ -379,9 +381,26 @@ fn every_fault_code_maps_to_the_right_gateway_error_code() {
     }
     assert!(!map_fault(&Fault { code: "interactive-job.not-ui-safe".into(), message: "x".into() }).retryable, "a verb kept out of the agent lane does not come back by retrying");
 }
+
+#[test]
+fn a_verb_whose_lane_an_agent_cannot_carry_is_refused_by_name_with_an_en_and_de_remedy() {
+    let message = "action 'exportVideo' publishes a file download that an agent transaction cannot carry; it runs only from the shell";
+    let mapped = map_fault(&Fault { code: AGENT_LANE_UNCARRIED_FAULT_CODE.into(), message: message.into() });
+    assert_eq!(mapped.code, GatewayErrorCode::PluginUnavailable);
+    assert!(!mapped.retryable, "an uncarried lane does not appear by retrying");
+    assert_eq!(mapped.message, message, "the guest's refusal names the action and the lane");
+    assert_eq!(mapped.details["faultCode"], AGENT_LANE_UNCARRIED_FAULT_CODE);
+    for (locale, remedy) in [("en", AGENT_LANE_UNCARRIED_REMEDY.0), ("de", AGENT_LANE_UNCARRIED_REMEDY.1)] {
+        assert_eq!(mapped.details["remedy"][locale], remedy, "remedy.{locale}");
+        assert!(!remedy.trim().is_empty(), "remedy.{locale} is non-empty");
+    }
+    assert_ne!(AGENT_LANE_UNCARRIED_REMEDY.0, AGENT_LANE_UNCARRIED_REMEDY.1, "de is a translation, not a copy");
+}
 //#endregion 🔖️FaultMapping
 
 //#region 🔖️SagaCompensation
+/// ↩️ Member A (instance 0) will fail its commit; its undo (compensation) must be attempted after
+/// member B (instance 1, committed first since commit runs in REVERSE discovery order) succeeds.
 #[test]
 fn saga_commits_in_reverse_discovery_order_and_compensates_on_failure() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -394,8 +413,6 @@ fn saga_commits_in_reverse_discovery_order_and_compensates_on_failure() {
     let prepared_a = adapter.prepare(&catalog, &principal, &session, "gateway.memberA", serde_json::json!({}), 0, 0).unwrap();
     let prepared_b = adapter.prepare(&catalog, &principal, &session, "gateway.memberB", serde_json::json!({}), 1, 0).unwrap();
 
-    // Member A (instance 0) will fail its commit; its undo (compensation) must be attempted after
-    // member B (instance 1, committed first since commit runs in REVERSE discovery order) succeeds.
     channel.force_commit_fault(0, Fault { code: "mutation.rejected".into(), message: "A rejected".into() });
 
     let saga_handle = adapter.transaction_begin(&session, &[prepared_a.prepared_handle, prepared_b.prepared_handle], 1).unwrap();
@@ -408,6 +425,7 @@ fn saga_commits_in_reverse_discovery_order_and_compensates_on_failure() {
     assert!(log.iter().any(|(instance, command)| *instance == 1 && matches!(command, AppCommand::TransactionUndo { .. })), "member B (already committed) must be compensated via TransactionUndo");
 }
 
+/// 💥️ Compensating the already-committed member B also fails
 #[test]
 fn compensation_failure_itself_is_reported_as_compensation_failed() {
     let (adapter, channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
@@ -421,7 +439,7 @@ fn compensation_failure_itself_is_reported_as_compensation_failed() {
     let prepared_b = adapter.prepare(&catalog, &principal, &session, "gateway.memberB", serde_json::json!({}), 1, 0).unwrap();
 
     channel.force_commit_fault(0, Fault { code: "mutation.rejected".into(), message: "A rejected".into() });
-    channel.force_undo_fails(1); // compensating the already-committed member B also fails
+    channel.force_undo_fails(1);
 
     let saga_handle = adapter.transaction_begin(&session, &[prepared_a.prepared_handle, prepared_b.prepared_handle], 1).unwrap();
     let error = adapter.transaction_commit(&principal, &session, &saga_handle, 2).unwrap_err();
@@ -450,13 +468,14 @@ fn unknown_capability_id_is_not_found() {
 /// already correctly invoking the validator (confirmed: the same validator correctly rejects a
 /// wrong-typed `dx` and an `additionalProperties:false`-violating unknown field). Fixed by
 /// asserting against genuinely-invalid input instead of an incorrectly-assumed-required field.
+///
+/// `dx` is declared `ArgSchema::Number` — a string value violates the schema's `type: "number"`.
 #[test]
 fn invalid_input_against_the_capabilitys_schema_is_input_invalid() {
     let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
     let catalog = real_fixture_catalog();
     let session = SessionHandle::new("sess_1");
     let principal = principal(&["artifact.write"]);
-    // `dx` is declared `ArgSchema::Number` — a string value violates the schema's `type: "number"`.
     let error = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": "not a number"}), 0, 0).unwrap_err();
     assert_eq!(error.code, GatewayErrorCode::InputInvalid);
 }

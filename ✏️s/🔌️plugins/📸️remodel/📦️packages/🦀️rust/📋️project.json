@@ -45,18 +45,6 @@
         "forwardAllArgs": true
       },
       "outputs": []
-    },
-    "describe": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts describe",
-        "forwardAllArgs": true
-      },
-      "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🛂️.descriptor.semio",
-        "{workspaceRoot}/✏️s/🔌️plugins/📸️remodel/🔣️.json"
-      ]
     }
   }
 }

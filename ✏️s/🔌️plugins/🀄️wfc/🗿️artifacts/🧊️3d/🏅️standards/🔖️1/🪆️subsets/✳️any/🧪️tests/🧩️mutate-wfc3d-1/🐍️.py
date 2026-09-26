@@ -384,6 +384,73 @@ def apply_mutation(document, mutation):
     return apply_diff(document, delta), delta, messages
 
 
+# ---------------------------------------------------------------- adapter
+
+
+LEAVES = ("before", "mutation", "diff", "outcome", "after")
+
+
+def variant_of(kind):
+    """🐫️ `change-tile-media` → `ChangeTileMedia`, the externally tagged payload's single key."""
+    return "".join(word.capitalize() for word in kind.split("-"))
+
+
+def committed(ctx):
+    """🧫️ The committed quintet of this scenario's row, read through the plan's declared fixtures."""
+    spec = ctx.doc_json()
+    if spec["kind"] != ctx.row():
+        raise AssertionError("scenario %s: the doc string names %r" % (ctx.scenario["id"], spec["kind"]))
+    return {leaf: json.loads(ctx.fixture_bytes(spec[leaf]).decode("utf-8")) for leaf in LEAVES}
+
+
+def adapter():
+    """🧭️ The platform entry point. The reference answers in the ORACLE role only, by Scenario Outline base id —
+    registering it as a subject too would make it its own subject and manufacture a green self-comparison. Every law
+    the standalone replay checks is asserted in role, per row, before the parity phase compares the document it answers."""
+    from semio_repo_test import Adapter, Outcome
+
+    def answer(document):
+        return Outcome(document, raw=json.dumps(document, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+    def mutate_oracle(ctx):
+        kind, leaves = ctx.row(), committed(ctx)
+        if list(leaves["mutation"]) != [variant_of(kind)]:
+            raise AssertionError("mutate-%s: the committed payload declares %r" % (kind, list(leaves["mutation"])))
+        produced, delta, messages = apply_mutation(leaves["before"], leaves["mutation"])
+        if delta != leaves["diff"]:
+            raise AssertionError("mutate-%s: the produced delta is not the committed 🔺️diff" % kind)
+        if produced != leaves["after"]:
+            raise AssertionError("mutate-%s: applying the mutation does not reach the committed after-snapshot" % kind)
+        declared = [(row["level"], row["code"]) for row in leaves["outcome"].get("messages", [])]
+        if list(messages) != declared:
+            raise AssertionError("mutate-%s: raised diagnostics %r are not the committed %r" % (kind, messages, declared))
+        if produced == leaves["before"] and ("warning", "mutation.no-op") not in declared:
+            raise AssertionError("mutate-%s: the vector does not move the document and its outcome declares no no-op" % kind)
+        return answer(produced)
+
+    def inverse_oracle(ctx):
+        kind, leaves = ctx.row(), committed(ctx)
+        restored, _, _ = apply_mutation(leaves["before"], leaves["mutation"])
+        (variant, payload), = leaves["mutation"].items()
+        for step in inverse(leaves["before"], variant, payload):
+            restored, _, _ = apply_mutation(restored, step)
+        if restored != leaves["before"]:
+            raise AssertionError("inverse-%s: the reference's own inverse did not restore the before-snapshot" % kind)
+        return answer(restored)
+
+    def identity_oracle(ctx):
+        committed_bytes = ctx.fixture_bytes(ctx.step_fixture_uris()[0])
+        document = json.loads(committed_bytes.decode("utf-8"))
+        reparsed = json.loads(json.dumps(document, separators=(",", ":"), ensure_ascii=False))
+        if reparsed != document:
+            raise AssertionError("identity-round-trip: re-serializing and re-reading the document moved it")
+        if not all(tile.get("media") for tile in reparsed["tiles"]):
+            raise AssertionError("identity-round-trip: a tile lost its inline media")
+        return answer(reparsed)
+
+    return Adapter("python").oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("identity-round-trip", identity_oracle)
+
+
 # ---------------------------------------------------------------- vector replay
 
 

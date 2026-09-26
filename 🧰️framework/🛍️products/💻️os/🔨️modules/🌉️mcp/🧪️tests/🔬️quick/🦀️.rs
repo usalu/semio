@@ -140,9 +140,11 @@ fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope
 
 /// 🎬️ The second half of the brief's §5 live transcript: a principal WITHOUT the required scope
 /// gets `PERMISSION_DENIED`, never a protocol-level failure.
+///
+/// no scopes granted
 #[test]
 fn action_prepare_tool_call_is_permission_denied_for_a_scope_the_principal_lacks() {
-    let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &[], None); // no scopes granted
+    let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &[], None);
     let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), GatewayRuntime::default());
     let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
     assert!(result.is_error);

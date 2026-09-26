@@ -84,7 +84,7 @@ fn application_property_table() -> CatalogueTable {
         rows: part_10::CATALOGUE_APPLICATION_TYPES
             .iter()
             .map(|app| {
-                let (id, c, w, t, a) = part_10::application_property_row(app);
+                let (id, c, w, t, a) = part_10::application_property_row(*app);
                 CatalogueRow {
                     id: id.into(),
                     cells: vec![

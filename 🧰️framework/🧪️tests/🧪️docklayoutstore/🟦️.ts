@@ -401,36 +401,31 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       { pluginId: "note", moduleUrl: "/🔌️plugin-modules/note/note_plugin.js" },
       { pluginId: "s", moduleUrl: "/🔌️plugin-modules/s/s_plugin.js" },
     ];
+    const silentWatch = () => () => {};
 
-    it("subscribes to the adapter's exact watch URLs without a product route dependency", async () => {
+    it("opens and closes exactly its owner's watch streams without a product route dependency", async () => {
       const { default: fixture } = await import("../../🔨️modules/🎠️kernel/🧫️fixtures/📡️source-watch.json");
       const { default: schema } = await import("../../🔨️modules/🎠️kernel/🧬️schema/🔣️.json");
       const { default: Ajv } = await import("ajv");
       expect(new Ajv().compile(schema.$defs.SourceWatchFixture)(fixture)).toBe(true);
       const opened: string[] = [], closed: string[] = [];
-      vi.stubGlobal("EventSource", class {
-        onmessage: ((event: MessageEvent) => void) | null = null;
-        readonly url: string;
-        constructor(url: string) { this.url = url; opened.push(url); }
-        close() { closed.push(this.url); }
-      });
-      try {
-        for (const stream of fixture.streams) {
-          const source = stream.source === "dev" ? createDevPluginSource(registry, stream.watchUrl) : createExtensionSource(SYNTHETIC_PLUGIN_CATALOG, stream.watchUrl);
-          const unsubscribe = source.subscribe(() => {});
-          expect(opened.at(-1)).toBe(stream.watchUrl);
-          unsubscribe();
-          expect(closed.at(-1)).toBe(stream.watchUrl);
-        }
-        expect(opened).toEqual(fixture.streams.map((stream) => stream.watchUrl));
-        expect(closed).toEqual(opened);
-      } finally {
-        vi.unstubAllGlobals();
+      const watchFor = (label: string) => () => {
+        opened.push(label);
+        return () => void closed.push(label);
+      };
+      for (const stream of fixture.streams) {
+        const source = stream.source === "dev" ? createDevPluginSource(registry, watchFor(stream.watch)) : createExtensionSource(SYNTHETIC_PLUGIN_CATALOG, watchFor(stream.watch));
+        const unsubscribe = source.subscribe(() => {});
+        expect(opened.at(-1)).toBe(stream.watch);
+        unsubscribe();
+        expect(closed.at(-1)).toBe(stream.watch);
       }
+      expect(opened).toEqual(fixture.streams.map((stream) => stream.watch));
+      expect(closed).toEqual(opened);
     });
 
     it("list() returns the registry it was created with", async () => {
-      const source = createDevPluginSource(registry, "/neutral/watch");
+      const source = createDevPluginSource(registry, silentWatch);
       expect(source.id).toBe("dev");
       await expect(source.list()).resolves.toEqual(registry);
     });
@@ -449,7 +444,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("acquireModule() cache-busts a cold page load even before the build snapshot arrives", async () => {
       const probes = servedModules(["/🔌️plugin-modules/note/🔣️.json", "/🔌️plugin-modules/s/🔣️.json"]);
       try {
-        const source = createDevPluginSource(registry, "/neutral/watch");
+        const source = createDevPluginSource(registry, silentWatch);
         const firstAcquired = await source.acquireModule("note", undefined, acquisition());
         const first = new URL(firstAcquired.moduleUrl, "http://semio.test");
         const second = new URL((await source.acquireModule("s", undefined, acquisition())).moduleUrl, "http://semio.test");
@@ -466,7 +461,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("acquireModule() cache-busts with a rebuiltAt query param", async () => {
       servedModules(["/🔌️plugin-modules/note/🔣️.json"]);
       try {
-        const source = createDevPluginSource(registry, "/neutral/watch");
+        const source = createDevPluginSource(registry, silentWatch);
         await expect(source.acquireModule("note", 1785789943669, acquisition())).resolves.toEqual({ moduleUrl: "/🔌️plugin-modules/note/note_plugin.js?v=1785789943669", rebuiltAt: 1785789943669 });
       } finally {
         vi.unstubAllGlobals();
@@ -476,7 +471,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("acquireModule() answers unavailable for an unknown pluginId and for a module this device does not serve", async () => {
       servedModules([]);
       try {
-        const source = createDevPluginSource(registry, "/neutral/watch");
+        const source = createDevPluginSource(registry, silentWatch);
         await expect(source.acquireModule("missing", undefined, acquisition())).rejects.toBeInstanceOf(PluginModuleUnavailableError);
         await expect(source.acquireModule("note", undefined, acquisition())).rejects.toThrow(/HTTP 404/);
       } finally {
@@ -484,8 +479,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    it("subscribe() is a harmless no-op without a global EventSource (node/vitest)", () => {
-      const source = createDevPluginSource(registry, "/neutral/watch");
+    it("subscribe() through a watch that never delivers yields nothing and unsubscribes cleanly", () => {
+      const source = createDevPluginSource(registry, silentWatch);
       const events: PluginSourceEvent[] = [];
       const unsubscribe = source.subscribe((event) => events.push(event));
       expect(() => unsubscribe()).not.toThrow();
@@ -514,8 +509,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         moduleUrl: (pluginId) => `/🔌️plugin-modules/${pluginId}/🌉️bridge.js`,
         extensionModuleUrl: (pluginId) => `/🧩️extension-modules/${pluginId}/🌉️bridge.js`,
       };
-      const dev = createDevPluginSource(registry, "/neutral/watch");
-      const extensions = createExtensionSource(catalog, "/neutral/extension-watch");
+      const dev = createDevPluginSource(registry, silentWatch);
+      const extensions = createExtensionSource(catalog, silentWatch);
       const multiplexed = multiplexPluginSources(dev, extensions);
       expect(multiplexed.id).toBe("dev+extensions");
       const listed = await multiplexed.list();

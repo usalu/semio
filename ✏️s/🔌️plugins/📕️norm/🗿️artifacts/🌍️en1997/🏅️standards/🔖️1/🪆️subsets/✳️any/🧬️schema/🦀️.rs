@@ -1670,7 +1670,7 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
                 .annex(annex)
                 .explanation(loc(
                     &format!("R_d=A·c_u/γ_R,h; c_u={:.0} kPa, R_h,d={:.0} kN.", layer.cohesion_undrained/1000.0, r_hu/1000.0),
-                    &format!("R_d=A·c_u/γ_R,h; c_u={:.0} kPa, R_h,d={:.0} kN.", layer.cohesion_undrained/1000.0, r_hu/1000.0),
+                    &format!("R_d=A·c_u/γ_R,h; c_u={:.0} kPa, R_h,d={:.0} kN. (DE-NA)", layer.cohesion_undrained/1000.0, r_hu/1000.0),
                 ));
                 if h_d > r_hu {
                     us = us.remedy(Remedy::at_least(
@@ -1700,7 +1700,7 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
             .annex(annex)
             .explanation(loc(
                 &format!("e_perm={:.3} m (≤ B/6={:.3}), e_tot={:.3} m (≤ B/3={:.3}).", e_perm, limit_perm, e_tot, limit_tot),
-                &format!("e_perm={:.3} m (≤ B/6={:.3}), e_tot={:.3} m (≤ B/3={:.3}).", e_perm, limit_perm, e_tot, limit_tot),
+                &format!("e_perm={:.3} m (≤ B/6={:.3}), e_tot={:.3} m (≤ B/3={:.3}). (DE-NA)", e_perm, limit_perm, e_tot, limit_tot),
             ));
             if !ecc_ok {
                 let b_need = (6.0 * e_perm).max(3.0 * e_tot);

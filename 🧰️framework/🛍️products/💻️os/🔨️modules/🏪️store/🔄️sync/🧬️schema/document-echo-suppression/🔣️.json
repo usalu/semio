@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/document-echo-suppression/v1.json",
+  "title": "Document Echo Suppression V1",
+  "description": "How every replica of a hub document (native actor, browser actor, React worker) decides which envelopes of a server `Commands` frame it applies: by operation identity, never by frame origin. A replica applies an envelope unless its operation id is one it authored or already applied; frames are never discarded whole. A relay frame carries one author's batch, a hello catch-up tail carries anyone's (including the joiner's own earlier device), and the hub stamps a tail with its declared catch-up origin rather than the receiving socket's actor.",
+  "$defs": {
+    "OperationId": { "type": "string", "minLength": 1 },
+    "ActorId": { "type": "string", "minLength": 1 },
+    "Envelope": {
+      "title": "Frame Envelope",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mutationId", "actor"],
+      "properties": { "mutationId": { "$ref": "#/$defs/OperationId" }, "actor": { "$ref": "#/$defs/ActorId" } }
+    },
+    "Frame": {
+      "title": "Server Commands Frame",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "origin", "envelopes"],
+      "properties": {
+        "kind": { "enum": ["relay", "tail"] },
+        "origin": { "$ref": "#/$defs/ActorId" },
+        "envelopes": { "type": "array", "items": { "$ref": "#/$defs/Envelope" } }
+      }
+    },
+    "Step": {
+      "title": "Replica Step",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["authored"],
+          "properties": { "authored": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/OperationId" } } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["frame", "expectApplied"],
+          "properties": { "frame": { "$ref": "#/$defs/Frame" }, "expectApplied": { "type": "array", "items": { "$ref": "#/$defs/OperationId" } } }
+        }
+      ]
+    },
+    "Vector": {
+      "title": "Replica Vector",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "socketActor", "steps"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "socketActor": { "$ref": "#/$defs/ActorId" },
+        "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Step" } }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "hubCatchUpOrigin", "vectors"],
+  "properties": {
+    "schema": { "const": "semio.store.document-echo-suppression/v1" },
+    "hubCatchUpOrigin": { "$ref": "#/$defs/ActorId", "description": "The origin the hub stamps on a hello catch-up tail: a declared hub identity, never the receiving socket's actor." },
+    "vectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Vector" } }
+  }
+}

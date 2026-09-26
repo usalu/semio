@@ -15,7 +15,7 @@ import fixture from "../../../../../../../🔨️modules/✍️editor/🧫️fix
 
 // #region 🧪️Harness
 type Step = { readonly type?: string; readonly key?: string; readonly select?: readonly [number, number]; readonly paste?: string; readonly compose?: string };
-type Sequence = { readonly id: string; readonly text: string; readonly selection: readonly [number, number]; readonly steps: readonly Step[]; readonly expect: { readonly text: string; readonly selection: readonly [number, number] } };
+type Sequence = { readonly id: string; readonly text: string; readonly selection: readonly number[]; readonly steps: readonly Step[]; readonly expect: { readonly text: string; readonly selection: readonly number[] } };
 type EchoEvent = { readonly typed?: string; readonly local?: string; readonly refuse?: string; readonly reason?: string; readonly echo?: string; readonly expect: string; readonly pending: readonly string[]; readonly readOnly?: boolean };
 
 const lineEdgeKeys: Readonly<Record<string, string>> = process.platform === "darwin" ? { Home: "Meta+ArrowLeft", End: "Meta+ArrowRight" } : { Home: "Home", End: "End" };
@@ -29,10 +29,11 @@ function utf16Offset(text: string, scalars: number): number {
   return Array.from(text).slice(0, scalars).join("").length;
 }
 
-async function replay(page: Page, sequence: Sequence): Promise<{ readonly text: string; readonly selection: readonly [number, number] }> {
+async function replay(page: Page, sequence: Sequence): Promise<{ readonly text: string; readonly selection: readonly number[]; readonly events: readonly string[] }> {
   await page.evaluate(
     ({ text, anchor, caret }) => {
       const area = document.querySelector("textarea")!;
+      (window as unknown as { inputEvents: string[] }).inputEvents = [];
       area.value = text;
       area.focus();
       area.setSelectionRange(Math.min(anchor, caret), Math.max(anchor, caret), caret < anchor ? "backward" : "forward");
@@ -42,8 +43,23 @@ async function replay(page: Page, sequence: Sequence): Promise<{ readonly text: 
   for (const step of sequence.steps) {
     if (step.type !== undefined) for (const ch of Array.from(step.type)) await page.keyboard.press(ch === "\n" ? "Enter" : ch);
     else if (step.key !== undefined) await page.keyboard.press(lineEdgeKeys[step.key] ?? step.key);
-    else if (step.paste !== undefined) await page.keyboard.insertText(step.paste);
-    else if (step.compose !== undefined) await page.keyboard.insertText(step.compose);
+    else if (step.paste !== undefined) {
+      await page.evaluate(text => {
+        const transfer = new DataTransfer();
+        transfer.setData("text/plain", text);
+        document.querySelector("textarea")!.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, clipboardData: transfer }));
+      }, step.paste);
+      await page.keyboard.insertText(step.paste);
+    }
+    else if (step.compose !== undefined) {
+      await page.evaluate(text => {
+        const area = document.querySelector("textarea")!;
+        area.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true, data: "" }));
+        area.dispatchEvent(new CompositionEvent("compositionupdate", { bubbles: true, data: text }));
+      }, step.compose);
+      await page.keyboard.insertText(step.compose);
+      await page.evaluate(text => document.querySelector("textarea")!.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true, data: text })), step.compose);
+    }
     else if (step.select !== undefined) {
       const [anchor, caret] = step.select;
       await page.evaluate(({ anchor, caret }) => document.querySelector("textarea")!.setSelectionRange(Math.min(anchor, caret), Math.max(anchor, caret)), { anchor, caret });
@@ -51,11 +67,11 @@ async function replay(page: Page, sequence: Sequence): Promise<{ readonly text: 
   }
   const state = await page.evaluate(() => {
     const area = document.querySelector("textarea")!;
-    return { text: area.value, start: area.selectionStart, end: area.selectionEnd, backward: area.selectionDirection === "backward" };
+    return { text: area.value, start: area.selectionStart, end: area.selectionEnd, backward: area.selectionDirection === "backward", events: (window as unknown as { inputEvents: string[] }).inputEvents };
   });
   const start = scalarOffset(state.text, state.start);
   const end = scalarOffset(state.text, state.end);
-  return { text: state.text, selection: state.backward ? [end, start] : [start, end] };
+  return { text: state.text, selection: state.backward ? [end, start] : [start, end], events: state.events };
 }
 // #endregion 🧪️Harness
 
@@ -103,17 +119,22 @@ describe("⌨️ Chromium's native textarea answers every typing sequence of the
   beforeAll(async () => {
     browser = await chromium.launch({ headless: true });
     page = await browser.newPage();
-    await page.setContent('<textarea style="font-family: monospace; font-size: 14px; width: 600px; height: 200px" spellcheck="false"></textarea>');
+    await page.setContent('<textarea style="font-family: monospace; font-size: 14px; width: 600px; height: 200px" spellcheck="false"></textarea><script>window.inputEvents=[];const area=document.querySelector("textarea");area.addEventListener("paste",event=>window.inputEvents.push(`paste:${event.clipboardData.getData("text/plain")}`));area.addEventListener("compositionend",event=>window.inputEvents.push(`compose:${event.data}`));</script>');
   }, 60_000);
   afterAll(async () => {
     await browser?.close();
   });
 
-  for (const sequence of fixture.sequences as readonly Sequence[]) {
+  const sequences: readonly Sequence[] = fixture.sequences;
+  for (const sequence of sequences) {
     it(sequence.id, async () => {
       const answer = await replay(page, sequence);
       expect(answer.text, `${sequence.id}: text`).toBe(sequence.expect.text);
       expect(answer.selection, `${sequence.id}: selection`).toEqual(sequence.expect.selection);
+      for (const step of sequence.steps) {
+        if (step.paste !== undefined) expect(answer.events).toContain(`paste:${step.paste}`);
+        if (step.compose !== undefined) expect(answer.events).toContain(`compose:${step.compose}`);
+      }
     });
   }
 });

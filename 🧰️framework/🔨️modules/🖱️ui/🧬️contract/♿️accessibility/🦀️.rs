@@ -79,7 +79,7 @@ pub fn accessibility_role(component: &crate::Component, activatable: bool) -> &'
             if props.appearance == crate::ToggleAppearance::Checkbox {
                 "checkbox"
             } else {
-                "switch"
+                "button"
             }
         }
         crate::Component::KeyValueList(_) => "list",
@@ -180,11 +180,15 @@ pub struct AccessibilityProjectionNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub checked: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressed: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selected: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expanded: Option<bool>,
     #[serde(default, skip_serializing_if = "is_default")]
     pub editable: bool,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub multiline: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub controls: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -241,6 +245,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
     let activatable = record.bindings.iter().any(|binding| binding.trigger == crate::Trigger::Activate);
     let value = accessibility_value(&record.component);
     let label = record.accessibility.label.as_ref().or_else(|| match &record.component {
+        crate::Component::Button(props) => Some(&props.label),
         crate::Component::TreeItem(props) => Some(&props.label),
         crate::Component::Table(props) => Some(&props.label),
         _ => None,
@@ -260,17 +265,26 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         actionable: activatable || !record.bindings.is_empty(),
         focused: false,
         checked: match &record.component {
-            crate::Component::Toggle(props) => Some(props.on),
+            crate::Component::Toggle(props) if props.appearance == crate::ToggleAppearance::Checkbox => Some(props.on),
+            _ => None,
+        },
+        pressed: match &record.component {
+            crate::Component::Toggle(props) if props.appearance == crate::ToggleAppearance::Button => Some(props.on),
             _ => None,
         },
         selected: None,
         expanded: match &record.component {
             crate::Component::Select(_) => Some(false),
             crate::Component::TreeSection(props) => Some(props.default_open.unwrap_or(true)),
-            crate::Component::TreeItem(props) if props.default_open.is_some() || !record.children.is_empty() => Some(props.default_open.unwrap_or(true)),
+            crate::Component::TreeItem(props)
+                if props.default_open.is_some() || record.children.iter().any(|child| Some(*child) != props.inline_toolbar && Some(*child) != props.detail) =>
+            {
+                Some(props.default_open.unwrap_or(true))
+            }
             _ => None,
         },
         editable: false,
+        multiline: false,
         controls: None,
         active_descendant: None,
         level: matches!(record.component, crate::Component::TreeItem(_)).then_some(depth.saturating_add(1)),

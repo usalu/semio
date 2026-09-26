@@ -41,6 +41,7 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
         .depends_on(dependency.plugin_id, dependency.version)
         .contributes_topic(catalog)
         .artifact_kind(semio_s_artifact_gis_gismap::artifact_kind())
+        .artifact_kind(semio_s_artifact_gis_gisterrain::artifact_kind())
         .artifact(semio_s_artifact_gis_gismap::declaration().map_err(PluginAssemblyError::definition)?)
         .artifact(semio_s_artifact_gis_gisterrain::declaration().map_err(PluginAssemblyError::definition)?)
         .host_media_handler(HostMediaHandlerDeclaration::two_d_svg_export(
@@ -59,6 +60,7 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
         .viewer::<semio_s_artifact_gis_gisterrain::viewer::gisterrain::GisTerrainViewer>(semio_s_artifact_gis_gisterrain::viewer::gisterrain::create_gisterrain_viewer())
         .viewer_mutation_roster::<semio_s_artifact_gis_gisterrain::viewer::gisterrain::GisTerrainViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_gis_gismap::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_gis_gisterrain::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist gis2d/gis3d editor edits (map features, terrain) to the open gismap document".into(), optional: false })
         .requests(CapabilityRequest { id: CapabilityId("shell.navigate".into()), scope: "plugin".into(), reason: "the `shell` command opens an external basemap/attribution URL (Effect::OpenExternalUrl)".into(), optional: false })

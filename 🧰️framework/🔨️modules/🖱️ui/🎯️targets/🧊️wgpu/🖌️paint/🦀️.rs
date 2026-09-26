@@ -687,7 +687,7 @@ fn retained_tree_node_step(
             let color = foreground_on_fill(theme, theme.text_element, selected, on_hover_fill);
             let color = if item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
-            let value_width = if item.control.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
+            let value_width = if item.control.is_some() || item.inline_toolbar.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
             let label_width = (bounds.x + bounds.w - trailing - label_x - value_width).max(0.0);
             let label_x = if inline.is_rtl() { bounds.x + value_width + trailing } else { label_x };
             match retained_tree_text_step(item.label.as_str(), Rect::new(label_x, row.y, label_width, row.h), font_size, color, inline, atlas, draw, cursor) {
@@ -709,7 +709,8 @@ fn retained_tree_node_step(
             let offset = item.label.as_str().len().min(RETAINED_NODE_COLLECTION_ITEMS) as f32 * theme.font_size_body * 0.5;
             let description_x = indent + TREE_ICON_SIZE + theme.gap_standard + offset;
             let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
-            let description_width = (bounds.x + bounds.w - trailing - description_x).max(1.0);
+            let value_width = if item.control.is_some() || item.inline_toolbar.is_some() { metrics.control_width + metrics.gap * 2.0 } else { 0.0 };
+            let description_width = (bounds.x + bounds.w - trailing - value_width - description_x).max(1.0);
             let emphasized = item.presence.selected || item.presence.state == UiState::Previewed || item.presence.hover;
             let description_ink = foreground_on_fill(theme, theme.text_muted, item.presence.selected, emphasized && !item.presence.selected);
             match retained_tree_text_step(description, Rect::new(description_x, row.y, description_width, row.h), theme.font_size_small, description_ink, inline, atlas, draw, cursor) {
@@ -1023,7 +1024,7 @@ pub(crate) fn paint_node_step_with_driver(
                         let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], theme.border_radius, theme.glass(Level::Menu));
                         draw.begin_glass_content(glass);
                         push_chrome_border(draw, popup.menu, theme.stroke_hairline, theme.border_normal, true, true, true, true);
-                        draw.push_scissor(popup.menu);
+                        draw.push_scissor(crate::wgpu::select::select_popup_viewport_rect(popup));
                         opened = true;
                     });
                     cursor.phase = 4;
@@ -1096,18 +1097,21 @@ pub(crate) fn paint_node_step_with_driver(
                         return RetainedNodePaintStep::Fault;
                     };
                     let result = retained_fixed_output(draw, |draw| {
+                        draw.pop_scissor();
                         if let (Some(up), Some(down), Some(icons)) = (popup.up, popup.down, icons) {
                             let chevron = SIZE_TINY;
                             let center_x = popup.menu.x + (popup.menu.w - chevron) * 0.5;
                             push_icon(draw, icons, "chevron-up", center_x, up.y + (up.h - chevron) * 0.5, chevron, theme.text_muted);
                             push_icon(draw, icons, "chevron-down", center_x, down.y + (down.h - chevron) * 0.5, chevron, theme.text_muted);
                         }
+                        draw.end_glass_content();
                     });
                     cursor.advance(7);
                     if result.is_err() {
                         let _ = retained_select_close_route(draw, cursor);
                         RetainedNodePaintStep::Fault
                     } else {
+                        cursor.popup_route = false;
                         RetainedNodePaintStep::Pending
                     }
                 }
@@ -1780,7 +1784,7 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                     let (offset, direction) = (node.state.scroll_offset.1, node.state.scroll_offset.0);
                     let mut popup = crate::wgpu::select::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, offset, direction);
                     if let Some(index) = opening_index {
-                        let revealed = crate::wgpu::select::select_revealed_scroll(popup, index, theme);
+                        let revealed = crate::wgpu::select::select_revealed_scroll(popup, index);
                         popup = crate::wgpu::select::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, revealed, 0.0);
                     }
                     cursor.select_menu_top = popup.menu.y - trigger.y;

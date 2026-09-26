@@ -33,7 +33,11 @@ import {
   createSessionAppSwitchGateV1,
   createSessionWorkLedgerV1,
   createShellSessionLaneV1,
+  shellIdentityResolutionV1,
+  shellRouteAdmissionTextV1,
+  shellRouteAdmissionV1,
   shellRouteIsOverlayV1,
+  shellSessionRouteV1,
   quiesceSessionWorkV1,
   resolveBootPrimaryAppV1,
   roleSwitchTargetV1,
@@ -45,6 +49,8 @@ import {
   surfaceRoleAppsV1,
   surfaceSwitchBusyTextV1,
   type RoleSurfaceAppV1,
+  type ShellIdentityResolutionV1,
+  type ShellRouteAdmissionV1,
   type SessionAppSwitchQuiesceV1,
   type SessionAppSwitchSessionV1,
   type SessionAppSwitchStatusV1,
@@ -54,6 +60,8 @@ import {
 import fixtureJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔀️surface-switch/🔣️.json";
 import sessionLaneFixtureJson from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🧭️session-lane/🔣️.json";
 import pLimit from "p-limit";
+import { match } from "path-to-regexp";
+import { createActor, setup } from "xstate";
 
 type SurfaceSwitchFixture = {
   readonly note: string;
@@ -710,6 +718,10 @@ type SessionLaneFixtureV1 = {
   readonly note: string;
   readonly scenarios: readonly { readonly id: string; readonly steps: readonly SessionLaneStepV1[]; readonly expected: { readonly started: readonly string[]; readonly requests: readonly SessionLaneOutcomeV1[] } }[];
   readonly routes: readonly { readonly uri: string; readonly overlay: boolean }[];
+  readonly sessionRoutes: readonly { readonly uri: string; readonly underlying: string | null; readonly expected: { readonly overlay: boolean; readonly sessionRoute: string | null } }[];
+  readonly identities: readonly { readonly state: Parameters<typeof shellIdentityResolutionV1>[0]; readonly expected: ShellIdentityResolutionV1 }[];
+  readonly admissions: readonly { readonly route: string; readonly identity: ShellIdentityResolutionV1; readonly expected: ShellRouteAdmissionV1 }[];
+  readonly admissionLabels: readonly { readonly admission: Exclude<ShellRouteAdmissionV1, "apply">; readonly locale: string; readonly text: string; readonly action: string | null }[];
 };
 type SessionLaneUnderTestV1 = { readonly route: (uri: string) => Promise<void>; readonly run: (job: () => Promise<void>) => Promise<void>; readonly idle: () => boolean };
 
@@ -790,5 +802,60 @@ describe("shell session lane", () => {
       assert.equal(shellRouteIsOverlayV1(row.uri), row.overlay, row.uri);
       assert.equal(new URL(row.uri, "http://127.0.0.1").pathname === "/hub", row.overlay, `${row.uri}: URL oracle`);
     }
+  });
+
+  it("keeps the route an overlay was opened over as the session's route — equal to a WHATWG URL oracle", () => {
+    const fixture = sessionLaneFixtureJson as SessionLaneFixtureV1;
+    assert(fixture.sessionRoutes.length >= 7);
+    for (const row of fixture.sessionRoutes) {
+      assert.deepEqual(shellSessionRouteV1(row.uri, row.underlying), row.expected, row.uri);
+      const overlay = new URL(row.uri, "http://127.0.0.1").pathname === "/hub";
+      assert.deepEqual({ overlay, sessionRoute: overlay ? row.underlying : row.uri }, row.expected, `${row.uri}: URL oracle`);
+    }
+  });
+
+  it("resolves the hub identity for every shell state — equal to an XState machine of the same rule", () => {
+    const fixture = sessionLaneFixtureJson as SessionLaneFixtureV1;
+    assert.equal(fixture.identities.length, 32);
+    const oracle = setup({ types: { context: {} as Parameters<typeof shellIdentityResolutionV1>[0] } }).createMachine({
+      context: ({ input }) => input as Parameters<typeof shellIdentityResolutionV1>[0],
+      initial: "deciding",
+      states: {
+        deciding: {
+          always: [
+            { guard: ({ context }) => !context.hubConfigured, target: "local-only" },
+            { guard: ({ context }) => !context.sessionHeld || context.refused, target: "signed-out" },
+            { guard: ({ context }) => context.confirmed, target: "signed-in" },
+            { guard: ({ context }) => context.offline, target: "hub-unavailable" },
+            { target: "pending" },
+          ],
+        },
+        "local-only": { type: "final" },
+        "signed-out": { type: "final" },
+        "signed-in": { type: "final" },
+        "hub-unavailable": { type: "final" },
+        pending: { type: "final" },
+      },
+    });
+    for (const row of fixture.identities) {
+      assert.equal(shellIdentityResolutionV1(row.state), row.expected, JSON.stringify(row.state));
+      const actor = createActor(oracle, { input: row.state }).start();
+      assert.equal(actor.getSnapshot().value, row.expected, `${JSON.stringify(row.state)}: XState oracle`);
+      actor.stop();
+    }
+  });
+
+  it("holds a space route until the human it is opened for is known, opens it offline when the hub does not answer, and says so in both languages — equal to a path-to-regexp oracle", () => {
+    const fixture = sessionLaneFixtureJson as SessionLaneFixtureV1;
+    assert(fixture.admissions.length >= 45);
+    const spaceRoute = match("/spaces/:space{/*rest}");
+    for (const row of fixture.admissions) {
+      assert.equal(shellRouteAdmissionV1(row.route, row.identity), row.expected, `${row.route} × ${row.identity}`);
+      const addressesSpace = spaceRoute(new URL(row.route, "http://127.0.0.1").pathname) !== false;
+      const oracle: ShellRouteAdmissionV1 = !addressesSpace || row.identity === "local-only" || row.identity === "signed-in" ? "apply" : row.identity === "hub-unavailable" ? "apply-offline" : row.identity === "pending" ? "await-identity" : "await-sign-in";
+      assert.equal(oracle, row.expected, `${row.route} × ${row.identity}: path-to-regexp oracle`);
+    }
+    assert.equal(fixture.admissionLabels.length, 6);
+    for (const row of fixture.admissionLabels) assert.deepEqual(shellRouteAdmissionTextV1(row.admission, row.locale), { text: row.text, action: row.action }, `${row.admission}/${row.locale}`);
   });
 });

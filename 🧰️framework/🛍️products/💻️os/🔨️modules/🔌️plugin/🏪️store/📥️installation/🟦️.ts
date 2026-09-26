@@ -1,10 +1,13 @@
 #!/usr/bin/env bun
-/** @emoji 🏪 Runtime-installable extension store — unpack `.semio` packages, materialize for native/web, dev-server install + SSE. */
+/** @emoji 🏪 Runtime-installable extension store — unpack `.semio` packages, materialize for native/web, dev-server install + the
+ * `extension-modules.watch` stream route. */
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
-import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { DEV_STREAM_ROUTES, decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import type { StreamMuxJsonV1 } from "../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
+import { devStreamMuxServer } from "../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { decodeOwnedZip, encodeOwnedZip } from "../🟦️.ts";
 import { installationDirectoryCollision, installationDirectoryEmoji } from "../../../🧩️extension/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
@@ -23,7 +26,6 @@ import {
 //#region 🔖️Constants
 export const EXTENSION_STATIC_ROUTE = MODULE_EXTENSION_ROUTE;
 export const EXTENSION_INSTALL_PATH = `${EXTENSION_STATIC_ROUTE}/install`;
-export const EXTENSION_WATCH_PATH = `${EXTENSION_STATIC_ROUTE}/watch`;
 export const EXTENSION_WATCH_MARKER = "👀️extension-watch.json";
 export const EXTENSION_INSTALL_META = "📥️install.json";
 export const EXTENSION_COMPONENT_FILE = "component.wasm";
@@ -70,11 +72,7 @@ export type InstalledExtensionRecord = {
   readonly installedAt: number;
 };
 
-export type ExtensionInstallResult = {
-  readonly extensionId: string;
-  readonly version: string;
-  readonly moduleUrl: string;
-};
+export type ExtensionInstallResult = InstalledExtensionRecord;
 
 export type ExtensionMaterializeInput = {
   readonly extensionId: string;
@@ -324,7 +322,7 @@ export function createExtensionStore(options: { readonly installRoot: string; re
     };
     writeFileSync(join(outDir, EXTENSION_INSTALL_META), `${JSON.stringify(record, null, 2)}\n`);
     writeWatchMarker(installRoot, { kind: "installed", extensionId: manifest.extensionId, version: manifest.version, installedAt });
-    return { extensionId: manifest.extensionId, version: manifest.version, moduleUrl };
+    return record;
   }
 
   return {
@@ -368,11 +366,11 @@ function readRequestBody(req: { on(event: string, listener: (...args: unknown[])
 }
 
 //#region 🔌️ExtensionStoreVitePlugin
-/** @emoji 🔌 Vite middleware: `POST /🧩️extension-modules/install`, `GET /🧩️extension-modules/watch` SSE (mirrors plugin hot-swap).
+/** @emoji 🔌 Vite middleware: `GET|POST|DELETE /🧩️extension-modules/install` plus the `extension-modules.watch` stream route
+ * (snapshot of every installed extension on each fresh open, then `installed`/`uninstalled`) on the dev stream channel.
  * `pre`, like the static mount of the same `/🧩️extension-modules` route: the mount answers 404 for every path its install
- * root lacks, so a store registered after it never saw `watch` — every `s` boot logged a failed
- * `/🧩️extension-modules/watch` and the shell missed extension installs (ticket 26/09/23 U5). The dev serve lists the store
- * before its static mounts; law: "extension store route precedence" in `../🧪️tests/🧪️authored-extension-installation-identity`. */
+ * root lacks, so an unmarked store would never see its own install endpoint (ticket 26/09/23 U5). The dev serve lists the
+ * store before its static mounts; law: "extension store route precedence" in `../🧪️tests/🧪️authored-extension-installation-identity`. */
 export function semioExtensionStoreVitePlugin(options: { readonly installRoot: string; readonly repoRoot: string; readonly materializer?: ExtensionMaterializer }) {
   const store = createExtensionStore({
     installRoot: options.installRoot,
@@ -382,8 +380,12 @@ export function semioExtensionStoreVitePlugin(options: { readonly installRoot: s
   return {
     name: "semio-extension-store",
     enforce: "pre" as const,
-    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
-      const subscribers = new Set<BackboneServerResponse>();
+    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void }; httpServer?: Parameters<typeof devStreamMuxServer>[0] }) {
+      const mux = devStreamMuxServer(server.httpServer);
+      mux.route(DEV_STREAM_ROUTES.extensionModules, {
+        admit: (key) => key === "",
+        snapshot: async () => ({ kind: "snapshot", extensions: (await store.listInstalled()) as unknown as StreamMuxJsonV1 }),
+      });
       mkdirSync(store.installRoot, { recursive: true });
       const markerPath = join(store.installRoot, EXTENSION_WATCH_MARKER);
       let debounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -399,26 +401,29 @@ export function semioExtensionStoreVitePlugin(options: { readonly installRoot: s
             return;
           }
           const { emittedAt: _ignored, ...event } = marker;
-          const payload = `data: ${JSON.stringify(event)}\n\n`;
-          for (const sub of subscribers) sub.write(payload);
+          mux.publish(DEV_STREAM_ROUTES.extensionModules, "", event as unknown as StreamMuxJsonV1);
         }, FOLDER_WATCH_DEBOUNCE_MS);
       });
       server.middlewares.use(async (req, res, next) => {
         const requestPath = moduleRoutePath(req.url ?? "");
-        if (requestPath === EXTENSION_WATCH_PATH && req.method === "GET") {
-          res.statusCode = 200;
-          res.setHeader("content-type", "text/event-stream");
-          res.setHeader("cache-control", "no-cache");
-          res.setHeader("connection", "keep-alive");
-          res.write(": connected\n\n");
-          const snapshot: ExtensionSourceEvent = { kind: "snapshot", extensions: await store.listInstalled() };
-          res.write(`data: ${JSON.stringify(snapshot)}\n\n`);
-          subscribers.add(res);
-          req.on("close", () => subscribers.delete(res));
-          return;
-        }
-        if (requestPath !== EXTENSION_INSTALL_PATH || req.method !== "POST") return next();
+        if (requestPath !== EXTENSION_INSTALL_PATH) return next();
         try {
+          if (req.method === "GET") {
+            res.statusCode = 200;
+            res.setHeader("content-type", "application/json");
+            res.end(JSON.stringify(await store.listInstalled()));
+            return;
+          }
+          if (req.method === "DELETE") {
+            const extensionId = new URL(req.url ?? "", "http://localhost").searchParams.get("extensionId");
+            if (!extensionId) throw new Error("extensionId query parameter is required");
+            await store.uninstall(extensionId);
+            res.statusCode = 200;
+            res.setHeader("content-type", "application/json");
+            res.end(JSON.stringify({ extensionId }));
+            return;
+          }
+          if (req.method !== "POST") return next();
           const contentType = (req as { headers?: Record<string, string> }).headers?.["content-type"] ?? "";
           let result: ExtensionInstallResult;
           if (contentType.includes("application/json")) {
@@ -447,6 +452,6 @@ export function semioExtensionStoreVitePlugin(options: { readonly installRoot: s
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../🧪️tests/🧪️authored-extension-installation-identity/🟦️.ts");
-  await registerTests1(import.meta.vitest, { EXTENSION_COMPONENT_FILE, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, EXTENSION_WATCH_PATH, MODULE_EXTENSION_ROUTE, createExtensionStore, semioExtensionStoreVitePlugin, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { EXTENSION_COMPONENT_FILE, EXTENSION_INSTALL_PATH, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, MODULE_EXTENSION_ROUTE, createExtensionStore, semioExtensionStoreVitePlugin, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests

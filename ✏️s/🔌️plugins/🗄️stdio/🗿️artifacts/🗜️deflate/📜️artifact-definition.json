@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1", "status": "implemented", "from": "s.stdio.deflate.standard.rfc1950.dialect.source", "to": "s.stdio.deflate.standard.rfc1950.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.deflate.v1", "artifact_kind": "stdio.deflate", "artifact_schema": "stdio.deflate", "extension": "zz", "pack_schema_hash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea", "runtime_capability_id": "s.stdio.deflate.standard.rfc1950.codec.codec-stdio-deflate-extension-zz.v1" } }
+    { "id": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1", "status": "implemented", "from": "s.stdio.deflate.standard.rfc1950.dialect.source", "to": "s.stdio.deflate.standard.rfc1950.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.deflate.v1", "artifact_kind": "s.stdio.deflate", "artifact_schema": "stdio.deflate", "extension": "zz", "pack_schema_hash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea", "runtime_capability_id": "s.stdio.deflate.standard.rfc1950.codec.codec-stdio-deflate-extension-zz.v1" } }
   ],
   "mutations": [],
   "inferences": [],

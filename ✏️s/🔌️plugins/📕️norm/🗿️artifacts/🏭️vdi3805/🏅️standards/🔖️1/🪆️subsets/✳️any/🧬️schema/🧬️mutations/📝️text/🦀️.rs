@@ -14,6 +14,7 @@ use crate::artifact_schema::mutations::{
     add_product::AddProduct, remove_curve::RemoveCurve, remove_geometry::RemoveGeometry, remove_product::RemoveProduct, remove_edition_profile::RemoveEditionProfile, remove_geometry_connection::RemoveGeometryConnection,
     rename_product::RenameProduct, change_curve_points::ChangeCurvePoints, change_geometry_parameters::ChangeGeometryParameters, change_product_configuration::ChangeProductConfiguration, resize_geometry::ResizeGeometry,
     change_manufacturer_file::ChangeManufacturerFile,
+    change_limits::ChangeLimits,
 };
 
 //#region 📖️SemioGrammar
@@ -117,6 +118,7 @@ fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, 
 fn print_vdi3805_mutation(mutation: &Vdi3805Mutation) -> String {
     match mutation {
         Vdi3805Mutation::ChangeManufacturerFile(p) => format!("change-manufacturer-file new-manufacturer-file={}", enc_json(&p.new_manufacturer_file)),
+        Vdi3805Mutation::ChangeLimits(p) => format!("change-limits new-limits={}", enc_json(&p.new_limits)),
         Vdi3805Mutation::ChangeCorrectionAsOf(p) => format!("change-correction-as-of new-correction-as-of={}", enc_json(&p.new_correction_as_of)),
         Vdi3805Mutation::ChangeStrictMode(p) => format!("change-strict-mode new-strict-mode={}", enc_bool(p.new_strict_mode)),
         Vdi3805Mutation::ChangeEditionProfile(p) => format!("change-edition-profile sheet={} new-choice={}", enc_str(&p.sheet), enc_json(&p.new_choice)),
@@ -224,6 +226,7 @@ fn read_opt_usize_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize
 /// 🏷️ Op tags of `Vdi3805Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("../💾️binary/📡️.protocol.semio");
 const TAG_UPDATE_MANUFACTURER_FILE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-manufacturer-file");
+const TAG_CHANGE_LIMITS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-limits");
 const TAG_CHANGE_CORRECTION_AS_OF: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-correction-as-of");
 const TAG_CHANGE_STRICT_MODE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-strict-mode");
 const TAG_CHANGE_EDITION_PROFILE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "change-edition-profile");
@@ -247,6 +250,7 @@ impl protocol::OpBinary for Vdi3805Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
             Vdi3805Mutation::ChangeManufacturerFile(_) => TAG_UPDATE_MANUFACTURER_FILE,
+            Vdi3805Mutation::ChangeLimits(_) => TAG_CHANGE_LIMITS,
             Vdi3805Mutation::ChangeCorrectionAsOf(_) => TAG_CHANGE_CORRECTION_AS_OF,
             Vdi3805Mutation::ChangeStrictMode(_) => TAG_CHANGE_STRICT_MODE,
             Vdi3805Mutation::ChangeEditionProfile(_) => TAG_CHANGE_EDITION_PROFILE,
@@ -268,6 +272,7 @@ impl protocol::OpBinary for Vdi3805Mutation {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
             Vdi3805Mutation::ChangeManufacturerFile(p) => write_json_bin(&mut out, &p.new_manufacturer_file),
+            Vdi3805Mutation::ChangeLimits(p) => write_json_bin(&mut out, &p.new_limits),
             Vdi3805Mutation::ChangeCorrectionAsOf(p) => write_json_bin(&mut out, &p.new_correction_as_of),
             Vdi3805Mutation::ChangeStrictMode(p) => write_bool_bin(&mut out, p.new_strict_mode),
             Vdi3805Mutation::ChangeEditionProfile(p) => {
@@ -323,6 +328,7 @@ impl protocol::OpBinary for Vdi3805Mutation {
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
             TAG_UPDATE_MANUFACTURER_FILE => Ok(Vdi3805Mutation::ChangeManufacturerFile(ChangeManufacturerFile { new_manufacturer_file: read_json_bin(&mut reader).map_err(|e| malformed("new_manufacturer_file", reader.position(), e))? })),
+            TAG_CHANGE_LIMITS => Ok(Vdi3805Mutation::ChangeLimits(ChangeLimits { new_limits: read_json_bin(&mut reader).map_err(|e| malformed("new_limits", reader.position(), e))? })),
             TAG_CHANGE_CORRECTION_AS_OF => Ok(Vdi3805Mutation::ChangeCorrectionAsOf(ChangeCorrectionAsOf { new_correction_as_of: read_json_bin(&mut reader).map_err(|e| malformed("new_correction_as_of", reader.position(), e))? })),
             TAG_CHANGE_STRICT_MODE => Ok(Vdi3805Mutation::ChangeStrictMode(ChangeStrictMode { new_strict_mode: read_bool_bin(&mut reader).map_err(|e| malformed("new_strict_mode", reader.position(), e))? })),
             TAG_CHANGE_EDITION_PROFILE => {
@@ -387,7 +393,7 @@ impl protocol::OpBinary for Vdi3805Mutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
     use crate::{GenericAttributes, 
-        BoundingBox, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, EditionId, EditionProfileChoice, ExtensionBag, ParametricGeometry, ProductIdentity, SecurityLimits, SheetAttributes, SheetId, ValveHeatingAttributes,
+        BoundingBox, CatalogueProduct, CharacteristicCurve, Configuration, ConnectionPoint, CurvePoint, EditionId, EditionProfileChoice, ExtensionBag, ParametricGeometry, ProductIdentity, SheetAttributes, SheetId, ValveHeatingAttributes,
         VdiQuantityKind, VdiUnit,
     };
 
@@ -416,14 +422,14 @@ pub(crate) fn demo_mutation_cases() -> Vec<Vdi3805Mutation> {
         Vdi3805Mutation::RenameProduct(RenameProduct { id: "VLV-50-001".into(), new_title: crate::bilingual("Umbenannt", "Renamed") }),
         Vdi3805Mutation::ChangeProductConfiguration(ChangeProductConfiguration { id: "VLV-50-001".into(), new_configuration: product.configuration.clone() }),
         Vdi3805Mutation::AddGeometry(AddGeometry { geometry: geometry.clone() }),
-        Vdi3805Mutation::RemoveGeometry(RemoveGeometry { id: "geom.valve.50".into() }),
-        Vdi3805Mutation::ResizeGeometry(ResizeGeometry { id: "geom.valve.50".into(), new_bbox: BoundingBox::from_size(2.0, 2.0, 2.0) }),
+        Vdi3805Mutation::RemoveGeometry(RemoveGeometry { id: "geom-valve-50".into() }),
+        Vdi3805Mutation::ResizeGeometry(ResizeGeometry { id: "geom-valve-50".into(), new_bbox: BoundingBox::from_size(2.0, 2.0, 2.0) }),
         Vdi3805Mutation::AddGeometryConnection(AddGeometryConnection {
-            id: "geom.valve.50".into(),
+            id: "geom-valve-50".into(),
             connection: ConnectionPoint { id: "mid".into(), medium: "water".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], diameter_mm: Some(25.0) },
         }),
-        Vdi3805Mutation::RemoveGeometryConnection(RemoveGeometryConnection { id: "geom.valve.50".into(), connection_id: "in".into() }),
-        Vdi3805Mutation::ChangeGeometryParameters(ChangeGeometryParameters { id: "geom.valve.50".into(), new_parameters: std::collections::BTreeMap::from([("scale".to_string(), 2.0)]) }),
+        Vdi3805Mutation::RemoveGeometryConnection(RemoveGeometryConnection { id: "geom-valve-50".into(), connection_id: "in".into() }),
+        Vdi3805Mutation::ChangeGeometryParameters(ChangeGeometryParameters { id: "geom-valve-50".into(), new_parameters: std::collections::BTreeMap::from([("scale".to_string(), 2.0)]) }),
         Vdi3805Mutation::AddCurve(AddCurve { curve: curve.clone() }),
         Vdi3805Mutation::RemoveCurve(RemoveCurve { id: "curve-kvs".into() }),
         Vdi3805Mutation::ChangeCurvePoints(ChangeCurvePoints { id: "curve-kvs".into(), new_points: vec![CurvePoint { x: 0.0, y: 0.0 }, CurvePoint { x: 100.0, y: 9.0 }] }),

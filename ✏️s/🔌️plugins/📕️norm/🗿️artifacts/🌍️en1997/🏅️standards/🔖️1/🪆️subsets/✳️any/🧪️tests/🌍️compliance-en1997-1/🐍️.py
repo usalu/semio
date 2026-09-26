@@ -228,9 +228,11 @@ def settlement_oedometric(layers, width, length, embedment, q_sls, gwl=1e9) -> f
         dsig = stress_2to1(q_sls, width, length, z_mid)
         depth_abs = embedment + z_mid
         if gwl < depth_abs:
+            gamma_w = 9_810.0
             gamma = max(layer.get("gamma", 1.0), 1.0)
             gamma_p = layer.get("gammaPrime", gamma * 0.55)
-            dsig *= max(0.4, min(1.0, gamma_p / gamma))
+            gamma_eff = max(min(gamma_p, max(gamma - gamma_w, 0.0)), 1.0)
+            dsig *= max(0.4, min(1.0, gamma_eff / gamma))
         e = max(layer.get("oedometricModulus", 1.0), 1.0)
         s += dsig / e * dz
     return s

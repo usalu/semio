@@ -604,7 +604,8 @@ fn tree_window(window: Option<&ui_contract::TreeWindow>) -> Option<UiTreeWindow>
 
 /// 🌳️ Assembles one `Component::TreeItem` record and its whole subtree into the inline
 /// `UiTreeItemNode` the retained `Tree` spec carries. A child that projects to a control becomes the
-/// row's `control`; every other child recurses as a nested item.
+/// row's `control`; the explicit toolbar/detail relations stay out of the nested item list; every
+/// other child recurses as a nested item.
 fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, controller: &str, depth: usize) -> UiTreeItemNode {
     let ui_contract::Component::TreeItem(props) = &record.component else {
         return UiTreeItemNode {
@@ -622,14 +623,20 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
             drag_data: None,
             items: None,
             control: None,
+            inline_toolbar: None, detail: None,
             dimmed: None,
             menu: menu_ref(record),
         };
     };
     let mut items: Vec<UiTreeItemNode> = Vec::new();
     let mut control: Option<UiControlNode> = None;
+    let inline_toolbar = tree_item_inline_toolbar(document, props, controller);
+    let detail = tree_item_detail(document, props, surface, controller);
     if depth < UI_DOCUMENT_RECONCILE_DEPTH {
         for child_id in record.children.iter() {
+            if props.inline_toolbar == Some(*child_id) || props.detail == Some(*child_id) {
+                continue;
+            }
             let Some(child) = document.record(*child_id) else { continue };
             match tree_item_control(child, controller) {
                 Some(node) if control.is_none() => control = Some(node),
@@ -653,9 +660,53 @@ fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, co
         drag_data: drag_data(props.drag_data.as_ref()),
         items: if items.is_empty() { None } else { Some(items) },
         control,
+        inline_toolbar,
+        detail,
         dimmed: props.dimmed,
         menu: menu_ref(record),
     }
+}
+
+/// 🎞️ Rehydrates the Tree row's explicitly related engine Surface without treating it as a nested row.
+fn tree_item_detail(document: &UiDocumentTree, props: &ui_contract::TreeItemProps, surface: &str, controller: &str) -> Option<UiComponentSceneNode> {
+    let record = document.record(props.detail?)?;
+    let ui_contract::Component::Surface(surface_props) = &record.component else { return None };
+    Some(surface_scene_node(document, record, surface_props, surface, controller))
+}
+
+/// 🎛️ Rehydrates the explicit inline Toolbar relation without reinterpreting it as another
+/// TreeItem. Its children stay ordinary Button nodes with their own ids and Activate bindings.
+fn tree_item_inline_toolbar(document: &UiDocumentTree, props: &ui_contract::TreeItemProps, controller: &str) -> Option<UiStackNode> {
+    let record = document.record(props.inline_toolbar?)?;
+    let ui_contract::Component::Container(container) = &record.component else { return None };
+    if container.role != ui_contract::ContainerRole::Toolbar {
+        return None;
+    }
+    let ui_contract::LayoutSpec::Stack(layout) = &record.layout else { return None };
+    if layout.axis != ui_contract::Axis::Horizontal {
+        return None;
+    }
+    let children = record
+        .children
+        .iter()
+        .map(|id| {
+            let button = document.record(*id)?;
+            matches!(&button.component, ui_contract::Component::Button(_)).then(|| button_node(button, controller))
+        })
+        .collect::<Option<Vec<_>>>()?;
+    let (_, gap, padding) = stack_metrics(&record.layout);
+    Some(UiStackNode {
+        direction: "horizontal".into(),
+        gap,
+        padding,
+        id: Some(record.key.as_str().to_string()),
+        presence: record_presence(record),
+        activate: record_action(record, ui_contract::Trigger::Activate, controller),
+        drop_action: record_action(record, ui_contract::Trigger::Drop, controller),
+        drop_overlay: drop_overlay(container.drop_overlay.as_ref()),
+        menu: menu_ref(record),
+        children,
+    })
 }
 
 /// 🎛️ The control a tree row embeds, when its child record is one of the nine control components.
@@ -1415,6 +1466,12 @@ fn tree_item_row(item: &UiTreeItemNode) -> UiNode {
     let mut children: Vec<UiNode> = Vec::new();
     if let Some(control) = &item.control {
         children.push(ui_control_to_node(control.clone()));
+    }
+    if let Some(toolbar) = &item.inline_toolbar {
+        children.push(UiNode::Stack(toolbar.clone()));
+    }
+    if let Some(detail) = &item.detail {
+        children.push(UiNode::ComponentScene(detail.clone()));
     }
     for action in item.actions.iter().flatten() {
         if action.placement() == UiTreeActionPlacement::Menu {

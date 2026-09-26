@@ -328,6 +328,10 @@ fn agent_messages_resource_is_retryable_plugin_unavailable_without_a_shell() {
 /// 💬️ The emitting half: one tool call becomes a `AgentToolCall` + busy `AgentPresence` before the
 /// handler runs, and a `AgentToolResult` + idle `AgentPresence` after — in that exact order, on the
 /// live connection, with the arguments the agent really sent.
+///
+/// 📬️ `broadcast` admits onto the bridge's own worker pool, so the frames land asynchronously —
+/// awaited (never polled in a spin loop) with a real deadline so a regression fails loudly instead
+/// of hanging the suite.
 #[tokio::test]
 async fn agent_conversation_publishes_the_real_tool_call_and_its_result() {
     let slot: BridgeSlot = Arc::new(OnceLock::new());
@@ -339,9 +343,6 @@ async fn agent_conversation_publishes_the_real_tool_call_and_its_result() {
     let invocation = conversation.begin_tool_call("action_invoke", &serde_json::json!({ "capabilityId": "cad.viewport.translateSelection" }));
     conversation.finish_tool_call(&invocation, "action_invoke", true, "moved 1 object");
 
-    // 📬️ `broadcast` admits onto the bridge's own worker pool, so the frames land asynchronously —
-    // awaited (never polled in a spin loop) with a real deadline so a regression fails loudly instead
-    // of hanging the suite.
     let mut frames = Vec::new();
     for _ in 0..4 {
         let frame = tokio::time::timeout(Duration::from_secs(5), outbox.recv()).await.expect("the bridge delivers every admitted conversation frame").expect("the outbox stays open");

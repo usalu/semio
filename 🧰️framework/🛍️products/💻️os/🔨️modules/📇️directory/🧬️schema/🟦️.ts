@@ -2615,7 +2615,7 @@ export function decodeCanonicalCheckpointPairV1(input: Uint8Array): CanonicalChe
   const aggregateSha256 = header.digest();
   if (!header.exhausted) throw new Error("canonical-checkpoint-pair.header-trailing-bytes");
   if (!artifactFrontierIsGenesisForV1(scope, baselineFrontier) && !artifactFrontierIsEditedForV1(scope, baselineFrontier)) throw new Error("canonical-checkpoint-pair.baseline-frontier");
-  if (pack.byteLength + spr.byteLength > CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES || pack.byteLength === 0) throw new Error("canonical-checkpoint-pair.pair-length");
+  if (pack.byteLength + spr.byteLength > CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES || pack.byteLength === 0 || spr.byteLength === 0) throw new Error("canonical-checkpoint-pair.pair-length");
   const records = canonicalCheckpointPairRecordCountV1(pack.byteLength, spr.byteLength);
   if (records > CANONICAL_CHECKPOINT_PAIR_MAX_RECORDS) throw new Error("canonical-checkpoint-pair.record-count");
   const packBytes = new Uint8Array(pack.byteLength);
@@ -2647,6 +2647,24 @@ export function decodeCanonicalCheckpointPairV1(input: Uint8Array): CanonicalChe
   if (!stream.exhausted || packFilled !== pack.byteLength || sprFilled !== spr.byteLength) throw new Error("canonical-checkpoint-pair.incomplete");
   return { scope, descriptorDigestV1, activeCheckpointId, baselineFrontier, pack, spr, aggregateSha256, packBytes, sprBytes };
 }
+
+/** 🔡️ Canonical lowercase hexadecimal of one 32-byte hash. */
+function canonicalCheckpointPairHexV1(hash: ArtifactHash): string {
+  return hash.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+/** 🎫️ Admits a decoded pair only as exactly the checkpoint the hub authorized for this open (the execution-target
+ * lease's or the open plan's `checkpoint`): a checkpoint that moved, a changed descriptor or a foreign scope is
+ * refused by name, never mounted — the twin of the kernel's `CanonicalCheckpointPairV1::admit`. */
+export function admitCanonicalCheckpointPairV1(pair: CanonicalCheckpointPairV1, scope: DocumentScope, expected: DocumentOpenCheckpointV1): void {
+  if (pair.scope.spaceId !== scope.spaceId || pair.scope.documentId !== scope.documentId) throw new Error("canonical-checkpoint-pair.scope");
+  if (canonicalCheckpointPairHexV1(pair.activeCheckpointId) !== expected.checkpointId) throw new Error("canonical-checkpoint-pair.checkpoint");
+  if (canonicalCheckpointPairHexV1(pair.descriptorDigestV1) !== expected.descriptorDigestV1) throw new Error("canonical-checkpoint-pair.descriptor");
+  const baseline = expected.baselineFrontier;
+  const frontier = pair.baselineFrontier;
+  if (frontier.documentId !== baseline.documentId || frontier.headEditOrdinal !== baseline.headEditOrdinal || frontier.headEditId !== baseline.headEditId || frontier.lastCommitSeq !== baseline.lastCommitSeq || canonicalCheckpointPairHexV1(frontier.chainHash) !== canonicalCheckpointPairHexV1(baseline.chainHash)) throw new Error("canonical-checkpoint-pair.baseline");
+  if (canonicalCheckpointPairHexV1(pair.aggregateSha256) !== expected.aggregateSha256) throw new Error("canonical-checkpoint-pair.aggregate");
+}
 //#endregion 🪢️CanonicalCheckpointPair
 
 //#region 🔖️Stream
@@ -2669,10 +2687,14 @@ export interface RebootstrapRequired {
   baselineFrontier: ArtifactFrontier;
 }
 
+/** 🔑️ Which way one reader's own access to a space moved. */
+export type DirectoryAccessChange = "granted" | "revoked";
+
 export type DirectoryStreamMessage =
   | { kind: "event"; event: DirectoryEvent }
   | { kind: "connection"; phase: DirectoryConnectionPhase; connection: ConnectionView }
   | { kind: "presence"; spaceId: string; documentId: string; actors: DirectoryPresenceActor[] }
   | { kind: "heartbeat"; headSeq: number }
-  | { kind: "rebootstrap-required"; control: RebootstrapRequired };
+  | { kind: "rebootstrap-required"; control: RebootstrapRequired }
+  | { kind: "access-changed"; spaceId: string; change: DirectoryAccessChange };
 //#endregion 🔖️Stream

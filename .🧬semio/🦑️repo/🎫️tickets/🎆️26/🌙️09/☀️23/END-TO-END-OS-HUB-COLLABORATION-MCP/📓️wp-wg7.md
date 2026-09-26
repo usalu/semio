@@ -21,14 +21,136 @@ Slice: WG7 (session 11). Ports: hubs 8050–8059 + inherited 7900, serves 6550�
 
 | # | Item | Status |
 |---|------|--------|
-| S12-1 | Item 4 to done: wasm32 browser A authors on a hub document, B attaches and sees it, B edits, A sees it (en + de) | **collaboration proven on 8050** (runs s12c 10/13, s12e steps 1–12 ✓: sign-in ×2, attach ×2, B sees A ~1 s, A sees B ~2–4 s, pills `Persisted`); de chrome was English (no host-locale door) → fixed in source (🗣️HostLocale, law green), renderer rebuild in the `wasmshort` lane; then 8050 re-run + 7800 B2 run |
-| S12-1b | Coordinator add-on (audit P2-2): ONE kernel connection-shortage primitive (suspend/resume, refuse long offline) for native + wasm32 + React TS twin, fixture law, 5–20 s outage proof en + de | primitive landed, laws green; **15 s cut proven live** (s12e 10–12: worker answers in 2–26 ms, offline edit `Pending (1)`, relink 1.5 s after the cut, B receives the offline edit). Kernel defect measured: a cut longer than ~31.5 s expired (retry scheduled past the bound) → patch set `wp-wg7/s12-link-expiry-patch.py` prepared + verified in isolation (rustc 2/2, bun twin 52/52 steps, Ajv ✓); applies after rule 20 lifts |
-| S12-2 | Presence in the wasm32 wgpu shell (roster, peer cursors) interoperating with React | roster name parity **landed** (the wgpu heartbeat sent the APP ID as the person's label; now React's `presenceClientIdentity` rule, law 13/13); peer cursors not started (wgpu sends no `views`, paints none) |
-| S12-3 | Agent reply + approval overlay parity live in the wasm32 shell | **gap found + source landed**: the wasm32 shell had NO bridge discovery (nothing called `semioWgpuSetAgentBridgeConfig`, the wgpu serve mounted no rendezvous) — shared offer leaf + page watcher + `host-agent-bridge` transport message + worker hook + serve plugin; laws 68/68 + 47/47, tsc 0. Live run pending (renderer build) |
-| S12-4 | P2-12 native/wgpu accessibility (keyboard traversal, AccessKit tree for chrome) — measured | **browser half measured** (`wg7-a11y-probe.mjs`, `wg7-tab-trace.mjs`): mirror 37 nodes / 36 focusable, but **0 Tab stops — Tab from the canvas into the mirror faulted the whole shell** (transport refused node id 0, the contract's first minted id) → fixed in source (TS transport + Worker credits share one rule, fixture `transportCredits`, schema; TS 61/61, Rust law pending run); 2 unnamed `application` surfaces; native AccessKit waits on rule 20 (Cargo.lock) |
-| S12-5 | wasm32 `--lib` checks of every touched crate through the wasm mutex | kernel `sync` + renderer green (02:20, 09:48); renderer re-check for the locale door running (`wasmshort`, 10:49) |
+| S12-1 | Item 4 to done: wasm32 browser A authors on a hub document, B attaches and sees it, B edits, A sees it (en + de) | **live on 8050: s12f 20/20, s12i 13/13** (A↔B edits in 1.4–4.3 s, pills `Persisted`, frames name the document). Open, all fixed in source/prepared, waiting for the landing window: de chrome (locale door, in source), **late joiners see no history** (echo-by-origin; React lane landed, kernel + hub patches prepared), sign-in freezes input on a slow hub (patch prepared). 7800 B2: B's legs green, A (user1) blocked by the freeze |
+| S12-1b | Coordinator add-on (audit P2-2): ONE kernel connection-shortage primitive (suspend/resume, refuse long offline) for native + wasm32 + React TS twin, fixture law, 5–20 s outage proof en + de | primitive landed, laws green; **live on 8050 (s12f): 15 s cut → no freeze (7–8 ms), `Pending (1)`, relink 3.1 s; 20 s cut spoken + cleared; long cut expires and never relinks**; de line English until the locale door ships. Expiry-window defect (>31.5 s) → `s12-link-expiry-patch.py` prepared + verified |
+| S12-2 | Presence in the wasm32 wgpu shell (roster, peer cursors) interoperating with React | roster live both ways (`User One · User Two`), agent badge live on 7800 (`WG7 agent de (AI agent)`, `live · 2 peers`); peer cursors not exercisable with note (no board canvas — WG8's finding), wasm32 heartbeat carries the ephemeral pack |
+| S12-3 | Agent reply + approval overlay parity live in the wasm32 shell | wasm32 bridge discovery landed; **live on 7800: the delegated semio-MCP agent is its own principal, appears in the wgpu roster AS an agent, `addBlock` SUCCEEDED (head 3→4)**; the human's view of the agent's block is blocked by the late-joiner/echo defect (fix prepared); approval overlay live not yet driven |
+| S12-4 | P2-12 native/wgpu accessibility (keyboard traversal, AccessKit tree for chrome) — measured | browser half measured: mirror 37 nodes / 36 focusable, **Tab from the canvas killed the shell** (node id 0 refused) → fixed in source (credit-only admission, fixture `transportCredits`, TS 61/61, Rust 7/7); 2 unnamed `application` roots (guest-side); native AccessKit waits on the Cargo.lock freeze |
+| S12-5 | wasm32 `--lib` checks of every touched crate through the wasm mutex | kernel `sync` + renderer green (02:20, 09:48, 10:55, **15:32** — the last covers the locale door + a11y credit fix); renderer release running |
+
+### Landing window plan (WG7, when W2 reports DONE and the coordinator reopens the lanes)
+
+1. `python3 wp-wg7/s12-echo-suppression-kernel-patch.py --apply` and `python3 wp-wg7/s12-link-expiry-patch.py --apply` (kernel, one
+   window) → native `cargo test -p <kernel> --lib -- document_echo_suppression_tests document_link_shortage_tests os_store::sync` + the
+   TS twin laws (`DocumentEchoSuppression`, `DocumentLinkShortage`) + framework-os vitest.
+2. `python3 wp-wg7/s12-echo-suppression-hub-patch.py --apply` (hub hunk, H9 informed) → hub `bin-unit` catch-up laws; hub binary rebuild
+   for 8050 (and 7800 via W2's post-publish binary).
+3. `python3 wp-wg7/s12-hub-sign-in-off-interaction.py --apply` (renderer) → native renderer laws (`hub_projection_workspace_tests`,
+   `ui_prefs_themes_i18n_tests`, `document_relay_tests`, `browser_input_wire_tests`).
+4. Renderer: `wasmshort` check, then `zsh wp-wg7/s12-release-direct.sh` (full log) — carries the locale door, the a11y credit fix, the
+   sign-in task and (through the kernel) the echo suppression; regenerate frame-worker/boot bundles if TS moved.
+5. Live: `wg7-browser-collab.mjs` on 8050 (fresh note AND the s12f note for step 4b, outage on: 13d must turn German) and on 7800 B2;
+   `wg7-agent-probe.ts` on 7800 as user1 and user2 (en + de: roster "KI-Agent", the agent's block visible); `wg7-a11y-probe.mjs` +
+   `wg7-tab-trace.mjs` (Tab must walk into the mirror).
 
 ### Session 12 log
+
+- 17:1x–17:3x **late-joiner fix, owned end to end (coordinator decision 17:1x): echo suppression by operation identity, never by frame
+  origin, on all three lanes; the hub's catch-up tail carries a declared hub origin.**
+  - schema `🏪️store/🔄️sync/🧬️schema/document-echo-suppression/🔣️.json` + fixture `🏪️store/🧫️fixtures/document-echo-suppression-v1/🔣️.json`
+    (4 vectors, 7 frames: a late joiner applies the whole tail even when it names the joiner's own actor; the declared catch-up origin
+    changes nothing; the same user's second device applies the first device's edits (same actor, relay AND tail); a genuine echo is applied
+    exactly once, and a tail repeating own + already-applied edits admits only the new one) — Ajv ⊨ ✓.
+  - **React lane — LANDED:** TS twin `admitRemoteEnvelopes` / `noteAuthoredEnvelopeIds` (`🛍️products/💻️os/🟦️.ts`, region
+    🔁️DocumentEchoSuppression); the worker's `Commands` handler no longer discards a frame by `origin !== state.actor`, it admits by id and
+    forwards an exact re-encoded batch of ONLY the admitted envelopes when a frame is partly known (before, the whole server batch was
+    forwarded whenever any envelope was fresh); `admitLocalMutations` records every authored id. Laws: `DocumentEchoSuppression` 2/2 (Ajv +
+    every vector), framework-os **487/488** — the one red, `bounds retained document backbone bytes…`, is a 5 s timeout under load average
+    35 (it builds four 256 KiB messages) and passes with `--testTimeout=60000`; tsc 0 over the three files (`s12-wg7-logs/tsc-echo.txt`).
+  - **Kernel lanes — PREPARED** (`wp-wg7/s12-echo-suppression-kernel-patch.py`, frozen until the window): `admit_remote_envelopes` /
+    `note_authored_envelopes` (target-neutral region 🔁️DocumentEchoSuppression), `applied_op_ids` on both actors, authored ids noted at the
+    top of `relay_operations_to_hub` / `relay_operations` (before any outbox early return), both `Commands` arms admit by id (native keeps
+    its folder `known_op_ids` as the persisted half), new law `document_echo_suppression_tests` (fixture walk + a source law that no arm reads
+    a frame origin). Dry run clean; the helper verified standalone with rustc over every fixture vector (`generated/echo-check/`).
+  - **Hub — PREPARED** (`wp-wg7/s12-echo-suppression-hub-patch.py`; H9 told 17:2x): `HUB_CATCH_UP_ORIGIN = "hub.catch-up"` passed to
+    `state.db.hello` instead of the socket actor; the existing reconnect and joiner catch-up asserts in `bin-unit` now pin the origin and the
+    fixture's `hubCatchUpOrigin`. Dry run clean.
+  - frame-worker + browser-boot bundles regenerated after the `🛍️products/💻️os/🟦️.ts` twin (package scripts, `check-frame-worker` fresh).
+  - Probe: `wg7-browser-collab.mjs` step **4b** — each browser shows the hub head's worth of blocks right after attaching (the delta-only
+    steps had hidden the defect: s12i passed 13/13 while both browsers showed 0 of 3 existing blocks).
+
+- 16:5x **agent probe on 7800 as user2, de (`s12c`): 5/7** — the human (wasm32, de-DE, user2's fast directory) signs in and holds the note
+  `Persisted` ✓; **the wgpu roster shows the delegated semio-MCP agent AS an agent, live: `User Two · WG7 agent de (AI agent)`, footer
+  `live · 2 peers`** (screenshot `generated/agent-s12c-7800-de.png`) — the only red on row 3 is the tongue ("AI agent" where de expects
+  "KI-Agent": the 10:16 release has no locale door); `addBlock` SUCCEEDED, head_seq 3→4 ✓; ✗ the human's block count stayed 0 (see next).
+  Rerun `s12d` 4/8: 7800's directory answered "temporarily unavailable" to the agent's commit (W2's publish window).
+- 17:0x **late joiners see no history — root cause.** Run **`s12i-reopen` (8050, 13/13 on deltas)** reopened the s12f note (3 blocks) in two
+  fresh browsers: both attach `Persisted` and **show 0 blocks**; only edits made after the attach sync. Decoded (`generated/decode-full.ts`):
+  `SocketHelloV1{frontier null}` → `Welcome{bootstrap Tail, head 3}` → **`Commands{3 envelopes by two other actors, origin = hub.v1.bdb8e7…}`**
+  → `Session{actor hub.v1.bdb8e7…}` — the tail's `origin` is the RECEIVING socket's own actor, because the hub passes the socket actor to
+  `state.db.hello(db_id, frontier, session_id, actor.clone(), …)` (`🌎️hub/🏗️bootstrap/🦀️.rs` ~5224), which stamps it on the tail
+  (`🛢️db/🔄️sync` `commands_server_frame`). Both Rust document actors drop every `Commands` frame whose origin equals their own socket actor
+  as an echo (`🏪️store/🔄️sync/🦀️.rs` native ~3163, wasm32 ~4704), so the history is never applied; the React worker has the same
+  whole-frame filter (`🏪️store/👷️worker/🟦️.ts` ~4879). Fix proposal (sent to the coordinator 17:0x; kernel frozen / hub = H9): filter
+  PER ENVELOPE (skip `envelope.actor == own socket actor`, plus the known-id dedupe the native actor already keeps) instead of per frame —
+  or the hub stamps the tail with a neutral hub origin; the per-envelope filter is right either way because a relay frame is never
+  mixed-origin while a tail always may be.
+
+- 16:3x–16:5x **the wasm32 shell freezes input while a slow hub answers** (runs s12g/s12h on 7800, A = user1). A's console shows the
+  interaction state checked out by `frame-deferred` from the sign-in submit (+40.6 s) to +130.1 s, and silent again for 106 s after the next
+  action; the page's hub log shows why — measured directly (`generated/hub-latency.ts`, both hubs, load average 65, swap 7.7/8 GB): credential
+  sign-in **11–30 s on 8050 and 7800**, `GET /directory/spaces` **33.6 s for user1 (85 spaces)** vs 2.4 s for user2 (49) on 7800. Root cause in
+  the shell: `run_hub_sign_in_turn` awaited the mint, `me` AND `reload_hub_spaces` inside the frame-deferred action, which owns the
+  interaction state for its whole run (the renderer moves `interaction` into `spawn_frame_deferred_reserved`), so no input was taken until
+  the hub answered — React stays interactive. Coordinator agreed (16:4x); spaces latency routed to H9, sign-in latency already fixed by H10
+  (261 ms median, reaches 7800 with the post-publish binary). **Prepared (not applied — rule 24):** `wp-wg7/s12-hub-sign-in-off-interaction.py`
+  — `ShellHubTask<T>` (spawned on the pool's I/O lane natively / the page microtask queue in the browser, answer through a channel,
+  `cancel` = cancel token + pool-future cancel), `start_hub_sign_in` (arms and returns; the password draft is taken by the one request),
+  `apply_hub_sign_in`, `start_hub_spaces_reload` (every former `reload_hub_spaces().await` caller), `poll_hub_workspace_tasks` in BOTH
+  targets' `pump_directory_events`, Cancel ends the task, `clear_hub_session_owner` cancels in-flight tasks; the existing `Signing in…` /
+  `Anmeldung läuft…` + Cancel and the spaces `Loading` phase now actually render during the wait. The law file's `hub_verb` settles the
+  tasks (so WG8's live cross-shell laws keep their meaning) and a new law
+  `the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering` (source: SIGN_IN/REFRESH arm-and-return, no leg awaited in a
+  verb; behaviour: `Signing in…` + Cancel in en/de while pending, nothing applied before the answer, the pump applies it, a cancelled sign-in's
+  late answer is never applied). Dry run clean against the current tree (`generated/s12-hub-sign-in-dryrun.diff`). **WG8 note:** after it
+  lands, SIGN_IN/REFRESH_SPACES/CREATE_SPACE no longer finish inside the verb; `hub_verb` settles them, direct callers must pump.
+  Not covered yet (same class, shorter): sign-out, create-space/redeem commands, open-space members and the browser identity poll still
+  await inside their verb/pump.
+- 16:4x **agent probe on 7800 as user1 (`s12b`, en): 4/7** — the agent is its own principal ✓, `action_prepare` → handle ✓, **`addBlock`
+  SUCCEEDED ✓, hub head_seq 2→3 ✓**; the human never attached (the freeze above: sign-in + 34 s spaces), so roster/block legs could not be
+  observed. On 8050 (`s12a`) prepare returned no handle — 8050 runs the 09-25 hub binary; the agent leg belongs on 7800. Rerun as user2
+  (fast directory) in de started 16:51.
+
+- 15:58 coordinator killed my NI-15 renderer release (swap 15.4/16 GB, W2's publish stalled) → **rule 24: build-quiet**, `wasmshort` closed
+  until W2's `--packages all` publish is DONE. I stopped the rest of my release tree (wrapper 97382, mutex 97391, bun 97417, trunk 97725,
+  cargo 97949 + its rustc children), the lane lock is free. The earlier nx `wasm-release` (15:32→15:54) had ended rc=1 with the error cut from
+  the 20-line tail; `s12-release-direct.sh` (the target's own command, full log) is ready for the reopened lane. The last good release is
+  still **10:16** (sync pump + relabel + footer a11y; NOT the locale door, NOT the a11y credit fix).
+- 16:0x rule 23 answered (nothing of mine listened on 7800; my only listener is the 8050 hold). `wg7-browser-collab.mjs` no longer
+  defaults to any hub or serve port (`WG7_HUB` and `SEMIO_PROBE_URL` are required).
+- 16:0x **run `s12f` on 8050: 20/20** (10:16 release, serve 6552 pid **21493**, fresh door note **`artifact-24820790ebd8f82c62aa126a37dfee2d`**,
+  A en-US / B de-DE; log `s12-wg7-logs/collab-s12f-run.txt`, captures `generated/collab-s12f-*`): sign-in ×2, attach ×2 (`Persisted`), roster
+  `User Two · User One`, **B sees A's block in 1.7 s, A sees B's in 4.3 s**, frames name the document ×2; **outage**: a 15 s cut never
+  freezes A (worker answers 7 / 8 ms), the offline edit shows `Pending (1)`, A relinks 3.1 s after the cut and B receives it; **a 20 s cut
+  is spoken** (`framework.sync.link.reconnecting` + "Connection lost. Your edits are kept…", 3 s after the drop) **and clears on relink**
+  (the top of the required 5–20 s range, well inside the kernel's current ~31.5 s effective window); **a long cut expires B's link**
+  (`link-expired` 87 s after the cut) **and it never relinks by itself**. B's line is English on this release (the locale door is not in it) →
+  the probe now also asserts `13d` (B's expiry line is German), which the next release must turn green.
+  - Seen in the 13 screenshot: the Sync card overlaps its rows when the `remote://…` uri wraps (the wrapped text row keeps a one-line slot and
+    `Detach` / the link line paint over it). Renderer layout follow-up (the text measure lives in the ui crate — waits for the freeze).
+- 16:1x **agent probe `s12a` on 8050: 3/7** (`s12-wg7-logs/agent-s12a-en.txt`): human signed in + live ✓, the agent is its own principal
+  `agent:01a0de10…` and opens the document ✓; ✗ roster (no agent row), ✗ `action_prepare` produced no handle (`action_invoke` →
+  `INPUT_INVALID … preparedActionHandle is required`), so no block and no ledger advance. 8050 runs the 09-25 17:09 hub binary against a
+  15:12 `semio-os-mcp`; G10 proved the same calls on 7800 B2 → the agent run moves to 7800. Probe fixes: the Artifact panel is opened
+  only when its switch is off (it was toggled closed, so the human's block count read 0), and row 4 now prints the prepare result.
+- 16:1x **run `s12g` on 7800 B2: 12/21** (serve **6553** pid **50393**, module root `s12-wg7-catalog-modules-b2`, space `01a0db87…`, note
+  `artifact-aae0fa4e…`): B signed in, attached `Persisted` and authored; **A's attach never started** — the probe toggled A's Sync card
+  CLOSED (it was already open), so `framework.sync.remote` was absent and every A-dependent step failed. Probe fix: one `openSyncCard`
+  helper (activate the dock switch only when it is not `checked`) for attach and the outage steps. B's expiry ✓ and never relinks ✓ on 7800.
+  Rerun `s12h` started 16:30.
+
+- 15:0x resumed after the ~14:59 app restart: hub 8050, serve 6552 and the 10:55 release build had died; **`wp-wg7/generated/` was swept**
+  (the s12d/s12e captures and screenshots named below are gone; their numbers stay in this log). Every source edit survived (checked by
+  grep). Logs now live outside the ticket folder in `.🧬semio/🌐hub/s12-wg7-logs/`.
+  - **input-wire is not guest-linked** (rules 20/21): `🎮️input-wire/🦀️.rs` and `🌐️browser-worker/🦀️.rs` are `#[path]` modules of the
+    renderer crate `semio-framework-os-renderer-wgpu` only; no tracked workspace crate depends on it (sole dependent: a ticket-local probe crate).
+  - browser-boot bundle regenerated (transport credit change); frame-worker was stale from a peer's `SEMIO_PLAY_PAGE_ORIGINS` edit →
+    regenerated via the package script, `check-frame-worker` fresh.
+  - Native laws **7/7** (`s12-wg7-logs/input-wire-laws.txt`): the 5 input-wire laws incl. the new
+    `accessibility_addresses_are_admitted_by_credits_and_node_zero_is_an_address`, and `the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference`.
+  - Renderer **wasm32 `--lib` check rc=0** (`wasmshort`, 15:05→15:32, 27 min under fleet load; covers the Worker credit change, the locale door
+    and the transport); `wasm-release` queued 15:32 (wrapper **48566**, log `s12-wg7-logs/short-lane-locale-a11y.txt`).
+  - Hub 8050 restarted on its data root (`w2-hub-hold.ts` via `w2-detach.py`, nice 0): hold **78966**, os-hub **79010**, readyz 200 at 15:24.
 
 - 10:5x–11:0x **S12-4 browser keyboard traversal, measured** (serve 6552, release of 10:16): the mirror holds 37 nodes (36 focusable) in en and
   de, yet **Tab never reaches it** — 80 presses alternate `<body>` ↔ canvas (`generated/a11y-probe.json`). Trace (`wp-wg7/wg7-tab-trace.mjs`,
@@ -588,12 +710,11 @@ Ticket (`wp-wg7/`): `k1-directory-admission.py`, `k2-k7-browser-actor.py`, `k4-w
 
 ## Processes (WG7)
 
-- Serve `note release (catalog-B note)` on **6552**: pid **29033** (running since 12:47; log `.🧬semio/🌐hub/s11-wg7-logs/serve-6552.log`;
-  module root `.🧬semio/🌐hub/s11-wg7-catalog-modules/release/`). Earlier serves: 6550 pid 10452, 6551 pid 92356, 6552 pid 2313 — all stopped by me.
-- Inherited hub 7900 (hold 74207 / os-hub 74210): untouched (not used; the E2E runs on W2's 7800).
-- Serve 6552 pid **30112** (17:11; earlier 67896, stopped). Hub **8050**: hold 28307 / os-hub 28313 (`s11-wg7-hub-8050-state/pids.txt`).
-- Chain parent 42680 stopped by me at 17:08 (the hub step moved to `wg7-hub-8050.sh`); its queued served-note mutex wrapper **21478** runs on its turn.
-- Mutex wrappers of this slice: 44856 (done 13:24). Killed earlier (mine): 72068, 73535.
+- Session 12 (after the 14:59 app restart): hub **8050** hold **78966** / os-hub **79010** (`s12-wg7-hub-8050-state`, data root
+  `s11-wg7-hub-8050`); serve **6552** pid **21493** (release of 10:16, module root `s11-wg7-catalog-modules`); serve **6553** pid **50393**
+  (B2 module root `s12-wg7-catalog-modules-b2`, for runs against W2's 7800). Logs `.🧬semio/🌐hub/s12-wg7-logs/`. No build or mutex wrapper of
+  mine is running (release tree stopped 15:58 on rule 24). Never 7800 (rule 23).
+- Earlier (session 11): serves 6550/6551/6552 and hub 8050 holds listed in the Log — all ended.
 
 ## From WG8 (17:4x) — genesis-on-open and the relay test case
 

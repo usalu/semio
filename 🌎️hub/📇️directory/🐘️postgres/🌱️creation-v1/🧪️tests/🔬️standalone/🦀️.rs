@@ -168,5 +168,4 @@ async fn genesis_commit_ack_and_locked_expiry_are_atomic_postgres() {
     assert_eq!(first.await.unwrap().unwrap().phase, SpaceArtifactCreationPhaseV1::Failed);
     assert_eq!(second.await.unwrap().unwrap().phase, SpaceArtifactCreationPhaseV1::Failed);
     assert_eq!(expired.directory.read_artifact_creation(&expired.intent.actor.user_id, &expired.intent.request.request_id).await.unwrap().len(), 3);
-    println!("[DEBUG] PostgreSQL genesis: post-commit ACK loss=1 exact receipt/events=3 retry existing=1 lock-crossed expiry refusal=1 two-service terminalization=2 facts=3; no DirectoryService broadcast or real factory execution");
 }

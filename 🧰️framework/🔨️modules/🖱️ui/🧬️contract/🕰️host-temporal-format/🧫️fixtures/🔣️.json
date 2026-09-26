@@ -1,0 +1,362 @@
+{
+  "schema": "host-temporal-format.v1",
+  "cases": [
+    {
+      "id": "new-york-dst-and-relative",
+      "locales": [
+        "en-US"
+      ],
+      "timeZone": "America/New_York",
+      "nowMs": 1772953200000,
+      "values": [
+        {
+          "id": "event-before",
+          "source": {
+            "kind": "epochMs",
+            "timestampMs": 1772953199000
+          },
+          "format": "time"
+        },
+        {
+          "id": "event-after",
+          "source": {
+            "kind": "epochMs",
+            "timestampMs": 1772953201000
+          },
+          "format": "time"
+        },
+        {
+          "id": "date",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00:01.000Z"
+          },
+          "format": "date"
+        },
+        {
+          "id": "date-time",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00:01.000Z"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "relative",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T09:00:00.000Z"
+          },
+          "format": "relative"
+        },
+        {
+          "id": "invalid",
+          "source": {
+            "kind": "iso",
+            "iso": "not-an-instant"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "relative-plus-one-day",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-09T07:00:00.000Z"
+          },
+          "format": "relative"
+        },
+        {
+          "id": "relative-minus-one-day",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-07T07:00:00.000Z"
+          },
+          "format": "relative"
+        }
+      ],
+      "expected": [
+        "01:59:59 AM",
+        "03:00:01 AM",
+        "03/08/2026",
+        "03/08/2026, 03:00 AM",
+        "in 2 hours",
+        "not-an-instant",
+        "in 1 day",
+        "1 day ago"
+      ]
+    },
+    {
+      "id": "berlin-dst-and-relative",
+      "locales": [
+        "de-DE"
+      ],
+      "timeZone": "Europe/Berlin",
+      "nowMs": 1774746000000,
+      "values": [
+        {
+          "id": "event-before",
+          "source": {
+            "kind": "epochMs",
+            "timestampMs": 1774745999000
+          },
+          "format": "time"
+        },
+        {
+          "id": "event-after",
+          "source": {
+            "kind": "epochMs",
+            "timestampMs": 1774746001000
+          },
+          "format": "time"
+        },
+        {
+          "id": "date",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-29T01:00:01.000Z"
+          },
+          "format": "date"
+        },
+        {
+          "id": "date-time",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-29T01:00:01.000Z"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "relative",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-28T23:00:00.000Z"
+          },
+          "format": "relative"
+        },
+        {
+          "id": "invalid",
+          "source": {
+            "kind": "iso",
+            "iso": "kein-datum"
+          },
+          "format": "relative"
+        },
+        {
+          "id": "relative-plus-one-day",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-30T01:00:00.000Z"
+          },
+          "format": "relative"
+        },
+        {
+          "id": "relative-minus-one-day",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-28T01:00:00.000Z"
+          },
+          "format": "relative"
+        }
+      ],
+      "expected": [
+        "01:59:59",
+        "03:00:01",
+        "29.03.2026",
+        "29.03.2026, 03:00",
+        "vor 2 Stunden",
+        "kein-datum",
+        "in 1 Tag",
+        "vor 1 Tag"
+      ]
+    },
+    {
+      "id": "utc-reference",
+      "locales": [
+        "en-GB"
+      ],
+      "timeZone": "UTC",
+      "nowMs": 1772953200000,
+      "values": [
+        {
+          "id": "event",
+          "source": {
+            "kind": "epochMs",
+            "timestampMs": 1772953199000
+          },
+          "format": "time"
+        },
+        {
+          "id": "date",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00:01.000Z"
+          },
+          "format": "date"
+        },
+        {
+          "id": "date-time",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00:01.000Z"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "relative-future",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-09T07:00:00.000Z"
+          },
+          "format": "relative"
+        },
+        {
+          "id": "relative-past",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-07T07:00:00.000Z"
+          },
+          "format": "relative"
+        },
+        {
+          "id": "invalid",
+          "source": {
+            "kind": "iso",
+            "iso": "invalid-utc"
+          },
+          "format": "date"
+        },
+        {
+          "id": "minute-precision-z",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00Z"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "minute-precision-offset",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00+01:00"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "timezone-less-minute",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "timezone-less-second",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00:01"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "extended-year",
+          "source": {
+            "kind": "iso",
+            "iso": "+002026-03-08T07:00Z"
+          },
+          "format": "dateTime"
+        }
+      ],
+      "expected": [
+        "06:59:59",
+        "08/03/2026",
+        "08/03/2026, 07:00",
+        "in 1 day",
+        "1 day ago",
+        "invalid-utc",
+        "08/03/2026, 07:00",
+        "08/03/2026, 06:00"
+      ]
+    },
+    {
+      "id": "epoch-zero-and-exact-relative-threshold",
+      "locales": [
+        "en-GB"
+      ],
+      "timeZone": "UTC",
+      "nowMs": 1772953259000,
+      "values": [
+        {
+          "id": "unix-epoch",
+          "source": {
+            "kind": "epochMs",
+            "timestampMs": 0
+          },
+          "format": "time"
+        },
+        {
+          "id": "relative-fifty-nine-seconds",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08T07:00:00.000Z"
+          },
+          "format": "relative"
+        },
+        {
+          "id": "date-only",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08"
+          },
+          "format": "date"
+        },
+        {
+          "id": "date-only-time",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08"
+          },
+          "format": "dateTime"
+        },
+        {
+          "id": "date-only-relative",
+          "source": {
+            "kind": "iso",
+            "iso": "2026-03-08"
+          },
+          "format": "relative"
+        }
+      ],
+      "expected": [
+        "00:00:00",
+        "59 seconds ago",
+        "08/03/2026",
+        "08/03/2026, 00:00",
+        "7 hours ago"
+      ]
+    }
+  ],
+  "stale": {
+    "acceptedProfileRevision": 8,
+    "staleProfileRevision": 7
+  },
+  "isoGrammar": {
+    "valid": [
+      "1970-01-01",
+      "2026-03-08",
+      "2026-03-08T07:00Z",
+      "2026-03-08T07:00:01Z",
+      "2026-03-08T07:00:01.123456Z",
+      "2026-03-08T07:00+01:00",
+      "2026-03-08T07:00:01-05:00"
+    ],
+    "invalid": [
+      "2026-03-08T07:00",
+      "2026-03-08T07:00:01",
+      "+002026-03-08T07:00Z",
+      "2026-03-08 07:00Z",
+      "2026-03-08T07:00z",
+      "2026-02-30",
+      "not-an-instant"
+    ]
+  }
+}

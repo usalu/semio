@@ -757,6 +757,70 @@
           }
         }
       }
+    },
+    "MutationAuthoritySegment": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!\\.{1,2}$)(?![cC][oO][mM][pP][oO][sS][eE]$)[^/\\\\:*?{}\\u0000-\\u001f\\u2028\\u2029]+$"
+    },
+    "MutationSourceAuthorityProjectionV1": {
+      "title": "Mutation Source Authority Projection",
+      "description": "The taxonomy facts the mutation derive macros read at compile time, generated from 🔣️taxonomy.json so only a change to these facts invalidates a deriving crate.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "sourceFilename",
+        "descriptorFilename",
+        "mutationCollection",
+        "mutationPayloadFacet",
+        "mutationDomainOwners",
+        "mutationAggregateSources"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.dsl.mutation-source-authority/v1"
+        },
+        "sourceFilename": {
+          "$ref": "#/$defs/MutationAuthoritySegment"
+        },
+        "descriptorFilename": {
+          "$ref": "#/$defs/MutationAuthoritySegment"
+        },
+        "mutationCollection": {
+          "$ref": "#/$defs/MutationAuthoritySegment"
+        },
+        "mutationPayloadFacet": {
+          "$ref": "#/$defs/MutationAuthoritySegment"
+        },
+        "mutationDomainOwners": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$"
+              }
+            }
+          }
+        },
+        "mutationAggregateSources": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
     }
   }
 }

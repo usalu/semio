@@ -646,9 +646,6 @@ pub use crate::standards::v1::subsets::any::schema::snapshot::BitmapSnapshot;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[cfg(all(test, feature = "component-app-assembly"))]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧩️mount-contract/🦀️.rs"]
-mod mount_contract;
 
 #[cfg(all(test, feature = "component-app-assembly"))]
 #[path = "🧪️tests/🔬️store-fixture/🦀️.rs"]

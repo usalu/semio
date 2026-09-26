@@ -1,0 +1,259 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "drawing.field-patch.v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "name"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "visible",
+            "locked",
+            "fillEnabled",
+            "strokeEnabled"
+          ]
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "opacity",
+            "traceThreshold"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "strokeWidth",
+            "traceSimplify"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "transformX",
+            "transformY",
+            "transformRotation",
+            "rotationDegrees"
+          ]
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "fillColor",
+            "strokeColor"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$"
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "blendMode"
+          ]
+        },
+        "value": {
+          "enum": [
+            "normal",
+            "multiply",
+            "screen",
+            "overlay",
+            "darken",
+            "lighten"
+          ]
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "booleanOperation"
+          ]
+        },
+        "value": {
+          "enum": [
+            "union",
+            "intersect",
+            "subtract",
+            "exclude"
+          ]
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "transformScaleX",
+            "transformScaleY"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "strokeCap"
+          ]
+        },
+        "value": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "strokeJoin"
+          ]
+        },
+        "value": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "strokeDash"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[ \\t\\r\\n]*(?:(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[ \\t\\r\\n]+(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+))*)?[ \\t\\r\\n]*$"
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

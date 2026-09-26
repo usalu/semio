@@ -46,7 +46,13 @@ for (let i = 0; i < 30 && (await projection()).find((n) => String(n.key).endsWit
 await act((await projection()).find((n) => String(n.key).endsWith("framework.sync.attach"))?.key, 1000);
 const attachedAt = Date.now() - t0;
 await page.waitForTimeout(45000);
+for (let i = 0; i < 3 && !(await projection()).some((n) => String(n.key).endsWith("note-play-blocks.add.text")); i += 1) {
+  if ((await projection()).find((n) => n.key === "framework.panel.artifact")?.checked !== true) await act("framework.panel.artifact", 3000);
+  await key("note-play-blocks.add.text", 10000);
+}
 const nodes = await projection();
+const blocks = nodes.filter((n) => String(n.key).startsWith("note-play-block:")).map((n) => n.label);
+console.log(`BLOCKS ${blocks.length} ${JSON.stringify(blocks.slice(0, 8))} sync=${nodes.find((n) => n.key === "s-sync-status")?.label}`);
 const hubProjection = await page.evaluate(async () => { try { return await globalThis.semioWgpuHubProjection?.(); } catch (e) { return String(e); } });
 writeFileSync(`generated/attach-${tag}.json`, JSON.stringify({ attachedAt, frames, sync: nodes.filter((n) => String(n.key).startsWith("framework.sync") || n.key === "s-sync-status").map((n) => ({ key: n.key, label: n.label })), hubProjection }, null, 1));
 writeFileSync(`generated/attach-${tag}-console.txt`, lines.join("\n"));

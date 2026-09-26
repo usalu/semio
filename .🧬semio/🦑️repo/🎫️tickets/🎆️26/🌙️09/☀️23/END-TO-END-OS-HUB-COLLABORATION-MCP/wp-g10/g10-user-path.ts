@@ -147,7 +147,8 @@ try {
   }
   const decided: any = await pending;
   row(`5 the destructive request waits for the human, who approves it in the shell (${LOCALE})`, approvalId.length > 0 && onceWord === WORDS.once && decided.isError !== true, `approval=${approvalId || "<none>"} button="${onceWord}" answer=${JSON.stringify(decided.structuredContent ?? {}).slice(0, 200)}`);
-  row("6 time from the clean profile's first page load to an approved agent edit", true, `${((Date.now() - pathStarted) / 1000).toFixed(1)} s`);
+  const approvedEdit = approvalId.length > 0 && onceWord === WORDS.once && decided.isError !== true;
+  row("6 time from the clean profile's first page load to an approved agent edit", approvedEdit, approvedEdit ? `${((Date.now() - pathStarted) / 1000).toFixed(1)} s` : "no approved agent edit to time");
 
   const beforeRevoke = join(mkdtempSync(join(tmpdir(), "g10-user-path-cred-")), "credential.json");
   copyFileSync(credentialPath, beforeRevoke);

@@ -46,6 +46,8 @@ export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: Wi
     document_id: envelope.document,
     actor: envelope.actor,
     dependencies: [...(envelope.deps ?? [])],
+    observed: null,
+    target: [],
     diff: { schema: envelope.diff.schemaId, payload: packPayload(envelope.diff.payload) },
     inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: packPayload(envelope.inverse.inverseDiff.payload) },
     timestamp,
@@ -187,6 +189,10 @@ export type WireMutationEnvelope = {
   readonly document_id: string;
   readonly actor: string;
   readonly dependencies: readonly string[];
+  /** 👁️ Advisory, never an ordering constraint: the newest operation of ANOTHER author the author's replica had applied. */
+  readonly observed: string | null;
+  /** 🎯️ The structured address the operation writes (outermost segment first; empty: the whole artifact). */
+  readonly target: readonly string[];
   readonly diff: { readonly schema: string; readonly payload: readonly number[] };
   readonly inverse: { readonly schema: string; readonly payload: readonly number[] };
   readonly timestamp: { readonly actor: number; readonly physical_ms: number; readonly logical: number };
@@ -868,14 +874,20 @@ function decodeHlc(bytes: Uint8Array, pos: [number]): { readonly actor: number; 
   return { actor, physical_ms, logical };
 }
 
-/** 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> | diff.schema str |
- * diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc` — the TS twin of Rust
- * `protocol_causal::encode_envelope`. */
+/** 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> | observed (0 | 1 str) |
+ * target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc` —
+ * the TS twin of Rust `protocol_causal::encode_envelope`. */
 function encodeEnvelope(out: number[], envelope: WireMutationEnvelope): void {
   writeStr(out, envelope.mutation_id);
   writeStr(out, envelope.document_id);
   writeStr(out, envelope.actor);
   writeVecStr(out, envelope.dependencies);
+  if (envelope.observed === null) writeVarintU64(out, 0);
+  else {
+    writeVarintU64(out, 1);
+    writeStr(out, envelope.observed);
+  }
+  writeVecStr(out, envelope.target);
   writeStr(out, envelope.diff.schema);
   writeBytes(out, envelope.diff.payload);
   writeStr(out, envelope.inverse.schema);
@@ -889,12 +901,16 @@ function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireMutationEnvelope 
   const document_id = readStr(bytes, pos);
   const actor = readStr(bytes, pos);
   const dependencies = readVecStr(bytes, pos);
+  const observedFlag = readVarintU64(bytes, pos);
+  if (observedFlag !== 0 && observedFlag !== 1) throw new Error(`mutation envelope: observed flag ${observedFlag}`);
+  const observed = observedFlag === 1 ? readStr(bytes, pos) : null;
+  const target = readVecStr(bytes, pos);
   const diffSchema = readStr(bytes, pos);
   const diffPayload = readBytes(bytes, pos);
   const inverseSchema = readStr(bytes, pos);
   const inversePayload = readBytes(bytes, pos);
   const timestamp = decodeHlc(bytes, pos);
-  return { mutation_id, document_id, actor, dependencies, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp };
+  return { mutation_id, document_id, actor, dependencies, observed, target, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp };
 }
 
 /** 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq varint |
@@ -942,6 +958,8 @@ export const DOCUMENT_BACKBONE_BATCH_LIMITS = {
   maximumEnvelopes: MUTATION_DAG_CAPACITY,
   maximumDependenciesPerEnvelope: MUTATION_DAG_CAPACITY,
   maximumTotalDependencies: MUTATION_DAG_CAPACITY,
+  maximumTargetSegmentsPerEnvelope: MUTATION_DAG_CAPACITY,
+  maximumTotalTargetSegments: MUTATION_DAG_CAPACITY,
   maximumIdentifierBytes: MUTATION_DAG_IDENTIFIER_BYTES,
   maximumSchemaBytes: MUTATION_DAG_IDENTIFIER_BYTES,
   maximumPayloadBytes: 262_144,
@@ -957,6 +975,8 @@ export type DocumentBackboneBatchLimits = Readonly<{
   maximumEnvelopes: number;
   maximumDependenciesPerEnvelope: number;
   maximumTotalDependencies: number;
+  maximumTargetSegmentsPerEnvelope: number;
+  maximumTotalTargetSegments: number;
   maximumIdentifierBytes: number;
   maximumSchemaBytes: number;
   maximumPayloadBytes: number;
@@ -967,6 +987,8 @@ export type ExactWireMutationEnvelope = Readonly<{
   document_id: string;
   actor: string;
   dependencies: readonly string[];
+  observed: string | null;
+  target: readonly string[];
   diff: Readonly<{ schema: string; payload: Uint8Array }>;
   inverse: Readonly<{ schema: string; payload: Uint8Array }>;
   timestamp: Readonly<{ actor: bigint; physical_ms: bigint; logical: bigint }>;
@@ -997,6 +1019,8 @@ function normalizedDocumentBackboneBatchLimits(limits: DocumentBackboneBatchLimi
     maximumEnvelopes: documentBackboneBatchLimit("maximumEnvelopes", limits.maximumEnvelopes, MUTATION_DAG_CAPACITY),
     maximumDependenciesPerEnvelope: documentBackboneBatchLimit("maximumDependenciesPerEnvelope", limits.maximumDependenciesPerEnvelope, MUTATION_DAG_CAPACITY),
     maximumTotalDependencies: documentBackboneBatchLimit("maximumTotalDependencies", limits.maximumTotalDependencies, MUTATION_DAG_CAPACITY),
+    maximumTargetSegmentsPerEnvelope: documentBackboneBatchLimit("maximumTargetSegmentsPerEnvelope", limits.maximumTargetSegmentsPerEnvelope, MUTATION_DAG_CAPACITY),
+    maximumTotalTargetSegments: documentBackboneBatchLimit("maximumTotalTargetSegments", limits.maximumTotalTargetSegments, MUTATION_DAG_CAPACITY),
     maximumIdentifierBytes: documentBackboneBatchLimit("maximumIdentifierBytes", limits.maximumIdentifierBytes, MUTATION_DAG_IDENTIFIER_BYTES),
     maximumSchemaBytes: documentBackboneBatchLimit("maximumSchemaBytes", limits.maximumSchemaBytes, MUTATION_DAG_IDENTIFIER_BYTES),
     maximumPayloadBytes: documentBackboneBatchLimit("maximumPayloadBytes", limits.maximumPayloadBytes, DOCUMENT_BACKBONE_BATCH_LIMITS.maximumPayloadBytes),
@@ -1032,6 +1056,13 @@ export function encodeDocumentBackboneEnvelopeBatchExact(envelopes: readonly Exa
     documentBackboneWriteText(out, envelope.actor);
     documentBackboneWriteU64(out, BigInt(envelope.dependencies.length));
     for (const dependency of envelope.dependencies) documentBackboneWriteText(out, dependency);
+    if (envelope.observed === null) documentBackboneWriteU64(out, 0n);
+    else {
+      documentBackboneWriteU64(out, 1n);
+      documentBackboneWriteText(out, envelope.observed);
+    }
+    documentBackboneWriteU64(out, BigInt(envelope.target.length));
+    for (const segment of envelope.target) documentBackboneWriteText(out, segment);
     documentBackboneWriteText(out, envelope.diff.schema);
     documentBackboneWriteBytes(out, envelope.diff.payload);
     documentBackboneWriteText(out, envelope.inverse.schema);
@@ -1100,6 +1131,7 @@ function readDocumentBackboneEnvelopeBatchAtExact(
   const envelopeCount = readCount(limits.maximumEnvelopes, "envelopes");
   const envelopes: ExactWireMutationEnvelope[] = [];
   let totalDependencies = 0;
+  let totalTargetSegments = 0;
   let totalPayloadBytes = 0;
   for (let envelopeIndex = 0; envelopeIndex < envelopeCount; envelopeIndex++) {
     const mutation_id = readText(limits.maximumIdentifierBytes, "identifier-bytes");
@@ -1110,6 +1142,14 @@ function readDocumentBackboneEnvelopeBatchAtExact(
     totalDependencies += dependencyCount;
     const dependencies: string[] = [];
     for (let dependencyIndex = 0; dependencyIndex < dependencyCount; dependencyIndex++) dependencies.push(readText(limits.maximumIdentifierBytes, "identifier-bytes"));
+    const observedFlag = readU64();
+    if (observedFlag > 1n) throw new DocumentBackboneBatchError("malformed", "observed-flag");
+    const observed = observedFlag === 1n ? readText(limits.maximumIdentifierBytes, "identifier-bytes") : null;
+    const targetCount = readCount(limits.maximumTargetSegmentsPerEnvelope, "target-segments");
+    if (targetCount > limits.maximumTotalTargetSegments - totalTargetSegments) throw new DocumentBackboneBatchError("limit", "target-segments");
+    totalTargetSegments += targetCount;
+    const target: string[] = [];
+    for (let segmentIndex = 0; segmentIndex < targetCount; segmentIndex++) target.push(readText(limits.maximumIdentifierBytes, "identifier-bytes"));
     const diffSchema = readText(limits.maximumSchemaBytes, "schema-bytes");
     const diffPayload = readBytes(limits.maximumPayloadBytes - totalPayloadBytes, "payload-bytes");
     totalPayloadBytes += diffPayload.length;
@@ -1121,6 +1161,8 @@ function readDocumentBackboneEnvelopeBatchAtExact(
       document_id,
       actor,
       dependencies,
+      observed,
+      target,
       diff: { schema: diffSchema, payload: diffPayload },
       inverse: { schema: inverseSchema, payload: inversePayload },
       timestamp: { actor: readU64(), physical_ms: readU64(), logical: readU64() },

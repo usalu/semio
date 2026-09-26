@@ -35,3 +35,5 @@ mod tests_change_product_configuration_reparameterises_vlv_50_001_to_dn_80_and_r
 mod tests_resize_geometry_doubles_the_geom_valve_50_bounding_box;
 #[path = "../../🏭️change-manufacturer-file/🧪️tests/✏️renames-the-header-manufacturer-to-acme/🦀️.rs"]
 mod tests_change_manufacturer_file_renames_the_header_manufacturer_to_acme;
+#[path = "../../🚧️change-limits/🧪️tests/🛡️tightens-every-untrusted-input-limit/🦀️.rs"]
+mod tests_change_limits_tightens_every_untrusted_input_limit;

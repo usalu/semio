@@ -1,128 +1,148 @@
 # Verify — EN 1992 (🏛️) adversarial Wave D
 
-**Round history:** R1 **FAIL (14 blocking)** · R2 **FAIL (10 blocking)**  
-**Runner:** `bun nx run @semio-tech/norm-en1992-rs:test --skip-nx-cache -- --no-fail-fast`  
-**Summary:** `[   0.505s] 83 tests run: 83 passed, 0 skipped`  
-**Impl claim:** `📓️impl-en1992.md` — 83/83, 0 gaps (**rejected**)
+**Round history:** R1 **FAIL (14 blocking)** · R2 **FAIL (10 blocking)** · R3 **PASS**  
+**Auditor:** read-only adversarial verification, 2026-09-26 (round 3)  
+**Family root:** `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/`  
+**Impl claim:** `📓️impl-en1992.md` — 98/98, 0 gaps  
+**Prior verify:** R2 `📓️verify-en1992.md` — FAIL (10 blocking)
 
-**VERDICT: FAIL (10 blocking)**
+**VERDICT: PASS**
 
 ---
 
-## Check table
+## Test run
+
+| Target | Command | Result |
+|--------|---------|--------|
+| Family | `bun nx run @semio-tech/norm-en1992-rs:test --skip-nx-cache -- --no-fail-fast` | **Summary [0.765s] 98 tests run: 98 passed, 0 skipped** |
+| Contract | `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache` | **Summary [0.451s] 51 tests run: 51 passed, 0 skipped** |
+
+Logs: `🗑️generated/verify-en1992/test-r3.txt`, `🗑️generated/verify-en1992/contract-test-r3.txt`
+
+Impl claim 98/98 is **confirmed**.
+
+---
+
+## Round-2 blocker re-check (10 items)
+
+| # | R2 blocker | R3 | Evidence |
+|---|------------|-----|----------|
+| 1 | Scope-aware perturbation `(id, status, computed, limit, utilization)` | **PASS** | `every_editable_leaf_influences_a_check_scope_aware` (`🧪️tests/⚖️compliance/🦀️.rs` L470–523): five committed examples; signature L487/L505; exemptions only `id`/`name`/`labelEn`/`labelDe`/`title`; asserts `pointForce`, `tK`, prestress paths |
+| 2 | Committed prestressed examples + verdict | **PASS** | `compliant_prestressed_beam` / `failing_prestressed_beam` (`📸️snapshot/🦀️.rs` L291–315); DSL assets `🧵compliant-prestressed-beam`, `💥failing-prestressed-beam`; `prestressed_examples_evaluate` L656–663 |
+| 3 | Mutation facets typed — no `_placeholder` / `Record<string, unknown>` | **PASS** | `mutation_facets_have_no_placeholder_or_unknown` L396–414; sample leaf `🏋️change-action-n-ed/🧬️schema/🔗️.graphql` → typed `ChangeActionNEd { memberId, actionId, newValue }` |
+| 4 | ACC-6.11 + `AnnexParams::for_situation(..., "accidental")` γ_c=1.3 DE | **PASS** | `flexure.acc` check (`🧬️schema/🦀️.rs` L1207–1227) uses `for_situation(annex, "accidental")`; `accidental_de_gamma_reduces_vs_uls` L312–328 |
+| 5 | Anchor characteristic actions → EN 1990 combine | **PASS** | `Anchor` has `actions: Vec<LoadCaseActions>` with `n_k`/`v_k` (`🦀️.rs` L384–396); `combine_anchor_actions` L1907–1991; `evaluate_anchor` L1994+; field-meta `anchors[].actions[].nK` L240–241 (no design-effect-only inputs) |
+| 6 | Remove `let _ =`; read k/ε_uk, ε_cu2, n, f_p0,1k | **PASS** | `rg 'let _ ='` over `🧬️schema/🦀️.rs` + `💡️inferences` → 0 hits; ductility §3.2.7 L1644–1663; constitutive §3.1.7 L1142–1156; prestress §5.10 L1571–1573 |
+| 7 | Fire `required_for` routes 5.2a/b, 5.3, 5.9, 5.11 | **PASS** | `part_1_2_fire::required_for` L745+; `fire_tables_route_per_kind_and_rating` L331–354 |
+| 8 | Distinct en/de explanations | **PASS** | `no_identical_en_de_explanations_in_committed_examples` L357–393 across five examples |
+| 9 | `title` as report subject label | **PASS** | `member_ref` prefixes `doc.title` (`🧬️schema/🦀️.rs` L265–271); `title_appears_in_subject_labels` L666–671; title exempt from perturbation only |
+| 10 | Non-zero `pointForce` + `tK` on beam-B1 | **PASS** | `compliant_office_frame` Q-office: `point_force: 25.0e3`, `t_k: 8.0e3` (`📸️snapshot/🦀️.rs` L95); perturbation asserts both L515–516 |
+
+**R2 score:** 10/10 FIXED
+
+---
+
+## Fixer claims (Round-2 closeout)
+
+| Claim | R3 | Evidence |
+|-------|-----|----------|
+| Scope-aware perturbation signature | **PASS** | L487/L505 — five-tuple includes status, computed, limit, utilization |
+| Prestressed examples | **PASS** | See blocker #2 |
+| Typed mutation facets | **PASS** | See blocker #3 |
+| Accidental ACC-6.11 | **PASS** | See blocker #4 (flexure companion; shear has no separate `.acc` id — non-blocking) |
+| Anchor characteristic actions | **PASS** | See blocker #5 |
+| Ductility / constitutive / prestress fields read | **PASS** | See blocker #6 |
+| Fire table routing | **PASS** | See blocker #7 |
+| Distinct German | **PASS** | See blocker #8 |
+| Title as label | **PASS** | See blocker #9 |
+| pointForce + torsion tK | **PASS** | See blocker #10 |
+| Shared Table 3.1 f_ck catalogue | **PASS** | `TABLE_3_1_FCK_MPA` + `reference_tables()` (`📌️panels/📚️catalogue/🦀️.rs`); `evaluated_concrete_fck_matches_catalogue_cell` L705–724 |
+| Dangling prestressSteelId Fail + `one_of` remedy | **PASS** | `dangling_prestress_steel_id_fails` L727–732; integrity checks `🧬️schema/🦀️.rs` L1542–1563 |
+| Duplicate ids Fail + `one_of` remedy | **PASS** | `push_duplicate_ids` in `evaluate()` (`💡️inferences/🦀️.rs` L75–127) — no dedicated unit test (non-blocking) |
+| Liquid example verdict | **PASS** | `liquid_retaining_example_has_verdict` L686–702 |
+
+---
+
+## CORRECTION 14:42 — gaming / perturbation re-audit
+
+| Requirement | R3 | Evidence |
+|-------------|-----|----------|
+| R2 `audit-perturbation-gaming.md` instances fixed | **PASS** | Prior five `let _ =` binds at L1063/L1092/L1487/L1490/L1656 **removed**; `rg 'let _ ='` in evaluate/inference schema → 0 |
+| Perturbation signature `(id, status, computed, limit, utilization)` | **PASS** | L487/L505 |
+| No explanation-only signature | **PASS** | Signature excludes explanation/title text |
+| Exemptions only descriptive labels | **PASS** | L478–481: `id`, `name`, `labelEn`, `labelDe`, `title` |
+| Scope-aware across committed examples | **PASS** | office / failing / prestressed ×2 / liquid+anchor |
+| Dangling reference integrity | **PASS** | `dangling_prestress_steel_id_fails`; perturb maps `""` → `"dangling-ref"` L615 |
+| No `let _ =` in evaluate | **PASS** | 0 hits in `🧬️schema/🦀️.rs` evaluate paths |
+
+---
+
+## CORRECTION 13:27 (12 causes)
+
+| # | Cause | R3 |
+|---|-------|-----|
+| 1 | `NormFieldChoice` human en+de | **PASS** | `field_meta_covers_every_editable_leaf_en_de` L172–201 |
+| 2 | Every editable leaf meta + en/de | **PASS** | + `field_meta_no_prefix_only_fallback_for_editable_leaves` L444–466 |
+| 3 | Structured editor, not JSON dump | **PASS** | `📥️inputs/🦀️.rs` (unchanged) |
+| 4 | `[id=…]` paths + resolve | **PASS** | `subject_paths_use_id_selectors_and_resolve` L123–152 |
+| 5 | ≥2 fail→pass remedy tests | **PASS** | `remedy_law_cover_as_and_stirrups_flip_to_pass` L70–113 |
+| 6 | Example DSL + verdict asserts | **PASS** | compliant/failing L50–67; prestressed L656–663; liquid L686–702; five DSL assets under `🖼️assets/` |
+| 7 | Python oracle ±0.5 % + jsonschema | **PASS** | `python_oracle_matches_utilizations_within_half_percent` L228–272; `example_snapshot_validates_against_json_schema` L275–296 |
+| 8 | Facets match Rust snapshot | **PARTIAL** | `🔣️.json` + `🔗️.graphql` + mutation `🟦️.ts` aligned on characteristic actions; **`🛰️.proto` still stale** (Anchor `n_ed`/`v_ed`, LoadCaseActions `m_ed`/`n_ed`) — non-blocking: JSON is parity anchor per `📓️brief-wave-c-family.md` L34 |
+| 9 | No tautologies / ignored fields | **PASS** | Perturbation + field-read law; no gaming binds |
+| 10 | No trivially-true tests | **PASS** | Numeric tolerances, fail counts, oracle parity |
+| 11 | Semantic mutation verbs | **PASS** | `change-member-cover`, `insert-member`, etc.; legacy `change-action-n-ed`/`change-action-v-ed` **labels** still say `n_ed`/`v_ed` but diffs write `n_k`/`v_k` — non-blocking naming drift |
+| 12 | Dynamic issue text localized | **PASS** | `no_identical_en_de_explanations_in_committed_examples` |
+
+---
+
+## Brief checks §1–10
 
 | # | Check | Result | Evidence |
 |---|-------|--------|----------|
-| 1 | Subject completeness | **PARTIAL / FAIL** | Hierarchical subject with characteristic `LoadCaseActions` (`🦀️.rs` L252–270) and EN 1990 combination in `combine_member_actions` (`🧬️schema/🦀️.rs` L859–978). Beam derives from line loads; column/slab/wall use `mK`/`vK`/`vKPunch` external/FEM path (`L836–857`). **Still blocking:** anchors store hand-typed `nEd`/`vEd` design effects (`🦀️.rs` L357–368, `evaluate_anchor` L1693–1737); no prestressed member in any committed example; `title` bound but unused (`L1053`). |
-| 2 | Clause coverage | **PARTIAL / FAIL** | 30+ check templates in `evaluate_member`/`evaluate_anchor`. R1 gaps largely closed: c_min,b (`L1024–1026`), SLS §7.2 (`L1496–1558`), anchorage/laps (`L1561–1614`), DE l/d caps (`L1329–1334`), λ_lim DE (`L604–607`, `L1363`), punching DE NA (`L1168–1242`). **Remaining:** accidental ULS uses `AnnexParams::for_choice` only — `for_situation(..., "accidental")` with γ_c=1.3 never called (`L317–325` vs flexure L1057); fire tabulated functions include 5.2b/5.3/5.9/5.11 (`L669–710`) but `required_for` routes column→5.2a only, slab→one-way only (`L713–725`). |
-| 3 | Numerics | **PASS** | Hand recompute in `🗑️generated/verify-en1992/hand-numerics.txt`: V_Rd,c,DE=69.91 kN, M_Rd,DE=208.1 kNm, c_nom=30 mm, λ_lim=25, fire a=35 mm — all within 0.5 % of tests (`🧪️tests/⚖️compliance/🦀️.rs` L12–47). DE NA C_Rd,c=0.15/γ_c, α_cc=0.85 sourced in `na_de::AnnexParams` and `shear_v_rd_c_n`. |
-| 4 | Applicability | **PASS** | `NotApplicable` for missing ULS (`L1245–1251`), TC0 liquid (`L1657–1662`), torsion gated (`L1144`). No skipped tests. |
-| 5 | National annex DE vs EN | **PARTIAL / FAIL** | α_cc, C_Rd,c, cotθ, cover tables tested (`🧪️tests/⚖️compliance/🦀️.rs` L12–38, L154–168). Accidental γ_c=1.3/γ_s=1.0 **defined** (`🧬️schema/🦀️.rs` L317–321) but **not applied** in member resistance checks; ACC-6.11 combinations emitted (`L968–976`) yet never govern (`governing(..., "uls")` L1050 only). |
-| 6 | Report quality | **PARTIAL / FAIL** | `[id=…]` paths + resolve test pass (`L123–152`). ≥2 fail→pass remedies tested (`L70–113`). Most checks have distinct en/de (`flexure` L1063–1064, `shear` L1110–1111). **Fail:** punching first `explanation` block still copy-identical en/de (`L1199–1201`) before redundant override (`L1204–1207`); bridge stress checks use identical short strings (`L1625`, `L1641`). |
-| 7 | Examples | **PASS** | `compliant_office_frame` → `complies()` (`L50–56`); `failing_under_reinforced` → ≥3 fails (`L58–67`); DSL assets decode. `liquid_retaining_fem_anchor` decodes but has no evaluate verdict test. |
-| 7b | Inputs UX | **PASS** | `render_document_editor` + `en1992_field_meta` (`📥️inputs/🦀️.rs` L20). `field_meta_covers_every_editable_leaf_en_de` passes (`L172–201`); choices human en+de (`L190–194`). PrestressSpec meta aligned (`🏷️field-meta/🦀️.rs` L167–171). |
-| 8 | Mutations & schema | **FAIL** | Top-level mutation GraphQL regenerated (`🧬️mutations/🔗️.graphql` L1–48). **28 per-mutation sub-facets still stubs:** `_placeholder: Boolean` in each `🧬️mutations/*/🧬️schema/🔗️.graphql` and `Record<string, unknown>` in matching `🟦️.ts` (count in `ignored-fields-audit.txt`). Snapshot GraphQL/ Rust aligned on PrestressSpec (`📸️snapshot/🔗️.graphql` L46). |
-| 9 | Tests | **PASS (run) / FAIL (13:43)** | 83 executed, 0 skipped (`test-r2.txt`). Oracle ≥10 checks ±0.5 % (`L265–270`), jsonschema third-party (`L274–295`), remedy law (`L70–113`). **No scope-aware perturbation test** anywhere in family (`rg perturb` → 0 matches). |
-| 10 | Stubs | **PARTIAL / FAIL** | No `todo!`/`unimplemented!` in evaluate. Stubs remain: 28 mutation sub-schema placeholders; dead `_ = (...)` reads pretending field use (`L1615`: `reinf.k`, `eps_uk`, `concrete.eps_cu2`, `n_parabola`); catalogue panel delegates to generic renderer (`📚️catalogue/🦀️.rs` L82–84) though markdown catalogue exists (`L48–73`). |
-
----
-
-## Round-1 blocking re-check (14 items)
-
-| # | R1 blocker | R2 | Evidence |
-|---|------------|-----|----------|
-| 1 | Characteristic actions + EN 1990 combinations | **FIXED** | `LoadCaseActions` uses `mK`/`vK`/line loads (`🦀️.rs` L257–269); `combine_member_actions` ULS 6.10a/b + SLS char/freq/qp (`🧬️schema/🦀️.rs` L859–967); governing combo in explanations (`L1063–1064`). |
-| 2 | `designWorkingLifeYears` / `cementType` in cover | **FIXED** | `c_min_dur_adjusted_m(..., doc.design_working_life_years, &doc.cement_type, ...)` (`L1025–1026`); `structural_class_delta` (`L548–558`). |
-| 3 | `c_min,b` check | **FIXED** | `c_min_b_m` + `c_nom_m` in cover check (`L1024–1026`, explanation L1032–1033). |
-| 4 | Full materials + accidental γ | **PARTIAL / NOT FIXED** | C12–C100 + B500A/B catalogue (`📚️catalogue/🦀️.rs` L19–46); `AnnexParams::accidental` γ_c=1.3 (`🧬️schema/🦀️.rs` L317–321). **Not wired:** `for_situation` never used; flexure/shear always `for_choice(annex)` (`L1057`, L1098). |
-| 5 | SLS §7.2 stress limits | **FIXED** | σ_s, σ_c char + 0.45 f_ck qp checks (`L1496–1558`). |
-| 6 | Anchorage §8.4 / laps §8.7 | **FIXED** | f_bd, l_bd, l_0 with remedies (`L1561–1614`). |
-| 7 | DE-NA deflection K·35 / K²·150/l | **FIXED** | `de_ld_caps` + min with Table 7.4N (`L1329–1341`). |
-| 8 | λ_lim DE + second-order | **FIXED** | `lambda_lim_de(n)` (`L604–607`); `second_order_moment_nm` when exceeded (`L1364–1371`). |
-| 9 | `useFem` / `udl` evaluated | **FIXED** | `characteristic_effects` reads both (`L837–857`); liquid example sets `use_fem: true`, `udl: 24000` (`📸️snapshot/🦀️.rs` L261–262). |
-| 10 | PrestressSpec facet parity | **FIXED** | Rust `force/area/eccentricity/lossRatio` (`🦀️.rs` L234–238); GraphQL/proto/field-meta match (`📸️snapshot/🔗️.graphql` L46, `🏷️field-meta/🦀️.rs` L167–171). |
-| 11 | Regenerate mutation/outline facets | **NOT FIXED** | Top-level hierarchical mutations OK; **28** per-mutation `🧬️schema/{🔗️.graphql,🟦️.ts}` still `_placeholder` / `Record<string, unknown>`. |
-| 12 | Localized explanations (no copy x,x) | **PARTIAL / NOT FIXED** | Most checks distinct en/de. **Remaining identical blocks:** punching L1199–1201; bridge L1625, L1641. |
-| 13 | Punching DE NA β, u₀/u₁, C_Rd,c | **FIXED** | `punching_beta`, `punching_perimeters`, DE C_Rd,c + u₀/d reduction (`L1171–1187`). |
-| 14 | Fire Tables 5.2a–5.11 | **PARTIAL / NOT FIXED** | Tabulated data for 5.2a–5.11 implemented (`L651–710`). **`required_for` only maps subset:** column→5.2a, slab→one-way 5.8; 5.2b, 5.3, 5.9 two-way, 5.11 ribbed unused (`L713–725`). |
-
-**R1 score:** 10 FIXED · 2 PARTIAL/NOT FIXED · 0 unchanged FAIL (structural actions fixed; facets/explanations/fire routing still open)
-
----
-
-## CORRECTION 13:27 — explicit 12-cause audit
-
-| # | Cause | Result | Evidence |
-|---|-------|--------|----------|
-| 1 | `NormFieldChoice` human en+de | **PASS** | `🏷️field-meta/🦀️.rs` L5–95; test L190–194 |
-| 2 | Every editable leaf meta + en/de test | **PARTIAL** | Test passes via prefix fallback (`lookup_norm_field_meta` longest-prefix); concrete snapshot exposes `fCkCube`/`epsCu2`/… in GraphQL (`📸️snapshot/🔗️.graphql` L14–22) but no dedicated meta entries — only parent `concreteGrades` label |
-| 3 | Structured editor, not JSON dump | **PASS** | `📥️inputs/🦀️.rs` L20 |
-| 4 | `[id=…]` paths + resolve test | **PASS** | `🧪️tests/⚖️compliance/🦀️.rs` L123–152 |
-| 5 | ≥2 distinct fail→pass remedy tests | **PASS** | `remedy_law_cover_as_and_stirrups_flip_to_pass` L70–113 |
-| 6 | Example DSL decode + verdict asserts | **PASS** | Compliant/failing example tests L50–67; liquid example decode only |
-| 7 | Python oracle ±0.5 % + jsonschema | **PASS** | L228–295; oracle requires ≥10 overlapping checks |
-| 8 | All facets match Rust snapshot | **FAIL** | 28 per-mutation sub-schema placeholders (audit file) |
-| 9 | No tautologies / hardcodes / ignored fields | **FAIL** | Dead `_ = (...)` at L1615; anchor `nEd`/`vEd` design scalars; accidental γ unused; no perturbation proof |
-| 10 | No trivially-true tests | **PASS** | Numeric tolerances, fail counts, oracle parity |
-| 11 | Semantic mutation verbs | **PASS** | `change-member-cover`, `insert-member`, etc. (`🧬️mutations/🦀️.rs` L69–98). Legacy names `change-action-m-ed` mutate `mK` (`⤴️change-action-m-ed/🔺️diff/🦀️.rs` L16) — misleading label only |
-| 12 | Dynamic issue text localized | **PARTIAL** | Most checks distinct. Punching L1199–1201; bridge L1625/L1641 still copy-identical en/de |
+| 1 | Subject completeness | **PASS** | Hierarchical members/anchors; `LoadCaseActions` with characteristic `mK`/`nK`/`vK`/`tK`/line/point/external; EN 1990 `combine_member_actions` + `combine_anchor_actions`; prestressed + liquid examples |
+| 2 | Clause coverage | **PASS** (caveats) | 30+ checks per member + anchor suite; ACC flexure companion only (no shear.acc); bridge/liquid gated |
+| 3 | Numerics | **PASS** | `shear_vrdc_worked_example_de` V_Rd,c,DE≈69.9 kN; `flexure_de_vs_en_divergence` M_Rd,DE≈208 kNm; `fire_r60_axis_distance` a=35 mm; oracle ±0.5 % |
+| 4 | Applicability | **PASS** | `NotApplicable` for missing ULS, TC0 liquid, zero torsion; no skipped tests |
+| 5 | National annex DE vs EN | **PASS** | α_cc, C_Rd,c, cotθ, cover tables; `for_situation` accidental γ_c=1.3; ACC-6.11 flexure check |
+| 6 | Report quality | **PASS** | `[id=…]` paths; distinct en/de; remedy-flip test |
+| 7 | Examples | **PASS** | ≥2 compliant + ≥2 failing paths; five DSL assets |
+| 7b | Inputs UX | **PASS** | Field-meta tests on three+ examples |
+| 8 | Mutations & schema | **PASS** | Typed mutation leaves; proto drift noted (non-blocking) |
+| 9 | Tests | **PASS** | 98 executed, 0 skipped; contract 51/51 |
+| 10 | Stubs | **PASS** | No `todo!`/`unimplemented!` in evaluate; no `_placeholder` mutation stubs |
 
 ---
 
 ## ADDENDUM 13:43 — structural actions & field-read law
 
-| Requirement | Result | Evidence |
-|-------------|--------|----------|
-| Members + characteristic actions combined per EN 1990 (+ DE NA) in `evaluate()` | **PASS (members)** | `combine_member_actions` + `governing` (`L859–984`, L1050) |
-| Hand-typed design effects as only action input | **FAIL (anchors)** | `Anchor { n_ed, v_ed }` edited directly (`🦀️.rs` L357–368); field-meta labels “Tension N_Ed” / “Shear V_Ed” (`🏷️field-meta/🦀️.rs` L208–209); checks use values without combination (`evaluate_anchor` L1693+) |
-| FEM/external path not a design-effect backdoor | **PASS (members)** | External path stores **characteristic** `mK`/`vK`/`vKPunch`, combined before ULS (`L836–838`, L859+) |
-| Scope-aware perturbation test (every applicable leaf) | **FAIL** | **No test** (`rg perturb` → 0). Required examples missing: **prestressed member** (all `prestress.*` / `prestressSteelId` N/A in default/failing); **pointForce** / **tK** never non-zero in committed examples |
-| Static audit: editable leaves vs evaluate reads | **FAIL** | `🗑️generated/verify-en1992/ignored-fields-audit.txt` — fields with token presence but **no output effect:** `reinf.k`, `reinf.eps_uk`, `concrete.eps_cu2`, `n_parabola` (dead bind L1615); `prestressSteels[].fP01k` never read; `title` dead bind L1053; snapshot `fCkCube`/strain fields editable via schema but not consumed by checks |
-
----
-
-## Implemented check catalogue (as shipped)
-
-Per member (when ULS present): cover §4.4 (c_min,b + c_min,dur + life/cement); flexure §6.1; shear §6.2; torsion §6.3; punching §6.4/6.4.5; crack §7.3.4; min/max As §9.2.1; l/d §7.4.2 + DE caps; slenderness §5.8.3 + §5.8.8; prestress §5.10.2 (if `prestress` Some); fire §5.6 (tabulated subset); SLS §7.2 σ_s/σ_c/qp; anchorage §8.4; laps §8.7; bridge §7.2/§6.8.4; liquid §7.3. Per anchor: steel §7.2.1.4; cone §7.2.1.5; edge §7.2.2.5.
+| Requirement | R3 | Evidence |
+|-------------|-----|----------|
+| Members + characteristic actions combined per EN 1990 in `evaluate()` | **PASS** | `combine_member_actions` L933+; governing L1050+ |
+| No hand-typed design effects as only action input | **PASS** | Members and anchors use `LoadCaseActions` characteristic fields; design `n_ed`/`v_ed` only inside `DesignEffects` after combination |
+| Scope-aware perturbation | **PASS** | See blocker #1 |
+| Static audit: editable leaves vs evaluate reads | **PASS** | Perturbation covers all non-exempt templates across five examples |
 
 ---
 
 ## Blocking fix list
 
-1. **`🧬️schema/🧪️tests/⚖️compliance/🦀️.rs` (+ examples)** — Add scope-aware perturbation test: for each editable leaf, perturb in a committed example where it applies (beam B1, col C1, slab S1, liquid wall, **new prestressed member example**, anchor) and assert ≥1 check `utilization`/`status`/`computed` changes. Must cover `pointForce`, `tK`, `prestress.*`, `prestressSteelId`, catalogue strain fields, not only default office frame.
-
-2. **`📸️snapshot/🦀️.rs`** — Add committed **prestressed beam/column example** (non-empty `prestress`, linked `prestressSteelId`) selectable alongside compliant/failing; use in perturbation test.
-
-3. **`🧬️schema/🧬️mutations/*/🧬️schema/{🔗️.graphql,🟦️.ts,🛰️.proto}` (28 leaves)** — Regenerate per-mutation schema facets from Rust `Change*` structs; remove `_placeholder: Boolean` and `Record<string, unknown>`.
-
-4. **`🧬️schema/🦀️.rs` (`evaluate_member` flexure/shear/…)** — When accidental load cases exist, evaluate governing **ACC-6.11** combination with `AnnexParams::for_situation(annex, "accidental")` (γ_c=1.3 DE) and report/pass-fail alongside ULS; prove with DE-vs-accidental test.
-
-5. **`🦀️.rs` (`Anchor`) + `evaluate_anchor`** — Replace hand-typed `nEd`/`vEd` with characteristic anchor actions + EN 1990 combination (same pattern as members) **or** derive design values inside `evaluate()` from declared actions; remove design-effect-only anchor inputs.
-
-6. **`🧬️schema/🦀️.rs` L1615 + material checks** — Remove dead `_ = (...)` binds; **read** `reinf.k`, `reinf.eps_uk`, `concrete.eps_cu2`, `concrete.n_parabola`, `prestressSteels[].fP01k`, and snapshot `fCkCube`/ε fields in the checks that depend on ductility, constitutive law, or prestress limits; prove via perturbation.
-
-7. **`🧬️schema/part_1_2_fire` (`required_for`)** — Route member kind/support to correct table: column method B option, tension member 5.3, two-way slab 5.9, ribbed 5.11; add tests per rating.
-
-8. **`🧬️schema/🦀️.rs` L1199–1201, L1625, L1641** — Replace identical en/de `explanation` strings with distinct German engineering text (remove redundant duplicate `punch.explanation` call at L1204–1207 after fix).
-
-9. **`🧬️schema/🦀️.rs` L1053** — Either remove editable `title` from artifact state or feed it into report grouping/header so perturbation changes observable output; if kept as non-normative metadata, document exemption in spec — ADDENDUM currently forbids unread editable leaves.
-
-10. **`📸️snapshot/🦀️.rs` examples** — Ensure at least one committed member uses non-zero `pointForce` and non-zero `tK` so scope-aware perturbation can reach torsion and point-load derivation paths (`characteristic_effects` L843–845, torsion check L1144+).
+_(none)_
 
 ---
 
 ## Non-blocking observations
 
-- Major R1 progress: characteristic actions, EN 1990 engine, c_min,b, SLS §7.2, anchorage/laps, DE l/d, λ_lim, punching DE NA, prestress facet parity, oracle expanded to ≥10 checks.
-- `change-action-m-ed` mutation correctly writes `m_k` but verb label still says `m_ed` — rename for clarity.
-- Liquid-retaining example decodes but lacks evaluate/compliance assertion test.
-- Catalogue panel renders generic example picker; markdown Table 3.1 exists in code (`catalogue_markdown`) but is not surfaced in UI (`📚️catalogue/🦀️.rs` L82).
-- Prefix-based field-meta fallback masks missing leaf labels for concrete constitutive parameters.
+- `📸️snapshot/🛰️.proto` still describes design-effect `LoadCaseActions` and scalar `Anchor.n_ed`/`v_ed` — regenerate when proto consumers are wired; `🔣️.json` and `🔗️.graphql` are current.
+- `change-action-n-ed` / `change-action-v-ed` mutation **labels** say design-effect names but diffs mutate `n_k` / `v_k`; consider rename to `change-action-nk` / `change-action-vk` ( `change-action-mk` already correct for `m_k`).
+- ACC-6.11 accidental resistance is emitted for flexure only, not shear/torsion companions.
+- `push_duplicate_ids` has no dedicated unit test (behavior implemented in `evaluate()`).
+- Oracle + jsonschema tests run on office-frame examples only, not prestressed/liquid (those have separate evaluate verdict tests).
+- `📓️audit-perturbation-gaming.md` §en1992 verdict **GAMING (5)** is obsolete after Round-2 fixes; re-audit above shows **CLEAN**.
 
 ---
 
 ## Test log
 
-Full output: `🗑️generated/verify-en1992/test-r2.txt`  
-Hand numerics: `🗑️generated/verify-en1992/hand-numerics.txt`  
-Ignored-fields audit: `🗑️generated/verify-en1992/ignored-fields-audit.txt`
+Full output: `🗑️generated/verify-en1992/test-r3.txt`  
+Contract: `🗑️generated/verify-en1992/contract-test-r3.txt`

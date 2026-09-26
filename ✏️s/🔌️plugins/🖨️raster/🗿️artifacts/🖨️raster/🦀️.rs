@@ -712,11 +712,26 @@ pub fn adopt_raster_asset_owner(source: &RasterAssetChild, target: &mut RasterAs
 //#endregion 🧩️Composition
 
 //#region 🔖️Operations
+/// 🖼️ Nullable pixel attachment and display extent, preserved exactly by undo.
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct RasterPixelContent {
+    pub image_key: Option<String>,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+}
+
 /// 🩹️ Sparse patch applied to a single `RasterLayerNode` — the `PatchLayer` operation's payload, and
 /// (with fields swapped for their prior values) its own mechanical inverse.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct RasterLayerPatch {
+    #[dsl(block)]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub pixel_content: Option<RasterPixelContent>,
+    #[dsl(block)]
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub pixel_transform: Option<RasterTransform>,
     pub name: Option<String>,
     pub visible: Option<bool>,
     pub opacity: Option<f32>,
@@ -1116,6 +1131,8 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️add-layer-asset/🧪️tests/🖼️declines-to-4af870/🦀️.rs"]
                             mod tests_declines_to_reattach_an_asset_already_on_the_document;
                         }
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-layer-pixels/🦀️.rs"]
+                        pub mod change_layer_pixels;
                         #[path = "."]
                         pub mod remove_layer_asset {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️remove-layer-asset/🦀️.rs"]
@@ -1426,6 +1443,10 @@ pub mod editor {
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌫️set-brush-opacity/🦀️.rs"]
             pub mod set_brush_opacity;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-brush-color/🦀️.rs"]
+            pub mod set_brush_color;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️set-brush-hardness/🦀️.rs"]
+            pub mod set_brush_hardness;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📏️set-brush-size/🦀️.rs"]
             pub mod set_brush_size;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
@@ -1434,6 +1455,8 @@ pub mod editor {
             pub mod set_camera_zoom;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖥️set-composite-viewport/🦀️.rs"]
             pub mod set_composite_viewport;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit-pixels/🦀️.rs"]
+            pub mod edit_pixels;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👓️set-layer-visible/🦀️.rs"]
             pub mod set_layer_visible;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️toggle-layer-visible/🦀️.rs"]

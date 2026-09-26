@@ -142,7 +142,13 @@ if (kind == 2) {
     return vec4<f32>(in.color.rgb, glyph.r * in.color.a);
 }
 if (kind == 4 || kind == 5) {
-    return vec4<f32>(icon.rgb * in.color.rgb, icon.a * in.color.a);
+    var coverage = 1.0;
+    if (in.params.x > 0.0) {
+        let half = in.size * 0.5;
+        let dist = sdf_rounded_rect(in.local - half, half, in.params.x);
+        coverage = 1.0 - smoothstep(-1.0, 0.0, dist);
+    }
+    return vec4<f32>(icon.rgb * in.color.rgb, icon.a * in.color.a * coverage);
 }
 if (kind == 3) {
     return in.color;

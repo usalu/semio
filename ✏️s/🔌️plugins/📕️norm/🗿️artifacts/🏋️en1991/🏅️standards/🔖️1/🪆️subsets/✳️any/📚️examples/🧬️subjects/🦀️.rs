@@ -42,9 +42,9 @@ pub fn de_bridge_compliant() -> En1991Snapshot {
     s.bridge_lane_width = 9.0;
     s.assumed_bridge_tandem = 270_000.0;
     s.assumed_bridge_udl = 3_600.0;
-    s.assumed_bridge_lm2 = 360_000.0;
-    s.assumed_bridge_lm3 = 600_000.0;
-    s.assumed_bridge_lm4 = 5_000.0;
+    s.assumed_bridge_lm2 = 720_000.0;
+    s.assumed_bridge_lm3 = 1_200_000.0;
+    s.assumed_bridge_lm4 = 10_000.0;
     s.assumed_bridge_footway = 5_000.0;
     s.bridge_load_group = "gr1a".into();
     s.thermal_element_type = "bridge1".into();

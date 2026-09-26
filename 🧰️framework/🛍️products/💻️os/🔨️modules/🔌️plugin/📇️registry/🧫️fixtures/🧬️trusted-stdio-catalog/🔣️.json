@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "expectedCodecCount": 26,
-  "expectedOpenTargetKind": "stdio.json",
+  "expectedOpenTargetKind": "s.stdio.json",
   "expectedPublication": "committed",
   "expectedHubBundle": "withheld",
   "hostile": {

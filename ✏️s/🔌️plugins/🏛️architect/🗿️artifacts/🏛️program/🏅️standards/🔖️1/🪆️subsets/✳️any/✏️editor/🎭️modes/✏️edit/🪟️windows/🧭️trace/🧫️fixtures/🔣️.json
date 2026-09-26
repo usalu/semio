@@ -1,0 +1,18 @@
+{
+  "schema": "architect-event-feed-projection.v1",
+  "source": {
+    "id": "audit-event",
+    "timestamp": "2026-08-14T00:00:00Z",
+    "title": "Reception brief updated",
+    "detail": "Area target changed to 25 m²",
+    "success": true
+  },
+  "expected": {
+    "id": "audit-event",
+    "timestampMs": 1786665600000,
+    "iconId": "bell",
+    "title": "Reception brief updated",
+    "detail": "Area target changed to 25 m²",
+    "tone": "success"
+  }
+}

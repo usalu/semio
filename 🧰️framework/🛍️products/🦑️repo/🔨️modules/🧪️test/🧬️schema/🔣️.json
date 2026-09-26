@@ -1997,6 +1997,33 @@
         }
       }
     },
+    "SubjectFeatures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "implementation",
+        "features",
+        "rationale"
+      ],
+      "description": "🧩️ The Cargo features (or the language's equivalent) the generated SUBJECT host enables on this owner's own package, for a subject whose surface is gated behind them. Never applied to the oracle role, which must not link the subject at all.",
+      "properties": {
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        },
+        "features": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "OracleRegistry": {
       "type": "object",
       "additionalProperties": false,
@@ -2067,6 +2094,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/OracleHostPackage"
+          }
+        },
+        "subjectFeatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SubjectFeatures"
           }
         },
         "migrationStatus": {

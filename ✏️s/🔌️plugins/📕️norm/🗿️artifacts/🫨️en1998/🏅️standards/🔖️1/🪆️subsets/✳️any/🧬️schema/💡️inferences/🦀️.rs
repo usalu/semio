@@ -107,6 +107,53 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
     let (a_g, s, tb, tc, td) = annex_params.ground_params();
     let gamma_i = part_1::gamma_i(&document.site.importance_class);
 
+    if matches!(annex_params, AnnexParams::En { .. }) {
+        let annex = AnnexChoice::En;
+        let zone = na_de::SeismicZone::from(document.site.seismic_zone);
+        let combo = na_de::GroundCombo::from(document.site.de_ground_combo);
+        let zone_agr = zone.a_gr();
+        let zone_ok = (zone_agr - document.site.a_gr).abs() <= 1e-6 || document.site.a_gr <= 0.0;
+        let en_g = document.site.en_ground_type.chars().next().unwrap_or('?').to_ascii_uppercase();
+        let expected_combo = match en_g {
+            'A' => na_de::GroundCombo::AR,
+            'B' => na_de::GroundCombo::BR,
+            'C' => na_de::GroundCombo::CR,
+            'D' | 'E' => na_de::GroundCombo::CS,
+            _ => na_de::GroundCombo::BR,
+        };
+        let combo_ok = combo == expected_combo || document.site.en_ground_type.is_empty();
+        let mut zc = CheckResult::assess(
+            "en1998.site.deNaConsistencyUnderEn",
+            "EN 1998-1",
+            ClauseId::new("EN 1998-1", "1", "3.2.1"),
+            SubjectRef::new("", "site.seismicZone", lc("Seismic zone", "Erdbebenzone")),
+            lc("DE NA zone/combo consistent with EN site", "DE-NA Zone/Kombination konsistent mit EN-Standort"),
+        )
+        .utilization(q_dim(if zone_ok && combo_ok { 0.5 } else { 1.5 }), q_dim(1.0))
+        .annex(annex)
+        .explanation(lc(
+            &format!("zone a_gR={zone_agr:.3} vs site a_gR={:.3}; combo={combo:?} expected={expected_combo:?} for enGround={en_g}", document.site.a_gr),
+            &format!("Zone a_gR={zone_agr:.3} gegen Standort a_gR={:.3}; Kombi={combo:?} erwartet={expected_combo:?} für enGround={en_g}", document.site.a_gr),
+        ));
+        if !zone_ok {
+            zc = zc.remedy(Remedy::exactly(
+                SubjectRef::new("", "site.seismicZone", lc("Seismic zone", "Erdbebenzone")),
+                q_dim(0.0),
+                q_dim(1.0),
+                lc("Align seismicZone with site a_gR under EN annex.", "seismicZone unter EN-Anhang an Standort-a_gR anpassen."),
+            ));
+        }
+        if !combo_ok {
+            zc = zc.remedy(Remedy::exactly(
+                SubjectRef::new("", "site.deGroundCombo", lc("DE ground combo", "DE-Baugrundkombination")),
+                q_dim(0.0),
+                q_dim(1.0),
+                lc("Align deGroundCombo letter with enGroundType under EN annex.", "deGroundCombo-Buchstaben unter EN-Anhang an enGroundType anpassen."),
+            ));
+        }
+        report.push(zc.build());
+    }
+
     if matches!(annex, AnnexChoice::De) {
         let derived = document.site.seismic_zone.a_gr();
         if (document.site.a_gr - derived).abs() > 1e-9 {
@@ -134,6 +181,8 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
             );
         }
     }
+
+    push_referential_integrity(&mut report, document, annex);
 
     let low_seismicity = matches!(annex_params, AnnexParams::De { zone: na_de::SeismicZone::Zone0, .. }) || a_g <= 0.0;
 
@@ -270,7 +319,7 @@ pub fn check_full_seismic(document: &En1998Snapshot) -> CheckReport {
                     SubjectRef::new(bid, format!("{stpath}.centreOfMassXM"), lc(&storey.id, &storey.id)),
                     lc("Plan regularity e₀ ≤ 0.30 r and r ≥ ℓₛ", "Grundrissregelmässigkeit e₀ ≤ 0.30 r und r ≥ ℓₛ"),
                 )
-                .utilization(q_dim((e0 / limit_e.max(1e-9)).max(ls / r_min.max(1e-9))), q_dim(1.0))
+                .utilization(q_len(e0), q_len(limit_e.max(1e-6)))
                 .annex(annex)
                 .explanation(lc(
                     &format!("e0x={e0x:.3} m, e0y={e0y:.3} m, rx={rx:.3} m, ry={ry:.3} m, ls={ls:.3} m, kx={:.0}, ky={:.0}", storey.stiffness_x, storey.stiffness_y),
@@ -1015,6 +1064,77 @@ if member.role.to_ascii_lowercase() == "beam" {
     report
 }
 
+
+fn push_duplicate_ids(report: &mut CheckReport, annex: AnnexChoice, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String) {
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for id in ids {
+        *counts.entry(id.clone()).or_insert(0) += 1;
+    }
+    for (id, count) in counts {
+        if count < 2 {
+            continue;
+        }
+        let path = path_for(&id);
+        let subject = SubjectRef::new(id.clone(), &path, lc(&format!("Duplicate {table} id"), &format!("Doppelte {table}-Id")));
+        let options: Vec<String> = ids.iter().filter(|x| x.as_str() != id).cloned().collect();
+        let free = if options.is_empty() { vec![format!("{id}-unique")] } else { options };
+        report.push(
+            CheckResult::assess(
+                format!("en1998.integrity.duplicate.{table}.{id}"),
+                "EN 1998 integrity",
+                ClauseId::new("EN 1998", "§2", "id"),
+                subject.clone(),
+                lc(&format!("Unique {table} id"), &format!("Eindeutige {table}-Id")),
+            )
+            .annex(annex)
+            .explanation(lc(
+                &format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
+                &format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
+            ))
+            .status(crate::document::CheckStatus::Fail)
+            .remedy(Remedy::one_of(
+                subject,
+                free,
+                lc(
+                    &format!("Rename the duplicated '{id}' entry to a free id."),
+                    &format!("Den doppelten '{id}'-Eintrag auf eine freie Id umbenennen."),
+                ),
+            ))
+            .build(),
+        );
+    }
+}
+
+fn push_referential_integrity(report: &mut CheckReport, document: &En1998Snapshot, annex: AnnexChoice) {
+    push_duplicate_ids(report, annex, "buildings", &document.buildings.iter().map(|b| b.id.clone()).collect::<Vec<_>>(), &|id| format!("buildings[id={id}].id"));
+    push_duplicate_ids(report, annex, "bridges", &document.bridges.iter().map(|b| b.id.clone()).collect::<Vec<_>>(), &|id| format!("bridges[id={id}].id"));
+    push_duplicate_ids(report, annex, "assessments", &document.assessments.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), &|id| format!("assessments[id={id}].id"));
+    push_duplicate_ids(report, annex, "silos", &document.silos.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("silos[id={id}].id"));
+    push_duplicate_ids(report, annex, "tanks", &document.tanks.iter().map(|t| t.id.clone()).collect::<Vec<_>>(), &|id| format!("tanks[id={id}].id"));
+    push_duplicate_ids(report, annex, "foundations", &document.foundations.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), &|id| format!("foundations[id={id}].id"));
+    push_duplicate_ids(report, annex, "retainingWalls", &document.retaining_walls.iter().map(|w| w.id.clone()).collect::<Vec<_>>(), &|id| format!("retainingWalls[id={id}].id"));
+    push_duplicate_ids(report, annex, "towers", &document.towers.iter().map(|t| t.id.clone()).collect::<Vec<_>>(), &|id| format!("towers[id={id}].id"));
+
+    for building in &document.buildings {
+        let bid = &building.id;
+        push_duplicate_ids(report, annex, "systems", &building.systems.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("buildings[id={bid}].systems[id={id}].id"));
+        push_duplicate_ids(report, annex, "storeys", &building.storeys.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("buildings[id={bid}].storeys[id={id}].id"));
+        push_duplicate_ids(report, annex, "members", &building.members.iter().map(|m| m.id.clone()).collect::<Vec<_>>(), &|id| format!("buildings[id={bid}].members[id={id}].id"));
+        for storey in &building.storeys {
+            let sid = &storey.id;
+            push_duplicate_ids(report, annex, "variables", &storey.variables.iter().map(|v| v.id.clone()).collect::<Vec<_>>(), &|id| format!("buildings[id={bid}].storeys[id={sid}].variables[id={id}].id"));
+        }
+    }
+    for bridge in &document.bridges {
+        let brid = &bridge.id;
+        push_duplicate_ids(report, annex, "variables", &bridge.variables.iter().map(|v| v.id.clone()).collect::<Vec<_>>(), &|id| format!("bridges[id={brid}].variables[id={id}].id"));
+    }
+    for tower in &document.towers {
+        let tid = &tower.id;
+        push_duplicate_ids(report, annex, "variables", &tower.variables.iter().map(|v| v.id.clone()).collect::<Vec<_>>(), &|id| format!("towers[id={tid}].variables[id={id}].id"));
+    }
+}
+
 fn evaluate_bridges(report: &mut CheckReport, document: &En1998Snapshot, annex_params: &AnnexParams, gamma_i: f64, a_g: f64, s: f64, tb: f64, tc: f64, td: f64) {
     let annex = annex_params.choice();
     if document.bridges.is_empty() {
@@ -1024,6 +1144,30 @@ fn evaluate_bridges(report: &mut CheckReport, document: &En1998Snapshot, annex_p
     for bridge in &document.bridges {
         let t1 = bridge.fundamental_period_s.max(0.05);
         let q_isol = part_2::isolation_reduction_factor(bridge.period_ratio);
+        {
+            let mut pr = CheckResult::assess(
+                format!("en1998.2.{}.periodRatio", bridge.id),
+                "DIN EN 1998-2",
+                ClauseId::new("EN 1998-2", "2", "7.1"),
+                SubjectRef::new(&bridge.id, format!("{}.periodRatio", id_sel("bridges", &bridge.id)), lc(&bridge.id, &bridge.id)),
+                lc("Isolation period ratio T_isol/T_fixed", "Isolations-Periodenverhältnis T_isol/T_fixed"),
+            )
+            .utilization(q_dim(bridge.period_ratio), q_dim(3.0))
+            .annex(annex)
+            .explanation(lc(
+                &format!("periodRatio={:.3}, q_isol={q_isol:.3}", bridge.period_ratio),
+                &format!("Periodenverhältnis={:.3}, q_isol={q_isol:.3}", bridge.period_ratio),
+            ));
+            if bridge.period_ratio < 1.0 {
+                pr = pr.status(crate::document::CheckStatus::Fail).remedy(Remedy::at_least(
+                    SubjectRef::new(&bridge.id, format!("{}.periodRatio", id_sel("bridges", &bridge.id)), lc("Period ratio", "Periodenverhältnis")),
+                    q_dim(bridge.period_ratio),
+                    q_dim(1.0),
+                    lc("Increase isolation period ratio to at least 1.0.", "Isolations-Periodenverhältnis auf mindestens 1.0 erhöhen."),
+                ));
+            }
+            report.push(pr.build());
+        }
         let s_e = part_1::elastic_response_spectrum(a_g, s, tb, tc, td, t1);
         let s_d = part_1::design_spectrum_sd(s_e, gamma_i, q_isol, a_g);
         let mass = part_1::entity_seismic_mass_kg(bridge.permanent_gk_n, &bridge.variables, false, bridge.correlated_occupancy);
@@ -1070,12 +1214,15 @@ fn evaluate_assessments(report: &mut CheckReport, document: &En1998Snapshot, ann
                 &format!("supportedBuildingId={}{}", a.supported_building_id, if building_ok { " (aufgelöst)" } else { " (hängend)" }),
             ));
             if !building_ok {
-                href = href.remedy(Remedy::exactly(
-                    SubjectRef::new(&a.id, format!("{path}.supportedBuildingId"), lc("Supported building id", "Gebäude-ID")),
-                    q_dim(0.0),
-                    q_dim(1.0),
-                    lc("Set supportedBuildingId to an existing building id.", "supportedBuildingId auf eine vorhandene Gebäude-ID setzen."),
-                ));
+                let building_ids: Vec<String> = document.buildings.iter().map(|b| b.id.clone()).collect();
+                let opts = if building_ids.is_empty() { vec![format!("{}-missing", a.supported_building_id)] } else { building_ids };
+                href = href
+                    .status(crate::document::CheckStatus::Fail)
+                    .remedy(Remedy::one_of(
+                        SubjectRef::new(&a.id, format!("{path}.supportedBuildingId"), lc("Supported building id", "Gebäude-ID")),
+                        opts,
+                        lc("Set supportedBuildingId to one of the existing building ids.", "supportedBuildingId auf eine der vorhandenen Gebäude-Ids setzen."),
+                    ));
             }
             report.push(href.build());
         }
@@ -1203,12 +1350,15 @@ fn evaluate_foundations_walls(report: &mut CheckReport, document: &En1998Snapsho
                 &format!("supportedBuildingId={}{}", f.supported_building_id, if building_ok { " (aufgelöst)" } else { " (hängend)" }),
             ));
             if !building_ok {
-                href = href.remedy(Remedy::exactly(
-                    SubjectRef::new(&f.id, format!("{path}.supportedBuildingId"), lc("Supported building id", "Gebäude-ID")),
-                    q_dim(0.0),
-                    q_dim(1.0),
-                    lc("Set supportedBuildingId to an existing building id.", "supportedBuildingId auf eine vorhandene Gebäude-ID setzen."),
-                ));
+                let building_ids: Vec<String> = document.buildings.iter().map(|b| b.id.clone()).collect();
+                let opts = if building_ids.is_empty() { vec![format!("{}-missing", f.supported_building_id)] } else { building_ids };
+                href = href
+                    .status(crate::document::CheckStatus::Fail)
+                    .remedy(Remedy::one_of(
+                        SubjectRef::new(&f.id, format!("{path}.supportedBuildingId"), lc("Supported building id", "Gebäude-ID")),
+                        opts,
+                        lc("Set supportedBuildingId to one of the existing building ids.", "supportedBuildingId auf eine der vorhandenen Gebäude-Ids setzen."),
+                    ));
             }
             report.push(href.build());
         }

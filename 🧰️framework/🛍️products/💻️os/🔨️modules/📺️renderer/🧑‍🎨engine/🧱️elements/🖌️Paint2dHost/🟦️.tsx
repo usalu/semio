@@ -30,6 +30,7 @@ import { createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech
 import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type RasterWasmSession, createRasterSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { PixelEditingOverlay } from "./✍️editing/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `Canvas2dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { type CanvasCamera, canvasPinchCamera, worldToScreenLogical, wheelCameraAtScreen } from "../📐️Canvas2dHost/🟦️.tsx";
 import { WindowInstanceIdContext, world3dHoverActionArgs, world3dSelectionActionArgs } from "../🌐️World3dHost/🟦️.tsx";
@@ -717,6 +718,7 @@ function Paint2dCanvasSurface({
       {!isNavigator ? (
         <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       ) : null}
+      {!isNavigator && <PixelEditingOverlay documentJson={scene.documentSyncJson} assetsJson={scene.assetsJson} assetExtentsJson={paintWitness.assetsJson} selectionJson={scene.selectionJson} activeUtility={scene.activeUtility} brushSize={scene.brushSize} brushOpacity={scene.brushOpacity} brushColor={scene.brushColor} brushHardness={scene.brushHardness} camera={cameraRef} container={containerRef} dispatch={dispatch} onWheel={onWheel} onCameraChange={next=>{cameraRef.current=next;sessionRef.current?.setCamera(next.x,next.y,next.zoom);sessionRef.current?.renderFrame();dispatch("setCamera",{camera:next});}} />}
       <ContextMenuController
         title={contextMenuTitleLabel}
         open={contextMenu != null}

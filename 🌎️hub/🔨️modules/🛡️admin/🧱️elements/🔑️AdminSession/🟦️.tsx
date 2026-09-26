@@ -21,6 +21,7 @@ import type {
   SpaceView,
   UserView,
 } from "@semio-tech/framework-os";
+import type { HubObservabilityV1 } from "../../../../📊️observability/🟦️.ts";
 import { useAdminT } from "../📚️I18n/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -102,6 +103,10 @@ export class AdminClient {
 
   overview(signal?: AbortSignal): Promise<AdminOverview> {
     return this.getJson<AdminOverview>("/admin/api/overview", signal);
+  }
+
+  observability(signal?: AbortSignal): Promise<HubObservabilityV1> {
+    return this.getJson<HubObservabilityV1>("/admin/api/observability", signal);
   }
 
   spaces(cursor?: string): Promise<AdminPageV1<SpaceView>> {

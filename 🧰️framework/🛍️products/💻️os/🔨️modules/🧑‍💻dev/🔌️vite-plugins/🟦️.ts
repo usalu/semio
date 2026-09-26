@@ -6,16 +6,18 @@
  * runtime exists. */
 import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
+import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DEV_STREAM_ROUTES, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, STREAM_MUX_PATH, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
 import { AGENT_BRIDGE_OFFER_ENDPOINT, agentBridgeOfferAnswerV1 } from "../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
-import { MODULE_BRIDGE_FILE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceFreshness, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
+import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { requestLocalBrokerSession } from "../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
+import { protectOwnerOnly } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
 import { DEV_LOCAL_HUB_DATA_ENV, DEV_LOCAL_HUB_PROFILE_ENV } from "../🚀️local-hub/🏃️execution/🟦️.ts";
 import { LOCAL_HUB_SESSION_ENDPOINT_V1, localHubSessionAnswerV1 } from "../../📇️directory/🎫️local-session/🟦️.ts";
 import { AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1, AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, AGENT_CREDENTIAL_INSTALL_SCHEMA_V1, AGENT_CREDENTIAL_SCHEMA_V1, agentCredentialInstallFileNameV1, isAgentDelegationTokenV1 } from "../../📇️directory/🤖️delegations/🟦️.ts";
@@ -361,38 +363,100 @@ export async function writeBackbonePayload(uri: string, documentId: string | nul
   throw new Error(`unsupported backbone uri: ${uri}`);
 }
 
-/** 👁️ Per-folder-uri debounced watchers feeding every subscribed SSE response for that uri — one
- * `node:fs.watch` per folder regardless of subscriber count. Mirrors `store_sync`'s native
- * `notify` watcher (200ms debounce) so both the dev-browser and native paths agree on cadence. */
-const folderWatchSubscribers = new Map<string, Set<{ write: (chunk: string) => void }>>();
-const folderWatchHandles = new Map<string, ReturnType<typeof watch>>();
+/** 👁️ One debounced `node:fs.watch` of a `folder://` backbone's `.semio` directory, calling `changed` once per burst — the live
+ * source of the `backbone.folder` stream route (one per watched uri while its route instance lives). Mirrors `store_sync`'s
+ * native `notify` watcher (200 ms debounce) so the dev-browser and native paths agree on cadence. */
 const FOLDER_WATCH_DEBOUNCE_MS = 200;
 
-function subscribeFolderWatch(uri: string, subscriber: { write: (chunk: string) => void }): () => void {
-  if (!folderWatchSubscribers.has(uri)) folderWatchSubscribers.set(uri, new Set());
-  const subscribers = folderWatchSubscribers.get(uri)!;
-  subscribers.add(subscriber);
-  if (!folderWatchHandles.has(uri) && backboneKindFromUri(uri) === "folder") {
-    const folder = uri.slice("folder://".length);
-    mkdirSync(join(folder, ".semio"), { recursive: true });
-    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-    const handle = watch(join(folder, ".semio"), { persistent: false }, () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        for (const sub of folderWatchSubscribers.get(uri) ?? []) sub.write("data: changed\n\n");
-      }, FOLDER_WATCH_DEBOUNCE_MS);
-    });
-    folderWatchHandles.set(uri, handle);
-  }
+function watchFolderChanges(uri: string, changed: () => void): () => void {
+  const folder = join(uri.slice("folder://".length), ".semio");
+  mkdirSync(folder, { recursive: true });
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  const handle = watch(folder, { persistent: false }, () => {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(changed, FOLDER_WATCH_DEBOUNCE_MS);
+  });
   return () => {
-    subscribers.delete(subscriber);
-    if (subscribers.size === 0) {
-      folderWatchHandles.get(uri)?.close();
-      folderWatchHandles.delete(uri);
-      folderWatchSubscribers.delete(uri);
-    }
+    if (debounceTimer) clearTimeout(debounceTimer);
+    handle.close();
   };
 }
+
+//#region 🔀️StreamMuxServer
+/** 🌐️ The part of a dev server's HTTP server the stream channel needs. */
+type DevUpgradeServer = {
+  on(event: "upgrade", listener: (req: { readonly url?: string; readonly headers: Record<string, string | string[] | undefined> }, socket: { destroy(): void }, head: unknown) => void): unknown;
+  once(event: "close", listener: () => void): unknown;
+};
+
+/** 🔌️ The runtime's own WebSocket (Bun ships `ws` built in) as far as the stream channel uses it. */
+type RuntimeWebSocket = {
+  readonly bufferedAmount?: number;
+  send(frame: string): void;
+  close(code: number, reason: string): void;
+  on(event: "message", listener: (data: unknown, isBinary: boolean) => void): unknown;
+  on(event: "close" | "error", listener: () => void): unknown;
+};
+type RuntimeWebSocketServer = { handleUpgrade(req: unknown, socket: unknown, head: unknown, accepted: (socket: RuntimeWebSocket) => void): void };
+type RuntimeWebSocketModule = { readonly WebSocketServer: new (options: { readonly noServer: true; readonly maxPayload: number; readonly handleProtocols: (protocols: Set<string>) => string | false }) => RuntimeWebSocketServer };
+
+const RUNTIME_WEBSOCKET_MODULE = "ws";
+const devStreamMuxServers = new WeakMap<object, StreamMuxServerV1>();
+
+/** @emoji 🔀️ The ONE stream channel (`semio.io.stream-mux/v1` at `STREAM_MUX_PATH`) of a dev server, created on first use per
+ * HTTP server: it accepts same-origin WebSocket upgrades (subprotocol `semio.stream-mux.v1`) through the runtime's own `ws` —
+ * Bun's `node:http` upgrade socket does not transmit raw writes (measured, ticket 26/09/23 F2) — and every dev plugin that
+ * serves a long-lived stream registers its route here instead of holding an HTTP/1.1 response open. Without an HTTP server
+ * (a middleware-only harness) it answers a private server nothing can connect to. */
+export function devStreamMuxServer(httpServer: DevUpgradeServer | null | undefined): StreamMuxServerV1 {
+  if (httpServer === null || httpServer === undefined) return new StreamMuxServerV1();
+  const known = devStreamMuxServers.get(httpServer);
+  if (known !== undefined) return known;
+  const mux = new StreamMuxServerV1();
+  devStreamMuxServers.set(httpServer, mux);
+  const acceptor = (import(RUNTIME_WEBSOCKET_MODULE) as Promise<RuntimeWebSocketModule>).then(
+    ({ WebSocketServer }) =>
+      new WebSocketServer({
+        noServer: true,
+        maxPayload: STREAM_MUX_BOUNDS_V1.maxFrameBytes,
+        handleProtocols: (protocols) => (protocols.has(STREAM_MUX_BOUNDS_V1.subprotocol) ? STREAM_MUX_BOUNDS_V1.subprotocol : false),
+      }),
+    (error: unknown) => {
+      console.error("[stream-mux] the runtime WebSocket server is unavailable", error);
+      return null;
+    },
+  );
+  httpServer.on("upgrade", (req, socket, head) => {
+    let path: string;
+    try {
+      path = new URL(req.url ?? "", "http://127.0.0.1").pathname;
+    } catch {
+      return;
+    }
+    if (path !== STREAM_MUX_PATH) return;
+    const origin = req.headers.origin;
+    const host = req.headers.host;
+    if (Array.isArray(origin) || Array.isArray(host) || (origin !== undefined && origin !== `http://${host}` && origin !== `https://${host}`)) {
+      socket.destroy();
+      return;
+    }
+    void acceptor.then((acceptorServer) => {
+      if (acceptorServer === null) return socket.destroy();
+      acceptorServer.handleUpgrade(req, socket, head, (webSocket) => {
+        const connection = mux.connect({ send: (frame) => webSocket.send(frame), bufferedAmount: () => webSocket.bufferedAmount ?? 0, close: (code, reason) => webSocket.close(code, reason) });
+        webSocket.on("message", (data, isBinary) => {
+          if (isBinary) webSocket.close(1003, "stream-mux: text frames only");
+          else connection.receive(String(data));
+        });
+        webSocket.on("close", () => connection.closed());
+        webSocket.on("error", () => connection.closed());
+      });
+    });
+  });
+  httpServer.once("close", () => mux.close());
+  return mux;
+}
+//#endregion 🔀️StreamMuxServer
 
 type BackboneServerRequest = { method?: string; url?: string; headers?: Record<string, string | string[] | undefined>; on: (event: string, handler: (chunk?: unknown) => void) => void; off: (event: string, handler: (chunk?: unknown) => void) => void };
 type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string | Uint8Array) => void };
@@ -435,28 +499,6 @@ function collectBackboneRequestBody(req: BackboneServerRequest, limit: number, c
   req.on("end", () => complete(exceeded ? null : new Uint8Array(Buffer.concat(chunks))));
 }
 
-/** @emoji 💓️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): both dev SSE endpoints below previously
- * wrote `: connected\n\n` once on connect and nothing else until a real event fired — a quiet dev
- * session (no file edits, no plugin rebuild) could sit for minutes with nothing crossing the wire, which
- * is exactly the shape a browser or an intermediary dev proxy's idle-connection timeout (commonly in the
- * 30-60s range) silently kills with no client-visible `close`/`error` event, leaving the tab's
- * `EventSource` looking "connected" while actually dead. Periodic `: keepalive\n\n` SSE comments (valid
- * per the SSE spec — a line starting with `:` is ignored by `EventSource` but still resets any
- * intermediary's idle timer) fix that. `req.on("close")` already fires reliably on a real disconnect, so
- * clearing this timer there is the only cleanup needed. */
-const SSE_KEEPALIVE_INTERVAL_MS = 15_000;
-
-function startSseKeepalive(res: BackboneServerResponse): () => void {
-  const timer = setInterval(() => {
-    try {
-      res.write(": keepalive\n\n");
-    } catch {
-      clearInterval(timer);
-    }
-  }, SSE_KEEPALIVE_INTERVAL_MS);
-  return () => clearInterval(timer);
-}
-
 /** 🧹️ Eliminates in-source test branches before production asset URL collection. */
 export function semioProductionTestBoundaryVitePlugin(): { name: string; enforce: "pre"; apply: "build"; transform(source: string, id: string): Promise<{ code: string; map: string } | null> } {
   return {
@@ -474,12 +516,18 @@ export function semioProductionTestBoundaryVitePlugin(): { name: string; enforce
 
 /** @emoji 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
  * for read/write — a document nothing has written yet reads as `204 No Content`, the ordinary first-boot answer, never a
- * `404` in the console of a fresh data root (ticket 26/09/23 U5) — plus `GET ${BACKBONE_ENDPOINT_PATH}/watch?uri=` (SSE) for external-edit notification —
- * `🏪️store/👷️worker/🟦️.ts`'s folder transport degrades to polling if this endpoint isn't reachable. */
+ * `404` in the console of a fresh data root (ticket 26/09/23 U5) — plus the `backbone.folder` stream route (key = the `folder://`
+ * uri) on the dev stream channel for external-edit notices; `🏪️store/👷️worker/🟦️.ts`'s folder transport falls back to its slow
+ * sanity poll while no stream is open. */
 export function semioBackboneVitePlugin() {
   return {
     name: "semio-backbone",
-    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
+    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void }; httpServer?: DevUpgradeServer | null }) {
+      devStreamMuxServer(server.httpServer).route(DEV_STREAM_ROUTES.backboneFolder, {
+        admit: (uri) => backboneKindFromUri(uri) === "folder",
+        coalesce: () => "changed",
+        source: (uri, emit) => watchFolderChanges(uri, () => emit("changed")),
+      });
       server.middlewares.use((req, res, next) => {
         if (!req.url?.startsWith(BACKBONE_ENDPOINT_PATH)) return next();
         const requestUrl = new URL(req.url, "http://127.0.0.1");
@@ -487,25 +535,6 @@ export function semioBackboneVitePlugin() {
         if (!uri) {
           res.statusCode = 400;
           res.end("missing uri");
-          return;
-        }
-        if (requestUrl.pathname === `${BACKBONE_ENDPOINT_PATH}/watch`) {
-          if (req.method !== "GET") {
-            res.statusCode = 405;
-            res.end("method not allowed");
-            return;
-          }
-          res.statusCode = 200;
-          res.setHeader("content-type", "text/event-stream");
-          res.setHeader("cache-control", "no-cache");
-          res.setHeader("connection", "keep-alive");
-          res.write(": connected\n\n");
-          const stopKeepalive = startSseKeepalive(res);
-          const unsubscribe = subscribeFolderWatch(uri, res);
-          req.on("close", () => {
-            stopKeepalive();
-            unsubscribe();
-          });
           return;
         }
         const documentId = requestUrl.searchParams.get("documentId");
@@ -604,87 +633,7 @@ export function semioBackboneVitePlugin() {
 }
 //#endregion BackboneVitePlugin
 
-//#region 🔌️PluginHotSwapVitePlugin
-export type PluginHotSwapMarker = { readonly pluginId: string; readonly rebuiltAt: number };
-
-/** @emoji 🔌️ Every plugin dir under `root` that has a completed build right now (a `.core*.wasm`
- * present — same convention `collectPluginWasmSizeRows` walks), newest core-wasm mtime as `rebuiltAt`.
- * Backs the SSE endpoint's connect-time `snapshot` event: a browser that connects (or reconnects) after
- * some builds already finished must still learn about them — `♻️hot-swap.json` alone only ever holds the
- * single most recent build, not the full history. `root` is REQUIRED (never defaulted): the one staging
- * root is `pluginModulesRoot(profile)` in `♻️activation/🟦️.ts`, and a default here was how a second,
- * silently drifting module tree stayed alive. */
-export function scanBuiltPluginModules(root: string): readonly PluginHotSwapMarker[] {
-  if (!existsSync(root)) return [];
-  const rows: PluginHotSwapMarker[] = [];
-  for (const entry of readdirSync(root, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !moduleIdForDirectoryName(entry.name)) continue;
-    const pluginDir = join(root, entry.name);
-    let newestMs = 0;
-    for (const file of readdirSync(pluginDir)) {
-      if (!/\.core\d*\.wasm$/.test(file)) continue;
-      newestMs = Math.max(newestMs, statSync(join(pluginDir, file)).mtimeMs);
-    }
-    const pluginId = moduleIdForDirectoryName(entry.name);
-    if (newestMs > 0 && pluginId) rows.push({ pluginId, rebuiltAt: Math.round(newestMs) });
-  }
-  return rows;
-}
-
-/** @emoji 🔌️ OS-owned watcher route supplied explicitly to the neutral kernel source adapter. */
-export const PLUGIN_SOURCE_WATCH_PATH = `${MODULE_PLUGIN_ROUTE}/watch`;
-
-/** @emoji 🔌️ Vite middleware backing the shell's `createDevPluginSource` (`@semio-tech/framework`):
- * SSE at `PLUGIN_SOURCE_WATCH_PATH`, mirroring `semioBackboneVitePlugin`'s `/watch` endpoint. Sends one
- * `snapshot` on connect ({@link scanBuiltPluginModules}), then a `built` event every time `buildPlugin`
- * overwrites the shared `♻️hot-swap.json` marker — `buildPlugin` writes it last, after every other output
- * file, so by the time this fires the plugin's module is actually fetchable. Debounced the same 200ms
- * as `subscribeFolderWatch` above (a burst of writes during one build collapses to a single event). One
- * `fs.watch` on `plugin-modules/` for the whole dev server's lifetime — unlike the backbone plugin's
- * per-uri watchers, there is exactly one watch target here, so it is never torn down. */
-export function semioPluginHotSwapVitePlugin(options: { readonly moduleRoot: string }) {
-  return {
-    name: "semio-plugin-hot-swap",
-    configureServer(server: { middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void } }) {
-      const subscribers = new Set<BackboneServerResponse>();
-      mkdirSync(options.moduleRoot, { recursive: true });
-      const hotSwapMarker = join(options.moduleRoot, MODULE_HOT_SWAP_FILE);
-      let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-      watch(options.moduleRoot, (_eventType, filename) => {
-        if (filename !== MODULE_HOT_SWAP_FILE) return;
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          if (!existsSync(hotSwapMarker)) return;
-          let marker: PluginHotSwapMarker;
-          try {
-            marker = JSON.parse(readFileSync(hotSwapMarker, "utf8")) as PluginHotSwapMarker;
-          } catch {
-            return;
-          }
-          const event: PluginSourceEvent = { kind: "built", pluginId: marker.pluginId, rebuiltAt: marker.rebuiltAt };
-          const payload = `data: ${JSON.stringify(event)}\n\n`;
-          for (const sub of subscribers) sub.write(payload);
-        }, FOLDER_WATCH_DEBOUNCE_MS);
-      });
-      server.middlewares.use((req, res, next) => {
-        if (moduleRoutePath(req.url ?? "") !== PLUGIN_SOURCE_WATCH_PATH || req.method !== "GET") return next();
-        res.statusCode = 200;
-        res.setHeader("content-type", "text/event-stream");
-        res.setHeader("cache-control", "no-cache");
-        res.setHeader("connection", "keep-alive");
-        res.write(": connected\n\n");
-        const snapshot: PluginSourceEvent = { kind: "snapshot", plugins: scanBuiltPluginModules(options.moduleRoot) };
-        res.write(`data: ${JSON.stringify(snapshot)}\n\n`);
-        subscribers.add(res);
-        const stopKeepalive = startSseKeepalive(res);
-        req.on("close", () => {
-          stopKeepalive();
-          subscribers.delete(res);
-        });
-      });
-    },
-  };
-}
+//#region 🔌️PluginActivationVitePlugin
 /** @emoji 🧩️ One watched component; `installDirectory` overrides `<installRoot>/<directoryName>` when a host serves extensions from several activation lanes. */
 export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string; installDirectory?: string; cratePath?: string }>;
 
@@ -744,18 +693,13 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
     },
     configureServer(server: {
       middlewares: { use: (handler: (req: BackboneServerRequest, res: BackboneServerResponse, next: () => void) => void) => void };
-      httpServer?: { listening: boolean; once: (event: "close" | "listening", listener: () => void) => unknown } | null;
+      httpServer?: (DevUpgradeServer & { listening: boolean; once: (event: "close" | "listening", listener: () => void) => unknown }) | null;
       ws?: { send: (message: { type: "full-reload" }) => void };
     }) {
       dispose();
-      const subscribers = new Map<BackboneServerResponse, () => void>();
+      const mux = devStreamMuxServer(server.httpServer);
       let previous: ActivationReceipt | undefined;
-      const send = (event: PluginSourceEvent): void => {
-        const text = `data: ${JSON.stringify(event)}\n\n`;
-        for (const [response, stop] of subscribers) {
-          try { response.write(text); } catch { stop(); subscribers.delete(response); }
-        }
-      };
+      const send = (event: PluginSourceEvent): void => mux.publish(DEV_STREAM_ROUTES.pluginModules, "", event as unknown as StreamMuxJsonV1);
       const observer = observeActivationReceipts(options.receiptDirectory, (receipt) => {
         const apply = (): void => {
           staleness = reportActivationFreshness(receipt, options);
@@ -778,27 +722,18 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         }
         apply();
       }, (error) => console.error("Activation receipt failed:", error));
+      const unrouteWatch = mux.route(DEV_STREAM_ROUTES.pluginModules, {
+        admit: (key) => key === "",
+        snapshot: () => ({ kind: "snapshot", plugins: observer.snapshot().plugins.map(({ pluginId, rebuiltAt }) => ({ pluginId, rebuiltAt })) }),
+        coalesce: (event) => String((event as { readonly pluginId?: StreamMuxJsonV1 }).pluginId ?? "snapshot"),
+      });
       dispose = (): void => {
         observer.close();
-        for (const [response, stop] of subscribers) { stop(); response.end(); }
-        subscribers.clear();
+        unrouteWatch();
       };
       server.httpServer?.once("close", dispose);
-      server.middlewares.use((req, res, next) => {
-        if (moduleRoutePath(req.url ?? "") !== PLUGIN_SOURCE_WATCH_PATH || req.method !== "GET") return next();
-        res.statusCode = 200;
-        res.setHeader("content-type", "text/event-stream");
-        res.setHeader("cache-control", "no-cache");
-        res.setHeader("connection", "keep-alive");
-        res.write(": connected\n\n");
-        const event: PluginSourceEvent = { kind: "snapshot", plugins: observer.snapshot().plugins.map(({ pluginId, rebuiltAt }) => ({ pluginId, rebuiltAt })) };
-        res.write(`data: ${JSON.stringify(event)}\n\n`);
-        const stop = startSseKeepalive(res);
-        subscribers.set(res, stop);
-        req.on("close", () => { stop(); subscribers.delete(res); });
-      });
 
-      const jobs = new Map<string, { controller: AbortController; promise: Promise<void> }>();
+      const jobs = new Map<string, { readonly controller: AbortController; readonly promise: Promise<void>; readonly listeners: Set<(line: string) => void>; owners: number }>();
       const profile: "dev" | "release" = /(?:^|\/)release(?:\/|$)/.test(options.moduleRoot.replaceAll("\\", "/")) ? "release" : "dev";
 
       const resolveProject = (component: ActivationComponentSpec): string => {
@@ -847,70 +782,84 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         publishActivationReceipt(options.receiptDirectory, receipt);
       };
 
-      const materialize = (pluginId: string): Promise<void> => {
-        const existing = jobs.get(pluginId);
-        if (existing) return existing.promise;
-        const component = options.components.find((row) => row.pluginId === pluginId);
-        if (!component) return Promise.reject(new Error(`Unknown plugin ${pluginId}`));
-        const controller = new AbortController();
-        const promise = (async () => {
-          const project = resolveProject(component);
-          const target = `${project}:materialize-${profile}`;
-          
-          for (const [subscriber] of subscribers) {
-            try { subscriber.write(`: lazy-activate ${pluginId} via ${target}\n\n`); } catch { /* closed */ }
-          }
-          console.log(`[lazy-activate] materialize ${pluginId} via ${target}`);
-          await new Promise<void>((resolvePromise, reject) => {
-            // Restage only: skip `component-*` dependsOn so a missing bridge does not rebuild wasm
-            // (and does not queue behind the fleet wasm mutex). Component outputs must already exist.
-            const child = spawn("bun", ["nx", "run", target, "--excludeTaskDependencies"], { cwd: REPO_ROOT, env: process.env, stdio: ["ignore", "pipe", "pipe"] });
-            const onAbort = (): void => { child.kill("SIGTERM"); };
-            controller.signal.addEventListener("abort", onAbort, { once: true });
-            let stderr = "";
-            const progress = (chunk: Buffer | string): void => {
-              const line = String(chunk).trim();
-              if (!line) return;
-              for (const [subscriber] of subscribers) {
-                try { subscriber.write(`: lazy-activate-progress ${pluginId} ${line.slice(0, 200)}\n\n`); } catch { /* closed */ }
-              }
-            };
-            child.stdout?.on("data", progress);
-            child.stderr?.on("data", (chunk: Buffer | string) => { stderr += String(chunk); progress(chunk); });
-            child.on("error", reject);
-            child.on("exit", (code) => {
-              controller.signal.removeEventListener("abort", onAbort);
-              if (controller.signal.aborted) return reject(new Error(`cancelled ${pluginId}`));
-              if (code !== 0) return reject(new Error(`materialize failed ${target}: ${stderr.slice(-500)}`));
-              resolvePromise();
+      const leaseMaterialization = (pluginId: string, line?: (text: string) => void): { readonly done: Promise<void>; release(): void } => {
+        let job = jobs.get(pluginId);
+        if (job === undefined) {
+          const component = options.components.find((row) => row.pluginId === pluginId);
+          if (!component) return { done: Promise.reject(new Error(`Unknown plugin ${pluginId}`)), release: () => undefined };
+          const controller = new AbortController();
+          const listeners = new Set<(text: string) => void>();
+          const promise = (async () => {
+            const project = resolveProject(component);
+            const target = `${project}:materialize-${profile}`;
+            console.log(`[lazy-activate] materialize ${pluginId} via ${target}`);
+            await new Promise<void>((resolvePromise, reject) => {
+              const child = spawn("bun", ["nx", "run", target, "--excludeTaskDependencies"], { cwd: REPO_ROOT, env: process.env, stdio: ["ignore", "pipe", "pipe"] });
+              const onAbort = (): void => { child.kill("SIGTERM"); };
+              controller.signal.addEventListener("abort", onAbort, { once: true });
+              let stderr = "";
+              const progress = (chunk: Buffer | string): void => {
+                for (const text of String(chunk).split("\n")) {
+                  const trimmed = text.trim();
+                  if (trimmed) for (const listener of listeners) listener(trimmed.slice(0, STREAM_MUX_BOUNDS_V1.maxDetailLength));
+                }
+              };
+              child.stdout?.on("data", progress);
+              child.stderr?.on("data", (chunk: Buffer | string) => { stderr += String(chunk); progress(chunk); });
+              child.on("error", reject);
+              child.on("exit", (code) => {
+                controller.signal.removeEventListener("abort", onAbort);
+                if (controller.signal.aborted) return reject(new Error(`cancelled ${pluginId}`));
+                if (code !== 0) return reject(new Error(`materialize failed ${target}: ${stderr.slice(-500)}`));
+                resolvePromise();
+              });
             });
-          });
-          await publishOne(pluginId);
-          const rebuiltAt = readActivationReceipt(options.receiptDirectory).plugins.find((row) => row.pluginId === pluginId)?.rebuiltAt ?? Date.now();
-          send({ kind: "built", pluginId, rebuiltAt });
-        })().finally(() => { jobs.delete(pluginId); });
-        jobs.set(pluginId, { controller, promise });
-        return promise;
+            await publishOne(pluginId);
+            const rebuiltAt = readActivationReceipt(options.receiptDirectory).plugins.find((row) => row.pluginId === pluginId)?.rebuiltAt ?? Date.now();
+            send({ kind: "built", pluginId, rebuiltAt });
+          })().finally(() => { jobs.delete(pluginId); });
+          job = { controller, promise, listeners, owners: 0 };
+          jobs.set(pluginId, job);
+        }
+        const held = job;
+        held.owners += 1;
+        if (line !== undefined) held.listeners.add(line);
+        let released = false;
+        return {
+          done: held.promise,
+          release: () => {
+            if (released) return;
+            released = true;
+            held.owners -= 1;
+            if (line !== undefined) held.listeners.delete(line);
+            if (held.owners === 0 && jobs.get(pluginId) === held) held.controller.abort(new Error(`released ${pluginId}`));
+          },
+        };
       };
 
-      server.middlewares.use((req, res, next) => {
-        const path = moduleRoutePath(req.url ?? "");
-        if (!path || req.method !== "GET") return next();
-        const prefix = MODULE_PLUGIN_ROUTE.endsWith("/") ? MODULE_PLUGIN_ROUTE : `${MODULE_PLUGIN_ROUTE}/`;
-        if (!path.startsWith(prefix)) return next();
-        const directoryName = path.slice(prefix.length).split("/")[0] ?? "";
-        if (!directoryName || directoryName === "watch") return next();
-        const pluginId = moduleIdForDirectoryName(directoryName);
-        if (!pluginId) return next();
-        if (existsSync(join(options.moduleRoot, directoryName, MODULE_BRIDGE_FILE))) return next();
-        const cancel = (): void => { jobs.get(pluginId)?.controller.abort(); };
-        req.on("close", cancel);
-        void materialize(pluginId).then(() => { req.off("close", cancel); next(); }).catch((error) => {
-          req.off("close", cancel);
-          res.statusCode = 503;
-          res.setHeader("content-type", "application/json");
-          res.end(`${JSON.stringify({ error: "lazy-activate-failed", pluginId, detail: String(error) })}\n`);
-        });
+      const unrouteActivation = mux.route(DEV_STREAM_ROUTES.pluginActivation, {
+        admit: (pluginId) => options.components.some((row) => row.pluginId === pluginId),
+        run: (pluginId: string, job: StreamMuxJobV1) =>
+          new Promise<void>((resolvePromise, reject) => {
+            const component = options.components.find((row) => row.pluginId === pluginId)!;
+            if (existsSync(join(options.moduleRoot, component.directoryName, MODULE_BRIDGE_FILE))) return resolvePromise();
+            let lines = 0;
+            const lease = leaseMaterialization(pluginId, (text) => job.progress((lines += 1), null, text));
+            job.signal.addEventListener("abort", () => {
+              lease.release();
+              reject(job.signal.reason);
+            }, { once: true });
+            lease.done.then(
+              () => {
+                lease.release();
+                resolvePromise();
+              },
+              (error: unknown) => {
+                lease.release();
+                reject(error);
+              },
+            );
+          }),
       });
 
       const prefetch = (): void => {
@@ -918,15 +867,18 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         void (async () => {
           for (const row of [...pending].sort((a, b) => (a.pluginId < b.pluginId ? -1 : 1))) {
             if (existsSync(join(options.moduleRoot, row.directoryName, MODULE_BRIDGE_FILE))) continue;
-            try { await materialize(row.pluginId); }
+            const lease = leaseMaterialization(row.pluginId);
+            try { await lease.done; }
             catch (error) { console.warn(`[lazy-activate] prefetch ${row.pluginId}: ${String(error)}`); }
+            finally { lease.release(); }
           }
         })();
       };
       server.httpServer?.once("listening", prefetch);
       const priorDispose = dispose;
       dispose = (): void => {
-        for (const job of jobs.values()) job.controller.abort();
+        unrouteActivation();
+        for (const job of jobs.values()) job.controller.abort(new Error("dev server closing"));
         jobs.clear();
         priorDispose();
       };
@@ -934,7 +886,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
     closeBundle(): void { dispose(); },
   };
 }
-//#endregion 🔌️PluginHotSwapVitePlugin
+//#endregion 🔌️PluginActivationVitePlugin
 
 //#region BlobVitePlugin
 let blobDatabaseSingleton: InstanceType<typeof import("bun:sqlite").Database> | undefined;
@@ -1494,9 +1446,9 @@ export function semioAgentCredentialInstallVitePlugin(options: { readonly repoRo
             }
             const file = join(root, agentCredentialInstallFileNameV1(request.delegationId));
             mkdirSync(root, { recursive: true, mode: 0o700 });
-            chmodSync(root, 0o700);
+            protectOwnerOnly(root, "directory");
             writeFileSync(file, request.contents, { mode: 0o600 });
-            chmodSync(file, 0o600);
+            protectOwnerOnly(file, "file");
             return answer(201, { schema: AGENT_CREDENTIAL_INSTALL_RECEIPT_SCHEMA_V1, credentialPath: file, launcher });
           } catch {
             return answer(400, { error: "not an AgentCredentialInstallRequestV1" });

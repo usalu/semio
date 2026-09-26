@@ -20,9 +20,20 @@ fn sample_mutation(base: &En1999Snapshot) -> En1999Mutation {
             thickness: 0.002,
             width: 0.25,
             span: 1.0,
-            m_ed: 800.0,
-            n_ed: 0.0,
             welded: false,
+            actions: vec![crate::snapshot::MemberAction {
+                id: "G".into(),
+                kind: "permanent".into(),
+                category: "self".into(),
+                source: "external".into(),
+                g_k_line: 0.0,
+                q_k_line: 0.0,
+                n_k: 0.0,
+                v_y_k: 0.0,
+                v_z_k: 0.0,
+                m_y_k: 800.0,
+                m_z_k: 0.0,
+            }],
         });
     En1999Mutation::ChangeColdFormed(
         crate::mutations::change_cold_formed::ChangeColdFormed { cold_formed: changed }

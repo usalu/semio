@@ -1,5 +1,50 @@
 use super::*;
 
+#[test]
+fn correlated_receipts_survive_identical_payloads_without_entering_the_domain_descriptor() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧾️correlated-action-receipts/🔣️.json")).unwrap();
+    let rows = fixture["receipts"].as_array().unwrap();
+    let mut queue = BoundedActionQueue::default();
+    let mut batch = queue.reserve_batch(rows.len(), rows.len() * 256).unwrap();
+    for row in rows {
+        batch.action(fixture["controller"].as_str().unwrap(), row["action"].as_str().unwrap(), 256, |builder| {
+            builder.set_receipt(ActionQueueReceipt { token: std::num::NonZeroU64::new(row["token"].as_u64().unwrap()).unwrap(), member: row["member"].as_u64().unwrap() as u8, abort_correlation_on_error: row["abort"].as_bool().unwrap() })?;
+            builder.begin_object(None)?;
+            builder.string(Some("surfaceId"), fixture["surface"].as_str().unwrap())?;
+            builder.string(Some("text"), fixture["text"].as_str().unwrap())?;
+            builder.end_container()
+        }).unwrap();
+    }
+    batch.publish().unwrap();
+    let mut descriptors = Vec::new();
+    for row in rows {
+        let bounded = queue.pop_front().unwrap();
+        let receipt = bounded.receipt().unwrap();
+        let envelope = bounded.into_envelope().unwrap();
+        assert_eq!(envelope.receipt, Some(receipt));
+        assert_eq!(receipt.token.get(), row["token"].as_u64().unwrap());
+        assert_eq!(receipt.member, row["member"].as_u64().unwrap() as u8);
+        let wire = serde_json::to_value(envelope.descriptor).unwrap();
+        assert!(wire.get("receipt").is_none());
+        assert!(wire.get("token").is_none());
+        descriptors.push(wire);
+    }
+    assert_eq!(descriptors[0], descriptors[2]);
+    assert_eq!(descriptors[1], descriptors[3]);
+    assert!(queue.is_empty());
+}
+
+#[test]
+fn a_duplicate_receipt_refuses_publication_without_leaving_a_queued_owner() {
+    let mut queue = BoundedActionQueue::default();
+    let mut reservation = queue.reserve("writer", "edit", 128).unwrap();
+    let receipt = ActionQueueReceipt { token: std::num::NonZeroU64::new(1).unwrap(), member: 0, abort_correlation_on_error: true };
+    reservation.builder().set_receipt(receipt).unwrap();
+    assert_eq!(reservation.builder().set_receipt(receipt), Err(BoundedActionFault::Structure));
+    assert_eq!(reservation.publish(), Err(BoundedActionFault::Structure));
+    assert!(queue.is_empty());
+}
+
 fn publish(queue: &mut BoundedActionQueue, index: usize) {
     let mut reservation = queue.reserve("controller", "dispatch", 128).expect("reservation");
     let builder = reservation.builder();

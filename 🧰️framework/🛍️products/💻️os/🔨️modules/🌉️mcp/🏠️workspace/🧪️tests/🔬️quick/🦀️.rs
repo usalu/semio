@@ -33,13 +33,13 @@ fn probe_pack_schema_hash_matches_the_cross_process_descriptor_contract() {
     assert_eq!(actual, PROBE_PACK_SCHEMA_HASH);
 }
 
+/// 🪪️ The probe verifies no execution-target bytes, so it claims no lease and binds only its
+/// requested surface id; a forgeable local target is no longer an admission input anywhere.
 #[test]
 fn mcp_probe_document_transport_binds_full_scope_and_exact_surface_authority() {
     let origin = WorkspaceOrigin::Hub { base_url: "https://hub.example".into(), space_id: "space-a".into() };
     assert_eq!(origin.artifact_document_key("shared-document"), store::sync::ArtifactDocumentKey::hub("space-a", "shared-document"));
     assert_ne!(origin.artifact_document_key("shared-document"), store::sync::ArtifactDocumentKey::hub("space-b", "shared-document"));
-    // 🪪️ The probe verifies no execution-target bytes, so it claims no lease and binds only its
-    // requested surface id; a forgeable local target is no longer an admission input anywhere.
     match origin.persistence_binding() {
         store::sync::PersistenceBinding::Hub { surface, .. } => assert_eq!(surface.as_deref(), Some(PROBE_SURFACE_ID)),
         store::sync::PersistenceBinding::Folder { .. } => panic!("hub origin must bind a hub persistence binding"),
@@ -281,13 +281,13 @@ fn prepare_action_on_an_unknown_capability_is_not_found_not_a_panic() {
     assert_eq!(prepare_error.code, GatewayErrorCode::NotFound);
 }
 
+/// 🔀️ `action_adapter()` no longer needs to resolve ANY plugin just to be BUILT — routing is
+/// now per-call (`RoutingArtifactChannel`), so this reaches the real `HandleTable` and gets a
+/// real, typed `NOT_FOUND` for the bogus handle — never the old blanket `PLUGIN_UNAVAILABLE`
+/// every mutation call used to short-circuit with before a plugin was even looked at (the exact
+/// defect `📓️w8-capability-routing.md` fixes).
 #[test]
 fn invoke_action_on_an_unknown_handle_is_not_found_not_a_panic() {
-    // 🔀️ `action_adapter()` no longer needs to resolve ANY plugin just to be BUILT — routing is
-    // now per-call (`RoutingArtifactChannel`), so this reaches the real `HandleTable` and gets a
-    // real, typed `NOT_FOUND` for the bogus handle — never the old blanket `PLUGIN_UNAVAILABLE`
-    // every mutation call used to short-circuit with before a plugin was even looked at (the exact
-    // defect `📓️w8-capability-routing.md` fixes).
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
     let invoke_error = workspace.invoke_action("prep_x", None).expect_err("unknown handle");
@@ -425,6 +425,10 @@ fn routing_artifact_channel_exchange_on_an_unrouted_instance_without_a_purecomma
 /// capability id at all, decoded via `plugin_for_instance_slot` instead). Skipped with a clear
 /// message when the note/cad `.wasm` fixtures are not built (never a fabricated pass) — same
 /// convention as `plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired`.
+///
+/// 🔁️ Re-exchange against `note` via `ReadHistory`, which carries no capability id at all —
+/// proving `route_for_slot` decodes the SAME app the earlier `PureCommand` did, and that this
+/// second call reuses the cached channel rather than opening a second one.
 #[test]
 fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_opening_each_once() {
     let repo_root = match find_repo_root() {
@@ -472,9 +476,6 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
     let cad_result = router.exchange(cad_instance, vec![AppCommand::PureCommand { capability_id: cad_verb.clone(), input: serde_json::json!({}) }]);
     assert_ne!(cad_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "{cad_verb} must route to a real cad channel: {cad_result:?}");
 
-    // 🔁️ Re-exchange against `note` via `ReadHistory`, which carries no capability id at all —
-    // proving `route_for_slot` decodes the SAME app the earlier `PureCommand` did, and that this
-    // second call reuses the cached channel rather than opening a second one.
     let _ = router.exchange(note_instance, vec![AppCommand::ReadHistory]);
     assert_eq!(router.channels.lock().expect("cache lock").len(), 2, "exactly one cached channel per distinct app routed to (note, cad), never one per call");
 }
@@ -603,12 +604,13 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
 /// `fn` pointers, so a guest-backed codec's thunks resolve their route out of a process-global
 /// table. With NO route registered every one of them must refuse in a typed, countable way — a
 /// thunk that answered anything at all with no component behind it would be fabricating a document.
+///
+/// 🧭️ Reads the live table rather than clearing it: registration is process-global and another
+/// test in this binary may legitimately hold a route. The assertion is on the SHAPE of the
+/// refusal and on the count it reports, both of which hold for any candidate list that cannot
+/// print these bytes — and `b"not-a-pack"` is a pair no real component prints.
 #[tokio::test]
 async fn a_guest_backed_codec_with_no_registered_route_refuses_and_counts_its_candidates() {
-    // 🧭️ Reads the live table rather than clearing it: registration is process-global and another
-    // test in this binary may legitimately hold a route. The assertion is on the SHAPE of the
-    // refusal and on the count it reports, both of which hold for any candidate list that cannot
-    // print these bytes — and `b"not-a-pack"` is a pair no real component prints.
     let refused = guest_print_mirror(b"not-a-pack", b"not-an-spr").await.expect_err("no component prints bytes that are not a pack");
     let store::VcsError::Deserialize(message) = &refused else { panic!("print-mirror must refuse by decode, got {refused:?}") };
     assert!(message.contains("no registered guest codec prints this pair") && message.contains("candidate(s)"), "{message}");
@@ -632,6 +634,8 @@ async fn a_guest_backed_codec_refuses_the_two_operations_the_wit_does_not_export
         document_id: store::os_spr::ArtifactId("doc".to_string()),
         actor: store::os_spr::ActorId("agent:test#sess".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: store::os_spr::ArtifactDiff { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
         inverse: store::os_spr::InverseMutation { schema: store::os_spr::SchemaId("gis.map".to_string()), payload: Vec::new() },
         timestamp: store::os_spr::HybridLogicalTimestamp::new(1, 1),
@@ -676,6 +680,9 @@ fn bound_inference_command(document: Option<crate::actions::ArtifactDocumentBind
 /// 🔗️ The artifact the caller named lands under the field the PLUGIN declared, base64, and nowhere
 /// else — the fix for the gap `📓️pz2-puzzle-describe-under-budget.md` §5.2 named (`InferCommand`
 /// carried no artifact binding at all, so the guest had no document to read a snapshot from).
+///
+/// 🔡️ …and what the host wrote is what a guest decodes back, byte for byte — the two halves of
+///    `artifact-pack-base64` meet here and nowhere else.
 #[test]
 fn a_named_artifact_is_bound_under_the_field_the_contract_declares() {
     let declared = bound_inference_row(true, semio_framework::INFERENCE_ARTIFACT_PACK_BASE64);
@@ -683,8 +690,6 @@ fn a_named_artifact_is_bound_under_the_field_the_contract_declares() {
     let bound: serde_json::Value = serde_json::from_slice(&bind_inference_document(&declared, &command).expect("a named artifact binds")).expect("the bound body is JSON");
     assert_eq!(bound["document"]["pack"], serde_json::Value::String(crate::shell_channel::encode_base64(b"PACK-BYTES")));
     assert_eq!(bound["document"]["spr"], serde_json::Value::String(crate::shell_channel::encode_base64(b"SPR")));
-    // 🔡️ …and what the host wrote is what a guest decodes back, byte for byte — the two halves of
-    //    `artifact-pack-base64` meet here and nowhere else.
     assert_eq!(crate::shell_channel::decode_base64(bound["document"]["pack"].as_str().expect("a base64 string")), Some(b"PACK-BYTES".to_vec()));
 }
 

@@ -374,6 +374,7 @@ impl ArtifactEditor for HtmlEditor {
 pub fn create_html_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(HTML_DIALECT)
         .document(["semio", "html"])
+        .artifact_kind(crate::artifact_kind())
         .icon_id("file-text")
         .mode_def(edit::definition())
         .default_mode_id(edit::MODE_ID)
@@ -383,6 +384,7 @@ pub fn create_html_editor() -> semio_framework_plugin::AppDefinition {
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
+        .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
         .build_definition()
 }

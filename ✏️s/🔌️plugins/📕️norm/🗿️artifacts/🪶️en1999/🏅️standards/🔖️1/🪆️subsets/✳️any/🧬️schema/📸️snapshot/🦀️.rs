@@ -213,9 +213,9 @@ pub struct ColdFormedSheet {
     pub width: f64,
     /// Span L [m].
     pub span: f64,
-    pub m_ed: f64,
-    pub n_ed: f64,
     pub welded: bool,
+    /// Characteristic EN 1990 actions; design N_Ed/M_Ed from governing ULS/SLS.
+    pub actions: Vec<MemberAction>,
 }
 
 /// 🫙 Aluminium shell of revolution (EN 1999-1-5).
@@ -232,10 +232,8 @@ pub struct AluminiumShell {
     pub thickness: f64,
     /// Meridian length L [m].
     pub length: f64,
-    /// Meridional membrane stress σ_x,Ed [Pa].
-    pub sigma_x_ed: f64,
-    /// Circumferential membrane stress σ_θ,Ed [Pa].
-    pub sigma_theta_ed: f64,
+    /// Characteristic membrane actions (n_k→σ_x,k, m_y_k→σ_θ,k, v_z_k→τ_k [Pa]).
+    pub actions: Vec<MemberAction>,
 }
 
 //#endregion 🔖️SubjectEntities
@@ -449,9 +447,22 @@ impl En1999Snapshot {
                 thickness: 0.005,
                 width: 0.080,
                 span: 1.0,
-                m_ed: 40.0,
-                n_ed: 8_000.0,
                 welded: false,
+                actions: vec![
+                    MemberAction {
+                    id: "G-sheet".into(),
+                    kind: "permanent".into(),
+                    category: "self".into(),
+                    source: "external".into(),
+                    g_k_line: 120.0,
+                    q_k_line: 0.0,
+                    n_k: 5926.0,
+                    v_y_k: 0.0,
+                    v_z_k: 0.0,
+                    m_y_k: 29.6,
+                    m_z_k: 0.0,
+                },
+                ],
             }],
             shells: vec![AluminiumShell {
                 id: "shell-pass".into(),
@@ -459,8 +470,21 @@ impl En1999Snapshot {
                 radius: 0.50,
                 thickness: 0.010,
                 length: 2.0,
-                sigma_x_ed: 40.0e6,
-                sigma_theta_ed: 30.0e6,
+                actions: vec![
+                    MemberAction {
+                    id: "G-shell".into(),
+                    kind: "permanent".into(),
+                    category: "self".into(),
+                    source: "external".into(),
+                    g_k_line: 800.0,
+                    q_k_line: 0.0,
+                    n_k: 29600000.0,
+                    v_y_k: 0.0,
+                    v_z_k: 3700000.0,
+                    m_y_k: 22200000.0,
+                    m_z_k: 0.0,
+                },
+                ],
             }],
         }
     }
@@ -506,7 +530,7 @@ impl En1999Snapshot {
                         kind: "permanent".into(),
                         category: "self".into(),
                         source: "external".into(),
-                        g_k_line: 0.0, q_k_line: 0.0,
+                        g_k_line: 300.0, q_k_line: 0.0,
                         n_k: 20_000.0, v_y_k: 0.0, v_z_k: 8_000.0, m_y_k: 4_000.0, m_z_k: 500.0,
                     },
                     MemberAction {
@@ -514,7 +538,7 @@ impl En1999Snapshot {
                         kind: "imposed".into(),
                         category: "office".into(),
                         source: "external".into(),
-                        g_k_line: 0.0, q_k_line: 0.0,
+                        g_k_line: 0.0, q_k_line: 500.0,
                         n_k: 40_000.0, v_y_k: 5_000.0, v_z_k: 12_000.0, m_y_k: 6_000.0, m_z_k: 1_000.0,
                     },
                 ],
@@ -527,7 +551,7 @@ impl En1999Snapshot {
                     kind: "combined".into(),
                     actions: vec![MemberAction {
                         id: "Q-weld".into(), kind: "imposed".into(), category: "office".into(), source: "external".into(),
-                        g_k_line: 0.0, q_k_line: 0.0, n_k: 0.0, v_y_k: 0.0, v_z_k: 40_000.0, m_y_k: 0.0, m_z_k: 0.0,
+                        g_k_line: 0.0, q_k_line: 800.0, n_k: 0.0, v_y_k: 0.0, v_z_k: 40_000.0, m_y_k: 0.0, m_z_k: 0.0,
                     }],
                     bolts: default_bolts(),
                     welds: WeldGroup { filler_alloy: "4043".into(), throat: 0.002, length: 0.060, beta_w: 0.63, haz_extent: 0.025 },
@@ -540,11 +564,11 @@ impl En1999Snapshot {
                     actions: vec![
                         MemberAction {
                             id: "G-bolt".into(), kind: "permanent".into(), category: "self".into(), source: "external".into(),
-                            g_k_line: 0.0, q_k_line: 0.0, n_k: 10_000.0, v_y_k: 0.0, v_z_k: 5_000.0, m_y_k: 0.0, m_z_k: 0.0,
+                            g_k_line: 400.0, q_k_line: 0.0, n_k: 10_000.0, v_y_k: 0.0, v_z_k: 5_000.0, m_y_k: 0.0, m_z_k: 0.0,
                         },
                         MemberAction {
                             id: "Q-bolt".into(), kind: "imposed".into(), category: "office".into(), source: "external".into(),
-                            g_k_line: 0.0, q_k_line: 0.0, n_k: 20_000.0, v_y_k: 0.0, v_z_k: 15_000.0, m_y_k: 0.0, m_z_k: 0.0,
+                            g_k_line: 0.0, q_k_line: 600.0, n_k: 20_000.0, v_y_k: 0.0, v_z_k: 15_000.0, m_y_k: 0.0, m_z_k: 0.0,
                         },
                     ],
                     bolts: BoltGroup {
@@ -577,9 +601,35 @@ impl En1999Snapshot {
                 thickness: 0.0012,
                 width: 0.250,
                 span: 1.5,
-                m_ed: 2_500.0,
-                n_ed: 5_000.0,
                 welded: true,
+                actions: vec![
+                    MemberAction {
+                    id: "G-sheet".into(),
+                    kind: "permanent".into(),
+                    category: "self".into(),
+                    source: "external".into(),
+                    g_k_line: 90.0,
+                    q_k_line: 0.0,
+                    n_k: 2000.0,
+                    v_y_k: 0.0,
+                    v_z_k: 0.0,
+                    m_y_k: 800.0,
+                    m_z_k: 0.0,
+                },
+                    MemberAction {
+                    id: "Q-sheet".into(),
+                    kind: "imposed".into(),
+                    category: "office".into(),
+                    source: "external".into(),
+                    g_k_line: 0.0,
+                    q_k_line: 140.0,
+                    n_k: 3000.0,
+                    v_y_k: 0.0,
+                    v_z_k: 0.0,
+                    m_y_k: 1700.0,
+                    m_z_k: 0.0,
+                },
+                ],
             }],
             shells: vec![AluminiumShell {
                 id: "shell-fail".into(),
@@ -587,8 +637,34 @@ impl En1999Snapshot {
                 radius: 0.80,
                 thickness: 0.003,
                 length: 3.0,
-                sigma_x_ed: 180.0e6,
-                sigma_theta_ed: 120.0e6,
+                actions: vec![
+                    MemberAction {
+                    id: "G-shell".into(),
+                    kind: "permanent".into(),
+                    category: "self".into(),
+                    source: "external".into(),
+                    g_k_line: 5000.0,
+                    q_k_line: 0.0,
+                    n_k: 80000000.0,
+                    v_y_k: 0.0,
+                    v_z_k: 20000000.0,
+                    m_y_k: 50000000.0,
+                    m_z_k: 0.0,
+                },
+                    MemberAction {
+                    id: "Q-shell".into(),
+                    kind: "imposed".into(),
+                    category: "office".into(),
+                    source: "external".into(),
+                    g_k_line: 0.0,
+                    q_k_line: 9000.0,
+                    n_k: 100000000.0,
+                    v_y_k: 0.0,
+                    v_z_k: 80000000.0,
+                    m_y_k: 70000000.0,
+                    m_z_k: 0.0,
+                },
+                ],
             }],
         }
     }

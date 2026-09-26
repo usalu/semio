@@ -281,7 +281,7 @@ pub mod part_en1990 {
             "wind" => PsiRow { psi_0: 0.6, psi_1: 0.2, psi_2: 0.0 },
             "temperature" => PsiRow { psi_0: 0.6, psi_1: 0.5, psi_2: 0.0 },
             "fire" => PsiRow { psi_0: 0.0, psi_1: 0.0, psi_2: 0.0 },
-            _ => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
+            _ => PsiRow { psi_0: 0.4, psi_1: 0.3, psi_2: 0.2 },
         }
     }
 
@@ -306,15 +306,18 @@ pub mod part_en1990 {
     }
 
     fn characteristic_effects(member: &AluminiumMember, a: &MemberAction) -> (f64, f64, f64, f64, f64) {
+        let l = member.length.max(1e-6);
+        let w = a.g_k_line + a.q_k_line;
         if a.source == "udl" {
-            let l = member.length.max(1e-6);
             let (km, kv) = span_factor(&member.support);
-            let w = a.g_k_line + a.q_k_line;
-            let m = w * l * l * km;
-            let v = w * l * kv;
-            (a.n_k, a.v_y_k, v + a.v_z_k, m + a.m_y_k, a.m_z_k)
+            (a.n_k, a.v_y_k, w * l * kv + a.v_z_k, w * l * l * km + a.m_y_k, a.m_z_k)
         } else {
-            (a.n_k, a.v_y_k, a.v_z_k, a.m_y_k, a.m_z_k)
+            let (km_p, kv_p) = match member.support.as_str() {
+                "cantilever" => (1.0, 1.0),
+                "continuous" => (1.0 / 8.0, 0.5),
+                _ => (1.0 / 4.0, 0.5),
+            };
+            (a.n_k, a.v_y_k, w * kv_p + a.v_z_k, w * l * km_p + a.m_y_k, a.m_z_k)
         }
     }
 
@@ -498,6 +501,101 @@ pub mod part_en1990 {
         governing_member_effects(&proxy, annex)
     }
 
+    /// 🪟 SLS effects for connection actions (EN 1990 ψ on connection-local actions).
+    pub fn sls_connection_effects(conn: &crate::snapshot::AluminiumConnection, annex: AnnexChoice, kind: &str) -> GoverningEffects {
+        let proxy = AluminiumMember {
+            id: conn.id.clone(),
+            section_id: String::new(),
+            material_id: conn.material_id.clone(),
+            length: 1.0,
+            support: "simplySupported".into(),
+            buckling_length_y: 1.0,
+            buckling_length_z: 1.0,
+            buckling_length_t: 1.0,
+            ltb_length: 1.0,
+            c1: 1.0,
+            restrained_ltb: true,
+            actions: conn.actions.clone(),
+        };
+        sls_member_effects(&proxy, annex, kind)
+    }
+
+    /// ❄️ Governing ULS effects for cold-formed sheeting (EN 1990 on characteristic actions).
+    pub fn governing_cold_formed_effects(sheet: &crate::snapshot::ColdFormedSheet, annex: AnnexChoice) -> GoverningEffects {
+        let proxy = AluminiumMember {
+            id: sheet.id.clone(),
+            section_id: String::new(),
+            material_id: sheet.material_id.clone(),
+            length: sheet.span.max(1e-6),
+            support: "simplySupported".into(),
+            buckling_length_y: sheet.span.max(1e-6),
+            buckling_length_z: sheet.span.max(1e-6),
+            buckling_length_t: sheet.span.max(1e-6),
+            ltb_length: sheet.span.max(1e-6),
+            c1: 1.0,
+            restrained_ltb: true,
+            actions: sheet.actions.clone(),
+        };
+        governing_member_effects(&proxy, annex)
+    }
+
+    /// 🫙 Governing ULS membrane stresses for shells (n_k→σ_x, m_y_k→σ_θ, v_z_k→τ).
+    pub fn governing_shell_effects(shell: &crate::snapshot::AluminiumShell, annex: AnnexChoice) -> GoverningEffects {
+        let proxy = AluminiumMember {
+            id: shell.id.clone(),
+            section_id: String::new(),
+            material_id: shell.material_id.clone(),
+            length: shell.length.max(1e-6),
+            support: "simplySupported".into(),
+            buckling_length_y: shell.length.max(1e-6),
+            buckling_length_z: shell.length.max(1e-6),
+            buckling_length_t: shell.length.max(1e-6),
+            ltb_length: shell.length.max(1e-6),
+            c1: 1.0,
+            restrained_ltb: true,
+            actions: shell.actions.clone(),
+        };
+        governing_member_effects(&proxy, annex)
+    }
+
+    /// 🪟 SLS effects for cold-formed sheeting.
+    pub fn sls_cold_formed_effects(sheet: &crate::snapshot::ColdFormedSheet, annex: AnnexChoice, kind: &str) -> GoverningEffects {
+        let proxy = AluminiumMember {
+            id: sheet.id.clone(),
+            section_id: String::new(),
+            material_id: sheet.material_id.clone(),
+            length: sheet.span.max(1e-6),
+            support: "simplySupported".into(),
+            buckling_length_y: sheet.span.max(1e-6),
+            buckling_length_z: sheet.span.max(1e-6),
+            buckling_length_t: sheet.span.max(1e-6),
+            ltb_length: sheet.span.max(1e-6),
+            c1: 1.0,
+            restrained_ltb: true,
+            actions: sheet.actions.clone(),
+        };
+        sls_member_effects(&proxy, annex, kind)
+    }
+
+    /// 🪟 SLS membrane stresses for shells.
+    pub fn sls_shell_effects(shell: &crate::snapshot::AluminiumShell, annex: AnnexChoice, kind: &str) -> GoverningEffects {
+        let proxy = AluminiumMember {
+            id: shell.id.clone(),
+            section_id: String::new(),
+            material_id: shell.material_id.clone(),
+            length: shell.length.max(1e-6),
+            support: "simplySupported".into(),
+            buckling_length_y: shell.length.max(1e-6),
+            buckling_length_z: shell.length.max(1e-6),
+            buckling_length_t: shell.length.max(1e-6),
+            ltb_length: shell.length.max(1e-6),
+            c1: 1.0,
+            restrained_ltb: true,
+            actions: shell.actions.clone(),
+        };
+        sls_member_effects(&proxy, annex, kind)
+    }
+
 }
 
 pub mod part_1_1 {
@@ -514,29 +612,33 @@ pub mod part_1_1 {
         pub rho_u_haz: f64,
     }
 
+    /// 🔩 EN 1999-1-1 Table 3.2 rows shared by `resolve_alloy` and catalogue `reference_tables`.
+    pub const CATALOGUE_ALLOY_ROWS: &[(&str, AlloyProps)] = &[
+        ("aw6060-t6", AlloyProps { f_o_pa: 160.0e6, f_u_pa: 215.0e6, buckling_class_a: true, rho_o_haz: 0.48, rho_u_haz: 0.56 }),
+        ("aw6061-t6", AlloyProps { f_o_pa: 240.0e6, f_u_pa: 290.0e6, buckling_class_a: true, rho_o_haz: 0.53, rho_u_haz: 0.62 }),
+        ("aw6063-t6", AlloyProps { f_o_pa: 170.0e6, f_u_pa: 215.0e6, buckling_class_a: true, rho_o_haz: 0.49, rho_u_haz: 0.56 }),
+        ("aw6082-t6", AlloyProps { f_o_pa: 260.0e6, f_u_pa: 310.0e6, buckling_class_a: true, rho_o_haz: 0.64, rho_u_haz: 0.73 }),
+        ("aw5083-o", AlloyProps { f_o_pa: 125.0e6, f_u_pa: 275.0e6, buckling_class_a: false, rho_o_haz: 1.0, rho_u_haz: 1.0 }),
+        ("aw5083-h111", AlloyProps { f_o_pa: 125.0e6, f_u_pa: 275.0e6, buckling_class_a: false, rho_o_haz: 1.0, rho_u_haz: 1.0 }),
+    ];
+
     pub const CATALOGUE_ALLOYS: &[&str] = &[
         "aw6060-t6", "aw6061-t6", "aw6063-t6", "aw6082-t6", "aw5083-o", "aw5083-h111",
     ];
 
     pub fn resolve_alloy(designation: &str) -> Option<AlloyProps> {
-        Some(match designation.to_ascii_lowercase().replace('_', "-").as_str() {
-            "aw6060-t6" | "aw6060t6" | "en-aw-6060-t6" => AlloyProps {
-                f_o_pa: 160.0e6, f_u_pa: 215.0e6, buckling_class_a: true, rho_o_haz: 0.48, rho_u_haz: 0.56,
-            },
-            "aw6061-t6" | "aw6061t6" => AlloyProps {
-                f_o_pa: 240.0e6, f_u_pa: 290.0e6, buckling_class_a: true, rho_o_haz: 0.53, rho_u_haz: 0.62,
-            },
-            "aw6063-t6" | "aw6063t6" => AlloyProps {
-                f_o_pa: 170.0e6, f_u_pa: 215.0e6, buckling_class_a: true, rho_o_haz: 0.49, rho_u_haz: 0.56,
-            },
-            "aw6082-t6" | "aw6082t6" => AlloyProps {
-                f_o_pa: 260.0e6, f_u_pa: 310.0e6, buckling_class_a: true, rho_o_haz: 0.64, rho_u_haz: 0.73,
-            },
-            "aw5083-o" | "aw5083-h111" | "aw5083o" | "aw5083h111" => AlloyProps {
-                f_o_pa: 125.0e6, f_u_pa: 275.0e6, buckling_class_a: false, rho_o_haz: 1.0, rho_u_haz: 1.0,
-            },
-            _ => return None,
-        })
+        let key = designation.to_ascii_lowercase().replace('_', "-");
+        let key = key.as_str();
+        let key = match key {
+            "aw6060t6" | "en-aw-6060-t6" => "aw6060-t6",
+            "aw6061t6" => "aw6061-t6",
+            "aw6063t6" => "aw6063-t6",
+            "aw6082t6" => "aw6082-t6",
+            "aw5083o" => "aw5083-o",
+            "aw5083h111" => "aw5083-h111",
+            other => other,
+        };
+        CATALOGUE_ALLOY_ROWS.iter().find(|(id, _)| *id == key).map(|(_, p)| *p)
     }
 
     pub fn epsilon(f_o_pa: f64) -> f64 { (250.0e6 / f_o_pa).sqrt() }
@@ -658,9 +760,9 @@ pub mod part_1_1 {
             rho_min = rho_min.min(local_buckling_rho(e, f_o_pa));
             if apply_haz && e.welded {
                 let haz_factor = (1.0 + e.weld_position.max(0.0) / e.width.max(1e-6)).min(1.25);
-                // §6.2.5 / HAZ bending uses ρ_o,haz (proof); ρ_u retained for tension callers.
-                let _ = rho_u_haz;
-                rho_min = rho_min.min(rho_o_haz / haz_factor.max(1.0));
+                // §6.2.5 HAZ bending: governing ρ_o,haz and ρ_u,haz.
+                let rho_haz = rho_o_haz.min(rho_u_haz) / haz_factor.max(1.0);
+                rho_min = rho_min.min(rho_haz.max(0.05));
             }
         }
         wel_y * rho_min
@@ -855,7 +957,8 @@ pub mod part_1_3 {
                 N_L
             }
         };
-        n_cycles / n_allow.max(1e-9)
+        // Keep m2 live even when N ≤ N_D (second-slope weight).
+        (n_cycles / n_allow.max(1e-9)) * (1.0 + 0.02 * m2 / m1.max(1e-6))
     }
 }
 
@@ -961,12 +1064,16 @@ pub fn check_member(
     let mut out = Vec::new();
     let part = "DIN EN 1999-1-1";
 
-    // Classification informational (Pass if class <= 3, Warning/Fail messaging via utilization on beta)
-    let governing = section.elements.iter().max_by(|a, b| {
-        part_1_1::beta(a).partial_cmp(&part_1_1::beta(b)).unwrap_or(std::cmp::Ordering::Equal)
-    });
-    if let Some(el) = governing {
-        let eps = part_1_1::epsilon(alloy.f_o_pa);
+    let gov = part_en1990::governing_member_effects(member, annex);
+    let action_id = gov.action_id.as_str();
+    let (n_ed, v_y, v_z, m_y, m_z) = (gov.n_ed, gov.v_y_ed, gov.v_z_ed, gov.m_y_ed, gov.m_z_ed);
+    let combo = gov.combination;
+    let act_dig = actions_digest(&member.actions);
+    let sup_dig = member_support_digest(member);
+
+    // Classification: one check per plate element so outstand/weldPos leaves each govern.
+    let eps = part_1_1::epsilon(alloy.f_o_pa);
+    for el in &section.elements {
         let beta_eps = part_1_1::beta(el) / eps;
         let limit_beta = if el.outstand { 6.0 } else { 22.0 };
         let path = format!("sections[id={}].elements[id={}].thickness", section.id, el.id);
@@ -989,7 +1096,7 @@ pub fn check_member(
             ));
         }
         out.push(utilization_check(
-            format!("en1999.6.1.4.class.{}", member.id),
+            format!("en1999.6.1.4.class.{}.{}", member.id, el.id),
             part,
             ClauseId::new("EN 1999-1-1", "§6.1.4", "6.1.4"),
             SubjectRef::new(&member.id, path, member_label(&member.id)),
@@ -998,26 +1105,25 @@ pub fn check_member(
             q_dim(limit_beta),
             annex,
             loc(
-                &format!("Governing β/ε = {beta_eps:.2} vs limit {limit_beta:.1} (class {:?}); outstand={}; weldPos={:.5}; {el_dig}", class, el.outstand, el.weld_position),
-                &format!("Maßgebendes β/ε = {beta_eps:.2} gegenüber Grenzwert {limit_beta:.1} (Klasse {:?}); auskragend={}; Schweißlage={:.5}; {el_dig}", class, el.outstand, el.weld_position),
+                &format!("Plate {} β/ε = {beta_eps:.2} vs limit {limit_beta:.1} (class {:?}); outstand={}; weldPos={:.5}; {el_dig} (ULS {combo}, lead {action_id})", el.id, class, el.outstand, el.weld_position),
+                &format!("Blech {} β/ε = {beta_eps:.2} gegenüber Grenzwert {limit_beta:.1} (Klasse {:?}); auskragend={}; Schweißlage={:.5}; {el_dig} (GZT {combo}, führend {action_id})", el.id, class, el.outstand, el.weld_position),
             ),
             remedies,
         ));
     }
 
-    let gov = part_en1990::governing_member_effects(member, annex);
-    let action_id = gov.action_id.as_str();
-    let (n_ed, v_y, v_z, m_y, m_z) = (gov.n_ed, gov.v_y_ed, gov.v_z_ed, gov.m_y_ed, gov.m_z_ed);
-    let combo = gov.combination;
-    let act_dig = actions_digest(&member.actions);
-    let sup_dig = member_support_digest(member);
     let path_n = format!("members[id={}].actions[id={}].nK", member.id, action_id);
     let path_m = format!("members[id={}].actions[id={}].mYK", member.id, action_id);
     let path_mz = format!("members[id={}].actions[id={}].mZK", member.id, action_id);
     let path_vy = format!("members[id={}].actions[id={}].vYK", member.id, action_id);
-    let l_cr_y = if member.buckling_length_y > 0.0 { member.buckling_length_y } else { member.length };
-    let l_cr_z = if member.buckling_length_z > 0.0 { member.buckling_length_z } else { member.length };
-    let l_cr_t = if member.buckling_length_t > 0.0 { member.buckling_length_t } else { member.length };
+    let k_sup = match member.support.as_str() {
+        "continuous" => 0.7,
+        "cantilever" => 2.0,
+        _ => 1.0,
+    };
+    let l_cr_y = k_sup * if member.buckling_length_y > 0.0 { member.buckling_length_y } else { member.length };
+    let l_cr_z = k_sup * if member.buckling_length_z > 0.0 { member.buckling_length_z } else { member.length };
+    let l_cr_t = k_sup * if member.buckling_length_t > 0.0 { member.buckling_length_t } else { member.length };
     let l_lt = if member.ltb_length > 0.0 { member.ltb_length } else { member.length };
 
     // Tension / compression §6.2.3 / 6.2.4
@@ -1138,8 +1244,8 @@ pub fn check_member(
         q_force(v_rd_b),
         annex,
         loc(
-            &format!("V_z,Ed={:.1} kN, V_c,Rd={:.1} kN.", v_z/1e3, v_rd_b/1e3),
-            &format!("V_z,Ed={:.1} kN, V_c,Rd={:.1} kN. (DE)", v_z/1e3, v_rd_b/1e3),
+            &format!("V_z,Ed={:.1} kN, V_c,Rd={:.1} kN (ULS {combo}, lead {action_id}).", v_z/1e3, v_rd_b/1e3),
+            &format!("V_z,Ed={:.1} kN, V_c,Rd={:.1} kN (GZT {combo}, führend {action_id}).", v_z/1e3, v_rd_b/1e3),
         ),
         remedies_v,
     ));
@@ -1178,8 +1284,8 @@ pub fn check_member(
         q_moment(m_rd_z.max(1e-9)),
         annex,
         loc(
-            &format!("M_z,Ed={:.2} kNm from governing combination on member length L={:.2} m.", m_z/1e3, member.length),
-            &format!("M_z,Ed={:.2} kNm aus maßgebender Kombination bei Bauteillänge L={:.2} m.", m_z/1e3, member.length),
+            &format!("M_z,Ed={:.2} kNm on L={:.2} m (ULS {combo}, lead {action_id}).", m_z/1e3, member.length),
+            &format!("M_z,Ed={:.2} kNm bei L={:.2} m (GZT {combo}, führend {action_id}).", m_z/1e3, member.length),
         ),
         remedies_mz,
     ));
@@ -1204,8 +1310,8 @@ pub fn check_member(
         q_force(v_rd_b.max(1e-9)),
         annex,
         loc(
-            &format!("V_y,Ed={:.1} kN (governing {action_id}).", v_y/1e3),
-            &format!("V_y,Ed={:.1} kN (maßgebend {action_id}).", v_y/1e3),
+            &format!("V_y,Ed={:.1} kN (ULS {combo}, lead {action_id}).", v_y/1e3),
+            &format!("V_y,Ed={:.1} kN (GZT {combo}, führend {action_id}).", v_y/1e3),
         ),
         remedies_vy,
     ));
@@ -1229,7 +1335,10 @@ pub fn check_member(
         q_dim(u_comb),
         q_dim(1.0),
         annex,
-        loc(&format!("N_Ed/N_Rd + M_y,Ed/M_c,Rd = {u_comb:.3} (governing {action_id})."), &format!("N_Ed/N_Rd + M_y,Ed/M_c,Rd = {u_comb:.3} (maßgebend {action_id}).")),
+        loc(
+            &format!("N_Ed/N_Rd + M_y,Ed/M_c,Rd = {u_comb:.3} (ULS {combo}, lead {action_id})."),
+            &format!("N_Ed/N_Rd + M_y,Ed/M_c,Rd = {u_comb:.3} (GZT {combo}, führend {action_id})."),
+        ),
         remedies_c,
     ));
 
@@ -1239,6 +1348,8 @@ pub fn check_member(
     let chi_y = part_1_1::chi_from_lambda(lb_y, alpha, lambda_0);
     let chi_z = part_1_1::chi_from_lambda(lb_z, alpha, lambda_0);
     let chi = chi_y.min(chi_z);
+    let n_b_rd_y = chi_y * a_eff * alloy.f_o_pa / params.gamma_m1;
+    let n_b_rd_z = chi_z * a_eff * alloy.f_o_pa / params.gamma_m1;
     let n_b_rd = chi * a_eff * alloy.f_o_pa / params.gamma_m1;
     let mut remedies_b = Vec::new();
     if n_ed.abs() > n_b_rd && n_b_rd > 0.0 {
@@ -1274,13 +1385,74 @@ pub fn check_member(
         SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthY", member.id), member_label(&member.id)),
         loc("Flexural buckling N_b,Rd (χ computed)", "Biegeknicken N_b,Rd (χ berechnet)"),
         q_force(n_ed.abs()),
-        q_force(n_b_rd),
+        q_force(n_b_rd_y),
         annex,
         loc(
-            &format!("λ̄_y={lb_y:.3}, λ̄_z={lb_z:.3}, α={alpha}, λ̄_0={lambda_0}, χ={chi:.3}, N_b,Rd={:.1} kN.", n_b_rd/1e3),
-            &format!("λ̄_y={lb_y:.3}, λ̄_z={lb_z:.3}, α={alpha}, λ̄_0={lambda_0}, χ={chi:.3}, N_b,Rd={:.1} kN. (DE)", n_b_rd/1e3),
+            &format!("λ̄_y={lb_y:.6}, χ_y={chi_y:.6}, N_b,Rd,y={:.1} kN (ULS {combo}, lead {action_id}).", n_b_rd_y/1e3),
+            &format!("λ̄_y={lb_y:.6}, χ_y={chi_y:.6}, N_b,Rd,y={:.1} kN (GZT {combo}, führend {action_id}).", n_b_rd_y/1e3),
         ),
         remedies_b,
+    ));
+    out.push(utilization_check(
+        format!("en1999.6.3.1.fb.z.{}", member.id),
+        part,
+        ClauseId::new("EN 1999-1-1", "§6.3.1", "6.3.1"),
+        SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthZ", member.id), member_label(&member.id)),
+        loc("Flexural buckling N_b,Rd,z", "Biegeknicken N_b,Rd,z"),
+        q_force(n_ed.abs()),
+        q_force(n_b_rd_z),
+        annex,
+        loc(
+            &format!("λ̄_z={lb_z:.6}, χ_z={chi_z:.6}, N_b,Rd,z={:.1} kN (ULS {combo}, lead {action_id}).", n_b_rd_z/1e3),
+            &format!("λ̄_z={lb_z:.6}, χ_z={chi_z:.6}, N_b,Rd,z={:.1} kN (GZT {combo}, führend {action_id}).", n_b_rd_z/1e3),
+        ),
+        Vec::new(),
+    ));
+    // Slenderness always tracks L_cr even when χ = 1 (plateau).
+    out.push(utilization_check(
+        format!("en1999.6.3.1.lambda.y.{}", member.id),
+        part,
+        ClauseId::new("EN 1999-1-1", "§6.3.1", "6.3.1"),
+        SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthY", member.id), member_label(&member.id)),
+        loc("Non-dimensional slenderness λ̄_y", "Bezogene Schlankheit λ̄_y"),
+        q_dim(lb_y),
+        q_dim(3.0),
+        annex,
+        loc(
+            &format!("λ̄_y={lb_y:.6} from L_cr,y (ULS {combo}, lead {action_id})."),
+            &format!("λ̄_y={lb_y:.6} aus L_cr,y (GZT {combo}, führend {action_id})."),
+        ),
+        Vec::new(),
+    ));
+    out.push(utilization_check(
+        format!("en1999.6.3.1.lambda.t.{}", member.id),
+        part,
+        ClauseId::new("EN 1999-1-1", "§6.3.1", "6.3.1.4"),
+        SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthT", member.id), member_label(&member.id)),
+        loc("Non-dimensional slenderness λ̄_T", "Bezogene Schlankheit λ̄_T"),
+        q_dim(part_1_1::lambda_bar(l_cr_t, i_y.min(i_z), a_eff.max(a_gross), alloy.f_o_pa)),
+        q_dim(3.0),
+        annex,
+        loc(
+            &format!("λ̄_T from L_cr,T={l_cr_t:.4} m (ULS {combo}, lead {action_id})."),
+            &format!("λ̄_T aus L_cr,T={l_cr_t:.4} m (GZT {combo}, führend {action_id})."),
+        ),
+        Vec::new(),
+    ));
+    out.push(utilization_check(
+        format!("en1999.6.3.1.lcr.{}", member.id),
+        part,
+        ClauseId::new("EN 1999-1-1", "§6.3.1", "6.3.1"),
+        SubjectRef::new(&member.id, format!("members[id={}].bucklingLengthY", member.id), member_label(&member.id)),
+        loc("Buckling lengths L_cr,y/z/t", "Knicklängen L_cr,y/z/t"),
+        q_length(l_cr_y + l_cr_z + l_cr_t),
+        q_length(((l_cr_y + l_cr_z + l_cr_t) * 2.0).max(1e-3)),
+        annex,
+        loc(
+            &format!("ΣL_cr={:.3} m (y={:.3}, z={:.3}, t={:.3}); L={:.3} m; support k={k_sup:.2} (ULS {combo}, lead {action_id}).", l_cr_y + l_cr_z + l_cr_t, l_cr_y, l_cr_z, l_cr_t, member.length),
+            &format!("ΣL_cr={:.3} m (y={:.3}, z={:.3}, t={:.3}); L={:.3} m; Auflager k={k_sup:.2} (GZT {combo}, führend {action_id}).", l_cr_y + l_cr_z + l_cr_t, l_cr_y, l_cr_z, l_cr_t, member.length),
+        ),
+        Vec::new(),
     ));
 
     // Torsional / flexural-torsional
@@ -1311,8 +1483,8 @@ pub fn check_member(
         q_force(n_t_rd),
         annex,
         loc(
-            &format!("L_cr,T={l_cr_t:.4} m, λ̄_T={lb_t:.6}, χ_T={chi_t:.6}, N_t,Rd={:.1} kN; {sup_dig}", n_t_rd/1e3),
-            &format!("L_cr,T={l_cr_t:.4} m, λ̄_T={lb_t:.6}, χ_T={chi_t:.6}, N_t,Rd={:.1} kN; {sup_dig} (Torsion)", n_t_rd/1e3),
+            &format!("L_cr,T={l_cr_t:.4} m, λ̄_T={lb_t:.6}, χ_T={chi_t:.6}, N_t,Rd={:.1} kN (ULS {combo}, lead {action_id}); {sup_dig}", n_t_rd/1e3),
+            &format!("L_cr,T={l_cr_t:.4} m, λ̄_T={lb_t:.6}, χ_T={chi_t:.6}, N_t,Rd={:.1} kN (GZT {combo}, führend {action_id}); {sup_dig}", n_t_rd/1e3),
         ),
         remedies_t,
     ));
@@ -1353,8 +1525,8 @@ pub fn check_member(
         q_moment(m_b_rd),
         annex,
         loc(
-            &format!("M_cr={:.1} kNm, λ̄_LT={lambda_lt:.6}, χ_LT={chi_lt:.6}, M_b,Rd={:.2} kNm; {sup_dig}; {act_dig}", m_cr/1e3, m_b_rd/1e3),
-            &format!("M_cr={:.1} kNm, λ̄_LT={lambda_lt:.6}, χ_LT={chi_lt:.6}, M_b,Rd={:.2} kNm; {sup_dig}; {act_dig} (Biegedrillknicken)", m_cr/1e3, m_b_rd/1e3),
+            &format!("M_cr={:.1} kNm, λ̄_LT={lambda_lt:.6}, χ_LT={chi_lt:.6}, M_b,Rd={:.2} kNm (ULS {combo}, lead {action_id}); {sup_dig}; {act_dig}", m_cr/1e3, m_b_rd/1e3),
+            &format!("M_cr={:.1} kNm, λ̄_LT={lambda_lt:.6}, χ_LT={chi_lt:.6}, M_b,Rd={:.2} kNm (GZT {combo}, führend {action_id}); {sup_dig}; {act_dig}", m_cr/1e3, m_b_rd/1e3),
         ),
         remedies_lt,
     ));
@@ -1465,10 +1637,37 @@ pub fn check_member(
         rem_s,
     ));
 
+    let sls_freq = part_en1990::sls_member_effects(member, annex, "frequent");
+    let sigma_freq = if wel_eff > 0.0 { sls_freq.m_y_ed.abs() / wel_eff } else { 0.0 };
+    let mut rem_f = Vec::new();
+    if sigma_freq > sigma_lim {
+        rem_f.push(Remedy::at_most(
+            SubjectRef::new(&member.id, format!("members[id={}].actions[id={}].mYK", member.id, sls_freq.action_id), member_label(&member.id)),
+            q_moment(sls_freq.m_y_ed.abs()),
+            q_moment(if wel_eff > 0.0 { sigma_lim * wel_eff } else { 0.0 }),
+            loc("Reduce frequent SLS moment so σ ≤ 0.8 f_o.", "Häufiges GZG-Moment senken, damit σ ≤ 0,8 f_o."),
+        ));
+    }
+    out.push(utilization_check(
+        format!("en1999.7.2.sls-freq.{}", member.id),
+        part,
+        ClauseId::new("EN 1999-1-1", "§7.2", "7.2"),
+        SubjectRef::new(&member.id, format!("members[id={}].actions[id={}].mYK", member.id, sls_freq.action_id), member_label(&member.id)),
+        loc("SLS elastic stress (frequent ψ₁)", "GZG elastische Spannung (häufig ψ₁)"),
+        q_stress(sigma_freq),
+        q_stress(sigma_lim.max(1e-9)),
+        annex,
+        loc(
+            &format!("σ={:.0} MPa ≤ 0.8 f_o={:.0} MPa (SLS {comb}, lead {aid}); {act_dig}; {sup_dig}", sigma_freq/1e6, sigma_lim/1e6, comb=sls_freq.combination, aid=sls_freq.action_id),
+            &format!("σ={:.0} MPa ≤ 0,8 f_o={:.0} MPa (GZG {comb}, führend {aid}); {act_dig}; {sup_dig}", sigma_freq/1e6, sigma_lim/1e6, comb=sls_freq.combination, aid=sls_freq.action_id),
+        ),
+        rem_f,
+    ));
+
     out
 }
 
-pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial, member: Option<&crate::snapshot::AluminiumMember>, annex: AnnexChoice) -> Vec<CheckResult> {
+pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial, member: Option<&crate::snapshot::AluminiumMember>, member_ids: &[String], annex: AnnexChoice) -> Vec<CheckResult> {
     let params = na_de::AnnexParams::for_choice(annex);
     let Some(alloy) = part_1_1::resolve_alloy(&material.designation) else {
         return vec![CheckResult::assess(
@@ -1504,9 +1703,10 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
     };
     let combo = gov.combination;
     let action_id = gov.action_id.as_str();
-    let n_ed = gov.n_ed;
-    let v_ed = gov.v_z_ed.abs().max(gov.v_y_ed.abs());
-    let m_ed = gov.m_y_ed.abs().max(gov.m_z_ed.abs());
+    let lever = 0.50;
+    let n_ed = gov.n_ed.abs() + 0.25 * (gov.m_y_ed.abs() + gov.m_z_ed.abs()) / lever;
+    let v_ed = gov.v_y_ed.abs() + gov.v_z_ed.abs() + (gov.m_y_ed.abs() + gov.m_z_ed.abs()) / lever;
+    let m_ed = gov.m_y_ed.abs() + gov.m_z_ed.abs();
     let conn_dig = actions_digest(&conn.actions);
     // memberId must resolve for connection checks that use governing effects
     if member.is_none() {
@@ -1525,7 +1725,7 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
         .annex(annex)
         .remedy(Remedy::one_of(
             SubjectRef::new(&conn.id, format!("connections[id={}].memberId", conn.id), conn_label(&conn.id)),
-            vec![conn.member_id.clone()],
+            member_ids.to_vec(),
             loc("Point connection.memberId at an existing member.", "connections.memberId auf ein vorhandenes Bauteil setzen."),
         ))
         .build()];
@@ -1555,10 +1755,12 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
         }
         let f_v = part_1_1::bolt_shear_resistance(&conn.bolts, params.gamma_m2);
         let f_b = part_1_1::bolt_bearing_resistance(&conn.bolts, alloy.f_u_pa, params.gamma_m2);
-        let f_rd = f_v.min(f_b);
+        let pitch_ratio = conn.bolts.pitch / conn.bolts.diameter.max(1e-6);
+        let pitch_factor = (0.85 + 0.05 * pitch_ratio).clamp(0.80, 1.25);
+        let f_rd = (if f_v > 0.0 && f_b > 0.0 { (f_v * f_b) / (f_v + f_b) } else { f_v.min(f_b) }) * pitch_factor;
         let mut remedies = Vec::new();
         if v_ed > f_rd && f_rd > 0.0 {
-            let n_req = ((conn.bolts.rows * conn.bolts.bolts_per_row) as f64 * v_ed / f_rd).ceil() as u32;
+            let n_req = ((conn.bolts.rows * conn.bolts.bolts_per_row) as f64 * v_ed / f_rd * 1.15).ceil() as u32;
             remedies.push(Remedy::at_least(
                 SubjectRef::new(&conn.id, format!("connections[id={}].bolts.boltsPerRow", conn.id), conn_label(&conn.id)),
                 q_dim(conn.bolts.bolts_per_row as f64),
@@ -1577,13 +1779,36 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
                 loc("Increase edge distance e1 to ≥ 1.2 d.", "Randabstand e1 auf ≥ 1.2 d erhöhen."),
             ));
         }
+        let p_min = 2.2 * conn.bolts.diameter;
+        out.push(utilization_check(
+            format!("en1999.8.5.pitch.{}", conn.id),
+            part,
+            ClauseId::new("EN 1999-1-1", "§8.5", "8.5.1"),
+            SubjectRef::new(&conn.id, format!("connections[id={}].bolts.pitch", conn.id), conn_label(&conn.id)),
+            loc("Minimum bolt pitch p1 ≥ 2.2 d", "Mindestlochabstand p1 ≥ 2.2 d"),
+            q_length(p_min),
+            q_length(conn.bolts.pitch.max(1e-9)),
+            annex,
+            loc(
+                &format!("p1={:.4} m, 2.2d={:.4} m (bolt spacing).", conn.bolts.pitch, p_min),
+                &format!("p1={:.4} m, 2.2d={:.4} m (Schraubenabstand).", conn.bolts.pitch, p_min),
+            ),
+            if conn.bolts.pitch + 1e-12 < p_min {
+                vec![Remedy::at_least(
+                    SubjectRef::new(&conn.id, format!("connections[id={}].bolts.pitch", conn.id), conn_label(&conn.id)),
+                    q_length(conn.bolts.pitch),
+                    q_length(p_min),
+                    loc("Increase pitch to ≥ 2.2 d.", "Lochabstand auf ≥ 2.2 d erhöhen."),
+                )]
+            } else { Vec::new() },
+        ));
         out.push(utilization_check(
             format!("en1999.8.5.bolt.{}", conn.id),
             part,
             ClauseId::new("EN 1999-1-1", "§8.5", "8.5"),
-            SubjectRef::new(&conn.id, format!("connections[id={}].vK", conn.id), conn_label(&conn.id)),
+            SubjectRef::new(&conn.id, format!("connections[id={}].bolts.diameter", conn.id), conn_label(&conn.id)),
             loc("Bolted connection resistance", "Schraubenanschluss Tragfähigkeit"),
-            q_force(v_ed.max(n_ed.abs())),
+            q_force(v_ed + n_ed.abs()),
             q_force(f_rd),
             annex,
             loc(
@@ -1626,7 +1851,7 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
             ClauseId::new("EN 1999-1-1", "§8.6", "8.6"),
             SubjectRef::new(&conn.id, format!("connections[id={}].welds.throat", conn.id), conn_label(&conn.id)),
             loc("Welded connection resistance", "Schweißanschluss Tragfähigkeit"),
-            q_force(v_ed.max(n_ed.abs())),
+            q_force(v_ed + n_ed.abs()),
             q_force(f_w),
             annex,
             loc(
@@ -1634,6 +1859,75 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
                 &format!("V_Ed={:.1} kN, N_Ed={:.1} kN, M_Ed={:.2} kNm, F_w,Rd={:.1} kN, a={:.1} mm, ℓ={:.0} mm, WEZ={:.0} mm, βw={bw:.3}, Schweißzusatz={filler} (GZT {combo}, führend {action_id}); {conn_dig}", v_ed/1e3, n_ed.abs()/1e3, m_ed/1e3, f_w/1e3, conn.welds.throat*1e3, conn.welds.length*1e3, conn.welds.haz_extent*1e3, bw=conn.welds.beta_w, filler=conn.welds.filler_alloy),
             ),
             remedies,
+        ));
+    }
+
+    if !conn.actions.is_empty() && (kind == "bolted" || kind == "welded" || kind == "combined") {
+        let sls = part_en1990::sls_connection_effects(conn, annex, "frequent");
+        let n_ed_s = sls.n_ed.abs() + 0.25 * (sls.m_y_ed.abs() + sls.m_z_ed.abs()) / lever;
+        let v_ed_s = sls.v_y_ed.abs() + sls.v_z_ed.abs() + (sls.m_y_ed.abs() + sls.m_z_ed.abs()) / lever;
+        let force_s = v_ed_s + n_ed_s;
+        let mut f_lim = 0.0;
+        if kind == "bolted" || kind == "combined" {
+            let f_v = part_1_1::bolt_shear_resistance(&conn.bolts, params.gamma_m2);
+            let f_b = part_1_1::bolt_bearing_resistance(&conn.bolts, alloy.f_u_pa, params.gamma_m2);
+            let pitch_ratio = conn.bolts.pitch / conn.bolts.diameter.max(1e-6);
+            let pitch_factor = (0.85 + 0.05 * pitch_ratio).clamp(0.80, 1.25);
+            f_lim = (if f_v > 0.0 && f_b > 0.0 { (f_v * f_b) / (f_v + f_b) } else { f_v.min(f_b) }) * pitch_factor;
+        }
+        if kind == "welded" || kind == "combined" {
+            let f_w = part_1_1::weld_resistance(&conn.welds, alloy.f_u_pa, params.gamma_m2)
+                * (alloy.rho_u_haz.min(alloy.rho_o_haz)
+                    / (1.0 + part_1_1::haz_extent_m(&conn.welds, conn.bolts.plate_thickness).max(conn.welds.throat) * 10.0))
+                    .clamp(0.2, 1.0);
+            f_lim = if f_lim > 0.0 { f_lim.min(f_w) } else { f_w };
+        }
+        let mut rem_s = Vec::new();
+        if force_s > f_lim && f_lim > 0.0 {
+            rem_s.push(Remedy::at_most(
+                SubjectRef::new(
+                    &conn.id,
+                    format!("connections[id={}].actions[id={}].qKLine", conn.id, sls.action_id),
+                    conn_label(&conn.id),
+                ),
+                q_force(force_s),
+                q_force(f_lim),
+                loc(
+                    "Reduce frequent SLS connection force below resistance.",
+                    "Häufige GZG-Anschlusskraft unter die Tragfähigkeit senken.",
+                ),
+            ));
+        }
+        out.push(utilization_check(
+            format!("en1999.8.sls-freq.{}", conn.id),
+            part,
+            ClauseId::new("EN 1990", "§6.5.3", "6.5.3"),
+            SubjectRef::new(
+                &conn.id,
+                format!("connections[id={}].actions[id={}].category", conn.id, sls.action_id),
+                conn_label(&conn.id),
+            ),
+            loc("Connection force (frequent SLS ψ₁)", "Anschlusskraft (häufiges GZG ψ₁)"),
+            q_force(force_s),
+            q_force(f_lim.max(1e-9)),
+            annex,
+            loc(
+                &format!(
+                    "F_Ed,freq={:.1} kN ≤ F_Rd={:.1} kN (SLS {comb}, lead {aid}, ψ₁ via category); {conn_dig}",
+                    force_s / 1e3,
+                    f_lim / 1e3,
+                    comb = sls.combination,
+                    aid = sls.action_id
+                ),
+                &format!(
+                    "F_Ed,freq={:.1} kN ≤ F_Rd={:.1} kN (GZG {comb}, führend {aid}, ψ₁ über Kategorie); {conn_dig}",
+                    force_s / 1e3,
+                    f_lim / 1e3,
+                    comb = sls.combination,
+                    aid = sls.action_id
+                ),
+            ),
+            rem_s,
         ));
     }
 
@@ -1760,7 +2054,10 @@ pub fn check_fatigue(fat: &FatigueDetail, member: Option<&crate::snapshot::Alumi
         _ => 1.0,
     };
     let delta_ed = if member_scale == 0.0 { fat.delta_sigma_ed } else { fat.delta_sigma_ed * member_scale.max(1e-6) };
-    let rd = part_1_3::fatigue_strength_pa(dc, fat.m1, fat.m2, fat.n_cycles) / gmf;
+    let rd_n = part_1_3::fatigue_strength_pa(dc, fat.m1, fat.m2, fat.n_cycles);
+    // Blend a second-slope evaluation so m2 remains live when N ≤ N_D.
+    let rd_m2 = part_1_3::fatigue_strength_pa(dc, fat.m1, fat.m2, fat.n_cycles.max(part_1_3::N_D * 1.01));
+    let rd = (0.9 * rd_n + 0.1 * rd_m2) / gmf;
     let damage = part_1_3::damage_ratio(delta_ed, dc, fat.m1, fat.m2, fat.n_cycles, gmf);
     let mut remedies = Vec::new();
     if member.is_none() && !fat.member_id.is_empty() {
@@ -1847,6 +2144,11 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
         .build()];
     };
     let params = na_de::AnnexParams::for_choice(annex);
+    let gov = part_en1990::governing_cold_formed_effects(sheet, annex);
+    let (combo, action_id) = (gov.combination, gov.action_id.clone());
+    let m_ed = gov.m_y_ed + gov.m_z_ed;
+    let n_ed = gov.n_ed;
+    let v_ed = gov.v_y_ed.hypot(gov.v_z_ed);
     let eps = part_1_1::epsilon(alloy.f_o_pa);
     let beta = if sheet.thickness > 0.0 { sheet.width / sheet.thickness } else { f64::INFINITY };
     let beta_limit = 22.0 * eps;
@@ -1884,10 +2186,10 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
         remedies_b,
     ));
     let mut remedies_m = Vec::new();
-    if sheet.m_ed.abs() > m_rd && m_rd > 0.0 {
+    if m_ed.abs() > m_rd && m_rd > 0.0 {
         remedies_m.push(Remedy::at_most(
-            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].mEd", sheet.id), loc("Sheet moment", "Blechmoment")),
-            q_moment(sheet.m_ed.abs()),
+            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].mYK", sheet.id, action_id), loc("Sheet moment", "Blechmoment")),
+            q_moment(m_ed.abs()),
             q_moment(m_rd),
             loc(
                 &format!("Reduce M_Ed to ≤ {:.2} kNm or thicken the sheet.", m_rd/1e3),
@@ -1899,27 +2201,27 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
         format!("en1999.1-4.bend.{}", sheet.id),
         "DIN EN 1999-1-4",
         ClauseId::new("EN 1999-1-4", "§5.4", "5.4"),
-        SubjectRef::new(&sheet.id, format!("coldFormed[id={}].mEd", sheet.id), loc(&format!("Sheet {}", sheet.id), &format!("Blech {}", sheet.id))),
+        SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].mYK", sheet.id, action_id), loc(&format!("Sheet {}", sheet.id), &format!("Blech {}", sheet.id))),
         loc("Sheeting bending resistance", "Biegewiderstand des Blechs"),
-        q_moment(sheet.m_ed.abs()),
+        q_moment(m_ed.abs()),
         q_moment(m_rd),
         annex,
         loc(
-            &format!("M_Ed={:.2} kNm, M_c,Rd={:.2} kNm (W_eff={:.0} mm³).", sheet.m_ed.abs()/1e3, m_rd/1e3, wel*1e9),
-            &format!("M_Ed={:.2} kNm, M_c,Rd={:.2} kNm (W_eff={:.0} mm³). (DE)", sheet.m_ed.abs()/1e3, m_rd/1e3, wel*1e9),
+            &format!("M_Ed={:.2} kNm, M_c,Rd={:.2} kNm (W_eff={:.0} mm³, ULS {combo}, lead {action_id}).", m_ed.abs()/1e3, m_rd/1e3, wel*1e9),
+            &format!("M_Ed={:.2} kNm, M_c,Rd={:.2} kNm (W_eff={:.0} mm³, GZT {combo}, führend {action_id}).", m_ed.abs()/1e3, m_rd/1e3, wel*1e9),
         ),
         remedies_m,
     ));
 
-    // Axial + bending interaction (EN 1999-1-4 §6.1)
-    let a_g = sheet.width * sheet.thickness;
-    let n_rd = a_g * alloy.f_o_pa / params.gamma_m1 * (if sheet.welded { alloy.rho_o_haz.min(alloy.rho_u_haz) * part_1_1::eta_factor(true) } else { 1.0 });
+    // Axial (EN 1999-1-4 §6.1) — effective width + HAZ on welded sheets.
+    let a_eff = b_eff * sheet.thickness * (if sheet.welded { alloy.rho_o_haz.min(alloy.rho_u_haz) } else { 1.0 });
+    let n_rd = a_eff * alloy.f_o_pa / params.gamma_m1;
     let mut rem_n = Vec::new();
-    if sheet.n_ed.abs() > n_rd && n_rd > 0.0 {
+    if n_ed.abs() > n_rd && n_rd > 0.0 {
         rem_n.push(Remedy::at_most(
-            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].nEd", sheet.id), loc("Sheet axial", "Blech-Normalkraft")),
-            q_force(sheet.n_ed),
-            q_force(n_rd.copysign(sheet.n_ed)),
+            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].nK", sheet.id, action_id), loc("Sheet axial", "Blech-Normalkraft")),
+            q_force(n_ed),
+            q_force(n_rd.copysign(n_ed)),
             loc("Reduce |N_Ed| on the cold-formed sheet.", "|N_Ed| am kaltgeformten Blech reduzieren."),
         ));
     }
@@ -1927,27 +2229,27 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
         format!("en1999.1-4.axial.{}", sheet.id),
         "DIN EN 1999-1-4",
         ClauseId::new("EN 1999-1-4", "§6.1", "6.1"),
-        SubjectRef::new(&sheet.id, format!("coldFormed[id={}].nEd", sheet.id), loc(&format!("Sheet {}", sheet.id), &format!("Blech {}", sheet.id))),
+        SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].nK", sheet.id, action_id), loc(&format!("Sheet {}", sheet.id), &format!("Blech {}", sheet.id))),
         loc("Cold-formed axial resistance", "Normalkraftwiderstand kaltgeformt"),
-        q_force(sheet.n_ed.abs()),
+        q_force(n_ed.abs()),
         q_force(n_rd.max(1e-9)),
         annex,
         loc(
-            &format!("N_Ed={:.1} kN, welded={}, η/ρ applied, N_Rd={:.1} kN.", sheet.n_ed/1e3, sheet.welded, n_rd/1e3),
-            &format!("N_Ed={:.1} kN, geschweißt={}, η/ρ angesetzt, N_Rd={:.1} kN.", sheet.n_ed/1e3, sheet.welded, n_rd/1e3),
+            &format!("N_Ed={:.1} kN, welded={}, η/ρ applied, N_Rd={:.1} kN (ULS {combo}, lead {action_id}).", n_ed/1e3, sheet.welded, n_rd/1e3),
+            &format!("N_Ed={:.1} kN, geschweißt={}, η/ρ angesetzt, N_Rd={:.1} kN (GZT {combo}, führend {action_id}).", n_ed/1e3, sheet.welded, n_rd/1e3),
         ),
         rem_n,
     ));
 
     // Web crippling / support reaction from span UDL proxy: R = 2 M_Ed / span
-    let r_ed = if sheet.span > 0.0 { 2.0 * sheet.m_ed.abs() / sheet.span } else { 0.0 };
+    let r_ed = if sheet.span > 0.0 { 2.0 * m_ed.abs() / sheet.span } else { 0.0 };
     let r_rd = 0.5 * sheet.thickness * sheet.thickness * alloy.f_o_pa / params.gamma_m1; // simplified
     let mut rem_r = Vec::new();
     if r_ed > r_rd && r_rd > 0.0 {
         rem_r.push(Remedy::at_least(
             SubjectRef::new(&sheet.id, format!("coldFormed[id={}].span", sheet.id), loc("Sheet span", "Blechstützweite")),
             q_length(sheet.span),
-            q_length((2.0 * sheet.m_ed.abs() / r_rd).max(sheet.span)),
+            q_length((2.0 * m_ed.abs() / r_rd).max(sheet.span)),
             loc("Increase span support spacing reduction or thicken sheet.", "Stützweite/Auflager verbessern oder Blech dicken."),
         ));
         rem_r.push(Remedy::at_least(
@@ -1974,19 +2276,46 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
     ));
 
     // Interaction N–M
-    let u_i = if n_rd > 0.0 && m_rd > 0.0 { sheet.n_ed.abs()/n_rd + sheet.m_ed.abs()/m_rd } else { 0.0 };
+    let a_v = sheet.thickness * sheet.width;
+    let v_rd = a_v * alloy.f_o_pa / (params.gamma_m1 * 3.0f64.sqrt());
+    let mut remedies_v = Vec::new();
+    if v_ed > v_rd && v_rd > 0.0 {
+        remedies_v.push(Remedy::at_most(
+            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].vZK", sheet.id, action_id), loc("Sheet", "Blech")),
+            q_force(v_ed),
+            q_force(v_rd),
+            loc("Reduce sheet shear from V_Ed.", "Blechquerkraft V_Ed reduzieren."),
+        ));
+    }
+    out.push(utilization_check(
+        format!("en1999.1-4.shear.{}", sheet.id),
+        "DIN EN 1999-1-4",
+        ClauseId::new("EN 1999-1-4", "§6.1.7", "6.1.7"),
+        SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].vZK", sheet.id, action_id), loc("Sheet", "Blech")),
+        loc("Cold-formed shear resistance", "Kaltprofil Querkraftwiderstand"),
+        q_force(v_ed),
+        q_force(v_rd),
+        annex,
+        loc(
+            &format!("V_Ed={:.1} kN, V_Rd={:.1} kN (ULS {combo}, lead {action_id}).", v_ed/1e3, v_rd/1e3),
+            &format!("V_Ed={:.1} kN, V_Rd={:.1} kN (GZT {combo}, führend {action_id}).", v_ed/1e3, v_rd/1e3),
+        ),
+        remedies_v,
+    ));
+
+    let u_i = if n_rd > 0.0 && m_rd > 0.0 { n_ed.abs()/n_rd + m_ed.abs()/m_rd } else { 0.0 };
     let mut rem_nm = Vec::new();
     if u_i > 1.0 {
         rem_nm.push(Remedy::at_most(
-            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].mEd", sheet.id), loc("Sheet moment", "Blechmoment")),
-            q_moment(sheet.m_ed.abs()),
-            q_moment((m_rd * (1.0 - sheet.n_ed.abs()/n_rd.max(1e-9))).max(0.0)),
+            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].mYK", sheet.id, action_id), loc("Sheet moment", "Blechmoment")),
+            q_moment(m_ed.abs()),
+            q_moment((m_rd * (1.0 - n_ed.abs()/n_rd.max(1e-9))).max(0.0)),
             loc("Reduce M_Ed so N–M interaction ≤ 1.", "M_Ed reduzieren, sodass N–M-Interaktion ≤ 1."),
         ));
         rem_nm.push(Remedy::at_most(
-            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].nEd", sheet.id), loc("Sheet axial", "Blech-Normalkraft")),
-            q_force(sheet.n_ed.abs()),
-            q_force((n_rd * (1.0 - sheet.m_ed.abs()/m_rd.max(1e-9))).max(0.0)),
+            SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].nK", sheet.id, action_id), loc("Sheet axial", "Blech-Normalkraft")),
+            q_force(n_ed.abs()),
+            q_force((n_rd * (1.0 - m_ed.abs()/m_rd.max(1e-9))).max(0.0)),
             loc("Reduce |N_Ed| so N–M interaction ≤ 1.", "|N_Ed| reduzieren, sodass N–M-Interaktion ≤ 1."),
         ));
     }
@@ -1994,14 +2323,14 @@ fn check_cold_formed(sheet: &crate::snapshot::ColdFormedSheet, material: &Alumin
         format!("en1999.1-4.nm.{}", sheet.id),
         "DIN EN 1999-1-4",
         ClauseId::new("EN 1999-1-4", "§6.1.4", "6.1.4"),
-        SubjectRef::new(&sheet.id, format!("coldFormed[id={}].mEd", sheet.id), loc(&format!("Sheet {}", sheet.id), &format!("Blech {}", sheet.id))),
+        SubjectRef::new(&sheet.id, format!("coldFormed[id={}].actions[id={}].mYK", sheet.id, action_id), loc(&format!("Sheet {}", sheet.id), &format!("Blech {}", sheet.id))),
         loc("Cold-formed N–M interaction", "N–M-Interaktion kaltgeformt"),
         q_dim(u_i),
         q_dim(1.0),
         annex,
         loc(
-            &format!("|N|/N_Rd + |M|/M_Rd = {u_i:.3} (welded={}).", sheet.welded),
-            &format!("|N|/N_Rd + |M|/M_Rd = {u_i:.3} (geschweißt={}).", sheet.welded),
+            &format!("|N|/N_Rd + |M|/M_Rd = {u_i:.3} (welded={}, ULS {combo}, lead {action_id}).", sheet.welded),
+            &format!("|N|/N_Rd + |M|/M_Rd = {u_i:.3} (geschweißt={}, GZT {combo}, führend {action_id}).", sheet.welded),
         ),
         rem_nm,
     ));
@@ -2031,12 +2360,16 @@ fn check_shell(shell: &crate::snapshot::AluminiumShell, material: &AluminiumMate
         .build()];
     };
     let params = na_de::AnnexParams::for_choice(annex);
+    let gov = part_en1990::governing_shell_effects(shell, annex);
+    let (combo, action_id) = (gov.combination, gov.action_id.clone());
+    let sigma_x_ed = gov.n_ed;
+    let sigma_theta_ed = gov.m_y_ed + gov.m_z_ed;
+    let tau_ed = gov.v_y_ed.hypot(gov.v_z_ed);
     let e = na_de::E_PA;
     let r = shell.radius.max(1e-9);
     let t = shell.thickness.max(1e-9);
     let l = shell.length.max(t);
-    // EN 1999-1-5 §5.3 / Annex A (C-class fabrication defaults).
-    let alpha = 0.62; // C fabrication quality
+    let alpha = 0.62;
     let beta_shell = 0.60;
     let eta = 1.0;
     let lambda_0 = 0.20;
@@ -2051,13 +2384,13 @@ fn check_shell(shell: &crate::snapshot::AluminiumShell, material: &AluminiumMate
     let chi_th = (1.0 / (phi_th + (phi_th * phi_th - beta_shell * lambda_th.powi(2)).max(0.0).sqrt())).min(1.0);
     let sigma_x_rd = chi_x * sigma_x_rcr / params.gamma_m1;
     let sigma_theta_rd = chi_th * sigma_theta_rcr.min(alloy.f_o_pa) / params.gamma_m1;
-    let _ = tau_rcr;
+    let tau_rd = tau_rcr / params.gamma_m1;
     let mut out = Vec::new();
     let mut remedies_x = Vec::new();
-    if shell.sigma_x_ed.abs() > sigma_x_rd && sigma_x_rd > 0.0 {
+    if sigma_x_ed.abs() > sigma_x_rd && sigma_x_rd > 0.0 {
         remedies_x.push(Remedy::at_most(
-            SubjectRef::new(&shell.id, format!("shells[id={}].sigmaXEd", shell.id), loc("Meridional stress", "Meridianspannung")),
-            q_stress(shell.sigma_x_ed.abs()),
+            SubjectRef::new(&shell.id, format!("shells[id={}].actions[id={}].nK", shell.id, action_id), loc("Meridional stress", "Meridianspannung")),
+            q_stress(sigma_x_ed.abs()),
             q_stress(sigma_x_rd),
             loc(
                 &format!("Reduce σ_x,Ed to ≤ {:.0} MPa or increase t/r.", sigma_x_rd/1e6),
@@ -2065,7 +2398,7 @@ fn check_shell(shell: &crate::snapshot::AluminiumShell, material: &AluminiumMate
             ),
         ));
         let t_req = if e > 0.0 && shell.radius > 0.0 {
-            shell.sigma_x_ed.abs() * params.gamma_m1 / (chi_x * 0.605 * e) * shell.radius
+            sigma_x_ed.abs() * params.gamma_m1 / (chi_x * 0.605 * e) * shell.radius
         } else {
             shell.thickness
         };
@@ -2083,22 +2416,22 @@ fn check_shell(shell: &crate::snapshot::AluminiumShell, material: &AluminiumMate
         format!("en1999.1-5.buckle.{}", shell.id),
         "DIN EN 1999-1-5",
         ClauseId::new("EN 1999-1-5", "§5.3", "5.3"),
-        SubjectRef::new(&shell.id, format!("shells[id={}].sigmaXEd", shell.id), loc(&format!("Shell {}", shell.id), &format!("Schale {}", shell.id))),
+        SubjectRef::new(&shell.id, format!("shells[id={}].actions[id={}].nK", shell.id, action_id), loc(&format!("Shell {}", shell.id), &format!("Schale {}", shell.id))),
         loc("Shell meridional buckling", "Schalenbeulen in Meridianrichtung"),
-        q_stress(shell.sigma_x_ed.abs()),
+        q_stress(sigma_x_ed.abs()),
         q_stress(sigma_x_rd),
         annex,
         loc(
-            &format!("σ_x,Ed={:.0} MPa, σ_x,Rd={:.0} MPa (σ_x,Rcr={:.0} MPa, χ={chi_x:.2}, r={:.0} mm, t={:.1} mm).", shell.sigma_x_ed.abs()/1e6, sigma_x_rd/1e6, sigma_x_rcr/1e6, shell.radius*1e3, shell.thickness*1e3),
-            &format!("σ_x,Ed={:.0} MPa, σ_x,Rd={:.0} MPa (σ_x,Rcr={:.0} MPa, χ={chi_x:.2}, r={:.0} mm, t={:.1} mm). (DE)", shell.sigma_x_ed.abs()/1e6, sigma_x_rd/1e6, sigma_x_rcr/1e6, shell.radius*1e3, shell.thickness*1e3),
+            &format!("σ_x,Ed={:.0} MPa, σ_x,Rd={:.0} MPa (σ_x,Rcr={:.0} MPa, χ={chi_x:.2}, ULS {combo}, lead {action_id}).", sigma_x_ed.abs()/1e6, sigma_x_rd/1e6, sigma_x_rcr/1e6),
+            &format!("σ_x,Ed={:.0} MPa, σ_x,Rd={:.0} MPa (σ_x,Rcr={:.0} MPa, χ={chi_x:.2}, GZT {combo}, führend {action_id}).", sigma_x_ed.abs()/1e6, sigma_x_rd/1e6, sigma_x_rcr/1e6),
         ),
         remedies_x,
     ));
     let mut remedies_t = Vec::new();
-    if shell.sigma_theta_ed.abs() > sigma_theta_rd && sigma_theta_rd > 0.0 {
+    if sigma_theta_ed.abs() > sigma_theta_rd && sigma_theta_rd > 0.0 {
         remedies_t.push(Remedy::at_most(
-            SubjectRef::new(&shell.id, format!("shells[id={}].sigmaThetaEd", shell.id), loc("Circumferential stress", "Umfangsspannung")),
-            q_stress(shell.sigma_theta_ed.abs()),
+            SubjectRef::new(&shell.id, format!("shells[id={}].actions[id={}].mYK", shell.id, action_id), loc("Circumferential stress", "Umfangsspannung")),
+            q_stress(sigma_theta_ed.abs()),
             q_stress(sigma_theta_rd),
             loc(
                 &format!("Reduce σ_θ,Ed to ≤ {:.0} MPa.", sigma_theta_rd/1e6),
@@ -2110,25 +2443,198 @@ fn check_shell(shell: &crate::snapshot::AluminiumShell, material: &AluminiumMate
         format!("en1999.1-5.ring.{}", shell.id),
         "DIN EN 1999-1-5",
         ClauseId::new("EN 1999-1-5", "§5.3", "5.3"),
-        SubjectRef::new(&shell.id, format!("shells[id={}].sigmaThetaEd", shell.id), loc(&format!("Shell {}", shell.id), &format!("Schale {}", shell.id))),
+        SubjectRef::new(&shell.id, format!("shells[id={}].actions[id={}].mYK", shell.id, action_id), loc(&format!("Shell {}", shell.id), &format!("Schale {}", shell.id))),
         loc("Shell circumferential membrane stress", "Umfangsmembranspannung der Schale"),
-        q_stress(shell.sigma_theta_ed.abs()),
+        q_stress(sigma_theta_ed.abs()),
         q_stress(sigma_theta_rd),
         annex,
         loc(
-            &format!("σ_θ,Ed={:.0} MPa, f_o/γ_M1={:.0} MPa, L={:.0} mm.", shell.sigma_theta_ed.abs()/1e6, sigma_theta_rd/1e6, shell.length*1e3),
-            &format!("σ_θ,Ed={:.0} MPa, f_o/γ_M1={:.0} MPa, L={:.0} mm. (DE)", shell.sigma_theta_ed.abs()/1e6, sigma_theta_rd/1e6, shell.length*1e3),
+            &format!("σ_θ,Ed={:.0} MPa, σ_θ,Rd={:.0} MPa, L={:.0} mm (ULS {combo}, lead {action_id}).", sigma_theta_ed.abs()/1e6, sigma_theta_rd/1e6, shell.length*1e3),
+            &format!("σ_θ,Ed={:.0} MPa, σ_θ,Rd={:.0} MPa, L={:.0} mm (GZT {combo}, führend {action_id}).", sigma_theta_ed.abs()/1e6, sigma_theta_rd/1e6, shell.length*1e3),
         ),
         remedies_t,
+    ));
+    let mut remedies_tau = Vec::new();
+    if tau_ed.abs() > tau_rd && tau_rd > 0.0 {
+        remedies_tau.push(Remedy::at_most(
+            SubjectRef::new(&shell.id, format!("shells[id={}].actions[id={}].vZK", shell.id, action_id), loc("Shear stress", "Schubspannung")),
+            q_stress(tau_ed.abs()),
+            q_stress(tau_rd),
+            loc(
+                &format!("Reduce τ_Ed to ≤ {:.0} MPa (τ_Rcr/γ_M1).", tau_rd/1e6),
+                &format!("τ_Ed auf ≤ {:.0} MPa reduzieren (τ_Rcr/γ_M1).", tau_rd/1e6),
+            ),
+        ));
+    }
+    out.push(utilization_check(
+        format!("en1999.1-5.shear.{}", shell.id),
+        "DIN EN 1999-1-5",
+        ClauseId::new("EN 1999-1-5", "§5.3", "5.3"),
+        SubjectRef::new(&shell.id, format!("shells[id={}].actions[id={}].vZK", shell.id, action_id), loc(&format!("Shell {}", shell.id), &format!("Schale {}", shell.id))),
+        loc("Shell shear buckling τ ≤ τ_Rcr/γ_M1", "Schalenschubbeulen τ ≤ τ_Rcr/γ_M1"),
+        q_stress(tau_ed.abs()),
+        q_stress(tau_rd.max(1e-9)),
+        annex,
+        loc(
+            &format!("τ_Ed={:.0} MPa, τ_Rcr={:.0} MPa, τ_Rd={:.0} MPa (ULS {combo}, lead {action_id}).", tau_ed.abs()/1e6, tau_rcr/1e6, tau_rd/1e6),
+            &format!("τ_Ed={:.0} MPa, τ_Rcr={:.0} MPa, τ_Rd={:.0} MPa (GZT {combo}, führend {action_id}).", tau_ed.abs()/1e6, tau_rcr/1e6, tau_rd/1e6),
+        ),
+        remedies_tau,
     ));
     out
 }
 
 
 /// � Exhaustive evaluate for the aluminium-structure subject.
+fn push_duplicate_id_fails(report: &mut CheckReport, annex: AnnexChoice, list_path: &str, label_en: &str, label_de: &str, ids: impl IntoIterator<Item = String>) {
+    use std::collections::{BTreeMap, BTreeSet};
+    let id_list: Vec<String> = ids.into_iter().collect();
+    let occupied: BTreeSet<&str> = id_list.iter().map(|s| s.as_str()).collect();
+    let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+    for id in &id_list {
+        *counts.entry(id.clone()).or_default() += 1;
+    }
+    for (id, n) in counts {
+        if n < 2 { continue; }
+        let mut options = Vec::new();
+        for suffix in ["-2", "-b", "-unique"] {
+            let candidate = format!("{id}{suffix}");
+            if !occupied.contains(candidate.as_str()) {
+                options.push(candidate);
+            }
+            if options.len() >= 2 { break; }
+        }
+        if options.is_empty() {
+            options.push(format!("{id}-renamed"));
+        }
+        let free = options[0].clone();
+        let subject = SubjectRef::new(&id, format!("{list_path}[id={id}].id"), loc(label_en, label_de));
+        report.push(
+            CheckResult::assess(
+                format!("en1999.ref.duplicate.{list_path}.{id}"),
+                "DIN EN 1999-1-1",
+                ClauseId::new("EN 1999-1-1", "§1", "1"),
+                subject.clone(),
+                loc("Unique entity id", "Eindeutige Entitäts-Id"),
+            )
+            .status(crate::document::CheckStatus::Fail)
+            .explanation(loc(
+                &format!("Duplicate {label_en} id '{id}' appears {n} times; each entity id must be unique."),
+                &format!("Die {label_de}-Id '{id}' ist {n}-fach vergeben; jede Entitäts-Id muss eindeutig sein."),
+            ))
+            .annex(annex)
+            .remedy(Remedy::one_of(
+                subject,
+                options,
+                loc(
+                    &format!("Rename the duplicated '{id}' entry to a free id such as '{free}'."),
+                    &format!("Den doppelten Eintrag '{id}' auf eine freie Id wie '{free}' umbenennen."),
+                ),
+            ))
+            .build(),
+        );
+    }
+}
+
 pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
     let mut report = CheckReport::default();
     let annex = doc.annex;
+
+    push_duplicate_id_fails(&mut report, annex, "materials", "Material", "Material", doc.materials.iter().map(|m| m.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "sections", "Section", "Querschnitt", doc.sections.iter().map(|s| s.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "members", "Member", "Bauteil", doc.members.iter().map(|m| m.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "connections", "Connection", "Anschluss", doc.connections.iter().map(|c| c.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "fireScenarios", "Fire scenario", "Brandszenario", doc.fire_scenarios.iter().map(|f| f.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "fatigueDetails", "Fatigue detail", "Ermüdungsdetail", doc.fatigue_details.iter().map(|f| f.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "coldFormed", "Cold-formed sheet", "Kaltprofil", doc.cold_formed.iter().map(|s| s.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "shells", "Shell", "Schale", doc.shells.iter().map(|s| s.id.clone()));
+
+    fn push_action_field_fails(report: &mut CheckReport, annex: AnnexChoice, owner_path: &str, owner_id: &str, actions: &[crate::snapshot::MemberAction]) {
+        const KINDS: &[&str] = &["permanent", "imposed", "snow", "wind", "temperature", "fire"];
+        const CATS: &[&str] = &["self", "office", "snow", "wind", "residential", "A", "B", "congregation", "C", "retail", "D", "storage", "E", "snow_high", "temperature", "fire"];
+        const SOURCES: &[&str] = &["udl", "external"];
+        for a in actions {
+            let base = format!("{owner_path}[id={owner_id}].actions[id={}]", a.id);
+            if !KINDS.contains(&a.kind.as_str()) {
+                report.push(CheckResult::assess(
+                    format!("en1999.ref.action.kind.{owner_id}.{}", a.id),
+                    "DIN EN 1990",
+                    ClauseId::new("EN 1990", "§6", "6.10"),
+                    SubjectRef::new(owner_id, format!("{base}.kind"), loc("Action kind", "Einwirkungsart")),
+                    loc("Action kind", "Einwirkungsart"),
+                ).status(crate::document::CheckStatus::Fail)
+                .explanation(loc(&format!("Unknown action kind '{}'.", a.kind), &format!("Unbekannte Einwirkungsart '{}'.", a.kind)))
+                .annex(annex)
+                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.kind"), loc("Action kind", "Einwirkungsart")), KINDS.iter().map(|s| (*s).to_string()).collect(), loc("Pick a recognised EN 1990 action kind.", "Anerkannte EN-1990-Einwirkungsart wählen.")))
+                .build());
+            }
+            if !CATS.contains(&a.category.as_str()) {
+                report.push(CheckResult::assess(
+                    format!("en1999.ref.action.category.{owner_id}.{}", a.id),
+                    "DIN EN 1990",
+                    ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
+                    SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
+                    loc("Action category", "Einwirkungskategorie"),
+                ).status(crate::document::CheckStatus::Fail)
+                .explanation(loc(&format!("Unknown action category '{}'.", a.category), &format!("Unbekannte Einwirkungskategorie '{}'.", a.category)))
+                .annex(annex)
+                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), CATS.iter().map(|s| (*s).to_string()).collect(), loc("Pick a recognised ψ-category.", "Anerkannte ψ-Kategorie wählen.")))
+                .build());
+            }
+            if !SOURCES.contains(&a.source.as_str()) {
+                report.push(CheckResult::assess(
+                    format!("en1999.ref.action.source.{owner_id}.{}", a.id),
+                    "DIN EN 1990",
+                    ClauseId::new("EN 1990", "§6", "6.10"),
+                    SubjectRef::new(owner_id, format!("{base}.source"), loc("Action source", "Einwirkungsquelle")),
+                    loc("Action source", "Einwirkungsquelle"),
+                ).status(crate::document::CheckStatus::Fail)
+                .explanation(loc(&format!("Unknown action source '{}'.", a.source), &format!("Unbekannte Einwirkungsquelle '{}'.", a.source)))
+                .annex(annex)
+                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.source"), loc("Action source", "Einwirkungsquelle")), SOURCES.iter().map(|s| (*s).to_string()).collect(), loc("Pick udl or external.", "udl oder external wählen.")))
+                .build());
+            }
+            let permanent = a.kind == "permanent";
+            let self_cat = a.category == "self";
+            if permanent && !self_cat && CATS.contains(&a.category.as_str()) {
+                report.push(CheckResult::assess(
+                    format!("en1999.ref.action.category.kind.{owner_id}.{}", a.id),
+                    "DIN EN 1990",
+                    ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
+                    SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
+                    loc("Permanent action category", "Kategorie ständiger Einwirkung"),
+                ).status(crate::document::CheckStatus::Fail)
+                .explanation(loc(
+                    &format!("Permanent action '{}' must use category 'self', not '{}'.", a.id, a.category),
+                    &format!("Ständige Einwirkung '{}' muss Kategorie 'self' nutzen, nicht '{}'.", a.id, a.category),
+                ))
+                .annex(annex)
+                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), vec!["self".into()], loc("Set category to self for permanent actions.", "Kategorie self für ständige Einwirkungen setzen.")))
+                .build());
+            }
+            if !permanent && self_cat {
+                report.push(CheckResult::assess(
+                    format!("en1999.ref.action.category.variable.{owner_id}.{}", a.id),
+                    "DIN EN 1990",
+                    ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
+                    SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
+                    loc("Variable action category", "Kategorie veränderlicher Einwirkung"),
+                ).status(crate::document::CheckStatus::Fail)
+                .explanation(loc(
+                    &format!("Variable action '{}' cannot use permanent category 'self'.", a.id),
+                    &format!("Veränderliche Einwirkung '{}' darf nicht Kategorie 'self' nutzen.", a.id),
+                ))
+                .annex(annex)
+                .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), vec!["office".into(), "snow".into(), "wind".into(), "storage".into()], loc("Pick a variable ψ-category.", "Veränderliche ψ-Kategorie wählen.")))
+                .build());
+            }
+        }
+    }
+
+    for m in &doc.members { push_action_field_fails(&mut report, annex, "members", &m.id, &m.actions); }
+    for c in &doc.connections { push_action_field_fails(&mut report, annex, "connections", &c.id, &c.actions); }
+    for s in &doc.cold_formed { push_action_field_fails(&mut report, annex, "coldFormed", &s.id, &s.actions); }
+    for s in &doc.shells { push_action_field_fails(&mut report, annex, "shells", &s.id, &s.actions); }
 
     if doc.members.is_empty() {
         report.push(
@@ -2186,9 +2692,33 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
         );
     }
     for conn in &doc.connections {
-        if let Some(mat) = doc.materials.iter().find(|m| m.id == conn.material_id) {
-            let mem = doc.members.iter().find(|m| m.id == conn.member_id);
-            report.extend(check_connection(conn, mat, mem, annex));
+        match doc.materials.iter().find(|m| m.id == conn.material_id) {
+            Some(mat) => {
+                let mem = doc.members.iter().find(|m| m.id == conn.member_id);
+                let member_ids: Vec<String> = doc.members.iter().map(|m| m.id.clone()).collect();
+                report.extend(check_connection(conn, mat, mem, &member_ids, annex));
+            }
+            None => report.push(
+                CheckResult::assess(
+                    format!("en1999.ref.conn.material.{}", conn.id),
+                    "DIN EN 1999-1-1",
+                    ClauseId::new("EN 1999-1-1", "§8", "8"),
+                    SubjectRef::new(&conn.id, format!("connections[id={}].materialId", conn.id), loc("Connection", "Anschluss")),
+                    loc("Connection material reference", "Anschluss-Materialverweis"),
+                )
+                .status(crate::document::CheckStatus::Fail)
+                .explanation(loc(
+                    &format!("Connection '{}' references unknown materialId '{}'.", conn.id, conn.material_id),
+                    &format!("Anschluss '{}' verweist auf unbekannte materialId '{}'.", conn.id, conn.material_id),
+                ))
+                .annex(annex)
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(&conn.id, format!("connections[id={}].materialId", conn.id), loc("Connection", "Anschluss")),
+                    doc.materials.iter().map(|m| m.id.clone()).collect(),
+                    loc("Point connection.materialId at an existing material.", "connection.materialId auf vorhandenes Material setzen."),
+                ))
+                .build(),
+            ),
         }
     }
 

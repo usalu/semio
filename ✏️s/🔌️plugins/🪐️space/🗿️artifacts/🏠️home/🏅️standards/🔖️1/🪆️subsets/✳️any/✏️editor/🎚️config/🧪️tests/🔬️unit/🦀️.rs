@@ -53,3 +53,42 @@ async fn home_config_operation_round_trips_via_apply_and_backwards() {
     let restored = backwards[0].diff(&next).diff().clone();
     assert_eq!(restored, config);
 }
+
+//#region 🧪️RetainedConfigPreparation
+#[test]
+fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
+    use std::io::Write as _;
+    use store::ArtifactStoreOneItemPreparation as _;
+    let config = HomeConfig::default();
+    let mut preparation = HomeConfigPreparation {
+        base: None,
+        mutation: Some(HomeConfigMutation::ReplaceDirectoryProjection {
+            directory_json: config.directory_json,
+            session_binding_sha256: "a".repeat(64),
+            authorization_generation: 1,
+            receipt_sha256: "b".repeat(64),
+        }),
+        description: None,
+        authority: None,
+        candidate: None,
+        sealed_candidate: None,
+        serialized_bytes: None,
+        prepared: None,
+        checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+        cancelled: false,
+        closing: false,
+    };
+    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: HOME_CONFIG_STEP_BYTES };
+    preparation.cancel();
+    assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
+    preparation.begin_close();
+    assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
+    assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes } if released_bytes == HOME_CONFIG_STEP_BYTES));
+    assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
+    assert!(preparation.terminal_is_empty());
+    let mut counter = HomeConfigByteCounter { bytes: 0 };
+    let maximum = vec![0; HOME_CONFIG_STEP_BYTES];
+    assert_eq!(counter.write(&maximum).expect("maximum serialized envelope"), HOME_CONFIG_STEP_BYTES);
+    assert!(counter.write(&[0]).is_err());
+}
+//#endregion 🧪️RetainedConfigPreparation

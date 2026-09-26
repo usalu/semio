@@ -44,3 +44,5 @@ record remove-curve tag=16
 field payload bytes
 record change-curve-points tag=17
 field payload bytes
+record change-limits tag=18
+field payload bytes

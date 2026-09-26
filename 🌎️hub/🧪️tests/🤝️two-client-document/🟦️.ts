@@ -191,6 +191,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           return { status: res.status, json: JSON.parse(await res.text()) };
         };
 
+        let directoryTimings: { spaceListMs: number; directoryPageMs: number[] } = { spaceListMs: 0, directoryPageMs: [] };
         const tokenA = await signIn(ADA.email, ADA.password, "device-ada");
         const tokenB = await signIn(BO.email, BO.password, "device-bo");
         const created = await cmd(tokenA, { kind: "create-space", name: fixture.spaceName, spaceKind: "studio", visibility: "private" });
@@ -202,6 +203,32 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         }
         expect(spaceId).toBeTruthy();
         expect((await cmd(tokenA, { kind: "upsert-member", spaceId, email: BO.email, role: "author" })).status).toBe(202);
+        for (let index = 0; index < fixture.directoryPages.spaces; index++) {
+          const extra = await cmd(tokenA, { kind: "create-space", name: `${fixture.spaceName} ${index}`, spaceKind: index % 2 ? "atelier" : "studio", visibility: index % 4 ? "private" : "public" });
+          expect(extra.status).toBe(202);
+        }
+        const directoryPageMs: number[] = [];
+        let spaceListMs = Number.POSITIVE_INFINITY;
+        for (let sample = 0; sample < fixture.directoryPages.samples; sample++) {
+          const startedAt = Date.now();
+          const listed = await fetchTimed(`${origin}/directory/spaces`, { headers: { authorization: `Bearer ${tokenA}` } });
+          const rows = (await listed.json()) as unknown[];
+          spaceListMs = Math.min(spaceListMs, Date.now() - startedAt);
+          expect(listed.status).toBe(200);
+          expect(rows.length).toBeGreaterThan(fixture.directoryPages.spaces);
+        }
+        for (let after = 0; ; ) {
+          const startedAt = Date.now();
+          const paged = await fetchTimed(`${origin}/directory/event-page/v1?after=${after}`, { headers: { authorization: `Bearer ${tokenA}` } });
+          const page = (await paged.json()) as { throughSeqInclusive: number; hasMore: boolean };
+          directoryPageMs.push(Date.now() - startedAt);
+          expect(paged.status).toBe(200);
+          if (!page.hasMore || page.throughSeqInclusive === after) break;
+          after = page.throughSeqInclusive;
+        }
+        expect(spaceListMs, `the space list of ${fixture.directoryPages.spaces}+ spaces answered within the page budget`).toBeLessThanOrEqual(fixture.directoryPages.pageBudgetMs);
+        expect(Math.max(...directoryPageMs), `every directory event page answered within the page budget: ${JSON.stringify(directoryPageMs)}`).toBeLessThanOrEqual(fixture.directoryPages.pageBudgetMs);
+        directoryTimings = { spaceListMs, directoryPageMs };
 
         const route = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
         const catalog = await (await fetchTimed(`${origin}${route}`, { headers: { authorization: `Bearer ${tokenA}` } })).json();
@@ -368,6 +395,8 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           document_id: documentId,
           actor: a.actor,
           dependencies: [],
+          observed: null,
+          target: [],
           diff: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(fixture.command.diffValue)) },
           inverse: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(fixture.command.inverseValue)) },
           timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
@@ -430,6 +459,8 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
                     document_id: documentId,
                     actor: agent.actor,
                     dependencies: [],
+                    observed: null,
+                    target: [],
                     diff: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(fixture.agent.diffValue)) },
                     inverse: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(fixture.command.inverseValue)) },
                     timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
@@ -455,7 +486,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         }
         const afterRevocation = since(b);
         const revokedAt = Date.now();
-        const revoked = await fetchTimed(`${origin}/auth/agent-delegations/${encodeURIComponent(delegation.delegationId)}`, { method: "DELETE", headers: humanHeaders });
+        const revoked = await fetchTimed(`${origin}/auth/agent-delegations/${encodeURIComponent(delegation.delegationId)}/revoke`, { method: "POST", headers: humanHeaders });
         expect(revoked.status).toBe(204);
         const agentClosed = await Promise.race([agent.closed, sleep(fixture.agent.revocationWithinMs).then(() => null)]);
         expect(agentClosed?.code, "the agent's open document socket closes on revocation").toBe(fixture.agent.closeCode);
@@ -503,6 +534,8 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
                         document_id: documentId,
                         actor: holder.actor,
                         dependencies: [previous],
+                        observed: null,
+                        target: [],
                         diff: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue(value)) },
                         inverse: { schema: fixture.command.diffSchema, payload: Array.from(encodePackValue({})) },
                         timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 },
@@ -544,6 +577,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
         note("growthEditsAcceptedBeforeRestart", fixture.growth.editsBeforeRestart);
         note("growthMsBeforeRestart", growthMsBeforeRestart);
         note("agentRevocationMs", agentRevocationMs);
+        note("directoryTimings", directoryTimings);
         note("agentExecutionTargetMs", agentExecutionTargetMs);
         const fenceRelease = writerFence.backends.find((row: any) => row.backend === backend)?.crashRelease as string | undefined;
         const exitOf = (hubRun: typeof run, ms: number) =>
@@ -634,6 +668,7 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
             expect(seen(event!, outcome!), `${event}:${outcome} in ${JSON.stringify(traceCounts)}`).toBe(true);
           expect(traced.filter((record) => record.event === "server.shutdown").map((record) => record.detail)).toEqual([expect.stringContaining(fixture.shutdown.databaseClosedMarker)]);
           await waitReady(run2, "restart");
+          note("sigtermToReadyMs", Date.now() - sigtermAt);
           const tokenA2 = await signIn(ADA.email, ADA.password, "device-ada-2");
           const spaces = await (await fetchTimed(`${origin}/directory/spaces`, { headers: { authorization: `Bearer ${tokenA2}` } })).json();
           expect(spaces.some((r: any) => r?.space?.id === spaceId)).toBe(true);
@@ -642,10 +677,9 @@ describe.skipIf(!HUB_E2E)("two-client document collaboration e2e", () => {
           const a3 = await openSocket(await mint("a-restart", tokenA2), null, fixture.shutdown.reopenWithinMs);
           note("reopenedOnFirstAttemptAfterSigterm", true);
           note("readyToReopenedWelcomeMs", Date.now() - reopenAt);
+          note("sigtermToReopenedWelcomeFirstAttemptMs", Date.now() - sigtermAt);
           await grow(a3, fixture.growth.editsBeforeRestart, fixture.growth.editsAfterRestart, lastGrown);
           note("growthEditsAcceptedAfterRestart", fixture.growth.editsAfterRestart);
-          const gracefulReopenMs = Date.now() - sigtermAt;
-          note("sigtermToReopenedWelcomeFirstAttemptMs", gracefulReopenMs);
           expect(a3.welcome.server_frontier.document_id ?? a3.welcome.server_frontier.documentId).toBe(documentId);
           expect((a3.welcome.server_frontier.last_commit_seq ?? 0) >= (frontierBefore.last_commit_seq ?? 0)).toBe(true);
 

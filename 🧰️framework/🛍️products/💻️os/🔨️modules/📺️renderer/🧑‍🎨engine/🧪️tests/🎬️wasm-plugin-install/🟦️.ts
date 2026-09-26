@@ -4,6 +4,8 @@
 
 import { describe, expect, it } from "vitest";
 import { createLazyPluginInstallDoor, type LazyPluginInstallPhase } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🧩️lazy-install/🟦️.ts";
+import { WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL, WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL, admitWgpuDynamicExtension, installWgpuDynamicExtensionDoor } from "../../🎯️targets/🧊️wgpu/🧩️dynamic-extension/🟦️.ts";
+import extensionFixture from "../../../../🔌️plugin/🏪️store/📥️installation/🧫️fixtures/🔣️.json";
 
 type Deferred = { readonly promise: Promise<unknown>; resolve: (value: unknown) => void; reject: (error: Error) => void };
 
@@ -94,5 +96,49 @@ describe("frame-worker lazy plugin install door", () => {
     const { door } = harness();
     expect(door.cancel("cad")).toBe(false);
     expect(door.pending()).toEqual([]);
+  });
+});
+
+describe("dynamic extension admission", () => {
+  it("loads exactly the Store-authored module URL and admits its matching manifest", async () => {
+    const calls: unknown[] = [];
+    const handle = { id: "bridge" };
+    await expect(admitWgpuDynamicExtension(JSON.stringify(extensionFixture), async (record) => {
+      calls.push(record);
+      return { handle, manifest: { pluginId: record.extensionId, version: record.version } };
+    })).resolves.toBe(handle);
+    expect(calls).toEqual([extensionFixture]);
+  });
+
+  it("refuses substituted identity or version after load", async () => {
+    await expect(admitWgpuDynamicExtension(JSON.stringify(extensionFixture), async () => ({ handle: {}, manifest: { pluginId: "substituted", version: extensionFixture.version } }))).rejects.toThrow(/extension-install\.identity/);
+    await expect(admitWgpuDynamicExtension(JSON.stringify(extensionFixture), async () => ({ handle: {}, manifest: { pluginId: extensionFixture.extensionId, version: "9.9.9" } }))).rejects.toThrow(/extension-install\.version/);
+  });
+
+  it("refuses caller-shaped metadata outside the exact Store record", async () => {
+    await expect(admitWgpuDynamicExtension(JSON.stringify({ ...extensionFixture, enabled: true }), async () => ({ handle: {}, manifest: { pluginId: extensionFixture.extensionId, version: extensionFixture.version } }))).rejects.toThrow(/fields mismatch/);
+  });
+
+  it("keeps dynamic installation and actor retirement on separate bridge doors", async () => {
+    const host: {
+      [WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL]?: (value: string) => Promise<unknown>;
+      [WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL]?: (value: string) => Promise<void>;
+    } = {};
+    const retired: string[] = [];
+    installWgpuDynamicExtensionDoor(host, async (record) => ({ handle: { id: record.extensionId }, manifest: { pluginId: record.extensionId, version: record.version } }), async (extensionId) => { retired.push(extensionId); });
+    await expect(host[WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL]!(JSON.stringify(extensionFixture))).resolves.toEqual({ id: extensionFixture.extensionId });
+    await expect(host[WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL]!(extensionFixture.extensionId)).resolves.toBeUndefined();
+    expect(retired).toEqual([extensionFixture.extensionId]);
+  });
+
+  it("retires a mounted actor when manifest admission rejects its identity", async () => {
+    const host: {
+      [WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL]?: (value: string) => Promise<unknown>;
+      [WGPU_DYNAMIC_EXTENSION_RETIRE_GLOBAL]?: (value: string) => Promise<void>;
+    } = {};
+    const retired: string[] = [];
+    installWgpuDynamicExtensionDoor(host, async () => ({ handle: {}, manifest: { pluginId: "substituted", version: extensionFixture.version } }), async (extensionId) => { retired.push(extensionId); });
+    await expect(host[WGPU_DYNAMIC_EXTENSION_INSTALL_GLOBAL]!(JSON.stringify(extensionFixture))).rejects.toThrow(/extension-install\.identity/);
+    expect(retired).toEqual([extensionFixture.extensionId]);
   });
 });

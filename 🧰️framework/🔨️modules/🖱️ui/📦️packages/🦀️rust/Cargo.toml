@@ -87,7 +87,8 @@ serde_json = { version = "1.0.140", optional = true }
 # 🖋️ Text shaping/font-fallback (parley) + rasterization (swash) for the `text` region's glyph
 # atlas — versions match what `layout_rs` already resolves in the workspace lockfile (parley
 # pulls fontique 0.5.0 transitively; accessed here via `parley::fontique`, not a direct dep).
-parley = { version = "0.5.0", optional = true }
+# `no_std` + `libm` like `ui-render`: embedded font bytes only, no fontique path/mmap sources.
+parley = { version = "0.5.0", default-features = false, features = ["libm"], optional = true }
 swash = { version = "0.2.6", default-features = false, features = ["render", "std"], optional = true }
 bytemuck = { version = "1.24.0", features = ["derive"], optional = true }
 # ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): restored after an
@@ -102,6 +103,10 @@ taffy = { version = "0.9", default-features = false, features = ["std", "flexbox
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], optional = true }
+
+# 🐧️ winit's Linux backends are features; these load their system libraries at run time (no dev packages).
+[target.'cfg(target_os = "linux")'.dependencies]
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"], optional = true }
 
 [target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
 libc = { version = "0.2.186", optional = true }

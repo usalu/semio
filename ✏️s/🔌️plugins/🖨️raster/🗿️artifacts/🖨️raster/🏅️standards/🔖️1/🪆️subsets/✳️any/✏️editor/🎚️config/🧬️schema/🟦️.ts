@@ -20,6 +20,10 @@ export interface RasterConfig {
   brushSize: number;
   /** @state config */
   brushOpacity: number;
+  /** 🎨️ Session foreground in hexadecimal RGB. */
+  brushColor: string;
+  /** 🖌️ Solid fraction of the brush radius. */
+  brushHardness: number;
   /** @state config */
   compositeViewport?: RasterConfigViewportSize;
   /** @state config */
@@ -79,6 +83,8 @@ export function parseRasterConfig(value: unknown, at = "$"): RasterConfig {
   return {
     brushSize: rasterRasterConfigGuardNumber(row["brushSize"], `${at}.brushSize`),
     brushOpacity: rasterRasterConfigGuardNumber(row["brushOpacity"], `${at}.brushOpacity`),
+    brushColor: rasterRasterConfigGuardString(row["brushColor"], `${at}.brushColor`, {pattern:"^#[0-9a-fA-F]{6}$"}),
+    brushHardness: rasterRasterConfigGuardNumber(row["brushHardness"], `${at}.brushHardness`, {minimum:0,maximum:1}),
     compositeViewport: row["compositeViewport"] === undefined ? undefined : parseRasterConfigViewportSize(row["compositeViewport"], `${at}.compositeViewport`),
     camera: parseRasterCamera(row["camera"], `${at}.camera`),
   };

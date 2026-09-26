@@ -240,7 +240,7 @@ async fn fillet_translate_chain() {
 async fn manifest_lists_brep_operators() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let json = build_manifest_json("brep", "Brep", "0.3.0", &neural_engine::ColdOwner::new(module_registry().await), vec!["onStartup".into()], vec![], vec![], vec![]);
+    let json = build_manifest_json("brep", "Brep", env!("CARGO_PKG_VERSION"), &neural_engine::ColdOwner::new(module_registry().await), vec!["onStartup".into()], vec![], vec![], vec![]);
     assert!(json.contains("brep.prim3d.box"));
     assert!(json.contains("brep.curve.line"));
     assert!(json.contains("brep.solid.extrude"));
@@ -351,7 +351,7 @@ async fn extension_bundle_extends_flow_and_evaluates_box() {
     let flow_topic = flow_extension_sdk::flow_extension_topic_contribution("flow-play", "brep", "Brep", "brep", &manifest_json);
     let procedural3d_topic = flow_extension_sdk::flow_extension_topic_contribution("procedural3d-play", "brep", "Brep", "brep", &manifest_json);
     let evaluation_registry = neural_engine::ColdOwner::new(module_registry().await);
-    let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0")
+    let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", env!("CARGO_PKG_VERSION"))
         .extends("flow")
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)

@@ -61,7 +61,7 @@
       "executable_registration": true,
       "native_factory": {
         "factory_id": "stdio.native.jpg.v1",
-        "artifact_kind": "stdio.jpg",
+        "artifact_kind": "s.stdio.jpg",
         "artifact_schema": "stdio.jpg",
         "extension": "jpg",
         "pack_schema_hash": "f219d5263766b5f60120ccd63da80058f6a6082b8347e1e220181a686f7c60ad",

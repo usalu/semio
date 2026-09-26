@@ -60,7 +60,30 @@ pub struct Vdi3805PlayApp;
 impl ArtifactEditor for Vdi3805PlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source(), crate::examples::nonconforming::source()]
+        vec![
+            crate::examples::demo::source(),
+            crate::examples::nonconforming::source(),
+            crate::examples::blatt_3::source(),
+            crate::examples::blatt_3_fail::source(),
+            crate::examples::blatt_4::source(),
+            crate::examples::blatt_4_fail::source(),
+            crate::examples::blatt_5::source(),
+            crate::examples::blatt_5_fail::source(),
+            crate::examples::blatt_6::source(),
+            crate::examples::blatt_6_fail::source(),
+            crate::examples::blatt_7::source(),
+            crate::examples::blatt_7_fail::source(),
+            crate::examples::blatt_8::source(),
+            crate::examples::blatt_8_fail::source(),
+            crate::examples::blatt_16::source(),
+            crate::examples::blatt_16_fail::source(),
+            crate::examples::blatt_19::source(),
+            crate::examples::blatt_19_fail::source(),
+            crate::examples::blatt_53::source(),
+            crate::examples::blatt_53_fail::source(),
+            crate::examples::blatt_60::source(),
+            crate::examples::blatt_60_fail::source(),
+        ]
     }
     type Snapshot = Vdi3805Snapshot;
     type Mutation = Vdi3805Mutation;

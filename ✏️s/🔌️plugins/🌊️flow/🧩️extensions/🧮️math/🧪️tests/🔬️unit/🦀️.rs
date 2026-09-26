@@ -51,7 +51,7 @@ async fn manifest_lists_math_operators_and_schemas() {
     let json = build_manifest_json(
         "math",
         "Math",
-        "0.2.0",
+        env!("CARGO_PKG_VERSION"),
         &neural_engine::ColdOwner::new(module_registry()),
         vec!["onStartup".into()],
         vec![],

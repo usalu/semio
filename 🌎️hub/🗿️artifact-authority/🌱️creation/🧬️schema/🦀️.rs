@@ -359,6 +359,16 @@ impl ArtifactCreationPreparedV1 {
 
 impl ArtifactCreationOperationV1 {
     /// 📖️ Validates a complete bounded history; neither an orphan completion nor a terminal retry opens a key.
+    ///
+    /// ⏱️ Order, not the calendar: a fact cannot be recorded before the checkpoint it
+    /// carries. A Prepared fact recorded past `intent.deadline_ms` used to be refused
+    /// here as "expired", which made the durable history enforce a third copy of the
+    /// absolute bound the live path no longer carries — and turned an honest 180 s
+    /// genesis on the biggest staged component into a permanent, unrecoverable refusal
+    /// (ticket 26/09/18 slice HC1, measured on hub 7681). Nothing is lost: this arm
+    /// only accepts Prepared on a key still in `Accepted`, and a key the recovery
+    /// sweep closed is already terminal, so a late preparation on an abandoned key is
+    /// refused by the transition itself.
     pub fn fold(facts: &[ArtifactCreationFactV1]) -> DirectoryResult<Self> {
         if facts.is_empty() || facts.len() > ARTIFACT_CREATION_FACTS_MAX {
             return Err(rejected("artifact creation fact count is invalid"));
@@ -382,15 +392,6 @@ impl ArtifactCreationOperationV1 {
                 (ArtifactCreationFactBodyV1::Accepted { .. }, _, 0) if fact.recorded_at_ms == intent.accepted_at_ms => {}
                 (ArtifactCreationFactBodyV1::Prepared { candidate }, SpaceArtifactCreationPhaseV1::Accepted, _) => {
                     candidate.validate(intent)?;
-                    // ⏱️ Order, not the calendar: a fact cannot be recorded before the checkpoint it
-                    // carries. A Prepared fact recorded past `intent.deadline_ms` used to be refused
-                    // here as "expired", which made the durable history enforce a third copy of the
-                    // absolute bound the live path no longer carries — and turned an honest 180 s
-                    // genesis on the biggest staged component into a permanent, unrecoverable refusal
-                    // (ticket 26/09/18 slice HC1, measured on hub 7681). Nothing is lost: this arm
-                    // only accepts Prepared on a key still in `Accepted`, and a key the recovery
-                    // sweep closed is already terminal, so a late preparation on an abandoned key is
-                    // refused by the transition itself.
                     if fact.recorded_at_ms < candidate.checkpoint.published_at_ms {
                         return Err(rejected("artifact creation preparation predates its checkpoint"));
                     }

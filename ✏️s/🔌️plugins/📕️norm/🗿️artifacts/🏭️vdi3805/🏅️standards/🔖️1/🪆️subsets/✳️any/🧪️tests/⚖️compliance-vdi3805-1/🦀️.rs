@@ -51,18 +51,18 @@ mod tests {
                     let has_struct_fail = report.failing().any(|c| c.id.contains("structure"));
                     assert_eq!(!has_struct_fail, pass, "{name} structure oracle={pass} rust_fail={}", has_struct_fail);
                     let _ = rust_struct_ok;
-                } else if id.starts_with("dn:") {
-                    let has = report.failing().any(|c| c.id.contains(".dn."));
-                    assert_eq!(!has, pass, "{name} dn");
-                } else if id.starts_with("kvs:") {
-                    let has = report.failing().any(|c| c.id.contains(".kvs."));
-                    assert_eq!(!has, pass, "{name} kvs");
-                } else if id.starts_with("pn:") {
-                    let has = report.failing().any(|c| c.id.contains(".pn."));
-                    assert_eq!(!has, pass, "{name} pn");
-                } else if id.starts_with("authority:") {
-                    let has = report.failing().any(|c| c.id.contains(".authority."));
-                    assert_eq!(!has, pass, "{name} authority");
+                } else if let Some(article) = id.strip_prefix("dn:") {
+                    let has = report.failing().any(|c| c.id.contains(".dn.") && c.id.contains(article));
+                    assert_eq!(!has, pass, "{name} dn:{article}");
+                } else if let Some(article) = id.strip_prefix("kvs:") {
+                    let has = report.failing().any(|c| c.id.contains(".kvs.") && c.id.contains(article));
+                    assert_eq!(!has, pass, "{name} kvs:{article}");
+                } else if let Some(article) = id.strip_prefix("pn:") {
+                    let has = report.failing().any(|c| c.id.contains(".pn.") && c.id.contains(article));
+                    assert_eq!(!has, pass, "{name} pn:{article}");
+                } else if let Some(article) = id.strip_prefix("authority:") {
+                    let has = report.failing().any(|c| c.id.contains(".authority.") && c.id.contains(article));
+                    assert_eq!(!has, pass, "{name} authority:{article}");
                 } else if id.starts_with("phi:") {
                     let has = report.failing().any(|c| c.id.contains(".phi."));
                     assert_eq!(!has, pass, "{name} phi");
@@ -86,14 +86,20 @@ mod tests {
                     assert_eq!(!has, pass, "{name} mandatory");
                 }
                 if let Some(okvs) = oc.get("kvs_m3_h").and_then(|v| v.as_f64()) {
-                    if let SheetAttributes::ValveHeating(a) = &doc.catalog.products[0].configuration.attributes {
-                        let kvs_h = a.kvs_m3_h();
-                        assert!((okvs - kvs_h).abs() <= 0.005 * kvs_h.max(1.0), "kvs numeric {okvs} vs {kvs_h}");
+                    let article = id.strip_prefix("kvs:").unwrap_or("");
+                    if let Some(product) = doc.catalog.products.iter().find(|p| p.id == article) {
+                        if let SheetAttributes::ValveHeating(a) = &product.configuration.attributes {
+                            let kvs_h = a.kvs_m3_h();
+                            assert!((okvs - kvs_h).abs() <= 0.005 * kvs_h.max(1.0), "{name} kvs numeric {okvs} vs {kvs_h} for {article}");
+                        }
                     }
                 }
                 if let Some(odn) = oc.get("dn").and_then(|v| v.as_i64()) {
-                    if let SheetAttributes::ValveHeating(a) = &doc.catalog.products[0].configuration.attributes {
-                        assert_eq!(odn as u16, a.dn);
+                    let article = id.strip_prefix("dn:").unwrap_or("");
+                    if let Some(product) = doc.catalog.products.iter().find(|p| p.id == article) {
+                        if let SheetAttributes::ValveHeating(a) = &product.configuration.attributes {
+                            assert_eq!(odn as u16, a.dn, "{name} dn numeric for {article}");
+                        }
                     }
                 }
                 if id == "structure" {
@@ -111,7 +117,7 @@ mod tests {
         let _ = std::fs::create_dir_all(&dir);
         let snap = dir.join("conforming.json");
         write_snapshot(&conforming_valve_dataset(), &snap);
-        let py = oracle_dir().join("validate_schema.py");
+        let py = oracle_dir().join("../../🔮️oracles/🧬️snapshot-schema/🐍️.py");
         let out = Command::new("python3").arg(&py).arg(snapshot_schema_path()).arg(&snap).output().expect("spawn validate_schema");
         assert!(out.status.success(), "validate_schema failed: {}\n{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
     }
@@ -166,17 +172,20 @@ mod tests {
                         }
                     }
                 } else if id.starts_with("cop:") {
-                    assert_eq!(!rust_fail(".domain.cop") && !rust_fail(".range.cop") && !rust_fail(".mandatory."), pass || true);
+                    let has = report.failing().any(|c| c.id.contains("cop"));
+                    assert_eq!(!has, pass, "blatt {sheet} cop oracle={pass}");
                     if let Some(v) = oc.get("cop").and_then(|x| x.as_f64()) {
-                        if let Some(c) = report.checks.iter().find(|c| c.id.contains("cop")) {
-                            assert!((c.computed.value - v).abs() <= 0.005 * v.max(1.0) || c.computed.value == 0.0, "COP ±0.5%");
+                        if let Some(c) = report.checks.iter().find(|c| c.id.contains("cop") && c.computed.value > 0.0) {
+                            assert!((c.computed.value - v).abs() <= 0.005 * v.max(1.0), "COP ±0.5% oracle={v} rust={}", c.computed.value);
                         }
                     }
-                } else if id.starts_with("kvs:") {
+                } else if let Some(article) = id.strip_prefix("kvs:") {
                     if let Some(okvs) = oc.get("kvs_m3_h").and_then(|v| v.as_f64()) {
-                        if let SheetAttributes::ValveHeating(a) = &doc.catalog.products[0].configuration.attributes {
-                            let kvs_h = a.kvs_m3_h();
-                            assert!((okvs - kvs_h).abs() <= 0.005 * kvs_h.max(1.0), "kvs ±0.5%");
+                        if let Some(product) = doc.catalog.products.iter().find(|p| p.id == article) {
+                            if let SheetAttributes::ValveHeating(a) = &product.configuration.attributes {
+                                let kvs_h = a.kvs_m3_h();
+                                assert!((okvs - kvs_h).abs() <= 0.005 * kvs_h.max(1.0), "blatt {sheet} kvs ±0.5% for {article}");
+                            }
                         }
                     }
                 } else if id.starts_with("mandatory:") {
@@ -191,7 +200,7 @@ mod tests {
     fn validate_schema_accepts_every_assessed_blatt_example() {
         let dir = std::env::temp_dir().join("vdi3805-schema-blatts");
         let _ = std::fs::create_dir_all(&dir);
-        let py = oracle_dir().join("validate_schema.py");
+        let py = oracle_dir().join("../../🔮️oracles/🧬️snapshot-schema/🐍️.py");
         for sheet in ASSESSED_BLATT_SHEETS {
             let snap = dir.join(format!("blatt-{sheet}.json"));
             write_snapshot(&conforming_blatt_dataset(*sheet), &snap);

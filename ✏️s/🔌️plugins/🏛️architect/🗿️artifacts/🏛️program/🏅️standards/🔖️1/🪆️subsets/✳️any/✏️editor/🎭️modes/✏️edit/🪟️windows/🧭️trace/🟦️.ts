@@ -1,11 +1,6 @@
-/** 🧭️ Architect editor — Trace window: typed twin of `🦀️.rs`'s view boundary. Mirrors
- * `render(program: &ProgramSnapshot) -> UiNode`'s signature — the document-wide audit trail. No
- * config parameter: unlike its four siblings this window reads only the program document, since the
- * audit feed has no per-session view state (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM
- * removed the selection-scoped trace chain/impact sections this window used to also carry). */
+/** 🧭️ Architect editor — Trace window: typed twin of `🦀️.rs`'s document-owned EventFeed boundary. */
 
-/** 🧭️ The Trace window's typed view-model — mirrors the Rust `render()` boundary's sole input: the
- * whole program document (read for its `audit_events`/`traces`; rendered as the last 12 events). */
+/** 🧭️ The Trace window reads the whole program audit trail; renderer hosts own temporal labels. */
 export interface ArchitectTraceViewModel {
   windowKindId: "architect-trace";
   bodyKey: "architect.trace";

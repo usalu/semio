@@ -20,7 +20,8 @@
           "strokeJson": null,
           "booleanOperation": "subtract",
           "traceParamsJson": null,
-          "layerJson": null
+          "layerJson": null,
+          "pathSegments": null
         }
       }
     ],

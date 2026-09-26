@@ -26,8 +26,9 @@ use serde::{Deserialize, Serialize};
 /// Rust encoder and `🚪️host-io/🟦️.ts`'s decoder cannot drift into two spellings.
 pub const DIRECTORY_DOOR_OP: &str = "directory-http";
 
-/// 📨️ One directory HTTP request handed to the page. `body` is text because every payload on the
-/// frozen hub surface is JSON — never opaque bytes — so the door needs no binary channel at all.
+/// 📨️ One directory HTTP request handed to the page. A request `body` is text because every payload the
+/// shell POSTs is JSON; a read that names its `accept` media type (the binary canonical checkpoint pair) is
+/// answered as base64 bytes (`bodyBase64`) instead of text.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DirectoryDoorRequestV1 {
@@ -38,6 +39,8 @@ pub struct DirectoryDoorRequestV1 {
     pub bearer: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accept: Option<String>,
 }
 
 /// 📬️ One answer the page hands back: either a real HTTP status/body pair or a transport refusal.
@@ -52,6 +55,8 @@ pub struct DirectoryDoorResponseV1 {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub body_base64: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub error: Option<String>,
 }
 
@@ -60,7 +65,6 @@ pub fn directory_door_method(method: HttpMethod) -> &'static str {
     match method {
         HttpMethod::Get => "GET",
         HttpMethod::Post => "POST",
-        HttpMethod::Delete => "DELETE",
     }
 }
 
@@ -71,7 +75,13 @@ pub fn encode_directory_door_request(method: HttpMethod, url: &str, bearer: Opti
         Some(bytes) => Some(String::from_utf8(bytes.to_vec()).map_err(|_| TransportError::Io("directory door body is not utf-8".into()))?),
         None => None,
     };
-    let request = DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.to_string(), method: directory_door_method(method).to_string(), url: url.to_string(), bearer: bearer.map(str::to_string), body };
+    let request = DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.to_string(), method: directory_door_method(method).to_string(), url: url.to_string(), bearer: bearer.map(str::to_string), body, accept: None };
+    serde_json::to_string(&request).map_err(|error| TransportError::Io(error.to_string()))
+}
+
+/// 🪢️ Seals one binary read for the door: a GET naming the exact media type it accepts, answered as base64 bytes.
+pub fn encode_directory_door_binary_request(url: &str, bearer: Option<&str>, accept: &str) -> Result<String, TransportError> {
+    let request = DirectoryDoorRequestV1 { op: DIRECTORY_DOOR_OP.to_string(), method: "GET".to_string(), url: url.to_string(), bearer: bearer.map(str::to_string), body: None, accept: Some(accept.to_string()) };
     serde_json::to_string(&request).map_err(|error| TransportError::Io(error.to_string()))
 }
 
@@ -82,7 +92,12 @@ pub fn decode_directory_door_response(answer: &str) -> Result<HttpResponse, Tran
         return Err(TransportError::Io(error));
     }
     let status = response.status.ok_or_else(|| TransportError::Io("directory door answer carries no status".into()))?;
-    Ok(HttpResponse { status, body: response.body.unwrap_or_default().into_bytes() })
+    let body = match (response.body, response.body_base64) {
+        (Some(_), Some(_)) => return Err(TransportError::Io("directory door answer carries both a text and a byte body".into())),
+        (None, Some(encoded)) => semio_framework_io_base64::base64_standard_decode(&encoded).map_err(|_| TransportError::Io("directory door byte body is not base64".into()))?,
+        (text, None) => text.unwrap_or_default().into_bytes(),
+    };
+    Ok(HttpResponse { status, body })
 }
 //#endregion 🔖️Wire
 
@@ -111,6 +126,17 @@ impl semio_framework_os_kernel::os_directory::client::DirectoryTransport for Bro
         }
         let request = encode_directory_door_request(method, url, bearer, body.as_deref())?;
         let answer = crate::shell::host_io_call(&request, None).await.map_err(TransportError::Io)?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(TransportError::Cancelled);
+        }
+        decode_directory_door_response(&answer)
+    }
+
+    async fn get_accepting(&self, ctx: &semio_framework_async::OperationContext, url: &str, bearer: Option<&str>, accept: &str) -> Result<HttpResponse, TransportError> {
+        if ctx.cancel.is_cancelled().await {
+            return Err(TransportError::Cancelled);
+        }
+        let answer = crate::shell::host_io_call(&encode_directory_door_binary_request(url, bearer, accept)?, None).await.map_err(TransportError::Io)?;
         if ctx.cancel.is_cancelled().await {
             return Err(TransportError::Cancelled);
         }

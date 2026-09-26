@@ -1,10 +1,15 @@
 {
   "schema": "semio.plugin-registry.rebuild-chain/v1",
   "steps": [
-    { "id": "describe", "stage": "descriptors", "command": ["nx", "run-many", "-t", "describe", "--exclude", "@semio-tech/os-plugin-describe-rs", "--parallel=1"] },
+    { "id": "provenance", "stage": "inputs", "command": ["nx", "run", "repo:cargo-provenance-check"] },
+    { "id": "mutation-authority", "stage": "inputs", "command": ["nx", "run", "@semio-tech/dsl-derive-rs:check-generated"] },
+    { "id": "components", "stage": "descriptors", "command": ["nx", "run-many", "-t", "describe", "materialize-dev", "--exclude", "@semio-tech/os-plugin-describe-rs", "--parallel=2"] },
     { "id": "generate", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:generate"] },
     { "id": "check", "stage": "registry", "command": ["nx", "run", "@semio-tech/plugin-registry:check"] },
     { "id": "activate-s", "stage": "guests", "command": ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-dev"] },
+    { "id": "verify-s", "stage": "guests", "command": ["nx", "run", "@semio-tech/plugin-registry:verify-staged", "--variant", "s"] },
+    { "id": "flow-core-bindings", "stage": "guests", "command": ["nx", "run", "semio-framework-os-flow-core:wasm"] },
+    { "id": "preflight-catalog", "stage": "catalog", "command": ["nx", "run", "os-hub:trusted-catalog-preflight", "--packages", "all"] },
     { "id": "publish-catalog", "stage": "catalog", "command": ["nx", "run", "os-hub:trusted-catalog-bootstrap", "--packages", "all"] }
   ]
 }

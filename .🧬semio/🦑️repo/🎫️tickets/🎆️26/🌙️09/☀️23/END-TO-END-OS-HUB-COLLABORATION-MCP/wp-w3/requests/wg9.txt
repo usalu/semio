@@ -1,0 +1,3 @@
+# WG9 guest-linked crates whose code changed (session 13) — crate + reason
+semio-framework-os-kernel  WG9 item 1 (19:13): DocumentLinkShortage retry never scheduled past the bound (`retry_at`/`ceiling_at`), only a failed attempt at the bound or the ceiling tick expires — a cut > ~31.5 s no longer expires a link whose hub is back. Target-neutral region; every guest links the kernel.
+semio-framework-os-kernel  WG9 item 2 (19:20): echo suppression by operation identity (`admit_remote_envelopes`/`note_authored_envelopes`, `applied_op_ids` on the native AND wasm32 document actors); a Commands frame is never discarded by its origin — late joiners see the hub document's existing history. Renderer (browser wgpu) wasm-release must be rebuilt from this tree.

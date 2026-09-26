@@ -23,5 +23,6 @@ Resume a cut agent with SendMessage to its id from the SAME coordinator session.
 | P8 | opus | a3dea972c32076739 | 📓️wp-p8.md |
 | F1 | opus | a08f8ae53121e1506 | 📓️wp-f1.md |
 | H10 | opus | aeeb37193ec299af7 | 📓️wp-h10.md |
+| DB1 | opus | a4aed68c6b113d197 | 📓️wp-db1.md |
 
 Parked: Z2 (after W2's `--packages all`), rename slice (after the final publish).

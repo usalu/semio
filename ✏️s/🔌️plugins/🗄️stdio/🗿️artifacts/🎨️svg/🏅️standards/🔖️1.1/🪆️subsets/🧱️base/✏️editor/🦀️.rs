@@ -82,6 +82,31 @@ impl ArtifactOwnedToolJobFactory for SvgAnyEditorExampleFactory {
     type Owner = EditorApp<SvgAnyEditor>;
     const TOOL_IDS: &'static [&'static str] = STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
+}
+//#region 🔖️Editor
+#[derive(Default, Clone, Copy)]
+pub struct SvgAnyEditor;
+
+impl ArtifactEditor for SvgAnyEditor {
+    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
+    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+        vec![crate::examples::demo::source()]
+    }
+    type Snapshot = SvgSnapshot;
+    type Mutation = SvgMutation;
+    type Config = NoConfig;
+    type ConfigMutation = NoConfigMutation;
+    type Draft = NoDraft;
+    type DraftMutation = NoDraftMutation;
+    type Presence = NoPresence;
+    type PresenceMutation = NoPresenceMutation;
+    type Transient = NoTransient;
+    type TransientMutation = NoTransientMutation;
+    type Command = SvgAnyEditCommand;
+
+    const DIALECT: Dialect = SVG_ANY_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<SvgAnyEditor>,
@@ -108,31 +133,6 @@ impl ArtifactOwnedToolJobFactory for SvgAnyEditorExampleFactory {
     }
     fn command_id(command: &Self::Command) -> &'static str { svgAnyEditor_command_id(command) }
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> { svgAnyEditor_command_from_action(action, args) }
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[STDIO_SVG_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
-}
-//#region 🔖️Editor
-#[derive(Default, Clone, Copy)]
-pub struct SvgAnyEditor;
-
-impl ArtifactEditor for SvgAnyEditor {
-    /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
-    }
-    type Snapshot = SvgSnapshot;
-    type Mutation = SvgMutation;
-    type Config = NoConfig;
-    type ConfigMutation = NoConfigMutation;
-    type Draft = NoDraft;
-    type DraftMutation = NoDraftMutation;
-    type Presence = NoPresence;
-    type PresenceMutation = NoPresenceMutation;
-    type Transient = NoTransient;
-    type TransientMutation = NoTransientMutation;
-    type Command = SvgAnyEditCommand;
-
-    const DIALECT: Dialect = SVG_ANY_DIALECT;
-    const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> Self::Snapshot {
         SvgSnapshot::default()
@@ -197,6 +197,7 @@ pub fn create_svg_any_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(SVG_ANY_DIALECT).document(["semio", "svg"]).icon_id("image").mode_def(edit::definition()).default_mode_id(edit::MODE_ID).window_kind_def(main::definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
+        .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
         .build_definition()
 }

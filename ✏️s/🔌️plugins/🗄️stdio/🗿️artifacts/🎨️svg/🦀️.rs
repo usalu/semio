@@ -70,7 +70,7 @@ pub const SVG_TINY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", st
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.svg".into(),
+        id: "s.stdio.svg".into(),
         name: "Svg".into(),
         source_format: STDIO_SVG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

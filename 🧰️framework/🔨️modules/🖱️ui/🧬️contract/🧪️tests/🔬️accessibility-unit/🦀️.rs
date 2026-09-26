@@ -46,6 +46,34 @@ fn every_component_implies_the_role_the_shared_fixture_declares() {
     eprintln!("[DEBUG] ui contract accessibility: {} role rows over all {} components", rows.len(), seen.len());
 }
 
+/// 🔀️ A retained Toggle keeps the semantic state channel of the React control selected by its
+/// appearance: the button publishes pressed, while the native checkbox publishes checked.
+#[test]
+fn every_toggle_appearance_projects_only_its_native_state_channel() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♿️retained-toggle-semantics/🔣️.json")).expect("🔀️ the retained-toggle fixture parses");
+    for (index, case) in fixture["cases"].as_array().expect("toggle cases").iter().enumerate() {
+        let expected = &case["expected"];
+        let record: crate::UiNodeRecord = serde_json::from_value(serde_json::json!({
+            "id": index,
+            "key": format!("#toggle-{index}"),
+            "component": case["component"],
+            "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+            "style": {},
+            "activity": "idle",
+            "accessibility": { "label": case["accessibleLabel"] }
+        }))
+        .unwrap_or_else(|error| panic!("{}: fixture record deserializes: {error}", case["id"].as_str().expect("case id")));
+        let node = accessibility_projection_node(&record, 0);
+        assert_eq!(node.role, expected["role"].as_str().expect("role"), "{}: role", node.key);
+        let state = expected["stateValue"].as_bool().expect("state value");
+        match expected["stateAttribute"].as_str().expect("state attribute") {
+            "aria-pressed" => assert_eq!((node.pressed, node.checked), (Some(state), None), "{}: button state", node.key),
+            "aria-checked" => assert_eq!((node.checked, node.pressed), (Some(state), None), "{}: checkbox state", node.key),
+            attribute => panic!("unexpected state attribute {attribute}"),
+        }
+    }
+}
+
 /// ♿️ The per-node projection of a real published snapshot, field for field.
 #[test]
 fn every_published_record_projects_the_way_the_shared_fixture_declares() {

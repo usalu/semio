@@ -240,7 +240,7 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     let t_ext = document.climate_zone.design_external_temperature_c();
 
     for zone in &document.zones {
-        report.push(part_2::check_summer_heat(zone, document.climate_zone, &document.elements));
+        report.push(part_2::check_summer_heat(zone, document.climate_zone, &document.elements, &document.usage));
         report.push(part_2::check_zone_transmission_loss(zone, &document.elements, &document.usage, document.t_int_c));
     }
     if document.zones.is_empty() {
@@ -282,6 +282,7 @@ pub fn evaluate(document: &Din4108Snapshot) -> CheckReport {
     let opaque_area = opaque_envelope_area(&document.elements);
     for element in &document.elements {
         report.push(part_2::check_minimum_r(element, &document.usage, document.t_int_c));
+        report.push(part_2::check_surface_mass(element));
         report.push(part_2::check_f_rsi(element, document.t_int_c, t_ext));
         report.push(part_3::check_glaser(element, document.t_int_c, document.rh_int, document.climate_zone));
         report.push(part_6::check_u_value(element, &document.usage, document.t_int_c));

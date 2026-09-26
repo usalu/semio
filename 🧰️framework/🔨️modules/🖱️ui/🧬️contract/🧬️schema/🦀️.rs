@@ -855,8 +855,11 @@ export type TransitionHint = "introducing" | "celebrating";"####,
  * the old inline `control: Option<UiControlNode>` are now ordinary children on the record (the
  * `UiControlNode` enum does not get ported — every one of its old variants is already a
  * [`Component`] variant in its own right, so a control-as-child-node needs no separate wrapper
- * type). The row's primary click action (old `action: Option<ActionDescriptor>`) moved to the
- * record's `bindings` (`Trigger::Activate`).
+ * type). `inlineToolbar` identifies the one direct horizontal Toolbar child whose real Button
+ * children remain independently focusable and actionable inside the row. `detail` identifies one
+ * direct Surface child placed in a bounded band below the row. The row's primary click
+ * action (old `action: Option<ActionDescriptor>`) moved to the record's `bindings`
+ * (`Trigger::Activate`).
  */
 export type TreeItemProps = { label: Label, description: string | null, icon: string | null, defaultOpen: boolean | null, draggable: boolean | null, dragData: { [key in string]?: string } | null,
 /**
@@ -873,7 +876,18 @@ window: TreeWindow | null,
  * row is a pick target of the tree's `interaction_domain`, keyed by its own record key, so it
  * needs no argument map and no per-row binding of its own.
  */
-granularity: string | null, rowActions: Array<RowAction>, };"####,
+granularity: string | null,
+/**
+ * 🎛️ A direct `ContainerRole::Toolbar` child laid out horizontally inside this row. The
+ * document validator requires the target to be one of this record's direct children and every
+ * toolbar child to be a real `Component::Button`.
+ */
+inlineToolbar: UiNodeId | null,
+/**
+ * 🎞️ A direct Surface child placed in a bounded detail band below this row. It is neither an
+ * inline control nor a nested TreeItem, and remains a real independently hosted scene.
+ */
+detail: UiNodeId | null, rowActions: Array<RowAction>, };"####,
     },
     SchemaMetadata {
         name: "TreePresentation",
@@ -943,7 +957,7 @@ export type Trigger = "activate" | "change" | "commit" | "delta" | "drop" | "sub
  * ⚠️ One structural invariant a [`crate::UiSnapshot`] fails — every variant here is a whole-document
  * shape property, never a per-patch wire quota (those are [`PatchRejection::QuotaExceeded`]).
  */
-export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, };"####,
+export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, };"####,
     },
     SchemaMetadata {
         name: "UiDocumentLimits",

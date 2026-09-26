@@ -1,6 +1,7 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
-import { chmodSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { protectOwnerOnly } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, writeLocalFrame } from "../📡️framing/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
 import type { LocalHubRun } from "../🏃️execution/🟦️.ts";
@@ -179,7 +180,7 @@ export function startLocalSessionBroker(run: LocalHubRun, dataDir: string, profi
   const record = parseLocalSessionBrokerRecordV1({ schema: LOCAL_SESSION_BROKER_SCHEMA, hubOrigin, runId: run.runId, port: server.port, secret, profiles: profileIds });
   const path = join(dataDir, LOCAL_SESSION_BROKER_FILE);
   writeFileSync(path, `${JSON.stringify(record)}\n`, { mode: 0o600 });
-  chmodSync(path, 0o600);
+  protectOwnerOnly(path, "file");
   return Object.freeze({
     record,
     stop: () => {

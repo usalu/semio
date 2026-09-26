@@ -7,5 +7,6 @@
   "strictMode": null,
   "index": null,
   "geometry": null,
-  "curves": null
+  "curves": null,
+  "limits": null
 }

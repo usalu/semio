@@ -329,9 +329,9 @@ async fn raster_labels_resolve_native_english_by_default() {
     assert!(catalogue_json.contains("raster-catalogue.group"));
     assert!(catalogue_json.contains("raster-catalogue.adjustment"));
     let properties_json = render(&mut app, inspection::RASTER_PLAY_BODY_PROPERTIES).await;
-    assert!(properties_json.contains("raster-play-inspector.schema"));
-    assert!(properties_json.contains(RASTER_DOCUMENT_SCHEMA));
-    assert!(properties_json.contains("raster-play-inspector.brush"));
+    assert!(properties_json.contains("raster-inspector.foreground.input"));
+    assert!(properties_json.contains("Foreground"));
+    assert!(properties_json.contains("setBrushColor"));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -388,7 +388,7 @@ async fn composite_scene_syncs_document_and_assets() {
 async fn raster_scene_projects_populated_owned_maps_without_wholesale_serialization() {
     let document = crate::standards::v1::subsets::any::schema::semio_example_document();
     assert!(!document.assets.is_empty(), "the regression needs a populated asset pool");
-    let scene = raster_scene(&document, &crate::editor::raster::config::RasterConfig::default(), "brush", "composite");
+    let scene = raster_scene(&document, &crate::editor::raster::config::RasterConfig::default(), "brush", "composite", &[], None);
     let sync_value: Value = dsl::os_pack::json::parse(&scene.document_sync_json).expect("sync json");
     assert!(sync_value.get("assets").is_none(), "sync json must omit assets");
     assert_eq!(sync_value.get("id").and_then(Value::as_str), Some("semio-demo"));
@@ -502,8 +502,8 @@ async fn move_layer_into_group() {
         let pixel = projection.layers.iter().find(|layer| matches!(layer, RasterLayerNode::Pixel { .. })).unwrap();
         (crate::standards::v1::subsets::any::schema::layer_node_id(group).to_string(), crate::standards::v1::subsets::any::schema::layer_node_id(pixel).to_string())
     };
-    let target_row = format!("{RASTER_TREE_PREFIX}.group.{group_id}");
-    dispatch(&mut app, RasterCommand::MoveLayer(move_layer::MoveLayer { layer_id: pixel_id.clone(), target_row_id: target_row, drop_position: "after".into() })).await;
+    let target_row = group_id.clone();
+    dispatch(&mut app, RasterCommand::MoveLayer(move_layer::MoveLayer { layer_id: pixel_id.clone(), target_row_id: target_row, drop_position: "inside".into() })).await;
     let projection = app.snapshot().expect("snapshot");
     let RasterLayerNode::Group { children, .. } = projection.layers.iter().find(|layer| crate::standards::v1::subsets::any::schema::layer_node_id(layer) == group_id).unwrap() else {
         panic!("expected group");
@@ -668,10 +668,13 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::MoveLayer(move_layer::MoveLayer { layer_id: "l1".into(), target_row_id: "raster-play-layers".into(), drop_position: "after".into() }),
         RasterCommand::SetBrushSize(set_brush_size::SetBrushSize { value: 40.0 }),
         RasterCommand::SetBrushOpacity(set_brush_opacity::SetBrushOpacity { value: 0.5 }),
+        RasterCommand::SetBrushColor(set_brush_color::SetBrushColor { value: "#e07020".into() }),
+        RasterCommand::SetBrushHardness(set_brush_hardness::SetBrushHardness { value: 0.25 }),
         RasterCommand::SetCompositeViewport(set_composite_viewport::SetCompositeViewport { width: 640.0, height: 480.0 }),
         RasterCommand::SetCamera(set_camera::SetCamera { camera: crate::RasterCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
         RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
         RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() }),
+        RasterCommand::EditPixels(edit_pixels::EditPixels { layer_id: "l1".into(), expected_image_key: None, operation: "{\"kind\":\"invert\"}".into(), selection: None }),
     ]
 }
 
@@ -684,9 +687,9 @@ fn every_command() -> Vec<RasterCommand> {
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use std::collections::BTreeSet;
-    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 15);
-    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 15);
-    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 15);
+    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 18);
+    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 18);
+    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 18);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
@@ -696,7 +699,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 
     // 🛣️ Lane discipline, read off the handlers: ten document verbs publish into the artifact lane,
     // five session verbs into the config lane, and no route publishes into both.
-    let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample"].into_iter().collect();
+    let artifact_lane: BTreeSet<&str> = ["addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer", "setActiveExample", "editPixels"].into_iter().collect();
     for tool_id in RASTER_RETAINED_TOOL_IDS {
         let contract = RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
         let expected = if artifact_lane.contains(tool_id) { ArtifactToolPublicationLane::Artifact } else { ArtifactToolPublicationLane::Config };
@@ -754,7 +757,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_wire_keywords_are_unique_across_every_row() {
     let commands = every_command();
-    assert_eq!(commands.len(), 15, "every RasterCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 18, "every RasterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -781,10 +784,13 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
                 RasterCommand::MoveLayer(_) => "move-layer",
                 RasterCommand::SetBrushSize(_) => "brush-size",
                 RasterCommand::SetBrushOpacity(_) => "brush-opacity",
+                RasterCommand::SetBrushColor(_) => "brush-color",
+                RasterCommand::SetBrushHardness(_) => "brush-hardness",
                 RasterCommand::SetCompositeViewport(_) => "composite-viewport",
                 RasterCommand::SetCamera(_) => "camera",
                 RasterCommand::SetCameraZoom(_) => "camera-zoom",
                 RasterCommand::SetActiveExample(_) => "set-active-example",
+                RasterCommand::EditPixels(_) => "edit-pixels",
             };
             (keyword, command)
         })
@@ -962,6 +968,35 @@ fn packed_scene_text(json: &str) -> String {
     text
 }
 
+#[semio_framework_async_macros::async_test]
+async fn edit_pixels_retained_publication_survives_undo_and_redo() {
+    use crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot;
+    let mut app=context::app().await;
+    context::dispatch(&mut app,RasterCommand::AddLayer(add_layer::AddLayer {kind:"pixel".into()})).await;
+    let snapshot=app.snapshot().unwrap();
+    let id=crate::standards::v1::subsets::any::schema::layer_node_id(&snapshot.layers[0]).to_owned();
+    retire_raster_snapshot(snapshot);
+    for field in ["width","height"] {
+        context::dispatch(&mut app,RasterCommand::PatchLayer(patch_layer::PatchLayer {layer_id:id.clone(),field:field.into(),value:"2".into()})).await;
+    }
+    context::dispatch(&mut app,RasterCommand::EditPixels(edit_pixels::EditPixels {layer_id:id.clone(),expected_image_key:None,operation:"{\"kind\":\"fill\",\"color\":[12,34,56,255]}".into(),selection:None})).await;
+    let snapshot=app.snapshot().unwrap();
+    let crate::RasterLayerNode::Pixel {image_key:Some(key),..}=&snapshot.layers[0] else {panic!("pixel edit did not publish")};
+    let key=key.clone();
+    let encoded=crate::raster_asset(&snapshot.assets,&key).unwrap();
+    assert_eq!(semio_framework_pixels::decode_png(&encoded.data).unwrap().pixels,[12,34,56,255].repeat(4));
+    retire_raster_snapshot(snapshot);
+    context::history(&mut app,"undo").await;
+    let snapshot=app.snapshot().unwrap();
+    assert!(matches!(&snapshot.layers[0],crate::RasterLayerNode::Pixel {image_key:None,..}));
+    retire_raster_snapshot(snapshot);
+    context::history(&mut app,"redo").await;
+    let snapshot=app.snapshot().unwrap();
+    assert!(matches!(&snapshot.layers[0],crate::RasterLayerNode::Pixel {image_key:Some(value),..} if value==&key));
+    assert!(crate::raster_asset(&snapshot.assets,&key).is_some());
+    retire_raster_snapshot(snapshot);
+}
+
 /// 🚀️ The react shell's boot sequence: the store boots on the empty shell and the shell replays
 /// `setActiveExample demo`, which must plant the Semio-logo carrier (two root layers) through the
 /// retained route without any owned-map clone or un-retired drop (react boots of 2026-09-16).
@@ -984,7 +1019,7 @@ async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     // :6033, 2026-09-21 — `assetsJson` parsed as `{}`, zero textures uploaded). The scene's own
     // projection is read here because the published surface carries both JSON lanes out of band.
     let booted = app.snapshot().expect("snapshot");
-    let scene = raster_scene(&booted, &crate::editor::raster::config::RasterConfig::default(), "brush", "composite");
+    let scene = raster_scene(&booted, &crate::editor::raster::config::RasterConfig::default(), "brush", "composite", &[], None);
     let assets_json = scene.assets_json.clone();
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(booted);
     std::mem::forget(app);
@@ -1081,4 +1116,39 @@ async fn mounted_config_lane_publishes_viewport_and_camera() {
     let text = packed_scene_text(&render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await);
     assert!(text.contains("\"zoom\":2") || text.contains("zoom=2"), "the wheel camera must land in the config store and reach the composite scene: {text}");
     assert!(text.contains("1024"), "the boot viewport must land in the config store: {text}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn layer_tree_and_scene_keep_exact_domain_selection_ids() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🖱️selection/🔣️.json")).unwrap();
+    let selected: Vec<String> = serde_json::from_value(fixture["selectedIds"].clone()).unwrap();
+    let hovered = fixture["hoveredId"].as_str();
+    let mut document = empty_raster_document();
+    let layer: RasterLayerNode = dsl::json::from_json_str(&serde_json::json!({"kind":"pixel","id":selected[0],"name":fixture["name"],"mask":null,"width":32,"height":32,"imageKey":null}).to_string()).unwrap();
+    assert_eq!(layer_row_id(&layer), selected[0]);
+    document.layers.push(layer);
+    let scene = raster_scene(&document, &RasterConfig::default(), "paintBrush", "composite", &selected, hovered);
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.selection_json).unwrap(), fixture["selectedIds"]);
+    assert_eq!(scene.hovered_id.as_deref(), hovered);
+    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(document);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inspector_patch_values_preserve_numeric_names_and_typed_controls() {
+    let mut app = app().await;
+    dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
+    let snapshot = app.snapshot().unwrap();
+    let id = crate::standards::v1::subsets::any::schema::layer_node_id(&snapshot.layers[0]).to_string();
+    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(snapshot);
+    for (field, value) in [("name", serde_json::json!("123")), ("opacity", serde_json::json!(0.25)), ("visible", serde_json::json!(false))] {
+        let args = dsl::json::to_dsl_value(&dsl::json::parse(&serde_json::json!({"layerIds":[id],"field":field,"value":value}).to_string()).unwrap());
+        let command = <RasterPlayApp as ArtifactEditor>::command_from_action("patchLayers", Some(&args)).unwrap();
+        dispatch(&mut app, command).await;
+    }
+    let snapshot = app.snapshot().unwrap();
+    let layer = crate::standards::v1::subsets::any::schema::find_layer(&snapshot.layers, &id).unwrap();
+    assert_eq!(crate::standards::v1::subsets::any::schema::layer_name(layer), "123");
+    assert_eq!(crate::standards::v1::subsets::any::schema::layer_opacity(layer), 0.25);
+    assert!(!crate::standards::v1::subsets::any::schema::layer_visible(layer));
+    crate::standards::v1::subsets::any::schema::mutations::binary::unit_tests::retirement::retire_raster_snapshot(snapshot);
 }

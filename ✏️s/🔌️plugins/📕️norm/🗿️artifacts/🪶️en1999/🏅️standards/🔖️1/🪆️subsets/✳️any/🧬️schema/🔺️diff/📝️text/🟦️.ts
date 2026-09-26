@@ -1,4 +1,5 @@
 /** 📝️ Text representation for `norm.en1999.diff`. */
+import type { En1999Diff } from "../🟦️.ts";
 export type En1999DiffText = string;
 
 //#region 🚪️Parsers
@@ -17,8 +18,8 @@ type normEn1999DiffTextGuardTextBounds = { readonly minLength?: number; readonly
 type normEn1999DiffTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normEn1999DiffTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normEn1999DiffTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normEn1999DiffTextGuardReject(at, "value is not an object");
+export const normEn1999DiffTextGuardObject = (value: unknown, at: string): Readonly<En1999Diff> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as En1999Diff) : normEn1999DiffTextGuardReject(at, "value is not an object");
 export const normEn1999DiffTextGuardArray = (value: unknown, at: string, bounds: normEn1999DiffTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normEn1999DiffTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normEn1999DiffTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);

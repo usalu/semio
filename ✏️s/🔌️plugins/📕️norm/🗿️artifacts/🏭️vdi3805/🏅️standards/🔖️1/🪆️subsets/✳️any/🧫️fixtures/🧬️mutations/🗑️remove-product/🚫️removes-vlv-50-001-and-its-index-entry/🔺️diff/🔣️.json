@@ -3,16 +3,16 @@
   "manufacturerFile": null,
   "catalog": {
     "file": {
-      "header_version": "3805",
+      "headerVersion": "3805",
       "manufacturer": "DEMO",
-      "building_system_number": {
-        "system_code": "420",
+      "buildingSystemNumber": {
+        "systemCode": "420",
         "subsystem": "10",
         "sequence": 1
       },
       "created": "2023-06-01",
       "charset": "UTF-8",
-      "record_count": 2,
+      "recordCount": 2,
       "extensions": {
         "fields": {}
       }
@@ -29,5 +29,6 @@
     "entries": []
   },
   "geometry": null,
-  "curves": null
+  "curves": null,
+  "limits": null
 }

@@ -35,3 +35,22 @@ message DrawingArtboard {
   double width = 1;
   double height = 2;
 }
+
+// ✏️ Typed path geometry shared by editing and persistence.
+message PathPoint { double x = 1; double y = 2; }
+message PathMove { PathPoint to = 1; }
+message PathLine { PathPoint to = 1; }
+message PathQuad { PathPoint ctrl = 1; PathPoint to = 2; }
+message PathCubic { PathPoint ctrl1 = 1; PathPoint ctrl2 = 2; PathPoint to = 3; }
+message PathArc { double rx = 1; double ry = 2; double rotation = 3; bool large_arc = 4; bool sweep = 5; PathPoint to = 6; }
+message PathClose {}
+message PathSegment {
+  oneof segment {
+    PathMove move = 1;
+    PathLine line = 2;
+    PathQuad quad = 3;
+    PathCubic cubic = 4;
+    PathArc arc = 5;
+    PathClose close = 6;
+  }
+}

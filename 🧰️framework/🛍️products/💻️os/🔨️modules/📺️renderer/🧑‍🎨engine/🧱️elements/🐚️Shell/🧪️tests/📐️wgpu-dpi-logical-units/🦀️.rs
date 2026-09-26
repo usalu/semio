@@ -78,7 +78,7 @@ fn chrome_geometry(scale_factor: f32) -> ChromeGeometry {
     let mut draw = DrawList::default();
 
     let tab_bars = dock.stack_corner_tab_bar_rects(body, &theme, &mut atlas, &labels);
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     dock.register_resize_hits(&mut ctx, body);
     let resize_handles = input.staged_hits().iter().filter(|hit| hit.kind == HitKind::DockSplit).map(|hit| [hit.rect.x, hit.rect.y, hit.rect.w, hit.rect.h]).collect();
 

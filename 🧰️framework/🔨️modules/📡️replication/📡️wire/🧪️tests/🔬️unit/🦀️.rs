@@ -8,6 +8,8 @@ async fn sample_envelope(id: &str) -> crate::causal::MutationEnvelope {
         document_id: crate::ids::ArtifactId("document-1".to_string()),
         actor: crate::ids::ActorId("actor-1".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
         inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),

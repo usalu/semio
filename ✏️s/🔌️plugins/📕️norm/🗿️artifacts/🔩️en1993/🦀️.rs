@@ -219,6 +219,7 @@ pub struct FireExposure {
     pub protection_thickness: f64,
     pub section_factor: f64,
     pub mu0: f64,
+    pub design_temperature: f64,
     pub protection_conductivity: f64,
     pub protection_density: f64,
     pub protection_specific_heat: f64,

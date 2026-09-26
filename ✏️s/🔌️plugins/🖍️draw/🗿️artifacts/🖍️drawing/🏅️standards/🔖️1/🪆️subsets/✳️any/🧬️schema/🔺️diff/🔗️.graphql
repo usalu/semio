@@ -3,6 +3,7 @@
 # optional field — GraphQL already conflates "absent" with "explicit null". Nested types imported
 # from the artifact's own root schema so every facet of the drawing artifact agrees on the same
 # `DrawingLayerNode`/`DrawingImageAsset`/`DrawingArtboard`/`DrawingArtifact`.
+# import PathSegment from "../🔗️.graphql"
 # import DrawingArtifact from "../🔗️.graphql"
 # import DrawingLayerNode from "../🔗️.graphql"
 # import DrawingImageAsset from "../🔗️.graphql"
@@ -71,4 +72,5 @@ type DrawingLayerPatch {
   booleanOperation: String
   traceParamsJson: String
   layerJson: String
+  pathSegments: [PathSegment!]
 }

@@ -1,0 +1,7 @@
+{
+  "ChangeConnectionActionKind": {
+    "actionId": "g",
+    "connectionId": "conn-C1",
+    "newValue": "imposed"
+  }
+}

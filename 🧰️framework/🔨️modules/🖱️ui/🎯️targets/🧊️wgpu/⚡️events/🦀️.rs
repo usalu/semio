@@ -2402,7 +2402,7 @@ impl EventRouter {
         if let Some(node) = tree.node_mut(id) {
             node.state.highlighted = index;
             if let (Some(index), Some(popup)) = (index, node.state.select_popup) {
-                node.state.scroll_offset.1 = select::select_revealed_scroll(popup, index, &crate::wgpu::theme::Theme::default());
+                node.state.scroll_offset.1 = select::select_revealed_scroll(popup, index);
             }
         }
         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);

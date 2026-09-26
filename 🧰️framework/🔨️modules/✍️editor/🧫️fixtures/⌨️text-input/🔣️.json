@@ -11,6 +11,29 @@
       "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx — reconcileTextEditorEchoV1 (the `echoes`)"
     ]
   },
+  "hostLifecycle": {
+    "surfaceId": "shared-editor-document",
+    "text": "alpha",
+    "closingWindow": "text-editor-close-a",
+    "siblingWindow": "text-editor-close-b",
+    "expect": {
+      "closedHosts": 1,
+      "survivingHosts": 1,
+      "siblingText": "alpha",
+      "successorText": "fresh"
+    }
+  },
+  "rendererKeys": [
+    { "id": "shift-left-selects-one-character", "text": "abc", "selection": [2, 2], "key": "ArrowLeft", "shift": true, "operation": "moveLeft", "argument": true, "expect": { "text": "abc", "selection": [2, 1] } },
+    { "id": "down-preserves-column", "text": "abcd\nxyz", "selection": [2, 2], "key": "ArrowDown", "operation": "moveDown", "argument": false, "expect": { "text": "abcd\nxyz", "selection": [7, 7] } },
+    { "id": "shift-home-selects-to-line-start", "text": "ab\ncde", "selection": [5, 5], "key": "Home", "shift": true, "operation": "moveLineStart", "argument": true, "expect": { "text": "ab\ncde", "selection": [5, 3] } },
+    { "id": "shift-end-selects-to-line-end", "text": "ab\ncde", "selection": [4, 4], "key": "End", "shift": true, "operation": "moveLineEnd", "argument": true, "expect": { "text": "ab\ncde", "selection": [4, 6] } },
+    { "id": "tab-inserts-configured-spaces", "text": "ab", "selection": [1, 1], "key": "Tab", "tabSize": 2, "operation": "insertText", "argument": "  ", "expect": { "text": "a  b", "selection": [3, 3] } },
+    { "id": "enter-at-a-newline-gate", "text": "ab", "selection": [1, 1], "key": "Enter", "newlineGates": [1], "operation": "insertText", "argument": "\n", "expect": { "text": "a\nb", "selection": [2, 2] } },
+    { "id": "enter-outside-newline-gates-is-consumed", "text": "ab", "selection": [1, 1], "key": "Enter", "newlineGates": [2], "operation": null, "expect": { "text": "ab", "selection": [1, 1] } },
+    { "id": "space-is-a-printable-key", "text": "ab", "selection": [1, 1], "key": " ", "operation": "insertText", "argument": " ", "expect": { "text": "a b", "selection": [2, 2] } },
+    { "id": "alt-chord-is-not-text", "text": "ab", "selection": [1, 1], "key": "x", "alt": true, "operation": null, "expect": { "text": "ab", "selection": [1, 1] } }
+  ],
   "sequences": [
     {
       "id": "a-word-typed-after-a-token-gets-no-implied-space",

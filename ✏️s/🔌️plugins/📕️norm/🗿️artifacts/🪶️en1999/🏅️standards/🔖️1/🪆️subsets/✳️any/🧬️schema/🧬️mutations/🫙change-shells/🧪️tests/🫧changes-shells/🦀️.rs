@@ -20,8 +20,19 @@ fn sample_mutation(base: &En1999Snapshot) -> En1999Mutation {
             radius: 0.6,
             thickness: 0.005,
             length: 2.0,
-            sigma_x_ed: 50e6,
-            sigma_theta_ed: 30e6,
+            actions: vec![crate::snapshot::MemberAction {
+                id: "G".into(),
+                kind: "permanent".into(),
+                category: "self".into(),
+                source: "external".into(),
+                g_k_line: 0.0,
+                q_k_line: 0.0,
+                n_k: 50e6,
+                v_y_k: 0.0,
+                v_z_k: 0.0,
+                m_y_k: 30e6,
+                m_z_k: 0.0,
+            }],
         });
     En1999Mutation::ChangeShells(
         crate::mutations::change_shells::ChangeShells { shells: changed }

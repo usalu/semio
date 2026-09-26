@@ -1,0 +1,9 @@
+{
+  "schema": "semio.hub.vigilant-concurrent-edit/v1",
+  "description": "Two authors (two sessions, two socket actors) write the same part (`target: [\"text\"]`) of one opaque document over the hub's document sockets. No write carries a dependency: each names only the operation of the other author it had `observed`. Alice writes `base`, Bob writes `first` having observed `base`, then Alice writes `second` — having observed `first` or not. A write that had not observed the other author's latest write to the same part is concurrent with it: `vigilant` refuses it with the typed `mutation.clamped` warning (the Shell localizes it: `🛠️ShellHelpers/🧫️fixtures/⚔️hub-command-rejection`), `normal` accepts it and carries the warning. The database's grading rule: `🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧫️fixtures/⚔️concurrent-write`.",
+  "rows": [
+    { "name": "vigilant refuses the write authored without observing the other author's latest", "policy": "vigilant", "secondObserves": null, "second": "refused", "code": "mutation.clamped", "level": "warning" },
+    { "name": "vigilant accepts the write that observed the other author's latest", "policy": "vigilant", "secondObserves": "first", "second": "accepted", "code": null, "level": null },
+    { "name": "normal accepts the concurrent write and reports it", "policy": "normal", "secondObserves": null, "second": "accepted", "code": "mutation.clamped", "level": "warning" }
+  ]
+}

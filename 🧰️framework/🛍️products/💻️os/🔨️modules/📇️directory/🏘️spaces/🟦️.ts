@@ -5,7 +5,7 @@
  * write), and invite redemption leaves as the hub's own `POST /directory/invites/{token}/redeem`
  * path. Sorting and filtering are locale-independent so the two renderers agree byte for byte. */
 
-import type { DirectoryCommand, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, MemberSpaceViewV1, PublicSpaceViewV1 } from "../🧬️schema/🟦️.ts";
+import type { DirectoryCommand, DirectoryEvent, DirectorySpaceKind, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, MemberSpaceViewV1, PublicSpaceViewV1 } from "../🧬️schema/🟦️.ts";
 
 //#region 🔖️Routes
 export const DIRECTORY_COMMANDS_PATH_V1 = "/directory/commands";
@@ -71,10 +71,84 @@ function spaceRow(entry: DirectorySpaceListEntryV1): SpaceRowV1 {
  * public), each group most-recently-updated first, ties broken by id. Deterministic and
  * locale-independent — `localeCompare` would make two devices disagree on order. */
 export function spaceRowsV1(entries: readonly DirectorySpaceListEntryV1[]): readonly SpaceRowV1[] {
-  return entries
-    .map(spaceRow)
-    .slice()
-    .sort((left, right) => ACCESS_ORDER[left.access] - ACCESS_ORDER[right.access] || right.updatedAtMs - left.updatedAtMs || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+  return sortSpaceRows(entries.map(spaceRow));
+}
+
+function sortSpaceRows(rows: SpaceRowV1[]): readonly SpaceRowV1[] {
+  return rows.sort((left, right) => ACCESS_ORDER[left.access] - ACCESS_ORDER[right.access] || right.updatedAtMs - left.updatedAtMs || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0));
+}
+
+/** 🧾️ Read-your-writes for the space list: folds the directory events of one command receipt (in receipt order) into
+ * the caller's rows, so a space the caller just created, renamed, archived, joined, left or deleted shows at once,
+ * whatever the list query answers (it lags, fails or times out on a loaded hub). Only what an event states exactly is
+ * applied — a membership change of another user on a listed space keeps its member count until the next list, which
+ * replaces the rows wholesale. Mirrors the directory read-model fold (`📇️directory/🟦️.ts` `fold`), projected onto the
+ * caller: a space enters the rows with the caller's own membership, a role picks the access (`author` → `author`,
+ * `spectator` → `member`), a public space the caller leaves stays listed as `public`. The Rust twin is
+ * `space_rows_after_events` in `🏘️SpaceBrowser/🎯️targets/🧊️wgpu`; both are held to `🏘️spaces/🔣️.json` `receiptFolds`. */
+export function spaceRowsAfterEventsV1(rows: readonly SpaceRowV1[], events: readonly DirectoryEvent[], userId: string): readonly SpaceRowV1[] {
+  const next = rows.map((row) => ({ ...row }));
+  const created = new Map<string, { name: string; kind: DirectorySpaceKind; visibility: DirectorySpaceVisibility; members: Set<string> }>();
+  const at = (spaceId: string): number => next.findIndex((row) => row.id === spaceId);
+  const touch = (spaceId: string, recordedAtMs: number, change: (row: SpaceRowV1) => SpaceRowV1): void => {
+    const index = at(spaceId);
+    if (index >= 0) next[index] = { ...change(next[index]!), updatedAtMs: recordedAtMs };
+  };
+  const join = (spaceId: string, member: string, role: DirectorySpaceRole, recordedAtMs: number, redeemed: boolean): void => {
+    const fresh = created.get(spaceId);
+    fresh?.members.add(member);
+    const access: SpaceAccessV1 = role === "author" ? "author" : "member";
+    if (member === userId && at(spaceId) < 0 && fresh !== undefined) {
+      next.push({ id: spaceId, name: fresh.name, kind: fresh.kind, visibility: fresh.visibility, access, role, memberCount: fresh.members.size, documentCount: 0, activeConnections: 0, updatedAtMs: recordedAtMs });
+      return;
+    }
+    touch(spaceId, recordedAtMs, (row) => ({
+      ...row,
+      ...(member === userId ? { access, role } : {}),
+      memberCount: fresh !== undefined ? fresh.members.size : (member === userId && row.access === "public") || (member !== userId && redeemed) ? row.memberCount + 1 : row.memberCount,
+    }));
+  };
+  for (const event of events) {
+    const body = event.body;
+    switch (body.kind) {
+      case "space.created":
+        if (body.ownerUserId === userId) created.set(body.spaceId, { name: body.name, kind: body.spaceKind, visibility: body.visibility, members: new Set() });
+        break;
+      case "space.renamed":
+        touch(body.spaceId, event.recordedAtMs, (row) => ({ ...row, name: body.name }));
+        break;
+      case "space.visibility-changed":
+        touch(body.spaceId, event.recordedAtMs, (row) => ({ ...row, visibility: body.visibility }));
+        break;
+      case "space.archived":
+        touch(body.spaceId, event.recordedAtMs, (row) => ({ ...row, kind: "archive", ...(row.role === "author" ? { role: "spectator" as const, access: "member" as const } : {}) }));
+        break;
+      case "space.deleted":
+        if (at(body.spaceId) >= 0) next.splice(at(body.spaceId), 1);
+        break;
+      case "member.upserted":
+        join(body.spaceId, body.userId, body.role, event.recordedAtMs, false);
+        break;
+      case "invite.redeemed":
+        join(body.spaceId, body.userId, body.role, event.recordedAtMs, true);
+        break;
+      case "member.removed": {
+        created.get(body.spaceId)?.members.delete(body.userId);
+        const index = at(body.spaceId);
+        if (index < 0) break;
+        const row = next[index]!;
+        if (body.userId === userId && row.visibility !== "public") next.splice(index, 1);
+        else next[index] = { ...row, ...(body.userId === userId ? { access: "public" as const, role: null, activeConnections: 0 } : {}), memberCount: Math.max(0, row.memberCount - 1), updatedAtMs: event.recordedAtMs };
+        break;
+      }
+      case "document.announced":
+        touch(body.descriptor.spaceId, event.recordedAtMs, (row) => ({ ...row, documentCount: row.documentCount + 1 }));
+        break;
+      default:
+        break;
+    }
+  }
+  return sortSpaceRows(next);
 }
 
 /** 🔎️ Case-insensitive substring filter over name and id. An empty query keeps every row. */
@@ -107,10 +181,7 @@ export interface SpaceMemberPresenceV1 {
 /** 👥️ Joins the member roster with the set of user ids the presence lane reports as connected.
  * Owners first, then authors, then spectators, each alphabetically by user id so the roster does not
  * reshuffle on every presence tick. */
-export function spaceMemberPresenceV1(
-  members: readonly Readonly<{ userId: string; displayName: string; email: string; role: DirectorySpaceRole; owner: boolean }>[],
-  onlineUserIds: readonly string[],
-): readonly SpaceMemberPresenceV1[] {
+export function spaceMemberPresenceV1(members: readonly Readonly<{ userId: string; displayName: string; email: string; role: DirectorySpaceRole; owner: boolean }>[], onlineUserIds: readonly string[]): readonly SpaceMemberPresenceV1[] {
   const online = new Set(onlineUserIds);
   return members
     .map((member) => ({ userId: member.userId, displayName: member.displayName.length > 0 ? member.displayName : member.email, role: member.role, owner: member.owner, online: online.has(member.userId) }))

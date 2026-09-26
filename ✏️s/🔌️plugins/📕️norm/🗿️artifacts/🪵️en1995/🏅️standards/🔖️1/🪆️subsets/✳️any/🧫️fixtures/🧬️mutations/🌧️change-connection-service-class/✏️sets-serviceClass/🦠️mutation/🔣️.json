@@ -1,0 +1,6 @@
+{
+  "ChangeConnectionServiceClass": {
+    "connectionId": "conn-C1",
+    "newValue": 2
+  }
+}

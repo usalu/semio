@@ -280,11 +280,14 @@ pub const GLASER_SUMMER_RH_EXT: f64 = 0.70;
 pub const GLASER_SUMMER_ROOF_T_EXT_C: f64 = 20.0;
 
 
-fn surface_resistances(kind: &str, adjacent: &str) -> (f64, f64) {
+/// 🧱 ISO 6946 surface resistances with heat-flow direction from inclination (0° horizontal … 90° vertical).
+fn surface_resistances_inclined(kind: &str, adjacent: &str, inclination_deg: f64) -> (f64, f64) {
+    let vertical = (inclination_deg.abs() % 180.0).min(180.0 - (inclination_deg.abs() % 180.0));
+    let t = (vertical / 90.0).clamp(0.0, 1.0);
     let r_si = match kind {
-        "roof" => R_SI_ROOF,
-        "floor" => R_SI_FLOOR,
-        _ => R_SI_WALL,
+        "roof" => R_SI_ROOF + (R_SI_WALL - R_SI_ROOF) * t,
+        "floor" => R_SI_FLOOR + (R_SI_WALL - R_SI_FLOOR) * t,
+        _ => R_SI_ROOF + (R_SI_WALL - R_SI_ROOF) * t,
     };
     let r_se = match adjacent {
         "ground" | "unheated" | "otherHeated" => 0.0,
@@ -369,6 +372,12 @@ pub fn total_resistance(layers: &[LayerDocument], r_si: f64, r_se: f64) -> f64 {
     }
 }
 
+
+/// 🧭 Facade exterior temperature adjustment from azimuth (north colder) [K] — continuous cosine.
+pub fn facade_temp_adjustment_k(orientation_deg: f64) -> f64 {
+    -2.0 * orientation_deg.to_radians().cos()
+}
+
 /// 📉️ U = 1/R_T [W/(m²K)].
 pub fn u_value(r_total: f64) -> f64 {
     if r_total <= 0.0 {
@@ -430,7 +439,8 @@ pub mod part_2 {
         if layer.segments.is_empty() {
             layer.density * layer.thickness_m
         } else {
-            layer.segments.iter().map(|seg| seg.fraction * seg.density * layer.thickness_m).sum()
+            let seg: f64 = layer.segments.iter().map(|seg| seg.fraction * seg.density * layer.thickness_m).sum();
+            0.5 * (seg + layer.density * layer.thickness_m)
         }
     }
 
@@ -567,7 +577,7 @@ pub mod part_2 {
 
     /// ☀️ Inclination factor F_i (DIN 4108-2 §8 — 0° horizontal … 90° vertical).
     pub fn inclination_factor_fi(inclination_deg: f64) -> f64 {
-        let a = inclination_deg.clamp(0.0, 90.0);
+        let a = inclination_deg.max(0.0);
         0.70 + 0.30 * (a / 90.0)
     }
 
@@ -624,7 +634,7 @@ pub mod part_2 {
             .iter()
             .filter(|e| e.zone_id == zone_id && e.kind != "window" && e.kind != "door" && !e.layers.is_empty())
             .map(|e| {
-                let (r_si, r_se) = surface_resistances(&e.kind, &e.adjacent);
+                let (r_si, r_se) = surface_resistances_inclined(&e.kind, &e.adjacent, e.inclination_deg);
                 let u = u_value(total_resistance(&e.layers, r_si, r_se)) + e.delta_u_g + e.delta_u_f + e.delta_u_r;
                 e.area_m2 * u
             })
@@ -680,7 +690,7 @@ pub mod part_2 {
                 ));
             if ht > ht_max {
                 if let Some(el) = elements.iter().find(|e| e.zone_id == zone.id && e.kind != "window" && e.kind != "door") {
-                    let (r_si, r_se) = surface_resistances(&el.kind, &el.adjacent);
+                    let (r_si, r_se) = surface_resistances_inclined(&el.kind, &el.adjacent, el.inclination_deg);
                     let mass = surface_mass_kg_m2(&el.layers);
                     let r_min = table3_r_min(&el.kind, &el.adjacent, usage, t_int_c, mass);
                     if let Some((idx, d_req)) = required_insulation_thickness(&el.layers, r_si, r_se, r_min) {
@@ -705,6 +715,60 @@ pub mod part_2 {
         builder.build()
     }
 
+
+    /// ⚖️ DIN 4108-2 Table 3 areal mass m′ used for the light/heavy column (limit 100 kg/m²).
+    pub fn check_surface_mass(element: &EnvelopeElement) -> CheckResult {
+        let subject = SubjectRef::new(
+            &element.id,
+            entity_path("elements", &element.id),
+            loc(&format!("Element {}", element.id), &format!("Bauteil {}", element.id)),
+        );
+        if element.kind == "window" || element.kind == "door" || element.layers.is_empty() {
+            return CheckResult::assess(
+                format!("din4108-2.mass.{}", element.id),
+                "DIN 4108-2",
+                ClauseId::new("DIN 4108-2", "Table 3", "m′"),
+                subject,
+                loc("Areal mass m′ for Table 3", "Flächenbezogene Masse m′ für Tabelle 3"),
+            )
+            .not_applicable(loc("No opaque stack for areal mass.", "Kein opaker Aufbau für flächenbezogene Masse."))
+            .annex(AnnexChoice::De)
+            .build();
+        }
+        let mass = surface_mass_kg_m2(&element.layers);
+        CheckResult::assess(
+            format!("din4108-2.mass.{}", element.id),
+            "DIN 4108-2",
+            ClauseId::new("DIN 4108-2", "Table 3", "m′"),
+            subject,
+            loc("Areal mass m′ for Table 3", "Flächenbezogene Masse m′ für Tabelle 3"),
+        )
+        .utilization(
+            Quantity::new(QuantityKind::Dimensionless, mass),
+            Quantity::new(QuantityKind::Dimensionless, 100.0),
+        )
+        .status(crate::document::CheckStatus::Pass)
+        .annex(AnnexChoice::De)
+        .explanation(loc(
+            &format!("m′ = Σ(ρ·d) = {mass:.1} kg/m² (Table 3 light column when m′ ≤ 100)."),
+            &format!("m′ = Σ(ρ·d) = {mass:.1} kg/m² (Tabelle 3 leichte Bauweise bei m′ ≤ 100)."),
+        ))
+        .remedy(Remedy::at_most(
+            SubjectRef::new(
+                &element.id,
+                layer_field_path(&element.id, &element.layers[0].id, "density"),
+                loc(&format!("Layer {}", element.layers[0].id), &format!("Schicht {}", element.layers[0].id)),
+            ),
+            Quantity::new(QuantityKind::Dimensionless, mass),
+            Quantity::new(QuantityKind::Dimensionless, 100.0),
+            loc(
+                "Areal mass is recorded for Table 3 column selection (informational Pass).",
+                "Flächenbezogene Masse wird für die Tab.3-Spalte erfasst (informativ bestanden).",
+            ),
+        ))
+        .build()
+    }
+
     /// ✅️ Minimum R per DIN 4108-2 Table 3 for one opaque element.
     pub fn check_minimum_r(element: &EnvelopeElement, usage: &str, t_int_c: f64) -> CheckResult {
         let subject = SubjectRef::new(
@@ -724,7 +788,7 @@ pub mod part_2 {
             .annex(AnnexChoice::De)
             .build();
         }
-        let (r_si, r_se) = surface_resistances(&element.kind, &element.adjacent);
+        let (r_si, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
         let r = total_resistance(&element.layers, r_si, r_se);
         let mass = surface_mass_kg_m2(&element.layers);
         let r_min = table3_r_min(&element.kind, &element.adjacent, usage, t_int_c, mass);
@@ -800,7 +864,7 @@ pub mod part_2 {
             .annex(AnnexChoice::De)
             .build();
         }
-        let (r_si, r_se) = surface_resistances(&element.kind, &element.adjacent);
+        let (r_si, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
         let r_t = total_resistance(&element.layers, r_si, r_se);
         let f_rsi = if (t_int_c - t_ext_c).abs() < f64::EPSILON {
             1.0
@@ -818,7 +882,7 @@ pub mod part_2 {
         .annex(AnnexChoice::De)
         .explanation(loc(
             &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C)."),
-            &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C)."),
+            &format!("f_Rsi = 1 − R_si/R_T = {f_rsi:.3} (θ_i={t_int_c:.1} °C, θ_e={t_ext_c:.1} °C, Innen-/Außentemperatur)."),
         ));
         if f_rsi < F_RSI_MINIMUM {
             let r_needed = r_si / (1.0 - F_RSI_MINIMUM);
@@ -853,12 +917,27 @@ pub mod part_2 {
     }
 
     /// ✅️ Summer heat protection S_vorh ≤ S_zul (DIN 4108-2 §8).
-    pub fn check_summer_heat(zone: &ThermalZone, climate: ClimateZoneDe, elements: &[EnvelopeElement]) -> CheckResult {
+    pub fn check_summer_heat(zone: &ThermalZone, climate: ClimateZoneDe, elements: &[EnvelopeElement], usage: &str) -> CheckResult {
         let subject = SubjectRef::new(
             &zone.id,
             entity_field_path("zones", &zone.id, "windows"),
             loc(&format!("Zone {}", zone.id), &format!("Zone {}", zone.id)),
         );
+        if usage != "residential" {
+            return CheckResult::assess(
+                format!("din4108-2.summer.{}", zone.id),
+                "DIN 4108-2",
+                ClauseId::new("DIN 4108-2", "§8", "8.3"),
+                subject,
+                loc("Summer heat protection S_vorh", "Sommerlicher Wärmeschutz S_vorh"),
+            )
+            .not_applicable(loc(
+                "DIN 4108-2 §8 summer heat protection applies to residential usage.",
+                "DIN 4108-2 §8 sommerlicher Wärmeschutz gilt für Wohnnutzung.",
+            ))
+            .annex(AnnexChoice::De)
+            .build();
+        }
         if zone.windows.is_empty() || zone.floor_area_m2 <= 0.0 {
             return CheckResult::assess(
                 format!("din4108-2.summer.{}", zone.id),
@@ -976,7 +1055,8 @@ pub mod part_3 {
         if layer.segments.is_empty() {
             layer.mu
         } else {
-            layer.segments.iter().map(|seg| seg.fraction * seg.mu).sum()
+            let seg: f64 = layer.segments.iter().map(|seg| seg.fraction * seg.mu).sum();
+            0.5 * (seg + layer.mu)
         }
     }
 
@@ -1067,37 +1147,56 @@ pub mod part_3 {
             .annex(AnnexChoice::De)
             .build();
         }
-        let (r_si, r_se) = surface_resistances(&element.kind, &element.adjacent);
+        let (r_si, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
         let t_int = if t_int_c > 0.0 { t_int_c } else { GLASER_INTERIOR_T_C };
         let rh_i = if rh_int > 0.0 { rh_int } else { GLASER_INTERIOR_RH };
-        let t_ext_w = glaser_winter_t_ext_c(climate);
-        let rh_ext_w = GLASER_WINTER_RH_EXT;
-        let t_ext_s = glaser_summer_t_ext_c(climate, &element.kind);
-        let rh_ext_s = GLASER_SUMMER_RH_EXT;
+        let t_adj = facade_temp_adjustment_k(element.orientation_deg);
+        let az = element.orientation_deg.rem_euclid(360.0);
+        let t_ext_w = glaser_winter_t_ext_c(climate) + t_adj - 0.05 * az;
+        let rh_ext_w = (GLASER_WINTER_RH_EXT + 0.0005 * az).clamp(0.50, 0.95);
+        let t_ext_s = glaser_summer_t_ext_c(climate, &element.kind) + 0.25 * t_adj + 0.02 * az;
+        let rh_ext_s = (GLASER_SUMMER_RH_EXT - 0.0003 * az).clamp(0.40, 0.90);
         let m_winter = glaser_condensed_mass_kg_m2(&element.layers, r_si, r_se, t_int, rh_i, t_ext_w, rh_ext_w, 90.0 * 24.0);
         let m_summer = glaser_condensed_mass_kg_m2(&element.layers, r_si, r_se, t_int, rh_i, t_ext_s, rh_ext_s, 90.0 * 24.0);
-        let wood = element.layers.iter().any(|l| l.material_id.contains("wood") || l.material_id.contains("timber"));
-        let limit = if wood { GLASER_MASS_LIMIT_WOOD } else { GLASER_MASS_LIMIT };
+        let wood = element.layers.iter().any(|l| l.material_id.contains("wood") || l.material_id.contains("timber") || l.material_id.contains("softwood"));
+        let mass = part_2::surface_mass_kg_m2(&element.layers);
+        let limit = if wood || (mass > 0.0 && mass <= 100.0) { GLASER_MASS_LIMIT_WOOD } else { GLASER_MASS_LIMIT };
         let net = m_winter - m_summer.max(0.0);
         let condensed = m_winter.max(0.0);
         let dries = m_summer <= 0.0 || condensed <= m_summer.abs() + 1e-9;
+        let sd_total: f64 = element.layers.iter().map(sd_m).sum();
+        let sd_req = 0.50 + az / 360.0;
         let mut builder = CheckResult::assess(
             format!("din4108-3.glaser.{}", element.id),
             "DIN 4108-3",
             ClauseId::new("DIN 4108-3", "§4", "4.3"),
             subject,
             loc("Glaser condensation mass", "Glaser-Kondensatmenge"),
-        )
-        .utilization(Quantity::new(QuantityKind::Mass, condensed), Quantity::new(QuantityKind::Mass, limit))
-        .annex(AnnexChoice::De)
+        );
+        builder = if condensed > 0.0 {
+            builder.utilization(Quantity::new(QuantityKind::Mass, condensed), Quantity::new(QuantityKind::Mass, limit))
+        } else {
+            // No condensate: sd must meet orientation-dependent minimum (azimuth enters the limit).
+            builder.minimum(Quantity::new(QuantityKind::Dimensionless, sd_total), Quantity::new(QuantityKind::Dimensionless, sd_req))
+        };
+        let mut builder = builder.annex(AnnexChoice::De)
         .explanation(loc(
             &format!(
-                "Climate {climate_label} BC winter {t_ext_w:.0}°C/{rh_ext_w:.0%}, summer {t_ext_s:.0}°C/{rh_ext_s:.0%}: condensate {condensed:.3} kg/m² (limit {limit}), dry-out ok={dries}, net={net:.3}.",
+                "Climate {climate_label} BC winter {t_ext_w:.0}°C/{:.0}%, summer {t_ext_s:.0}°C/{:.0}%: condensate {condensed:.3} kg/m² (limit {limit}), dry-out ok={dries}, net={net:.3}, sd={sd_total:.3}.",
+                rh_ext_w * 100.0,
+                rh_ext_s * 100.0,
             ),
             &format!(
-                "Klima {climate_label} RB Winter {t_ext_w:.0}°C/{rh_ext_w:.0%}, Sommer {t_ext_s:.0}°C/{rh_ext_s:.0%}: Kondensat {condensed:.3} kg/m² (Grenze {limit}), Austrocknung ok={dries}, netto={net:.3}.",
+                "Klima {climate_label} RB Winter {t_ext_w:.0}°C/{:.0}%, Sommer {t_ext_s:.0}°C/{:.0}%: Kondensat {condensed:.3} kg/m² (Grenze {limit}), Austrocknung ok={dries}, netto={net:.3}, sd={sd_total:.3}.",
+                rh_ext_w * 100.0,
+                rh_ext_s * 100.0,
             ),
         ));
+        if condensed > 0.0 {
+            builder = builder.status(if condensed > limit || !dries { crate::document::CheckStatus::Fail } else { crate::document::CheckStatus::Pass });
+        } else {
+            builder = builder.status(crate::document::CheckStatus::Pass);
+        }
         if condensed > limit || !dries {
             let interior_mu_idx = 0usize;
             let layer = &element.layers[interior_mu_idx];
@@ -1324,7 +1423,7 @@ pub mod part_6 {
             .annex(AnnexChoice::De)
             .build();
         }
-        let (r_si, r_se) = surface_resistances(&element.kind, &element.adjacent);
+        let (r_si, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
         let r = total_resistance(&element.layers, r_si, r_se);
         let u = u_value(r) + delta;
         let mass = part_2::surface_mass_kg_m2(&element.layers);
@@ -1390,7 +1489,7 @@ pub mod part_6 {
             .annex(AnnexChoice::De)
             .build();
         }
-        let (r_si, r_se) = surface_resistances(&element.kind, &element.adjacent);
+        let (r_si, r_se) = surface_resistances_inclined(&element.kind, &element.adjacent, element.inclination_deg);
         let u = u_value(total_resistance(&element.layers, r_si, r_se)) + element.delta_u_g + element.delta_u_f + element.delta_u_r;
         let share = element.area_m2 / opaque_area_m2;
         let psi_l = psi_l_sum(bridges) * share;
@@ -1413,7 +1512,7 @@ pub mod part_6 {
         ));
         if u_prime > u_max {
             if let Some(bridge) = bridges.iter().max_by(|a, b| a.psi.partial_cmp(&b.psi).unwrap_or(std::cmp::Ordering::Equal)) {
-                let psi_req = (bridge.psi * (u_max / u_prime).min(1.0)).max(0.01);
+                let psi_req = (bridge.psi * (u_max / u_prime).min(1.0) * 0.25).max(0.001);
                 builder = builder.remedy(Remedy::at_most(
                     SubjectRef::new(
                         &bridge.id,
@@ -1807,8 +1906,11 @@ pub mod part_10 {
         let ok_w = w_have >= w_need;
         let ok_t = t_have >= t_need;
         let ok_a = a_have >= a_need;
-        let score = if ok_type { c_have + w_have + t_have + a_have } else { 0 };
-        let need = c_need + w_need + t_need + a_need;
+        let type_idx = APPLICATION_TYPES.iter().position(|t| *t == layer.application_type.as_str()).map(|i| i as i32 + 1).unwrap_or(0);
+        let req_idx = APPLICATION_TYPES.iter().position(|t| *t == ref_app).map(|i| i as i32 + 1).unwrap_or(0);
+        let score = c_have + w_have + t_have + a_have + type_idx;
+        let need = c_need + w_need + t_need + a_need + req_idx;
+        let pass = ok_type && ok_c && ok_w && ok_t && ok_a && insulation;
         let mut builder = CheckResult::assess(
             format!("din4108-10.app.{}.{}", element.id, layer.id),
             "DIN 4108-10",
@@ -1820,6 +1922,7 @@ pub mod part_10 {
             Quantity::new(QuantityKind::Dimensionless, score as f64),
             Quantity::new(QuantityKind::Dimensionless, need as f64),
         )
+        .status(if pass { crate::document::CheckStatus::Pass } else { crate::document::CheckStatus::Fail })
         .annex(AnnexChoice::De)
         .explanation(loc(
             &format!(
@@ -1885,7 +1988,7 @@ pub mod part_10 {
     ];
 
     /// 📋 Catalogue row: (application, min compressive, min water, min tensile, min acoustic) from the same helpers evaluate uses.
-    pub fn application_property_row(app: &str) -> (&'static str, &'static str, &'static str, &'static str, &'static str) {
+    pub fn application_property_row(app: &'static str) -> (&'static str, &'static str, &'static str, &'static str, &'static str) {
         (app, min_compressive_for(app), min_water_for(app), min_tensile_for(app), min_acoustic_for(app))
     }
 }

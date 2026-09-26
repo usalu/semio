@@ -82,8 +82,9 @@ pub struct HeadedStuds {
 /// 📋 Characteristic action / load case under EN 1990 / EN 1991 (SI).
 ///
 /// Area intensity `q_area_pa` [Pa] is the single source of truth for distributed loads
-/// (line load = q_area × tributary width). Columns may carry externally analysed characteristic
-/// internals `m_k_nm` / `n_k_n`. Fatigue uses Δσ_k / Δτ_k or FLM3 when `kind=fatigue`.
+/// (line load = q_area × tributary width). When `q_area_pa ≈ 0`, optional point force `f_k_n`
+/// supplies the sole characteristic concentrated load (EN 1990 combination of effects).
+/// Fatigue uses Δσ_k / Δτ_k or FLM3 when `kind=fatigue`. Column N/M use [`ColumnAction`].
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -99,16 +100,31 @@ pub struct CharacteristicAction {
     /// Characteristic area load q_k [Pa = N/m²] (× member tributary width → line).
     #[dsl(unit = "Pa")]
     pub q_area_pa: f64,
-    /// Externally analysed characteristic bending moment [N·m] (columns / external analysis).
-    pub m_k_nm: f64,
+    /// Sole characteristic concentrated force [N] when `q_area_pa ≈ 0` (never both).
     #[dsl(unit = "N")]
-    pub v_k_n: f64,
-    #[dsl(unit = "N")]
-    pub n_k_n: f64,
+    pub f_k_n: f64,
     #[dsl(unit = "Pa")]
     pub delta_sigma_k_pa: f64,
     #[dsl(unit = "Pa")]
     pub delta_tau_k_pa: f64,
+}
+
+/// 🏛️ Column characteristic N/M from structural analysis (EN 1990 action effects, SI).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ColumnAction {
+    pub id: String,
+    /// permanent | imposed | snow | wind | construction
+    pub kind: String,
+    pub category: String,
+    /// construction | composite
+    pub stage: String,
+    #[dsl(unit = "N")]
+    pub n_k_n: f64,
+    /// Characteristic bending moment [N·m].
+    pub m_k_nm: f64,
 }
 
 /// 🧱 Composite beam subject under EN 1994-1-1 / EN 1994-2 (SI).
@@ -179,7 +195,7 @@ pub struct CompositeColumn {
     pub i_m4: f64,
     pub buckling_curve: String,
     #[dsl(table)]
-    pub actions: Vec<CharacteristicAction>,
+    pub actions: Vec<ColumnAction>,
 }
 
 /// 🧱 Composite slab with profiled sheeting under EN 1994-1-1 §9 (SI).
@@ -293,30 +309,36 @@ impl CharacteristicAction {
     pub fn permanent_area(id: &str, stage: &str, category: &str, q_area_pa: f64) -> Self {
         Self {
             id: id.into(), kind: "permanent".into(), category: category.into(), stage: stage.into(),
-            q_area_pa, m_k_nm: 0.0, v_k_n: 0.0, n_k_n: 0.0,
-            delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
+            q_area_pa, f_k_n: 0.0, delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
         }
     }
     pub fn imposed_area(id: &str, stage: &str, category: &str, q_area_pa: f64) -> Self {
         Self {
             id: id.into(), kind: "imposed".into(), category: category.into(), stage: stage.into(),
-            q_area_pa, m_k_nm: 0.0, v_k_n: 0.0, n_k_n: 0.0,
-            delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
+            q_area_pa, f_k_n: 0.0, delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
+        }
+    }
+    /// 📍 Sole characteristic concentrated force when area load is absent.
+    pub fn point_force(id: &str, stage: &str, kind: &str, category: &str, f_k_n: f64) -> Self {
+        Self {
+            id: id.into(), kind: kind.into(), category: category.into(), stage: stage.into(),
+            q_area_pa: 0.0, f_k_n, delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
         }
     }
     pub fn fatigue_flm3(id: &str) -> Self {
         Self {
             id: id.into(), kind: "fatigue".into(), category: "flm3".into(), stage: "composite".into(),
-            q_area_pa: 0.0, m_k_nm: 0.0, v_k_n: 0.0, n_k_n: 0.0,
-            delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
+            q_area_pa: 0.0, f_k_n: 0.0, delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
         }
     }
-    /// 🏛️ Column characteristic internals from structural analysis (EN 1990 action effects).
-    pub fn column_forces(id: &str, stage: &str, kind: &str, category: &str, n_k_n: f64, m_k_nm: f64) -> Self {
+}
+
+impl ColumnAction {
+    /// 🏛️ Column characteristic N_k / M_k from structural analysis.
+    pub fn forces(id: &str, stage: &str, kind: &str, category: &str, n_k_n: f64, m_k_nm: f64) -> Self {
         Self {
             id: id.into(), kind: kind.into(), category: category.into(), stage: stage.into(),
-            q_area_pa: 0.0, m_k_nm, v_k_n: 0.0, n_k_n,
-            delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
+            n_k_n, m_k_nm,
         }
     }
 }
@@ -331,8 +353,7 @@ fn default_beam_actions(steel_a_m2: f64, spacing_m: f64, slab_thickness_m: f64, 
         CharacteristicAction::permanent_area("G-wet", "construction", "wet_concrete", g_wet_area),
         CharacteristicAction {
             id: "Q-constr".into(), kind: "construction".into(), category: "construction_load".into(), stage: "construction".into(),
-            q_area_pa: 1.0e3, m_k_nm: 0.0, v_k_n: 0.0, n_k_n: 0.0,
-            delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
+            q_area_pa: 1.0e3, f_k_n: 0.0, delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
         },
         CharacteristicAction::permanent_area("G-steel-comp", "composite", "self_steel", g_steel_area),
         CharacteristicAction::permanent_area("G-slab", "composite", "slab", g_wet_area * 0.9),
@@ -367,8 +388,8 @@ impl CompositeColumn {
             steel_a_m2: 0.0084, steel_f_y_pa: 355e6, concrete_a_m2: 0.072, concrete_f_ck_pa: 30e6,
             reinforcement_as_m2: 0.0012, reinforcement_f_yk_pa: 500e6, i_m4: 2.1e-4, buckling_curve: "a".into(),
             actions: vec![
-                CharacteristicAction::column_forces("G-col", "composite", "permanent", "self", 1200e3, 20e3),
-                CharacteristicAction::column_forces("Q-col", "composite", "imposed", "B", 400e3, 15e3),
+                ColumnAction::forces("G-col", "composite", "permanent", "self", 1200e3, 20e3),
+                ColumnAction::forces("Q-col", "composite", "imposed", "B", 400e3, 15e3),
             ],
         }
     }

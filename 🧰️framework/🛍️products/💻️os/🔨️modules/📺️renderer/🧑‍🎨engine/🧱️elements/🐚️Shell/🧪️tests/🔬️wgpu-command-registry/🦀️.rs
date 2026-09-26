@@ -142,6 +142,10 @@ impl DirectoryTransport for DirectoryBootstrapFakeTransport {
         self.responses.lock().expect("fake directory responses").pop_front().ok_or_else(|| TransportError::Io("missing fake response".into()))
     }
 
+    async fn get_accepting(&self, _ctx: &OperationContext, _url: &str, _bearer: Option<&str>, _accept: &str) -> Result<semio_framework_os_kernel::os_directory::client::HttpResponse, TransportError> {
+        Err(TransportError::Io("binary reads are outside the page fixture".into()))
+    }
+
     fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<semio_framework_os_kernel::os_directory::client::HttpResponse, TransportError> {
         Err(TransportError::Io("socket grant is outside the page fixture".into()))
     }

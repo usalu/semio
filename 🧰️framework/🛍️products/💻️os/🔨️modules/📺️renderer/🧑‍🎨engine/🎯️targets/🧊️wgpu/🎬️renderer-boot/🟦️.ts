@@ -6,6 +6,7 @@ import { watchAgentBridgeOffer } from "../../../🧱️elements/🔗️AgentBrid
 import { ICON_NAMES, ICONS } from "@semio-tech/assets";
 import { loadPluginModule, pluginHandleForBridge } from "../🐚️plugin-bridge/🟦️.ts";
 import { installWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
+import { installWgpuDynamicExtensionDoor } from "../🧩️dynamic-extension/🟦️.ts";
 import { WGPU_PREFERS_DARK_MEDIA_QUERY, readWgpuHostStorageSnapshot, resolveWgpuBootDescriptor, resolveWgpuHostAppearance, resolveWgpuHostPlatform, type WgpuBootDefaults, type WgpuBootHub, type WgpuBootLocks } from "../🧭️boot-descriptor/🟦️.ts";
 
 /** 🧊️ The embeddable wgpu boot door. Field-for-field React's `FrameworkOsBootOptions`
@@ -150,6 +151,28 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   // through the Worker bridge — one `semioWgpuHostIo` binding, two installs, so neither io journey can
   // work on one variant and vanish on the other (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
   installWgpuPageHostIo();
+  const dynamicHandles: Awaited<ReturnType<typeof loadPluginModule>>[] = [];
+  const dynamicExtensions = new Map<string, Awaited<ReturnType<typeof loadPluginModule>>>();
+  installWgpuDynamicExtensionDoor(globalThis, async (record) => {
+    const previous = dynamicExtensions.get(record.extensionId);
+    dynamicExtensions.delete(record.extensionId);
+    if (previous) {
+      const index = dynamicHandles.indexOf(previous);
+      if (index >= 0) dynamicHandles.splice(index, 1);
+      await previous.dispose();
+    }
+    const module = await loadPluginModule(record.extensionId, record.moduleUrl);
+    dynamicHandles.push(module);
+    dynamicExtensions.set(record.extensionId, module);
+    return { handle: pluginHandleForBridge(module), manifest: module.manifest };
+  }, async (extensionId) => {
+    const module = dynamicExtensions.get(extensionId);
+    if (!module) return;
+    dynamicExtensions.delete(extensionId);
+    const index = dynamicHandles.indexOf(module);
+    if (index >= 0) dynamicHandles.splice(index, 1);
+    await module.dispose();
+  });
 
   const canvas = document.createElement("canvas");
   canvas.style.display = "block";
@@ -221,7 +244,7 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
     window.removeEventListener("storage", publishAppearance);
     window.removeEventListener("storage", publishHostStorage);
     root.replaceChildren();
-    const results = await Promise.allSettled(loadedHandles.map((handle) => handle.dispose()));
+    const results = await Promise.allSettled([...loadedHandles, ...dynamicHandles].map((handle) => handle.dispose()));
     const failures = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
     if (failures.length) throw new AggregateError(failures.map((result) => result.reason), "wgpu-renderer.retirement-failed");
   };

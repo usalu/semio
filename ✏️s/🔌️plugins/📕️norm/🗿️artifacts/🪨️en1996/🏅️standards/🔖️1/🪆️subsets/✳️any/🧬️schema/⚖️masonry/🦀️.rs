@@ -31,6 +31,7 @@ fn concentrated_path(wall: &MasonryWall, lc: &WallLoadCase, cid: &str, field: &s
     format!("walls[id={}].loadCases[id={}].concentrated[id={}].{field}", wall.id, lc.id, cid)
 }
 
+
 //#region ⚖️AnnexParams
 #[derive(Clone, Copy, Debug)]
 pub struct AnnexParams {
@@ -147,14 +148,16 @@ pub fn f_vk0_pa(mortar: MortarClass, material: UnitMaterial) -> f64 {
 }
 
 /// ✂️ f_vk with DE-NA upper limits (f_vk ≤ f_vlt from unit tensile / 0.045·f_b …).
+/// ✂️ DE-NA upper-limit ratio f_vlt / f_b for bed-joint shear (DIN EN 1996-1-1/NA).
+pub const F_VLT_OVER_FB_DE: f64 = 0.045;
+
 pub fn f_vk_pa(annex: AnnexChoice, mortar: MortarClass, material: UnitMaterial, sigma_d_pa: f64, f_b_pa: f64) -> f64 {
     let f_vk0 = f_vk0_pa(mortar, material);
     let raw = f_vk0 + 0.4 * sigma_d_pa.max(0.0);
     match annex {
         AnnexChoice::En => raw,
         AnnexChoice::De => {
-            // DIN EN 1996-1-1/NA: f_vk ≤ f_vlt with f_vlt ≈ 0.045·f_b (calibrated from f_bt,cal path).
-            let f_vlt = 0.045 * f_b_pa.max(0.0);
+            let f_vlt = F_VLT_OVER_FB_DE * f_b_pa.max(0.0);
             raw.min(f_vlt).min(f_vk0 + 0.4 * sigma_d_pa.max(0.0))
         }
     }
@@ -180,14 +183,16 @@ pub fn t_ef_m(wall: &MasonryWall) -> f64 {
 /// 🪟 Opening-aware length reduction for ρ_n (§5.5.1.4 — openings that pierce the wall height).
 pub fn effective_length_m(wall: &MasonryWall) -> f64 {
     let mut l = wall.length_m;
+    let h = wall.height_m.max(1e-6);
     for o in &wall.openings {
-        // Full-height pier openings (sill≈0 and height≈wall height) remove length.
-        let pier = o.sill_height_m <= 0.05 * wall.height_m && o.height_m >= 0.85 * wall.height_m;
+        let pier = o.sill_height_m <= 0.05 * h && o.height_m >= 0.85 * h;
         if pier {
             l -= o.width_m;
         } else {
-            // Partial openings: reduce by width × (height/H) fraction of stiffness.
-            l -= o.width_m * (o.height_m / wall.height_m.max(1e-6)).clamp(0.0, 1.0) * 0.5;
+            let open_frac = (o.height_m / h).clamp(0.0, 1.0);
+            let sill_frac = (o.sill_height_m / h).clamp(0.0, 1.0);
+            // Lower sill → longer pier-like interruption; sill shifts residual load path (§5.5.1.4).
+            l -= o.width_m * open_frac * (0.35 + 0.65 * (1.0 - sill_frac));
         }
     }
     l.max(0.1 * wall.length_m)
@@ -241,6 +246,8 @@ pub fn eccentricity_from_slab_bearing_m(wall: &MasonryWall) -> f64 {
 /// max(0; 1,6 − ℓ_f/6) for 4,5 m ≤ ℓ_f ≤ 6,0 m). Folded into e₀ / e_mk so span moves compression Φ.
 pub fn eccentricity_from_slab_rotation_m(wall: &MasonryWall, lc: &WallLoadCase, n_ed: f64) -> f64 {
     let l_f = lc.slab_span_m.clamp(0.0, 6.0);
+    // DIN EN 1996-1-1/NA NDP 6.1.2.2 / Annex C: e_θ = (N_floor/N_Ed)·ℓ_f/25, capped at 0,05·t so Φ_i
+    // stays realistic; span above 4,5 m is additionally reduced via Φ₁ (1,6 − ℓ_f/6).
     let e_full = l_f / 25.0;
     let n_floor = (lc.g_k_slab_n + lc.q_k_imposed_pa * lc.tributary_area_m2
         + lc.q_k_snow_pa * lc.tributary_area_m2)
@@ -250,7 +257,7 @@ pub fn eccentricity_from_slab_rotation_m(wall: &MasonryWall, lc: &WallLoadCase, 
     } else {
         1.0
     };
-    (e_full * share).min(0.4 * wall.thickness_m.max(1e-6))
+    (e_full * share).min(0.05 * wall.thickness_m.max(1e-6))
 }
 
 /// 📉 DE-NA Φ₁ span reduction (NDP 6.1.2.2 / NA Annex C): 1,6 − ℓ_f/6 on 4,5…6,0 m, else 1,0 below 4,5 m.
@@ -393,7 +400,8 @@ fn situation_from_str(s: &str) -> DesignSituation {
     }
 }
 
-fn psi0_imposed(category: &str) -> f64 {
+/// ⚖️ Combination factor ψ₀ for imposed floor categories (EN 1990 Table A1.1 / DE NA).
+pub fn psi0_imposed(category: &str) -> f64 {
     match category.trim().to_ascii_uppercase().chars().next().unwrap_or('A') {
         'A' | 'B' => 0.7, // residential/office DE NA
         'C' | 'D' => 0.7,
@@ -565,6 +573,196 @@ fn material_conformance_ok(wall: &MasonryWall) -> (bool, String, String) {
 //#endregion
 
 //#region ⚖️Evaluate
+fn push_duplicate_ids(
+    report: &mut CheckReport,
+    annex: AnnexChoice,
+    table: &str,
+    table_en: &str,
+    table_de: &str,
+    ids: &[String],
+    path_for: &dyn Fn(&str) -> String,
+) {
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for id in ids {
+        *counts.entry(id.clone()).or_insert(0) += 1;
+    }
+    for (id, count) in counts {
+        if count < 2 {
+            continue;
+        }
+        let path = path_for(&id);
+        let subject = SubjectRef::new(
+            id.clone(),
+            &path,
+            loc(
+                &format!("Duplicate {table_en} id"),
+                &format!("Doppelte {table_de}-Id"),
+            ),
+        );
+        let free = format!("{id}-2");
+        report.push(
+            CheckResult::assess(
+                format!("en1996.integrity.duplicate.{table}.{id}"),
+                "EN 1996 integrity",
+                clause("EN 1996-1-1", "§1", "1"),
+                subject.clone(),
+                loc(
+                    &format!("Unique {table_en} id"),
+                    &format!("Eindeutige {table_de}-Id"),
+                ),
+            )
+            .annex(annex)
+            .explanation(loc(
+                &format!("Duplicate {table_en} id '{id}' appears {count} times; each entity id must be unique within its parent."),
+                &format!("Doppelte {table_de}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss innerhalb des Elternknotens eindeutig sein."),
+            ))
+            .status(CheckStatus::Fail)
+            .remedy(Remedy::one_of(
+                subject,
+                vec![free.clone(), format!("{id}-unique")],
+                loc(
+                    &format!("Rename the duplicated '{id}' entry to a free id such as '{free}'."),
+                    &format!("Den doppelten '{id}'-Eintrag auf eine freie Id wie '{free}' umbenennen."),
+                ),
+            ))
+            .build(),
+        );
+    }
+}
+
+fn push_unknown_imposed_category(
+    report: &mut CheckReport,
+    annex: AnnexChoice,
+    wall: &MasonryWall,
+    lc: &WallLoadCase,
+) {
+    let raw = lc.imposed_category.trim();
+    let key = raw.to_ascii_uppercase().chars().next().unwrap_or(' ');
+    let known = ['A', 'B', 'C', 'D', 'E', 'H'];
+    if known.contains(&key) {
+        return;
+    }
+    let path = load_case_path(wall, lc, "imposedCategory");
+    let subject = SubjectRef::new(lc.id.clone(), &path, loc("Imposed category", "Nutzungskategorie"));
+    let options: Vec<String> = known.iter().map(|c| c.to_string()).collect();
+    report.push(
+        CheckResult::assess(
+            format!("en1996.integrity.imposedCategory.{}.{}", wall.id, lc.id),
+            "EN 1996 integrity",
+            clause("EN 1990", "A1.1", "Table A1.1"),
+            subject.clone(),
+            loc("Known imposed category", "Bekannte Nutzungskategorie"),
+        )
+        .annex(annex)
+        .explanation(loc(
+            &format!("Imposed category '{raw}' is not one of the tabulated floor categories A–E or H."),
+            &format!("Nutzungskategorie '{raw}' ist keine der tabellierten Decategorien A–E oder H."),
+        ))
+        .status(CheckStatus::Fail)
+        .remedy(Remedy::one_of(
+            subject,
+            options,
+            loc(
+                "Select a tabulated imposed-floor category (A, B, C, D, E, or H).",
+                "Eine tabellierte Nutzungskategorie wählen (A, B, C, D, E oder H).",
+            ),
+        ))
+        .build(),
+    );
+}
+
+fn push_unknown_design_situation(
+    report: &mut CheckReport,
+    annex: AnnexChoice,
+    wall: &MasonryWall,
+    lc: &WallLoadCase,
+) {
+    let raw = lc.design_situation.trim().to_ascii_lowercase();
+    let known = ["persistent", "transient", "accidental", "seismic", "bsp", "bst", "bsa"];
+    if known.iter().any(|k| *k == raw) {
+        return;
+    }
+    let path = load_case_path(wall, lc, "designSituation");
+    let subject = SubjectRef::new(lc.id.clone(), &path, loc("Design situation", "Bemessungssituation"));
+    let options = vec![
+        "persistent".into(),
+        "transient".into(),
+        "accidental".into(),
+        "seismic".into(),
+    ];
+    report.push(
+        CheckResult::assess(
+            format!("en1996.integrity.designSituation.{}.{}", wall.id, lc.id),
+            "EN 1996 integrity",
+            clause("EN 1990", "§6", "6.4"),
+            subject.clone(),
+            loc("Known design situation", "Bekannte Bemessungssituation"),
+        )
+        .annex(annex)
+        .explanation(loc(
+            &format!("Design situation '{raw}' is not persistent, transient, accidental, or seismic."),
+            &format!("Bemessungssituation '{raw}' ist weder ständig, vorübergehend, außergewöhnlich noch Erdbeben."),
+        ))
+        .status(CheckStatus::Fail)
+        .remedy(Remedy::one_of(
+            subject,
+            options,
+            loc(
+                "Select persistent, transient, accidental, or seismic.",
+                "Ständig, vorübergehend, außergewöhnlich oder Erdbeben wählen.",
+            ),
+        ))
+        .build(),
+    );
+}
+
+fn push_referential_integrity(report: &mut CheckReport, annex: AnnexChoice, walls: &[MasonryWall]) {
+    push_duplicate_ids(
+        report,
+        annex,
+        "walls",
+        "wall",
+        "Wand",
+        &walls.iter().map(|w| w.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("walls[id={id}].id"),
+    );
+    for wall in walls {
+        let wid = &wall.id;
+        push_duplicate_ids(
+            report,
+            annex,
+            "loadCases",
+            "load case",
+            "Lastfall",
+            &wall.load_cases.iter().map(|lc| lc.id.clone()).collect::<Vec<_>>(),
+            &|id| format!("walls[id={wid}].loadCases[id={id}].id"),
+        );
+        push_duplicate_ids(
+            report,
+            annex,
+            "openings",
+            "opening",
+            "Öffnung",
+            &wall.openings.iter().map(|o| o.id.clone()).collect::<Vec<_>>(),
+            &|id| format!("walls[id={wid}].openings[id={id}].id"),
+        );
+        for lc in &wall.load_cases {
+            let lid = &lc.id;
+            push_duplicate_ids(
+                report,
+                annex,
+                "concentrated",
+                "concentrated load",
+                "Einzellast",
+                &lc.concentrated.iter().map(|c| c.id.clone()).collect::<Vec<_>>(),
+                &|id| format!("walls[id={wid}].loadCases[id={lid}].concentrated[id={id}].id"),
+            );
+            push_unknown_imposed_category(report, annex, wall, lc);
+            push_unknown_design_situation(report, annex, wall, lc);
+        }
+    }
+}
+
 pub fn evaluate_building(
     annex: AnnexChoice,
     masonry_class: MasonryClass,
@@ -573,6 +771,7 @@ pub fn evaluate_building(
     walls: &[MasonryWall],
 ) -> CheckReport {
     let mut report = CheckReport::default();
+    push_referential_integrity(&mut report, annex, walls);
     if walls.is_empty() {
         report.push(
             CheckResult::assess(
@@ -605,8 +804,7 @@ fn evaluate_wall(
 ) -> Vec<CheckResult> {
     let mut out = Vec::new();
     let path_t = wall_path(wall, "thicknessM");
-    let path_h = wall_path(wall, "heightM");
-    let path_support = wall_path(wall, "supportSides");
+        let path_support = wall_path(wall, "supportSides");
     let path_fb = wall_path(wall, "fBPa");
     let path_mortar = wall_path(wall, "mortarClass");
     let path_mortar_f = wall_path(wall, "mortarStrengthPa");
@@ -638,22 +836,20 @@ fn evaluate_wall(
             &format!("λ=h_ef/t_ef={lambda:.2} with L_eff={:.3} m (openings).", effective_length_m(wall)),
             &format!("λ=h_ef/t_ef={lambda:.2} mit L_eff={:.3} m (Öffnungen).", effective_length_m(wall)),
         ));
-        if lambda > 27.0 {
-            let t_req = h_ef_m(wall) / 27.0;
-            b = b
-                .remedy(Remedy::at_least(
-                    wall_subject(wall, &path_t),
-                    Quantity::length_m(t),
-                    Quantity::length_m(t_req),
-                    loc("Increase thickness so λ ≤ 27.", "Dicke erhöhen, damit λ ≤ 27."),
-                ))
-                .remedy(Remedy::exactly(
-                    wall_subject(wall, &path_support),
-                    Quantity::new(QuantityKind::Dimensionless, wall.support_sides as f64),
-                    Quantity::new(QuantityKind::Dimensionless, 4.0),
-                    loc("Increase to 4-sided support.", "Auf 4-seitige Halterung erhöhen."),
-                ));
-        }
+        let t_req = h_ef_m(wall) / 27.0;
+        b = b
+            .remedy(Remedy::at_least(
+                wall_subject(wall, &path_t),
+                Quantity::length_m(t),
+                Quantity::length_m(t_req),
+                loc("Increase thickness so λ ≤ 27.", "Dicke erhöhen, damit λ ≤ 27."),
+            ))
+            .remedy(Remedy::exactly(
+                wall_subject(wall, &path_support),
+                Quantity::new(QuantityKind::Dimensionless, wall.support_sides as f64),
+                Quantity::new(QuantityKind::Dimensionless, 4.0),
+                loc("Increase to 4-sided support.", "Auf 4-seitige Halterung erhöhen."),
+            ));
         out.push(b.build());
     }
 
@@ -760,48 +956,83 @@ fn evaluate_wall(
                     ge.combo_de, lc.slab_span_m, wall.phi_infinity, wall.density_kg_m3
                 ),
             ));
-            if n_ed > n_rd {
-                let t_req = t * (n_ed / n_rd.max(1e-12)).max(1.0);
-                let fb_req = wall.f_b_pa * (n_ed / n_rd.max(1e-12)).max(1.0);
-                b = b
-                    .remedy(Remedy::at_least(
-                        wall_subject(wall, &path_t),
-                        Quantity::length_m(t),
-                        Quantity::length_m(t_req),
-                        loc("Increase thickness.", "Dicke erhöhen."),
-                    ))
-                    .remedy(Remedy::at_least(
-                        wall_subject(wall, &path_fb),
-                        Quantity::new(QuantityKind::Stress, wall.f_b_pa),
-                        Quantity::new(QuantityKind::Stress, fb_req),
-                        loc("Increase f_b.", "f_b erhöhen."),
-                    ))
-                    .remedy(Remedy::at_least(
-                        wall_subject(wall, &path_bearing),
-                        Quantity::length_m(wall.slab_bearing_depth_m),
-                        Quantity::length_m((t / 3.0).max(wall.slab_bearing_depth_m)),
-                        loc("Increase slab bearing depth to reduce eccentricity.", "Deckenauflager vertiefen, Exzentrizität reduzieren."),
-                    ))
-                    .remedy(Remedy::at_most(
-                        wall_subject(wall, &path_span),
-                        Quantity::length_m(lc.slab_span_m),
-                        Quantity::length_m((lc.slab_span_m * 0.85).max(4.0)),
-                        loc("Reduce slab span to raise Φ₁ / cut e_θ (NA 6.1.2.2).", "Deckenspannweite reduzieren (Φ₁/e_θ, NA 6.1.2.2)."),
-                    ))
-                    .remedy(Remedy::at_most(
-                        wall_subject(wall, &path_phi_inf),
-                        Quantity::new(QuantityKind::Dimensionless, wall.phi_infinity),
-                        Quantity::new(QuantityKind::Dimensionless, (wall.phi_infinity * 0.7).max(0.5)),
-                        loc("Reduce φ∞ to cut creep eccentricity e_k.", "φ∞ senken, Kriechexzentrizität e_k reduzieren."),
-                    ))
-                    .remedy(Remedy::at_most(
-                        wall_subject(wall, &path_density),
-                        Quantity::new(QuantityKind::Mass, wall.density_kg_m3),
-                        Quantity::new(QuantityKind::Mass, (wall.density_kg_m3 * 0.9).max(600.0)),
-                        loc("Reduce masonry density (self-weight in N_Ed).", "Rohdichte senken (Eigengewicht in N_Ed)."),
-                    ));
-            }
+            let t_req = t * (n_ed / n_rd.max(1e-12)).max(1.0);
+            let fb_req = wall.f_b_pa * (n_ed / n_rd.max(1e-12)).max(1.0);
+            b = b
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_t),
+                    Quantity::length_m(t),
+                    Quantity::length_m(t_req),
+                    loc("Increase thickness.", "Dicke erhöhen."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_fb),
+                    Quantity::new(QuantityKind::Stress, wall.f_b_pa),
+                    Quantity::new(QuantityKind::Stress, fb_req),
+                    loc("Increase f_b.", "f_b erhöhen."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_bearing),
+                    Quantity::length_m(wall.slab_bearing_depth_m),
+                    Quantity::length_m((t / 3.0).max(wall.slab_bearing_depth_m)),
+                    loc("Increase slab bearing depth to reduce eccentricity.", "Deckenauflager vertiefen, Exzentrizität reduzieren."),
+                ))
+                .remedy(Remedy::at_most(
+                    wall_subject(wall, &path_span),
+                    Quantity::length_m(lc.slab_span_m),
+                    Quantity::length_m((lc.slab_span_m * 0.85).max(4.0)),
+                    loc("Reduce slab span to raise Φ₁ / cut e_θ (NA 6.1.2.2).", "Deckenspannweite reduzieren (Φ₁/e_θ, NA 6.1.2.2)."),
+                ))
+                .remedy(Remedy::at_most(
+                    wall_subject(wall, &path_phi_inf),
+                    Quantity::new(QuantityKind::Dimensionless, wall.phi_infinity),
+                    Quantity::new(QuantityKind::Dimensionless, (wall.phi_infinity * 0.7).max(0.5)),
+                    loc("Reduce φ∞ to cut creep eccentricity e_k.", "φ∞ senken, Kriechexzentrizität e_k reduzieren."),
+                ))
+                .remedy(Remedy::at_most(
+                    wall_subject(wall, &path_density),
+                    Quantity::new(QuantityKind::Mass, wall.density_kg_m3),
+                    Quantity::new(QuantityKind::Mass, (wall.density_kg_m3 * 0.9).max(600.0)),
+                    loc("Reduce masonry density (self-weight in N_Ed).", "Rohdichte senken (Eigengewicht in N_Ed)."),
+                ));
             out.push(b.build());
+
+            // Mid-height station always reported (§6.1.2 Φ_m with e_mk incl. creep e_k from φ∞).
+            {
+                let n_rd_mid = phi_mid * f_d * a;
+                let mut bm = CheckResult::assess(
+                    format!("en1996.6.1.2.compression.mid.{}.{}", wall.id, lc.id),
+                    "EN 1996-1-1",
+                    clause("EN 1996-1-1", "§6.1.2", "6.1.2"),
+                    wall_subject(wall, &path_phi_inf),
+                    loc("Mid-height compression N_Ed ≤ Φ_m·Φ₁·f_d·A", "Druck Wandmitte N_Ed ≤ Φ_m·Φ₁·f_d·A"),
+                )
+                .utilization(Quantity::new(QuantityKind::Force, ge.n_mid), Quantity::new(QuantityKind::Force, n_rd_mid.max(1e-9)))
+                .annex(annex)
+                .explanation(loc(
+                    &format!(
+                        "mid; Φ_m·Φ₁={phi_mid:.3}; e_mk={e_mk:.4} m; e_k={e_k:.4} m (φ∞={:.2}); N_Ed={:.0} N; N_Rd={n_rd_mid:.0} N.",
+                        wall.phi_infinity, ge.n_mid
+                    ),
+                    &format!(
+                        "Mitte; Φ_m·Φ₁={phi_mid:.3}; e_mk={e_mk:.4} m; e_k={e_k:.4} m (φ∞={:.2}); N_Ed={:.0} N; N_Rd={n_rd_mid:.0} N.",
+                        wall.phi_infinity, ge.n_mid
+                    ),
+                ))
+                .remedy(Remedy::at_most(
+                    wall_subject(wall, &path_phi_inf),
+                    Quantity::new(QuantityKind::Dimensionless, wall.phi_infinity),
+                    Quantity::new(QuantityKind::Dimensionless, (wall.phi_infinity * 0.7).max(0.5)),
+                    loc("Reduce φ∞ to cut creep eccentricity e_k.", "φ∞ senken, Kriechexzentrizität e_k reduzieren."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_t),
+                    Quantity::length_m(t),
+                    Quantity::length_m(t * (ge.n_mid / n_rd_mid.max(1e-12)).max(1.0)),
+                    loc("Increase thickness for mid-height compression.", "Dicke für Druck in Wandmitte erhöhen."),
+                ));
+                out.push(bm.build());
+            }
 
             // Declared member eccentricities (excl. slab-bearing offset handled in Φ) ≤ 0.2·t (§6.1.2.2).
             {
@@ -820,17 +1051,21 @@ fn evaluate_wall(
                 .utilization(Quantity::length_m(e_gov), Quantity::length_m(e_lim.max(1e-9)))
                 .annex(annex)
                 .explanation(loc(
-                    &format!("e_top,decl={e_top_decl:.4} m; e_bot={e_bot_abs:.4} m; e_slab={e_slab:.4} m; limit 0.2t={e_lim:.4} m; φ∞={:.2}.", wall.phi_infinity),
-                    &format!("e_oben,ang={e_top_decl:.4} m; e_unten={e_bot_abs:.4} m; e_Decke={e_slab:.4} m; Grenze 0,2t={e_lim:.4} m; φ∞={:.2}.", wall.phi_infinity),
+                    &format!("e_top,decl={e_top_decl:.4} m; e_bot={e_bot_abs:.4} m; e_slab={e_slab:.4} m; limit 0.2t={e_lim:.4} m.",),
+                    &format!("e_oben,ang={e_top_decl:.4} m; e_unten={e_bot_abs:.4} m; e_Decke={e_slab:.4} m; Grenze 0,2t={e_lim:.4} m.",),
+                ))
+                .remedy(Remedy::at_most(
+                    wall_subject(wall, &wall_path(wall, "eccentricityBottomM")),
+                    Quantity::length_m(e_bot_abs),
+                    Quantity::length_m(e_lim),
+                    loc("Reduce bottom eccentricity.", "Exzentrizität unten reduzieren."),
+                ))
+                .remedy(Remedy::at_most(
+                    wall_subject(wall, &wall_path(wall, "eccentricityTopM")),
+                    Quantity::length_m(e_top_decl),
+                    Quantity::length_m(e_lim),
+                    loc("Reduce top eccentricity.", "Exzentrizität oben reduzieren."),
                 ));
-                if e_gov > e_lim {
-                    be = be.remedy(Remedy::at_most(
-                        wall_subject(wall, &wall_path(wall, "eccentricityBottomM")),
-                        Quantity::length_m(e_bot_abs),
-                        Quantity::length_m(e_lim),
-                        loc("Reduce bottom eccentricity.", "Exzentrizität unten reduzieren."),
-                    ));
-                }
                 out.push(be.build());
             }
         }
@@ -865,21 +1100,19 @@ fn evaluate_wall(
                     ge.combo_de, wall.mu, f_vk / 1e6
                 ),
             ));
-            if v_ed > v_rd {
-                b = b
-                    .remedy(Remedy::at_least(
-                        wall_subject(wall, &path_t),
-                        Quantity::length_m(t),
-                        Quantity::length_m(t * (v_ed / v_rd.max(1e-12)).max(1.0)),
-                        loc("Increase thickness for shear/sliding.", "Dicke für Schub/Gleiten erhöhen."),
-                    ))
-                    .remedy(Remedy::at_least(
-                        wall_subject(wall, &path_mu),
-                        Quantity::new(QuantityKind::Dimensionless, wall.mu),
-                        Quantity::new(QuantityKind::Dimensionless, (wall.mu * 1.25).min(0.8)),
-                        loc("Increase friction coefficient μ.", "Reibungsbeiwert μ erhöhen."),
-                    ));
-            }
+            b = b
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_t),
+                    Quantity::length_m(t),
+                    Quantity::length_m(t * (v_ed / v_rd.max(1e-12)).max(1.0)),
+                    loc("Increase thickness for shear/sliding.", "Dicke für Schub/Gleiten erhöhen."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_mu),
+                    Quantity::new(QuantityKind::Dimensionless, wall.mu),
+                    Quantity::new(QuantityKind::Dimensionless, (wall.mu * 1.25).min(0.8)),
+                    loc("Increase friction coefficient μ.", "Reibungsbeiwert μ erhöhen."),
+                ));
             out.push(b.build());
         }
 
@@ -926,6 +1159,18 @@ fn evaluate_wall(
                 .explanation(loc(
                     &format!("{}; w_Ed={w_ed:.0} Pa; M_Ed={m_ed:.0} N·m; M_Rd={m_rd:.0} N·m (As,h={as_h:.6} m², f_yd={:.0} Pa, M_Rd,s={m_rd_reinf:.0}).", ge.combo_en, f_yd),
                     &format!("{}; w_Ed={w_ed:.0} Pa; M_Ed={m_ed:.0} N·m; M_Rd={m_rd:.0} N·m (As,h={as_h:.6} m², f_yd={:.0} Pa, M_Rd,s={m_rd_reinf:.0}) (Plattenbiegung).", ge.combo_de, f_yd),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_t),
+                    Quantity::length_m(t),
+                    Quantity::length_m(t * 1.2),
+                    loc("Increase thickness for lateral flexure.", "Dicke für Plattenbiegung erhöhen."),
+                ))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_as_h),
+                    Quantity::new(QuantityKind::Area, as_h),
+                    Quantity::new(QuantityKind::Area, (as_h + 50e-6).max(50e-6)),
+                    loc("Add bed-joint reinforcement As,h.", "Lagerfugenbewehrung As,h ergänzen."),
                 ));
                 if as_h > 0.0 && f_yd <= 0.0 {
                     b = b
@@ -935,20 +1180,6 @@ fn evaluate_wall(
                             Quantity::new(QuantityKind::Stress, f_yd),
                             Quantity::new(QuantityKind::Stress, 435e6),
                             loc("Declare f_yd for bed-joint reinforcement.", "f_yd für Lagerfugenbewehrung angeben."),
-                        ));
-                } else if m_ed > m_rd {
-                    b = b
-                        .remedy(Remedy::at_least(
-                            wall_subject(wall, &path_t),
-                            Quantity::length_m(t),
-                            Quantity::length_m(t * 1.2),
-                            loc("Increase thickness for lateral flexure.", "Dicke für Plattenbiegung erhöhen."),
-                        ))
-                        .remedy(Remedy::at_least(
-                            wall_subject(wall, &path_as_h),
-                            Quantity::new(QuantityKind::Area, as_h),
-                            Quantity::new(QuantityKind::Area, (as_h + 50e-6).max(50e-6)),
-                            loc("Add bed-joint reinforcement As,h.", "Lagerfugenbewehrung As,h ergänzen."),
                         ));
                 }
                 out.push(b.build());
@@ -975,14 +1206,12 @@ fn evaluate_wall(
                 &format!("{}; β={beta:.2}; F_Ed={f_ed:.0} N; N_Rdc={n_rdc:.0} N.", ge.combo_en),
                 &format!("{}; β={beta:.2}; F_Ed={f_ed:.0} N; N_Rdc={n_rdc:.0} N (Teilflächenpressung).", ge.combo_de),
             ));
-            if f_ed > n_rdc {
-                b = b.remedy(Remedy::at_least(
-                    wall_subject(wall, &concentrated_path(wall, lc, &c.id, "bearingLengthM")),
-                    Quantity::length_m(c.bearing_length_m),
-                    Quantity::length_m(c.bearing_length_m * (f_ed / n_rdc.max(1e-12)).max(1.0)),
-                    loc("Increase bearing length.", "Auflagerlänge erhöhen."),
-                ));
-            }
+            b = b.remedy(Remedy::at_least(
+                wall_subject(wall, &concentrated_path(wall, lc, &c.id, "bearingLengthM")),
+                Quantity::length_m(c.bearing_length_m),
+                Quantity::length_m(c.bearing_length_m * (f_ed / n_rdc.max(1e-12)).max(1.0)),
+                loc("Increase bearing length.", "Auflagerlänge erhöhen."),
+            ));
             out.push(b.build());
         }
     }
@@ -1013,15 +1242,21 @@ fn evaluate_wall(
             &format!("REI {}; α=N_Ed,fi/N_Rd={alpha:.3}; t={t:.3} m; t_min(α)={t_min:.3} m.", wall.fire_rei_min),
             &format!("REI {}; α=N_Ed,fi/N_Rd={alpha:.3}; t={t:.3} m; t_min(α)={t_min:.3} m (tabellarisch).", wall.fire_rei_min),
         ));
-        // Utilization: max(t_min/t, α) style — thickness utilization and α≤1
-        let u_t = t_min / t.max(1e-9);
-        let u = u_t.max(alpha);
-        b = b.utilization(Quantity::new(QuantityKind::Dimensionless, u), Quantity::new(QuantityKind::Dimensionless, 1.0));
-        if u > 1.0 {
+        b = b.minimum(Quantity::length_m(t), Quantity::length_m(t_min));
+        if alpha > 1.0 {
+            b = b
+                .utilization(Quantity::new(QuantityKind::Dimensionless, alpha), Quantity::new(QuantityKind::Dimensionless, 1.0))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_t),
+                    Quantity::length_m(t),
+                    Quantity::length_m(t_min.max(t * alpha)),
+                    loc("Increase thickness for fire / reduce α.", "Dicke für Brandschutz erhöhen / α reduzieren."),
+                ));
+        } else {
             b = b.remedy(Remedy::at_least(
                 wall_subject(wall, &path_t),
                 Quantity::length_m(t),
-                Quantity::length_m(t_min.max(t * alpha)),
+                Quantity::length_m(t_min.max(t)),
                 loc("Increase thickness for fire / reduce α.", "Dicke für Brandschutz erhöhen / α reduzieren."),
             ));
         }
@@ -1055,14 +1290,12 @@ fn evaluate_wall(
                 .explanation(loc(
                     &format!("Required mortar ≥ {need:.1} MPa for {:?}; have {have:.1} MPa.", wall.exposure),
                     &format!("Erforderlicher Mörtel ≥ {need:.1} MPa für {:?}; vorhanden {have:.1} MPa.", wall.exposure),
-                ));
-            if have + 1e-9 < need {
-                b = b.remedy(Remedy::one_of(
+                ))
+                .remedy(Remedy::one_of(
                     wall_subject(wall, &path_mortar),
                     vec!["M10".into(), "M15".into(), "M20".into()],
                     loc("Upgrade mortar class.", "Mörtelklasse erhöhen."),
                 ));
-            }
         }
         out.push(b.build());
 
@@ -1136,7 +1369,7 @@ fn evaluate_wall(
             }
         } else if as_have < as_min || wall.f_yd_pa <= 0.0 {
             b = b
-                .utilization(Quantity::new(QuantityKind::Area, as_have), Quantity::new(QuantityKind::Area, as_min.max(1e-9)))
+                .minimum(Quantity::new(QuantityKind::Area, as_have), Quantity::new(QuantityKind::Area, as_min.max(1e-9)))
                 .remedy(Remedy::at_least(
                     wall_subject(wall, &path_as_h),
                     Quantity::new(QuantityKind::Area, as_h),
@@ -1150,7 +1383,14 @@ fn evaluate_wall(
                     loc("Declare reinforcement f_yd.", "Bewehrungs-f_yd angeben."),
                 ));
         } else {
-            b = b.utilization(Quantity::new(QuantityKind::Area, as_have), Quantity::new(QuantityKind::Area, as_min.max(1e-9)));
+            b = b
+                .minimum(Quantity::new(QuantityKind::Area, as_have), Quantity::new(QuantityKind::Area, as_min.max(1e-9)))
+                .remedy(Remedy::at_least(
+                    wall_subject(wall, &path_as_h),
+                    Quantity::new(QuantityKind::Area, as_h),
+                    Quantity::new(QuantityKind::Area, as_min),
+                    loc("Provide minimum reinforcement.", "Mindestbewehrung vorsehen."),
+                ));
         }
         out.push(b.build());
     }
@@ -1288,14 +1528,12 @@ fn evaluate_wall(
                 &format!("N_Ed,min={n_min:.0} N (≥ {n_min_req:.0}); N_Ed,max={n_max:.0} N (≤ {n_rd_s:.0})."),
                 &format!("N_Ed,min={n_min:.0} N (≥ {n_min_req:.0}); N_Ed,max={n_max:.0} N (≤ {n_rd_s:.0}) (Kellerwand §4.5)."),
             ));
-            if u > 1.0 {
-                b = b.remedy(Remedy::at_least(
-                    wall_subject(wall, &path_t),
-                    Quantity::length_m(t),
-                    Quantity::length_m(t * 1.2),
-                    loc("Thicken basement wall / increase permanent load.", "Kellerwand verdicken / ständige Last erhöhen."),
-                ));
-            }
+            b = b.remedy(Remedy::at_least(
+                wall_subject(wall, &path_t),
+                Quantity::length_m(t),
+                Quantity::length_m(t * 1.2),
+                loc("Thicken basement wall / increase permanent load.", "Kellerwand verdicken / ständige Last erhöhen."),
+            ));
             out.push(b.build());
         } else if wall.load_cases.iter().any(|lc| lc.h_k_earth_n > 0.0) {
             out.push(

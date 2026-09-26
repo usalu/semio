@@ -1,5 +1,6 @@
 use super::*;
 use crate::os_directory::{directory_command_sha256, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
+use crate::os_directory::schema::{DocumentOpenCheckpointV1, DocumentScope, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1};
 use semio_framework_async::{CancelToken, TraceId};
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
@@ -30,6 +31,8 @@ pub struct FakeTransport {
     /// interleaved caller has a real window to flip the token between yields (see
     /// `an_in_flight_request_is_cancelled_when_its_context_is_cancelled` below).
     pub yields_before_response: Arc<AtomicU32>,
+    /// 🪢️ The `Accept` media type of every `get_accepting` read, in order.
+    pub accepts: Arc<Mutex<Vec<String>>>,
 }
 
 impl FakeTransport {
@@ -112,6 +115,11 @@ impl DirectoryTransport for FakeTransport {
         }
         self.requests.lock().unwrap().push(RecordedRequest { method, url: url.to_string(), bearer: bearer.map(str::to_string), body: body.unwrap_or_default() });
         self.responses.lock().unwrap().pop_front().unwrap_or_else(|| Err(TransportError::Io("no scripted response".to_string())))
+    }
+
+    async fn get_accepting(&self, ctx: &OperationContext, url: &str, bearer: Option<&str>, accept: &str) -> Result<HttpResponse, TransportError> {
+        self.accepts.lock().unwrap().push(accept.to_string());
+        self.http(ctx, HttpMethod::Get, url, bearer, None).await
     }
 
     fn issue_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, body: &[u8], _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
@@ -1093,5 +1101,53 @@ async fn execution_target_module_resolution_follows_the_serving_generation() {
             }
         }
         let _ = std::fs::remove_dir_all(&root);
+    }
+}
+
+/// 🪢️ The native pair fetch over the shared fixture: exact route and `Accept`, a transient refusal asked again, a final one
+/// named, and a pair admitted only as the checkpoint the open was authorized for.
+#[semio_framework_async_macros::async_test]
+async fn the_canonical_pair_is_fetched_verified_and_admitted_as_the_authorized_checkpoint() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📇️directory/🪢️canonical-checkpoint-pair-v1.json")).expect("canonical pair fixture");
+    let capability = format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64));
+    let hex = |value: &serde_json::Value| -> Vec<u8> {
+        let text = value.as_str().unwrap();
+        (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).unwrap()).collect()
+    };
+    for case in fixture["admissions"].as_array().unwrap() {
+        let pair = fixture["pairs"].as_array().unwrap().iter().find(|pair| pair["id"] == case["pair"]).unwrap();
+        let expected: DocumentOpenCheckpointV1 = crate::os_pack::json::from_json_str(&case["expected"].to_string()).expect("fixture checkpoint");
+        let scope = DocumentScope::new(case["scope"]["spaceId"].as_str().unwrap(), case["scope"]["documentId"].as_str().unwrap());
+        let transport = FakeTransport::default();
+        transport.push_response(Ok(HttpResponse { status: 503, body: Vec::new() })).await;
+        transport.push_response(Ok(HttpResponse { status: 200, body: hex(&pair["bodyHex"]) })).await;
+        let client = authenticated_client(transport.clone(), &capability);
+        let answer = client.document_canonical_checkpoint_pair(&root_ctx(), &scope, &expected).await;
+        let id = &case["id"];
+        match case["refusal"].as_str() {
+            None => assert_eq!(answer.as_ref().map(|decoded| decoded.pack_bytes.len() as u64).ok(), pair["pack"]["length"].as_u64(), "{id}"),
+            Some(code) => assert!(matches!(&answer, Err(DirectoryClientError::Decode(detail)) if detail == code), "{id}: {answer:?}"),
+        }
+        let requests = transport.requests.lock().unwrap();
+        assert_eq!(requests.len(), 2, "{id}: the 503 was asked again once");
+        assert!(requests.iter().all(|request| request.method == HttpMethod::Get && request.url == format!("http://hub.local{}", canonical_checkpoint_pair_path(&scope)) && request.bearer.as_deref() == Some(capability.as_str())), "{id}");
+        assert_eq!(*transport.accepts.lock().unwrap(), vec![CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1.to_string(); 2], "{id}");
+    }
+    let genesis = &fixture["pairs"][0];
+    let scope = DocumentScope::new(genesis["selection"]["spaceId"].as_str().unwrap(), genesis["selection"]["documentId"].as_str().unwrap());
+    let expected: DocumentOpenCheckpointV1 = crate::os_pack::json::from_json_str(&fixture["admissions"][0]["expected"].to_string()).unwrap();
+    for (status, refusal) in [(401, "unauthorized"), (404, "http 404"), (503, "http 503")] {
+        let transport = FakeTransport::default();
+        for _ in 0..CANONICAL_CHECKPOINT_PAIR_TRANSIENT_ATTEMPTS {
+            transport.push_response(Ok(HttpResponse { status, body: Vec::new() })).await;
+        }
+        let answer = authenticated_client(transport.clone(), &capability).document_canonical_checkpoint_pair(&root_ctx(), &scope, &expected).await;
+        let named = match &answer {
+            Err(DirectoryClientError::Unauthorized) => "unauthorized".to_string(),
+            Err(DirectoryClientError::Http { status, .. }) => format!("http {status}"),
+            other => format!("{other:?}"),
+        };
+        assert_eq!(named, refusal);
+        assert_eq!(transport.requests.lock().unwrap().len(), if status == 503 { CANONICAL_CHECKPOINT_PAIR_TRANSIENT_ATTEMPTS as usize } else { 1 }, "{status}");
     }
 }

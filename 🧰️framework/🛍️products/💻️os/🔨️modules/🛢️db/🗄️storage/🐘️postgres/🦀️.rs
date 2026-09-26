@@ -87,7 +87,7 @@ use crate::db_durability::{DurabilityClass, EpochFence};
 use crate::db_ids::{check_len, ArtifactId, DbError};
 use crate::db_storage::{
     close_db_io_backend, db_io_close_platform, db_io_copy_observed_text, db_io_hash_pages, db_io_prepare_platform, db_io_transfer_list, db_io_write_observed_bytes, register_db_io_backend, register_db_io_backend_prepared_with_use,
-    retire_db_io_backend, submit_db_io_task, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult,
+    retire_db_io_backend, submit_db_io_task_admitted, CatalogStorage, DbIoArtifactId, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation, DbIoDriverReservation, DbIoExecutionStep, DbIoExecutorMode, DbIoLeaseResult,
     DbIoAsyncDriverRuntime, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, IndexStorage, LeaseInfo, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities,
     WalSegmentState, WalStorage, DB_IO_LIST_ITEMS, DB_IO_PAGE_BYTES,
 };
@@ -1073,6 +1073,11 @@ pub struct PostgresStorage {
 
 impl PostgresStorage {
     pub async fn connect(worker_pool: Arc<WorkerPool>, database_url: &str) -> Result<Self, DbStorageOpenRejected> {
+        crate::db_storage::open_db_io_backend_admitted(&worker_pool, || Self::connect_once(worker_pool.clone(), database_url)).await
+    }
+
+    /// @emoji 🎯️ One PostgreSQL backend open attempt, refused at once when the backend capacity is taken.
+    async fn connect_once(worker_pool: Arc<WorkerPool>, database_url: &str) -> Result<Self, DbStorageOpenRejected> {
         let database_url = DbIoText::try_from_str(database_url)?;
         let rollback = DbIoBackendRollbackReservation::try_reserve()?;
         let pool_use = worker_pool.acquire_use().map_err(|error| DbError::Unavailable(format!("PostgreSQL DB I/O backend WorkerPool use rejected: {error:?}")))?;
@@ -1086,7 +1091,7 @@ impl PostgresStorage {
     }
 
     async fn execute(&self, task: DbIoTask) -> Result<DbIoResult, DbError> {
-        let mut operation = submit_db_io_task(task).map_err(|(error, _)| error)?;
+        let mut operation = submit_db_io_task_admitted(task).await?;
         operation.start_async_native_on_lane_io().await?;
         operation.finish().await
     }

@@ -11,6 +11,8 @@
         "maximumEnvelopes",
         "maximumDependenciesPerEnvelope",
         "maximumTotalDependencies",
+        "maximumTargetSegmentsPerEnvelope",
+        "maximumTotalTargetSegments",
         "maximumIdentifierBytes",
         "maximumSchemaBytes",
         "maximumPayloadBytes"
@@ -20,6 +22,8 @@
         "maximumEnvelopes": { "type": "integer", "minimum": 0, "maximum": 8192 },
         "maximumDependenciesPerEnvelope": { "type": "integer", "minimum": 0, "maximum": 8192 },
         "maximumTotalDependencies": { "type": "integer", "minimum": 0, "maximum": 8192 },
+        "maximumTargetSegmentsPerEnvelope": { "type": "integer", "minimum": 0, "maximum": 8192 },
+        "maximumTotalTargetSegments": { "type": "integer", "minimum": 0, "maximum": 8192 },
         "maximumIdentifierBytes": { "type": "integer", "minimum": 1, "maximum": 256 },
         "maximumSchemaBytes": { "type": "integer", "minimum": 0, "maximum": 256 },
         "maximumPayloadBytes": { "type": "integer", "minimum": 0, "maximum": 262144 }
@@ -28,12 +32,14 @@
     "Envelope": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutationId", "documentId", "actor", "dependencies", "diff", "inverse", "timestamp"],
+      "required": ["mutationId", "documentId", "actor", "dependencies", "observed", "target", "diff", "inverse", "timestamp"],
       "properties": {
         "mutationId": { "type": "string" },
         "documentId": { "type": "string" },
         "actor": { "type": "string" },
         "dependencies": { "type": "array", "items": { "type": "string" } },
+        "observed": { "oneOf": [{ "type": "string" }, { "type": "null" }], "description": "Advisory, never an ordering constraint: the newest operation of another author the author's replica had applied." },
+        "target": { "type": "array", "items": { "type": "string" }, "description": "The structured address the operation writes, outermost segment first; empty is the whole artifact." },
         "diff": {
           "type": "object",
           "additionalProperties": false,

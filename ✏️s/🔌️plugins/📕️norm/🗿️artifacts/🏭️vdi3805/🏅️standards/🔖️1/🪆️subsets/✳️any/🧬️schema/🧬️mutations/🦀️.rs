@@ -60,6 +60,7 @@ use super::resize_geometry;
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`.
 //#region 🔖️Leaves
 use super::change_manufacturer_file;
+use super::change_limits;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
@@ -67,6 +68,7 @@ use super::change_manufacturer_file;
 #[mutations(snapshot = Vdi3805Snapshot, diff = Vdi3805Diff, schema = "s.norm.vdi3805")]
 pub enum Vdi3805Mutation {
     ChangeManufacturerFile(change_manufacturer_file::ChangeManufacturerFile),
+    ChangeLimits(change_limits::ChangeLimits),
     ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf),
     ChangeStrictMode(change_strict_mode::ChangeStrictMode),
     ChangeEditionProfile(change_edition_profile::ChangeEditionProfile),
@@ -93,6 +95,7 @@ pub enum Vdi3805Mutation {
 /// is what keeps the enum, this const and the committed manifest from drifting apart.
 pub const KINDS: &[&str] = &[
     "change-manufacturer-file",
+    "change-limits",
     "change-correction-as-of",
     "change-strict-mode",
     "change-edition-profile",
@@ -125,6 +128,7 @@ impl Vdi3805Mutation {
     pub fn from_snapshot(base: &Vdi3805Snapshot, target: &Vdi3805Snapshot) -> Vec<Vdi3805Mutation> {
         let mut mutations = vec![
             Vdi3805Mutation::ChangeManufacturerFile(change_manufacturer_file::ChangeManufacturerFile { new_manufacturer_file: target.catalog.file.clone() }),
+            Vdi3805Mutation::ChangeLimits(change_limits::ChangeLimits { new_limits: target.limits }),
             Vdi3805Mutation::ChangeCorrectionAsOf(change_correction_as_of::ChangeCorrectionAsOf { new_correction_as_of: target.correction_as_of }),
             Vdi3805Mutation::ChangeStrictMode(change_strict_mode::ChangeStrictMode { new_strict_mode: target.strict_mode }),
         ];

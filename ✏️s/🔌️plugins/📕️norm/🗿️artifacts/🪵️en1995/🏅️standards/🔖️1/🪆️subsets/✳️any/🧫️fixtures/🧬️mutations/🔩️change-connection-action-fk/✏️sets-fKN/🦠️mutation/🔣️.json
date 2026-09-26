@@ -1,0 +1,7 @@
+{
+  "ChangeConnectionActionFK": {
+    "actionId": "g",
+    "connectionId": "conn-C1",
+    "newValue": 12000.0
+  }
+}

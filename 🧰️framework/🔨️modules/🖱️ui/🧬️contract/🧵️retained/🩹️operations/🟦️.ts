@@ -31,6 +31,17 @@ function* operationStrings(operation: Operation): Generator<string> {
  * invariants read as *structure* rather than as content (`🔬️graph/🟦️.ts`'s `sectionNested`). */
 function sectionRole(component: RetainedUiNodeRecord["component"]): boolean { return component.type === "container" && component.role === "section"; }
 
+function inlineToolbarRole(record: RetainedUiNodeRecord): number {
+  if (record.component.type === "treeItem") return record.component.inlineToolbar ?? -1;
+  if (record.component.type === "container" && record.component.role === "toolbar") return -2;
+  if (record.component.type === "button") return -3;
+  return -4;
+}
+
+function treeDetailRole(record: RetainedUiNodeRecord): number {
+  return record.component.type === "treeItem" ? record.component.detail ?? -1 : -2;
+}
+
 /** 🧮️ Metered equality over the three record properties the graph invariants are a function of:
  * sibling `key`, `children` edges and section role. Two records that agree on all three occupy the
  * SAME position in every invariant the validated base already proved — reachability, depth, cycles,
@@ -38,7 +49,10 @@ function sectionRole(component: RetainedUiNodeRecord["component"]): boolean { re
  * replacements needs no graph walk at all (see {@link OwnedUiOperationResult.shapePreserving}). */
 function* sameGraphShape(previous: RetainedUiNodeRecord, next: RetainedUiNodeRecord, grant: () => NumericIndexGrant): Generator<number, boolean, void> {
   yield 48;
-  if (previous.key.length !== next.key.length || previous.children.length !== next.children.length || sectionRole(previous.component) !== sectionRole(next.component)) return false;
+  const previousInlineRole = inlineToolbarRole(previous);
+  const nextInlineRole = inlineToolbarRole(next);
+  if (previous.key.length !== next.key.length || previous.children.length !== next.children.length || sectionRole(previous.component) !== sectionRole(next.component) || previousInlineRole !== nextInlineRole || treeDetailRole(previous) !== treeDetailRole(next)) return false;
+  if (previousInlineRole === -2 && (previous.layout.kind !== "stack" || next.layout.kind !== "stack" || previous.layout.axis !== next.layout.axis)) return false;
   let index = 0;
   while (index < previous.key.length) {
     let work = 0;

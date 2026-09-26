@@ -263,7 +263,7 @@ fn lc(en: &str, de: &str) -> LocalizedCopy {
 
 pub mod part_en1990 {
     use super::*;
-    use crate::CharacteristicAction;
+    use crate::{CharacteristicAction, ColumnAction};
 
     /// 📋 Design effects from an EN 1990 combination.
     #[derive(Clone, Debug)]
@@ -301,13 +301,26 @@ pub mod part_en1990 {
         }
     }
 
+    /// 🇪️🇺️ EN 1990 Table A1.2(B) recommended γ_G for buildings.
+    pub const GAMMA_G_EN: f64 = 1.35;
+    /// 🇩️🇪️ DIN EN 1990/NA γ_G for buildings (same numerical value; annex still selects).
+    pub const GAMMA_G_DE: f64 = 1.35;
+    /// 🇪️🇺️ EN 1990 Table A1.2(B) recommended γ_Q for buildings.
+    pub const GAMMA_Q_EN: f64 = 1.50;
+    /// 🇩️🇪️ DIN EN 1990/NA γ_Q for buildings (same numerical value; annex still selects).
+    pub const GAMMA_Q_DE: f64 = 1.50;
+
     pub fn gamma_g(annex: AnnexChoice) -> f64 {
-        let _ = annex;
-        1.35
+        match annex {
+            AnnexChoice::En => GAMMA_G_EN,
+            AnnexChoice::De => GAMMA_G_DE,
+        }
     }
     pub fn gamma_q(annex: AnnexChoice) -> f64 {
-        let _ = annex;
-        1.50
+        match annex {
+            AnnexChoice::En => GAMMA_Q_EN,
+            AnnexChoice::De => GAMMA_Q_DE,
+        }
     }
     /// 🔥 ψ_fi for fire combination EN 1990 Eq. (6.11b) — EN/DE recommended 0.9 for offices (ψ₁) reduced; use 0.5 for category B ψ₂-like fire.
     pub fn psi_fi(kind: &str, category: &str) -> f64 {
@@ -315,7 +328,7 @@ pub mod part_en1990 {
         if kind == "permanent" { 1.0 } else { p1.max(p2) }
     }
 
-    /// 📐️ Characteristic internals from one action (area×tributary, else external N/M/V).
+    /// 📐️ Characteristic internals from one action (area×tributary, else sole point force).
     pub fn action_internals(action: &CharacteristicAction, span_m: f64, support: &str, spacing_m: f64) -> (f64, f64, f64, f64) {
         let q = action.q_area_pa * spacing_m;
         if q.abs() > 1e-12 {
@@ -325,10 +338,76 @@ pub mod part_en1990 {
             };
             return (m_span, m_hog, v, 0.0);
         }
-        if action.m_k_nm.abs() > 1.0 || action.v_k_n.abs() > 1.0 || action.n_k_n.abs() > 1.0 {
-            return (action.m_k_nm, 0.0, action.v_k_n, action.n_k_n);
+        if action.f_k_n.abs() > 1.0 {
+            let f = action.f_k_n;
+            let (m_span, m_hog, v) = match support {
+                "continuous_2_span" => (f * span_m / 8.0, f * span_m / 8.0, 1.25 * f / 2.0),
+                _ => (f * span_m / 4.0, 0.0, f / 2.0),
+            };
+            return (m_span, m_hog, v, 0.0);
         }
         (0.0, 0.0, 0.0, 0.0)
+    }
+
+    /// 🏛️ Characteristic N/M from a column analysis action.
+    pub fn column_action_internals(action: &ColumnAction) -> (f64, f64, f64, f64) {
+        (action.m_k_nm, 0.0, 0.0, action.n_k_n)
+    }
+
+    fn accumulate_column(actions: &[ColumnAction], stage: &str, annex: AnnexChoice, mode: &str) -> DesignEffects {
+        let g_g = gamma_g(annex);
+        let g_q = gamma_q(annex);
+        let staged: Vec<_> = actions.iter().filter(|a| a.stage == stage || a.stage == "any").collect();
+        let permanents: Vec<_> = staged.iter().copied().filter(|a| a.kind == "permanent").collect();
+        let variables: Vec<_> = staged.iter().copied().filter(|a| matches!(a.kind.as_str(), "imposed" | "snow" | "wind" | "construction")).collect();
+        let mut m = 0.0;
+        let mut n = 0.0;
+        let scale_perm = match mode {
+            "uls" => g_g,
+            _ => 1.0,
+        };
+        for a in &permanents {
+            let (mi, _, _, ni) = column_action_internals(a);
+            m += scale_perm * mi;
+            n += scale_perm * ni;
+        }
+        match mode {
+            "uls" => {
+                let mut best = DesignEffects::default();
+                if variables.is_empty() {
+                    return DesignEffects {
+                        m_nm: m, m_hog_nm: 0.0, v_n: 0.0, n_n: n,
+                        label_en: format!("ULS 6.10 ({stage}, G only)"),
+                        label_de: format!("GZT 6.10 ({stage}, nur G)"),
+                    };
+                }
+                for (i, lead) in variables.iter().enumerate() {
+                    let (lm, _, _, ln) = column_action_internals(lead);
+                    let mut mm = m + g_q * lm;
+                    let mut nn = n + g_q * ln;
+                    for (j, acc) in variables.iter().enumerate() {
+                        if i == j { continue; }
+                        let (p0, _, _) = psi_factors(&acc.kind, &acc.category);
+                        let (am, _, _, an) = column_action_internals(acc);
+                        mm += g_q * p0 * am;
+                        nn += g_q * p0 * an;
+                    }
+                    if mm.abs() + nn.abs() >= best.m_nm.abs() + best.n_n.abs() {
+                        best = DesignEffects {
+                            m_nm: mm, m_hog_nm: 0.0, v_n: 0.0, n_n: nn,
+                            label_en: format!("ULS Eq. 6.10 ({stage}, leading {})", lead.id),
+                            label_de: format!("GZT Gl. 6.10 ({stage}, führend {})", lead.id),
+                        };
+                    }
+                }
+                best
+            }
+            _ => DesignEffects { m_nm: m, m_hog_nm: 0.0, v_n: 0.0, n_n: n, label_en: mode.into(), label_de: mode.into() },
+        }
+    }
+
+    pub fn uls_column(actions: &[ColumnAction], annex: AnnexChoice) -> DesignEffects {
+        accumulate_column(actions, "composite", annex, "uls")
     }
 
     fn accumulate(actions: &[CharacteristicAction], span_m: f64, support: &str, spacing_m: f64, stage: &str, annex: AnnexChoice, mode: &str) -> DesignEffects {
@@ -620,11 +699,18 @@ pub mod part_1_1 {
         n.max(1)
     }
 
+    /// 📐️ EN 1994-1-1 §6.6.5.5 — minimum stud spacing factor × diameter.
+    pub const STUD_SPACING_MIN_DIAMETER_FACTOR: f64 = 5.0;
+    /// 📐️ EN 1994-1-1 §6.6.5.5 — maximum stud spacing factor × concrete cover thickness h_c.
+    pub const STUD_SPACING_MAX_HC_FACTOR: f64 = 6.0;
+    /// 📐️ EN 1994-1-1 §6.6.5.5 — absolute maximum stud spacing [m].
+    pub const STUD_SPACING_MAX_ABS_M: f64 = 0.800;
+
     /// 📐️ Maximum / minimum stud spacing [m] per EN 1994-1-1 §6.6.5.5.
     pub fn stud_spacing_limits_m(beam: &CompositeBeam) -> (f64, f64) {
         let h_c = (beam.slab_thickness_m - beam.sheeting.height_m).max(0.04);
-        let s_max = (6.0 * h_c).min(0.800);
-        let s_min = 5.0 * beam.studs.diameter_m;
+        let s_max = (STUD_SPACING_MAX_HC_FACTOR * h_c).min(STUD_SPACING_MAX_ABS_M);
+        let s_min = STUD_SPACING_MIN_DIAMETER_FACTOR * beam.studs.diameter_m;
         (s_min, s_max)
     }
 

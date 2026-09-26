@@ -311,10 +311,11 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         self
     }
 
-    /// 🔗️ Declares a direct plugin dependency this plugin requires to load — contract freeze §3/§4.
+    /// 🔗️ Declares a direct plugin dependency this plugin requires to load, pinned exactly (`semio_framework::tree_pin!()`
+    /// for a plugin of the same tree) — contract freeze §3/§4.
     /// Repeatable; order matters only for extensions (`ExtensionBundle::extends` must equal
     /// `dependencies[0].plugin_id`), which plain plugins have no equivalent constraint for.
-    pub fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionReq) -> Self {
+    pub fn depends_on(mut self, plugin_id: impl Into<String>, version: semio_framework::VersionPin) -> Self {
         self.dependencies.push(semio_framework::PluginDependency::new(plugin_id, version));
         self
     }
@@ -358,7 +359,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             PA::from(resolve_ready(crate::app::VcsArtifactApp::with_registry(A::default(), crate::app::AppActionRegistry::from_definition(def))))
         }
         let definition = app.definition.clone();
-        self.app_defs.push((app, (definition, factory::<A, PA>)));
+        self.app_defs.push((app, crate::app::declarations::AppFactory { definition, create: factory::<A, PA>, document_schema: A::DOCUMENT_SCHEMA }));
         self.app_schema_descriptors.push(app_schema::<A>);
         self.document_app_ids.push(A::APP_ID);
         self
@@ -424,7 +425,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples: Vec::new() };
-        self.app_defs.push((app, (def, factory::<V, PA>)));
+        self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<V, PA>, document_schema: V::DOCUMENT_SCHEMA }));
         self.app_schema_descriptors.push(app_schema::<V>);
         // 🔒️ Contract §2.3 clause 4 — a viewer's document store attaches Read only, never Write.
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App })
@@ -485,7 +486,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
             def.io.artifact_schema = E::DOCUMENT_SCHEMA.to_string();
         }
         let app = App { definition: def.clone(), examples };
-        self.app_defs.push((app, (def, factory::<E, PA>)));
+        self.app_defs.push((app, crate::app::declarations::AppFactory { definition: def, create: factory::<E, PA>, document_schema: E::DOCUMENT_SCHEMA }));
         self.app_schema_descriptors.push(app_schema::<E>);
         // 🔒️ Contract §2.3 clause 4 — an editor's document store attaches both Read and Write.
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })

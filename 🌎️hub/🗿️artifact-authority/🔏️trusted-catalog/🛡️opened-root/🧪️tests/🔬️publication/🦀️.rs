@@ -110,7 +110,6 @@ async fn trusted_publication_owner_lock_drop_and_exact_replacement_match_fixture
     std::fs::write(&collision, b"other writer").unwrap();
     assert!(next.replace_current("2123456789abcdef0123456789abcdef", b"collision", &context).is_err());
     assert_eq!(std::fs::read(collision).unwrap(), b"other writer");
-    println!("[DEBUG] publication owner: competing=contended drop=reacquired replacement=exact cancellation=retained collision=retained");
 }
 
 #[tokio::test]
@@ -129,7 +128,6 @@ async fn trusted_publication_owner_remains_rooted_after_path_replacement() {
     owner.replace_current(fixture["nonce"].as_str().unwrap(), selected, &context).unwrap();
     assert_eq!(std::fs::read(root.join("retained-catalog/current.json")).unwrap(), selected);
     assert_eq!(std::fs::read(root.join("trusted-catalog/current.json")).unwrap(), foreign);
-    println!("[DEBUG] publication rooted replace: retained=selected replacement-root=unchanged");
 }
 
 #[tokio::test]
@@ -149,7 +147,6 @@ async fn trusted_publication_owner_refuses_nonregular_lock_leaves() {
         assert!(data.acquire_publication(&context).await.is_err());
         assert_eq!(std::fs::read(root.join("foreign.lock")).unwrap(), b"foreign");
     }
-    println!("[DEBUG] publication lock admission: directory=refused linked-leaf=refused-on-unix");
 }
 
 #[cfg(unix)]

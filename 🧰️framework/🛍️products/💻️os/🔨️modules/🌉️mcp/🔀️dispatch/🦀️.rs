@@ -331,6 +331,17 @@ pub trait HistoryUndoPort: Send + Sync {
     fn undo_hub_inference_approval(&self, member: &HubInferenceApprovalUndoMemberV1) -> Result<(), GatewayError>;
 }
 
+/// 🧭️ The fault the plugin SDK's agent-lane preview (`🔌️plugin` `preview_addressed_action`) answers for a
+/// verb whose emit publishes a lane an agent transaction cannot carry: a whole-document load, a file
+/// download or request, extension calls or follow-up tasks. The verb runs only from the shell.
+pub const AGENT_LANE_UNCARRIED_FAULT_CODE: &str = "interactive-job.agent-lane-uncarried";
+
+/// 🗣️ What the agent tells its human about an [`AGENT_LANE_UNCARRIED_FAULT_CODE`] refusal, `(en, de)`.
+pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
+    "This action runs only in the semio shell; ask your human to run it there.",
+    "Diese Aktion läuft nur in der semio-Oberfläche; bitte deinen Menschen, sie dort auszuführen.",
+);
+
 /// 🧯️ `Fault.code` → `GatewayErrorCode` — `📋️master.md` §3.3's Fault code table, plus this crate's
 /// own `"budget.exceeded"` addition (`GatewayErrorCode::BudgetExceeded`, retryable) and W8's
 /// `"capability.not-found"`/`"plugin.unavailable"` (`🏠️workspace/🦀️.rs`'s `RoutingArtifactChannel`
@@ -340,7 +351,10 @@ pub trait HistoryUndoPort: Send + Sync {
 /// `BatchOnlyPendingRewrite`) is a non-retryable `PLUGIN_UNAVAILABLE`; a preview whose ops exceed the
 /// verb's declared output cap (`interactive-job.preview-output`) is `INPUT_INVALID`; a mutation the
 /// document's own state refuses (`transaction.member-rejected`, e.g. a target that is not there) is
-/// `PRECONDITION_FAILED`. An unrecognised code is `Internal` (never silently swallowed).
+/// `PRECONDITION_FAILED`. A verb whose emit publishes a lane an agent transaction cannot carry
+/// ([`AGENT_LANE_UNCARRIED_FAULT_CODE`]) is a non-retryable `PLUGIN_UNAVAILABLE` whose `details` name the
+/// fault and tell the agent, in en and de, to hand the action to its human. An unrecognised code is
+/// `Internal` (never silently swallowed).
 fn map_fault(fault: &Fault) -> GatewayError {
     match fault.code.as_str() {
         "viewer.read-only" | "capability-denied" => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
@@ -348,6 +362,8 @@ fn map_fault(fault: &Fault) -> GatewayError {
         "transaction.member-rejected" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
         "interactive-job.not-ui-safe" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
         "interactive-job.preview-output" => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
+        AGENT_LANE_UNCARRIED_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone())
+            .with_details(serde_json::json!({ "faultCode": AGENT_LANE_UNCARRIED_FAULT_CODE, "remedy": { "en": AGENT_LANE_UNCARRIED_REMEDY.0, "de": AGENT_LANE_UNCARRIED_REMEDY.1 } })),
         "transaction.generation-mismatch" => GatewayError::new(GatewayErrorCode::RevisionConflict, fault.message.clone()),
         "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
         "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),
@@ -418,6 +434,15 @@ impl MockInstanceState {
         RevisionStamp { artifact_id: self.artifact_id.clone(), head_edit_id: format!("edit-{}", self.head_edit_id), cursor: format!("gen-{}", self.generation) }
     }
 
+    /// 💡️ Scripted exactly like every other arm of this in-memory store: an inference on an
+    /// instance whose generation has moved past the request's is a real staleness rejection
+    /// (the same `validate_commit` rule the real router enforces); otherwise the request's own
+    /// canonical payload comes back as the result payload, so a test can assert the request
+    /// really travelled the port without this double ever claiming to have computed anything.
+    ///
+    /// 📤️🆕️ This double owns no guest, so it can neither run a media port nor mint a plugin's
+    /// genesis document. It says so with the SAME typed fault a real unreachable plugin uses,
+    /// never a synthesised export or an empty pack that a caller could mistake for real bytes.
     fn handle(&mut self, command: AppCommand) -> AppFrame {
         match command {
             AppCommand::ReadHistory => AppFrame::HistorySnapshot(self.revision()),
@@ -481,20 +506,12 @@ impl MockInstanceState {
                 self.generation += 1;
                 AppFrame::TransactionRedone { group_id }
             }
-            // 💡️ Scripted exactly like every other arm of this in-memory store: an inference on an
-            // instance whose generation has moved past the request's is a real staleness rejection
-            // (the same `validate_commit` rule the real router enforces); otherwise the request's own
-            // canonical payload comes back as the result payload, so a test can assert the request
-            // really travelled the port without this double ever claiming to have computed anything.
             AppCommand::Infer(command) => {
                 if command.generation != self.generation {
                     return AppFrame::Error(Fault { code: "transaction.generation-mismatch".into(), message: format!("inference base generation {} no longer matches current generation {}", command.generation, self.generation) });
                 }
                 AppFrame::Inferred { inference_schema: command.inference_schema, complete: true, payload: command.canonical_payload }
             }
-            // 📤️🆕️ This double owns no guest, so it can neither run a media port nor mint a plugin's
-            // genesis document. It says so with the SAME typed fault a real unreachable plugin uses,
-            // never a synthesised export or an empty pack that a caller could mistake for real bytes.
             AppCommand::ExportMedia { port, .. } => AppFrame::Error(Fault { code: "plugin.unavailable".into(), message: format!("the scripted in-memory channel has no guest to read media port `{port}` from — bind a workspace with --folder/--hub") }),
             AppCommand::ReadArtifact => AppFrame::Error(Fault { code: "plugin.unavailable".into(), message: "the scripted in-memory channel has no guest to read a genesis document from — bind a workspace with --folder/--hub".into() }),
         }

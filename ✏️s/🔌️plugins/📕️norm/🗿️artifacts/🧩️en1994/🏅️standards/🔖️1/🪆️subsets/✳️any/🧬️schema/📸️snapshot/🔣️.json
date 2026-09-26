@@ -74,9 +74,7 @@
         "category",
         "stage",
         "qAreaPa",
-        "mKNm",
-        "vKN",
-        "nKN",
+        "fKN",
         "deltaSigmaKPa",
         "deltaTauKPa"
       ],
@@ -94,22 +92,20 @@
           "type": "string"
         },
         "qAreaPa": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
-        "mKNm": {
-          "type": "number"
-        },
-        "vKN": {
-          "type": "number"
-        },
-        "nKN": {
-          "type": "number"
+        "fKN": {
+          "type": "number",
+          "format": "double"
         },
         "deltaSigmaKPa": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         },
         "deltaTauKPa": {
-          "type": "number"
+          "type": "number",
+          "format": "double"
         }
       }
     },
@@ -362,7 +358,7 @@
         "actions": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/CharacteristicAction"
+            "$ref": "#/definitions/ColumnAction"
           }
         }
       }
@@ -415,6 +411,40 @@
           "items": {
             "$ref": "#/definitions/CharacteristicAction"
           }
+        }
+      }
+    },
+    "ColumnAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "category",
+        "stage",
+        "nKN",
+        "mKNm"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "stage": {
+          "type": "string"
+        },
+        "nKN": {
+          "type": "number",
+          "format": "double"
+        },
+        "mKNm": {
+          "type": "number",
+          "format": "double"
         }
       }
     }

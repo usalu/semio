@@ -22,6 +22,7 @@ pub fn reference_tables() -> Vec<CatalogueTable> {
 }
 
 pub fn alloy_table_3_2() -> CatalogueTable {
+    use crate::standards::v1::subsets::any::schema::part_1_1::CATALOGUE_ALLOY_ROWS;
     CatalogueTable {
         id: "table-3-2",
         title_en: "Aluminium alloys and tempers",
@@ -34,27 +35,16 @@ pub fn alloy_table_3_2() -> CatalogueTable {
             CatalogueColumn { id: "rho_o", label_en: "ρ_o,haz", label_de: "ρ_o,WEZ", unit: None },
             CatalogueColumn { id: "rho_u", label_en: "ρ_u,haz", label_de: "ρ_u,WEZ", unit: None },
         ],
-        rows: vec![
-            alloy_row("aw6060-t6", 160.0, 215.0, 0.48, 0.56),
-            alloy_row("aw6061-t6", 240.0, 290.0, 0.53, 0.62),
-            alloy_row("aw6063-t6", 170.0, 215.0, 0.49, 0.56),
-            alloy_row("aw6082-t6", 260.0, 310.0, 0.64, 0.73),
-            alloy_row("aw5083-o", 125.0, 275.0, 1.0, 1.0),
-            alloy_row("aw5083-h111", 125.0, 275.0, 1.0, 1.0),
-        ],
-    }
-}
-
-fn alloy_row(des: &str, fo: f64, fu: f64, rho_o: f64, rho_u: f64) -> CatalogueRow {
-    CatalogueRow {
-        id: des.into(),
-        cells: vec![
-            CatalogueCell::text(des),
-            CatalogueCell::number(fo, 0),
-            CatalogueCell::number(fu, 0),
-            CatalogueCell::number(rho_o, 2),
-            CatalogueCell::number(rho_u, 2),
-        ],
+        rows: CATALOGUE_ALLOY_ROWS.iter().map(|(des, props)| CatalogueRow {
+            id: (*des).into(),
+            cells: vec![
+                CatalogueCell::text(*des),
+                CatalogueCell::number(props.f_o_pa / 1e6, 0),
+                CatalogueCell::number(props.f_u_pa / 1e6, 0),
+                CatalogueCell::number(props.rho_o_haz, 2),
+                CatalogueCell::number(props.rho_u_haz, 2),
+            ],
+        }).collect(),
     }
 }
 //#endregion 📚️AlloyCatalogue

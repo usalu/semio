@@ -2,5 +2,6 @@
 import { ScriptRouter, runBundleScriptMain } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { DescriptorBuildScript, DescriptorTestScript } from "../../🏗️component-build/🟦️.ts";
 import { DescribeScript } from "../../🛂️descriptor-emission/🟦️.ts";
+import { DescribeComponentScript } from "../../🏭️fresh-component/🟦️.ts";
 
-if (import.meta.main) await runBundleScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript), import.meta.url);
+if (import.meta.main) await runBundleScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("component", DescribeComponentScript), import.meta.url);

@@ -12,6 +12,7 @@ import type { DirectorySpaceRole } from "../🧬️schema/🟦️.ts";
 //#region 🔖️Routes
 export const HUB_SESSION_MINT_PATH_V1 = "/auth/sessions";
 export const HUB_SESSION_ME_PATH_V1 = "/auth/sessions/me";
+export const HUB_SESSION_SIGN_OUT_PATH_V1 = "/auth/sessions/me/sign-out";
 export const HUB_SIGN_IN_REQUEST_SCHEMA_V1 = "semio.hub.auth.credential-sign-in/v1";
 export const HUB_AUTH_ERROR_SCHEMA_V1 = "semio.hub.auth.error/v1";
 /** 📏️ AU1 §1.1: axum's `DefaultBodyLimit` rejects a larger body with 413 before the handler runs. */
@@ -536,7 +537,7 @@ export interface HubSignInResponseV1 {
 }
 
 /** 🔌️ The three calls the sign-in flow makes. `mint` posts the credential, `read` is
- * `GET /auth/sessions/me` (the re-auth probe), `end` is `DELETE /auth/sessions/me`. */
+ * `GET /auth/sessions/me` (the re-auth probe), `end` is the `POST /auth/sessions/me/sign-out` command. */
 export interface HubSignInTransportV1 {
   mint(origin: string, body: string, signal: AbortSignal): Promise<HubSignInResponseV1>;
   read(origin: string, signal: AbortSignal): Promise<HubSignInResponseV1>;

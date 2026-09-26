@@ -71,8 +71,9 @@ import { stageTestBrowserHostV1 } from "../../../🧰️framework/🛍️product
 import { pluginModulesRootIn } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { produceFreshComponentV1, testFreshComponentStagingV1, testFreshComponentProcessV1, testFreshComponentSourceEpochV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
+import { FRESH_COMPONENT_MAX_BYTES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
 import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
-import { buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
+import { browserActorImportAdmissionV1, buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
 import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, transpilePluginComponentAsync } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
 import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA, utf8OrderV1, type TrustedPluginModuleBundleV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
@@ -113,7 +114,7 @@ import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpac
 import { issueLocalCredential, type LocalSessionBrokerV1, parseLocalSessionBrokerRecordV1, parseLocalSessionRequestV1, parseLocalSessionV1, startLocalSessionBroker } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
-import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_READINESS_STALL_BOUND_MS, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { ensureHubBackend, finishLocalHub, freeLoopbackPort, HUB_BINARY_SOURCES_FILE, HUB_DEV_BINARY_TARGET, hubBackendIdentity, hubBackendName, type HubBackendName, hubBinaryPath, hubDevBinaryPath, hubDevPostgresBinaryPath, LOCAL_HUB_DEVELOPMENT_CATALOG_PACKAGES, LOCAL_HUB_DEVELOPMENT_PROFILES, LOCAL_READINESS_STALL_BOUND_MS, TRUSTED_CATALOG_READINESS_STALL_BOUND_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 
 //#region 🧱️SourceGateRunners
@@ -391,7 +392,7 @@ function startLocalAdminRelay(hubOrigin: string, envelope: Record<string, any>, 
 
 async function readLocalRelayBody(request: Request, maximumBytes = LOCAL_RELAY_MAX_BODY_BYTES, signal?: AbortSignal): Promise<Uint8Array<ArrayBuffer> | undefined> {
   signal?.throwIfAborted();
-  if (request.method === "GET" || request.method === "DELETE" || request.body === null) return undefined;
+  if (request.method === "GET" || request.body === null) return undefined;
   const contentLength = Number(request.headers.get("content-length") ?? "0");
   if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > maximumBytes) throw new Error("payload too large");
   const reader = request.body.getReader();
@@ -883,6 +884,8 @@ async function commitCheckInProcessEdit(
       document_id: documentId,
       actor: grant.actorId,
       dependencies: [...envelope.dependencies],
+      observed: null,
+      target: [],
       diff: { schema: envelope.diffSchema, payload: Array.from(Buffer.from(envelope.diff, "base64")) },
       inverse: { schema: envelope.inverseSchema, payload: Array.from(Buffer.from(envelope.inverse, "base64")) },
       timestamp: { actor: 1, physical_ms: physicalMs, logical: index + 1 },
@@ -1584,7 +1587,7 @@ async function runSecureLocalSmoke(repoRoot: string, root: string): Promise<void
     if ((await fetch(`http://127.0.0.1:${run.port}/auth/sessions`, { method: "POST" })).status !== 404) throw new Error("public session mint route exists");
     for (const capability of capabilities) {
       const headers = { authorization: `Bearer ${capability}` };
-      if ((await fetch(`http://127.0.0.1:${run.port}/auth/sessions/me`, { method: "DELETE", headers })).status !== 204) throw new Error("local session revoke failed");
+      if ((await fetch(`http://127.0.0.1:${run.port}/auth/sessions/me/sign-out`, { method: "POST", headers })).status !== 204) throw new Error("local session revoke failed");
       if ((await fetch(`http://127.0.0.1:${run.port}/auth/sessions/me`, { headers })).status !== 401) throw new Error("revoked local session remained usable");
     }
     const replayNow = Date.now();
@@ -3663,7 +3666,7 @@ async function proveInferenceRelay(repoRoot: string): Promise<number> {
       const bytes = new Uint8Array(await response.arrayBuffer());
       if (row.status === 200 && (bytes.length !== row.bytes || bytes.some((byte) => byte !== 73) || response.headers.get("cache-control") !== "no-store")) throw new Error("inference response bytes or privacy changed");
     }
-    console.log(`[DEBUG] inference live relay routes=${fixture.routes.length} response-bounds=${fixture.responses.length} proof-ratchet=true upstream-auth=true`);
+    console.log(`inference live relay routes=${fixture.routes.length} response-bounds=${fixture.responses.length} proof-ratchet=true upstream-auth=true`);
     return fixture.routes.length + fixture.responses.length + 3;
   } finally {
     proof.fill(0);
@@ -4160,7 +4163,7 @@ async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
     const candidateFixture = { ...fixture, catalogRows: [row] };
     if (documentOpenNeutralIssueOutcome(fixture.intent, "session", "author", candidateFixture).code !== "component-unavailable") throw new Error(`document-open issuer admitted hostile ${mutation.path}`);
   }
-  console.log(`[DEBUG] verified parent dialect source:18 fields,3 digest substitutions,${fixture.parentDialectNegativeMutations.length} hostile rows,public plan+private exchange+socket equality; native authority unverified`);
+  console.log(`verified parent dialect source:18 fields,3 digest substitutions,${fixture.parentDialectNegativeMutations.length} hostile rows,public plan+private exchange+socket equality; native authority unverified`);
   const receiptSecret = Buffer.from(fixture.receiptDigest.receipt.slice("open.v1.".length), "base64url");
   try {
     if (receiptSecret.length !== 32 || `open.v1.${receiptSecret.toString("base64url")}` !== fixture.receiptDigest.receipt) throw new Error("document-open receipt secret grammar mismatch");
@@ -4755,7 +4758,7 @@ async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<Retu
         if (stage === progressStage && completed !== total && completed - progressReported < 64 * 1024 * 1024) return;
         progressStage = stage;
         progressReported = completed;
-        console.log(`[DEBUG] headless Stdio metadata ${stage}: bytes=${completed}/${total}`);
+        console.log(`headless Stdio metadata ${stage}: bytes=${completed}/${total}`);
       },
     });
     Bun.gc(true);
@@ -4777,7 +4780,7 @@ async function proveHeadlessStdioImports(repoRoot: string, receipt: Awaited<Retu
     process.removeListener("SIGINT", cancel);
     process.removeListener("SIGTERM", cancel);
   }
-  console.log(`[DEBUG] headless Stdio imports: features=${fixture.features.join(",")} cases=${fixture.cases.length}; evidence=${runRoot}; private-metadata-capture=1; native metadata only, no guest execution claim`);
+  console.log(`headless Stdio imports: features=${fixture.features.join(",")} cases=${fixture.cases.length}; evidence=${runRoot}; private-metadata-capture=1; native metadata only, no guest execution claim`);
 }
 
 async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Awaited<ReturnType<typeof runExactCargoLaws>>[number]): Promise<void> {
@@ -4786,12 +4789,12 @@ async function proveNativeStdioCommitmentSchema(repoRoot: string, receipt: Await
   const output = join(receipt.artifactDir, `law-${law}.stdout`);
   const stat = lstatSync(output);
   if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 8 * 1024 * 1024) throw new Error("native Stdio commitment evidence is not a bounded regular file");
-  const prefix = "[DEBUG] native-catalog-payload=";
+  const prefix = "native-catalog-payload=";
   const lines = readFileSync(output, "utf8").split("\n").filter((line) => line.startsWith(prefix));
   if (lines.length !== 1 || Buffer.byteLength(lines[0]!.slice(prefix.length), "utf8") > 2 * 1024 * 1024) throw new Error("native Stdio commitment payload must be unique and at most 2 MiB");
   const validate = hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCatalogSurfaceCommitment");
   if (!validate(JSON.parse(lines[0]!.slice(prefix.length)))) throw new Error("actual native Stdio commitment violates its owning scope contract");
-  console.log("[DEBUG] actual native Stdio commitment: AJV schema validated; no guest descriptor equality claim");
+  console.log("actual native Stdio commitment: AJV schema validated; no guest descriptor equality claim");
 }
 
 class NativeOpenableCatalogProviderCheckScript extends BundleScript {
@@ -7865,6 +7868,41 @@ export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selecti
   console.log(`trusted-catalog-preflight: ${claims.length} committed descriptors carry exact, bounded dependencies inside the selected closure`);
 }
 
+/** 🛫️ Fails a publication in milliseconds, before the hub build and every release build: each selected package and each extension
+ * of one has a `dist/component-dev` deliverable that is exactly the component its committed descriptor names (`hashes.wasmSha256`, the
+ * `rebuild-all` invariant), and that component imports only interfaces a closed browser actor admits — the rule the actor build applies
+ * to the release component after its build (`browserActorImportAdmissionV1`). Every finding of every component is reported at once,
+ * with the fix it needs. */
+export function trustedBootstrapPreflightComponentsV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
+  const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
+  if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun nx run @semio-tech/plugin-registry:generate`);
+  const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; cratePath?: unknown; wasmOut?: unknown; role?: unknown; extends?: unknown }[];
+  const selected = new Set(selection.map((spec) => spec.pluginId));
+  const rows = registry.filter((row) => (row.role === "plugin" && selected.has(String(row.pluginId))) || (row.role === "extension" && selected.has(String(row.extends))));
+  const missing = [...selected].filter((pluginId) => !rows.some((row) => row.pluginId === pluginId));
+  if (missing.length > 0) throw new Error(`trusted catalog preflight: ${missing.join(", ")} not rows of the generated plugin registry`);
+  const findings: string[] = [];
+  for (const row of rows) {
+    if (typeof row.cratePath !== "string" || typeof row.wasmOut !== "string") { findings.push(`${String(row.pluginId)}: registry row carries no crate path or component name`); continue; }
+    const descriptor = trustedBootstrapReadRegular(join(repoRoot, row.cratePath, "..", "..", "🛂️.descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, `committed ${row.pluginId} descriptor`, () => {});
+    const named = (packValueToExactJson(decodePackValue(descriptor)) as { hashes?: { wasmSha256?: unknown } }).hashes?.wasmSha256;
+    const path = join(repoRoot, row.cratePath, "dist", "component-dev", row.wasmOut);
+    if (!existsSync(path)) { findings.push(`${row.pluginId}: no component-dev deliverable ${relative(repoRoot, path)}; run bun nx run @semio-tech/plugin-registry:rebuild-all`); continue; }
+    const component = trustedBootstrapReadRegular(path, FRESH_COMPONENT_MAX_BYTES, `${row.pluginId} component-dev deliverable`, () => {});
+    try {
+      if (createHash("sha256").update(component).digest("hex") !== named) findings.push(`${row.pluginId}: component-dev deliverable is not the component its committed descriptor names; run bun nx run @semio-tech/plugin-registry:rebuild-all`);
+      const imports = browserActorImportAdmissionV1(component);
+      if (imports.refused.length > 0) findings.push(`${row.pluginId}: imports ${imports.refused.join(", ")}, which no closed browser actor admits; the guest must not link that capability`);
+    } catch (error) {
+      findings.push(`${row.pluginId}: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      component.fill(0);
+    }
+  }
+  if (findings.length > 0) throw new Error(`trusted catalog preflight refused ${findings.length} of ${rows.length} components:\n  ${findings.join("\n  ")}`);
+  console.log(`trusted-catalog-preflight: ${rows.length} component-dev deliverables (${selected.size} packages + ${rows.length - selected.size} extensions) match their committed descriptors and import only browser-actor-admitted interfaces`);
+}
+
 /** 🧮️ Frames all resolved dependency identities in the native generation format. */
 function trustedBootstrapDependencyEncoding(value: unknown): Buffer {
   const dependencies = trustedBootstrapDependencies(value);
@@ -8370,7 +8408,7 @@ async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): Promise<
   const mode = gate.lastIndexOf('if (segments[0] === "--browser" || segments[0] === "--two-author-shell")');
   assert(mode >= 0 && gate.indexOf("const initialPlan = await validateAndPublishTrustedStdioGisCandidate") < mode);
   assert(gate.slice(mode).includes("await proveTrustedGisClosedActorV1(this.repoRoot, dataRoot, receipt, artifactPath)"));
-  console.log("[DEBUG] trusted-retained-gis-browser: pinned-tables=3 deep-equal=" + fixture.cases.length + " SHA256=node+webcrypto source-hostiles=" + hostiles.length + "; neutral bytes only, no browser execution claim");
+  console.log("trusted-retained-gis-browser: pinned-tables=3 deep-equal=" + fixture.cases.length + " SHA256=node+webcrypto source-hostiles=" + hostiles.length + "; neutral bytes only, no browser execution claim");
 }
 
 /** 🤝️ Pins the genuine two-peer acceptance specification without claiming any observed runtime trace. */
@@ -8466,7 +8504,7 @@ async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string):
     { ...fixture, teardown: { ...fixture.teardown, childBytes: 1 } },
   ];
   for (const hostile of hostiles) assert(!validate(hostile), "collaboration contract hostile must fail");
-  console.log("[DEBUG] trusted-gis-collaboration-contract: pinned-specification=1 hostile=" + hostiles.length + " cross-fixture-equality=8; specification only, no observed collaboration trace");
+  console.log("trusted-gis-collaboration-contract: pinned-specification=1 hostile=" + hostiles.length + " cross-fixture-equality=8; specification only, no observed collaboration trace");
 }
 
 /** 🛂️ Checks one mandatory exact-generation proof before every new current publication. */
@@ -8530,7 +8568,7 @@ async function proveTrustedGisPublicationFixture(repoRoot: string, fixture: Reco
   }
   assert(native.includes("await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, receipt, validation)"), "native must join mandatory proof");
   assert(native.includes("await validateAndPublishTrustedStdioGisCandidate(this.repoRoot, this.root, dataRoot, rotated, validation, initialPlan)"), "rotation must join mandatory proof");
-  console.log("[DEBUG] trusted-gis-publication: AJV=1 sqlite-traces=" + fixture.entryPoints.length * fixture.cases.length + " source-hostiles=" + hostiles.length + "; no native component or browser claim");
+  console.log("trusted-gis-publication: AJV=1 sqlite-traces=" + fixture.entryPoints.length * fixture.cases.length + " source-hostiles=" + hostiles.length + "; no native component or browser claim");
 }
 
 async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<void> {
@@ -8822,7 +8860,7 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   }
   assert.deepEqual(trustedBootstrapDependencies(fixture.ordering.input).map((identity) => identity.pluginId), fixture.ordering.expected);
   assert.equal(accepted, 3);
-  console.log(`[DEBUG] compiled dependency claims: AJV=1 Pack=1 DataView=1 cases=${fixture.cases.length} accepted=${accepted} native-vectors=${fixture.nativeCases.length} raw-Pack=${fixture.rawCases.length} source-derived-goldens=${fixture.encodingCases.length} publication-files=${fixture.publicationFiles.length} UTF8-order=1; native guest agreement remains separate`);
+  console.log(`compiled dependency claims: AJV=1 Pack=1 DataView=1 cases=${fixture.cases.length} accepted=${accepted} native-vectors=${fixture.nativeCases.length} raw-Pack=${fixture.rawCases.length} source-derived-goldens=${fixture.encodingCases.length} publication-files=${fixture.publicationFiles.length} UTF8-order=1; native guest agreement remains separate`);
 }
 
 type TrustedBootstrapMaterializationV1 = Readonly<{ profileId: string; generationId: string; bundleSha256: string; bundlePath: string }>;
@@ -9668,7 +9706,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
     }
     assert.deepEqual(readFileSync(pointerPath), previous);
   }
-  console.log(`[DEBUG] trusted publication final-byte fence: scope-exports=3 WebCrypto=1 Node-replace-oracle=1 cases=${fixture.cases.length} command-cases=${fixture.commandCases.length} receipt-cases=${fixture.receiptCases.length} revision-cases=${cas.cases.length} transport-outcomes=3 real-child-cases=${transport.processCases.length}; native-owner/CAS remain unqualified; evidence=${evidence}`);
+  console.log(`trusted publication final-byte fence: scope-exports=3 WebCrypto=1 Node-replace-oracle=1 cases=${fixture.cases.length} command-cases=${fixture.commandCases.length} receipt-cases=${fixture.receiptCases.length} revision-cases=${cas.cases.length} transport-outcomes=3 real-child-cases=${transport.processCases.length}; native-owner/CAS remain unqualified; evidence=${evidence}`);
 }
 
 /** ♾️ The repository's unlimited build budget (`SEMIO_BUILD_BUDGET_MS` unset, so [[BUILD_BUDGET_MS]] is `0`)
@@ -9732,7 +9770,7 @@ const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,gis,animate,architect,block,cad,da
 export const TRUSTED_BOOTSTRAP_LINKED_PACKAGES = "stdio,gis";
 
 const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Object.freeze([
-  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", opensDocuments: false }),
+  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", componentPackageId: "semio:stdio", outputName: "semio_s_plugin_stdio.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🗄️stdio/📇️registry/📜️native-codec-factories.json", opensDocuments: true }),
   Object.freeze({ pluginId: "gis", cargoPackage: "semio-s-plugin-gis", componentPackageId: "semio:gis", outputName: "semio_s_plugin_gis.wasm", linkedCodecRegistry: "✏️s/🔌️plugins/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
   Object.freeze({ pluginId: "animate", cargoPackage: "semio-s-plugin-animate", componentPackageId: "semio:animate", outputName: "semio_s_plugin_animate.wasm", linkedCodecRegistry: null, opensDocuments: true }),
   Object.freeze({ pluginId: "architect", cargoPackage: "semio-s-plugin-architect", componentPackageId: "semio:architect", outputName: "semio_s_plugin_architect.wasm", linkedCodecRegistry: null, opensDocuments: true }),
@@ -10554,7 +10592,8 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
       codecCount: record.nativeCodecs.length,
       targetCount: record.openTargets.length,
     }));
-    if (!Array.isArray(profile.openTargets) || profile.openTargets.length !== 1) throw new Error("trusted rotation source profile does not declare exactly one open target");
+    const packageTargets = bundle.packages.reduce((total: number, record: any) => total + record.openTargets.length, 0);
+    if (!Array.isArray(profile.openTargets) || profile.openTargets.length !== packageTargets) throw new Error("trusted rotation source profile does not open every package target");
     const profileSummary = { id: profile.id, selectedClosure: profile.selectedClosure, packages: packageSummary, openTargets: profile.openTargets.map((selection: any) => ({ pluginId: selection.package.pluginId, ...selection.target })) };
     const generationId = createHash("sha256").update(trustedBootstrapProfileEncoding(profileSummary, codecs)).digest("hex");
     if (generationId === current.generationId) throw new Error("trusted rotation did not change the full profile generation");
@@ -10916,7 +10955,7 @@ async function proveTrustedPublicationCli(repoRoot: string, hubRoot: string): Pr
     result.bytes.fill(0);
   }
   first.bytes.fill(0); next.bytes.fill(0); retained.fill(0);
-  console.log(`[DEBUG] trusted publication CLI: real-Hub=1 compiled-provider=1 revisions=1,2 stale=refused invalid=2 outcome=${nextReceipt.outcome} evidence=${evidence}; synthetic guest fixture, no guest execution or activation claim`);
+  console.log(`trusted publication CLI: real-Hub=1 compiled-provider=1 revisions=1,2 stale=refused invalid=2 outcome=${nextReceipt.outcome} evidence=${evidence}; synthetic guest fixture, no guest execution or activation claim`);
 }
 
 /** 🗂️ Allocates private qualification diagnostics outside immutable generations and current. */
@@ -12219,7 +12258,7 @@ async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: strin
   }
   if (!completedReceipt) throw new Error("two-author Shell composition has no completed observation");
   trustedBootstrapWriteNew(join(prepared.artifactRoot, `two-author-shell-${randomBytes(8).toString("hex")}.json`), Buffer.from(`${JSON.stringify(completedReceipt, null, 2)}\n`), () => {});
-  console.log(`[DEBUG] two-author Shell Map: generation=${prepared.current.generationId} real-store-observations=8 private-job-denials=3 MCP-cancel=1 ordinary-approval=1 ordinary-undo=1 same-root-restart=1`);
+  console.log(`two-author Shell Map: generation=${prepared.current.generationId} real-store-observations=8 private-job-denials=3 MCP-cancel=1 ordinary-approval=1 ordinary-undo=1 same-root-restart=1`);
 }
 
 /** 🤝️ Drives the bounded two-Author Hub/MCP proposal and durable server-owned undo journey. */
@@ -12691,7 +12730,7 @@ class LocalBootstrapLaunchCheckScript extends BundleScript {
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build through Nx without additional arguments");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, { output: "dist/build" });
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, { output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
     signExecutableForDistribution(join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
   }
 }
@@ -12719,7 +12758,7 @@ class PublishScript extends BundleScript {
 class BuildDevScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build-dev through Nx without additional arguments");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, { output: "dist/build-dev" });
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, { output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
   }
 }
 
@@ -12730,27 +12769,38 @@ class BuildDevScript extends BundleScript {
 class BuildDevPostgresScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build-dev-postgres through Nx without additional arguments");
-    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub", "--features", "postgres,neo4j"], this.repoRoot, { output: "dist/build-dev-postgres" });
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub", "--features", "postgres,neo4j"], this.repoRoot, { output: "dist/build-dev-postgres", sourcesRecord: HUB_BINARY_SOURCES_FILE });
   }
 }
 
-/** 🐘️ Points BOTH durable halves of a `dev postgres` launch at PostgreSQL.
+/** 🐘️ Points BOTH durable halves of a `dev postgres` / `dev neo4j` launch at that backend.
  *
- * `OS_HUB_DATABASE_URL` is required and carries the document/blob store; the directory reuses it
- * unless `OS_HUB_DIRECTORY_DATABASE_URL` names another database (or `OS_HUB_DIRECTORY_BACKEND` is
- * already set, e.g. to `neo4j`, in which case that choice is left alone). Anything the caller set
- * explicitly wins — this only fills what a `postgres` launch cannot run without.
+ * Zero-touch: without a caller-named server (`OS_HUB_DATABASE_URL` for postgres, `OS_HUB_NEO4J_URI` for neo4j) the
+ * launch reuses — or starts — the persistent development server `os-hub-ts:backend-up` manages
+ * (`ensureHubBackend`, `🌎️hub/compose.yaml`), and takes every hub variable it declares. A caller-named server keeps
+ * the caller's variables; only the directory half is filled from the storage half when unset.
  *
- * 🧵️ Both halves reach `sqlx` through `db_storage::DbIoAsyncDriverRuntime`, the bounded runtime the
- * storage layer owns: a `sqlx` future is never polled on a `WorkerPool` worker, which has no Tokio
- * context and aborted the process before that seam existed (ticket 26/09/18 D4). */
-function applyPostgresBackendEnvironment(): void {
-  const databaseUrl = process.env.OS_HUB_DATABASE_URL;
-  if (!databaseUrl) throw new Error("dev postgres needs OS_HUB_DATABASE_URL (for example postgres://semio:semio@127.0.0.1:5432/semio_hub) — it is the hub's document/blob store");
-  process.env.OS_HUB_STORAGE_BACKEND = "postgres";
-  if (!process.env.OS_HUB_DIRECTORY_BACKEND) process.env.OS_HUB_DIRECTORY_BACKEND = "postgres";
-  if (process.env.OS_HUB_DIRECTORY_BACKEND === "postgres" && !process.env.OS_HUB_DIRECTORY_DATABASE_URL) process.env.OS_HUB_DIRECTORY_DATABASE_URL = databaseUrl;
-  if (process.env.OS_HUB_DIRECTORY_BACKEND === "neo4j" && !process.env.OS_HUB_DIRECTORY_NEO4J_URI) throw new Error("OS_HUB_DIRECTORY_BACKEND=neo4j needs OS_HUB_DIRECTORY_NEO4J_URI (for example bolt://127.0.0.1:7687)");
+ * 🧵️ Both halves reach `sqlx`/`neo4rs` through `db_storage::DbIoAsyncDriverRuntime`, the bounded runtime the
+ * storage layer owns: a driver future is never polled on a `WorkerPool` worker, which has no Tokio context and
+ * aborted the process before that seam existed (ticket 26/09/18 D4). */
+async function applyExternalBackendEnvironment(repoRoot: string, name: HubBackendName): Promise<void> {
+  const named = name === "postgres" ? process.env.OS_HUB_DATABASE_URL : process.env.OS_HUB_NEO4J_URI;
+  if (!named) {
+    const server = await ensureHubBackend(repoRoot, hubBackendIdentity(name), { onProgress: (progress) => console.log(`[INFO] ${progress.name} backend ${progress.phase} ${progress.elapsedSeconds} s`) });
+    for (const [key, value] of Object.entries(server.env)) process.env[key] ??= value;
+    console.log(`[INFO] dev ${name}: backend server ${server.host}:${server.port} (container ${server.identity.container}; remove with os-hub-ts:backend-down)`);
+    return;
+  }
+  process.env.OS_HUB_STORAGE_BACKEND = name;
+  process.env.OS_HUB_DIRECTORY_BACKEND ??= name;
+  if (process.env.OS_HUB_DIRECTORY_BACKEND === "postgres") process.env.OS_HUB_DIRECTORY_DATABASE_URL ??= process.env.OS_HUB_DATABASE_URL;
+  if (process.env.OS_HUB_DIRECTORY_BACKEND === "neo4j") {
+    process.env.OS_HUB_DIRECTORY_NEO4J_URI ??= process.env.OS_HUB_NEO4J_URI;
+    process.env.OS_HUB_DIRECTORY_NEO4J_USER ??= process.env.OS_HUB_NEO4J_USER;
+    process.env.OS_HUB_DIRECTORY_NEO4J_PASSWORD ??= process.env.OS_HUB_NEO4J_PASSWORD;
+  }
+  if (!process.env.OS_HUB_DIRECTORY_DATABASE_URL && process.env.OS_HUB_DIRECTORY_BACKEND === "postgres") throw new Error("OS_HUB_DIRECTORY_BACKEND=postgres needs OS_HUB_DIRECTORY_DATABASE_URL");
+  if (!process.env.OS_HUB_DIRECTORY_NEO4J_URI && process.env.OS_HUB_DIRECTORY_BACKEND === "neo4j") throw new Error("OS_HUB_DIRECTORY_BACKEND=neo4j needs OS_HUB_DIRECTORY_NEO4J_URI (for example bolt://127.0.0.1:7687)");
 }
 
 /** 🔗️ `runCargo`'s `env` arg replaces `process.env` wholesale (see `runCmdInternal`'s
@@ -12759,9 +12809,9 @@ function applyPostgresBackendEnvironment(): void {
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     buildAdminSpa(this.repoRoot);
-    const postgres = segments[0] === "postgres";
-    const binaryPath = postgres ? hubDevPostgresBinaryPath(this.root) : hubDevBinaryPath(this.root);
-    if (postgres) applyPostgresBackendEnvironment();
+    const external = segments[0] === "postgres" || segments[0] === "neo4j" ? hubBackendName(segments[0]) : undefined;
+    const binaryPath = external ? hubDevPostgresBinaryPath(this.root) : hubDevBinaryPath(this.root);
+    if (external) await applyExternalBackendEnvironment(this.repoRoot, external);
     const secureSuite = segments[0] === "secure-suite";
     const secureNative = secureSuite || segments[0] === "secure-native";
     const secureMcp = secureSuite || segments[0] === "secure-mcp";
@@ -12982,7 +13032,7 @@ ${finishGisMapProcessDocumentSocket.toString()}
     await server.stop(true);
     for (const socket of sockets) if (socket.readyState < WebSocket.CLOSING) socket.close();
   }
-  console.log(`[DEBUG] GIS Map witness socket retirement: neutral=${observed.length} Bun=1 third-party-ws=1 exact-close-events=2; no Hub restart claim`);
+  console.log(`GIS Map witness socket retirement: neutral=${observed.length} Bun=1 third-party-ws=1 exact-close-events=2; no Hub restart claim`);
 }
 
 /** 🪢️ Validates the neutral shared-current workflow and its private owner boundaries. */
@@ -13225,7 +13275,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
         cwd: this.root, env: hubEnv, nativeEnv: { RUST_MIN_STACK: "268435456" }, artifactDir: artifactPath,
         groups: [{ package: "semio-hub", target: { kind: "bin", name: "os-hub" }, cargoArgs: ["--no-default-features", "--features", "sqlite,integration-fixtures,native-artifact-execution"], laws: ["check_in_process_fixture_emits_verified_gis_ledger_and_catalog"] }],
         buildBudgetMs: buildBudgetMs(), listBudgetMs: 60_000, lawBudgetMs: 120_000,
-        progress(event) { console.log(`[DEBUG] two-author Shell seed ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) { console.log(`two-author Shell seed ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
       });
       const dataRoot = join(resolve(artifactRoot), "server-owned-data");
       const binary = join(hubTarget, "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
@@ -13271,13 +13321,28 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
   }
 }
 
+/** 🧾️ Parses the one `[--packages <plugin,plugin,…|all>]` argument the trusted catalog verbs take. */
+function trustedCatalogPackagesArgument(segments: readonly string[], verb: string): readonly TrustedBootstrapPackageSpecV1[] {
+  const flag = segments.indexOf("--packages");
+  const list = flag === -1 ? TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES : segments[flag + 1];
+  if ((flag === -1 && segments.length !== 0) || (flag !== -1 && (flag !== 0 || segments.length !== 2)) || typeof list !== "string")
+    throw new Error(`usage: ${verb} [--packages <plugin,plugin,…|all>]`);
+  return trustedBootstrapSelectPackages(list);
+}
+
+class TrustedCatalogPreflightScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const selection = trustedCatalogPackagesArgument(segments, "trusted-catalog-preflight");
+    trustedBootstrapPreflightDescriptorsV1(this.repoRoot, selection);
+    trustedBootstrapPreflightComponentsV1(this.repoRoot, selection);
+  }
+}
+
 class TrustedCatalogBootstrapScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const flag = segments.indexOf("--packages");
-    const list = flag === -1 ? TRUSTED_BOOTSTRAP_DEFAULT_PACKAGES : segments[flag + 1];
-    if ((flag === -1 && segments.length !== 0) || (flag !== -1 && (flag !== 0 || segments.length !== 2)) || typeof list !== "string")
-      throw new Error("usage: trusted-catalog-bootstrap [--packages <plugin,plugin,…|all>]");
-    const selection = trustedBootstrapSelectPackages(list);
+    const selection = trustedCatalogPackagesArgument(segments, "trusted-catalog-bootstrap");
+    trustedBootstrapPreflightDescriptorsV1(this.repoRoot, selection);
+    trustedBootstrapPreflightComponentsV1(this.repoRoot, selection);
     const dataRoot = process.env.OS_HUB_DATA ? resolve(process.env.OS_HUB_DATA) : resolve(this.repoRoot, ".🧬semio", "🌐hub");
     runCargo(["build", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root);
     const binaryPath = hubBinaryPath(this.repoRoot);
@@ -14482,7 +14547,7 @@ async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void
       currentProof.fill(0);
       return { proof: proofHex, ...browserConfig };
     };
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Scoped presence browser shell</title><script type="module">import { injectIntoGlobalHook } from "/@react-refresh"; injectIntoGlobalHook(window); window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => (type) => type;</script><script type="module" src="/@vite/client"></script></head><body><div id="root"></div><script type="module">const root = document.querySelector("#root"); try { const module = await import(${JSON.stringify(`/@fs${componentPath}`)}); const response = await fetch("/__scoped-presence/config"); if (!response.ok) throw new Error(\`config status \${response.status}\`); module.mountScopedPresenceBrowserShellV1(root, await response.json()); } catch (error) { root.textContent = \`[DEBUG] scoped-presence mount failed: \${error instanceof Error ? error.message : String(error)}\`; console.error(root.textContent); }</script></body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Scoped presence browser shell</title><script type="module">import { injectIntoGlobalHook } from "/@react-refresh"; injectIntoGlobalHook(window); window.$RefreshReg$ = () => {}; window.$RefreshSig$ = () => (type) => type;</script><script type="module" src="/@vite/client"></script></head><body><div id="root"></div><script type="module">const root = document.querySelector("#root"); try { const module = await import(${JSON.stringify(`/@fs${componentPath}`)}); const response = await fetch("/__scoped-presence/config"); if (!response.ok) throw new Error(\`config status \${response.status}\`); module.mountScopedPresenceBrowserShellV1(root, await response.json()); } catch (error) { root.textContent = \`scoped-presence mount failed: \${error instanceof Error ? error.message : String(error)}\`; console.error(root.textContent); }</script></body></html>`;
     const { createServer: createViteServer } = await import("vite");
     vite = await createViteServer({
       configFile: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"),
@@ -14625,7 +14690,7 @@ async function proveDirectoryEventPageV1Process(repoRoot: string, root: string):
       throw new Error("directory event page process did not advance one saturated raw-hidden scan exactly");
     }
 
-    const revoked = await fetch(`http://127.0.0.1:${first.port}/auth/sessions/me`, { method: "DELETE", headers: { authorization: `Bearer ${envelopeB.capability}` }, signal: AbortSignal.timeout(2_000) });
+    const revoked = await fetch(`http://127.0.0.1:${first.port}/auth/sessions/me/sign-out`, { method: "POST", headers: { authorization: `Bearer ${envelopeB.capability}` }, signal: AbortSignal.timeout(2_000) });
     const stale = await fetch(`http://127.0.0.1:${first.port}/directory/event-page/v1?after=0`, { headers: { authorization: `Bearer ${envelopeB.capability}` }, signal: AbortSignal.timeout(2_000) });
     if (revoked.status !== 204 || stale.status !== 401 || (await stale.arrayBuffer()).byteLength !== 0) throw new Error("directory event page process stale bearer denial was not empty and terminal");
     const priorBinding = continuation.sessionBindingSha256;
@@ -14747,7 +14812,7 @@ async function proveDirectoryCommandReceiptV1Process(repoRoot: string, root: str
     );
     if (oversize.status !== 413 && oversize.status !== 400) throw new Error(`directory command receipt process did not bound an oversize request: ${oversize.status}`);
 
-    await fetch(`http://127.0.0.1:${run.port}/auth/sessions/me`, { method: "DELETE", headers: { authorization: `Bearer ${author.capability}` }, signal: AbortSignal.timeout(5_000) });
+    await fetch(`http://127.0.0.1:${run.port}/auth/sessions/me/sign-out`, { method: "POST", headers: { authorization: `Bearer ${author.capability}` }, signal: AbortSignal.timeout(5_000) });
     const revoked = await postLiveDirectoryCommand(run, author.capability, requestId, inviteCommand);
     if (revoked.status !== 401 || revoked.text.includes(token)) throw new Error(`directory command receipt process revoked author retrieved a stored completion: ${revoked.status}`);
     console.log("directory-command-receipt-process: one-shot capability, redacted same-id resolution, conflict, spectator denial, byte ceiling, and revoked-author denial passed");
@@ -14980,7 +15045,7 @@ async function proveDirectoryCommandAuthorityV1(repoRoot: string): Promise<numbe
       const accepted = database.query(lookup[1]).get(...params(lookup[2])) as { accepted_at: number | null } | null;
       const status = result.changes === 1 ? 202 : accepted?.accepted_at != null ? 409 : 404;
       if (status !== row.status) throw new Error("production SQLite accepted-invite scope: " + row.id);
-      console.log(`[DEBUG] directory-invite-sqlite case=${row.id} changed=${result.changes} revoked=${stored.revoked_at !== null}`);
+      console.log(`directory-invite-sqlite case=${row.id} changed=${result.changes} revoked=${stored.revoked_at !== null}`);
     }
   } finally {
     database.close();
@@ -15182,7 +15247,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     || !spaceEditor.includes("create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in_the_host_relay")
     || !createArtifact.includes('action_id: "os.create-space-artifact".into()')
     || !createArtifact.includes('"kindChoice": payload.kind_choice')) throw new Error("ordinary Space creation dialog relay is not exact kindChoice-only");
-  console.log(`[DEBUG] space artifact creation contract: cases=${checks} raw-json=${fixture.rawJson.length} relay=${httpFixture.routes.length} authority=${httpFixture.authorities.length} responses=${httpFixture.responses.length} AJV=1 scope-exports=4 TypeScript=1 Pack=1 ready-only-coordinate=1 ordinary-bridge=3; runtime genesis remains a separate gate`);
+  console.log(`space artifact creation contract: cases=${checks} raw-json=${fixture.rawJson.length} relay=${httpFixture.routes.length} authority=${httpFixture.authorities.length} responses=${httpFixture.responses.length} AJV=1 scope-exports=4 TypeScript=1 Pack=1 ready-only-coordinate=1 ordinary-bridge=3; runtime genesis remains a separate gate`);
   const indexed = JSON.parse(readFileSync(join(base, "../📇️document-index-v1/🔣️.json"), "utf8"));
   /** 🚧️ `schema://os.directory/DirectoryEventBody` is the owning export, but it carries the OpenAPI
    * `discriminator` annotation, which the shared draft-07 validator rejects as an unknown keyword. Until
@@ -15205,7 +15270,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     }
     if (backendAccepted !== row.backendAccepted) throw new Error(`document index independent SHA256 authority differs: ${row.id}`);
   }
-  console.log(`[DEBUG] document index fixture: ordered-client=${indexed.cases.length} AJV=1 independent-node-SHA256=${indexed.cases.length}; backend transactions not executed`);
+  console.log(`document index fixture: ordered-client=${indexed.cases.length} AJV=1 independent-node-SHA256=${indexed.cases.length}; backend transactions not executed`);
   const genesis = JSON.parse(readFileSync(join(base, "../🌱️artifact-genesis-v1/🔣️.json"), "utf8"));
   const openFixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json"), "utf8"));
   const requiredPlan = hubSchemaExport(repoRoot, "schema://os.directory/DocumentOpenPlanV1");
@@ -15226,7 +15291,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     const neutralLeaseAccepted = executionTargetLeaseFieldsAdmissible(lease, { componentMaxBytes: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, descriptorMaxBytes: DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES });
     if (planAccepted !== row.accepted || leaseAccepted !== row.accepted || neutralAccepted !== row.accepted || neutralLeaseAccepted !== row.accepted || Boolean(requiredPlan(plan)) !== row.accepted || Boolean(requiredLease(lease)) !== row.accepted) throw new Error(`required checkpoint presence differs: ${row.kind}`);
   }
-  console.log(`[DEBUG] required committed checkpoint: TypeScript/AJV plan+lease cases=${openFixture.checkpointPresenceCases.length * 2}; protected HTTP endpoints not executed`);
+  console.log(`required committed checkpoint: TypeScript/AJV plan+lease cases=${openFixture.checkpointPresenceCases.length * 2}; protected HTTP endpoints not executed`);
   const validateFrontier = hubSchemaExport(repoRoot, "schema://os.directory/ArtifactFrontier");
   for (const row of genesis.frontiers) {
     const independentFrontier = Boolean(validateFrontier(row.frontier) && row.scope.spaceId && row.scope.documentId === row.frontier.documentId);
@@ -15248,14 +15313,14 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
   for (const row of transactions.cases) {
     if (!validateTransaction(row) || validateTransaction({ ...row, committed: !row.committed })) throw new Error(`creation transaction oracle differs: ${row.kind}`);
   }
-  console.log(`[DEBUG] creation transaction oracle: scope-export=${transactions.cases.length}; backend transactions not executed`);
+  console.log(`creation transaction oracle: scope-export=${transactions.cases.length}; backend transactions not executed`);
   const recovery = JSON.parse(readFileSync(join(transactionRoot, "🧯️accepted-recovery.json"), "utf8"));
   const validateRecovery = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationAcceptedRecoveryV1");
   if (recovery.cases.length !== 3 || new Set(recovery.cases.map((row: any) => row.kind)).size !== 3) throw new Error("creation accepted recovery corpus is not the exact kind closure");
   for (const row of recovery.cases) {
     if (!validateRecovery(row) || validateRecovery({ ...row, facts: row.facts + 1 })) throw new Error(`creation accepted recovery oracle differs: ${row.kind}`);
   }
-  console.log(`[DEBUG] creation accepted recovery oracle: scope-export=${recovery.cases.length}; real deadline/backend not executed`);
+  console.log(`creation accepted recovery oracle: scope-export=${recovery.cases.length}; real deadline/backend not executed`);
   const operation = JSON.parse(readFileSync(join(operationRoot, "🔣️.json"), "utf8"));
   const cancellations = JSON.parse(readFileSync(join(operationRoot, "🛑️cancel.json"), "utf8"));
   const validateCancellation = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationCancellationDecisionV1");
@@ -15263,7 +15328,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
   for (const row of cancellations.cases) {
     if (!validateCancellation(row) || validateCancellation({ ...row, accepted: !row.accepted })) throw new Error(`creation cancellation oracle differs: ${row.state}/${row.expectedRevision}`);
   }
-  console.log(`[DEBUG] creation cancellation oracle: scope-export=${cancellations.cases.length}; backend concurrency not executed`);
+  console.log(`creation cancellation oracle: scope-export=${cancellations.cases.length}; backend concurrency not executed`);
   const validateTransition = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.creation/ArtifactCreationTransitionV1");
   if (operation.schema !== "semio.test.artifact-creation-operation/v1" || operation.transitions.length !== 30
     || new Set(operation.transitions.map((row: any) => `${row.state}/${row.fact}`)).size !== 30) throw new Error("creation operation transition corpus is not the exact 6x5 closure");
@@ -15275,14 +15340,14 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
     const bytes = Buffer.from(value); const length = Buffer.alloc(8); length.writeBigUInt64BE(BigInt(bytes.length)); intentDigest.update(length).update(bytes);
   }
   if (intentDigest.digest("hex") !== operation.intent.commandSha256) throw new Error("creation operation independent intent commitment differs");
-  console.log(`[DEBUG] creation operation: scope-export transitions=${operation.transitions.length} independent-node-SHA256=1; native reducer/backend not executed`);
+  console.log(`creation operation: scope-export transitions=${operation.transitions.length} independent-node-SHA256=1; native reducer/backend not executed`);
   const expected = genesis.expected;
   if (JSON.stringify(hash(Buffer.from(expected.checkpointEncodingHex, "hex"))) !== JSON.stringify(expected.checkpoint.checkpointId)
     || JSON.stringify(hash(descriptorDigestEncodingV1(expected.descriptor))) !== JSON.stringify(expected.checkpoint.descriptorDigestV1)
     || JSON.stringify(hash(Buffer.from(genesis.initialPair.pack))) !== JSON.stringify(expected.checkpoint.pack.sha256)
     || JSON.stringify(hash(Buffer.from(genesis.initialPair.spr))) !== JSON.stringify(expected.checkpoint.spr.sha256)
     || JSON.stringify(hash(Buffer.from([...genesis.initialPair.pack, ...genesis.initialPair.spr]))) !== JSON.stringify(expected.checkpoint.aggregateSha256)) throw new Error("genesis independent SHA256 fixture differs");
-  console.log(`[DEBUG] genesis frontier: TypeScript=${genesis.frontiers.length} AJV=1 open/lease=${genesis.frontiers.length} independent-node-SHA256=5; native factory/publication not executed`);
+  console.log(`genesis frontier: TypeScript=${genesis.frontiers.length} AJV=1 open/lease=${genesis.frontiers.length} independent-node-SHA256=5; native factory/publication not executed`);
   return checks + httpFixture.routes.length + httpFixture.authorities.length + httpFixture.responses.length;
 }
 
@@ -16232,7 +16297,7 @@ async function proveInviteRedemptionTransaction(repoRoot: string): Promise<numbe
         before.spaces.get("archive-space").view.role !== "author"
       )
         throw new Error(`archive client fold differs from SQLite oracle for ${row.name}`);
-      console.log(`[DEBUG] directory-archive-fold case=${row.name} members=2 role=spectator immutable=1`);
+      console.log(`directory-archive-fold case=${row.name} members=2 role=spectator immutable=1`);
     }
 
     for (const row of fixture.authorityRaces) {
@@ -16589,7 +16654,7 @@ type DirectorySpaceJourneyFixture = {
     readonly id: string;
     readonly actor: "a" | "b" | "both";
     readonly route: string;
-    readonly method: "GET" | "POST" | "DELETE";
+    readonly method: "GET" | "POST";
     readonly expect: Record<string, any>;
     readonly labels: { readonly en: string; readonly de: string };
   }[];
@@ -16763,7 +16828,7 @@ async function proveDirectorySpaceJourneyV1(repoRoot: string): Promise<Readonly<
   if (fixture.steps.length < 12 || fixture.steps.length > 32 || fixture.skips.length < 3 || fixture.skips.length > 16 || fixture.routes.length < 8) throw new Error("space journey inventory drift");
   if (new Set([...fixture.steps, ...fixture.skips].map((row) => row.id)).size !== fixture.steps.length + fixture.skips.length) throw new Error("space journey step identifiers are not unique");
   if (new Set(fixture.routes).size !== fixture.routes.length || fixture.routes.some((route) => !route.startsWith("/"))) throw new Error("space journey route inventory drift");
-  if (fixture.steps.some((step) => !step.route.startsWith("/") || !["GET", "POST", "DELETE"].includes(step.method) || !["a", "b", "both"].includes(step.actor))) throw new Error("space journey step taxonomy drift");
+  if (fixture.steps.some((step) => !step.route.startsWith("/") || !["GET", "POST"].includes(step.method) || !["a", "b", "both"].includes(step.actor))) throw new Error("space journey step taxonomy drift");
   if (fixture.privacy.forbiddenTraceSubstrings.length < 4 || fixture.privacy.forbiddenPageSubstrings.length < 4) throw new Error("space journey privacy inventory drift");
   if (!["atelier", "studio", "archive"].includes(fixture.space.spaceKind) || !["private", "public"].includes(fixture.space.visibility)) throw new Error("space journey space taxonomy drift");
   let checks = 1;
@@ -17193,7 +17258,7 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
     step("removed-member-page-denied", at, String(removedRead.status), { status: removedRead.status, bodyBytes: removedRead.source.length });
 
     at = Date.now();
-    const revoked = await fetch(`http://127.0.0.1:${first.port}/auth/sessions/me`, { method: "DELETE", headers: { authorization: `Bearer ${envelopeA.capability}` }, signal: AbortSignal.timeout(5_000) });
+    const revoked = await fetch(`http://127.0.0.1:${first.port}/auth/sessions/me/sign-out`, { method: "POST", headers: { authorization: `Bearer ${envelopeA.capability}` }, signal: AbortSignal.timeout(5_000) });
     const revokedBody = await revoked.arrayBuffer();
     if (revoked.status !== spaceJourneyStep(fixture, "author-self-revokes").expect.status || revokedBody.byteLength !== 0) throw new Error(`space journey self-revocation was not terminal: ${revoked.status}`);
     step("author-self-revokes", at, String(revoked.status), { status: revoked.status });
@@ -17342,6 +17407,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("execution-target-lease-check", ExecutionTargetLeaseCheckScript)
   .register("execution-target-lease-browser-check", ExecutionTargetLeaseBrowserCheckScript)
   .register("space-public-boundary-check", SpacePublicBoundaryCheckScript)
+  .register("trusted-catalog-preflight", TrustedCatalogPreflightScript)
   .register("trusted-catalog-bootstrap", TrustedCatalogBootstrapScript)
   .register("gis-map-proposal-check", GisMapProposalCheckScript)
   .register("trusted-stdio-gis-bundle-check", TrustedStdioGisBundleCheckScript)

@@ -1,16 +1,14 @@
 semio norm.vdi3805.dsl v1
-strict-mode=false
-}
-catalog=file=header-version="3805" manufacturer=DEMO created="2026-07-22" charset=UTF-8 record-count=6 building-system-number=system-code="420" subsystem="10" sequence=1 extensions=fields={
+strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="2023-06-01" charset=UTF-8 record-count=9 building-system-number=system-code="420" subsystem="10" sequence=1 extensions=fields={
 }
 extensions=fields={
 }
 products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
   VLV-50-001 {manufacturer-code=DEMO product-group=HV article-number=VLV-50-001} [ {locale=de text="Stellventil DN50"} {locale=en text="Control valve DN50"} ] 2 [ {family="100" fields=[ "100" DEMO HV VLV-50-001 "2" ] extensions=fields={
   }
-  } {family="110" fields=[ "110" cfg.VLV-50-001 geom.valve.50 curve-kvs ] extensions=fields={
+  } {family="110" fields=[ "110" cfg.VLV-50-001 geom-valve-50 curve-kvs ] extensions=fields={
   }
-  } {family="200" fields=[ "200" geom.valve.50 "0.15" "0.20" "0.10" ] extensions=fields={
+  } {family="200" fields=[ "200" geom-valve-50 "0.15" "0.20" "0.10" ] extensions=fields={
   }
   } {family="210" fields=[ "210" dn "50" kvs "4.5" pressure_class PN16 connection_type flange authority_min "0.3" authority_max "0.7" ] extensions=fields={
   }
@@ -18,10 +16,22 @@ products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuratio
   }
   } {family="700" fields=[ "700" de "Stellventil DN50" en "Control valve DN50" ] extensions=fields={
   }
-  } ] {id=cfg.VLV-50-001 geometry-ref=geom.valve.50 attributes={
+  } ] {id=cfg.VLV-50-001 geometry-ref=geom-valve-50 attributes={
     authorityMax=0.7 authorityMin=0.3 connectionType="flange" dn=50 kind="valveHeating" kvsM3S=0.00125 pressureClass="PN16"
   }
-  function-refs=[ curve-kvs ]} [ ] [ ] {fields={
+  function-refs=[ curve-kvs ]} [ {accessory-id=ACT-01 required=true quantity=1} ] [ {component-id=ACT-01 quantity=1} ] {fields={
+  }
+  }
+  ACT-01 {manufacturer-code=DEMO product-group=ACT article-number=ACT-01} [ {locale=de text=Stellantrieb} {locale=en text=Actuator} ] 2 [ {family="100" fields=[ "100" DEMO ACT ACT-01 "2" ] extensions=fields={
+  }
+  } {family="210" fields=[ "210" dn "50" kvs "4.5" pressure_class PN16 connection_type flange authority_min "0.3" authority_max "0.7" ] extensions=fields={
+  }
+  } {family="700" fields=[ "700" de "Stellantrieb" en "Actuator" ] extensions=fields={
+  }
+  } ] {id=cfg.ACT-01 attributes={
+    authorityMax=0.7 authorityMin=0.3 connectionType="flange" dn=50 kind="valveHeating" kvsM3S=0.00125 pressureClass="PN16"
+  }
+  function-refs=[ ]} [ ] [ ] {fields={
   }
   }
 }
@@ -29,12 +39,15 @@ edition-profile={
 }
 correction-as-of=year=2024 month=1 index=
 entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
+  ACT-01 2 [ Stellantrieb Actuator ] 50
   VLV-50-001 2 [ "Stellventil DN50" "Control valve DN50" ] 50
 }
 geometry={
-  geom.valve.50=id=geom.valve.50 bbox=min-x=0 min-y=0 min-z=0 max-x=0.15 max-y=0.2 max-z=0.1 parameters={
+  geom-valve-50=id=geom-valve-50 bbox=min-x=0 min-y=0 min-z=0 max-x=0.15 max-y=0.2 max-z=0.1 parameters={
+    clearance=0.01 scale=1
   }
   connections [id:TEXT medium:TEXT position:TUPLE direction:TUPLE diameter-mm:QTY] {
+    in water 0,0.1,0.05 -1,0,0 50mm
   }
 }
 curves={
@@ -44,3 +57,4 @@ curves={
     100 4.5
   }
 }
+limits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32

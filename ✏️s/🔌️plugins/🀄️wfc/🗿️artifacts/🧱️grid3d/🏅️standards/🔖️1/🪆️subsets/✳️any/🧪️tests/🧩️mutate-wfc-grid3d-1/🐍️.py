@@ -200,6 +200,107 @@ def apply_diff(base, diff):
     return out
 
 
+def inverse(base, kind, payload):
+    """↩️ The reference's OWN inverse — a list of steps of this same vocabulary, computed against `base`, never read
+    from a fixture. Every collection insert lands at its canonical sorted position, so a removed row comes back
+    exactly where it was; a resize also restores the per-axis cell sizes it truncated or filled."""
+    if kind == "change-seed":
+        return [{"ChangeSeed": {"seed": base["seed"]}}]
+    if kind == "resize-grid":
+        steps = [{"ResizeGrid": {"width": base["width"], "height": base["height"], "depth": base["depth"]}}]
+        return steps + [{"ChangeCellSizes": {"axis": axis, "sizes": list(base["cellSizes" + axis.upper()])}} for axis in ("x", "y", "z")]
+    if kind == "change-cell-sizes":
+        return [{"ChangeCellSizes": {"axis": payload["axis"], "sizes": list(base["cellSizes" + payload["axis"].upper()])}}]
+    if kind == "change-periodicity":
+        return [{"ChangePeriodicity": {"periodicX": base["periodicX"], "periodicY": base["periodicY"], "periodicZ": base["periodicZ"]}}]
+    if kind == "create-tile":
+        return [{"DeleteTile": {"id": payload["tile"]["id"]}}]
+    if kind == "delete-tile":
+        _, tile = find(base["tiles"], lambda item: item["id"] == payload["id"])
+        steps = [{"CreateTile": {"tile": tile}}]
+        steps += [{"CreateRule": {"rule": rule}} for rule in base["rules"] if payload["id"] in (rule["tileAId"], rule["tileBId"])]
+        return steps + [{"PinCell": {"pinned": cell}} for cell in base["pinned"] if cell["tileId"] == payload["id"]]
+    if kind in ("change-tile-weight", "change-tile-media"):
+        _, tile = find(base["tiles"], lambda item: item["id"] == payload["tileId"])
+        return [{"ChangeTileWeight": {"tileId": tile["id"], "weight": tile["weight"]}}] if kind == "change-tile-weight" else [{"ChangeTileMedia": {"tileId": tile["id"], "media": tile["media"]}}]
+    if kind == "create-rule":
+        return [{"DeleteRule": {"id": payload["rule"]["id"]}}]
+    if kind == "delete-rule":
+        _, rule = find(base["rules"], lambda item: item["id"] == payload["id"])
+        return [{"CreateRule": {"rule": rule}}]
+    if kind == "pin-cell":
+        key = cell_key(payload["pinned"])
+        previous = [cell for cell in base["pinned"] if cell_key(cell) == key]
+        return [{"PinCell": {"pinned": previous[0]}}] if previous else [{"UnpinCell": {"x": payload["pinned"]["x"], "y": payload["pinned"]["y"], "z": payload["pinned"]["z"]}}]
+    if kind == "unpin-cell":
+        return [{"PinCell": {"pinned": cell}} for cell in base["pinned"] if cell_key(cell) == cell_key(payload)]
+    if kind == "mask-cell":
+        key = cell_key(payload["cell"])
+        return [] if any(cell_key(cell) == key for cell in base["masked"]) else [{"UnmaskCell": {"x": payload["cell"]["x"], "y": payload["cell"]["y"], "z": payload["cell"]["z"]}}]
+    if kind == "unmask-cell":
+        return [{"MaskCell": {"cell": cell}} for cell in base["masked"] if cell_key(cell) == cell_key(payload)]
+    raise AssertionError("unknown kind " + kind)
+
+
+def apply_mutation(base, mutation):
+    """🧬️ One externally tagged mutation: its delta, applied."""
+    (variant, payload), = mutation.items()
+    delta = diff_for(VARIANTS[variant], payload, base)
+    return apply_diff(base, delta), delta
+
+
+LEAVES = ("before", "mutation", "diff", "outcome", "after")
+
+
+def variant_of(kind):
+    """🐫️ `change-tile-media` → `ChangeTileMedia`, the externally tagged payload's single key."""
+    return "".join(word.capitalize() for word in kind.split("-"))
+
+
+def committed(ctx):
+    """🧫️ The committed quintet of this scenario's row, read through the plan's declared fixtures."""
+    spec = ctx.doc_json()
+    if spec["kind"] != ctx.row():
+        raise AssertionError("scenario %s: the doc string names %r" % (ctx.scenario["id"], spec["kind"]))
+    return {leaf: json.loads(ctx.fixture_bytes(spec[leaf]).decode("utf-8")) for leaf in LEAVES}
+
+
+def adapter():
+    """🧭️ The platform entry point. The reference answers in the ORACLE role only, by Scenario Outline base id —
+    registering it as a subject too would make it its own subject and manufacture a green self-comparison. Every law
+    the standalone replay checks is asserted in role, per row, before the parity phase compares the document it answers."""
+    from semio_repo_test import Adapter, Outcome
+
+    def answer(document):
+        return Outcome(document, raw=json.dumps(document, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+
+    def mutate_oracle(ctx):
+        kind, leaves = ctx.row(), committed(ctx)
+        variant = next(iter(leaves["mutation"]))
+        if VARIANTS.get(variant) != kind:
+            raise AssertionError("mutate-%s: the committed mutation is a %s" % (kind, variant))
+        produced, delta = apply_mutation(leaves["before"], leaves["mutation"])
+        if delta != leaves["diff"]:
+            raise AssertionError("mutate-%s: the produced diff differs from the committed one" % kind)
+        if produced != leaves["after"]:
+            raise AssertionError("mutate-%s: the produced diff does not carry before to the committed after-snapshot" % kind)
+        if leaves["outcome"].get("status") != "applied" or produced == leaves["before"]:
+            raise AssertionError("mutate-%s: every committed vector declares the applied status and moves the document" % kind)
+        return answer(produced)
+
+    def inverse_oracle(ctx):
+        kind, leaves = ctx.row(), committed(ctx)
+        restored, _ = apply_mutation(leaves["before"], leaves["mutation"])
+        (variant, payload), = leaves["mutation"].items()
+        for step in inverse(leaves["before"], VARIANTS[variant], payload):
+            restored, _ = apply_mutation(restored, step)
+        if restored != leaves["before"]:
+            raise AssertionError("inverse-%s: the reference's own inverse did not restore the before-snapshot" % kind)
+        return answer(restored)
+
+    return Adapter("python").oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle)
+
+
 def read(path):
     with open(path, encoding="utf-8") as handle:
         return json.load(handle)

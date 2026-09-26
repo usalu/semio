@@ -1057,7 +1057,7 @@ mod plugin_builder_contract_tests {
             if matches!(body_key, "graph" | "properties") {
                 let item = TreeNode::try_new("item-1", Component::TreeItem(TreeItemProps {
                     label: Label(UiText::try_from_str("Item 1").expect("bounded fixture")), description: None, icon: None, default_open: None,
-                    draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, row_actions: UiFixedList::default(),
+                    draggable: None, drag_data: None, dimmed: None, window: None, granularity: None, inline_toolbar: None, detail: None, row_actions: UiFixedList::default(),
                 })).expect("bounded fixture");
                 let root = TreeNode::try_new("root", Component::Tree(TreeProps { presentation: Default::default(), interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
                     .expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
@@ -7051,6 +7051,8 @@ mod plugin_builder_contract_tests {
                 dimmed: None,
                 window: None,
                 granularity: None,
+                inline_toolbar: None,
+                detail: None,
                 row_actions: UiFixedList::default(),
             }),
         )
@@ -7104,6 +7106,8 @@ mod plugin_builder_contract_tests {
                     dimmed: None,
                     window: None,
                     granularity: None,
+                    inline_toolbar: None,
+                    detail: None,
                     row_actions: UiFixedList::default(),
                 }),
             )

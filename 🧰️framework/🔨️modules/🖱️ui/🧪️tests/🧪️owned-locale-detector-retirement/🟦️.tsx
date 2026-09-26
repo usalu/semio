@@ -9541,8 +9541,8 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
   
       it("formats calendar and relative timestamps through the owned locale-explicit formatter", () => {
         const calendar = new Date(2026, 4, 1, 12, 34);
-        expect(formatVirtualFileSystemTime(calendar, "date", "en")).toBe("2026-05-01");
-        expect(formatVirtualFileSystemTime(calendar, "datetime", "de")).toBe("2026-05-01 12:34");
+        expect(formatVirtualFileSystemTime(calendar, "date", "en")).toBe(new Intl.DateTimeFormat("en", { year: "numeric", month: "2-digit", day: "2-digit" }).format(calendar));
+        expect(formatVirtualFileSystemTime(calendar, "datetime", "de")).toBe(new Intl.DateTimeFormat("de", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(calendar));
         const now = new Date("2026-05-01T12:00:00.000Z");
         const future = new Date("2026-05-01T14:00:00.000Z");
         const past = new Date("2026-05-01T10:00:00.000Z");

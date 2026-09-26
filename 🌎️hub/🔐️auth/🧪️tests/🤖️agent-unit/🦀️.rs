@@ -150,6 +150,10 @@ fn structural(export: &str) -> semio_framework_schema::OwnedJsonSchemaValidator 
 
 /// 🧬️ The agent scope's Rust decoders and its JSON Schema admit EXACTLY the same wire. Without this
 /// the `$defs` would be documentation; with it they are authority, and the decoder cannot drift.
+///
+/// 🧾️ Every fact kind this scope appends is declared in the module's durable-event enum.
+///
+/// 🤖️ The credential FILE the MCP reads is the same schema authority, not a second dialect.
 #[test]
 fn the_agent_decoders_and_the_json_schema_admit_exactly_the_same_wire() {
     let create = serde_json::json!({ "schema": AGENT_DELEGATION_CREATE_SCHEMA, "spaceId": "space-a", "agentLabel": "Drafting agent", "audience": "edit", "ttlSecs": DEFAULT_DELEGATION_TTL_SECS });
@@ -215,13 +219,11 @@ fn the_agent_decoders_and_the_json_schema_admit_exactly_the_same_wire() {
     let error_schema = structural("AgentErrorV1");
     assert!(error_schema.is_valid_json(&serde_json::to_string(&AgentErrorV1::new(AgentErrorCodeV1::DelegationRevoked)).expect("error json")));
 
-    // 🧾️ Every fact kind this scope appends is declared in the module's durable-event enum.
     let kinds = structural("AuthDurableEventKindV1");
     for kind in [crate::directory::AGENT_DELEGATED_EVENT, crate::directory::AGENT_DELEGATION_REVOKED_EVENT, crate::directory::AGENT_SESSION_ISSUED_EVENT] {
         assert!(kinds.is_valid_json(&serde_json::to_string(kind).expect("kind json")), "{kind} must be a declared durable event kind");
     }
 
-    // 🤖️ The credential FILE the MCP reads is the same schema authority, not a second dialect.
     let credential_schema = structural("AgentCredentialFileV1");
     let credential = serde_json::json!({ "schema": "semio.hub.agent-credential/v1", "hubOrigin": "http://127.0.0.1:7501", "spaceId": "space-a", "audience": "edit", "token": receipt.token });
     assert!(credential_schema.is_valid_json(&credential.to_string()));

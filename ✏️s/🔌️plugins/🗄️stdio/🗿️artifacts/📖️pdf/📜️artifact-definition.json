@@ -100,7 +100,7 @@
       "executable_registration": true,
       "native_factory": {
         "factory_id": "stdio.native.pdf.v1",
-        "artifact_kind": "stdio.pdf",
+        "artifact_kind": "s.stdio.pdf",
         "artifact_schema": "stdio.pdf",
         "extension": "pdf",
         "pack_schema_hash": "9f6de52d8be98fb427b4e2328b827b98a223494714c61b0bb5d44c2fa41fa7ce",

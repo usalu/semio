@@ -17,10 +17,10 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
-}
+    }
 fn expected_after() -> Vdi3805Snapshot {
     serde_json::from_str(AFTER).expect("after snapshot decodes")
-}
+    }
 fn mutation() -> Vdi3805Mutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
@@ -28,7 +28,7 @@ fn applied() -> Vdi3805Snapshot {
     let base = before();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &base);
     <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), &base).expect("remove-product applies to its committed before-snapshot")
-}
+    }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
@@ -36,7 +36,7 @@ async fn applies_to_committed_after() {
     let snapshot = applied();
     assert!(snapshot.catalog.products.is_empty(), "remove-product/removes-vlv-50-001-and-its-index-entry: the catalogue must be empty afterwards");
     assert!(snapshot.index.entries.is_empty(), "remove-product/removes-vlv-50-001-and-its-index-entry: the persisted index must lose the VLV-50-001 entry too");
-    assert!(snapshot.geometry.contains_key("geom.valve.50"), "remove-product/removes-vlv-50-001-and-its-index-entry: deleting a product must NOT cascade into the geometry it referenced");
+    assert!(snapshot.geometry.contains_key("geom-valve-50"), "remove-product/removes-vlv-50-001-and-its-index-entry: deleting a product must NOT cascade into the geometry it referenced");
     assert_eq!(snapshot, expected_after(), "remove-product/removes-vlv-50-001-and-its-index-entry: applied state differs from committed after-snapshot");
 }
 

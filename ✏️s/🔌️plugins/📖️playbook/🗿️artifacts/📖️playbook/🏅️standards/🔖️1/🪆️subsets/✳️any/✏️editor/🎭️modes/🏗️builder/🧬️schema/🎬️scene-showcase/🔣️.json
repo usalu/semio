@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/playbook/scene-showcase-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "modeId", "windows"],
+  "properties": {
+    "schema": { "const": "playbook.scene-showcase.v1" },
+    "modeId": { "const": "builder" },
+    "windows": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["windowId", "bodyKey", "surfaceKind"],
+        "properties": {
+          "windowId": { "type": "string", "minLength": 1 },
+          "bodyKey": { "type": "string", "pattern": "^playbook\\.play\\." },
+          "surfaceKind": { "enum": ["table", "diffView", "eventFeed", "textEditor"] }
+        }
+      }
+    }
+  }
+}

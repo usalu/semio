@@ -1092,6 +1092,15 @@ pub fn set_active_example_action() -> semio_framework_plugin::ActionDefinition {
     )
 }
 
+/// 💬️ The agent-facing description of every stdio editor's `setActiveExample` — one sentence for all formats,
+/// beside the argument form every stdio editor already shares.
+pub fn set_active_example_description() -> semio_framework_plugin::LocalizedLabel {
+    semio_framework_plugin::LocalizedLabel::native(
+        "Replaces the whole open document with one of the bundled examples for its format, by example id.",
+        "Ersetzt das gesamte offene Dokument durch eines der mitgelieferten Beispiele für sein Format, anhand der Beispiel-Id.",
+    )
+}
+
 /// 📝️ The picker's typed argument: one option per example this editor's subset publishes, defaulting
 /// to the one the pane boots.
 pub fn set_active_example_args(options: &[(&str, semio_framework_plugin::LocalizedLabel)], default_example_id: &str) -> Vec<semio_framework_plugin::ActionArgDef> {

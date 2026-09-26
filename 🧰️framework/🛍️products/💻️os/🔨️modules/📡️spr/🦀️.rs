@@ -24,7 +24,7 @@ pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, Signa
 
 pub use crate::os_spr::causal::{
     decode_document_backbone_envelopes_exact, decode_document_backbone_envelopes_exact_with_limits, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec,
-    frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, ArtifactDiff, DocumentBackboneBatchLimitsV1, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult,
+    frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_envelopes_from_edit_since, mutation_ids_for_edit, ArtifactDiff, DocumentBackboneBatchLimitsV1, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult,
     InverseMutation, MutationDag, MutationDagAppliedStep, MutationDagCloseOwner, MutationDagError, MutationDagInsertRejected, MutationDagSeedRejected, MutationEnvelope, MutationTransform, TransformOutcome, DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES,
     DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES, DOCUMENT_BACKBONE_PENDING_MAXIMUM_MESSAGES,
 };

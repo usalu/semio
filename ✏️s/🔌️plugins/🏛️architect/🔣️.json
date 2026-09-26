@@ -2598,7 +2598,7 @@
               }
             },
             "bodyKey": "architect.trace",
-            "surfaceKind": "text-editor",
+            "surfaceKind": "event-feed",
             "iconId": "file-code",
             "options": {
               "engagement": {

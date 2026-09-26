@@ -36,18 +36,6 @@
         "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       }
-    },
-    "describe": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts describe",
-        "forwardAllArgs": true
-      },
-      "outputs": [
-        "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🛂️.descriptor.semio",
-        "{workspaceRoot}/✏️s/🔌️plugins/💠️lowpoly/🔣️.json"
-      ]
     }
   }
 }

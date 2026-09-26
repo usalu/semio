@@ -10,6 +10,10 @@ pub struct RasterConfig {
     #[state(config)]
     pub brush_opacity: f64,
     #[state(config)]
+    pub brush_color: String,
+    #[state(config)]
+    pub brush_hardness: f64,
+    #[state(config)]
     pub composite_viewport: Option<RasterConfigViewportSize>,
     #[state(config)]
     pub camera: RasterCamera,

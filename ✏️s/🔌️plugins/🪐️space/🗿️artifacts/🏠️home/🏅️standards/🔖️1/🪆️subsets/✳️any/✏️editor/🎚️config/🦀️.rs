@@ -10,8 +10,9 @@
 //! Home launcher's real `ArtifactEditor::Config`: the folded hub directory read model
 //! (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C1/§C6).
 
+use crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation;
+use semio_framework_plugin::{AppEvent, Emit, Fault, NoDraftMutation, ToolExecutionContract};
 use std::collections::BTreeMap;
-use semio_framework_plugin::Fault;
 
 /// 🧾️ Exact terminal proof that one authenticated directory frontier is the retained Home config.
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
@@ -150,7 +151,10 @@ impl HomeConfig {
         receipt.validate().then_some(receipt)
     }
 
-    /// 📄️ Applies one authenticated page to a replacement config without exposing partial folds.
+    /// 📄️ Applies one authenticated page to a replacement config without exposing partial folds. A page from the origin
+    /// (`after_seq_exclusive == 0`) rebuilds the projection under any authority: the reader's visible set can change
+    /// retroactively (a human added to an existing space sees that space's earlier events), so the worker re-reads the
+    /// directory from the origin on the hub's `access-changed` signal; a later page must continue the held frontier.
     pub fn apply_directory_event_page(&self, page: &store::os_directory::DirectoryEventPageV1) -> Result<Self, Fault> {
         page.validate().map_err(|_| Fault::from("s.home.directory-event-page-invalid"))?;
         let current = self.directory()?;
@@ -159,16 +163,14 @@ impl HomeConfig {
         if same_authority && current.cursor == page.through_seq_inclusive && self.directory_receipt_sha256 == page.receipt_sha256 {
             return Ok(self.clone());
         }
-        let mut directory = if same_authority {
-            if page.after_seq_exclusive != current.cursor {
-                return Err(Fault::from("s.home.directory-event-page-frontier-race"));
-            }
-            current
-        } else {
-            if page.after_seq_exclusive != 0 {
-                return Err(Fault::from("s.home.directory-event-page-rebootstrap-required"));
-            }
+        let mut directory = if page.after_seq_exclusive == 0 {
             store::os_directory::DirectoryReadModel::default()
+        } else if !same_authority {
+            return Err(Fault::from("s.home.directory-event-page-rebootstrap-required"));
+        } else if page.after_seq_exclusive != current.cursor {
+            return Err(Fault::from("s.home.directory-event-page-frontier-race"));
+        } else {
+            current
         };
         for event in &page.events {
             directory = store::os_directory::fold(directory, event);
@@ -180,6 +182,30 @@ impl HomeConfig {
         next.directory_authorization_generation = page.authorization_generation;
         next.directory_receipt_sha256 = page.receipt_sha256.clone();
         Ok(next)
+    }
+
+    /// 📬️ The whole config-lane answer to one sealed page, for BOTH Home surfaces: the replacement projection (none
+    /// when the page is the frontier already held) and the typed terminal receipt the host acknowledges the page by.
+    /// The editor's `applyDirectoryEventPage` and the viewer's retained twin answer through this one function, so the
+    /// read-only Home lists exactly the rows the editor lists (ticket 26/09/23 S16).
+    pub fn directory_event_page_emit(&self, page_json: &str) -> Result<Emit<SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
+        let page = store::os_directory::DirectoryEventPageV1::parse_canonical_json(page_json).map_err(|_| Fault::from("s.home.directory-event-page-invalid"))?;
+        let next = self.apply_directory_event_page(&page)?;
+        let receipt = next.directory_projection_receipt().ok_or_else(|| Fault::from("s.home.directory-projection-receipt-invalid"))?;
+        let event = AppEvent { kind: DirectoryProjectionReceiptV1::SCHEMA.into(), payload: protocol::ToValue::to_value(&receipt) };
+        if next == *self {
+            return Ok(Emit { events: vec![event], ..Default::default() });
+        }
+        Ok(Emit {
+            config_mutations: vec![HomeConfigMutation::ReplaceDirectoryProjection {
+                directory_json: next.directory_json,
+                session_binding_sha256: next.directory_session_binding_sha256,
+                authorization_generation: next.directory_authorization_generation,
+                receipt_sha256: next.directory_receipt_sha256,
+            }],
+            events: vec![event],
+            ..Default::default()
+        })
     }
 }
 
@@ -356,6 +382,212 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     }
 }
 //#endregion 🔖️ConfigOperations
+
+//#region 📏️RetainedLimits
+/// 📏️ One sealed directory page is a `HostOnly` machine payload whose only real bound is the retained wire budget —
+/// the hub pages the directory with `hasMore`, so a page is bounded by construction, and the 4 KiB public scalar cap
+/// would refuse an ordinary page of a dozen spaces (ticket 26/09/18 S4). Shared by both Home surfaces.
+pub const HOME_DIRECTORY_PAGE_BYTES: usize = 128 * 1024;
+/// 📏️ Home's config lane is a ONE-ITEM retained lane, and `ArtifactStoreOneItemFootprint::is_admissible`
+/// refuses any item declaring more than [`store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`] (1 MiB). These
+/// two constants were 4 MiB and 16 MiB, so `HomeConfigPreparationFactory::preflight`'s footprint could
+/// never be admitted and every retained config gesture died with "one-item preparation footprint exceeds
+/// its fixed item or byte capacity" — invisible while `applyDirectoryEventPage` was
+/// `BatchOnlyPendingRewrite` and therefore never reached this lane at all (ticket 26/09/18 S4).
+/// The directory projection they carry is a few KiB for an ordinary hub, and the hub pages it, so the
+/// store's own ceiling is the honest budget rather than an aspirational one.
+pub const HOME_CONFIG_BASE_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+pub const HOME_CONFIG_STEP_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+
+/// ⏱️ The execution contract of every Home retained route, editor and viewer alike: one page per operation, the config
+/// store's own step budget, resumable so a page that outlives one turn continues from its checkpoint.
+pub fn home_retained_contract() -> ToolExecutionContract {
+    ToolExecutionContract::resumable(HOME_DIRECTORY_PAGE_BYTES, 256, 1, HOME_CONFIG_STEP_BYTES, 7_500, 1, 1)
+}
+//#endregion 📏️RetainedLimits
+
+//#region 📬️ConfigStorePreparation
+/// 📬️ The ONE retained one-item preparation of the Home config lane, shared by BOTH Home surfaces: the editor and
+/// the read-only viewer each fold sealed directory pages into their own config store through it, so a viewer
+/// lists the same hub rows as the editor (ticket 26/09/23 S16).
+pub struct HomeConfigPreparationFactory;
+
+struct HomeConfigPreparation {
+    base: Option<store::SnapshotRead<HomeConfig>>,
+    mutation: Option<HomeConfigMutation>,
+    description: Option<String>,
+    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    candidate: Option<(HomeConfig, HomeConfigMutation, HomeConfigMutation)>,
+    sealed_candidate: Option<(HomeConfig, protocol::Edit<HomeConfigMutation>)>,
+    serialized_bytes: Option<usize>,
+    prepared: Option<store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>>,
+    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+fn home_config_retained_bytes(config: &HomeConfig) -> usize {
+    config
+        .directory_json
+        .len()
+        .saturating_add(config.directory_session_binding_sha256.len())
+        .saturating_add(config.directory_receipt_sha256.len())
+        .saturating_add(size_of_val(&config.directory_authorization_generation))
+}
+
+fn home_config_edit(forward: HomeConfigMutation, inverse: HomeConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<HomeConfigMutation> {
+    let id = format!("space-home-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
+    protocol::Edit {
+        id: id.clone(), actor: Some(authority.actor().to_string()), forwards: vec![forward], inverse: vec![inverse],
+        mutation_meta: vec![protocol::MutationMeta {
+            mutation_id: Some(protocol::MutationId(format!("{id}#0"))), dependencies: Vec::new(), base_version: authority.base_applied_edit_count() as u64,
+            author_id: Some(protocol::ActorId(authority.actor().to_string())), timestamp: authority.next_clock(), undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+            payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default(),
+        }],
+        description, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
+    }
+}
+
+#[cfg(test)]
+struct HomeConfigByteCounter { bytes: usize }
+
+#[cfg(test)]
+impl std::io::Write for HomeConfigByteCounter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        if self.bytes.saturating_add(bytes.len()) > HOME_CONFIG_STEP_BYTES { return Err(std::io::Error::from(std::io::ErrorKind::InvalidData)); }
+        self.bytes += bytes.len();
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+}
+
+fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<usize, String> {
+    let bytes = pack::to_json_string(&dsl::ToValue::to_value(edit)).len();
+    if bytes > HOME_CONFIG_STEP_BYTES {
+        return Err("Space Home config edit exceeds its serialized byte envelope".to_string());
+    }
+    Ok(bytes)
+}
+
+impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutation> for HomeConfigPreparationFactory {
+    fn preflight(&self, mutation: &HomeConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        let (mutation_bytes, maximum_bytes) = match mutation {
+            HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 }
+                if *authorization_generation > 0
+                    && directory_json.len() <= HOME_CONFIG_BASE_BYTES
+                    && directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) =>
+            {
+                (directory_json.len().saturating_add(session_binding_sha256.len()).saturating_add(receipt_sha256.len()).saturating_add(8), HOME_CONFIG_BASE_BYTES + 136)
+            }
+            _ => return Err("Space Home config preparation rejects non-retained mutations".into()),
+        };
+        if lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
+            return Err("Space Home config preparation rejected its lane or byte envelope".into());
+        }
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 3, retained_bytes: HOME_CONFIG_STEP_BYTES })
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<HomeConfig, HomeConfigMutation>> {
+        let (mutation_bytes, maximum_bytes) = match &request.mutation {
+            HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 }
+                if *authorization_generation > 0
+                    && directory_json.len() <= HOME_CONFIG_BASE_BYTES
+                    && directory_projection_state_is_valid(directory_json, session_binding_sha256, *authorization_generation, receipt_sha256) =>
+            {
+                (directory_json.len().saturating_add(session_binding_sha256.len()).saturating_add(receipt_sha256.len()).saturating_add(8), HOME_CONFIG_BASE_BYTES + 136)
+            }
+            _ => return Err(request),
+        };
+        if request.lane != store::HistoryLane::Document || mutation_bytes > maximum_bytes || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+            return Err(request);
+        }
+        Ok(Box::new(HomeConfigPreparation {
+            base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
+        }))
+    }
+}
+
+impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for HomeConfigPreparation {
+    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
+        // 🎟️ The grant is a PAGE, not the owner's whole envelope: `ArtifactStoreOneItemGrant`'s own
+        // contract is "consume at most one semantic unit", and every framework pump that drives this
+        // preparation grants `TYPED_OPERATION_RESULT_PAGE_BYTES` (4 KiB) — the typed-operation
+        // publication ladder hard-codes it (`🔌️plugin/🦀️.rs`'s `ArtifactStoreOneItemGrant { maximum_items: 1,
+        // maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }`). Demanding `HOME_CONFIG_STEP_BYTES`
+        // (1 MiB) therefore answered `Blocked` on EVERY unit for ever, and `Blocked` is a silent
+        // non-advance: the operation stayed in `Publishing`, the actor stayed in `MoreWork` with no
+        // effect, no patch and no fault, and the signed-in Home listed 0 spaces while the host's drain
+        // polled it for the whole session (ticket 26/09/18 S8, measured on serve 6190 → hub 7611).
+        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
+        if self.candidate.is_none() && self.sealed_candidate.is_none() {
+            let base = self.base.as_ref().ok_or_else(|| "Space Home config preparation lost its exact base root".to_string())?.get();
+            let base_bytes = home_config_retained_bytes(base);
+            if base_bytes > HOME_CONFIG_BASE_BYTES { return Err("Space Home config base exceeds retained byte capacity".into()); }
+            let mutation = self.mutation.take().ok_or_else(|| "Space Home config preparation lost its mutation owner".to_string())?;
+            let mut post = base.clone();
+            let inverse = match &mutation {
+                HomeConfigMutation::ReplaceDirectoryProjection { directory_json, session_binding_sha256, authorization_generation, receipt_sha256 } => HomeConfigMutation::ReplaceDirectoryProjection {
+                    directory_json: std::mem::replace(&mut post.directory_json, directory_json.clone()),
+                    session_binding_sha256: std::mem::replace(&mut post.directory_session_binding_sha256, session_binding_sha256.clone()),
+                    authorization_generation: std::mem::replace(&mut post.directory_authorization_generation, *authorization_generation),
+                    receipt_sha256: std::mem::replace(&mut post.directory_receipt_sha256, receipt_sha256.clone()),
+                },
+                _ => return Err("Space Home config preparation received a non-retained mutation".into()),
+            };
+            self.candidate = Some((post, inverse, mutation));
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: base_bytes as u64, digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        if self.sealed_candidate.is_none() {
+            let (post, inverse, forward) = self.candidate.take().ok_or_else(|| "Space Home config preparation lost its candidate".to_string())?;
+            let authority = self.authority.as_ref().ok_or_else(|| "Space Home config preparation lost its Store authority".to_string())?;
+            self.sealed_candidate = Some((post, home_config_edit(forward, inverse, self.description.take(), authority)));
+        }
+        if self.serialized_bytes.is_none() {
+            let (post, edit) = self.sealed_candidate.as_ref().ok_or_else(|| "Space Home config preparation lost its semantic edit".to_string())?;
+            let bytes = home_config_edit_bytes(edit)?;
+            if bytes.saturating_add(home_config_retained_bytes(post)).saturating_add(512) > HOME_CONFIG_STEP_BYTES {
+                return Err("Space Home config publication exceeds its complete retained envelope".into());
+            }
+            self.serialized_bytes = Some(bytes);
+            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.checkpoint.completed_bytes.saturating_add(bytes as u64), digest: [0; 32] };
+            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
+        }
+        let (post, edit) = self.sealed_candidate.take().ok_or_else(|| "Space Home config preparation lost its validated edit".to_string())?;
+        let authority = self.authority.as_ref().ok_or_else(|| "Space Home config preparation lost its Store authority".to_string())?;
+        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 3, completed_items: 3, completed_bytes: self.checkpoint.completed_bytes.saturating_add(self.serialized_bytes.unwrap_or(0) as u64), digest: prepared.edit_digest() };
+        self.prepared = Some(prepared);
+        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
+    }
+    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<HomeConfig, HomeConfigMutation>> { self.prepared.take() }
+    fn cancel(&mut self) { self.cancelled = true; }
+    fn begin_close(&mut self) { self.closing = true; }
+    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
+        if !self.closing || !grant.permits_one() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+        // 🧹️ One retained owner per granted page, never more bytes than the page granted — the same
+        // reasoning as `advance` above: an owner that answers `Blocked` until it is handed its whole
+        // declared envelope never closes under the framework's 4 KiB pumps.
+        if self.prepared.take().is_some() || self.sealed_candidate.take().is_some() || self.candidate.take().is_some() || self.mutation.take().is_some() || self.description.take().is_some() { return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: grant.maximum_bytes }); }
+        if let Some(base) = self.base.take() {
+            if !base.return_to_registry() { return Err("Space Home config preparation could not return its exact base root".into()); }
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(authority) = self.authority.as_ref() {
+            let bytes = authority.actor().len();
+            if grant.maximum_bytes < bytes { return Ok(store::SnapshotRetirementStep::Blocked); }
+            self.authority = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+    fn terminal_is_empty(&self) -> bool { self.closing && self.base.is_none() && self.mutation.is_none() && self.description.is_none() && self.authority.is_none() && self.candidate.is_none() && self.sealed_candidate.is_none() && self.prepared.is_none() }
+}
+//#endregion 📬️ConfigStorePreparation
 
 //#region 🧪️Tests
 #[cfg(test)]

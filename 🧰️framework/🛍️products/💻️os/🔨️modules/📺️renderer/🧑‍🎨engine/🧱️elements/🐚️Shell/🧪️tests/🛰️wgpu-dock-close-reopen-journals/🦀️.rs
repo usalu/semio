@@ -67,7 +67,7 @@ fn published_dock_tab_rows(shell: &ShellState) -> Vec<String> {
     let mut draw = DrawList::default();
     let labels = HashMap::from([(TOP.to_string(), "Top".to_string()), (PERSPECTIVE.to_string(), "Perspective".to_string())]);
     let icon_ids = HashMap::new();
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     shell.dock.paint_chrome(&mut ctx, CANVAS, false);
     input.staged_hits().iter().filter_map(|hit| hit.control_id.clone()).filter(|id| id.starts_with("dock.tab.")).collect()
 }
@@ -80,7 +80,7 @@ fn accepted_dock_input(shell: &mut ShellState) -> InputState<ActionDescriptor> {
     let mut draw = DrawList::default();
     let labels = HashMap::from([(TOP.to_string(), "Top".to_string()), (PERSPECTIVE.to_string(), "Perspective".to_string())]);
     let icon_ids = HashMap::new();
-    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids, control_names: None };
     shell.dock.paint_chrome(&mut ctx, CANVAS, false);
     shell.publish_retained_hit_registry(&mut input);
     input

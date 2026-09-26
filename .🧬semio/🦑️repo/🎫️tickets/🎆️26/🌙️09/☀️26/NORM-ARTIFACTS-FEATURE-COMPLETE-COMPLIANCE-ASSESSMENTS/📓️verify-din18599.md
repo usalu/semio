@@ -1,8 +1,8 @@
-# Wave D Verification — DIN V 18599 (`⚡️din18599`) — Round 4
+# Wave D Verification — DIN V 18599 (`⚡️din18599`) — Round 6
 
-**VERDICT: FAIL (1 blocking)**
+**VERDICT: PASS (0 blocking)**
 
-Reviewer: adversarial Wave D read-only, round 4. Round 1: **FAIL (9 blocking)**. Round 2: **FAIL (5 blocking)**. Round 3: **FAIL (2 blocking)**. Implementer claim: 102/102 (`📓️impl-din18599.md` Round 3 section). Evidence date: 2026-09-26.
+Reviewer: adversarial Wave D read-only, round 6. Round 1: **FAIL (9 blocking)**. Round 2: **FAIL (5 blocking)**. Round 3: **FAIL (2 blocking)**. Round 4: **FAIL (1 blocking)**. Round 5: **FAIL (2 blocking)**. Implementer claim: 113/113 (`📓️impl-din18599.md` Round 5 section). Evidence date: 2026-09-26.
 
 Family root: `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/`.
 
@@ -15,7 +15,9 @@ Family root: `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599
 | R1 | FAIL (9) | id-only paths, stub DSL, hard-coded setActiveExample, missing field-meta choices, single remedy test, no jsonschema/oracle, heuristic limits, trivial example tests |
 | R2 | FAIL (5) | `deltaUWbWM2K` path typo, facet drift, no path-resolve test, η_WRG/tabular magic limits, weak `report_out`, identical en/de cooling copy |
 | R3 | FAIL (2) | No scope-aware perturbation test; five editable leaves never read by `evaluate()` |
-| R4 | **FAIL (1)** | Both R3 code gaps closed; perturbation test runs on **one** subject only — does not loop all committed examples (two-zone + cooled + detached) per CORRECTION 13:43 / R4 step 4 |
+| R4 | FAIL (1) | Perturbation test ran on **one** subject only — did not loop all committed examples |
+| R5 | FAIL (2) | `reference_tables()` still `Vec::new()`; no duplicate-entity-id integrity checks |
+| R6 | **PASS (0)** | Round-5 catalogue + duplicate-id blockers **closed**; 113/113 + contract 51/51 green |
 
 ---
 
@@ -23,10 +25,30 @@ Family root: `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599
 
 ```
 bun nx run @semio-tech/norm-din18599-rs:test --skip-nx-cache -- --no-fail-fast
-Summary [   1.580s] 103 tests run: 103 passed, 0 skipped
+Summary [   0.897s] 113 tests run: 113 passed, 0 skipped
 ```
 
-Log: `🗑️generated/verify-din18599/test-r4.txt`.
+```
+bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache
+Summary [   0.193s] 51 tests run: 51 passed, 0 skipped
+```
+
+Logs: `🗑️generated/verify-din18599/test-r6.txt`, `🗑️generated/verify-din18599/contract-test-r6.txt`.
+
+---
+
+## Round 6 — Round-5 blocking re-check (items 1–8)
+
+| # | Requirement | Result | Evidence |
+|---|-------------|--------|----------|
+| 1 | `every_editable_leaf_influences_a_check` loops cooled / two-zone / detached; signature `(id, status, computed, limit, utilization)`; per-fixture assert; no ratio slack | **PASS** | `🧬️schema/🧪️tests/⚖️compliance/🦀️.rs` L446–456 three-fixture loop; L458–471 `check_sig`; L554–557 per-fixture `unchanged.is_empty()`; exempts only `labelEn`/`labelDe`/`id` (L496–498) |
+| 2 | `climate.*` skip removed; resolved climate drives balance | **PASS** | Climate payload test L560–583; `din18599_climate()` fallback `MonthlyClimate::potsdam_reference()` (`🦀️.rs` L338–344) |
+| 3 | Composition-handle leaves not blanket-exempt; dangling/wrong kind → Fail + en/de `one_of`; non-editable only via field meta | **PASS** | `perturb_string` perturbs handles (L594–605); check `din18599.1.climate-composition` (`🧬️schema/🦀️.rs` L989–1029) |
+| 4 | `compliant-two-zone` + `cooled-office` are DSL `setActiveExample` entries with verdict tests | **PASS** | `🎨️set-active-example/🦀️.rs`; per-example tests under `📚️examples/` |
+| 5 | Dead helpers `fan_operating_hours_a` / `lighting_power_density_limit_w_m2` removed | **PASS** | No matches in family |
+| 6 | `zoneId` field meta offers zone ids as choices if dynamic hook exists; else impl md documents | **PASS** | `choices: None` (`🏷️field-meta/🦀️.rs` L109); impl md Round 4 E / Round 5 B2 note |
+| 7 | CORRECTION 14:54: `reference_tables()` publishes lookup tables shared with `evaluate()`; test asserts evaluated limit = table cell | **PASS** | `📚️catalogue/🦀️.rs` L24–34 returns seven tables; all numeric cells import shared `#region 📜️NormTables` consts or `MonthlyClimate::potsdam_reference()` (no literal `CatalogueCell::number(…)`); `reference_tables_cells_match_evaluate_sources` (`📚️catalogue/🧪️tests/🔬️unit/🦀️.rs` L37–50) asserts `geg_anlage2_ht_prime_limits::DETACHED_AN_LE_350` (0.40) equals `din18599.geg.ht-prime` limit on compliant detached |
+| 8 | Round-3 retentions: dangling `zoneId` Fail + `one_of`; duplicate ids Fail; no gaming artifacts; 13:27 causes | **PASS** | Dangling: `din18599.1.element-zone.{id}` L1063–1097. Duplicate: `push_duplicate_ids` L884–919 before clause checks; tests `duplicate_zone_id_fails_integrity` / `duplicate_element_id_fails_integrity` (compliance L653–685). No fingerprint/epsilon gaming in evaluate. `no_identical_en_de_explanations_in_committed_examples` (L688–716) green. `net-floor-area` en≠de (L1045–1047). `MonthlyClimate::german_reference()` → `potsdam_reference()` (`🦀️.rs` L252–254) |
 
 ---
 
@@ -34,128 +56,103 @@ Log: `🗑️generated/verify-din18599/test-r4.txt`.
 
 | # | Check | Result | Evidence |
 |---|--------|--------|----------|
-| 1 | Subject completeness | **PASS** | Hierarchical snapshot (`📸️snapshot/🔣️.json`). Static audit: 44/44 editable leaves read in `zone_balances`/`balance_for`/`evaluate` (`🗑️generated/verify-din18599/ignored-fields-audit.txt`). `heatedVolumeM3` in H_V infiltration + A/V_e + plausibility (schema L425, L774, L907–951). No building `lighting.powerDensityWM2`. |
-| 2 | Clause coverage | **PASS** | Checks: `din18599.1.heated-volume`, `din18599.1.net-floor-area`, `din18599.1.element-zone.*`, `din18599.geg.ht-prime`, `din18599.geg.mean-u.*`, `din18599.2.heating-demand`, `din18599.4.lighting-power.{zoneId}`, `din18599.5.heating-efficiency`, `din18599.6.heat-recovery`, `din18599.7.cooling`, `din18599.8.dhw`, `din18599.geg.qp`, `din18599.11.automation`, `din18599.12.tabular`. Limits from `#region 📜️NormTables`; `norm_table_rows_match_cited_sources` (compliance L294–331). No tautologies found. |
-| 3 | Numerics | **PASS** | Hand: H_T=**112.893 W/K**, H′T=**0.239 W/(m²·K)**; zone H_V=**46.648 W/K**; Q_l=**1142.4 kWh/a**; V_e plausibility ΣV/V_e=1.00. Oracle ±0.5 % on compliant/two_zone/cooled/noncompliant. Details: `🗑️generated/verify-din18599/hand-numerics.txt`. |
-| 4 | Applicability | **PASS** | Cooling N/A when `plant: None` (schema L1378–1389). Tabular N/A for `DetailedMonthly`. Mean Ū N/A per kind when no elements. |
-| 5 | National annex | **PASS** | DE-only family; all checks `AnnexChoice::De` (schema L904). |
-| 6 | Report quality | **PASS** | en≠de (cooling L1362, η_sys L1265–1267, DHW L1299–1307). `[id=…]` paths (L751–757, L984–1014, L1223). `every_emitted_path_resolves_via_get_value_at_path` (compliance L355–389). ≥5 remedy-apply tests (L153–351). |
-| 7 | Examples | **PASS** | DSL assets 16 lines with zones + elements (`🖼️assets/✅️compliant-detached/🗣️.dsl.semio`). `setActiveExample` loads PRIMARY_TEXT (editor `🎨️set-active-example/🦀️.rs` L19–25). `example_assets_decode_and_match_claimed_verdict` (compliance L257–272). Subjects: `compliant_two_zone_house`, `cooled_office_building` in tests. |
-| 7b | Inputs UX | **PASS** | `🏷️field-meta/🦀️.rs`: en+de labels, SI units, `NormFieldChoice` for carriers/profiles/kinds. `every_default_leaf_has_en_de_label` (L139–145). Structured editor `render_document_editor` (`📥️inputs/🦀️.rs` L25–30). |
-| 8 | Mutations & schema | **PASS** | Semantic verbs incl. `specify-heating-system` / `specify-dhw-system` (mutations L67–68). Facets aligned on `deltaUWbWM2k`. Snapshot TS: no `Record<string, unknown>` (guard-only in inference text TS). |
-| 9 | Tests | **FAIL** | 103/103 executed, 0 skipped. Oracle + jsonschema + remedy-law + path-resolve present. **Gap:** `every_editable_leaf_influences_a_check` uses only `cooled_office_building()` (compliance L438–442) — does not perturb leaves in `compliant_two_zone_house()` or `compliant_detached_house()` per R4 step 4 / CORRECTION 13:43. |
-| 10 | Stubs | **PASS** | No `todo!`/`unimplemented!` in family `.rs`. Comment-only “placeholder” in mutate feature prose (`🧪️tests/⚡️mutate-din18599-1/🦀️.rs` L119). |
+| 1 | Subject completeness | **PASS** | Hierarchical snapshot; multi-zone `zone_balances`; `heatedVolumeM3` in infiltration + plausibility |
+| 2 | Clause coverage | **PASS** | Checks incl. climate-composition, element-zone, integrity duplicates, GEG H′T/Q_P, parts 4–12; limits from `#region 📜️NormTables` |
+| 3 | Numerics | **PASS** | `norm_table_rows_match_cited_sources` (compliance L296–333); oracle ±0.5 % on four subjects |
+| 4 | Applicability | **PASS** | Cooling N/A when `plant: None`; tabular N/A for `DetailedMonthly` |
+| 5 | National annex | **PASS** | DE-only family |
+| 6 | Report quality | **PASS** | en≠de on all committed-example explanations/remedies (`no_identical_en_de_explanations_in_committed_examples`); paths `[id=…]`; ≥5 remedy-apply tests |
+| 7 | Examples | **PASS** | Five DSL examples incl. two-zone + cooled; verdict tests pass |
+| 7b | Inputs UX | **PASS** | Field-meta en+de + choices; `every_default_leaf_has_en_de_label` |
+| 8 | Mutations & schema | **PASS** | Semantic verbs; facets aligned on `deltaUWbWM2k` |
+| 9 | Tests | **PASS** | 113/113 executed, 0 skipped; catalogue panel + integrity tests added (+4 vs R5) |
+| 10 | Stubs | **PASS** | No `todo!`/`unimplemented!` in family `.rs` evaluate path |
 
 ---
 
-## Round-3 blocking items (re-check)
+## Round-5 blocking items (re-check)
 
-| R3 # | Item | Round 4 | Evidence |
-|------|------|---------|----------|
-| 1 | Wire ignored editable fields into `balance_for`/`evaluate()` | **FIXED** | `heatedVolumeM3` L425,L774,L907+; `zones[].usageProfile` L421,L444,L760–762; `zones[].volumeM3` L423,L438,L760; `zones[].lightingPowerWM2` L469,L1217–1245; `elements[].zoneId` L398–399,L431–478,L984+; static audit 0 unread |
-| 2 | Scope-aware `every_editable_leaf_influences_a_check` | **PARTIAL** | Test exists and passes on `cooled_office_building()` (L438–512) — covers cooling.plant.* and Office profile. **Not** run on `compliant_two_zone_house()` (second zone JSON paths) or `compliant_detached_house()` (WFH residential scope) |
-
----
-
-## Coordinator decisions A–F (re-check)
-
-| Dec | Requirement | Round 4 | Evidence |
-|-----|-------------|---------|----------|
-| A | Zone monthly balance; `elements[].zoneId`; dangling → Fail + one_of; field meta zone choices | **PARTIAL** | `zone_balances` L431–478; zoneId check L984–1017 with `Remedy::one_of` L1007–1014. **`elements[].zoneId` field-meta `choices: None`** (field-meta L104) — zone ids not exposed as editor choices |
-| B | `heatedVolumeM3` = V_e; Σ net ≤ V_e; net/gross ≥ 0.80 | **FIXED** | `DIN_V_18599_1_NET_TO_GROSS_VOLUME_RATIO` L709; check `din18599.1.heated-volume` L907–951; infiltration on V_e L425 |
-| C | Per-zone lighting; remove building `powerDensityWM2` | **FIXED** | `LightingSystem` control-only (root L217–219); per-zone checks L1217–1245; no `powerDensityWM2` in schema/DSL |
-| D | Cooling discriminated `Option<CoolingPlant>`; cooled example; perturb cooling leaves | **FIXED** | `CoolingSystem.plant: Option<CoolingPlant>` (root L191–210); `cooled_office_building` L484–498; perturbation base uses cooled (compliance L442) |
-| E | Rename `update-heating`/`update-dhw` → semantic verbs | **FIXED** | `specify-heating-system` / `specify-dhw-system` (mutations/🔥specify-heating-system, 🚿specify-dhw-system) |
-| F | Two-zone / profile / oracle / jsonschema | **FIXED** | `two_zone_moving_element_changes_zone_balances` L392–423; `usage_profile_change_changes_zone_hours_and_gains` L426–435; oracle + jsonschema on compliant/noncompliant/two_zone/cooled (`🔬️oracle/🦀️.rs` L18–70) |
+| R5 item | Round 6 | Evidence |
+|---------|---------|----------|
+| 1 `reference_tables()` non-empty from shared NormTables + Potsdam | **FIXED** | `📚️catalogue/🦀️.rs` L24–206 — seven tables (GEG f_P, H′T, U_ref/Ū, part-4 LPD, part-10 hours/DHW, part-12 q_p,tab, Potsdam monthly); `render` passes `windows` (L211–217); unit tests L23–50 |
+| 2 Duplicate `zones[].id` / `elements[].id` → Fail + en/de + `one_of` | **FIXED** | `push_duplicate_ids` L884–939; compliance tests L653–685 |
 
 ---
 
-## Round-2 / Round-1 still-relevant items
+## Coordinator Round-4/5 decisions (re-check)
 
-All nine R1 and five R2 blockers remain **FIXED** (unchanged from R3 re-check; spot-verified: `deltaUWbWM2k` L826+, path-resolve L355+, table asserts L294+, `report_out` editor L231–241).
+| Dec / note | Round 6 | Evidence |
+|------------|---------|----------|
+| A Climate composition + payload | **FIXED** | `din18599.1.climate-composition`; `assert_climate_payload_influences_checks` |
+| B Signature `(id, status, computed, limit, utilization)` | **FIXED** | `check_sig` L458–471 |
+| C Promote two-zone + cooled examples | **FIXED** | setActiveExample + catalogue + verdict tests |
+| D Remove dead helpers | **FIXED** | No stale fan/LPD helpers |
+| E Dynamic zoneId choices | **ACCEPTABLE** | `choices: None` + impl md B2 |
+| R5-A Localize `net-floor-area` en≠de | **FIXED** | L1045–1047 Nettogrundfläche / Summe der Zonenflächen |
+| R5-B `german_reference` climate zone | **FIXED** | Parameter removed; alias to `potsdam_reference()` |
 
 ---
 
 ## CORRECTION 13:27 — 12 recurring causes
 
-| # | Cause | Result | Evidence |
-|---|--------|--------|----------|
-| 1 | Human en+de `NormFieldChoice` labels | **PASS** | `ENERGY_CARRIER`, `USAGE_PROFILE`, `BOOL_YES_NO` (field-meta L48–60) |
-| 2 | Every editable leaf has meta + test | **PASS** | `every_default_leaf_has_en_de_label` (field-meta L139–145) |
-| 3 | Structured Inputs, not JSON dump | **PASS** | `render_document_editor` + `field_meta` (inputs L25–30) |
-| 4 | Entity paths `[id=…]` + path resolution test | **PASS** | compliance L355–389; zone/element paths in evaluate |
-| 5 | ≥2 remedy-apply tests; applicable writable targets | **PASS** | Five+ apply tests (compliance L153–351) |
-| 6 | Example tests decode DSL + verdict | **PASS** | compliance L257–272 |
-| 7 | Python oracle + third-party jsonschema | **PASS** | oracle/🦀️.rs L18–70; no skip hatch |
-| 8 | Facets regenerated, no drift | **PASS** | `deltaUWbWM2k` lockstep; snapshot TS clean |
-| 9 | No tautologies / ignored editable fields | **PASS** | Static audit 0 unread (`ignored-fields-audit.txt`) |
-| 10 | No trivially-true tests | **PASS** | `report_out` asserts complies + ids + numerics (editor L231–241) |
-| 11 | Semantic mutation verbs | **PASS** | `specify-heating-system`, `replace-elements`, … |
-| 12 | Dynamic issue text localized | **PASS** | Cooling L1362 en/de differ; η_sys L1265–1267 |
+| # | Cause | Result |
+|---|--------|--------|
+| 1 | Human en+de `NormFieldChoice` labels | **PASS** |
+| 2 | Every editable leaf has meta + test | **PASS** |
+| 3 | Structured Inputs, not JSON dump | **PASS** |
+| 4 | Entity paths `[id=…]` + path resolution test | **PASS** |
+| 5 | ≥2 remedy-apply tests | **PASS** |
+| 6 | Example tests decode DSL + verdict | **PASS** |
+| 7 | Python oracle + third-party jsonschema | **PASS** |
+| 8 | Facets regenerated, no drift | **PASS** |
+| 9 | No tautologies / ignored editable fields | **PASS** |
+| 10 | No trivially-true tests | **PASS** |
+| 11 | Semantic mutation verbs | **PASS** |
+| 12 | Dynamic issue text localized | **PASS** |
 
 ---
 
-## CORRECTION 13:43 — perturbation test + ignored-fields audit
+## CORRECTION 14:42 — gaming audit re-check
 
-### Perturbation test
-
-| Requirement | Result | Evidence |
-|-------------|--------|----------|
-| Test exists and perturbs editable leaves | **PASS** | `every_editable_leaf_influences_a_check` (compliance L438–512); asserts `unchanged.is_empty()` |
-| Scope-aware: cooling leaves in cooled example | **PASS** | Base = `cooled_office_building()` (L442); `cooling.plant.eer` / `energyCarrier` present |
-| **Complete across all committed examples (two-zone + cooled + detached)** | **FAIL** | Test runs **only** on `cooled_office_building()`. Does not loop `compliant_two_zone_house()` (zones[1].*, multi-zone zoneId splits) or `compliant_detached_house()` (WFH residential). Dedicated integration tests (L392–435) do not substitute per-leaf perturbation |
-| Exempt only descriptive labels | **PASS** | Exempts `labelEn`/`labelDe`/`id`/climate composition (L456–465) |
-| Assert ≥1 check status/utilization change | **PASS** | Signature compare on `(id, status, utilization)` (L504–510) |
-
-### Static audit — editable leaves vs `evaluate()` reads
-
-Full audit: `🗑️generated/verify-din18599/ignored-fields-audit.txt`.
-
-| Path group | Read by checks? | Notes |
-|------------|-----------------|-------|
-| `heatedVolumeM3` | **YES** | Infiltration L425; A/V_e L774; plausibility L907–951 |
-| `zones[].usageProfile` | **YES** | `usage_profile_row` L421,L444; fan weighting L760–762 |
-| `zones[].volumeM3` | **YES** | H_V profile term L423; volume share L438 |
-| `zones[].lightingPowerWM2` | **YES** | Q_l L469; part-4 checks L1217–1245 |
-| `elements[].zoneId` | **YES** | `elements_for_zone` L398–399; zone balances L431–478; linkage checks L984+ |
-| `zones[].labelEn/labelDe`, `elements[].labelEn/labelDe` | EXEMPT | Descriptive entity labels |
-| `zones[].id`, `elements[].id` | EXEMPT | Entity identifiers for `[id=…]` paths |
-| `climate.childId`, `climate.target`, … | EXEMPT | Composition handles; climate via `din18599_climate()` |
-
-**R3 five-leaf gap: FIXED** (0 potentially unread leaves).
+| Audit item | Round 5 | Round 6 |
+|------------|---------|---------|
+| Gaming instances | CLEAN (0) | **Still CLEAN** |
+| Perturbation climate/handle exemptions | RESOLVED | **Still RESOLVED** |
+| Perturbation signature utilization-only | RESOLVED | **Still RESOLVED** |
+| Duplicate entity ids Fail | GAP | **RESOLVED** — `push_duplicate_ids` + tests |
+| Catalogue `reference_tables()` empty | GAP | **RESOLVED** — seven tables + cross-check test |
 
 ---
 
-## Numeric derivations (≥3)
+## Catalogue ↔ evaluate const alignment (manual trace)
 
-See `🗑️generated/verify-din18599/hand-numerics.txt`. Summary:
+| Table id | Catalogue source | Evaluate consumer |
+|----------|------------------|-------------------|
+| `geg-anlage4-fp` | `geg_anlage4_primary_energy_factors::*` | `primary_energy_factor()` (`🧬️schema/🦀️.rs` L267–268) |
+| `geg-anlage2-ht-prime` | `geg_anlage2_ht_prime_limits::*` | `geg_ht_prime_limit()` → `din18599.geg.ht-prime` |
+| `geg-anlage2-3-u` | `geg_anlage2_reference_u::*`, `geg_anlage3_mean_u::*` | U-value checks |
+| `din18599-4-lpd` | `din_v_18599_4_lighting_power_density::*` | per-zone LPD limits L377–389 |
+| `din18599-10-hours-dhw` | `din_v_18599_10_fan_hours::*`, `lighting_hours::*`, `dhw_specific::*` | zone profile defaults |
+| `din18599-12-qp-tab` | `din_v_18599_12_tabelle5_qp_specific::*` | `tabular_qp_limit()` L823–825 |
+| `din18599-10-potsdam-climate` | `MonthlyClimate::potsdam_reference()` | `din18599_climate()` + climate-composition check |
 
-1. **H_T / H′T:** 112.893 W/K → 0.239 W/(m²·K) vs limit 0.40.
-2. **H_V (zone + WFH profile):** 46.648 W/K with η=0.80 (formula at schema L420–428).
-3. **Q_l (DIN V 18599-4/-10):** 1142.4 kWh/a from zone LPD × t_L(WFH)=1700 h/a × control 0.8.
-4. **V_e plausibility:** ΣV_zone/V_e = 1.00 ≥ 0.80.
-
-18599-10 profile constants sourced in `#region 📜️NormTables` (L695–706) and asserted L311–313.
+No duplicated numeric literals in catalogue panel; `rg 'CatalogueCell::number\([0-9]'` over catalogue module: zero hits.
 
 ---
 
 ## Blocking fix list
 
-1. **`…/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs` — Extend `every_editable_leaf_influences_a_check` to loop all committed subject fixtures** (do not delete fields or narrow scope):
-   - Run the existing perturbation loop on **`cooled_office_building()`** (cooling.plant.* scope), **`compliant_two_zone_house()`** (second zone + multi-zone zoneId scope), and **`compliant_detached_house()`** (WFH residential scope).
-   - For each fixture: walk JSON leaves, apply the same exempt list (descriptive `labelEn`/`labelDe`/`id` + climate composition handles only), perturb, assert ≥1 check `(id, status, utilization)` change vs that fixture’s baseline.
-   - Must fail until every leaf in every fixture influences a check (same strictness as current `unchanged.is_empty()` per fixture, or document-equivalent union coverage with explicit per-fixture assert messages).
+*(none)*
 
 ---
 
 ## Non-blocking observations
 
-- R3 core evaluate wiring is credibly closed; test count 99→103 with zone/volume/plausibility coverage.
-- Decision A remedy `one_of` for dangling `zoneId` works (schema L1007–1014); static `NormFieldMeta` still lacks dynamic zone-id choices for the inputs editor (field-meta L104) — consider B2 dynamic-choice hook.
-- Dead helpers `fan_operating_hours_a(use_class)` / `lighting_power_density_limit_w_m2(use_class)` (schema L716–730) unused by evaluate path; fan/lighting now zone-profile-driven.
-- `two_zone` / `cooled` subjects exist in tests/oracle but are not DSL `setActiveExample` entries (only compliant/noncompliant/demo) — UX gap only.
-- Impl md “102/102 no gaps” overstated until perturbation loops all committed examples.
+- Catalogue cross-check test asserts one cell (detached H′T 0.40) — meets ADDENDUM 14:54 minimum (mirrors en1990 single-table pattern); all cells already bind shared consts so drift risk is low.
+- `zoneId` static `NormFieldMeta` still lacks dynamic zone-id dropdown — acceptable per B2 / impl md.
+- `MonthlyClimate::german_reference()` remains a Potsdam alias; no multi-zone TRY selector in this family (DE-only, documented).
+- `norm_table_rows_match_cited_sources` validates const inventory separately from catalogue panel — complementary, not redundant.
 
 ---
 
-*Auditor: adversarial Wave D read-only · round 4 · 2026-09-26 · Family `⚡️din18599`*
+*Auditor: adversarial Wave D read-only · round 6 · 2026-09-26 · Family `⚡️din18599`*

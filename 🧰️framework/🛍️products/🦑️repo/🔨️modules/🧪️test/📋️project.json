@@ -182,6 +182,26 @@
         "forwardAllArgs": true
       },
       "inputs": ["default", "^default", "normOracleSources"]
+    },
+    "acceptance-goal": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts acceptance goal",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "acceptance-plan": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts acceptance plan",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     }
   },
   "namedInputs": {

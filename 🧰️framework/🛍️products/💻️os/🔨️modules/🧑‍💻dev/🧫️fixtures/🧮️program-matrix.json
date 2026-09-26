@@ -1,0 +1,73 @@
+{
+  "schema": "semio.os-dev.program-matrix-pins/v1",
+  "liveId": "@liveId",
+  "excludedKinds": ["space/home", "space/studio"],
+  "pluginVerbs": {
+    "animate": "addTile", "architect": "setAdjacencyKind", "block": "addHandleKind", "cad": "addNode", "dag": "addNode",
+    "demonstrator": "changeSchema", "draw": "addLayer", "energy": "create-zone", "fem": "addNode", "flow": "addWidget",
+    "forms": "addStep", "gis": "addFeature", "imperative": "addStep", "layout": "addPage", "lowpoly": "addPrimitive",
+    "mathematical": "nodeGraphEdit", "norm": "setSnapshot", "note": "addBlock", "playbook": "addStep",
+    "playbook-module-procedural": "importSolidGeometry", "procedural": "addWidget", "process": "addStep",
+    "puzzle": "addNode", "raster": "addLayer", "reasoning": "addNode", "remodel": "addStream", "sequence": "addStep",
+    "shooting": "addShot", "sourcing": "curationSetCount", "space": "renameArtifact", "stdio": "set-cell",
+    "trinity": "patchNodes", "vcs": "incrementCounter", "wfc": "change-seed", "writer": "setText"
+  },
+  "pluginArgs": {
+    "energy.create-zone": { "name": "ProbeZone", "volumeM3": "120", "multiplier": "1", "conditioned": "true" },
+    "energy.rename-zone": { "zone": "@liveId", "newName": "ProbeZone" },
+    "fem.addNode": { "x": "3.5", "y": "4.5" },
+    "wfc.change-seed": { "seed": "7" },
+    "trinity.patchNodes": { "nodeIds": "@liveId", "field": "name", "value": "Matrix Node" },
+    "sourcing.curationSetCount": { "objectId": "@liveId", "delta": "1" },
+    "writer.setText": { "text": "Matrix writer buffer" },
+    "stdio.set-cell": { "row": "0", "column": "0", "value": "Matrix Cell" },
+    "space.createArtifact": { "name": "Matrix Probe Artifact", "kindChoice": "@liveId" },
+    "space.renameArtifact": { "name": "Matrix Renamed Artifact" }
+  },
+  "kindVerbs": {
+    "space/space": "renameArtifact",
+    "trinity/rewriting": "addRuleClause",
+    "block/block2d": "addHandleKind",
+    "block/block3d": "addRepresentation",
+    "block/block5d": "addGripKind",
+    "gis/gisterrain": "setExaggeration",
+    "puzzle/puzzle3d": "duplicateSelection",
+    "demonstrator/puzzle3d": "duplicateSelection",
+    "stdio/txt": "replace-text",
+    "stdio/md": "replace-text",
+    "stdio/html": "replace-text",
+    "stdio/json": "set-node",
+    "stdio/xml": "set-node"
+  },
+  "kindPre": {
+    "puzzle/puzzle3d": "selectAll",
+    "demonstrator/puzzle3d": "selectAll",
+    "trinity/jack": "selectAll",
+    "space/space": "createArtifact!",
+    "stdio/csv": "setActiveExample!",
+    "stdio/tsv": "setActiveExample!",
+    "stdio/json": "setActiveExample!",
+    "stdio/json/i-json": "setActiveExample!",
+    "stdio/xml": "setActiveExample!",
+    "stdio/xml/valid": "setActiveExample!"
+  },
+  "kindArgs": {
+    "gis/gisterrain.setExaggeration": { "exaggeration": "2.5" },
+    "trinity/rewriting.addRuleClause": { "kind": "create" },
+    "stdio/txt.replace-text": { "text": "Matrix text" },
+    "stdio/md.replace-text": { "text": "# Matrix" },
+    "stdio/html.replace-text": { "text": "<p>Matrix</p>" },
+    "stdio/json.set-node": { "nodeId": "$␟k=name", "value": "Matrix" },
+    "stdio/xml.set-node": { "nodeId": "$␟2␟0", "value": "Matrix" },
+    "stdio/json/i-json.set-node": { "nodeId": "$␟k=id", "value": "Matrix" },
+    "stdio/xml/valid.set-node": { "nodeId": "$␟0␟0␟0", "value": "Matrix" }
+  },
+  "kindOrigin": {
+    "demonstrator/generation3d": "procedural",
+    "demonstrator/cad": "cad",
+    "demonstrator/puzzle3d": "puzzle",
+    "demonstrator/curation": "sourcing",
+    "demonstrator/process3d": "process",
+    "demonstrator/gismap": "gis"
+  }
+}

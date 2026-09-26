@@ -91,9 +91,9 @@ pub const EXTENSION_PACKAGE_FORMAT: u16 = 1;
 /// (`semio-framework-os-kernel`) must never depend on `semio-framework` (contract freeze §0
 /// dependency edge law: `semio-framework` depends on `semio-framework-os-kernel`, never the
 /// reverse), so the `.sxt` wire shape is duplicated here byte-identically instead of imported.
-/// `version` is the plain `VersionReq` display string (`=X.Y.Z`/`^X.Y.Z`/`~X.Y.Z`/`>=X.Y.Z`/`*`,
-/// contract freeze §3) — round-trips losslessly through `semio_framework::VersionReq::parse` at
-/// any call site that does depend on that crate (e.g. the guest `ExtensionManifest`).
+/// `version` is the exact pin's display string `=X.Y.Z` — the only form `semio_framework::VersionPin::parse`
+/// accepts at any call site that does depend on that crate (e.g. the guest `ExtensionManifest`); `from_json`
+/// refuses every range (`*`, `^`, `~`, `>=`, a bare triple) the same way.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PackagePluginDependency {
     pub plugin_id: String,
@@ -110,9 +110,18 @@ impl PackagePluginDependency {
         use crate::os_pack::json::Value;
         Ok(Self {
             plugin_id: value.get("pluginId").and_then(Value::as_str).map(str::to_owned).ok_or_else(|| "missing field pluginId".to_string())?,
-            version: value.get("version").and_then(Value::as_str).map(str::to_owned).ok_or_else(|| "missing field version".to_string())?,
+            version: value.get("version").and_then(Value::as_str).filter(|version| is_exact_pin(version)).map(str::to_owned).ok_or_else(|| "field version must be an exact pin `=X.Y.Z`".to_string())?,
         })
     }
+}
+
+/// 📌️ Whether `raw` is an exact dependency pin `=X.Y.Z` (three all-numeric segments), the `.sxt` twin of
+/// `semio_framework::VersionPin::parse`.
+fn is_exact_pin(raw: &str) -> bool {
+    raw.trim().strip_prefix('=').is_some_and(|version| {
+        let segments: Vec<&str> = version.split('.').collect();
+        segments.len() == 3 && segments.iter().all(|segment| !segment.is_empty() && segment.bytes().all(|byte| byte.is_ascii_digit()))
+    })
 }
 
 /// 📦️ On-disk package manifest carried as `🛂️manifest.semio` inside the zip payload.

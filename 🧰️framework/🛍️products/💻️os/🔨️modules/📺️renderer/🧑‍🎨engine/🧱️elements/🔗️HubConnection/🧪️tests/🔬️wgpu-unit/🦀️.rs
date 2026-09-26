@@ -679,7 +679,7 @@ fn every_fixture_creation_phase_paints_its_role_and_controls() {
             "failed" => HubArtifactOpening::Failed,
             _ => HubArtifactOpening::Idle,
         };
-        state.creation.operation = Some(HubArtifactCreation { intent, space_id: catalog.space_id.clone(), phase, submitted: true, cancel_requested: case["cancelRequested"].as_bool().expect("cancel"), cancel_sent: false, ready, opening, deadline_at_ms: u64::MAX, next_poll_at_ms: 0 });
+        state.creation.operation = Some(HubArtifactCreation { intent, space_id: catalog.space_id.clone(), phase, submitted: true, cancel_requested: case["cancelRequested"].as_bool().expect("cancel"), cancel_sent: false, ready, opening, last_answered_at_ms: 0, polls: 0, next_poll_at_ms: 0 });
         let tree = build_hub_workspace_ui(&state, locale);
         let painted = collected(&tree, texts);
         let buttons = collected(&tree, enabled_buttons);
@@ -743,10 +743,27 @@ fn the_door_seals_one_intent_for_a_chosen_kind_and_a_valid_name() {
     assert!(intent.validate());
     let buttons = collected(&build_hub_workspace_ui(&state, Locale::En), enabled_buttons);
     assert!(buttons.contains(&(format!("{HUB_ARTIFACT_CREATION_ID}.create"), true)));
-    state.creation.operation = Some(HubArtifactCreation { intent, space_id: "space-a".into(), phase: SpaceArtifactCreationPhaseV1::Preparing, submitted: true, cancel_requested: false, cancel_sent: false, ready: None, opening: HubArtifactOpening::Idle, deadline_at_ms: u64::MAX, next_poll_at_ms: 0 });
+    state.creation.operation = Some(HubArtifactCreation { intent, space_id: "space-a".into(), phase: SpaceArtifactCreationPhaseV1::Preparing, submitted: true, cancel_requested: false, cancel_sent: false, ready: None, opening: HubArtifactOpening::Idle, last_answered_at_ms: 0, polls: 0, next_poll_at_ms: 0 });
     assert_eq!(hub_artifact_creation_intent(&state), None, "one creation at a time");
     state.creation.operation = None;
     state.creation.name_draft = "   ".into();
     assert_eq!(hub_artifact_creation_intent(&state), None, "a blank name seals nothing");
 }
 //#endregion 🌱️ArtifactCreationDoorLaws
+
+/// ⏱️ The door follows a creation exactly as the browser does: every poll delay and the unreachable bound
+/// come from the shared contract (`🏪️store/👷️worker/🌱️creation-polling/🔣️.json`), recomputed here from its
+/// raw numbers — a slow hub that still answers is waited for, never concluded.
+#[test]
+fn the_creation_door_follows_the_shared_polling_contract() {
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🏪️store/👷️worker/🌱️creation-polling/🔣️.json")).expect("contract");
+    let (initial, maximum, bound) = (contract["pollInitialMs"].as_u64().unwrap(), contract["pollMaxMs"].as_u64().unwrap(), contract["unreachableBoundMs"].as_u64().unwrap());
+    let mut expected = initial;
+    for attempt in 0..40 {
+        assert_eq!(space_artifact_creation_poll_delay_ms(attempt), expected.min(maximum), "attempt {attempt}");
+        expected = expected.saturating_mul(2).min(maximum);
+    }
+    assert!(!space_artifact_creation_unreachable(1_000, 1_000 + bound - 1), "an answer inside the bound keeps the creation followed");
+    assert!(space_artifact_creation_unreachable(1_000, 1_000 + bound), "a hub silent for the whole bound is unreachable");
+    assert!(!space_artifact_creation_unreachable(1_000, 500), "a clock read before the answer is never unreachable");
+}

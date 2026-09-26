@@ -103,6 +103,10 @@ pub const SHELL_CHANNEL_PAYLOAD_VERSION: u32 = 1;
 /// 📤️ Encodes one [`AppCommand`] as this codec's JSON payload. Field names are camelCase and the
 /// `kind` discriminator is the variant's own name — the shared fixtures
 /// (`🐚️channel/🧫️fixtures/🗿️app-commands.json`) are the SSOT both banks are tested against.
+///
+/// 💡️ An inference never travels the shell route: `ensure_inference_route` owns its own guest
+/// and the shell has no seam to drive one. `ShellArtifactChannel::exchange` refuses it before
+/// encoding, so this arm exists only to keep the match total.
 pub fn encode_app_command(command: &AppCommand) -> serde_json::Value {
     let body = match command {
         AppCommand::ReadHistory => serde_json::json!({ "kind": "readHistory" }),
@@ -125,9 +129,6 @@ pub fn encode_app_command(command: &AppCommand) -> serde_json::Value {
         AppCommand::ExportMedia { port, document, document_spr } => {
             serde_json::json!({ "kind": "exportMedia", "port": port, "document": encode_base64(document), "documentSpr": encode_base64(document_spr) })
         }
-        // 💡️ An inference never travels the shell route: `ensure_inference_route` owns its own guest
-        // and the shell has no seam to drive one. `ShellArtifactChannel::exchange` refuses it before
-        // encoding, so this arm exists only to keep the match total.
         AppCommand::Infer(_) => serde_json::json!({ "kind": "infer" }),
     };
     let mut payload = body;
@@ -336,6 +337,10 @@ impl ShellArtifactChannel {
     }
 
     /// 🎯️ Resolves the shell-side instance id this exchange addresses, and remembers it.
+    ///
+    /// 🎯️ ONE open program of the artifact's own plugin is the artifact: bind it. Several is
+    /// genuinely ambiguous, and an ambiguous handle is refused BY NAME rather than resolved
+    /// silently — picking one would edit a document the agent never named.
     fn resolve_instance_id(&self, handle: &BridgeHandle, connection: ShellConnectionId, instance: u32, command: &AppCommand) -> Result<String, Fault> {
         let entries = handle.last_instances(connection).unwrap_or_default();
         if entries.is_empty() {
@@ -360,9 +365,6 @@ impl ShellArtifactChannel {
         }
         if let Some(plugin_id) = self.plugin.as_deref() {
             let owned: Vec<&BridgeInstanceRef> = entries.iter().filter(|entry| entry.plugin_id == plugin_id).collect();
-            // 🎯️ ONE open program of the artifact's own plugin is the artifact: bind it. Several is
-            // genuinely ambiguous, and an ambiguous handle is refused BY NAME rather than resolved
-            // silently — picking one would edit a document the agent never named.
             if owned.len() == 1 {
                 let only = owned[0].instance_id.clone();
                 self.bound.lock().expect("shell channel instance binding lock poisoned").insert(instance, only.clone());
@@ -392,6 +394,11 @@ impl ShellArtifactChannel {
     }
 
     /// 📤️ One correlated request/response round trip over the bridge.
+    ///
+    /// 🛑️ A timed-out command is cancelled in the shell, not left running: the same
+    /// cooperative flag the human's own Cancel button flips, so a shell that is still
+    /// grinding on an abandoned command stops instead of committing it after the agent
+    /// gave up on it.
     fn round_trip(&self, handle: &BridgeHandle, connection: ShellConnectionId, instance_id: &str, command: &AppCommand) -> Result<Vec<AppFrame>, Fault> {
         let seq = next_app_command_seq();
         let payload = serde_json::to_vec(&encode_app_command(command)).map_err(|error| fault("channel.not-wired", format!("encoding an AppCommand for the shell: {error}")))?;
@@ -415,10 +422,6 @@ impl ShellArtifactChannel {
                 }
             }
             if Instant::now() >= deadline {
-                // 🛑️ A timed-out command is cancelled in the shell, not left running: the same
-                // cooperative flag the human's own Cancel button flips, so a shell that is still
-                // grinding on an abandoned command stops instead of committing it after the agent
-                // gave up on it.
                 handle.send_to(connection, GatewayToShell::AppCommand { seq, instance_id: instance_id.to_string(), command: serde_json::to_vec(&serde_json::json!({ "version": SHELL_CHANNEL_PAYLOAD_VERSION, "kind": "cancel", "cancelSeq": seq })).unwrap_or_default() });
                 return Err(fault("budget.exceeded", format!("the attached shell did not answer this command within {}ms", self.timeout.as_millis())));
             }

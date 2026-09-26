@@ -257,6 +257,8 @@ impl OpDagGen {
                 document_id: crate::os_spr::ArtifactId("doc-1".to_string()),
                 actor: crate::os_spr::ActorId(format!("actor-{}", rng.next_range(4).await)),
                 dependencies,
+                observed: None,
+                target: Vec::new(),
                 diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
                 inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: Vec::new() },
                 timestamp: crate::os_spr::HybridLogicalTimestamp::new(i as u64, i as u64 * 10),

@@ -45,12 +45,6 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     }
 }
 
-/// 📌️ Pins one composed plugin exactly at the version of the tree this bundle is compiled from: a trusted catalog
-/// admits only exact dependency pins inside its own closure (`=x.y.z`, `trustedBootstrapDescriptorClaims`), never a range.
-fn same_tree_pin() -> Result<VersionReq, PluginAssemblyError> {
-    Version::parse(PLUGIN_VERSION).map(VersionReq::Exact).map_err(|error| PluginAssemblyError::new("plugin-assembly.dependency-version", format!("compiled workspace version is not semver: {error}")))
-}
-
 /// 🔌️ Builds the concrete demonstrator bundle: declares its owned playground artifact, registers
 /// its own native editor+viewer surfaces over that artifact, then registers the six foreign plugins'
 /// surfaces in their preserved order (`sourcing`/`process` each contribute an editor+viewer pair).
@@ -59,12 +53,12 @@ pub fn plugin() -> Result<Plugin<DemonstratorApps>, PluginAssemblyError> {
         .label(PLUGIN_LABEL)
         .version(PLUGIN_VERSION)
         .package_id("semio:demonstrator")
-        .depends_on("cad", same_tree_pin()?)
-        .depends_on("gis", same_tree_pin()?)
-        .depends_on("procedural", same_tree_pin()?)
-        .depends_on("process", same_tree_pin()?)
-        .depends_on("puzzle", same_tree_pin()?)
-        .depends_on("sourcing", same_tree_pin()?)
+        .depends_on("cad", semio_framework::tree_pin!())
+        .depends_on("gis", semio_framework::tree_pin!())
+        .depends_on("procedural", semio_framework::tree_pin!())
+        .depends_on("process", semio_framework::tree_pin!())
+        .depends_on("puzzle", semio_framework::tree_pin!())
+        .depends_on("sourcing", semio_framework::tree_pin!())
         .artifact(crate::artifacts::playground::declaration().map_err(PluginAssemblyError::definition)?)
         .editor::<crate::editor::playground::PlaygroundEditor>(crate::editor::playground::create_playground_editor())
         .editor_mutation_roster::<crate::editor::playground::PlaygroundEditor>()

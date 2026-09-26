@@ -1,0 +1,26 @@
+{
+  "name": "pixels-verification",
+  "targets": {
+    "test-artifact": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test edit_pixels",
+        "cwd": "../../../../../../../../✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust"
+      }
+    },
+    "test-typescript": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test typescript",
+        "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels"
+      }
+    },
+    "test-rust": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test rust",
+        "cwd": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "selection": [],
+      "fields": []
+    },
+    {
+      "selection": [
+        "paint.foreground"
+      ],
+      "fields": [
+        "name",
+        "visible",
+        "opacity",
+        "blendMode",
+        "transformX",
+        "transformY",
+        "width",
+        "height"
+      ]
+    },
+    {
+      "selection": [
+        "paint.foreground",
+        "paint.background"
+      ],
+      "fields": [
+        "name",
+        "visible",
+        "opacity",
+        "blendMode",
+        "transformX",
+        "transformY",
+        "width",
+        "height"
+      ]
+    }
+  ]
+}

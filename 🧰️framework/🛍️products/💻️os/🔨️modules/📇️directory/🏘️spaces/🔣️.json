@@ -29,5 +29,419 @@
     { "status": 429, "code": "unreachable" },
     { "status": 503, "code": "unreachable" },
     { "status": 418, "code": "hub-refused" }
+  ],
+  "receiptFolds": [
+    {
+      "id": "a-space-i-create-is-listed-at-once-with-my-membership",
+      "userId": "u-amara",
+      "rows": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-new",
+          "body": { "kind": "space.created", "spaceId": "sp-new", "name": "New Studio", "spaceKind": "studio", "visibility": "private", "ownerUserId": "u-amara" },
+          "recordedAtMs": 1790000000000
+        },
+        {
+          "seq": 2,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000002",
+          "hlc": { "physicalMs": 1790000000001, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-new",
+          "body": { "kind": "member.upserted", "spaceId": "sp-new", "userId": "u-amara", "role": "author" },
+          "recordedAtMs": 1790000000001
+        }
+      ],
+      "expected": [
+        { "id": "sp-new", "name": "New Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 1, "documentCount": 0, "activeConnections": 0, "updatedAtMs": 1790000000001 },
+        { "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }
+      ]
+    },
+    {
+      "id": "an-archive-i-create-lists-me-as-a-spectator-member",
+      "userId": "u-amara",
+      "rows": [],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-arch",
+          "body": { "kind": "space.created", "spaceId": "sp-arch", "name": "Shelf", "spaceKind": "archive", "visibility": "private", "ownerUserId": "u-amara" },
+          "recordedAtMs": 1790000000000
+        },
+        {
+          "seq": 2,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000002",
+          "hlc": { "physicalMs": 1790000000001, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-arch",
+          "body": { "kind": "member.upserted", "spaceId": "sp-arch", "userId": "u-amara", "role": "spectator" },
+          "recordedAtMs": 1790000000001
+        }
+      ],
+      "expected": [{ "id": "sp-arch", "name": "Shelf", "kind": "archive", "visibility": "private", "access": "member", "role": "spectator", "memberCount": 1, "documentCount": 0, "activeConnections": 0, "updatedAtMs": 1790000000001 }]
+    },
+    {
+      "id": "a-space-someone-else-creates-is-not-mine-to-list",
+      "userId": "u-amara",
+      "rows": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-noor#shell-1" },
+          "spaceId": "sp-noor",
+          "body": { "kind": "space.created", "spaceId": "sp-noor", "name": "Noor", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u-noor" },
+          "recordedAtMs": 1790000000000
+        },
+        {
+          "seq": 2,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000002",
+          "hlc": { "physicalMs": 1790000000001, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-noor#shell-1" },
+          "spaceId": "sp-noor",
+          "body": { "kind": "member.upserted", "spaceId": "sp-noor", "userId": "u-noor", "role": "author" },
+          "recordedAtMs": 1790000000001
+        }
+      ],
+      "expected": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }]
+    },
+    {
+      "id": "rename-visibility-and-archive-restate-a-listed-space",
+      "userId": "u-amara",
+      "rows": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-old",
+          "body": { "kind": "space.renamed", "spaceId": "sp-old", "name": "Renamed Studio" },
+          "recordedAtMs": 1790000000000
+        },
+        {
+          "seq": 2,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000002",
+          "hlc": { "physicalMs": 1790000000001, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-old",
+          "body": { "kind": "space.visibility-changed", "spaceId": "sp-old", "visibility": "public" },
+          "recordedAtMs": 1790000000001
+        },
+        {
+          "seq": 3,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000003",
+          "hlc": { "physicalMs": 1790000000002, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-old",
+          "body": { "kind": "space.archived", "spaceId": "sp-old" },
+          "recordedAtMs": 1790000000002
+        }
+      ],
+      "expected": [{ "id": "sp-old", "name": "Renamed Studio", "kind": "archive", "visibility": "public", "access": "member", "role": "spectator", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1790000000002 }]
+    },
+    {
+      "id": "leaving-a-private-space-drops-its-row",
+      "userId": "u-amara",
+      "rows": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-old",
+          "body": { "kind": "member.removed", "spaceId": "sp-old", "userId": "u-amara" },
+          "recordedAtMs": 1790000000000
+        }
+      ],
+      "expected": []
+    },
+    {
+      "id": "leaving-a-public-space-keeps-it-listed-as-public",
+      "userId": "u-amara",
+      "rows": [{ "id": "sp-open", "name": "Open", "kind": "studio", "visibility": "public", "access": "author", "role": "author", "memberCount": 3, "documentCount": 1, "activeConnections": 2, "updatedAtMs": 1700000000000 }],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-open",
+          "body": { "kind": "member.removed", "spaceId": "sp-open", "userId": "u-amara" },
+          "recordedAtMs": 1790000000000
+        }
+      ],
+      "expected": [{ "id": "sp-open", "name": "Open", "kind": "studio", "visibility": "public", "access": "public", "role": null, "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1790000000000 }]
+    },
+    {
+      "id": "joining-a-public-space-makes-me-a-member-and-counts-me",
+      "userId": "u-amara",
+      "rows": [{ "id": "sp-public", "name": "Open Studio", "kind": "studio", "visibility": "public", "access": "public", "role": null, "memberCount": 4, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-public",
+          "body": { "kind": "member.upserted", "spaceId": "sp-public", "userId": "u-amara", "role": "author" },
+          "recordedAtMs": 1790000000000
+        }
+      ],
+      "expected": [{ "id": "sp-public", "name": "Open Studio", "kind": "studio", "visibility": "public", "access": "author", "role": "author", "memberCount": 5, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1790000000000 }]
+    },
+    {
+      "id": "a-deleted-space-leaves-the-list",
+      "userId": "u-amara",
+      "rows": [
+        { "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 },
+        { "id": "sp-public", "name": "Open Studio", "kind": "studio", "visibility": "public", "access": "public", "role": null, "memberCount": 4, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }
+      ],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-old",
+          "body": { "kind": "space.deleted", "spaceId": "sp-old" },
+          "recordedAtMs": 1790000000000
+        }
+      ],
+      "expected": [{ "id": "sp-public", "name": "Open Studio", "kind": "studio", "visibility": "public", "access": "public", "role": null, "memberCount": 4, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }]
+    },
+    {
+      "id": "a-redeemed-invite-counts-a-new-member-an-upsert-of-another-user-does-not",
+      "userId": "u-amara",
+      "rows": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-old",
+          "body": { "kind": "invite.redeemed", "spaceId": "sp-old", "userId": "u-devon", "inviteId": "inv-1", "role": "author" },
+          "recordedAtMs": 1790000000000
+        },
+        {
+          "seq": 2,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000002",
+          "hlc": { "physicalMs": 1790000000001, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-old",
+          "body": { "kind": "member.upserted", "spaceId": "sp-old", "userId": "u-noor", "role": "spectator" },
+          "recordedAtMs": 1790000000001
+        },
+        {
+          "seq": 3,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000003",
+          "hlc": { "physicalMs": 1790000000002, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "spaceId": "sp-old",
+          "body": { "kind": "member.removed", "spaceId": "sp-old", "userId": "u-devon" },
+          "recordedAtMs": 1790000000002
+        }
+      ],
+      "expected": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1790000000002 }]
+    },
+    {
+      "id": "an-announced-document-counts-in-its-space",
+      "userId": "u-amara",
+      "rows": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 1, "activeConnections": 0, "updatedAtMs": 1700000000000 }],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1790000000000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#shell-1" },
+          "body": {
+            "kind": "document.announced",
+            "descriptor": {
+              "spaceId": "sp-old",
+              "documentId": "artifact-1",
+              "artifactKind": "s.gis.gismap",
+              "artifactSchema": "s.gis.gismap@1/*",
+              "owner": { "pluginId": "s.gis", "packageId": "s.gis.gismap", "version": "1.0.0", "packageHash": "2222222222222222222222222222222222222222222222222222222222222222" },
+              "packSchemaHash": "1111111111111111111111111111111111111111111111111111111111111111",
+              "bootstrapVersion": 1,
+              "bootstrapFrontier": { "headSeq": 7, "commitSeq": 7, "epoch": 2 },
+              "bootstrapSnapshotHash": "3333333333333333333333333333333333333333333333333333333333333333"
+            }
+          },
+          "recordedAtMs": 1790000000000
+        }
+      ],
+      "expected": [{ "id": "sp-old", "name": "Old Studio", "kind": "studio", "visibility": "private", "access": "author", "role": "author", "memberCount": 2, "documentCount": 2, "activeConnections": 0, "updatedAtMs": 1790000000000 }]
+    },
+    {
+      "id": "the-golden-directory-log-folds-to-the-read-models-view-of-its-owner",
+      "userId": "u-amara",
+      "rows": [],
+      "events": [
+        {
+          "seq": 1,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000001",
+          "hlc": { "physicalMs": 1755331200000, "logical": 0 },
+          "actor": { "kind": "system", "id": "system" },
+          "userId": "u-amara",
+          "body": { "kind": "user.created", "userId": "u-amara", "email": "amara@semio.dev", "displayName": "Amara Voss" },
+          "recordedAtMs": 1755331200000
+        },
+        {
+          "seq": 2,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000002",
+          "hlc": { "physicalMs": 1755331201000, "logical": 0 },
+          "actor": { "kind": "system", "id": "system" },
+          "userId": "u-noor",
+          "body": { "kind": "user.created", "userId": "u-noor", "email": "noor@semio.dev", "displayName": "Noor Iqbal" },
+          "recordedAtMs": 1755331201000
+        },
+        {
+          "seq": 3,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000003",
+          "hlc": { "physicalMs": 1755331202000, "logical": 0 },
+          "actor": { "kind": "system", "id": "system" },
+          "userId": "u-devon",
+          "body": { "kind": "user.created", "userId": "u-devon", "email": "devon@semio.dev", "displayName": "Devon Cole" },
+          "recordedAtMs": 1755331202000
+        },
+        {
+          "seq": 4,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000004",
+          "hlc": { "physicalMs": 1755331203000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-atelier-amara",
+          "body": { "kind": "space.created", "spaceId": "sp-atelier-amara", "name": "Amara's Atelier", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u-amara" },
+          "recordedAtMs": 1755331203000
+        },
+        {
+          "seq": 5,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000005",
+          "hlc": { "physicalMs": 1755331204000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-atelier-amara",
+          "userId": "u-amara",
+          "body": { "kind": "member.upserted", "spaceId": "sp-atelier-amara", "userId": "u-amara", "role": "author" },
+          "recordedAtMs": 1755331204000
+        },
+        {
+          "seq": 6,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000006",
+          "hlc": { "physicalMs": 1755331205000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "body": { "kind": "space.created", "spaceId": "sp-studio-fabrication", "name": "Fab Studio", "spaceKind": "studio", "visibility": "private", "ownerUserId": "u-amara" },
+          "recordedAtMs": 1755331205000
+        },
+        {
+          "seq": 7,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000007",
+          "hlc": { "physicalMs": 1755331206000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "userId": "u-amara",
+          "body": { "kind": "member.upserted", "spaceId": "sp-studio-fabrication", "userId": "u-amara", "role": "author" },
+          "recordedAtMs": 1755331206000
+        },
+        {
+          "seq": 8,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000008",
+          "hlc": { "physicalMs": 1755331207000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "userId": "u-noor",
+          "body": { "kind": "member.upserted", "spaceId": "sp-studio-fabrication", "userId": "u-noor", "role": "author" },
+          "recordedAtMs": 1755331207000
+        },
+        {
+          "seq": 9,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000009",
+          "hlc": { "physicalMs": 1755331208000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "body": { "kind": "space.renamed", "spaceId": "sp-studio-fabrication", "name": "Fabrication Studio" },
+          "recordedAtMs": 1755331208000
+        },
+        {
+          "seq": 10,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000010",
+          "hlc": { "physicalMs": 1755331209000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "body": { "kind": "space.visibility-changed", "spaceId": "sp-studio-fabrication", "visibility": "public" },
+          "recordedAtMs": 1755331209000
+        },
+        {
+          "seq": 11,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000011",
+          "hlc": { "physicalMs": 1755331210000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-devon#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "userId": "u-devon",
+          "body": { "kind": "invite.redeemed", "spaceId": "sp-studio-fabrication", "userId": "u-devon", "inviteId": "inv-1", "role": "author" },
+          "recordedAtMs": 1755331210000
+        },
+        {
+          "seq": 12,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000012",
+          "hlc": { "physicalMs": 1755331211000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "userId": "u-noor",
+          "body": { "kind": "member.removed", "spaceId": "sp-studio-fabrication", "userId": "u-noor" },
+          "recordedAtMs": 1755331211000
+        },
+        {
+          "seq": 13,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000013",
+          "hlc": { "physicalMs": 1755331212000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-atelier-amara",
+          "body": { "kind": "space.deleted", "spaceId": "sp-atelier-amara" },
+          "recordedAtMs": 1755331212000
+        },
+        {
+          "seq": 14,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000014",
+          "hlc": { "physicalMs": 1755331213000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "userId": "u-amara",
+          "body": { "kind": "member.upserted", "spaceId": "sp-studio-fabrication", "userId": "u-amara", "role": "spectator" },
+          "recordedAtMs": 1755331213000
+        },
+        {
+          "seq": 15,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000015",
+          "hlc": { "physicalMs": 1755331214000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "userId": "u-devon",
+          "body": { "kind": "member.upserted", "spaceId": "sp-studio-fabrication", "userId": "u-devon", "role": "spectator" },
+          "recordedAtMs": 1755331214000
+        },
+        {
+          "seq": 16,
+          "id": "018f6b1a-6e40-7c31-9d21-000000000016",
+          "hlc": { "physicalMs": 1755331215000, "logical": 0 },
+          "actor": { "kind": "user", "id": "user:u-amara#s1" },
+          "spaceId": "sp-studio-fabrication",
+          "body": { "kind": "space.archived", "spaceId": "sp-studio-fabrication" },
+          "recordedAtMs": 1755331215000
+        }
+      ],
+      "expected": [
+        { "id": "sp-studio-fabrication", "name": "Fabrication Studio", "kind": "archive", "visibility": "public", "access": "member", "role": "spectator", "memberCount": 2, "documentCount": 0, "activeConnections": 0, "updatedAtMs": 1755331215000 }
+      ]
+    }
   ]
 }

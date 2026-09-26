@@ -65,7 +65,7 @@ impl FakeCluster {
 }
 
 async fn dependency(id: &str) -> semio_framework::PluginDependency {
-    semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any)
+    semio_framework::PluginDependency::new(id, semio_framework::tree_pin!())
 }
 
 #[semio_framework_async_macros::async_test]

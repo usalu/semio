@@ -965,7 +965,7 @@ async fn db_io_blocking_fault_preserves_exact_category_scalars_and_retires() {
         assert_eq!(actual_error, expected_error);
         assert_eq!(fault_category_oracle(&actual_error), expected_category);
         let ledger = lock(db_io_operation_ledger());
-        assert_eq!(ledger.slots[db_io_operation_slot(&ledger, handle.operation).unwrap()].result_leases == 0, fixture.fault_conversion_retires_result_lease);
+        assert_eq!(db_io_operation_slot(&ledger, handle.operation).map_or(0, |slot| ledger.slots[slot].result_leases) == 0, fixture.fault_conversion_retires_result_lease, "a fault holds no result lease; a task maintenance already retired holds no ledger slot at all");
         drop(ledger);
         drain_control_tasks(control).await;
     }

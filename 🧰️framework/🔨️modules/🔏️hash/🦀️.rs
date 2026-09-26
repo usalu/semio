@@ -88,35 +88,117 @@ impl Sha256 {
     }
 
     fn transform(&mut self, block: &[u8; 64]) {
-        let mut words = [0u32; 64];
-        for (word, bytes) in words.iter_mut().take(16).zip(block.as_chunks::<4>().0) {
-            *word = u32::from_be_bytes(*bytes);
+        sha256_compress(&mut self.state, block);
+    }
+}
+
+/// 🏎️ One SHA-256 compression on the CPU's own SHA-256 instructions when it has them (aarch64 `sha2`,
+/// x86-64 `sha` with `sse4.1`, detected at run time), otherwise [`sha256_compress_portable`] — the
+/// same FIPS 180-4 compression either way, so every digest is identical on every machine and target.
+#[inline]
+fn sha256_compress(state: &mut [u32; 8], block: &[u8; 64]) {
+    #[cfg(target_arch = "aarch64")]
+    if std::arch::is_aarch64_feature_detected!("sha2") {
+        return unsafe { sha256_compress_aarch64(state, block) };
+    }
+    #[cfg(target_arch = "x86_64")]
+    if std::arch::is_x86_feature_detected!("sha") && std::arch::is_x86_feature_detected!("sse4.1") {
+        return unsafe { sha256_compress_x86(state, block) };
+    }
+    sha256_compress_portable(state, block);
+}
+
+/// 🦾️ The compression on the Armv8 SHA-256 instructions: four rounds per `SHA256H`/`SHA256H2` pair,
+/// the message schedule on `SHA256SU0`/`SHA256SU1`.
+#[cfg(target_arch = "aarch64")]
+#[target_feature(enable = "sha2")]
+unsafe fn sha256_compress_aarch64(state: &mut [u32; 8], block: &[u8; 64]) {
+    use std::arch::aarch64::{vaddq_u32, vld1q_u32, vld1q_u8, vreinterpretq_u32_u8, vrev32q_u8, vsha256h2q_u32, vsha256hq_u32, vsha256su0q_u32, vsha256su1q_u32, vst1q_u32};
+    unsafe {
+        let (mut abcd, mut efgh) = (vld1q_u32(state.as_ptr()), vld1q_u32(state.as_ptr().add(4)));
+        let (abcd_start, efgh_start) = (abcd, efgh);
+        let load = |offset: usize| vreinterpretq_u32_u8(vrev32q_u8(vld1q_u8(block.as_ptr().add(offset))));
+        let mut words = [load(0), load(16), load(32), load(48)];
+        for group in 0..16 {
+            let scheduled = vaddq_u32(words[0], vld1q_u32(SHA256_ROUNDS.as_ptr().add(group * 4)));
+            let next = vsha256su1q_u32(vsha256su0q_u32(words[0], words[1]), words[2], words[3]);
+            words = [words[1], words[2], words[3], next];
+            let abcd_before = abcd;
+            abcd = vsha256hq_u32(abcd, efgh, scheduled);
+            efgh = vsha256h2q_u32(efgh, abcd_before, scheduled);
         }
-        for index in 16..64 {
-            let s0 = words[index - 15].rotate_right(7) ^ words[index - 15].rotate_right(18) ^ (words[index - 15] >> 3);
-            let s1 = words[index - 2].rotate_right(17) ^ words[index - 2].rotate_right(19) ^ (words[index - 2] >> 10);
-            words[index] = words[index - 16].wrapping_add(s0).wrapping_add(words[index - 7]).wrapping_add(s1);
+        vst1q_u32(state.as_mut_ptr(), vaddq_u32(abcd, abcd_start));
+        vst1q_u32(state.as_mut_ptr().add(4), vaddq_u32(efgh, efgh_start));
+    }
+}
+
+/// 🧮️ The compression on the x86 SHA extensions: two rounds per `SHA256RNDS2`, the message schedule on
+/// `SHA256MSG1`/`SHA256MSG2`, the state held as the `ABEF`/`CDGH` lane pairs those instructions use.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "sha,sse2,ssse3,sse4.1")]
+unsafe fn sha256_compress_x86(state: &mut [u32; 8], block: &[u8; 64]) {
+    use std::arch::x86_64::{__m128i, _mm_add_epi32, _mm_alignr_epi8, _mm_blend_epi16, _mm_loadu_si128, _mm_set_epi64x, _mm_sha256msg1_epu32, _mm_sha256msg2_epu32, _mm_sha256rnds2_epu32, _mm_shuffle_epi32, _mm_shuffle_epi8, _mm_storeu_si128};
+    unsafe {
+        let byte_swap = _mm_set_epi64x(0x0c0d_0e0f_0809_0a0b, 0x0405_0607_0001_0203);
+        let dcba = _mm_loadu_si128(state.as_ptr().cast::<__m128i>());
+        let hgfe = _mm_loadu_si128(state.as_ptr().add(4).cast::<__m128i>());
+        let cdab = _mm_shuffle_epi32(dcba, 0xb1);
+        let efgh = _mm_shuffle_epi32(hgfe, 0x1b);
+        let mut abef = _mm_alignr_epi8(cdab, efgh, 8);
+        let mut cdgh = _mm_blend_epi16(efgh, cdab, 0xf0);
+        let (abef_start, cdgh_start) = (abef, cdgh);
+        let load = |offset: usize| _mm_shuffle_epi8(_mm_loadu_si128(block.as_ptr().add(offset).cast::<__m128i>()), byte_swap);
+        let mut words = [load(0), load(16), load(32), load(48)];
+        for group in 0..16 {
+            let message = if group < 4 {
+                words[group]
+            } else {
+                let next = _mm_sha256msg2_epu32(_mm_add_epi32(_mm_sha256msg1_epu32(words[0], words[1]), _mm_alignr_epi8(words[3], words[2], 4)), words[3]);
+                words = [words[1], words[2], words[3], next];
+                next
+            };
+            let scheduled = _mm_add_epi32(message, _mm_loadu_si128(SHA256_ROUNDS.as_ptr().add(group * 4).cast::<__m128i>()));
+            cdgh = _mm_sha256rnds2_epu32(cdgh, abef, scheduled);
+            abef = _mm_sha256rnds2_epu32(abef, cdgh, _mm_shuffle_epi32(scheduled, 0x0e));
         }
-        let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h] = self.state;
-        for index in 0..64 {
-            let sum1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
-            let choice = (e & f) ^ (!e & g);
-            let temporary1 = h.wrapping_add(sum1).wrapping_add(choice).wrapping_add(SHA256_ROUNDS[index]).wrapping_add(words[index]);
-            let sum0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
-            let majority = (a & b) ^ (a & c) ^ (b & c);
-            let temporary2 = sum0.wrapping_add(majority);
-            h = g;
-            g = f;
-            f = e;
-            e = d.wrapping_add(temporary1);
-            d = c;
-            c = b;
-            b = a;
-            a = temporary1.wrapping_add(temporary2);
-        }
-        for (state, value) in self.state.iter_mut().zip([a, b, c, d, e, f, g, h]) {
-            *state = state.wrapping_add(value);
-        }
+        let feba = _mm_shuffle_epi32(_mm_add_epi32(abef, abef_start), 0x1b);
+        let dchg = _mm_shuffle_epi32(_mm_add_epi32(cdgh, cdgh_start), 0xb1);
+        _mm_storeu_si128(state.as_mut_ptr().cast::<__m128i>(), _mm_blend_epi16(feba, dchg, 0xf0));
+        _mm_storeu_si128(state.as_mut_ptr().add(4).cast::<__m128i>(), _mm_alignr_epi8(dchg, feba, 8));
+    }
+}
+
+/// 📜️ The FIPS 180-4 compression in portable Rust: the reference every accelerated path is held
+/// against, and the only one a wasm guest runs.
+fn sha256_compress_portable(state: &mut [u32; 8], block: &[u8; 64]) {
+    let mut words = [0u32; 64];
+    for (word, bytes) in words.iter_mut().take(16).zip(block.as_chunks::<4>().0) {
+        *word = u32::from_be_bytes(*bytes);
+    }
+    for index in 16..64 {
+        let s0 = words[index - 15].rotate_right(7) ^ words[index - 15].rotate_right(18) ^ (words[index - 15] >> 3);
+        let s1 = words[index - 2].rotate_right(17) ^ words[index - 2].rotate_right(19) ^ (words[index - 2] >> 10);
+        words[index] = words[index - 16].wrapping_add(s0).wrapping_add(words[index - 7]).wrapping_add(s1);
+    }
+    let [mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h] = *state;
+    for index in 0..64 {
+        let sum1 = e.rotate_right(6) ^ e.rotate_right(11) ^ e.rotate_right(25);
+        let choice = (e & f) ^ (!e & g);
+        let temporary1 = h.wrapping_add(sum1).wrapping_add(choice).wrapping_add(SHA256_ROUNDS[index]).wrapping_add(words[index]);
+        let sum0 = a.rotate_right(2) ^ a.rotate_right(13) ^ a.rotate_right(22);
+        let majority = (a & b) ^ (a & c) ^ (b & c);
+        let temporary2 = sum0.wrapping_add(majority);
+        h = g;
+        g = f;
+        f = e;
+        e = d.wrapping_add(temporary1);
+        d = c;
+        c = b;
+        b = a;
+        a = temporary1.wrapping_add(temporary2);
+    }
+    for (state, value) in state.iter_mut().zip([a, b, c, d, e, f, g, h]) {
+        *state = state.wrapping_add(value);
     }
 }
 

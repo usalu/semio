@@ -450,6 +450,7 @@ impl ArtifactEditor for TxtEditor {
 pub fn create_txt_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TXT_EDITOR_DIALECT)
         .document(["semio", "stdio", "txt"])
+        .artifact_kind(crate::artifact_kind())
         .icon_id("type")
         .mode_def(edit::definition())
         .default_mode_id(edit::TXT_EDIT_MODE_ID)
@@ -459,6 +460,7 @@ pub fn create_txt_editor() -> semio_framework_plugin::AppDefinition {
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
+        .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
         .build_definition()
 }

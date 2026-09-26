@@ -62,7 +62,7 @@ async fn bounding_box_overlaps_detects_intersection_and_gap() {
 #[semio_framework_async_macros::async_test]
 async fn geometry_bbox_volume() {
     let doc = Vdi3805Snapshot::default();
-    let geom = doc.geometry.get("geom.valve.50").expect("geom");
+    let geom = doc.geometry.get("geom-valve-50").expect("geom");
     let bbox = geom.evaluate_bbox();
     assert!((bbox.volume_m3() - 0.003).abs() < 1e-6);
 }

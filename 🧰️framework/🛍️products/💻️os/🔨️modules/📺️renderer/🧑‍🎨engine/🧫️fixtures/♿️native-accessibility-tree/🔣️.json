@@ -1,0 +1,94 @@
+{
+  "schema": "semio.renderer.native-accessibility-tree-fixture/v1",
+  "title": "Semio",
+  "windows": [
+    {
+      "windowId": "shell.chrome",
+      "windowGeneration": 7,
+      "nodes": [
+        { "nodeId": 11, "key": "nav.home", "role": "button", "depth": 0, "label": "Home", "live": "off", "focusable": true, "actionable": true },
+        { "nodeId": 12, "key": "nav.theme", "role": "switch", "depth": 0, "label": "Dark theme", "live": "off", "focusable": true, "actionable": true, "checked": true },
+        { "nodeId": 13, "key": "footer.sync", "role": "status", "depth": 0, "label": "Live · 2 peers", "live": "polite" },
+        { "nodeId": 14, "key": "search.input", "role": "textbox", "depth": 0, "label": "Search", "live": "off", "focusable": true, "editable": true }
+      ]
+    },
+    {
+      "windowId": "note-composite",
+      "windowGeneration": 3,
+      "nodes": [
+        { "nodeId": 21, "key": "toolbar", "role": "toolbar", "depth": 0, "label": "Formatting", "live": "off" },
+        { "nodeId": 22, "key": "bold", "role": "button", "depth": 1, "label": "Bold", "live": "off", "shortcut": "⌘B", "focusable": true, "actionable": true, "pressed": false },
+        { "nodeId": 23, "key": "body", "role": "textbox", "depth": 0, "label": "Note body", "live": "off", "focusable": true, "focused": true, "editable": true, "multiline": true, "valueText": "Hello" },
+        { "nodeId": 24, "key": "outline", "role": "tree", "depth": 0, "label": "Outline", "live": "off" },
+        { "nodeId": 25, "key": "outline.a", "role": "treeitem", "depth": 1, "label": "Chapter 1", "live": "off", "focusable": true, "actionable": true, "expanded": true, "selected": true, "level": 1 },
+        { "nodeId": 26, "key": "outline.a.1", "role": "treeitem", "depth": 2, "label": "Section 1.1", "live": "off", "focusable": true, "actionable": true, "level": 2 },
+        { "nodeId": 27, "key": "zoom", "role": "slider", "depth": 0, "label": "Zoom", "live": "off", "focusable": true, "valueMin": 10.0, "valueMax": 400.0, "valueNow": 100.0, "valueText": "100 %" },
+        { "nodeId": 28, "key": "save", "role": "button", "depth": 0, "label": "Save", "live": "off", "disabled": true, "focusable": true, "actionable": true },
+        { "nodeId": 29, "key": "readout", "role": "textbox", "depth": 0, "label": "Word count", "live": "off", "valueText": "2" },
+        { "nodeId": 30, "key": "canvas", "role": "application", "depth": 0, "label": "Board", "live": "off", "focusable": true },
+        { "nodeId": 31, "key": "future", "role": "marquee", "depth": 0, "label": "Ticker", "live": "off" }
+      ]
+    }
+  ],
+  "expected": {
+    "root": { "role": "Window", "name": "Semio", "children": ["shell.chrome", "note-composite"] },
+    "focus": "note-composite/body",
+    "panes": [
+      { "authorId": "shell.chrome", "role": "Group", "children": ["shell.chrome/nav.home", "shell.chrome/nav.theme", "shell.chrome/footer.sync", "shell.chrome/search.input"] },
+      { "authorId": "note-composite", "role": "Pane", "children": ["note-composite/toolbar", "note-composite/body", "note-composite/outline", "note-composite/zoom", "note-composite/save", "note-composite/readout", "note-composite/canvas", "note-composite/future"] }
+    ],
+    "nodes": [
+      { "authorId": "shell.chrome/nav.home", "role": "Button", "name": "Home", "actions": ["Click", "Focus"], "children": [] },
+      { "authorId": "shell.chrome/nav.theme", "role": "Switch", "name": "Dark theme", "actions": ["Click", "Focus"], "toggled": "True", "children": [] },
+      { "authorId": "shell.chrome/footer.sync", "role": "Status", "name": "Live · 2 peers", "actions": [], "live": "Polite", "children": [] },
+      { "authorId": "shell.chrome/search.input", "role": "TextInput", "name": "Search", "actions": ["Focus", "SetValue"], "children": [] },
+      { "authorId": "note-composite/toolbar", "role": "Toolbar", "name": "Formatting", "actions": [], "children": ["note-composite/bold"] },
+      { "authorId": "note-composite/bold", "role": "Button", "name": "Bold", "actions": ["Click", "Focus"], "toggled": "False", "shortcut": "⌘B", "children": [] },
+      { "authorId": "note-composite/body", "role": "MultilineTextInput", "name": "Note body", "actions": ["Focus", "SetValue"], "value": "Hello", "children": [] },
+      { "authorId": "note-composite/outline", "role": "Tree", "name": "Outline", "actions": [], "children": ["note-composite/outline.a"] },
+      { "authorId": "note-composite/outline.a", "role": "TreeItem", "name": "Chapter 1", "actions": ["Click", "Focus"], "expanded": true, "selected": true, "level": 1, "children": ["note-composite/outline.a.1"] },
+      { "authorId": "note-composite/outline.a.1", "role": "TreeItem", "name": "Section 1.1", "actions": ["Click", "Focus"], "level": 2, "children": [] },
+      { "authorId": "note-composite/zoom", "role": "Slider", "name": "Zoom", "actions": ["Focus"], "value": "100 %", "numeric": [10.0, 400.0, 100.0], "children": [] },
+      { "authorId": "note-composite/save", "role": "Button", "name": "Save", "actions": [], "disabled": true, "children": [] },
+      { "authorId": "note-composite/readout", "role": "TextInput", "name": "Word count", "actions": [], "readOnly": true, "value": "2", "children": [] },
+      { "authorId": "note-composite/canvas", "role": "Application", "name": "Board", "actions": ["Focus"], "children": [] },
+      { "authorId": "note-composite/future", "role": "Unknown", "name": "Ticker", "actions": [], "children": [] }
+    ]
+  },
+  "roles": [
+    { "role": "application", "platform": "Application" },
+    { "role": "button", "platform": "Button" },
+    { "role": "checkbox", "platform": "CheckBox" },
+    { "role": "combobox", "platform": "ComboBox" },
+    { "role": "form", "platform": "Form" },
+    { "role": "grid", "platform": "Grid" },
+    { "role": "group", "platform": "Group" },
+    { "role": "img", "platform": "Image" },
+    { "role": "list", "platform": "List" },
+    { "role": "menuitem", "platform": "MenuItem" },
+    { "role": "option", "platform": "ListBoxOption" },
+    { "role": "paragraph", "platform": "Paragraph" },
+    { "role": "progressbar", "platform": "ProgressIndicator" },
+    { "role": "radiogroup", "platform": "RadioGroup" },
+    { "role": "region", "platform": "Region" },
+    { "role": "row", "platform": "Row" },
+    { "role": "separator", "platform": "Splitter" },
+    { "role": "slider", "platform": "Slider" },
+    { "role": "spinbutton", "platform": "SpinButton" },
+    { "role": "status", "platform": "Status" },
+    { "role": "switch", "platform": "Switch" },
+    { "role": "textbox", "platform": "TextInput" },
+    { "role": "toolbar", "platform": "Toolbar" },
+    { "role": "tree", "platform": "Tree" },
+    { "role": "treeitem", "platform": "TreeItem" }
+  ],
+  "actions": [
+    { "id": "click-activates", "authorId": "note-composite/bold", "action": "Click", "dispatch": { "event": "activate", "windowId": "note-composite", "windowGeneration": 3, "nodeId": 22, "nodeKey": "bold" } },
+    { "id": "focus-focuses", "authorId": "shell.chrome/nav.home", "action": "Focus", "dispatch": { "event": "focus", "windowId": "shell.chrome", "windowGeneration": 7, "nodeId": 11, "nodeKey": "nav.home" } },
+    { "id": "blur-blurs", "authorId": "note-composite/body", "action": "Blur", "dispatch": { "event": "blur", "windowId": "note-composite", "windowGeneration": 3, "nodeId": 23, "nodeKey": "body" } },
+    { "id": "set-value-writes", "authorId": "note-composite/body", "action": "SetValue", "value": "Hi", "dispatch": { "event": "value", "value": "Hi", "windowId": "note-composite", "windowGeneration": 3, "nodeId": 23, "nodeKey": "body" } },
+    { "id": "set-value-without-a-value-is-nothing", "authorId": "note-composite/body", "action": "SetValue", "dispatch": null },
+    { "id": "scroll-is-not-a-shell-event", "authorId": "note-composite/body", "action": "ScrollIntoView", "dispatch": null },
+    { "id": "the-root-is-not-a-shell-address", "authorId": null, "action": "Click", "dispatch": null }
+  ]
+}

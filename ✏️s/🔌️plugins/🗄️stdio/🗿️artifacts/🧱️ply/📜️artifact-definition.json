@@ -49,7 +49,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.ply.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.ply.standard.1-0.dialect.source", "to": "s.stdio.ply.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.ply.v1", "artifact_kind": "stdio.ply", "artifact_schema": "stdio.ply", "extension": "ply", "pack_schema_hash": "42ed85cd84beceab5a85f3d9784d66af517c0e85c843058411b52cb0b03cb40a", "runtime_capability_id": "s.stdio.ply.standard.1-0.codec.codec-stdio-ply-extension-ply.v1" } }
+    { "id": "s.stdio.ply.standard.1-0.codec.native-document.v1", "status": "implemented", "from": "s.stdio.ply.standard.1-0.dialect.source", "to": "s.stdio.ply.standard.1-0.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.ply.v1", "artifact_kind": "s.stdio.ply", "artifact_schema": "stdio.ply", "extension": "ply", "pack_schema_hash": "42ed85cd84beceab5a85f3d9784d66af517c0e85c843058411b52cb0b03cb40a", "runtime_capability_id": "s.stdio.ply.standard.1-0.codec.codec-stdio-ply-extension-ply.v1" } }
   ],
   "mutations": [],
   "inferences": [],

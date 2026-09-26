@@ -190,7 +190,6 @@ impl En1996Snapshot {
         doc.walls[0].height_m = 2.50;
         doc.walls[0].load_cases[0].id = "uls-earth".into();
         doc.walls[0].load_cases[0].h_k_earth_n = 45_000.0;
-        doc.walls[0].load_cases[0].q_p_wind_pa = 0.0;
         doc
     }
 
@@ -216,8 +215,8 @@ impl En1996Snapshot {
         doc.walls[0].label_en = "Reinforced masonry wall".into();
         doc.walls[0].label_de = "Bewehrte Mauerwerkswand".into();
         doc.walls[0].reinforced = true;
-        doc.walls[0].as_vertical_m2 = 2.5e-4;
-        doc.walls[0].as_horizontal_m2 = 1.5e-4;
+        doc.walls[0].as_vertical_m2 = 6.0e-4;
+        doc.walls[0].as_horizontal_m2 = 4.0e-4;
         doc.walls[0].f_yd_pa = 435e6;
         doc
     }

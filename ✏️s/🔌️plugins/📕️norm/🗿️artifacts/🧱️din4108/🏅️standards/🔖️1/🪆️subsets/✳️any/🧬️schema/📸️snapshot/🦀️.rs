@@ -72,7 +72,9 @@ impl Din4108Snapshot {
                     floor_area_m2: 12.0,
                     heaviness: "heavy".into(),
                     night_ventilation: "none".into(),
-                    windows: vec![],
+                    windows: vec![
+                        ZoneWindow { id: "win-utility".into(), orientation: "N".into(), inclination_deg: 90.0, area_m2: 1.0, g_value: 0.50, shading_fc: 0.70 },
+                    ],
                 },
             ],
             elements: vec![
@@ -116,7 +118,7 @@ impl Din4108Snapshot {
                 EnvelopeElement {
                     id: "floor-ground".into(),
                     kind: "floor".into(),
-                    zone_id: "zone-living".into(),
+                    zone_id: "zone-utility".into(),
                     orientation_deg: 0.0,
                     inclination_deg: 0.0,
                     adjacent: "ground".into(),

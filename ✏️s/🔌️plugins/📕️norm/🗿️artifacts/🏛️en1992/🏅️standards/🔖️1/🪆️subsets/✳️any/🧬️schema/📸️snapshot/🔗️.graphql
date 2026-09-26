@@ -5,7 +5,7 @@ enum SupportCondition { SimplySupported Continuous Cantilever Fixed }
 enum ExposureClass { X0 Xc1 Xc2 Xc3 Xc4 Xd1 Xd2 Xd3 Xs1 Xs2 Xs3 Xf1 Xf2 Xf3 Xf4 Xa1 Xa2 Xa3 }
 enum FireRating { R30 R60 R90 R120 }
 enum TightnessClass { Tc0 Tc1 Tc2 }
-enum DuctilityClass { A B C }
+enum DuctilityClass { a b c }
 
 type ConcreteGrade {
   id: String!

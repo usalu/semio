@@ -473,6 +473,28 @@ impl En1995Mutation {
 }
 //#endregion 🔖️FromSnapshot
 
+//#region 🌉️ExternalCodecBridge
+/// 🌉️ Decodes one mutation from the production JSON codec (the committed `🦠️mutation` vectors).
+pub fn decode_en1995_mutation_json(text: &str) -> Result<En1995Mutation, String> {
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
+}
+/// 🌉️ Encodes one mutation through the production JSON codec.
+pub fn encode_en1995_mutation_json(mutation: &En1995Mutation) -> String {
+    pack::json::to_json_string(mutation)
+}
+/// 🧮️ Applies `mutation` to `base`, returning the next snapshot and every diagnostic the mutation raised.
+pub fn apply_en1995_mutation(base: &En1995Snapshot, mutation: &En1995Mutation) -> Result<(En1995Snapshot, Vec<String>), String> {
+    let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(mutation, base);
+    let messages = outcome.messages().iter().map(|message| format!("{message:?}")).collect();
+    let next = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((next, messages))
+}
+/// ↩️ The mutation list that undoes `mutation` applied to `base`.
+pub fn inverse_en1995_mutation(mutation: &En1995Mutation, base: &En1995Snapshot) -> Vec<En1995Mutation> {
+    <En1995Mutation as protocol::Mutation<En1995Snapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

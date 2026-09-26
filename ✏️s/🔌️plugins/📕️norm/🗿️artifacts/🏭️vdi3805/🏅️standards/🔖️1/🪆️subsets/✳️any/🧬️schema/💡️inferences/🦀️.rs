@@ -137,41 +137,52 @@ fn sheet_mandatory_keys(sheet: u16, profile: EditionProfileChoice) -> &'static [
 /// 📏 Blatt-sourced numeric domains (VDI 3805 Part 1 §5 field ranges + product-sheet tables).
 /// Citations: DN series DIN EN ISO 6708 / Blatt tables; airflow/pressure VDI 3805-16/19 §4; COP VDI 3805-53 §4.2.
 fn sheet_numeric_bounds(sheet: u16) -> &'static [(&'static str, f64, f64)] {
+    const BOUNDS_AIR: &[(&str, f64, f64)] = &[
+        ("airflow_m3_s", crate::SHEET_NUMERIC_BOUNDS_19_AIRFLOW.0, crate::SHEET_NUMERIC_BOUNDS_19_AIRFLOW.1),
+        ("pressure_drop_pa", crate::SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA.0, crate::SHEET_NUMERIC_BOUNDS_16_PRESSURE_DROP_PA.1),
+    ];
+    const BOUNDS_53: &[(&str, f64, f64)] = &[
+        ("dn", crate::SHEET_NUMERIC_BOUNDS_53_DN.0, crate::SHEET_NUMERIC_BOUNDS_53_DN.1),
+        ("nominal_heat_output_w", crate::SHEET_NUMERIC_BOUNDS_53_HEAT_W.0, crate::SHEET_NUMERIC_BOUNDS_53_HEAT_W.1),
+        ("cop", crate::SHEET_NUMERIC_BOUNDS_53_COP.0, crate::SHEET_NUMERIC_BOUNDS_53_COP.1),
+    ];
+    const BOUNDS_DN: &[(&str, f64, f64)] = &[("dn", crate::SHEET_NUMERIC_BOUNDS_DN.0, crate::SHEET_NUMERIC_BOUNDS_DN.1)];
+    const BOUNDS_4: &[(&str, f64, f64)] = &[
+        ("dn", crate::SHEET_NUMERIC_BOUNDS_DN_PIPE.0, crate::SHEET_NUMERIC_BOUNDS_DN_PIPE.1),
+        ("outer_diameter_m", crate::SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M.0, crate::SHEET_NUMERIC_BOUNDS_OUTER_DIAMETER_M.1),
+        ("wall_thickness_m", crate::SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M.0, crate::SHEET_NUMERIC_BOUNDS_WALL_THICKNESS_M.1),
+    ];
+    const BOUNDS_7: &[(&str, f64, f64)] = &[
+        ("dn", crate::SHEET_NUMERIC_BOUNDS_DN.0, crate::SHEET_NUMERIC_BOUNDS_DN.1),
+        ("volume_m3", crate::SHEET_NUMERIC_BOUNDS_VOLUME_M3.0, crate::SHEET_NUMERIC_BOUNDS_VOLUME_M3.1),
+    ];
+    const BOUNDS_60: &[(&str, f64, f64)] = &[
+        ("dn", crate::SHEET_NUMERIC_BOUNDS_DN.0, crate::SHEET_NUMERIC_BOUNDS_DN.1),
+        ("axial_force_n", crate::SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N.0, crate::SHEET_NUMERIC_BOUNDS_AXIAL_FORCE_N.1),
+    ];
     match sheet {
-        // VDI 3805-4 §4.1 pipe DN / outer diameter / wall (mm→m already SI).
-        4 => &[("dn", 6.0, 1200.0), ("outer_diameter_m", 0.006, 2.0), ("wall_thickness_m", 0.0005, 0.1)],
-        // VDI 3805-7 §4.1 storage volume.
-        7 => &[("dn", 6.0, 600.0), ("volume_m3", 0.001, 500.0)],
-        8 | 10 | 14 | 18 | 33 | 36 | 37 | 40 | 42 | 100 => &[("dn", 6.0, 600.0)],
-        9 | 11 | 28 | 32 | 34 | 35 | 38 | 41 | 43 | 44 | 45 | 50 | 51 | 52 | 54 | 55 | 99 => &[("dn", 6.0, 600.0)],
-        // VDI 3805-16/17/19 §4 airflow + Δp.
-        16 | 17 | 19 | 20 | 21 | 22 | 23 | 24 | 26 | 27 | 29 => &[("airflow_m3_s", 1e-5, 50.0), ("pressure_drop_pa", 0.0, 5000.0)],
-        // VDI 3805-53 §4.2 heat-pump COP / Qn.
-        53 => &[("dn", 6.0, 300.0), ("nominal_heat_output_w", 100.0, 5.0e6), ("cop", 1.0, 10.0)],
-        // VDI 3805-60..66 §4.1 axial force.
-        60..=66 => &[("dn", 6.0, 600.0), ("axial_force_n", 0.0, 1.0e7)],
+        4 => BOUNDS_4,
+        7 => BOUNDS_7,
+        8 | 10 | 14 | 18 | 33 | 36 | 37 | 40 | 42 | 100 => BOUNDS_DN,
+        9 | 11 | 28 | 32 | 34 | 35 | 38 | 41 | 43 | 44 | 45 | 50 | 51 | 52 | 54 | 55 | 99 => BOUNDS_DN,
+        16 | 17 | 19 | 20 | 21 | 22 | 23 | 24 | 26 | 27 | 29 => BOUNDS_AIR,
+        53 => BOUNDS_53,
+        60..=66 => BOUNDS_60,
         _ => &[],
     }
 }
 
-/// 🏷️ Connection-type code list shared by heating/sanitary/ventilation product sheets (VDI 3805-1 §6.2).
-const CONNECTION_TYPE_CODES: &[&str] = &["flange", "thread", "weld", "press"];
-
-/// 🏷️ PN pressure-class code list (DIN EN 1092 / VDI 3805 product sheets §4).
-const PRESSURE_CLASS_CODES: &[&str] = &["PN6", "PN10", "PN16", "PN25", "PN40"];
-
-/// 🏷️ Filter classes for Blatt 19 (ISO 16890 / EN 779 legacy — VDI 3805-19 Table 1).
-const FILTER_CLASS_CODES: &[&str] = &["G4", "M5", "M6", "F7", "F8", "F9", "ePM1", "ePM2_5", "ePM10"];
-
-/// 🏷️ Generic type_code tokens admitted on multi-profile sheets (VDI 3805-8/10/… §4.1).
-const TYPE_CODE_PATTERN_OK: &[&str] = &["STD", "STD-A", "STD-B", "TYPE-A", "TYPE-B", "TYPE-C", "DEFAULT"];
+/// 🔌️ VDI 3805-1 §5.2 — common connection port ids on product geometry.
+const CONNECTION_ID_CODES: &[&str] = &["in", "out", "drain", "vent", "bypass"];
+/// 💧 VDI 3805-1 §5.2 — connection medium codes.
+const CONNECTION_MEDIUM_CODES: &[&str] = &["water", "air", "glycol", "steam", "refrigerant"];
 
 fn code_list_for_key(sheet: u16, key: &str) -> Option<&'static [&'static str]> {
     match key {
-        "connection_type" => Some(CONNECTION_TYPE_CODES),
-        "pressure_class" => Some(PRESSURE_CLASS_CODES),
-        "filter_class" if sheet == 19 => Some(FILTER_CLASS_CODES),
-        "type_code" => Some(TYPE_CODE_PATTERN_OK),
+        "connection_type" => Some(crate::CONNECTION_TYPE_CODES),
+        "pressure_class" => Some(crate::PRESSURE_CLASS_CODES),
+        "filter_class" if sheet == 19 => Some(crate::FILTER_CLASS_CODES),
+        "type_code" => Some(crate::TYPE_CODE_CODES),
         "fuel_type" => Some(&["gas", "oil", "electric", "biomass", "district"]),
         _ => None,
     }
@@ -213,20 +224,20 @@ fn profile_for_sheet(document: &Vdi3805Snapshot, sheet: u16) -> EditionProfileCh
 }
 
 fn valve_attrs_from_product(product: &CatalogueProduct) -> ValveHeatingAttributes {
-    match attributes_from_records(product.sheet, &product.records) {
-        SheetAttributes::ValveHeating(a) => a,
-        _ => match &product.configuration.attributes {
-            SheetAttributes::ValveHeating(a) => a.clone(),
+    match &product.configuration.attributes {
+        SheetAttributes::ValveHeating(a) => a.clone(),
+        _ => match attributes_from_records(product.sheet, &product.records) {
+            SheetAttributes::ValveHeating(a) => a,
             _ => ValveHeatingAttributes::from_kvs_m3_h(0, 0.0, "", "", 0.0, 0.0),
         },
     }
 }
 
 fn radiator_attrs_from_product(product: &CatalogueProduct) -> RadiatorAttributes {
-    match attributes_from_records(product.sheet, &product.records) {
-        SheetAttributes::Radiator(a) => a,
-        _ => match &product.configuration.attributes {
-            SheetAttributes::Radiator(a) => a.clone(),
+    match &product.configuration.attributes {
+        SheetAttributes::Radiator(a) => a.clone(),
+        _ => match attributes_from_records(product.sheet, &product.records) {
+            SheetAttributes::Radiator(a) => a,
             _ => RadiatorAttributes {
                 standard_output_w: 0.0,
                 heat_exponent_n: 0.0,
@@ -240,10 +251,10 @@ fn radiator_attrs_from_product(product: &CatalogueProduct) -> RadiatorAttributes
 }
 
 fn pump_attrs_from_product(product: &CatalogueProduct) -> PumpHeatingAttributes {
-    match attributes_from_records(product.sheet, &product.records) {
-        SheetAttributes::PumpHeating(a) => a,
-        _ => match &product.configuration.attributes {
-            SheetAttributes::PumpHeating(a) => a.clone(),
+    match &product.configuration.attributes {
+        SheetAttributes::PumpHeating(a) => a.clone(),
+        _ => match attributes_from_records(product.sheet, &product.records) {
+            SheetAttributes::PumpHeating(a) => a,
             _ => PumpHeatingAttributes {
                 dn_suction: 0,
                 dn_discharge: 0,
@@ -258,10 +269,10 @@ fn pump_attrs_from_product(product: &CatalogueProduct) -> PumpHeatingAttributes 
 }
 
 fn heat_attrs_from_product(product: &CatalogueProduct) -> HeatGeneratorAttributes {
-    match attributes_from_records(product.sheet, &product.records) {
-        SheetAttributes::HeatGenerator(a) => a,
-        _ => match &product.configuration.attributes {
-            SheetAttributes::HeatGenerator(a) => a.clone(),
+    match &product.configuration.attributes {
+        SheetAttributes::HeatGenerator(a) => a.clone(),
+        _ => match attributes_from_records(product.sheet, &product.records) {
+            SheetAttributes::HeatGenerator(a) => a,
             _ => HeatGeneratorAttributes {
                 nominal_heat_output_w: 0.0,
                 fuel_type: String::new(),
@@ -396,6 +407,7 @@ fn check_attributes_records_sync(product: &CatalogueProduct) -> Vec<CheckResult>
                 && (a.length_m - b.length_m).abs() < 1e-9
                 && (a.height_m - b.height_m).abs() < 1e-9
                 && (a.depth_m - b.depth_m).abs() < 1e-9
+                && a.connection_type == b.connection_type
         }
         (SheetAttributes::PumpHeating(a), SheetAttributes::PumpHeating(b)) => {
             a.dn_suction == b.dn_suction
@@ -404,6 +416,7 @@ fn check_attributes_records_sync(product: &CatalogueProduct) -> Vec<CheckResult>
                 && (a.nominal_head_m - b.nominal_head_m).abs() < 1e-9
                 && (a.motor_power_w - b.motor_power_w).abs() < 1e-6
                 && (a.hydraulic_efficiency - b.hydraulic_efficiency).abs() < 1e-12
+                && a.qh_curve_ref == b.qh_curve_ref
         }
         (SheetAttributes::HeatGenerator(a), SheetAttributes::HeatGenerator(b)) => {
             (a.nominal_heat_output_w - b.nominal_heat_output_w).abs() < 1e-9
@@ -412,11 +425,7 @@ fn check_attributes_records_sync(product: &CatalogueProduct) -> Vec<CheckResult>
                 && (a.return_temp_min_c - b.return_temp_min_c).abs() < 1e-9
         }
         (SheetAttributes::Generic(a), SheetAttributes::Generic(b)) => {
-            let mut ak: Vec<_> = a.entries.iter().map(|e| (e.key.to_lowercase(), e.value.clone())).collect();
-            let mut bk: Vec<_> = b.entries.iter().map(|e| (e.key.to_lowercase(), e.value.clone())).collect();
-            ak.sort();
-            bk.sort();
-            ak == bk
+            a.entries.iter().all(|e| b.entries.iter().any(|f| f.key.eq_ignore_ascii_case(&e.key) && f.value == e.value))
         }
         _ => false,
     };
@@ -504,8 +513,8 @@ fn check_part1(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                     Quantity::new(QuantityKind::Dimensionless, current),
                     Quantity::new(QuantityKind::Dimensionless, required_count),
                     copy(
-                        format!("Set manufacturerFile.recordCount from {current} to {required_count}."),
-                        format!("manufacturerFile.recordCount von {current} auf {required_count} setzen."),
+                        format!("Set catalog.file.recordCount from {current} to {required_count}."),
+                        format!("catalog.file.recordCount von {current} auf {required_count} setzen."),
                     ),
                 ));
             } else if path.contains("geometryRef") {
@@ -526,6 +535,24 @@ fn check_part1(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                     document.curves.keys().cloned().collect(),
                     copy("Replace dangling curve refs with existing curve ids.", "Hängende Kennlinienreferenzen durch vorhandene IDs ersetzen."),
                 ));
+            } else if path.contains("accessoryId") {
+                builder = builder.remedy(Remedy::one_of(
+                    target,
+                    document.catalog.products.iter().map(|p| p.id.clone()).collect(),
+                    copy(
+                        "Point accessories[].accessoryId at an existing catalogue product id.",
+                        "accessories[].accessoryId auf eine vorhandene Katalog-Produkt-ID setzen.",
+                    ),
+                ));
+            } else if path.contains("componentId") {
+                builder = builder.remedy(Remedy::one_of(
+                    target,
+                    document.catalog.products.iter().map(|p| p.id.clone()).collect(),
+                    copy(
+                        "Point components[].componentId at an existing catalogue product id.",
+                        "components[].componentId auf eine vorhandene Katalog-Produkt-ID setzen.",
+                    ),
+                ));
             } else {
                 builder = builder.remedy(Remedy::exactly(
                     target,
@@ -540,7 +567,7 @@ fn check_part1(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     out
 }
 
-fn mono_increasing_remedy(curve_id: &str, curve: &CharacteristicCurve) -> Option<(usize, f64, f64)> {
+fn mono_increasing_remedy(curve: &CharacteristicCurve) -> Option<(usize, f64, f64)> {
     for (i, w) in curve.points.windows(2).enumerate() {
         if w[1].y + 1e-12 < w[0].y {
             return Some((i + 1, w[1].y, w[0].y));
@@ -552,8 +579,7 @@ fn mono_increasing_remedy(curve_id: &str, curve: &CharacteristicCurve) -> Option
     None
 }
 
-fn mono_decreasing_y_remedy(curve_id: &str, curve: &CharacteristicCurve) -> Option<(usize, f64, f64)> {
-    let _ = curve_id;
+fn mono_decreasing_y_remedy(curve: &CharacteristicCurve) -> Option<(usize, f64, f64)> {
     for (i, w) in curve.points.windows(2).enumerate() {
         if w[1].y > w[0].y + 1e-12 {
             return Some((i + 1, w[1].y, w[0].y));
@@ -579,7 +605,7 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
         dn_builder = dn_builder
             .explanation(copy(format!("DN {} is not in the VDI 3805 Blatt 2 series.", attrs.dn), format!("DN {} ist nicht in der VDI-3805-Blatt-2-Reihe.", attrs.dn)))
             .remedy(Remedy::exactly(
-                SubjectRef::new(article, product_path(article, "configuration.attributes.dn"), copy("DN", "DN")),
+                SubjectRef::new(article, product_path(article, "configuration.attributes.dn"), copy("Nominal diameter", "Nennweite")),
                 Quantity::new(QuantityKind::Dimensionless, attrs.dn as f64),
                 Quantity::new(QuantityKind::Dimensionless, nearest as f64),
                 copy(format!("Change DN from {} to {}.", attrs.dn, nearest), format!("DN von {} auf {} ändern.", attrs.dn, nearest)),
@@ -598,7 +624,7 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
         kvs_builder = kvs_builder
             .explanation(copy(format!("kvs = {kvs_h:.3} m³/h below Blatt 2 minimum {min_kvs:.3} m³/h.",), format!("kvs = {kvs_h:.3} m³/h unter Blatt-2-Minimum {min_kvs:.3} m³/h.")))
             .remedy(Remedy::at_least(
-                SubjectRef::new(article, product_path(article, "configuration.attributes.kvsM3S"), copy("kvs", "kvs")),
+                SubjectRef::new(article, product_path(article, "configuration.attributes.kvsM3S"), copy("Flow coefficient kvs", "Durchflusskoeffizient kvs")),
                 Quantity::new(QuantityKind::Volume, attrs.kvs_m3_s),
                 Quantity::new(QuantityKind::Volume, min_kvs / 3600.0),
                 copy(format!("Increase kvs from {kvs_h:.3} m³/h to at least {min_kvs:.3} m³/h."), format!("kvs von {kvs_h:.3} m³/h auf mindestens {min_kvs:.3} m³/h erhöhen.")),
@@ -624,9 +650,11 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
     out.push(pc.build());
 
     let ct = attrs.connection_type.as_str();
-    let ct_ok = CONNECTION_TYPE_CODES.iter().any(|c| *c == ct);
+    let ct_ord = crate::CONNECTION_TYPE_CODES.iter().position(|c| *c == ct).map(|i| (i + 1) as f64).unwrap_or(0.0);
+    let ct_ok = ct_ord > 0.0;
     let mut ct_check = CheckResult::assess(format!("vdi3805.2.connectionType.{article}"), part.clone(), clause("2", "4.2.5"), subject.clone(), copy("Connection type", "Anschlussart"))
         .annex(ANNEX)
+        .minimum(Quantity::new(QuantityKind::Dimensionless, ct_ord), Quantity::new(QuantityKind::Dimensionless, 1.0))
         .status(if ct_ok { CheckStatus::Pass } else { CheckStatus::Fail });
     if ct_ok {
         ct_check = ct_check.explanation(copy(format!("connectionType `{ct}` is in the Blatt 2 code list."), format!("connectionType `{ct}` ist in der Blatt-2-Codeliste.")));
@@ -638,14 +666,14 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
             ))
             .remedy(Remedy::one_of(
                 SubjectRef::new(article, product_path(article, "configuration.attributes.connectionType"), copy("Connection type", "Anschlussart")),
-                CONNECTION_TYPE_CODES.iter().map(|s| (*s).to_string()).collect(),
+                crate::CONNECTION_TYPE_CODES.iter().map(|s| (*s).to_string()).collect(),
                 copy("Set connectionType to a Blatt code-list value (e.g. flange).", "connectionType auf einen Blatt-Codelistenwert setzen (z. B. flange)."),
             ));
     }
     out.push(ct_check.build());
 
     // PN domain (not just presence) — VDI 3805-2 §4.2.3 / DIN EN 1092.
-    if !attrs.pressure_class.is_empty() && !PRESSURE_CLASS_CODES.iter().any(|c| *c == attrs.pressure_class.as_str()) {
+    if !attrs.pressure_class.is_empty() && !crate::PRESSURE_CLASS_CODES.iter().any(|c| *c == attrs.pressure_class.as_str()) {
         out.push(
             CheckResult::assess(format!("vdi3805.2.pn.domain.{article}"), part.clone(), clause("2", "4.2.3"), subject.clone(), copy("Pressure class domain", "Druckstufen-Wertebereich"))
                 .annex(ANNEX)
@@ -653,7 +681,7 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
                 .explanation(copy(format!("pressureClass `{}` is not an admitted PN code.", attrs.pressure_class), format!("pressureClass `{}` ist kein zugelassener PN-Code.", attrs.pressure_class)))
                 .remedy(Remedy::one_of(
                     SubjectRef::new(article, product_path(article, "configuration.attributes.pressureClass"), copy("Pressure class", "Druckstufe")),
-                    PRESSURE_CLASS_CODES.iter().map(|s| (*s).to_string()).collect(),
+                    crate::PRESSURE_CLASS_CODES.iter().map(|s| (*s).to_string()).collect(),
                     copy("Choose an admitted PN class (PN6…PN40).", "Zugelassene PN-Klasse wählen (PN6…PN40)."),
                 ))
                 .build(),
@@ -686,7 +714,7 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
                 .status(if mono { CheckStatus::Pass } else { CheckStatus::Fail });
             if mono {
                 c = c.explanation(copy(format!("Curve {curve_id} is non-decreasing.",), format!("Kennlinie {curve_id} ist monoton steigend.")));
-            } else if let Some((idx, current_y, required_y)) = mono_increasing_remedy(curve_id, curve) {
+            } else if let Some((idx, current_y, required_y)) = mono_increasing_remedy(curve) {
                 let axis = if curve.points.get(idx).is_some_and(|p| curve.points.get(idx - 1).is_some_and(|prev| p.x + 1e-12 < prev.x)) {
                     "x"
                 } else {
@@ -711,6 +739,78 @@ fn check_valve(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &V
                     ));
             }
             out.push(c.build());
+            if curve_id.contains("kvs") {
+                let ymax = curve.points.iter().map(|p| p.y).fold(0.0_f64, f64::max);
+                let span_ok = (ymax - attrs.kvs_m3_h()).abs() <= attrs.kvs_m3_h().max(1.0) * 0.05 + 1e-9;
+                let mut ks = CheckResult::assess(format!("vdi3805.2.curve.kvsMatch.{article}.{curve_id}"), part.clone(), clause("2", "5.1"), subject.clone(), copy("kvs curve endpoint", "kvs-Kennlinienendpunkt"))
+                    .annex(ANNEX)
+                    .minimum(Quantity::new(QuantityKind::Volume, ymax / 3600.0), Quantity::new(QuantityKind::Volume, attrs.kvs_m3_s * 0.95));
+                if span_ok {
+                    ks = ks.explanation(copy(format!("Curve max y={ymax:.3} matches kvs={:.3} m³/h.", attrs.kvs_m3_h()), format!("Kennlinien-Max y={ymax:.3} entspricht kvs={:.3} m³/h.", attrs.kvs_m3_h())));
+                } else {
+                    ks = ks
+                        .explanation(copy(format!("Curve max y={ymax:.3} disagrees with kvs={:.3} m³/h.", attrs.kvs_m3_h()), format!("Kennlinien-Max y={ymax:.3} weicht von kvs={:.3} m³/h ab.", attrs.kvs_m3_h())))
+                        .remedy(Remedy::exactly(
+                            SubjectRef::new(curve_id, curve_point_path(curve_id, curve.points.len().saturating_sub(1), "y"), copy("Curve end y", "Kennlinienende y")),
+                            Quantity::new(QuantityKind::Dimensionless, ymax),
+                            Quantity::new(QuantityKind::Dimensionless, attrs.kvs_m3_h()),
+                            copy("Align the kvs curve endpoint with configuration.attributes.kvs.", "kvs-Kennlinienendpunkt an configuration.attributes.kvs angleichen."),
+                        ));
+                }
+                out.push(ks.build());
+                for (pi, pt) in curve.points.iter().enumerate() {
+                    let upper = attrs.kvs_m3_h() * 1.05 + 1e-9;
+                    let in_band = pt.y >= -1e-12 && pt.y <= upper && pt.x >= -1e-12;
+                    let mut pb = CheckResult::assess(format!("vdi3805.2.curve.point.{article}.{curve_id}.{pi}"), part.clone(), clause("2", "5.1"), subject.clone(), copy("Curve point envelope", "Kennlinienpunkt-Hüllkurve"))
+                        .annex(ANNEX)
+                        .utilization(Quantity::new(QuantityKind::Dimensionless, pt.y.max(0.0)), Quantity::new(QuantityKind::Dimensionless, upper.max(1e-9)));
+                    if in_band {
+                        pb = pb.explanation(copy(format!("Point[{pi}]=({:.3},{:.3}) within kvs envelope.", pt.x, pt.y), format!("Punkt[{pi}]=({:.3},{:.3}) innerhalb der kvs-Hüllkurve.", pt.x, pt.y)));
+                    } else {
+                        pb = pb
+                            .status(CheckStatus::Fail)
+                            .explanation(copy(format!("Point[{pi}] y={:.3} outside [0, {:.3}].", pt.y, upper), format!("Punkt[{pi}] y={:.3} außerhalb [0, {:.3}].", pt.y, upper)))
+                            .remedy(Remedy::exactly(
+                                SubjectRef::new(curve_id, curve_point_path(curve_id, pi, "y"), copy("Curve point y", "Kennlinienpunkt y")),
+                                Quantity::new(QuantityKind::Dimensionless, pt.y),
+                                Quantity::new(QuantityKind::Dimensionless, attrs.kvs_m3_h().min(pt.y.max(0.0))),
+                                copy("Bring the curve point back inside the kvs envelope.", "Kennlinienpunkt zurück in die kvs-Hüllkurve bringen."),
+                            ));
+                    }
+                    out.push(pb.build());
+                }
+                let symbol_ok = curve.x_unit.symbol == "%"
+                    && (curve.y_unit.symbol == "m3/h" || curve.y_unit.symbol == "m³/h");
+                let delta_ok = curve.x_unit.delta && !curve.y_unit.delta;
+                let factor_ok = curve.x_unit.si_factor > 0.0 && curve.y_unit.si_factor > 0.0;
+                let units_ok = symbol_ok && delta_ok && factor_ok;
+                let mut xu = CheckResult::assess(format!("vdi3805.2.curve.units.{article}.{curve_id}"), part.clone(), clause("2", "5.1"), subject.clone(), copy("Curve unit metadata", "Kennlinien-Einheitenmetadaten"))
+                    .annex(ANNEX)
+                    .minimum(
+                        Quantity::new(QuantityKind::Dimensionless, if units_ok { curve.x_unit.si_factor.min(curve.y_unit.si_factor) } else { 0.0 }),
+                        Quantity::new(QuantityKind::Dimensionless, 1e-12),
+                    )
+                    .status(if units_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+                if units_ok {
+                    xu = xu.explanation(copy(
+                        format!("Units {}/{} (delta/abs) with SI factors {}/{}.", curve.x_unit.symbol, curve.y_unit.symbol, curve.x_unit.si_factor, curve.y_unit.si_factor),
+                        format!("Einheiten {}/{} (delta/abs) mit SI-Faktoren {}/{}.", curve.x_unit.symbol, curve.y_unit.symbol, curve.x_unit.si_factor, curve.y_unit.si_factor),
+                    ));
+                } else {
+                    xu = xu
+                        .explanation(copy(
+                            "kvs curve units must be % (delta) over m3/h (absolute) with positive si_factor.",
+                            "kvs-Kennlinieneinheiten müssen % (delta) über m3/h (absolut) mit positivem si_factor sein.",
+                        ))
+                        .remedy(Remedy::exactly(
+                            SubjectRef::new(curve_id, format!("curves[id={curve_id}].xUnit.symbol"), copy("X unit symbol", "X-Einheitensymbol")),
+                            Quantity::new(QuantityKind::Dimensionless, 0.0),
+                            Quantity::new(QuantityKind::Dimensionless, 1.0),
+                            copy("Set xUnit.symbol to `%` (delta) and yUnit.symbol to `m3/h` with positive si_factor.", "xUnit.symbol auf `%` (delta) und yUnit.symbol auf `m3/h` mit positivem si_factor setzen."),
+                        ));
+                }
+                out.push(xu.build());
+            }
         }
     }
     out
@@ -741,6 +841,10 @@ fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttributes) -> Vec
     let n_ok = attrs.heat_exponent_n >= RADIATOR_N_MIN && attrs.heat_exponent_n <= RADIATOR_N_MAX;
     let mut n = CheckResult::assess(format!("vdi3805.3.n.{article}"), part.clone(), clause("3", "4.2"), subject.clone(), copy("Heat exponent n", "Heizexponent n"))
         .annex(ANNEX)
+        .utilization(
+            Quantity::new(QuantityKind::Dimensionless, attrs.heat_exponent_n),
+            Quantity::new(QuantityKind::Dimensionless, RADIATOR_N_MAX),
+        )
         .status(if n_ok { CheckStatus::Pass } else { CheckStatus::Fail });
     if n_ok {
         n = n.explanation(copy(format!("n = {:.3} within [{RADIATOR_N_MIN}, {RADIATOR_N_MAX}].", attrs.heat_exponent_n), format!("n = {:.3} im Bereich [{RADIATOR_N_MIN}, {RADIATOR_N_MAX}].", attrs.heat_exponent_n)));
@@ -786,9 +890,11 @@ fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttributes) -> Vec
         out.push(dim.build());
     }
     let ct = attrs.connection_type.as_str();
-    let ct_ok = CONNECTION_TYPE_CODES.iter().any(|c| *c == ct);
+    let ct_ord = crate::CONNECTION_TYPE_CODES.iter().position(|c| *c == ct).map(|i| (i + 1) as f64).unwrap_or(0.0);
+    let ct_ok = ct_ord > 0.0;
     let mut ct_check = CheckResult::assess(format!("vdi3805.3.connectionType.{article}"), part_label(3), clause("3", "4.4"), subject.clone(), copy("Connection type", "Anschlussart"))
         .annex(ANNEX)
+        .minimum(Quantity::new(QuantityKind::Dimensionless, ct_ord), Quantity::new(QuantityKind::Dimensionless, 1.0))
         .status(if ct_ok { CheckStatus::Pass } else { CheckStatus::Fail });
     if ct_ok {
         ct_check = ct_check.explanation(copy(format!("connectionType `{ct}` admitted."), format!("connectionType `{ct}` zugelassen.")));
@@ -797,7 +903,7 @@ fn check_radiator(product: &CatalogueProduct, attrs: &RadiatorAttributes) -> Vec
             .explanation(copy("connectionType missing or not in Blatt code list.", "connectionType fehlt oder nicht in der Blatt-Codeliste."))
             .remedy(Remedy::one_of(
                 SubjectRef::new(article, product_path(article, "configuration.attributes.connectionType"), copy("Connection type", "Anschlussart")),
-                CONNECTION_TYPE_CODES.iter().map(|s| (*s).to_string()).collect(),
+                crate::CONNECTION_TYPE_CODES.iter().map(|s| (*s).to_string()).collect(),
                 copy("Set connectionType to a Blatt code-list value.", "connectionType auf einen Blatt-Codelistenwert setzen."),
             ));
     }
@@ -830,6 +936,7 @@ fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &Pu
     let eta_ok = attrs.hydraulic_efficiency > 0.0 && attrs.hydraulic_efficiency <= 1.0;
     let mut eta = CheckResult::assess(format!("vdi3805.5.eta.{article}"), part.clone(), clause("5", "4.2"), subject.clone(), copy("Hydraulic efficiency", "Hydraulischer Wirkungsgrad"))
         .annex(ANNEX)
+        .minimum(Quantity::new(QuantityKind::Dimensionless, attrs.hydraulic_efficiency), Quantity::new(QuantityKind::Dimensionless, 1.0))
         .status(if eta_ok { CheckStatus::Pass } else { CheckStatus::Fail });
     if eta_ok {
         eta = eta.explanation(copy(format!("η = {:.3}.", attrs.hydraulic_efficiency), format!("η = {:.3}.", attrs.hydraulic_efficiency)));
@@ -875,25 +982,139 @@ fn check_pump(document: &Vdi3805Snapshot, product: &CatalogueProduct, attrs: &Pu
         out.push(c.build());
     }
 
-    if let Some(curve_id) = attrs.qh_curve_ref.as_ref().or(product.configuration.function_refs.first()) {
+    let qh_ref = attrs.qh_curve_ref.clone().or_else(|| product.configuration.function_refs.first().cloned());
+    let mut qhref = CheckResult::assess(format!("vdi3805.5.qhCurveRef.{article}"), part.clone(), clause("5", "5.1"), subject.clone(), copy("Q-H curve reference", "Q-H-Kennlinienreferenz"))
+        .annex(ANNEX);
+    match qh_ref.as_deref() {
+        Some(curve_id) if document.curves.contains_key(curve_id) => {
+            qhref = qhref
+                .minimum(Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0))
+                .status(CheckStatus::Pass)
+                .explanation(copy(format!("qhCurveRef `{curve_id}` resolves."), format!("qhCurveRef `{curve_id}` ist auflösbar.")));
+        }
+        Some(curve_id) => {
+            qhref = qhref
+                .minimum(Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0))
+                .status(CheckStatus::Fail)
+                .explanation(copy(format!("qhCurveRef `{curve_id}` is dangling."), format!("qhCurveRef `{curve_id}` ist hängend.")))
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(article, product_path(article, "configuration.attributes.qhCurveRef"), copy("Q-H curve reference", "Q-H-Kennlinienreferenz")),
+                    document.curves.keys().cloned().collect(),
+                    copy("Point qhCurveRef at an existing curve id.", "qhCurveRef auf eine vorhandene Kennlinien-ID setzen."),
+                ));
+        }
+        None => {
+            qhref = qhref
+                .minimum(Quantity::new(QuantityKind::Dimensionless, 0.0), Quantity::new(QuantityKind::Dimensionless, 1.0))
+                .status(CheckStatus::Fail)
+                .explanation(copy("qhCurveRef omitted.", "qhCurveRef fehlt."))
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(article, product_path(article, "configuration.attributes.qhCurveRef"), copy("Q-H curve reference", "Q-H-Kennlinienreferenz")),
+                    document.curves.keys().cloned().collect(),
+                    copy("Set qhCurveRef to an existing curve id.", "qhCurveRef auf eine vorhandene Kennlinien-ID setzen."),
+                ));
+        }
+    }
+    out.push(qhref.build());
+    if let Some(curve_id) = qh_ref.as_ref() {
         if let Some(curve) = document.curves.get(curve_id) {
-            let mono = curve.points.windows(2).all(|w| w[1].x + 1e-12 >= w[0].x && w[1].y <= w[0].y + 1e-12);
-            let mut c = CheckResult::assess(format!("vdi3805.5.qh.{article}"), part, clause("5", "5.1"), subject, copy("Q-H curve shape", "Q-H-Kennlinie"))
+            let mono = curve.points.windows(2).all(|w| w[1].x >= w[0].x && w[1].y <= w[0].y);
+            let rising = curve.points.windows(2).filter(|w| w[1].y > w[0].y + 1e-12).count() as f64;
+            let mut c = CheckResult::assess(format!("vdi3805.5.qh.{article}"), part.clone(), clause("5", "5.1"), subject.clone(), copy("Q-H curve shape", "Q-H-Kennlinie"))
                 .annex(ANNEX)
+                .minimum(Quantity::new(QuantityKind::Dimensionless, if mono { 0.0 } else { rising }), Quantity::new(QuantityKind::Dimensionless, 0.0))
                 .status(if mono { CheckStatus::Pass } else { CheckStatus::Fail });
             if mono {
                 c = c.explanation(copy("Q-H head is non-increasing with flow.", "Förderhöhe fällt mit dem Volumenstrom nicht an."));
-            } else if let Some((idx, current_y, required_y)) = mono_decreasing_y_remedy(curve_id, curve) {
-                c = c
-                    .explanation(copy("Q-H curve must not rise with flow.", "Q-H-Kennlinie darf mit dem Volumenstrom nicht steigen."))
-                    .remedy(Remedy::exactly(
+            } else {
+                c = c.explanation(copy("Q-H curve must not rise with flow.", "Q-H-Kennlinie darf mit dem Volumenstrom nicht steigen."));
+                if let Some((idx, current_y, required_y)) = mono_decreasing_y_remedy(curve) {
+                    c = c.remedy(Remedy::exactly(
                         SubjectRef::new(curve_id, curve_point_path(curve_id, idx, "y"), copy("Q-H point y", "Q-H-Punkt y")),
                         Quantity::new(QuantityKind::Dimensionless, current_y),
                         Quantity::new(QuantityKind::Dimensionless, required_y),
                         copy("Lower the rising head point so Q-H is non-increasing.", "Ansteigenden Förderhöhenpunkt absenken, damit Q-H nicht steigt."),
                     ));
+                } else if let Some(pt) = curve.points.first() {
+                    c = c.remedy(Remedy::exactly(
+                        SubjectRef::new(curve_id, curve_point_path(curve_id, 0, "y"), copy("Q-H point y", "Q-H-Punkt y")),
+                        Quantity::new(QuantityKind::Dimensionless, pt.y),
+                        Quantity::new(QuantityKind::Dimensionless, pt.y),
+                        copy("Resample the Q-H curve so head is non-increasing with flow.", "Q-H-Kennlinie so neu abtasten, dass die Förderhöhe mit dem Volumenstrom nicht steigt."),
+                    ));
+                }
             }
             out.push(c.build());
+
+            let x_symbol_ok = curve.x_unit.symbol == "%" || curve.x_unit.symbol == "m3/h" || curve.x_unit.symbol == "m³/h";
+            let y_symbol_ok = curve.y_unit.symbol == "m";
+            let delta_ok = curve.x_unit.delta == (curve.x_unit.symbol == "%") && !curve.y_unit.delta;
+            let factor_ok = curve.x_unit.si_factor > 0.0 && curve.y_unit.si_factor > 0.0;
+            let units_ok = x_symbol_ok && y_symbol_ok && delta_ok && factor_ok;
+            let mut u = CheckResult::assess(
+                format!("vdi3805.5.qh.units.{article}.{curve_id}"),
+                part.clone(),
+                clause("5", "5.1"),
+                subject.clone(),
+                copy("Q-H curve units", "Q-H-Kennlinieneinheiten"),
+            )
+            .annex(ANNEX)
+            .minimum(
+                Quantity::new(QuantityKind::Dimensionless, if units_ok { curve.x_unit.si_factor.min(curve.y_unit.si_factor) } else { 0.0 }),
+                Quantity::new(QuantityKind::Dimensionless, 1e-12),
+            )
+            .status(if units_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+            if units_ok {
+                u = u.explanation(copy(
+                    format!("Q-H units {}/{} (delta={} / abs) with SI factors {}/{}.", curve.x_unit.symbol, curve.y_unit.symbol, curve.x_unit.delta, curve.x_unit.si_factor, curve.y_unit.si_factor),
+                    format!("Q-H-Einheiten {}/{} (delta={} / abs) mit SI-Faktoren {}/{}.", curve.x_unit.symbol, curve.y_unit.symbol, curve.x_unit.delta, curve.x_unit.si_factor, curve.y_unit.si_factor),
+                ));
+            } else {
+                u = u
+                    .explanation(copy(
+                        "Q-H curve units must be % (delta) or m3/h over head in m (absolute) with positive si_factor.",
+                        "Q-H-Kennlinieneinheiten müssen % (delta) oder m3/h über Förderhöhe in m (absolut) mit positivem si_factor sein.",
+                    ))
+                    .remedy(Remedy::exactly(
+                        SubjectRef::new(curve_id, format!("curves[id={curve_id}].yUnit.symbol"), copy("Y unit symbol", "Y-Einheitensymbol")),
+                        Quantity::new(QuantityKind::Dimensionless, 0.0),
+                        Quantity::new(QuantityKind::Dimensionless, 1.0),
+                        copy("Set yUnit.symbol to `m` (absolute) and xUnit to `%` (delta) or `m3/h`.", "yUnit.symbol auf `m` (absolut) und xUnit auf `%` (delta) oder `m3/h` setzen."),
+                    ));
+            }
+            out.push(u.build());
+            for (axis, pt) in curve.points.iter().enumerate() {
+                let mut pb = CheckResult::assess(
+                    format!("vdi3805.5.qh.point.{article}.{curve_id}.{axis}"),
+                    part.clone(),
+                    clause("5", "5.1"),
+                    subject.clone(),
+                    copy("Q-H curve point", "Q-H-Kennlinienpunkt"),
+                )
+                .annex(ANNEX)
+                .minimum(Quantity::new(QuantityKind::Dimensionless, pt.x), Quantity::new(QuantityKind::Dimensionless, 0.0))
+                .utilization(
+                    Quantity::new(QuantityKind::Dimensionless, pt.y.max(0.0)),
+                    Quantity::new(QuantityKind::Dimensionless, curve.points.first().map(|p| p.y.max(1e-9)).unwrap_or(1.0)),
+                )
+                .status(if pt.x >= -1e-12 && pt.y >= -1e-12 { CheckStatus::Pass } else { CheckStatus::Fail });
+                if pt.x < -1e-12 || pt.y < -1e-12 {
+                    pb = pb
+                        .explanation(copy("Q-H points must have non-negative flow and head.", "Q-H-Punkte müssen nicht-negativen Volumenstrom und Förderhöhe haben."))
+                        .remedy(Remedy::at_least(
+                            SubjectRef::new(curve_id, curve_point_path(curve_id, axis, "y"), copy("Q-H point y", "Q-H-Punkt y")),
+                            Quantity::new(QuantityKind::Dimensionless, pt.y),
+                            Quantity::new(QuantityKind::Dimensionless, 0.0),
+                            copy("Set Q-H point coordinates to non-negative values.", "Q-H-Punktkoordinaten auf nicht-negative Werte setzen."),
+                        ));
+                } else {
+                    pb = pb.explanation(copy(
+                        format!("Q-H point {axis} at Q={:.4}, H={:.4}.", pt.x, pt.y),
+                        format!("Q-H-Punkt {axis} bei Q={:.4}, H={:.4}.", pt.x, pt.y),
+                    ));
+                }
+                out.push(pb.build());
+            }
         }
     }
     out
@@ -1082,6 +1303,68 @@ fn check_operative_sheet(document: &Vdi3805Snapshot, product: &CatalogueProduct)
     }
     out.push(b.build());
 
+    // Every generic attribute entry must carry a non-empty key; numeric Blatt keys must parse.
+    for (ei, entry) in generic_entries.iter().enumerate() {
+        let key_ok = !entry.key.is_empty();
+        let mut kc = CheckResult::assess(
+            format!("vdi3805.{sheet}.generic.key.{article}.{ei}"),
+            part_label(sheet),
+            clause(&sheet.to_string(), "4.1"),
+            subject_product(product),
+            copy("Generic attribute key", "Generisches Attribut-Schlüssel"),
+        )
+        .annex(ANNEX)
+        .status(if key_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+        if !key_ok {
+            kc = kc.remedy(Remedy::exactly(
+                SubjectRef::new(article, product_path(article, &format!("configuration.attributes.entries[{ei}].key")), copy("Attribute key", "Attributschlüssel")),
+                Quantity::new(QuantityKind::Dimensionless, 0.0),
+                Quantity::new(QuantityKind::Dimensionless, 1.0),
+                copy("Set a non-empty generic attribute key.", "Nicht-leeren generischen Attributschlüssel setzen."),
+            ));
+        }
+        out.push(kc.build());
+        if sheet_numeric_bounds(sheet).iter().any(|(k, _, _)| *k == entry.key) || keys.iter().any(|k| *k == entry.key) {
+            let (value_ok, value_metric) = if let Some(codes) = code_list_for_key(sheet, &entry.key) {
+                let ok = codes.iter().any(|c| *c == entry.value.as_str());
+                (ok, if ok { 1.0 } else { 0.0 })
+            } else if let Ok(v) = entry.value.parse::<f64>() {
+                (true, v.abs().max(1e-12))
+            } else {
+                (!entry.value.is_empty(), if entry.value.is_empty() { 0.0 } else { 1.0 })
+            };
+            let mut vc = CheckResult::assess(
+                format!("vdi3805.{sheet}.generic.value.{article}.{ei}"),
+                part_label(sheet),
+                clause(&sheet.to_string(), "4.1"),
+                subject_product(product),
+                copy("Generic attribute value", "Generisches Attribut-Wert"),
+            )
+            .annex(ANNEX)
+            .minimum(Quantity::new(QuantityKind::Dimensionless, value_metric), Quantity::new(QuantityKind::Dimensionless, 1e-12))
+            .status(if value_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+            if value_ok {
+                vc = vc.explanation(copy(
+                    format!("entries[{ei}].value `{}` is admissible for key `{}`.", entry.value, entry.key),
+                    format!("entries[{ei}].value `{}` ist für Schlüssel `{}` zulässig.", entry.value, entry.key),
+                ));
+            } else {
+                vc = vc
+                    .explanation(copy(
+                        format!("entries[{ei}].value `{}` is not admissible for key `{}`.", entry.value, entry.key),
+                        format!("entries[{ei}].value `{}` ist für Schlüssel `{}` unzulässig.", entry.value, entry.key),
+                    ))
+                    .remedy(Remedy::exactly(
+                        SubjectRef::new(article, product_path(article, &format!("configuration.attributes.entries[{ei}].value")), copy("Attribute value", "Attributwert")),
+                        Quantity::new(QuantityKind::Dimensionless, 0.0),
+                        Quantity::new(QuantityKind::Dimensionless, 1.0),
+                        copy("Set a numeric or code-list value for this Blatt attribute.", "Numerischen oder Codelisten-Wert für dieses Blatt-Attribut setzen."),
+                    ));
+            }
+            out.push(vc.build());
+        }
+    }
+
     // Domain validation for mandatory enum keys (not just presence) — Blatt code lists.
     for key in keys {
         let Some(codes) = code_list_for_key(sheet, key) else { continue };
@@ -1089,7 +1372,8 @@ fn check_operative_sheet(document: &Vdi3805Snapshot, product: &CatalogueProduct)
         if raw.is_empty() {
             continue; // presence Fail already emitted
         }
-        let ok = codes.iter().any(|c| *c == raw.as_str());
+        let ord = codes.iter().position(|c| *c == raw.as_str()).map(|i| (i + 1) as f64).unwrap_or(0.0);
+        let ok = ord > 0.0;
         let path = generic_entry_value_path(article, &generic_entries, key);
         let mut c = CheckResult::assess(
             format!("vdi3805.{sheet}.domain.{key}.{article}"),
@@ -1099,6 +1383,7 @@ fn check_operative_sheet(document: &Vdi3805Snapshot, product: &CatalogueProduct)
             copy(format!("Blatt {sheet} `{key}` domain"), format!("Blatt-{sheet}-`{key}`-Wertebereich")),
         )
         .annex(ANNEX)
+        .minimum(Quantity::new(QuantityKind::Dimensionless, ord), Quantity::new(QuantityKind::Dimensionless, 1.0))
         .status(if ok { CheckStatus::Pass } else { CheckStatus::Fail });
         if ok {
             c = c.explanation(copy(format!("`{key}` = `{raw}` is in the Blatt code list."), format!("`{key}` = `{raw}` ist in der Blatt-Codeliste.")));
@@ -1118,7 +1403,7 @@ fn check_operative_sheet(document: &Vdi3805Snapshot, product: &CatalogueProduct)
         let raw = kv.get(*key).cloned().or_else(|| generic_entries.iter().find(|e| e.key.eq_ignore_ascii_case(key)).map(|e| e.value.clone()));
         let Some(raw) = raw.filter(|s| !s.is_empty()) else { continue };
         let Ok(value) = raw.parse::<f64>() else { continue };
-        let ok = value + 1e-12 >= *min_v && value <= *max_v + 1e-12;
+        let ok = value >= *min_v && value <= *max_v;
         let path = generic_entry_value_path(article, &generic_entries, key);
         let mut c = CheckResult::assess(
             format!("vdi3805.{sheet}.range.{key}.{article}"),
@@ -1128,6 +1413,7 @@ fn check_operative_sheet(document: &Vdi3805Snapshot, product: &CatalogueProduct)
             copy(format!("Blatt {sheet} attribute `{key}` range"), format!("Blatt-{sheet}-Attribut `{key}` Bereich")),
         )
         .annex(ANNEX)
+        .minimum(Quantity::new(QuantityKind::Dimensionless, value), Quantity::new(QuantityKind::Dimensionless, *max_v))
         .status(if ok { CheckStatus::Pass } else { CheckStatus::Fail });
         if ok {
             c = c.explanation(copy(format!("{key} = {value} within [{min_v}, {max_v}]."), format!("{key} = {value} in [{min_v}, {max_v}].")));
@@ -1159,7 +1445,7 @@ fn check_operative_sheet(document: &Vdi3805Snapshot, product: &CatalogueProduct)
             .status(if mono { CheckStatus::Pass } else { CheckStatus::Fail });
             if mono {
                 c = c.explanation(copy(format!("Curve {curve_id} x-order is non-decreasing."), format!("Kennlinie {curve_id}: x-Folge ist monoton.")));
-            } else if let Some((idx, cur, req)) = mono_increasing_remedy(curve_id, curve) {
+            } else if let Some((idx, cur, req)) = mono_increasing_remedy(curve) {
                 c = c
                     .explanation(copy(format!("Curve {curve_id} is not ordered."), format!("Kennlinie {curve_id} ist nicht geordnet.")))
                     .remedy(Remedy::exactly(
@@ -1202,10 +1488,119 @@ fn check_sheet_product(document: &Vdi3805Snapshot, product: &CatalogueProduct) -
 fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     let mut out = Vec::new();
     let product_ids: BTreeSet<_> = document.catalog.products.iter().map(|p| p.id.clone()).collect();
+    let lim = &document.limits;
+    let actual_records: usize = document.catalog.products.iter().map(|p| p.records.len()).sum();
+    let actual_field_len: usize = document
+        .catalog
+        .products
+        .iter()
+        .flat_map(|p| p.records.iter())
+        .flat_map(|r| r.fields.iter())
+        .map(|f| f.len())
+        .max()
+        .unwrap_or(0);
+    let actual_bytes: usize = document
+        .catalog
+        .products
+        .iter()
+        .flat_map(|p| p.records.iter())
+        .flat_map(|r| r.fields.iter())
+        .map(|f| f.len())
+        .sum::<usize>()
+        .saturating_add(document.catalog.file.manufacturer.len())
+        .saturating_add(document.catalog.file.created.len());
+    let actual_depth: usize = 4;
+    for (leaf, actual, limit_v, en, de) in [
+        ("limits.maxRecords", actual_records as f64, lim.max_records as f64, "Max records", "Max. Datensätze"),
+        ("limits.maxFileBytes", actual_bytes as f64, lim.max_file_bytes as f64, "Max file bytes", "Max. Dateibytes"),
+        ("limits.maxFieldLength", actual_field_len as f64, lim.max_field_length as f64, "Max field length", "Max. Feldlänge"),
+        ("limits.maxNestingDepth", actual_depth as f64, lim.max_nesting_depth as f64, "Max nesting depth", "Max. Verschachtelungstiefe"),
+    ] {
+        let ok = actual <= limit_v && limit_v >= 1.0;
+        let mut c = CheckResult::assess(
+            format!("vdi3805.1.{leaf}"),
+            part_label(1),
+            clause("1", "4.1"),
+            subject_dataset(),
+            copy(en, de),
+        )
+        .annex(ANNEX)
+        .minimum(Quantity::new(QuantityKind::Dimensionless, limit_v - actual), Quantity::new(QuantityKind::Dimensionless, 0.0))
+        .utilization(Quantity::new(QuantityKind::Dimensionless, actual), Quantity::new(QuantityKind::Dimensionless, limit_v.max(1.0)))
+        .status(if ok { CheckStatus::Pass } else { CheckStatus::Fail });
+        if !ok {
+            c = c.remedy(Remedy::at_least(
+                SubjectRef::new("", leaf, copy(en, de)),
+                Quantity::new(QuantityKind::Dimensionless, limit_v),
+                Quantity::new(QuantityKind::Dimensionless, actual.max(1.0)),
+                copy(format!("Raise {leaf} so the catalogue fits the security envelope."), format!("{leaf} anheben, damit der Katalog in die Sicherheitsgrenzen passt.")),
+            ));
+        } else {
+            c = c.explanation(copy(
+                format!("{leaf}: actual {actual} ≤ limit {limit_v}."),
+                format!("{leaf}: Ist {actual} ≤ Grenze {limit_v}."),
+            ));
+        }
+        out.push(c.build());
+    }
+
+
+    {
+        let mut bags: Vec<(String, &std::collections::BTreeMap<String, String>)> = vec![
+            ("catalog.file.extensions.fields".into(), &document.catalog.file.extensions.fields),
+            ("catalog.extensions.fields".into(), &document.catalog.extensions.fields),
+        ];
+        for product in &document.catalog.products {
+            bags.push((format!("catalog.products[id={}].extensions.fields", product.id), &product.extensions.fields));
+            for (ri, record) in product.records.iter().enumerate() {
+                bags.push((format!("catalog.products[id={}].records[{ri}].extensions.fields", product.id), &record.extensions.fields));
+            }
+        }
+        for (base, fields) in bags {
+            for (key, value) in fields.iter() {
+                let ok = !key.is_empty() && !value.is_empty();
+                let path = format!("{base}[{key}]");
+                let mut ec = CheckResult::assess(
+                    format!("vdi3805.1.extensions.{}", path.replace('.', "-").replace('[', "-").replace(']', "")),
+                    part_label(1),
+                    clause("1", "4.1"),
+                    subject_dataset(),
+                    copy("Extension field", "Erweiterungsfeld"),
+                )
+                .annex(ANNEX)
+                .minimum(Quantity::new(QuantityKind::Dimensionless, if ok { 1.0 } else { 0.0 }), Quantity::new(QuantityKind::Dimensionless, 1.0))
+                .status(if ok { CheckStatus::Pass } else { CheckStatus::Fail });
+                if ok {
+                    ec = ec.explanation(copy(format!("Extension `{key}` present."), format!("Erweiterung `{key}` vorhanden.")));
+                } else {
+                    ec = ec
+                        .explanation(copy(format!("Extension `{key}` must have a non-empty value."), format!("Erweiterung `{key}` braucht einen nicht-leeren Wert.")))
+                        .remedy(Remedy::exactly(
+                            SubjectRef::new("", path, copy("Extension field", "Erweiterungsfeld")),
+                            Quantity::new(QuantityKind::Dimensionless, 0.0),
+                            Quantity::new(QuantityKind::Dimensionless, 1.0),
+                            copy("Fill the extension field with a non-empty value.", "Erweiterungsfeld mit nicht-leerem Wert füllen."),
+                        ));
+                }
+                out.push(ec.build());
+            }
+        }
+    }
 
     let year = document.correction_as_of.year;
     let month = document.correction_as_of.month;
-    let date_ok = (1990..=2100).contains(&year) && (1..=12).contains(&month);
+    let range_ok = (1990..=2100).contains(&year) && (1..=12).contains(&month);
+    let created = document.catalog.file.created.as_str();
+    let created_key = {
+        let parts: Vec<_> = created.split('-').collect();
+        match (parts.first().and_then(|y| y.parse::<u16>().ok()), parts.get(1).and_then(|m| m.parse::<u8>().ok())) {
+            (Some(y), Some(m)) => Some((y as u32) * 100 + m as u32),
+            _ => None,
+        }
+    };
+    let corr_key = (year as u32) * 100 + month as u32;
+    let chronology_ok = created_key.map(|c| c <= corr_key).unwrap_or(false);
+    let date_ok = range_ok && chronology_ok;
     let mut corr = CheckResult::assess(
         "vdi3805.1.correctionAsOf",
         part_label(1),
@@ -1213,32 +1608,118 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
         subject_dataset(),
         copy("Correction date", "Korrekturdatum"),
     )
-    .annex(ANNEX);
+    .annex(ANNEX)
+    .utilization(
+        Quantity::new(QuantityKind::Dimensionless, created_key.unwrap_or(u32::MAX) as f64),
+        Quantity::new(QuantityKind::Dimensionless, corr_key as f64),
+    );
     if date_ok {
         corr = corr.status(CheckStatus::Pass).explanation(copy(
-            format!("correctionAsOf {year:04}-{month:02} is a valid edition stamp."),
-            format!("correctionAsOf {year:04}-{month:02} ist ein gültiger Ausgabenstempel."),
+            format!("created `{created}` is on or before correctionAsOf {year:04}-{month:02}."),
+            format!("created `{created}` liegt auf oder vor correctionAsOf {year:04}-{month:02}."),
         ));
     } else {
+        let remedy_year = created_key.map(|c| (c / 100) as f64).unwrap_or(2024.0);
         corr = corr
             .status(CheckStatus::Fail)
             .explanation(copy(
-                format!("correctionAsOf {year}-{month} is out of range (year 1990–2100, month 1–12)."),
-                format!("correctionAsOf {year}-{month} außerhalb des Bereichs (Jahr 1990–2100, Monat 1–12)."),
+                format!("correctionAsOf {year:04}-{month:02} must be a valid stamp on or after created `{created}`."),
+                format!("correctionAsOf {year:04}-{month:02} muss ein gültiger Stempel auf oder nach created `{created}` sein."),
             ))
-            .remedy(Remedy::exactly(
+            .remedy(Remedy::at_least(
                 SubjectRef::new("", "correctionAsOf.year", copy("Correction year", "Korrekturjahr")),
                 Quantity::new(QuantityKind::Dimensionless, year as f64),
-                Quantity::new(QuantityKind::Dimensionless, 2022.0),
-                copy("Set correctionAsOf.year to a valid catalogue year (e.g. 2022).", "correctionAsOf.year auf ein gültiges Katalogjahr setzen (z. B. 2022)."),
+                Quantity::new(QuantityKind::Dimensionless, remedy_year),
+                copy(
+                    "Raise correctionAsOf.year/month so the stamp is on or after catalog.file.created.",
+                    "correctionAsOf.year/month so anheben, dass der Stempel auf oder nach catalog.file.created liegt.",
+                ),
             ));
     }
     out.push(corr.build());
 
+    if document.strict_mode {
+        let charset_ok = document.catalog.file.charset.eq_ignore_ascii_case("UTF-8");
+        let hv_ok = document.catalog.file.header_version == "3805";
+        let strict_ok = charset_ok && hv_ok;
+        let mut strict_c = CheckResult::assess(
+            "vdi3805.1.strictMode",
+            part_label(1),
+            clause("1", "4.3"),
+            subject_dataset(),
+            copy("Strict evaluation mode", "Strenger Auswertungsmodus"),
+        )
+        .annex(ANNEX)
+        .status(if strict_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+        if strict_ok {
+            strict_c = strict_c.explanation(copy(
+                "strictMode requires UTF-8 charset and headerVersion 3805 — both present.",
+                "strictMode erfordert charset UTF-8 und headerVersion 3805 — beides vorhanden.",
+            ));
+        } else {
+            strict_c = strict_c
+                .explanation(copy(
+                    "strictMode requires charset UTF-8 and headerVersion 3805.",
+                    "strictMode erfordert charset UTF-8 und headerVersion 3805.",
+                ))
+                .remedy(Remedy::exactly(
+                    SubjectRef::new("", "catalog.file.charset", copy("Charset", "Zeichensatz")),
+                    Quantity::new(QuantityKind::Dimensionless, 0.0),
+                    Quantity::new(QuantityKind::Dimensionless, 1.0),
+                    copy("Set catalog.file.charset to UTF-8 while strictMode is enabled.", "catalog.file.charset auf UTF-8 setzen, solange strictMode aktiv ist."),
+                ));
+        }
+        out.push(strict_c.build());
+    } else {
+        out.push(
+            CheckResult::assess(
+                "vdi3805.1.strictMode",
+                part_label(1),
+                clause("1", "4.3"),
+                subject_dataset(),
+                copy("Strict evaluation mode", "Strenger Auswertungsmodus"),
+            )
+            .annex(ANNEX)
+            .not_applicable(copy(
+                "strictMode is off — charset/header strict gate does not apply.",
+                "strictMode ist aus — strenge charset/header-Prüfung gilt nicht.",
+            ))
+            .build(),
+        );
+    }
+
+    let unique_ok = product_ids.len() == document.catalog.products.len();
+    let mut dup = CheckResult::assess(
+        "vdi3805.1.products.uniqueId",
+        part_label(1),
+        clause("1", "4.1"),
+        subject_dataset(),
+        copy("Unique product ids", "Eindeutige Produkt-IDs"),
+    )
+    .annex(ANNEX)
+    .minimum(
+        Quantity::new(QuantityKind::Dimensionless, product_ids.len() as f64),
+        Quantity::new(QuantityKind::Dimensionless, document.catalog.products.len() as f64),
+    )
+    .status(if unique_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+    if unique_ok {
+        dup = dup.explanation(copy("Every catalogue product id is unique.", "Jede Katalog-Produkt-ID ist eindeutig."));
+    } else {
+        dup = dup
+            .explanation(copy("Duplicate product ids in catalog.products.", "Doppelte Produkt-IDs in catalog.products."))
+            .remedy(Remedy::exactly(
+                SubjectRef::new("", "catalog.products[0].id", copy("Product id", "Produkt-ID")),
+                Quantity::new(QuantityKind::Dimensionless, 0.0),
+                Quantity::new(QuantityKind::Dimensionless, 1.0),
+                copy("Give each catalogue product a unique id.", "Jeder Katalogprodukt eine eindeutige ID geben."),
+            ));
+    }
+    out.push(dup.build());
+
     let mut dangling_index = Vec::new();
-    for entry in &document.index.entries {
+    for (i, entry) in document.index.entries.iter().enumerate() {
         if !product_ids.contains(&entry.product_id) {
-            dangling_index.push(entry.product_id.clone());
+            dangling_index.push(i);
         }
     }
     let mut idx = CheckResult::assess(
@@ -1252,16 +1733,17 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     if dangling_index.is_empty() {
         idx = idx.status(CheckStatus::Pass).explanation(copy("Every index entry resolves to a catalogue product.", "Jeder Indexeintrag verweist auf ein Katalogprodukt."));
     } else {
+        let i0 = dangling_index[0];
+        let bad = &document.index.entries[i0].product_id;
         idx = idx
             .status(CheckStatus::Fail)
             .explanation(copy(
-                format!("Index entries reference missing products: {dangling_index:?}."),
-                format!("Indexeinträge verweisen auf fehlende Produkte: {dangling_index:?}."),
+                format!("Index entries reference missing products (first `{bad}`)."),
+                format!("Indexeinträge verweisen auf fehlende Produkte (zuerst `{bad}`)."),
             ))
-            .remedy(Remedy::exactly(
-                SubjectRef::new("", "index.entries[0].productId", copy("Index product id", "Index-Produkt-ID")),
-                Quantity::new(QuantityKind::Dimensionless, 0.0),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
+            .remedy(Remedy::one_of(
+                SubjectRef::new("", format!("index.entries[{i0}].productId"), copy("Index product id", "Index-Produkt-ID")),
+                product_ids.iter().cloned().collect(),
                 copy("Point index.entries[].productId at an existing catalogue product id.", "index.entries[].productId auf eine vorhandene Katalog-Produkt-ID setzen."),
             ));
     }
@@ -1269,6 +1751,171 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
 
     for product in &document.catalog.products {
         let article = product.id.as_str();
+        let record_100 = product.records.iter().find(|r| r.family.0 == "100");
+        let group_matches = record_100.and_then(|r| r.fields.get(2)).map(|g| g == &product.identity.product_group).unwrap_or(false);
+        let article_matches = record_100.and_then(|r| r.fields.get(3)).map(|a| a == &product.identity.article_number).unwrap_or(false);
+        let mfr_matches = record_100.and_then(|r| r.fields.get(1)).map(|m| m == &product.identity.manufacturer_code).unwrap_or(false);
+        let id_ok = product.id == product.identity.article_number
+            && !product.identity.manufacturer_code.is_empty()
+            && !product.identity.product_group.is_empty()
+            && group_matches
+            && article_matches
+            && mfr_matches;
+        let mut idc = CheckResult::assess(
+            format!("vdi3805.1.identity.{article}"),
+            part_label(1),
+            clause("1", "4.1"),
+            subject_product(product),
+            copy("Product identity consistency", "Produktidentitätskonsistenz"),
+        )
+        .annex(ANNEX)
+        .status(if id_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+        if id_ok {
+            idc = idc.explanation(copy(
+                format!("id `{}` matches identity.articleNumber; manufacturer/group present.", article),
+                format!("id `{}` entspricht identity.articleNumber; Hersteller/Gruppe vorhanden.", article),
+            ));
+        } else {
+            idc = idc
+                .explanation(copy(
+                    "product.id must equal identity.articleNumber; manufacturerCode and productGroup must be non-empty.",
+                    "product.id muss identity.articleNumber entsprechen; manufacturerCode und productGroup dürfen nicht leer sein.",
+                ))
+            .remedy(Remedy::exactly(
+                SubjectRef::new(article, product_path(article, "identity.articleNumber"), copy("Article number", "Artikelnummer")),
+                Quantity::new(QuantityKind::Dimensionless, 0.0),
+                Quantity::new(QuantityKind::Dimensionless, 1.0),
+                copy("Align identity.articleNumber with product.id.", "identity.articleNumber an product.id angleichen."),
+            ));
+        }
+        out.push(idc.build());
+
+        // Configuration id must be `cfg.{articleNumber}` (Part 1 configuration record).
+        let expected_cfg = format!("cfg.{article}");
+        let cfg_ok = product.configuration.id == expected_cfg;
+        let mut cfg = CheckResult::assess(
+            format!("vdi3805.1.configuration.id.{article}"),
+            part_label(1),
+            clause("1", "4.1"),
+            subject_product(product),
+            copy("Configuration id", "Konfigurations-ID"),
+        )
+        .annex(ANNEX)
+        .minimum(Quantity::new(QuantityKind::Dimensionless, if cfg_ok { 1.0 } else { 0.0 }), Quantity::new(QuantityKind::Dimensionless, 1.0))
+        .status(if cfg_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+        if cfg_ok {
+            cfg = cfg.explanation(copy(format!("configuration.id `{expected_cfg}` matches article."), format!("configuration.id `{expected_cfg}` entspricht der Artikelnummer.")));
+        } else {
+            cfg = cfg
+                .explanation(copy(
+                    format!("configuration.id `{}` must equal `{expected_cfg}`.", product.configuration.id),
+                    format!("configuration.id `{}` muss `{expected_cfg}` sein.", product.configuration.id),
+                ))
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(article, product_path(article, "configuration.id"), copy("Configuration id", "Konfigurations-ID")),
+                    vec![expected_cfg.clone()],
+                    copy(format!("Set configuration.id to `{expected_cfg}`."), format!("configuration.id auf `{expected_cfg}` setzen.")),
+                ));
+        }
+        out.push(cfg.build());
+
+        if let Some((ri, rec)) = product.records.iter().enumerate().find(|(_, r)| r.family.0 == "700") {
+            let de = rec.fields.get(2).cloned().unwrap_or_default();
+            let en = rec.fields.get(4).cloned().unwrap_or_default();
+            let title_de = text_in(&product.title, "de");
+            let title_en = text_in(&product.title, "en");
+            let de_ok = !de.is_empty() && de == title_de;
+            let en_ok = !en.is_empty() && en == title_en;
+            for (locale, ok, field_i, got, want) in [
+                ("de", de_ok, 2usize, de.clone(), title_de.clone()),
+                ("en", en_ok, 4usize, en.clone(), title_en.clone()),
+            ] {
+                let mut tc = CheckResult::assess(
+                    format!("vdi3805.1.title.700.{article}.{locale}"),
+                    part_label(1),
+                    clause("1", "4.1"),
+                    subject_product(product),
+                    copy("Record 700 title", "Satz-700-Titel"),
+                )
+                .annex(ANNEX)
+                .minimum(Quantity::new(QuantityKind::Dimensionless, if ok { 1.0 } else { 0.0 }), Quantity::new(QuantityKind::Dimensionless, 1.0))
+                .status(if ok { CheckStatus::Pass } else { CheckStatus::Fail });
+                if ok {
+                    tc = tc.explanation(copy(format!("700 {locale} title matches product.title."), format!("700-{locale}-Titel entspricht product.title.")));
+                } else {
+                    tc = tc
+                        .explanation(copy(
+                            format!("records[{ri}].fields[{field_i}] `{got}` must equal product.title[{locale}] `{want}`."),
+                            format!("records[{ri}].fields[{field_i}] `{got}` muss product.title[{locale}] `{want}` entsprechen."),
+                        ))
+                        .remedy(Remedy::exactly(
+                            SubjectRef::new(article, product_path(article, &format!("records[{ri}].fields[{field_i}]")), copy("Record 700 title field", "Satz-700-Titelfeld")),
+                            Quantity::new(QuantityKind::Dimensionless, 0.0),
+                            Quantity::new(QuantityKind::Dimensionless, 1.0),
+                            copy("Align record 700 title fields with product.title.", "Satz-700-Titelfelder an product.title angleichen."),
+                        ));
+                }
+                out.push(tc.build());
+            }
+        }
+
+        // Native Part 1 records: fields[0] must echo the family code; identity fields must match record 100 (VDI 3805-1 §4.1).
+        for (ri, record) in product.records.iter().enumerate() {
+            let family = record.family.0.as_str();
+            let head_ok = record.fields.first().map(|f| f.as_str() == family).unwrap_or(false);
+            let mut rf = CheckResult::assess(
+                format!("vdi3805.1.records.family.{article}.{ri}"),
+                part_label(1),
+                clause("1", "4.1"),
+                subject_product(product),
+                copy("Native record family field", "Nativer Datensatz-Familienfeld"),
+            )
+            .annex(ANNEX)
+            .status(if head_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+            if head_ok {
+                rf = rf.explanation(copy(format!("records[{ri}].fields[0] matches family `{family}`."), format!("records[{ri}].fields[0] entspricht Familie `{family}`.")));
+            } else {
+                rf = rf
+                    .explanation(copy(
+                        format!("records[{ri}].fields[0] must equal family code `{family}`."),
+                        format!("records[{ri}].fields[0] muss dem Familiencode `{family}` entsprechen."),
+                    ))
+                    .remedy(Remedy::exactly(
+                        SubjectRef::new(article, product_path(article, &format!("records[{ri}].fields[0]")), copy("Record family field", "Datensatz-Familienfeld")),
+                        Quantity::new(QuantityKind::Dimensionless, 0.0),
+                        Quantity::new(QuantityKind::Dimensionless, 1.0),
+                        copy(format!("Set records[{ri}].fields[0] to `{family}`."), format!("records[{ri}].fields[0] auf `{family}` setzen.")),
+                    ));
+            }
+            out.push(rf.build());
+            // Each subsequent field contributes to Part 1 arity — empty tokens Fail.
+            for (fi, field) in record.fields.iter().enumerate().skip(1) {
+                let ok = !field.is_empty();
+                let mut ff = CheckResult::assess(
+                    format!("vdi3805.1.records.field.{article}.{ri}.{fi}"),
+                    part_label(1),
+                    clause("1", "4.1"),
+                    subject_product(product),
+                    copy("Native record field", "Natives Datensatzfeld"),
+                )
+                .annex(ANNEX)
+                .minimum(Quantity::new(QuantityKind::Dimensionless, if ok { 1.0 } else { 0.0 }), Quantity::new(QuantityKind::Dimensionless, 1.0));
+                if ok {
+                    ff = ff.explanation(copy(format!("records[{ri}].fields[{fi}] present."), format!("records[{ri}].fields[{fi}] vorhanden.")));
+                } else {
+                    ff = ff
+                        .explanation(copy(format!("records[{ri}].fields[{fi}] is empty."), format!("records[{ri}].fields[{fi}] ist leer.")))
+                        .remedy(Remedy::exactly(
+                            SubjectRef::new(article, product_path(article, &format!("records[{ri}].fields[{fi}]")), copy("Record field", "Datensatzfeld")),
+                            Quantity::new(QuantityKind::Dimensionless, 0.0),
+                            Quantity::new(QuantityKind::Dimensionless, 1.0),
+                            copy("Fill the native record field per Part 1 arity.", "Natives Datensatzfeld gemäß Teil-1-Stellenzahl füllen."),
+                        ));
+                }
+                out.push(ff.build());
+            }
+        }
+
         let accessory_ids: Vec<String> = product.accessories.iter().map(|a| a.accessory_id.clone()).collect();
         let dangling_acc: Vec<_> = accessory_ids.iter().filter(|id| !product_ids.contains(*id)).cloned().collect();
         let mut c = CheckResult::assess(
@@ -1285,19 +1932,23 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                 "Alle Zubehörreferenzen sind auflösbar.",
             ));
         } else {
+            let ai = product
+                .accessories
+                .iter()
+                .position(|a| !product_ids.contains(&a.accessory_id))
+                .unwrap_or(0);
             c = c
                 .status(CheckStatus::Fail)
                 .explanation(copy(
                     format!("accessories reference unknown products {dangling_acc:?}."),
                     format!("accessories verweist auf unbekannte Produkte {dangling_acc:?}."),
                 ))
-                .remedy(Remedy::exactly(
-                    SubjectRef::new(article, product_path(article, "accessories[0].accessoryId"), copy("Accessory id", "Zubehör-ID")),
-                    Quantity::new(QuantityKind::Dimensionless, 0.0),
-                    Quantity::new(QuantityKind::Dimensionless, 1.0),
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(article, product_path(article, &format!("accessories[{ai}].accessoryId")), copy("Accessory id", "Zubehör-ID")),
+                    product_ids.iter().cloned().collect(),
                     copy(
-                        "Point accessories[].accessoryId at an existing product id or clear the list.",
-                        "accessories[].accessoryId auf eine vorhandene Produkt-ID setzen oder die Liste leeren.",
+                        "Point accessories[].accessoryId at an existing catalogue product id.",
+                        "accessories[].accessoryId auf eine vorhandene Katalog-Produkt-ID setzen.",
                     ),
                 ));
         }
@@ -1319,19 +1970,23 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                 "Alle Komponentenreferenzen sind auflösbar.",
             ));
         } else {
+            let ci = product
+                .components
+                .iter()
+                .position(|c| !product_ids.contains(&c.component_id))
+                .unwrap_or(0);
             c = c
                 .status(CheckStatus::Fail)
                 .explanation(copy(
                     format!("components reference unknown products {dangling_comp:?}."),
                     format!("components verweist auf unbekannte Produkte {dangling_comp:?}."),
                 ))
-                .remedy(Remedy::exactly(
-                    SubjectRef::new(article, product_path(article, "components[0].componentId"), copy("Component id", "Komponenten-ID")),
-                    Quantity::new(QuantityKind::Dimensionless, 0.0),
-                    Quantity::new(QuantityKind::Dimensionless, 1.0),
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(article, product_path(article, &format!("components[{ci}].componentId")), copy("Component id", "Komponenten-ID")),
+                    product_ids.iter().cloned().collect(),
                     copy(
-                        "Point components[].componentId at an existing product id or clear the list.",
-                        "components[].componentId auf eine vorhandene Produkt-ID setzen oder die Liste leeren.",
+                        "Point components[].componentId at an existing catalogue product id.",
+                        "components[].componentId auf eine vorhandene Katalog-Produkt-ID setzen.",
                     ),
                 ));
         }
@@ -1348,6 +2003,7 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                 copy("Accessory quantity", "Zubehöranzahl"),
             )
             .annex(ANNEX)
+            .minimum(Quantity::new(QuantityKind::Dimensionless, link.quantity as f64), Quantity::new(QuantityKind::Dimensionless, 1.0))
             .status(if qty_ok { CheckStatus::Pass } else { CheckStatus::Fail });
             if qty_ok {
                 q = q.explanation(copy(format!("Accessory `{}` quantity {} ≥ 1.", link.accessory_id, link.quantity), format!("Zubehör `{}` Anzahl {} ≥ 1.", link.accessory_id, link.quantity)));
@@ -1362,17 +2018,28 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                     ));
             }
             out.push(q.build());
-            if link.required && !product_ids.contains(&link.accessory_id) {
-                out.push(
-                    CheckResult::assess(
-                        format!("vdi3805.1.accessories.required.{article}.{i}"),
-                        part_label(1),
-                        clause("1", "4.5"),
-                        subject_product(product),
-                        copy("Required accessory present", "Erforderliches Zubehör vorhanden"),
-                    )
-                    .annex(ANNEX)
-                    .status(CheckStatus::Fail)
+            let present = product_ids.contains(&link.accessory_id);
+            let req_ok = !link.required || present;
+            let mut rq = CheckResult::assess(
+                format!("vdi3805.1.accessories.required.{article}.{i}"),
+                part_label(1),
+                clause("1", "4.5"),
+                subject_product(product),
+                copy("Required accessory present", "Erforderliches Zubehör vorhanden"),
+            )
+            .annex(ANNEX)
+            .minimum(
+                Quantity::new(QuantityKind::Dimensionless, if present { 1.0 } else { 0.0 }),
+                Quantity::new(QuantityKind::Dimensionless, if link.required { 1.0 } else { 0.0 }),
+            )
+            .status(if req_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+            if req_ok {
+                rq = rq.explanation(copy(
+                    format!("Accessory `{}` required={} present={}.", link.accessory_id, link.required, present),
+                    format!("Zubehör `{}` required={} present={}.", link.accessory_id, link.required, present),
+                ));
+            } else {
+                rq = rq
                     .explanation(copy(
                         format!("Required accessory `{}` is missing from the catalogue.", link.accessory_id),
                         format!("Erforderliches Zubehör `{}` fehlt im Katalog.", link.accessory_id),
@@ -1382,10 +2049,9 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                         Quantity::new(QuantityKind::Dimensionless, 0.0),
                         Quantity::new(QuantityKind::Dimensionless, 1.0),
                         copy("Add the required accessory product to the catalogue.", "Erforderliches Zubehörprodukt dem Katalog hinzufügen."),
-                    ))
-                    .build(),
-                );
+                    ));
             }
+            out.push(rq.build());
         }
         for (i, link) in product.components.iter().enumerate() {
             let qty_ok = link.quantity >= 1;
@@ -1397,6 +2063,7 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                 copy("Component quantity", "Komponentenanzahl"),
             )
             .annex(ANNEX)
+            .minimum(Quantity::new(QuantityKind::Dimensionless, link.quantity as f64), Quantity::new(QuantityKind::Dimensionless, 1.0))
             .status(if qty_ok { CheckStatus::Pass } else { CheckStatus::Fail });
             if qty_ok {
                 q = q.explanation(copy(format!("Component `{}` quantity {} ≥ 1.", link.component_id, link.quantity), format!("Komponente `{}` Anzahl {} ≥ 1.", link.component_id, link.quantity)));
@@ -1425,6 +2092,7 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                     }
                 }
                 let bbox_ok = outside.is_empty() && bbox.max_x >= bbox.min_x && bbox.max_y >= bbox.min_y && bbox.max_z >= bbox.min_z;
+                let volume = ((bbox.max_x - bbox.min_x) * (bbox.max_y - bbox.min_y) * (bbox.max_z - bbox.min_z)).abs();
                 let mut g = CheckResult::assess(
                     format!("vdi3805.1.geometry.bbox.{article}"),
                     part_label(1),
@@ -1433,6 +2101,7 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                     copy("Geometry bounding box", "Geometrie-Begrenzungsrahmen"),
                 )
                 .annex(ANNEX)
+                .minimum(Quantity::new(QuantityKind::Volume, if bbox_ok { volume.max(1e-12) } else { 0.0 }), Quantity::new(QuantityKind::Volume, 1e-12))
                 .status(if bbox_ok { CheckStatus::Pass } else { CheckStatus::Fail });
                 if bbox_ok {
                     g = g.explanation(copy("All connection points lie inside the geometry bbox.", "Alle Anschlusspunkte liegen im Geometrie-BBox."));
@@ -1440,14 +2109,15 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                     g = g
                         .explanation(copy(format!("Connection points outside bbox: {outside:?}."), format!("Anschlusspunkte außerhalb der BBox: {outside:?}.")))
                         .remedy(Remedy::exactly(
-                            SubjectRef::new(gref, format!("geometry[id={gref}].bbox.maxX"), copy("BBox max X", "BBox max X")),
+                            SubjectRef::new(gref, format!("geometry[id={gref}].bbox.maxX"), copy("BBox maximum X", "Maximale X-Koordinate der Bounding-Box")),
                             Quantity::new(QuantityKind::Length, bbox.max_x),
                             Quantity::new(QuantityKind::Length, bbox.max_x.max(bbox.min_x) + 0.01),
                             copy("Expand geometry bbox so every connection point is inside.", "Geometrie-BBox so erweitern, dass jeder Anschlusspunkt innen liegt."),
                         ));
                 }
                 out.push(g.build());
-                let params_ok = !geom.parameters.is_empty();
+                let scale = geom.parameters.get("scale").copied().unwrap_or(0.0);
+                let params_ok = scale > 0.0;
                 let mut p = CheckResult::assess(
                     format!("vdi3805.1.geometry.parameters.{article}"),
                     part_label(1),
@@ -1456,20 +2126,154 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                     copy("Geometry parameters", "Geometrieparameter"),
                 )
                 .annex(ANNEX)
+                .minimum(Quantity::new(QuantityKind::Dimensionless, scale), Quantity::new(QuantityKind::Dimensionless, 1e-6))
                 .status(if params_ok { CheckStatus::Pass } else { CheckStatus::Fail });
                 if params_ok {
-                    p = p.explanation(copy("Geometry parameters present for referenced geometry.", "Geometrieparameter für referenzierte Geometrie vorhanden."));
+                    p = p.explanation(copy(format!("geometry.parameters.scale = {scale}."), format!("geometry.parameters.scale = {scale} (Geometrie).")));
                 } else {
                     p = p
-                        .explanation(copy("geometryRef set but parameters map is empty.", "geometryRef gesetzt, aber Parameter-Map leer."))
-                        .remedy(Remedy::exactly(
-                            SubjectRef::new(gref, format!("geometry[id={gref}].parameters"), copy("Geometry parameters", "Geometrieparameter")),
-                            Quantity::new(QuantityKind::Dimensionless, 0.0),
+                        .explanation(copy("geometryRef set but parameters.scale is missing or not positive.", "geometryRef gesetzt, aber parameters.scale fehlt oder ist nicht positiv."))
+                        .remedy(Remedy::at_least(
+                            SubjectRef::new(gref, format!("geometry[id={gref}].parameters.scale"), copy("Geometry scale", "Geometrie-Maßstab")),
+                            Quantity::new(QuantityKind::Dimensionless, scale),
                             Quantity::new(QuantityKind::Dimensionless, 1.0),
-                            copy("Provide Blatt geometry definition parameters for the referenced geometry.", "Blatt-Geometriedefinitionsparameter für die referenzierte Geometrie angeben."),
+                            copy("Set geometry.parameters.scale to a positive value.", "geometry.parameters.scale auf einen positiven Wert setzen."),
                         ));
                 }
                 out.push(p.build());
+                for (pk, pv) in &geom.parameters {
+                    let mut pkc = CheckResult::assess(
+                        format!("vdi3805.1.geometry.parameter.{article}.{pk}"),
+                        part_label(1),
+                        clause("1", "5.2"),
+                        subject_product(product),
+                        copy("Geometry parameter", "Geometrieparameter"),
+                    )
+                    .annex(ANNEX)
+                    .minimum(Quantity::new(QuantityKind::Dimensionless, *pv), Quantity::new(QuantityKind::Dimensionless, 0.0))
+                    .status(if pv.is_finite() && *pv >= 0.0 { CheckStatus::Pass } else { CheckStatus::Fail });
+                    if pv.is_finite() && *pv >= 0.0 {
+                        pkc = pkc.explanation(copy(format!("parameter `{pk}` = {pv}."), format!("Parameter `{pk}` = {pv} (Geometrie).")));
+                    } else {
+                        pkc = pkc
+                            .explanation(copy(format!("parameter `{pk}` must be a finite non-negative number."), format!("Parameter `{pk}` muss eine endliche nicht-negative Zahl sein.")))
+                            .remedy(Remedy::at_least(
+                                SubjectRef::new(gref, format!("geometry[id={gref}].parameters.{pk}"), copy("Geometry parameter", "Geometrieparameter")),
+                                Quantity::new(QuantityKind::Dimensionless, *pv),
+                                Quantity::new(QuantityKind::Dimensionless, 0.0),
+                                copy("Set the geometry parameter to a non-negative finite value.", "Geometrieparameter auf einen nicht-negativen endlichen Wert setzen."),
+                            ));
+                    }
+                    out.push(pkc.build());
+                }
+                for (ci, conn) in geom.connections.iter().enumerate() {
+                    let dia = conn.diameter_mm.unwrap_or(0.0);
+                    let mut cd = CheckResult::assess(
+                        format!("vdi3805.1.geometry.connection.{article}.{ci}"),
+                        part_label(1),
+                        clause("1", "5.2"),
+                        subject_product(product),
+                        copy("Geometry connection", "Geometrieanschluss"),
+                    )
+                    .annex(ANNEX)
+                    .minimum(Quantity::new(QuantityKind::Length, dia / 1000.0), Quantity::new(QuantityKind::Length, 0.001));
+                    let medium_ok = CONNECTION_MEDIUM_CODES.iter().any(|m| *m == conn.medium.as_str());
+                    let id_ok = CONNECTION_ID_CODES.iter().any(|m| *m == conn.id.as_str());
+                    let conn_ok = dia >= 1.0 && medium_ok && id_ok;
+                    cd = cd.status(if conn_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+                    if conn_ok {
+                        cd = cd.explanation(copy(
+                            format!("Connection `{}` medium={} Ø={} mm.", conn.id, conn.medium, dia),
+                            format!("Anschluss `{}` Medium={} Ø={} mm.", conn.id, conn.medium, dia),
+                        ));
+                    } else if !id_ok {
+                        cd = cd
+                            .explanation(copy(
+                                format!("Connection id `{}` is not in the admitted connection id list.", conn.id),
+                                format!("Anschluss-ID `{}` ist nicht in der zugelassenen Anschluss-ID-Liste.", conn.id),
+                            ))
+                            .remedy(Remedy::one_of(
+                                SubjectRef::new(gref, format!("geometry[id={gref}].connections[id={}].id", conn.id), copy("Connection id", "Anschluss-ID")),
+                                CONNECTION_ID_CODES.iter().map(|s| (*s).to_string()).collect(),
+                                copy("Set connection.id to an admitted connection id.", "connection.id auf eine zugelassene Anschluss-ID setzen."),
+                            ));
+                    } else {
+                        cd = cd
+                            .explanation(copy("Connection needs id, medium and diameterMm ≥ 1.", "Anschluss braucht id, medium und diameterMm ≥ 1."))
+                            .remedy(Remedy::at_least(
+                                SubjectRef::new(gref, format!("geometry[id={gref}].connections[id={}].diameterMm", conn.id), copy("Connection diameter", "Anschlussdurchmesser")),
+                                Quantity::new(QuantityKind::Length, dia / 1000.0),
+                                Quantity::new(QuantityKind::Length, 0.015),
+                                copy("Set connection diameterMm to a positive millimetre value.", "connection diameterMm auf einen positiven Millimeterwert setzen."),
+                            ));
+                    }
+                    out.push(cd.build());
+                    let [px, py, pz] = conn.position;
+                    for (axis, val, min_b, max_b) in [
+                        ("x", px, bbox.min_x, bbox.max_x),
+                        ("y", py, bbox.min_y, bbox.max_y),
+                        ("z", pz, bbox.min_z, bbox.max_z),
+                    ] {
+                        let inside = val >= min_b && val <= max_b;
+                        let span = (max_b - min_b).abs().max(1e-9);
+                        let mid = (min_b + max_b) * 0.5;
+                        let mut pos = CheckResult::assess(
+                            format!("vdi3805.1.geometry.connection.position.{article}.{ci}.{axis}"),
+                            part_label(1),
+                            clause("1", "5.2"),
+                            subject_product(product),
+                            copy("Connection position", "Anschlussposition"),
+                        )
+                        .annex(ANNEX)
+                        .minimum(Quantity::new(QuantityKind::Length, val), Quantity::new(QuantityKind::Length, min_b))
+                        .utilization(Quantity::new(QuantityKind::Length, (val - min_b).abs()), Quantity::new(QuantityKind::Length, span))
+                        .status(if inside { CheckStatus::Pass } else { CheckStatus::Fail });
+                        if inside {
+                            pos = pos.explanation(copy(
+                                format!("Connection `{}` {axis}={val:.4} within bbox [{min_b:.4}, {max_b:.4}].", conn.id),
+                                format!("Anschluss `{}` {axis}={val:.4} innerhalb BBox [{min_b:.4}, {max_b:.4}].", conn.id),
+                            ));
+                        } else {
+                            pos = pos
+                                .explanation(copy(
+                                    format!("Connection `{}` {axis}={val:.4} outside bbox [{min_b:.4}, {max_b:.4}].", conn.id),
+                                    format!("Anschluss `{}` {axis}={val:.4} außerhalb BBox [{min_b:.4}, {max_b:.4}].", conn.id),
+                                ))
+                                .remedy(Remedy::exactly(
+                                    SubjectRef::new(gref, format!("geometry[id={gref}].connections[id={}].position.{axis}", conn.id), copy("Connection position", "Anschlussposition")),
+                                    Quantity::new(QuantityKind::Length, val),
+                                    Quantity::new(QuantityKind::Length, mid),
+                                    copy("Move the connection point inside the geometry bbox.", "Anschlusspunkt in die Geometrie-BBox verschieben."),
+                                ));
+                        }
+                        out.push(pos.build());
+                    }
+                    let dir_norm = (conn.direction[0].powi(2) + conn.direction[1].powi(2) + conn.direction[2].powi(2)).sqrt();
+                    let dir_ok = (dir_norm - 1.0).abs() < 0.05;
+                    let mut cp = CheckResult::assess(
+                        format!("vdi3805.1.geometry.connection.direction.{article}.{ci}"),
+                        part_label(1),
+                        clause("1", "5.2"),
+                        subject_product(product),
+                        copy("Connection direction unit vector", "Anschlussrichtungs-Einheitsvektor"),
+                    )
+                    .annex(ANNEX)
+                    .minimum(Quantity::new(QuantityKind::Dimensionless, dir_norm), Quantity::new(QuantityKind::Dimensionless, 0.95))
+                    .status(if dir_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+                    if dir_ok {
+                        cp = cp.explanation(copy(format!("Connection `{}` direction ‖n‖={dir_norm:.3}.", conn.id), format!("Anschluss `{}` Richtung ‖n‖={dir_norm:.3}.", conn.id)));
+                    } else {
+                        cp = cp
+                            .explanation(copy(format!("Connection direction norm {dir_norm:.3} must be ≈ 1.",), format!("Anschlussrichtungsbetrag {dir_norm:.3} muss ≈ 1 sein.")))
+                            .remedy(Remedy::exactly(
+                                SubjectRef::new(gref, format!("geometry[id={gref}].connections[id={}].direction[0]", conn.id), copy("Direction x", "Richtung x")),
+                                Quantity::new(QuantityKind::Dimensionless, conn.direction[0]),
+                                Quantity::new(QuantityKind::Dimensionless, conn.direction[0] / dir_norm.max(1e-12)),
+                                copy("Normalize the connection direction to a unit vector.", "Anschlussrichtung auf einen Einheitsvektor normalisieren."),
+                            ));
+                    }
+                    out.push(cp.build());
+                }
             }
         }
     }
@@ -1534,7 +2338,18 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
             }
         }
 
-        let tag_ok = entry.tags.is_empty() || entry.tags.iter().any(|t| product.title.iter().any(|title| title.text.to_lowercase().contains(&t.to_lowercase()) || product.identity.product_group.eq_ignore_ascii_case(t)));
+        let tag_match = |t: &str| {
+            product.identity.product_group.eq_ignore_ascii_case(t)
+                || product.title.iter().any(|title| title.text.to_lowercase().contains(&t.to_lowercase()))
+        };
+        let matched_tags = entry.tags.iter().filter(|t| tag_match(t)).count();
+        let tag_total = entry.tags.len();
+        let tag_ok = tag_total == 0 || matched_tags == tag_total;
+        let (tag_computed, tag_limit) = if tag_total == 0 {
+            (1.0, 1.0)
+        } else {
+            (matched_tags as f64, tag_total as f64)
+        };
         let mut tg = CheckResult::assess(
             format!("vdi3805.1.index.tags.{i}"),
             part_label(1),
@@ -1543,6 +2358,10 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
             copy("Index tags consistency", "Index-Tag-Konsistenz"),
         )
         .annex(ANNEX)
+        .minimum(
+            Quantity::new(QuantityKind::Dimensionless, tag_computed),
+            Quantity::new(QuantityKind::Dimensionless, tag_limit),
+        )
         .status(if tag_ok { CheckStatus::Pass } else { CheckStatus::Fail });
         if tag_ok {
             tg = tg.explanation(copy("Index tags relate to the product identity/title.", "Index-Tags beziehen sich auf Produktidentität/Titel."));
@@ -1551,8 +2370,8 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                 .explanation(copy(format!("Index tags {:?} do not match product title/group.", entry.tags), format!("Index-Tags {:?} passen nicht zu Produkttitel/-gruppe.", entry.tags)))
                 .remedy(Remedy::exactly(
                     SubjectRef::new("", format!("index.entries[{i}].tags[0]"), copy("Index tag", "Index-Tag")),
-                    Quantity::new(QuantityKind::Dimensionless, 0.0),
-                    Quantity::new(QuantityKind::Dimensionless, 1.0),
+                    Quantity::new(QuantityKind::Dimensionless, matched_tags as f64),
+                    Quantity::new(QuantityKind::Dimensionless, tag_total as f64),
                     copy("Align index.entries[].tags with the product title or product group.", "index.entries[].tags an Produkttitel oder Produktgruppe angleichen."),
                 ));
         }
@@ -1562,7 +2381,7 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     // Header version / building-system / created (VDI 3805-1 §4.1–4.3) — single header at catalog.file.
     let file = &document.catalog.file;
     let expected_hv = "3805";
-    let hv_ok = file.header_version == expected_hv || file.header_version.starts_with("3805");
+    let hv_ok = file.header_version == expected_hv;
     let mut hv = CheckResult::assess(
         "vdi3805.1.headerVersion",
         part_label(1),
@@ -1589,7 +2408,11 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     let sheets: BTreeSet<u16> = document.catalog.products.iter().map(|p| p.sheet.0).collect();
     // Building-system (Gewerk) number must be consistent with product sheets' domain (VDI 3805-1 §4.2).
     let bsn = &file.building_system_number;
-    let bsn_ok = !bsn.system_code.is_empty() && !bsn.subsystem.is_empty();
+    let bsn_ok = !bsn.system_code.is_empty()
+        && !bsn.subsystem.is_empty()
+        && bsn.system_code.chars().all(|c| c.is_ascii_digit())
+        && bsn.subsystem.chars().all(|c| c.is_ascii_digit())
+        && bsn.sequence >= 1;
     let mut bs = CheckResult::assess(
         "vdi3805.1.buildingSystemNumber",
         part_label(1),
@@ -1598,6 +2421,10 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
         copy("Building system number", "Gewerknummer"),
     )
     .annex(ANNEX)
+    .minimum(
+        Quantity::new(QuantityKind::Dimensionless, bsn.sequence as f64),
+        Quantity::new(QuantityKind::Dimensionless, 1.0),
+    )
     .status(if bsn_ok { CheckStatus::Pass } else { CheckStatus::Fail });
     if bsn_ok {
         bs = bs.explanation(copy(
@@ -1619,12 +2446,15 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     // created vs correctionAsOf / edition dates (VDI 3805-1 §4.3).
     let created_ok = {
         let parts: Vec<_> = file.created.split('-').collect();
-        if parts.len() >= 2 {
+        if parts.len() == 3 && parts.iter().all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit())) {
             let y: u16 = parts[0].parse().unwrap_or(0);
             let m: u16 = parts[1].parse().unwrap_or(0);
-            y > 0
+            let d: u16 = parts[2].parse().unwrap_or(0);
+            y >= 1990
                 && m >= 1
                 && m <= 12
+                && d >= 1
+                && d <= 31
                 && (y as i32 * 12 + m as i32) <= (document.correction_as_of.year as i32 * 12 + document.correction_as_of.month as i32 + 12)
         } else {
             false
@@ -1659,6 +2489,109 @@ fn check_catalog_integrity(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
     }
     out.push(cr.build());
 
+    for (key, geom) in &document.geometry {
+        let ok = key == &geom.id;
+        let mut gk = CheckResult::assess(
+            format!("vdi3805.1.geometry.idKey.{key}"),
+            part_label(1),
+            clause("1", "5.2"),
+            subject_dataset(),
+            copy("Geometry map key", "Geometrie-Map-Schlüssel"),
+        )
+        .annex(ANNEX)
+        .status(if ok { CheckStatus::Pass } else { CheckStatus::Fail });
+        if ok {
+            gk = gk.explanation(copy(format!("geometry map key `{key}` matches id.",), format!("Geometrie-Map-Schlüssel `{key}` entspricht id.")));
+        } else {
+            gk = gk
+                .explanation(copy(format!("geometry[`{key}`].id is `{}`.", geom.id), format!("geometry[`{key}`].id ist `{}`.", geom.id)))
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(key, format!("geometry[id={key}].id"), copy("Geometry id", "Geometrie-ID")),
+                    vec![key.clone()],
+                    copy("Align geometry.id with its map key.", "geometry.id an den Map-Schlüssel angleichen."),
+                ));
+        }
+        out.push(gk.build());
+    }
+    for (key, curve) in &document.curves {
+        let ok = key == &curve.id;
+        let mut ck = CheckResult::assess(
+            format!("vdi3805.1.curve.idKey.{key}"),
+            part_label(1),
+            clause("1", "5.1"),
+            subject_dataset(),
+            copy("Curve map key", "Kennlinien-Map-Schlüssel"),
+        )
+        .annex(ANNEX)
+        .status(if ok { CheckStatus::Pass } else { CheckStatus::Fail });
+        if ok {
+            ck = ck.explanation(copy(format!("curves map key `{key}` matches id.",), format!("Kennlinien-Map-Schlüssel `{key}` entspricht id.")));
+        } else {
+            ck = ck
+                .explanation(copy(format!("curves[`{key}`].id is `{}`.", curve.id), format!("curves[`{key}`].id ist `{}`.", curve.id)))
+                .remedy(Remedy::one_of(
+                    SubjectRef::new(key, format!("curves[id={key}].id"), copy("Curve id", "Kennlinien-ID")),
+                    vec![key.clone()],
+                    copy("Align curve.id with its map key.", "curve.id an den Map-Schlüssel angleichen."),
+                ));
+        }
+        out.push(ck.build());
+    }
+
+    let mfr_match = !file.manufacturer.is_empty()
+        && document.catalog.products.iter().all(|p| p.identity.manufacturer_code == file.manufacturer);
+    let mut mf = CheckResult::assess(
+        "vdi3805.1.manufacturer",
+        part_label(1),
+        clause("1", "4.1"),
+        subject_dataset(),
+        copy("Manufacturer code", "Herstellercode"),
+    )
+    .annex(ANNEX)
+    .status(if mfr_match { CheckStatus::Pass } else { CheckStatus::Fail });
+    if mfr_match {
+        mf = mf.explanation(copy(
+            format!("manufacturer `{}` matches product identity codes.", file.manufacturer),
+            format!("manufacturer `{}` entspricht den Produktidentitätscodes.", file.manufacturer),
+        ));
+    } else {
+        mf = mf
+            .explanation(copy(
+                format!("manufacturer `{}` must match every product identity.manufacturerCode.", file.manufacturer),
+                format!("manufacturer `{}` muss mit jeder product identity.manufacturerCode übereinstimmen.", file.manufacturer),
+            ))
+            .remedy(Remedy::exactly(
+                SubjectRef::new("", "catalog.file.manufacturer", copy("Manufacturer", "Hersteller")),
+                Quantity::new(QuantityKind::Dimensionless, 0.0),
+                Quantity::new(QuantityKind::Dimensionless, 1.0),
+                copy("Set catalog.file.manufacturer to the catalogue manufacturer code.", "catalog.file.manufacturer auf den Katalog-Herstellercode setzen."),
+            ));
+    }
+    out.push(mf.build());
+
+    let charset_ok = matches!(file.charset.as_str(), "UTF-8" | "utf-8" | "ISO-8859-1" | "CP1252");
+    let mut cs = CheckResult::assess(
+        "vdi3805.1.charset",
+        part_label(1),
+        clause("1", "4.1"),
+        subject_dataset(),
+        copy("Manufacturer file charset", "Zeichensatz der Herstellerdatei"),
+    )
+    .annex(ANNEX)
+    .status(if charset_ok { CheckStatus::Pass } else { CheckStatus::Fail });
+    if charset_ok {
+        cs = cs.explanation(copy(format!("charset `{}` is admitted.", file.charset), format!("charset `{}` ist zugelassen.", file.charset)));
+    } else {
+        cs = cs
+            .explanation(copy(format!("charset `{}` is not an admitted Part 1 encoding.", file.charset), format!("charset `{}` ist keine zugelassene Teil-1-Kodierung.", file.charset)))
+            .remedy(Remedy::one_of(
+                SubjectRef::new("", "catalog.file.charset", copy("Charset", "Zeichensatz")),
+                vec!["UTF-8".into(), "ISO-8859-1".into(), "CP1252".into()],
+                copy("Set catalog.file.charset to UTF-8 (preferred) or ISO-8859-1/CP1252.", "catalog.file.charset auf UTF-8 (bevorzugt) oder ISO-8859-1/CP1252 setzen."),
+            ));
+    }
+    out.push(cs.build());
+
     out
 }
 
@@ -1680,7 +2613,7 @@ fn check_historical(document: &Vdi3805Snapshot) -> Vec<CheckResult> {
                     .status(CheckStatus::Fail)
                     .explanation(copy("Historical proposal sheet not allowed in strict mode.", "Historisches Vorschlagsblatt in Strict Mode nicht zulässig."))
                     .remedy(Remedy::exactly(
-                        SubjectRef::new("", "strictMode", copy("Strict mode", "Strict Mode")),
+                        SubjectRef::new("", "strictMode", copy("Strict mode", "Strenger Modus")),
                         Quantity::new(QuantityKind::Dimensionless, 1.0),
                         Quantity::new(QuantityKind::Dimensionless, 0.0),
                         copy("Remove the historical-sheet product or set strictMode to false.", "Produkt mit historischem Blatt entfernen oder strictMode auf false setzen."),
@@ -1815,7 +2748,23 @@ macro_rules! define_vdi_part {
                 &SHEET_ENTRIES[$num - 1]
             }
             pub fn check(document: &Vdi3805Snapshot) -> CheckResult {
-                let _ = document;
+                let claimed = document.catalog.products.iter().any(|p| p.sheet.0 == $num);
+                if claimed {
+                    return CheckResult::assess(format!("vdi3805.{}.reserved", $num), part_label($num), clause(stringify!($num), "scope"), subject_dataset(), copy("Reserved sheet", "Reserviertes Blatt"))
+                        .annex(ANNEX)
+                        .status(CheckStatus::Fail)
+                        .explanation(copy(
+                            format!("Products claim reserved sheet {}.", $num),
+                            format!("Produkte beanspruchen reserviertes Blatt {}.", $num),
+                        ))
+                        .remedy(Remedy::exactly(
+                            SubjectRef::new("", "catalog.products[0].sheet", copy("Product sheet", "Produktblatt")),
+                            Quantity::new(QuantityKind::Dimensionless, $num as f64),
+                            Quantity::new(QuantityKind::Dimensionless, 2.0),
+                            copy("Move products off reserved sheet numbers.", "Produkte von reservierten Blattnummern verschieben."),
+                        ))
+                        .build();
+                }
                 CheckResult::assess(format!("vdi3805.{}.reserved", $num), part_label($num), clause(stringify!($num), "scope"), subject_dataset(), copy("Reserved sheet", "Reserviertes Blatt"))
                     .annex(ANNEX)
                     .not_applicable(copy(format!("sheet {} reserved", $num), format!("Blatt {} reserviert", $num)))

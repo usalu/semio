@@ -13,13 +13,13 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-from-the-german-na-to-the-recommended-en-annex/🎯️outcome/🔣️.json");
 
 fn before() -> En1995Snapshot {
-    serde_json::from_str(BEFORE).expect("the committed before-snapshot decodes")
+    pack::json::from_json_str(BEFORE).expect("the committed before-snapshot decodes")
 }
 fn expected_after() -> En1995Snapshot {
-    serde_json::from_str(AFTER).expect("the committed after-snapshot decodes")
+    pack::json::from_json_str(AFTER).expect("the committed after-snapshot decodes")
 }
 fn mutation() -> En1995Mutation {
-    serde_json::from_str(MUTATION).expect("the committed `change-annex` payload decodes")
+    pack::json::from_json_str(MUTATION).expect("the committed `change-annex` payload decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<En1995Diff> {
     <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation(), &before())
@@ -53,18 +53,18 @@ async fn switching_back_to_the_german_na_restores_before() {
     assert_eq!(snapshot, base, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: replaying the inverse did not restore the whole before-snapshot");
 }
 
-/// 🔣️ Both committed snapshots and the committed `change-annex` payload are already canonical: decode → encode
-/// is a fixed point, so `{"ChangeAnnex": {"newAnnex": "En"}}` — externally tagged, because `En1995Mutation`
-/// carries no `#[serde(tag = …)]` is spelled here exactly as this artifact's own serde attributes render it.
+/// 🔣️ Both committed snapshots and the committed `change-annex` payload are already canonical under the
+/// production `pack::json` codec: decode → encode is a fixed point, so `{"ChangeAnnex": {"newAnnex": "En"}}`
+/// is spelled exactly as the external adapters read it.
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: En1995Snapshot = serde_json::from_str(text).expect("the committed snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("the committed snapshot re-encodes");
+        let decoded: En1995Snapshot = pack::json::from_json_str(text).expect("the committed snapshot decodes");
+        let reencoded: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&decoded)).expect("the committed snapshot re-encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("the committed snapshot reparses");
         assert_eq!(reencoded, original, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the committed {side} snapshot JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("the change-annex payload re-encodes");
+    let reencoded: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&mutation())).expect("the change-annex payload re-encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("the change-annex payload reparses");
     assert_eq!(reencoded, original, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the committed change-annex JSON is not canonical");
 }
@@ -89,7 +89,7 @@ async fn declared_outcome_holds() {
 /// matches.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let produced = serde_json::to_value(built_outcome().diff()).expect("the produced change-annex diff encodes");
+    let produced: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(built_outcome().diff())).expect("the produced change-annex diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff decodes");
     assert_eq!(produced, committed, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -98,12 +98,12 @@ async fn produces_committed_diff() {
 /// else.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-annex diff decodes");
+    let decoded: En1995Diff = pack::json::from_json_str(DIFF).expect("the committed change-annex diff decodes");
     assert_eq!(decoded.annex, Some(crate::document::AnnexChoice::En), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the committed diff must carry annex = `AnnexChoice::En`");
     assert!(decoded.members.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: change-annex writes annex and must leave `members` untouched");
     assert!(decoded.connections.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: change-annex writes annex and must leave `connections` untouched");
     assert!(decoded.artifact.is_none(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: a field-scoped change must never fall back to a whole-artifact replacement");
-    let reencoded = serde_json::to_value(&decoded).expect("the committed diff re-encodes");
+    let reencoded: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&decoded)).expect("the committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("the committed diff reparses");
     assert_eq!(reencoded, original, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the committed diff JSON is not canonical");
 }
@@ -112,7 +112,7 @@ async fn committed_diff_is_canonical() {
 /// description of the annex switch, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: En1995Diff = serde_json::from_str(DIFF).expect("the committed change-annex diff decodes");
+    let decoded: En1995Diff = pack::json::from_json_str(DIFF).expect("the committed change-annex diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("the committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: the committed diff did not carry before to after");
     assert_eq!(produced.annex, crate::document::AnnexChoice::En, "change-annex/switches-from-the-german-na-to-the-recommended-en-annex: applying the committed diff must land annex on `AnnexChoice::En`");

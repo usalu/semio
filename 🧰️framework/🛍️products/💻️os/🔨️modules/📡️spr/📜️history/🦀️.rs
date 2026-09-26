@@ -195,6 +195,8 @@ impl HistoryTransitionRecord {
             document_id: crate::os_spr::ArtifactId(document_id.to_string()),
             actor: crate::os_spr::ActorId(self.actor.clone()),
             dependencies: self.dependencies.iter().cloned().map(crate::os_spr::MutationId).collect(),
+            observed: None,
+            target: Vec::new(),
             diff: crate::os_spr::ArtifactDiff { schema: schema.clone(), payload: self.payload.clone() },
             inverse: crate::os_spr::InverseMutation { schema, payload: Vec::new() },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: self.hlt.0, physical_ms: self.hlt.1, logical: self.hlt.2 },

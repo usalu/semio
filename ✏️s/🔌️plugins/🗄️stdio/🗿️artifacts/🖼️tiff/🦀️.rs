@@ -67,7 +67,7 @@ pub const TIFF_BASELINE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tif
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.tiff".into(),
+        id: "s.stdio.tiff".into(),
         name: "Tiff".into(),
         source_format: STDIO_TIFF_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

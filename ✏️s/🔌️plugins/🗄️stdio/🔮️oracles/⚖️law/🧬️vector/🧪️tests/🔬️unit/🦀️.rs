@@ -6,7 +6,7 @@ const DIFF: &str = r#"{"zoom":2}"#;
 const APPLIED: &str = r#"{"status":"applied","messages":[]}"#;
 const KEPT: &str = r#"{"status":"no-op","messages":[{"level":"warning","code":"mutation.no-op"}]}"#;
 
-fn vector(before: &'static str, after: &'static str, outcome: &'static str, observable: bool) -> Vector {
+fn vector(before: &'static str, after: &'static str, outcome: &'static str, observable: bool) -> Vector<'static> {
     Vector { before, mutation: r#"{"kind":"set-zoom","zoom":2}"#, after, diff: DIFF, outcome, observable }
 }
 

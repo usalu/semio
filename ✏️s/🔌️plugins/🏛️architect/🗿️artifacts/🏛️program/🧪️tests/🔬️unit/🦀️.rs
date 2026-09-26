@@ -136,6 +136,8 @@ async fn architect_example_text_parses_to_sample_plugin_and_round_trips() {
     assert_eq!(parsed.elements[1].code, expected.elements[1].code);
     assert_eq!(parsed.adjacencies.len(), expected.adjacencies.len());
     assert_eq!(parsed.adjacencies[0].kind, expected.adjacencies[0].kind);
+    assert_eq!(parsed.audit_events.len(), expected.audit_events.len());
+    assert_eq!(parsed.audit_events[0].timestamp, expected.audit_events[0].timestamp);
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&parsed);
     semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&parsed);
 }

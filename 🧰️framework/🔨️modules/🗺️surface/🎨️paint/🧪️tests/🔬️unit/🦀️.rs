@@ -2,6 +2,25 @@
 use super::*;
 
 #[test]
+fn paint_image_transform_matches_pixel_gesture_coordinates() {
+    let fixtures:serde_json::Value=serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixtures["cases"].as_array().unwrap() {
+        let mut host=RasterHost::new();
+        host.set_size(100,100,1.0);
+        host.sync_document_json(&case["document"].to_string()).unwrap();
+        host.set_camera(case["camera"]["x"].as_f64().unwrap(),case["camera"]["y"].as_f64().unwrap(),case["camera"]["zoom"].as_f64().unwrap());
+        for (key,asset) in case["assets"].as_object().unwrap() {
+            host.upload_raster_image_key(key,&png_bytes(asset["width"].as_u64().unwrap() as u32,asset["height"].as_u64().unwrap() as u32)).unwrap();
+        }
+        let scene=host.build_vector_scene();
+        let encoded=canvas::draw_list::scene_draw_list_json(&scene,canvas::draw_list::DrawListOptions::default());
+        let value:serde_json::Value=serde_json::from_str(&encoded).unwrap();
+        let command=value["commands"].as_array().unwrap().iter().find(|command|command[0]=="i").unwrap();
+        for index in 0..6 { assert!((command[4][index].as_f64().unwrap()-case["imageTransform"][index].as_f64().unwrap()).abs()<1e-8,"{}",case["name"]); }
+    }
+}
+
+#[test]
 fn parse_minimal_document() {
     let json = r#"{"schema":"raster.document","id":"t","camera":{"x":0,"y":0,"zoom":1},"layers":[]}"#;
     let doc = parse_document(json).expect("parse");
@@ -361,66 +380,72 @@ fn pointer_down_button1_pans_on_move() {
 }
 
 #[test]
-fn pointer_down_paint_utility_paints_immediately() {
-    let mut host = RasterHost::new();
-    host.set_size(400, 400, 1.0);
-    host.set_active_utility("paintBrush");
-    host.sync_interaction(&["back".to_string()], None);
-    host.pointer_down_screen(400.0, 400.0, 0);
-    assert!(host.painting);
-    let key = RasterHost::layer_pixel_buffer_key("back");
-    let buf = host.buffers.paint.get(&key).expect("buffer created");
-    let painted = buf.chunks_exact(4).any(|px| px[0] == 40 && px[1] == 120 && px[2] == 220);
-    assert!(painted, "brush color should appear in buffer");
+fn paint_stroke_intent_uses_intrinsic_layer_coordinates_without_mutating_pixels() {
+    let fixtures: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🧫️fixtures/🔣️.json")).unwrap();
+    for case in fixtures["cases"].as_array().unwrap() {
+        let mut host = RasterHost::new();
+        host.set_size(100, 100, 1.0);
+        host.sync_document_json(&case["document"].to_string()).unwrap();
+        for (key, asset) in case["assets"].as_object().unwrap() {
+            host.upload_raster_image_key(key, &png_bytes(asset["width"].as_u64().unwrap() as u32, asset["height"].as_u64().unwrap() as u32)).unwrap();
+        }
+        host.sync_interaction(&["p".into()], None);
+        host.set_active_utility("paintBrush");
+        let before = host.buffers.paint.clone();
+        let (x, y) = host.world_to_screen_point(case["worldPoint"][0].as_f64().unwrap(), case["worldPoint"][1].as_f64().unwrap());
+        host.pointer_down_screen(x, y, 0);
+        assert!(host.paint_gesture.is_some());
+        assert!(host.pixel_edit().is_none());
+        host.pointer_up_screen(x, y);
+        let command = host.take_pixel_edit().unwrap();
+        let operation: serde_json::Value = serde_json::from_str(&command.operation).unwrap();
+        for index in 0..2 { assert_eq!(operation["points"][0][index].as_f64(), case["pixelPoint"][index].as_f64()); }
+        assert_eq!(command.layer_id, "p");
+        assert_eq!(host.buffers.paint, before);
+    }
 }
 
 #[test]
-fn pointer_move_while_painting_strokes_between_points() {
-    let mut host = RasterHost::new();
-    host.set_size(400, 400, 1.0);
+fn paint_cancel_discards_unpublished_intent_and_accepts_another_stroke() {
+    let mut host = two_pixel_layer_host();
     host.set_active_utility("paintBrush");
-    host.sync_interaction(&["back".to_string()], None);
-    host.pointer_down_screen(350.0, 400.0, 0);
-    host.pointer_move_screen(450.0, 400.0);
-    let key = RasterHost::layer_pixel_buffer_key("back");
-    let buf = host.buffers.paint.get(&key).expect("buffer created");
-    let painted_count = buf.chunks_exact(4).filter(|px| px[0] == 40 && px[2] == 220).count();
-    assert!(painted_count > 20, "stroke across two points should paint more than a single dab, got {painted_count}");
-}
-
-#[test]
-fn pointer_cancel_discards_only_the_live_brush_stroke_and_admits_the_next_down() {
-    let mut host = RasterHost::new();
-    host.set_size(400, 400, 1.0);
-    host.set_active_utility("paintBrush");
-    host.sync_interaction(&["back".to_string()], None);
-    host.pointer_down_screen(350.0, 400.0, 0);
-    host.pointer_up_screen(350.0, 400.0);
-    let key = RasterHost::layer_pixel_buffer_key("back");
-    let published = host.buffers.paint.get(&key).expect("published scratch").clone();
-    host.pointer_down_screen(450.0, 400.0, 0);
-    host.pointer_move_screen(470.0, 400.0);
-    assert_ne!(host.buffers.paint.get(&key), Some(&published));
+    host.sync_interaction(&["back".into()], None);
+    host.pointer_down_screen(100.0, 100.0, 0);
+    host.pointer_move_screen(110.0, 120.0);
     host.pointer_cancel_screen();
-    assert_eq!(host.buffers.paint.get(&key), Some(&published));
-    assert!(!host.painting);
-    assert!(host.paint_gesture_before.is_empty());
-    host.pointer_down_screen(400.0, 400.0, 0);
-    assert!(host.painting, "the next primary down is admitted");
+    assert!(host.paint_gesture.is_none());
+    assert!(host.pixel_edit().is_none());
+    host.pointer_down_screen(100.0, 100.0, 0);
+    host.pointer_up_screen(110.0, 120.0);
+    assert!(host.take_pixel_edit().is_some());
 }
 
 #[test]
-fn paint_eraser_reduces_alpha_instead_of_coloring() {
-    let mut host = RasterHost::new();
-    host.set_size(400, 400, 1.0);
+fn native_eraser_preserves_brush_settings_in_the_command() {
+    let mut host = two_pixel_layer_host();
+    host.sync_interaction(&["back".into()], None);
     host.set_active_utility("paintEraser");
-    host.set_brush_opacity(1.0);
-    host.sync_interaction(&["back".to_string()], None);
-    host.pointer_down_screen(400.0, 400.0, 0);
-    let key = RasterHost::layer_pixel_buffer_key("back");
-    let buf = host.buffers.paint.get(&key).expect("buffer created");
-    let center_idx = ((200usize * 512) + 200) * 4;
-    assert_eq!(buf[center_idx + 3], 0, "fully-opaque erase should zero alpha");
+    host.set_brush_opacity(0.25);
+    host.set_brush_color([10, 20, 30, 255]);
+    host.set_brush_hardness(0.5);
+    host.pointer_down_screen(100.0, 100.0, 0);
+    host.pointer_up_screen(100.0, 100.0);
+    let command = host.take_pixel_edit().unwrap();
+    let operation: serde_json::Value = serde_json::from_str(&command.operation).unwrap();
+    assert_eq!(operation["erase"], true);
+    assert_eq!(operation["hardness"], 0.5);
+    assert_eq!(operation["opacity"], 0.25);
+    assert_eq!(operation["color"], serde_json::json!([10, 20, 30, 255]));
+}
+
+#[test]
+fn missing_pixel_target_does_not_create_an_arbitrary_background_layer() {
+    let mut host = RasterHost::new();
+    host.set_active_utility("paintBrush");
+    host.pointer_down_screen(20.0, 20.0, 0);
+    host.pointer_up_screen(40.0, 40.0);
+    assert!(host.pixel_edit().is_none());
+    assert!(host.buffers.paint.is_empty());
 }
 // #endregion ✋️ Pointer / paint interaction
 
@@ -698,3 +723,17 @@ fn navigator_fit_camera_json_falls_back_when_document_is_empty() {
     assert_eq!(camera.zoom, 1.5);
 }
 // #endregion 🎯️ Picking edge cases
+
+#[test]
+fn empty_layer_is_transparent_and_does_not_allocate_or_paint_a_checkerboard_asset() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🫥️empty-layer/🔣️.json")).unwrap();
+    let mut host = RasterHost::new();
+    let width = fixture["layerWidth"].as_u64().unwrap() as u32;
+    let height = fixture["layerHeight"].as_u64().unwrap() as u32;
+    let actual = host.layer_image("blank", width, height, &None);
+    let oracle = image::RgbaImage::new(fixture["storageWidth"].as_u64().unwrap() as u32, fixture["storageHeight"].as_u64().unwrap() as u32);
+    assert_eq!(oracle.as_raw(), &fixture["rgba"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as u8).collect::<Vec<_>>());
+    let expected = image_from_rgba(oracle.width(), oracle.height(), oracle.into_raw());
+    assert_eq!(actual.as_ref(), &expected);
+    assert!(host.buffers.paint.is_empty());
+}

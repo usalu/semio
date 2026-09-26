@@ -34,6 +34,7 @@ enum DrawingMutationFields {
     Strings { first: String, second: Option<String> },
     Fill { id: String, value: Option<FillStyle> },
     Stroke { id: String, value: Option<StrokeStyle> },
+    Segments { id: String, value: Option<Vec<PathSegment>> },
     Layer { parent: Option<String>, value: Option<Box<DrawingLayerNode>> },
 }
 
@@ -291,6 +292,7 @@ impl DrawingOwnedRetirement {
                     SetLayerBlendMode(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.blend_mode) },
                     RenameLayer(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_name) },
                     UpdateLayerTransform(payload) => DrawingMutationFields::String(payload.layer_id),
+                    UpdatePathGeometry(payload) => DrawingMutationFields::Segments { id: payload.layer_id, value: Some(payload.segments) },
                     ReplaceLayerFill(payload) => DrawingMutationFields::Fill { id: payload.layer_id, value: payload.fill },
                     ReplaceLayerStroke(payload) => DrawingMutationFields::Stroke { id: payload.layer_id, value: payload.stroke },
                     SetLayerBooleanOperation(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.boolean_operation) },
@@ -332,6 +334,14 @@ impl DrawingOwnedRetirement {
                         drop(self.owner.take());
                         Ok(store::SnapshotRetirementStep::Complete)
                     }
+                },
+                DrawingMutationFields::Segments { id, value } => match self.phase {
+                    0 => Ok(Self::release_string(id, &mut self.phase, 1, maximum_items, maximum_bytes)),
+                    1 if value.is_some() => {
+                        self.phase = 2;
+                        Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Segments(value.take().expect("Path geometry owner remains exact"))))
+                    }
+                    _ => { drop(self.owner.take()); Ok(store::SnapshotRetirementStep::Complete) }
                 },
                 DrawingMutationFields::Stroke { id, value } => match self.phase {
                     0 => Ok(Self::release_string(id, &mut self.phase, 1, maximum_items, maximum_bytes)),
@@ -2769,6 +2779,59 @@ impl Drop for DrawingStrokeCloneAuthority {
     }
 }
 
+struct DrawingSegmentsCloneAuthority {
+    value: std::mem::ManuallyDrop<Option<Vec<PathSegment>>>,
+    retirement: std::mem::ManuallyDrop<Option<Box<DrawingOwnedRetirement>>>,
+    index: usize,
+    terminal: bool,
+}
+
+impl DrawingSegmentsCloneAuthority {
+    fn new(source: &[PathSegment]) -> Result<Self, &'static str> {
+        if source.len() > DRAWING_MAXIMUM_NESTED_ITEMS || source.len().checked_mul(size_of::<PathSegment>()).is_none_or(|bytes| bytes > DRAWING_MAXIMUM_NESTED_BYTES) { return Err("drawing-store.path-capacity"); }
+        let mut value = Vec::new();
+        value.try_reserve_exact(source.len()).map_err(|_| "drawing-store.path-admission")?;
+        Ok(Self { value: std::mem::ManuallyDrop::new(Some(value)), retirement: std::mem::ManuallyDrop::new(None), index: 0, terminal: false })
+    }
+
+    fn step(&mut self, source: &[PathSegment], cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        if self.terminal { return Ok(true); }
+        if let Some(segment) = source.get(self.index) {
+            if !crate::schema::valid_path_segment(segment) { return Err("drawing-store.path-invalid-segment"); }
+            self.value.as_mut().ok_or("drawing-store.path-target")?.push(segment.clone());
+            self.index += 1;
+            cx.consume_fuel(1);
+        } else { self.terminal = true; }
+        Ok(self.terminal)
+    }
+
+    fn take(&mut self) -> Option<Vec<PathSegment>> { self.terminal.then(|| self.value.take()).flatten() }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if let Some(retirement) = self.retirement.as_mut() {
+            return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
+                    drop(self.retirement.take()); self.terminal = true; Ok(store::SnapshotRetirementStep::Complete)
+                }
+                store::SnapshotRetirementStep::Complete => Err("Path clone reported false terminal".into()),
+                step => Ok(step),
+            };
+        }
+        if let Some(value) = self.value.take() {
+            *self.retirement = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::Segments(value))));
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.terminal = true;
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.terminal && self.value.is_none() && self.retirement.is_none() }
+}
+
+impl Drop for DrawingSegmentsCloneAuthority {
+    fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "Path clone reached Drop before retirement"); }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct DrawingSemanticDigestTotals {
     semantic_items: usize,
@@ -3451,6 +3514,8 @@ struct DrawingMutationDigestAuthority {
     layer: Option<DrawingLayerDigestAuthority>,
     fill: Option<DrawingFillDigestAuthority>,
     stroke: Option<DrawingStrokeDigestAuthority>,
+    segment: Option<DrawingPathSegmentDigestAuthority>,
+    segment_index: usize,
     credit: DrawingSemanticDigestCredit,
     phase: u8,
     terminal: bool,
@@ -3458,7 +3523,7 @@ struct DrawingMutationDigestAuthority {
 
 impl DrawingMutationDigestAuthority {
     fn new() -> Self {
-        Self { layer: None, fill: None, stroke: None, credit: DrawingSemanticDigestCredit::default(), phase: 0, terminal: false }
+        Self { layer: None, fill: None, stroke: None, segment: None, segment_index: 0, credit: DrawingSemanticDigestCredit::default(), phase: 0, terminal: false }
     }
 
     fn variant(mutation: &DrawingMutation) -> u8 {
@@ -3477,6 +3542,7 @@ impl DrawingMutationDigestAuthority {
             DrawingMutation::DuplicateLayer(_) => 12,
             DrawingMutation::DeleteLayer(_) => 13,
             DrawingMutation::ReorderLayer(_) => 14,
+            DrawingMutation::UpdatePathGeometry(_) => 15,
         }
     }
 
@@ -3512,6 +3578,21 @@ impl DrawingMutationDigestAuthority {
             return Ok(false);
         }
         match mutation {
+            DrawingMutation::UpdatePathGeometry(value) => match self.phase {
+                2 => {
+                    self.credit.source_vec(&value.segments)?;
+                    self.credit.derived_vec(&value.segments)?;
+                    self.credit.scalar_usize(digest, 370, value.segments.len(), cx)?;
+                    self.phase = 3;
+                    Ok(false)
+                }
+                _ => {
+                    let Some(segment) = value.segments.get(self.segment_index) else { return self.finish(digest, cx) };
+                    let cursor = self.segment.get_or_insert_with(DrawingPathSegmentDigestAuthority::new);
+                    if cursor.step(segment, digest, &mut self.credit, cx)? { self.segment = None; self.segment_index += 1; }
+                    Ok(false)
+                }
+            },
             DrawingMutation::SetLayerVisible(value) => {
                 if self.phase == 2 {
                     self.credit.observe(digest, 3, &[u8::from(value.visible)], cx)?;
@@ -3584,6 +3665,7 @@ impl DrawingMutationDigestAuthority {
                     let stroke = self.stroke.get_or_insert_with(DrawingStrokeDigestAuthority::new);
                     if stroke.step(value.stroke.as_ref(), digest, &mut self.credit, cx)? {
                         self.stroke = None;
+        self.segment = None;
                         self.phase = 3;
                     }
                     Ok(false)
@@ -3668,12 +3750,13 @@ impl DrawingMutationDigestAuthority {
         self.layer = None;
         self.fill = None;
         self.stroke = None;
+        self.segment = None;
         self.terminal = true;
         store::SnapshotRetirementStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.terminal && self.layer.is_none() && self.fill.is_none() && self.stroke.is_none()
+        self.terminal && self.layer.is_none() && self.fill.is_none() && self.stroke.is_none() && self.segment.is_none()
     }
 }
 
@@ -4089,6 +4172,7 @@ struct DrawingMutationCandidateAuthority {
     clone_work: Option<DrawingLayerCloneWorkAuthority>,
     fill_clone: std::mem::ManuallyDrop<Option<DrawingFillCloneAuthority>>,
     stroke_clone: std::mem::ManuallyDrop<Option<DrawingStrokeCloneAuthority>>,
+    segments_clone: std::mem::ManuallyDrop<Option<DrawingSegmentsCloneAuthority>>,
     duplicate_rewrite: Option<DrawingDuplicateRewriteAuthority>,
     duplicate_id_owner: std::mem::ManuallyDrop<Option<String>>,
     rebuild: std::mem::ManuallyDrop<Option<DrawingContainerRebuildAuthority>>,
@@ -4141,6 +4225,7 @@ impl DrawingMutationCandidateAuthority {
             clone_work: None,
             fill_clone: std::mem::ManuallyDrop::new(None),
             stroke_clone: std::mem::ManuallyDrop::new(None),
+            segments_clone: std::mem::ManuallyDrop::new(None),
             duplicate_rewrite: None,
             duplicate_id_owner: std::mem::ManuallyDrop::new(Some(owner.duplicate_id)),
             rebuild: std::mem::ManuallyDrop::new(None),
@@ -4175,6 +4260,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::DuplicateLayer(value) => &value.layer_id,
             DrawingMutation::DeleteLayer(value) => &value.layer_id,
             DrawingMutation::ReorderLayer(value) => &value.layer_id,
+            DrawingMutation::UpdatePathGeometry(value) => &value.layer_id,
         }
     }
 
@@ -4194,6 +4280,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::DuplicateLayer(value) => Some(&value.layer_id),
             DrawingMutation::DeleteLayer(value) => Some(&value.layer_id),
             DrawingMutation::ReorderLayer(value) => Some(&value.layer_id),
+            DrawingMutation::UpdatePathGeometry(value) => Some(&value.layer_id),
         }
     }
 
@@ -4389,7 +4476,7 @@ impl DrawingMutationCandidateAuthority {
                 if matches!(mutation, DrawingMutation::DuplicateLayer(_)) {
                     self.locator = Some(DrawingLayerLocator::new());
                     self.phase = DrawingMutationCandidatePhase::LocateCloneSource;
-                } else if matches!(mutation, DrawingMutation::CreateLayer(_) | DrawingMutation::ReplaceLayerFill(_) | DrawingMutation::ReplaceLayerStroke(_)) {
+                } else if matches!(mutation, DrawingMutation::CreateLayer(_) | DrawingMutation::ReplaceLayerFill(_) | DrawingMutation::ReplaceLayerStroke(_) | DrawingMutation::UpdatePathGeometry(_)) {
                     self.phase = DrawingMutationCandidatePhase::PrepareOwnedValue;
                 } else {
                     self.phase = DrawingMutationCandidatePhase::BindOverlay;
@@ -4507,6 +4594,17 @@ impl DrawingMutationCandidateAuthority {
                         drop(self.duplicate_rewrite.take());
                         self.clone_work = Some(DrawingLayerCloneWorkAuthority::new());
                     }
+                    DrawingMutation::UpdatePathGeometry(value) => {
+                        if self.segments_clone.is_none() {
+                            *self.segments_clone = Some(DrawingSegmentsCloneAuthority::new(&value.segments)?);
+                            cx.consume_fuel(1);
+                            return Ok(false);
+                        }
+                        let clone = self.segments_clone.as_mut().ok_or("drawing-store.path-clone-missing")?;
+                        if !clone.step(&value.segments, cx)? { return Ok(false); }
+                        let (items, bytes) = DrawingLayerCloneWorkAuthority::vector(clone.value.as_ref().ok_or("drawing-store.path-clone-value")?)?;
+                        self.workset.as_mut().ok_or("drawing-store.mutation-workset-missing")?.admit_clone(items, bytes)?;
+                    }
                     DrawingMutation::ReplaceLayerFill(value) => {
                         if let Some(source) = value.fill.as_ref() {
                             if self.fill_clone.is_none() {
@@ -4612,6 +4710,13 @@ impl DrawingMutationCandidateAuthority {
                             crate::DrawingTransform { x: value.transform.x, y: value.transform.y, scale_x: value.transform.scale_x, scale_y: value.transform.scale_y, rotation: value.transform.rotation };
                     }
                     DrawingMutation::UpdateLayerTransform(_) => return Err("drawing-store.mutation-transform-invalid"),
+                    DrawingMutation::UpdatePathGeometry(_) => {
+                        let DrawingLayerNode::Path(target) = DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")? else { return Err("drawing-store.path-target-kind"); };
+                        let replacement = self.segments_clone.as_mut().ok_or("drawing-store.path-clone-missing")?.take().ok_or("drawing-store.path-false-terminal")?;
+                        let old = std::mem::replace(&mut target.segments, replacement);
+                        *self.retirement = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::Segments(old))));
+                        drop(self.segments_clone.take());
+                    }
                     DrawingMutation::ReplaceLayerFill(value) => {
                         let replacement = match value.fill.as_ref() {
                             Some(_) => Some(self.fill_clone.as_mut().ok_or("drawing-store.fill-clone-missing")?.take().ok_or("drawing-store.fill-false-terminal")?),
@@ -4908,6 +5013,16 @@ impl DrawingMutationCandidateAuthority {
                 step => Ok(step),
             };
         }
+        if let Some(segments) = self.segments_clone.as_mut() {
+            return match segments.close_step(maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if segments.terminal_is_empty() => {
+                    drop(self.segments_clone.take());
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                store::SnapshotRetirementStep::Complete => Err("Path clone reported false terminal".into()),
+                step => Ok(step),
+            };
+        }
         if let Some(stroke) = self.stroke_clone.as_mut() {
             return match stroke.close_step(maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if stroke.terminal_is_empty() => {
@@ -4950,6 +5065,7 @@ impl DrawingMutationCandidateAuthority {
             && self.clone_work.is_none()
             && self.fill_clone.is_none()
             && self.stroke_clone.is_none()
+            && self.segments_clone.is_none()
             && self.duplicate_rewrite.is_none()
             && self.duplicate_id_owner.is_none()
             && self.rebuild.is_none()

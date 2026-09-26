@@ -1,5 +1,8 @@
 use super::*;
+use crate::app_surface::CatalogueCell;
+use crate::artifact_schema::{psi_for_category, NaEn};
 use crate::editor::en1990::unit_tests::context;
+use crate::ImportanceClass;
 use semio_framework_plugin::{TreeWindows, ViewModel};
 
 #[semio_framework_async_macros::async_test]
@@ -30,4 +33,22 @@ fn renders_reference_tables_with_examples() {
             assert!(json.contains(&format!("norm-catalogue.table-{}", table.id)) || json.contains(table.title_en) || json.contains(table.id), "missing table {}: {json}", table.id);
         }
     }
+}
+
+#[test]
+fn reference_tables_cells_match_psi_and_gamma_i_sources() {
+    let tables = reference_tables();
+    let en_psi = tables.iter().find(|t| t.id == "table-a1-1-psi-en").expect("EN ψ table");
+    let office = en_psi.rows.iter().find(|r| r.id == "office").expect("office row");
+    let CatalogueCell::Number { value: psi_0, .. } = &office.cells[1] else {
+        panic!("office ψ₀ cell must be Number");
+    };
+    assert_eq!(*psi_0, psi_for_category(&NaEn, "office").psi_0);
+
+    let gamma = tables.iter().find(|t| t.id == "importance-gamma-i").expect("γ_I table");
+    let class_iii = gamma.rows.iter().find(|r| r.id == "III").expect("class III row");
+    let CatalogueCell::Number { value: gamma_i, .. } = &class_iii.cells[1] else {
+        panic!("class III γ_I cell must be Number");
+    };
+    assert_eq!(*gamma_i, ImportanceClass::III.gamma_i());
 }

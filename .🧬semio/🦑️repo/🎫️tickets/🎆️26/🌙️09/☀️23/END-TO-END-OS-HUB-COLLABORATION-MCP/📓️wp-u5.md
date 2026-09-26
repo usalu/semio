@@ -32,6 +32,8 @@ captures `wp-u5/generated/` (expendable). Staged guests = W2's restage4 (18:55, 
 | 12-2 | Tasks window with a real spawned job: progress, Suspend/Resume/Cancel, en + de | **measured PASS** (remodel reconstruction, a ≥ 60 s spawned run): live progress (36 refreshes / 12 s), Suspend → "suspended" 1.06 s, Resume → running again 1.5 s, Suspend again 1.5 s, **Cancel → row gone 0.54 s**, en + de. Two root fixes: spawned programs' own progress/completion passes were owned by the PROGRAM as presenter (never current → never painted); Cancel sat outside the narrow Tasks window. Also RTL-mangled right panels fixed; focused-program tools/ToolRun/examples in `s` | §12-2 |
 | 12-3 | Puzzle rows en ↔ de + History sweep of all staged plugins for missing German | **measured PASS**: puzzle History 11/11 rows switch en ↔ de live incl. "Add Node↶ → Knoten hinzufügen↶"; static sweep 2801 mutation-label sites, **0 identical, 0 English leaks**; raster's `Hover` ships as "Darüberfahren" in the staged descriptor; per-kind live rows are S15's matrix (de 75/75) — not duplicated | §12-3 |
 | 12-4 | Customization persists across reload and devices (hub-backed shared / local-only) | **reload: measured PASS** (appearance, language, keybinding override, saved named layout, dock panels + tab); **keybinding capture was broken** (a modifier's keydown ended the capture — no chord with a modifier could be recorded) → **fixed** + laws; **second device: FAIL for all** — every preference is browser-local; the hub has no per-user preference store → design + request filed (hub route = H9 / freeze) | §12-4 |
+| 12-6 | G10/C10 relays (15:0x): "Set up MCP client" stuck at `installing`; agent pane unbound + "Not signed in to a hub" after an approved agent edit; hard `/spaces/<id>` mounts the Space app twice | **fixed + measured live on 7800** (serve 6581, clean profile): pane bound 22.9 s after sign-in and stays bound, install → `ready` in 0.00 s, reopened pane signed in with the delegation row; hard `/spaces/<id>` **3/3 one mount, 0 losses, 0 console errors** (same on 8080). Root causes: the hub pane's port captured the session before sign-in; the route effect skipped every overlay URI; space routes applied before the identity they are for; the credential was dropped on a session flicker; the install answer was generation-owned | §12-6 |
+| 12-7 | Coordinator rule 23 (my serve 6581 started a hub on 7800 at 15:41) + S15 stale dev catalog | **fixed + measured**: an explicit hub is JOIN-ONLY (localized wait, typed give-up at 120 s, never spawns); the default hub is started behind an owner lease per port + data root (6 racing processes → exactly 1 owner, also over a stale claim); a stale catalog is republished with progress + cancel instead of crashing the hub; laws 17/17; live: German join status, joined a hub that bound 35 s late, no lease/log/hub on the port; `hub-dev` verdict `stale (format 2 ≠ 3)`, 7800's B2 root `current` | §12-7 |
 | 12-5 | Remaining unowned UX items of the os-frontend audit | **taken + closed:** audit §4 #10 (Home ≥ 9 live), #13 (layout persistence measured), #14 (live job row in Tasks), #15 (puzzle en/de, raster Hover); #11 verified fixed in source (gateway `ApprovalWithdrawn`); plus found + fixed: canonical-serve 4xx/5xx ×4, keybinding capture, Hotkeys German names, Tasks overflow, RTL panels, hub overlay, spawned progress owner. **Left:** #6 (H9), #7 (hub install of an unregistered plugin — unowned, large), #12 (WG7), Home viewer lists no hub rows (needs a guest projection feed) | §12-5 |
 
 ### Session 12 log
@@ -57,6 +59,11 @@ captures `wp-u5/generated/` (expendable). Staged guests = W2's restage4 (18:55, 
   half prepared (`patches/u5-preference-lane-apply.py`), held by the hard guest freeze (rule 20).
 - Processes now: hub hold **64020** → os-hub **64023** (8080), serve **64021** → vite **64063** (6580) — kept for the
   preference-lane proof; standard serve 6581 stopped.
+- 15:0x (after the app restart killed everything) G10/C10 relay: three shell defects (§12-6). Restarted serve 6581 → 7800
+  while 7800 was still booting: its `ensureDevLocalHub` spawned a local hub owner (pid 39477) that built `os-hub` and bound
+  7800 at ~15:41 (W2's hold had to restart) — reported to the coordinator, serve stopped, and the dev hub path fixed
+  (§12-7). Measured on my hub 8080 (hold **43857** → os-hub **43860**, ada re-provisioned, `wp-u5/u5-8080.env`) with serve
+  6580 (**52936**, HMR off), then live on 7800 (READY 16:11) with serve 6581 (**54613**, join-only).
 
 ### 12-1 Home with many hub spaces
 
@@ -378,6 +385,70 @@ and lands after W2's `--packages all` publish because of the ABI freeze):
 | 12 | native wgpu accessibility | no | WG7 |
 | — | Home viewer lists no hub rows | found | the viewer is read-only by construction and the directory projection is fed only through the editor's sealed-page lane; a fresh viewer instance has none. Needs a read-only projection feed for the viewer (guest + host) — after the guest freeze |
 
+### 12-6 Three shell defects from G10 S4 and C10 (hub pane, MCP install, `/spaces/<id>` hard load)
+
+**What actually happened** (`wp-u5/u5-agent-install-probe.mjs`, G10 captures `s12-g10-logs/user-path-7800-*`): G10's clean
+profile loads `/spaces/<id>` signed out, signs in through the hub pane (URL `/hub`), and the space it sees in the pane was
+opened identity-less at boot. When the hub confirmed the new human, the human-change effect re-established Home (the Home
+app refuses to assemble without one) — and the route effect skipped every overlay URI, so nothing brought the space back:
+the pane went to `data-semio-hub-agent-space=""`, `watchSpaceMembers(null)` threw away the one-time credential mid "Set up
+MCP client" (G10 de-1: `installing` → `null`), and the delegation row was unreachable. Reopening the pane mounted a new
+`useHubConnection` whose port still carried the capability captured when the shell built it — before the sign-in — so it
+read "Not signed in to a hub" above the signed-in human's own spaces. The same identity race is C10's: a signed-in hard load
+applied the space route before the stored identity resolved, then re-established Home and mounted the space again.
+
+**Fixes (TS only, no guest/kernel/taxonomy edits):**
+
+| where | change |
+|---|---|
+| `🏛️ShellHost/🔀️surface-switch/🟦️.ts` | `shellSessionRouteV1` (the route an overlay sits over stays the session route), `shellIdentityResolutionV1` (local-only / signed-out / pending / signed-in / hub-unavailable), `shellRouteAdmissionV1` (a space route waits for its human: `await-identity`, `await-sign-in`; `apply-offline` is the typed path of a hub that does not answer), en + de notice labels |
+| `🏛️ShellHost/🟦️.tsx` | route effect applies the session route under `/hub`; routes (effect + `navigateShellUri`) go through the admission; a held route shows a `role="status"` notice (`data-semio-route-admission`, "Sign in" action opens the hub pane); closing the pane returns to the session route; the hub port reads the shell's live capability cell |
+| `🔗️HubConnection/🟦️.tsx` | port `heldCapability()` read on every mount; `HubConnectionCapabilityCellV1` replaces the captured copy (a sign-in, a dev local session and a refusal are one value); the install and save answers are owned by their delegation (terminal phase whenever that credential is shown); the credential is dropped only when a different space opens |
+
+**Laws:** fixture `🧭️session-lane/🔣️.json` + `sessionRoutes` 7 (WHATWG URL oracle), `identities` 32 (XState oracle),
+`admissions` 45 (path-to-regexp oracle), `admissionLabels` 6 — surface-switch file green; HubSignIn "held session" law
+(Testing Library; a reopened surface is signed in, the shell-adopted session is the one sent); AgentDelegations "late install
+across a no-space flicker" law; route-ledger + spawned-program-session source laws follow the new route effect. Suites:
+hub panes + route-ledger 144/144, shell suites 72/72; renderer `tsc`: 0 errors in my files (13 in a peer's
+`🧪️space-artifact-creation-owner`); engine-contract 672/673 (the 1 is the same peer's artifact-creation copy schema).
+
+**Live (measured):**
+
+| run | result |
+|---|---|
+| 8080 / serve 6580, `u5-agent-install-probe … b1` | signed-out load → notice `await-sign-in`, Home; after sign-in `await-identity` → pane bound, stays bound (Space app mounted once); delegation → install `ready` 0.01 s (POST 0 ms); close → back at `/spaces/<id>`; reopen → signed in, 1 delegation row |
+| 7800 / serve 6581, `… c2` | pane bound 22.9 s after sign-in (hub mint + me under W2's publish load), install `ready` 0.00 s, reopen signed in + row; `c1` could not reach the create form because `/directory/spaces` took 29 s on 7800 then (hub latency, not the shell) |
+| `u5-space-mount-probe.mjs` 8080 `a` / 7800 `c` | **3/3 and 3/3: one Space mount per hard load, 0 losses**, `await-identity` shown while pending; 7800: **0 console errors**; 8080: only the catalog-less hub's 503 (`trusted-catalog/plugin-modules`) |
+| `u5-hub-overlay-probe.mjs` 7800 | palette "Open Hub" at rest and during a space route: overlay shown, pane names the space, close returns to it |
+
+Connection budget observed at install time: 4–5 held-open HTTP/1.1 connections to the serve (2 module watches, 2 backbone
+folder watches, the directory event-page long poll) — one below Chromium's 6 per origin; a shell with more open documents
+can queue every later fetch (the install POST included). Not changed here; worth a shared-watch follow-up.
+
+### 12-7 Development hub: join-only for a named hub, owner lease, stale catalog
+
+`🧑‍💻dev/🚀️local-hub/🏃️execution/🟦️.ts`: `devHubRoleV1` (explicit `S_HUB_URL` → `join`), `joinDevHubV1` (never spawns, localized
+status every 10 s, typed `joined` / `gave-up` at `DEV_HUB_JOIN_BOUND_MS` = 120 s), `ownDevHubV1` (default hub only: joins a
+ready hub, waits for a live owner even before it binds, refuses a port someone else holds, else starts one owner),
+`claimDevHubLeaseV1` (port lease `.🧬semio/🌐hub/dev-hub-leases/port-<p>.json` + data-root lease, content-complete create by
+hard link, stale claims moved aside, a moved live claim put back), `devHubCatalogFreshnessV1` + `ensureCurrentTrustedCatalogV1`
+(stale → republish through `os-hub:trusted-catalog-bootstrap` with progress lines, SIGINT/SIGTERM cancels the process tree,
+the previous generation stays current), en/de `devHubStatusTextV1`. Schema `🧬️schema/🔣️.json` `DevHubLeaseV1`,
+`DevHubCatalogHeaderV1`, `DevHubCatalogPointerV1`; fixture `🧫️fixtures/🚀️local-hub.json`; serve passes only an explicit hub;
+the collaboration harness uses the freshness-aware publisher.
+
+Laws `🧪️tests/🚀️local-hub` **17/17** (race law 3 × more green): roles, locales, 12 status lines en + de, fake hub binding late
+(joined) / never (gave-up, `detect-port`: its port stays free), explicit serve never spawns, 5 own scenarios, 6 racing
+processes → 1 owner (empty and stale), strict Ajv over leases and catalog headers agreeing with the product, republish +
+cancel + absent + broken publisher, and the catalog contract = the publisher's `schemaVersion: 3` + record keys and the
+loader's `schema_version != 3`. `tsc` 0 errors (5 files checked). No hub was built (rule 24).
+
+Live: serve 6582 with `S_HUB_URL=http://127.0.0.1:8098`, `LANG=de_DE.UTF-8` and a hub double binding 35 s later
+(`wp-u5/u5-fake-hub.ts`): "warte auf den Hub … (0/11/22 von 120 s) — dieser Serve startet dort keinen eigenen Hub" →
+"mit dem Hub … verbunden"; no lease file, `hub-dev/local-hub.log` untouched. `wp-u5/u5-catalog-freshness.ts`: `hub-dev` →
+`stale (format 2 ≠ 3)` (the catalog that crashed at 15:41), W2's `s12-w2-hub-7800-b2` → `current`. Not proven live: an
+own-mode start and a real republish (both build `os-hub` — rule 24).
+
 ## 0. Inherited state (truth vs audit)
 
 The S11 audit (`📓️audit-s11-os-frontend.md`) repeats G5's 2026-09-2x findings; several are stale against the tree:
@@ -684,6 +755,12 @@ header 8, the chrome 5; `UI_DOCUMENT_NODES = 128`. The SDK kit also capped a tab
   One-off codemods: `wp-u5/u5-table-window-{contract,sdk,apps,react}.py`; probes `u5-home-table-probe.mjs`,
   `u5-puzzle-history-probe.mjs`.
 * Requests: `wp-w1/requests/u5.txt` (label pass, surface wasm, space guest + describe, Hover label, windowed table → space guest).
+* Session 12, §12-6/§12-7: `🏛️ShellHost/🔀️surface-switch/🟦️.ts`, `🏛️ShellHost/🟦️.tsx`, `🏛️ShellHost/🧫️fixtures/🧭️session-lane/🔣️.json`,
+  `🔗️HubConnection/🟦️.tsx`; laws `🧪️tests/🔀️surface-switch/🟦️.ts`, `🧪️tests/🧭️route-ledger/🟦️.ts`, `🧪️tests/🪟️spawned-program-session/🟦️.tsx`,
+  `🔐️HubSignIn/🧪️tests/🧩️component/🟦️.tsx`, `🤖️AgentDelegations/🧪️tests/🧩️component/🟦️.tsx`; dev: `🚀️local-hub/🏃️execution/🟦️.ts`,
+  `♻️activation/🌐️serve/🟦️.ts`, `🧬️schema/🔣️.json`, new `🧫️fixtures/🚀️local-hub.json` + `🧪️tests/🚀️local-hub/🟦️.ts`,
+  `🧪️tests/🎚️config/🟦️.ts`, `🧪️tests/🤝️collaboration/🟦️.ts`. Probes `wp-u5/u5-agent-install-probe.mjs`, `u5-space-mount-probe.mjs`,
+  `u5-fake-hub.ts`, `u5-catalog-freshness.ts`, `tsc-local-hub/tsconfig.json`; test env `u5-8080.env`.
 
 ## 9. Processes started
 
@@ -701,3 +778,15 @@ header 8, the chrome 5; `UI_DOCUMENT_NODES = 128`. The SDK kit also capped a tab
 | `dev s` serve, third run | 71361 tree | 6580 | `generated/u5-serve-3.txt` |
 
 All stopped at the end of the turn; the hub data dir is deleted again (re-seed: `os-hub credential set` + `u5-hub-seed.ts`).
+
+Session 12 (15:0x →), all detached with `setopt no_bg_nice; nohup … & disown`:
+
+| what | pid | port | capture |
+|---|---|---|---|
+| serve 6581 → 7800 (started while 7800 booted; its dev hub path spawned owner 39477, which bound 7800 at ~15:41 and exited) | 38811 / 39585 — stopped 15:4x | 6581 | `.🧬semio/🌐hub/s12-u5-logs/serve-6581-b.txt` |
+| hub hold 8080 (catalog-less, existing data, ada re-provisioned) | hold 43857, os-hub 43860 | 8080 | `.🧬semio/🌐hub/s12-u5-state-8080/` |
+| serve 6580 → 8080, HMR off | 52936 tree | 6580 | `…/s12-u5-logs/serve-6580-b.txt` |
+| join-only proof serve (`S_HUB_URL=…8098`, `LANG=de_DE`) + hub double | 46914 / 48253, 46916 — stopped | 6582, 8098 | `…/s12-u5-logs/serve-6582-join.txt`, `fake-hub-8098.txt` |
+| serve 6581 → 7800 (join-only code, after 7800 READY 16:11) | 54613 tree | 6581 | `…/s12-u5-logs/serve-6581-c.txt` |
+
+All of the above stopped at ~16:45 (hub 8080 data kept: `.🧬semio/🌐hub/s12-u5-hub-8080`, test env `wp-u5/u5-8080.env`).

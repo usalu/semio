@@ -629,6 +629,7 @@ pub mod generation_forms {
                     drag_data: None,
                     items: None,
                     control: None,
+                    inline_toolbar: None, detail: None,
                     dimmed: None,
                     menu: None,
                 }
@@ -652,6 +653,7 @@ pub mod generation_forms {
                     drag_data: None,
                     items: None,
                     control: None,
+                    inline_toolbar: None, detail: None,
                     dimmed: None,
                     menu: None,
                 }]
@@ -677,6 +679,7 @@ pub mod generation_forms {
                 drag_data: None,
                 items: None,
                 control: None,
+                inline_toolbar: None, detail: None,
                 dimmed: None,
                 menu: None,
             }],

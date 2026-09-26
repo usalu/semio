@@ -1,0 +1,72 @@
+{
+  "schema": "semio.renderer.text-editor-delivery/v1",
+  "cases": [
+    {
+      "id": "typing-coalesces-until-edit-and-selection-settle",
+      "initial": "a",
+      "typed": [
+        "b",
+        "c",
+        "d"
+      ],
+      "outcome": "accepted",
+      "expected": [
+        [
+          "textEdit:ab"
+        ],
+        [
+          "textEdit:ab",
+          "textSelect:2:2",
+          "textEdit:abcd"
+        ],
+        [
+          "textEdit:ab",
+          "textSelect:2:2",
+          "textEdit:abcd",
+          "textSelect:4:4"
+        ]
+      ],
+      "readOnly": false
+    },
+    {
+      "id": "refused-edit-does-not-send-its-selection",
+      "initial": "a",
+      "typed": [
+        "b"
+      ],
+      "outcome": "dispatch-failed",
+      "expected": [
+        [
+          "textEdit:ab"
+        ],
+        [
+          "textEdit:ab"
+        ],
+        [
+          "textEdit:ab"
+        ]
+      ],
+      "readOnly": false
+    },
+    {
+      "id": "viewer-refusal-switches-the-host-to-read-only",
+      "initial": "a",
+      "typed": [
+        "b"
+      ],
+      "outcome": "viewer-read-only",
+      "expected": [
+        [
+          "textEdit:ab"
+        ],
+        [
+          "textEdit:ab"
+        ],
+        [
+          "textEdit:ab"
+        ]
+      ],
+      "readOnly": true
+    }
+  ]
+}

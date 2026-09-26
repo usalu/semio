@@ -4,7 +4,7 @@ use semio_framework_plugin::{ExampleSource, LocalizedLabel};
 
 pub const ID: &str = "cooled-office";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Cooled Office Building", "Gekühltes Bürogebäude")
+    LocalizedLabel::native("Cooled Office (non-compliant)", "Gekühltes Büro (nicht konform)")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/❄️cooled-office/🗣️.dsl.semio");

@@ -42,6 +42,9 @@ pub mod rendezvous;
 #[path = "../../🤖️agent-credential/🦀️.rs"]
 pub mod agent_credential;
 
+#[path = "../../🔐️owner-only/🦀️.rs"]
+pub mod owner_only;
+
 #[path = "../../🗂️catalog/🦀️.rs"]
 pub mod catalog;
 

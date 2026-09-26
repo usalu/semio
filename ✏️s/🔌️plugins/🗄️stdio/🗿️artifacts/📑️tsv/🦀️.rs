@@ -51,7 +51,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.tsv".into(),
+        id: "s.stdio.tsv".into(),
         name: "Tsv".into(),
         source_format: STDIO_TSV_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

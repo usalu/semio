@@ -1174,7 +1174,9 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
         ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")),
         ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")),
     ];
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View, "list") }.with_args([ActionArgDef::select(
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View, "list") }
+    .describe(LocalizedLabel::native("Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.", "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."))
+    .with_args([ActionArgDef::select(
         "value",
         LocalizedLabel::native("Filter", "Filter"),
         options,
@@ -1195,7 +1197,10 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// shell never captured has no computable inverse, so it stays a log row the document undo ledger
 /// steps straight over — see `VcsArtifactApp::dispatch_chrome_history_action`.
 pub fn note_shell_command_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell, "book-open") }.chrome().with_args([
+    ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell, "book-open") }
+        .chrome()
+        .describe(LocalizedLabel::native("Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.", "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."))
+        .with_args([
         ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
         ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
         ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")),
@@ -3009,6 +3014,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
 pub fn record_tutorial_action_definition() -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View, "eye") }
+        .describe(LocalizedLabel::native("Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.", "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."))
 }
 
 /// ⏱️ Real-time (not timeline-time, not rate-scaled) duration of the camera glide the player performs
@@ -4191,7 +4197,7 @@ impl FromValue for Version {
     }
 }
 
-/// 🚧️ Failure parsing a `Version` (`major.minor.patch`, all-numeric segments) or a `VersionReq`.
+/// 🚧️ Failure parsing a `Version` (`major.minor.patch`, all-numeric segments) or a `VersionPin`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum VersionParseError {
     Malformed(String),
@@ -4255,127 +4261,114 @@ impl TryFrom<String> for Version {
     }
 }
 
-/// 🔢️ A dependency version requirement — the frozen grammar `=X.Y.Z` / `^X.Y.Z` / `~X.Y.Z` /
-/// `>=X.Y.Z` / `*` (contract freeze §3). `^`/`~` follow standard semver caret/tilde precedence:
-/// caret allows any change that does not bump the leftmost nonzero component, tilde allows only
-/// patch-level movement within the same `major.minor`.
+/// 📌️ A dependency pin: the exact version (`=X.Y.Z`) of the plugin a manifest depends on. One tree is one catalog, and a
+/// trusted catalog admits only exact pins inside its own closure (`trustedBootstrapDescriptorClaims`,
+/// `🌎️hub/📦️packages/🦀️rust/📜️script.ts`), so a manifest carries no range grammar: a declaration pins the version its
+/// own tree builds, through [`tree_pin!`](crate::tree_pin).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum VersionReq {
-    Any,
-    Exact(Version),
-    Caret(Version),
-    Tilde(Version),
-    AtLeast(Version),
-}
+pub struct VersionPin(pub Version);
 
-impl VersionReq {
-    /// 🔢️ Parses one of the five frozen grammar forms.
-    // 🚫️async: E1 transitive — `FromValue::from_value` (this file, below) calls this synchronously;
-    // pure string parsing, no I/O (R9).
-    pub fn parse(input: &str) -> Result<Self, VersionReqParseError> {
+impl VersionPin {
+    /// 🔢️ Parses the one wire form, `=X.Y.Z`; every range (`*`, `^`, `~`, `>=`, a bare triple) is refused.
+    // 🚫️async: E1 transitive — `FromValue::from_value` (this file, below) calls this synchronously; pure string
+    // parsing, no I/O (R9).
+    pub fn parse(input: &str) -> Result<Self, VersionPinParseError> {
         let trimmed = input.trim();
-        if trimmed == "*" {
-            return Ok(VersionReq::Any);
-        }
-        if let Some(rest) = trimmed.strip_prefix(">=") {
-            return Ok(VersionReq::AtLeast(Version::parse(rest)?));
-        }
-        if let Some(rest) = trimmed.strip_prefix('^') {
-            return Ok(VersionReq::Caret(Version::parse(rest)?));
-        }
-        if let Some(rest) = trimmed.strip_prefix('~') {
-            return Ok(VersionReq::Tilde(Version::parse(rest)?));
-        }
-        if let Some(rest) = trimmed.strip_prefix('=') {
-            return Ok(VersionReq::Exact(Version::parse(rest)?));
-        }
-        Err(VersionReqParseError::UnknownOperator(trimmed.to_string()))
+        let Some(rest) = trimmed.strip_prefix('=') else { return Err(VersionPinParseError::NotExact(trimmed.to_string())) };
+        Ok(Self(Version::parse(rest)?))
     }
 
-    /// ✅️ Whether `version` satisfies this requirement.
+    /// 📌️ Pins the version a crate of this tree is compiled at. [`tree_pin!`](crate::tree_pin) evaluates it in a
+    /// `const` over the declaring crate's own `CARGO_PKG_VERSION`, so a version that is not a strict
+    /// `major.minor.patch` triple is a compile error in that crate, never a guest trap.
+    pub const fn of_tree(crate_version: &str) -> Self {
+        let bytes = crate_version.as_bytes();
+        let mut segments = [0u64; 3];
+        let mut segment = 0;
+        let mut digits = 0;
+        let mut index = 0;
+        while index < bytes.len() {
+            let byte = bytes[index];
+            if byte == b'.' {
+                if digits == 0 || segment == 2 {
+                    panic!("the compiled crate version is not a strict major.minor.patch triple");
+                }
+                segment += 1;
+                digits = 0;
+            } else if byte.is_ascii_digit() {
+                segments[segment] = segments[segment] * 10 + (byte - b'0') as u64;
+                digits += 1;
+            } else {
+                panic!("the compiled crate version is not a strict major.minor.patch triple");
+            }
+            index += 1;
+        }
+        if segment != 2 || digits == 0 {
+            panic!("the compiled crate version is not a strict major.minor.patch triple");
+        }
+        Self(Version { major: segments[0], minor: segments[1], patch: segments[2] })
+    }
+
+    /// ✅️ Whether `version` is exactly the pinned version.
     // 🚫️async: E1 transitive — pure comparison consumed by `matches_raw`, itself required sync (R9).
     pub fn matches(&self, version: &Version) -> bool {
-        match self {
-            VersionReq::Any => true,
-            VersionReq::Exact(required) => version == required,
-            VersionReq::AtLeast(required) => version >= required,
-            VersionReq::Caret(required) => {
-                if required.major != 0 {
-                    version.major == required.major && version >= required
-                } else if required.minor != 0 {
-                    version.major == 0 && version.minor == required.minor && version >= required
-                } else {
-                    version.major == 0 && version.minor == 0 && version.patch == required.patch
-                }
-            }
-            VersionReq::Tilde(required) => version.major == required.major && version.minor == required.minor && version.patch >= required.patch,
-        }
+        &self.0 == version
     }
 
-    /// ✅️ Convenience for the dependency graph: parses `raw` and matches, treating an unparsable
-    /// target version as non-matching (except `*`, which never needs to parse its target).
-    // 🚫️async: E1 transitive — dependency-graph validation calls this synchronously via `!`; pure
-    // parse-and-compare, no I/O (R9).
+    /// ✅️ Convenience for the dependency graph: parses `raw` and compares; an unparsable target version never matches.
+    // 🚫️async: E1 transitive — dependency-graph validation calls this synchronously via `!`; pure parse-and-compare,
+    // no I/O (R9).
     pub fn matches_raw(&self, raw: &str) -> bool {
-        match self {
-            VersionReq::Any => true,
-            _ => Version::parse(raw).is_ok_and(|version| self.matches(&version)),
-        }
+        Version::parse(raw).is_ok_and(|version| self.matches(&version))
     }
 }
 
-impl std::fmt::Display for VersionReq {
+impl std::fmt::Display for VersionPin {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            VersionReq::Any => write!(f, "*"),
-            VersionReq::Exact(v) => write!(f, "={v}"),
-            VersionReq::Caret(v) => write!(f, "^{v}"),
-            VersionReq::Tilde(v) => write!(f, "~{v}"),
-            VersionReq::AtLeast(v) => write!(f, ">={v}"),
-        }
+        write!(f, "={}", self.0)
     }
 }
 
-/// 🚧️ Failure parsing a `VersionReq` string.
+/// 🚧️ Failure parsing a `VersionPin`: anything but `=X.Y.Z` (a range such as `*`, `^`, `~` or `>=` included).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum VersionReqParseError {
-    UnknownOperator(String),
+pub enum VersionPinParseError {
+    NotExact(String),
     Version(VersionParseError),
 }
 
-impl std::fmt::Display for VersionReqParseError {
+impl std::fmt::Display for VersionPinParseError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::UnknownOperator(input) => write!(formatter, "unknown version requirement operator in {input:?} (expected one of `=`,`^`,`~`,`>=`,`*`)"),
+            Self::NotExact(input) => write!(formatter, "a dependency pins an exact version `=X.Y.Z`, got {input:?}"),
             Self::Version(error) => error.fmt(formatter),
         }
     }
 }
 
-impl std::error::Error for VersionReqParseError {
+impl std::error::Error for VersionPinParseError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Version(error) => Some(error),
-            Self::UnknownOperator(_) => None,
+            Self::NotExact(_) => None,
         }
     }
 }
 
-impl From<VersionParseError> for VersionReqParseError {
+impl From<VersionParseError> for VersionPinParseError {
     fn from(error: VersionParseError) -> Self {
         Self::Version(error)
     }
 }
 
-impl ToValue for VersionReq {
+impl ToValue for VersionPin {
     fn to_value(&self) -> DslValue {
         DslValue::String(self.to_string())
     }
 }
-impl FromValue for VersionReq {
+impl FromValue for VersionPin {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         match value {
-            DslValue::String(s) => VersionReq::parse(&s).map_err(|e| ValueError::new(e.to_string())),
+            DslValue::String(s) => VersionPin::parse(&s).map_err(|e| ValueError::new(e.to_string())),
             other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
         }
     }
@@ -4384,31 +4377,41 @@ impl FromValue for VersionReq {
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only
 // manifest type above/below (`PluginDependency.version`) — hand-written, same reasoning as the
 // `ToValue`/`FromValue` pair above.
-impl Serialize for VersionReq {
+impl Serialize for VersionPin {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string())
     }
 }
-impl<'de> Deserialize<'de> for VersionReq {
+impl<'de> Deserialize<'de> for VersionPin {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let raw = String::deserialize(deserializer)?;
-        VersionReq::parse(&raw).map_err(serde::de::Error::custom)
+        VersionPin::parse(&raw).map_err(serde::de::Error::custom)
     }
 }
 
-/// 🔗️ One direct plugin dependency: the depended-on plugin id plus the version requirement it must
-/// satisfy — see `resolve_load_order`/`validate_dependency_graph`.
+/// 📌️ The exact pin of the tree the invoking crate is compiled from: `semio_framework::tree_pin!()` expands in the
+/// declaring crate, so `CARGO_PKG_VERSION` is that crate's own workspace version, checked at compile time.
+#[macro_export]
+macro_rules! tree_pin {
+    () => {{
+        const TREE_PIN: $crate::VersionPin = $crate::VersionPin::of_tree(env!("CARGO_PKG_VERSION"));
+        TREE_PIN
+    }};
+}
+
+/// 🔗️ One direct plugin dependency: the depended-on plugin id plus the exact version it pins — see
+/// `resolve_load_order`/`validate_dependency_graph`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct PluginDependency {
     pub plugin_id: String,
-    pub version: VersionReq,
+    pub version: VersionPin,
 }
 
 impl PluginDependency {
-    pub fn new(plugin_id: impl Into<String>, version: VersionReq) -> Self {
+    pub fn new(plugin_id: impl Into<String>, version: VersionPin) -> Self {
         Self { plugin_id: plugin_id.into(), version }
     }
 }

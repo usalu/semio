@@ -1,22 +1,11 @@
 #!/usr/bin/env bun
 /** 📸️ `@semio-tech/remodel-plugin` router: `bun ./📜️script.ts test`. */
-import { join } from "node:path";
 import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted(["semio-s-plugin-remodel"], this.repoRoot, rest);
-  }
-}
-
-/** @emoji 🛂️ Builds this crate's `wasm32-wasip2` component and re-emits `🛂️.descriptor.semio` +
- * `🔣️.json` at this plugin's own owner root (D0-descriptor-plumbing) — the command
- * `📇️registry:check`'s own descriptor-gate warning tells a developer to run. */
-class DescribeScript extends BundleScript {
-  run(): void {
-    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-remodel", join(this.root, "..", "..")));
   }
 }
 
@@ -31,7 +20,7 @@ class RegenerateExampleScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("describe", DescribeScript).register("regenerate-example", RegenerateExampleScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("regenerate-example", RegenerateExampleScript);
 registerPlaygroundSiteBuildCommands(router);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

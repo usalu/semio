@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.io.stream-mux/v1",
+  "title": "🔀️ Stream multiplexing channel — one WebSocket per page and origin carrying every long-lived stream",
+  "description": "Frame contract of the ONE channel a page holds to its serve origin (WebSocket subprotocol `semio.stream-mux.v1`, one JSON text message per frame). Every long-lived stream (watch streams, folder change notices, job progress) is a numbered stream on it, so none of them occupies one of the six HTTP/1.1 connections a browser allows per origin. Per-stream credit bounds what the server may send (backpressure); queued data coalesces by the route's key and a queue that still overflows is replaced by a fresh snapshot; every data frame carries a sequence number of the server epoch, so a reconnect resumes where the last frame left off or starts fresh. Kanal-Vertrag: ein WebSocket pro Seite und Ursprung trägt alle langlebigen Ströme.",
+  "$defs": {
+    "Bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subprotocol", "maxFrameBytes", "maxStreamsPerChannel", "maxCredit", "defaultCredit", "maxQueuedFrames", "maxRetainedEvents", "resumeGraceMs", "beatMs", "deadAfterMs", "reconnectMinMs", "reconnectMaxMs", "socketHighWaterBytes", "maxKeyLength", "maxDetailLength", "lingerMs"],
+      "properties": {
+        "subprotocol": { "const": "semio.stream-mux.v1" },
+        "maxFrameBytes": { "const": 262144, "description": "UTF-8 bytes of one frame, either direction." },
+        "maxStreamsPerChannel": { "const": 1024 },
+        "maxCredit": { "const": 256, "description": "Largest credit one open or grant may carry." },
+        "defaultCredit": { "const": 32 },
+        "maxQueuedFrames": { "const": 64, "description": "Data frames the server holds for one stream without credit; beyond it the stream resynchronizes." },
+        "maxRetainedEvents": { "const": 128, "description": "Events a route instance retains for resuming readers." },
+        "resumeGraceMs": { "const": 60000, "description": "How long a route instance (and a job) outlives its last reader that left by a lost link." },
+        "beatMs": { "const": 10000 },
+        "deadAfterMs": { "const": 25000, "description": "Silence after which a reader declares the link dead and reconnects." },
+        "reconnectMinMs": { "const": 250 },
+        "reconnectMaxMs": { "const": 10000 },
+        "socketHighWaterBytes": { "const": 1048576, "description": "Buffered socket bytes above which the server stops draining stream queues." },
+        "maxKeyLength": { "const": 1024, "description": "Code points of a stream key (a watched folder uri, a plugin id)." },
+        "maxDetailLength": { "const": 512, "description": "Code points of an end detail or a progress note." },
+        "lingerMs": { "const": 5000, "description": "How long a page keeps its idle channel open after the last stream closed." }
+      }
+    },
+    "StreamId": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+    "Route": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}(\\.[a-z][a-z0-9-]{0,31}){0,3}$" },
+    "Key": { "type": "string", "maxLength": 1024 },
+    "Epoch": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "Seq": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "Resume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["epoch", "seq"],
+      "properties": { "epoch": { "$ref": "#/$defs/Epoch" }, "seq": { "$ref": "#/$defs/Seq" } }
+    },
+    "Open": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "stream", "route", "key", "resume", "credit"],
+      "properties": {
+        "kind": { "const": "open" },
+        "stream": { "$ref": "#/$defs/StreamId" },
+        "route": { "$ref": "#/$defs/Route" },
+        "key": { "$ref": "#/$defs/Key" },
+        "resume": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Resume" }] },
+        "credit": { "type": "integer", "minimum": 0, "maximum": 256 }
+      }
+    },
+    "Grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "stream", "credit"],
+      "properties": { "kind": { "const": "grant" }, "stream": { "$ref": "#/$defs/StreamId" }, "credit": { "type": "integer", "minimum": 1, "maximum": 256 } }
+    },
+    "Cancel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "stream"],
+      "properties": { "kind": { "const": "cancel" }, "stream": { "$ref": "#/$defs/StreamId" } }
+    },
+    "Hello": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "version", "epoch", "beatMs"],
+      "properties": { "kind": { "const": "hello" }, "version": { "const": 1 }, "epoch": { "$ref": "#/$defs/Epoch" }, "beatMs": { "type": "integer", "minimum": 1, "maximum": 60000 } }
+    },
+    "Opened": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "stream", "mode", "epoch", "seq"],
+      "properties": {
+        "kind": { "const": "opened" },
+        "stream": { "$ref": "#/$defs/StreamId" },
+        "mode": { "enum": ["fresh", "resumed"], "description": "fresh: every earlier state of this stream is void (a snapshot follows when the route has one); resumed: the frames after `seq` follow." },
+        "epoch": { "$ref": "#/$defs/Epoch" },
+        "seq": { "$ref": "#/$defs/Seq" }
+      }
+    },
+    "Data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "stream", "seq", "data"],
+      "properties": { "kind": { "const": "data" }, "stream": { "$ref": "#/$defs/StreamId" }, "seq": { "$ref": "#/$defs/Seq" }, "data": { "description": "Route-owned JSON value." } }
+    },
+    "Progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "stream", "done", "total", "note"],
+      "properties": {
+        "kind": { "const": "progress" },
+        "stream": { "$ref": "#/$defs/StreamId" },
+        "done": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "total": { "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }] },
+        "note": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "End": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "stream", "reason", "detail"],
+      "properties": {
+        "kind": { "const": "end" },
+        "stream": { "$ref": "#/$defs/StreamId" },
+        "reason": { "enum": ["done", "cancelled", "refused", "failed"] },
+        "detail": { "type": "string", "maxLength": 512 }
+      }
+    },
+    "Beat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "at"],
+      "properties": { "kind": { "const": "beat" }, "at": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } }
+    },
+    "ClientFrame": { "oneOf": [{ "$ref": "#/$defs/Open" }, { "$ref": "#/$defs/Grant" }, { "$ref": "#/$defs/Cancel" }] },
+    "ServerFrame": { "oneOf": [{ "$ref": "#/$defs/Hello" }, { "$ref": "#/$defs/Opened" }, { "$ref": "#/$defs/Data" }, { "$ref": "#/$defs/Progress" }, { "$ref": "#/$defs/End" }, { "$ref": "#/$defs/Beat" }] },
+    "Refusal": { "enum": ["too-large", "malformed-json", "not-an-object", "unknown-kind", "unknown-field", "missing-field", "invalid-field"] }
+  }
+}

@@ -890,6 +890,8 @@ fn tree_window_law_row(section: usize, index: usize) -> crate::TreeNode {
         dimmed: None,
         window: None,
         granularity: Some(ui_text("object")),
+        inline_toolbar: None,
+        detail: None,
         row_actions: ui_contract::UiFixedList::default(),
     };
     let mut node = crate::TreeNode::try_new(&key, ui_contract::Component::TreeItem(props)).expect("bounded fixture row");

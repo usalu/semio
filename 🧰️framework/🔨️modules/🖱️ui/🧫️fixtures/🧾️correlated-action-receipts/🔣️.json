@@ -1,0 +1,48 @@
+{
+  "schema": "semio.ui.correlated-action-receipts/v1",
+  "controller": "writer",
+  "surface": "same-document",
+  "text": "identical",
+  "receipts": [
+    {
+      "token": 101,
+      "member": 0,
+      "action": "textEdit",
+      "abort": true
+    },
+    {
+      "token": 101,
+      "member": 1,
+      "action": "textSelect",
+      "abort": false
+    },
+    {
+      "token": 102,
+      "member": 0,
+      "action": "textEdit",
+      "abort": true
+    },
+    {
+      "token": 102,
+      "member": 1,
+      "action": "textSelect",
+      "abort": false
+    }
+  ],
+  "stagedToken": 103,
+  "refusedToken": 101,
+  "dispatch": [
+    "101:0",
+    "102:0",
+    "102:1"
+  ],
+  "cancelled": [
+    "101:1"
+  ],
+  "closed": [
+    "102:1",
+    "102:0",
+    "101:1",
+    "101:0"
+  ]
+}

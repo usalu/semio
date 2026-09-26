@@ -26,6 +26,42 @@ pub fn q_dim(value: f64) -> Quantity {
     Quantity::new(QuantityKind::Dimensionless, value)
 }
 
+/// 🎛 1-based ordinal in a controlled list (0 = not a member).
+pub fn controlled_ordinal(value: &str, allowed: &[&str]) -> f64 {
+    let v = value.trim();
+    allowed
+        .iter()
+        .position(|a| a.eq_ignore_ascii_case(v))
+        .map(|i| (i + 1) as f64)
+        .unwrap_or(0.0)
+}
+
+/// 🔗 Resolution score: positive ordinal when `target` is known; otherwise minus distance to the nearest known id (shared-prefix metric) so unresolved edits remain observable without folding raw identifier bytes into Pass quantities.
+pub fn reference_slot_score(target: &str, known: impl IntoIterator<Item = impl AsRef<str>>) -> f64 {
+    let ids: Vec<String> = {
+        let mut v: Vec<String> = known.into_iter().map(|s| s.as_ref().to_string()).collect();
+        v.sort();
+        v.dedup();
+        v
+    };
+    if let Some(i) = ids.iter().position(|k| k == target) {
+        return (i + 1) as f64;
+    }
+    let mut best = f64::MAX;
+    for k in &ids {
+        let common = target.bytes().zip(k.bytes()).take_while(|(a, b)| a == b).count();
+        let dist = (target.len() + k.len()) as f64 - 2.0 * common as f64;
+        if dist < best {
+            best = dist;
+        }
+    }
+    if best == f64::MAX {
+        -1.0
+    } else {
+        -(best + 1.0)
+    }
+}
+
 pub fn q_len(value: f64) -> Quantity {
     Quantity::new(QuantityKind::Length, value)
 }

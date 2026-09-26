@@ -1,0 +1,26 @@
+{
+  "layers": [
+    {
+      "kind": "pixel",
+      "id": "paint",
+      "name": "Concurrent Name",
+      "visible": true,
+      "opacity": 0.5,
+      "blendMode": "multiply",
+      "transform": {
+        "x": -40,
+        "y": 10,
+        "scaleX": 2,
+        "scaleY": 1,
+        "rotation": 20
+      },
+      "mask": null,
+      "width": 3,
+      "height": 2,
+      "imageKey": null
+    }
+  ],
+  "schema": "s.raster.raster",
+  "id": "pixel-content",
+  "title": "Pixel Content"
+}

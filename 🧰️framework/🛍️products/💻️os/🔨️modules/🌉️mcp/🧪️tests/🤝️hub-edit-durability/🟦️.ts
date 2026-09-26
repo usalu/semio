@@ -144,7 +144,7 @@ async function agentLane(token: string, spaceId: string, known: string, label: s
     return { ok: opened.isError !== true && invoked.structuredContent?.status === "SUCCEEDED", detail: `${capabilityId} open=${opened.isError !== true} status=${invoked.structuredContent?.status ?? JSON.stringify(invoked.structuredContent ?? prepared.structuredContent).slice(0, 200)}`, documentId, surfaceId };
   } finally {
     session.stop();
-    await hub("DELETE", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json?.delegationId ?? ""))}`, token).catch(() => undefined);
+    await hub("POST", `/auth/agent-delegations/${encodeURIComponent(String(delegation.json?.delegationId ?? ""))}/revoke`, token).catch(() => undefined);
   }
 }
 

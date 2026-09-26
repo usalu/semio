@@ -108,6 +108,7 @@ pub struct DrawingLayerPatch {
     pub boolean_operation: Option<String>,
     pub trace_params_json: Option<String>,
     pub layer_json: Option<String>,
+    pub path_segments: Option<Vec<crate::PathSegment>>,
 }
 //#endregion 🔖️DeltaHelpers
 
@@ -251,6 +252,11 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         *layer = replacement;
         return Ok(());
     }
+    if let Some(segments) = &patch.path_segments {
+        if !segments.iter().all(crate::schema::valid_path_segment) { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Invalid path geometry")); }
+        let DrawingLayerNode::Path(path) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Geometry target is not a path")); };
+        path.segments = segments.clone();
+    }
     let base = layer_base_mut(layer);
     if let Some(visible) = patch.visible {
         base.visible = visible;
@@ -312,6 +318,7 @@ fn merge_layer_patch(dst: &mut DrawingLayerPatch, mut src: DrawingLayerPatch) {
     take!(boolean_operation);
     take!(trace_params_json);
     take!(layer_json);
+    take!(path_segments);
 }
 
 fn apply_assets_delta(assets: &mut BTreeMap<String, DrawingImageAsset>, delta: &DrawingAssetsDelta) -> protocol::MutationApplyResult<()> {
@@ -504,3 +511,8 @@ pub fn diff_assets(entries: DrawingAssetsDelta) -> DrawingDiff {
     DrawingDiff { assets: Some(entries), ..Default::default() }
 }
 //#endregion 🔖️Builders
+
+/// ✏️ Replaces only the path geometry facet.
+pub fn diff_set_path_geometry(layer_id: &str, segments: &[crate::PathSegment]) -> DrawingDiff {
+    layer_base_patch(layer_id, DrawingLayerPatch { path_segments: Some(segments.to_vec()), ..Default::default() })
+}

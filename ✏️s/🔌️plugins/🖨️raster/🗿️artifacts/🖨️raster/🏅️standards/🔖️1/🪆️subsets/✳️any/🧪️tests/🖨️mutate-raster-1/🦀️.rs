@@ -39,6 +39,7 @@ const KINDS: &[&str] = &[
     "change-layer-adjustment-kind",
     "add-layer-asset",
     "remove-layer-asset",
+    "change-layer-pixels",
 ];
 
 /// 👁️ Kinds whose committed specification vector declares NO movement — a refusal or an accepted

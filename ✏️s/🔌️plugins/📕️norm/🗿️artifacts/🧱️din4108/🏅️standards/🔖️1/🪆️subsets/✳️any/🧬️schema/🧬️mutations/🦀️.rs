@@ -197,10 +197,6 @@ impl Din4108Mutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-
 pub fn decode_din4108_mutation_json(text: &str) -> Result<Din4108Mutation, String> {
     pack::json::from_json_str(text).map_err(|error| error.to_string())
 }

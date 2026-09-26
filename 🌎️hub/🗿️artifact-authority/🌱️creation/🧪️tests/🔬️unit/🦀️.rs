@@ -6,6 +6,7 @@ struct GenesisFixtureCodec {
     identity: TrustedArtifactIdentity,
     pair: ArtifactPair,
     calls: std::sync::atomic::AtomicUsize,
+    validations: std::sync::atomic::AtomicUsize,
 }
 
 impl TrustedArtifactCodec for GenesisFixtureCodec {
@@ -14,6 +15,7 @@ impl TrustedArtifactCodec for GenesisFixtureCodec {
     }
     async fn validate_pair(&self, pair: &ArtifactPair, _stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         assert_eq!(pair, &self.pair);
+        self.validations.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         context.checkpoint()
     }
     async fn apply_operation(&self, _pair: ArtifactPair, _operation: &super::super::AcceptedArtifactOperation, _context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
@@ -80,7 +82,6 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
         assert_eq!(directory::os_pack::json::from_json_str::<directory::os_directory::DocumentOpenPlanV1>(&plan.to_string()).is_ok(), row["accepted"].as_bool().unwrap());
         assert_eq!(directory::os_pack::json::from_json_str::<directory::os_directory::DocumentExecutionTargetLeaseFieldsV1>(&lease.to_string()).is_ok(), row["accepted"].as_bool().unwrap());
     }
-    println!("[DEBUG] Required committed checkpoint: neutral plan/lease presence cases=6; descriptor-only HTTP routes not executed");
     for row in fixture["frontiers"].as_array().unwrap() {
         let scope: DocumentScope = directory::os_pack::json::from_json_str(&row["scope"].to_string()).unwrap();
         let frontier: ArtifactFrontier = directory::os_pack::json::from_json_str(&row["frontier"].to_string()).unwrap();
@@ -99,6 +100,7 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
             identity: identity.clone(),
             pair: ArtifactPair { pack: serde_json::from_value(fixture["initialPair"]["pack"].clone()).unwrap(), spr: serde_json::from_value(fixture["initialPair"]["spr"].clone()).unwrap() },
             calls: std::sync::atomic::AtomicUsize::new(0),
+            validations: std::sync::atomic::AtomicUsize::new(0),
         };
         let mut request = ArtifactGenesisRequest { scope: expected.scope.clone(), kind_id: identity.artifact_kind.clone() };
         let mut limits = super::super::AuthorityLimits::maximum();
@@ -126,13 +128,13 @@ async fn genesis_materialization_binds_exact_zero_history_and_independent_sha256
             let mut parented = actual.candidate.checkpoint;
             parented.parent_checkpoint_id = Some(ArtifactHash([1; 32]));
             assert!(super::super::checkpoint_id_encoding_v1(&parented).is_err());
-            assert_eq!(control.stages.lock().unwrap().last(), Some(&AuthorityProgressStage::Derived));
+            assert_eq!(*control.stages.lock().unwrap(), [AuthorityProgressStage::Preflight, AuthorityProgressStage::CatalogResolved, AuthorityProgressStage::OutputValidated, AuthorityProgressStage::Derived]);
+            assert_eq!(codec.validations.load(std::sync::atomic::Ordering::SeqCst), 1, "the genesis pair is validated once: a second validation of the same bytes re-ran the whole guest for nothing");
         } else {
             assert!(!control.stages.lock().unwrap().contains(&AuthorityProgressStage::Derived));
         }
         assert!(codec.calls.load(std::sync::atomic::Ordering::SeqCst) <= 1);
     }
-    println!("[DEBUG] genesis: neutral frontiers=8 private materializer=9 independent Node SHA256=5 factory once=1 no domain edit=1; no durable publication");
 }
 
 /// 🧗️ A control whose clock the TEST advances, so a creation that runs for minutes can be examined

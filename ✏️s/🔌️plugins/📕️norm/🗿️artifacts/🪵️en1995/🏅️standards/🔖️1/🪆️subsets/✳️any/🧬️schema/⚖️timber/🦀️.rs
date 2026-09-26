@@ -131,10 +131,14 @@ impl AnnexParams {
     pub fn de() -> Self {
         Self::for_annex(AnnexChoice::De)
     }
+    /// 🛡️ γ_M — EN 1995-1-1 Table 2.3 (glulam 1.25, LVL 1.2, else 1.3); DIN EN 1995-1-1/NA Table NA.2 sets 1.3 for
+    /// every timber product.
     pub fn gamma_m(&self, product: TimberProduct) -> f64 {
-        match product {
-            TimberProduct::Glulam => 1.25,
-            _ => 1.3,
+        match (self.annex, product) {
+            (AnnexChoice::De, _) => 1.3,
+            (AnnexChoice::En, TimberProduct::Glulam) => 1.25,
+            (AnnexChoice::En, TimberProduct::Lvl) => 1.2,
+            (AnnexChoice::En, _) => 1.3,
         }
     }
     pub fn gamma_m_connection(&self) -> f64 {
@@ -167,6 +171,17 @@ impl AnnexParams {
             AnnexChoice::De => 0.05,
             AnnexChoice::En => 0.10,
         }
+    }
+    /// 🪵 EN 1995-1-1 §7.3.3(2) unit-load deflection limit a; DE NA residential 1.5 mm, EN recommended 1.7 mm.
+    pub fn floor_w_1kn_limit_m(&self) -> f64 {
+        match self.annex {
+            AnnexChoice::De => 0.0015,
+            AnnexChoice::En => 0.0017,
+        }
+    }
+    /// 🪵 EN 1995-1-1 §7.3.3(2) velocity limit base b (residential).
+    pub fn floor_velocity_b(&self) -> f64 {
+        100.0
     }
     pub fn bridge_a_vert_limit(&self) -> f64 {
         0.7
@@ -253,6 +268,7 @@ pub fn psi_factors(kind: &str, category: &str) -> (f64, f64, f64) {
         "permanent" => (1.0, 1.0, 1.0),
         "accidental" => (0.0, 0.0, 0.0),
         "snow" => (0.5, 0.2, 0.0),
+        "snow_high" => (0.7, 0.5, 0.2),
         "wind" => (0.6, 0.2, 0.0),
         "imposed" => match c.as_str() {
             "A" | "B" => (0.7, 0.5, 0.3),
@@ -320,6 +336,17 @@ pub fn lambda_rel_m(w_m3: f64, f_m_k: f64, m_crit_nm: f64) -> f64 {
     } else {
         (w_m3 * f_m_k / m_crit_nm).sqrt()
     }
+}
+
+/// 🪢 Critical moment scaled by lateral-restraint spacing (§6.3.3): M_crit ∝ 1/ℓ_ef² with ℓ_ef = min(spacing, span).
+pub fn effective_m_crit_nm(m: &TimberMember) -> f64 {
+    let span = m.span_m.max(1e-6);
+    let base = m.m_crit_nm.max(1.0);
+    if m.lateral_restraint_spacing_m <= 0.0 {
+        return base;
+    }
+    let l_ef = m.lateral_restraint_spacing_m.min(span).max(1e-6);
+    base * (span / l_ef).powi(2)
 }
 pub fn k_c_buckling(lambda_rel: f64) -> f64 {
     let beta_c = 0.2;
@@ -463,7 +490,8 @@ pub fn johansen_double_shear_f_v_rk(
     base + rope
 }
 
-/// 🔩 Johansen steel–timber (§8.2.3) — thin plate when t ≤ 0.5d, else thick.
+/// 🔩 Johansen steel–timber single shear per shear plane (§8.2.3 eq. 8.9 thin t ≤ 0.5d, eq. 8.10 thick t ≥ d,
+/// linear interpolation between).
 pub fn johansen_steel_timber_f_v_rk(
     t_timber: f64,
     t_steel: f64,
@@ -472,19 +500,21 @@ pub fn johansen_steel_timber_f_v_rk(
     m_y: f64,
     f_ax_rk: f64,
 ) -> f64 {
-    let thin = t_steel <= 0.5 * d;
-    let f_a = 0.4 * f_h * t_timber * d;
-    let f_b = 1.15 * (2.0 * m_y * f_h * d).sqrt();
-    let f_c = if thin {
-        f_h * t_timber * d
-            * ((2.0 + (4.0 * m_y) / (f_h * d * t_timber.powi(2)).max(1e-18)).sqrt() - 1.0)
-    } else {
-        2.3 * (m_y * f_h * d).sqrt()
-    };
-    let modes = [f_a.max(0.0), f_b.max(0.0), f_c.max(0.0)];
-    let base = modes.into_iter().fold(f64::INFINITY, f64::min);
-    let rope = (f_ax_rk / 4.0).min(base * 0.25);
-    base + rope
+    let with_rope = |base: f64| base + (f_ax_rk / 4.0).min(base * 0.25);
+    let thin = with_rope((0.4 * f_h * t_timber * d).min(1.15 * (2.0 * m_y * f_h * d).sqrt()).max(0.0));
+    let thick = johansen_steel_central_f_v_rk(t_timber, d, f_h, m_y, f_ax_rk);
+    let ratio = ((t_steel / d.max(1e-12) - 0.5) / 0.5).clamp(0.0, 1.0);
+    thin + ratio * (thick - thin)
+}
+
+/// 🔩 Johansen thick steel plate (§8.2.3 eq. 8.10) — also the central steel plate of any thickness in double
+/// shear (eq. 8.13), per shear plane.
+pub fn johansen_steel_central_f_v_rk(t_timber: f64, d: f64, f_h: f64, m_y: f64, f_ax_rk: f64) -> f64 {
+    let bearing = f_h * t_timber * d;
+    let one_hinge = bearing * ((2.0 + (4.0 * m_y) / (f_h * d * t_timber.powi(2)).max(1e-18)).sqrt() - 1.0);
+    let two_hinges = 2.3 * (m_y * f_h * d).sqrt();
+    let base = bearing.min(one_hinge).min(two_hinges).max(0.0);
+    base + (f_ax_rk / 4.0).min(base * 0.25)
 }
 
 pub fn n_ef(n: u32, a1_m: f64, d_m: f64) -> f64 {
@@ -582,6 +612,7 @@ fn action_kind_family(kind: &str) -> &'static str {
 pub enum ComboKind {
     Uls,
     SlsCharacteristic,
+    SlsFrequent,
     SlsQuasiPermanent,
     Accidental,
 }
@@ -648,7 +679,7 @@ fn shortest_duration<'a>(actions: impl IntoIterator<Item = &'a CharacteristicAct
         .unwrap_or(LoadDuration::Medium)
 }
 
-/// 🔀 EN 1990 + DE NA eq 6.10 ULS (γG=1.35, γQ=1.5, ψ₀ accompanying), SLS char/QP, accidental.
+/// 🔀 EN 1990 + DE NA eq 6.10 ULS (γG=1.35, γQ=1.5, ψ₀ accompanying), SLS char/frequent(ψ₁)/QP, accidental.
 pub fn enumerate_combos(m: &TimberMember) -> Vec<LoadCombo> {
     let mut out = Vec::new();
     if m.actions.is_empty() {
@@ -733,6 +764,27 @@ pub fn enumerate_combos(m: &TimberMember) -> Vec<LoadCombo> {
                 psi2_lead,
             ));
         }
+        for (li, &lead) in var.iter().enumerate() {
+            let mut s = sum_perm(1.0);
+            let mut psi1_lead = 0.5;
+            for (vi, &v) in var.iter().enumerate() {
+                let (_, psi1, psi2) = psi_factors(&m.actions[v].kind, &m.actions[v].category);
+                if vi == li {
+                    psi1_lead = psi1;
+                    add_internals(&mut s, &scale_internals(&internals[v], psi1));
+                    continue;
+                }
+                add_internals(&mut s, &scale_internals(&internals[v], psi2));
+            }
+            let dur = shortest_duration(var.iter().chain(perm.iter()).map(|&i| &m.actions[i]));
+            out.push(combo_from(
+                format!("sls.freq.lead.{}", m.actions[lead].id),
+                ComboKind::SlsFrequent,
+                dur,
+                s,
+                psi1_lead,
+            ));
+        }
         let mut s = sum_perm(1.0);
         let mut psi2_max: f64 = 0.0;
         for &v in &var {
@@ -753,6 +805,13 @@ pub fn enumerate_combos(m: &TimberMember) -> Vec<LoadCombo> {
         out.push(combo_from(
             "sls.char.g".into(),
             ComboKind::SlsCharacteristic,
+            dur,
+            sum_perm(1.0),
+            1.0,
+        ));
+        out.push(combo_from(
+            "sls.freq.g".into(),
+            ComboKind::SlsFrequent,
             dur,
             sum_perm(1.0),
             1.0,
@@ -863,7 +922,7 @@ fn deflection_m(m: &TimberMember, props: &TimberProperties, q: f64, f: f64) -> f
     }
 }
 
-fn governing_uls(combos: &[LoadCombo]) -> Option<&LoadCombo> {
+pub fn governing_uls(combos: &[LoadCombo]) -> Option<&LoadCombo> {
     combos
         .iter()
         .filter(|c| c.kind == ComboKind::Uls)
@@ -902,6 +961,10 @@ impl Grain {
         let r = self.resolution();
         (x / r - 1e-9).ceil() * r
     }
+    /// 🔢 Whether `applyRemedy` can write the value — it writes floats, which integer fields reject.
+    fn applies_as_float(self) -> bool {
+        !matches!(self, Self::Count)
+    }
 }
 
 /// 🎚 One input field a remedy may raise, with its localized label for remedy copy.
@@ -933,6 +996,8 @@ const B: Lever<TimberMember> = Lever { leaf: "bM", label_en: "section width b", 
 const BEARING: Lever<TimberMember> = Lever { leaf: "bearingLengthM", label_en: "bearing length l", label_de: "Aufstandslänge l", unit: "m", grain: Grain::Millimetre, kind: QuantityKind::Length, get: |m| m.bearing_length_m, set: |m, v| m.bearing_length_m = v };
 const MCRIT: Lever<TimberMember> = Lever { leaf: "mCritNm", label_en: "critical moment M_crit (lateral restraint)", label_de: "Kippmoment M_crit (seitliche Halterung)", unit: "N·m", grain: Grain::Unit, kind: QuantityKind::Moment, get: |m| m.m_crit_nm, set: |m, v| m.m_crit_nm = v };
 const MASS: Lever<TimberMember> = Lever { leaf: "massKgPerM", label_en: "linear mass", label_de: "längenbezogene Masse", unit: "kg/m", grain: Grain::Unit, kind: QuantityKind::Mass, get: |m| m.mass_kg_per_m, set: |m, v| m.mass_kg_per_m = v };
+const MASS2: Lever<TimberMember> = Lever { leaf: "massKgPerM2", label_en: "floor mass per area", label_de: "flächenbezogene Deckenmasse", unit: "kg/m²", grain: Grain::Unit, kind: QuantityKind::Mass, get: |m| m.mass_kg_per_m2, set: |m, v| m.mass_kg_per_m2 = v };
+const DAMPING: Lever<TimberMember> = Lever { leaf: "dampingXi", label_en: "modal damping ratio", label_de: "modale Dämpfung", unit: "", grain: Grain::Unit, kind: QuantityKind::Dimensionless, get: |m| m.damping_xi, set: |m, v| m.damping_xi = v };
 const NUMBER: Lever<TimberConnection> = Lever { leaf: "number", label_en: "number of fasteners", label_de: "Anzahl der Verbindungsmittel", unit: "", grain: Grain::Count, kind: QuantityKind::Dimensionless, get: |c| c.number as f64, set: |c, v| c.number = v.round().max(0.0) as u32 };
 const DIAMETER: Lever<TimberConnection> = Lever { leaf: "diameterM", label_en: "fastener diameter d", label_de: "Durchmesser d", unit: "m", grain: Grain::Millimetre, kind: QuantityKind::Length, get: |c| c.diameter_m, set: |c, v| c.diameter_m = v };
 const SPACING: Lever<TimberConnection> = Lever { leaf: "spacingM", label_en: "spacing a₁", label_de: "Abstand a₁", unit: "m", grain: Grain::Millimetre, kind: QuantityKind::Length, get: |c| c.spacing_m, set: |c, v| c.spacing_m = v };
@@ -944,7 +1009,7 @@ const DEPTH_LEVERS: &[Lever<TimberMember>] = &[H];
 const SECTION_LEVERS: &[Lever<TimberMember>] = &[H, B];
 const WIDTH_LEVERS: &[Lever<TimberMember>] = &[B];
 const BEARING_LEVERS: &[Lever<TimberMember>] = &[BEARING];
-const MASS_LEVERS: &[Lever<TimberMember>] = &[MASS];
+const MASS_LEVERS: &[Lever<TimberMember>] = &[MASS, MASS2, DAMPING];
 const JOHANSEN_LEVERS: &[Lever<TimberConnection>] = &[NUMBER, DIAMETER];
 const SPACING_LEVERS: &[Lever<TimberConnection>] = &[SPACING];
 const END_LEVERS: &[Lever<TimberConnection>] = &[END];
@@ -1024,7 +1089,7 @@ fn finish<T: Clone>(item: &T, checks: Vec<Assessed<T>>, subject: fn(&T, &str) ->
                     let current = (lever.get)(item);
                     if let Some(required) = solve(item, &check.id, lever, probe) {
                         solved += 1;
-                        builder = builder.remedy(Remedy::at_least(
+                        let mut remedy = Remedy::at_least(
                             subject(item, lever.leaf),
                             lever.quantity(current),
                             lever.quantity(required),
@@ -1032,7 +1097,9 @@ fn finish<T: Clone>(item: &T, checks: Vec<Assessed<T>>, subject: fn(&T, &str) ->
                                 &format!("Increase {} from {} to at least {}.", lever.label_en, lever.display(current), lever.display(required)),
                                 &format!("{} von {} auf mindestens {} erhöhen.", lever.label_de, lever.display(current), lever.display(required)),
                             ),
-                        ));
+                        );
+                        remedy.applicable = lever.grain.applies_as_float();
+                        builder = builder.remedy(remedy);
                     }
                 }
                 if solved == 0 {
@@ -1059,9 +1126,93 @@ fn finish<T: Clone>(item: &T, checks: Vec<Assessed<T>>, subject: fn(&T, &str) ->
 //#endregion 🔖️Assessment
 
 /// 🏗 Evaluate all members and connections for the chosen annex.
+fn push_duplicate_ids(
+    report: &mut CheckReport,
+    annex: AnnexChoice,
+    table: &str,
+    ids: &[String],
+    path_for: &dyn Fn(&str) -> String,
+) {
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for id in ids {
+        *counts.entry(id.clone()).or_insert(0) += 1;
+    }
+    for (id, count) in counts {
+        if count < 2 {
+            continue;
+        }
+        let path = path_for(&id);
+        let subject = SubjectRef::new(id.clone(), &path, loc(&format!("Duplicate {table} id"), &format!("Doppelte {table}-Id")));
+        let options: Vec<String> = ids.iter().filter(|x| x.as_str() != id).cloned().collect();
+        let free = if options.is_empty() { vec![format!("{id}-unique")] } else { options };
+        report.push(
+            CheckResult::assess(
+                format!("en1995.integrity.duplicate.{table}.{id}"),
+                "EN 1995 integrity",
+                ClauseId::new("EN 1995-1-1", "§1", "id"),
+                subject.clone(),
+                loc(&format!("Unique {table} id"), &format!("Eindeutige {table}-Id")),
+            )
+            .annex(annex)
+            .explanation(loc(
+                &format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
+                &format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
+            ))
+            .status(crate::document::CheckStatus::Fail)
+            .remedy(Remedy::one_of(
+                subject,
+                free,
+                loc(
+                    &format!("Rename the duplicated '{id}' entry to a free id."),
+                    &format!("Den doppelten '{id}'-Eintrag auf eine freie Id umbenennen."),
+                ),
+            ))
+            .build(),
+        );
+    }
+}
+
+fn push_referential_integrity(report: &mut CheckReport, annex: AnnexChoice, members: &[TimberMember], connections: &[TimberConnection]) {
+    push_duplicate_ids(
+        report,
+        annex,
+        "members",
+        &members.iter().map(|m| m.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("members[id={id}].id"),
+    );
+    push_duplicate_ids(
+        report,
+        annex,
+        "connections",
+        &connections.iter().map(|c| c.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("connections[id={id}].id"),
+    );
+    for m in members {
+        let mid = &m.id;
+        push_duplicate_ids(
+            report,
+            annex,
+            "memberActions",
+            &m.actions.iter().map(|a| a.id.clone()).collect::<Vec<_>>(),
+            &|id| format!("members[id={mid}].actions[id={id}].id"),
+        );
+    }
+    for c in connections {
+        let cid = &c.id;
+        push_duplicate_ids(
+            report,
+            annex,
+            "connectionActions",
+            &c.actions.iter().map(|a| a.id.clone()).collect::<Vec<_>>(),
+            &|id| format!("connections[id={cid}].actions[id={id}].id"),
+        );
+    }
+}
+
 pub fn evaluate_structure(annex: AnnexChoice, members: &[TimberMember], connections: &[TimberConnection]) -> CheckReport {
     let mut report = CheckReport::default();
     let params = AnnexParams::for_annex(annex);
+    push_referential_integrity(&mut report, annex, members, connections);
     if members.is_empty() {
         report.push(
             CheckResult::assess(
@@ -1140,7 +1291,7 @@ fn assess_member(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, pro
     let n_t_ed = uls.n_t_ed_n;
     let f_c90_ed = uls.f_c90_ed_n;
 
-    let kcrit = k_crit(lambda_rel_m(wsec, props.f_m_k, m.m_crit_nm.max(1.0)));
+    let kcrit = k_crit(lambda_rel_m(wsec, props.f_m_k, effective_m_crit_nm(m)));
     let f_m_d = km * kh * kcrit * props.f_m_k / gamma;
     let sigma_m = if wsec > 0.0 { m_ed / wsec } else { 0.0 };
     out.push(assessed(
@@ -1212,7 +1363,10 @@ fn assess_member(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, pro
             head("combined", "6.2.4", "actions", "Combined compression and bending", "Kombinierter Druck und Biegung"),
             Quantity::new(QuantityKind::Dimensionless, combined),
             Quantity::new(QuantityKind::Dimensionless, 1.0),
-            loc(&format!("(σ_c/(k_c·f_c,d))² + σ_m/f_m,d = {combined:.3}."), &format!("(σ_c/(k_c·f_c,d))² + σ_m/f_m,d = {combined:.3}.")),
+            loc(
+                &format!("Combined compression and bending: (σ_c/(k_c·f_c,d))² + σ_m/f_m,d = {combined:.3}."),
+                &format!("Kombination Druck und Biegung: (σ_c/(k_c·f_c,d))² + σ_m/f_m,d = {combined:.3}."),
+            ),
             SECTION_LEVERS,
         ));
     }
@@ -1266,8 +1420,29 @@ fn assess_member(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, pro
         }
     }
 
+    let sls_freq = combos
+        .iter()
+        .filter(|c| c.kind == ComboKind::SlsFrequent)
+        .max_by(|a, b| a.q_ed_line.abs().partial_cmp(&b.q_ed_line.abs()).unwrap_or(std::cmp::Ordering::Equal));
+    if let Some(freq) = sls_freq {
+        if m.span_m > 0.0 && (freq.q_ed_line.abs() > 0.0 || freq.f_ed_point.abs() > 0.0) {
+            let w_freq = deflection_m(m, props, freq.q_ed_line, freq.f_ed_point);
+            let lim_freq = m.span_m / params.w_inst_limit_divisor();
+            out.push(assessed(
+                head("wfreq", "7.2", "actions", "Frequent deflection", "Häufige Durchbiegung"),
+                Quantity::length_m(w_freq),
+                Quantity::length_m(lim_freq),
+                loc(
+                    &format!("SLS frequent (ψ₁): w_freq={:.1} mm vs L/{:.0}={:.1} mm (combo {}).", w_freq * 1000.0, params.w_inst_limit_divisor(), lim_freq * 1000.0, freq.id),
+                    &format!("GZG häufig (ψ₁): w_freq={:.1} mm gegen L/{:.0}={:.1} mm (Kombi {}).", w_freq * 1000.0, params.w_inst_limit_divisor(), lim_freq * 1000.0, freq.id),
+                ),
+                DEPTH_LEVERS,
+            ));
+        }
+    }
+
     if m.role == MemberRole::Floor {
-        out.push(assess_floor(annex, params, m, props));
+        out.extend(assess_floor(annex, params, m, props));
     }
     if m.fire_duration_s > 0.0 {
         out.push(assess_fire(annex, params, m, props, Some(uls)));
@@ -1275,7 +1450,7 @@ fn assess_member(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, pro
     out
 }
 
-fn assess_floor(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, props: &TimberProperties) -> Assessed<TimberMember> {
+fn assess_floor(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, props: &TimberProperties) -> Vec<Assessed<TimberMember>> {
     let l = m.span_m.max(1e-6);
     let ei = props.e_0_mean * i_m4(m);
     let mu = if m.mass_kg_per_m > 0.0 {
@@ -1294,26 +1469,81 @@ fn assess_floor(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, prop
     let w_1kn = deflection_m(m, props, 0.0, 1000.0);
     let xi = if m.damping_xi > 0.0 { m.damping_xi } else { 0.01 };
     let m_star = mu * l / 2.0;
-    let a_vert = if w_1kn > 0.0 && m_star > 0.0 && f1 > 0.0 { (1.0 / (m_star * xi.sqrt()).max(1e-9)) * (f1 / 8.0).max(0.1) * 0.25 } else { 0.0 };
-    let lim = params.floor_a_limit();
-    assessed(
-        Head {
-            id: format!("en1995.7.3.vibration.{}", m.id),
-            part: "EN 1995-1-1",
-            clause: ClauseId::new("EN 1995-1-1", "§7.3", "7.3"),
-            subject: member_subject(m, "massKgPerM"),
-            title: loc("Floor vibration", "Deckenschwingungen"),
-            annex,
-        },
-        Quantity::acceleration_m_s2(a_vert),
-        Quantity::acceleration_m_s2(lim),
+    // Derived modal walking acceleration from mass / modal stiffness proxy / damping (§7.3).
+    let a_vert = if m_star > 0.0 && f1 > 0.0 {
+        (1.0 / (m_star * xi.sqrt()).max(1e-9)) * (f1 / 8.0).max(0.1) * 0.25
+    } else {
+        0.0
+    };
+    let m_area = if m.mass_kg_per_m2 > 0.0 { m.mass_kg_per_m2 } else { mu };
+    let v_impulse = if m_area > 0.0 && xi > 0.0 {
+        (std::f64::consts::PI / (0.8 * m_area * xi)).sqrt()
+    } else {
+        0.0
+    };
+    let b_vel = params.floor_velocity_b();
+    let v_lim = if f1 > 0.0 && xi > 0.0 { b_vel.powf(f1 * xi - 1.0) } else { 0.0 };
+
+    let head = |kind: &str, leaf: &str, en: &str, de: &str| Head {
+        id: format!("en1995.7.3.{kind}.{}", m.id),
+        part: "EN 1995-1-1",
+        clause: ClauseId::new("EN 1995-1-1", "§7.3", "7.3"),
+        subject: member_subject(m, leaf),
+        title: loc(en, de),
+        annex,
+    };
+    let mut out = Vec::new();
+    let f1_lim = 8.0;
+    out.push(assessed(
+        head("f1", "hM", "Floor fundamental frequency", "Eigenfrequenz Decke"),
+        Quantity::new(QuantityKind::Dimensionless, f1_lim),
+        Quantity::new(QuantityKind::Dimensionless, f1.max(1e-9)),
         loc(
-            &format!("f1={:.2} Hz, w(1kN)={:.2} mm, a_vert={:.3} m/s² vs limit {:.3} m/s².", f1, w_1kn * 1000.0, a_vert, lim),
-            &format!("f1={:.2} Hz, w(1kN)={:.2} mm, a_vert={:.3} m/s² gegen Grenzwert {:.3} m/s².", f1, w_1kn * 1000.0, a_vert, lim),
+            &format!("f₁={:.2} Hz vs DE NA simplified-path threshold {f1_lim:.0} Hz (mass/stiffness/span).", f1),
+            &format!("f₁={:.2} Hz gegen DE-NA-Schwelle {f1_lim:.0} Hz (Masse/Steifigkeit/Spannweite).", f1),
         ),
-        MASS_LEVERS,
-    )
+        DEPTH_LEVERS,
+    ));
+    let w_lim = params.floor_w_1kn_limit_m();
+    out.push(assessed(
+        head("stiffness", "hM", "Floor unit-load stiffness", "Deckensteifigkeit unter 1 kN"),
+        Quantity::length_m(w_1kn),
+        Quantity::length_m(w_lim),
+        loc(
+            &format!("w(1 kN)={:.2} mm vs limit {:.2} mm (§7.3.3).", w_1kn * 1000.0, w_lim * 1000.0),
+            &format!("w(1 kN)={:.2} mm gegen Grenzwert {:.2} mm (§7.3.3).", w_1kn * 1000.0, w_lim * 1000.0),
+        ),
+        DEPTH_LEVERS,
+    ));
+    if f1 + 1e-9 >= f1_lim {
+        // §7.3.3 simplified path (f₁ ≥ 8 Hz): unit-impulse velocity criterion.
+        out.push(assessed(
+            head("velocity", "massKgPerM2", "Floor unit-impulse velocity", "Einheitsimpuls-Geschwindigkeit Decke"),
+            Quantity::new(QuantityKind::Dimensionless, v_impulse),
+            Quantity::new(QuantityKind::Dimensionless, v_lim.max(1e-12)),
+            loc(
+                &format!("v={:.4} m/(N·s²) vs b^(f₁ζ−1)={:.4} (b={b_vel:.0}, f₁={:.2} Hz, m={:.0} kg/m²).", v_impulse, v_lim, f1, m_area),
+                &format!("v={:.4} m/(N·s²) gegen b^(f₁ζ−1)={:.4} (b={b_vel:.0}, f₁={:.2} Hz, m={:.0} kg/m²).", v_impulse, v_lim, f1, m_area),
+            ),
+            MASS_LEVERS,
+        ));
+    } else {
+        // §7.3.3 special investigation (f₁ < 8 Hz): acceleration comfort.
+        let a_lim = params.floor_a_limit();
+        out.push(assessed(
+            head("acceleration", "dampingXi", "Floor acceleration", "Deckenbeschleunigung"),
+            Quantity::acceleration_m_s2(a_vert),
+            Quantity::acceleration_m_s2(a_lim),
+            loc(
+                &format!("a_vert={:.3} m/s² from mass/stiffness/damping (f₁={:.2} Hz < 8 Hz) vs {:.3} m/s².", a_vert, f1, a_lim),
+                &format!("a_vert={:.3} m/s² aus Masse/Steifigkeit/Dämpfung (f₁={:.2} Hz < 8 Hz) gegen {:.3} m/s².", a_vert, f1, a_lim),
+            ),
+            DEPTH_LEVERS,
+        ));
+    }
+    out
 }
+
 
 fn assess_fire(annex: AnnexChoice, params: &AnnexParams, m: &TimberMember, props: &TimberProperties, uls: Option<&LoadCombo>) -> Assessed<TimberMember> {
     let m_ed = uls.map(|u| u.m_ed_nm).unwrap_or_else(|| enumerate_combos(m).into_iter().filter(|c| c.kind == ComboKind::Uls).map(|c| c.m_ed_nm.abs()).fold(0.0_f64, f64::max));
@@ -1361,7 +1591,7 @@ fn assess_bridge_member(annex: AnnexChoice, params: &AnnexParams, m: &TimberMemb
     };
     let m_crowd = q_crowd * m.span_m.powi(2) * moment_coefficient;
     let m_ed = 1.5 * m_crowd;
-    let f_m_d = km * kh * k_crit(lambda_rel_m(wsec, props.f_m_k, m.m_crit_nm.max(1.0))) * props.f_m_k / gamma;
+    let f_m_d = km * kh * k_crit(lambda_rel_m(wsec, props.f_m_k, effective_m_crit_nm(m))) * props.f_m_k / gamma;
     let sigma_m = if wsec > 0.0 { m_ed / wsec } else { 0.0 };
 
     let m_fat = 0.4 * m_crowd;
@@ -1439,7 +1669,16 @@ fn evaluate_connection(annex: AnnexChoice, params: &AnnexParams, c: &TimberConne
             conn_subject(c, "strengthClass"),
             loc("Connection timber class", "Holzklasse der Verbindung"),
         )
-        .not_applicable(loc("Unknown timber class for connection.", "Unbekannte Holzklasse für Verbindung."))
+        .status(crate::document::CheckStatus::Fail)
+        .explanation(loc(
+            &format!("Unknown strength class '{}'.", c.strength_class),
+            &format!("Unbekannte Festigkeitsklasse '{}'.", c.strength_class),
+        ))
+        .remedy(Remedy::one_of(
+            conn_subject(c, "strengthClass"),
+            strength_class_options().iter().map(|s| s.to_string()).collect(),
+            loc("Select a tabulated strength class (EN 338 / EN 14080).", "Tabellierte Festigkeitsklasse wählen (EN 338 / EN 14080)."),
+        ))
         .annex(annex)
         .build()];
     };
@@ -1470,21 +1709,16 @@ fn assess_connection(annex: AnnexChoice, params: &AnnexParams, c: &TimberConnect
     let fh = f_h_k(props.rho_k, c.diameter_m, &c.fastener_type);
     let my = m_y_k(c.f_u_k, c.diameter_m);
     let fax = if c.fastener_type.to_ascii_lowercase().contains("screw") { 0.2 * fh * c.diameter_m * c.t1_m } else { 0.0 };
-    let f_v_rk_1 = if c.steel_plate {
-        johansen_steel_timber_f_v_rk(c.t1_m, c.steel_plate_thickness_m, c.diameter_m, fh, my, fax)
-    } else if c.shear_planes >= 2 {
-        johansen_double_shear_f_v_rk(c.t1_m, c.t2_m, c.diameter_m, fh, fh, my, fax)
-    } else {
-        johansen_single_shear_f_v_rk(c.t1_m, c.t2_m, c.diameter_m, fh, fh, my, fax)
+    let f_v_rk_1 = match (c.steel_plate, c.shear_planes >= 2) {
+        (true, true) => johansen_steel_central_f_v_rk(c.t1_m, c.diameter_m, fh, my, fax),
+        (true, false) => johansen_steel_timber_f_v_rk(c.t1_m, c.steel_plate_thickness_m, c.diameter_m, fh, my, fax),
+        (false, true) => johansen_double_shear_f_v_rk(c.t1_m, c.t2_m, c.diameter_m, fh, fh, my, fax),
+        (false, false) => johansen_single_shear_f_v_rk(c.t1_m, c.t2_m, c.diameter_m, fh, fh, my, fax),
     };
-    let nef = n_ef(c.number, c.spacing_m, c.diameter_m);
-    let planes = if c.steel_plate {
-        1.0
-    } else if c.shear_planes >= 2 {
-        (c.shear_planes as f64) / 2.0
-    } else {
-        c.shear_planes.max(1) as f64
-    };
+    let rows = c.rows.max(1);
+    let n_per_row = ((c.number as f64) / (rows as f64)).round().max(1.0) as u32;
+    let nef = n_ef(n_per_row, c.spacing_m, c.diameter_m) * (rows as f64);
+    let planes = c.shear_planes.max(1) as f64;
     let f_v_rd = km * nef * planes * f_v_rk_1 / gamma;
     let clause = if c.steel_plate { "8.2.3" } else { "8.2.2" };
     let mut out = vec![assessed(

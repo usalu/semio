@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { processTableSnapshot } from "../../🏃️process/📋️process-table/🟦️.ts";
 import { basename } from "node:path";
 
 /**
@@ -29,7 +29,8 @@ const DEV_COMMAND_MARKERS = [
 ];
 
 const IDE_HOST_MARKERS = /(?:Cursor Helper|Code Helper|Electron|Visual Studio Code)/i;
-const ACTIVE_SEMIO_TECH_BUILD = /\bnx(?:\.js)?\s+run\s+['"]?@semio-tech\//;
+/** 🏗️ A running `nx run @semio-tech/…` build, on POSIX and Windows command lines (a quoted `nx.js` path included). */
+export const ACTIVE_SEMIO_TECH_BUILD = /\bnx(?:\.js)?["']?\s+run\s+['"]?@semio-tech\//;
 
 export interface ProcessRow {
   pid: number;
@@ -66,15 +67,7 @@ export function isDevLeftoverRow(row: Pick<ProcessRow, "name" | "command" | "sta
 }
 
 function processRows(): ProcessRow[] {
-  const snapshot = spawnSync("ps", ["-axo", "pid=,ppid=,stat=,command="], { encoding: "utf8", windowsHide: true });
-  if (snapshot.status !== 0 || typeof snapshot.stdout !== "string") return [];
-  return snapshot.stdout.split("\n").flatMap((line): ProcessRow[] => {
-    const match = line.trim().match(/^(\d+)\s+(\d+)\s+(\S+)\s+(.+)$/);
-    if (!match) return [];
-    const [, pid, ppid, stat, command] = match;
-    const name = strayProcessExecutableName(command!);
-    return [{ pid: Number(pid), ppid: Number(ppid), stat: stat!, name, command: command! }];
-  });
+  return (processTableSnapshot() ?? []).map((row) => ({ pid: row.pid, ppid: row.parent, stat: row.stat, name: strayProcessExecutableName(row.command), command: row.command }));
 }
 
 /** 🌳Walks `ppid` links from the current process to protect this script's own ancestry (shell, editor, agent) from being reaped. */

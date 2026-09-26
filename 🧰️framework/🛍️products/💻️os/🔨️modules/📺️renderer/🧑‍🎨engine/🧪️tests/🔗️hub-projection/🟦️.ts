@@ -5,6 +5,7 @@ import Ajv from "ajv";
 import { describe, expect, test } from "vitest";
 import { hubConnectionSummaryV1 } from "../../🧱️elements/🔄️ShellSync/🟦️.tsx";
 import { hubConnectionOperationOwnerCurrentV1 } from "../../🧱️elements/🔗️HubConnection/🟦️.tsx";
+import { SHELL_HUB_ROUTE } from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧫️fixtures", "🔗️hub-projection", "🔣️.json"), "utf8"));
@@ -66,7 +67,7 @@ describe("🔗️ target-neutral Hub projection", () => {
     const spaces = readFileSync(join(engineRoot, "🧱️elements", "🏘️SpaceBrowser", "🟦️.tsx"), "utf8");
     const labels = readFileSync(join(engineRoot, "🧱️elements", "🔗️HubConnection", "🟦️.tsx"), "utf8");
     expect(shellSync).toContain("framework.hub.signIn");
-    expect(host).toContain('const SHELL_HUB_ROUTE = "/hub";');
+    expect(SHELL_HUB_ROUTE).toBe("/hub");
     expect(host).toContain("navigateHistory(SHELL_HUB_ROUTE)");
     expect(workspace).toContain("HubSignInPane");
     expect(workspace).toContain("SpaceBrowser");

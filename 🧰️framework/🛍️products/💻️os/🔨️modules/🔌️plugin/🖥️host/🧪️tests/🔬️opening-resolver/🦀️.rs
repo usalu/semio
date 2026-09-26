@@ -37,7 +37,7 @@ async fn step1_explicit_default_still_in_router_wins() {
                 topic_contributions: Vec::new(),
                 commands: Vec::new(),
                 artifact_kinds: Vec::new(),
-                dependencies: vec![semio_framework::PluginDependency::new("cad", semio_framework::VersionReq::Any)],
+                dependencies: vec![semio_framework::PluginDependency::new("cad", semio_framework::tree_pin!())],
                 contributions: Vec::new(),
             },
         )

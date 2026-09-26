@@ -108,7 +108,7 @@ fn bearing_n_factors_table() -> CatalogueTable {
         title_de: "Tragfähigkeitsbeiwerte N_q, N_c, N_γ",
         clause: ClauseId::new("EN 1997-1", "6", "D"),
         columns: vec![
-            CatalogueColumn { id: "phi", label_en: "φ′", label_de: "φ′", unit: "°" },
+            CatalogueColumn { id: "phi", label_en: "φ′", label_de: "φ′", unit: Some("°") },
             CatalogueColumn { id: "n_q", label_en: "N_q", label_de: "N_q", unit: None },
             CatalogueColumn { id: "n_c", label_en: "N_c", label_de: "N_c", unit: None },
             CatalogueColumn { id: "n_gamma", label_en: "N_γ", label_de: "N_γ", unit: None },

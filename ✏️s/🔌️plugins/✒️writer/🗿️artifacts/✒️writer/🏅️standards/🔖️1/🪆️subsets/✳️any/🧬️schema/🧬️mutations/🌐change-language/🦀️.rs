@@ -33,6 +33,11 @@ impl MutationKind<WriterSnapshot, WriterMutation> for ChangeLanguage {
         super::inverse::inverse(self, base)
     }
 
+    /// 🎯️ The writer's language. Concurrent writers of the same field conflict; writers of different fields never do.
+    fn target(&self) -> Vec<String> {
+        vec!["language_id".to_string()]
+    }
+
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native(&format!("Change document language to \"{}\"", self.new_language_id), &format!("Dokumentsprache auf \"{}\" ändern", self.new_language_id))
     }

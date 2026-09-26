@@ -696,9 +696,16 @@ pub mod part_1_3 {
         let alpha = pitch_deg.max(0.0);
         let mut mu = if alpha <= 30.0 { 0.8 } else if alpha < 60.0 { 0.8 * (60.0 - alpha) / 30.0 } else { 0.0 };
         if roof_type.contains("duo") && (15.0..30.0).contains(&alpha) { mu = mu.max(0.8); }
-        if multi_span { mu = mu.max(1.6); }
+        // EN 1991-1-3 §5.3.4 / §5.3.6 — multi-span and multi-bay roofs raise μ.
+        if multi_span || roof_type.contains("multi") { mu = mu.max(1.6); }
         let h = parapet_height.max(drift_obstruction_height);
-        if has_parapet || h > 0.0 { mu = mu.max((2.0 * h).min(2.0).max(0.8)); }
+        if has_parapet {
+            // Parapet drift case: flag engages Annex drifting with notional min height when unspecified.
+            let h_par = h.max(0.5);
+            mu = mu.max((2.0 * h_par).min(2.0));
+        } else if h > 0.0 {
+            mu = mu.max((2.0 * h).min(2.0).max(0.8));
+        }
         if exceptional_north { mu = (mu * 2.0).min(2.0); }
         mu
     }

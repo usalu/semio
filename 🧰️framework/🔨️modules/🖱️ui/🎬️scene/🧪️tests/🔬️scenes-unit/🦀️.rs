@@ -558,6 +558,8 @@ fn paint2d_probe_scene() -> Paint2dScene {
         active_utility: "brush".into(),
         brush_size: 4.0,
         brush_opacity: 1.0,
+        brush_color: "#e07020".into(),
+        brush_hardness: 0.25,
         view_mode: "composite".into(),
         composite_viewport_json: None,
         lanes: Vec::new(),

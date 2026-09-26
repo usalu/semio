@@ -9,6 +9,7 @@ import type { BrowserFrameUiMessage, BrowserFrameWorkerMessage } from "../🚚�
 import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../📇️interactive-job-registry/🟦️.ts";
 import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } from "../🐚️plugin-bridge/🟦️.ts";
 import { createLazyPluginInstallDoor } from "./🧩️lazy-install/🟦️.ts";
+import { installWgpuDynamicExtensionDoor } from "../🧩️dynamic-extension/🟦️.ts";
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
 import { concatenateReferenceImageSource, decodeReferenceImage, referenceImageBitmapForStage, referenceImageSourceDigest, referenceImageSourceDimensions, referenceImageTargetSize, streamReferenceImageBitmapRows, type ReferenceImageDimensions } from "../🖼️reference-image-decode/🟦️.ts";
 import { FrameTurnScheduler, WorkerTurnTaskQueue, nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
@@ -959,6 +960,22 @@ const lazyPluginInstalls = createLazyPluginInstallDoor({
 
 (globalThis as { semioWgpuInstallPlugin?: (pluginId: string) => Promise<unknown> }).semioWgpuInstallPlugin = (pluginId) => lazyPluginInstalls.install(pluginId);
 (globalThis as { semioWgpuCancelPluginInstall?: (pluginId: string) => boolean }).semioWgpuCancelPluginInstall = (pluginId) => lazyPluginInstalls.cancel(pluginId);
+const dynamicExtensionModules = new Map<string, Awaited<ReturnType<typeof loadPluginModule>>>();
+installWgpuDynamicExtensionDoor(globalThis, async (record) => {
+  if (closed || closing || failed) throw new Error("extension-install.closing: the frame Worker is closing");
+  const previous = dynamicExtensionModules.get(record.extensionId);
+  dynamicExtensionModules.delete(record.extensionId);
+  await previous?.dispose();
+  const module = await monitoredSuspension(`extension-install:${record.extensionId}`, () => loadPluginModule(record.extensionId, record.moduleUrl), suspensionLedger);
+  dynamicExtensionModules.set(record.extensionId, module);
+  void primeContributionManifest(record.extensionId, record.moduleUrl).catch(() => {});
+  return { handle: pluginHandleForBridge(module), manifest: module.manifest };
+}, async (extensionId) => {
+  const module = dynamicExtensionModules.get(extensionId);
+  if (!module) return;
+  dynamicExtensionModules.delete(extensionId);
+  await module.dispose();
+});
 //#endregion 🧩️LazyPluginInstall
 
 function post(message: BrowserFrameWorkerMessage, transfer: Transferable[] = []): void {

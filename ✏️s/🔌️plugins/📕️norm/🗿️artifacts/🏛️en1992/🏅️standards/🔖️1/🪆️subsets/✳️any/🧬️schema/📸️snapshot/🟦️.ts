@@ -5,7 +5,7 @@ export type SupportCondition = "SimplySupported" | "Continuous" | "Cantilever" |
 export type ExposureClass = "X0" | "Xc1" | "Xc2" | "Xc3" | "Xc4" | "Xd1" | "Xd2" | "Xd3" | "Xs1" | "Xs2" | "Xs3" | "Xf1" | "Xf2" | "Xf3" | "Xf4" | "Xa1" | "Xa2" | "Xa3";
 export type FireRating = "R30" | "R60" | "R90" | "R120";
 export type TightnessClass = "Tc0" | "Tc1" | "Tc2";
-export type DuctilityClass = "A" | "B" | "C";
+export type DuctilityClass = "a" | "b" | "c";
 
 export interface ConcreteGrade { id: string; name: string; fCk: number; }
 export interface ReinforcementGrade { id: string; name: string; fYk: number; eS: number; ductility: DuctilityClass; k: number; epsUk: number; }

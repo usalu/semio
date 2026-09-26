@@ -8354,6 +8354,15 @@
       ],
       "source": "registry"
     },
+    "framework-io-stream-mux": {
+      "ownerKindIds": [
+        "io"
+      ],
+      "memberNames": [
+        "🔀️stream-mux"
+      ],
+      "source": "registry"
+    },
     "manifestless-source-closure": {
       "ownerKindIds": [
         "fixtures",
@@ -26640,6 +26649,27 @@
       ],
       "reason": "The exact standalone JCO workspace owns one digest-locked Cargo library adapter; no implementation bytes are generated"
     },
+    "mutation-source-authority": {
+      "ownership": "owned",
+      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
+      "target": "@semio-tech/dsl-derive-rs:generate",
+      "previewTarget": "@semio-tech/dsl-derive-rs:preview-generated",
+      "checkTarget": "@semio-tech/dsl-derive-rs:check-generated",
+      "inputPatterns": [
+        "📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📋️project.json",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📜️script.ts",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧬️schema/🔣️.json",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+      ],
+      "outputRoots": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔣️mutation-authority.json",
+          "inclusion": "tracked"
+        }
+      ],
+      "reason": "The mutation derive macros read and track only this projection of the taxonomy, so an unrelated taxonomy, nx.json or project.json edit never recompiles a deriving crate"
+    },
     "playground-session": {
       "ownership": "owned",
       "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
@@ -27053,6 +27083,7 @@
             "🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🟦️.ts",
             "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+            "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
             "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts",
@@ -27117,6 +27148,7 @@
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts",
+            "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️dynamic-extension/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-turn-scheduler/🟦️.ts",
             "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts",
@@ -27182,6 +27214,7 @@
         "🧰️framework/🔨️modules/🕹️interaction/👆️gesture/🟦️.ts",
         "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+        "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🗂️index/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/🎬️scene/🔗️binding/🟦️.ts",
@@ -27269,6 +27302,7 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️dynamic-extension/🟦️.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎮️browser-interactive-job-port.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/📨️browser-frame-transport.ts",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🧩️package-integration.ts",

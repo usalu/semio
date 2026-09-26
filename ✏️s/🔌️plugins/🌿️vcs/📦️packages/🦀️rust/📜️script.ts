@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
 /** 🌿️ VCS plugin package command router. */
-import { join } from "node:path";
 import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describePluginComponent } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { NativeCodecCheckScript } from "../../🧪️tests/📇️native-codecs/🟦️.ts";
 import { NativeOpenableIdentityCheckScript } from "../../🧪️tests/🪪️native-openable-identity/🟦️.ts";
 
@@ -13,15 +11,8 @@ class TestScript extends BundleScript {
   }
 }
 
-class DescribeScript extends BundleScript {
-  run(): void {
-    process.exit(describePluginComponent(this.repoRoot, "semio-s-plugin-vcs", join(this.root, "..", "..")));
-  }
-}
-
 const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
-  .register("describe", DescribeScript)
   .register("native-openable-identity-check", NativeOpenableIdentityCheckScript)
   .register("native-codec-check", NativeCodecCheckScript);
 registerPlaygroundSiteBuildCommands(router);

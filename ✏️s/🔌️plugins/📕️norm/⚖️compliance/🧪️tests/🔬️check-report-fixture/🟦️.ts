@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixture = JSON.parse(readFileSync(join(here, "../../🎫️fixtures/🔬️check-report/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🔬️check-report/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(here, "../../🧬️schema/🔣️.json"), "utf8"));
 
 describe("Norm compliance CheckReport fixture", () => {

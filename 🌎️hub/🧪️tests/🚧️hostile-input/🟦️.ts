@@ -3,12 +3,15 @@
  * 🚧️ Third-party oracle (Ajv) for the hub's hostile-input law (`🧫️fixtures/🚧️hostile-input-v1`, Rust law
  * `every_route_answers_hostile_input_with_a_typed_signed_refusal`). Ajv — not the hub — decides that every
  * wrong-schema body the law sends is invalid against the route's own declared request schema, that every
- * refusal body the status table yields is a valid `HubRefusalV1`, and that a body naming a code outside the
- * declared vocabulary is not.
+ * refusal body the status table yields is a valid `HubRefusalV1`, that a body naming a code outside the
+ * declared vocabulary is not, and that the credential refusal of every credential-optional route
+ * (`🚧️refusal/🧫️fixtures/🪪️credential-refusal-v1`) is a valid `HubCredentialRefusalV1` in en and de. OpenSSL's SHA-256 (`node:crypto`) — not the hub's own hash — reproduces the generative
+ * law's draw vectors (`generative.drawVectors`, Rust law `hostile_draws_reproduce_the_language_neutral_vectors`).
  */
 // #endregion Header
 
 import Ajv from "ajv";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -51,6 +54,37 @@ describe("hub hostile-input oracle", () => {
     expect(validate({ schema: "semio.hub.refusal/v1", status: 404, code: "teapot" })).toBe(false);
     expect(validate({ schema: "semio.hub.refusal/v1", status: 200, code: "not-found" })).toBe(false);
     expect(validate({ schema: "semio.hub.refusal/v1", status: 404, code: "not-found", detail: "leak" })).toBe(false);
+  });
+
+  it("the generative draws are the SHA-256 counter blocks the fixture declares", () => {
+    const draws = (seed: number, count: number): string[] => {
+      const drawn: string[] = [];
+      for (let block = 0n; drawn.length < count; block += 1n) {
+        const input = Buffer.alloc(16);
+        input.writeBigUInt64LE(BigInt(seed), 0);
+        input.writeBigUInt64LE(block, 8);
+        const digest = createHash("sha256").update(Buffer.concat([Buffer.from("semio.hub.hostile-draws/v1"), input])).digest();
+        for (let offset = 0; offset < 32; offset += 8) drawn.push(digest.readBigUInt64LE(offset).toString(16).padStart(16, "0"));
+      }
+      return drawn.slice(0, count);
+    };
+    for (const vector of fixture.generative.drawVectors) expect(draws(vector.seed, vector.draws.length)).toEqual(vector.draws);
+    expect(fixture.generative.seeds.length).toBeGreaterThanOrEqual(1);
+    expect(fixture.generative.budgetMs).toBeLessThanOrEqual(900_000);
+  });
+
+  it("the credential refusal every credential-optional route answers is a valid HubCredentialRefusalV1, and no near miss is", () => {
+    const credential = read(hubRoot, "🚧️refusal", "🧫️fixtures", "🪪️credential-refusal-v1", "🔣️.json");
+    const validate = compileDef(refusal, "HubCredentialRefusalV1");
+    expect(validate(credential.answer.body), JSON.stringify(validate.errors)).toBe(true);
+    expect(credential.answer.body.message).toEqual(refusal.$defs.HubCredentialRefusalMessageV1.const);
+    expect(Object.keys(credential.answer.body.message).sort()).toEqual(["de", "en"]);
+    expect(credential.answer.status).toBe(credential.answer.body.status);
+    expect(refusal.$defs.HubRefusalStatusCodesV1.const[String(credential.answer.status)]).toBe(credential.answer.refusal);
+    expect(credential.invalidBodies.length).toBeGreaterThanOrEqual(4);
+    for (const body of credential.invalidBodies) expect(validate(body), JSON.stringify(body)).toBe(false);
+    const credentialOptional = fixture.routes.filter((route: any) => route.public === "credential-optional").map((route: any) => route.path);
+    for (const path of credentialOptional) expect(credential.routes.map((route: any) => route.path), path).toContain(path);
   });
 
   it("the fixture's oversized vector exceeds every declared body limit", () => {

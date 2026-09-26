@@ -1,0 +1,136 @@
+{
+  "segments": [
+    {
+      "kind": "move",
+      "to": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "cubic",
+      "ctrl1": [
+        0,
+        10
+      ],
+      "ctrl2": [
+        10,
+        10
+      ],
+      "to": [
+        10,
+        0
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "curve-extrema",
+      "parent": [
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      "point": [
+        5,
+        7
+      ],
+      "selected": true
+    },
+    {
+      "name": "nested-translation",
+      "parent": [
+        100,
+        20,
+        1,
+        1,
+        0
+      ],
+      "point": [
+        105,
+        27
+      ],
+      "selected": true
+    },
+    {
+      "name": "nested-rotation",
+      "parent": [
+        100,
+        20,
+        1,
+        1,
+        1.5707963267948966
+      ],
+      "point": [
+        93,
+        25
+      ],
+      "selected": true
+    },
+    {
+      "name": "old-coordinate-misses",
+      "parent": [
+        100,
+        20,
+        1,
+        1,
+        0
+      ],
+      "point": [
+        5,
+        7
+      ],
+      "selected": false
+    },
+    {
+      "name": "hidden-parent",
+      "parent": [
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      "point": [
+        5,
+        7
+      ],
+      "visible": false,
+      "selected": false
+    },
+    {
+      "name": "locked-parent",
+      "parent": [
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      "point": [
+        5,
+        7
+      ],
+      "locked": true,
+      "selected": false
+    },
+    {
+      "name": "transformed-control-outside-fill",
+      "parent": [
+        100,
+        20,
+        1,
+        1,
+        0
+      ],
+      "point": [
+        100,
+        30
+      ],
+      "includeControls": true,
+      "selected": true
+    }
+  ]
+}

@@ -36,7 +36,9 @@ backend_metal = { path = "../../../🖌️render/🎯️targets/🍎️metal/�
 [target.'cfg(target_os = "windows")'.dependencies]
 backend_d3d12 = { path = "../../../🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust", package = "semio-framework-ui-backend-d3d12" }
 
+# 🐧️ winit's Linux backends are features; these load their system libraries at run time (no dev packages).
 [target.'cfg(target_os = "linux")'.dependencies]
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"] }
 backend_vulkan = { path = "../../../🖌️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust", package = "semio-framework-ui-backend-vulkan" }
 
 # 🌉️ `backend_webgpu` is a browser-only WebGPU-via-`wasm-bindgen` backend. Excluded from

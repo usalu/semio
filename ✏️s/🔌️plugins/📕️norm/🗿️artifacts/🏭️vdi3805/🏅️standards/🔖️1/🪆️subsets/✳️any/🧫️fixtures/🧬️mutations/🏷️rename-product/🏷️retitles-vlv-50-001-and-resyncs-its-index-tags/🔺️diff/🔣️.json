@@ -3,26 +3,27 @@
   "manufacturerFile": null,
   "catalog": {
     "file": {
-      "header_version": "3805",
+      "headerVersion": "3805",
       "manufacturer": "DEMO",
-      "building_system_number": {
-        "system_code": "420",
+      "buildingSystemNumber": {
+        "systemCode": "420",
         "subsystem": "10",
         "sequence": 1
       },
       "created": "2023-06-01",
       "charset": "UTF-8",
-      "record_count": 2,
+      "recordCount": 2,
       "extensions": {
         "fields": {}
       }
     },
     "products": [
       {
+        "id": "VLV-50-001",
         "identity": {
-          "manufacturer_code": "DEMO",
-          "product_group": "HV",
-          "article_number": "VLV-50-001"
+          "manufacturerCode": "DEMO",
+          "productGroup": "HV",
+          "articleNumber": "VLV-50-001"
         },
         "title": [
           {
@@ -52,10 +53,6 @@
         ],
         "configuration": {
           "id": "cfg.VLV-50-001",
-          "geometry_ref": "geom.valve.50",
-          "function_refs": [
-            "curve-kvs"
-          ],
           "attributes": {
             "kind": "valveHeating",
             "dn": 50,
@@ -64,14 +61,17 @@
             "connectionType": "flange",
             "authorityMin": 0.3,
             "authorityMax": 0.7
-          }
+          },
+          "geometryRef": "geom-valve-50",
+          "functionRefs": [
+            "curve-kvs"
+          ]
         },
         "accessories": [],
         "components": [],
         "extensions": {
           "fields": {}
-        },
-        "id": "VLV-50-001"
+        }
       }
     ],
     "extensions": {
@@ -84,7 +84,7 @@
   "index": {
     "entries": [
       {
-        "product_id": "VLV-50-001",
+        "productId": "VLV-50-001",
         "sheet": 2,
         "tags": [
           "Regelventil DN50",
@@ -95,5 +95,6 @@
     ]
   },
   "geometry": null,
-  "curves": null
+  "curves": null,
+  "limits": null
 }

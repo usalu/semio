@@ -97,6 +97,7 @@ export function parseDrawingArtifact(value: unknown, at = "$"): DrawingArtifact 
 export function parseDrawingLayerNode(value: unknown, at = "$"): DrawingLayerNode {
   const row = drawingDrawingArtifactGuardObject(value, at);
   return {
+    ...structuredClone(row),
     kind: drawingDrawingArtifactGuardString(row["kind"], `${at}.kind`),
   };
 }
@@ -117,4 +118,32 @@ export function parseDrawingArtboard(value: unknown, at = "$"): DrawingArtboard 
     width: drawingDrawingArtifactGuardNumber(row["width"], `${at}.width`),
     height: drawingDrawingArtifactGuardNumber(row["height"], `${at}.height`),
   };
+}
+
+/** ✏️ Owned path geometry vocabulary shared by editing and persistence. */
+export type PathSegment =
+  | { kind: "move"; to: [number,number] }
+  | { kind: "line"; to: [number,number] }
+  | { kind: "quad"; ctrl: [number,number]; to: [number,number] }
+  | { kind: "cubic"; ctrl1: [number,number]; ctrl2: [number,number]; to: [number,number] }
+  | { kind: "arc"; rx: number; ry: number; rotation: number; largeArc: boolean; sweep: boolean; to: [number,number] }
+  | { kind: "close" };
+
+/** 📍 Validates owned geometry without accepting malformed or unknown segment fields. */
+export function parsePathSegment(value: unknown, at = "$"): PathSegment {
+  const row = drawingDrawingArtifactGuardObject(value, at);
+  const kind = drawingDrawingArtifactGuardMember(row.kind, `${at}.kind`, ["move", "line", "quad", "cubic", "arc", "close"] as const);
+  const fields = { move: ["to"], line: ["to"], quad: ["ctrl", "to"], cubic: ["ctrl1", "ctrl2", "to"], arc: ["rx", "ry", "rotation", "largeArc", "sweep", "to"], close: [] }[kind];
+  for (const key of Object.keys(row)) if (key !== "kind" && !fields.includes(key)) drawingDrawingArtifactGuardReject(`${at}.${key}`, "unknown segment field");
+  const point = (key: string): [number, number] => {
+    const values = drawingDrawingArtifactGuardArray(row[key], `${at}.${key}`, { minItems: 2, maxItems: 2 });
+    return [drawingDrawingArtifactGuardNumber(values[0], `${at}.${key}[0]`), drawingDrawingArtifactGuardNumber(values[1], `${at}.${key}[1]`)];
+  };
+  switch (kind) {
+    case "move": case "line": return { kind, to: point("to") };
+    case "quad": return { kind, ctrl: point("ctrl"), to: point("to") };
+    case "cubic": return { kind, ctrl1: point("ctrl1"), ctrl2: point("ctrl2"), to: point("to") };
+    case "arc": return { kind, rx: drawingDrawingArtifactGuardNumber(row.rx, `${at}.rx`, { minimum: 0 }), ry: drawingDrawingArtifactGuardNumber(row.ry, `${at}.ry`, { minimum: 0 }), rotation: drawingDrawingArtifactGuardNumber(row.rotation, `${at}.rotation`), largeArc: drawingDrawingArtifactGuardBoolean(row.largeArc, `${at}.largeArc`), sweep: drawingDrawingArtifactGuardBoolean(row.sweep, `${at}.sweep`), to: point("to") };
+    case "close": return { kind };
+  }
 }

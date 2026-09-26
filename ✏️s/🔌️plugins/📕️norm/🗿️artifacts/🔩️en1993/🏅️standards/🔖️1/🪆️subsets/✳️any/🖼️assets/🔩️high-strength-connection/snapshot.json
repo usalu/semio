@@ -67,6 +67,12 @@
       "name": "Imposed Q",
       "kind": "imposed",
       "category": "office"
+    },
+    {
+      "id": "w-wind",
+      "name": "Wind",
+      "kind": "wind",
+      "category": "wind"
     }
   ],
   "memberActions": [
@@ -190,15 +196,159 @@
       "mu0": 0.75,
       "protectionConductivity": 0.2,
       "protectionDensity": 800,
-      "protectionSpecificHeat": 1700
+      "protectionSpecificHeat": 1700,
+      "designTemperature": 550.0
     }
   ],
-  "coldFormedMembers": [],
-  "platedPanels": [],
-  "siloShells": [],
-  "tensionComponents": [],
-  "bridgeFatigue": [],
-  "towerLegs": [],
-  "piles": [],
-  "craneRunways": []
+  "coldFormedMembers": [
+    {
+      "id": "cf-1",
+      "bBar": 0.08,
+      "thickness": 0.003,
+      "kSigma": 4.0,
+      "psi": 1.0,
+      "fy": 350000000.0,
+      "grossResistance": 80000.0,
+      "actions": [
+        {
+          "id": "cf-g",
+          "loadCaseId": "g-permanent",
+          "force": 15000.0
+        },
+        {
+          "id": "cf-q",
+          "loadCaseId": "q-imposed",
+          "force": 10000.0
+        }
+      ]
+    }
+  ],
+  "platedPanels": [
+    {
+      "id": "pp-1",
+      "a": 1.2,
+      "b": 0.6,
+      "thickness": 0.012,
+      "fy": 355000000.0,
+      "kSigma": 4.0,
+      "actions": [
+        {
+          "id": "pp-g",
+          "loadCaseId": "g-permanent",
+          "force": 80000000.0
+        },
+        {
+          "id": "pp-q",
+          "loadCaseId": "q-imposed",
+          "force": 40000000.0
+        }
+      ]
+    }
+  ],
+  "siloShells": [
+    {
+      "id": "silo-1",
+      "thickness": 0.008,
+      "radius": 3.0,
+      "depth": 6.0,
+      "k": 0.5,
+      "gamma": 9000.0,
+      "fy": 355000000.0
+    }
+  ],
+  "tensionComponents": [
+    {
+      "id": "ten-1",
+      "fUk": 500000.0,
+      "fK": 400000.0,
+      "actions": [
+        {
+          "id": "ten-g",
+          "loadCaseId": "g-permanent",
+          "force": 120000.0
+        },
+        {
+          "id": "ten-q",
+          "loadCaseId": "q-imposed",
+          "force": 80000.0
+        }
+      ]
+    }
+  ],
+  "bridgeFatigue": [
+    {
+      "id": "br-1",
+      "memberId": "member-b1",
+      "lambda": 0.8,
+      "phi2": 1.0,
+      "deltaSigmaP": 40000000.0,
+      "category": 71,
+      "method": "damage_tolerant"
+    }
+  ],
+  "towerLegs": [
+    {
+      "id": "tw-1",
+      "memberId": "member-b1",
+      "forceCoefficient": 1.0,
+      "dynamicFactor": 1.0,
+      "actions": [
+        {
+          "id": "tw-g",
+          "loadCaseId": "g-permanent",
+          "force": 80000.0
+        },
+        {
+          "id": "tw-w",
+          "loadCaseId": "w-wind",
+          "force": 40000.0
+        }
+      ]
+    }
+  ],
+  "piles": [
+    {
+      "id": "pile-1",
+      "sectionId": "sec-heb240",
+      "materialId": "mat-s355",
+      "drivingStress": 200000000.0,
+      "embeddedLength": 8.0,
+      "shaftPerimeter": 0.96,
+      "actions": [
+        {
+          "id": "pile-g",
+          "loadCaseId": "g-permanent",
+          "force": 200000.0
+        },
+        {
+          "id": "pile-q",
+          "loadCaseId": "q-imposed",
+          "force": 100000.0
+        }
+      ]
+    }
+  ],
+  "craneRunways": [
+    {
+      "id": "crane-1",
+      "memberId": "member-b1",
+      "wheelContactLength": 0.1,
+      "dispersion": 0.05,
+      "webThickness": 0.01,
+      "fy": 355000000.0,
+      "phi": 1.25,
+      "actions": [
+        {
+          "id": "cr-g",
+          "loadCaseId": "g-permanent",
+          "force": 20000.0
+        },
+        {
+          "id": "cr-q",
+          "loadCaseId": "q-imposed",
+          "force": 30000.0
+        }
+      ]
+    }
+  ]
 }

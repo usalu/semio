@@ -462,9 +462,8 @@
           "thickness",
           "width",
           "span",
-          "mEd",
-          "nEd",
-          "welded"
+          "welded",
+          "actions"
         ],
         "properties": {
           "id": {
@@ -482,14 +481,63 @@
           "span": {
             "type": "number"
           },
-          "mEd": {
-            "type": "number"
-          },
-          "nEd": {
-            "type": "number"
-          },
           "welded": {
             "type": "boolean"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "category",
+                "source",
+                "gKLine",
+                "qKLine",
+                "nK",
+                "vYK",
+                "vZK",
+                "mYK",
+                "mZK"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "gKLine": {
+                  "type": "number"
+                },
+                "qKLine": {
+                  "type": "number"
+                },
+                "nK": {
+                  "type": "number"
+                },
+                "vYK": {
+                  "type": "number"
+                },
+                "vZK": {
+                  "type": "number"
+                },
+                "mYK": {
+                  "type": "number"
+                },
+                "mZK": {
+                  "type": "number"
+                }
+              }
+            }
           }
         }
       },
@@ -506,8 +554,7 @@
           "radius",
           "thickness",
           "length",
-          "sigmaXEd",
-          "sigmaThetaEd"
+          "actions"
         ],
         "properties": {
           "id": {
@@ -525,11 +572,60 @@
           "length": {
             "type": "number"
           },
-          "sigmaXEd": {
-            "type": "number"
-          },
-          "sigmaThetaEd": {
-            "type": "number"
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "category",
+                "source",
+                "gKLine",
+                "qKLine",
+                "nK",
+                "vYK",
+                "vZK",
+                "mYK",
+                "mZK"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "gKLine": {
+                  "type": "number"
+                },
+                "qKLine": {
+                  "type": "number"
+                },
+                "nK": {
+                  "type": "number"
+                },
+                "vYK": {
+                  "type": "number"
+                },
+                "vZK": {
+                  "type": "number"
+                },
+                "mYK": {
+                  "type": "number"
+                },
+                "mZK": {
+                  "type": "number"
+                }
+              }
+            }
           }
         }
       },

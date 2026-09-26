@@ -232,7 +232,11 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     context::settle(&mut app).await;
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
     context::settle(&mut app).await;
-    assert_eq!(app.snapshot().expect("projection"), Vdi3805Snapshot::default());
+    let mut got = app.snapshot().expect("projection");
+    let mut expected = Vdi3805Snapshot::default();
+    got.index = crate::CatalogIndex::from_catalog(&got.catalog);
+    expected.index = crate::CatalogIndex::from_catalog(&expected.catalog);
+    assert_eq!(got, expected);
     context::close(&mut app);
 }
 

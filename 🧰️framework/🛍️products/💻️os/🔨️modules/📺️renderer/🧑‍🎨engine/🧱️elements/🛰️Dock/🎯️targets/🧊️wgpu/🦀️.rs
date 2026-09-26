@@ -116,6 +116,16 @@ pub struct DockState {
     pub mobile: bool,
 }
 
+/// 🏷️ The semantic name of a control painted by this Dock walk.
+pub enum DockControlName<'a> {
+    Body(&'a str),
+    Tab { title: &'a str, selected: bool, panel: &'a str },
+    Focus,
+    Unfocus,
+    Close,
+    Drag(&'a str),
+}
+
 pub struct DockRenderContext<'a> {
     pub draw: &'a mut DrawList,
     pub atlas: &'a mut FontAtlas,
@@ -124,6 +134,7 @@ pub struct DockRenderContext<'a> {
     pub theme: &'a Theme,
     pub window_labels: &'a HashMap<String, String>,
     pub window_icon_ids: &'a HashMap<String, String>,
+    pub control_names: Option<&'a mut dyn FnMut(&str, DockControlName<'_>)>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1723,14 +1734,31 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
             let action_w = dock_tab_action_width(theme);
             let select_w = (tab.rect.w - action_w * actions.len() as f32).max(theme.padding_standard * 2.0);
             let select_rect = Rect::new(tab.rect.x, tab.rect.y, select_w, tab.rect.h);
-            ctx.input.register_hit(HitTarget { rect: select_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
+            let select_id = format!("dock.tab.{}.{}", path_str(path), tab.window_id);
+            if let Some(names) = ctx.control_names.as_mut() {
+                names(&select_id, DockControlName::Tab { title: &tab.label, selected: is_active, panel: active });
+            }
+            ctx.input.register_hit(HitTarget { rect: select_rect, event: None, control_id: Some(select_id), kind: HitKind::Window, drag_axis: None, drag_data: None });
             content_x = tab.rect.x + tab.rect.w - action_w * actions.len() as f32;
             for (action, icon_id) in actions.iter() {
                 let action_rect = Rect::new(content_x, control_rect.y, action_w, control_rect.h);
                 let action_hovered = action_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
                 let action_tint = chrome_item_text(theme, false, action_hovered);
                 let _ = paint_dock_tab_icon(ctx, icon_id, action_rect.x + theme.padding_standard * 0.5, action_rect, action_tint);
-                ctx.input.register_hit(HitTarget { rect: action_rect, event: None, control_id: Some(format!("dock.tab.{}.{}.{}", path_str(path), tab.window_id, action)), kind: HitKind::Button, drag_axis: None, drag_data: None });
+                let action_id = format!("dock.tab.{}.{}.{}", path_str(path), tab.window_id, action);
+                if let Some(names) = ctx.control_names.as_mut() {
+                    let name = match *action {
+                        "focus" if maximized => Some(DockControlName::Unfocus),
+                        "focus" => Some(DockControlName::Focus),
+                        "close" => Some(DockControlName::Close),
+                        "drag" => Some(DockControlName::Drag(&tab.label)),
+                        _ => None,
+                    };
+                    if let Some(name) = name {
+                        names(&action_id, name);
+                    }
+                }
+                ctx.input.register_hit(HitTarget { rect: action_rect, event: None, control_id: Some(action_id), kind: HitKind::Button, drag_axis: None, drag_data: None });
                 content_x += action_w;
             }
         }

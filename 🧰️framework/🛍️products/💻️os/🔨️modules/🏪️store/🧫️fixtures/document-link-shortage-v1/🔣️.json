@@ -57,7 +57,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 70000
+            "expiresAtMs": 100000
           }
         },
         {
@@ -74,7 +74,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 70000
+            "expiresAtMs": 100000
           }
         },
         {
@@ -91,7 +91,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 70000
+            "expiresAtMs": 100000
           }
         },
         {
@@ -108,7 +108,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 70000
+            "expiresAtMs": 100000
           }
         },
         {
@@ -125,7 +125,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 70000
+            "expiresAtMs": 100000
           }
         },
         {
@@ -144,7 +144,192 @@
       ]
     },
     {
-      "id": "the-backoff-doubles-to-its-cap-and-an-unlinked-open-expires",
+      "id": "a-cut-shorter-than-the-bound-relinks-at-the-bound",
+      "openedAtMs": 0,
+      "steps": [
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 100
+          },
+          "expect": {
+            "state": {
+              "kind": "linked"
+            },
+            "status": "linked",
+            "admitsLocalEdits": true
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 10000
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 500,
+              "retryAtMs": 10500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 10500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 1000,
+              "retryAtMs": 11500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 11500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 2000,
+              "retryAtMs": 13500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 13500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 4000,
+              "retryAtMs": 17500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 17500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 8000,
+              "retryAtMs": 25500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 25500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 16000,
+              "retryAtMs": 41500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 41500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 30000,
+              "retryAtMs": 70000
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 69999
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 30000,
+              "retryAtMs": 70000
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 70000
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 10000,
+              "backoffMs": 30000,
+              "retryAtMs": 70000
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 100000
+          }
+        },
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 70200
+          },
+          "expect": {
+            "state": {
+              "kind": "linked"
+            },
+            "status": "linked",
+            "admitsLocalEdits": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "the-backoff-doubles-to-its-cap-and-the-last-attempt-runs-at-the-bound",
       "openedAtMs": 0,
       "steps": [
         {
@@ -161,7 +346,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 60000
+            "expiresAtMs": 90000
           }
         },
         {
@@ -178,7 +363,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 60000
+            "expiresAtMs": 90000
           }
         },
         {
@@ -195,7 +380,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 60000
+            "expiresAtMs": 90000
           }
         },
         {
@@ -212,7 +397,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 60000
+            "expiresAtMs": 90000
           }
         },
         {
@@ -229,7 +414,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 60000
+            "expiresAtMs": 90000
           }
         },
         {
@@ -246,7 +431,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 60000
+            "expiresAtMs": 90000
           }
         },
         {
@@ -259,11 +444,11 @@
               "kind": "unlinked",
               "sinceMs": 0,
               "backoffMs": 30000,
-              "retryAtMs": 61500
+              "retryAtMs": 60000
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 60000
+            "expiresAtMs": 90000
           }
         },
         {
@@ -276,11 +461,11 @@
               "kind": "unlinked",
               "sinceMs": 0,
               "backoffMs": 30000,
-              "retryAtMs": 61500
+              "retryAtMs": 60000
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 60000
+            "expiresAtMs": 90000
           }
         },
         {
@@ -290,9 +475,215 @@
           },
           "expect": {
             "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 30000,
+              "retryAtMs": 60000
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 60000
+          },
+          "expect": {
+            "state": {
               "kind": "expired",
               "sinceMs": 0,
               "atMs": 60000
+            },
+            "status": "link-expired",
+            "admitsLocalEdits": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "an-attempt-that-never-answers-expires-at-the-ceiling",
+      "openedAtMs": 0,
+      "steps": [
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 0
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 500,
+              "retryAtMs": 500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 1000,
+              "retryAtMs": 1500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 1500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 2000,
+              "retryAtMs": 3500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 3500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 4000,
+              "retryAtMs": 7500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 7500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 8000,
+              "retryAtMs": 15500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 15500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 16000,
+              "retryAtMs": 31500
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "failed",
+            "nowMs": 31500
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 30000,
+              "retryAtMs": 60000
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 60000
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 30000,
+              "retryAtMs": 60000
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 89999
+          },
+          "expect": {
+            "state": {
+              "kind": "unlinked",
+              "sinceMs": 0,
+              "backoffMs": 30000,
+              "retryAtMs": 60000
+            },
+            "status": "reconnecting",
+            "admitsLocalEdits": true,
+            "expiresAtMs": 90000
+          }
+        },
+        {
+          "event": {
+            "kind": "tick",
+            "nowMs": 90000
+          },
+          "expect": {
+            "state": {
+              "kind": "expired",
+              "sinceMs": 0,
+              "atMs": 90000
+            },
+            "status": "link-expired",
+            "admitsLocalEdits": false
+          }
+        },
+        {
+          "event": {
+            "kind": "restored",
+            "nowMs": 90100
+          },
+          "expect": {
+            "state": {
+              "kind": "expired",
+              "sinceMs": 0,
+              "atMs": 90000
             },
             "status": "link-expired",
             "admitsLocalEdits": false
@@ -331,7 +722,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 65000
+            "expiresAtMs": 95000
           }
         },
         {
@@ -348,7 +739,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 65000
+            "expiresAtMs": 95000
           }
         },
         {
@@ -429,7 +820,7 @@
             },
             "status": "reconnecting",
             "admitsLocalEdits": true,
-            "expiresAtMs": 61000
+            "expiresAtMs": 91000
           }
         },
         {

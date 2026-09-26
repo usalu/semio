@@ -227,6 +227,34 @@ pub mod part_1 {
     use super::*;
     use crate::part_1::*;
 
+    /// 📈️ ISO 16757-1 §5.1 catalogue lifecycle statuses (exchange metadata).
+    pub const LIFECYCLE_STATUSES: &[&str] = &["draft", "published", "withdrawn", "superseded"];
+
+    /// 📈️ Lifecycle status rows with distinct en/de labels for catalogue tables.
+    pub const LIFECYCLE_STATUS_ROWS: &[(&str, &str, &str)] = &[
+        ("draft", "Draft", "Entwurf"),
+        ("published", "Published", "Veröffentlicht"),
+        ("withdrawn", "Withdrawn", "Zurückgezogen"),
+        ("superseded", "Superseded", "Ersetzt"),
+    ];
+
+    /// 🎛 Selection constraint operators (Part 1 selection).
+    pub const CONSTRAINT_OPERATOR_ROWS: &[(&str, &str, &str)] = &[
+        ("equal", "Equal", "Gleich"),
+        ("notEqual", "Not equal", "Ungleich"),
+        ("lessThan", "Less than", "Kleiner als"),
+        ("greaterThan", "Greater than", "Größer als"),
+        ("inRange", "In range", "Im Bereich"),
+    ];
+
+    /// 🏷 Property definition kinds.
+    pub const PROPERTY_KIND_ROWS: &[(&str, &str, &str)] = &[
+        ("static", "Static", "Statisch"),
+        ("dynamic", "Dynamic", "Dynamisch"),
+        ("selection", "Selection", "Auswahl"),
+        ("external", "External", "Extern"),
+    ];
+
     pub fn evaluate_constraint(value: &CatalogueValue, constraint: &SelectionConstraint) -> bool {
         match (&constraint.operator, value, &constraint.value) {
             (ConstraintOperator::Equal, a, b) => a == b,
@@ -347,6 +375,18 @@ pub mod part_1 {
 pub mod part_2 {
     use super::*;
     use crate::part_2::*;
+
+    /// 📐️ ISO 16757-2 §7 minimum installation clearance around the product solid [m].
+    pub const INSTALL_CLEARANCE_M: f64 = 0.05;
+
+    /// 📐️ Controlled SpaceKind wire codes with en/de labels (Part 2 geometry spaces).
+    pub const SPACE_KIND_ROWS: &[(&str, &str, &str)] = &[
+        ("overall", "Overall space", "Gesamtraum"),
+        ("operation", "Operation space", "Betriebsraum"),
+        ("access", "Access space", "Zugangsraum"),
+        ("placementTransportation", "Placement / transportation", "Platzierung / Transport"),
+        ("installation", "Installation space", "Installationsraum"),
+    ];
 
     pub fn substitute_parameters(node: &GeometryNode, values: &HashMap<String, f64>) -> GeometryNode {
         match node {
@@ -521,6 +561,24 @@ pub mod part_5 {
     use super::*;
     use crate::part_5::*;
     use std::time::{Duration, Instant};
+
+    /// 🔄 ISO 16757-5 edition profile wire codes with en/de labels.
+    pub const EDITION_PROFILE_ROWS: &[(&str, &str, &str)] = &[
+        ("fullPublished", "Full published edition", "Vollständig veröffentlichte Ausgabe"),
+        ("part1_2015", "Part 1 (2015)", "Teil 1 (2015)"),
+        ("part2_2016", "Part 2 (2016)", "Teil 2 (2016)"),
+        ("part4_2025", "Part 4 (2025)", "Teil 4 (2025)"),
+        ("part5_2025", "Part 5 (2025)", "Teil 5 (2025)"),
+    ];
+
+    /// 🔄 Exchange process stages with en/de labels.
+    pub const EXCHANGE_PROCESS_ROWS: &[(&str, &str, &str)] = &[
+        ("createFromDictionary", "Create from dictionary", "Aus Wörterbuch erstellen"),
+        ("provideCatalogue", "Provide catalogue", "Katalog bereitstellen"),
+        ("determineProduct", "Determine product", "Produkt bestimmen"),
+        ("integrateIntoSystem", "Integrate into system", "In System integrieren"),
+        ("exchangeSystemModel", "Exchange system model", "Systemmodell austauschen"),
+    ];
 
     /// 🧮️ Sandboxed calculation runtime (constrained numeric expressions).
     pub trait ScriptRuntime {

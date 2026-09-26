@@ -1,0 +1,156 @@
+{
+  "layers": [
+    {
+      "id": "a",
+      "x": 0,
+      "y": 0,
+      "width": 10,
+      "height": 10
+    },
+    {
+      "id": "b",
+      "x": 30,
+      "y": 20,
+      "width": 20,
+      "height": 20
+    },
+    {
+      "id": "c",
+      "x": 80,
+      "y": 50,
+      "width": 10,
+      "height": 10
+    }
+  ],
+  "cases": [
+    {
+      "operation": "alignLeft",
+      "ids": [
+        "a",
+        "b",
+        "c"
+      ],
+      "bounds": [
+        [
+          0,
+          0,
+          10,
+          10
+        ],
+        [
+          0,
+          20,
+          20,
+          20
+        ],
+        [
+          0,
+          50,
+          10,
+          10
+        ]
+      ]
+    },
+    {
+      "operation": "alignBottom",
+      "ids": [
+        "a",
+        "b",
+        "c"
+      ],
+      "bounds": [
+        [
+          0,
+          50,
+          10,
+          10
+        ],
+        [
+          30,
+          40,
+          20,
+          20
+        ],
+        [
+          80,
+          50,
+          10,
+          10
+        ]
+      ]
+    },
+    {
+      "operation": "distributeHorizontal",
+      "ids": [
+        "a",
+        "b",
+        "c"
+      ],
+      "bounds": [
+        [
+          0,
+          0,
+          10,
+          10
+        ],
+        [
+          35,
+          20,
+          20,
+          20
+        ],
+        [
+          80,
+          50,
+          10,
+          10
+        ]
+      ]
+    },
+    {
+      "operation": "group",
+      "ids": [
+        "a",
+        "b"
+      ],
+      "rootCount": 2
+    },
+    {
+      "operation": "duplicate",
+      "ids": [
+        "a"
+      ],
+      "rootCount": 4
+    },
+    {
+      "operation": "delete",
+      "ids": [
+        "a",
+        "c"
+      ],
+      "rootCount": 1
+    },
+    {
+      "operation": "bringToFront",
+      "ids": [
+        "a"
+      ],
+      "order": [
+        "b",
+        "c",
+        "a"
+      ]
+    },
+    {
+      "operation": "sendToBack",
+      "ids": [
+        "c"
+      ],
+      "order": [
+        "c",
+        "a",
+        "b"
+      ]
+    }
+  ]
+}

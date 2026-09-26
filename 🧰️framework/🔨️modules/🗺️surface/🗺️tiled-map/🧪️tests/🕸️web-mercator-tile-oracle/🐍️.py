@@ -72,6 +72,51 @@ def check_lod_bands(fixture: dict, failures: list[str]) -> None:
             failures.append(f"lodBands[spanDeg={entry['spanDeg']}]: got (idx={idx}, z={tile_z[idx]}) want (idx={entry['lodIndex']}, z={entry['tileZ']})")
 
 
+FIXTURE = "shared://🕸️web-mercator-tile-oracle/🔣️.json"
+PROPERTY_LAWS = ("cursor-anchored-zoom-invariant", "pan-round-trip-invariant", "zoom-round-trip-invariant", "visible-tile-count-bound")
+
+
+def adapter():
+    """🧭️ The platform entry point, ORACLE role. The three differential scenarios answer from `mercantile` alone; the
+    `lod-band-selection` conformance scenario answers with the committed specification vectors (no third party
+    defines that band scheme); the four camera laws have no third-party counterpart, so the reference answers with
+    the law the feature states and the subject must reach it by asserting the law in role."""
+    from semio_repo_test import Adapter, Outcome
+
+    def answer(key, rows):
+        projection = {key: rows}
+        return Outcome(projection, raw=json.dumps(projection, separators=(",", ":")).encode("utf-8"))
+
+    def fixture(ctx):
+        return json.loads(ctx.fixture_bytes(FIXTURE).decode("utf-8"))
+
+    def projection(ctx):
+        return answer("points", [dict(zip(("id", "worldX", "worldY"), (entry["id"], *world_xy(entry["lon"], entry["lat"])))) for entry in fixture(ctx)["projection"]])
+
+    def tile_numbering(ctx):
+        tiles = [(entry["id"], mercantile.tile(entry["lon"], entry["lat"], entry["z"])) for entry in fixture(ctx)["tileNumbering"]]
+        return answer("tiles", [{"id": identifier, "z": tile.z, "x": tile.x, "y": tile.y} for identifier, tile in tiles])
+
+    def tile_bounds(ctx):
+        bounds = [(entry["id"], mercantile.bounds(entry["x"], entry["y"], entry["z"])) for entry in fixture(ctx)["tileBounds"]]
+        return answer("bounds", [{"id": identifier, "west": b.west, "south": b.south, "east": b.east, "north": b.north} for identifier, b in bounds])
+
+    def lod_bands(ctx):
+        return answer("bands", [{"spanDeg": entry["spanDeg"], "lodIndex": entry["lodIndex"], "tileZ": entry["tileZ"]} for entry in fixture(ctx)["lodBands"]])
+
+    def stated_law(identifier):
+        def handler(ctx):
+            projection = {"law": identifier, "holds": True}
+            return Outcome(projection, raw=json.dumps(projection, separators=(",", ":")).encode("utf-8"))
+
+        return handler
+
+    built = Adapter("python").oracle("lonlat-world-round-trip", projection).oracle("tile-numbering", tile_numbering).oracle("tile-bounds", tile_bounds).oracle("lod-band-selection", lod_bands)
+    for identifier in PROPERTY_LAWS:
+        built = built.oracle(identifier, stated_law(identifier))
+    return built
+
+
 def main() -> int:
     fixture_path = Path(__file__).resolve().parents[2] / "🧫️fixtures" / "🕸️web-mercator-tile-oracle" / "🔣️.json"
     fixture = json.loads(fixture_path.read_text(encoding="utf-8"))

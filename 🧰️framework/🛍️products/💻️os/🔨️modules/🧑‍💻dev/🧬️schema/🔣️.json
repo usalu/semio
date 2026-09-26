@@ -596,6 +596,136 @@
           }
         }
       }
+    },
+    "DevHubLeaseV1": {
+      "description": "One claim on a development hub: the owner process that holds a hub port and its data root. A claim whose process is gone is stale and may be taken over; a live one means the hub is owned even before it has bound its port.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pid",
+        "port",
+        "dataDir",
+        "hubUrl",
+        "acquiredAt"
+      ],
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "dataDir": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hubUrl": {
+          "type": "string",
+          "pattern": "^https?://[^/]+$"
+        },
+        "acquiredAt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "DevHubCatalogHeaderV1": {
+      "description": "The part of a development hub's current trusted-catalog generation (`trusted-catalog/generations/<id>/trusted-catalog.json`) the dev hub owner reads before it boots the hub: the catalog format version the hub loads and the package record keys that format requires. A generation outside it was written by an older publisher and is republished instead of crashing the hub (`ArtifactAuthority(Catalog(\"missing field pluginModule\"))`, 26/09/23). Twins: `🌎️hub/📦️packages/🦀️rust/📜️script.ts` `materializeTrustedCatalogBundle`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs` schema version check.",
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "profiles",
+        "packages"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 3
+        },
+        "profiles": {
+          "type": "array",
+          "minItems": 1
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "pluginId",
+              "packageId",
+              "version",
+              "role",
+              "dependencies",
+              "component",
+              "descriptor",
+              "executionProtocol",
+              "browserActor",
+              "pluginModule",
+              "nativeCodecs",
+              "openTargets"
+            ],
+            "properties": {
+              "pluginId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "packageId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "role": {
+                "type": "string",
+                "minLength": 1
+              },
+              "dependencies": {
+                "type": "array"
+              },
+              "component": {
+                "type": "object"
+              },
+              "descriptor": {
+                "type": "object"
+              },
+              "executionProtocol": {
+                "type": "object"
+              },
+              "browserActor": {
+                "type": "object"
+              },
+              "pluginModule": {
+                "type": "object"
+              },
+              "nativeCodecs": {
+                "type": "array"
+              },
+              "openTargets": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      }
+    },
+    "DevHubCatalogPointerV1": {
+      "description": "`trusted-catalog/current.json` as far as the dev hub owner reads it: which generation is current.",
+      "type": "object",
+      "required": [
+        "generationId"
+      ],
+      "properties": {
+        "generationId": {
+          "$ref": "#/$defs/Sha256Digest"
+        }
+      }
     }
   }
 }

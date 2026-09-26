@@ -439,6 +439,16 @@ describe("🪐️ the space the user is in reaches every render that shows it", 
     expect(shellHostSource).toContain("activeSpaceId={openSpaceId}");
     expect(shellHostSource).not.toContain("activeSpaceId={openSpaceIdRef.current}");
     expect(shellHostSource.match(/openSpaceIdRef\.current = /gu) ?? []).toHaveLength(1);
-    expect(shellHostSource).toContain("const hubOverlay = shellRouteIsOverlayV1(shellUri);");
+    expect(shellHostSource).toContain("const { overlay, sessionRoute: route } = shellSessionRouteV1(shellUri, sessionRouteRef.current);");
+  });
+
+  it("keeps applying the route the hub overlay sits over, so a session replaced under `/hub` returns to its space", () => {
+    const start = shellHostSource.indexOf("const { overlay, sessionRoute: route } = shellSessionRouteV1(shellUri, sessionRouteRef.current);");
+    const effect = shellHostSource.slice(start, shellHostSource.indexOf("}, [applyShellUri,", start));
+    expect(start).toBeGreaterThan(-1);
+    expect(effect).toContain("setHubWorkspaceOpen(overlay);");
+    expect(effect).toContain("requestSessionRoute(route);");
+    expect(effect).not.toMatch(/if \(overlay[^)]*\) return;/u);
+    expect(shellHostSource).toContain('navigateHistory(sessionRouteRef.current ?? "/");');
   });
 });

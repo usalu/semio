@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "whoami": [
+    {
+      "name": "workgroup account, CRLF",
+      "stdout": "\"desktop-7k2\\jane\",\"S-1-5-21-3623811015-3361044348-30300820-1013\"\r\n",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013"
+    },
+    {
+      "name": "LF only",
+      "stdout": "\"desktop-7k2\\jane\",\"S-1-5-21-3623811015-3361044348-30300820-1013\"\n",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013"
+    },
+    {
+      "name": "comma and escaped quote inside the account name",
+      "stdout": "\"corp\\o\"\"brien, pat\",\"S-1-5-21-3623811015-3361044348-30300820-1013\"\r\n",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013"
+    },
+    {
+      "name": "localized account name",
+      "stdout": "\"büro-pc\\jürgen\",\"S-1-5-21-1004336348-1177238915-682003330-1002\"\r\n",
+      "sid": "S-1-5-21-1004336348-1177238915-682003330-1002"
+    },
+    {
+      "name": "blank lines around the row",
+      "stdout": "\r\n\r\n\"host\\user\",\"S-1-5-21-3623811015-3361044348-30300820-1013\"\r\n\r\n",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013"
+    },
+    {
+      "name": "LocalSystem",
+      "stdout": "\"nt authority\\system\",\"S-1-5-18\"\r\n",
+      "sid": "S-1-5-18"
+    },
+    {
+      "name": "access denied",
+      "stdout": "ERROR: Access is denied.\r\n",
+      "sid": null
+    },
+    {
+      "name": "a SID with one authority only is not an account",
+      "stdout": "\"a\\b\",\"S-1-5\"\r\n",
+      "sid": null
+    },
+    {
+      "name": "a malformed SID",
+      "stdout": "\"a\\b\",\"S-X-5-21\"\r\n",
+      "sid": null
+    },
+    {
+      "name": "an unquoted row",
+      "stdout": "host\\user,S-1-5-21-3623811015-3361044348-30300820-1013\r\n",
+      "sid": null
+    }
+  ],
+  "icacls": [
+    {
+      "name": "credential file",
+      "path": "C:\\src\\semio\\.🧬semio\\🌐hub\\hub-dev\\local-session-broker.json",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "kind": "file",
+      "arguments": [
+        "C:\\src\\semio\\.🧬semio\\🌐hub\\hub-dev\\local-session-broker.json",
+        "/inheritance:r",
+        "/grant:r",
+        "*S-1-5-21-3623811015-3361044348-30300820-1013:F"
+      ]
+    },
+    {
+      "name": "local hub data root",
+      "path": "C:\\src\\semio\\.🧬semio\\🌐hub\\hub-dev",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "kind": "directory",
+      "arguments": [
+        "C:\\src\\semio\\.🧬semio\\🌐hub\\hub-dev",
+        "/inheritance:r",
+        "/grant:r",
+        "*S-1-5-21-3623811015-3361044348-30300820-1013:(OI)(CI)F"
+      ]
+    }
+  ],
+  "sddl": [
+    {
+      "name": "owner-only file after icacls",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:S-1-5-21-3623811015-3361044348-30300820-1013G:S-1-5-21-3623811015-3361044348-30300820-1013D:P(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)",
+      "violations": []
+    },
+    {
+      "name": "owner-only directory after icacls",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:S-1-5-21-3623811015-3361044348-30300820-1013G:S-1-5-21-3623811015-3361044348-30300820-1013D:PAI(A;OICI;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)",
+      "violations": []
+    },
+    {
+      "name": "a folder under C:\\ keeps the inherited entries",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:S-1-5-21-3623811015-3361044348-30300820-1013G:S-1-5-21-3623811015-3361044348-30300820-1013D:AI(A;ID;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)(A;ID;0x1301bf;;;AU)(A;ID;FA;;;SY)(A;ID;FA;;;BA)(A;ID;0x1200a9;;;BU)",
+      "violations": [
+        "inherits entries from its parent",
+        "grants AU access",
+        "grants BU access"
+      ]
+    },
+    {
+      "name": "Everyone",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:BAG:SYD:P(A;;FA;;;WD)",
+      "violations": [
+        "grants WD access"
+      ]
+    },
+    {
+      "name": "LocalSystem, Administrators and creator owner stay trusted",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:S-1-5-21-3623811015-3361044348-30300820-1013G:S-1-5-21-3623811015-3361044348-30300820-1013D:PAI(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)(A;;FA;;;SY)(A;;FA;;;BA)(A;OICIIO;GA;;;CO)(A;;FA;;;OW)",
+      "violations": []
+    },
+    {
+      "name": "well-known SIDs in long form",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "D:P(A;;FA;;;S-1-5-18)(A;;FA;;;S-1-5-32-544)(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)",
+      "violations": []
+    },
+    {
+      "name": "a deny entry restricts, never leaks",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "D:P(D;;FA;;;WD)(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)",
+      "violations": []
+    },
+    {
+      "name": "an inherit-only entry reaches everything created inside",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "D:P(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)(A;OICIIO;FA;;;BU)",
+      "violations": [
+        "grants BU access"
+      ]
+    },
+    {
+      "name": "another account",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "D:P(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)(A;;FR;;;S-1-5-21-1004336348-1177238915-682003330-1002)",
+      "violations": [
+        "grants S-1-5-21-1004336348-1177238915-682003330-1002 access"
+      ]
+    },
+    {
+      "name": "object allow entry",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "D:P(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)(OA;;RP;bf967aba-0de6-11d0-a285-00aa003049e2;;AU)",
+      "violations": [
+        "grants AU access"
+      ]
+    },
+    {
+      "name": "null DACL",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:BAD:NO_ACCESS_CONTROL",
+      "violations": [
+        "no discretionary ACL (everyone has access)"
+      ]
+    },
+    {
+      "name": "no DACL",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:BAG:SY",
+      "violations": [
+        "no discretionary ACL (everyone has access)"
+      ]
+    },
+    {
+      "name": "a SACL after the DACL is not read as access",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:S-1-5-21-3623811015-3361044348-30300820-1013G:S-1-5-21-3623811015-3361044348-30300820-1013D:PAI(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)S:AI(AU;SAFA;FA;;;WD)",
+      "violations": []
+    },
+    {
+      "name": "the group alias DU before the DACL",
+      "sid": "S-1-5-21-3623811015-3361044348-30300820-1013",
+      "sddl": "O:DAG:DUD:P(A;;FA;;;S-1-5-21-3623811015-3361044348-30300820-1013)",
+      "violations": []
+    }
+  ]
+}

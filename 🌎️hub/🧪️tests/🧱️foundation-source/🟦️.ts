@@ -208,7 +208,6 @@ test("frame transport handles splits and rejects hostile bounds, JSON, deadlines
 test("allocation, readiness and finish stay injectable and idempotent", async () => {
   const calls: string[] = [];
   const allocation = allocateLocalHubRunRoot("/private/ticket", {
-    platform: "linux",
     makeTemporaryDirectory: (prefix) => {
       calls.push(`make:${prefix}`);
       return "/private/ticket/semio-hub-run-fixed";

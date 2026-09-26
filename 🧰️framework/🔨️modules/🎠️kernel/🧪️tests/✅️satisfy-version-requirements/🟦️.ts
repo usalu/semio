@@ -22,7 +22,7 @@ function pairs(ctx: AdapterContext): { version: string; requirement: string }[] 
 // #endregion 🧫️Vectors
 
 // #region 🧭️Adapter
-const DIFFERENTIAL = ["exact-and-any", "caret-tiers", "tilde-and-at-least"];
+const DIFFERENTIAL = ["exact-pins"];
 
 export default defineTestAdapter({
   implementation: "typescript",

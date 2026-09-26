@@ -181,6 +181,37 @@ async fn a_scroll_button_moves_the_viewport_by_reacts_own_step_and_never_past_th
     assert_eq!(select_clamped_scroll(8, &theme, painted, -10.0), 0.0);
     assert!((select_clamped_scroll(8, &theme, painted, 10_000.0) - extent).abs() < 0.001);
     assert_eq!(select_clamped_scroll(2, &theme, painted, 10_000.0), 0.0, "a popup that fits cannot scroll");
+    let short_viewport = theme.padding_standard;
+    let short_maximum = select_row_height(&theme) * 8.0 + theme.padding_standard * 2.0 - short_viewport;
+    assert!((select_clamped_scroll(8, &theme, short_viewport, f32::MAX) - short_maximum).abs() < 0.001, "a viewport shorter than its padding still owns the DOM scrollHeight padding");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn nearest_reveal_uses_the_custom_theme_metrics_captured_by_the_popup() {
+    let mut theme = Theme::light();
+    theme.padding_standard = 7.0;
+    theme.font_size_body = 18.0;
+    let trigger = Rect::new(20.0, 120.0, 104.0, theme.control_height);
+    let popup = select_popup_geometry(trigger, 20, &theme, 300.0, 0.0, 0.0);
+    let revealed = select_revealed_scroll(popup, 19);
+    let popup = select_popup_geometry(trigger, 20, &theme, 300.0, revealed, 0.0);
+    let viewport = select_popup_viewport_rect(popup);
+    let row = select_popup_row_rect(trigger, 19, popup, &theme);
+
+    assert!(revealed > 0.0);
+    assert!(row.y >= viewport.y - 0.001);
+    assert!(row.y + row.h <= viewport.y + viewport.h + 0.001);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn nearest_reveal_keeps_an_oversized_first_row_at_its_visible_leading_edge() {
+    let theme = Theme::light();
+    let trigger = Rect::new(8.0, 62.0, 120.0, theme.control_height);
+    let popup = select_popup_geometry(trigger, 20, &theme, 100.0, 0.0, 0.0);
+    let viewport = select_popup_viewport_rect(popup);
+    assert!(viewport.h < select_row_height(&theme));
+    assert_eq!(select_revealed_scroll(popup, 0), 0.0, "the leading edge is already visible, so nearest must not hide it to reveal the trailing edge");
+    assert!(select_revealed_scroll(popup, 1) > 0.0, "the next oversized row still moves its leading edge into view");
 }
 
 /// 🔼️ W15a item 4. The two scroll functions above were tested arithmetic with ZERO callers, so a

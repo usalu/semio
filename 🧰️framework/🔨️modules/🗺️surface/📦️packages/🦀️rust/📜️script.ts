@@ -26,9 +26,9 @@ class WasmScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     runCmd("bun", ["test", join(this.root, "../../🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot });
-    runCargoTestBudgeted(["semio-framework-surface"], this.repoRoot, segments);
+    await runCargoTestBudgeted(["semio-framework-surface"], this.repoRoot, segments);
   }
 }
 

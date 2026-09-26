@@ -6,11 +6,18 @@ export interface CharacteristicAction {
   category: string;
   stage: string;
   qAreaPa: number;
-  mKNm: number;
-  vKN: number;
-  nKN: number;
+  fKN: number;
   deltaSigmaKPa: number;
   deltaTauKPa: number;
+}
+
+export interface ColumnAction {
+  id: string;
+  kind: string;
+  category: string;
+  stage: string;
+  nKN: number;
+  mKNm: number;
 }
 
 export interface SteelSection {
@@ -77,7 +84,7 @@ export interface CompositeColumn {
   reinforcementFYkPa: number;
   iM4: number;
   bucklingCurve: string;
-  actions: CharacteristicAction[];
+  actions: ColumnAction[];
 }
 
 export interface CompositeSlab {

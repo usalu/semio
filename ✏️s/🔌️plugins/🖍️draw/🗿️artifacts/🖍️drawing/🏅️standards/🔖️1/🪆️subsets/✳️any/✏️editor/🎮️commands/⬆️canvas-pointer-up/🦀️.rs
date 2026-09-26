@@ -27,7 +27,7 @@ pub struct CanvasPointerUp {
 /// `idle` (no effect is sinked), an idle canvas or a click-sequenced draft is left untouched — a
 /// real release in `drafting` is a no-op too, and a cancel must never fall back to a pick.
 pub fn cancel_gesture(session: &mut DrawingSession, document: &DrawingSnapshot, config: &NoConfig) -> Emit<DrawingMutation, NoConfigMutation> {
-    if session.gesture.matches("marqueeing") || session.gesture.matches("shape_dragging") {
+    if session.gesture.matches("marqueeing") || session.gesture.matches("shape_dragging") || session.gesture.matches("moving_layer") {
         return session.step_gesture(drawing_gesture::Event::Escape, document, config);
     }
     Emit::default()

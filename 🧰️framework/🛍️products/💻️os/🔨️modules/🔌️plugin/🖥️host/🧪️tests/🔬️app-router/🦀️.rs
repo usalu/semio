@@ -75,7 +75,7 @@ pub(super) async fn fixture_app(id: &str, dialect: semio_framework::ArtifactDial
 async fn fixture_manifest(plugin_id: &str, dependency_ids: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> PluginManifest {
     let mut dependencies = Vec::with_capacity(dependency_ids.len());
     for id in dependency_ids {
-        dependencies.push(semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any));
+        dependencies.push(semio_framework::PluginDependency::new(id, semio_framework::tree_pin!()));
     }
     PluginManifest {
         plugin_id: plugin_id.into(),

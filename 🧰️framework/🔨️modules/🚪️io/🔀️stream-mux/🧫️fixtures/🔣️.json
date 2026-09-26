@@ -1,0 +1,2668 @@
+{
+ "$schema": "semio.io.stream-mux.fixture/v1",
+ "contract": "semio.io.stream-mux/v1",
+ "epoch": "0123456789abcdef",
+ "vectors": [
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"plugin-modules.watch\",\"key\":\"\",\"resume\":null,\"credit\":32}",
+   "frame": {
+    "kind": "open",
+    "stream": 1,
+    "route": "plugin-modules.watch",
+    "key": "",
+    "resume": null,
+    "credit": 32
+   }
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":7,\"route\":\"backbone.folder\",\"key\":\"folder:///Users/ada/.semio/spaces/01a0/Grüße 🗂️\",\"resume\":{\"epoch\":\"0123456789abcdef\",\"seq\":42},\"credit\":0}",
+   "frame": {
+    "kind": "open",
+    "stream": 7,
+    "route": "backbone.folder",
+    "key": "folder:///Users/ada/.semio/spaces/01a0/Grüße 🗂️",
+    "resume": {
+     "epoch": "0123456789abcdef",
+     "seq": 42
+    },
+    "credit": 0
+   }
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":2147483647,\"route\":\"a.b-c.d0.e\",\"key\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"resume\":{\"epoch\":\"fedcba9876543210\",\"seq\":9007199254740991},\"credit\":256}",
+   "frame": {
+    "kind": "open",
+    "stream": 2147483647,
+    "route": "a.b-c.d0.e",
+    "key": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "resume": {
+     "epoch": "fedcba9876543210",
+     "seq": 9007199254740991
+    },
+    "credit": 256
+   }
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"grant\",\"stream\":1,\"credit\":1}",
+   "frame": {
+    "kind": "grant",
+    "stream": 1,
+    "credit": 1
+   }
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"grant\",\"stream\":3,\"credit\":256}",
+   "frame": {
+    "kind": "grant",
+    "stream": 3,
+    "credit": 256
+   }
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"cancel\",\"stream\":1}",
+   "frame": {
+    "kind": "cancel",
+    "stream": 1
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"hello\",\"version\":1,\"epoch\":\"0123456789abcdef\",\"beatMs\":10000}",
+   "frame": {
+    "kind": "hello",
+    "version": 1,
+    "epoch": "0123456789abcdef",
+    "beatMs": 10000
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"opened\",\"stream\":1,\"mode\":\"fresh\",\"epoch\":\"0123456789abcdef\",\"seq\":0}",
+   "frame": {
+    "kind": "opened",
+    "stream": 1,
+    "mode": "fresh",
+    "epoch": "0123456789abcdef",
+    "seq": 0
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"opened\",\"stream\":2,\"mode\":\"resumed\",\"epoch\":\"fedcba9876543210\",\"seq\":9007199254740991}",
+   "frame": {
+    "kind": "opened",
+    "stream": 2,
+    "mode": "resumed",
+    "epoch": "fedcba9876543210",
+    "seq": 9007199254740991
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"data\",\"stream\":1,\"seq\":0,\"data\":{\"kind\":\"snapshot\",\"plugins\":[{\"pluginId\":\"alpha\",\"rebuiltAt\":1}]}}",
+   "frame": {
+    "kind": "data",
+    "stream": 1,
+    "seq": 0,
+    "data": {
+     "kind": "snapshot",
+     "plugins": [
+      {
+       "pluginId": "alpha",
+       "rebuiltAt": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"data\",\"stream\":1,\"seq\":5,\"data\":null}",
+   "frame": {
+    "kind": "data",
+    "stream": 1,
+    "seq": 5,
+    "data": null
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"data\",\"stream\":1,\"seq\":6,\"data\":[1,2.5,\"ß\",true,false,{\"nested\":{\"a\":[]}}]}",
+   "frame": {
+    "kind": "data",
+    "stream": 1,
+    "seq": 6,
+    "data": [
+     1,
+     2.5,
+     "ß",
+     true,
+     false,
+     {
+      "nested": {
+       "a": []
+      }
+     }
+    ]
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"data\",\"stream\":1,\"seq\":7,\"data\":\"Änderung ✏️\"}",
+   "frame": {
+    "kind": "data",
+    "stream": 1,
+    "seq": 7,
+    "data": "Änderung ✏️"
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"progress\",\"stream\":3,\"done\":1,\"total\":3,\"note\":\"materialize note\"}",
+   "frame": {
+    "kind": "progress",
+    "stream": 3,
+    "done": 1,
+    "total": 3,
+    "note": "materialize note"
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"progress\",\"stream\":3,\"done\":0,\"total\":null,\"note\":\"\"}",
+   "frame": {
+    "kind": "progress",
+    "stream": 3,
+    "done": 0,
+    "total": null,
+    "note": ""
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"end\",\"stream\":1,\"reason\":\"done\",\"detail\":\"\"}",
+   "frame": {
+    "kind": "end",
+    "stream": 1,
+    "reason": "done",
+    "detail": ""
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"end\",\"stream\":1,\"reason\":\"cancelled\",\"detail\":\"\"}",
+   "frame": {
+    "kind": "end",
+    "stream": 1,
+    "reason": "cancelled",
+    "detail": ""
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"end\",\"stream\":1,\"reason\":\"refused\",\"detail\":\"unknown-route\"}",
+   "frame": {
+    "kind": "end",
+    "stream": 1,
+    "reason": "refused",
+    "detail": "unknown-route"
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"end\",\"stream\":1,\"reason\":\"failed\",\"detail\":\"materialize failed: exit 1\"}",
+   "frame": {
+    "kind": "end",
+    "stream": 1,
+    "reason": "failed",
+    "detail": "materialize failed: exit 1"
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"beat\",\"at\":0}",
+   "frame": {
+    "kind": "beat",
+    "at": 0
+   }
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"beat\",\"at\":1790441896668}",
+   "frame": {
+    "kind": "beat",
+    "at": 1790441896668
+   }
+  }
+ ],
+ "hostiles": [
+  {
+   "side": "client",
+   "text": "{\"kind\":\"cancel\",\"stream\":1",
+   "refusal": "malformed-json",
+   "field": null
+  },
+  {
+   "side": "client",
+   "text": "[1,2]",
+   "refusal": "not-an-object",
+   "field": null
+  },
+  {
+   "side": "client",
+   "text": "42",
+   "refusal": "not-an-object",
+   "field": null
+  },
+  {
+   "side": "client",
+   "text": "null",
+   "refusal": "not-an-object",
+   "field": null
+  },
+  {
+   "side": "client",
+   "text": "{\"stream\":1}",
+   "refusal": "unknown-kind",
+   "field": "kind"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"close\",\"stream\":1}",
+   "refusal": "unknown-kind",
+   "field": "kind"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"hello\",\"version\":1,\"epoch\":\"0123456789abcdef\",\"beatMs\":10000}",
+   "refusal": "unknown-kind",
+   "field": "kind"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"plugin-modules.watch\",\"key\":\"\",\"resume\":null,\"credit\":1}",
+   "refusal": "unknown-kind",
+   "field": "kind"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"cancel\",\"stream\":1,\"reason\":\"x\"}",
+   "refusal": "unknown-field",
+   "field": "reason"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"plugin-modules.watch\",\"key\":\"\",\"credit\":1}",
+   "refusal": "missing-field",
+   "field": "resume"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"grant\",\"stream\":1}",
+   "refusal": "missing-field",
+   "field": "credit"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"cancel\",\"stream\":0}",
+   "refusal": "invalid-field",
+   "field": "stream"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"cancel\",\"stream\":2147483648}",
+   "refusal": "invalid-field",
+   "field": "stream"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"cancel\",\"stream\":1.5}",
+   "refusal": "invalid-field",
+   "field": "stream"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"cancel\",\"stream\":\"1\"}",
+   "refusal": "invalid-field",
+   "field": "stream"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"Plugin.watch\",\"key\":\"\",\"resume\":null,\"credit\":1}",
+   "refusal": "invalid-field",
+   "field": "route"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"a.b.c.d.e\",\"key\":\"\",\"resume\":null,\"credit\":1}",
+   "refusal": "invalid-field",
+   "field": "route"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"watch.\",\"key\":\"\",\"resume\":null,\"credit\":1}",
+   "refusal": "invalid-field",
+   "field": "route"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"plugin-modules.watch\",\"key\":\"🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️\",\"resume\":null,\"credit\":1}",
+   "refusal": "invalid-field",
+   "field": "key"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"plugin-modules.watch\",\"key\":\"\",\"resume\":{\"epoch\":\"0123\",\"seq\":1},\"credit\":1}",
+   "refusal": "invalid-field",
+   "field": "resume"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"plugin-modules.watch\",\"key\":\"\",\"resume\":{\"epoch\":\"0123456789abcdef\",\"seq\":-1},\"credit\":1}",
+   "refusal": "invalid-field",
+   "field": "resume"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"plugin-modules.watch\",\"key\":\"\",\"resume\":{\"epoch\":\"0123456789abcdef\",\"seq\":1,\"extra\":0},\"credit\":1}",
+   "refusal": "invalid-field",
+   "field": "resume"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"open\",\"stream\":1,\"route\":\"plugin-modules.watch\",\"key\":\"\",\"resume\":null,\"credit\":257}",
+   "refusal": "invalid-field",
+   "field": "credit"
+  },
+  {
+   "side": "client",
+   "text": "{\"kind\":\"grant\",\"stream\":1,\"credit\":0}",
+   "refusal": "invalid-field",
+   "field": "credit"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"hello\",\"version\":2,\"epoch\":\"0123456789abcdef\",\"beatMs\":10000}",
+   "refusal": "invalid-field",
+   "field": "version"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"opened\",\"stream\":1,\"mode\":\"stale\",\"epoch\":\"0123456789abcdef\",\"seq\":0}",
+   "refusal": "invalid-field",
+   "field": "mode"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"opened\",\"stream\":1,\"mode\":\"fresh\",\"epoch\":\"0123456789ABCDEF\",\"seq\":0}",
+   "refusal": "invalid-field",
+   "field": "epoch"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"data\",\"stream\":1,\"seq\":0}",
+   "refusal": "missing-field",
+   "field": "data"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"data\",\"stream\":1,\"seq\":9007199254740993,\"data\":null}",
+   "refusal": "invalid-field",
+   "field": "seq"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"progress\",\"stream\":1,\"done\":1,\"total\":-1,\"note\":\"\"}",
+   "refusal": "invalid-field",
+   "field": "total"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"progress\",\"stream\":1,\"done\":1,\"total\":null,\"note\":\"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\"}",
+   "refusal": "invalid-field",
+   "field": "note"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"end\",\"stream\":1,\"reason\":\"timeout\",\"detail\":\"\"}",
+   "refusal": "invalid-field",
+   "field": "reason"
+  },
+  {
+   "side": "server",
+   "text": "{\"kind\":\"beat\",\"at\":-1}",
+   "refusal": "invalid-field",
+   "field": "at"
+  },
+  {
+   "side": "client",
+   "fill": {
+    "prefix": "{\"kind\":\"cancel\",\"stream\":1,\"pad\":\"",
+    "char": "x",
+    "count": 262144,
+    "suffix": "\"}"
+   },
+   "refusal": "too-large",
+   "field": null
+  },
+  {
+   "side": "server",
+   "fill": {
+    "prefix": "{\"kind\":\"data\",\"stream\":1,\"seq\":0,\"data\":\"",
+    "char": "ü",
+    "count": 131072,
+    "suffix": "\"}"
+   },
+   "refusal": "too-large",
+   "field": null
+  }
+ ],
+ "routes": {
+  "plugin-modules.watch": {
+   "snapshot": {
+    "kind": "snapshot",
+    "plugins": [
+     {
+      "pluginId": "alpha",
+      "rebuiltAt": 1
+     }
+    ]
+   },
+   "coalesceBy": "pluginId"
+  },
+  "plain.watch": {
+   "snapshot": {
+    "kind": "snapshot"
+   }
+  },
+  "backbone.folder": {
+   "admitKey": "^folder://",
+   "coalesceAll": true,
+   "source": true
+  },
+  "plugin-modules.activation": {
+   "job": true
+  }
+ },
+ "serverScenarios": [
+  {
+   "name": "fresh open sends the snapshot at the head, then live events in order",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.watch",
+      "key": "",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "alpha",
+       "rebuiltAt": 2
+      }
+     }
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "beta",
+       "rebuiltAt": 3
+      }
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 0,
+        "data": {
+         "kind": "snapshot",
+         "plugins": [
+          {
+           "pluginId": "alpha",
+           "rebuiltAt": 1
+          }
+         ]
+        }
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 1,
+        "data": {
+         "kind": "built",
+         "pluginId": "alpha",
+         "rebuiltAt": 2
+        }
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 2,
+        "data": {
+         "kind": "built",
+         "pluginId": "beta",
+         "rebuiltAt": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "credit bounds what is sent; a grant releases the queue",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plain.watch",
+      "key": "",
+      "resume": null,
+      "credit": 2
+     }
+    },
+    {
+     "publishMany": {
+      "route": "plain.watch",
+      "key": "",
+      "count": 3
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 0,
+        "data": {
+         "kind": "snapshot"
+        }
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 1,
+        "data": {
+         "n": 1
+        }
+       }
+      ]
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "grant",
+      "stream": 1,
+      "credit": 2
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 2,
+        "data": {
+         "n": 2
+        }
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 3,
+        "data": {
+         "n": 3
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "queued events coalesce by the route key while the reader holds no credit",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.watch",
+      "key": "",
+      "resume": null,
+      "credit": 1
+     }
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "alpha",
+       "rebuiltAt": 2
+      }
+     }
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "beta",
+       "rebuiltAt": 3
+      }
+     }
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "alpha",
+       "rebuiltAt": 4
+      }
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 0,
+        "data": {
+         "kind": "snapshot",
+         "plugins": [
+          {
+           "pluginId": "alpha",
+           "rebuiltAt": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "grant",
+      "stream": 1,
+      "credit": 5
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 2,
+        "data": {
+         "kind": "built",
+         "pluginId": "beta",
+         "rebuiltAt": 3
+        }
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 3,
+        "data": {
+         "kind": "built",
+         "pluginId": "alpha",
+         "rebuiltAt": 4
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "a queue that overflows its bound resynchronizes with a fresh snapshot once credit returns",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plain.watch",
+      "key": "",
+      "resume": null,
+      "credit": 1
+     }
+    },
+    {
+     "publishMany": {
+      "route": "plain.watch",
+      "key": "",
+      "count": 65
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 0,
+        "data": {
+         "kind": "snapshot"
+        }
+       }
+      ]
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "grant",
+      "stream": 1,
+      "credit": 1
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 65
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 65,
+        "data": {
+         "kind": "snapshot"
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "a reader that lost its link resumes after its last sequence number and gets exactly the missed events",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.watch",
+      "key": "",
+      "resume": null,
+      "credit": 8
+     }
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "alpha",
+       "rebuiltAt": 2
+      }
+     }
+    },
+    {
+     "drop": "a"
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "beta",
+       "rebuiltAt": 3
+      }
+     }
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "gamma",
+       "rebuiltAt": 4
+      }
+     }
+    },
+    {
+     "connect": "b"
+    },
+    {
+     "send": "b",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.watch",
+      "key": "",
+      "resume": {
+       "epoch": "0123456789abcdef",
+       "seq": 1
+      },
+      "credit": 8
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 0,
+        "data": {
+         "kind": "snapshot",
+         "plugins": [
+          {
+           "pluginId": "alpha",
+           "rebuiltAt": 1
+          }
+         ]
+        }
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 1,
+        "data": {
+         "kind": "built",
+         "pluginId": "alpha",
+         "rebuiltAt": 2
+        }
+       }
+      ],
+      "b": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "resumed",
+        "epoch": "0123456789abcdef",
+        "seq": 1
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 2,
+        "data": {
+         "kind": "built",
+         "pluginId": "beta",
+         "rebuiltAt": 3
+        }
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 3,
+        "data": {
+         "kind": "built",
+         "pluginId": "gamma",
+         "rebuiltAt": 4
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "a resume from another epoch starts fresh",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "alpha",
+       "rebuiltAt": 2
+      }
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.watch",
+      "key": "",
+      "resume": {
+       "epoch": "fedcba9876543210",
+       "seq": 1
+      },
+      "credit": 4
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 1
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 1,
+        "data": {
+         "kind": "snapshot",
+         "plugins": [
+          {
+           "pluginId": "alpha",
+           "rebuiltAt": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "after the resume grace the instance is gone and an event nobody read makes the resume fresh",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.watch",
+      "key": "",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "drop": "a"
+    },
+    {
+     "advance": 60000
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "alpha",
+       "rebuiltAt": 2
+      }
+     }
+    },
+    {
+     "connect": "b"
+    },
+    {
+     "send": "b",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.watch",
+      "key": "",
+      "resume": {
+       "epoch": "0123456789abcdef",
+       "seq": 0
+      },
+      "credit": 4
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 0,
+        "data": {
+         "kind": "snapshot",
+         "plugins": [
+          {
+           "pluginId": "alpha",
+           "rebuiltAt": 1
+          }
+         ]
+        }
+       }
+      ],
+      "b": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 1
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 1,
+        "data": {
+         "kind": "snapshot",
+         "plugins": [
+          {
+           "pluginId": "alpha",
+           "rebuiltAt": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "census": {
+      "channels": 1,
+      "streams": 1,
+      "instances": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "a resume older than the retained ring starts fresh",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plain.watch",
+      "key": "",
+      "resume": null,
+      "credit": 1
+     }
+    },
+    {
+     "drop": "a"
+    },
+    {
+     "publishMany": {
+      "route": "plain.watch",
+      "key": "",
+      "count": 130
+     }
+    },
+    {
+     "connect": "b"
+    },
+    {
+     "send": "b",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plain.watch",
+      "key": "",
+      "resume": {
+       "epoch": "0123456789abcdef",
+       "seq": 1
+      },
+      "credit": 2
+     }
+    },
+    {
+     "send": "b",
+     "frame": {
+      "kind": "open",
+      "stream": 2,
+      "route": "plain.watch",
+      "key": "",
+      "resume": {
+       "epoch": "0123456789abcdef",
+       "seq": 128
+      },
+      "credit": 2
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 0,
+        "data": {
+         "kind": "snapshot"
+        }
+       }
+      ],
+      "b": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 130
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 130,
+        "data": {
+         "kind": "snapshot"
+        }
+       },
+       {
+        "kind": "opened",
+        "stream": 2,
+        "mode": "resumed",
+        "epoch": "0123456789abcdef",
+        "seq": 128
+       },
+       {
+        "kind": "data",
+        "stream": 2,
+        "seq": 129,
+        "data": {
+         "n": 129
+        }
+       },
+       {
+        "kind": "data",
+        "stream": 2,
+        "seq": 130,
+        "data": {
+         "n": 130
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "unknown routes and refused keys end refused; a duplicate stream id closes the channel",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "no.such-route",
+      "key": "",
+      "resume": null,
+      "credit": 1
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 2,
+      "route": "backbone.folder",
+      "key": "file:///etc",
+      "resume": null,
+      "credit": 1
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 3,
+      "route": "backbone.folder",
+      "key": "folder:///a",
+      "resume": null,
+      "credit": 1
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 3,
+      "route": "backbone.folder",
+      "key": "folder:///b",
+      "resume": null,
+      "credit": 1
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "end",
+        "stream": 1,
+        "reason": "refused",
+        "detail": "unknown-route"
+       },
+       {
+        "kind": "end",
+        "stream": 2,
+        "reason": "refused",
+        "detail": "key-refused"
+       },
+       {
+        "kind": "opened",
+        "stream": 3,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       }
+      ]
+     }
+    },
+    {
+     "closed": {
+      "a": [
+       1008,
+       "stream-mux: duplicate-stream"
+      ]
+     }
+    },
+    {
+     "census": {
+      "channels": 0,
+      "streams": 0,
+      "instances": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "a malformed reader frame closes the channel with its refusal",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "sendText": "a",
+     "text": "{\"kind\":\"open\"}"
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       }
+      ]
+     }
+    },
+    {
+     "closed": {
+      "a": [
+       1008,
+       "stream-mux: missing-field stream"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "a job reports progress and ends done; a later reader within the grace sees the retained end without a rerun",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.activation",
+      "key": "note",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "jobProgress": {
+      "key": "note",
+      "done": 1,
+      "total": 3,
+      "note": "materialize note"
+     }
+    },
+    {
+     "jobSettle": {
+      "key": "note",
+      "outcome": "done"
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 2,
+      "route": "plugin-modules.activation",
+      "key": "note",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "progress",
+        "stream": 1,
+        "done": 1,
+        "total": 3,
+        "note": "materialize note"
+       },
+       {
+        "kind": "end",
+        "stream": 1,
+        "reason": "done",
+        "detail": ""
+       },
+       {
+        "kind": "opened",
+        "stream": 2,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "progress",
+        "stream": 2,
+        "done": 1,
+        "total": 3,
+        "note": "materialize note"
+       },
+       {
+        "kind": "end",
+        "stream": 2,
+        "reason": "done",
+        "detail": ""
+       }
+      ]
+     }
+    },
+    {
+     "jobRuns": {
+      "note": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "a failed job ends failed; the next reader starts it again",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.activation",
+      "key": "raster",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "jobSettle": {
+      "key": "raster",
+      "outcome": "failed",
+      "detail": "materialize failed: exit 1"
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 2,
+      "route": "plugin-modules.activation",
+      "key": "raster",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "end",
+        "stream": 1,
+        "reason": "failed",
+        "detail": "materialize failed: exit 1"
+       },
+       {
+        "kind": "opened",
+        "stream": 2,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       }
+      ]
+     }
+    },
+    {
+     "jobRuns": {
+      "raster": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "the last reader's cancel cancels the job",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.activation",
+      "key": "cad",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "cancel",
+      "stream": 1
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "end",
+        "stream": 1,
+        "reason": "cancelled",
+        "detail": ""
+       }
+      ]
+     }
+    },
+    {
+     "jobAborted": {
+      "cad": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "a job survives a lost link within the grace and the returning reader sees its latest progress",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.activation",
+      "key": "flow",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "jobProgress": {
+      "key": "flow",
+      "done": 2,
+      "total": 5,
+      "note": "compile"
+     }
+    },
+    {
+     "drop": "a"
+    },
+    {
+     "advance": 59999
+    },
+    {
+     "connect": "b"
+    },
+    {
+     "send": "b",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.activation",
+      "key": "flow",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "progress",
+        "stream": 1,
+        "done": 2,
+        "total": 5,
+        "note": "compile"
+       }
+      ],
+      "b": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "progress",
+        "stream": 1,
+        "done": 2,
+        "total": 5,
+        "note": "compile"
+       }
+      ]
+     }
+    },
+    {
+     "jobAborted": {
+      "flow": false
+     }
+    },
+    {
+     "jobRuns": {
+      "flow": 1
+     }
+    }
+   ]
+  },
+  {
+   "name": "a live source runs while its route instance lives and stops when the resume grace retires it",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "backbone.folder",
+      "key": "folder:///a",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "sources": {
+      "folder:///a": "live"
+     }
+    },
+    {
+     "sourceEmit": {
+      "key": "folder:///a",
+      "data": "changed"
+     }
+    },
+    {
+     "sourceEmit": {
+      "key": "folder:///a",
+      "data": "changed"
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 1,
+        "data": "changed"
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 2,
+        "data": "changed"
+       }
+      ]
+     }
+    },
+    {
+     "drop": "a"
+    },
+    {
+     "advance": 59999
+    },
+    {
+     "sources": {
+      "folder:///a": "live"
+     }
+    },
+    {
+     "advance": 1
+    },
+    {
+     "sources": {
+      "folder:///a": "stopped"
+     }
+    },
+    {
+     "census": {
+      "channels": 0,
+      "streams": 0,
+      "instances": 0
+     }
+    }
+   ]
+  },
+  {
+   "name": "queued change notices of one folder collapse into one",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "backbone.folder",
+      "key": "folder:///b",
+      "resume": null,
+      "credit": 1
+     }
+    },
+    {
+     "sourceEmit": {
+      "key": "folder:///b",
+      "data": "changed"
+     }
+    },
+    {
+     "sourceEmit": {
+      "key": "folder:///b",
+      "data": "changed"
+     }
+    },
+    {
+     "sourceEmit": {
+      "key": "folder:///b",
+      "data": "changed"
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 1,
+        "data": "changed"
+       }
+      ]
+     }
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "grant",
+      "stream": 1,
+      "credit": 4
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 3,
+        "data": "changed"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "the server beats every beatMs",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "advance": 20000
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "beat",
+        "at": 10000
+       },
+       {
+        "kind": "beat",
+        "at": 20000
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "a congested socket holds the queue until it drains",
+   "steps": [
+    {
+     "connect": "a"
+    },
+    {
+     "send": "a",
+     "frame": {
+      "kind": "open",
+      "stream": 1,
+      "route": "plugin-modules.watch",
+      "key": "",
+      "resume": null,
+      "credit": 4
+     }
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "hello",
+        "version": 1,
+        "epoch": "0123456789abcdef",
+        "beatMs": 10000
+       },
+       {
+        "kind": "opened",
+        "stream": 1,
+        "mode": "fresh",
+        "epoch": "0123456789abcdef",
+        "seq": 0
+       },
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 0,
+        "data": {
+         "kind": "snapshot",
+         "plugins": [
+          {
+           "pluginId": "alpha",
+           "rebuiltAt": 1
+          }
+         ]
+        }
+       }
+      ]
+     }
+    },
+    {
+     "buffered": {
+      "a": 1048577
+     }
+    },
+    {
+     "publish": {
+      "route": "plugin-modules.watch",
+      "key": "",
+      "data": {
+       "kind": "built",
+       "pluginId": "alpha",
+       "rebuiltAt": 2
+      }
+     }
+    },
+    {
+     "advance": 20
+    },
+    {
+     "expect": {
+      "a": []
+     }
+    },
+    {
+     "buffered": {
+      "a": 0
+     }
+    },
+    {
+     "advance": 20
+    },
+    {
+     "expect": {
+      "a": [
+       {
+        "kind": "data",
+        "stream": 1,
+        "seq": 1,
+        "data": {
+         "kind": "built",
+         "pluginId": "alpha",
+         "rebuiltAt": 2
+        }
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "channelScenarios": [
+  {
+   "name": "one link carries every stream and reopens them from their last sequence numbers after a loss",
+   "random": 0,
+   "steps": [
+    {
+     "open": {
+      "sub": "p",
+      "route": "plugin-modules.watch",
+      "key": "",
+      "credit": 4
+     }
+    },
+    {
+     "open": {
+      "sub": "q",
+      "route": "backbone.folder",
+      "key": "folder:///a",
+      "credit": 2
+     }
+    },
+    {
+     "expect": {
+      "links": 1,
+      "sent": []
+     }
+    },
+    {
+     "linkOpen": true
+    },
+    {
+     "expect": {
+      "sent": [
+       {
+        "kind": "open",
+        "stream": 1,
+        "route": "plugin-modules.watch",
+        "key": "",
+        "resume": null,
+        "credit": 4
+       },
+       {
+        "kind": "open",
+        "stream": 2,
+        "route": "backbone.folder",
+        "key": "folder:///a",
+        "resume": null,
+        "credit": 2
+       }
+      ]
+     }
+    },
+    {
+     "server": {
+      "kind": "hello",
+      "version": 1,
+      "epoch": "0123456789abcdef",
+      "beatMs": 10000
+     }
+    },
+    {
+     "server": {
+      "kind": "opened",
+      "stream": 1,
+      "mode": "fresh",
+      "epoch": "0123456789abcdef",
+      "seq": 0
+     }
+    },
+    {
+     "server": {
+      "kind": "data",
+      "stream": 1,
+      "seq": 0,
+      "data": {
+       "kind": "snapshot",
+       "plugins": [
+        {
+         "pluginId": "alpha",
+         "rebuiltAt": 1
+        }
+       ]
+      }
+     }
+    },
+    {
+     "server": {
+      "kind": "data",
+      "stream": 1,
+      "seq": 1,
+      "data": {
+       "kind": "built",
+       "pluginId": "alpha",
+       "rebuiltAt": 2
+      }
+     }
+    },
+    {
+     "server": {
+      "kind": "opened",
+      "stream": 2,
+      "mode": "fresh",
+      "epoch": "0123456789abcdef",
+      "seq": 5
+     }
+    },
+    {
+     "expect": {
+      "sent": [
+       {
+        "kind": "grant",
+        "stream": 1,
+        "credit": 2
+       }
+      ],
+      "events": {
+       "p": [
+        [
+         "opened",
+         "fresh"
+        ],
+        [
+         "data",
+         {
+          "kind": "snapshot",
+          "plugins": [
+           {
+            "pluginId": "alpha",
+            "rebuiltAt": 1
+           }
+          ]
+         }
+        ],
+        [
+         "data",
+         {
+          "kind": "built",
+          "pluginId": "alpha",
+          "rebuiltAt": 2
+         }
+        ]
+       ],
+       "q": [
+        [
+         "opened",
+         "fresh"
+        ]
+       ]
+      }
+     }
+    },
+    {
+     "linkClosed": true
+    },
+    {
+     "advance": 249
+    },
+    {
+     "expect": {
+      "links": 1
+     }
+    },
+    {
+     "advance": 1
+    },
+    {
+     "expect": {
+      "links": 2
+     }
+    },
+    {
+     "linkOpen": true
+    },
+    {
+     "expect": {
+      "sent": [
+       {
+        "kind": "open",
+        "stream": 1,
+        "route": "plugin-modules.watch",
+        "key": "",
+        "resume": {
+         "epoch": "0123456789abcdef",
+         "seq": 1
+        },
+        "credit": 4
+       },
+       {
+        "kind": "open",
+        "stream": 2,
+        "route": "backbone.folder",
+        "key": "folder:///a",
+        "resume": {
+         "epoch": "0123456789abcdef",
+         "seq": 5
+        },
+        "credit": 2
+       }
+      ]
+     }
+    },
+    {
+     "server": {
+      "kind": "opened",
+      "stream": 1,
+      "mode": "resumed",
+      "epoch": "0123456789abcdef",
+      "seq": 1
+     }
+    },
+    {
+     "server": {
+      "kind": "data",
+      "stream": 1,
+      "seq": 2,
+      "data": {
+       "kind": "built",
+       "pluginId": "beta",
+       "rebuiltAt": 3
+      }
+     }
+    },
+    {
+     "expect": {
+      "events": {
+       "p": [
+        [
+         "opened",
+         "resumed"
+        ],
+        [
+         "data",
+         {
+          "kind": "built",
+          "pluginId": "beta",
+          "rebuiltAt": 3
+         }
+        ]
+       ],
+       "q": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "a silent link is declared dead after deadAfterMs and reconnected",
+   "random": 0,
+   "steps": [
+    {
+     "open": {
+      "sub": "p",
+      "route": "plugin-modules.watch",
+      "key": "",
+      "credit": 4
+     }
+    },
+    {
+     "linkOpen": true
+    },
+    {
+     "server": {
+      "kind": "hello",
+      "version": 1,
+      "epoch": "0123456789abcdef",
+      "beatMs": 10000
+     }
+    },
+    {
+     "advance": 24999
+    },
+    {
+     "expect": {
+      "links": 1,
+      "linkClosed": false
+     }
+    },
+    {
+     "advance": 1
+    },
+    {
+     "expect": {
+      "linkClosed": true
+     }
+    },
+    {
+     "advance": 250
+    },
+    {
+     "expect": {
+      "links": 2
+     }
+    }
+   ]
+  },
+  {
+   "name": "a data handler that has not settled holds its credit",
+   "random": 0,
+   "steps": [
+    {
+     "open": {
+      "sub": "p",
+      "route": "plugin-modules.watch",
+      "key": "",
+      "credit": 2,
+      "deferData": true
+     }
+    },
+    {
+     "linkOpen": true
+    },
+    {
+     "server": {
+      "kind": "opened",
+      "stream": 1,
+      "mode": "fresh",
+      "epoch": "0123456789abcdef",
+      "seq": 0
+     }
+    },
+    {
+     "server": {
+      "kind": "data",
+      "stream": 1,
+      "seq": 0,
+      "data": {
+       "kind": "snapshot",
+       "plugins": [
+        {
+         "pluginId": "alpha",
+         "rebuiltAt": 1
+        }
+       ]
+      }
+     }
+    },
+    {
+     "expect": {
+      "sent": [
+       {
+        "kind": "open",
+        "stream": 1,
+        "route": "plugin-modules.watch",
+        "key": "",
+        "resume": null,
+        "credit": 2
+       }
+      ],
+      "events": {
+       "p": [
+        [
+         "opened",
+         "fresh"
+        ],
+        [
+         "data",
+         {
+          "kind": "snapshot",
+          "plugins": [
+           {
+            "pluginId": "alpha",
+            "rebuiltAt": 1
+           }
+          ]
+         }
+        ]
+       ]
+      }
+     }
+    },
+    {
+     "release": "p"
+    },
+    {
+     "expect": {
+      "sent": [
+       {
+        "kind": "grant",
+        "stream": 1,
+        "credit": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "server end closes the stream; a refused server frame closes the link",
+   "random": 0,
+   "steps": [
+    {
+     "open": {
+      "sub": "p",
+      "route": "plugin-modules.activation",
+      "key": "note",
+      "credit": 4
+     }
+    },
+    {
+     "linkOpen": true
+    },
+    {
+     "server": {
+      "kind": "opened",
+      "stream": 1,
+      "mode": "fresh",
+      "epoch": "0123456789abcdef",
+      "seq": 0
+     }
+    },
+    {
+     "server": {
+      "kind": "progress",
+      "stream": 1,
+      "done": 1,
+      "total": 3,
+      "note": "materialize note"
+     }
+    },
+    {
+     "server": {
+      "kind": "end",
+      "stream": 1,
+      "reason": "done",
+      "detail": ""
+     }
+    },
+    {
+     "expect": {
+      "events": {
+       "p": [
+        [
+         "opened",
+         "fresh"
+        ],
+        [
+         "progress",
+         1,
+         3,
+         "materialize note"
+        ],
+        [
+         "end",
+         "done",
+         ""
+        ]
+       ]
+      }
+     }
+    },
+    {
+     "open": {
+      "sub": "q",
+      "route": "plugin-modules.watch",
+      "key": "",
+      "credit": 4
+     }
+    },
+    {
+     "serverText": "{\"kind\":\"data\"}"
+    },
+    {
+     "expect": {
+      "linkClosed": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "the idle channel lingers, is reused within the linger, and closes after it",
+   "random": 0,
+   "steps": [
+    {
+     "open": {
+      "sub": "p",
+      "route": "plugin-modules.watch",
+      "key": "",
+      "credit": 4
+     }
+    },
+    {
+     "linkOpen": true
+    },
+    {
+     "close": "p"
+    },
+    {
+     "advance": 4999
+    },
+    {
+     "open": {
+      "sub": "r",
+      "route": "plugin-modules.watch",
+      "key": "",
+      "credit": 4
+     }
+    },
+    {
+     "close": "r"
+    },
+    {
+     "expect": {
+      "links": 1,
+      "linkClosed": false,
+      "sent": [
+       {
+        "kind": "open",
+        "stream": 1,
+        "route": "plugin-modules.watch",
+        "key": "",
+        "resume": null,
+        "credit": 4
+       },
+       {
+        "kind": "cancel",
+        "stream": 1
+       },
+       {
+        "kind": "open",
+        "stream": 2,
+        "route": "plugin-modules.watch",
+        "key": "",
+        "resume": null,
+        "credit": 4
+       },
+       {
+        "kind": "cancel",
+        "stream": 2
+       }
+      ]
+     }
+    },
+    {
+     "advance": 5000
+    },
+    {
+     "expect": {
+      "links": 1,
+      "linkClosed": true
+     }
+    }
+   ]
+  }
+ ]
+}

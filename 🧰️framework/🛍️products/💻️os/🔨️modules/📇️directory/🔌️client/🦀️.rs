@@ -34,12 +34,12 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
 
 //#region 🔖️Transport
-/// 📨️ One HTTP verb `DirectoryClient` issues against the hub REST surface.
+/// 📨️ One HTTP verb `DirectoryClient` issues against the hub REST surface: queries are `GET`,
+/// commands are `POST`. The hub has no resource-deletion verb (CQRS, never CRUD).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HttpMethod {
     Get,
     Post,
-    Delete,
 }
 
 /// 📬️ A transport-agnostic HTTP response: status code plus raw body bytes.
@@ -120,6 +120,9 @@ impl<T> DirectoryConnectionPlatform for T {}
 pub trait DirectoryTransport: DirectoryTransportPlatform {
     type Ws: DirectoryWsConnection;
     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
+    /// 🪢️ One GET that names the exact media type it accepts — a binary route such as the canonical checkpoint
+    /// pair, whose hub refuses any other `Accept` — answered with the raw body bytes.
+    async fn get_accepting(&self, ctx: &OperationContext, url: &str, bearer: Option<&str>, accept: &str) -> Result<HttpResponse, TransportError>;
     fn issue_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, body: &[u8], timeout_ms: u64) -> Result<HttpResponse, TransportError>;
     fn open_ws(&self, ctx: &OperationContext, url: &str, protocols: &[String], timeout_ms: u64) -> Result<Self::Ws, TransportError>;
 }
@@ -1055,14 +1058,15 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         DirectorySessionAuthorityV1::parse_canonical_json(&source).ok_or_else(|| DirectoryClientError::Decode("directory session authority response is not canonical".into()))
     }
 
-    /// 🚪️ Revokes the held session (or the browser cookie session when this client has no
-    /// bearer). A successful empty `204` is accepted without attempting JSON decoding.
+    /// 🚪️ Sends the `POST /auth/sessions/me/sign-out` command for the held session (or the browser
+    /// cookie session when this client has no bearer). A successful empty `204` is accepted without
+    /// attempting JSON decoding.
     pub async fn sign_out(&self, ctx: &OperationContext) -> Result<(), DirectoryClientError> {
         if ctx.cancel.is_cancelled().await {
             return Err(DirectoryClientError::Cancelled);
         }
         let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
-        let response = self.transport.http(ctx, HttpMethod::Delete, &self.url("/auth/sessions/me"), bearer, None).await?;
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url("/auth/sessions/me/sign-out"), bearer, Some(Vec::new())).await?;
         match response.status {
             200 | 204 | 401 => Ok(()),
             status => Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
@@ -1628,7 +1632,7 @@ impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
         match message {
             DirectoryStreamMessage::Event { event } => self.since = self.since.max(event.seq),
             DirectoryStreamMessage::Heartbeat { head_seq } => self.since = self.since.max(*head_seq),
-            DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } | DirectoryStreamMessage::RebootstrapRequired { .. } => {}
+            DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } | DirectoryStreamMessage::RebootstrapRequired { .. } | DirectoryStreamMessage::AccessChanged { .. } => {}
         }
     }
 }
@@ -1663,6 +1667,17 @@ pub mod native {
     const UREQ_HTTP_REQUEST_BODY_BYTES: usize = 16 * 1024 * 1024;
     const UREQ_HTTP_BODY_PAGE_BYTES: usize = 16 * 1024;
     const UREQ_HTTP_READ_TIMEOUT_MS: u64 = 15_000;
+    const UREQ_HTTP_CONNECT_TIMEOUT_MS: u64 = 15_000;
+    /// ⏱️ The overall bound of a request whose caller named no deadline: long enough for a loaded hub's slowest
+    /// answer and a 64 MiB execution-target body, finite so the blocking IO thread it occupies is freed.
+    pub const UREQ_HTTP_UNBOUNDED_REQUEST_MS: u64 = 120_000;
+
+    /// ⏱️ One request's ureq overall timeout: what is left of the caller's deadline (at least 1 ms), else
+    /// [`UREQ_HTTP_UNBOUNDED_REQUEST_MS`]. `now_ms` is the runtime clock `ComputePool::run_io` compares the
+    /// deadline against, so the transport never cuts a request the caller still waits for.
+    pub fn ureq_request_budget_ms(deadline_ms: Option<u64>, now_ms: u64) -> u64 {
+        deadline_ms.map_or(UREQ_HTTP_UNBOUNDED_REQUEST_MS, |deadline| deadline.saturating_sub(now_ms).max(1))
+    }
 
     type UreqBodyReader = Box<dyn Read + Send + Sync + 'static>;
 
@@ -1678,7 +1693,7 @@ pub mod native {
 
     impl UreqStreamingHttpTransport {
         pub fn new(compute: Arc<ComputePool>, runtime: Arc<TokioHostRuntime>, scope: ScopeHandle) -> Self {
-            Self { agent: ureq::AgentBuilder::new().timeout(Duration::from_millis(UREQ_HTTP_READ_TIMEOUT_MS)).timeout_read(Duration::from_millis(UREQ_HTTP_READ_TIMEOUT_MS)).build(), compute, runtime, scope }
+            Self { agent: ureq::AgentBuilder::new().timeout_connect(Duration::from_millis(UREQ_HTTP_CONNECT_TIMEOUT_MS)).build(), compute, runtime, scope }
         }
     }
 
@@ -1740,10 +1755,11 @@ pub mod native {
                     drop(terminal_guard);
                     return Err(HttpPoolError::Transport("ureq HTTP request cancelled".into()));
                 }
+                let budget_ms = ureq_request_budget_ms(connect_ctx.deadline_ms, connect_runtime.now_ms().await);
                 let (head, reader) = connect_compute
                     .run_io(connect_runtime.as_ref(), &connect_scope, connect_ctx, move || {
                         let _terminal = terminal_guard;
-                        ureq_stream_start(&agent, request)
+                        ureq_stream_start(&agent, request, Duration::from_millis(budget_ms))
                     })
                     .await
                     .map_err(HttpPoolError::Compute)??;
@@ -1754,7 +1770,7 @@ pub mod native {
         }
     }
 
-    fn ureq_stream_start(agent: &ureq::Agent, request: PoolHttpRequest) -> Result<(HttpResponseHead, UreqBodyReader), HttpPoolError> {
+    fn ureq_stream_start(agent: &ureq::Agent, request: PoolHttpRequest, budget: Duration) -> Result<(HttpResponseHead, UreqBodyReader), HttpPoolError> {
         if request.url.len() > UREQ_HTTP_URL_BYTES || request.headers.len() > UREQ_HTTP_HEADER_ITEMS || request.body.len() > UREQ_HTTP_REQUEST_BODY_BYTES {
             return Err(HttpPoolError::Transport("ureq HTTP request exceeded fixed credits".into()));
         }
@@ -1775,9 +1791,9 @@ pub mod native {
             let mut builder = match request.method.as_str() {
                 "GET" => agent.get(&request.url),
                 "POST" => agent.post(&request.url),
-                "DELETE" => agent.delete(&request.url),
                 other => return Err(HttpPoolError::Transport(format!("ureq HTTP transport does not admit method {other}"))),
             };
+            builder = builder.timeout(budget);
             for (name, value) in &request.headers {
                 builder = builder.set(name, value);
             }
@@ -1821,7 +1837,6 @@ pub mod native {
         match method {
             HttpMethod::Get => "GET",
             HttpMethod::Post => "POST",
-            HttpMethod::Delete => "DELETE",
         }
     }
 
@@ -1984,17 +1999,9 @@ pub mod native {
         }
     }
 
-    impl<R: HostAsyncRuntime + 'static> DirectoryTransport for NativeDirectoryTransport<R> {
-        type Ws = TungsteniteConnection;
-        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
-            if ctx.cancel.is_cancelled().await {
-                return Err(TransportError::Cancelled);
-            }
-            let mut headers = Vec::new();
-            if let Some(token) = bearer {
-                headers.push(("Authorization".to_string(), format!("Bearer {token}")));
-            }
-            let request = PoolHttpRequest { method: http_method_str(method).await.to_string(), url: url.to_string(), headers, body: body.unwrap_or_default() };
+    impl<R: HostAsyncRuntime + 'static> NativeDirectoryTransport<R> {
+        /// 🌊️ One request through the pooled HTTP lane, its pool failures mapped onto the transport's closed errors.
+        async fn pool_request(&self, ctx: &OperationContext, request: PoolHttpRequest) -> Result<HttpResponse, TransportError> {
             match self.http_pool.request(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await {
                 Ok(response) => Ok(HttpResponse { status: response.status, body: response.body }),
                 Err(error) => {
@@ -2006,6 +2013,32 @@ pub mod native {
                     })
                 }
             }
+        }
+    }
+
+    impl<R: HostAsyncRuntime + 'static> DirectoryTransport for NativeDirectoryTransport<R> {
+        type Ws = TungsteniteConnection;
+        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let mut headers = Vec::new();
+            if let Some(token) = bearer {
+                headers.push(("Authorization".to_string(), format!("Bearer {token}")));
+            }
+            let request = PoolHttpRequest { method: http_method_str(method).await.to_string(), url: url.to_string(), headers, body: body.unwrap_or_default() };
+            self.pool_request(ctx, request).await
+        }
+
+        async fn get_accepting(&self, ctx: &OperationContext, url: &str, bearer: Option<&str>, accept: &str) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let mut headers = vec![("Accept".to_string(), accept.to_string())];
+            if let Some(token) = bearer {
+                headers.push(("Authorization".to_string(), format!("Bearer {token}")));
+            }
+            self.pool_request(ctx, PoolHttpRequest { method: "GET".to_string(), url: url.to_string(), headers, body: Vec::new() }).await
         }
 
         fn issue_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, body: &[u8], timeout_ms: u64) -> Result<HttpResponse, TransportError> {
@@ -2128,7 +2161,6 @@ pub mod browser {
             init.set_method(match method {
                 HttpMethod::Get => "GET",
                 HttpMethod::Post => "POST",
-                HttpMethod::Delete => "DELETE",
             });
             if let Some(bytes) = &body {
                 let array = js_sys::Uint8Array::from(bytes.as_slice());
@@ -2144,6 +2176,24 @@ pub mod browser {
             let array_buffer = JsFuture::from(response.array_buffer().map_err(|error| TransportError::Io(format!("{error:?}")))?).await.map_err(|error| TransportError::Io(format!("{error:?}")))?;
             let bytes = js_sys::Uint8Array::new(&array_buffer).to_vec();
             Ok(HttpResponse { status, body: bytes })
+        }
+
+        async fn get_accepting(&self, ctx: &OperationContext, url: &str, bearer: Option<&str>, accept: &str) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let window = web_sys::window().ok_or_else(|| TransportError::Io("no window".to_string()))?;
+            let init = RequestInit::new();
+            init.set_method("GET");
+            let request = web_sys::Request::new_with_str_and_init(url, &init).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            request.headers().set("Accept", accept).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            if let Some(token) = bearer {
+                request.headers().set("Authorization", &format!("Bearer {token}")).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            }
+            let response: Response = JsFuture::from(window.fetch_with_request(&request)).await.map_err(|error| TransportError::Io(format!("{error:?}")))?.dyn_into().map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            let status = response.status();
+            let array_buffer = JsFuture::from(response.array_buffer().map_err(|error| TransportError::Io(format!("{error:?}")))?).await.map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            Ok(HttpResponse { status, body: js_sys::Uint8Array::new(&array_buffer).to_vec() })
         }
 
         fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
@@ -2214,6 +2264,10 @@ mod space_artifact_creation;
 
 #[path = "📌️document-check-in/🦀️.rs"]
 mod document_check_in;
+
+#[path = "🪢️canonical-checkpoint-pair/🦀️.rs"]
+mod canonical_checkpoint_pair;
+pub use canonical_checkpoint_pair::{canonical_checkpoint_pair_path, CANONICAL_CHECKPOINT_PAIR_TRANSIENT_ATTEMPTS, CANONICAL_CHECKPOINT_PAIR_TRANSIENT_STATUSES};
 //#endregion 🌱️SpaceArtifactCreation
 
 //#region 🧩️ExecutionTargetModule

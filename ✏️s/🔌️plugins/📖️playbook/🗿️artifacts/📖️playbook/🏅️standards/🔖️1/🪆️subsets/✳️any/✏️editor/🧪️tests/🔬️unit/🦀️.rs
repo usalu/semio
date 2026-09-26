@@ -160,17 +160,27 @@ pub(super) fn every_command() -> Vec<PlaybookCommand> {
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stitches_every_taxonomy_node() {
     let json = serde_json::to_string(&create_playbook_play_app()).expect("app definition json");
-    assert!(json.contains(PLAYBOOK_PLAY_WINDOW_BUILDER), "window kind missing from the manifest: {json}");
+    for window in [PLAYBOOK_PLAY_WINDOW_BUILDER, PLAYBOOK_PLAY_WINDOW_STEPS, PLAYBOOK_PLAY_WINDOW_CHANGES, PLAYBOOK_PLAY_WINDOW_ACTIVITY, PLAYBOOK_PLAY_WINDOW_SOURCE] {
+        assert!(json.contains(window), "window kind missing from the manifest: {window}");
+    }
     assert!(json.contains(builder::PLAYBOOK_PLAY_MODE_BUILDER), "mode missing from the manifest");
     assert!(json.contains("text.playbook"), "artifact kind missing from the manifest");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn playbook_play_app_declares_builder_window_only() {
+async fn playbook_play_app_declares_the_authored_scene_showcase() {
     let definition = create_playbook_play_app();
-    assert_eq!(definition.window_kinds.len(), 1);
-    assert_eq!(definition.window_kinds[0].id, PLAYBOOK_PLAY_WINDOW_BUILDER);
-    assert_eq!(definition.window_kinds[0].body_key, PLAYBOOK_PLAY_BODY_BUILDER);
+    let actual = definition.window_kinds.iter().map(|window| (window.id.as_str(), window.body_key.as_str(), window.surface_kind)).collect::<Vec<_>>();
+    assert_eq!(
+        actual,
+        vec![
+            (PLAYBOOK_PLAY_WINDOW_BUILDER, PLAYBOOK_PLAY_BODY_BUILDER, semio_framework_plugin::SurfaceKind::BlockList),
+            (PLAYBOOK_PLAY_WINDOW_STEPS, PLAYBOOK_PLAY_BODY_STEPS, semio_framework_plugin::SurfaceKind::Table),
+            (PLAYBOOK_PLAY_WINDOW_CHANGES, PLAYBOOK_PLAY_BODY_CHANGES, semio_framework_plugin::SurfaceKind::DiffView),
+            (PLAYBOOK_PLAY_WINDOW_ACTIVITY, PLAYBOOK_PLAY_BODY_ACTIVITY, semio_framework_plugin::SurfaceKind::EventFeed),
+            (PLAYBOOK_PLAY_WINDOW_SOURCE, PLAYBOOK_PLAY_BODY_SOURCE, semio_framework_plugin::SurfaceKind::TextEditor),
+        ]
+    );
 }
 //#endregion 🔖️ManifestSanity
 

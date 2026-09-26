@@ -6,14 +6,14 @@
 //! semio-native artifact with no third-party reader or writer, so its reference is a second
 //! IMPLEMENTATION: the independent Python `🐍️.py` beside this file, registered as the
 //! oracle `en1995-1-python-independent`. This adapter is the SUBJECT half only — it drives this
-//! repository's own `apply_en1995_mutation` over the full 20-kind `En1995Mutation` vocabulary.
+//! repository's own `apply_en1995_mutation` over the full 66-kind `En1995Mutation` vocabulary.
 //!
-//! Twenty document-root scalars, one `change-<field>` each: national annex, the design actions
-//! M_Ed, N_Ed and V_Ed, the section properties W, A, b and h, the characteristic strengths
-//! f_m,k, f_c,0,k and f_v,k, the two classification enums that drive k_mod and k_def — service
-//! class and load-duration class — the lateral-torsional M_crit, the connection inputs F_Ed and
-//! A_ef, the fire inputs (duration and section depth) and the footbridge vibration inputs
-//! (vertical acceleration and bridge cycle count).
+//! The vocabulary is hierarchical: `change-annex`; insert/remove plus one `change-member-<field>`
+//! per scalar of an id-addressed member; insert/remove plus one `change-member-action-<field>` per
+//! scalar of a member's id-addressed characteristic action; and the same three shapes for
+//! connections and their fastener actions. Every vector starts from the default floor-beam document
+//! and is written by the production JSON codec (`EN1995_REGEN_MUTATION_VECTORS=1`), and
+//! `committed_mutation_vectors_replay_for_every_kind` in the crate replays each one.
 //!
 //! ⚖️ WHERE THE ASSERTIONS LIVE. Every law this case claims is asserted IN ROLE inside the
 //! subject handlers as well as being compared against the oracle's answer, through the shared
@@ -38,14 +38,8 @@
 //! read the SAME committed bytes and neither holds a Rust or Python literal transcribed beside
 //! them that could drift from what the other one read.
 //!
-//! 🚧️ The Rust SUBJECT phase still cannot run: `semio-s-plugin-norm` does not compile (671 errors
-//! at the time of writing — a concurrent session is mid-flight across ~2000 files of this plugin,
-//! removing gratuitous `async fn` wrappers). `parity` therefore has nothing to compare the oracle
-//! against YET; the moment the crate is green it does, with no further change here. The subject half is
-//! written against the SYNC trait surface the fixture tests in this crate already call
-//! (`Mutation::diff`, `MutationDiff::apply`, `Mutation::inverse`, `ArtifactDsl`,
-//! `ArtifactPack`) rather than against the plugin's async wrappers, and is `sut`-gated so the
-//! oracle-only run never links it.
+//! 🚧️ The subject half is `sut`-gated so the oracle-only run never links the subject crate; the
+//! bridges it calls are exercised inside the crate by `bridges_round_trip_apply_and_invert_every_kind`.
 
 use semio_repo_test_host::{digest, parse_json, Adapter, Context, Json, Outcome};
 use semio_s_plugin_stdio_test_oracle::law;
@@ -58,33 +52,79 @@ use semio_s_plugin_stdio_test_oracle::law;
 #[cfg(feature = "sut")]
 const KINDS: &[&str] = &[
     "change-annex",
-    "change-m-ed-knm",
-    "change-n-ed-kn",
-    "change-v-ed-kn",
-    "change-w-mm3",
-    "change-a-mm2",
-    "change-b-mm",
-    "change-h-mm",
-    "change-fmk",
-    "change-fc0-k",
-    "change-service-class",
-    "change-load-duration",
-    "change-m-crit-knm",
-    "change-f-ed-kn",
-    "change-a-ef-mm2",
-    "change-fvk",
-    "change-fire-duration-min",
-    "change-section-depth-mm",
-    "change-a-vert-ms2",
-    "change-n-cycles-bridge",
+    "insert-member",
+    "remove-member",
+    "change-member-label-en",
+    "change-member-label-de",
+    "change-member-role",
+    "change-member-strength-class",
+    "change-member-service-class",
+    "change-member-support",
+    "change-member-b",
+    "change-member-h",
+    "change-member-span",
+    "change-member-support-length",
+    "change-member-bearing-length",
+    "change-member-buckling-y",
+    "change-member-buckling-z",
+    "change-member-lateral-restraint",
+    "change-member-notch-depth",
+    "change-member-notch-distance",
+    "change-member-m-crit",
+    "change-member-mass-per-m",
+    "change-member-mass-per-m2",
+    "change-member-damping",
+    "change-member-fire-duration",
+    "change-member-bridge-n-obs",
+    "change-member-bridge-tl-years",
+    "change-member-bridge-beta",
+    "change-member-bridge-a",
+    "change-member-bridge-b",
+    "change-member-bridge-crowd",
+    "insert-member-action",
+    "remove-member-action",
+    "change-member-action-kind",
+    "change-member-action-category",
+    "change-member-action-load-duration",
+    "change-member-action-q-line",
+    "change-member-action-f-point",
+    "change-member-action-mk",
+    "change-member-action-vk",
+    "change-member-action-nk",
+    "change-member-action-ntk",
+    "change-member-action-fc90-k",
+    "insert-connection",
+    "remove-connection",
+    "change-connection-label-en",
+    "change-connection-label-de",
+    "change-connection-fastener-type",
+    "change-connection-strength-class",
+    "change-connection-service-class",
+    "change-connection-diameter",
+    "change-connection-number",
+    "change-connection-rows",
+    "change-connection-spacing",
+    "change-connection-edge-distance",
+    "change-connection-end-distance",
+    "change-connection-t1",
+    "change-connection-t2",
+    "change-connection-steel-plate",
+    "change-connection-steel-plate-thickness",
+    "change-connection-shear-planes",
+    "change-connection-fuk",
+    "insert-connection-action",
+    "remove-connection-action",
+    "change-connection-action-kind",
+    "change-connection-action-load-duration",
+    "change-connection-action-fk",
 ];
 
 /// 🗣️ The real committed EN 1995 document, read where the domain already keeps it.
 #[cfg(feature = "sut")]
-const DSL_ASSET: &str = "asset://🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio";
+const DSL_ASSET: &str = "asset://🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio";
 /// 🎒️ The same document in its binary envelope, written by a separate codec from the DSL text.
 #[cfg(feature = "sut")]
-const PACK_ASSET: &str = "asset://🌉️glulam-footbridge/🎒️.pack.semio";
+const PACK_ASSET: &str = "asset://🏠️glulam-floor-beam/🎒️.pack.semio";
 //#endregion 🔖️Kinds
 
 //#region 🔖️Fixtures
@@ -101,119 +141,395 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-from-the-german-na-to-the-recommended-en-annex/📸️snapshot/➡️after/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🌍️change-annex/🌍️switches-from-the-german-na-to-the-recommended-en-annex/🎯️outcome/🔣️.json"),
         ),
-        "change-m-ed-knm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-m-ed-knm/⤴️raises-the-design-bending-moment-to-32-knm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-m-ed-knm/⤴️raises-the-design-bending-moment-to-32-knm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-m-ed-knm/⤴️raises-the-design-bending-moment-to-32-knm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-m-ed-knm/⤴️raises-the-design-bending-moment-to-32-knm/🎯️outcome/🔣️.json"),
+        "insert-member" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-member/➕️inserts-a-member-at-end/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-member/➕️inserts-a-member-at-end/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-member/➕️inserts-a-member-at-end/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-member/➕️inserts-a-member-at-end/🎯️outcome/🔣️.json"),
         ),
-        "change-n-ed-kn" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-n-ed-kn/🏋️raises-the-design-axial-force-to-75-kn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-n-ed-kn/🏋️raises-the-design-axial-force-to-75-kn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-n-ed-kn/🏋️raises-the-design-axial-force-to-75-kn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-n-ed-kn/🏋️raises-the-design-axial-force-to-75-kn/🎯️outcome/🔣️.json"),
+        "remove-member" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-member/➖️removes-the-first-member/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-member/➖️removes-the-first-member/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-member/➖️removes-the-first-member/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-member/➖️removes-the-first-member/🎯️outcome/🔣️.json"),
         ),
-        "change-v-ed-kn" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🪚️change-v-ed-kn/🪚️raises-the-design-shear-force-to-22-5-kn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪚️change-v-ed-kn/🪚️raises-the-design-shear-force-to-22-5-kn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪚️change-v-ed-kn/🪚️raises-the-design-shear-force-to-22-5-kn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🪚️change-v-ed-kn/🪚️raises-the-design-shear-force-to-22-5-kn/🎯️outcome/🔣️.json"),
+        "change-member-label-en" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-member-label-en/✏️sets-labelEn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-member-label-en/✏️sets-labelEn/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-member-label-en/✏️sets-labelEn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-member-label-en/✏️sets-labelEn/🎯️outcome/🔣️.json"),
         ),
-        "change-w-mm3" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-w-mm3/📊️raises-the-section-modulus-to-4000000-mm3/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-w-mm3/📊️raises-the-section-modulus-to-4000000-mm3/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-w-mm3/📊️raises-the-section-modulus-to-4000000-mm3/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📊️change-w-mm3/📊️raises-the-section-modulus-to-4000000-mm3/🎯️outcome/🔣️.json"),
+        "change-member-label-de" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-member-label-de/✏️sets-labelDe/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-member-label-de/✏️sets-labelDe/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-member-label-de/✏️sets-labelDe/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-member-label-de/✏️sets-labelDe/🎯️outcome/🔣️.json"),
         ),
-        "change-a-mm2" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-a-mm2/📐️enlarges-the-gross-area-to-72000-mm2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-a-mm2/📐️enlarges-the-gross-area-to-72000-mm2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-a-mm2/📐️enlarges-the-gross-area-to-72000-mm2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️change-a-mm2/📐️enlarges-the-gross-area-to-72000-mm2/🎯️outcome/🔣️.json"),
+        "change-member-role" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-member-role/✏️sets-role/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-member-role/✏️sets-role/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-member-role/✏️sets-role/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🎯️change-member-role/✏️sets-role/🎯️outcome/🔣️.json"),
         ),
-        "change-b-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️widens-the-beam-to-240-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️widens-the-beam-to-240-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️widens-the-beam-to-240-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-b-mm/↔️widens-the-beam-to-240-mm/🎯️outcome/🔣️.json"),
+        "change-member-strength-class" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-member-strength-class/✏️sets-strengthClass/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-member-strength-class/✏️sets-strengthClass/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-member-strength-class/✏️sets-strengthClass/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-member-strength-class/✏️sets-strengthClass/🎯️outcome/🔣️.json"),
         ),
-        "change-h-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-h-mm/↕️deepens-the-beam-to-360-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-h-mm/↕️deepens-the-beam-to-360-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-h-mm/↕️deepens-the-beam-to-360-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-h-mm/↕️deepens-the-beam-to-360-mm/🎯️outcome/🔣️.json"),
+        "change-member-service-class" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-member-service-class/✏️sets-serviceClass/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-member-service-class/✏️sets-serviceClass/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-member-service-class/✏️sets-serviceClass/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-member-service-class/✏️sets-serviceClass/🎯️outcome/🔣️.json"),
         ),
-        "change-fmk" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-fmk/🛡️upgrades-the-bending-strength-class-to-28-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-fmk/🛡️upgrades-the-bending-strength-class-to-28-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-fmk/🛡️upgrades-the-bending-strength-class-to-28-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-fmk/🛡️upgrades-the-bending-strength-class-to-28-mpa/🎯️outcome/🔣️.json"),
+        "change-member-support" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️change-member-support/✏️sets-support/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️change-member-support/✏️sets-support/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️change-member-support/✏️sets-support/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️change-member-support/✏️sets-support/🎯️outcome/🔣️.json"),
         ),
-        "change-fc0-k" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗜️change-fc0-k/🗜️raises-the-parallel-compressive-strength-to-26-5-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗜️change-fc0-k/🗜️raises-the-parallel-compressive-strength-to-26-5-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗜️change-fc0-k/🗜️raises-the-parallel-compressive-strength-to-26-5-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗜️change-fc0-k/🗜️raises-the-parallel-compressive-strength-to-26-5-mpa/🎯️outcome/🔣️.json"),
+        "change-member-b" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-b/✏️sets-bM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-b/✏️sets-bM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-b/✏️sets-bM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-b/✏️sets-bM/🎯️outcome/🔣️.json"),
         ),
-        "change-service-class" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-service-class/🌧️moves-the-beam-from-service-class-1-to-service-class-2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-service-class/🌧️moves-the-beam-from-service-class-1-to-service-class-2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-service-class/🌧️moves-the-beam-from-service-class-1-to-service-class-2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-service-class/🌧️moves-the-beam-from-service-class-1-to-service-class-2/🎯️outcome/🔣️.json"),
+        "change-member-h" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-member-h/✏️sets-hM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-member-h/✏️sets-hM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-member-h/✏️sets-hM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-member-h/✏️sets-hM/🎯️outcome/🔣️.json"),
         ),
-        "change-load-duration" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-load-duration/⏳️shortens-the-load-duration-class-from-medium-to-short/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-load-duration/⏳️shortens-the-load-duration-class-from-medium-to-short/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-load-duration/⏳️shortens-the-load-duration-class-from-medium-to-short/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-load-duration/⏳️shortens-the-load-duration-class-from-medium-to-short/🎯️outcome/🔣️.json"),
+        "change-member-span" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-span/✏️sets-spanM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-span/✏️sets-spanM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-span/✏️sets-spanM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-span/✏️sets-spanM/🎯️outcome/🔣️.json"),
         ),
-        "change-m-crit-knm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/⚠️change-m-crit-knm/⚠️raises-the-critical-buckling-moment-to-96-knm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⚠️change-m-crit-knm/⚠️raises-the-critical-buckling-moment-to-96-knm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⚠️change-m-crit-knm/⚠️raises-the-critical-buckling-moment-to-96-knm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/⚠️change-m-crit-knm/⚠️raises-the-critical-buckling-moment-to-96-knm/🎯️outcome/🔣️.json"),
+        "change-member-support-length" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-support-length/✏️sets-supportLengthM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-support-length/✏️sets-supportLengthM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-support-length/✏️sets-supportLengthM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-support-length/✏️sets-supportLengthM/🎯️outcome/🔣️.json"),
         ),
-        "change-f-ed-kn" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-f-ed-kn/🔩️raises-the-design-fastener-force-to-24-kn/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-f-ed-kn/🔩️raises-the-design-fastener-force-to-24-kn/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-f-ed-kn/🔩️raises-the-design-fastener-force-to-24-kn/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-f-ed-kn/🔩️raises-the-design-fastener-force-to-24-kn/🎯️outcome/🔣️.json"),
+        "change-member-bearing-length" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-bearing-length/✏️sets-bearingLengthM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-bearing-length/✏️sets-bearingLengthM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-bearing-length/✏️sets-bearingLengthM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-bearing-length/✏️sets-bearingLengthM/🎯️outcome/🔣️.json"),
         ),
-        "change-a-ef-mm2" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🧩️change-a-ef-mm2/🧩️enlarges-the-effective-connection-area-to-16000-mm2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧩️change-a-ef-mm2/🧩️enlarges-the-effective-connection-area-to-16000-mm2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧩️change-a-ef-mm2/🧩️enlarges-the-effective-connection-area-to-16000-mm2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🧩️change-a-ef-mm2/🧩️enlarges-the-effective-connection-area-to-16000-mm2/🎯️outcome/🔣️.json"),
+        "change-member-buckling-y" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-buckling-y/✏️sets-bucklingLengthYM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-buckling-y/✏️sets-bucklingLengthYM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-buckling-y/✏️sets-bucklingLengthYM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-buckling-y/✏️sets-bucklingLengthYM/🎯️outcome/🔣️.json"),
         ),
-        "change-fvk" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-fvk/✂️lowers-the-characteristic-shear-strength-to-3-5-mpa/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-fvk/✂️lowers-the-characteristic-shear-strength-to-3-5-mpa/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-fvk/✂️lowers-the-characteristic-shear-strength-to-3-5-mpa/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✂️change-fvk/✂️lowers-the-characteristic-shear-strength-to-3-5-mpa/🎯️outcome/🔣️.json"),
+        "change-member-buckling-z" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-buckling-z/✏️sets-bucklingLengthZM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-buckling-z/✏️sets-bucklingLengthZM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-buckling-z/✏️sets-bucklingLengthZM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-buckling-z/✏️sets-bucklingLengthZM/🎯️outcome/🔣️.json"),
         ),
-        "change-fire-duration-min" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-duration-min/🔥️raises-the-fire-exposure-from-r30-to-r60/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-duration-min/🔥️raises-the-fire-exposure-from-r30-to-r60/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-duration-min/🔥️raises-the-fire-exposure-from-r30-to-r60/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-fire-duration-min/🔥️raises-the-fire-exposure-from-r30-to-r60/🎯️outcome/🔣️.json"),
+        "change-member-lateral-restraint" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-lateral-restraint/✏️sets-lateralRestraintSpacingM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-lateral-restraint/✏️sets-lateralRestraintSpacingM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-lateral-restraint/✏️sets-lateralRestraintSpacingM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-lateral-restraint/✏️sets-lateralRestraintSpacingM/🎯️outcome/🔣️.json"),
         ),
-        "change-section-depth-mm" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-section-depth-mm/📏️raises-the-size-effect-depth-to-360-mm/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-section-depth-mm/📏️raises-the-size-effect-depth-to-360-mm/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-section-depth-mm/📏️raises-the-size-effect-depth-to-360-mm/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📏️change-section-depth-mm/📏️raises-the-size-effect-depth-to-360-mm/🎯️outcome/🔣️.json"),
+        "change-member-notch-depth" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-notch-depth/✏️sets-notchDepthM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-notch-depth/✏️sets-notchDepthM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-notch-depth/✏️sets-notchDepthM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-notch-depth/✏️sets-notchDepthM/🎯️outcome/🔣️.json"),
         ),
-        "change-a-vert-ms2" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🦶️change-a-vert-ms2/🦶️doubles-the-vertical-footfall-acceleration-to-0-5-m-s2/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🦶️change-a-vert-ms2/🦶️doubles-the-vertical-footfall-acceleration-to-0-5-m-s2/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🦶️change-a-vert-ms2/🦶️doubles-the-vertical-footfall-acceleration-to-0-5-m-s2/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🦶️change-a-vert-ms2/🦶️doubles-the-vertical-footfall-acceleration-to-0-5-m-s2/🎯️outcome/🔣️.json"),
+        "change-member-notch-distance" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-notch-distance/✏️sets-notchDistanceM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-notch-distance/✏️sets-notchDistanceM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-notch-distance/✏️sets-notchDistanceM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-member-notch-distance/✏️sets-notchDistanceM/🎯️outcome/🔣️.json"),
         ),
-        "change-n-cycles-bridge" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-n-cycles-bridge/🌉️quadruples-the-bridge-fatigue-cycles-to-2000000/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-n-cycles-bridge/🌉️quadruples-the-bridge-fatigue-cycles-to-2000000/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-n-cycles-bridge/🌉️quadruples-the-bridge-fatigue-cycles-to-2000000/📸️snapshot/➡️after/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔁️change-n-cycles-bridge/🌉️quadruples-the-bridge-fatigue-cycles-to-2000000/🎯️outcome/🔣️.json"),
+        "change-member-m-crit" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⚠️change-member-m-crit/✏️sets-mCritNm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚠️change-member-m-crit/✏️sets-mCritNm/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚠️change-member-m-crit/✏️sets-mCritNm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚠️change-member-m-crit/✏️sets-mCritNm/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-mass-per-m" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-mass-per-m/✏️sets-massKgPerM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-mass-per-m/✏️sets-massKgPerM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-mass-per-m/✏️sets-massKgPerM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-mass-per-m/✏️sets-massKgPerM/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-mass-per-m2" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-mass-per-m2/✏️sets-massKgPerM2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-mass-per-m2/✏️sets-massKgPerM2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-mass-per-m2/✏️sets-massKgPerM2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-mass-per-m2/✏️sets-massKgPerM2/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-damping" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌊️change-member-damping/✏️sets-dampingXi/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌊️change-member-damping/✏️sets-dampingXi/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌊️change-member-damping/✏️sets-dampingXi/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌊️change-member-damping/✏️sets-dampingXi/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-fire-duration" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-member-fire-duration/✏️sets-fireDurationS/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-member-fire-duration/✏️sets-fireDurationS/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-member-fire-duration/✏️sets-fireDurationS/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔥️change-member-fire-duration/✏️sets-fireDurationS/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-bridge-n-obs" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-n-obs/✏️sets-bridgeNObs/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-n-obs/✏️sets-bridgeNObs/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-n-obs/✏️sets-bridgeNObs/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-n-obs/✏️sets-bridgeNObs/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-bridge-tl-years" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-tl-years/✏️sets-bridgeTLYears/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-tl-years/✏️sets-bridgeTLYears/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-tl-years/✏️sets-bridgeTLYears/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-tl-years/✏️sets-bridgeTLYears/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-bridge-beta" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-beta/✏️sets-bridgeBeta/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-beta/✏️sets-bridgeBeta/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-beta/✏️sets-bridgeBeta/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-beta/✏️sets-bridgeBeta/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-bridge-a" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-a/✏️sets-bridgeA/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-a/✏️sets-bridgeA/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-a/✏️sets-bridgeA/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-a/✏️sets-bridgeA/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-bridge-b" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-b/✏️sets-bridgeB/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-b/✏️sets-bridgeB/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-b/✏️sets-bridgeB/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌉️change-member-bridge-b/✏️sets-bridgeB/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-bridge-crowd" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🚶️change-member-bridge-crowd/✏️sets-bridgeCrowdPerM2/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚶️change-member-bridge-crowd/✏️sets-bridgeCrowdPerM2/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚶️change-member-bridge-crowd/✏️sets-bridgeCrowdPerM2/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🚶️change-member-bridge-crowd/✏️sets-bridgeCrowdPerM2/🎯️outcome/🔣️.json"),
+        ),
+        "insert-member-action" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-member-action/➕️inserts-an-action-at-end-of-member/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-member-action/➕️inserts-an-action-at-end-of-member/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-member-action/➕️inserts-an-action-at-end-of-member/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-member-action/➕️inserts-an-action-at-end-of-member/🎯️outcome/🔣️.json"),
+        ),
+        "remove-member-action" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-member-action/➖️removes-the-first-action-of-member/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-member-action/➖️removes-the-first-action-of-member/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-member-action/➖️removes-the-first-action-of-member/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-member-action/➖️removes-the-first-action-of-member/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-kind" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-action-kind/✏️sets-kind/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-action-kind/✏️sets-kind/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-action-kind/✏️sets-kind/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-member-action-kind/✏️sets-kind/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-category" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏢️change-member-action-category/✏️sets-category/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏢️change-member-action-category/✏️sets-category/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏢️change-member-action-category/✏️sets-category/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏢️change-member-action-category/✏️sets-category/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-load-duration" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-member-action-load-duration/✏️sets-loadDuration/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-member-action-load-duration/✏️sets-loadDuration/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-member-action-load-duration/✏️sets-loadDuration/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-member-action-load-duration/✏️sets-loadDuration/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-q-line" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-member-action-q-line/✏️sets-qLineNPerM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-member-action-q-line/✏️sets-qLineNPerM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-member-action-q-line/✏️sets-qLineNPerM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-member-action-q-line/✏️sets-qLineNPerM/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-f-point" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-member-action-f-point/✏️sets-fPointN/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-member-action-f-point/✏️sets-fPointN/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-member-action-f-point/✏️sets-fPointN/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⬇️change-member-action-f-point/✏️sets-fPointN/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-mk" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-member-action-mk/✏️sets-mKNm/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-member-action-mk/✏️sets-mKNm/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-member-action-mk/✏️sets-mKNm/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⤴️change-member-action-mk/✏️sets-mKNm/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-vk" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-member-action-vk/✏️sets-vKN/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-member-action-vk/✏️sets-vKN/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-member-action-vk/✏️sets-vKN/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↕️change-member-action-vk/✏️sets-vKN/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-nk" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-nk/✏️sets-nKN/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-nk/✏️sets-nKN/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-nk/✏️sets-nKN/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-nk/✏️sets-nKN/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-ntk" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-ntk/✏️sets-nTKN/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-ntk/✏️sets-nTKN/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-ntk/✏️sets-nTKN/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-ntk/✏️sets-nTKN/🎯️outcome/🔣️.json"),
+        ),
+        "change-member-action-fc90-k" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-fc90-k/✏️sets-fC90KN/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-fc90-k/✏️sets-fC90KN/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-fc90-k/✏️sets-fC90KN/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏋️change-member-action-fc90-k/✏️sets-fC90KN/🎯️outcome/🔣️.json"),
+        ),
+        "insert-connection" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-connection/➕️inserts-a-connection-at-end/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-connection/➕️inserts-a-connection-at-end/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-connection/➕️inserts-a-connection-at-end/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-connection/➕️inserts-a-connection-at-end/🎯️outcome/🔣️.json"),
+        ),
+        "remove-connection" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-connection/➖️removes-the-first-connection/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-connection/➖️removes-the-first-connection/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-connection/➖️removes-the-first-connection/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-connection/➖️removes-the-first-connection/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-label-en" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-connection-label-en/✏️sets-labelEn/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-connection-label-en/✏️sets-labelEn/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-connection-label-en/✏️sets-labelEn/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-connection-label-en/✏️sets-labelEn/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-label-de" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-connection-label-de/✏️sets-labelDe/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-connection-label-de/✏️sets-labelDe/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-connection-label-de/✏️sets-labelDe/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🏷️change-connection-label-de/✏️sets-labelDe/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-fastener-type" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-fastener-type/✏️sets-fastenerType/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-fastener-type/✏️sets-fastenerType/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-fastener-type/✏️sets-fastenerType/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-fastener-type/✏️sets-fastenerType/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-strength-class" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-connection-strength-class/✏️sets-strengthClass/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-connection-strength-class/✏️sets-strengthClass/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-connection-strength-class/✏️sets-strengthClass/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-connection-strength-class/✏️sets-strengthClass/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-service-class" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-connection-service-class/✏️sets-serviceClass/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-connection-service-class/✏️sets-serviceClass/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-connection-service-class/✏️sets-serviceClass/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🌧️change-connection-service-class/✏️sets-serviceClass/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-diameter" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-diameter/✏️sets-diameterM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-diameter/✏️sets-diameterM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-diameter/✏️sets-diameterM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-diameter/✏️sets-diameterM/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-number" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-number/✏️sets-number/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-number/✏️sets-number/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-number/✏️sets-number/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-number/✏️sets-number/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-rows" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-rows/✏️sets-rows/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-rows/✏️sets-rows/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-rows/✏️sets-rows/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-rows/✏️sets-rows/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-spacing" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-spacing/✏️sets-spacingM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-spacing/✏️sets-spacingM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-spacing/✏️sets-spacingM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-spacing/✏️sets-spacingM/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-edge-distance" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-edge-distance/✏️sets-edgeDistanceM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-edge-distance/✏️sets-edgeDistanceM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-edge-distance/✏️sets-edgeDistanceM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-edge-distance/✏️sets-edgeDistanceM/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-end-distance" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-end-distance/✏️sets-endDistanceM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-end-distance/✏️sets-endDistanceM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-end-distance/✏️sets-endDistanceM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-end-distance/✏️sets-endDistanceM/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-t1" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-t1/✏️sets-t1M/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-t1/✏️sets-t1M/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-t1/✏️sets-t1M/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-t1/✏️sets-t1M/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-t2" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-t2/✏️sets-t2M/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-t2/✏️sets-t2M/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-t2/✏️sets-t2M/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-t2/✏️sets-t2M/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-steel-plate" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-steel-plate/✏️sets-steelPlate/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-steel-plate/✏️sets-steelPlate/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-steel-plate/✏️sets-steelPlate/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-steel-plate/✏️sets-steelPlate/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-steel-plate-thickness" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-steel-plate-thickness/✏️sets-steelPlateThicknessM/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-steel-plate-thickness/✏️sets-steelPlateThicknessM/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-steel-plate-thickness/✏️sets-steelPlateThicknessM/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/↔️change-connection-steel-plate-thickness/✏️sets-steelPlateThicknessM/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-shear-planes" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-shear-planes/✏️sets-shearPlanes/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-shear-planes/✏️sets-shearPlanes/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-shear-planes/✏️sets-shearPlanes/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-connection-shear-planes/✏️sets-shearPlanes/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-fuk" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-connection-fuk/✏️sets-fUK/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-connection-fuk/✏️sets-fUK/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-connection-fuk/✏️sets-fUK/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🛡️change-connection-fuk/✏️sets-fUK/🎯️outcome/🔣️.json"),
+        ),
+        "insert-connection-action" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-connection-action/➕️inserts-an-action-at-end-of-connection/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-connection-action/➕️inserts-an-action-at-end-of-connection/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-connection-action/➕️inserts-an-action-at-end-of-connection/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️insert-connection-action/➕️inserts-an-action-at-end-of-connection/🎯️outcome/🔣️.json"),
+        ),
+        "remove-connection-action" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-connection-action/➖️removes-the-first-action-of-connection/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-connection-action/➖️removes-the-first-action-of-connection/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-connection-action/➖️removes-the-first-action-of-connection/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➖️remove-connection-action/➖️removes-the-first-action-of-connection/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-action-kind" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-connection-action-kind/✏️sets-kind/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-connection-action-kind/✏️sets-kind/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-connection-action-kind/✏️sets-kind/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⚖️change-connection-action-kind/✏️sets-kind/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-action-load-duration" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-connection-action-load-duration/✏️sets-loadDuration/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-connection-action-load-duration/✏️sets-loadDuration/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-connection-action-load-duration/✏️sets-loadDuration/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/⏳️change-connection-action-load-duration/✏️sets-loadDuration/🎯️outcome/🔣️.json"),
+        ),
+        "change-connection-action-fk" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-action-fk/✏️sets-fKN/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-action-fk/✏️sets-fKN/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-action-fk/✏️sets-fKN/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔩️change-connection-action-fk/✏️sets-fKN/🎯️outcome/🔣️.json"),
         ),
         other => panic!("mutate-en1995-1: no committed fixture is registered for kind {other:?}"),
     }

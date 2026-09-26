@@ -22,11 +22,11 @@ P = "directory::os_directory::schema::space_artifact_creation"
 
 EDITS = [
     (CONFIG,
-     "`🛡️access-policy` and `🚧️hostile-input` oracles.",
-     "`🛡️access-policy`, `🚧️hostile-input` and `🌱️creation-progress` oracles."),
+     "`🛡️access-policy`, `🚧️hostile-input` and `📊️observability` oracles.",
+     "`🛡️access-policy`, `🚧️hostile-input`, `📊️observability` and `🌱️creation-progress` oracles."),
     (CONFIG,
-     'resolve(dir, "../../🧪️tests/🚧️hostile-input/🟦️.ts")]',
-     'resolve(dir, "../../🧪️tests/🚧️hostile-input/🟦️.ts"), resolve(dir, "../../🧪️tests/🌱️creation-progress/🟦️.ts")]'),
+     'resolve(dir, "../../🧪️tests/📊️observability/🟦️.ts")]',
+     'resolve(dir, "../../🧪️tests/📊️observability/🟦️.ts"), resolve(dir, "../../🧪️tests/🌱️creation-progress/🟦️.ts")]'),
     (AUTHORITY,
      "    CatalogLoading,\n    GuestCodecExecuting,\n",
      "    CatalogLoading,\n    GuestCompiling,\n    GuestCodecExecuting,\n"),

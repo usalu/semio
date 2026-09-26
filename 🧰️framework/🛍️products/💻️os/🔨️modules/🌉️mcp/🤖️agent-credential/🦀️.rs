@@ -88,8 +88,8 @@ impl AgentCredentialV1 {
         Ok(Self { hub_origin, space_id, audience, token })
     }
 
-    /// 📂️ Reads the credential from a path. The file must be regular, within the size bound and —
-    /// on unix — readable by its owner alone: a credential a group or the world can read is not a
+    /// 📂️ Reads the credential from a path. The file must be regular, within the size bound and
+    /// readable by its owner alone (POSIX mode, Windows DACL — `🔐️owner-only`): a credential a group or the world can read is not a
     /// credential, and refusing it at startup is the only moment anyone will notice.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn read_file(path: &std::path::Path) -> Result<Self, GatewayError> {
@@ -100,14 +100,7 @@ impl AgentCredentialV1 {
         if metadata.len() > AGENT_CREDENTIAL_MAX_BYTES {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("agent credential `{}` is larger than 16 KiB", path.display())));
         }
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let mode = metadata.permissions().mode() & 0o777;
-            if mode & 0o077 != 0 {
-                return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, format!("agent credential `{}` is mode {mode:04o}; it must not be readable by group or others (chmod 600)", path.display())));
-            }
-        }
+        crate::owner_only::verify_owner_only(path).map_err(|reason| GatewayError::new(GatewayErrorCode::PermissionDenied, format!("agent credential `{}` {reason}", path.display())))?;
         let mut bytes = std::fs::read(path).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("agent credential `{}` is unreadable: {error}", path.display())))?;
         let credential = Self::decode(&bytes);
         bytes.fill(0);

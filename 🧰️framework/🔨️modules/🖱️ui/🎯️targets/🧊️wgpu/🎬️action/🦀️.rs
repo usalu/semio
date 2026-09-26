@@ -238,6 +238,21 @@ impl FlatNode {
     }
 }
 
+/// 🧾️ Identifies one member of an admitted renderer emission without changing its wire payload.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ActionQueueReceipt {
+    pub token: std::num::NonZeroU64,
+    pub member: u8,
+    pub abort_correlation_on_error: bool,
+}
+
+/// 📥️ Transfers an action and its local receipt to the runtime dispatcher.
+#[derive(Debug)]
+pub struct QueuedActionDescriptor {
+    pub descriptor: ActionDescriptor,
+    pub receipt: Option<ActionQueueReceipt>,
+}
+
 #[derive(Debug)]
 pub struct BoundedAction {
     controller_id: TextSpan,
@@ -248,9 +263,19 @@ pub struct BoundedAction {
     byte_len: usize,
     root: Option<u16>,
     batch_remaining: u8,
+    receipt: Option<ActionQueueReceipt>,
 }
 
 impl BoundedAction {
+    pub fn receipt(&self) -> Option<ActionQueueReceipt> {
+        self.receipt
+    }
+
+    pub fn into_envelope(self) -> Result<QueuedActionDescriptor, BoundedActionFault> {
+        let receipt = self.receipt;
+        Ok(QueuedActionDescriptor { descriptor: self.into_descriptor()?, receipt })
+    }
+
     pub fn owned_bytes(&self) -> usize {
         self.byte_len
     }
@@ -347,6 +372,7 @@ impl BoundedActionBuilder {
                 byte_len: 0,
                 root: None,
                 batch_remaining: 1,
+                receipt: None,
             },
             parents: [None; ACTION_DEPTH_CAPACITY],
             depth: 0,
@@ -356,6 +382,15 @@ impl BoundedActionBuilder {
         builder.action.controller_id = builder.copy_text(controller_id)?;
         builder.action.action = builder.copy_text(action)?;
         Ok(builder)
+    }
+
+    pub fn set_receipt(&mut self, receipt: ActionQueueReceipt) -> Result<(), BoundedActionFault> {
+        self.live()?;
+        if self.action.receipt.is_some() {
+            return self.poison(BoundedActionFault::Structure);
+        }
+        self.action.receipt = Some(receipt);
+        Ok(())
     }
 
     pub fn begin_object(&mut self, key: Option<&str>) -> Result<(), BoundedActionFault> {

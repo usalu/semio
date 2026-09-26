@@ -1,95 +1,120 @@
-# EN 1995 Wave C / Wave D Implementation
+# 🪵️ EN 1995 — Feature-Complete Compliance Assessment
 
-## Subject schema
+Scope: `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/` only (below, `ANY` = `🏅️standards/🔖️1/🪆️subsets/✳️any/`).
+Compliance core (`⚖️compliance`) and app-surface were not edited.
+
+Wave C (fresh fixer): Round-3 **FAIL (4)** blockers closed — SLS frequent ψ₁, mutation text/binary facets (66 kinds), combined en/de localization.
+
+## Subject sketch
 
 ```text
 En1995Snapshot
-├── annex: AnnexChoice (EN | DE)
-├── members: Vec<TimberMember>        # stable string ids
-│     id, labelEn/De, strengthClass (C14–C50, GL20h–GL32c, LVL32, CLT100)
-│     serviceClass (1–3), loadDuration
-│     bM, hM, spanM, supportLengthM, bearingLengthM
-│     bucklingLengthYM/ZM, lateralRestraintSpacingM
-│     notchDepthM, notchDistanceM
-│     mEdNm, vEdN, nEdN, nTEdN, fC90EdN, mCritNm
-│     wInstM, psi2, floorAVert, fireDurationS, bridgeNCycles
+├── annex: AnnexChoice (En | De)
+├── members: Vec<TimberMember>                      # stable string ids, SI base units
+│     id, labelEn/De, role (beam|column|floor|bridge), strengthClass, serviceClass, support
+│     bM, hM, spanM, supportLengthM, bearingLengthM, bucklingLengthY/ZM, lateralRestraintSpacingM
+│     notchDepthM, notchDistanceM, mCritNm, massKgPerM, massKgPerM2, dampingXi, fireDurationS
+│     bridgeNObs, bridgeTLYears, bridgeBeta, bridgeA, bridgeB, bridgeCrowdPerM2
+│     actions: Vec<CharacteristicAction>             # kind, category, loadDuration, qLine/fPoint or analysed mK/vK/nK/nTK/fC90K
 └── connections: Vec<TimberConnection>
-      id, labelEn/De, fastenerType (nail|screw|bolt|dowel)
-      strengthClass, serviceClass, loadDuration
-      diameterM, number, rows, spacingM, edgeDistanceM, endDistanceM
-      t1M, t2M, steelPlate, steelPlateThicknessM, shearPlanes
-      fEdN, fUK
+      id, labelEn/De, fastenerType, strengthClass, serviceClass
+      diameterM, number, rows, spacingM, edgeDistanceM, endDistanceM, t1M, t2M
+      steelPlate, steelPlateThicknessM, shearPlanes, fUK
+      actions: Vec<ConnectionAction>                 # kind, loadDuration, fKN
 ```
 
-All quantities are SI base units (m, N, Pa, s). Strength properties resolve from EN 338 / EN 14080 / LVL / CLT tables in `🧬️schema/⚖️timber/🦀️.rs`.
+Characteristic actions are combined inside `evaluate()` per EN 1990 eq. 6.10 (+ ψ₀/ψ₁/ψ₂ from Table A1.1 / DE NA `snow_high`). Design effects are never the only action input. `ComboKind` = ULS, SLS characteristic, **SLS frequent (ψ₁ lead + ψ₂ accompanying)**, SLS quasi-permanent, accidental. `lateralRestraintSpacingM` scales `M_crit` (∝ 1/ℓ_ef²). Connection `rows` enters `n_ef`. Steel-plate / shear-plane Johansen uses §8.2.2–8.2.3. Bridge ULS uses crowd LM from `bridgeCrowdPerM2`, not the building beam’s design moment. Floor §7.3 derives f₁ and a_vert from mass/stiffness/span; NotApplicable when role ≠ Floor.
 
 ## Check catalogue
 
-| Part | Clause | Check id pattern | Remedy strategy |
-|------|--------|------------------|-----------------|
-| EN 1995-1-1 | §6.1.6 | `en1995.6.1.6.bending.<id>` | ↑ `hM` (analytic cube-root) |
-| EN 1995-1-1 | §6.1.7 | `en1995.6.1.7.shear.<id>` | ↑ `hM`; k_cr EN 0.67 / DE min(1,2.5/f_v,k); k_v notches |
-| EN 1995-1-1 | §6.1.2 | `en1995.6.1.2.tension.<id>` | ↑ `bM` = A_req/h (not √A) |
-| EN 1995-1-1 | §6.3.2 | `en1995.6.3.2.compression.<id>` | ↑ `bM` = A_req/h; k_c from λ_rel (β_c=0.2) |
-| EN 1995-1-1 | §6.2.4 | `en1995.6.2.4.combined.<id>` | ↑ `hM` via bounded search inverting (σ_c/(k_c·f_c,d))²+σ_m/f_m,d ≤ 1 |
-| EN 1995-1-1 | §6.1.5 | `en1995.6.1.5.c90.<id>` | ↑ `bearingLengthM`; k_c,90 |
-| EN 1995-1-1 | §7.2 | `en1995.7.2.winst/wfin.<id>` | ↑ `hM`; k_def×ψ2; DE L/200 vs EN L/250 fin |
-| EN 1995-1-1 | §7.3 | `en1995.7.3.vibration.<id>` | ↑ `hM`; DE 0.05 / EN 0.10 m/s² (only when bridgeNCycles≤0) |
-| EN 1995-1-1 | §8.2.2 | `en1995.8.2.2.johansen.<id>` | ↑ `number` / `diameterM`; EYM + rope; n_ef |
-| EN 1995-1-1 | §8.3 | `en1995.8.spacing.<id>` | u=max(a1,min/a1, a3,t,min/a3,t, a4,t,min/a4,t); Table 8.2/8.4/8.5 by fastener |
-| EN 1995-1-2 | §4.2 | `en1995.1-2.4.fire.<id>` | ↑ `hM`; d_ef from β_n(product); k_fi/k_mod,fi/γ_M,fi via AnnexParams |
-| EN 1995-2 | Annex A | `en1995.2.a.fatigue.<id>` | gated on bridgeNCycles; k_fat(N); ↑ `hM` |
-| EN 1995-2 | Annex B | `en1995.2.b.vibration.<id>` | pedestrian a_vert vs bridge comfort (DE 0.5 / EN 0.7) |
-| EN 1995-2 | §5 | `en1995.2.uls.bending.<id>` | bridge ULS bending |
-| EN 1995-2 | §7 | `en1995.2.sls.deflection.<id>` | bridge SLS L/400 |
+| Part | Clause | Check id | Remedy levers |
+|---|---|---|---|
+| EN 1995-1-1 | §6.1.6 | `en1995.6.1.6.bending.<member>` | ↑ `hM`, ↑ `mCritNm`, ↓ `lateralRestraintSpacingM` |
+| EN 1995-1-1 | §6.1.7 | `en1995.6.1.7.shear.<member>` | ↑ `hM` / ↑ `bM` |
+| EN 1995-1-1 | §6.1.2 | `en1995.6.1.2.tension.<member>` | ↑ `bM` |
+| EN 1995-1-1 | §6.3.2 | `en1995.6.3.2.compression.<member>` | ↑ `hM` / ↑ `bM` (λ from Y and Z buckling lengths) |
+| EN 1995-1-1 | §6.2.4 | `en1995.6.2.4.combined.<member>` | ↑ `hM` / ↑ `bM` — en/de prose differs („Kombination Druck und Biegung“) |
+| EN 1995-1-1 | §6.1.5 | `en1995.6.1.5.c90.<member>` | ↑ `bearingLengthM` (`supportLengthM` in k_c,90) |
+| EN 1995-1-1 | §7.2 | `en1995.7.2.winst/wfin/wfreq.<member>` | ↑ `hM` — wfreq uses SLS frequent (ψ₁) combo |
+| EN 1995-1-1 | §7.3 | `en1995.7.3.f1/stiffness/velocity|acceleration.<member>` | Floor role; ↑ `hM` / mass / damping |
+| EN 1995-1-2 | §4.2 | `en1995.1-2.4.fire.<member>` | ↑ `hM` / ↑ `bM` |
+| EN 1995-2 | Annex A | `en1995.2.a.fatigue.<member>` | Wohler N_R / k_fat damage; ↑ `hM` |
+| EN 1995-2 | Annex B | `en1995.2.b.avert/ahor.<member>` | ↑ `hM` / crowd |
+| EN 1995-2 | §5 / §7 | `en1995.2.uls.bending` / `….sls.deflection` | Crowd LM; ↑ `hM` |
+| EN 1995-1-1 | §8.2.2/8.2.3 | `en1995.8.*.johansen.<conn>` | steel plate / planes / rows; ↑ `diameterM` |
+| EN 1995-1-1 | §8.3–8.6 | `en1995.8.spacing.*` | ↑ spacing / end / edge |
+| integrity | id | `en1995.integrity.duplicate.*` / material unknown | `Remedy::one_of` free ids / tabulated classes |
 
-SubjectRef / Remedy paths use `members[id=<id>].…` / `connections[id=<id>].…` (spec v1.2).
+## Mutations (66 hierarchical kinds)
 
-Applicability: empty members → NotApplicable; tension/compression/c90/SLS/vibration/fire/bridge gated on inputs.
+Rust `En1995Mutation` / `KINDS` = 66 id-addressed kinds (memberId / connectionId / actionId; insert/remove keep list index).
+
+- `🧬️mutations/🟦️.ts` and `🧬️mutations/📝️text/🟦️.ts` — typed union; no `Record<string, unknown>` / `unknown` nests.
+- `🧬️mutations/💾️binary/📡️.protocol.semio` — wire tags 0..65 for all 66 kinds; legacy flat scalars (`change-m-ed-knm`, `change-w-mm3`, …) removed.
+- Python oracle `🔮️oracles/🐍️evaluate.py` mirrors SLS frequent + `en1995.7.2.wfreq.*`.
 
 ## DE / EN differences
 
-| Parameter | EN | DE-NA |
-|-----------|----|-------|
+| Parameter | EN | DE |
+|---|---|---|
+| γ_M timber | solid 1.3 / glulam 1.25 / LVL 1.2 | 1.3 all (NA Table NA.2) |
 | k_cr | 0.67 | min(1, 2.5/f_v,k[MPa]) |
-| w_fin limit | L/250 | L/200 |
-| floor a_vert | 0.10 m/s² | 0.05 m/s² |
-| bridge a_vert | 0.70 m/s² | 0.50 m/s² |
-| γ_M | solid 1.3 / glulam 1.25 / conn 1.3 | same |
-| fire k_fi / k_mod,fi / γ_M,fi / β_n | AnnexParams (product tables) | same routing |
-
-## Mutations
-
-46 hierarchical kinds (id-keyed scalars + insert/remove for members/connections). Legacy flat-scalar triads removed. Each leaf has 🔣️.json + payload schema, diff/inverse, and text/unit coverage. Semantic kinds match `#[derive(dsl::Mutations)]` kebab variants (`change-member-fc90-ed`, `change-member-nt-ed`, `change-connection-fuk`). Plugin mutation-leaf taxonomy regenerated.
+| w_fin | L/250 | L/200 |
+| floor w(1 kN) | 1.7 mm | 1.5 mm |
+| floor a_vert (f₁<8) | 0.10 m/s² | 0.05 m/s² |
+| snow ψ₁ | 0.2 (`snow`) | 0.5 (`snow_high`, sites >1000 m) |
 
 ## Examples
 
-1. **Compliant** — `🌉️glulam-footbridge` / `compliant_glulam_beam()` (default): GL28h 200×400, L=6 m, M_Ed=28 kNm, DE SC1 medium, bridgeNCycles=2e6. Spacing margins above Table 8.4 minima.
-2. **Non-compliant** — `❌️multi-fail-timber` / `noncompliant_multi_fail()`: C24 beam + slender column + weak nail group + fire + bridge overload; multiple Fail with remedies.
+1. `🏠️glulam-floor-beam` — compliant floor + connection (`complies()`).
+2. `🌉️glulam-footbridge` — compliant bridge (`complies()`).
+3. `❌️multi-fail-timber` — `fail_count ≥ 2` with named ids.
+4. `⚠️overloaded-footbridge` — ≥2 EN 1995-2 fails.
 
-## B2 field metadata
+## Catalogue / anti-gaming
 
-`🏷️field-meta/🦀️.rs` → `en1995_field_meta` with `NormFieldChoice { value, label_en, label_de }` (not `&[&str]`). Exact-path + `[]` wildcard lookup; en+de labels; SI display units on quantity leaves; enum choices for annex/strength/service/load-duration/fastener/steel-plate.
+- `reference_tables()` publishes strength classes, k_mod (Table 3.1), fasteners, roles from the same consts `evaluate()` reads.
+- Test `reference_table_k_mod_cell_equals_evaluated_modification_factor` asserts table cell == governing k_mod.
+- Perturbation signature `(id, status, computed, limit, utilization)` only; exemptions `id`/`labelEn`/`labelDe` (+ role-gated bridge leaves / steel thickness when plate off).
+- Duplicate member/connection/action ids Fail with `one_of`. Unknown strength class Fail with `one_of` (member + connection).
+- No fingerprints / epsilon gaming; no evaluate-path `let _ =` dummy binds on editable leaves.
+- `bucklingLengthZM` retained and used in compression buckling λ_z.
 
-## Facets / regen
+## Wave C FAIL (4) closeout
 
-Snapshot/diff/mutations/text/binary/JSON/TS/GQL/proto leaves for hierarchical subject. Oracle catalog `🔮️oracles/🔣️.json` lists all 46 kinds. Independent Python evaluate at `🔮️oracles/🐍️evaluate.py` (also via `⚖️evaluate-en1995-1/🐍️.py`).
+1. **SLS frequent** — `ComboKind::SlsFrequent` + `enumerate_combos()` emits `sls.freq.*` with ψ₁ lead / ψ₂ accompanying; `evaluate()` emits real §7.2 `wfreq` deflection check. Char + QP enumeration and ULS from characteristic actions unchanged.
+2. **Text mutations** — regenerated 66-kind typed facet from Rust (no `Record<string, unknown>`).
+3. **Binary protocol** — regenerated tags for all 66 hierarchical kinds.
+4. **Combined interaction de** — German explanation uses „Kombination Druck und Biegung“, not a copied English formula string.
+
+New test: `sls_frequent_uses_psi1_and_de_snow_high_diverges`.
 
 ## Tests
 
-| Suite | Status |
-|-------|--------|
-| Python oracle smoke | **PASS** |
-| JSON Schema (third-party `jsonschema`) on compliant + noncompliant snapshots | **PASS** |
-| Rust↔Python utilization parity ≤ 0.5 % on both examples | **PASS** |
-| `bun nx run @semio-tech/norm-en1995-rs:test -- --no-fail-fast` | **Summary [   0.438s] 84 tests run: 84 passed, 0 skipped** |
+Command: `bun nx run @semio-tech/norm-en1995-rs:test --skip-nx-cache -- --no-fail-fast`
 
-Editor unit tests call `NormHost::evaluate()` before paint-path assertions (revision-keyed report cache).
+```text
+Summary [   2.831s] 177 tests run: 177 passed, 0 skipped
+```
+
+Command: `bun nx run @semio-tech/norm-artifact-contract-rs:test --skip-nx-cache`
+
+```text
+Summary [   0.154s] 51 tests run: 51 passed, 0 skipped
+```
+
+Added / retained gates: ψ₁ frequent combo + DE `snow_high` divergence, two fail→pass remedies, path-resolve, field-meta leaf walk, python oracle ±0.5 %, jsonschema, example DSL→`complies()`/`fail_count≥2`, perturbation walk, duplicate/dangling integrity, lateral-restraint + rows influence, steel-plate capacity.
 
 ## Remaining gaps
 
-_(none)_
+None for the Wave D Round-3 **FAIL (4)** blocking list.
+
+Non-blocking residuals:
+
+- Integer fastener-count remedies stay `applicable = false` until app-surface accepts u32 writes.
+- Framework `UNITS` table still lacks N·m / N/m / kg/m / kg/m² (DSL uses plain `NUM`).
+- Plugin-wide `NormMutationLeafTaxonomy` `rows.maxItems: 392` while generate emits 547 payloads (not EN 1995-only).
 
 ## Requests to coordinator
 
-_(none)_
+- Raise `NormMutationLeafTaxonomy` JSON Schema `rows.maxItems` (or split the fixture) so `mutation-leaf-taxonomy-check` can pass.

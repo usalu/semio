@@ -38,6 +38,10 @@ pub mod stores;
 #[path = "../../🚧️refusal/🦀️.rs"]
 pub mod refusal;
 
+// 📊️ The counters and latency percentiles an administrator reads: per event, per route, residency, DB I/O.
+#[path = "../../📊️observability/🦀️.rs"]
+pub mod observability;
+
 // 🗂️ Also under `integration-fixtures`: that feature exists to serve the crate's OTHER targets
 // (`🗿️artifact-authority/🔏️trusted-catalog`'s `trusted_catalog_fixture`), which builds its profiles
 // under this same artifact root, and a `#[cfg(test)]` module cannot serve them.

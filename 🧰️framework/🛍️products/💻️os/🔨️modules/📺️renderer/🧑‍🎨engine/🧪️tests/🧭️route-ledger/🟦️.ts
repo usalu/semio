@@ -86,7 +86,7 @@ describe("shell route ledger", () => {
   });
 
   it("routes every shell route application through the ledger", () => {
-    expect(shellSource).toContain("if (hubOverlay || !shellRouteLedgerRef.current.shouldApply(shellUri)) return;");
+    expect(shellSource).toContain("if (route === null || !shellRouteLedgerRef.current.shouldApply(route)) return;");
     expect(shellSource).toContain("shellRouteLedgerRef.current.settle(generation, request.uri, await applyShellUriRef.current(request.uri, request.preservedViewState));");
     expect(shellSource.match(/shellRouteLedgerRef\.current\.invalidate\(\)/gu)?.length).toBe(2);
     expect(shellSource).toMatch(/rememberOpenSpaceId\(null\);\n\s+openInstanceIdRef\.current = null;\n\s+shellRouteLedgerRef\.current\.invalidate\(\);/u);

@@ -17,10 +17,10 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
-}
+    }
 fn expected_after() -> Vdi3805Snapshot {
     serde_json::from_str(AFTER).expect("after snapshot decodes")
-}
+    }
 fn mutation() -> Vdi3805Mutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
@@ -28,16 +28,16 @@ fn applied() -> Vdi3805Snapshot {
     let base = before();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &base);
     <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), &base).expect("change-geometry-parameters applies to its committed before-snapshot")
-}
+    }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let snapshot = applied();
-    let parameters = &snapshot.geometry["geom.valve.50"].parameters;
+    let parameters = &snapshot.geometry["geom-valve-50"].parameters;
     assert_eq!(parameters.get("scale"), Some(&0.5), "change-geometry-parameters/rescales-geom-valve-50-to-half-and-adds-clearance: scale must be 0.5");
     assert_eq!(parameters.get("clearance"), Some(&0.0625), "change-geometry-parameters/rescales-geom-valve-50-to-half-and-adds-clearance: the new clearance key must be present");
-    assert_eq!(snapshot.geometry["geom.valve.50"].bbox.max_x, 0.25, "change-geometry-parameters/rescales-geom-valve-50-to-half-and-adds-clearance: the stored bbox is NOT pre-scaled by this mutation");
+    assert_eq!(snapshot.geometry["geom-valve-50"].bbox.max_x, 0.25, "change-geometry-parameters/rescales-geom-valve-50-to-half-and-adds-clearance: the stored bbox is NOT pre-scaled by this mutation");
     assert_eq!(snapshot, expected_after(), "change-geometry-parameters/rescales-geom-valve-50-to-half-and-adds-clearance: applied state differs from committed after-snapshot");
 }
 
@@ -104,7 +104,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
-    assert_eq!(raised_diff.geometry.as_ref().map(|map| map["geom.valve.50"].parameters.len()), Some(2), "change-geometry-parameters/rescales-geom-valve-50-to-half-and-adds-clearance: the diff must publish the geometry map with both parameter keys");
+    assert_eq!(raised_diff.geometry.as_ref().map(|map| map["geom-valve-50"].parameters.len()), Some(2), "change-geometry-parameters/rescales-geom-valve-50-to-half-and-adds-clearance: the diff must publish the geometry map with both parameter keys");
     assert!(raised_diff.edition_profile.is_none(), "change-geometry-parameters/rescales-geom-valve-50-to-half-and-adds-clearance: geometry tuning has nothing to do with sheet edition profiles");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");

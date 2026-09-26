@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": { "const": 1 },
     "expectedCodecCount": { "const": 26 },
-    "expectedOpenTargetKind": { "const": "stdio.json" },
+    "expectedOpenTargetKind": { "const": "s.stdio.json" },
     "expectedPublication": { "const": "committed" },
     "expectedHubBundle": { "const": "withheld" },
     "hostile": {
@@ -41,7 +41,7 @@
       "additionalProperties": false,
       "required": ["artifactKind", "artifactSchema", "packSchemaHash", "role", "surfaceId", "factoryId", "extension"],
       "properties": {
-        "artifactKind": { "const": "stdio.json" },
+        "artifactKind": { "const": "s.stdio.json" },
         "artifactSchema": { "const": "stdio.json" },
         "packSchemaHash": { "$ref": "#/$defs/digest" },
         "role": { "const": "editor" },

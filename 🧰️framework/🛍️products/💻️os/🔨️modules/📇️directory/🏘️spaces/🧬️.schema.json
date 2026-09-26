@@ -3,7 +3,7 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/directory/spaces-browser-fixtures/v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "commandsPath", "spacesPath", "inviteLinkFragment", "inviteTtlChoicesSecs", "commandFieldOrder", "accessOrder", "inviteTokens", "redemptionStatusCodes"],
+  "required": ["schema", "commandsPath", "spacesPath", "inviteLinkFragment", "inviteTtlChoicesSecs", "commandFieldOrder", "accessOrder", "inviteTokens", "redemptionStatusCodes", "receiptFolds"],
   "properties": {
     "schema": { "const": "semio.directory.spaces-browser-fixtures.v1" },
     "commandsPath": { "const": "/directory/commands" },
@@ -45,6 +45,58 @@
           "status": { "type": "integer", "minimum": 100, "maximum": 599 },
           "code": { "enum": ["invalid-invite", "expired-invite", "already-member", "unauthorized", "unreachable", "hub-refused", "cancelled"] }
         }
+      }
+    },
+    "receiptFolds": {
+      "description": "🧾️ Read-your-writes: the caller's rows after one command receipt's directory events, in receipt order (`spaceRowsAfterEventsV1` / `space_rows_after_events`). `expected` is sorted like `spaceRowsV1`.",
+      "type": "array",
+      "minItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "userId", "rows", "events", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "userId": { "type": "string", "minLength": 1 },
+          "rows": { "type": "array", "items": { "$ref": "#/definitions/spaceRow" } },
+          "events": { "type": "array", "items": { "$ref": "#/definitions/directoryEvent" } },
+          "expected": { "type": "array", "items": { "$ref": "#/definitions/spaceRow" } }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "directoryEvent": {
+      "description": "📜️ One directory event as the hub's receipts carry it (`📇️directory/🧬️schema` `DirectoryEvent`); the body's own grammar is the directory schema's.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seq", "id", "hlc", "actor", "body", "recordedAtMs"],
+      "properties": {
+        "seq": { "type": "integer", "minimum": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "hlc": { "type": "object", "additionalProperties": false, "required": ["physicalMs", "logical"], "properties": { "physicalMs": { "type": "integer" }, "logical": { "type": "integer", "minimum": 0 } } },
+        "actor": { "type": "object", "additionalProperties": false, "required": ["kind", "id"], "properties": { "kind": { "enum": ["user", "admin", "system"] }, "id": { "type": "string", "minLength": 1 } } },
+        "spaceId": { "type": "string", "minLength": 1 },
+        "userId": { "type": "string", "minLength": 1 },
+        "body": { "type": "object", "required": ["kind"], "properties": { "kind": { "type": "string", "minLength": 1 } } },
+        "recordedAtMs": { "type": "integer" }
+      }
+    },
+    "spaceRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "visibility", "access", "role", "memberCount", "documentCount", "activeConnections", "updatedAtMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["atelier", "studio", "archive"] },
+        "visibility": { "enum": ["private", "public"] },
+        "access": { "enum": ["author", "member", "public"] },
+        "role": { "enum": ["author", "spectator", null] },
+        "memberCount": { "type": "integer", "minimum": 0 },
+        "documentCount": { "type": "integer", "minimum": 0 },
+        "activeConnections": { "type": "integer", "minimum": 0 },
+        "updatedAtMs": { "type": "integer" }
       }
     }
   }

@@ -297,6 +297,7 @@ pub use shell::{Shell, ShellEvent};
 // this is the actual public entry point a host drives per tick, per `report-w0-engine-facade.md`'s
 // own closing wiring request.
 pub use action::{
+    ActionQueueReceipt, QueuedActionDescriptor,
     checked_action_string_bytes, intent_is_stale, BoundedAction, BoundedActionBatchReservation, BoundedActionBuilder, BoundedActionClaim, BoundedActionClaimBatch, BoundedActionFault, BoundedActionQueue, BoundedActionReservation,
     BoundedClaimedActionDraft, BoundedClaimedActionReservation, PreparedClaimedAction, PreparedClaimedActionBatch, UiIntentAddress, UiIntentAdmission, UiIntentBindings, UiIntentCommand, UiIntentSequencer, ACTION_ITEM_BYTE_CAPACITY,
     ACTION_STRING_BYTE_CAPACITY, INTENT_DELTA_FIELD, INTENT_VALUE_FIELD,

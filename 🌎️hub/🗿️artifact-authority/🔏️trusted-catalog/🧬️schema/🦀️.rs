@@ -22,7 +22,7 @@ const ALL_LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), 
 const MODULE_JSON: &str = include_str!("🔣️.json");
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 27] = [
+const EXPORTS: [SchemaExport; 31] = [
     SchemaExport { id: "TrustedCatalogRelativePathV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleIdentityV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleCodecV1", leaves: ALL_LEAVES },
@@ -49,6 +49,10 @@ const EXPORTS: [SchemaExport; 27] = [
     SchemaExport { id: "TrustedPluginModuleIndexEntryV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedPluginModuleIndexV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedCatalogGuestResidencyV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogGuestResidencyStateV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogPackagePhaseV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogPackageProgressV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedCatalogLoadProgressV1", leaves: ALL_LEAVES },
     SchemaExport { id: "GuestCodecVerificationV1", leaves: ALL_LEAVES },
 ];
 
@@ -70,12 +74,88 @@ mod scope_schema_export_law;
 pub const TRUSTED_CATALOG_SCHEMA_JSON: &str = include_str!("🔣️.json");
 
 /// 🧊️ `TrustedCatalogGuestResidencyV1`: how many component bytes of compiled guests a hub keeps
-/// resident (least recently used released first, never for idleness) and how many guests a catalog
-/// load compiles and interprets at once.
+/// resident, how admission compares access counts, and how many guests a catalog load compiles and
+/// interprets at once.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TrustedCatalogGuestResidencyV1 {
-    pub resident_component_bytes_maximum: u64,
+    pub resident_component_bytes: u64,
     pub concurrent_verifications: usize,
+    pub access_count_ceiling: u32,
+    pub access_count_aging_per_guest: u64,
+}
+
+/// 🌐️ The environment variable an operator sets `residentComponentBytes` with (decimal bytes).
+pub const GUEST_RESIDENCY_BYTES_ENV: &str = "OS_HUB_GUEST_RESIDENCY_BYTES";
+
+/// 📏️ The inclusive `minimum`/`maximum` of `residentComponentBytes`.
+pub const TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS: std::ops::RangeInclusive<u64> = 0..=17_179_869_184;
+
+impl TrustedCatalogGuestResidencyV1 {
+    /// 🎚️ The residency with the operator's `residentComponentBytes` (`OS_HUB_GUEST_RESIDENCY_BYTES`): the
+    /// schema default when absent or empty, refused when it is not a decimal byte count within the bounds.
+    pub fn configured(value: Option<&str>) -> Result<Self, String> {
+        let Some(text) = value.map(str::trim).filter(|text| !text.is_empty()) else { return Ok(TRUSTED_CATALOG_GUEST_RESIDENCY) };
+        let bytes = text.parse::<u64>().ok().filter(|bytes| TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.contains(bytes)).ok_or_else(|| {
+            format!("{GUEST_RESIDENCY_BYTES_ENV} must be a decimal byte count from {} to {}", TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.start(), TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.end())
+        })?;
+        Ok(Self { resident_component_bytes: bytes, ..TRUSTED_CATALOG_GUEST_RESIDENCY })
+    }
+}
+
+/// 📏️ `TrustedCatalogGuestResidencyStateV1`: what a hub's compiled-guest residency holds now and has
+/// done since the hub started.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrustedCatalogGuestResidencyStateV1 {
+    pub budget_bytes: u64,
+    pub registered_guests: u64,
+    pub resident_guests: u64,
+    pub resident_bytes: u64,
+    pub hits: u64,
+    pub compiles: u64,
+    pub admitted: u64,
+    pub bypassed: u64,
+    pub released: u64,
+    pub compile_micros: u64,
+}
+
+/// 🚦️ `TrustedCatalogPackagePhaseV1`: where one selected package stands in its catalog's load and verification.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum TrustedCatalogPackagePhaseV1 {
+    Pending,
+    Reading,
+    Staged,
+    Verifying,
+    Ready,
+    Refused,
+}
+
+/// 📦️ `TrustedCatalogPackageProgressV1`: one selected package's place in its catalog's load and verification.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrustedCatalogPackageProgressV1 {
+    pub plugin_id: String,
+    pub component_bytes: u64,
+    pub phase: TrustedCatalogPackagePhaseV1,
+    pub rows: u64,
+    pub rows_pinned: u64,
+    pub rows_verified: u64,
+}
+
+/// 📈️ `TrustedCatalogLoadProgressV1`: how far a hub's trusted catalog has come, counts only.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrustedCatalogLoadProgressV1 {
+    pub packages: Vec<TrustedCatalogPackageProgressV1>,
+    pub packages_total: u64,
+    pub packages_ready: u64,
+    pub packages_refused: u64,
+    pub component_bytes_total: u64,
+    pub component_bytes_read: u64,
+    pub rows_total: u64,
+    pub rows_pinned: u64,
+    pub rows_verified: u64,
 }
 
 /// 🗃️ `GuestCodecVerificationV1`: one remembered guest codec verification, content-addressed by its key.
@@ -92,8 +172,9 @@ pub struct GuestCodecVerificationV1 {
 /// 🏷️ The `schema` of every [`GuestCodecVerificationV1`].
 pub const GUEST_CODEC_VERIFICATION_SCHEMA: &str = "semio.hub.guest-codec-verification/v1";
 
-/// 🧊️ The one residency every hub applies, the `const` values of `TrustedCatalogGuestResidencyV1`.
-pub const TRUSTED_CATALOG_GUEST_RESIDENCY: TrustedCatalogGuestResidencyV1 = TrustedCatalogGuestResidencyV1 { resident_component_bytes_maximum: 268_435_456, concurrent_verifications: 4 };
+/// 🧊️ The residency a hub applies unless its operator configures `residentComponentBytes`: the schema's
+/// `default` and `const` values of `TrustedCatalogGuestResidencyV1`.
+pub const TRUSTED_CATALOG_GUEST_RESIDENCY: TrustedCatalogGuestResidencyV1 = TrustedCatalogGuestResidencyV1 { resident_component_bytes: 268_435_456, concurrent_verifications: 4, access_count_ceiling: 15, access_count_aging_per_guest: 16 };
 /// 🏷️ Closed publication command schema identity.
 pub const TRUSTED_CATALOG_PUBLICATION_SCHEMA: &str = "semio.hub.trusted-catalog-publication/v1";
 /// 🏷️ Closed publication receipt schema identity.

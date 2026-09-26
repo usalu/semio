@@ -41,11 +41,10 @@ type EditionId { year: Int! month: Int! }
 type CatalogIndexEntry { productId: String! sheet: Int! tags: [String!]! dn: Int }
 type CatalogIndex { entries: [CatalogIndexEntry!]! }
 type BoundingBox { minX: Float! minY: Float! minZ: Float! maxX: Float! maxY: Float! maxZ: Float! }
-type GeometryConnection { id: String! x: Float! y: Float! z: Float! nx: Float! ny: Float! nz: Float! }
+type GeometryConnection { id: String! medium: String! position: [Float!]! direction: [Float!]! diameterMm: Float }
 type ParametricGeometry { id: String! bbox: BoundingBox! connections: [GeometryConnection!]! parameters: [Vdi3805FloatMapEntry!]! }
 type CurvePoint { x: Float! y: Float! }
 type CharacteristicCurve { id: String! points: [CurvePoint!]! }
-type SecurityLimits { maxFileBytes: Int! maxRecords: Int! maxFieldLength: Int! maxNestingDepth: Int! }
 type Vdi3805StringMapEntry { key: String! value: String! }
 type Vdi3805FloatMapEntry { key: String! value: Float! }
 

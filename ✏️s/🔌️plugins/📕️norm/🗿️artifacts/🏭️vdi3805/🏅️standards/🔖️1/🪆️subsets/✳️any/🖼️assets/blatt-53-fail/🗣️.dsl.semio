@@ -1,0 +1,45 @@
+semio norm.vdi3805.dsl v1
+strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="2023-06-01" charset=UTF-8 record-count=0 building-system-number=system-code="420" subsystem="10" sequence=1 extensions=fields={
+}
+extensions=fields={
+}
+products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
+  HP-12 {manufacturer-code=DEMO product-group=HP article-number=HP-12} [ {locale=de text="Wärmepumpe 12 kW"} {locale=en text="Heat pump 12 kW"} ] 53 [ {family="100" fields=[ "100" DEMO HP HP-12 "53" ] extensions=fields={
+  }
+  } {family="210" fields=[ "210" cop "-1" dn "-1" nominal_heat_output_w "12000" product_group HP type_code INVALID ] extensions=fields={
+  }
+  } {family="700" fields=[ "700" de "Wärmepumpe 12 kW" en "Heat pump 12 kW" ] extensions=fields={
+  }
+  } ] {id=cfg.HP-12 attributes={
+    entries=[ {
+      key="product_group" unit=null value="HP"
+    }
+ {
+      key="type_code" unit=null value="INVALID"
+    }
+ {
+      key="dn" unit=null value="-1"
+    }
+ {
+      key="nominal_heat_output_w" unit=null value="12000"
+    }
+ {
+      key="cop" unit=null value="-1"
+    }
+    ] kind="generic"
+  }
+  function-refs=[ ]} [ ] [ ] {fields={
+  }
+  }
+}
+edition-profile={
+}
+correction-as-of=year=2024 month=1 index=
+entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
+  HP-12 53 [ "Wärmepumpe 12 kW" "Heat pump 12 kW" ] _
+}
+geometry={
+}
+curves={
+}
+limits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32

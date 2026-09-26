@@ -195,8 +195,11 @@ async fn drawing_play_layers_tree_row_id_formats_and_parses_back() {
     assert_eq!(drawing_play_layer_id_from_tree_row_id(&row_id), Some(id));
 
     let child_row = drawing_play_boolean_child_row_id("bool-1", "child-1");
-    assert_eq!(child_row, "drawing-play-layers.boolean.bool-1.child.child-1");
+    assert_eq!(child_row, "drawing-play-layers.boolean-child.6.bool-1child-1");
     assert_eq!(drawing_play_layer_id_from_tree_row_id(&child_row), Some("child-1".to_string()));
+    for (parent, child) in [("a.child.b", "c.child.d"), ("🌳.child", "葉.1")] {
+        assert_eq!(drawing_play_layer_id_from_tree_row_id(&drawing_play_boolean_child_row_id(parent, child)), Some(child.into()));
+    }
 
     assert_eq!(drawing_play_layer_id_from_tree_row_id("not-a-row-id"), None);
     assert_eq!(drawing_play_layer_id_from_tree_row_id("drawing-play-layers."), None);
@@ -253,8 +256,7 @@ async fn drawing_layer_world_bounds_covers_text_image_default_and_none_branches(
     assert_eq!((iw, ih), (256.0, 256.0));
 
     let empty_path = create_drawing_path_layer("Empty", Vec::new());
-    let bounds = drawing_layer_world_bounds(&empty_path).expect("default bbox");
-    assert_eq!(bounds, (-64.0, -64.0, 128.0, 128.0));
+    assert!(drawing_layer_world_bounds(&empty_path).is_none());
 
     let close_only = create_drawing_path_layer("CloseOnly", vec![PathSegment::Close]);
     assert!(drawing_layer_world_bounds(&close_only).is_none());
@@ -311,13 +313,7 @@ async fn transform_path_segments_transforms_every_segment_kind() {
         PathSegment::Move { to } => assert_eq!(*to, [12.0, 20.0]),
         other => panic!("expected move, got {other:?}"),
     }
-    match &transformed[4] {
-        PathSegment::Arc { to, rx, .. } => {
-            assert_eq!(*to, [12.0, 20.0]);
-            assert_eq!(*rx, 1.0);
-        }
-        other => panic!("expected arc, got {other:?}"),
-    }
+    assert_eq!(transformed[4], PathSegment::Line { to: [12.0, 20.0] });
     assert!(matches!(transformed[5], PathSegment::Close));
 }
 
@@ -548,4 +544,44 @@ async fn find_drawing_layer_location_reports_parent_and_index_or_none_when_missi
     assert_eq!(top_location.index, 1);
 
     assert!(find_drawing_layer_location(&doc, "missing").is_none());
+}
+
+#[test]
+fn nested_group_transform_reaches_scene_and_bounds() {
+    let mut child = create_drawing_shape_layer_rect("Child");
+    if let DrawingLayerNode::Shape(shape) = &mut child { shape.rect = Some(DrawingRect { x: 0.0, y: 0.0, width: 10.0, height: 20.0 }); }
+    layer_base_mut(&mut child).transform.x = 4.0;
+    layer_base_mut(&mut child).transform.y = 5.0;
+    let mut group = create_drawing_group_layer("Group");
+    layer_base_mut(&mut group).transform = DrawingTransform { x: 10.0, y: 20.0, scale_x: 2.0, scale_y: 3.0, rotation: 0.0 };
+    if let DrawingLayerNode::Group(body) = &mut group { body.children.push(child); }
+    assert_eq!(drawing_layer_world_bounds(&group), Some((18.0, 35.0, 20.0, 60.0)));
+    let document = DrawingSnapshot { layers: vec![group], ..Default::default() };
+    let scene = flatten_drawing_document_to_scene_nodes(&document);
+    assert_eq!(scene[0].transform, [2.0, 0.0, 0.0, 3.0, 18.0, 35.0]);
+}
+
+#[test]
+fn curve_bounds_include_the_visible_extremum() {
+    let layer = create_drawing_path_layer("Curve", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Cubic { ctrl1: [0.0, 100.0], ctrl2: [100.0, 100.0], to: [100.0, 0.0] }]);
+    assert_eq!(drawing_layer_world_bounds(&layer), Some((0.0, 0.0, 100.0, 75.0)));
+}
+
+#[test]
+fn tree_row_ids_preserve_dotted_layer_ids() {
+    assert_eq!(drawing_play_layer_id_from_tree_row_id("drawing-play-layers.shape.shape.a"), Some("shape.a".into()));
+    assert_eq!(drawing_play_layer_id_from_tree_row_id("drawing-play-layers.group.group.a"), Some("group.a".into()));
+}
+
+#[test]
+fn duplicated_group_remaps_internal_boolean_references() {
+    let child = create_drawing_shape_layer_rect("Operand");
+    let original_id = layer_id(&child).to_string();
+    let boolean = create_drawing_boolean_layer("Result", "union", vec![original_id.clone(), "external".into()]);
+    let mut group = create_drawing_group_layer("Container");
+    if let DrawingLayerNode::Group(body) = &mut group { body.children = vec![child, boolean]; }
+    let DrawingLayerNode::Group(copy) = clone_drawing_layer_node(&group, " copy") else { panic!("Expected a group") };
+    let DrawingLayerNode::Boolean(boolean) = &copy.children[1] else { panic!("Expected Boolean operands") };
+    assert_ne!(layer_id(&copy.children[0]), original_id);
+    assert_eq!(boolean.children, vec![layer_id(&copy.children[0]).to_string(), "external".into()]);
 }

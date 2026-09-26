@@ -6,6 +6,7 @@ use crate::{ManufacturerFile, Vdi3805Mutation, Vdi3805Snapshot};
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[mutation_leaf(contract = ::protocol)]
 pub struct ChangeManufacturerFile {
     pub new_manufacturer_file: ManufacturerFile,

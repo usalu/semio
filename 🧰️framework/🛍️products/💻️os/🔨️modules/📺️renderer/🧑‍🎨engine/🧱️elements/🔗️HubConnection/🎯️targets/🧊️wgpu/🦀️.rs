@@ -345,8 +345,9 @@ pub enum HubArtifactOpening {
 }
 
 /// 🌱️ The one creation this workspace drives: the sealed intent, the hub's latest receipt, whether a
-/// cancel was asked and sent, and the opening of its result. `deadline_at_ms` bounds the whole
-/// operation; past it the outcome is `Indeterminate`, never silently `Failed`.
+/// cancel was asked and sent, and the opening of its result. The door follows the creation for as
+/// long as the hub answers ([`space_artifact_creation_unreachable`] since `last_answered_at_ms`), polling
+/// with the shared backoff (`polls`); only a hub silent past the bound makes it `Indeterminate`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HubArtifactCreation {
     pub intent: SpaceArtifactCreateV1,
@@ -357,7 +358,8 @@ pub struct HubArtifactCreation {
     pub cancel_sent: bool,
     pub ready: Option<SpaceArtifactCreationReadyV1>,
     pub opening: HubArtifactOpening,
-    pub deadline_at_ms: u64,
+    pub last_answered_at_ms: u64,
+    pub polls: u32,
     pub next_poll_at_ms: u64,
 }
 
@@ -376,10 +378,31 @@ pub struct HubArtifactCreationState {
     pub operation: Option<HubArtifactCreation>,
 }
 
-/// ⏱️ The whole-operation bound and the poll cadence — the browser worker's
-/// `SPACE_ARTIFACT_CREATION_DEADLINE_MS` / `SPACE_ARTIFACT_CREATION_POLL_MS` (`🏪️store/👷️worker/🟦️.ts`).
-pub const HUB_ARTIFACT_CREATION_DEADLINE_MS: u64 = 120_000;
-pub const HUB_ARTIFACT_CREATION_POLL_MS: u64 = 100;
+/// ⏱️ How a client follows one space artifact creation — the shared contract
+/// `🏪️store/👷️worker/🌱️creation-polling/🔣️.json`, read by React's `spaceArtifactCreationPollDelayV1` /
+/// `spaceArtifactCreationUnreachableV1` and by this door.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpaceArtifactCreationPollingV1 {
+    pub poll_initial_ms: u64,
+    pub poll_max_ms: u64,
+    pub unreachable_bound_ms: u64,
+}
+
+/// 📜️ The shared polling contract, parsed once from the file both renderers read.
+pub static SPACE_ARTIFACT_CREATION_POLLING_V1: std::sync::LazyLock<SpaceArtifactCreationPollingV1> =
+    std::sync::LazyLock::new(|| serde_json::from_str(include_str!("../../../../../../🏪️store/👷️worker/🌱️creation-polling/🔣️.json")).expect("the shared creation-polling contract parses"));
+
+/// ⏳️ The wait before status poll `attempt` (0-based): `pollInitialMs` doubling up to `pollMaxMs`.
+pub fn space_artifact_creation_poll_delay_ms(attempt: u32) -> u64 {
+    let contract = &*SPACE_ARTIFACT_CREATION_POLLING_V1;
+    contract.poll_max_ms.min(contract.poll_initial_ms.saturating_mul(1u64 << attempt.min(30)))
+}
+
+/// 🛑️ Whether a creation must be concluded `Indeterminate`: the hub has not answered for the contract's bound.
+pub fn space_artifact_creation_unreachable(last_answered_at_ms: u64, now_ms: u64) -> bool {
+    now_ms.saturating_sub(last_answered_at_ms) >= SPACE_ARTIFACT_CREATION_POLLING_V1.unreachable_bound_ms
+}
 
 /// 🏁️ A phase after which the hub will not change the receipt again.
 pub fn hub_artifact_creation_terminal(phase: SpaceArtifactCreationPhaseV1) -> bool {

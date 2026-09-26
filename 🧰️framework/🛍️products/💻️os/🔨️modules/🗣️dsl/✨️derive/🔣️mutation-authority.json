@@ -1,0 +1,636 @@
+{
+  "schema": "semio.dsl.mutation-source-authority/v1",
+  "sourceFilename": "🦀️.rs",
+  "descriptorFilename": "🔣️.json",
+  "mutationCollection": "🧬️mutations",
+  "mutationPayloadFacet": "🦠️mutation",
+  "mutationDomainOwners": {
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": {
+      "🔑️access-rule": {
+        "🌱️create": "create-access-rule",
+        "🗑️delete": "delete-access-rule",
+        "🏷️rename": "rename-access-rule",
+        "♻️replace": "replace-access-rule"
+      },
+      "♿️accessibility-requirement": {
+        "🌱️create": "create-accessibility-requirement",
+        "🗑️delete": "delete-accessibility-requirement",
+        "🏷️rename": "rename-accessibility-requirement",
+        "♻️replace": "replace-accessibility-requirement"
+      },
+      "🏃️activity": {
+        "🌱️create": "create-activity",
+        "🗑️delete": "delete-activity",
+        "🏷️rename": "rename-activity",
+        "♻️replace": "replace-activity"
+      },
+      "🧲️adjacency": {
+        "🧲️connect": "connect-adjacency",
+        "🫷️disconnect": "disconnect-adjacency"
+      },
+      "🔬️analysis-record": {
+        "🌱️create": "create-analysis-record",
+        "🗑️delete": "delete-analysis-record",
+        "🏷️rename": "rename-analysis-record",
+        "♻️replace": "replace-analysis-record"
+      },
+      "👍️approval-record": {
+        "🌱️create": "create-approval-record",
+        "🗑️delete": "delete-approval-record",
+        "🏷️rename": "rename-approval-record",
+        "♻️replace": "replace-approval-record"
+      },
+      "💭️assumption": {
+        "🌱️create": "create-assumption",
+        "🗑️delete": "delete-assumption",
+        "🏷️rename": "rename-assumption",
+        "♻️replace": "replace-assumption"
+      },
+      "📒️audit-event": {
+        "🌱️create": "create-audit-event",
+        "🗑️delete": "delete-audit-event",
+        "🏷️rename": "rename-audit-event",
+        "♻️replace": "replace-audit-event"
+      },
+      "🏁️benchmark-record": {
+        "🌱️create": "create-benchmark-record",
+        "🗑️delete": "delete-benchmark-record",
+        "🏷️rename": "rename-benchmark-record",
+        "♻️replace": "replace-benchmark-record"
+      },
+      "🔀️change-record": {
+        "🌱️create": "create-change-record",
+        "🗑️delete": "delete-change-record",
+        "🏷️rename": "rename-change-record",
+        "♻️replace": "replace-change-record"
+      },
+      "🤝️collaboration-record": {
+        "🌱️create": "create-collaboration-record",
+        "🗑️delete": "delete-collaboration-record",
+        "🏷️rename": "rename-collaboration-record",
+        "♻️replace": "replace-collaboration-record"
+      },
+      "📡️communication-requirement": {
+        "🌱️create": "create-communication-requirement",
+        "🗑️delete": "delete-communication-requirement",
+        "🏷️rename": "rename-communication-requirement",
+        "♻️replace": "replace-communication-requirement"
+      },
+      "🛂️compliance-record": {
+        "🌱️create": "create-compliance-record",
+        "🗑️delete": "delete-compliance-record",
+        "🏷️rename": "rename-compliance-record",
+        "♻️replace": "replace-compliance-record"
+      },
+      "⚔️conflict": {
+        "🌱️create": "create-conflict",
+        "🗑️delete": "delete-conflict",
+        "🏷️rename": "rename-conflict",
+        "♻️replace": "replace-conflict"
+      },
+      "🚧️constraint-record": {
+        "🌱️create": "create-constraint-record",
+        "🗑️delete": "delete-constraint-record",
+        "🏷️rename": "rename-constraint-record",
+        "♻️replace": "replace-constraint-record"
+      },
+      "💰️cost-requirement": {
+        "🌱️create": "create-cost-requirement",
+        "🗑️delete": "delete-cost-requirement",
+        "🏷️rename": "rename-cost-requirement",
+        "♻️replace": "replace-cost-requirement"
+      },
+      "✅️decision": {
+        "🌱️create": "create-decision",
+        "🗑️delete": "delete-decision",
+        "🏷️rename": "rename-decision",
+        "♻️replace": "replace-decision"
+      },
+      "🚚️delivery-constraint": {
+        "🌱️create": "create-delivery-constraint",
+        "🗑️delete": "delete-delivery-constraint",
+        "🏷️rename": "rename-delivery-constraint",
+        "♻️replace": "replace-delivery-constraint"
+      },
+      "📃️document": {
+        "🌱️create": "create-document",
+        "🗑️delete": "delete-document",
+        "🏷️rename": "rename-document",
+        "♻️replace": "replace-document"
+      },
+      "🌿️environmental-requirement": {
+        "🌱️create": "create-environmental-requirement",
+        "🗑️delete": "delete-environmental-requirement",
+        "🏷️rename": "rename-environmental-requirement",
+        "♻️replace": "replace-environmental-requirement"
+      },
+      "🛠️equipment": {
+        "🌱️create": "create-equipment",
+        "🗑️delete": "delete-equipment",
+        "🏷️rename": "rename-equipment",
+        "♻️replace": "replace-equipment"
+      },
+      "🧩️flexibility-requirement": {
+        "🌱️create": "create-flexibility-requirement",
+        "🗑️delete": "delete-flexibility-requirement",
+        "🏷️rename": "rename-flexibility-requirement",
+        "♻️replace": "replace-flexibility-requirement"
+      },
+      "🌊️flow-requirement": {
+        "🌱️create": "create-flow-requirement",
+        "🗑️delete": "delete-flow-requirement",
+        "🏷️rename": "rename-flow-requirement",
+        "♻️replace": "replace-flow-requirement"
+      },
+      "⚙️function": {
+        "🌱️create": "create-function",
+        "🗑️delete": "delete-function",
+        "🏷️rename": "rename-function",
+        "♻️replace": "replace-function"
+      },
+      "🏛️governance": {
+        "🏷️rename": "rename-governance",
+        "♻️replace": "replace-governance"
+      },
+      "📈️growth-plan": {
+        "🌱️create": "create-growth-plan",
+        "🗑️delete": "delete-growth-plan",
+        "🏷️rename": "rename-growth-plan",
+        "♻️replace": "replace-growth-plan"
+      },
+      "🧠️human-factor-requirement": {
+        "🌱️create": "create-human-factor-requirement",
+        "🗑️delete": "delete-human-factor-requirement",
+        "🏷️rename": "rename-human-factor-requirement",
+        "♻️replace": "replace-human-factor-requirement"
+      },
+      "ℹ️information-requirement": {
+        "🌱️create": "create-information-requirement",
+        "🗑️delete": "delete-information-requirement",
+        "🏷️rename": "rename-information-requirement",
+        "♻️replace": "replace-information-requirement"
+      },
+      "🏗️infrastructure-requirement": {
+        "🌱️create": "create-infrastructure-requirement",
+        "🗑️delete": "delete-infrastructure-requirement",
+        "🏷️rename": "rename-infrastructure-requirement",
+        "♻️replace": "replace-infrastructure-requirement"
+      },
+      "🐛️issue": {
+        "🌱️create": "create-issue",
+        "🗑️delete": "delete-issue",
+        "🏷️rename": "rename-issue",
+        "♻️replace": "replace-issue"
+      },
+      "📚️knowledge-record": {
+        "🌱️create": "create-knowledge-record",
+        "🗑️delete": "delete-knowledge-record",
+        "🏷️rename": "rename-knowledge-record",
+        "♻️replace": "replace-knowledge-record"
+      },
+      "🗓️meeting-record": {
+        "🌱️create": "create-meeting-record",
+        "🗑️delete": "delete-meeting-record",
+        "🏷️rename": "rename-meeting-record",
+        "♻️replace": "replace-meeting-record"
+      },
+      "🏷️meta": {
+        "🏷️rename": "rename-meta",
+        "♻️replace": "replace-meta"
+      },
+      "📋️operational-requirement": {
+        "🌱️create": "create-operational-requirement",
+        "🗑️delete": "delete-operational-requirement",
+        "🏷️rename": "rename-operational-requirement",
+        "♻️replace": "replace-operational-requirement"
+      },
+      "⚖️option-evaluation": {
+        "🌱️create": "create-option-evaluation",
+        "🗑️delete": "delete-option-evaluation",
+        "🏷️rename": "rename-option-evaluation",
+        "♻️replace": "replace-option-evaluation"
+      },
+      "🏢️organizational-requirement": {
+        "🌱️create": "create-organizational-requirement",
+        "🗑️delete": "delete-organizational-requirement",
+        "🏷️rename": "rename-organizational-requirement",
+        "♻️replace": "replace-organizational-requirement"
+      },
+      "📊️performance-criterion": {
+        "🌱️create": "create-performance-criterion",
+        "🗑️delete": "delete-performance-criterion",
+        "🏷️rename": "rename-performance-criterion",
+        "♻️replace": "replace-performance-criterion"
+      },
+      "⭐️priority-record": {
+        "🌱️create": "create-priority-record",
+        "🗑️delete": "delete-priority-record",
+        "🏷️rename": "rename-priority-record",
+        "♻️replace": "replace-priority-record"
+      },
+      "🔒️privacy-requirement": {
+        "🌱️create": "create-privacy-requirement",
+        "🗑️delete": "delete-privacy-requirement",
+        "🏷️rename": "rename-privacy-requirement",
+        "♻️replace": "replace-privacy-requirement"
+      },
+      "🔄️process": {
+        "🌱️create": "create-process",
+        "🗑️delete": "delete-process",
+        "🏷️rename": "rename-process",
+        "♻️replace": "replace-process"
+      },
+      "🧱️program-element": {
+        "🌱️create": "create-program-element",
+        "🗑️delete": "delete-program-element",
+        "🏷️rename": "rename-program-element",
+        "♻️replace": "replace-program-element"
+      },
+      "🏙️project": {
+        "🏷️rename": "rename-project",
+        "♻️replace": "replace-project"
+      },
+      "💎️quality-record": {
+        "🌱️create": "create-quality-record",
+        "🗑️delete": "delete-quality-record",
+        "🏷️rename": "rename-quality-record",
+        "♻️replace": "replace-quality-record"
+      },
+      "🔢️quantity-requirement": {
+        "🌱️create": "create-quantity-requirement",
+        "🗑️delete": "delete-quantity-requirement",
+        "🏷️rename": "rename-quantity-requirement",
+        "♻️replace": "replace-quantity-requirement"
+      },
+      "📜️regulatory-requirement": {
+        "🌱️create": "create-regulatory-requirement",
+        "🗑️delete": "delete-regulatory-requirement",
+        "🏷️rename": "rename-regulatory-requirement",
+        "♻️replace": "replace-regulatory-requirement"
+      },
+      "🕸️relationship": {
+        "🌱️create": "create-relationship",
+        "🗑️delete": "delete-relationship",
+        "🏷️rename": "rename-relationship",
+        "♻️replace": "replace-relationship"
+      },
+      "📑️report-record": {
+        "🌱️create": "create-report-record",
+        "🗑️delete": "delete-report-record",
+        "🏷️rename": "rename-report-record",
+        "♻️replace": "replace-report-record"
+      },
+      "📌️requirement": {
+        "🌱️create": "create-requirement",
+        "🗑️delete": "delete-requirement",
+        "🏷️rename": "rename-requirement",
+        "♻️replace": "replace-requirement"
+      },
+      "💪️resilience-requirement": {
+        "🌱️create": "create-resilience-requirement",
+        "🗑️delete": "delete-resilience-requirement",
+        "🏷️rename": "rename-resilience-requirement",
+        "♻️replace": "replace-resilience-requirement"
+      },
+      "📦️resource": {
+        "🌱️create": "create-resource",
+        "🗑️delete": "delete-resource",
+        "🏷️rename": "rename-resource",
+        "♻️replace": "replace-resource"
+      },
+      "⚠️risk": {
+        "🌱️create": "create-risk",
+        "🗑️delete": "delete-risk",
+        "🏷️rename": "rename-risk",
+        "♻️replace": "replace-risk"
+      },
+      "🦺️safety-requirement": {
+        "🌱️create": "create-safety-requirement",
+        "🗑️delete": "delete-safety-requirement",
+        "🏷️rename": "rename-safety-requirement",
+        "♻️replace": "replace-safety-requirement"
+      },
+      "🎬️scenario": {
+        "🌱️create": "create-scenario",
+        "🗑️delete": "delete-scenario",
+        "🏷️rename": "rename-scenario",
+        "♻️replace": "replace-scenario"
+      },
+      "📅️schedule-requirement": {
+        "🌱️create": "create-schedule-requirement",
+        "🗑️delete": "delete-schedule-requirement",
+        "🏷️rename": "rename-schedule-requirement",
+        "♻️replace": "replace-schedule-requirement"
+      },
+      "🔍️search-filter": {
+        "🌱️create": "create-search-filter",
+        "🗑️delete": "delete-search-filter",
+        "🏷️rename": "rename-search-filter",
+        "♻️replace": "replace-search-filter"
+      },
+      "🛡️security-requirement": {
+        "🌱️create": "create-security-requirement",
+        "🗑️delete": "delete-security-requirement",
+        "🏷️rename": "rename-security-requirement",
+        "♻️replace": "replace-security-requirement"
+      },
+      "🛎️service-requirement": {
+        "🌱️create": "create-service-requirement",
+        "🗑️delete": "delete-service-requirement",
+        "🏷️rename": "rename-service-requirement",
+        "♻️replace": "replace-service-requirement"
+      },
+      "📍️site-context": {
+        "🌱️create": "create-site-context",
+        "🗑️delete": "delete-site-context",
+        "🏷️rename": "rename-site-context",
+        "♻️replace": "replace-site-context"
+      },
+      "👥️stakeholder": {
+        "🌱️create": "create-stakeholder",
+        "🗑️delete": "delete-stakeholder",
+        "🏷️rename": "rename-stakeholder",
+        "♻️replace": "replace-stakeholder"
+      },
+      "📶️status-record": {
+        "🌱️create": "create-status-record",
+        "🗑️delete": "delete-status-record",
+        "🏷️rename": "rename-status-record",
+        "♻️replace": "replace-status-record"
+      },
+      "🗄️storage-requirement": {
+        "🌱️create": "create-storage-requirement",
+        "🗑️delete": "delete-storage-requirement",
+        "🏷️rename": "rename-storage-requirement",
+        "♻️replace": "replace-storage-requirement"
+      },
+      "🗳️survey": {
+        "🌱️create": "create-survey",
+        "🗑️delete": "delete-survey",
+        "🏷️rename": "rename-survey",
+        "♻️replace": "replace-survey"
+      },
+      "♻️sustainability-requirement": {
+        "🌱️create": "create-sustainability-requirement",
+        "🗑️delete": "delete-sustainability-requirement",
+        "🏷️rename": "rename-sustainability-requirement",
+        "♻️replace": "replace-sustainability-requirement"
+      },
+      "📐️template-record": {
+        "🌱️create": "create-template-record",
+        "🗑️delete": "delete-template-record",
+        "🏷️rename": "rename-template-record",
+        "♻️replace": "replace-template-record"
+      },
+      "🧵️trace": {
+        "🧵️connect": "connect-trace",
+        "✂️disconnect": "disconnect-trace"
+      },
+      "🧑️user-profile": {
+        "🌱️create": "create-user-profile",
+        "🗑️delete": "delete-user-profile",
+        "🏷️rename": "rename-user-profile",
+        "♻️replace": "replace-user-profile"
+      },
+      "✔️validation-record": {
+        "🌱️create": "create-validation-record",
+        "🗑️delete": "delete-validation-record",
+        "🏷️rename": "rename-validation-record",
+        "♻️replace": "replace-validation-record"
+      },
+      "🧭️wayfinding-requirement": {
+        "🌱️create": "create-wayfinding-requirement",
+        "🗑️delete": "delete-wayfinding-requirement",
+        "🏷️rename": "rename-wayfinding-requirement",
+        "♻️replace": "replace-wayfinding-requirement"
+      },
+      "🎓️workshop": {
+        "🌱️create": "create-workshop",
+        "🗑️delete": "delete-workshop",
+        "🏷️rename": "rename-workshop",
+        "♻️replace": "replace-workshop"
+      }
+    },
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations": {
+      "🎥️camera": {
+        "🌱️create": "create-camera",
+        "🗑️delete": "delete-camera",
+        "🚚️move": "move-camera",
+        "🔀️reorder": "reorder-cameras"
+      },
+      "🎞️animation": {
+        "🌱️create": "create-animation",
+        "🗑️delete": "delete-animation",
+        "🚚️move": "move-animation",
+        "🔀️reorder": "reorder-animations"
+      },
+      "🦴️skin": {
+        "🌱️create": "create-skin",
+        "🗑️delete": "delete-skin",
+        "🚚️move": "move-skin",
+        "🔀️reorder": "reorder-skins"
+      },
+      "🎬️scene": {
+        "🌱️create": "create-scene",
+        "🗑️delete": "delete-scene",
+        "🚚️move": "move-scene",
+        "🔀️reorder": "reorder-scenes",
+        "🏷️rename": "change-scene-name",
+        "📝️change-extras": "change-scene-extra-data",
+        "🧩️change-extensions": "change-scene-extension-data"
+      },
+      "🌳️node": {
+        "🌱️create": "create-node",
+        "🗑️delete": "delete-node",
+        "🚚️move": "move-node",
+        "🔀️reorder": "reorder-nodes",
+        "🏷️rename": "change-node-name",
+        "📝️change-extras": "change-node-extra-data",
+        "🧩️change-extensions": "change-node-extension-data",
+        "⚖️change-weights": "change-node-morph-weights",
+        "📐️transform": "change-node-transform",
+        "🌿️reparent": "move-node-parent"
+      },
+      "🕸️mesh": {
+        "🌱️create": "create-mesh",
+        "🗑️delete": "delete-mesh",
+        "🚚️move": "move-mesh",
+        "🔀️reorder": "reorder-meshs",
+        "🏷️rename": "change-mesh-name",
+        "📝️change-extras": "change-mesh-extra-data",
+        "🧩️change-extensions": "change-mesh-extension-data",
+        "⚖️change-weights": "change-mesh-morph-weights"
+      },
+      "🔺️primitive": {
+        "🌱️create": "create-primitive",
+        "🗑️delete": "delete-primitive",
+        "🚚️move": "move-primitive",
+        "🔀️reorder": "reorder-primitives",
+        "📐️change-topology": "change-primitive-topology-mode",
+        "📝️change-extras": "change-primitive-extra-data",
+        "🧩️change-extensions": "change-primitive-extension-data"
+      },
+      "🧬️morph-target": {
+        "🌱️create": "create-morph-target",
+        "🗑️delete": "delete-morph-target",
+        "🚚️move": "move-morph-target",
+        "🔀️reorder": "reorder-morph-targets"
+      },
+      "💎️material": {
+        "🌱️create": "create-material",
+        "🗑️delete": "delete-material",
+        "🚚️move": "move-material",
+        "🔀️reorder": "reorder-materials",
+        "🪞️change-sides": "change-material-double-sided",
+        "🌫️change-alpha": "change-material-alpha-mode"
+      },
+      "🎨️texture": {
+        "🌱️create": "create-texture",
+        "🗑️delete": "delete-texture",
+        "🚚️move": "move-texture",
+        "🔀️reorder": "reorder-textures"
+      },
+      "🖼️image": {
+        "🌱️create": "create-image",
+        "🗑️delete": "delete-image",
+        "🚚️move": "move-image",
+        "🔀️reorder": "reorder-images"
+      },
+      "🎛️sampler": {
+        "🌱️create": "create-sampler",
+        "🗑️delete": "delete-sampler",
+        "🚚️move": "move-sampler",
+        "🔀️reorder": "reorder-samplers"
+      },
+      "📐️accessor": {
+        "🌱️create": "create-accessor",
+        "🗑️delete": "delete-accessor",
+        "🚚️move": "move-accessor",
+        "🔀️reorder": "reorder-accessors"
+      },
+      "💿️buffer": {
+        "🌱️create": "create-buffer",
+        "🗑️delete": "delete-buffer",
+        "🚚️move": "move-buffer",
+        "🔀️reorder": "reorder-buffers"
+      },
+      "🪟️buffer-view": {
+        "🌱️create": "create-buffer-view",
+        "🗑️delete": "delete-buffer-view",
+        "🚚️move": "move-buffer-view",
+        "🔀️reorder": "reorder-buffer-views"
+      },
+      "🪪️asset": {
+        "🔖️version": "change-asset-version",
+        "📝️change-description": "change-asset-descriptive-metadata",
+        "🧩️change-extensions": "change-asset-extension-data",
+        "🧾️change-extras": "change-asset-extra-data"
+      },
+      "📃️document": {
+        "📝️change-extras": "change-document-extra-data",
+        "🧩️change-extensions": "change-document-extension-data"
+      },
+      "📣️used-extension": {
+        "➕️add": "add-used-extension",
+        "➖️remove": "remove-used-extension",
+        "🚚️move": "move-used-extension",
+        "🔀️reorder": "reorder-used-extensions"
+      },
+      "✅️required-extension": {
+        "➕️add": "add-required-extension",
+        "➖️remove": "remove-required-extension",
+        "🚚️move": "move-required-extension",
+        "🔀️reorder": "reorder-required-extensions"
+      },
+      "🏠️default-scene": {
+        "🔗️bind": "bind-default-scene",
+        "✂️unbind": "unbind-default-scene"
+      },
+      "🌲️scene-root": {
+        "🔗️bind": "bind-scene-root-node",
+        "✂️unbind": "unbind-scene-root-node",
+        "🚚️move": "move-scene-root-node",
+        "🔀️reorder": "reorder-scene-root-nodes"
+      },
+      "📷️node-camera": {
+        "🔗️bind": "bind-node-camera",
+        "✂️unbind": "unbind-node-camera"
+      },
+      "🌿️node-child": {
+        "🔗️bind": "bind-node-child",
+        "✂️unbind": "unbind-node-child",
+        "🚚️move": "move-node-child",
+        "🔀️reorder": "reorder-node-children"
+      },
+      "🏗️node-mesh": {
+        "🔗️bind": "bind-node-mesh",
+        "✂️unbind": "unbind-node-mesh"
+      },
+      "🩻️node-skin": {
+        "🔗️bind": "bind-node-skin",
+        "✂️unbind": "unbind-node-skin"
+      },
+      "🔤️primitive-attribute": {
+        "🔗️bind": "bind-primitive-attribute",
+        "✂️unbind": "unbind-primitive-attribute",
+        "🚚️move": "move-primitive-attribute",
+        "🔀️reorder": "reorder-primitive-attributes"
+      },
+      "🔢️primitive-indices": {
+        "🔗️bind": "bind-primitive-indices",
+        "✂️unbind": "unbind-primitive-indices"
+      },
+      "🧱️primitive-material": {
+        "🔗️bind": "bind-primitive-material",
+        "✂️unbind": "unbind-primitive-material"
+      },
+      "🎚️morph-attribute": {
+        "🔗️bind": "bind-morph-target-attribute",
+        "✂️unbind": "unbind-morph-target-attribute",
+        "🚚️move": "move-morph-target-attribute",
+        "🔀️reorder": "reorder-morph-target-attributes"
+      }
+    }
+  },
+  "mutationAggregateSources": {
+    "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": [
+      "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations"
+    ],
+    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": [
+      "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations"
+    ],
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations": [
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations"
+    ],
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/🧬️mutations": [
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations"
+    ],
+    "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": [
+      "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🪜️step/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations"
+    ],
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations": [
+      "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations",
+      "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations"
+    ]
+  }
+}

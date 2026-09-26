@@ -9,7 +9,7 @@ import { chromium } from "/Users/ueli/Documents/semio/node_modules/playwright/in
 
 const [port, locale, observeMsArg, label] = process.argv.slice(2);
 const observeMs = Number(observeMsArg);
-const out = `/Users/ueli/Documents/semio/.tmp-ticket/wp-g10/🗑️generated/s12/bridge-live-${label}`;
+const out = `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-g10-logs/bridge-live/${label}`;
 const started = Date.now();
 const since = (): number => Date.now() - started;
 const sockets: { url: string; openedAtMs: number; closedAtMs: number | null; framesIn: number[] }[] = [];

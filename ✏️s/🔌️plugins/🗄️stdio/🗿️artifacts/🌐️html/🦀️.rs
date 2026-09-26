@@ -60,7 +60,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.html".into(),
+        id: "s.stdio.html".into(),
         name: "Html".into(),
         source_format: STDIO_HTML_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

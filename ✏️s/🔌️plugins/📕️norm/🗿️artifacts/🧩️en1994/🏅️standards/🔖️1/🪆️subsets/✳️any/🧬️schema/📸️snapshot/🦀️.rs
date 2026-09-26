@@ -52,7 +52,7 @@ impl Default for En1994Snapshot {
         slab.id = "slab-S1".into();
         Self {
             annex: AnnexChoice::De,
-            structure_kind: "building".into(),
+            structure_kind: "bridge".into(),
             steel_f_y_pa: 355e6,
             beams: vec![beam],
             columns: vec![col],
@@ -90,8 +90,8 @@ impl En1994Snapshot {
         s.beams[0].n_cycles = 2.0e6;
         s.beams[0].span_m = 25.0;
         let mut fat = crate::CharacteristicAction::fatigue_flm3("FLM3");
-        fat.delta_sigma_k_pa = 35e6;
-        fat.delta_tau_k_pa = 20e6;
+        fat.delta_sigma_k_pa = 65e6;
+        fat.delta_tau_k_pa = 40e6;
         s.beams[0].actions.push(fat);
         s
     }

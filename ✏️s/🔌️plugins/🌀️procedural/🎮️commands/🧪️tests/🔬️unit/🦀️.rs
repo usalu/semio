@@ -27,6 +27,7 @@ fn list_flow_extensions_answers_the_installed_roster() {
     assert_eq!(first.get("extension").and_then(DslValue::as_str), Some("brep"));
     let ids: Vec<&str> = rows.iter().filter_map(|row| row.get("id").and_then(DslValue::as_str)).collect();
     assert_eq!(ids.len(), crate::FLOW_EXTENSIONS.len(), "every row carries an id");
+    assert!(rows.iter().all(|row| row.get("version").and_then(DslValue::as_str) == Some(env!("CARGO_PKG_VERSION"))), "every extension is reported at the tree version");
 }
 
 /// 🔁️ The plugin's own dispatcher accepts the command through the manifest definition it declared.

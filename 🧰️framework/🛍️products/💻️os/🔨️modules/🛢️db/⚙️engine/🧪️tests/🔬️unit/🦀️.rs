@@ -2159,6 +2159,8 @@ async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::Art
         document_id: document.clone(),
         actor: protocol::ActorId(actor.to_string()),
         dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
@@ -3786,7 +3788,7 @@ async fn artifact_history_empty_and_two_batch_replay_are_deterministic() {
     while empty.close_step() {}
     for id in ["history-1", "history-2"] {
         let batch = db_artifact::CommandBatch::new(vec![envelope(id, &[], "alice", &document, &[("value", serde_json::json!(id))]).await]).await.unwrap();
-        db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
+        db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..db_artifact::SubmitOptions::default() })).unwrap().unwrap();
     }
     let mut first = handle.history().await.unwrap();
     let mut second = handle.history().await.unwrap();
@@ -3924,10 +3926,10 @@ async fn compact_document_uses_live_actor_writer_and_restores_submits() {
     let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
     let first = db_artifact::CommandBatch::new(vec![envelope("compact-before", &[], "alice", &document, &[("x", serde_json::json!(1))]).await]).await.unwrap();
     db_actor::block_on(handle.submit(first, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..db_artifact::SubmitOptions::default() })).unwrap().unwrap();
-    let fill_ids = ["compact-fill-0", "compact-fill-1", "compact-fill-2", "compact-fill-3", "compact-fill-4", "compact-fill-5", "compact-fill-6", "compact-fill-7"];
+    let fill_ids: Vec<String> = (0..12).map(|index| format!("compact-fill-{index}")).collect();
     for (index, mutation_id) in fill_ids.iter().enumerate() {
-        let dependency = if index == 0 { "compact-before" } else { fill_ids[index - 1] };
-        let value = format!("{index}:{}", "x".repeat(40_000));
+        let dependency = if index == 0 { "compact-before" } else { fill_ids[index - 1].as_str() };
+        let value = format!("{index}:{}", "x".repeat(50_000));
         let batch = db_artifact::CommandBatch::new(vec![envelope(mutation_id, &[dependency], "alice", &document, &[("x", serde_json::json!(value))]).await]).await.unwrap();
         db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..db_artifact::SubmitOptions::default() })).unwrap().unwrap();
     }
@@ -3953,9 +3955,9 @@ async fn compact_document_uses_live_actor_writer_and_restores_submits() {
 
     let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(true));
     assert!(matches!(handle.compact("cancelled-holder", false, cancelled).await, Err(DbError::Closed)));
-    let second = db_artifact::CommandBatch::new(vec![envelope("compact-after", &["compact-fill-7"], "alice", &document, &[("x", serde_json::json!(2))]).await]).await.unwrap();
+    let second = db_artifact::CommandBatch::new(vec![envelope("compact-after", &["compact-fill-11"], "alice", &document, &[("x", serde_json::json!(2))]).await]).await.unwrap();
     let receipt = db_actor::block_on(handle.submit(second, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..db_artifact::SubmitOptions::default() })).unwrap().unwrap();
-    assert_eq!(receipt.frontier.head_seq, 10);
+    assert_eq!(receipt.frontier.head_seq, 14);
     assert!(matches!(storage.wal().await.acquire_writer(&core_document).await, Err(DbError::Conflict(_))), "cancelled maintenance must restore the engine without releasing its writer");
     drop(storage);
     drop(handle);
@@ -4294,7 +4296,7 @@ async fn artifact_history_completion_interleavings_preserve_result_and_wake() {
     for operation in fixture["operations"].as_array().unwrap() {
         let id = operation.as_str().unwrap();
         let batch = db_artifact::CommandBatch::new(vec![envelope(id, &[], "history-fixture", &document, &[("value", serde_json::json!(id))]).await]).await.unwrap();
-        db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
+        db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions { durability: DurabilityClass::Fsync, ..db_artifact::SubmitOptions::default() })).unwrap().unwrap();
     }
     let mut observations = Vec::new();
     for row in fixture["publication"].as_array().unwrap() {
@@ -4780,6 +4782,91 @@ fn version_graph_member_opens_through_its_own_pack_codec() {
 /// 🐢️ Laws whose honest size takes minutes in a debug build; the `long` level runs them.
 mod long {
     use super::*;
+
+    /// ⏱️ Two dozen grown documents greeted at once right after the database reopens — a hub restart's reconnect storm —
+    /// are each welcomed within the reopen bound of the hub's growth e2e (30 s; growth run g17: after 24 documents grew
+    /// together and the hub restarted, a document was not welcomed in 30 s). Prints the welcome distribution.
+    #[semio_framework_async_macros::async_test]
+    async fn two_dozen_grown_documents_greeted_at_once_after_a_reopen_are_welcomed_within_the_reopen_bound() {
+        if !db_storage::process_isolated_law("db_engine::tests::long::two_dozen_grown_documents_greeted_at_once_after_a_reopen_are_welcomed_within_the_reopen_bound") {
+            return;
+        }
+        const DOCUMENTS: usize = 24;
+        const BATCHES: usize = 8;
+        const BATCH_EDITS: usize = 16;
+        const REOPEN_BOUND: std::time::Duration = std::time::Duration::from_secs(30);
+        let root = tempdir("greeting-storm").await;
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 10)));
+        let grown_at = std::time::Instant::now();
+        {
+            let mut database = Database::open_at(pool.clone(), &root, Profile::Dev).await.unwrap();
+            for document_index in 0..DOCUMENTS {
+                let document = protocol::ArtifactId(format!("storm-{document_index}"));
+                let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+                let mut previous: Option<protocol::MutationId> = None;
+                for batch_index in 0..BATCHES {
+                    let mut envelopes = Vec::with_capacity(BATCH_EDITS);
+                    for edit_index in 0..BATCH_EDITS {
+                        let mutation_id = protocol::MutationId(format!("storm-{document_index}-{batch_index}-{edit_index}"));
+                        envelopes.push(protocol::MutationEnvelope {
+                            mutation_id: mutation_id.clone(),
+                            document_id: document.clone(),
+                            actor: protocol::ActorId("storm-author".to_string()),
+                            dependencies: previous.iter().cloned().collect(),
+                            observed: None,
+                            target: Vec::new(),
+                            diff: protocol::ArtifactDiff { schema: protocol::SchemaId("storm.v1".to_string()), payload: vec![0x5a; 256] },
+                            inverse: protocol::InverseMutation { schema: protocol::SchemaId("storm.v1".to_string()), payload: Vec::new() },
+                            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
+                        });
+                        previous = Some(mutation_id);
+                    }
+                    handle.submit(db_artifact::CommandBatch::new(envelopes).await.unwrap(), db_artifact::SubmitOptions::default()).await.unwrap().unwrap();
+                }
+                drop(handle);
+            }
+            database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(60))).await.unwrap();
+        }
+        let grown = grown_at.elapsed();
+        let database = Arc::new(Database::open_at(pool.clone(), &root, Profile::Dev).await.unwrap());
+        eprintln!("greeting storm of {DOCUMENTS} documents begins after growing them in {grown:?}");
+        let storm_at = std::time::Instant::now();
+        let mut welcomes: Vec<std::time::Duration> = std::thread::scope(|scope| {
+            let greetings: Vec<_> = (0..DOCUMENTS)
+                .map(|document_index| {
+                    let database = database.clone();
+                    scope.spawn(move || {
+                        db_actor::block_on(async move {
+                            let asked_at = std::time::Instant::now();
+                            let mut session = database.hello(protocol::ArtifactId(format!("storm-{document_index}")), None, format!("storm-session-{document_index}"), protocol::ActorId("semio_hub".to_string()), 64 * 1024).await.unwrap();
+                            session.take_welcome().unwrap().acknowledge().unwrap();
+                            let welcomed = asked_at.elapsed();
+                            while let Some(frame) = session.next_frame().await.unwrap() {
+                                frame.acknowledge().unwrap();
+                            }
+                            welcomed
+                        })
+                    })
+                })
+                .collect();
+            greetings.into_iter().map(|greeting| greeting.join().unwrap()).collect()
+        });
+        let storm = storm_at.elapsed();
+        welcomes.sort();
+        let ms = |duration: std::time::Duration| duration.as_secs_f64() * 1_000.0;
+        eprintln!(
+            "greeting storm of {DOCUMENTS} in {:.0} ms: welcome p50 {:.1} ms p90 {:.1} ms max {:.1} ms; {DOCUMENTS} documents x {} edits grown in {:.0} ms",
+            ms(storm),
+            ms(welcomes[DOCUMENTS / 2]),
+            ms(welcomes[DOCUMENTS * 9 / 10]),
+            ms(welcomes[DOCUMENTS - 1]),
+            BATCHES * BATCH_EDITS,
+            ms(grown)
+        );
+        assert!(welcomes[DOCUMENTS - 1] <= REOPEN_BOUND, "the slowest of {DOCUMENTS} simultaneous greetings took {:?}", welcomes[DOCUMENTS - 1]);
+        let mut database = Arc::try_unwrap(database).ok().expect("the storm released every database handle");
+        database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(60))).await.unwrap();
+    }
 
     /// 📈️ The same growth over SQLite storage, the hub's storage backend of choice: past every former
     /// wall (the eighth index entry, the 64th version-graph change, the 128th replaced value) with a

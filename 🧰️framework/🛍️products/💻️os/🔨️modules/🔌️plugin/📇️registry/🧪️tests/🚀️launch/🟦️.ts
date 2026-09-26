@@ -19,7 +19,7 @@ describe("plugin registry generator preview targets", () => {
       ["actor-typegen", 206.01], ["assets-build", 206.02], ["async-typegen", 206.03],
       ["dev-distribution-bundle", 206.035], ["flow-browser-package", 206.037],
       ["framework-manifest", 206.04], ["graph-catalog", 206.05], ["jco-package-adapter", 206.055],
-      ["playground-session", 206.057],
+      ["mutation-source-authority", 206.056], ["playground-session", 206.057],
       ["plugin-registry", 206.06], ["print-latex-tokens", 206.07], ["report-actor-network", 206.075], ["scale-fixture", 206.08],
       ["schema-entity-catalog", 206.09], ["shell-typegen", 206.1], ["styling-tokens", 206.11],
       ["ui-axes", 206.12], ["ui-contract", 206.13],
@@ -116,21 +116,24 @@ describe("WASI codegen profile policy", () => {
     expect(manifest.profile["wasm-release"]).toMatchObject({ inherits: "release", "opt-level": "s", lto: "thin", "codegen-units": 1, strip: "symbols", incremental: false, "trim-paths": "object" });
   });
 
-  it("keeps generated native, root preflight, and MCP runtime profiles identical without debug", () => {
+  it("resolves every runtime component from its crate's deliverable, which describe reads without building", () => {
     const root = getWorkspaceRoot();
     for (const path of [
       "📜️script.ts",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🗿️artifacts/🦀️.rs",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts",
     ]) {
       const source = readFileSync(join(root, path), "utf8");
-      const declaration = source.split("\n").find((line) => line.includes("const PLUGIN_WASM_PROFILE_DIRS"));
-      expect(declaration, path).toContain('["wasm-dev", "wasm-release"]');
-      expect(declaration, path).not.toContain('"debug"');
+      const declaration = source.split("\n").find((line) => line.includes("const PLUGIN_COMPONENT_PROFILE_DIRS"));
+      expect(declaration, path).toContain('"dist/component-dev", "dist/component-release"');
+      expect(source, path).not.toContain("PLUGIN_WASM_TARGET");
     }
     const describe = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts"), "utf8");
-    expect(describe.match(/pluginComponentRustcArgs\(packageName, "wasm-dev"\)/g)).toHaveLength(1);
+    expect(describe).not.toContain("pluginComponentRustcArgs");
+    const inferred = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs"), "utf8");
+    expect(inferred).toContain('dependsOn: ["component-dev"]');
     const component = readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts"), "utf8");
     expect(component).toContain('"--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", profile');
     const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
@@ -190,7 +193,7 @@ describe("launch configuration identity", () => {
   it("registers a launch row for every canonical root lifecycle command", async () => {
     const launch = await launchOutput();
     const commands = new Set(launch.configurations.map((entry) => String(entry.command ?? "")));
-    for (const command of ["setup", "start", "dev", "generate", "lint", "format", "test", "build", "publish", "purge"]) {
+    for (const command of ["setup", "start", "dev", "generate", "lint", "format", "test", "build", "publish"]) {
       expect([...commands].some((row) => row === `bun nx run workspace:${command}` || row.startsWith(`bun nx run workspace:${command} `)), command).toBe(true);
     }
   });

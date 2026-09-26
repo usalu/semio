@@ -1,0 +1,48 @@
+semio norm.vdi3805.dsl v1
+strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="2023-06-01" charset=UTF-8 record-count=3 building-system-number=system-code="420" subsystem="10" sequence=1 extensions=fields={
+}
+extensions=fields={
+}
+products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
+  PIPE-DN50 {manufacturer-code=DEMO product-group=PIPE article-number=PIPE-DN50} [ {locale=de text="Rohr DN50"} {locale=en text="Pipe DN50"} ] 4 [ {family="100" fields=[ "100" DEMO PIPE PIPE-DN50 "4" ] extensions=fields={
+  }
+  } {family="210" fields=[ "210" product_group PIPE dn "50" pressure_class PN16 connection_type weld outer_diameter_m "0.0603" wall_thickness_m "0.0029" ] extensions=fields={
+  }
+  } {family="700" fields=[ "700" de "Rohr DN50" en "Pipe DN50" ] extensions=fields={
+  }
+  } ] {id=cfg.PIPE-DN50 attributes={
+    entries=[ {
+      key="product_group" unit=null value="PIPE"
+    }
+ {
+      key="dn" unit=null value="50"
+    }
+ {
+      key="pressure_class" unit=null value="PN16"
+    }
+ {
+      key="connection_type" unit=null value="weld"
+    }
+ {
+      key="outer_diameter_m" unit=null value="0.0603"
+    }
+ {
+      key="wall_thickness_m" unit=null value="0.0029"
+    }
+    ] kind="generic"
+  }
+  function-refs=[ ]} [ ] [ ] {fields={
+  }
+  }
+}
+edition-profile={
+}
+correction-as-of=year=2024 month=1 index=
+entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
+  PIPE-DN50 4 [ "Rohr DN50" "Pipe DN50" ] _
+}
+geometry={
+}
+curves={
+}
+limits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32

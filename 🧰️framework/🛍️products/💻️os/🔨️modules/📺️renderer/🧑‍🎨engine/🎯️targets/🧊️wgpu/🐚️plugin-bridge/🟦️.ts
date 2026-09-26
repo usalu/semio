@@ -1923,8 +1923,6 @@ export interface WgpuJsBridge {
   readonly loadAppArtifactPack: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🧬️ `codec.pack-schema-hash(artifactKind)`: the kind's 32-byte structural fingerprint. */
   readonly codecPackSchemaHash: (artifactKind: string) => Promise<Uint8Array>;
-  /** 🌱️ `codec.genesis(artifactKind, documentId)`: the zero-history `{ pack, spr }` the component mints. */
-  readonly codecGenesis: (artifactKind: string, documentId: string) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array }>;
   /** 📥️ `codec.print-mirror(artifactKind, pair)`: the pair's `[dsl, ops]` text mirror, its validation fence. */
   readonly codecPrintMirror: (artifactKind: string, pack: Uint8Array, spr: Uint8Array) => Promise<readonly [string, string]>;
   /** 👥️ `WgpuPluginHandle.ephemeralSnapshot`, synchronous — read after every action and command. */
@@ -1987,7 +1985,6 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
     loadAppDocumentArchive: (instanceId, archive) => handle.loadAppDocumentArchive(instanceId, archive),
     loadAppArtifactPack: (instanceId, pack, spr) => handle.loadAppDocumentPack(instanceId, pack, spr),
     codecPackSchemaHash: (artifactKind) => handle.codec({ operation: "pack-schema-hash", artifactKind }).then((value) => codecBytes(value, "pack-schema-hash")),
-    codecGenesis: (artifactKind, documentId) => handle.codec({ operation: "genesis", artifactKind, documentId }).then((value) => codecPair(value)),
     codecPrintMirror: (artifactKind, pack, spr) => handle.codec({ operation: "print-mirror", artifactKind, pair: { pack, spr } }).then((value) => codecMirror(value)),
     ephemeralSnapshot: (instanceId) => handle.ephemeralSnapshot(instanceId),
   };
@@ -1997,12 +1994,6 @@ export function pluginHandleForBridge(handle: WgpuPluginHandle): WgpuJsBridge {
 function codecBytes(value: unknown, operation: string): Uint8Array {
   if (!(value instanceof Uint8Array)) throw new Error(`actor-codec.${operation}.answer-not-bytes`);
   return value;
-}
-
-/** 🌱️ The `document-pair` answer of `codec.genesis`, refused unless both halves are bytes. */
-function codecPair(value: unknown): { readonly pack: Uint8Array; readonly spr: Uint8Array } {
-  const pair = value !== null && typeof value === "object" ? (value as { readonly pack?: unknown; readonly spr?: unknown }) : {};
-  return { pack: codecBytes(pair.pack, "genesis.pack"), spr: codecBytes(pair.spr, "genesis.spr") };
 }
 
 /** 📥️ The `tuple<string, string>` answer of `codec.print-mirror`. */

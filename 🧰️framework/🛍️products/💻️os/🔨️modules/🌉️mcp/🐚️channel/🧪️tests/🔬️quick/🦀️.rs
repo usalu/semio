@@ -187,6 +187,9 @@ fn a_silent_shell_times_out_into_a_retryable_budget_fault_and_never_hangs() {
 /// an instance from. Measured inside `s` before this rule existed: with a spawned `note` editor open
 /// the shell reported 3 instances and `ReadArtifact` refused outright, cascading (f1)…(f8) of the
 /// live agent gate (ticket 26/09/18, S6 §5.4).
+///
+/// 🎯️ Nothing answers, so the exchange still times out — but it times out having ADDRESSED an
+/// instance, which is the whole statement: before the rule it refused `plugin.unavailable` here.
 #[test]
 fn a_capability_less_command_resolves_the_one_open_instance_of_its_own_plugin() {
     let handle = std::sync::Arc::new(BridgeHandle::new());
@@ -202,8 +205,6 @@ fn a_capability_less_command_resolves_the_one_open_instance_of_its_own_plugin() 
     slot.set(std::sync::Arc::clone(&handle)).ok();
     let binding = std::sync::Arc::new(SessionChannelBinding::new(Some(slot)));
     let mut channel = ShellArtifactChannel::new(binding, empty_catalog()).for_plugin("note").with_timeout(Duration::from_millis(60));
-    // 🎯️ Nothing answers, so the exchange still times out — but it times out having ADDRESSED an
-    // instance, which is the whole statement: before the rule it refused `plugin.unavailable` here.
     let fault = channel.exchange(0, vec![AppCommand::ReadArtifact]).expect_err("nothing answers");
     assert_eq!(fault.code, "budget.exceeded", "{}", fault.message);
 }

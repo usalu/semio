@@ -176,6 +176,8 @@ import {
   decodePackValue,
   decodePackWire,
   BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
+  DEV_STREAM_ROUTES,
+  STREAM_MUX_PATH,
   DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
   encodeBackboneWorkerRequest,
   encodeDocumentArchiveBytes,
@@ -215,7 +217,7 @@ import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type Mu
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 import { SpaceDirectoryHistoryV1 } from "./📇️space-directory/🟦️.ts";
 import { collectLocalPresenceWindowViewsV1, collectLocalActiveToolV1, publishArtifactPresenceRosterV1, clearArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../👕️canvas-presence/🟦️.ts";
-import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellRouteIsOverlayV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
+import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, createShellSessionLaneV1, quiesceSessionWorkV1, SHELL_HUB_ROUTE, shellIdentityResolutionV1, shellRouteAdmissionTextV1, shellRouteAdmissionV1, shellRouteIsOverlayV1, shellSessionRouteV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
 import { focusedProgramKeyV1, focusedProgramV1, programEntriesV1, programHistoryKeyV1, programKeyedEntriesV1, withProgramEntriesV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedGuestWindowInstancesV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, spawnProgramRefusalCodeV1, spawnProgramRefusalNoticeTextV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1, type SpawnProgramRefusalReasonV1 } from "./🪟️spawned-program/🟦️.ts";
 import { causalOrderKeyV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, inputAppliedV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
@@ -683,11 +685,12 @@ import { publishBrowserActorHostEffectsV1 } from "../../../../🔌️plugin/🌐
 import { InferencePortOpeningMailboxV1 } from "../../../../💡️inference/🚪️opening/🟦️.ts";
 import { isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { hopTrace, type HopTraceDetail } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import { StreamMuxChannelV1, pageStreamMuxChannelV1, streamMuxWatchV1 } from "../../../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { liveInstanceWindowFaultV1, type WindowFault, type WindowFaultClass, windowFaultFromError } from "./🩺️fault/🟦️.ts";
 import { createShellRouteLedgerV1 } from "./🧭️route-ledger/🟦️.ts";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
-import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_EXTENSION_ROUTE } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { createHubPluginSource, HUB_SAME_ORIGIN_MOUNT, type HubPluginSourceV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
 import { hubCatalogClosureV1, hubCatalogOnlyPluginsV1, hubCatalogOwnerOfDialectV1, hubProgramIdV1, parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
 import type { TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
@@ -700,6 +703,7 @@ import {
   applyDirectoryEventPageBootstrapV1,
   closeDirectoryHomeOwnerV1,
   openDirectoryHomeOwnerV1,
+  directoryHomeOwnerAppV1,
   type DirectoryBootstrapUiState,
   type DirectoryHomeOwnerV1,
 } from "./📇️directory-bootstrap/🟦️.tsx";
@@ -2642,6 +2646,7 @@ function FrameworkOsShellInner({
   const uiDriver: UiDriver = useMemo(() => uiDriverDraft ?? resolveUiDriver(uiDriverId, uiCustomDrivers), [uiDriverId, uiCustomDrivers, uiDriverDraft]);
   /** 🧵️ Lazily-created worker running `🟦️backbone-🟦️worker.ts` — one per shell instance, reused across `openDocument` calls. */
   const backboneWorkerRef = useRef<Worker | null>(null);
+  const backboneWorkerStreamsDetachRef = useRef<(() => void) | null>(null);
   /** 🪪️ Per-tab session id component of the actor (contract §C0 `user:{userId}#{shellSessionId}`) —
    * stable for this tab's whole lifetime, shared by both the pre-identity `client-{id}` actor and the
    * post-sign-in `user:{userId}#{id}` one, so a tab's actor id only ever changes its PREFIX on sign-in,
@@ -2736,10 +2741,14 @@ function FrameworkOsShellInner({
   const [hubSessionCapability, setHubSessionCapability] = useState<HubSessionCapabilityV1 | null>(() =>
     hubEnv === null ? null : readHubSessionCapabilityV1(hubSessionStorageV1(), hubBootstrapOriginV1()),
   );
+  /** 🎫️ The capability as the hub pane's port reads it on every request — written here, together with the state, so a
+   * request sent right after a mint already carries it. */
+  const hubSessionCapabilityRef = useRef(hubSessionCapability);
   const rememberHubSessionCapability = useCallback((minted: Readonly<{ token: string; userId: string }> | null) => {
     const origin = hubBootstrapOriginV1();
     const next = minted === null ? null : { origin, token: minted.token, userId: minted.userId };
     writeHubSessionCapabilityV1(hubSessionStorageV1(), next);
+    hubSessionCapabilityRef.current = next;
     setHubSessionCapability(next);
   }, []);
   const localSessionClaimedAtRef = useRef(0);
@@ -2764,10 +2773,11 @@ function FrameworkOsShellInner({
     };
   }, [hubEnv, hubSessionCapability, hubSessionRefused, rememberHubSessionCapability]);
 
-  /** 🎫️ The mount-time capability the hub port is seeded with — a ref, because the port holds the
-   * live token in its own closure and must never be rebuilt underneath an in-flight request. */
-  const restoredHubSessionCapabilityRef = useRef(hubSessionCapability);
-  const restoredHubSessionCapability = restoredHubSessionCapabilityRef.current;
+  /** 🪪️ Where the hub identity stands, for the route admission ({@link shellRouteAdmissionV1}): a space route waits for
+   * the human it is opened for, and a hub that does not answer opens it offline. */
+  const identityResolution = shellIdentityResolutionV1({ hubConfigured: hubEnv !== null, sessionHeld: hubSessionCapability !== null, refused: hubSessionRefused, confirmed: verifiedSessionAuthority !== null && identity?.userId === verifiedSessionAuthority.userId, offline: identityOffline });
+  const identityResolutionRef = useRef(identityResolution);
+  identityResolutionRef.current = identityResolution;
   /** 📇️ Retained directory owner bound to the same visible Home landing instance. */
   const directoryHomeOwnerRef = useRef<DirectoryHomeOwnerV1 | null>(null);
   const directoryHomeRetirementRef = useRef<{ readonly owner: DirectoryHomeOwnerV1; readonly promise: Promise<void> } | null>(null);
@@ -2940,8 +2950,7 @@ function FrameworkOsShellInner({
         // remembered for this browsing context and handed to the credential-owning backbone worker,
         // whose own hub lane (`/_semio/hub/*`, same-origin) carries exactly this human's session.
         bootstrapOrigin: hubBootstrapOriginV1(),
-        restoredCapability: restoredHubSessionCapability,
-        onCapability: rememberHubSessionCapability,
+        capability: { read: () => hubSessionCapabilityRef.current, write: rememberHubSessionCapability },
         deviceInstanceId: hubDeviceInstanceIdV1(typeof globalThis.localStorage === "undefined" ? null : globalThis.localStorage),
         clientClass: "browser",
         parseSpaces: (body) => (JSON.parse(body) as unknown[]).map(parseDirectorySpaceListEntryV1),
@@ -2968,7 +2977,7 @@ function FrameworkOsShellInner({
           await fetch(`${AGENT_CREDENTIAL_INSTALL_ENDPOINT_V1}/${encodeURIComponent(delegationId)}`, { method: "DELETE", cache: "no-store" });
         },
       }),
-    [rememberHubSessionCapability, restoredHubSessionCapability],
+    [rememberHubSessionCapability],
   );
   const spaceAdministrationRef = useRef<ShellSpaceAdministrationStateV1 | null>(null);
   spaceAdministrationRef.current = spaceAdministration;
@@ -3258,6 +3267,12 @@ function FrameworkOsShellInner({
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
     const worker = new Worker(new URL("../../../../🏪️store/👷️worker/🟦️.ts", import.meta.url), { type: "module" });
+    const streams = pageStreamMuxChannelV1(STREAM_MUX_PATH);
+    if (streams instanceof StreamMuxChannelV1) {
+      const streamPipe = new MessageChannel();
+      backboneWorkerStreamsDetachRef.current = streams.attachPort(streamPipe.port1);
+      worker.postMessage({ kind: "semio-stream-mux-port", port: streamPipe.port2 }, [streamPipe.port2]);
+    }
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
       if (message.kind === "browser-actor-action-result") {
@@ -3975,7 +3990,9 @@ function FrameworkOsShellInner({
   }, [hubEnv, hubSessionCapability]);
 
   useEffect(() => {
-    if (!identity || !verifiedSessionAuthority || verifiedSessionAuthority.userId !== identity.userId || !hubEnv || !hostPlugin || !landingApp || !session || session.pluginId !== hostPlugin.handle.pluginId || session.app.id !== landingApp.id) return;
+    if (!identity || !verifiedSessionAuthority || verifiedSessionAuthority.userId !== identity.userId || !hubEnv || !hostPlugin || !landingApp || !session || session.pluginId !== hostPlugin.handle.pluginId) return;
+    const ownerApp = directoryHomeOwnerAppV1(landingApp, session.app);
+    if (!ownerApp) return;
     const worker = ensureBackboneWorker();
     const bootstrapEpoch = directoryBootstrapEpochRef.current + 1;
     directoryBootstrapEpochRef.current = bootstrapEpoch;
@@ -3987,7 +4004,7 @@ function FrameworkOsShellInner({
       if (!current || current.pluginId !== visibleSession.pluginId || current.app.id !== visibleSession.app.id || current.instanceId !== visibleSession.instanceId) return;
       const owner = await openDirectoryHomeOwnerV1({
         plugin: hostPlugin.handle,
-        app: landingApp,
+        app: ownerApp,
         identity: { userId: identity.userId, displayName: identity.displayName },
         instance: { instanceId: visibleSession.instanceId, viewState: visibleSession.viewState },
         baseUrl: identity.hubBaseUrl,
@@ -4040,6 +4057,20 @@ function FrameworkOsShellInner({
   /** 🧭️ A navigation a human or a guest asks for always takes effect: a session-replacing route is invalidated, a new URI
    * goes through history (the route effect applies it), and the URI already shown is applied on the spot — back to a
    * space's index from one of its documents, whose URI is the space's own ({@link createShellRouteLedgerV1}). */
+  /** 🪟️ The route the session stands at ({@link shellSessionRouteV1}): the shell URI, or the route an open overlay sits
+   * over — kept so a session replaced under `/hub` returns to it. The ref is what the route code reads mid-flight, the
+   * state what a render reads. */
+  const sessionRouteRef = useRef<string | null>(null);
+  const [sessionRoute, setSessionRoute] = useState<string | null>(null);
+  /** 🚪️ Hands a session route to the lane unless its admission holds it ({@link shellRouteAdmissionV1}); a held route is
+   * applied by the route effect once the identity it waits for resolves. */
+  const requestSessionRoute = useCallback((uri: string): void => {
+    const admission = shellRouteAdmissionV1(uri, identityResolutionRef.current);
+    if (admission === "await-identity" || admission === "await-sign-in") return;
+    void shellSessionLaneRef.current.route({ uri }).catch((uriError: unknown) => {
+      if (!isPluginInstanceRetiredV1(uriError)) console.warn(`[os-shell] route ${uri} was not applied`, uriError);
+    });
+  }, []);
   const navigateShellUri = useCallback((uri: string) => {
     const overlay = shellRouteIsOverlayV1(uri);
     if (!overlay) shellRouteLedgerRef.current.invalidate();
@@ -4048,10 +4079,8 @@ function FrameworkOsShellInner({
       return;
     }
     if (!hostMode || overlay) return;
-    void shellSessionLaneRef.current.route({ uri }).catch((uriError: unknown) => {
-      if (!isPluginInstanceRetiredV1(uriError)) console.warn(`[os-shell] route ${uri} was not applied`, uriError);
-    });
-  }, [hostMode, navigateHistory]);
+    requestSessionRoute(uri);
+  }, [hostMode, navigateHistory, requestSessionRoute]);
 
   // 🐚️ `scope.storage` (not a separately-resolved ephemeral/browser port here) — two shells sharing a
   // page must not clobber each other's panel layout/dock state through an unnamespaced localStorage key.
@@ -4093,7 +4122,8 @@ function FrameworkOsShellInner({
         : null,
     [hubEnv],
   );
-  /** 🔌️ Dev hosts stream availability over SSE `/watch`; shipped static bundles replay one immediate
+  /** 🔌️ Dev hosts stream availability on the page's stream channel (`DEV_STREAM_ROUTES`, one WebSocket for every stream of
+   * the page and its workers, never an HTTP/1.1 connection held per stream); shipped static bundles replay one immediate
    * `snapshot` per tree ({@link createBundledPluginSource}) so dependency contributors install without
    * Vite middleware. The modules staged beside the shell answer first; the hub source answers what this
    * device does not serve — local-first, and only when something opens it: the hub source announces nothing. */
@@ -4101,7 +4131,10 @@ function FrameworkOsShellInner({
   const pluginSource: PluginSource = useMemo(() => {
     const local = import.meta.env.PROD
       ? [createBundledPluginSource(registry), createBundledPluginSource(extensionRegistry)]
-      : [createDevPluginSource(registry, `${MODULE_PLUGIN_ROUTE}/watch`), createExtensionSource(PLUGIN_CATALOG, `${MODULE_EXTENSION_ROUTE}/watch`)];
+      : [
+          createDevPluginSource(registry, streamMuxWatchV1(pageStreamMuxChannelV1(STREAM_MUX_PATH), DEV_STREAM_ROUTES.pluginModules)),
+          createExtensionSource(PLUGIN_CATALOG, streamMuxWatchV1(pageStreamMuxChannelV1(STREAM_MUX_PATH), DEV_STREAM_ROUTES.extensionModules)),
+        ];
     return multiplexPluginSources(...local, ...(hubPluginSource ? [hubPluginSource] : []));
   }, [extensionRegistry, registry, hubPluginSource]);
 
@@ -5289,6 +5322,8 @@ function FrameworkOsShellInner({
       browserActorUiByRuntimeKeyRef.current.clear();
       worker?.terminate();
       backboneWorkerRef.current = null;
+      backboneWorkerStreamsDetachRef.current?.();
+      backboneWorkerStreamsDetachRef.current = null;
     };
   }, []);
 
@@ -6242,9 +6277,10 @@ function FrameworkOsShellInner({
    * would fight the boot that is already establishing the session.
    *
    * The re-establishment runs on the shell session lane, after whatever route application is in flight, and
-   * the route effect re-applies the route behind it — the new session is the landing app, so a hard load of
-   * `/spaces/<id>` whose hub identity was restored mid-route returns to that space instead of staying on Home
-   * (ticket 26/09/23 U5). */
+   * the route effect re-applies the session route behind it — the new session is the landing app. A space route
+   * is held until the identity it is opened for resolves ({@link shellRouteAdmissionV1}), so a hard load of
+   * `/spaces/<id>` mounts the space once, after this re-establishment, and a sign-in under the hub overlay returns
+   * to the space the overlay sits over (ticket 26/09/23 U5; C10 and G10 S4 relays). */
   const sessionHumanKeyRef = useRef<string | null>(null);
   useEffect(() => {
     const previous = sessionHumanKeyRef.current;
@@ -7126,14 +7162,14 @@ function FrameworkOsShellInner({
   applyShellUriRef.current = applyShellUri;
 
   useEffect(() => {
+    const { overlay, sessionRoute: route } = shellSessionRouteV1(shellUri, sessionRouteRef.current);
+    sessionRouteRef.current = route;
+    setSessionRoute(route);
     if (!hostMode || loadedPlugins.length === 0) return;
-    const hubOverlay = shellRouteIsOverlayV1(shellUri);
-    setHubWorkspaceOpen(hubOverlay);
-    if (hubOverlay || !shellRouteLedgerRef.current.shouldApply(shellUri)) return;
-    void shellSessionLaneRef.current.route({ uri: shellUri }).catch((uriError: unknown) => {
-      if (!isPluginInstanceRetiredV1(uriError)) console.warn(`[os-shell] route ${shellUri} was not applied`, uriError);
-    });
-  }, [applyShellUri, loadedPlugins.length, shellUri, hostMode, session?.pluginId, session?.instanceId]);
+    setHubWorkspaceOpen(overlay);
+    if (route === null || !shellRouteLedgerRef.current.shouldApply(route)) return;
+    requestSessionRoute(route);
+  }, [applyShellUri, loadedPlugins.length, shellUri, hostMode, session?.pluginId, session?.instanceId, identityResolution, requestSessionRoute]);
 
   const resolveSyncTargetSession = useCallback((): ActiveSession | null => {
     if (!session) return null;
@@ -9853,14 +9889,18 @@ function FrameworkOsShellInner({
   );
 
   /** 🌎️ The serving hub's current catalog of plugin modules, read when the shell starts and once a minute after (a
-   * catalog generation changes rarely and publishes no stream); `null` without a hub or while it is unreachable. */
+   * catalog generation changes rarely and publishes no stream); `null` without a hub or before its first answer. A read
+   * that fails keeps the last catalog: one unanswered read is not a hub without plugins. */
   const [hubCatalog, setHubCatalog] = useState<TrustedPluginModuleIndexV1 | null>(null);
   useEffect(() => {
-    if (hubPluginSource === null) return;
+    if (hubPluginSource === null) {
+      setHubCatalog(null);
+      return;
+    }
     const abort = new AbortController();
     const read = (): void => {
       void hubPluginSource.catalog(abort.signal).then((index) => {
-        if (!abort.signal.aborted) setHubCatalog((current) => (current?.generationId === index?.generationId && current !== null ? current : index));
+        if (!abort.signal.aborted && index !== null) setHubCatalog((current) => (current?.generationId === index.generationId ? current : index));
       }, () => undefined);
     };
     read();
@@ -10326,6 +10366,10 @@ function FrameworkOsShellInner({
     setHubWorkspaceOpen(true);
     if (hostMode) navigateHistory(SHELL_HUB_ROUTE);
   }, [hostMode, navigateHistory]);
+  /** 🚪️ What the human is told while the session route waits for the identity it is opened for, or opens without its
+   * hub ({@link shellRouteAdmissionV1}) — a held route is never silent. */
+  const routeAdmission = hostMode && sessionRoute !== null ? shellRouteAdmissionV1(sessionRoute, identityResolution) : "apply";
+  const routeAdmissionNotice = routeAdmission === "apply" ? null : shellRouteAdmissionTextV1(routeAdmission, uiLocale);
   /** 👥️ The hub identities this shell's presence lane currently sees. A peer with no hub identity
    * (a folder-only or anonymous participant) contributes nothing, so the roster can never show a
    * member the directory does not know. */
@@ -12758,7 +12802,7 @@ function FrameworkOsShellInner({
                 onOpenSpace={(spaceId) => navigateShellUri(`/spaces/${spaceId}`)}
                 onClose={() => {
                   setHubWorkspaceOpen(false);
-                  if (hostMode) navigateHistory(openSpaceIdRef.current === null ? "/" : `/spaces/${openSpaceIdRef.current}`);
+                  if (hostMode) navigateHistory(sessionRouteRef.current ?? "/");
                 }}
               />
             </div>
@@ -12780,6 +12824,16 @@ function FrameworkOsShellInner({
               />
             </div>
           ) : null}
+          {routeAdmissionNotice === null ? null : (
+            <div role="status" aria-live="polite" data-semio-route-admission={routeAdmission} className="pointer-events-auto absolute bottom-double left-1/2 z-40 flex max-w-[90vw] -translate-x-1/2 flex-wrap items-center gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
+              <span>{routeAdmissionNotice.text}</span>
+              {routeAdmissionNotice.action === null ? null : (
+                <button type="button" data-semio-route-admission-action="" className="underline" onClick={openHubWorkspace}>
+                  {routeAdmissionNotice.action}
+                </button>
+              )}
+            </div>
+          )}
           {/* 🧯️ Non-blocking notice — e.g. a `"viewer.read-only"` fault (contract freeze §2.3/§5): never
            * a crash, never blocks interaction with the rest of the shell. */}
           {transientNotice ? (

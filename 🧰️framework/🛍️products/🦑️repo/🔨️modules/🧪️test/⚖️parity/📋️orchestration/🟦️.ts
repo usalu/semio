@@ -15,6 +15,7 @@ import {
   formatMetrics,
   loadOracleRegistry,
   markRunComplete,
+  oracleImplementation,
   profileTable,
   renderDiff,
   renderJUnit,
@@ -37,7 +38,7 @@ export function oracleDecision(repoRoot: string, discovered: DiscoveredCase, lev
     return { implementation: null, hostedByCase: false, noOracleDecision: plan.noOracleDecision, comparison: plan.comparison, problem: plan.noOracleDecision === null ? `${discovered.caseDir}: feature declares neither an oracle nor a no-oracle decision` : null, unavailable: null };
   const entry = registry.oracles.find((candidate) => candidate.id === plan.oracle);
   if (entry === undefined) return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: unknown oracle id ${plan.oracle}`, unavailable: null };
-  const mapped = (entry.ecosystem === "native" ? entry.hostImplementation : entry.ecosystem === "javascript" ? "typescript" : entry.ecosystem) as Implementation | undefined;
+  const mapped = oracleImplementation(entry);
   if (mapped === undefined) return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: native oracle ${entry.id} names no hostImplementation to drive it from`, unavailable: null };
   if ((discovered.adapters as Record<string, string | undefined>)[mapped] === undefined)
     return { implementation: null, hostedByCase: false, noOracleDecision: null, comparison: plan.comparison, problem: `${discovered.caseDir}: oracle ${entry.id} needs a ${mapped} adapter to run in`, unavailable: null };

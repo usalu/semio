@@ -237,8 +237,11 @@ changed since; hub 7800 down. Session-11 executors had been cut ~18:0x by the ac
   gis/stdio/vcs/demonstrator; projected 0 audit findings, 0 description findings, `search::long` 4/4.
 - H10: owned-interpreter speedup in `semio-framework-plugin-host` (fuel-identical, wasmtime + trust-record oracle) and hardware
   SHA-256 in `semio-framework-hash` (digest-identical, runtime-detected) — both recompile framework dependents.
-- H10: codec calls construct only the owning app (SDK `plugin_artifact_codec_app`; puzzle.3d pack-schema-hash 830 M instr today).
-- P8: agent lane ≡ shell lane (SDK `preview_addressed_action` runs the retained work inline) + dead-command migrations.
+- H10: Q1 = `zsh .tmp-ticket/wp-h10/q1-land.sh` (self-reverting on any failure; identity sweep 43/43, ~2.2×); guest
+  `wp-h10/patches/codec-app-resolution.py` (one app per codec call: puzzle 6→1, wfc 10→1).
+  Q2 hardware SHA-256 (password hashing 215 → 26 ms, identical digests). After the window: Docker cold build (1 job) + run drill.
+- P8: `python3 .tmp-ticket/wp-p8/p8-land.py --write --test` (six sets, self-restoring per set: agent-lane → law → flow (one
+  graph copy) → cad → space-studio → space-home); held back `--only orphan` (edits leaving unreferenced stored data, ~12 plugins).
   FIRST in the window: P8 test-only leftovers (flow law placeholder `probes.len()==0`, temporary `p8_scratch_flow_probe_dump`).
 - F1/U5/C10/S15 host (TS) fixes are live already; guest/framework-wasm fixes (F1 label cache, T12, P8, D1) need the restage.
 - F1: typed text coalesces into one amendable ledger edit in EVERY TextEditor-based editor (jack stopped saving at the 65th
@@ -256,6 +259,16 @@ changed since; hub 7800 down. Session-11 executors had been cut ~18:0x by the ac
   `DefaultHasher` at ~18 minting sites + regenerate 661 carriers + law (T12 F9); (b) 18 cases whose differential rows never run
   (7 missing `adapter()`, 11 missing TS adapters) + contract rule (T12 F10); (c) the kernel derive macro reads a narrow generated
   input instead of the whole taxonomy/nx/project.json (W2); (d) rename slice (R8 plan); (e) Z2 cross-platform + devcontainer.
+- S15: restore `ArtifactCreationProgressCopyV1.waiting` in `📇️directory/🧬️schema/🔣️.json` (exact JSON in `📓️wp-s15.md` S12-3k; lost to a
+  peer overwrite; 1 engine-contract law red until then).
+- H9: `zsh .tmp-ticket/wp-h9/codemods/opaque-concurrency/land.sh` (store stamps dependencies with the causal head at AUTHORING time;
+  db grades an opaque write missing the frontier head as `mutation.clamped` Warning; vigilant refuses). Follow-up slice: field-precise
+  conflicts (MutationEnvelope field keys, spr op-meta bit, per-plugin declarations) so vigilant only refuses same-field writes.
+  Hub native (compile + laws first after publish): RW gates, pg one-query lists, directory one-query + space index, post-commit
+  re-check removed, revocation fences in-flight frames (close 4401).
+- F1 (resume): os tsc error in `⌨️text-input-oracle` (reported by C10, S15, U5 since ~09:xx) — fix first thing in the window.
+- WG7: late joiners see none of a hub document's existing content (hello tail origin = receiving actor → dropped as echo in all
+  three lanes) → lanes dedupe by operation id + hub tail carries a declared relay origin; one patch set, fixture law ×3 lanes.
 - Then ONE consolidated describe → generate → check → restage s → verify (W2) + the next catalog publish.
 - ~01:40 the account's 5-hour usage limit cut all 12 Opus executors (reset 03:40). W2's detached chain survived: B2 lanes
   done 02:14 (8 packages, 10709 s; stdio earlier), os-hub built 02:17, **catalog B2 published 03:18** (`.🧬semio/🌐hub/w2-catalog-b2`,
@@ -294,3 +307,43 @@ changed since; hub 7800 down. Session-11 executors had been cut ~18:0x by the ac
   its B2 root (`w2-hub-resume.sh`, hold 28673); **publish 3 relaunched detached by the coordinator** (chain 28685, preflight PASS
   969 ms, publish from 15:01:51). Preamble rule 22: long chains are coordinator-owned. Resumed W2 (monitor + post-publish script),
   U5, H9, H10, G10, S15, WG7, WG8, P8. Finished and parked: R8, D1, F1, T12, C10.
+- 15:54 publish 3 FAILED (51 min): the COORDINATOR's disk guard (free 78 < 80 GiB at 15:35) pruned build units by directory mtime and
+  deleted both in-use wasm-release kernel units (62 GiB). 15:58 swap 15.4/16 GB: coordinator killed the two warm lanes, WG7's NI-15
+  renderer build and H10's Docker build. Guard rewritten lock-aware (flock -n on `<unit>/.lock` + newest-file age + keep newest).
+  16:0x publish 4 launched by the coordinator (chain 96896, full recompile expected); rules 23 (7800 reserved — U5's and S15's
+  dev serves had spawned a local hub on it) and 24 (build-quiet).
+- 16:3x U5 DONE (three shell defects + dev local hub join-only / owner lease / stale-catalog republish, 17/17 laws). Open, unowned:
+  the shell holds 4–5 long-lived connections per serve origin at install time vs Chromium's 6-per-origin limit (later requests can
+  queue indefinitely) → frontend slice after the window (multiplex watches/SSE over one channel). H9: pg lists one query each,
+  `inference_approve` post-commit re-check removed, agent exec-target answers 3–10 ms with RW gates; directory space list latency
+  (25–58 s for 82 spaces on the old binary) under investigation. G10 DONE except S4 re-run (resumed). H10, P8 DONE.
+
+### Post-publish sequence (decided 16:5x)
+1. Publish 4 DONE → lift rule 24 (build-quiet) for native hub builds only.
+2. H9 compiles + runs its directory (one query `/directory/spaces`, one membership read per event page, space index) + RW gate +
+   pg list laws on sqlite/pg/neo4j → green.
+3. Coordinator launches `wp-w2/w2-after-all.sh` (current-tree os-hub incl. H9 + H10 + S15 hub fixes → 7800 onto `w2-catalog-all`,
+   verification memory copied, open-plan probe over every kind).
+4. Landing window (rules 20/21 lifted): every prepared patch above, each compile-atomic by its owner, recorded in `📓️landing.md`.
+5. W2 item 4 (`rebuild-all` under one lease) → ONE consolidated restage of `s` → verify 60/60 → next catalog publish (coordinator-owned).
+- 17:2x S15 DONE: matrix en 75/75, de 75/75, viewers 70/70; tool-run column (10 read-only PASS, commit+undo PASS for reasoning,
+  trinity, dag, puzzle2d, remodel); registry union live en+de; hub-document sweep on 7800 B2: 14/16 kinds passed at least once
+  (puzzle2d/3d never — hub creation cost, H10 guest patch + Q1); streamed exec-target routes; open-lane retries; shared Ajv
+  vocabulary for `x-semio-*`. G10: S4 user path de 8/8 (62.1 s first load → approved agent edit), en 6/8 (old-binary 503s).
+  H9: revocation fences in-flight frames; opaque-concurrency patch ready. WG7: late-joiner catch-up bug found (patch owner WG7).
+  Publish 4: stdio done 17:15 (63 min), 1/34; one warm lane (d2) relaunched from the end.
+- 17:5x NEW slice **DB1** (wp-db1, Opus): db write/replay throughput (H9 g17: 7.7 s per 16-envelope submit from per-commit index maintenance; reopen storm replays the whole WAL per hello; acks 3–8 s at 24 docs).
+
+## Session 13 (Claude Code fleet, 2026-09-26 19:00, coordinator "End-to-end repo completion")
+
+Rules `📓️session-13-preamble.md`, fleet `📓️fleet-13-agents.md`. Publish 4 (`--packages all`) FAILED 18:45 at imperative's
+browser-actor codegen (`unsupported import interface`); the session-12 fleet is gone. Decision: landing window NOW (every
+prepared set, compile-atomic, rows in `📓️landing.md`), then ONE consolidated rebuild-all → `--packages all` → 7800 onto it.
+
+- **W3** build/publish owner (imperative fix, fail-fast import-admission preflight over all packages, W2 item 4, derive-macro
+  narrow inputs, rebuild + publish + 7800). **LA/LB/LC/LD** landing (framework core / plugin open kinds + descriptions /
+  handlers + editors + preferences + labels / collab store). **H11** hub correctness (H9's uncompiled in-tree fixes, pg/neo4j,
+  sweep reds). **DB1** db throughput. **C11** React collaboration. **WG9** wasm32 wgpu shell. **WG10** native shell. **S16** os
+  `s` frontend + matrices. **F2** per-origin connection multiplexing + perf. **G11** semio MCP. **Z3** cross-platform + Docker +
+  devcontainer. **T13** plugin debt (F10 adapters, F9 content ids). Audits (Sonnet): landing inventory, os, hub, collab, mcp;
+  rules (queued).

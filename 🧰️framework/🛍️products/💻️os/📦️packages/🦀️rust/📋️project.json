@@ -70,6 +70,16 @@
       },
       "outputs": []
     },
+    "reopen-storm-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts reopen-storm-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "database-shutdown-check": {
       "executor": "nx:run-commands",
       "cache": true,

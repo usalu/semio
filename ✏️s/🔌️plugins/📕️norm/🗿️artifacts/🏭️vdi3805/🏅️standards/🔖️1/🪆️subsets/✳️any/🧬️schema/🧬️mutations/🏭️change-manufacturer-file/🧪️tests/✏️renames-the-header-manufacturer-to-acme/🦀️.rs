@@ -17,10 +17,10 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 
 fn before() -> Vdi3805Snapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")
-}
+    }
 fn expected_after() -> Vdi3805Snapshot {
     serde_json::from_str(AFTER).expect("after snapshot decodes")
-}
+    }
 fn mutation() -> Vdi3805Mutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
 }
@@ -28,7 +28,7 @@ fn applied() -> Vdi3805Snapshot {
     let base = before();
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &base);
     <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), &base).expect("change-manufacturer-file applies to its committed before-snapshot")
-}
+    }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
 #[semio_framework_async_macros::async_test]
@@ -102,8 +102,9 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(&mutation(), &before());
     let raised_diff = raised.diff();
-    assert_eq!(raised_diff.manufacturer_file.as_ref().map(|file| file.manufacturer.as_str()), Some("ACME"), "change-manufacturer-file/renames-the-header-manufacturer-to-acme: the diff must publish manufacturerFile with manufacturer ACME");
-    assert!(raised_diff.catalog.is_none(), "change-manufacturer-file/renames-the-header-manufacturer-to-acme: updating the header must not republish the whole catalog");
+    assert_eq!(raised_diff.manufacturer_file.as_ref().map(|f| f.manufacturer.as_str()), Some("ACME"), "change-manufacturer-file/renames-the-header-manufacturer-to-acme: the diff must publish manufacturer_file with manufacturer ACME");
+    assert!(raised_diff.catalog.is_none(), "change-manufacturer-file/renames-the-header-manufacturer-to-acme: header edit must not republish the whole catalog");
+    assert_eq!(raised_diff.manufacturer_file.as_ref().map(|f| f.record_count), Some(3), "change-manufacturer-file/renames-the-header-manufacturer-to-acme: manufacturer_file.record_count must be 3");
     let produced = serde_json::to_value(raised_diff).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-manufacturer-file/renames-the-header-manufacturer-to-acme: produced diff differs from the committed 🔺️diff/🔣️.json");

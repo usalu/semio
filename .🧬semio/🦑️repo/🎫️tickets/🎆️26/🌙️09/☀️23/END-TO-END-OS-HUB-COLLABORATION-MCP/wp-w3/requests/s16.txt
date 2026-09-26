@@ -1,0 +1,3 @@
+# S16 (session 13) guest crates whose code changed — for W3's consolidated rebuild (describe → materialize → activate-s)
+semio-s-artifact-space-home — Home viewer sealed-page feed: viewer declares `applyDirectoryEventPage` (Migrated, Chrome, config-only retained factory `HomeViewCommandJobFactory`), shared config preparation/page emission moved into the config module (audit s13 §6 #16; host half in ShellHost `directoryHomeOwnerAppV1`). Descriptor changes (new viewer action) → needs describe.
+semio-s-artifact-space-space — Space index table leads with the Name column (row accessible name was "Open: artifact-<id>"); column order only, no schema change.

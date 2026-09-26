@@ -1,0 +1,6 @@
+{
+  "ChangeMemberRole": {
+    "memberId": "beam-B1",
+    "newValue": "Column"
+  }
+}

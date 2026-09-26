@@ -126,3 +126,25 @@ fn a_non_positive_tile_weight_is_refused() {
         assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.invariant"), "weight {weight} must be refused");
     }
 }
+
+//#region 🌳️CommittedTree
+/// 🌳️ Every declared kind owns exactly one committed vector directory holding at least one vector — the tree the
+/// per-kind fixture tests and the `🔲️mutate-grid2d-1` case replay, so a kind cannot drop out of both unnoticed.
+mod committed_tree {
+    use super::KINDS;
+
+    fn fixtures() -> std::path::PathBuf {
+        std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../")).join("🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations")
+    }
+
+    #[test]
+    fn the_committed_tree_covers_every_declared_kind() {
+        let kinds: Vec<std::path::PathBuf> = std::fs::read_dir(fixtures()).expect("fixture root reads").filter_map(Result::ok).map(|entry| entry.path()).filter(|path| path.is_dir()).collect();
+        assert_eq!(kinds.len(), KINDS.len());
+        for kind in &kinds {
+            let vectors = std::fs::read_dir(kind).expect("kind reads").filter_map(Result::ok).filter(|entry| entry.path().is_dir()).count();
+            assert!(vectors > 0, "{} holds no committed vector", kind.display());
+        }
+    }
+}
+//#endregion 🌳️CommittedTree

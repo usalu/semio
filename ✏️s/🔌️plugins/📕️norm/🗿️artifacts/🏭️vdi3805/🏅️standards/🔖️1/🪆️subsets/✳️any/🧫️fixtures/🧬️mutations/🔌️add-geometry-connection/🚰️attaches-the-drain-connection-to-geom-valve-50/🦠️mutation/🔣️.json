@@ -1,6 +1,6 @@
 {
   "AddGeometryConnection": {
-    "id": "geom.valve.50",
+    "id": "geom-valve-50",
     "connection": {
       "id": "drain",
       "medium": "water",

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 export function createBrowserBundleTests(dependencies: import("../../🌐️browser-bundle/📜️script.ts").BrowserBundleTestDependencies, source: { directory: string; url: string }) {
-  const { browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync } = dependencies;
+  const { browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync } = dependencies;
   type BrowserActorBuildControl = import("../../🌐️browser-bundle/📜️script.ts").BrowserActorBuildControl;
   async function testClosedBrowserComponentFactory(repoRoot: string): Promise<void> {
     await testBrowserActorCodegenManifest();
@@ -301,6 +301,9 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert.equal(policy.compiler.inputs.length, 11);
     assert.equal(policy.firstParty.length, 6);
     assert.deepEqual(artifact.importInterfaces, input.closed.importInterfaces);
+    assert.deepEqual(browserActorImportAdmissionV1(componentBytes), { admitted: input.closed.importInterfaces, refused: [] });
+    assert.deepEqual(browserActorImportAdmissionV1(Buffer.from(input.unsupported, "hex")), { admitted: [], refused: ["untrusted:remote/pure@1.0.0"] });
+    assert.throws(() => browserActorImportAdmissionV1(componentBytes.subarray(0, componentBytes.byteLength - 1)), /malformed component/);
     const nodeClosure = await closedBrowserActorBundle(input.closed.source, input.closed.cores.map((core: { name: string; hex: string }) => ({ name: core.name, bytes: Buffer.from(core.hex, "hex") })), { importInterfaces: input.closed.importInterfaces });
     assert.deepEqual(artifact.bytes, new TextEncoder().encode(nodeClosure));
     const runtimeRoot = join(evidence, "captured-runtime");

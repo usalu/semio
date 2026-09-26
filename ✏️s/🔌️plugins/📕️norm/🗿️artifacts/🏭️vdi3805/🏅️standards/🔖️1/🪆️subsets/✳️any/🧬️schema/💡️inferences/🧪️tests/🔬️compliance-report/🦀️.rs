@@ -336,7 +336,14 @@ fn walk_dsl_leaves(prefix: &str, value: &dsl::DslValue, visit: &mut dyn FnMut(&s
     match value {
         dsl::DslValue::Object(map) => {
             for (k, v) in map.iter() {
-                let path = if prefix.is_empty() { k.clone() } else { format!("{prefix}.{k}") };
+                // Map keys with `.` (geometry/curve ids) must use [id=…] so set_value_at_path can resolve them.
+                let path = if prefix.is_empty() {
+                    if k.contains('.') { format!("[id={k}]") } else { k.clone() }
+                } else if k.contains('.') {
+                    format!("{prefix}[id={k}]")
+                } else {
+                    format!("{prefix}.{k}")
+                };
                 match v {
                     dsl::DslValue::Object(_) | dsl::DslValue::Array(_) => walk_dsl_leaves(&path, v, visit),
                     _ => visit(&path, v),
@@ -372,10 +379,19 @@ fn is_descriptive_name_or_title_leaf(path: &str) -> bool {
         return true;
     }
     let leaf = path.rsplit(['.', '[']).next().unwrap_or(path);
-    matches!(leaf, "text" | "title" | "label" | "labelEn" | "labelDe" | "shortName")
+    matches!(leaf, "name" | "title" | "labelEn" | "labelDe")
 }
 
-fn report_signature(report: &crate::document::CheckReport) -> Vec<(String, String, i64, i64)> {
+fn is_reference_or_entity_id_leaf(path: &str) -> bool {
+    let leaf = path.rsplit(['.', '[']).next().unwrap_or(path);
+    matches!(
+        leaf,
+        "id" | "accessoryId" | "componentId" | "productId" | "geometryRef"
+    ) || leaf.ends_with("Id")
+        || leaf.ends_with("Ref")
+}
+
+fn report_signature(report: &crate::document::CheckReport) -> Vec<(String, String, i64, i64, i64)> {
     report
         .checks
         .iter()
@@ -384,6 +400,7 @@ fn report_signature(report: &crate::document::CheckReport) -> Vec<(String, Strin
                 c.id.clone(),
                 format!("{:?}", c.status),
                 (c.computed.value * 1e6).round() as i64,
+                (c.limit.value * 1e6).round() as i64,
                 (c.utilization * 1e6).round() as i64,
             )
         })
@@ -397,6 +414,10 @@ fn perturb_dsl_leaf(path: &str, value: &dsl::DslValue) -> Option<dsl::DslValue> 
             Some(if n.is_integer() {
                 let base = if v < 0.0 { (v as i64).saturating_sub(1) as u64 } else { (v as u64).saturating_add(1) };
                 dsl::DslValue::uint(base.max(0))
+            } else if path.contains(".points[") || path.contains("si_factor") || path.contains("siFactor") {
+                // Break monotonicity / unit scale rather than a ratio-preserving stretch.
+                let next = if v.abs() < 1e-12 { -1.0 } else { -v.abs() * 1.5 - 0.5 };
+                dsl::DslValue::float(next)
             } else {
                 let next = if v.abs() < 1e-12 { 1.0 } else { v * 1.35 + 0.01 };
                 dsl::DslValue::float(next)
@@ -405,6 +426,9 @@ fn perturb_dsl_leaf(path: &str, value: &dsl::DslValue) -> Option<dsl::DslValue> 
         dsl::DslValue::Bool(b) => Some(dsl::DslValue::Bool(!*b)),
         dsl::DslValue::String(s) => {
             use crate::editor::field_meta::vdi3805_field_meta;
+            if is_reference_or_entity_id_leaf(path) {
+                return Some(dsl::DslValue::String("__dangling__".into()));
+            }
             if let Some(choices) = vdi3805_field_meta(path).and_then(|m| m.choices) {
                 let alt = choices.iter().map(|c| c.value).find(|c| *c != s.as_str()).unwrap_or("x");
                 return Some(dsl::DslValue::String(alt.to_string()));
@@ -419,11 +443,11 @@ fn perturb_dsl_leaf(path: &str, value: &dsl::DslValue) -> Option<dsl::DslValue> 
 #[semio_framework_async_macros::async_test]
 async fn every_editable_leaf_perturbation_changes_a_check() {
     use dsl::{FromValue, ToValue};
-    let mut subjects: Vec<(String, Vdi3805Snapshot)> = all_conforming_blatt_examples()
+    let subjects: Vec<(String, Vdi3805Snapshot)> = all_conforming_blatt_examples()
         .into_iter()
         .map(|(sheet, doc)| (format!("blatt-{sheet}"), doc))
         .collect();
-    subjects.push(("nonconforming-2".into(), nonconforming_valve_dataset()));
+    // Nonconforming counterpart is asserted separately; perturbation subjects are conforming assessed Blätter only.
     let mut inert = Vec::new();
     for (label, base) in subjects {
         let base_report = evaluate(&base);
@@ -432,10 +456,6 @@ async fn every_editable_leaf_perturbation_changes_a_check() {
         let mut leaves = Vec::new();
         walk_dsl_leaves("", &value0, &mut |path, leaf| {
             if path.is_empty() || is_descriptive_name_or_title_leaf(path) {
-                return;
-            }
-            // Extension bag keys are free-form; perturbing empty maps is a no-op surface.
-            if path.contains(".extensions.fields") {
                 return;
             }
             leaves.push((path.to_string(), leaf.clone()));
@@ -508,4 +528,60 @@ async fn facet_parity_accessories_components_generic_product_id() {
             assert!(!slice.contains("limits"), "{label} required must not list limits");
         }
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn dangling_accessory_and_component_ids_fail_with_one_of_existing_product_ids() {
+    let mut doc = conforming_valve_dataset();
+    let existing: Vec<String> = doc.catalog.products.iter().map(|p| p.id.clone()).collect();
+    assert!(existing.len() >= 2, "fixture must expose catalogue product ids for one_of choices");
+    doc.catalog.products[0].accessories = vec![AccessoryLink {
+        accessory_id: "__dangling__".into(),
+        required: true,
+        quantity: 1,
+    }];
+    doc.catalog.products[0].components = vec![CompositionLink {
+        component_id: "__dangling__".into(),
+        quantity: 1,
+    }];
+    let article = doc.catalog.products[0].id.clone();
+    let report = evaluate(&doc);
+    let acc = report
+        .checks
+        .iter()
+        .find(|c| c.id == format!("vdi3805.1.accessories.{article}"))
+        .expect("dangling accessory check");
+    assert_eq!(acc.status, CheckStatus::Fail);
+    assert!(acc.explanation.en != acc.explanation.de, "en/de explanations must differ");
+    let acc_remedy = acc.remedies.iter().find(|r| !r.options.is_empty()).expect("accessory remedy must be one_of with options");
+    assert!(
+        existing.iter().any(|id| acc_remedy.options.contains(id)),
+        "accessory one_of must enumerate an existing product id; options={:?} existing={:?}",
+        acc_remedy.options,
+        existing
+    );
+    let comp = report
+        .checks
+        .iter()
+        .find(|c| c.id == format!("vdi3805.1.components.{article}"))
+        .expect("dangling component check");
+    assert_eq!(comp.status, CheckStatus::Fail);
+    assert!(comp.explanation.en != comp.explanation.de, "en/de explanations must differ");
+    let comp_remedy = comp.remedies.iter().find(|r| !r.options.is_empty()).expect("component remedy must be one_of with options");
+    assert!(
+        existing.iter().any(|id| comp_remedy.options.contains(id)),
+        "component one_of must enumerate an existing product id; options={:?} existing={:?}",
+        comp_remedy.options,
+        existing
+    );
+}
+
+#[test]
+fn check_sources_contain_no_fingerprint_gaming_patterns() {
+    let inf = include_str!("../../🦀️.rs");
+    let hits: Vec<_> = ["param_metric", "pos_metric", "point_metric + unit_metric", "field_fingerprint", "(k.len() as f64) * 1e-", "let _ = actual_records", "let _ = curve_id", "let _ = document"]
+        .into_iter()
+        .filter(|p| inf.contains(p))
+        .collect();
+    assert!(hits.is_empty(), "perturbation gaming patterns must not fold string fingerprints into computed/limit (CORRECTION 14:37): {hits:?}");
 }

@@ -22,6 +22,7 @@ fn the_fixture_names_the_routes_bounds_and_schemas_this_module_pins() {
     let fixture = fixture();
     assert_eq!(fixture["mintPath"], HUB_SESSION_MINT_PATH_V1);
     assert_eq!(fixture["sessionPath"], HUB_SESSION_ME_PATH_V1);
+    assert_eq!(fixture["signOutPath"], HUB_SESSION_SIGN_OUT_PATH_V1);
     assert_eq!(fixture["requestSchema"], HUB_SIGN_IN_REQUEST_SCHEMA_V1);
     assert_eq!(fixture["errorSchema"], HUB_AUTH_ERROR_SCHEMA_V1);
     assert_eq!(fixture["requestMaxBytes"].as_u64(), Some(HUB_SESSION_MINT_REQUEST_MAX_BYTES as u64));

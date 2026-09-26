@@ -27,15 +27,19 @@ Session 12 (2026-09-25 22:5x →). Ports: hubs 8010–8019, serves 6510–6519. 
 
 | # | Item | Status |
 |---|------|--------|
-| g | Documents stay writable as they grow: ≥ 500 authored edits (map + note), hub restart, next edit accepted; per-operation-bounded DB I/O admission | IN PROGRESS: RW gates (C10 fanout root cause) law-green (os-hub bin 156/157, 09:0x); g14 (sqlite, 24 docs) refused an edit on a worker-queue lock race → one db retry policy (`db_policy::worker_submit_retry_attempt`, lock races spend no attempt) on every hot-path owner, db laws 59/59 (nextest); g15 sqlite running on the rebuilt binary; pg/neo4j next |
-| R | Agent revocation (coordinator add-on G12-P2-1) | LAW PASS + **LIVE PASS** on the real binary (two-client e2e `tc18` sqlite: agent socket 4401, B's roster drops the agent, agent 401, revoked delegation 403 `delegation-revoked`, 3 ms); pg/neo4j running (`tc19`) |
+| g | Documents stay writable as they grow: ≥ 500 authored edits (map + note), hub restart, next edit accepted; per-operation-bounded DB I/O admission | sqlite: 3680/3680 accepted, latency PASS, restart spawn 42 ms (g17); reopen tail > 30 s at 24 docs = db throughput (→ DB1). postgres: two root causes fixed in the tree (per-row list round trips; the one async-native slot refused concurrent writers → waiting admission, live laws PASS); pg/neo4j growth reruns need the post-publish binary |
+| R | Agent revocation (coordinator add-on G12-P2-1) | LAW PASS + LIVE PASS on the 15:33 binary (sqlite/pg/neo4j e2e, 3–33 ms); G10 S4 race (7800) root-fixed: the delegation withdrawal now fences admitted agent frames (both-orders law written, compile after publish 4) |
 | L | Per-kind localized labels (en + de) descriptor → hub creation catalog → both shells' pickers | PATCH SET READY (guest wire change; dry run clean; post-publish landing, W2 told) |
 | M | Hub memory bound: bounded compiled-guest cache + idle release, RSS before/after (`footprint`) | LANDED, laws 2/2 PASS → **handed to H10** (RSS measurement) |
-| b | P2-2 live: restart < 1 s on sqlite, postgres, neo4j (hub level), database closed on every exit | TODO |
-| 4 | db in-process gate flake (backend-control retirement starvation) + `semio-hub --all-features` 375/375 | TODO |
+| b | P2-2 live: restart < 1 s on sqlite, postgres, neo4j (hub level), database closed on every exit | LIVE PASS (audit acceptance) in the two-client receipts: SIGTERM → exit 0.5–2.3 s with `server.shutdown … database=closed`, 0 live WAL writers left (pg, neo4j), restart spawned 22 / 207 / 31 ms after the exit, first-attempt reopen on sqlite (tc24), postgres (tc23) and neo4j (tc19: lease released). Boot to ready is not < 1 s: SIGTERM → ready 23–31 s on sqlite (g15/g17, catalog load → H10); two-client now records `sigtermToReadyMs`. Re-run on the post-publish binary |
+| 4 | db in-process gate flake + `semio-hub --all-features` 375/375 | db nextest green except DB1's throughput laws; one fixture race fixed; in-process flake = backend-control exhaustion at `MemoryStorage::new` (plan written); all-features after the post-publish gate |
 | D | P2-3 cold `docker build` + `docker run` → `/healthz`, `/readyz` | `.dockerignore` fixed (context was 344 GB) → **handed to H10** |
 | V | Schema-driven hostile-input law over every hub HTTP/WS route, Ajv oracle | LANDED: Rust laws 2/2 PASS (420 requests), Ajv 3/3 PASS → **handed to H10** |
 | C | Creation-phase progress + bounded creation (S15 "stuck 2d.puzzle") | PATCH SET READY (os-kernel schema is guest-linked → rule 20): `wp-h9/codemods/creation-progress/`; cause of the stall = residency release → H10 |
+| Qa | Vigilant hub accepts a concurrent same-field plugin write (C10) | PREPARED: store stamps its causal head at authoring + db grades opaque writes that missed the head + fixture law; one command `…/codemods/opaque-concurrency/land.sh` (dry-run clean, not compile-verified); field precision = follow-up |
+| Qb | `inference_approve` 503 while committed (G10) | FIXED in the tree: no post-commit directory re-check; law written (compile pending); live proof = G10 quartet on a current-tree hub |
+| Qc | execution-target 503 for agent sessions (G10) | VERIFIED FIXED on the current tree (RW gates): agent manifest/descriptor 3–10 ms right after its own commit, socket open (`tc23` pg, `tc24` sqlite) |
+| Qd | `/directory/spaces` 25–58 s, event pages slow (WG8/U5) | FIXED in the tree (one summary query per list, one membership read per event page, linear sealing, event space index); laws written; compile after publish 4 |
 
 ### Handoff to H10 (04:5x, coordinator split: H10 owns hub performance + operations)
 
@@ -308,6 +312,179 @@ What H9 landed in H10's areas before the split (all compile-checked; laws as sta
   `pub`), used by all three lists; db compile-checked with every driver. Law: pending (live-docker law, like the
   fence conformance). Binary built 11:38, then the app restart (14:59) deleted my private target dir and my rm+cp found
   no binary — cold rebuild `build-12` started 15:02 (load 110).
+- 15:0x coordinator queue after the ledger/WorkerPool fixes — (a) vigilant same-field acceptance, (b) G10
+  `inference_approve` 503 while committed, (c) G10 execution-target 503 for agent sessions:
+  - **(b) root + fix (hub, landed in the tree, law written, not yet compiled):** `post_inference_gis_map_job_approval`
+    and `post_inference_gis_map_approval_undo` re-ran a directory authority check AFTER the commit
+    (`revalidate_gis_map_approval_delivery`: `authenticate_session` + `get_role`, 2 s timeouts each). On a loaded hub
+    that check timed out → `503 inference.unavailable` for an approval whose commit was durable (head 0→1). The ingress
+    already holds the caller's user/session/space/membership bindings (shared) across the whole operation, so no
+    revocation can interleave; the post-commit check could only fail for availability. The routes now answer the
+    receipt of a durable commit; the check stays at ingress (`revalidate_gis_map_approval_authority`). Law
+    `a_committed_gis_map_approval_is_answered_with_its_receipt` (route source: the committed branch answers the
+    receipt and awaits nothing after the commit) — the in-process fixture has no succeeding committer (the real one
+    needs the composed GIS transaction), so the runtime proof is G10's quartet on a current-tree hub.
+  - **(c) likely the exclusive-gate defect, verification written:** `execution-target/{manifest,descriptor}` take the
+    caller's record bindings with a 2 s budget (`share_record`) → `DeadlineExceeded`. On 7800's binary every gate is an
+    exclusive mutex, and the agent's own open document socket holds its bindings through frames and deliveries (C10
+    root, RW gates since 05:1x), so the agent's lease requests time out while the owner (no socket) answers in 1–2 ms.
+    The two-client e2e's agent leg now commits one agent edit and then, socket still open, fetches the agent's
+    manifest + descriptor: both must answer 200 within `agent.executionTargetWithinMs` = 2000 (fixture + schema +
+    receipt `agentExecutionTargetMs`). Runs with the next binary.
+  - **(a) decision:** the db cannot see same-field conflicts in a plugin document: its diffs are opaque to it
+    (`diff_entries` is empty for every non-pathmap schema, so neither the last-writer check nor
+    `db_conflict::ConflictDetector` ever sees a touched region), and the only domain-neutral signal left — causality —
+    is empty too, because the Rust store stamps `mutation.dependencies()`, whose default is `Vec::new()` and which no
+    domain mutation overrides (`🏪️store/🦀️.rs` commit path → `MutationMeta.dependencies`). Two halves, landing
+    TOGETHER after the freeze: (1) guest/store (prepared patch, guest-linked): a mutation without declared
+    dependencies is stamped with the store's current causal head (its last applied mutation id, local or ingested);
+    (2) hub/db (host-only, prepared, held back): an envelope whose dependencies do not include the document's last
+    committed mutation (within a batch: its predecessor) was authored without seeing it — for an opaque diff the
+    overlap cannot be ruled out, so it is graded `Warning` (`mutation.clamped`, "concurrent write, fields opaque to the
+    database"): `Normal` accepts it with the message, `Vigilant` refuses it. O(1) state (the last committed id).
+    Landing (2) alone would make a vigilant hub refuse every write of today's clients (their dependencies are always
+    empty), including C10's 8025 runs, so it waits for (1).
+- 16:00 **`tc23` postgres + `tc24` sqlite** (15:33 binary: RW gates, retry policy, hello admission, pg one-statement
+  lists, (b) fix): postgres now grows all 300 × 16 KiB edits (689 s; was a frame-deadline stall at edits 30–256),
+  **agent revocation 22 ms (pg) / 33 ms (sqlite)**, **agent execution-target after its own commit 5/4 ms (pg), 10/3 ms
+  (sqlite)** — (c) verified on the current tree —, SIGTERM → exit 2.2 s, exit → respawn 207 ms (pg) / 22 ms (sqlite),
+  0 live writers after exit, ready → reopened Welcome 17.6 s, 30 more edits accepted, SIGKILL → server release 351 ms.
+  Both then failed `a-crash-0 missing Welcome within 30000 ms`: after SIGKILL the first reopen of the 4.8 MB pathmap
+  document took longer than the fixture's 30 s (load 80–110; the SIGTERM reopen took 17.6 s). Open: reopen latency of a
+  grown document after a crash (profiling next; performance overlap with H10).
+- 16:0x rule 24 (build-quiet during publish 4): my `laws-12` hub test build started compiling stdio plugin crates
+  (the test feature set re-unifies the whole framework stack) — stopped at once (cargo + rustc killed, no orphans);
+  a second attempt with the binary's feature set also reached plugin crates and was aborted by its watchdog. Hub bin
+  laws wait for publish 4. db laws are allowed: **`a_postgres_list_is_one_statement_however_many_rows_it_returns`
+  PASS** (live `postgres:17-alpine`, `log_statement = all`: 40 runs and 12 segments each listed by exactly one
+  statement), with the shared `db_storage::docker_server` helpers (the fence lanes now use them too; sqlite fence lane
+  PASS) and `db_policy` 7/7. Growth `g17` (sqlite, alone) launched 16:1x.
+- 16:4x **WG8/U5 directory latency (7800: `/directory/spaces` 25–58 s for 82 spaces) — root causes + fixes (in the tree,
+  compile blocked by rule 24: peers' framework edits make any hub build recompile the kernel → plugin crates):**
+  - `GET /directory/spaces` folded the WHOLE directory event log per request (`load_read_model` →
+    `load_all_directory_events(0)` + `fold_all`), then per visible space listed its documents and MOUNTED each document
+    (`documents_for_space` → `document_view` → `state.db.document(..)`) just to count them, plus one sessions query per
+    space. Now one directory query, `HubDirectory::list_visible_space_summaries(user)` (public spaces + the caller's,
+    with its role and the member/document/active-connection counts of the space-administration summary), on sqlite,
+    postgres and neo4j; the route maps rows through the existing `admin_space_summary_view`. Dead per-space helpers
+    removed (`load_read_model`, `public_documents_for_space`, `documents_for_space`, the unused `space_view`).
+  - Every summary's `updatedAt` subquery scanned the whole event table per space (no index on `space_id`): new
+    `idx_directory_event_space (space_id, recorded_at)` (sqlite, postgres) and neo4j indexes on
+    `DirectoryEvent.spaceId` / `SyncSession.spaceId` (idempotent `IF NOT EXISTS`).
+  - `GET /directory/event-page/v1` read the space and the caller's role PER EVENT (256 round trips for a full page)
+    and re-sealed the whole page so far per row (quadratic JSON + SHA-256): now one membership read per page
+    (`directory_member_space_ids`) and linear size accounting (`directory_event_page_bytes_bound`, exact seal only near
+    the 64 KiB limit — identical paging). `GET /directory/events` uses the same single membership read.
+  - Laws (written, compile after publish 4): in-process
+    `a_member_of_many_spaces_reads_its_space_list_and_event_pages_within_the_page_budget` (120 spaces, oracle = the
+    event-log fold: same visible ids, discriminators, roles, member/document counts; list best-of-3 < 200 ms, each
+    event page < 400 ms); live on every backend: the two-client e2e's new `directoryPages` leg (A owns 100 more spaces;
+    space list best-of-3 and every event page ≤ 200 ms; receipt `directoryTimings`). Still per message: directory
+    stream deliveries check access with two reads each (not O(spaces); noted).
+  - Not in scope but same shape: the space-administration document window mounts each listed document for its frontier
+    (`document_view`, per page row).
+- 16:4x (a) store half: coordinator refined the design (plugin-declared field keys, schema-first; fixture law: two
+  concurrent same-field writes on a vigilant hub → one accepted + one typed, localized refusal). Next after the
+  directory work; both halves land with one command.
+- 16:5x **G10 S4 revocation gap (7800: a withdrawn agent refused in one run, still edited in the other)** — root:
+  `DELETE /auth/agent-delegations/{id}` revoked the minted sessions in the directory and invalidated their grants, but
+  never fenced the agent's already-admitted frames (a sign-out does, through the Session binding held exclusively), so
+  whether the agent's racing edit landed before or after the `204` was timing. Fix (in the tree): once the revocation is
+  durable, the route holds every revoked session's binding exclusively (bounded by the frame deadline) before it
+  invalidates grants/plans and answers — an admitted edit finishes first, every later frame re-reads the revoked session
+  and is refused. Law (written, compile after publish 4):
+  `a_withdrawn_delegation_admits_no_agent_edit_after_it_in_either_order` — in flight (edit admitted, held on the
+  document writer): the `DELETE` waits, the edit is Accepted, then `204`, socket `4401`, `/auth/sessions/me` 401;
+  withdrawn first: the next edit on the still-open socket is never Accepted, the document's commit_seq is unchanged,
+  401. (The existing roster law keeps covering the human's view.)
+- 17:0x **(a) both halves prepared, one command:** `zsh .tmp-ticket/wp-h9/codemods/opaque-concurrency/land.sh`
+  (`--dry-run` clean now; applies the three codemods, then db nextest, os-kernel store laws, the hub laws, the wasm
+  check through the fleet mutex). Design decisions found while writing it:
+  - **Stamp at authoring time, in the store, not at send time in the relays.** A relay stamping at send would give
+    C10's edit — authored during the cut — the post-reconnect head, and the vigilant hub would accept it again. The
+    store half (`store-causal-dependencies.py`): `ArtifactStore::causal_head()` = the mutation the store applied last
+    (own or ingested); `replay_mutations` stamps it on every mutation declaring no dependency, chaining within a
+    batch. Both relays already pass dependencies through unchanged.
+  - **The db half judges in the currency clients see: the frontier head** (`head_edit_id`, a mutation id or a
+    durable group's edit id). `db-opaque-concurrency.py`: an opaque write (no interpretable region) whose dependencies
+    miss the head is graded `Warning mutation.clamped`; and a dependency on a durable group's edit id is accepted
+    (`durable_group_edit_ids`, kept on append and replay) — before, a client depending on a GIS approval's head would
+    have been refused "depends on unseen operation".
+  - Law + fixture (`hub-vigilant-law.py`, `⚔️vigilant-concurrent-edit-v1`): vigilant refuses the concurrent write with
+    the typed `mutation.clamped` (the Shell's `⚔️hub-command-rejection` fixture localizes it en/de), accepts the one
+    that saw the head; normal accepts and reports. **Field precision** (the coordinator's "plugin-declared field keys")
+    needs a wire field on `MutationEnvelope` (31 Rust + 11 TS files), a spr op-meta bit (bit 7 is free) and a
+    schema-first declaration in every plugin's mutations: until then an opaque concurrent write is refused
+    conservatively under vigilant even on another field. Recorded as the follow-up; not in this patch.
+  - Not compile-verified (rule 20/24); written against the 17:00 tree, anchors verified.
+- 17:17 **`g17` sqlite (15:33 binary, run alone):** 24 created (first 30 s, last 1482 s — the owned interpreter runs
+  genesis, load 30–110), **3680/3680 edits accepted**, latency law PASSED, SIGTERM → exit 1.7 s, exit → respawn 42 ms,
+  ready 23.5 s; then `0-0 missing Welcome` within 30 s when all 24 sockets reopened at once (hello admission now waits
+  instead of refusing, g15's refusal is gone). Cause under study: each hello replays the document's whole WAL again
+  (`replay_sync_state_retained`, separate from the engine mount) and yields one worker turn per envelope; 24 of
+  them, 8 admitted at a time, under load. New db law (runs now, db tests are allowed by rule 24):
+  `two_dozen_grown_documents_greeted_at_once_after_a_reopen_are_welcomed_within_the_reopen_bound` (24 docs × 128
+  opaque edits, reopen, 24 concurrent `Database::hello` on 24 threads, 10-worker pool; prints the distribution; bound
+  30 s).
+- 17:1x WG7 notice: its late-joiner patch touches only the hello catch-up hunk of `bootstrap` (~5224, origin of the
+  tail); none of my edits are in that region.
+- 17:45 **db greeting storm law PASS, with numbers that explain g17** (`db-storm-1.txt`, nextest, load ~30, debug):
+  24 documents × 128 opaque edits took **1472 s to write** (192 submits of 16 envelopes: ~7.7 s per submit, ~480 ms per
+  envelope — the hot frames are index maintenance per commit: `IndexHandle::put_batch` → `maybe_auto_merge` →
+  `merge_adjacent`, `read_run`/`list_step`/`replace_step` on the fs backend); the reopen storm welcomed all 24 in 24.2 s
+  (p50 11.8 s, p90 22.4 s, max 22.7 s ≤ 30 s bound). At hub level (mounts, sockets, 10× more load) that tail crosses 30 s:
+  g17's missing Welcome. Both are db write/replay throughput — reported to the coordinator as a performance item (per
+  commit index merging dominates every edit's latency and the reopen replay).
+- 17:56 **`g18` postgres growth FAILED at the first edits: `unavailable: DB I/O async-native backend operation capacity
+  exhausted`.** A postgres/neo4j backend admits ONE async-native operation at a time
+  (`db_io_backend_admit_operation`: `admitted_operation != 0` → refused), and a refused `submit_db_io_task` surfaced
+  as a rejected edit — with 24 documents writing, every second concurrent storage operation was refused (the
+  two-client runs have one writer, so they passed). DB1 now owns throughput (making the slot multi-flight would be
+  theirs); correctness is mine: **fix (db, host-only, compiled):** `submit_db_io_task_admitted` — every storage facade
+  (memory, fs, sqlite, postgres, neo4j) submits through it; a submission refused only because a fixed DB I/O capacity
+  is momentarily taken (task arena, process credit, page arena, backend pending operations, the async-native slot —
+  named constants now) waits for a release (`db_io_admission_released()`: epoch + wake-all over the shared
+  `AdmissionWaiters<256>`, called when credit, a task slot or a backend's operation is returned; two atomics when
+  nobody waits) and retries, bounded by `DB_IO_ADMISSION_WAIT_MS` = the frame deadline; any other refusal answers at
+  once; dropping the future cancels. This also removes the in-process growth law's "process aggregate credit
+  exhausted" refusal class. Law (live docker): `concurrent_postgres_writers_wait_for_the_backends_one_operation_slot`
+  (24 writers × 4 runs on one backend, none refused, every run landed). Test run blocked for the moment: a peer's
+  new `⚙️engine/🧪️tests/⏱️throughput/` file (DB1, in progress) does not compile yet.
+- 18:0x–18:3x db verification of the admission change (db tests are allowed by rule 24): both live postgres laws
+  **PASS** (`a_postgres_list_is_one_statement…`, `concurrent_postgres_writers_wait_for_the_backends_one_operation_slot`);
+  mutation check — the same law with the plain `submit_db_io_task` in the postgres facade: **23 of 24 writers refused**
+  (`async-native backend operation capacity exhausted`), so the law discriminates. Full db nextest (`db-nextest-3.txt`):
+  every law green except DB1's two new throughput laws (theirs, red by design until their fix) and
+  `db_io_blocking_fault_preserves_exact_category_scalars_and_retires` — a pre-existing race (5/5 alone): it read the
+  operation's ledger slot after the fault, and under full-suite load maintenance had already retired the whole task;
+  the law now reads a retired slot as "no result lease" (its fixture expects the lease retired). My greeting-storm law
+  (25 min) moved into the engine tests' `long` module (DB1's throughput laws now measure the same storm per backend).
+- Next (item 4, after the post-publish gate): the in-process `--lib` flake is backend-control exhaustion at
+  `MemoryStorage::new` — the same "capacity is backpressure" shape: storage constructors wait on
+  `db_io_admission_released()` (plus a wake where a registry/rollback slot is freed) instead of failing.
+- 18:2x in-process `cargo test -p …-db --lib` (skipping `long::` and DB1's throughput laws): **770 passed, 3 failed** —
+  the backend-control flake did not appear this time; the 3 failures (`artifact_history_empty_and_two_batch_replay…`,
+  `artifact_history_completion_interleavings…`, `compact_document_uses_live_actor_writer…`) fail even alone in their
+  isolated child process and began after DB1's edits to `🗿️artifact`, `📝️wal`, `🔢️index` (18:16–18:24; they passed in
+  my 18:07 nextest run) — DB1's work in progress, not mine. Risk for the post-publish gate: my first hub build compiles
+  whatever DB1 has in the tree at that moment. Gate script ready: `.tmp-ticket/wp-h9/post-publish-gate.sh` (build, full
+  os-hub bin + lib laws, install the binary), then e2e: two-client ×3 backends, growth pg/neo4j.
+- 18:3x prepared patches re-verified dry-run clean while waiting for publish 4: `opaque-concurrency/land.sh --dry-run`,
+  `creation-progress` (`patch -p1 --dry-run` + `hub-creation-progress.py --dry-run`), `kind-label-patch.py` (184 literal
+  sites in 93 files, 6/6 exact hunks). The label patch read its file list from `wp-h9/generated/kindspec-files.txt`, which
+  a sweep deleted; it now computes the list itself (`git grep -l 'ArtifactKindSpec {' -- '*.rs'`, ticket folders
+  excluded), so it depends on no generated input.
+- 18:4x while publish 4 runs (10 components complete at 18:39): (1) static review of the hub edits no build has compiled yet
+  (directory lists in the three backends, space list, event page, revocation fence, approval routes, the three new bin laws): every
+  helper, field and type they use exists with the used signature; the postgres `$1` compares only against TEXT columns, so it
+  infers without a cast. One docstring fixed (`document_view` kept the plural doc of the removed `documents_for_space`). (2) WG7's
+  hub half (`wp-wg7/s12-echo-suppression-hub-patch.py`) dry-runs clean on my current bootstrap. Its law reads the store fixture
+  `document-echo-suppression-v1`, which is already on disk (untracked JSON), so the hub half compiles without the frozen kernel
+  half. It goes into the gate build. (3) Row b (P2-2) is closed from existing evidence: the two-client runs already stop with
+  SIGTERM, assert `database=closed` and 0 live writers, respawn within 1 s and reopen on the first attempt; tc24/tc23/tc19 pass
+  that leg on all three backends. The two-client receipt's `sigtermToReopenedWelcomeFirstAttemptMs` was taken after the
+  post-restart growth, so it overstated the reopen. It is now taken at the first Welcome, and the scenario records
+  `sigtermToReadyMs` like the growth scenario (syntax-checked, runs with the next e2e).
 
 ## Landing (guest ABI, 00:56 → 01:13)
 

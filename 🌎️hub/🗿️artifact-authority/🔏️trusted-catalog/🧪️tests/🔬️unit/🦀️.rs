@@ -12,17 +12,36 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 static FIXTURE_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
 
-/// 🧊️ The residency every hub applies is exactly the `const` values `TrustedCatalogGuestResidencyV1`
-/// declares, and a catalog load never verifies more guests at once than the declared bound.
+/// 🧊️ The residency a hub applies unless configured is exactly the `default` and `const` values
+/// `TrustedCatalogGuestResidencyV1` declares, an operator's `residentComponentBytes` is admitted only within the
+/// declared bounds, a catalog load never verifies more guests at once than the declared bound, and the state the
+/// admin route reports carries exactly the fields `TrustedCatalogGuestResidencyStateV1` requires.
 #[test]
 fn guest_residency_bounds_are_the_declared_schema_values() {
     let module: serde_json::Value = serde_json::from_str(schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
     let residency = &module["$defs"]["TrustedCatalogGuestResidencyV1"];
     let declared = &residency["properties"];
-    assert_eq!(declared["residentComponentBytesMaximum"]["const"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.resident_component_bytes_maximum));
+    let bytes = &declared["residentComponentBytes"];
+    assert_eq!(bytes["default"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.resident_component_bytes));
+    assert_eq!(bytes["minimum"].as_u64(), Some(*schema::TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.start()));
+    assert_eq!(bytes["maximum"].as_u64(), Some(*schema::TRUSTED_CATALOG_GUEST_RESIDENCY_BYTES_BOUNDS.end()));
     assert_eq!(declared["concurrentVerifications"]["const"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.concurrent_verifications as u64));
+    assert_eq!(declared["accessCountCeiling"]["const"].as_u64(), Some(u64::from(TRUSTED_CATALOG_GUEST_RESIDENCY.access_count_ceiling)));
+    assert_eq!(declared["accessCountAgingPerGuest"]["const"].as_u64(), Some(TRUSTED_CATALOG_GUEST_RESIDENCY.access_count_aging_per_guest));
     assert_eq!(residency["required"].as_array().unwrap().len(), declared.as_object().unwrap().len(), "every declared bound is required");
     assert!(guest_verification_concurrency() >= 1 && guest_verification_concurrency() <= TRUSTED_CATALOG_GUEST_RESIDENCY.concurrent_verifications);
+    let configured = |value: Option<&str>| TrustedCatalogGuestResidencyV1::configured(value).map(|residency| residency.resident_component_bytes);
+    assert_eq!(configured(None), Ok(TRUSTED_CATALOG_GUEST_RESIDENCY.resident_component_bytes));
+    assert_eq!(configured(Some(" ")), Ok(TRUSTED_CATALOG_GUEST_RESIDENCY.resident_component_bytes));
+    assert_eq!(configured(Some("0")), Ok(0));
+    assert_eq!(configured(Some("67108864")), Ok(67_108_864));
+    assert_eq!(configured(Some("17179869184")), Ok(17_179_869_184));
+    for refused in ["17179869185", "-1", "64MiB", "1e9", "0x10"] {
+        assert!(configured(Some(refused)).is_err(), "{refused} is refused");
+    }
+    let state = serde_json::to_value(TrustedCatalogGuestResidencyStateV1::default()).unwrap();
+    let required: BTreeSet<&str> = module["$defs"]["TrustedCatalogGuestResidencyStateV1"]["required"].as_array().unwrap().iter().map(|field| field.as_str().unwrap()).collect();
+    assert_eq!(state.as_object().unwrap().keys().map(String::as_str).collect::<BTreeSet<_>>(), required, "the reported state is exactly the schema's fields");
 }
 
 /// 🗃️ A remembered verification answers only for exactly its component, schema and engine; a record
@@ -76,46 +95,208 @@ async fn a_guest_codec_verification_is_keyed_by_the_engine_and_travels_with_the_
     std::fs::remove_dir_all(&copied).unwrap();
 }
 
-/// 🧊️ Compiled guests stay resident within the ledger's byte budget: a new compile releases the least
-/// recently used guests no call holds, a held guest is never released, idleness alone releases nothing,
-/// and a released guest compiles again on its next use.
+/// 🧊️ A residency ledger over byte-charged test values, `budget` bytes.
+fn residency_ledger(budget: u64) -> Arc<GuestResidencyLedgerV1<Vec<u8>>> {
+    GuestResidencyLedgerV1::new(TrustedCatalogGuestResidencyV1 { resident_component_bytes: budget, ..TRUSTED_CATALOG_GUEST_RESIDENCY })
+}
+
+/// 🧪️ One operation's `calls` codec calls on `slot`; a compile answers the SHA-256 of the slot's own `source`.
+async fn residency_operation(control: &TestControl, slot: &GuestResidencyV1<Vec<u8>>, source: &[u8], calls: usize, compiles: &AtomicUsize) -> Vec<u8> {
+    let context = control.context();
+    let mut answers = Vec::with_capacity(calls);
+    for _ in 0..calls {
+        let value = slot
+            .acquire(&context, || async {
+                compiles.fetch_add(1, Ordering::SeqCst);
+                Ok::<_, AuthorityError>(Sha256::digest(source).to_vec())
+            })
+            .await
+            .unwrap();
+        answers.push(value.as_ref().clone());
+    }
+    assert!(answers.windows(2).all(|pair| pair[0] == pair[1]), "every call of one operation answers the same guest");
+    answers.pop().unwrap()
+}
+
+/// 🧊️ A compiled guest that fits stays resident, a resident guest serves later operations without compiling
+/// again, and idleness alone releases nothing.
 #[tokio::test]
-async fn compiled_guests_are_released_least_recently_used_by_capacity_never_by_idleness() {
-    let compiles = AtomicUsize::new(0);
-    let compile = |value: u8| {
-        let compiles = &compiles;
-        move || async move {
-            compiles.fetch_add(1, Ordering::SeqCst);
-            Ok::<_, AuthorityError>(vec![value; 16])
-        }
-    };
-    let ledger = GuestResidencyLedgerV1::<Vec<u8>>::new(2_000);
-    let (a, b, c) = (ledger.register(1_000), ledger.register(1_000), ledger.register(1_000));
-    assert_eq!(*a.acquire(compile(1)).await.unwrap(), vec![1; 16]);
-    assert_eq!(*b.acquire(compile(2)).await.unwrap(), vec![2; 16]);
-    assert_eq!(*a.acquire(compile(1)).await.unwrap(), vec![1; 16]);
-    assert_eq!(compiles.load(Ordering::SeqCst), 2, "a resident guest is reused");
+async fn a_compiled_guest_that_fits_stays_resident_and_idleness_releases_nothing() {
+    let (control, compiles) = (TestControl::new(), AtomicUsize::new(0));
+    let ledger = residency_ledger(2_000);
+    let (a, b) = (ledger.register(1_000), ledger.register(1_000));
+    residency_operation(&control, &a, b"a", 1, &compiles).await;
+    residency_operation(&control, &b, b"b", 1, &compiles).await;
+    residency_operation(&control, &a, b"a", 1, &compiles).await;
     tokio::time::sleep(std::time::Duration::from_millis(20)).await;
     assert!(a.is_resident() && b.is_resident(), "idleness alone releases nothing");
-    assert_eq!(ledger.state(), GuestResidencyStateV1 { resident: 2, resident_bytes: 2_000, maximum_bytes: 2_000, released: 0 });
-    assert_eq!(*c.acquire(compile(3)).await.unwrap(), vec![3; 16]);
-    assert!(!b.is_resident() && a.is_resident() && c.is_resident(), "the least recently used unheld guest makes room");
-    assert_eq!(ledger.state(), GuestResidencyStateV1 { resident: 2, resident_bytes: 2_000, maximum_bytes: 2_000, released: 1 });
-    let held_a = a.acquire(compile(1)).await.unwrap();
-    let held_c = c.acquire(compile(3)).await.unwrap();
-    assert_eq!(*b.acquire(compile(2)).await.unwrap(), vec![2; 16]);
-    assert_eq!(compiles.load(Ordering::SeqCst), 4, "the released guest compiles again on its next use");
-    assert!(a.is_resident() && c.is_resident() && b.is_resident(), "guests running calls hold are never released, even over budget");
-    drop((held_a, held_c));
-    assert_eq!(*b.acquire(compile(2)).await.unwrap(), vec![2; 16]);
+    assert_eq!(ledger.state(), TrustedCatalogGuestResidencyStateV1 { budget_bytes: 2_000, registered_guests: 2, resident_guests: 2, resident_bytes: 2_000, hits: 1, compiles: 2, admitted: 2, bypassed: 0, released: 0, compile_micros: ledger.state().compile_micros });
+}
+
+/// 🧮️ An operation counts one use however many calls it makes, a guest that does not fit serves every call
+/// of the operation that compiled it and is dropped with it, and it displaces the least recently used
+/// resident guest only once it has been used in more operations than that guest.
+#[tokio::test]
+async fn one_operation_counts_one_use_and_an_unadmitted_guest_lives_exactly_as_long_as_its_operation() {
+    let (control, compiles) = (TestControl::new(), AtomicUsize::new(0));
+    let ledger = residency_ledger(1_000);
+    let (a, b) = (ledger.register(1_000), ledger.register(1_000));
+    residency_operation(&control, &a, b"a", 3, &compiles).await;
+    assert_eq!(compiles.load(Ordering::SeqCst), 1);
+    assert!(a.is_resident());
+    residency_operation(&control, &b, b"b", 3, &compiles).await;
+    assert_eq!(compiles.load(Ordering::SeqCst), 2, "the unadmitted guest served all three calls of its operation from one compile");
+    assert!(!b.is_resident() && a.is_resident(), "a guest used in no more operations than the one it would release does not displace it");
+    assert_eq!(ledger.state().resident_guests, 1, "the unadmitted guest was dropped with its operation");
+    residency_operation(&control, &b, b"b", 3, &compiles).await;
+    assert!(!b.is_resident(), "one use each: a tie keeps the resident guest");
+    residency_operation(&control, &b, b"b", 1, &compiles).await;
+    assert!(b.is_resident() && !a.is_resident(), "a guest used in more operations displaces the least recently used one");
     assert_eq!(compiles.load(Ordering::SeqCst), 4);
-    let d = ledger.register(1_000);
-    assert_eq!(*d.acquire(compile(4)).await.unwrap(), vec![4; 16]);
-    assert!(!a.is_resident() && !c.is_resident() && b.is_resident() && d.is_resident(), "the next compile brings the ledger back under budget, oldest first");
-    assert_eq!(ledger.state().resident_bytes, 2_000);
-    let failing = ledger.register(1_000);
-    assert!(failing.acquire(|| async { Err::<Vec<u8>, _>(AuthorityError::Catalog("refused".into())) }).await.is_err());
-    assert!(!failing.is_resident(), "a failed compile leaves nothing resident");
+    let state = ledger.state();
+    assert_eq!((state.admitted, state.bypassed, state.released, state.hits), (2, 2, 1, 6));
+}
+
+/// 🔒️ A resident guest a running operation holds is never released, even for a guest used in more
+/// operations, and a zero budget keeps nothing resident while operations that reach a guest at once still
+/// share its one compile.
+#[tokio::test]
+async fn held_guests_are_never_released_and_a_zero_budget_keeps_nothing_resident() {
+    let (control, compiles) = (TestControl::new(), AtomicUsize::new(0));
+    let ledger = residency_ledger(1_000);
+    let (a, b) = (ledger.register(1_000), ledger.register(1_000));
+    residency_operation(&control, &b, b"b", 1, &compiles).await;
+    let holding = control.context();
+    let held = b.acquire(&holding, || async { Ok::<_, AuthorityError>(b"never".to_vec()) }).await.unwrap();
+    for _ in 0..4 {
+        residency_operation(&control, &a, b"a", 1, &compiles).await;
+    }
+    assert!(b.is_resident() && !a.is_resident(), "the held guest stays although the other was used in more operations");
+    assert_eq!(compiles.load(Ordering::SeqCst), 5);
+    drop((held, holding));
+    residency_operation(&control, &a, b"a", 1, &compiles).await;
+    assert!(a.is_resident() && !b.is_resident(), "once released by its operation, the less used guest makes room");
+    let zero = residency_ledger(0);
+    let (c, zero_compiles) = (zero.register(1), AtomicUsize::new(0));
+    let first = control.context();
+    let shared = c.acquire(&first, || async { Ok::<_, AuthorityError>(b"c".to_vec()) }).await.unwrap();
+    let second = control.context();
+    let again = c.acquire(&second, || async { Ok::<_, AuthorityError>(b"never".to_vec()) }).await.unwrap();
+    assert!(Arc::ptr_eq(&shared, &again), "an operation that reaches a held guest shares its compile");
+    drop((shared, again, first, second));
+    residency_operation(&control, &c, b"c", 2, &zero_compiles).await;
+    assert_eq!(zero_compiles.load(Ordering::SeqCst), 1);
+    assert!(!c.is_resident() && zero.state().resident_guests == 0 && zero.state().admitted == 0, "a zero budget keeps nothing resident");
+}
+
+/// 🔁️ The scale law: twelve guests of different sizes, budget for a third of their bytes, sixty rounds of a
+/// round-robin where every operation makes three codec calls (a creation's genesis and two validations). After
+/// the first round the resident set never changes, every round compiles exactly the guests that do not fit —
+/// once per operation — every answer is its own guest's, and the resident charge never exceeds the budget once
+/// an operation ends. A pure least-recently-used ledger compiles every guest in every round of the same trace.
+#[tokio::test]
+async fn a_round_robin_over_more_guests_than_fit_keeps_a_stable_resident_set() {
+    const SIZES: [u64; 12] = [500, 300, 800, 200, 600, 400, 700, 100, 900, 300, 500, 200];
+    const BUDGET: u64 = 2_000;
+    const ROUNDS: usize = 60;
+    let (control, compiles) = (TestControl::new(), AtomicUsize::new(0));
+    let ledger = residency_ledger(BUDGET);
+    let slots: Vec<_> = SIZES.iter().map(|size| ledger.register(*size)).collect();
+    let sources: Vec<Vec<u8>> = (0..SIZES.len()).map(|index| format!("guest-{index}").into_bytes()).collect();
+    let (mut resident_sets, mut compiled_per_round, mut released_per_round) = (Vec::new(), Vec::new(), Vec::new());
+    for _ in 0..ROUNDS {
+        let before = compiles.load(Ordering::SeqCst);
+        for (slot, source) in slots.iter().zip(&sources) {
+            assert_eq!(residency_operation(&control, slot, source, 3, &compiles).await, Sha256::digest(source).to_vec(), "a guest answers from its own source, compiled again or not");
+            assert!(ledger.state().resident_bytes <= BUDGET, "the resident charge fits the budget once the operation ended");
+        }
+        compiled_per_round.push(compiles.load(Ordering::SeqCst) - before);
+        released_per_round.push(ledger.state().released);
+        resident_sets.push(slots.iter().map(GuestResidencyV1::is_resident).collect::<Vec<_>>());
+    }
+    let resident = resident_sets[1].iter().filter(|resident| **resident).count();
+    assert!(resident >= 2, "the budget holds several guests: {resident_sets:?}");
+    assert!(resident_sets[1..].windows(2).all(|pair| pair[0] == pair[1]), "the resident set is stable after the first round");
+    assert!(compiled_per_round[1..].iter().all(|compiled| *compiled == SIZES.len() - resident), "each round compiles exactly the guests that do not fit: {compiled_per_round:?}");
+    assert!(released_per_round.windows(2).skip(1).all(|pair| pair[0] == pair[1]), "no resident guest is released after the first round: {released_per_round:?}");
+    let mut lru: Vec<usize> = Vec::new();
+    let mut lru_compiles_per_round = Vec::new();
+    for _ in 0..ROUNDS {
+        let mut compiled = 0;
+        for (index, size) in SIZES.iter().enumerate() {
+            if let Some(at) = lru.iter().position(|resident| *resident == index) {
+                lru.remove(at);
+            } else {
+                compiled += 1;
+                while lru.iter().map(|resident| SIZES[*resident]).sum::<u64>() + size > BUDGET && !lru.is_empty() {
+                    lru.remove(0);
+                }
+            }
+            lru.push(index);
+        }
+        lru_compiles_per_round.push(compiled);
+    }
+    assert!(lru_compiles_per_round[1..].iter().all(|compiled| *compiled == SIZES.len()), "the same trace thrashes a pure LRU ledger: {lru_compiles_per_round:?}");
+}
+
+/// 🌊️ A workload that moved on displaces the guests it left: after a long round-robin, two guests that were
+/// never resident become resident within a bounded number of operations (use counts age), and from then on
+/// their operations compile nothing.
+#[tokio::test]
+async fn a_workload_that_moved_on_displaces_the_guests_it_left() {
+    const SIZES: [u64; 8] = [400, 400, 400, 400, 400, 400, 400, 400];
+    let (control, compiles) = (TestControl::new(), AtomicUsize::new(0));
+    let ledger = residency_ledger(1_600);
+    let slots: Vec<_> = SIZES.iter().map(|size| ledger.register(*size)).collect();
+    for _ in 0..40 {
+        for (index, slot) in slots.iter().enumerate() {
+            residency_operation(&control, slot, &[index as u8], 1, &compiles).await;
+        }
+    }
+    let cold: Vec<usize> = (0..SIZES.len()).filter(|index| !slots[*index].is_resident()).take(2).collect();
+    assert_eq!(cold.len(), 2);
+    let aging = TRUSTED_CATALOG_GUEST_RESIDENCY.access_count_aging_per_guest as usize * SIZES.len();
+    let mut operations = 0;
+    while !(slots[cold[0]].is_resident() && slots[cold[1]].is_resident()) {
+        assert!(operations < 2 * aging, "the new workload became resident within two aging windows");
+        residency_operation(&control, &slots[cold[operations % 2]], &[cold[operations % 2] as u8], 1, &compiles).await;
+        operations += 1;
+    }
+    let settled = compiles.load(Ordering::SeqCst);
+    for operation in 0..20 {
+        residency_operation(&control, &slots[cold[operation % 2]], &[cold[operation % 2] as u8], 1, &compiles).await;
+    }
+    assert_eq!(compiles.load(Ordering::SeqCst), settled, "the new workload's operations compile nothing once resident");
+}
+
+/// 🤝️ Operations that reach one guest at once share its single compile, and each of them is a use: eight
+/// concurrent operations outnumber the two of a resident guest, so the shared compile is admitted in its place.
+#[tokio::test]
+async fn concurrent_operations_share_one_compile() {
+    let control = TestControl::new();
+    let compiles = AtomicUsize::new(0);
+    let ledger = residency_ledger(1_000);
+    let (hot, cold) = (ledger.register(1_000), ledger.register(1_000));
+    for _ in 0..2 {
+        residency_operation(&control, &hot, b"hot", 1, &compiles).await;
+    }
+    let barrier = tokio::sync::Barrier::new(8);
+    let operations = (0..8).map(|_| async {
+        let context = control.context();
+        let value = cold
+            .acquire(&context, || async {
+                compiles.fetch_add(1, Ordering::SeqCst);
+                Ok::<_, AuthorityError>(b"cold".to_vec())
+            })
+            .await
+            .unwrap();
+        barrier.wait().await;
+        value
+    });
+    let answers = futures::future::join_all(operations).await;
+    assert!(answers.windows(2).all(|pair| Arc::ptr_eq(&pair[0], &pair[1])), "every concurrent operation holds the same compile");
+    assert_eq!(compiles.load(Ordering::SeqCst), 2, "one compile for the resident guest, one shared by eight operations");
+    assert!(cold.is_resident() && !hot.is_resident(), "the guest eight operations used displaced the one two used");
 }
 
 /// 🧵️ A guest codec call interprets on the blocking pool, never on the worker awaiting it: another
@@ -187,7 +368,6 @@ fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
             }
             outcome => panic!("unknown bounded wire outcome {outcome}"),
         }
-        eprintln!("[DEBUG] bounded-descriptor-wire case={}", row["id"]);
     }
     let mut amplified = Vec::new();
     os_store::pack_rt::write_varint_u64(&mut amplified, 1);
@@ -965,6 +1145,9 @@ async fn loader_retains_exact_bytes_and_independent_identities_before_atomic_cod
 /// selected digest: it answers only for the exact descriptor/role/surface the catalog itself
 /// resolves, only while the caller-observed generation is still this catalog's own, and the
 /// bytes it returns are the very bytes whose SHA-256/BLAKE3 the selection projects.
+///
+/// 🔁 A rotated (or merely guessed) generation is never served, and no role, surface or
+/// descriptor substitution reaches bytes.
 #[tokio::test]
 async fn selected_execution_target_assets_are_generation_and_digest_bound() {
     let fixture = prepared_fixture();
@@ -1001,8 +1184,6 @@ async fn selected_execution_target_assets_are_generation_and_digest_bound() {
     assert_eq!(actor.as_ref(), b"abc");
     assert_eq!(assets.selection.browser_actor, retained.browser_actor);
     assert!(assets.component.byte_length() <= TRUSTED_COMPONENT_MAX_BYTES && assets.descriptor.len() as u64 <= TRUSTED_DESCRIPTOR_MAX_BYTES);
-    // 🔁 A rotated (or merely guessed) generation is never served, and no role, surface or
-    // descriptor substitution reaches bytes.
     assert!(catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#editor"), true, &"ab".repeat(32)).is_none());
     assert!(catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#editor"), false, &generation).is_none());
     assert!(catalog.assets_for_current_selection(&descriptor, Some("s.fixture.document@1/*#viewer"), true, &generation).is_none());
@@ -1063,7 +1244,6 @@ async fn verified_trusted_catalog_document_open_generation_and_resolution_are_ex
         let changed_generation = trusted_profile_generation(&changed, &changed.profiles[0]).unwrap();
         assert_ne!(changed_generation, catalog.generation_id(), "catalog binds parent {field}");
     }
-    eprintln!("[DEBUG] trusted open catalog retained verified editor/viewer parent dialect;3 field changes alter generation");
     assert!(catalog.resolve_document_open(&descriptor, Some("s.fixture.document@1/*#viewer"), true).is_none());
     assert!(catalog.resolve_document_open(&descriptor, Some("foreign"), false).is_none());
     let roles: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️identity-roles/🔣️.json")).unwrap();
@@ -1146,7 +1326,6 @@ async fn trusted_browser_actor_loader_verifies_retains_and_cancels_before_public
             assert!(matches!(result, Err(AuthorityError::Cancelled)));
         }
     }
-    eprintln!("[DEBUG] trusted browser actor loader:8 neutral body/cancellation vectors; retained synthetic bytes never executed");
 }
 
 #[tokio::test]
@@ -1314,8 +1493,17 @@ async fn all_trust_failures_precede_activation_and_have_bounded_diagnostics() {
     assert!(document_codec(&descriptor_mutation.schema).await.expect("codec registry").is_none());
 
     let missing = prepared_fixture();
-    let error = expect_load_error(&missing, &[], &control).await;
-    assert!(error.to_string().contains(&missing.schema), "a declared codec row no provider answers for is pinned against the component and names its own schema: {error}");
+    let context = control.context();
+    let loaded = load_fixture(&missing, &[], &context).await.expect("a row no provider answers for loads and waits for its component's answer");
+    let owner = loaded.codecs.iter().find(|codec| codec.identity.artifact_schema == missing.schema).expect("the pending row's codec");
+    let staged = |catalog: &VerifiedTrustedCatalog| catalog.load_progress().packages[owner.guest.component.position].phase;
+    assert_eq!(staged(&loaded), TrustedCatalogPackagePhaseV1::Staged, "nothing interpreted the component during the load");
+    let error = owner.guest.genesis("fixture-document", &context).await.expect_err("no codec call runs before its rows are pinned");
+    assert!(error.to_string().contains(&missing.schema), "the refusal names the row it was pinning: {error}");
+    assert_eq!(staged(&loaded), TrustedCatalogPackagePhaseV1::Refused);
+    loaded.verify_pending_guests(&context).await.expect("a refused package does not stop the background pass");
+    assert_eq!(loaded.load_progress().packages_refused, 1);
+    assert!(owner.guest.genesis("fixture-document", &context).await.expect_err("a refused package refuses every call").to_string().contains(&missing.schema));
     assert!(document_codec(&missing.schema).await.expect("codec registry").is_none());
 
     let wrong_package = prepared_fixture();
@@ -1350,6 +1538,209 @@ async fn all_trust_failures_precede_activation_and_have_bounded_diagnostics() {
     assert_eq!(expect_load_error(&cancelled, &[cancelled.binding()], &control).await, AuthorityError::Cancelled);
     assert!(document_codec(&cancelled.schema).await.expect("codec registry").is_none());
     assert!(catalog_error("x".repeat(AUTHORITY_MAX_DIAGNOSTIC_BYTES * 2)).to_string().len() <= AUTHORITY_MAX_DIAGNOSTIC_BYTES + 40);
+}
+
+/// 🧩️ A real owned-ABI guest, one memory page and the fourteen owned exports: `pack-schema-hash` answers `answer`,
+/// `genesis` answers the pair `([1, 2, 3], [4, 5])`, every other export answers nothing. Built byte by byte (the
+/// interpreter's own component framing), so a law runs the production interpreter without a plugin build.
+fn owned_test_guest(answer: [u8; 32]) -> Vec<u8> {
+    fn uleb(mut value: u64, output: &mut Vec<u8>) {
+        loop {
+            let byte = (value & 0x7f) as u8;
+            value >>= 7;
+            output.push(if value == 0 { byte } else { byte | 0x80 });
+            if value == 0 {
+                return;
+            }
+        }
+    }
+    fn sleb(mut value: i64, output: &mut Vec<u8>) {
+        loop {
+            let byte = (value & 0x7f) as u8;
+            value >>= 7;
+            let done = (value == 0 && byte & 0x40 == 0) || (value == -1 && byte & 0x40 != 0);
+            output.push(if done { byte } else { byte | 0x80 });
+            if done {
+                return;
+            }
+        }
+    }
+    fn section(id: u8, payload: Vec<u8>, output: &mut Vec<u8>) {
+        output.push(id);
+        uleb(payload.len() as u64, output);
+        output.extend(payload);
+    }
+    let hash_output = format!("{{\"Ok\":{}}}", serde_json::to_string(&answer.to_vec()).unwrap()).into_bytes();
+    let genesis_output = br#"{"Ok":{"pack":[1,2,3],"spr":[4,5]}}"#.to_vec();
+    let returning = |offset: i64, output: &[u8]| {
+        let mut body = vec![0x00, 0x42];
+        sleb(((output.len() as i64) << 32) | offset, &mut body);
+        body.push(0x0b);
+        body
+    };
+    let exports = semio_framework_plugin_host::interpreter::OwnedSemioExport::ALL;
+    let (types, bodies): (Vec<u8>, Vec<Vec<u8>>) = exports
+        .iter()
+        .map(|export| match export {
+            semio_framework_plugin_host::interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
+            semio_framework_plugin_host::interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
+            semio_framework_plugin_host::interpreter::OwnedSemioExport::Checkpoint | semio_framework_plugin_host::interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
+            semio_framework_plugin_host::interpreter::OwnedSemioExport::PackSchemaHash => (3, returning(1024, &hash_output)),
+            semio_framework_plugin_host::interpreter::OwnedSemioExport::Genesis => (3, returning(2048, &genesis_output)),
+            _ => (3, vec![0x00, 0x42, 0x00, 0x0b]),
+        })
+        .unzip();
+    let mut core = b"\0asm\x01\0\0\0".to_vec();
+    section(1, vec![4, 0x60, 1, 0x7f, 1, 0x7f, 0x60, 2, 0x7f, 0x7f, 0, 0x60, 0, 1, 0x7e, 0x60, 2, 0x7f, 0x7f, 1, 0x7e], &mut core);
+    let mut functions = Vec::new();
+    uleb(types.len() as u64, &mut functions);
+    functions.extend(&types);
+    section(3, functions, &mut core);
+    section(5, vec![1, 0x00, 1], &mut core);
+    let mut export_section = Vec::new();
+    uleb(exports.len() as u64 + 1, &mut export_section);
+    export_section.push(6);
+    export_section.extend(b"memory");
+    export_section.extend([2, 0]);
+    for (index, export) in exports.iter().enumerate() {
+        uleb(export.core_name().len() as u64, &mut export_section);
+        export_section.extend(export.core_name().as_bytes());
+        export_section.push(0);
+        uleb(index as u64, &mut export_section);
+    }
+    section(7, export_section, &mut core);
+    let mut code = Vec::new();
+    uleb(bodies.len() as u64, &mut code);
+    for body in &bodies {
+        uleb(body.len() as u64, &mut code);
+        code.extend(body);
+    }
+    section(10, code, &mut core);
+    let mut data = vec![2];
+    for (offset, output) in [(1024i64, &hash_output), (2048, &genesis_output)] {
+        data.extend([0x00, 0x41]);
+        sleb(offset, &mut data);
+        data.push(0x0b);
+        uleb(output.len() as u64, &mut data);
+        data.extend(output.iter());
+    }
+    section(11, data, &mut core);
+    let mut component = b"\0asm\x0d\0\x01\0".to_vec();
+    section(1, core, &mut component);
+    component
+}
+
+/// 🧩️ Replaces the fixture editor package's component with [`owned_test_guest`] answering `answer`, leaving its one
+/// codec row (`0x11 × 32`) to be pinned against the guest: no provider binds it.
+fn install_owned_guest(fixture: &mut FixtureDirectory, answer: [u8; 32]) {
+    let bytes = owned_test_guest(answer);
+    std::fs::write(fixture.component_path(0), &bytes).expect("owned guest component");
+    let sha256 = hex_lower(&Sha256::digest(&bytes));
+    let mut blake3 = Hasher::new();
+    blake3.update(&bytes);
+    let component = &mut fixture.bundle["packages"][0]["component"];
+    component["byteLength"] = bytes.len().into();
+    component["sha256"] = sha256.clone().into();
+    component["blake3"] = hex_lower(blake3.finalize().as_bytes()).into();
+    fixture.bundle["packages"][0]["browserActor"]["sourceComponentSha256"] = sha256.into();
+    let schema = fixture.schema.clone();
+    fixture.rewrite_descriptor(0, Some(&schema), Some(("fixture.base", "1.0.0")));
+}
+
+/// 🔐️ LAW (coordinator, session 13): no codec call is ever served from a row its component has not answered as the trust
+/// record says — not before the background pass reached it (the first call verifies it itself), not after the guest was
+/// released and compiled again (zero residency budget: every operation compiles, the row is verified once), and not from
+/// component bytes that changed after the verification. A guest that answers differently refuses every call of its
+/// package. Runs the production interpreter on a real owned-ABI guest ([`owned_test_guest`]).
+#[tokio::test]
+async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
+    let control = TestControl::new();
+    let answered = |fixture: &FixtureDirectory, catalog: &VerifiedTrustedCatalog| catalog.codecs.iter().position(|codec| codec.identity.artifact_schema == fixture.schema).expect("the fixture row's codec");
+    let mut fixture = prepared_fixture();
+    install_owned_guest(&mut fixture, [0x11; 32]);
+    let catalog = load_fixture(&fixture, &[], &control.context()).await.expect("a catalog whose row waits for its guest");
+    catalog.configure_guest_residency(TrustedCatalogGuestResidencyV1 { resident_component_bytes: 0, ..TRUSTED_CATALOG_GUEST_RESIDENCY });
+    let owner = &catalog.codecs[answered(&fixture, &catalog)];
+    let position = owner.guest.component.position;
+    assert_eq!(catalog.load_progress().packages[position].phase, TrustedCatalogPackagePhaseV1::Staged);
+    let first = owner.guest.genesis("document-1", &control.context()).await.expect("the row answers as recorded, then the call is served");
+    assert_eq!((first.pack.clone(), first.spr.clone()), (vec![1, 2, 3], vec![4, 5]));
+    let progress = catalog.load_progress();
+    assert_eq!((progress.packages[position].phase, progress.rows_verified), (TrustedCatalogPackagePhaseV1::Ready, 1));
+    assert_eq!(catalog.guest_residency().resident_guests, 0, "a zero budget released the guest with its operation");
+    let again = owner.guest.genesis("document-1", &control.context()).await.expect("a released guest compiles again and is served");
+    assert_eq!((again.pack, again.spr), (first.pack, first.spr), "the reloaded guest answers the same");
+    let residency = catalog.guest_residency();
+    assert_eq!((residency.compiles, residency.admitted), (2, 0), "the row was verified once; the second operation compiled again");
+    assert_eq!(catalog.load_progress().rows_verified, 1);
+    std::fs::write(fixture.component_path(0), owned_test_guest([0x11; 32]).iter().rev().copied().collect::<Vec<u8>>()).expect("tamper the verified component");
+    assert!(owner.guest.genesis("document-1", &control.context()).await.is_err(), "bytes that changed after the verification are never compiled, so never served");
+
+    let mut lying = prepared_fixture();
+    install_owned_guest(&mut lying, [0x22; 32]);
+    let refused = load_fixture(&lying, &[], &control.context()).await.expect("a catalog whose guest will answer differently");
+    let liar = &refused.codecs[answered(&lying, &refused)];
+    let error = liar.guest.genesis("document-1", &control.context()).await.expect_err("a row answered differently is never served");
+    assert!(error.to_string().contains("differs from its trust record"), "{error}");
+    refused.verify_pending_guests(&control.context()).await.expect("the background pass records the refusal and moves on");
+    assert_eq!(refused.load_progress().packages_refused, 1);
+    assert!(liar.guest.genesis("document-2", &control.context()).await.is_err(), "the refusal is permanent for the catalog");
+
+    let mut background = prepared_fixture();
+    install_owned_guest(&mut background, [0x11; 32]);
+    let verified = load_fixture(&background, &[], &control.context()).await.expect("a catalog verified in the background");
+    verified.verify_pending_guests(&control.context()).await.expect("background pass");
+    let progress = verified.load_progress();
+    assert_eq!((progress.packages_ready, progress.packages_total, progress.rows_verified), (progress.packages_total, 2, 1));
+    let served = &verified.codecs[answered(&background, &verified)];
+    assert!(served.guest.genesis("document-1", &control.context()).await.is_ok());
+}
+
+/// 📈️ A catalog load reports every selected package into the host's progress cell — phase, component bytes and
+/// codec rows — and the counts add up: a load whose rows a linked codec pins ends with every package ready,
+/// every component byte read and no row interpreted; the body is exactly `TrustedCatalogLoadProgressV1`.
+#[tokio::test]
+async fn a_catalog_load_reports_every_package_phase_bytes_and_rows_into_the_hosts_cell() {
+    struct ObservedControl(Arc<TrustedCatalogLoadProgressCellV1>);
+    impl AuthorityOperationControl for ObservedControl {
+        fn now_ms(&self) -> u64 {
+            0
+        }
+
+        fn is_cancelled(&self) -> bool {
+            false
+        }
+
+        fn report(&self, _progress: AuthorityProgress) {}
+
+        fn catalog_progress(&self) -> Option<Arc<TrustedCatalogLoadProgressCellV1>> {
+            Some(Arc::clone(&self.0))
+        }
+    }
+    let fixture = prepared_fixture();
+    let control = ObservedControl(Arc::default());
+    let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
+    let catalog = load_fixture(&fixture, &[fixture.binding()], &context).await.expect("fixture catalog");
+    let observed = control.0.snapshot();
+    assert_eq!(observed, catalog.load_progress(), "the catalog keeps reporting into the host's cell");
+    assert!(observed.packages_total >= 1 && observed.packages.len() as u64 == observed.packages_total);
+    assert_eq!(observed.packages_ready, observed.packages_total, "{observed:?}");
+    assert_eq!((observed.packages_refused, observed.rows_verified), (0, 0));
+    assert_eq!(observed.component_bytes_read, observed.component_bytes_total);
+    assert_eq!(observed.rows_pinned, observed.rows_total);
+    assert_eq!(observed.rows_total, observed.packages.iter().map(|package| package.rows).sum::<u64>());
+    catalog.verify_pending_guests(&context).await.expect("nothing is pending");
+    let module: serde_json::Value = serde_json::from_str(schema::TRUSTED_CATALOG_SCHEMA_JSON).unwrap();
+    let fields = |def: &str| module["$defs"][def]["required"].as_array().unwrap().iter().map(|field| field.as_str().unwrap().to_string()).collect::<BTreeSet<_>>();
+    let body = serde_json::to_value(&observed).unwrap();
+    assert_eq!(body.as_object().unwrap().keys().cloned().collect::<BTreeSet<_>>(), fields("TrustedCatalogLoadProgressV1"));
+    assert_eq!(body["packages"][0].as_object().unwrap().keys().cloned().collect::<BTreeSet<_>>(), fields("TrustedCatalogPackageProgressV1"));
+    let phases: Vec<String> = module["$defs"]["TrustedCatalogPackagePhaseV1"]["enum"].as_array().unwrap().iter().map(|phase| phase.as_str().unwrap().to_string()).collect();
+    let spelled: Vec<String> = [TrustedCatalogPackagePhaseV1::Pending, TrustedCatalogPackagePhaseV1::Reading, TrustedCatalogPackagePhaseV1::Staged, TrustedCatalogPackagePhaseV1::Verifying, TrustedCatalogPackagePhaseV1::Ready, TrustedCatalogPackagePhaseV1::Refused]
+        .iter()
+        .map(|phase| serde_json::to_value(phase).unwrap().as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(spelled, phases);
 }
 
 #[tokio::test]
@@ -1461,7 +1852,7 @@ fn trusted_profile_generation_binds_zero_target_package_and_every_codec_row() {
 }
 
 #[test]
-fn local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map_editor_and_viewer() {
+fn local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_opens_every_package_target() {
     let bundle = local_stdio_gis_profile_bundle();
     let selected = validate_bundle(&bundle, "local-stdio-gis-open-v1").expect("closed stdio+GIS profile");
     assert_eq!(selected.package_indices.len(), 2);
@@ -1489,12 +1880,66 @@ fn local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map
     target.surface_id = "s.gis.gisterrain@1/*#editor".into();
     target.app_id = target.surface_id.clone();
     target.parent_dialect.artifact_kind = target.artifact_kind.clone();
-    terrain_target.packages[0].open_targets.push(target);
-    assert!(validate_bundle(&terrain_target, "local-stdio-gis-open-v1").expect_err("Terrain target").to_string().contains("exact closed"));
+    terrain_target.packages[0].open_targets.push(target.clone());
+    assert!(validate_bundle(&terrain_target, "local-stdio-gis-open-v1").expect_err("a package target the profile does not open").to_string().contains("exact closed"));
+    let package = terrain_target.profiles[0].open_targets[0].package.clone();
+    terrain_target.profiles[0].open_targets.push(TrustedBundleProfileOpenTargetV1 { package, target });
+    terrain_target.profiles[0].generation_id = trusted_profile_generation(&terrain_target, &terrain_target.profiles[0]).expect("profile generation");
+    assert!(validate_bundle(&terrain_target, "local-stdio-gis-open-v1").is_ok(), "the terrain target the one rule admits is opened by the profile");
 
     let mut reordered = local_stdio_gis_profile_bundle();
     reordered.profiles[0].selected_closure.reverse();
     assert!(validate_bundle(&reordered, "local-stdio-gis-open-v1").expect_err("noncanonical closure").to_string().contains("canonical"));
+}
+
+/// 🧭️ Editors of committed descriptors that author no persisted document of their own, each with the reason; every
+/// other editor surface must open at least one kind through the one rule (coordinator decision, session 12).
+const EDITORS_WITHOUT_A_DOCUMENT: [(&str, &str); 3] = [
+    ("s.space.home@1/*#editor", "the launcher: its snapshot holds only the catalog generation it lists (`SHomeSnapshot { schema, catalog_generation }`), never user content"),
+    ("s.space.studio@1/*#editor", "the `s` shell's studio: it edits the running shell's OS-owned workflow (`semio_framework_os::WorkflowSnapshot`) and has no artifact kind of its own"),
+    ("s.playbook.procedural@1/*#editor", "a `playbook.blockKind` module: its snapshot is the host playbook block's render payload (foreign document codec), never a document of its own"),
+];
+
+/// 🗺️ LAW (census): every editor surface of every committed, isolated package descriptor opens at least one artifact
+/// kind through [`descriptor_open_targets`], so every document kind with an editor is creatable and openable over the
+/// hub; the only exceptions are [`EDITORS_WITHOUT_A_DOCUMENT`], and each of those must still exist.
+#[test]
+fn every_committed_editor_that_edits_a_document_opens_a_kind_through_the_one_rule() {
+    let mut pending = vec![PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../✏️s/🔌️plugins")];
+    let mut descriptors = Vec::new();
+    while let Some(directory) = pending.pop() {
+        for entry in std::fs::read_dir(&directory).unwrap_or_else(|error| panic!("{}: {error}", directory.display())) {
+            let path = entry.expect("plugin tree entry").path();
+            if path.is_dir() && !matches!(path.file_name().and_then(|name| name.to_str()), Some("dist" | "target" | "node_modules")) {
+                pending.push(path);
+            } else if path.file_name().and_then(|name| name.to_str()) == Some("🛂️.descriptor.semio") {
+                descriptors.push(path);
+            }
+        }
+    }
+    let (mut editors, mut unopened, mut shells) = (0usize, Vec::new(), std::collections::BTreeSet::new());
+    for path in &descriptors {
+        let descriptor = decode_package_descriptor(&std::fs::read(path).expect("committed descriptor")).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+        if descriptor.execution != semio_framework::ExecutionMode::Isolated {
+            continue;
+        }
+        let opened = descriptor_open_targets(&descriptor).into_iter().map(|target| target.surface_id).collect::<std::collections::BTreeSet<_>>();
+        for app in descriptor.manifest.apps.iter().filter(|app| app.role == semio_framework::AppRole::Editor && app.id == semio_framework::surface_app_id(&app.dialect, app.role)) {
+            editors += 1;
+            if opened.contains(&app.id) {
+                continue;
+            }
+            match EDITORS_WITHOUT_A_DOCUMENT.iter().find(|(surface, _)| *surface == app.id) {
+                Some((surface, _)) => {
+                    shells.insert(*surface);
+                }
+                None => unopened.push(format!("{} ({})", app.id, path.display())),
+            }
+        }
+    }
+    assert!(editors > 0, "no committed editor surface found");
+    assert!(unopened.is_empty(), "{} of {editors} editor surfaces open no kind: {unopened:#?}", unopened.len());
+    assert_eq!(shells.len(), EDITORS_WITHOUT_A_DOCUMENT.len(), "every allow-listed shell still exists and still opens nothing: {shells:?}");
 }
 
 mod long {
@@ -1563,7 +2008,6 @@ mod long {
         for schema in &schemas {
             before.push(document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)));
         }
-        eprintln!("[DEBUG] linked-catalog initial-public-codecs={}", before.iter().filter(|codec| codec.is_some()).count());
         for row in corpus["atomicCases"].as_array().unwrap() {
             fixture.bundle = baseline.clone();
             for (index, (path, bytes)) in originals.iter().enumerate() {
@@ -1625,7 +2069,6 @@ mod long {
                     assert_eq!(&document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), prior, "partial public codec after {change}: {schema}");
                 }
             }
-            eprintln!("[DEBUG] linked-catalog atomic-case={change} successful-private-previews={}", previews.len());
         }
     }
 }

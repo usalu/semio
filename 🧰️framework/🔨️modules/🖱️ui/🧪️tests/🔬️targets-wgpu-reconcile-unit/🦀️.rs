@@ -131,6 +131,7 @@ fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
         drag_data: None,
         items: None,
         control: None,
+        inline_toolbar: None, detail: None,
         dimmed: None,
         menu: None,
     }
@@ -242,6 +243,7 @@ fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         window: None,
         granularity: None,
         control: Some(UiControlNode::Toggle(UiToggleNode { appearance: ui_contract::ToggleAppearance::Button, id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
+        inline_toolbar: None, detail: None,
         actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu) }]),
         ..tree_item("leaf", "Leaf")
     };

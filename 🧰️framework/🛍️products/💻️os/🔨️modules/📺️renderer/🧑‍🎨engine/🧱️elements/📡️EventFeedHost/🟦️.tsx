@@ -12,6 +12,7 @@ import { cn, ContextMenuController, Icon, interactiveHoverFillClass, useLabel, t
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
+import { formatHostTemporalValueV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🕰️host-temporal-format/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️EventFeedHost
@@ -26,14 +27,6 @@ const FEED_TONE_CLASS: Record<string, string> = {
    * CLASS-CONFLICTS` §C1) — bolder than plain `error` since a fatal outcome never partially applied. */
   fatal: "text-destructive font-semibold",
 };
-
-function formatFeedTimestamp(timestampMs: number): string {
-  try {
-    return new Date(timestampMs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  } catch {
-    return "";
-  }
-}
 
 /** ⚖️ Mints one {@link EventFeedEntry} from a `MutationMessage` (contract freeze §C2/§C9) — `tone`
  * follows `level` 1:1 (`FEED_TONE_CLASS` covers all four, including `fatal`), `title` stays the raw
@@ -130,7 +123,9 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-single">
               <span className={cn("truncate text-xs font-medium", entry.tone ? FEED_TONE_CLASS[entry.tone] : undefined)}>{entry.title}</span>
-              <span className="text-muted-foreground ml-auto shrink-0 text-[10px] tabular-nums">{formatFeedTimestamp(entry.timestampMs)}</span>
+              <span className="text-muted-foreground ml-auto shrink-0 text-[10px] tabular-nums">
+                {formatHostTemporalValueV1({ id: entry.id, source: { kind: "epochMs", timestampMs: entry.timestampMs }, format: "time" }, Date.now())}
+              </span>
             </div>
             {entry.detail ? <p className="text-muted-foreground truncate text-xs">{entry.detail}</p> : null}
           </div>

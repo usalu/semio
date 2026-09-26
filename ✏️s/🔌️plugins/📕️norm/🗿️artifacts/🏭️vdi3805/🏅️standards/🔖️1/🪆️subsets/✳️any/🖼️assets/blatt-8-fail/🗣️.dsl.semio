@@ -1,0 +1,42 @@
+semio norm.vdi3805.dsl v1
+strict-mode=false catalog=file=header-version="3805" manufacturer=DEMO created="2023-06-01" charset=UTF-8 record-count=0 building-system-number=system-code="420" subsystem="10" sequence=1 extensions=fields={
+}
+extensions=fields={
+}
+products [id:TEXT identity:REC title:TABLE sheet:UINT records:TABLE configuration:REC accessories:TABLE components:TABLE extensions:REC] {
+  FIT-80 {manufacturer-code=DEMO product-group=FIT article-number=FIT-80} [ {locale=de text="Armatur DN80"} {locale=en text="Fitting DN80"} ] 8 [ {family="100" fields=[ "100" DEMO FIT FIT-80 "8" ] extensions=fields={
+  }
+  } {family="210" fields=[ "210" dn "-1" pressure_class INVALID product_group FIT type_code INVALID ] extensions=fields={
+  }
+  } {family="700" fields=[ "700" de "Armatur DN80" en "Fitting DN80" ] extensions=fields={
+  }
+  } ] {id=cfg.FIT-80 attributes={
+    entries=[ {
+      key="product_group" unit=null value="FIT"
+    }
+ {
+      key="type_code" unit=null value="INVALID"
+    }
+ {
+      key="dn" unit=null value="-1"
+    }
+ {
+      key="pressure_class" unit=null value="INVALID"
+    }
+    ] kind="generic"
+  }
+  function-refs=[ ]} [ ] [ ] {fields={
+  }
+  }
+}
+edition-profile={
+}
+correction-as-of=year=2024 month=1 index=
+entries [product-id:TEXT sheet:UINT tags:LIST dn:UINT] {
+  FIT-80 8 [ "Armatur DN80" "Fitting DN80" ] _
+}
+geometry={
+}
+curves={
+}
+limits=max-file-bytes=16777216 max-records=100000 max-field-length=8192 max-nesting-depth=32

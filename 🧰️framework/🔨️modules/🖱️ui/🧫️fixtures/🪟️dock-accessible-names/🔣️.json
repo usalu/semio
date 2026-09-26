@@ -1,0 +1,37 @@
+{
+  "schema": "dock-accessible-names-v1",
+  "windows": [
+    {
+      "id": "pane-top",
+      "title": "Top"
+    },
+    {
+      "id": "pane-perspective",
+      "title": "Perspective"
+    }
+  ],
+  "locales": [
+    {
+      "id": "en",
+      "focus": "Focus",
+      "unfocus": "Unfocus",
+      "close": "Close",
+      "drag": "Click and hold left click to drag {{target}}"
+    },
+    {
+      "id": "de",
+      "focus": "Fokussieren",
+      "unfocus": "Fokus aufheben",
+      "close": "Schließen",
+      "drag": "Linksklick gedrückt halten, um {{target}} zu ziehen"
+    }
+  ],
+  "publication": "accepted-frame",
+  "semantics": {
+    "tabRole": "tab",
+    "panelRole": "tabpanel",
+    "selected": true,
+    "panelActionable": false
+  },
+  "stackedActiveId": "pane-top"
+}

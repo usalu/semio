@@ -160,7 +160,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.las".into(),
+        id: "s.stdio.las".into(),
         name: "Las".into(),
         source_format: STDIO_LAS_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

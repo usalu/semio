@@ -19,7 +19,21 @@ fn alloy_table_3_2_6082_t6() {
     assert!((a.f_o_pa - 260.0e6).abs() < 1.0);
     assert!((a.rho_o_haz - 0.64).abs() < 1e-9);
     assert!(a.buckling_class_a);
+    let (des, row) = part_1_1::CATALOGUE_ALLOY_ROWS.iter().find(|(d, _)| *d == "aw6082-t6").expect("catalogue row");
+    assert_eq!(*des, "aw6082-t6");
+    assert!((row.f_o_pa - a.f_o_pa).abs() < 1.0);
+    let snap = En1999Snapshot::compliant_roof_purlin();
+    assert_eq!(snap.materials[0].designation, "aw6082-t6");
+    let report = evaluate_structure(&snap);
+    let n = report.checks.iter().find(|c| c.id.contains("6.2.3.n.purlin-1")).expect("N_Rd check");
+    let n_rd = n.limit.value;
+    assert!(n_rd > 1.0, "N_Rd must be positive for aw6082-t6 member");
+    let section = snap.sections.iter().find(|s| s.id == snap.members[0].section_id).unwrap();
+    let a_eff = part_1_1::effective_area(section, row.f_o_pa, true, row.rho_o_haz, row.rho_u_haz);
+    let expected = a_eff * row.f_o_pa / na_de::AnnexParams::de().gamma_m1;
+    assert!((n_rd - expected).abs() / expected.max(1.0) < 1e-9, "N_Rd limit {n_rd} must equal catalogue-based {expected}");
 }
+
 
 #[test]
 fn alloy_5083_class_b() {
@@ -112,9 +126,20 @@ fn cold_formed_and_shells_evaluate_when_present() {
         thickness: 0.0025,
         width: 0.20,
         span: 1.2,
-        m_ed: 400.0,
-        n_ed: 0.0,
         welded: false,
+        actions: vec![crate::snapshot::MemberAction {
+            id: "G".into(),
+            kind: "permanent".into(),
+            category: "self".into(),
+            source: "external".into(),
+            g_k_line: 0.0,
+            q_k_line: 0.0,
+            n_k: 0.0,
+            v_y_k: 0.0,
+            v_z_k: 0.0,
+            m_y_k: 400.0 / 1.35,
+            m_z_k: 0.0,
+        }],
     });
     doc.shells.push(crate::snapshot::AluminiumShell {
         id: "shell-1".into(),
@@ -122,8 +147,19 @@ fn cold_formed_and_shells_evaluate_when_present() {
         radius: 0.60,
         thickness: 0.008,
         length: 2.0,
-        sigma_x_ed: 20.0e6,
-        sigma_theta_ed: 40.0e6,
+        actions: vec![crate::snapshot::MemberAction {
+            id: "G".into(),
+            kind: "permanent".into(),
+            category: "self".into(),
+            source: "external".into(),
+            g_k_line: 0.0,
+            q_k_line: 0.0,
+            n_k: 20.0e6 / 1.35,
+            v_y_k: 0.0,
+            v_z_k: 0.0,
+            m_y_k: 40.0e6 / 1.35,
+            m_z_k: 0.0,
+        }],
     });
     let report = evaluate_structure(&doc);
     assert!(report.checks.iter().any(|c| c.id.contains("1-4.")));
@@ -417,13 +453,64 @@ fn facet_field_names_match_snapshot_json_schema() {
 }
 
 #[test]
+fn facet_diff_matches_rust() {
+    let diff_ts = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🟦️.ts")).unwrap_or_default();
+    let diff_gql = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🔗️.graphql")).unwrap_or_default();
+    let diff_proto = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🛰️.proto")).unwrap_or_default();
+    for field in ["artifact", "annex", "materials", "sections", "members", "connections", "fireScenarios", "fatigueDetails", "coldFormed", "shells"] {
+        assert!(diff_ts.contains(field), "diff TS missing {field}");
+        assert!(diff_gql.contains(field), "diff GraphQL missing {field}");
+    }
+    for field in ["artifact", "annex", "materials", "sections", "members", "connections", "fire_scenarios", "fatigue_details", "cold_formed", "shells"] {
+        assert!(diff_proto.contains(field), "diff proto missing {field}");
+    }
+    for stale in ["nEdKn", "mEdKnm", "chi?:", "sheetMEdKnm", "sigmaEdShellMpa", "n_ed_kn", "sigma_ed_shell_mpa", "double chi", "chi:"] {
+        assert!(!diff_ts.contains(stale), "diff TS still has stale scalar {stale}");
+        assert!(!diff_gql.contains(stale), "diff GraphQL still has stale scalar {stale}");
+        assert!(!diff_proto.contains(stale), "diff proto still has stale scalar {stale}");
+    }
+}
+
+#[test]
+fn facet_mutations_match_kinds() {
+    use crate::mutations::KINDS;
+    let mut_ts = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🟦️.ts")).unwrap_or_default();
+    let mut_gql = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🔗️.graphql")).unwrap_or_default();
+    let mut_proto = std::fs::read_to_string(family_any_dir().join("🧬️schema/🧬️mutations/🛰️.proto")).unwrap_or_default();
+    assert_eq!(KINDS.len(), 18, "Rust KINDS length drift");
+    for kind in KINDS {
+        assert!(mut_ts.contains(kind), "mutations TS missing KINDS entry {kind}");
+        assert!(mut_gql.contains(kind), "mutations GraphQL missing KINDS entry {kind}");
+        assert!(mut_proto.contains(kind), "mutations proto missing KINDS entry {kind}");
+    }
+    for stale in ["changeNEdKn", "changeChi", "changeSheetMEdKnm", "changeSigmaEdShellMpa", "nEdKn", "change_n_ed_kn"] {
+        assert!(!mut_ts.contains(stale), "mutations TS still has stale scalar mutation {stale}");
+        assert!(!mut_gql.contains(stale), "mutations GraphQL still has stale scalar mutation {stale}");
+        assert!(!mut_proto.contains(stale), "mutations proto still has stale scalar mutation {stale}");
+    }
+}
+
+#[test]
 fn governing_uls_combination_named_in_member_explanations() {
     let report = evaluate_structure(&En1999Snapshot::compliant_roof_purlin());
-    let uls: Vec<_> = report.checks.iter().filter(|c| c.id.contains("6.2.3.n.") || c.id.contains("6.2.5.m.")).collect();
+    let uls: Vec<_> = report.checks.iter().filter(|c| c.id.contains("en1999.6.2.") || c.id.contains("en1999.6.3.")).collect();
     assert!(!uls.is_empty());
-    assert!(uls.iter().any(|c| c.explanation.en.contains("uls-610a") || c.explanation.en.contains("uls-610b")));
-    assert!(uls.iter().any(|c| c.explanation.de.contains("uls-610a") || c.explanation.de.contains("uls-610b")));
-    assert!(uls.iter().any(|c| c.explanation.de.contains("GZT") || c.explanation.de.contains("führend")));
+    for c in &uls {
+        assert!(
+            c.explanation.en.contains("uls-610a") || c.explanation.en.contains("uls-610b") || c.explanation.en.contains("uls-g"),
+            "missing ULS combo in en explanation for {}: {}", c.id, c.explanation.en
+        );
+        assert!(
+            c.explanation.de.contains("uls-610a") || c.explanation.de.contains("uls-610b") || c.explanation.de.contains("uls-g"),
+            "missing ULS combo in de explanation for {}: {}", c.id, c.explanation.de
+        );
+        assert!(
+            c.explanation.en.contains("lead ") && c.explanation.de.contains("führend "),
+            "missing action_id lead tag for {}: en={} de={}", c.id, c.explanation.en, c.explanation.de
+        );
+    }
+    assert!(uls.iter().any(|c| c.explanation.de.contains("GZT")));
+    assert!(report.checks.iter().any(|c| c.id.contains("sls-freq") && c.explanation.en.contains("sls-freq")));
 }
 
 #[test]
@@ -465,7 +552,7 @@ fn field_meta_rows_resolve_to_schema_leaves() {
     for stale in ["vYEd", "vZEd", "mZEd", "mYEd", "slopeM"] {
         assert!(leaves.iter().all(|p| !p.contains(stale)), "snapshot still has stale {stale}");
     }
-    // Member/connection action forces must be nK not nEd; coldFormed.nEd is intentional 1-4 design force.
+    // Member/connection/cold/shell action forces must be characteristic nK (no hand-typed *Ed design effects).
     assert!(leaves.iter().filter(|p| p.contains("actions") && p.contains("nEd")).count() == 0);
     for path in &leaves {
         let meta_path = path_to_meta_pattern(path);
@@ -572,16 +659,20 @@ fn shell_chi_from_geometry_hand_value() {
 }
 
 #[test]
+
+
+
 fn every_editable_leaf_influences_a_check() {
     // Descriptive report labels only — never geometry/loads.
     const EXEMPT_SUFFIXES: &[&str] = &[".id"]; // ids only; name/title not in this subject
     for snap in [En1999Snapshot::compliant_roof_purlin(), En1999Snapshot::noncompliant_multi_fail()] {
         let base_report = evaluate_structure(&snap);
-        let base_sig: Vec<_> = base_report
+        let mut base_sig: Vec<_> = base_report
             .checks
             .iter()
-            .map(|c| (c.id.clone(), c.status, (c.utilization * 1e12).round() as i64, c.explanation.en.clone()))
+            .map(|c| (c.id.clone(), c.status, c.computed.value.to_bits(), c.limit.value.to_bits(), c.utilization.to_bits()))
             .collect();
+        base_sig.sort_by(|a, b| a.0.cmp(&b.0));
         let value = serde_json::to_value(&snap).expect("json");
         let mut leaves = Vec::new();
         walk_leaves("", &value, &mut |path| {
@@ -600,25 +691,43 @@ fn every_editable_leaf_influences_a_check() {
             match cur {
                 serde_json::Value::Number(n) => {
                     let v = n.as_f64().unwrap_or(0.0);
-                    let nv = if v.abs() < 1e-12 { 1.0 } else { v * 1.15 };
+                    let nv = if v.abs() < 1e-12 { 1.0e5 } else { v * 1.35 };
                     let _ = set_number_at_path(&mut tree, path, nv);
                 }
                 serde_json::Value::Bool(b) => { let _ = set_bool_at_path(&mut tree, path, !b); }
                 serde_json::Value::String(s) => {
+                    let leaf = path.rsplit('.').next().unwrap_or(path.as_str());
                     let ns: String = if s == "de" { "en".into() }
                         else if s == "en" { "de".into() }
                         else if s.contains("6082") { "aw6060-t6".into() }
                         else if s.contains("6060") { "aw6082-t6".into() }
                         else if s == "simplySupported" { "continuous".into() }
-                        else if s == "snow" { "imposed".into() }
+                        else if s == "continuous" { "cantilever".into() }
+                        else if s == "cantilever" { "simplySupported".into() }
+                        else if leaf == "kind" && (s == "snow" || s == "wind" || s == "imposed" || s == "temperature") { "permanent".into() }
+                        else if leaf == "kind" && s == "permanent" { "imposed".into() }
+                        else if leaf == "category" && s == "snow" { "storage".into() }
+                        else if leaf == "category" && s == "wind" { "storage".into() }
+                        else if leaf == "category" && s == "office" { "storage".into() }
+                        else if leaf == "category" && s == "self" { "snow".into() }
+                        else if s == "permanent" { "imposed".into() }
+                        else if s == "imposed" { "permanent".into() }
+                        else if s == "snow" { "storage".into() }
+                        else if s == "wind" { "storage".into() }
+                        else if s == "office" { "storage".into() }
+                        else if s == "self" { "snow".into() }
                         else if s == "external" { "udl".into() }
+                        else if s == "udl" { "external".into() }
                         else if s == "8.8" { "10.9".into() }
                         else if s == "10.9" { "5.6".into() }
+                        else if s == "4.6" || s == "5.6" { "8.8".into() }
                         else if s == "tube" || s == "chs" { "extrudedI".into() }
                         else if s == "extrudedI" { "tube".into() }
                         else if s == "combined" { "bolted".into() }
                         else if s == "bolted" { "welded".into() }
+                        else if s == "welded" { "combined".into() }
                         else if s == "4043" { "5356".into() }
+                        else if s == "5356" { "4043".into() }
                         else { format!("{s}-x") };
                     let _ = set_string_at_path(&mut tree, path, &ns);
                 }
@@ -626,7 +735,8 @@ fn every_editable_leaf_influences_a_check() {
             }
             let Ok(perturbed): Result<En1999Snapshot,_> = serde_json::from_value(tree) else { continue; };
             let rep = evaluate_structure(&perturbed);
-            let sig: Vec<_> = rep.checks.iter().map(|c| (c.id.clone(), c.status, (c.utilization * 1e12).round() as i64, c.explanation.en.clone())).collect();
+            let mut sig: Vec<_> = rep.checks.iter().map(|c| (c.id.clone(), c.status, c.computed.value.to_bits(), c.limit.value.to_bits(), c.utilization.to_bits())).collect();
+            sig.sort_by(|a, b| a.0.cmp(&b.0));
             if sig == base_sig {
                 unchanged.push(path.clone());
             }
@@ -638,6 +748,105 @@ fn every_editable_leaf_influences_a_check() {
     }
 }
 
+
+
+
+#[test]
+
+
+
+
+fn regen_example_assets_when_env_set() {
+    if std::env::var("REGEN_EN1999_ASSETS").is_err() {
+        return;
+    }
+    let any = family_any_dir();
+    for (name, snap) in [
+        ("🏠️aluminium-roof-purlin", En1999Snapshot::compliant_roof_purlin()),
+        ("🏚️noncompliant-multi-fail", En1999Snapshot::noncompliant_multi_fail()),
+    ] {
+        let dir = any.join("🖼️assets").join(name).join(name);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("🗣️.dsl.semio"), encode_en1999_dsl(&snap)).unwrap();
+        std::fs::write(
+            any.join("🖼️assets").join(name).join("🎒️.pack.semio"),
+            crate::standards::v1::subsets::any::schema::snapshot::encode_en1999_pack(&snap),
+        ).unwrap();
+        std::fs::write(
+            dir.join("🔣️.json"),
+            crate::standards::v1::subsets::any::schema::snapshot::encode_en1999_snapshot_json(&snap),
+        ).unwrap();
+    }
+}
+
+#[test]
+fn duplicate_material_id_fails_with_oneof_remedy() {
+    let mut doc = En1999Snapshot::compliant_roof_purlin();
+    let dup_id = doc.materials[0].id.clone();
+    let mut twin = doc.materials[0].clone();
+    twin.designation = "aw5083-o".into();
+    doc.materials.push(twin);
+    let report = evaluate_structure(&doc);
+    let check = report
+        .checks
+        .iter()
+        .find(|c| c.id == format!("en1999.ref.duplicate.materials.{dup_id}"))
+        .expect("duplicate material id Fail");
+    assert_eq!(check.status, CheckStatus::Fail);
+    assert_ne!(check.explanation.en, check.explanation.de);
+    let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable one_of remedy");
+    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(!remedy.options.is_empty());
+    assert!(!remedy.options.iter().any(|o| o == &dup_id));
+}
+
+#[test]
+fn dangling_connection_material_id_fails_with_oneof_existing_materials() {
+    let mut doc = En1999Snapshot::compliant_roof_purlin();
+    assert!(!doc.connections.is_empty(), "fixture must expose a connection");
+    let existing: Vec<String> = doc.materials.iter().map(|m| m.id.clone()).collect();
+    let conn_id = doc.connections[0].id.clone();
+    doc.connections[0].material_id = "mat-missing".into();
+    let report = evaluate_structure(&doc);
+    let check = report
+        .checks
+        .iter()
+        .find(|c| c.id == format!("en1999.ref.conn.material.{conn_id}"))
+        .expect("dangling connection materialId Fail");
+    assert_eq!(check.status, CheckStatus::Fail);
+    assert_ne!(check.explanation.en, check.explanation.de);
+    let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable one_of remedy");
+    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(!remedy.options.is_empty());
+    for opt in &remedy.options {
+        assert!(existing.contains(opt), "remedy option {opt} must be an existing material id");
+    }
+    assert!(!remedy.options.iter().any(|o| o == "mat-missing"));
+}
+
+#[test]
+fn dangling_connection_member_id_fails_with_oneof_existing_members() {
+    let mut doc = En1999Snapshot::compliant_roof_purlin();
+    assert!(!doc.connections.is_empty(), "fixture must expose a connection");
+    let existing: Vec<String> = doc.members.iter().map(|m| m.id.clone()).collect();
+    let conn_id = doc.connections[0].id.clone();
+    doc.connections[0].member_id = "member-missing".into();
+    let report = evaluate_structure(&doc);
+    let check = report
+        .checks
+        .iter()
+        .find(|c| c.id == format!("en1999.8.ref.{conn_id}"))
+        .expect("dangling connection memberId Fail");
+    assert_eq!(check.status, CheckStatus::Fail);
+    assert_ne!(check.explanation.en, check.explanation.de);
+    let remedy = check.remedies.iter().find(|r| r.applicable).expect("applicable one_of remedy");
+    assert!(matches!(remedy.bound, crate::document::RemedyBound::OneOf));
+    assert!(!remedy.options.is_empty());
+    for opt in &remedy.options {
+        assert!(existing.contains(opt), "remedy option {opt} must be an existing member id");
+    }
+    assert!(!remedy.options.iter().any(|o| o == "member-missing"));
+}
 
 
 fn family_any_dir() -> PathBuf {

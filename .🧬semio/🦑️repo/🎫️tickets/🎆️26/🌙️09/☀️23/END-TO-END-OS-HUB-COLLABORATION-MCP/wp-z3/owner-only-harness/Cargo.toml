@@ -1,0 +1,15 @@
+# 🔐️ Z3 one-off harness: compiles and tests the semio MCP's `🔐️owner-only` module (and its unit laws) on its own, natively
+# and for x86_64-pc-windows-msvc, without the MCP crate's dependency graph.
+[package]
+name = "z3-owner-only-harness"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "lib.rs"
+
+[dev-dependencies]
+serde_json = "1"
+
+[workspace]

@@ -19,5 +19,5 @@ type WeldGroup { fillerAlloy: String!, throat: Float!, length: Float!, betaW: Fl
 type AluminiumConnection { id: String!, memberId: String!, materialId: String!, kind: String!, actions: [MemberAction!]!, bolts: BoltGroup!, welds: WeldGroup! }
 type FireScenario { id: String!, memberId: String!, thetaA: Float!, durationS: Float! }
 type FatigueDetail { id: String!, memberId: String!, detailCategory: String!, deltaSigmaC: Float!, deltaSigmaEd: Float!, nCycles: Float!, m1: Float!, m2: Float! }
-type ColdFormedSheet { id: String!, materialId: String!, thickness: Float!, width: Float!, span: Float!, mEd: Float!, nEd: Float!, welded: Boolean! }
-type AluminiumShell { id: String!, materialId: String!, radius: Float!, thickness: Float!, length: Float!, sigmaXEd: Float!, sigmaThetaEd: Float! }
+type ColdFormedSheet { id: String!, materialId: String!, thickness: Float!, width: Float!, span: Float!, welded: Boolean!, actions: [MemberAction!]! }
+type AluminiumShell { id: String!, materialId: String!, radius: Float!, thickness: Float!, length: Float!, actions: [MemberAction!]! }

@@ -1,0 +1,10 @@
+{
+  "extensionId": "fixture.dynamic-extension",
+  "directoryName": "🧩️fixture-dynamic-extension",
+  "version": "1.2.3",
+  "label": "Fixture Dynamic Extension",
+  "extends": "space",
+  "moduleUrl": "/🧩️extension-modules/🧩️fixture-dynamic-extension/🧩️component.js",
+  "packageHash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "installedAt": 42
+}

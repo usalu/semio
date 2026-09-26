@@ -26,6 +26,29 @@ function* violation(value: UiContractViolation, frontier: RetainedUiGraphFrontie
   yield* violations.set(frontier.count++, value);
 }
 
+function* validInlineToolbar(record: Record, nodes: RetainedUiGraphNodes): Program<boolean> {
+  if (record.component.type !== "treeItem" || record.component.inlineToolbar === null) return true;
+  const id = record.component.inlineToolbar;
+  if (!(record.children ?? []).includes(id)) return false;
+  const toolbar = yield* nodes.lookup(id);
+  if (!toolbar || toolbar.component.type !== "container" || toolbar.component.role !== "toolbar" || toolbar.layout.kind !== "stack" || toolbar.layout.axis !== "horizontal") return false;
+  const children = toolbar.children ?? [];
+  if (children.length < 1 || children.length > 4) return false;
+  for (const child of children) {
+    const button = yield* nodes.lookup(child);
+    if (!button || button.component.type !== "button" || (button.children ?? []).length !== 0) return false;
+  }
+  return true;
+}
+
+function* validTreeDetail(record: Record, nodes: RetainedUiGraphNodes): Program<boolean> {
+  if (record.component.type !== "treeItem" || record.component.detail === null) return true;
+  const id = record.component.detail;
+  if (!(record.children ?? []).includes(id)) return false;
+  const detail = yield* nodes.lookup(id);
+  return detail?.component.type === "surface";
+}
+
 export function closeRetainedUiGraphFrame(frontier: RetainedUiGraphFrontier): boolean {
   const cell = frontier.stack;
   if (!cell) return false;
@@ -52,6 +75,8 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
     const section = record.component.type === "container" && record.component.role === "section";
     if (frame.section && section) yield* violation({ type: "sectionNested", node: frame.id }, frontier, violations);
     if (!finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: frame.id }, frontier, violations);
+    if (record.component.type === "treeItem" && record.component.inlineToolbar !== null && !(yield* validInlineToolbar(record, nodes))) yield* violation({ type: "invalidTreeInlineToolbar", node: frame.id, toolbar: record.component.inlineToolbar }, frontier, violations);
+    if (record.component.type === "treeItem" && record.component.detail !== null && !(yield* validTreeDetail(record, nodes))) yield* violation({ type: "invalidTreeDetail", node: frame.id, detail: record.component.detail }, frontier, violations);
     if (frame.depth > limits.maxDepth) { yield* violation({ type: "depthQuota", node: frame.id, depth: frame.depth, max: limits.maxDepth }, frontier, violations); continue; }
     yield* marks.set(frame.id, 3);
     frontier.stack = { value: { ...frame, kind: "exit" }, next: frontier.stack }; yield 48;

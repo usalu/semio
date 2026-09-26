@@ -109,7 +109,8 @@ async function superviseOnce(): Promise<"stopped" | "exited"> {
     }
   } catch (error) {
     flushCapture(run, "WAIT_FAIL");
-    status(`WAIT_FAIL generation=${generation} ${error instanceof Error ? error.message : String(error)}`);
+    const listener = Bun.spawnSync(["lsof", "-nP", `-iTCP:${port}`, "-sTCP:LISTEN"]).stdout.toString().trim().split("\n").slice(1).map((line) => line.split(/\s+/).slice(0, 2).join(" pid=")).join("; ");
+    status(`WAIT_FAIL generation=${generation} ${error instanceof Error ? error.message : String(error)} listeners[${listener || "none"}] ownHub=${run.child.pid}`);
     stopping = true;
     await finishLocalHub(run).catch(() => undefined);
     clearInterval(heartbeat);

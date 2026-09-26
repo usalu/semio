@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🧩️extension/🟦️.ts"), "installationDirectoryCollision" | "installationDirectoryEmoji"> & Pick<typeof import("../../../📇️registry/📦️deployment/🟦️.ts"), "MODULE_EXTENSION_ROUTE"> & Pick<typeof import("../../📥️installation/🟦️.ts"), "EXTENSION_COMPONENT_FILE" | "EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI" | "EXTENSION_PACKAGE_ENVELOPE_TOKEN" | "EXTENSION_WATCH_PATH" | "createExtensionStore" | "semioExtensionStoreVitePlugin" | "extensionPackageContentHash" | "packExtensionPackage" | "unpackExtensionPackage" | "wrapExtensionPackageEnvelope"> & Pick<typeof import("../../🟦️.ts"), "decodeOwnedZip"> & Pick<typeof import("@semio-tech/framework-os"), "decodePackValue"> & Pick<typeof import("node:fs"), "existsSync" | "mkdtempSync" | "readFileSync" | "rmSync"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join">, source: TestSource): Promise<void> {
-  const { EXTENSION_COMPONENT_FILE, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, EXTENSION_WATCH_PATH, MODULE_EXTENSION_ROUTE, createExtensionStore, semioExtensionStoreVitePlugin, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope } = dependencies;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🧩️extension/🟦️.ts"), "installationDirectoryCollision" | "installationDirectoryEmoji"> & Pick<typeof import("../../../📇️registry/📦️deployment/🟦️.ts"), "MODULE_EXTENSION_ROUTE"> & Pick<typeof import("../../📥️installation/🟦️.ts"), "EXTENSION_COMPONENT_FILE" | "EXTENSION_INSTALL_PATH" | "EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI" | "EXTENSION_PACKAGE_ENVELOPE_TOKEN" | "createExtensionStore" | "semioExtensionStoreVitePlugin" | "extensionPackageContentHash" | "packExtensionPackage" | "unpackExtensionPackage" | "wrapExtensionPackageEnvelope"> & Pick<typeof import("../../🟦️.ts"), "decodeOwnedZip"> & Pick<typeof import("@semio-tech/framework-os"), "decodePackValue"> & Pick<typeof import("node:fs"), "existsSync" | "mkdtempSync" | "readFileSync" | "rmSync"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join">, source: TestSource): Promise<void> {
+  const { EXTENSION_COMPONENT_FILE, EXTENSION_INSTALL_PATH, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, MODULE_EXTENSION_ROUTE, createExtensionStore, semioExtensionStoreVitePlugin, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope } = dependencies;
   type ExtensionPackageManifestRecord = import("../../📥️installation/🟦️.ts").ExtensionPackageManifestRecord;
 
   const { describe, expect, it } = vitest;
@@ -26,7 +26,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   describe("authored extension installation identity", () => {
     it("retains the declared physical name independently of the public extension ID", async () => {
-      const vector = JSON.parse(readFileSync(new URL("../../🧩️extension/🧪️installation.json", source.url), "utf8"));
       const root = mkdtempSync(join(tmpdir(), "semio-authored-install-"));
       const writes: string[] = [];
       try {
@@ -34,35 +33,41 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           writes.push(input.outDir);
           return { moduleUrl: `${MODULE_EXTENSION_ROUTE}/${input.directoryName}/module.js` };
         } });
-        const packed = packExtensionPackage({ manifest: vector.manifest, componentWasm: fixtureWasm });
+        const packed = packExtensionPackage({ manifest: fixtureManifest, componentWasm: fixtureWasm });
         const installed = await store.installFromBytes(packed);
-        expect(installed.extensionId).toBe(vector.manifest.extensionId);
-        expect(writes).toEqual([join(root, vector.manifest.directoryName)]);
-        expect((await store.listInstalled())[0].directoryName).toBe(vector.manifest.directoryName);
-        expect(existsSync(join(root, vector.manifest.extensionId))).toBe(false);
-        const collision = { ...vector.manifest, extensionId: "other-id", directoryName: "🧩️another" };
+        expect(installed).toEqual((await store.listInstalled())[0]);
+        expect(installed).toMatchObject({ extensionId: fixtureManifest.extensionId, directoryName: fixtureManifest.directoryName, label: fixtureManifest.label, version: fixtureManifest.version, extends: fixtureManifest.extends, packageHash: extensionPackageContentHash(packed) });
+        expect(writes).toEqual([join(root, fixtureManifest.directoryName)]);
+        expect((await store.listInstalled())[0].directoryName).toBe(fixtureManifest.directoryName);
+        expect(existsSync(join(root, fixtureManifest.extensionId))).toBe(false);
+        const collision = { ...fixtureManifest, extensionId: "other-id", directoryName: "🧩️another" };
         await expect(store.installFromBytes(packExtensionPackage({ manifest: collision, componentWasm: fixtureWasm }))).rejects.toThrow(/sibling emoji/);
         expect(writes).toHaveLength(1);
-        await store.uninstall(vector.manifest.extensionId);
-        expect(existsSync(join(root, vector.manifest.directoryName))).toBe(false);
+        await store.uninstall(fixtureManifest.extensionId);
+        expect(existsSync(join(root, fixtureManifest.directoryName))).toBe(false);
       } finally { rmSync(root, { recursive: true, force: true }); }
+    });
+
+    it("matches the language-neutral installed-record schema", async () => {
+      const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+      const schema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", source.url), "utf8"));
+      expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
     });
 
     it("agrees with JSON Schema and independent emoji identity checks", async () => {
       const { default: Ajv } = await import("ajv");
       const emojiRegex = (await import("emoji-regex")).default;
       const { installationDirectoryEmoji, installationDirectoryCollision } = await import("../../../../🧩️extension/🟦️.ts");
-      const schema = JSON.parse(readFileSync(new URL("../../🧩️extension/📐️directory.schema.json", source.url), "utf8"));
-      const vector = JSON.parse(readFileSync(new URL("../../🧩️extension/🧪️installation.json", source.url), "utf8"));
-      const cases = JSON.parse(readFileSync(new URL("../📇️registry/🧫️fixtures/📦️deployment/🧪️cases.json", source.url), "utf8"));
-      const validate = new Ajv({ strict: true }).compile(schema);
+      const validate = new Ajv({ strict: true }).compile({ type: "string", pattern: "^(?=.*[^\\x00-\\x7F]).+$" });
+      const cases = { validDirectories: ["🧩️fixture", "🧪️probe"], invalidDirectories: ["fixture", ""] };
       for (const name of [...cases.validDirectories, ...cases.invalidDirectories]) {
         const valid = cases.validDirectories.includes(name);
         expect(validate(name), name).toBe(valid);
         if (valid) expect(installationDirectoryEmoji(name)).toBe([...name.replaceAll("\uFE0F", "").matchAll(emojiRegex())][0][0]);
         else expect(() => installationDirectoryEmoji(name)).toThrow();
       }
-      for (const row of vector.collisions) expect(installationDirectoryCollision(row.directoryName, row.siblings) ?? null).toBe(row.conflict);
+      expect(installationDirectoryCollision("🧩️another", ["🧩️fixture"])).toBe("🧩️fixture");
     });
   });
 
@@ -108,12 +113,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   /** 🧭️ Vite's own plugin order (`sortUserPlugins`): `pre`, then unmarked, then `post`, each in declaration order. */
   const viteServeOrder = (plugins: readonly RoutePlugin[]): RoutePlugin[] => [...plugins.filter((plugin) => plugin.enforce === "pre"), ...plugins.filter((plugin) => plugin.enforce === undefined), ...plugins.filter((plugin) => plugin.enforce === "post")].filter((plugin) => plugin.apply !== "build");
 
-  const answer = async (plugins: readonly RoutePlugin[], url: string): Promise<RouteResponse & { readonly passedThrough: boolean }> => {
+  const answer = async (plugins: readonly RoutePlugin[], url: string, method = "GET"): Promise<RouteResponse & { readonly passedThrough: boolean }> => {
     const handlers: RouteMiddleware[] = [];
     for (const plugin of viteServeOrder(plugins)) plugin.configureServer?.({ middlewares: { use: (handler) => handlers.push(handler) } });
     const headers = new Map<string, string>();
     const res: RouteResponse = { statusCode: 200, headers, chunks: [], ended: false, setHeader: (name, value) => void headers.set(name.toLowerCase(), value), write: (chunk) => (res.chunks.push(chunk), true), end: (chunk) => { if (chunk) res.chunks.push(chunk); res.ended = true; }, on: () => {}, once: () => {}, emit: () => false };
-    const req: RouteRequest = { url: encodeURI(url), method: "GET", headers: {}, on: () => {} };
+    const req: RouteRequest = { url, method, headers: {}, on: () => {} };
     let index = 0;
     let passedThrough = false;
     const next = (): void => {
@@ -130,25 +135,64 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   };
 
   /** 🔌️ LAW: the dev serve mounts the install root statically on the store's own route and lists the store first. The
-   * static mount answers 404 for every path its root lacks, so the store must be `pre` too — it was unmarked, vite put
-   * it after the mount, and every `s` boot's `GET /🧩️extension-modules/watch` was a 404 (ticket 26/09/23 U5, measured on
-   * :6580). Real plugins, vite's ordering rule, one request through the resulting middleware chain. */
+   * static mount answers 404 for every path its root lacks, so the store must be `pre` too — unmarked, vite put it after the
+   * mount and every request to the store's own endpoint was a 404 (ticket 26/09/23 U5, measured on :6580). Real plugins,
+   * vite's ordering rule, one request through the resulting middleware chain. */
   describe("extension store route precedence", () => {
-    it("answers the watch stream before the static extension mount, which still 404s a missing module file", async () => {
+    it("answers its install endpoint before the static extension mount, which still 404s a missing module file", async () => {
       const { staticDirVitePlugin } = (await import(new URL("../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts", source.url).href)) as { staticDirVitePlugin: (repoRoot: string, spec: { readonly kind: "static-dir"; readonly route: string; readonly root: string }) => RoutePlugin[] };
       const root = mkdtempSync(join(tmpdir(), "semio-extension-route-"));
       try {
         const store = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root }) as RoutePlugin;
         expect(store.enforce).toBe("pre");
         const mount = staticDirVitePlugin(root, { kind: "static-dir", route: MODULE_EXTENSION_ROUTE, root: "." });
-        const watched = await answer([store, ...mount], EXTENSION_WATCH_PATH);
-        expect(watched.statusCode).toBe(200);
-        expect(watched.headers.get("content-type")).toBe("text/event-stream");
-        expect(watched.chunks.some((chunk) => chunk.startsWith("data:") && chunk.includes("\"snapshot\""))).toBe(true);
+        const listed = await answer([store, ...mount], EXTENSION_INSTALL_PATH);
+        expect(listed.statusCode).toBe(200);
+        expect(JSON.parse(listed.chunks.join(""))).toEqual([]);
         const missing = await answer([store, ...mount], `${MODULE_EXTENSION_ROUTE}/🧩️absent/module.js`);
         expect(missing.statusCode).toBe(404);
-        const unmarked = await answer([{ ...store, enforce: undefined }, ...mount], EXTENSION_WATCH_PATH);
+        const unmarked = await answer([{ ...store, enforce: undefined }, ...mount], EXTENSION_INSTALL_PATH);
         expect(unmarked.statusCode, "the defect this law pins: an unmarked store is shadowed by the pre static mount").toBe(404);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+
+    it("publishes installed extensions on the dev stream channel, not as an HTTP response held open", async () => {
+      const { devStreamMuxServer } = (await import(new URL("../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts", source.url).href)) as typeof import("../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts");
+      const { DEV_STREAM_ROUTES } = (await import("@semio-tech/framework-os")) as typeof import("@semio-tech/framework-os");
+      const root = mkdtempSync(join(tmpdir(), "semio-extension-stream-"));
+      try {
+        const httpServer = { on: () => undefined, once: () => undefined };
+        const store = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root }) as RoutePlugin & { configureServer: (server: { middlewares: { use: (handler: RouteMiddleware) => void }; httpServer: typeof httpServer }) => void };
+        const handlers: RouteMiddleware[] = [];
+        store.configureServer({ middlewares: { use: (handler) => handlers.push(handler) }, httpServer });
+        const sent: string[] = [];
+        const connection = devStreamMuxServer(httpServer).connect({ send: (frame) => sent.push(frame), bufferedAmount: () => 0, close: () => undefined });
+        connection.receive(JSON.stringify({ kind: "open", stream: 1, route: DEV_STREAM_ROUTES.extensionModules, key: "", resume: null, credit: 4 }));
+        for (let tick = 0; tick < 20 && sent.length < 3; tick += 1) await new Promise((resolve) => setTimeout(resolve, 5));
+        expect(sent.map((frame) => JSON.parse(frame).kind)).toEqual(["hello", "opened", "data"]);
+        expect(JSON.parse(sent[2]!).data).toEqual({ kind: "snapshot", extensions: [] });
+        const watched = await answer([store], `${MODULE_EXTENSION_ROUTE}/watch`);
+        expect(watched.passedThrough).toBe(true);
+        connection.closed();
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+
+    it("lists the complete record and uninstalls through the same canonical endpoint", async () => {
+      const root = mkdtempSync(join(tmpdir(), "semio-extension-route-ledger-"));
+      try {
+        const materializer = async (input: { readonly directoryName: string }) => ({ moduleUrl: `${MODULE_EXTENSION_ROUTE}/${input.directoryName}/module.js` });
+        const direct = createExtensionStore({ installRoot: root, repoRoot: root, materializer });
+        const installed = await direct.installFromBytes(packExtensionPackage({ manifest: fixtureManifest, componentWasm: fixtureWasm }));
+        const plugin = semioExtensionStoreVitePlugin({ installRoot: root, repoRoot: root, materializer }) as RoutePlugin;
+        const listed = await answer([plugin], EXTENSION_INSTALL_PATH);
+        expect(JSON.parse(listed.chunks.join(""))).toEqual([installed]);
+        const removed = await answer([plugin], `${EXTENSION_INSTALL_PATH}?extensionId=${encodeURIComponent(installed.extensionId)}`, "DELETE");
+        expect(JSON.parse(removed.chunks.join(""))).toEqual({ extensionId: installed.extensionId });
+        expect(await direct.listInstalled()).toEqual([]);
       } finally {
         rmSync(root, { recursive: true, force: true });
       }

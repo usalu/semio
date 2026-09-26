@@ -1,6 +1,26 @@
 use super::*;
 
 #[test]
+fn neutral_diff_fixture_matches_the_native_operation_sequence() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-produced-surface/🔣️.json")).expect("DiffView fixture");
+    let before = fixture["before"].as_str().unwrap().lines().collect::<Vec<_>>();
+    let after = fixture["after"].as_str().unwrap().lines().collect::<Vec<_>>();
+    let actual = diff_lines(&before, &after)
+        .into_iter()
+        .map(|line| {
+            let kind = match line.operation {
+                DiffLineOperation::Equal => "equal",
+                DiffLineOperation::Removed => "remove",
+                DiffLineOperation::Added => "add",
+            };
+            (kind, line.text)
+        })
+        .collect::<Vec<_>>();
+    let expected = fixture["expected"].as_array().unwrap().iter().map(|line| (line["kind"].as_str().unwrap(), line["text"].as_str().unwrap())).collect::<Vec<_>>();
+    assert_eq!(actual, expected);
+}
+
+#[test]
 fn identical_inputs_produce_only_equal_operations() {
     let before = vec!["a", "b", "c"];
     let after = vec!["a", "b", "c"];

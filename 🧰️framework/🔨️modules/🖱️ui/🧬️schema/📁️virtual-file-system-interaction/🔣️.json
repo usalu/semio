@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/virtual-file-system-interaction.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rows", "visibility", "chrome", "keyboard", "navigation"],
+  "properties": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "fileNodeKindId", "name"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "fileNodeKindId": { "type": "string", "minLength": 1 },
+          "name": { "type": "string" },
+          "parentId": { "type": ["string", "null"] },
+          "hasChildren": { "type": "boolean" },
+          "navigateUri": { "type": "string" }
+        }
+      }
+    },
+    "visibility": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "expandedRowIds", "visibleRowIds", "levels"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "expandedRowIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "visibleRowIds": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "levels": { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+        }
+      }
+    },
+    "chrome": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["locale", "name", "empty", "expand", "collapse"],
+        "properties": {
+          "locale": { "enum": ["en", "de"] },
+          "name": { "type": "string", "minLength": 1 },
+          "empty": { "type": "string", "minLength": 1 },
+          "expand": { "type": "string", "minLength": 1 },
+          "collapse": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "keyboard": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["control", "key", "result"],
+        "properties": {
+          "control": { "enum": ["row", "chevron"] },
+          "key": { "enum": ["enter", "space"] },
+          "result": { "type": ["string", "null"], "enum": ["toggle", null] }
+        }
+      }
+    },
+    "navigation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rowId", "action", "args"],
+        "properties": {
+          "rowId": { "type": "string", "minLength": 1 },
+          "action": { "type": ["string", "null"] },
+          "args": {
+            "anyOf": [
+              { "type": "null" },
+              { "type": "object", "additionalProperties": { "type": "string" } }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

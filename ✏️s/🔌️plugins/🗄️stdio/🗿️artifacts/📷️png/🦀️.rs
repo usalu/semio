@@ -69,7 +69,7 @@ pub const PNG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.png", standar
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.png".into(),
+        id: "s.stdio.png".into(),
         name: "Png".into(),
         source_format: STDIO_PNG_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

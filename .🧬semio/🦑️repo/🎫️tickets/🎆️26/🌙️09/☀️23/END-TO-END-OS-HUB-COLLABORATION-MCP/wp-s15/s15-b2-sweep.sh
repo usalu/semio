@@ -3,19 +3,20 @@
 # of `generated/s15-b2-kinds.txt`) and each locale, the person-driven journey (`s15-hub-journey.mjs`): sign in → open the sweep space →
 # create the kind → the creation saga opens it (its program installed by catalog generation) → rail verb → undo → redo.
 # One persistent browser profile per locale, so a plugin's first kind installs from the hub and later ones from the device's store.
-# usage: zsh s15-b2-sweep.sh <serveOrigin> <tagPrefix> <locale en|de> [firstIndex] [lastIndex]
+# usage: [S15_KINDS_FILE=<kinds list>] [S15_B2_SPACE=<space name>] zsh s15-b2-sweep.sh <serveOrigin> <tagPrefix> <locale en|de> [firstIndex] [lastIndex]
 W=/Users/ueli/Documents/semio/.tmp-ticket/wp-s15
 L="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-s15-logs"
 P="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-s15-profiles"
 ORIGIN="$1"; TAG="$2"; LOC="$3"; FIRST="${4:-0}"; LAST="${5:-15}"
-PLUGINS=(block draw puzzle wfc wfc wfc block puzzle wfc wfc block puzzle animate gis note writer)
+KINDS="${S15_KINDS_FILE:-$L/kinds-b2-7800.txt}"
+PLUGINS=($(tail -n +2 "$KINDS" | awk '{ split($4, part, "."); print part[2] }'))
 mkdir -p "$P/$TAG-$LOC"
 cd "$W" || exit 1
 for i in $(seq "$FIRST" "$LAST"); do
   plugin=${PLUGINS[$((i + 1))]}
   run="$TAG-$LOC-$i-$plugin"
   echo "[s15-b2] $(date '+%T') start $run"
-  S12_SPACE="${S15_B2_SPACE:-S15 B2 Sweep}" S12_KIND_INDEX=$i S15_LOCALE=$([ "$LOC" = de ] && echo de-DE || echo en-US) S15_PROFILE_DIR="$P/$TAG-$LOC" S15_CONSOLE_ALL=1 S15_CONSOLE_FILTER="hub program|loaded from|stale|refused|error" \
+  S15_KINDS_FILE="$KINDS" S12_SPACE="${S15_B2_SPACE:-S15 B2 Sweep}" S12_KIND_INDEX=$i S15_LOCALE=$([ "$LOC" = de ] && echo de-DE || echo en-US) S15_PROFILE_DIR="$P/$TAG-$LOC" S15_CONSOLE_ALL=1 S15_CONSOLE_FILTER="hub program|loaded from|stale|refused|error" \
     bun s15-hub-journey.mjs "$ORIGIN" "$run" "$plugin" none > "$L/journey-$run.txt" 2>&1
   echo "[s15-b2] $(date '+%T') done $run rc=$? $(/usr/bin/grep -o 'createArtifact → [^"]*' "$L/journey-$run.txt" | head -1) | $(/usr/bin/grep -o '"verb":"[^"]*","detail":[^,]*,"edits":\[[^]]*\]' "$L/journey-$run.txt" | head -1)"
 done

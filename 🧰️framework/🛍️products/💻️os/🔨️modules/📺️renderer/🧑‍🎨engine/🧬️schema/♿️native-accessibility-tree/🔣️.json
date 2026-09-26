@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/renderer/native-accessibility-tree-v1.json",
+  "title": "Native accessibility tree",
+  "description": "How the native wgpu shell projects the accessibility publication of one presented frame (the chrome's shell.chrome window and every visible document window, each a flat depth-ordered list of ui-contract AccessibilityProjectionNode) into one platform tree: a Window root named after the application, one pane per window (the chrome a Group), nesting rebuilt from depth, platform roles, names, state and the actions a node's flags admit; and how every platform action request becomes the shell's own accessibility event on the node's window, generation, id and key.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "title", "windows", "expected", "roles", "actions"],
+  "definitions": {
+    "action": { "enum": ["Click", "Focus", "Blur", "SetValue", "ScrollIntoView"] },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windowId", "windowGeneration", "nodes"],
+      "properties": {
+        "windowId": { "type": "string", "minLength": 1 },
+        "windowGeneration": { "type": "integer", "minimum": 0 },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["nodeId", "key", "role", "depth", "live"],
+            "properties": {
+              "nodeId": { "type": "integer", "minimum": 0 },
+              "key": { "type": "string", "minLength": 1 },
+              "role": { "type": "string", "minLength": 1 },
+              "depth": { "type": "integer", "minimum": 0 },
+              "live": { "enum": ["off", "polite", "assertive"] }
+            }
+          }
+        }
+      }
+    },
+    "expectedNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorId", "role", "name", "actions", "children"],
+      "properties": {
+        "authorId": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "actions": { "type": "array", "items": { "$ref": "#/definitions/action" } },
+        "children": { "type": "array", "items": { "type": "string" } },
+        "toggled": { "enum": ["True", "False", "Mixed"] },
+        "selected": { "type": "boolean" },
+        "expanded": { "type": "boolean" },
+        "disabled": { "type": "boolean" },
+        "readOnly": { "type": "boolean" },
+        "level": { "type": "integer", "minimum": 1 },
+        "value": { "type": "string" },
+        "shortcut": { "type": "string" },
+        "live": { "enum": ["Polite", "Assertive"] },
+        "numeric": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } }
+      }
+    }
+  },
+  "properties": {
+    "schema": { "const": "semio.renderer.native-accessibility-tree-fixture/v1" },
+    "title": { "type": "string", "minLength": 1 },
+    "windows": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/window" } },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "focus", "panes", "nodes"],
+      "properties": {
+        "root": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["role", "name", "children"],
+          "properties": { "role": { "const": "Window" }, "name": { "type": "string" }, "children": { "type": "array", "items": { "type": "string" } } }
+        },
+        "focus": { "type": "string", "minLength": 1 },
+        "panes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["authorId", "role", "children"],
+            "properties": { "authorId": { "type": "string" }, "role": { "enum": ["Group", "Pane"] }, "children": { "type": "array", "items": { "type": "string" } } }
+          }
+        },
+        "nodes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/expectedNode" } }
+      }
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "platform"],
+        "properties": { "role": { "type": "string", "minLength": 1 }, "platform": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "authorId", "action", "dispatch"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "authorId": { "oneOf": [{ "type": "null" }, { "type": "string", "minLength": 1 }] },
+          "action": { "$ref": "#/definitions/action" },
+          "value": { "type": "string" },
+          "dispatch": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["event", "windowId", "windowGeneration", "nodeId", "nodeKey"],
+                "properties": {
+                  "event": { "enum": ["activate", "focus", "blur", "value"] },
+                  "value": { "type": "string" },
+                  "windowId": { "type": "string" },
+                  "windowGeneration": { "type": "integer", "minimum": 0 },
+                  "nodeId": { "type": "integer", "minimum": 0 },
+                  "nodeKey": { "type": "string" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

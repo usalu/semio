@@ -1,0 +1,31 @@
+# 🧫️ N1 one-off fixture emitter: answers derive/apply/dsl/kinds requests for every norm family through production dispatch.
+[workspace]
+
+[package]
+name = "n1-norm-fixture-emitter"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "n1-norm-fixture-emitter"
+path = "main.rs"
+
+[dependencies]
+semio-framework-os-kernel = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+pack = { path = "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+semio-s-artifact-norm-din16798 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust" }
+semio-s-artifact-norm-din18599 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust" }
+semio-s-artifact-norm-din4108 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1990 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1991 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1992 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1993 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1994 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1995 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1996 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1997 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1998 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust" }
+semio-s-artifact-norm-en1999 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust" }
+semio-s-artifact-norm-iso16757 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust" }
+semio-s-artifact-norm-vdi3805 = { path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust" }

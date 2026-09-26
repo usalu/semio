@@ -130,7 +130,49 @@ async fn dispatch_registers_semantic_descriptors() {
     register_drawing_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in DrawingMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
-        assert_eq!(kind.entity, "layer");
+        assert_eq!(kind.entity, if kind.kind == "update-path-geometry" { "path" } else { "layer" });
     }
-    assert_eq!(DrawingMutation::kinds().len(), 14);
+    assert_eq!(DrawingMutation::kinds().len(), 15);
+}
+
+#[test]
+fn field_patch_validation_fixtures() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎛️field-patch/🔣️.json")).unwrap();
+    let document = base_document();
+    let id = crate::schema::layer_id(&document.layers[0]);
+    for case in cases.as_array().unwrap() {
+        let patch = &case["patch"];
+        let value = dsl::json::to_dsl_value(&dsl::json::parse(&patch["value"].to_string()).unwrap());
+        let operation = drawing_op_for_layer_field(&document, id, patch["field"].as_str().unwrap(), &value);
+        assert_eq!(operation.is_some(), case["accepted"].as_bool().unwrap(), "{case}");
+        if patch["field"] == "rotationDegrees" {
+            let DrawingMutation::UpdateLayerTransform(update) = operation.unwrap() else { panic!("rotation must use a semantic transform mutation") };
+            assert!((update.transform.rotation - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
+        }
+    }
+}
+
+#[test]
+fn stroke_fields_preserve_appearance_and_undo() {
+    use protocol::Mutation;
+    let original = DrawingSnapshot { layers: vec![create_drawing_shape_layer_rect("Stroke target")], ..Default::default() };
+    let id = crate::schema::layer_id(&original.layers[0]);
+    let mut document = original.clone();
+    for (field, input) in [("strokeWidth", "3"), ("strokeColor", "#123456"), ("strokeCap", "round"), ("strokeJoin", "bevel"), ("strokeDash", "8")] {
+        let value = parse_layer_field_input(field, input);
+        let operation = drawing_op_for_layer_field(&document, id, field, &value).unwrap();
+        let inverse = operation.inverse(&document);
+        let before = document.clone();
+        apply_drawing_mutation(&mut document, &operation).unwrap();
+        let mut undone = document.clone();
+        for undo in inverse { apply_drawing_mutation(&mut undone, &undo).unwrap(); }
+        assert_eq!(undone, before);
+    }
+    let stroke = crate::schema::layer_base(&document.layers[0]).attributes.stroke.as_ref().unwrap();
+    assert_eq!((stroke.width, stroke.cap.as_str(), stroke.join.as_str()), (3.0, "round", "bevel"));
+    assert_eq!(stroke.dash, Some(vec![8.0]));
+    let scene = crate::schema::flatten_drawing_document_to_scene_nodes(&document);
+    assert_eq!(scene.iter().find_map(|node| node.stroke.as_ref()), Some(stroke));
+    assert_eq!(parse_layer_field_input("name", "123"), dsl::DslValue::String("123".into()));
+    eprintln!("[DEBUG] stroke edits preserve sibling attributes and undo atomically");
 }

@@ -227,7 +227,6 @@ async fn genesis_physical_pair_and_sqlite_restart_preserve_exact_receipt() {
     drop(blobs);
     drop(sqlite);
     std::fs::remove_dir_all(&root).unwrap();
-    println!("[DEBUG] SQLite genesis physical restart: neutral pair=1 exact CAS readbacks=6 descriptor/checkpoint/receipt/head/ledger preserved=2 same-root reopen=1 projection rebuild=1; real codec and Hub process restart not executed");
 }
 
 #[tokio::test]
@@ -263,7 +262,6 @@ async fn genesis_delivery_lease_serializes_invalidation_and_requires_replay() {
     assert!(f.service.delivery_epochs.lock().unwrap().2.len() <= crate::directory::DIRECTORY_DELIVERY_SCOPE_MAX);
     assert!(f.service.delivery_epoch(Some("other")) > current);
     assert!(f.service.acquire_delivery_lease(Some("other"), 0).await.is_none());
-    println!("[DEBUG] Directory delivery lease: pending invalidation=1 released send=1 scoped/global stale refusal=2 unrelated space retained=1 new replay epoch admitted=1 bounded-scope fallback=4096; no real socket send executed");
 }
 
 mod quick {
@@ -407,10 +405,6 @@ mod quick {
                 assert_eq!(f.sqlite().artifact_creation_terminate_uncommitted(&f.intent, now_ms() as u64).await.unwrap(), terminal);
             }
         }
-        println!(
-            "[DEBUG] SQLite genesis: neutral transactions={} rollback cuts=7 index binding cuts=2 authority refusals=6 exact receipt/replay/rebuild=4 ack-loss ordered broadcast=1 forced replay epochs=2 revoked recovery=6; socket reconnect, physical CAS staging and real factory not executed",
-            fixture["cases"].as_array().unwrap().len()
-        );
     }
 }
 
@@ -429,7 +423,6 @@ mod long {
             }
             if kind == "expired" {
                 let remaining = intent.deadline_ms.saturating_sub(now_ms() as u64);
-                println!("[DEBUG] Accepted-only recovery waits {remaining}ms for its real persisted 30-second deadline; no factory or CAS work scheduled");
                 tokio::time::sleep(std::time::Duration::from_millis(remaining + 1)).await;
                 assert!(now_ms() as u64 >= intent.deadline_ms);
             }
@@ -456,6 +449,5 @@ mod long {
                 assert_eq!(sqlite.read_artifact_creation(&intent.actor.user_id, &intent.request.request_id).await.unwrap(), facts);
             }
         }
-        println!("[DEBUG] SQLite Accepted-only recovery: neutral cases=3 actual deadline=30000ms terminal retries=2 no prepared/private/public/CAS rows=21; real factory and HTTP supervisor not executed");
     }
 }

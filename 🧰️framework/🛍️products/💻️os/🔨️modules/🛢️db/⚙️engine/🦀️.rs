@@ -11029,4 +11029,8 @@ impl ArtifactHandle {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/⏱️throughput/🦀️.rs"]
+mod throughput_tests;
 //#endregion 🧪️Tests

@@ -550,13 +550,13 @@ impl InMemoryToolRegistry {
         Self::default()
     }
 
+    /// 🧷️ Normalize here rather than at each call site: this is the one choke point every tool
+    /// passes through, so no future registration can reintroduce a boolean sub-schema that makes
+    /// the official SDK reject the entire `tools/list` response. See `schema::normalize_boolean_subschemas`.
     pub fn register(&mut self, tool: Tool, handler: impl Fn(serde_json::Value) -> CallToolResult + Send + Sync + 'static) -> Result<(), GatewayError> {
         if !is_valid_tool_name(&tool.name) {
             return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("tool name `{}` violates ^[a-zA-Z0-9_-]{{1,64}}$", tool.name)));
         }
-        // 🧷️ Normalize here rather than at each call site: this is the one choke point every tool
-        // passes through, so no future registration can reintroduce a boolean sub-schema that makes
-        // the official SDK reject the entire `tools/list` response. See `schema::normalize_boolean_subschemas`.
         let mut tool = tool;
         crate::schema::convert_draft07_to_2020_12(&mut tool.input_schema);
         crate::schema::normalize_boolean_subschemas(&mut tool.input_schema);
@@ -1158,21 +1158,27 @@ impl McpServer {
         Some(crate::notify::ProgressBinding { token, slot })
     }
 
+    /// 📈️ Held across the whole call: every job the tool mints while this guard is alive is bound
+    /// to the client's token, so its progress is PUSHED as `notifications/progress` instead of
+    /// only being readable by polling `job_get`.
+    ///
+    /// 💬️ The ONE real dispatch point every tool call passes through — so the shell's agent
+    /// panel shows the agent's actual calls, in order, with their real arguments and outcomes,
+    /// rather than a second bookkeeping path that could drift from what ran.
+    /// 💬️ …except for a tool whose own result IS a conversation frame: `conversation_reply`
+    /// publishes the agent's prose itself, and a tool-call row carrying the same sentence as its
+    /// `arguments` would print every turn twice (`SELF_PUBLISHING_CONVERSATION_TOOLS`).
+    ///
+    /// 🔔️ A committed mutation, an undo/redo, a created artifact — the declared table in
+    /// `📣️notify` says which tool changed which resource, and every connection subscribed
+    /// to one of those URIs is told. This is the one call site that makes
+    /// `"resources": {"subscribe": true}` real.
     fn handle_tools_call(&self, request: &JsonRpcRequest) -> DispatchOutcome {
         let Some(params) = request.params.as_ref() else { return DispatchOutcome::Error(INVALID_PARAMS, "tools/call requires params".to_string(), None) };
         let Some(name) = params.get("name").and_then(|value| value.as_str()) else { return DispatchOutcome::Error(INVALID_PARAMS, "tools/call requires params.name".to_string(), None) };
         let arguments = params.get("arguments").cloned().unwrap_or(serde_json::Value::Null);
-        // 📈️ Held across the whole call: every job the tool mints while this guard is alive is bound
-        // to the client's token, so its progress is PUSHED as `notifications/progress` instead of
-        // only being readable by polling `job_get`.
         let _request = crate::notify::enter_request_scope(request.id.as_ref().map(|id| serde_json::to_value(id).unwrap_or(serde_json::Value::Null)).as_ref());
         let _progress = crate::notify::enter_progress_scope(self.progress_binding(request, params));
-        // 💬️ The ONE real dispatch point every tool call passes through — so the shell's agent
-        // panel shows the agent's actual calls, in order, with their real arguments and outcomes,
-        // rather than a second bookkeeping path that could drift from what ran.
-        // 💬️ …except for a tool whose own result IS a conversation frame: `conversation_reply`
-        // publishes the agent's prose itself, and a tool-call row carrying the same sentence as its
-        // `arguments` would print every turn twice (`SELF_PUBLISHING_CONVERSATION_TOOLS`).
         let publishes_itself = crate::bridge::SELF_PUBLISHING_CONVERSATION_TOOLS.contains(&name);
         let invocation = self.conversation.as_ref().filter(|_| !publishes_itself).map(|conversation| conversation.begin_tool_call(name, &arguments));
         let outcome = self.tools.call(name, arguments);
@@ -1185,10 +1191,6 @@ impl McpServer {
         }
         match outcome {
             Ok(result) => {
-                // 🔔️ A committed mutation, an undo/redo, a created artifact — the declared table in
-                // `📣️notify` says which tool changed which resource, and every connection subscribed
-                // to one of those URIs is told. This is the one call site that makes
-                // `"resources": {"subscribe": true}` real.
                 crate::notify::broadcast_tool_result_changes(name, result.is_error, result.structured_content.as_ref());
                 DispatchOutcome::Result(serde_json::json!({
                     "resultType": "complete",
@@ -1244,13 +1246,13 @@ impl McpServer {
         }
     }
 
+    /// 🔔️ The registry validated that this URI is one it can serve; recording it here is what
+    /// makes a later `notifications/resources/updated` actually reach THIS connection.
     fn handle_resources_subscribe(&self, request: &JsonRpcRequest) -> DispatchOutcome {
         let Some(uri) = request.params.as_ref().and_then(|params| params.get("uri")).and_then(|value| value.as_str()) else {
             return DispatchOutcome::Error(INVALID_PARAMS, "resources/subscribe requires params.uri".to_string(), None);
         };
         match self.resources.subscribe(uri) {
-            // 🔔️ The registry validated that this URI is one it can serve; recording it here is what
-            // makes a later `notifications/resources/updated` actually reach THIS connection.
             Ok(()) => {
                 self.subscriptions.subscribe(uri);
                 DispatchOutcome::Result(serde_json::json!({}))

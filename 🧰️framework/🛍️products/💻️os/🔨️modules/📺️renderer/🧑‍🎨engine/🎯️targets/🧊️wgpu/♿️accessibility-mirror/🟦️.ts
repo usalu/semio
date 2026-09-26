@@ -18,9 +18,11 @@ export type AccessibilityProjectionNode = {
   readonly actionable?: boolean;
   readonly focused?: boolean;
   readonly checked?: boolean;
+  readonly pressed?: boolean;
   readonly selected?: boolean;
   readonly expanded?: boolean;
   readonly editable?: boolean;
+  readonly multiline?: boolean;
   readonly controls?: string;
   readonly activeDescendant?: string;
   readonly level?: number;
@@ -55,6 +57,7 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
         if (node.role !== "button") button.setAttribute("role", node.role);
         return button;
       }
+      if (node.role === "textbox" && node.multiline === true) return document.createElement("textarea");
       if (node.role === "textbox" || node.role === "slider" || node.role === "spinbutton" || (node.role === "combobox" && node.editable === true)) {
         const input = document.createElement("input");
         input.type = node.role === "slider" ? "range" : node.role === "spinbutton" ? "number" : "text";
@@ -83,9 +86,14 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     if (node.hidden === true) element.setAttribute("aria-hidden", "true");
     if (node.disabled === true) element.setAttribute("aria-disabled", "true");
     if (node.checked !== undefined) element.setAttribute("aria-checked", String(node.checked));
+    if (node.pressed !== undefined) element.setAttribute("aria-pressed", String(node.pressed));
     if (node.selected !== undefined) element.setAttribute("aria-selected", String(node.selected));
     if (node.expanded !== undefined) element.setAttribute("aria-expanded", String(node.expanded));
-    if (node.editable === true) element.setAttribute("aria-autocomplete", "list");
+    if (node.role === "combobox" && node.editable === true) element.setAttribute("aria-autocomplete", "list");
+    if (node.multiline === true) {
+      element.setAttribute("aria-multiline", "true");
+      element.setAttribute("aria-readonly", String(node.editable !== true));
+    }
     if (node.controls !== undefined && ids.has(node.controls)) element.setAttribute("aria-controls", ids.get(node.controls)!);
     if (node.activeDescendant !== undefined && ids.has(node.activeDescendant)) element.setAttribute("aria-activedescendant", ids.get(node.activeDescendant)!);
     if (node.level !== undefined) element.setAttribute("aria-level", String(node.level));
@@ -97,11 +105,11 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     if (node.focused === true) element.dataset.focused = "true";
     if (node.focusable === true) element.dataset.focusable = "true";
     if (node.actionable === true) element.dataset.actionable = "true";
-    if (element instanceof HTMLInputElement) {
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
       if (node.valueText !== undefined) element.value = node.valueText;
-      if (node.valueMin !== undefined) element.min = String(node.valueMin);
-      if (node.valueMax !== undefined) element.max = String(node.valueMax);
-      if (node.valueNow !== undefined && node.role !== "textbox" && node.role !== "combobox") element.value = String(node.valueNow);
+      if (element instanceof HTMLInputElement && node.valueMin !== undefined) element.min = String(node.valueMin);
+      if (element instanceof HTMLInputElement && node.valueMax !== undefined) element.max = String(node.valueMax);
+      if (element instanceof HTMLInputElement && node.valueNow !== undefined && node.role !== "textbox" && node.role !== "combobox") element.value = String(node.valueNow);
       element.disabled = node.disabled === true;
     }
     if (element instanceof HTMLButtonElement) element.disabled = node.disabled === true;
@@ -113,11 +121,11 @@ export function createAccessibilityMirror(root: HTMLElement, transport: Accessib
     if (node.focusable === true) element.addEventListener("blur", () => {
       if (!restoringFocus) transport.enqueueLossless({ kind: "accessibility-blur", ...address });
     });
-    if (node.actionable === true && !(element instanceof HTMLInputElement)) element.addEventListener("click", (event) => {
+    if (node.actionable === true && !(element instanceof HTMLInputElement) && !(element instanceof HTMLTextAreaElement)) element.addEventListener("click", (event) => {
       event.stopPropagation();
       transport.enqueueLossless({ kind: "accessibility-activate", ...address });
     });
-    if (element instanceof HTMLInputElement) element.addEventListener("input", (event) => {
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) element.addEventListener("input", (event) => {
       event.stopPropagation();
       transport.enqueueLossless({ kind: "accessibility-value", ...address, value: element.value });
     });

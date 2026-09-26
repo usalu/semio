@@ -6,7 +6,7 @@
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // 🧪️ Router of the repository testing domain:
-//   bun ./📜️script.ts <discover|contract|oracle|subject|parity|run|report|clean|dependency|nx|doctor> [args…]
+//   bun ./📜️script.ts <discover|contract|oracle|subject|parity|run|report|clean|dependency|nx|doctor|acceptance> [args…]
 
 //#endregion 🧲️Header
 
@@ -23,6 +23,7 @@ import { CleanScript, GcScript } from "./🧹️retention/📋️orchestration/�
 import { SchemaScript } from "./🧬️schema/📋️orchestration/🟦️.ts";
 import { MatrixScript, ProbeScript } from "./📊️coverage/📋️orchestration/🟦️.ts";
 import { MetricsScript, ReportScript } from "./📊️reporting/📋️orchestration/🟦️.ts";
+import { AcceptanceScript } from "./🎯️acceptance/📋️orchestration/🟦️.ts";
 
 /** 🧭️ Explicit full-fleet DSL conformance; never part of focused kernel test routing. */
 class DslScript extends Script {
@@ -70,6 +71,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("matrix", MatrixScript)
   .register("gc", GcScript)
   .register("gap", GapScript)
-  .register("manifest", ManifestScript);
+  .register("manifest", ManifestScript)
+  .register("acceptance", AcceptanceScript);
 
 await runBundleScriptMain(router, import.meta.url);

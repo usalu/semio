@@ -1,0 +1,6 @@
+{
+  "ChangeConnectionFastenerType": {
+    "connectionId": "conn-C1",
+    "newValue": "screw"
+  }
+}

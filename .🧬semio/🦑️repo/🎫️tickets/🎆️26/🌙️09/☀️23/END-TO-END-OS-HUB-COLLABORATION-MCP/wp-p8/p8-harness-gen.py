@@ -1,12 +1,14 @@
 """🏗️ Generates the ticket-local declared-verb probe harness (`wp-p8/probe-harness`): one standalone cargo crate (own
 `[workspace]`, path deps only, nothing in the tree touched) that runs `artifact_app_laws::probe_declared_verbs` over every
 editor and viewer surface `p8-surfaces.py` found and prints one JSON line per surface with its probes' findings and
-agent-lane divergences. Usage: p8-harness-gen.py <surfaces.json> [--only crate,crate]"""
-import json, os, re, sys
+agent-lane divergences. stdio surfaces are limited to the crates the stdio component ships (its other example editors do
+not compile under `full-app-catalog`, see `wp-p8.md` § Routed). Usage: p8-harness-gen.py <surfaces.json> [--only crate,crate]"""
+import json, os, re, shutil, sys
 ROOT = "/Users/ueli/Documents/semio"
 DEPS_ROOT = os.environ.get("P8_DEPS_ROOT", ROOT)
 HARNESS = os.path.join(ROOT, ".tmp-ticket/wp-p8/probe-harness")
-rows = json.load(open(sys.argv[1], encoding="utf-8"))
+SHIPPED_STDIO = {f"semio-s-artifact-stdio-{name}" for name in ["csv", "html", "json", "md", "tsv", "txt", "xml"]}
+rows = [row for row in json.load(open(sys.argv[1], encoding="utf-8")) if not (row["crate"] or "").startswith("semio-s-artifact-stdio-") or row["crate"] in SHIPPED_STDIO]
 only = None
 if "--only" in sys.argv:
     only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
@@ -67,6 +69,7 @@ for crate, (path, feats) in sorted(deps.items()):
     f = f', features = {json.dumps(feats)}' if feats else ""
     lines.append(f'{crate} = {{ path = "{path}"{f} }}')
 open(os.path.join(HARNESS, "Cargo.toml"), "w", encoding="utf-8").write("\n".join(lines) + "\n")
+shutil.copyfile(os.path.join(DEPS_ROOT, "Cargo.lock"), os.path.join(HARNESS, "Cargo.lock"))
 
 body = ['//! 🧪️ Ticket-local declared-verb probe harness (P8): runs the framework declared-verb law over every surface and prints',
         '//! one JSON line per surface — findings and agent-lane divergences — so the whole fleet is measured without touching the tree.',

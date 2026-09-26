@@ -1,0 +1,9 @@
+{
+  "schema": "semio.hub.vigilant-concurrent-edit/v1",
+  "description": "Two authors write the same opaque (plugin) document from the same base. The database cannot read the diffs, so it judges them by causality alone: a write whose dependencies miss the document's head was authored without seeing it. `Vigilant` refuses such a write with the typed `mutation.clamped` warning (the Shell localizes it as a concurrent edit of the same part: `🛠️ShellHelpers/🧫️fixtures/⚔️hub-command-rejection`); `Normal` accepts it and carries the warning; a write that depends on the head is accepted under both.",
+  "rows": [
+    { "name": "vigilant refuses the write authored without seeing the first", "policy": "vigilant", "secondDependsOn": "base", "first": "accepted", "second": "refused", "code": "mutation.clamped", "level": "warning" },
+    { "name": "vigilant accepts the write authored after seeing the first", "policy": "vigilant", "secondDependsOn": "first", "first": "accepted", "second": "accepted", "code": null, "level": null },
+    { "name": "normal accepts the concurrent write and reports it", "policy": "normal", "secondDependsOn": "base", "first": "accepted", "second": "accepted", "code": "mutation.clamped", "level": "warning" }
+  ]
+}

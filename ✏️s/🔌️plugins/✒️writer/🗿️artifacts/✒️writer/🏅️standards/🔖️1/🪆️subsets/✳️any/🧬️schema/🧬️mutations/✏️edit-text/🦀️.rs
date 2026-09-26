@@ -34,6 +34,11 @@ impl MutationKind<WriterSnapshot, WriterMutation> for EditText {
         super::inverse::inverse(self, base)
     }
 
+    /// 🎯️ The writer's authored body — its composed `document` child derives from it. Concurrent writers of the same field conflict; writers of different fields never do.
+    fn target(&self) -> Vec<String> {
+        vec!["text".to_string()]
+    }
+
     fn label(&self) -> protocol::LocalizedLabel {
         protocol::LocalizedLabel::native("Edit document text", "Dokumenttext bearbeiten")
     }

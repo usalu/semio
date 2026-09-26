@@ -3,15 +3,11 @@
   "installMetaFile": "📥️install.json",
   "staticDirectories": ["🪞️vendor", "🧵️shard", "🧩️puzzle"],
   "httpCases": [
-    { "owner": "plugin", "method": "GET", "url": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/watch", "expected": "snapshot" },
-    { "owner": "plugin", "method": "GET", "url": "/plugin-modules/watch", "expected": "next" },
-    { "owner": "plugin", "method": "POST", "url": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/watch", "expected": "next" },
-    { "owner": "plugin", "method": "GET", "url": "/%F0%9F%94%8C%EF%B8%8Fplugin-modules/%2e%2e/watch", "expected": "next" },
-    { "owner": "extension", "method": "GET", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/watch?v=1", "expected": "snapshot" },
+    { "owner": "extension", "method": "GET", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/watch?v=1", "expected": "next" },
     { "owner": "extension", "method": "POST", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/install", "expected": "installed" },
     { "owner": "extension", "method": "POST", "url": "/extensions/install", "expected": "next" },
     { "owner": "extension", "method": "POST", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/install%2fchild", "expected": "next" },
-    { "owner": "extension", "method": "GET", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/install", "expected": "next" }
+    { "owner": "extension", "method": "GET", "url": "/%F0%9F%A7%A9%EF%B8%8Fextension-modules/install", "expected": "listed" }
   ],
   "routeCases": [
     { "input": "/🔌️plugin-modules/watch", "output": "/🔌️plugin-modules/watch" },

@@ -103,6 +103,16 @@ pub fn inverse_wfc2d_mutation(projection: &Wfc2dSnapshot, mutation: &Wfc2dMutati
     mutation.inverse(projection)
 }
 
+//#region 🌉️TestBridge
+/// 🌉️ The language-neutral report of one committed specification vector — decoded, diffed, applied and inverted
+/// through this subset's production JSON codec and `Mutation` implementation — that the `mutate-wfc2d` case's
+/// subject half judges with `law::vector`. Its signature names only `str`, so a generated test host reaches it.
+/// @see store::os_store::test_support::mutation_report_json
+pub fn wfc2d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
+    store::os_store::test_support::mutation_report_json::<Wfc2dSnapshot, Wfc2dMutation>(base_json, mutation_json, after_json)
+}
+//#endregion 🌉️TestBridge
+
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

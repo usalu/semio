@@ -1083,6 +1083,423 @@
             }
           },
           {
+            "id": "editSelection",
+            "label": {
+              "native": {
+                "en": "Arrange Selection",
+                "de": "Auswahl anordnen"
+              },
+              "reuse": {
+                "en": "Arrange Selection",
+                "de": "Auswahl anordnen"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "operation",
+                "label": {
+                  "native": {
+                    "en": "Operation",
+                    "de": "Aktion"
+                  },
+                  "reuse": {
+                    "en": "Operation",
+                    "de": "Aktion"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "group",
+                      "label": {
+                        "native": {
+                          "en": "Group",
+                          "de": "Gruppieren"
+                        },
+                        "reuse": {
+                          "en": "Group",
+                          "de": "Gruppieren"
+                        }
+                      }
+                    },
+                    {
+                      "value": "duplicate",
+                      "label": {
+                        "native": {
+                          "en": "Duplicate",
+                          "de": "Duplizieren"
+                        },
+                        "reuse": {
+                          "en": "Duplicate",
+                          "de": "Duplizieren"
+                        }
+                      }
+                    },
+                    {
+                      "value": "delete",
+                      "label": {
+                        "native": {
+                          "en": "Delete",
+                          "de": "Löschen"
+                        },
+                        "reuse": {
+                          "en": "Delete",
+                          "de": "Löschen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "bringToFront",
+                      "label": {
+                        "native": {
+                          "en": "Bring to Front",
+                          "de": "In den Vordergrund"
+                        },
+                        "reuse": {
+                          "en": "Bring to Front",
+                          "de": "In den Vordergrund"
+                        }
+                      }
+                    },
+                    {
+                      "value": "sendToBack",
+                      "label": {
+                        "native": {
+                          "en": "Send to Back",
+                          "de": "In den Hintergrund"
+                        },
+                        "reuse": {
+                          "en": "Send to Back",
+                          "de": "In den Hintergrund"
+                        }
+                      }
+                    },
+                    {
+                      "value": "alignLeft",
+                      "label": {
+                        "native": {
+                          "en": "Align Left",
+                          "de": "Links ausrichten"
+                        },
+                        "reuse": {
+                          "en": "Align Left",
+                          "de": "Links ausrichten"
+                        }
+                      }
+                    },
+                    {
+                      "value": "alignCenter",
+                      "label": {
+                        "native": {
+                          "en": "Align Center",
+                          "de": "Horizontal zentrieren"
+                        },
+                        "reuse": {
+                          "en": "Align Center",
+                          "de": "Horizontal zentrieren"
+                        }
+                      }
+                    },
+                    {
+                      "value": "alignRight",
+                      "label": {
+                        "native": {
+                          "en": "Align Right",
+                          "de": "Rechts ausrichten"
+                        },
+                        "reuse": {
+                          "en": "Align Right",
+                          "de": "Rechts ausrichten"
+                        }
+                      }
+                    },
+                    {
+                      "value": "alignTop",
+                      "label": {
+                        "native": {
+                          "en": "Align Top",
+                          "de": "Oben ausrichten"
+                        },
+                        "reuse": {
+                          "en": "Align Top",
+                          "de": "Oben ausrichten"
+                        }
+                      }
+                    },
+                    {
+                      "value": "alignMiddle",
+                      "label": {
+                        "native": {
+                          "en": "Align Middle",
+                          "de": "Vertikal zentrieren"
+                        },
+                        "reuse": {
+                          "en": "Align Middle",
+                          "de": "Vertikal zentrieren"
+                        }
+                      }
+                    },
+                    {
+                      "value": "alignBottom",
+                      "label": {
+                        "native": {
+                          "en": "Align Bottom",
+                          "de": "Unten ausrichten"
+                        },
+                        "reuse": {
+                          "en": "Align Bottom",
+                          "de": "Unten ausrichten"
+                        }
+                      }
+                    },
+                    {
+                      "value": "distributeHorizontal",
+                      "label": {
+                        "native": {
+                          "en": "Distribute Horizontally",
+                          "de": "Horizontal verteilen"
+                        },
+                        "reuse": {
+                          "en": "Distribute Horizontally",
+                          "de": "Horizontal verteilen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "distributeVertical",
+                      "label": {
+                        "native": {
+                          "en": "Distribute Vertically",
+                          "de": "Vertikal verteilen"
+                        },
+                        "reuse": {
+                          "en": "Distribute Vertically",
+                          "de": "Vertikal verteilen"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": true
+              },
+              {
+                "id": "ids",
+                "label": {
+                  "native": {
+                    "en": "Layers",
+                    "de": "Ebenen"
+                  },
+                  "reuse": {
+                    "en": "Layers",
+                    "de": "Ebenen"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "editPath",
+            "label": {
+              "native": {
+                "en": "Edit Path",
+                "de": "Pfad bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit Path",
+                "de": "Pfad bearbeiten"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "layerId",
+                "label": {
+                  "native": {
+                    "en": "Path",
+                    "de": "Pfad"
+                  },
+                  "reuse": {
+                    "en": "Path",
+                    "de": "Pfad"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "edit",
+                "label": {
+                  "native": {
+                    "en": "Node Edit",
+                    "de": "Knotenbearbeitung"
+                  },
+                  "reuse": {
+                    "en": "Node Edit",
+                    "de": "Knotenbearbeitung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "format": {
+                    "kind": "json"
+                  }
+                },
+                "required": true
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "editFill",
+            "label": {
+              "native": {
+                "en": "Edit Fill",
+                "de": "Füllung bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit Fill",
+                "de": "Füllung bearbeiten"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [
+              {
+                "id": "layerId",
+                "label": {
+                  "native": {
+                    "en": "Layer",
+                    "de": "Ebene"
+                  },
+                  "reuse": {
+                    "en": "Layer",
+                    "de": "Ebene"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": true
+              },
+              {
+                "id": "edit",
+                "label": {
+                  "native": {
+                    "en": "Fill Edit",
+                    "de": "Füllungsbearbeitung"
+                  },
+                  "reuse": {
+                    "en": "Fill Edit",
+                    "de": "Füllungsbearbeitung"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "format": {
+                    "kind": "json"
+                  }
+                },
+                "required": true
+              }
+            ],
+            "inPalette": true,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
             "id": "setActiveExample",
             "label": {
               "native": {
@@ -2373,6 +2790,45 @@
                       }
                     },
                     {
+                      "value": "fillEnabled",
+                      "label": {
+                        "native": {
+                          "en": "Fill Enabled",
+                          "de": "Füllung aktiv"
+                        },
+                        "reuse": {
+                          "en": "Fill Enabled",
+                          "de": "Füllung aktiv"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeEnabled",
+                      "label": {
+                        "native": {
+                          "en": "Stroke Enabled",
+                          "de": "Kontur aktiv"
+                        },
+                        "reuse": {
+                          "en": "Stroke Enabled",
+                          "de": "Kontur aktiv"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeColor",
+                      "label": {
+                        "native": {
+                          "en": "Stroke Color",
+                          "de": "Konturfarbe"
+                        },
+                        "reuse": {
+                          "en": "Stroke Color",
+                          "de": "Konturfarbe"
+                        }
+                      }
+                    },
+                    {
                       "value": "fillColor",
                       "label": {
                         "native": {
@@ -2382,6 +2838,45 @@
                         "reuse": {
                           "en": "Fill Colour",
                           "de": "Füllfarbe"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeCap",
+                      "label": {
+                        "native": {
+                          "en": "Line Caps",
+                          "de": "Linienenden"
+                        },
+                        "reuse": {
+                          "en": "Line Caps",
+                          "de": "Linienenden"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeJoin",
+                      "label": {
+                        "native": {
+                          "en": "Line Joins",
+                          "de": "Linienverbindungen"
+                        },
+                        "reuse": {
+                          "en": "Line Joins",
+                          "de": "Linienverbindungen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeDash",
+                      "label": {
+                        "native": {
+                          "en": "Dash Pattern",
+                          "de": "Strichmuster"
+                        },
+                        "reuse": {
+                          "en": "Dash Pattern",
+                          "de": "Strichmuster"
                         }
                       }
                     },
@@ -2460,6 +2955,19 @@
                         "reuse": {
                           "en": "Rotation",
                           "de": "Drehung"
+                        }
+                      }
+                    },
+                    {
+                      "value": "rotationDegrees",
+                      "label": {
+                        "native": {
+                          "en": "Rotation (°)",
+                          "de": "Drehung (°)"
+                        },
+                        "reuse": {
+                          "en": "Rotation (°)",
+                          "de": "Drehung (°)"
                         }
                       }
                     },
@@ -2690,6 +3198,45 @@
                       }
                     },
                     {
+                      "value": "fillEnabled",
+                      "label": {
+                        "native": {
+                          "en": "Fill Enabled",
+                          "de": "Füllung aktiv"
+                        },
+                        "reuse": {
+                          "en": "Fill Enabled",
+                          "de": "Füllung aktiv"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeEnabled",
+                      "label": {
+                        "native": {
+                          "en": "Stroke Enabled",
+                          "de": "Kontur aktiv"
+                        },
+                        "reuse": {
+                          "en": "Stroke Enabled",
+                          "de": "Kontur aktiv"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeColor",
+                      "label": {
+                        "native": {
+                          "en": "Stroke Color",
+                          "de": "Konturfarbe"
+                        },
+                        "reuse": {
+                          "en": "Stroke Color",
+                          "de": "Konturfarbe"
+                        }
+                      }
+                    },
+                    {
                       "value": "fillColor",
                       "label": {
                         "native": {
@@ -2699,6 +3246,45 @@
                         "reuse": {
                           "en": "Fill Colour",
                           "de": "Füllfarbe"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeCap",
+                      "label": {
+                        "native": {
+                          "en": "Line Caps",
+                          "de": "Linienenden"
+                        },
+                        "reuse": {
+                          "en": "Line Caps",
+                          "de": "Linienenden"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeJoin",
+                      "label": {
+                        "native": {
+                          "en": "Line Joins",
+                          "de": "Linienverbindungen"
+                        },
+                        "reuse": {
+                          "en": "Line Joins",
+                          "de": "Linienverbindungen"
+                        }
+                      }
+                    },
+                    {
+                      "value": "strokeDash",
+                      "label": {
+                        "native": {
+                          "en": "Dash Pattern",
+                          "de": "Strichmuster"
+                        },
+                        "reuse": {
+                          "en": "Dash Pattern",
+                          "de": "Strichmuster"
                         }
                       }
                     },
@@ -2777,6 +3363,19 @@
                         "reuse": {
                           "en": "Rotation",
                           "de": "Drehung"
+                        }
+                      }
+                    },
+                    {
+                      "value": "rotationDegrees",
+                      "label": {
+                        "native": {
+                          "en": "Rotation (°)",
+                          "de": "Drehung (°)"
+                        },
+                        "reuse": {
+                          "en": "Rotation (°)",
+                          "de": "Drehung (°)"
                         }
                       }
                     },
@@ -4091,6 +4690,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -4196,6 +4805,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -4289,6 +4908,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -5564,6 +6193,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5669,6 +6308,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5762,6 +6411,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -6031,8 +6690,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "98afb541185ed30aa27eb1d577d0b22b1cd66b4ecc8a05f8fb10a6e8d3f1f0b3",
-    "coreWasmSha256": "33d81069f8493da2f8275ea0f3a9372d10f5c26b01f1d9a9bdf685f5b298c23c",
-    "descriptorSha256": "4b718b3dd1ecf4f8dad199cdb9392ba6b4be56884ed8e1b1719089defabd636c"
+    "wasmSha256": "1311a754a9b02cb082f0caafe4fcc1ac59f85fa774917fbbcdb0e00a740db82d",
+    "coreWasmSha256": "23999b28c434ef675dad467305c3ed798f55cb18dfaa9f3c1970ec1c40a8f289",
+    "descriptorSha256": "907faf690e730a1b31b2d2dddc5e9b935e5ddbcfdd4d4bf71ea00917f3767d38"
   }
 }

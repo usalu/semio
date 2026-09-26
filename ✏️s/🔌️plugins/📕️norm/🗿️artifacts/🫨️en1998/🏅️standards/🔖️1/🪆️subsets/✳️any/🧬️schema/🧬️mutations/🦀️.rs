@@ -232,3 +232,20 @@ impl En1998Mutation {
     }
 }
 
+//#region 🌉️ExternalCodecBridge
+/// 📥️ Decodes one committed mutation JSON document into [`En1998Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
+pub fn decode_en1998_mutation_json(text: &str) -> Result<En1998Mutation, String> {
+    pack::json::from_json_str(text).map_err(|error| error.to_string())
+}
+/// 🎯️ Applies one mutation to `base` through production dispatch, returning the next snapshot and every raised diagnostic as `level:code`.
+pub fn apply_en1998_mutation(base: &En1998Snapshot, mutation: &En1998Mutation) -> Result<(En1998Snapshot, Vec<String>), String> {
+    let raised = <En1998Mutation as protocol::Mutation<En1998Snapshot>>::diff(mutation, base);
+    let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
+    let applied = <En1998Diff as protocol::MutationDiff<En1998Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    Ok((applied, messages))
+}
+/// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
+pub fn inverse_en1998_mutation(mutation: &En1998Mutation, base: &En1998Snapshot) -> Vec<En1998Mutation> {
+    <En1998Mutation as protocol::Mutation<En1998Snapshot>>::inverse(mutation, base)
+}
+//#endregion 🌉️ExternalCodecBridge

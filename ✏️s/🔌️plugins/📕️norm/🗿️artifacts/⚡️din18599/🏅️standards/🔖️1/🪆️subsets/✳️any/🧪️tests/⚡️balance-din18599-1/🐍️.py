@@ -171,7 +171,7 @@ def balance(doc: dict, climate: dict, *, elements=None, delta_u=None, heat_eff=N
         "hV": h_v,
         "hTPrime": h_t / a_env,
         "qH": q_h,
-        "qP": max(q_p, 0.0),
+        "qP": q_p,
     }
 
 

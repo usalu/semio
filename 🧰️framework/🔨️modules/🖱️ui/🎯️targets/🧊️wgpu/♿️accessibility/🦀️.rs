@@ -113,7 +113,10 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
                 match &arena_node.spec.0 {
                     crate::wgpu::UiNode::Input(input) => node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| input.value.clone())),
                     crate::wgpu::UiNode::Select(_) => node.expanded = Some(arena_node.state.open),
-                    crate::wgpu::UiNode::Toggle(toggle) => node.checked = Some(toggle.presence.selected),
+                    crate::wgpu::UiNode::Toggle(toggle) => match toggle.appearance {
+                        ui_contract::ToggleAppearance::Button => node.pressed = Some(toggle.presence.selected),
+                        ui_contract::ToggleAppearance::Checkbox => node.checked = Some(toggle.presence.selected),
+                    },
                     _ => {}
                 }
                 if let Some(open) = tree.disclosure_open(mounted) {

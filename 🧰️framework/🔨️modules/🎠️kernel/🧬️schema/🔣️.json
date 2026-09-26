@@ -167,7 +167,7 @@
       ],
       "properties": {
         "version": {
-          "const": 1
+          "const": 2
         },
         "streams": {
           "type": "array",
@@ -178,7 +178,7 @@
             "additionalProperties": false,
             "required": [
               "source",
-              "watchUrl"
+              "watch"
             ],
             "properties": {
               "source": {
@@ -187,9 +187,10 @@
                   "extension"
                 ]
               },
-              "watchUrl": {
+              "watch": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "description": "Opaque label of the stream the source's owner opens for it; the kernel never names a route or URL."
               }
             }
           }

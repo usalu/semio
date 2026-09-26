@@ -79,6 +79,11 @@ resvg = "0.45.1"
 tiny-skia = "0.11.4"
 usvg = "0.45.1"
 
+# 🐧️ winit's Linux backends are features; these load their system libraries at run time (no dev packages).
+[target.'cfg(target_os = "linux")'.dependencies]
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"] }
+accesskit_winit = { version = "0.34.1", default-features = false, features = ["rwh_06", "accesskit_unix", "async-io"] }
+
 [features]
 native-bin = []
 
@@ -118,6 +123,11 @@ semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀�
 # module doc describes ("the ONE crate allowed to name tokio").
 semio-framework-os-services = { workspace = true }
 tokio = { version = "1", features = ["sync", "rt", "net", "time"], default-features = false }
+# ♿️ The native shell's platform accessibility bridge (`♿️native-accessibility`): the accessibility projection every window and
+# the chrome publish becomes one macOS NSAccessibility / Windows UI Automation / Linux AT-SPI tree. Behind that one module —
+# no public signature names an `accesskit` type (ticket 26/09/23 slice WG10). Linux adds its AT-SPI adapter below.
+accesskit = "0.25.1"
+accesskit_winit = { version = "0.34.1", default-features = false, features = ["rwh_06"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 # 🌉️ The browser half of the same crate the native half above already depends on: `🧊️renderer/🦀️.rs:2`
@@ -166,3 +176,8 @@ web-sys = { version = "0.3.98", features = [
 
 [dev-dependencies]
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-ui" }
+
+# ♿️ The third-party oracle of the accessibility bridge's laws: AccessKit's own consumer tree (the one its platform adapters
+# read) must answer the roles, names, actions and focus the language-agnostic fixture declares.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+accesskit_consumer = "0.39.1"

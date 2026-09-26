@@ -1,0 +1,46 @@
+{
+  "schema": "semio.raster.brush-style.v1",
+  "cases": [
+    {
+      "color": "#e07020",
+      "hardness": 0.25,
+      "rgba": [
+        224,
+        112,
+        32,
+        255
+      ]
+    },
+    {
+      "color": "#AB09ff",
+      "hardness": 0,
+      "rgba": [
+        171,
+        9,
+        255,
+        255
+      ]
+    },
+    {
+      "color": "#ffffff",
+      "hardness": 1,
+      "rgba": [
+        255,
+        255,
+        255,
+        255
+      ]
+    }
+  ],
+  "invalidColors": [
+    "red",
+    "#fff",
+    "#11223344",
+    "#gggggg",
+    "112233"
+  ],
+  "invalidHardness": [
+    -0.1,
+    1.1
+  ]
+}

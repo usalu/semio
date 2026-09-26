@@ -7,15 +7,15 @@
   "strictMode": null,
   "index": null,
   "geometry": {
-    "geom.valve.50": {
-      "id": "geom.valve.50",
+    "geom-valve-50": {
+      "id": "geom-valve-50",
       "bbox": {
-        "min_x": 0.0,
-        "min_y": 0.0,
-        "min_z": 0.0,
-        "max_x": 0.25,
-        "max_y": 0.5,
-        "max_z": 0.125
+        "minX": 0.0,
+        "minY": 0.0,
+        "minZ": 0.0,
+        "maxX": 0.25,
+        "maxY": 0.5,
+        "maxZ": 0.125
       },
       "connections": [
         {
@@ -31,7 +31,7 @@
             0.0,
             0.0
           ],
-          "diameter_mm": 50.0
+          "diameterMm": 50.0
         },
         {
           "id": "out",
@@ -46,22 +46,22 @@
             0.0,
             0.0
           ],
-          "diameter_mm": 50.0
+          "diameterMm": 50.0
         }
       ],
       "parameters": {
         "scale": 1.0
       }
     },
-    "geom.valve.80": {
-      "id": "geom.valve.80",
+    "geom-valve-80": {
+      "id": "geom-valve-80",
       "bbox": {
-        "min_x": 0.0,
-        "min_y": 0.0,
-        "min_z": 0.0,
-        "max_x": 0.5,
-        "max_y": 0.75,
-        "max_z": 0.25
+        "minX": 0.0,
+        "minY": 0.0,
+        "minZ": 0.0,
+        "maxX": 0.5,
+        "maxY": 0.75,
+        "maxZ": 0.25
       },
       "connections": [
         {
@@ -77,7 +77,7 @@
             0.0,
             0.0
           ],
-          "diameter_mm": 50.0
+          "diameterMm": 50.0
         }
       ],
       "parameters": {
@@ -85,5 +85,6 @@
       }
     }
   },
-  "curves": null
+  "curves": null,
+  "limits": null
 }

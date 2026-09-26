@@ -190,6 +190,6 @@ try {
   session.stop();
 }
 
-const revoked = await hub("DELETE", `/auth/agent-delegations/${encodeURIComponent(delegationId)}`, { token });
+const revoked = await hub("POST", `/auth/agent-delegations/${encodeURIComponent(delegationId)}/revoke`, { token });
 row("13 the human revokes the delegation", revoked.status === 204, `HTTP ${revoked.status}`);
 finish();

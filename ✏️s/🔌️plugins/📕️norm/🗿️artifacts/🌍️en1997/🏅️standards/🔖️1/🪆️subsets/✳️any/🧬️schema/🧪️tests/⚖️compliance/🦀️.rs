@@ -1022,3 +1022,118 @@ fn perturb_every_editable_leaf_changes_some_check() {
         "editable leaves that did not change any check: {unchanged:?}"
     );
 }
+
+#[test]
+fn duplicate_layer_id_fails_integrity() {
+    let mut doc = compliant_demo();
+    let mut dup = doc.layers[0].clone();
+    dup.id = doc.layers[0].id.clone();
+    doc.layers.push(dup);
+    let report = check_project(&doc);
+    let c = report
+        .checks
+        .iter()
+        .find(|c| c.id.contains("integrity.duplicate.layers"))
+        .expect("duplicate layer check");
+    assert_eq!(c.status, CheckStatus::Fail);
+    assert!(c.explanation.en.contains("Duplicate") || c.explanation.en.contains("duplicate"));
+    assert_ne!(c.explanation.en, c.explanation.de);
+    assert!(c.remedies.iter().any(|r| !r.options.is_empty()));
+}
+
+#[test]
+fn duplicate_footing_id_fails_integrity() {
+    let mut doc = compliant_demo();
+    let mut dup = doc.footings[0].clone();
+    dup.id = doc.footings[0].id.clone();
+    doc.footings.push(dup);
+    let report = check_project(&doc);
+    let c = report
+        .checks
+        .iter()
+        .find(|c| c.id.contains("integrity.duplicate.footings"))
+        .expect("duplicate footing check");
+    assert_eq!(c.status, CheckStatus::Fail);
+    assert!(c.remedies.iter().any(|r| r.target.path.contains(".id")));
+}
+
+#[test]
+fn duplicate_ids_fail_for_every_id_bearing_collection() {
+    let base = compliant_demo();
+    for table in [
+        "layers",
+        "footings",
+        "loadCases",
+        "piles",
+        "testProfiles",
+        "retainingWalls",
+        "slopes",
+        "upliftCases",
+    ] {
+        let mut doc = base.clone();
+        match table {
+            "layers" => {
+                let mut dup = doc.layers[0].clone();
+                dup.id = doc.layers[0].id.clone();
+                doc.layers.push(dup);
+            }
+            "footings" => {
+                let mut dup = doc.footings[0].clone();
+                dup.id = doc.footings[0].id.clone();
+                doc.footings.push(dup);
+            }
+            "loadCases" => {
+                let mut dup = doc.footings[0].load_cases[0].clone();
+                dup.id = doc.footings[0].load_cases[0].id.clone();
+                doc.footings[0].load_cases.push(dup);
+            }
+            "piles" => {
+                let mut dup = doc.piles[0].clone();
+                dup.id = doc.piles[0].id.clone();
+                doc.piles.push(dup);
+            }
+            "testProfiles" => {
+                let mut dup = doc.piles[0].test_profiles[0].clone();
+                dup.id = doc.piles[0].test_profiles[0].id.clone();
+                doc.piles[0].test_profiles.push(dup);
+            }
+            "retainingWalls" => {
+                let mut dup = doc.retaining_walls[0].clone();
+                dup.id = doc.retaining_walls[0].id.clone();
+                doc.retaining_walls.push(dup);
+            }
+            "slopes" => {
+                let mut dup = doc.slopes[0].clone();
+                dup.id = doc.slopes[0].id.clone();
+                doc.slopes.push(dup);
+            }
+            "upliftCases" => {
+                let mut dup = doc.uplift_cases[0].clone();
+                dup.id = doc.uplift_cases[0].id.clone();
+                doc.uplift_cases.push(dup);
+            }
+            _ => unreachable!(),
+        }
+        let report = check_project(&doc);
+        let c = report
+            .checks
+            .iter()
+            .find(|c| c.id.contains(&format!("integrity.duplicate.{table}.")))
+            .unwrap_or_else(|| panic!("expected duplicate check for {table}"));
+        assert_eq!(c.status, CheckStatus::Fail, "{table}");
+        assert!(!c.remedies.is_empty(), "{table} needs remedy");
+        assert_ne!(c.explanation.en, c.explanation.de, "{table} en/de");
+    }
+}
+
+#[test]
+fn governing_layer_id_missing_still_fails_with_duplicates_present() {
+    let mut doc = compliant_demo();
+    let mut dup = doc.layers[0].clone();
+    dup.id = format!("{}-extra", doc.layers[0].id);
+    doc.layers.push(dup);
+    doc.slopes[0].governing_layer_id = "missing-layer".into();
+    let report = check_project(&doc);
+    let bishop = report.checks.iter().find(|c| c.id.contains("bishop")).unwrap();
+    assert_eq!(bishop.status, CheckStatus::Fail);
+}

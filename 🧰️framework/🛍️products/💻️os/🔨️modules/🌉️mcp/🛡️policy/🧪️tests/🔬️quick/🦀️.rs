@@ -98,6 +98,7 @@ fn never_approval_mode_proceeds_without_any_gate() {
     assert_eq!(engine.gate_approval(&principal, &capability, serde_json::json!({}), None, &session, 0), ApprovalGate::Proceed);
 }
 
+/// ⏳️ Not yet decided: resubmitting the same (undecided) handle must still be Required.
 #[test]
 fn a_destructive_capability_under_when_destructive_requires_approval_then_proceeds_once_resolved() {
     let engine = PolicyEngine::new(Arc::new(HandleTable::new()), AutoApprovePolicy::Never);
@@ -111,7 +112,6 @@ fn a_destructive_capability_under_when_destructive_requires_approval_then_procee
         ApprovalGate::Proceed => panic!("a destructive WhenDestructive capability must require approval"),
     };
 
-    // not yet decided: resubmitting the same (undecided) handle must still be Required.
     let still_pending = engine.gate_approval(&principal, &capability, serde_json::json!({}), Some(&handle), &session, 1);
     assert_ne!(still_pending, ApprovalGate::Proceed);
 
@@ -338,6 +338,8 @@ fn a_bridge_with_no_shell_attached_is_unreachable_and_says_so() {
     }
 }
 
+/// 🧾️ WHO / WHAT / HOW LONG — the three things a human cannot decide without, and the
+/// reason a shell-lane approval is an affordance rather than a JSON blob on screen.
 #[test]
 fn the_shell_lane_publishes_a_structured_request_and_honours_the_humans_yes() {
     let (bridge, connection, mut next_frame) = live_bridge();
@@ -356,8 +358,6 @@ fn the_shell_lane_publishes_a_structured_request_and_honours_the_humans_yes() {
             assert_eq!(parsed["capabilityId"], "cad.editor.deleteSelection");
             assert_eq!(parsed["requestedBy"], "agent:local");
             assert_eq!(parsed["risk"], "high");
-            // 🧾️ WHO / WHAT / HOW LONG — the three things a human cannot decide without, and the
-            // reason a shell-lane approval is an affordance rather than a JSON blob on screen.
             assert_eq!(parsed["capabilityTitle"], "Delete Selection");
             assert_eq!(parsed["description"], "Removes every currently selected element from the drawing.");
             assert_eq!(parsed["artifactKind"], "s.cad.cad");

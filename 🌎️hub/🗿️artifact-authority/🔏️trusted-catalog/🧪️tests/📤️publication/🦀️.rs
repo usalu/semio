@@ -50,7 +50,6 @@ fn trusted_publication_revision_matches_neutral_closed_u64_cases() {
             assert_eq!(result.unwrap().to_string(), next);
         }
     }
-    println!("[DEBUG] publication revision: neutral cases=8 nonzero-u64=exact ABA=revision-sensitive");
 }
 
 #[tokio::test]
@@ -103,7 +102,6 @@ async fn trusted_publication_cas_races_and_aba_use_real_catalog_loader() {
     exhausted["expectedCurrentSha256"] = hex_lower(&Sha256::digest(&maximum_bytes)).into();
     assert!(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&exhausted).unwrap(), provider, &context).await.is_err());
     assert_eq!(std::fs::read(&pointer_path).unwrap(), maximum_bytes);
-    println!("[DEBUG] publication real loader: first=1 ABA=3 stale=refused concurrent-winners=1 final-revision=4 activation-only-on-load");
 }
 
 struct PublicationLeafSwap {
@@ -151,7 +149,6 @@ async fn trusted_publication_post_verification_leaf_substitution_preserves_curre
         assert!(document_codec(&b.schema).await.unwrap().is_none(), "failed candidate installed a codec");
         assert_eq!(TrustedCatalogLoader::load_current(&data, &provider_a, &context).await.unwrap().unwrap().generation_id(), current["generationId"].as_str().unwrap());
     }
-    println!("[DEBUG] publication final native fence: substituted-leaves=4 prior-current=exact reload=verified no-candidate-activation");
 }
 
 #[tokio::test]
@@ -178,5 +175,4 @@ async fn trusted_publication_command_refuses_invalid_authority_before_initial_po
     control.cancelled.store(true, Ordering::SeqCst);
     assert!(TrustedCatalogPublisher::publish_current(&data, &serde_json::to_vec(&command).unwrap(), &provider, &control.context()).await.is_err());
     assert!(!data.join("trusted-catalog/current.json").exists());
-    println!("[DEBUG] publication command: rejected-authority=4 cancelled=1 selected-provider-calls=0 current=absent");
 }

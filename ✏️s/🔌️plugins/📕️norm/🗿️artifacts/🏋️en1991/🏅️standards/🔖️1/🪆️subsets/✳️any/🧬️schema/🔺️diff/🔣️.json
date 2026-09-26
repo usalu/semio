@@ -89,11 +89,6 @@
       "format": "double",
       "x-semio-state": "artifact"
     },
-    "requiredDeltaT": {
-      "type": "number",
-      "format": "double",
-      "x-semio-state": "artifact"
-    },
     "constructionActivity": {
       "type": "string",
       "x-semio-state": "artifact"
@@ -104,7 +99,11 @@
       "x-semio-state": "artifact"
     },
     "structureKind": {
-      "type": "boolean",
+      "type": "string",
+      "enum": [
+        "building",
+        "bridge"
+      ],
       "x-semio-state": "artifact"
     },
     "bridgeLane": {
@@ -253,6 +252,78 @@
       },
       "x-semio-state": "artifact"
     },
+    "tMax": {
+      "type": "number"
+    },
+    "tMin": {
+      "type": "number"
+    },
+    "t0": {
+      "type": "number"
+    },
+    "thermalElementType": {
+      "type": "string"
+    },
+    "thermalBridgeType": {
+      "type": "integer"
+    },
+    "deltaTM": {
+      "type": "number"
+    },
+    "storeyCount": {
+      "type": "integer"
+    },
+    "fireMode": {
+      "type": "string",
+      "enum": [
+        "none",
+        "nominal",
+        "parametric"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "fireCurve": {
+      "type": "string"
+    },
+    "fireDuration": {
+      "type": "number"
+    },
+    "assumedGasTemperature": {
+      "type": "number"
+    },
+    "assumedHNet": {
+      "type": "number"
+    },
+    "fireCompartmentArea": {
+      "type": "number"
+    },
+    "fireCompartmentHeight": {
+      "type": "number"
+    },
+    "fireOpeningFactor": {
+      "type": "number"
+    },
+    "fireThermalInertia": {
+      "type": "number"
+    },
+    "fireOccupancy": {
+      "type": "string"
+    },
+    "fireLoadDensityQf": {
+      "type": "number"
+    },
+    "assumedQfD": {
+      "type": "number"
+    },
+    "assumedBridgeLm3": {
+      "type": "number"
+    },
+    "assumedBridgeLm4": {
+      "type": "number"
+    },
+    "bridgeLoadGroup": {
+      "type": "string"
+    },
     "artifact": {
       "type": "object",
       "x-semio-state": "artifact"
@@ -381,7 +452,8 @@
         "cPi",
         "cS",
         "cD",
-        "assumedWp"
+        "assumedWp",
+        "loadedArea"
       ],
       "properties": {
         "id": {
@@ -410,48 +482,78 @@
         },
         "assumedWp": {
           "type": "number"
+        },
+        "loadedArea": {
+          "type": "number"
         }
       }
     },
     "AccidentalCase": {
       "type": "object",
-      "additionalProperties": false,
       "required": [
         "id",
-        "kind",
-        "vehicleMass",
-        "vehicleSpeed",
-        "explosionMass",
-        "standoff",
-        "assumedForce",
-        "assumedPressure"
+        "impact",
+        "explosion"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
-        "kind": {
-          "type": "string"
+        "impact": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AccidentalImpact"
+          }
         },
+        "explosion": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AccidentalExplosion"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "AccidentalImpact": {
+      "type": "object",
+      "required": [
+        "vehicleMass",
+        "vehicleSpeed",
+        "assumedForce"
+      ],
+      "properties": {
         "vehicleMass": {
           "type": "number"
         },
         "vehicleSpeed": {
           "type": "number"
         },
+        "assumedForce": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AccidentalExplosion": {
+      "type": "object",
+      "required": [
+        "explosionMass",
+        "standoff",
+        "assumedPressure"
+      ],
+      "properties": {
         "explosionMass": {
           "type": "number"
         },
         "standoff": {
           "type": "number"
         },
-        "assumedForce": {
-          "type": "number"
-        },
         "assumedPressure": {
           "type": "number"
         }
-      }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "required": []
 }

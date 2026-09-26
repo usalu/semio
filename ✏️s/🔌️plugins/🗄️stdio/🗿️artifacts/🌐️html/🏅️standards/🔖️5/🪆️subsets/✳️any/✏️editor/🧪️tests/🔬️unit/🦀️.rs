@@ -12,6 +12,14 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
     assert_eq!(<HtmlEditor as ArtifactEditor>::DIALECT, HTML_DIALECT);
 }
 
+/// 🎯️ LAW: the editor declares the artifact kind it edits (the artifact's own `artifact_kind()`), which is
+/// what the hub's one open-target rule (`app_opens_kind`, `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs`)
+/// pairs with this editor and the viewer of its dialect — so an HTML document can be created and opened as a hub document.
+#[semio_framework_async_macros::async_test]
+async fn the_editor_declares_the_artifact_kind_it_edits() {
+    assert_eq!(create_html_editor().artifact_kinds, vec![crate::artifact_kind()]);
+}
+
 //#region 🎬️ExampleSwitchLaws
 /// ⚖️ LAW: the example picker's verb is declared on the app itself, which is what
 /// `appSwitchesExamples` (`🛠️ShellHelpers/🟦️.tsx`) reads before it offers the picker or announces a

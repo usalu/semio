@@ -16,6 +16,8 @@ export interface RasterCompositeViewModel {
   activeUtilityId: string;
   brushSize: number;
   brushOpacity: number;
+  brushColor: string;
+  brushHardness: number;
 }
 
 export const RASTER_PLAY_WINDOW_COMPOSITE = "raster-composite" as const;

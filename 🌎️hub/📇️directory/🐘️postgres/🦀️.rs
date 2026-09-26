@@ -383,6 +383,7 @@ CREATE INDEX IF NOT EXISTS idx_artifact_cas_reservation_object_lookup ON hub_art
 CREATE INDEX IF NOT EXISTS idx_artifact_cas_reference_object_lookup ON hub_artifact_cas_reference_object(space_id, kind, object_digest);
 
 CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_space_membership (user_id);
+CREATE INDEX IF NOT EXISTS idx_directory_event_space ON hub_directory_event (space_id, recorded_at);
 CREATE INDEX IF NOT EXISTS idx_sync_session_document ON hub_sync_session (document_id, disconnected_at);
 CREATE INDEX IF NOT EXISTS idx_sync_session_space ON hub_sync_session (space_id, disconnected_at);
 CREATE INDEX IF NOT EXISTS idx_space_invite_space ON hub_space_invite (space_id);
@@ -1155,17 +1156,17 @@ impl HubDirectory for PostgresDirectory {
         Ok(facts)
     }
 
+    /// ⏱️ A fact may not be stamped in the future. It may be stamped LATE: the durable
+    /// `deadline_ms` is what closes an ABANDONED key, and refusing a `Prepared` past it here
+    /// refused a genesis the guest had already produced — a 176 s honest creation on the biggest
+    /// staged component (ticket 26/09/18 slice HC1, hub 7681). A key the recovery sweep did close
+    /// is terminal, and `decide_artifact_creation_fact_append_v1` refuses the transition on it.
     async fn append_artifact_creation_fact(&self, append: &ArtifactCreationFactAppendV1) -> DirectoryResult<ArtifactCreationOperationV1> {
         let mut tx = self.pool.begin().await.map_err(backend)?;
         lock_artifact_creation_request(&mut tx, &append.actor.user_id, &append.request_id).await?;
         let observed_now = validate_artifact_creation_authority(&mut tx, &append.actor, &append.space_id, None).await?;
         let mut facts = artifact_creation_facts(&mut tx, &append.actor.user_id, &append.request_id).await?;
         let operation = ArtifactCreationOperationV1::fold(&facts)?;
-        // ⏱️ A fact may not be stamped in the future. It may be stamped LATE: the durable
-        // `deadline_ms` is what closes an ABANDONED key, and refusing a `Prepared` past it here
-        // refused a genesis the guest had already produced — a 176 s honest creation on the biggest
-        // staged component (ticket 26/09/18 slice HC1, hub 7681). A key the recovery sweep did close
-        // is terminal, and `decide_artifact_creation_fact_append_v1` refuses the transition on it.
         if append.recorded_at_ms > observed_now {
             return Err(DirectoryError::Conflict("artifact creation transition is outside its live server clock".into()));
         }
@@ -1239,6 +1240,11 @@ impl HubDirectory for PostgresDirectory {
             .collect()
     }
 
+    /// ⏱️ The durable `deadline_ms` closes an ABANDONED key; it is not a bound on how long an
+    /// honest genesis may take. Refusing the publication past it stranded a creation whose
+    /// pair was already prepared, in `preparing`, until the recovery sweep closed it (ticket
+    /// 26/09/18 slice HC1, hub 7681: 128 s of guest genesis, then this). A closed key is
+    /// terminal and `validate_document_genesis_append_v1` refuses a publication on it.
     async fn append_document_genesis(&self, append: &DocumentGenesisAppendV1) -> DirectoryResult<DocumentGenesisCommitV1> {
         append.intent.validate()?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
@@ -1259,11 +1265,6 @@ impl HubDirectory for PostgresDirectory {
             tx.commit().await.map_err(backend)?;
             return Ok(DocumentGenesisCommitV1::Existing(operation));
         }
-        // ⏱️ The durable `deadline_ms` closes an ABANDONED key; it is not a bound on how long an
-        // honest genesis may take. Refusing the publication past it stranded a creation whose
-        // pair was already prepared, in `preparing`, until the recovery sweep closed it (ticket
-        // 26/09/18 slice HC1, hub 7681: 128 s of guest genesis, then this). A closed key is
-        // terminal and `validate_document_genesis_append_v1` refuses a publication on it.
         if append.now_ms > observed_now {
             return Err(DirectoryError::Conflict("genesis publication is outside its live server deadline".into()));
         }
@@ -1678,6 +1679,36 @@ impl HubDirectory for PostgresDirectory {
                     active_connections: u64::try_from(active_connections).map_err(backend)?,
                     updated_at,
                 })
+            })
+            .collect()
+    }
+
+    async fn list_visible_space_summaries(&self, user_id: Option<&str>) -> DirectoryResult<Vec<(AdminSpaceSummaryRecord, Option<SpaceRole>)>> {
+        let rows: Vec<(String, String, String, i64, String, String, i64, i64, i64, i64, Option<String>)> = sqlx_core::query_as::query_as(
+            "SELECT s.id, s.name, s.owner_user_id, s.created_at, s.kind, s.visibility,
+                    (SELECT COUNT(*) FROM hub_space_membership m WHERE m.space_id = s.id),
+                    (SELECT COUNT(*) FROM hub_document_descriptor d WHERE d.space_id = s.id),
+                    (SELECT COUNT(*) FROM hub_sync_session y WHERE y.space_id = s.id AND y.disconnected_at IS NULL),
+                    COALESCE((SELECT MAX(e.recorded_at) FROM hub_directory_event e WHERE e.space_id = s.id), s.created_at),
+                    (SELECT r.role FROM hub_space_membership r WHERE r.space_id = s.id AND r.user_id = $1)
+             FROM hub_space s
+             WHERE s.visibility = 'public' OR EXISTS (SELECT 1 FROM hub_space_membership v WHERE v.space_id = s.id AND v.user_id = $1)
+             ORDER BY s.id",
+        )
+        .bind(user_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(backend)?;
+        rows.into_iter()
+            .map(|(id, name, owner_user_id, created_at, kind, visibility, member_count, document_count, active_connections, updated_at, role)| {
+                let summary = AdminSpaceSummaryRecord {
+                    space: SpaceRecord { id, name, owner_user_id, created_at, kind, visibility },
+                    member_count: u64::try_from(member_count).map_err(backend)?,
+                    document_count: u64::try_from(document_count).map_err(backend)?,
+                    active_connections: u64::try_from(active_connections).map_err(backend)?,
+                    updated_at,
+                };
+                Ok((summary, role.as_deref().and_then(SpaceRole::parse)))
             })
             .collect()
     }

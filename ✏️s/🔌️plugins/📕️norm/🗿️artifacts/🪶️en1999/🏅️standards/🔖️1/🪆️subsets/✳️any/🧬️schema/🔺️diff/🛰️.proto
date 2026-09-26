@@ -1,60 +1,25 @@
-// 🧬️ EN 1999 diff schema.
 syntax = "proto3";
 package semio.s.norm.en1999.diff;
-
+// 🧬️ EN 1999 sparse diff — hierarchical aluminium-structure subject
 message En1999Diff {
   // @state artifact
-  optional En1999Artifact artifact = 1;
+  bytes artifact = 1;
   // @state artifact
-  optional double n_ed_kn = 2;
+  string annex = 2;
   // @state artifact
-  optional double m_ed_knm = 3;
+  bytes materials = 3;
   // @state artifact
-  optional double a_mm2 = 4;
+  bytes sections = 4;
   // @state artifact
-  optional double w_el_mm3 = 5;
+  bytes members = 5;
   // @state artifact
-  optional double alloy = 6;
+  bytes connections = 6;
   // @state artifact
-  optional double chi = 7;
+  bytes fire_scenarios = 7;
   // @state artifact
-  optional double i_t_mm4 = 8;
+  bytes fatigue_details = 8;
   // @state artifact
-  optional double l_cr_mm = 9;
+  bytes cold_formed = 9;
   // @state artifact
-  optional double theta_c = 10;
-  // @state artifact
-  optional double delta_sigma_ed = 11;
-  // @state artifact
-  optional double delta_sigma_c = 12;
-  // @state artifact
-  optional double fatigue_m = 13;
-  // @state artifact
-  optional double n_cycles = 14;
-  // @state artifact
-  optional double v_weld_ed_kn = 15;
-  // @state artifact
-  optional double weld_throat_mm = 16;
-  // @state artifact
-  optional double weld_length_mm = 17;
-  // @state artifact
-  optional double beta_w = 18;
-  // @state artifact
-  optional double sheet_b_mm = 19;
-  // @state artifact
-  optional double sheet_t_mm = 20;
-  // @state artifact
-  optional double sheet_k_sigma = 21;
-  // @state artifact
-  optional double sheet_w_el_mm3 = 22;
-  // @state artifact
-  optional double sheet_m_ed_knm = 23;
-  // @state artifact
-  optional double shell_t_mm = 24;
-  // @state artifact
-  optional double shell_r_mm = 25;
-  // @state artifact
-  optional double sigma_ed_shell_mpa = 26;
-  // @state artifact
-  optional double annex = 27;
+  bytes shells = 10;
 }

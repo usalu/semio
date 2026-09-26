@@ -62,7 +62,7 @@ test("production cache inputs exclude fixtures while test inputs retain them", (
     expect(tests.has(sample.path), `test: ${sample.id}`).toBe(sample.test);
   }
   expect(namedInputs.production).toContain("!{workspaceRoot}/**/🧫️fixtures/**/*");
-  expect(nxJson.namedInputs.production).toContain("!{workspaceRoot}/**/🧫️fixtures/**/*");
+  expect(nxJson.namedInputs.production).toContain("!{projectRoot}/**/🧫️fixtures/**/*");
   const nativeJson = JSON.parse(readFileSync(join(root, vector.nativeProject.root, "📋️project.json"), "utf8"));
   const nativeNamedInputs = cacheInternals.projectInputs(nativeJson, vector.nativeProject.root, root, new Map());
   const nativeProject = {
@@ -88,5 +88,4 @@ test("production cache inputs exclude fixtures while test inputs retain them", (
   expect(nativeSelected("production")).toBe(false);
   expect(nativeSelected("test")).toBe(true);
   expect(cachePlugin.name).toBe("@repo/emoji-project-json");
-  console.log("[DEBUG] Cache boundary", JSON.stringify({ production: [...production], test: [...tests] }));
 });

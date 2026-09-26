@@ -55,9 +55,6 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/resize-geometry/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-limits/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/vdi3805/mutation/change-manufacturer-file/schema.json"
     }
   ]

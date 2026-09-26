@@ -36,6 +36,9 @@ const MAX_VALUE_LEN: u64 = 16 * 1024 * 1024;
 /// @emoji 🛡️ Ceiling on the number of entries a single run may hold, checked against the header's
 /// `entry_count` field before admitting decoded fixed entry slots.
 const MAX_RUN_ENTRIES: u64 = 64;
+
+/// @emoji 🧺️ The entries one run holds at most — what an owner batching its own entries fills.
+pub const RUN_ENTRIES_MAX: usize = MAX_RUN_ENTRIES as usize;
 //#endregion 🔖️Limits
 
 //#region 🔖️IndexKind
@@ -86,29 +89,47 @@ impl IndexKind {
     }
 }
 
-/// @emoji 🔢️ How many low bits of a `run_id` are the within-kind sequence — the remaining high
-/// bits are `IndexKind::tag()`. `db_storage::IndexStorage` addresses runs by a single flat `u64`
-/// per document; this crate carves that space into one namespace per kind so ten kinds can share
-/// one document's `IndexStorage` without colliding.
-const SEQUENCE_BITS: u32 = 56;
+/// @emoji 🔢️ A `run_id`'s layout, high to low: `[format:4][kind:4][sequence:50][entries-1:6]`.
+/// `db_storage::IndexStorage` addresses runs by a single flat `u64` per document; the high byte
+/// namespaces the runs of one kind (and this crate's run-id format) so ten kinds share one document's
+/// storage without colliding, and the low bits carry the run's entry count, so a listing alone tells
+/// the merge policy every run's size — no run is read just to learn how many entries it holds.
+const RUN_ID_FORMAT: u64 = 1;
+const RUN_NAMESPACE_SHIFT: u32 = 56;
+const RUN_ENTRY_BITS: u32 = 6;
+const RUN_ENTRY_MASK: u64 = (1u64 << RUN_ENTRY_BITS) - 1;
+const SEQUENCE_BITS: u32 = RUN_NAMESPACE_SHIFT - RUN_ENTRY_BITS;
 const SEQUENCE_MASK: u64 = (1u64 << SEQUENCE_BITS) - 1;
+const _: () = assert!(MAX_RUN_ENTRIES == 1 << RUN_ENTRY_BITS);
 
-/// @emoji 🧮️ Packs `kind` and `sequence` into one `run_id`. Errors `LimitExceeded` if `sequence`
-/// doesn't fit the 56-bit namespace (never happens in practice — that's 2^56 runs of one kind for
-/// one document before overflow, and the merge policy keeps live run counts tiny).
-fn make_run_id(kind: IndexKind, sequence: u64) -> Result<u64, DbError> {
-    if sequence > SEQUENCE_MASK {
-        return Err(DbError::LimitExceeded("db_index run sequence exceeds the 56-bit per-kind namespace"));
-    }
-    Ok(((kind.tag() as u64) << SEQUENCE_BITS) | sequence)
+/// @emoji 🏷️ The high byte every run of `kind` carries in its id.
+fn run_namespace(kind: IndexKind) -> u8 {
+    ((RUN_ID_FORMAT << 4) | u64::from(kind.tag())) as u8
 }
 
-fn kind_tag_of_run_id(run_id: u64) -> u8 {
-    (run_id >> SEQUENCE_BITS) as u8
+/// @emoji 🧮️ Packs `kind`, `sequence` and the run's `entries` count into one `run_id`. Errors
+/// `LimitExceeded` if `sequence` doesn't fit its 50 bits (2^50 runs of one kind for one document) or
+/// `entries` is outside `1..=MAX_RUN_ENTRIES` (an empty run is never written).
+fn make_run_id(kind: IndexKind, sequence: u64, entries: usize) -> Result<u64, DbError> {
+    if sequence > SEQUENCE_MASK {
+        return Err(DbError::LimitExceeded("db_index run sequence exceeds the 50-bit per-kind namespace"));
+    }
+    if entries == 0 || entries as u64 > MAX_RUN_ENTRIES {
+        return Err(DbError::LimitExceeded("db_index run entry count"));
+    }
+    Ok((u64::from(run_namespace(kind)) << RUN_NAMESPACE_SHIFT) | (sequence << RUN_ENTRY_BITS) | (entries as u64 - 1))
+}
+
+fn namespace_of_run_id(run_id: u64) -> u8 {
+    (run_id >> RUN_NAMESPACE_SHIFT) as u8
 }
 
 fn sequence_of_run_id(run_id: u64) -> u64 {
-    run_id & SEQUENCE_MASK
+    (run_id >> RUN_ENTRY_BITS) & SEQUENCE_MASK
+}
+
+fn entries_of_run_id(run_id: u64) -> u64 {
+    (run_id & RUN_ENTRY_MASK) + 1
 }
 //#endregion 🔖️IndexKind
 
@@ -591,14 +612,6 @@ async fn read_run_header(reader: &mut RunPageReader<'_>, expected_kind: IndexKin
     Ok(RunHeader { entry_count })
 }
 
-async fn peek_entry_count(pages: &db_storage::DbIoPages, expected_kind: IndexKind, control: &mut IndexCursorControl) -> Result<u64, DbError> {
-    if pages.len() < 4 {
-        return Err(DbError::Corrupt("index run is shorter than its checksum trailer".to_string()));
-    }
-    let mut reader = RunPageReader::new(pages, pages.len() - 4);
-    Ok(read_run_header(&mut reader, expected_kind, control).await?.entry_count)
-}
-
 /// @emoji ✍️ Encodes a well-formed (strictly ascending, unique-by-key) entry list into one run's
 /// bytes: `MAGIC(4) VERSION(1) KIND(1) entry_count(varint) entries... crc32c(4, LE)`. Each entry is
 /// `key_len(varint) key value_tag(1: 0=tombstone,1=put) [value_len(varint) value]`. Errors
@@ -700,6 +713,48 @@ async fn encode_run_pages(kind: IndexKind, entries: &RunEntries, control: &mut I
                 run_write_pages(&mut writer, &mut checksum, value, control).await?;
             }
         }
+    }
+    run_write_trailer(&mut writer, &checksum.finish().to_le_bytes()).await?;
+    writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
+}
+
+/// @emoji 📥️ Encodes strictly ascending, unique `(key, value)` puts into one run's bytes (the same
+/// layout as `encode_run_pages`) straight from caller-owned slices, under one page writer.
+async fn encode_sorted_run_pages(kind: IndexKind, entries: &[(&[u8], &[u8])], control: &mut IndexCursorControl) -> Result<db_storage::DbIoPages, DbError> {
+    check_len(entries.len() as u64, MAX_RUN_ENTRIES, "db_index::entries")?;
+    let mut encoded_len = RUN_MAGIC.len() + 2 + varint_len(entries.len() as u64) + 4;
+    for (index, (key, value)) in entries.iter().enumerate() {
+        control.grant()?;
+        if index > 0 && entries[index - 1].0 >= *key {
+            return Err(DbError::InvalidArgument("db_index sorted run entries must be strictly ascending and unique by key".to_string()));
+        }
+        check_len(key.len() as u64, MAX_KEY_LEN, "db_index::key")?;
+        check_len(value.len() as u64, MAX_VALUE_LEN, "db_index::value")?;
+        encoded_len = encoded_len
+            .checked_add(varint_len(key.len() as u64) + key.len() + 1 + varint_len(value.len() as u64) + value.len())
+            .ok_or(DbError::LimitExceeded("db_index encoded run bytes"))?;
+    }
+    let mut writer = db_storage::DbIoPageWriter::try_reserve(encoded_len.div_ceil(db_storage::DB_IO_PAGE_BYTES)).map_err(db_storage::DbIoPageWriterRejected::into_error)?;
+    let mut checksum = pack::codec::Crc32cCursor::new();
+    let mut varint = [0u8; 10];
+    let written = async {
+        run_write(&mut writer, &mut checksum, &RUN_MAGIC).await?;
+        run_write(&mut writer, &mut checksum, &[RUN_VERSION, kind.tag()]).await?;
+        run_write(&mut writer, &mut checksum, encode_varint(entries.len() as u64, &mut varint)).await?;
+        for (key, value) in entries {
+            control.grant()?;
+            run_write(&mut writer, &mut checksum, encode_varint(key.len() as u64, &mut varint)).await?;
+            run_write(&mut writer, &mut checksum, key).await?;
+            run_write(&mut writer, &mut checksum, &[1]).await?;
+            run_write(&mut writer, &mut checksum, encode_varint(value.len() as u64, &mut varint)).await?;
+            run_write(&mut writer, &mut checksum, value).await?;
+        }
+        Ok::<(), DbError>(())
+    }
+    .await;
+    if let Err(error) = written {
+        let _ = writer.seal_retained().await.map(close_run_pages);
+        return Err(error);
     }
     run_write_trailer(&mut writer, &checksum.finish().to_le_bytes()).await?;
     writer.seal_retained().await.map_err(db_storage::DbIoPageWriterRejected::into_error)
@@ -839,6 +894,26 @@ impl RunView {
             return Ok(false);
         }
         Ok(run_range_cmp(&self.pages, RunRange { start: key.start, len: prefix.len() }, &prefix.pages, RunRange { start: 0, len: prefix.len() })? == std::cmp::Ordering::Equal)
+    }
+
+    /// @emoji 🔢️ Entry `index`'s key as a big-endian `u64` (the seq-keyed kinds' key shape).
+    fn key_u64_be(&self, index: usize) -> Result<u64, DbError> {
+        let key = self.entries[index].key;
+        if key.len != 8 {
+            return Err(DbError::Corrupt("index run key is not an 8-byte sequence".to_string()));
+        }
+        let mut reader = RunPageReader { pages: &self.pages, position: key.start, limit: key.start + key.len };
+        Ok(u64::from_be_bytes(reader.array()?))
+    }
+
+    /// @emoji 🔢️ Entry `index`'s put value as a little-endian `u64` (the actor-seq kind's value shape).
+    fn value_u64_le(&self, index: usize) -> Result<u64, DbError> {
+        let value = self.entries[index].value.ok_or_else(|| DbError::Corrupt("index run entry has no value".to_string()))?;
+        if value.len != 8 {
+            return Err(DbError::Corrupt("index run value is not an 8-byte sequence".to_string()));
+        }
+        let mut reader = RunPageReader { pages: &self.pages, position: value.start, limit: value.start + value.len };
+        Ok(u64::from_le_bytes(reader.array()?))
     }
 
     /// @emoji 🔎️ The entry holding exactly `key`, by binary search over the run's ascending keys.
@@ -1108,13 +1183,14 @@ async fn merge_run_entries(mut older: RunEntries, mut newer: RunEntries, drop_to
 //#endregion 🔖️Merge
 
 //#region 🔖️MergePolicy
-/// @emoji ⚖️ When `IndexHandle::put_batch` should automatically fold runs together. This crate's own
-/// choice (the contract fixes the LSM-lite shape, not the trigger threshold): after every write,
-/// while a kind has more than `max_runs_before_merge` runs, the oldest adjacent pair among its newest
-/// `max_runs_before_merge + 1` runs whose entries fit one run (`MAX_RUN_ENTRIES`) is merged into one
-/// (see `IndexHandle::maybe_auto_merge`). A run never grows past `MAX_RUN_ENTRIES`, so every run —
+/// @emoji ⚖️ When an append (`IndexHandle::put_batch`/`put_sorted_run`) folds runs together. This
+/// crate's own choice (the contract fixes the LSM-lite shape, not the trigger threshold): after every
+/// append, if a kind has more than `max_runs_before_merge` runs, the oldest adjacent pair among its
+/// newest `max_runs_before_merge + 1` runs whose entries fit one run (`MAX_RUN_ENTRIES`) is merged
+/// into one — at most ONE merge per append, sized from the run ids alone (see
+/// `IndexHandle::merge_one_within_policy`). A run never grows past `MAX_RUN_ENTRIES`, so every run —
 /// and every merge of two — stays inside one operation's I/O credit however large its document grows;
-/// full runs simply accumulate behind the newest window.
+/// full runs simply accumulate behind the newest window and are never read again by an append.
 #[derive(Clone, Copy, Debug)]
 pub struct MergePolicy {
     pub max_runs_before_merge: usize,
@@ -1183,34 +1259,21 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         self.cancelled.store(true, std::sync::atomic::Ordering::Release);
     }
 
-    /// @emoji 📋️ This handle's live run ids, ascending by sequence (oldest first) — every other id
-    /// belonging to a different kind for the same document is filtered out.
-    async fn kind_run_ids(&self, control: &mut IndexCursorControl) -> Result<db_storage::DbIoU64List, DbError> {
+    /// @emoji 📋️ This handle's live run ids, ascending (oldest sequence first) — one storage listing;
+    /// every id of another kind or run-id format for the same document is filtered out.
+    async fn kind_run_ids(&self, control: &mut IndexCursorControl) -> Result<Vec<u64>, DbError> {
+        control.grant()?;
         let mut source = self.storage.list_runs(&self.document).await?;
-        let mut output = db_storage::DbIoU64List::new();
+        let namespace = run_namespace(self.kind);
+        let mut output = Vec::new();
         for id in source.as_slice() {
             control.grant()?;
-            if kind_tag_of_run_id(*id) == self.kind.tag() {
-                output.push(*id)?;
+            if namespace_of_run_id(*id) == namespace {
+                output.push(*id);
             }
         }
-        while !source.terminal_is_empty() {
-            control.grant()?;
-            let _ = source.close_step();
-            semio_framework_async::yield_once().await;
-        }
+        while source.close_step() {}
         Ok(output)
-    }
-
-    /// @emoji ⏭️ The sequence the next `put_batch` should claim: one past the newest live run's
-    /// sequence, or `0` if this kind has no runs yet.
-    async fn next_sequence(&self, control: &mut IndexCursorControl) -> Result<u64, DbError> {
-        let mut ids = self.kind_run_ids(control).await?;
-        let next = ids.as_slice().last().map_or(0, |id| sequence_of_run_id(*id) + 1);
-        control.grant()?;
-        let _ = ids.close_step();
-        drop(ids);
-        Ok(next)
     }
 
     async fn view_run(&self, run_id: u64, control: &mut IndexCursorControl) -> Result<RunView, DbError> {
@@ -1218,17 +1281,10 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         view_run_pages(pages, self.kind, control).await
     }
 
-    async fn run_entry_count(&self, run_id: u64, control: &mut IndexCursorControl) -> Result<u64, DbError> {
-        let pages = self.storage.read_run(&self.document, run_id).await?;
-        let count = peek_entry_count(&pages, self.kind, control).await;
-        control.grant()?;
-        close_run_pages(pages)?;
-        count
-    }
-
-    /// @emoji 🔀️ Folds two adjacent runs (`older` directly beneath `newer`) into `older`'s run id and
-    /// deletes `newer`'s: written before deleted, so a crash between the two leaves both runs, and the
-    /// newer copy of every key still wins. The caller only picks a pair whose entries fit one run.
+    /// @emoji 🔀️ Folds two adjacent runs (`older` directly beneath `newer`) into one run under
+    /// `older`'s sequence and deletes both inputs: written before deleted, so a crash in between
+    /// leaves copies whose values agree, and the newer copy of every key still wins. The caller only
+    /// picks a pair whose entries fit one run.
     async fn merge_adjacent(&self, older_id: u64, newer_id: u64, drop_tombstones: bool, control: &mut IndexCursorControl) -> Result<(), DbError> {
         let older = self.view_run(older_id, control).await?;
         let newer = match self.view_run(newer_id, control).await {
@@ -1240,14 +1296,21 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         };
         let encoded = match merge_run_views(&older, &newer, drop_tombstones, control) {
             Ok(picks) if picks.is_empty() => Ok(None),
-            Ok(picks) => encode_run_from_views(self.kind, [&older, &newer], &picks, control).await.map(Some),
+            Ok(picks) => match make_run_id(self.kind, sequence_of_run_id(older_id), picks.len()) {
+                Ok(merged_id) => encode_run_from_views(self.kind, [&older, &newer], &picks, control).await.map(|pages| Some((merged_id, pages))),
+                Err(error) => Err(error),
+            },
             Err(error) => Err(error),
         };
         older.close()?;
         newer.close()?;
-        match encoded? {
-            Some(pages) => self.storage.write_run(&self.document, older_id, pages).await?,
-            None => self.storage.delete_run(&self.document, older_id).await?,
+        if let Some((merged_id, pages)) = encoded? {
+            self.storage.write_run(&self.document, merged_id, pages).await?;
+            if merged_id != older_id {
+                self.storage.delete_run(&self.document, older_id).await?;
+            }
+        } else {
+            self.storage.delete_run(&self.document, older_id).await?;
         }
         self.storage.delete_run(&self.document, newer_id).await
     }
@@ -1257,12 +1320,12 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     /// never every entry of the kind. The newest occurrence of a key decides whether it is live.
     pub async fn last_live_in_range(&self, prefix: &IndexBytes, upper: Option<&IndexBytes>, control: &mut IndexCursorControl) -> Result<Option<(IndexBytes, IndexBytes)>, DbError> {
         const DEAD_KEYS_MAX: usize = MAX_RUN_ENTRIES as usize;
-        let mut ids = self.kind_run_ids(control).await?;
+        let ids = self.kind_run_ids(control).await?;
         let mut best: Option<(IndexBytes, IndexBytes)> = None;
         let mut dead: Vec<IndexBytes> = Vec::new();
         let mut failure = None;
         'runs: for position in (0..ids.len()).rev() {
-            let view = match self.view_run(ids.as_slice()[position], control).await {
+            let view = match self.view_run(ids[position], control).await {
                 Ok(view) => view,
                 Err(error) => {
                     failure = Some(error);
@@ -1326,9 +1389,6 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         for key in dead {
             close_index_bytes(key, control).await?;
         }
-        control.grant()?;
-        let _ = ids.close_step();
-        drop(ids);
         if let Some(error) = failure {
             if let Some((key, value)) = best {
                 close_index_bytes(key, control).await?;
@@ -1361,13 +1421,12 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
                 return Err(DbError::LimitExceeded("index unique fixed entry owner"));
             }
         }
+        let count = unique.len();
         let pages = encode_run_pages(self.kind, &unique, control).await?;
         control.grant()?;
         let _ = unique.close_step()?;
         drop(unique);
-        let run_id = make_run_id(self.kind, self.next_sequence(control).await?)?;
-        self.storage.write_run(&self.document, run_id, pages).await?;
-        self.maybe_auto_merge(control).await
+        self.append_run(pages, count, control).await
     }
 
     pub async fn put(&self, key: IndexBytes, value: IndexBytes, control: &mut IndexCursorControl) -> Result<(), DbError> {
@@ -1382,14 +1441,50 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         self.put_batch(entries, control).await
     }
 
+    /// @emoji 📥️ Durably appends one run of already strictly ascending, unique `(key, value)` puts —
+    /// the bulk path of an owner that generates its own keys (the artifact engine's command, inverse,
+    /// actor-seq and frontier entries): the run is encoded straight from the caller's bytes into one
+    /// write, with no per-entry byte owner. Errors `InvalidArgument` on unordered or duplicate keys.
+    pub async fn put_sorted_run(&self, entries: &[(&[u8], &[u8])], control: &mut IndexCursorControl) -> Result<(), DbError> {
+        if entries.is_empty() {
+            return Ok(());
+        }
+        let pages = encode_sorted_run_pages(self.kind, entries, control).await?;
+        self.append_run(pages, entries.len(), control).await
+    }
+
+    /// @emoji ➕️ Writes `pages` (holding `count` entries) as the kind's newest run from ONE listing
+    /// of its runs, then lets `MergePolicy` fold at most one adjacent pair — sizes come from the run
+    /// ids, so an append never reads a run it does not merge.
+    async fn append_run(&self, pages: db_storage::DbIoPages, count: usize, control: &mut IndexCursorControl) -> Result<(), DbError> {
+        let mut ids = match self.kind_run_ids(control).await {
+            Ok(ids) => ids,
+            Err(error) => {
+                close_run_pages(pages)?;
+                return Err(error);
+            }
+        };
+        let next = ids.last().map_or(0, |id| sequence_of_run_id(*id) + 1);
+        let run_id = match make_run_id(self.kind, next, count) {
+            Ok(run_id) => run_id,
+            Err(error) => {
+                close_run_pages(pages)?;
+                return Err(error);
+            }
+        };
+        self.storage.write_run(&self.document, run_id, pages).await?;
+        ids.push(run_id);
+        self.merge_one_within_policy(&ids, control).await
+    }
+
     /// @emoji 🔎️ Resolves `key` by searching runs newest-to-oldest in place and returning the first match —
     /// `Ok(None)` if the first match is a tombstone, or if no run has ever held `key`.
     pub async fn get(&self, key: &IndexBytes, control: &mut IndexCursorControl) -> Result<Option<IndexBytes>, DbError> {
-        let mut ids = self.kind_run_ids(control).await?;
+        let ids = self.kind_run_ids(control).await?;
         let mut result = Ok(None);
         for position in (0..ids.len()).rev() {
             control.grant()?;
-            let view = match self.view_run(ids.as_slice()[position], control).await {
+            let view = match self.view_run(ids[position], control).await {
                 Ok(view) => view,
                 Err(error) => {
                     result = Err(error);
@@ -1410,22 +1505,29 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
                 break;
             }
         }
-        control.grant()?;
-        let _ = ids.close_step();
-        drop(ids);
         result
+    }
+
+    /// @emoji 🔝️ The kind's newest run read in place, or `None` when the kind holds no run — the
+    /// one read an append-only owner needs to learn how far its entries reach.
+    async fn newest_run(&self, control: &mut IndexCursorControl) -> Result<Option<RunView>, DbError> {
+        let ids = self.kind_run_ids(control).await?;
+        match ids.last() {
+            Some(newest) => self.view_run(*newest, control).await.map(Some),
+            None => Ok(None),
+        }
     }
 
     /// @emoji 📜️ Every live (non-tombstoned) `(key, value)` whose key starts with `prefix`, ascending by
     /// key — runs searched in place newest-first, each key decided by its newest occurrence, only the
     /// live matches materialized (at most `MAX_RUN_ENTRIES` of them).
     pub async fn scan_prefix(&self, prefix: &IndexBytes, control: &mut IndexCursorControl) -> Result<RunEntries, DbError> {
-        let mut run_ids = self.kind_run_ids(control).await?;
+        let run_ids = self.kind_run_ids(control).await?;
         let mut output = RunEntries::new();
         let mut dead: Vec<IndexBytes> = Vec::new();
         let mut failure = None;
         'runs: for position in (0..run_ids.len()).rev() {
-            let view = match self.view_run(run_ids.as_slice()[position], control).await {
+            let view = match self.view_run(run_ids[position], control).await {
                 Ok(view) => view,
                 Err(error) => {
                     failure = Some(error);
@@ -1475,9 +1577,6 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         for key in dead {
             close_index_bytes(key, control).await?;
         }
-        control.grant()?;
-        let _ = run_ids.close_step();
-        drop(run_ids);
         if let Some(error) = failure {
             while output.close_step()? {}
             return Err(error);
@@ -1490,32 +1589,20 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
         Ok(output)
     }
 
-    /// @emoji 🌀️ `MergePolicy`'s enforcement: while this kind has more runs than
-    /// `policy.max_runs_before_merge`, merges the oldest adjacent pair among the newest
-    /// `max_runs_before_merge + 1` runs whose entries fit one run. Tombstones are dropped only when the
-    /// pair holds the kind's oldest run, since nothing older can still need shadowing.
-    async fn maybe_auto_merge(&self, control: &mut IndexCursorControl) -> Result<(), DbError> {
-        loop {
-            let mut run_ids = self.kind_run_ids(control).await?;
-            let count = run_ids.len();
-            if count <= self.policy.max_runs_before_merge {
-                control.grant()?;
-                let _ = run_ids.close_step();
-                drop(run_ids);
-                return Ok(());
-            }
-            let window = count - (self.policy.max_runs_before_merge + 1);
-            let ids: Vec<u64> = run_ids.as_slice()[window..].to_vec();
-            control.grant()?;
-            let _ = run_ids.close_step();
-            drop(run_ids);
-            let mut sizes = Vec::with_capacity(ids.len());
-            for id in &ids {
-                sizes.push(self.run_entry_count(*id, control).await?);
-            }
-            let Some(pair) = (0..ids.len() - 1).find(|pair| sizes[*pair] + sizes[*pair + 1] <= MAX_RUN_ENTRIES) else { return Ok(()) };
-            self.merge_adjacent(ids[pair], ids[pair + 1], window + pair == 0, control).await?;
+    /// @emoji 🌀️ `MergePolicy`'s enforcement after one append, bounded to ONE merge: while this kind
+    /// has more runs than `policy.max_runs_before_merge`, the oldest adjacent pair among its newest
+    /// `max_runs_before_merge + 1` runs whose entries fit one run is merged. Sizes come from the run
+    /// ids. Tombstones are dropped only when the pair holds the kind's oldest run, since nothing older
+    /// can still need shadowing. Full runs never pair, so an owner that appends full runs never merges.
+    async fn merge_one_within_policy(&self, ids: &[u64], control: &mut IndexCursorControl) -> Result<(), DbError> {
+        if ids.len() <= self.policy.max_runs_before_merge {
+            return Ok(());
         }
+        let window = ids.len() - (self.policy.max_runs_before_merge + 1);
+        let candidates = &ids[window..];
+        let Some(pair) = (0..candidates.len() - 1).find(|pair| entries_of_run_id(candidates[*pair]) + entries_of_run_id(candidates[*pair + 1]) <= MAX_RUN_ENTRIES) else { return Ok(()) };
+        control.grant()?;
+        self.merge_adjacent(candidates[pair], candidates[pair + 1], window + pair == 0, control).await
     }
 
     /// @emoji 🧹️ Folds this kind's runs into the fewest runs `MAX_RUN_ENTRIES` allows: from the oldest,
@@ -1524,19 +1611,16 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
     pub async fn compact(&self, control: &mut IndexCursorControl) -> Result<IndexStats, DbError> {
         let mut position = 0usize;
         loop {
-            let mut run_ids = self.kind_run_ids(control).await?;
-            let pair = (position + 1 < run_ids.len()).then(|| (run_ids.as_slice()[position], run_ids.as_slice()[position + 1]));
-            let oldest = run_ids.as_slice().first().copied();
-            control.grant()?;
-            let _ = run_ids.close_step();
-            drop(run_ids);
+            let run_ids = self.kind_run_ids(control).await?;
+            let pair = (position + 1 < run_ids.len()).then(|| (run_ids[position], run_ids[position + 1]));
+            let oldest = run_ids.first().copied();
             let Some((older, newer)) = pair else {
                 if let Some(oldest) = oldest {
                     self.drop_run_tombstones(oldest, control).await?;
                 }
                 break;
             };
-            if self.run_entry_count(older, control).await? + self.run_entry_count(newer, control).await? <= MAX_RUN_ENTRIES {
+            if entries_of_run_id(older) + entries_of_run_id(newer) <= MAX_RUN_ENTRIES {
                 self.merge_adjacent(older, newer, position == 0, control).await?;
             } else {
                 if position == 0 {
@@ -1556,46 +1640,55 @@ impl<'a, S: IndexStorage> IndexHandle<'a, S> {
             return view.close();
         }
         let picks: Vec<RunPick> = (0..view.entries.len()).filter(|index| view.entries[*index].value.is_some()).map(|entry| RunPick { view: 0, entry }).collect();
-        let encoded = if picks.is_empty() { Ok(None) } else { encode_run_from_views(self.kind, [&view, &view], &picks, control).await.map(Some) };
+        let encoded = if picks.is_empty() {
+            Ok(None)
+        } else {
+            match make_run_id(self.kind, sequence_of_run_id(run_id), picks.len()) {
+                Ok(rewritten) => encode_run_from_views(self.kind, [&view, &view], &picks, control).await.map(|pages| Some((rewritten, pages))),
+                Err(error) => Err(error),
+            }
+        };
         view.close()?;
         match encoded? {
-            Some(pages) => self.storage.write_run(&self.document, run_id, pages).await,
+            Some((rewritten, pages)) => {
+                self.storage.write_run(&self.document, rewritten, pages).await?;
+                if rewritten != run_id {
+                    self.storage.delete_run(&self.document, run_id).await?;
+                }
+                Ok(())
+            }
             None => self.storage.delete_run(&self.document, run_id).await,
         }
     }
 
     /// @emoji 📊️ Current shape of this kind's runs — see `IndexStats`'s doc for what `entry_count`
-    /// does and doesn't count. Cheap: reads every run's bytes but only parses each one's header.
+    /// does and doesn't count. Run and entry counts come from the listing; bytes from each run.
     pub async fn stats(&self, control: &mut IndexCursorControl) -> Result<IndexStats, DbError> {
-        let mut run_ids = self.kind_run_ids(control).await?;
-        let mut entry_count = 0u64;
+        let run_ids = self.kind_run_ids(control).await?;
         let mut total_bytes = 0u64;
-        for run_id in run_ids.as_slice() {
+        for run_id in &run_ids {
             control.grant()?;
-            let mut bytes = self.storage.read_run(&self.document, *run_id).await?;
+            let bytes = self.storage.read_run(&self.document, *run_id).await?;
             total_bytes += bytes.len() as u64;
-            entry_count += peek_entry_count(&bytes, self.kind, control).await?;
-            control.grant()?;
-            let _ = bytes.close_step()?;
-            drop(bytes);
+            close_run_pages(bytes)?;
         }
-        let run_count = run_ids.len();
-        control.grant()?;
-        let _ = run_ids.close_step();
-        drop(run_ids);
-        Ok(IndexStats { run_count, entry_count, total_bytes })
+        Ok(IndexStats { run_count: run_ids.len(), entry_count: run_ids.iter().map(|id| entries_of_run_id(*id)).sum(), total_bytes })
     }
 
     /// @emoji ✅️ Fully decodes (checksum + structural validation) every live run for this kind,
     /// surfacing the first `DbError::Corrupt` found rather than any value — `db_cli verify`'s hook.
+    /// A run whose entry count differs from the one its id declares is corrupt too.
     pub async fn verify(&self, control: &mut IndexCursorControl) -> Result<(), DbError> {
-        let mut ids = self.kind_run_ids(control).await?;
-        for index in 0..ids.len() {
-            self.view_run(ids.as_slice()[index], control).await?.close()?;
+        let ids = self.kind_run_ids(control).await?;
+        for id in ids {
+            let view = self.view_run(id, control).await?;
+            let declared = entries_of_run_id(id);
+            let held = view.entries.len() as u64;
+            view.close()?;
+            if declared != held {
+                return Err(DbError::Corrupt(format!("index run {id:#x} declares {declared} entries and holds {held}")));
+            }
         }
-        control.grant()?;
-        let _ = ids.close_step();
-        drop(ids);
         Ok(())
     }
 }
@@ -1679,6 +1772,24 @@ impl<'a, S: IndexStorage> SeqLocationIndex<'a, S> {
         let key = admit_generated_index_bytes(seq.to_be_bytes().to_vec(), MAX_KEY_LEN, &mut control).await?;
         self.handle.delete(key, &mut control).await
     }
+
+    async fn record_run(&self, entries: &[(u64, RecordLocation)]) -> Result<(), DbError> {
+        let mut encoded = Vec::with_capacity(entries.len());
+        for (seq, location) in entries {
+            encoded.push((seq.to_be_bytes(), encode_location(*location).await));
+        }
+        let slices: Vec<(&[u8], &[u8])> = encoded.iter().map(|(key, value)| (&key[..], &value[..])).collect();
+        let mut control = self.handle.operation_control(8_192)?;
+        self.handle.put_sorted_run(&slices, &mut control).await
+    }
+
+    async fn indexed_through(&self) -> Result<u64, DbError> {
+        let mut control = self.handle.operation_control(8_192)?;
+        let Some(view) = self.handle.newest_run(&mut control).await? else { return Ok(0) };
+        let highest = view.entries.len().checked_sub(1).map_or(Ok(0), |last| view.key_u64_be(last));
+        view.close()?;
+        highest
+    }
 }
 //#endregion 🔖️RecordLocation
 
@@ -1695,6 +1806,17 @@ impl<'a, S: IndexStorage> CommandIndex<'a, S> {
 
     pub async fn record(&self, command_seq: u64, location: RecordLocation) -> Result<(), DbError> {
         self.0.record(command_seq, location).await
+    }
+
+    /// @emoji 📥️ Records ascending `(command_seq, location)` pairs as ONE run (at most `MAX_RUN_ENTRIES`).
+    pub async fn record_run(&self, entries: &[(u64, RecordLocation)]) -> Result<(), DbError> {
+        self.0.record_run(entries).await
+    }
+
+    /// @emoji 🔝️ The highest command seq recorded, `0` when none — read from the newest run alone,
+    /// which holds it for an owner that records in ascending order.
+    pub async fn indexed_through(&self) -> Result<u64, DbError> {
+        self.0.indexed_through().await
     }
 
     pub async fn lookup(&self, command_seq: u64) -> Result<Option<RecordLocation>, DbError> {
@@ -1729,6 +1851,17 @@ impl<'a, S: IndexStorage> InverseIndex<'a, S> {
 
     pub async fn record(&self, command_seq: u64, location: RecordLocation) -> Result<(), DbError> {
         self.0.record(command_seq, location).await
+    }
+
+    /// @emoji 📥️ Records ascending `(command_seq, location)` pairs as ONE run (at most `MAX_RUN_ENTRIES`).
+    pub async fn record_run(&self, entries: &[(u64, RecordLocation)]) -> Result<(), DbError> {
+        self.0.record_run(entries).await
+    }
+
+    /// @emoji 🔝️ The highest command seq recorded, `0` when none — read from the newest run alone,
+    /// which holds it for an owner that records in ascending order.
+    pub async fn indexed_through(&self) -> Result<u64, DbError> {
+        self.0.indexed_through().await
     }
 
     pub async fn lookup(&self, command_seq: u64) -> Result<Option<RecordLocation>, DbError> {
@@ -1804,6 +1937,38 @@ impl<'a, S: IndexStorage> ActorSeqIndex<'a, S> {
             Some(bytes) => Ok(Some(decode_index_bytes(bytes, &mut control, decode_u64_le).await?)),
             None => Ok(None),
         }
+    }
+
+    /// @emoji 📥️ Records `(actor, actor_seq, command_seq)` triples as ONE run (at most
+    /// `MAX_RUN_ENTRIES`), keyed and ordered as `record` keys them.
+    pub async fn record_run(&self, entries: &[(ActorId, u64, u64)]) -> Result<(), DbError> {
+        let mut encoded = Vec::with_capacity(entries.len());
+        for (actor, actor_seq, command_seq) in entries {
+            encoded.push((actor_seq_key(actor, *actor_seq).await?, command_seq.to_le_bytes()));
+        }
+        encoded.sort_unstable_by(|left, right| left.0.cmp(&right.0));
+        let slices: Vec<(&[u8], &[u8])> = encoded.iter().map(|(key, value)| (&key[..], &value[..])).collect();
+        let mut control = self.handle.operation_control(8_192)?;
+        self.handle.put_sorted_run(&slices, &mut control).await
+    }
+
+    /// @emoji 🔝️ The highest command seq any entry of the newest run points at, `0` when none —
+    /// for an owner that records runs in ascending command order.
+    pub async fn indexed_through(&self) -> Result<u64, DbError> {
+        let mut control = self.handle.operation_control(8_192)?;
+        let Some(view) = self.handle.newest_run(&mut control).await? else { return Ok(0) };
+        let mut highest = Ok(0u64);
+        for index in 0..view.entries.len() {
+            match view.value_u64_le(index) {
+                Ok(command_seq) => highest = highest.map(|highest| highest.max(command_seq)),
+                Err(error) => {
+                    highest = Err(error);
+                    break;
+                }
+            }
+        }
+        view.close()?;
+        highest
     }
 
     /// @emoji 🥇️ The highest `(actor_seq, command_seq)` pair recorded for `actor`, or `None` if
@@ -1891,6 +2056,26 @@ impl<'a, S: IndexStorage> FrontierIndex<'a, S> {
             Some(bytes) => Ok(Some(decode_index_bytes(bytes, &mut control, decode_frontier).await?)),
             None => Ok(None),
         }
+    }
+
+    /// @emoji 📥️ Records ascending frontiers (by `commit_seq`) as ONE run (at most `MAX_RUN_ENTRIES`).
+    pub async fn record_run(&self, frontiers: &[Frontier]) -> Result<(), DbError> {
+        let mut encoded = Vec::with_capacity(frontiers.len());
+        for frontier in frontiers {
+            encoded.push((frontier.commit_seq.to_be_bytes(), encode_frontier(frontier).await));
+        }
+        let slices: Vec<(&[u8], &[u8])> = encoded.iter().map(|(key, value)| (&key[..], &value[..])).collect();
+        let mut control = self.handle.operation_control(8_192)?;
+        self.handle.put_sorted_run(&slices, &mut control).await
+    }
+
+    /// @emoji 🔝️ The highest `commit_seq` recorded, `0` when none — from the newest run alone.
+    pub async fn indexed_through(&self) -> Result<u64, DbError> {
+        let mut control = self.handle.operation_control(8_192)?;
+        let Some(view) = self.handle.newest_run(&mut control).await? else { return Ok(0) };
+        let highest = view.entries.len().checked_sub(1).map_or(Ok(0), |last| view.key_u64_be(last));
+        view.close()?;
+        highest
     }
 
     /// @emoji 🥇️ The frontier recorded under the highest `commit_seq`, or `None` if none recorded.

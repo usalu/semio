@@ -64,7 +64,7 @@ pub const MP4_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.mp4", standar
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.mp4".into(),
+        id: "s.stdio.mp4".into(),
         name: "Mp4".into(),
         source_format: STDIO_MP4_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

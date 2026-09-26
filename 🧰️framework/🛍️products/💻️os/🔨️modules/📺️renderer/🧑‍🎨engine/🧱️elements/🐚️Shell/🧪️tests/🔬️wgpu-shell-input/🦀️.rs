@@ -1,4 +1,16 @@
 use super::*;
+
+#[test]
+fn virtual_file_system_scene_chrome_uses_the_shared_english_and_german_labels() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/📁️virtual-file-system-interaction/🔣️.json"))).expect("shared VFS interaction fixture");
+    for pack in fixture["chrome"].as_array().expect("chrome packs") {
+        let labels = scene_chrome_labels(pack["locale"] == "de").virtual_file_system;
+        assert_eq!(labels.name, pack["name"]);
+        assert_eq!(labels.no_file_system_nodes, pack["empty"]);
+        assert_eq!(labels.expand, pack["expand"]);
+        assert_eq!(labels.collapse, pack["collapse"]);
+    }
+}
 use crate::dock::DockNode;
 
 #[test]
@@ -812,7 +824,7 @@ fn paint_tree_pointer_documents(shell: &mut ShellState, documents: &[(&str, &UiD
         let mut cursor = UiDocumentFrameCursor::default();
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-            let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
+            let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
             let done = render_ui_document_step(&mut cursor, document, *body, &mut ctx, surface, "s.test.tree", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
             assert!(done || !cursor.terminal_is_fault(), "the tree pointer document faulted in phase {}", cursor.phase_name());
             done
@@ -945,7 +957,7 @@ pub(super) fn paint_component_pointer_documents(shell: &mut ShellState, document
         let mut cursor = UiDocumentFrameCursor::default();
         let complete = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
             let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-            let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id };
+            let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id };
             let done = render_ui_document_step(&mut cursor, document, *body, &mut ctx, window_id, controller_id, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
             assert!(done || !cursor.terminal_is_fault(), "the component pointer document faulted in phase {}", cursor.phase_name());
             done
@@ -1123,6 +1135,10 @@ fn ui_event_from_key_action_maps_editing_and_tab_keys_to_matching_key_down_strin
         (ui_wgpu::wgpu::KeyAction::ArrowRight, "ArrowRight"),
         (ui_wgpu::wgpu::KeyAction::ArrowUp, "ArrowUp"),
         (ui_wgpu::wgpu::KeyAction::ArrowDown, "ArrowDown"),
+        (ui_wgpu::wgpu::KeyAction::Home, "Home"),
+        (ui_wgpu::wgpu::KeyAction::End, "End"),
+        (ui_wgpu::wgpu::KeyAction::PageUp, "PageUp"),
+        (ui_wgpu::wgpu::KeyAction::PageDown, "PageDown"),
         (ui_wgpu::wgpu::KeyAction::Tab, "Tab"),
     ];
     for (action, key) in cases {
@@ -2225,7 +2241,7 @@ fn renderer_canvas_reopen_waits_for_the_exact_old_window_close() {
     let mut world3d_states = AdmittedSurfaceMap::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
-    let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
+    let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
     assert!(!render_ui_document_step(&mut cursor, &successor, body, &mut ctx, surface, controller, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts));
     assert_eq!(cursor.phase_name(), "ingress", "the successor cannot enter the old retained generation while its close is pending");
 

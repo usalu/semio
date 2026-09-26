@@ -1135,6 +1135,12 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             // port (the old `create_vcs_app` had none), noted here anyway for parity with the other W2
             // packets' identical gap note. The subset's own `📚️examples/🎬️demo-session` facet (real
             // content, moved intact) is the modern, role-agnostic replacement surface for this.
+            .action_describe("incrementCounter", LocalizedLabel::native("Adds one to the demo document's counter.", "Erhöht den Zähler des Demodokuments um eins."))
+            .action_describe("patchSnapshot", LocalizedLabel::native("Sets one field of the demo document (title, counter, status or notes) from a text value.", "Setzt ein Feld des Demodokuments (Titel, Zähler, Status oder Notizen) aus einem Textwert."))
+            .action_describe("textEdit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes the title, counter, status and notes that differ; consecutive typing merges.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt abweichenden Titel, Zähler, Status und Notizen; fortlaufendes Tippen wird zusammengefasst."))
+            .action_describe("edit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes every field that differs as one edit.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt jedes abweichende Feld als eine Änderung."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole demo document with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte Demodokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
+            .action_audience("noMutation", semio_framework_plugin::CapabilityAudience::Chrome)
             .build_definition()
 }
 //#endregion 🔖️Manifest

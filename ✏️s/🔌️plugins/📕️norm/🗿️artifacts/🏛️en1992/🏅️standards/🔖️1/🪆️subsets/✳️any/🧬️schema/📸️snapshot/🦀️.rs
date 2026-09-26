@@ -66,8 +66,8 @@ impl En1992Snapshot {
                 ConcreteGrade::from_f_ck("c50", "C50/60", 50.0e6),
                 ConcreteGrade::from_f_ck("c100", "C100/115", 100.0e6),
             ],
-            reinforcement_grades: vec![ReinforcementGrade::b500b("b500"), ReinforcementGrade::b500a("b500a")],
-            prestress_steels: vec![PrestressSteel { id: "yp1860".into(), name: "Y1860S7".into(), f_pk: 1860.0e6, f_p0_1k: 1640.0e6 }],
+            reinforcement_grades: vec![ReinforcementGrade::b500b("b500"), ReinforcementGrade::b500a("b500a"), ReinforcementGrade::b500c("b500c")],
+            prestress_steels: vec![PrestressSteel { id: "yp1860".into(), name: "Y1860S7".into(), f_pk: 1860.0e6, f_p0_1k: 1600.0e6 }, PrestressSteel { id: "yp1860b".into(), name: "Y1770S7".into(), f_pk: 1770.0e6, f_p0_1k: 1520.0e6 }],
             members: vec![
                 RcMember {
                     id: "beam-B1".into(),
@@ -182,43 +182,6 @@ impl En1992Snapshot {
                     bridge_sigma_c: 0.0,
                     bridge_delta_sigma_s: 0.0,
                 },
-                RcMember {
-                    id: "beam-PS1".into(),
-                    label_en: "Prestressed beam PS1".into(),
-                    label_de: "Vorgespannter Träger PS1".into(),
-                    kind: MemberKind::Beam,
-                    concrete_grade_id: "c50".into(),
-                    reinforcement_grade_id: "b500".into(),
-                    prestress_steel_id: "yp1860".into(),
-                    exposure: ExposureClass::Xc1,
-                    width: 0.35,
-                    height: 0.70,
-                    effective_depth: 0.620,
-                    cover: 0.040,
-                    span: 12.0,
-                    support: SupportCondition::SimplySupported,
-                    buckling_length: 0.0,
-                    longitudinal: vec![BarLayer { id: "bot".into(), diameter: 0.016, count: 4, position: "bottom".into(), anchorage_length: 0.80, lap_length: 1.00, bond_condition: "good".into(), aggregate_size: 0.016 }],
-                    stirrups: Some(Stirrups { diameter: 0.010, spacing: 0.200, legs: 2 }),
-                    punching: None,
-                    prestress: Some(PrestressSpec { force: 1200.0e3, area: 1500.0e-6, eccentricity: 0.180, loss_ratio: 0.20 }),
-                    fire: Some(FireSpec { rating: FireRating::R90, axis_distance: 0.055, column_method: "".into(), slab_system: "".into() }),
-                    actions: vec![
-                        LoadCaseActions { id: "G".into(), kind: "permanent".into(), category: "self".into(), source: "udl".into(), g_k_line: 15.0e3, q_k_line: 0.0, point_force: 0.0, m_k: 0.0, n_k: 0.0, v_k: 0.0, t_k: 0.0, v_k_punch: 0.0 },
-                        LoadCaseActions { id: "Q-office".into(), kind: "imposed".into(), category: "office".into(), source: "udl".into(), g_k_line: 0.0, q_k_line: 8.0e3, point_force: 0.0, m_k: 0.0, n_k: 0.0, v_k: 0.0, t_k: 0.0, v_k_punch: 0.0 },
-                    ],
-                    use_fem: false,
-                    udl: 0.0,
-                    deflection_sensitive: false,
-                    tightness: None,
-                    hd_over_h: 0.0,
-                    liquid_sigma_s: 0.0,
-                    liquid_rho_p_eff: 0.0,
-                    liquid_f_ct_eff: 0.0,
-                    liquid_s_r_max: 0.0,
-                    bridge_sigma_c: 0.0,
-                    bridge_delta_sigma_s: 0.0,
-                },
             ],
             anchors: vec![Anchor {
                 id: "anc-1".into(),
@@ -231,8 +194,8 @@ impl En1992Snapshot {
                 c1: 0.100,
                 f_ck: 30.0e6,
                 actions: vec![
-                    LoadCaseActions { id: "G".into(), kind: "permanent".into(), category: "self".into(), source: "external".into(), g_k_line: 0.0, q_k_line: 0.0, point_force: 0.0, m_k: 0.0, n_k: 6.0e3, v_k: 3.0e3, t_k: 0.0, v_k_punch: 0.0 },
-                    LoadCaseActions { id: "Q-office".into(), kind: "imposed".into(), category: "office".into(), source: "external".into(), g_k_line: 0.0, q_k_line: 0.0, point_force: 0.0, m_k: 0.0, n_k: 4.0e3, v_k: 2.0e3, t_k: 0.0, v_k_punch: 0.0 },
+                    LoadCaseActions { id: "G".into(), kind: "permanent".into(), category: "self".into(), source: "udl".into(), g_k_line: 200.0, q_k_line: 100.0, point_force: 0.0, m_k: 50.0, n_k: 6.0e3, v_k: 3.0e3, t_k: 20.0, v_k_punch: 10.0 },
+                    LoadCaseActions { id: "Q-office".into(), kind: "imposed".into(), category: "office".into(), source: "point".into(), g_k_line: 0.0, q_k_line: 0.0, point_force: 50.0, m_k: 30.0, n_k: 4.0e3, v_k: 2.0e3, t_k: 15.0, v_k_punch: 5.0 },
                 ],
             }],
         }
@@ -282,18 +245,71 @@ impl En1992Snapshot {
     }
 
     /// 🗜️ Failing prestressed member — transfer stress / losses exceed §5.10 limits.
+
+    /// 🧵 Prestressed beam PS1 subject (used by compliant/failing prestressed examples).
+    pub fn prestressed_beam_member() -> crate::RcMember {
+        use crate::*;
+        RcMember {
+            id: "beam-PS1".into(),
+            label_en: "Prestressed beam PS1".into(),
+            label_de: "Vorgespannter Träger PS1".into(),
+            kind: MemberKind::Beam,
+            concrete_grade_id: "c50".into(),
+            reinforcement_grade_id: "b500".into(),
+            prestress_steel_id: "yp1860".into(),
+            exposure: ExposureClass::Xc1,
+            width: 0.35,
+            height: 0.70,
+            effective_depth: 0.620,
+            cover: 0.040,
+            span: 12.0,
+            support: SupportCondition::SimplySupported,
+            buckling_length: 0.0,
+            longitudinal: vec![BarLayer { id: "bot".into(), diameter: 0.020, count: 8, position: "bottom".into(), anchorage_length: 1.20, lap_length: 1.40, bond_condition: "good".into(), aggregate_size: 0.016 }],
+            stirrups: Some(Stirrups { diameter: 0.010, spacing: 0.120, legs: 2 }),
+            punching: None,
+            prestress: Some(PrestressSpec { force: 1200.0e3, area: 1500.0e-6, eccentricity: 0.150, loss_ratio: 0.12 }),
+            fire: Some(FireSpec { rating: FireRating::R60, axis_distance: 0.050, column_method: "A".into(), slab_system: "one-way".into() }),
+            actions: vec![
+                LoadCaseActions { id: "G".into(), kind: "permanent".into(), category: "self".into(), source: "udl".into(), g_k_line: 5000.0, q_k_line: 0.0, point_force: 0.0, m_k: 0.0, n_k: 0.0, v_k: 0.0, t_k: 0.0, v_k_punch: 0.0 },
+                LoadCaseActions { id: "Q-office".into(), kind: "imposed".into(), category: "office".into(), source: "udl".into(), g_k_line: 0.0, q_k_line: 2500.0, point_force: 0.0, m_k: 0.0, n_k: 0.0, v_k: 0.0, t_k: 0.0, v_k_punch: 0.0 },
+            ],
+            use_fem: false,
+            udl: 0.0,
+            deflection_sensitive: false,
+            tightness: None,
+            hd_over_h: 0.0,
+            liquid_sigma_s: 0.0,
+            liquid_rho_p_eff: 0.0,
+            liquid_f_ct_eff: 0.0,
+            liquid_s_r_max: 0.0,
+            bridge_sigma_c: 0.0,
+            bridge_delta_sigma_s: 0.0,
+        }
+    }
+
     pub fn failing_prestressed_beam() -> Self {
         let mut snap = Self::compliant_office_frame();
         snap.title = "Failing prestressed beam".into();
-        snap.members.retain(|m| m.id == "beam-PS1");
+        snap.members = vec![Self::prestressed_beam_member()];
         if let Some(ps) = snap.members.first_mut() {
             if let Some(pre) = &mut ps.prestress {
                 pre.force = 4000.0e3;
                 pre.eccentricity = 0.300;
-                pre.loss_ratio = 0.02;
+                pre.loss_ratio = 0.45;
             }
             ps.cover = 0.015;
+            ps.longitudinal[0].count = 2;
         }
+        snap.anchors.clear();
+        snap
+    }
+
+    /// ✅ Compliant prestressed beam example (selectable).
+    pub fn compliant_prestressed_beam() -> Self {
+        let mut snap = Self::compliant_office_frame();
+        snap.title = "Compliant prestressed beam".into();
+        snap.members = vec![Self::prestressed_beam_member()];
         snap.anchors.clear();
         snap
     }
@@ -333,8 +349,8 @@ impl En1992Snapshot {
             deflection_sensitive: false,
             tightness: Some(TightnessClass::Tc2),
             hd_over_h: 8.0,
-            liquid_sigma_s: 180.0e6,
-            liquid_rho_p_eff: 0.014,
+            liquid_sigma_s: 280.0e6,
+            liquid_rho_p_eff: 0.020,
             liquid_f_ct_eff: 3.2e6,
             liquid_s_r_max: 0.22,
             bridge_sigma_c: 0.0,
@@ -351,8 +367,8 @@ impl En1992Snapshot {
             c1: 0.120,
             f_ck: 35.0e6,
             actions: vec![
-                LoadCaseActions { id: "G".into(), kind: "permanent".into(), category: "self".into(), source: "external".into(), g_k_line: 0.0, q_k_line: 0.0, point_force: 0.0, m_k: 0.0, n_k: 8.0e3, v_k: 4.0e3, t_k: 0.0, v_k_punch: 0.0 },
-                LoadCaseActions { id: "Q-office".into(), kind: "imposed".into(), category: "office".into(), source: "external".into(), g_k_line: 0.0, q_k_line: 0.0, point_force: 0.0, m_k: 0.0, n_k: 5.0e3, v_k: 3.0e3, t_k: 0.0, v_k_punch: 0.0 },
+                LoadCaseActions { id: "G".into(), kind: "permanent".into(), category: "self".into(), source: "udl".into(), g_k_line: 250.0, q_k_line: 120.0, point_force: 0.0, m_k: 40.0, n_k: 8.0e3, v_k: 4.0e3, t_k: 25.0, v_k_punch: 8.0 },
+                LoadCaseActions { id: "Q-office".into(), kind: "imposed".into(), category: "office".into(), source: "point".into(), g_k_line: 0.0, q_k_line: 0.0, point_force: 80.0, m_k: 25.0, n_k: 5.0e3, v_k: 3.0e3, t_k: 18.0, v_k_punch: 6.0 },
             ],
         }];
         snap

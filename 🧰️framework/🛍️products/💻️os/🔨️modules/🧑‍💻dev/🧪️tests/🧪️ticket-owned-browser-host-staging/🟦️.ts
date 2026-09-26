@@ -73,13 +73,12 @@ import * as External15 from "../../../../🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: typeof testDependencies, source: TestSource): Promise<void> {
-  const { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, PLUGIN_SOURCE_WATCH_PATH, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, atTestLevel, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildPluginCatalog, cargoProfileDir, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginCargoArgs, pluginComponentBridgeSource, pluginOutRoot, pluginWasmProfile, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, scanBuiltPluginModules, shardWorkerSource, stagePluginDescriptor, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 } = dependencies;
+  const { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, atTestLevel, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildPluginCatalog, cargoProfileDir, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginCargoArgs, pluginComponentBridgeSource, pluginOutRoot, pluginWasmProfile, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, shardWorkerSource, stagePluginDescriptor, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 } = dependencies;
   type OwnedParityImage = import("../../⚖️parity/🖼️pixels/🟦️.ts").OwnedParityImage;
   type PackValue = import("../../../../🟦️.ts").PackValue;
   type ParityDump = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
   type ParityNode = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityNode;
   type PluginRegistryEntry = import("../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").PluginRegistryEntry;
-  type PluginHotSwapMarker = import("../../🔌️vite-plugins/🟦️.ts").PluginHotSwapMarker;
   type PluginSourceEvent = import("../../../../../../🔨️modules/🎠️kernel/🟦️.ts").PluginSourceEvent;
   type SpawnDaemonHandle = import("../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts").SpawnDaemonHandle;
 
@@ -527,70 +526,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
-    });
-  });
-
-  describe("scanBuiltPluginModules (plugin hot-swap SSE snapshot)", () => {
-    let root: string;
-
-    beforeEach(() => {
-      root = mkdtempSync(join(tmpdir(), "semio-plugin-hot-swap-"));
-    });
-
-    afterEach(() => {
-      rmSync(root, { recursive: true, force: true });
-    });
-
-    it("returns nothing for a missing root", () => {
-      expect(scanBuiltPluginModules(join(root, "does-not-exist"))).toEqual([]);
-    });
-
-    it("skips a plugin dir with no core wasm output yet", () => {
-      mkdirSync(join(root, "🗒️note"), { recursive: true });
-      writeFileSync(join(root, "🗒️note", "🟨️.js"), "");
-      expect(scanBuiltPluginModules(root)).toEqual([]);
-    });
-
-    it("skips the shared 🪞️vendor dir", () => {
-      mkdirSync(join(root, "🪞️vendor"), { recursive: true });
-      writeFileSync(join(root, "🪞️vendor", "shim.core.wasm"), "");
-      expect(scanBuiltPluginModules(root)).toEqual([]);
-    });
-
-    it("reports a built plugin's newest core wasm mtime", () => {
-      mkdirSync(join(root, "🗒️note"), { recursive: true });
-      writeFileSync(join(root, "🗒️note", "note_plugin_component.core.wasm"), "");
-      const rows = scanBuiltPluginModules(root);
-      expect(rows).toHaveLength(1);
-      expect(rows[0]!.pluginId).toBe("note");
-      expect(rows[0]!.rebuiltAt).toBeGreaterThan(0);
-    });
-
-    it("reports one row per plugin dir, largest mtime among multiple core wasm chunks", () => {
-      mkdirSync(join(root, "🗒️note"), { recursive: true });
-      writeFileSync(join(root, "🗒️note", "note_plugin_component.core.wasm"), "");
-      writeFileSync(join(root, "🗒️note", "note_plugin_component.core2.wasm"), "");
-      mkdirSync(join(root, "🪐️space"), { recursive: true });
-      writeFileSync(join(root, "🪐️space", "semio_s_plugin_space_component.core.wasm"), "");
-      const rows = scanBuiltPluginModules(root);
-      expect(rows.map((row) => row.pluginId).sort()).toEqual(["note", "space"]);
-    });
-
-    it("does not infer a public identity from undeclared raw or decorated basenames", () => {
-      for (const directoryName of ["note", "🗒️other", "🧩️unknown"]) {
-        mkdirSync(join(root, directoryName), { recursive: true });
-        writeFileSync(join(root, directoryName, "module.core.wasm"), "");
-      }
-      expect(scanBuiltPluginModules(root)).toEqual([]);
-    });
-  });
-
-  describe("PluginHotSwapMarker JSON round-trip (SSE `built` event payload)", () => {
-    it("parses the exact shape buildPlugin writes to ♻️hot-swap.json", () => {
-      const marker = JSON.parse(`${JSON.stringify({ pluginId: "note", rebuiltAt: 1785789943669 })}\n`) as PluginHotSwapMarker;
-      expect(marker).toEqual({ pluginId: "note", rebuiltAt: 1785789943669 });
-      const event: PluginSourceEvent = { kind: "built", pluginId: marker.pluginId, rebuiltAt: marker.rebuiltAt };
-      expect(event).toEqual({ kind: "built", pluginId: "note", rebuiltAt: 1785789943669 });
     });
   });
 
@@ -1413,21 +1348,20 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       console.log("[DEBUG] production excludes Node test imports; runtime and test-mode witnesses remain executable");
     }, 40_000);
 
-    itLong("routes encoded OS watcher and installation requests through the actual adapter handlers", async () => {
+    itLong("routes encoded OS installation requests through the actual adapter handler and registers its stream route", async () => {
       const ts = await import("typescript"), { EventEmitter } = await import("node:events");
       const { URL: OracleURL } = await import("whatwg-url");
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
       const handlers = new Map<string, Function>(), watched: string[] = [];
+      const routes: string[] = [];
       const environment = {
         mkdirSync() {}, watch(path: string) { watched.push(path); }, join, moduleRoutePath,
-        MODULE_HOT_SWAP_FILE, PLUGIN_SOURCE_WATCH_PATH,
-        startSseKeepalive: () => () => {}, scanBuiltPluginModules: () => [{ pluginId: "puzzle", rebuiltAt: 1 }],
-        EXTENSION_WATCH_MARKER: "👀️extension-watch.json", EXTENSION_WATCH_PATH: `${MODULE_EXTENSION_ROUTE}/watch`, EXTENSION_INSTALL_PATH: `${MODULE_EXTENSION_ROUTE}/install`,
+        devStreamMuxServer: () => ({ route: (name: string) => { routes.push(name); return () => undefined; }, publish() {} }), DEV_STREAM_ROUTES: { extensionModules: "extension-modules.watch" },
+        EXTENSION_WATCH_MARKER: "👀️extension-watch.json", EXTENSION_INSTALL_PATH: `${MODULE_EXTENSION_ROUTE}/install`,
         createExtensionStore: () => ({ installRoot: "fixture-install", listInstalled: async () => [], installFromBytes: async () => ({ installed: true }) }),
         readRequestBody: async () => Buffer.from([1]),
       };
       const specs = [
-        { owner: "plugin", path: join(dirname(fileURLToPath(source.url)), "../../🔌️vite-plugins/🟦️.ts"), name: "semioPluginHotSwapVitePlugin" },
         { owner: "extension", path: join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts"), name: "semioExtensionStoreVitePlugin" },
       ];
       for (const spec of specs) {
@@ -1438,7 +1372,8 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         const create = new Function("exports", ...Object.keys(environment), emitted + `\nreturn exports.${spec.name};`)({}, ...Object.values(environment));
         create({ moduleRoot: pluginOutRoot, installRoot: "fixture-install", repoRoot, materializer: async () => ({}) }).configureServer({ middlewares: { use(handler: Function) { handlers.set(spec.owner, handler); } } });
       }
-      expect(watched).toEqual([pluginOutRoot, "fixture-install"]);
+      expect(watched).toEqual(["fixture-install"]);
+      expect(routes).toEqual(["extension-modules.watch"]);
       for (const row of fixture.httpCases) {
         const request = Object.assign(new EventEmitter(), { url: row.url, method: row.method }), chunks: string[] = [];
         let next = false;
@@ -1447,7 +1382,8 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         expect(next, row.url).toBe(row.expected === "next");
         if (row.expected !== "next") {
           expect(response.statusCode).toBe(200);
-          expect(chunks.join("")).toContain(row.expected === "snapshot" ? '"kind":"snapshot"' : '"installed":true');
+          if (row.expected === "listed") expect(JSON.parse(chunks.join(""))).toEqual([]);
+          else expect(chunks.join("")).toContain('"installed":true');
           expect(decodeURIComponent(new OracleURL(row.url, "https://example.invalid").pathname)).toBe(moduleRoutePath(row.url));
         }
         request.emit("close");

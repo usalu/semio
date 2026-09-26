@@ -1,60 +1,37 @@
-/** 🧬️ EN 1999 diff schema. */
+/** 🧬️ EN 1999 diff schema — sparse field delta over the aluminium-structure subject. */
 
 import type { En1999Artifact } from "../🟦️.ts";
+import type {
+  AluminiumConnection,
+  AluminiumMaterial,
+  AluminiumMember,
+  AluminiumSection,
+  AluminiumShell,
+  AnnexChoice,
+  ColdFormedSheet,
+  FatigueDetail,
+  FireScenario,
+} from "../📸️snapshot/🟦️.ts";
 
 export interface En1999Diff {
   /** @state artifact */
   artifact?: En1999Artifact;
   /** @state artifact */
-  nEdKn?: number;
+  annex?: AnnexChoice | string;
   /** @state artifact */
-  mEdKnm?: number;
+  materials?: AluminiumMaterial[];
   /** @state artifact */
-  aMm2?: number;
+  sections?: AluminiumSection[];
   /** @state artifact */
-  wElMm3?: number;
+  members?: AluminiumMember[];
   /** @state artifact */
-  alloy?: number;
+  connections?: AluminiumConnection[];
   /** @state artifact */
-  chi?: number;
+  fireScenarios?: FireScenario[];
   /** @state artifact */
-  iTMm4?: number;
+  fatigueDetails?: FatigueDetail[];
   /** @state artifact */
-  lCrMm?: number;
+  coldFormed?: ColdFormedSheet[];
   /** @state artifact */
-  thetaC?: number;
-  /** @state artifact */
-  deltaSigmaEd?: number;
-  /** @state artifact */
-  deltaSigmaC?: number;
-  /** @state artifact */
-  fatigueM?: number;
-  /** @state artifact */
-  nCycles?: number;
-  /** @state artifact */
-  vWeldEdKn?: number;
-  /** @state artifact */
-  weldThroatMm?: number;
-  /** @state artifact */
-  weldLengthMm?: number;
-  /** @state artifact */
-  betaW?: number;
-  /** @state artifact */
-  sheetBMm?: number;
-  /** @state artifact */
-  sheetTMm?: number;
-  /** @state artifact */
-  sheetKSigma?: number;
-  /** @state artifact */
-  sheetWElMm3?: number;
-  /** @state artifact */
-  sheetMEdKnm?: number;
-  /** @state artifact */
-  shellTMm?: number;
-  /** @state artifact */
-  shellRMm?: number;
-  /** @state artifact */
-  sigmaEdShellMpa?: number;
-  /** @state artifact */
-  annex?: number;
+  shells?: AluminiumShell[];
 }

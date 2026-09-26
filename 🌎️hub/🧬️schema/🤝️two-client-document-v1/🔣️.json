@@ -17,6 +17,7 @@
         "growth",
         "presence",
         "agent",
+        "directoryPages",
         "shutdown",
         "steps",
         "expectations"
@@ -224,6 +225,33 @@
               "type": "object",
               "minProperties": 1,
               "maxProperties": 8
+            }
+          }
+        },
+        "directoryPages": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "spaces",
+            "pageBudgetMs",
+            "samples"
+          ],
+          "x-semio-note": "author A owns this many more spaces; its space list (best of samples) and every directory event page answer within pageBudgetMs (WG8 on 7800: 25–58 s for 82 spaces)",
+          "properties": {
+            "spaces": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 1000
+            },
+            "pageBudgetMs": {
+              "type": "integer",
+              "minimum": 50,
+              "maximum": 2000
+            },
+            "samples": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
             }
           }
         },

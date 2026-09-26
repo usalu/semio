@@ -247,6 +247,8 @@ pub fn history_transition_envelope(transition: &HistoryTransition, document_id: 
         document_id: document_id.clone(),
         actor: actor.clone(),
         dependencies,
+        observed: None,
+        target: Vec::new(),
         diff: super::ArtifactDiff { schema: schema.clone(), payload },
         inverse: super::InverseMutation { schema, payload: Vec::new() },
         timestamp,

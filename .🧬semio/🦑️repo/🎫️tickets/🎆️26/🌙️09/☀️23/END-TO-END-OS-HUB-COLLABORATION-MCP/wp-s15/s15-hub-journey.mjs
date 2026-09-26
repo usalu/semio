@@ -33,10 +33,11 @@ const B2_KIND_VERBS = {
   "s.gis.gismap": { gis: "addFeature" },
   "2d.puzzle": { puzzle: "addNode" },
   "3d.puzzle": { puzzle: "duplicateSelection" },
+  "text.document": { writer: "setText" },
 };
 /** ✋️ A rail verb a kind's pinned verb needs first (the local matrix's `KIND_PRE`): puzzle3d's selection verbs act on the live selection. */
 const B2_KIND_PRE = { "3d.puzzle": "selectAll" };
-const b2Kinds = fileURLToPath(new URL("./generated/s15-b2-kinds.txt", import.meta.url));
+const b2Kinds = process.env.S15_KINDS_FILE ?? "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s12-s15-logs/kinds-b2-7800.txt";
 const b2KindId = process.env.S12_KIND_INDEX !== undefined && existsSync(b2Kinds) ? readFileSync(b2Kinds, "utf8").split("\n").find((line) => line.startsWith(`${process.env.S12_KIND_INDEX} `))?.split(" ")[1] : undefined;
 if (b2KindId && B2_KIND_VERBS[b2KindId] && !process.env.S6_VERBS) process.env.S6_VERBS = JSON.stringify(B2_KIND_VERBS[b2KindId]);
 const { mutateUndoRedo: sweepMutateUndoRedo, readShell: sweepReadShell, unfoldActionsRail: sweepUnfoldActionsRail } = await import("../../../☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s6-all-kinds-sweep.mjs");
@@ -506,6 +507,27 @@ try {
   if (!afterCreation.includes("framework.window.table") && afterCreation.length > 0) {
     result.openedWindows = afterCreation;
     result.opened = "opened by the creation saga";
+    if (Number(process.env.S15_HOLD_MS ?? 0) > 0) {
+      /** ⏸️ Holds the opened document for `S15_HOLD_MS` and samples it every 500 ms: its windows, the route, and every read of the hub's
+       * plugin-module catalog index (the shell re-reads it once a minute) — a mounted document the index read disturbs changes its
+       * windows right after one. */
+      const holdStart = Date.now();
+      const catalogReads = () => hubRequests.filter((line) => / GET \/_semio\/hub\/trusted-catalog\/plugin-modules /u.test(line)).map((line) => Number(/@(\d+)/u.exec(line)?.[1] ?? 0));
+      const readsBefore = catalogReads().length;
+      result.hold = { samples: [], windowChanges: [] };
+      let last = "";
+      while (Date.now() - holdStart < Number(process.env.S15_HOLD_MS)) {
+        const row = await page.evaluate(() => `${location.pathname} | ${[...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")).sort().join(",")}`);
+        if (row !== last) {
+          result.hold.windowChanges.push({ atMs: Math.round(performance.now()), row });
+          last = row;
+        }
+        await page.waitForTimeout(500);
+      }
+      result.hold.catalogReads = catalogReads().slice(readsBefore);
+      result.hold.catalogStatuses = hubRequests.filter((line) => / GET \/_semio\/hub\/trusted-catalog\/plugin-modules /u.test(line)).slice(readsBefore).map((line) => line.split(" ")[0]);
+      log(`hold ${Math.round((Date.now() - holdStart) / 1000)} s: catalog reads ${JSON.stringify(result.hold.catalogStatuses)} @ ${JSON.stringify(result.hold.catalogReads)}; window states ${result.hold.windowChanges.length}: ${JSON.stringify(result.hold.windowChanges).slice(0, 600)}`);
+    }
     if (process.env.S15_OPEN_TRACE === "1") {
       result.openTrace = [];
       for (let sample = 0; sample < 60; sample += 1) {

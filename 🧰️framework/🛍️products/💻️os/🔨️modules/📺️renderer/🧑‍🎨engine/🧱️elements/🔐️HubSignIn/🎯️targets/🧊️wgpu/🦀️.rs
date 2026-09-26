@@ -23,8 +23,10 @@ use ui_wgpu::wgpu::Locale;
 //#region 🔖️Routes
 /// 🛣️ `POST` — AU1's `semio_hub::auth::SESSION_MINT_ROUTE`.
 pub const HUB_SESSION_MINT_PATH_V1: &str = "/auth/sessions";
-/// 🛣️ `GET`/`DELETE` — AU1's `SESSION_ME_ROUTE`; the only place the session's own expiry is served.
+/// 🛣️ `GET` — AU1's `SESSION_ME_ROUTE`; the only place the session's own expiry is served.
 pub const HUB_SESSION_ME_PATH_V1: &str = "/auth/sessions/me";
+/// 🚪️ `POST` — AU1's `SESSION_SIGN_OUT_ROUTE`, the self sign-out command.
+pub const HUB_SESSION_SIGN_OUT_PATH_V1: &str = "/auth/sessions/me/sign-out";
 /// 🏷️ The mint request's declared schema.
 pub const HUB_SIGN_IN_REQUEST_SCHEMA_V1: &str = "semio.hub.auth.credential-sign-in/v1";
 /// 🏷️ AU1's error body schema, read only to recover a rate-limit countdown.

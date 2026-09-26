@@ -1,4 +1,5 @@
 /** 📝️ Text representation for `norm.en1999.inference`. */
+import type { En1999Inference } from "../🟦️.ts";
 export type En1999InferenceText = string;
 
 //#region 🚪️Parsers
@@ -17,8 +18,8 @@ type normEn1999InferenceTextGuardTextBounds = { readonly minLength?: number; rea
 type normEn1999InferenceTextGuardRangeBounds = { readonly minimum?: number; readonly maximum?: number };
 type normEn1999InferenceTextGuardSizeBounds = { readonly minItems?: number; readonly maxItems?: number };
 
-export const normEn1999InferenceTextGuardObject = (value: unknown, at: string): Readonly<Record<string, unknown>> =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : normEn1999InferenceTextGuardReject(at, "value is not an object");
+export const normEn1999InferenceTextGuardObject = (value: unknown, at: string): Readonly<En1999Inference> =>
+  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as En1999Inference) : normEn1999InferenceTextGuardReject(at, "value is not an object");
 export const normEn1999InferenceTextGuardArray = (value: unknown, at: string, bounds: normEn1999InferenceTextGuardSizeBounds = {}): readonly unknown[] => {
   if (!Array.isArray(value)) return normEn1999InferenceTextGuardReject(at, "value is not an array");
   if (bounds.minItems !== undefined && value.length < bounds.minItems) normEn1999InferenceTextGuardReject(at, `array has fewer than ${bounds.minItems} items`);

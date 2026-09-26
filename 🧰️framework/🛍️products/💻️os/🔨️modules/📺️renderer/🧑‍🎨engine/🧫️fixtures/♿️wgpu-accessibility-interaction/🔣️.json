@@ -130,24 +130,24 @@
         "nodeId": 4,
         "key": "framework.settings",
         "depth": 0,
-        "role": "switch",
+        "role": "button",
         "label": "Settings",
         "live": "off",
         "focusable": true,
         "actionable": true,
-        "checked": true
+        "pressed": true
       },
       {
         "nodeId": 5,
         "key": "framework.settings.general",
         "depth": 0,
-        "role": "tab",
+        "role": "button",
         "label": "General",
         "live": "off",
         "focusable": true,
         "actionable": true,
         "focused": true,
-        "selected": true
+        "pressed": true
       }
     ]
   },
@@ -333,28 +333,73 @@
     "firstEpoch": 41,
     "successorEpoch": 42,
     "controls": [
-      { "id": "ui.panelToggle.display", "label": "Display" },
-      { "id": "ui.panelToggle.settings", "label": "Settings" }
+      {
+        "id": "ui.panelToggle.display",
+        "label": "Display"
+      },
+      {
+        "id": "ui.panelToggle.settings",
+        "label": "Settings"
+      }
     ],
     "generationRule": {
       "controlId": "ui.panelToggle.settings",
-      "firstRect": [1, 2, 30, 20],
-      "sameChromeRect": [1, 2, 30, 20],
-      "changedChromeRect": [41, 2, 30, 20]
+      "firstRect": [
+        1,
+        2,
+        30,
+        20
+      ],
+      "sameChromeRect": [
+        1,
+        2,
+        30,
+        20
+      ],
+      "changedChromeRect": [
+        41,
+        2,
+        30,
+        20
+      ]
     }
   },
   "settingsTabStrip": {
+    "role": "button",
+    "stateAttribute": "aria-pressed",
+    "pressedFollowsSelectionWhenFolded": true,
     "availableWidth": 300,
     "activeId": "framework.settings.general",
     "tabs": [
-      { "id": "fixture.settings.app", "label": "App" },
-      { "id": "framework.settings.general", "label": "General" },
-      { "id": "framework.settings.theme", "label": "Theme" },
-      { "id": "framework.settings.keybindings", "label": "Keybindings" },
-      { "id": "framework.settings.default-apps", "label": "Default Apps" },
-      { "id": "framework.settings.conflicts", "label": "Conflicts" }
+      {
+        "id": "fixture.settings.app",
+        "label": "App"
+      },
+      {
+        "id": "framework.settings.general",
+        "label": "General"
+      },
+      {
+        "id": "framework.settings.theme",
+        "label": "Theme"
+      },
+      {
+        "id": "framework.settings.keybindings",
+        "label": "Keybindings"
+      },
+      {
+        "id": "framework.settings.default-apps",
+        "label": "Default Apps"
+      },
+      {
+        "id": "framework.settings.conflicts",
+        "label": "Conflicts"
+      }
     ],
-    "tailIds": ["framework.settings.default-apps", "framework.settings.conflicts"]
+    "tailIds": [
+      "framework.settings.default-apps",
+      "framework.settings.conflicts"
+    ]
   },
   "transportCredits": {
     "note": "The transport and the Worker admit an address by its CREDITS only (bounded, control-free ids; non-negative safe integers). Liveness — a retired generation, an absent window, an id/key mismatch — is the renderer's answer (`rejections`), never a transport fault: a document's first minted node id is 0 (`UiNodeIdAllocator`), and refusing it tore the whole browser shell down the moment a keyboard user tabbed from the canvas into the mirror (ticket 26/09/23 session 12, WG7 S12-4).",
@@ -442,5 +487,36 @@
         }
       }
     ]
+  },
+  "chromePressedSemantics": {
+    "stateAttribute": "aria-pressed",
+    "fullscreen": {
+      "id": "ui.fullscreen.toggle",
+      "label": "Exit Fullscreen",
+      "pressed": true
+    },
+    "utility": {
+      "button": {
+        "id": "framework.utility.button.save",
+        "label": "Save"
+      },
+      "toggle": {
+        "id": "framework.utility.toggle.grid",
+        "label": "Grid",
+        "pressed": false
+      },
+      "collection": {
+        "id": "framework.utility.collection.views",
+        "label": "Views"
+      }
+    }
+  },
+  "textEditor": {
+    "role": "textbox",
+    "label": "Editor",
+    "value": "MATCH (n)\nRETURN n",
+    "multiline": true,
+    "editable": true,
+    "readOnly": false
   }
 }

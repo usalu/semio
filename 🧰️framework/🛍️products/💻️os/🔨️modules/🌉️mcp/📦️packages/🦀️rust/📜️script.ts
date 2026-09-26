@@ -491,6 +491,38 @@ class OsMcpHubAgentParticipantScript extends BundleScript {
   }
 }
 
+/** 🧩️ Runs the plugin-coverage lane-parity sweep: every installed plugin package over a fresh `--folder` semio MCP
+ * gateway — capabilities, descriptions, and per kind `artifact_create` + one non-destructive mutation. Configured by
+ * `S_OS_MCP_COVERAGE_PLUGINS` / `S_OS_MCP_COVERAGE_OUT`; see the sweep's own doc. */
+class OsMcpPluginCoverageScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("plugin-coverage-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧩️plugin-coverage/🟦️.ts")], this.repoRoot, "os-mcp-plugin-coverage", 7_200_000);
+  }
+}
+
+/** 🚶️ Runs the AI-client user path: a clean browser profile signs in to a hub-joined `s` serve, installs an MCP client
+ * from the agent pane, the official MCP SDK client edits the note, a destructive request is approved in the shell, and
+ * the withdrawal refuses every copy. `OS_MCP_HUB_ORIGIN`, `OS_MCP_HUB_EMAIL`, `OS_MCP_HUB_PASSWORD`,
+ * `S_OS_MCP_LIVE_SHELL_URL` and `S_OS_MCP_LIVE_LOCALE` select the target. */
+class OsMcpUserPathScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("user-path-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🚶️user-path/🟦️.ts")], this.repoRoot, "os-mcp-user-path", 3_600_000);
+  }
+}
+
+/** 🛡️ Runs the security gate against a live hub: per-tool scopes (read-only vs full grant), the read-audience cap, the
+ * agent-session rate limit, and revocation (the connected agent's next request is refused; the hub's connection census
+ * drops its sockets). `OS_MCP_HUB_ORIGIN`, `OS_MCP_HUB_EMAIL`, `OS_MCP_HUB_PASSWORD` and `OS_HUB_ADMIN_CAPABILITY_FILE`
+ * select the target. */
+class OsMcpSecurityScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("security-check accepts no arguments");
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🛡️security/🟦️.ts")], this.repoRoot, "os-mcp-security", 3_600_000);
+  }
+}
+
 /** 🤝️ Runs the hub-edit-durability gate: agent (fresh `semio-os-mcp --hub` processes) and human
  * (document socket) edits on one hub note must each be relayed, advance the ledger head, reach a
  * late joiner's catch-up and survive a restart of the hub the gate itself boots. `OS_MCP_HUB_BINARY`
@@ -783,6 +815,9 @@ const router = new ScriptRouter(import.meta.dir)
   .register("hub-agent-participant-check", OsMcpHubAgentParticipantScript)
   .register("hub-edit-durability-check", OsMcpHubEditDurabilityScript)
   .register("agent-reply-check", OsMcpAgentReplyScript)
+  .register("plugin-coverage-check", OsMcpPluginCoverageScript)
+  .register("user-path-check", OsMcpUserPathScript)
+  .register("security-check", OsMcpSecurityScript)
   .register("capability-audit-check", CapabilityAuditCheckScript)
   .register("schema-mirror", SchemaMirrorScript)
   .register("dev", DevScript);

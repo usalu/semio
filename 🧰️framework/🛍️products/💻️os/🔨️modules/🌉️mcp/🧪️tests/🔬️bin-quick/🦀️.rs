@@ -17,6 +17,8 @@ fn authenticated_hub_workspace_cli_contains_no_hub_credential_carrier() {
 /// 🤖️ The delegated-agent flags carry a LOCATION, never a secret: `--credential-file` is the only
 /// shape an MCP client configuration can express, and argv is world-readable through `ps`, so a
 /// token-shaped flag stays rejected.
+///
+/// 🔢️ `http` mode does not use stdio for MCP framing, so descriptor 0 is admissible there.
 #[test]
 fn the_delegated_agent_credential_is_a_path_and_never_a_secret_in_argv() {
     let stdio = parse_stdio_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-file", "/home/ada/.semio/agent.json"].into_iter().map(str::to_string)).unwrap();
@@ -40,7 +42,6 @@ fn the_delegated_agent_credential_is_a_path_and_never_a_secret_in_argv() {
         assert!(parse_stdio_args(&mut refused.clone().into_iter().map(str::to_string)).is_err(), "{refused:?} must be refused");
     }
 
-    // 🔢️ `http` mode does not use stdio for MCP framing, so descriptor 0 is admissible there.
     assert!(parse_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "0"].into_iter().map(str::to_string)).is_ok());
     assert!(parse_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "3"].into_iter().map(str::to_string)).is_err());
 }

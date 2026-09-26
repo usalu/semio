@@ -1,0 +1,33 @@
+{
+  "artifact": null,
+  "schema": null,
+  "id": null,
+  "title": null,
+  "layers": {
+    "added": [],
+    "removed": [],
+    "patched": [
+      {
+        "id": "paint",
+        "patch": {
+          "name": null,
+          "visible": null,
+          "opacity": null,
+          "blendMode": null,
+          "transformX": null,
+          "transformY": null,
+          "width": null,
+          "height": null,
+          "adjustmentKind": null,
+          "pixelContent": {
+            "imageKey": null,
+            "width": 3,
+            "height": 2
+          }
+        }
+      }
+    ],
+    "moved": []
+  },
+  "assets": null
+}

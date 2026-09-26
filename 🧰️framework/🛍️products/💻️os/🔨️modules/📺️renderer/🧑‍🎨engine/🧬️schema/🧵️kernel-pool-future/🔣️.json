@@ -6,7 +6,8 @@
   "required": [
     "cases",
     "responses",
-    "admissions"
+    "admissions",
+    "turnFairness"
   ],
   "properties": {
     "cases": {
@@ -111,6 +112,105 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 8
+            }
+          }
+        }
+      }
+    },
+    "turnFairness": {
+      "description": "⚖️ How the native kernel shares its request loop while a guest turn is mid-flight: a slice is `sliceFuel`/`sliceWallMs`; after each slice of a preempted turn at most `requestsBetweenSlices` queued requests run first when the head may (`gaps`); only an explicit cancel ends a turn — the requester dropping its request (`abandonment`) or a realm close at the head. Ticket 26/09/23 WG8.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sliceFuel",
+        "sliceWallMs",
+        "requestsBetweenSlices",
+        "gaps",
+        "abandonment"
+      ],
+      "properties": {
+        "sliceFuel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sliceWallMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "requestsBetweenSlices": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "gaps": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "head",
+              "headInstance",
+              "busy",
+              "served",
+              "cancels"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "head": {
+                "enum": [
+                  "exchangeCommands",
+                  "destroyApp",
+                  "closeRealm",
+                  null
+                ]
+              },
+              "headInstance": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "busy": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "served": {
+                "type": "boolean"
+              },
+              "cancels": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "abandonment": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "admitted",
+              "delivered",
+              "abandoned"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "admitted": {
+                "type": "boolean"
+              },
+              "delivered": {
+                "type": "boolean"
+              },
+              "abandoned": {
+                "type": "boolean"
+              }
             }
           }
         }

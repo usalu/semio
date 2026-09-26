@@ -27,6 +27,8 @@ pub struct Vdi3805Artifact {
     pub geometry: BTreeMap<String, ParametricGeometry>,
     #[state(artifact)]
     pub curves: BTreeMap<String, CharacteristicCurve>,
+    #[state(artifact)]
+    pub limits: SecurityLimits,
 }
 //#endregion 🔖️Artifact
 
@@ -42,6 +44,7 @@ impl Vdi3805Artifact {
             index: self.index.clone(),
             geometry: self.geometry.clone(),
             curves: self.curves.clone(),
+            limits: self.limits,
         }
     }
 
@@ -55,6 +58,7 @@ impl Vdi3805Artifact {
             index: snapshot.index,
             geometry: snapshot.geometry,
             curves: snapshot.curves,
+            limits: snapshot.limits,
         }
     }
     /// 🔄 Overwrite persistent fields from a snapshot; leave shared-ui untouched.
@@ -354,6 +358,44 @@ pub fn attributes_from_records(sheet: SheetId, records: &[NativeRecord]) -> Shee
     }
 }
 
+/// 🔁 Writes identity + sheet into the mandatory 100 record fields.
+pub fn sync_titles_into_records(product: &mut CatalogueProduct) {
+    let de = text_in(&product.title, "de");
+    let en = text_in(&product.title, "en");
+    let fields = vec!["700".into(), "de".into(), de, "en".into(), en];
+    if let Some(r700) = product.records.iter_mut().find(|r| r.family.0 == "700" || r.fields.first().is_some_and(|f| f == "700")) {
+        r700.family = RecordFamilyId("700".into());
+        r700.fields = fields;
+    } else {
+        product.records.push(NativeRecord {
+            family: RecordFamilyId("700".into()),
+            fields,
+            extensions: ExtensionBag::default(),
+        });
+    }
+}
+
+pub fn sync_identity_into_records(product: &mut CatalogueProduct) {
+    let sheet = product.sheet.0.to_string();
+    let fields = vec![
+        "100".into(),
+        product.identity.manufacturer_code.clone(),
+        product.identity.product_group.clone(),
+        product.identity.article_number.clone(),
+        sheet,
+    ];
+    if let Some(r100) = product.records.iter_mut().find(|r| r.family.0 == "100" || r.fields.first().is_some_and(|f| f == "100")) {
+        r100.family = RecordFamilyId("100".into());
+        r100.fields = fields;
+    } else {
+        product.records.insert(0, NativeRecord {
+            family: RecordFamilyId("100".into()),
+            fields,
+            extensions: ExtensionBag::default(),
+        });
+    }
+}
+
 /// 🔄 Writes typed configuration.attributes into a native 210 record (Part 1 authoritative mirror).
 pub fn sync_typed_attributes_into_records(product: &mut CatalogueProduct) {
     let fields = match &product.configuration.attributes {
@@ -387,21 +429,28 @@ pub fn sync_typed_attributes_into_records(product: &mut CatalogueProduct) {
             "connection_type".into(),
             a.connection_type.clone(),
         ],
-        SheetAttributes::PumpHeating(a) => vec![
-            "210".into(),
-            "dn_suction".into(),
-            a.dn_suction.to_string(),
-            "dn_discharge".into(),
-            a.dn_discharge.to_string(),
-            "nominal_flow_m3_s".into(),
-            a.nominal_flow_m3_s.to_string(),
-            "nominal_head_m".into(),
-            a.nominal_head_m.to_string(),
-            "motor_power_w".into(),
-            a.motor_power_w.to_string(),
-            "hydraulic_efficiency".into(),
-            a.hydraulic_efficiency.to_string(),
-        ],
+        SheetAttributes::PumpHeating(a) => {
+            let mut fields = vec![
+                "210".into(),
+                "dn_suction".into(),
+                a.dn_suction.to_string(),
+                "dn_discharge".into(),
+                a.dn_discharge.to_string(),
+                "nominal_flow_m3_s".into(),
+                a.nominal_flow_m3_s.to_string(),
+                "nominal_head_m".into(),
+                a.nominal_head_m.to_string(),
+                "motor_power_w".into(),
+                a.motor_power_w.to_string(),
+                "hydraulic_efficiency".into(),
+                a.hydraulic_efficiency.to_string(),
+            ];
+            if let Some(curve) = &a.qh_curve_ref {
+                fields.push("qh_curve_ref".into());
+                fields.push(curve.clone());
+            }
+            fields
+        },
         SheetAttributes::HeatGenerator(a) => vec![
             "210".into(),
             "nominal_heat_output_w".into(),
@@ -539,7 +588,12 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
     if !orphan_records.is_empty() && products.is_empty() {
         return Err(NormError::IncompleteInput { field: "100".into() });
     }
-    let _ = actual_records;
+    if actual_records != record_count {
+        return Err(NormError::InvalidValue {
+            field: "record_count".into(),
+            reason: format!("declared {record_count} != actual {actual_records}"),
+        });
+    }
     let file = ManufacturerFile {
         header_version: header_version.into(),
         manufacturer: manufacturer.into(),
@@ -555,25 +609,47 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
 /// 🔤️ Serialize catalogue to semicolon-delimited native text (010-style header + typed records).
 pub fn serialize_native_text(catalog: &ManufacturerCatalog) -> String {
     let f = &catalog.file;
-    let mut out = format!("010;{};{};{};{};{};{}\n", f.header_version, f.manufacturer, f.building_system_number.render(), f.created, f.charset, f.record_count);
+    let mut body = String::new();
+    let mut line_count: u32 = 0;
     for product in &catalog.products {
         let mut wrote_100 = false;
         for record in &product.records {
-            out.push_str(&record.fields.join(";"));
-            out.push('\n');
+            body.push_str(&record.fields.join(";"));
+            body.push('\n');
+            line_count += 1;
             if record.fields.first().is_some_and(|f| f == "100") {
                 wrote_100 = true;
             }
         }
         if !wrote_100 {
-            out.push_str(&format!("100;{};{};{};{}\n", product.identity.manufacturer_code, product.identity.product_group, product.identity.article_number, product.sheet.0));
+            body.push_str(&format!(
+                "100;{};{};{};{}\n",
+                product.identity.manufacturer_code,
+                product.identity.product_group,
+                product.identity.article_number,
+                product.sheet.0
+            ));
+            line_count += 1;
         }
-        if let Some(line) = attributes_to_native_line(&product.configuration.attributes) {
-            out.push_str(&line);
-            out.push('\n');
+        let has_210 = product.records.iter().any(|r| r.fields.first().is_some_and(|f| f == "210"));
+        if !has_210 {
+            if let Some(line) = attributes_to_native_line(&product.configuration.attributes) {
+                body.push_str(&line);
+                body.push('\n');
+                line_count += 1;
+            }
         }
     }
-    out
+    format!(
+        "010;{};{};{};{};{};{}\n{}",
+        f.header_version,
+        f.manufacturer,
+        f.building_system_number.render(),
+        f.created,
+        f.charset,
+        line_count,
+        body
+    )
 }
 
 fn attributes_to_native_fields(attributes: &SheetAttributes) -> Option<Vec<(String, String)>> {
@@ -633,19 +709,19 @@ pub fn validate_structure(document: &Vdi3805Snapshot) -> Vec<Diagnostic> {
     let catalog = &document.catalog;
     let mut issues = Vec::new();
     if catalog.file.manufacturer.is_empty() {
-        issues.push(Diagnostic::error("manufacturerFile.manufacturer", "missing manufacturer code"));
+        issues.push(Diagnostic::error("catalog.file.manufacturer", "missing manufacturer code"));
     }
     if catalog.file.charset.is_empty() {
-        issues.push(Diagnostic::error("manufacturerFile.charset", "missing charset"));
+        issues.push(Diagnostic::error("catalog.file.charset", "missing charset"));
     }
     if catalog.products.is_empty() {
         issues.push(Diagnostic::error("catalog.products", "empty product list"));
     }
     let actual = count_native_records(catalog);
     if catalog.file.record_count != actual {
-        issues.push(Diagnostic::error("manufacturerFile.recordCount", format!("record_count {} != actual {}", catalog.file.record_count, actual)));
+        issues.push(Diagnostic::error("catalog.file.recordCount", format!("record_count {} != actual {}", catalog.file.record_count, actual)));
     }
-    let article_numbers: BTreeSet<String> = catalog.products.iter().map(|p| p.identity.article_number.clone()).collect();
+    let product_ids: BTreeSet<String> = catalog.products.iter().map(|p| p.id.clone()).collect();
     for (pi, product) in catalog.products.iter().enumerate() {
         let base = format!("catalog.products[{pi}]");
         if product.identity.article_number.is_empty() {
@@ -691,12 +767,12 @@ pub fn validate_structure(document: &Vdi3805Snapshot) -> Vec<Diagnostic> {
             }
         }
         for (ai, link) in product.accessories.iter().enumerate() {
-            if !article_numbers.contains(&link.accessory_id) {
+            if !product_ids.contains(&link.accessory_id) {
                 issues.push(Diagnostic::error(format!("{base}.accessories[{ai}].accessoryId"), format!("dangling accessory {}", link.accessory_id)));
             }
         }
         for (ci, link) in product.components.iter().enumerate() {
-            if !article_numbers.contains(&link.component_id) {
+            if !product_ids.contains(&link.component_id) {
                 issues.push(Diagnostic::error(format!("{base}.components[{ci}].componentId"), format!("dangling component {}", link.component_id)));
             }
         }

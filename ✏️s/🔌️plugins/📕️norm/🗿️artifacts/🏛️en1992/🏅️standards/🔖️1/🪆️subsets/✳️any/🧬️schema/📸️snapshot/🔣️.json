@@ -128,9 +128,9 @@
         "ductility": {
           "type": "string",
           "enum": [
-            "A",
-            "B",
-            "C"
+            "a",
+            "b",
+            "c"
           ]
         }
       }

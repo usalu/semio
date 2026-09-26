@@ -1,0 +1,57 @@
+{
+  "schema": "semio.store.outbound-announcement/v1",
+  "vectors": [
+    {
+      "id": "a-coalesced-typing-run-announces-each-keystroke-exactly-once",
+      "steps": [
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 1, "observed": null } },
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 2, "observed": null } },
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 3, "observed": null } },
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 4, "observed": null } }
+      ]
+    },
+    {
+      "id": "a-multi-item-gesture-amending-the-tail-announces-only-its-own-items",
+      "steps": [
+        { "gesture": { "coalesceKey": "drag", "items": 2 }, "expect": { "announcedOperations": 2, "announcedTransitions": 0, "edits": 1, "tailOperations": 2, "observed": null } },
+        { "gesture": { "coalesceKey": "drag", "items": 3 }, "expect": { "announcedOperations": 3, "announcedTransitions": 0, "edits": 1, "tailOperations": 5, "observed": null } }
+      ]
+    },
+    {
+      "id": "a-changed-key-starts-a-new-edit-that-later-gestures-amend",
+      "steps": [
+        { "gesture": { "coalesceKey": "a", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 1, "observed": null } },
+        { "gesture": { "coalesceKey": "b", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 2, "tailOperations": 1, "observed": null } },
+        { "gesture": { "coalesceKey": "b", "items": 2 }, "expect": { "announcedOperations": 2, "announcedTransitions": 0, "edits": 2, "tailOperations": 3, "observed": null } }
+      ]
+    },
+    {
+      "id": "gestures-without-a-key-never-amend",
+      "steps": [
+        { "gesture": { "coalesceKey": null, "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 1, "observed": null } },
+        { "gesture": { "coalesceKey": null, "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 2, "tailOperations": 1, "observed": null } }
+      ]
+    },
+    {
+      "id": "after-an-undo-the-same-key-starts-a-new-edit",
+      "steps": [
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 1, "observed": null } },
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 2, "observed": null } },
+        { "undo": true, "expect": { "announcedOperations": 0, "announcedTransitions": 1, "edits": 1, "tailOperations": 0, "observed": null } },
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 2, "tailOperations": 1, "observed": null } },
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 2, "tailOperations": 2, "observed": null } }
+      ]
+    },
+    {
+      "id": "every-announced-operation-names-the-newest-foreign-operation-its-author-had-applied",
+      "steps": [
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 1, "tailOperations": 1, "observed": null } },
+        { "remote": { "id": "peer-1", "observed": null }, "expect": { "announcedOperations": 0, "announcedTransitions": 0, "edits": 2, "tailOperations": 1, "observed": null } },
+        { "gesture": { "coalesceKey": "typing", "items": 2 }, "expect": { "announcedOperations": 2, "announcedTransitions": 0, "edits": 3, "tailOperations": 2, "observed": "peer-1" } },
+        { "gesture": { "coalesceKey": "typing", "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 3, "tailOperations": 3, "observed": "peer-1" } },
+        { "remote": { "id": "peer-2", "observed": "an-operation-this-replica-never-saw" }, "expect": { "announcedOperations": 0, "announcedTransitions": 0, "edits": 4, "tailOperations": 1, "observed": null } },
+        { "gesture": { "coalesceKey": null, "items": 1 }, "expect": { "announcedOperations": 1, "announcedTransitions": 0, "edits": 5, "tailOperations": 1, "observed": "peer-2" } }
+      ]
+    }
+  ]
+}

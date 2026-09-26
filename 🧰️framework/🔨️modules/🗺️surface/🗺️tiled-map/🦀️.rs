@@ -101,7 +101,9 @@ const GIS_MAP_LOD_SCALE: LodScale = LodScale { lods: GIS_MAP_LODS };
 
 const MAX_MAP_TILE_CACHE_ENTRIES: usize = 512;
 
-const MAX_VISIBLE_TILE_REQUESTS: usize = 256;
+/// @emoji 🧮️ The most tiles one visible-tile enumeration may request — the budget `pick_raster_tile_zoom` and
+/// `pick_vector_tile_zoom` keep every viewport under.
+pub const MAX_VISIBLE_TILE_REQUESTS: usize = 256;
 
 const REVISION_FNV_OFFSET: u64 = 0xcbf29ce484222325;
 const REVISION_FNV_PRIME: u64 = 0x0000_0100_0000_01b3;
@@ -180,6 +182,13 @@ fn resolve_map_lod_index_from_span(span_deg: f64) -> usize {
         }
     }
     GIS_MAP_LODS.len().saturating_sub(1)
+}
+
+/// @emoji 📶️ The automatic LOD band a viewport longitude span (degrees) resolves to, and that band's raster tile z —
+/// the pair the `🕸️web-mercator-tile-oracle` case's `lod-band-selection` specification vectors pin.
+pub fn map_lod_band(span_deg: f64) -> (usize, u32) {
+    let index = resolve_map_lod_index_from_span(span_deg);
+    (index, GIS_MAP_LOD_TILE_Z.get(index).copied().unwrap_or(0))
 }
 
 fn resolve_detail_lod_index(span_deg: f64, forced_lod_id: Option<&str>) -> usize {

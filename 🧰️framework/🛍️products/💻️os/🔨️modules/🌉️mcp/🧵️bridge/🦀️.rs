@@ -2645,12 +2645,17 @@ impl BridgeHandle {
 
     /// 📝️ Records the effect of one received [`ShellToGateway`] frame against its connection —
     /// `Hello`/`Ping`/`Bye` never reach here (the read loop handles all three inline).
+    ///
+    /// 🛑️ A cancel is connection-independent and takes no connection state: it flips the SAME
+    /// cooperative flag `job_cancel` flips, on the job `AgentConversation::begin_tool_call` opened
+    /// under this invocation id. Handled before the connections lock so the two locks never nest.
+    /// A `NotFound`/`PreconditionFailed` means the call already finished between the human's click
+    /// and this frame — the honest outcome of a cancel arriving late, not an error to report.
+    ///
+    /// 💬️ Outside the connections lock: the subscription broker takes its own locks, and a human
+    /// turn that only becomes visible on the agent's next poll is a channel with a one-poll
+    /// latency floor. Subscribed clients are told now; unsubscribed ones still poll as before.
     pub(crate) fn record(&self, id: ShellConnectionId, frame: ShellToGateway) {
-        // 🛑️ A cancel is connection-independent and takes no connection state: it flips the SAME
-        // cooperative flag `job_cancel` flips, on the job `AgentConversation::begin_tool_call` opened
-        // under this invocation id. Handled before the connections lock so the two locks never nest.
-        // A `NotFound`/`PreconditionFailed` means the call already finished between the human's click
-        // and this frame — the honest outcome of a cancel arriving late, not an error to report.
         if let ShellToGateway::AgentCancel { invocation_id } = &frame {
             let _ = crate::ui::job_registry().request_cancel(invocation_id);
             return;
@@ -2673,9 +2678,6 @@ impl BridgeHandle {
             }
             ShellToGateway::Hello { .. } | ShellToGateway::Ping | ShellToGateway::Bye | ShellToGateway::AgentCancel { .. } => {}
         }
-        // 💬️ Outside the connections lock: the subscription broker takes its own locks, and a human
-        // turn that only becomes visible on the agent's next poll is a channel with a one-poll
-        // latency floor. Subscribed clients are told now; unsubscribed ones still poll as before.
         drop(connections);
         if inbox_grew {
             crate::notify::agent_messages_changed();
@@ -2891,13 +2893,14 @@ impl AgentConversation {
     /// 🛠️ Announces one tool call and returns its invocation id. Emitted BEFORE the handler runs, so
     /// a long tool is visible in the shell while it is still running rather than only afterwards;
     /// the `AgentPresence{active:true}` frame is what turns the existing presence dot amber.
+    ///
+    /// 🛑️ Every tool call is a real job in the ONE process-wide registry, keyed by the invocation id
+    /// the panel already renders — so the panel's cancel control, `job_cancel` and
+    /// `semio://job/{id}` all act on the same record, and a handler that polls
+    /// `is_cancel_requested` sees the human's stop. `report_progress` moves it off `Pending`
+    /// (a `Pending` job finishes as `Cancelled` immediately; this one is genuinely running).
     pub fn begin_tool_call(&self, tool_name: &str, arguments: &serde_json::Value) -> String {
         let invocation_id = format!("inv_{}", self.next_invocation.fetch_add(1, Ordering::Relaxed));
-        // 🛑️ Every tool call is a real job in the ONE process-wide registry, keyed by the invocation id
-        // the panel already renders — so the panel's cancel control, `job_cancel` and
-        // `semio://job/{id}` all act on the same record, and a handler that polls
-        // `is_cancel_requested` sees the human's stop. `report_progress` moves it off `Pending`
-        // (a `Pending` job finishes as `Cancelled` immediately; this one is genuinely running).
         crate::ui::job_registry().begin_with_id(invocation_id.clone(), "toolCall");
         crate::ui::job_registry().report_progress(&invocation_id, 0.0, Some(tool_name.to_string()));
         let rendered = if arguments.is_null() { String::new() } else { truncate_conversation_text(&serde_json::to_string(arguments).unwrap_or_default()) };
@@ -2907,9 +2910,10 @@ impl AgentConversation {
     }
 
     /// 🧾️ Closes the invocation `begin_tool_call` opened, then returns presence to idle.
+    ///
+    /// 🛑️ A call the human cancelled settles as `Cancelled`, not as whatever the handler happened to
+    /// return; `finish` is a no-op once terminal, so a cancel that already closed the record wins.
     pub fn finish_tool_call(&self, invocation_id: &str, tool_name: &str, ok: bool, summary: &str) {
-        // 🛑️ A call the human cancelled settles as `Cancelled`, not as whatever the handler happened to
-        // return; `finish` is a no-op once terminal, so a cancel that already closed the record wins.
         let registry = crate::ui::job_registry();
         if registry.is_cancel_requested(invocation_id) {
             registry.mark_cancelled(invocation_id);

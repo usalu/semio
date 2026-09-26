@@ -1,13 +1,14 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 import { stubFetch } from "../🌐️fetch-stub/🟦️.ts";
+import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
 import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪️store/👷️worker/🟦️.ts";
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: BackboneWorkerTestDependencies, registrar: TestSource): Promise<void> {
   // 📍️ Every fixture below is spelled relative to `💻️os/🟦️.ts` (the worker lived beside it as `🧵️backbone-worker.ts`
   // until 2026-09-12); the worker now registers from `🔨️modules/🏪️store/👷️worker/🟦️.ts`, so rebase its URL.
   const source: TestSource = decodeURIComponent(registrar.url).endsWith("/👷️worker/🟦️.ts") ? { directory: registrar.directory, url: new URL("../../../🟦️.ts", registrar.url).href } : registrar;
-  const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
+  const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, installStreamMuxEndpoint, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
   const { testSeams } = dependencies;
   const { DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck } = dependencies;
   vitest.it("retains the preceding inference job when a successor opening is refused", async () => {
@@ -1420,7 +1421,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }>;
       const parsed: unknown = JSON.parse(await readFile(new URL("./🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(await readFile(new URL("./🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
-      const { semioSchemaAjvV1 } = await import("../🧬️schema-oracle/🟦️.ts");
       const validate = semioSchemaAjvV1({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/GisMapPeerRebootstrapV1`)! as unknown as (value: unknown) => value is GisMapPeerRebootstrapFixtureV1;
       expect(validate(parsed)).toBe(true);
       if (!validate(parsed)) throw new Error("GIS Map peer rebootstrap fixture is invalid");
@@ -3476,24 +3476,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   //#endregion 💡️InferencePortTests
 
   //#region 🔖️OfflineResilienceTests
-  // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-backbone) findings 1/2/3/5: SSE-primary folder
-  // watch with a suppressed sanity-poll fallback, reconnect after a post-open drop, abort-on-close,
+  // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-backbone) findings 1/2/3/5: stream-primary folder
+  // watch (`backbone.folder` on the page's stream channel) with a suppressed sanity-poll fallback, abort-on-close,
   // and the bounded lossless mutation outbox. No real sleeps — `vi.useFakeTimers()` drives every
   // timer-dependent assertion, and every fetch/socket/stream is a controllable local fake.
   describe("backbone-worker offline resilience", () => {
-    class FakeEventSource {
-      static instances: FakeEventSource[] = [];
-      readonly url: string;
-      onopen: (() => void) | null = null;
-      onmessage: ((event: unknown) => void) | null = null;
-      onerror: (() => void) | null = null;
-      closed = false;
-      constructor(url: string) {
-        this.url = url;
-        FakeEventSource.instances.push(this);
-      }
-      close(): void {
-        this.closed = true;
+    type StreamMuxEndpointV1 = import("../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts").StreamMuxEndpointV1;
+    type StreamMuxHandlersV1 = import("../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts").StreamMuxHandlersV1;
+    /** 🔀️ The page's stream channel as the worker sees it: every open is a recorded stream whose handlers the test drives. */
+    class FakeStreamEndpoint implements StreamMuxEndpointV1 {
+      readonly streams: { readonly route: string; readonly key: string; readonly handlers: StreamMuxHandlersV1; closed: boolean }[] = [];
+      open(route: string, key: string, handlers: StreamMuxHandlersV1, options: { readonly signal?: AbortSignal } = {}): { close(): void } {
+        const stream = { route, key, handlers, closed: false };
+        this.streams.push(stream);
+        options.signal?.addEventListener("abort", () => (stream.closed = true), { once: true });
+        return { close: () => (stream.closed = true) };
       }
     }
 
@@ -3567,6 +3564,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           document_id: envelope.document,
           actor: envelope.actor,
           dependencies: envelope.deps ?? [],
+          observed: null,
+          target: [],
           diff: { schema: envelope.diff.schemaId, payload: diffPayload },
           inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackValue(envelope.inverse.inverseDiff.payload) },
           timestamp,
@@ -4052,7 +4051,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFile } = await import("node:fs/promises");
       const corpus = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json", source.url), "utf8"));
       const schema = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧬️schema/🔣️.json", source.url), "utf8")) as { $id: string };
-      const { semioSchemaAjvV1 } = await import("../🧬️schema-oracle/🟦️.ts");
       const validators = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(schema);
       const validateScope = validators.getSchema(`${schema.$id}#/$defs/DocumentOpeningScopeResolutionV1`)!;
       const validateFirstOpen = validators.getSchema(`${schema.$id}#/$defs/DocumentFirstOpenV1`)!;
@@ -4999,7 +4997,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const fixture = await executionTargetLeaseFixture();
       const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixtures/🔣️.json", source.url), "utf8"));
       const actionFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🧫️fixtures/🔣️.json", source.url), "utf8"));
-      const { semioSchemaAjvV1 } = await import("../🧬️schema-oracle/🟦️.ts");
       const schema = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", source.url), "utf8"));
       expect(semioSchemaAjvV1({ strict: true }).compile(schema)(corpus)).toBe(true);
       const { applyPatch } = await import("fast-json-patch");
@@ -5601,6 +5598,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await Promise.resolve();
         expect(workerResponses.filter((message) => message.kind === "browser-actor-action-result")).toHaveLength(0);
         expect(commandSequences).toEqual([]);
+        const windowRendersBeforeActions = visibleViews.length;
         const actionPatch = heldActionPatch!;
         const actionApplied = uiStore.applyPatch(actionPatch.patches[0]!);
         expect(actionApplied.ok).toBe(true);
@@ -5636,6 +5634,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const earlyCommandResult = workerResponses.filter((message): message is Extract<BackboneWorkerResponse, { kind: "browser-actor-action-result" }> => message.kind === "browser-actor-action-result").at(-1)!;
         expect(earlyCommandResult).toMatchObject({ actionSequence: 3, surfaceRevision: 1, outcome: "guest-applied", mutationCount: 1 });
         expect(decodeBrowserActorHostEffectsV1(earlyCommandResult.hostEffects)).toEqual([actionFixture.publication.projectedEffect]);
+        // 🪟️ The author's own windows are re-projected after its document-changing command (the guest's command turn does
+        // not re-render them: C11 measured the author seeing its own edit ~20 s late), never after a zero-mutation intent.
+        expect(visibleViews.length - windowRendersBeforeActions).toBe(1);
         expect(commandSequences).toEqual([3]);
         expect(backboneIngress).toHaveLength(1);
         console.log("[DEBUG] direct-browser-actor-action: skipped-sequence=1 u64-preserved=1 shell-frame=1 host-effect=1 full-turn-serialized=1 remote-echo=0 early-action-queued=1");
@@ -5670,6 +5671,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           expect(decodeBrowserActorHostEffectsV1(commandResult.hostEffects)).toEqual([actionFixture.publication.projectedEffect]);
         }
         expect(commandSequences).toEqual([3, 4, 5]);
+        expect(visibleViews.length - windowRendersBeforeActions).toBe(3);
         expect(commandInvocations).toEqual([earlyCommandInvocation, directActionInvocation, directCommandInvocation]);
         expect(commandViews).toEqual([earlyCommandView, directCommandView, directCommandView]);
         console.log("[DEBUG] direct-browser-actor-command: action-invocation=1 command-invocation=1 canonical-page=1 shell-publication=1 raw-backbone-projection=1 singleton-host-effect=1");
@@ -6031,6 +6033,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             document_id: value.document,
             actor: value.actor,
             dependencies: value.deps ?? [],
+            observed: null,
+            target: [],
             diff: { schema: value.diff.schemaId, payload: value.document === "doc-a" ? opaqueNoncanonicalPack : encodePackValue(value.diff.payload) },
             inverse: { schema: value.inverse.inverseDiff.schemaId, payload: encodePackValue(value.inverse.inverseDiff.payload) },
             timestamp: { actor: 7n, physical_ms: 9_007_199_254_740_992n, logical: 11n },
@@ -6097,6 +6101,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               document_id: documentId,
               actor: "caller",
               dependencies: [],
+              observed: null,
+              target: [],
               diff: { schema: "demo/v1", payload: encodePackValue("x".repeat(textBytes)) },
               inverse: { schema: "demo/v1", payload: encodePackValue(null) },
               timestamp: { actor: 1n, physical_ms: 2n, logical: 3n },
@@ -6151,7 +6157,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
       (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
       testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: `hub.v1.${"4".repeat(64)}`, expiresAtMs: Number.MAX_SAFE_INTEGER });
-      const replacement = (documentId: string) => ({ mutation_id: "hub-replacement", document_id: documentId, actor: "caller", dependencies: [], diff: { schema: "demo/v1", payload: Array.from(encodePackValue("hub")) }, inverse: { schema: "demo/v1", payload: Array.from(encodePackValue(null)) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 4n } });
+      const replacement = (documentId: string) => ({ mutation_id: "hub-replacement", document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: Array.from(encodePackValue("hub")) }, inverse: { schema: "demo/v1", payload: Array.from(encodePackValue(null)) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 4n } });
       const cases = [
         { documentId: "doc-ack-refused", outcome: { Rejected: { reason: "stale-base", messages: [] } }, expected: { kind: "rejected", reason: "stale-base", messages: [] } },
         { documentId: "doc-ack-transformed", outcome: { Transformed: { envelope: replacement("doc-ack-transformed") } }, expected: { kind: "transformed" } },
@@ -6161,7 +6167,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           FakeHubWebSocket.instances = [];
           const edit = (id: string) => encodeBackboneMessage({
             kind: "mutations",
-            envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: row.documentId, actor: "caller", dependencies: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
+            envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: row.documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
           });
           const outcomes: BackboneWorkerResponse[] = [];
           testSeams.workerPostTestSink = (message) => outcomes.push(message);
@@ -6329,8 +6335,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     it("poll never overlaps itself: concurrent revalidateFolder() calls collapse into one coalesced follow-up", async () => {
-      FakeEventSource.instances = [];
-      (globalThis as unknown as { EventSource: unknown }).EventSource = FakeEventSource;
+      installStreamMuxEndpoint(new FakeStreamEndpoint());
       let fetchCalls = 0;
       // 🚪️ Gated rather than immediately resolved — the whole point of this test is to fire more
       // calls WHILE one is still in flight, so the fetch must stay pending until we say so.
@@ -6366,12 +6371,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       } finally {
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         closeArtifact("doc-overlap");
+        installStreamMuxEndpoint(null);
       }
     });
 
-    it("poll is suppressed while SSE is healthy and resumes once it drops", async () => {
-      FakeEventSource.instances = [];
-      (globalThis as unknown as { EventSource: unknown }).EventSource = FakeEventSource;
+    it("poll is suppressed while the folder's change stream is open and resumes once it ends", async () => {
+      const endpoint = new FakeStreamEndpoint();
+      installStreamMuxEndpoint(endpoint);
       let fetchCalls = 0;
       const originalFetch = globalThis.fetch;
       (globalThis as unknown as { fetch: unknown }).fetch = async () => {
@@ -6379,32 +6385,25 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         return notFoundResponse();
       };
       vi.useFakeTimers();
-      // 🎯 Deterministic jitter (every delay collapses to its minimum): this test advances fake time
-      // across THREE phases in sequence, and leftover jitter slack from an earlier phase could
-      // otherwise let two sanity ticks land inside one later advance window — pinning `Math.random`
-      // removes that risk instead of just hoping the window is wide enough.
       const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
 
       try {
         openArtifact(folderOnlyConfig("doc-sanity"));
         const state = artifactState("doc-sanity")!;
-        await vi.advanceTimersByTimeAsync(0); // bootstrap read.
+        await vi.advanceTimersByTimeAsync(0);
         expect(fetchCalls).toBe(1);
 
-        // 🛟️ SSE never opened yet (`sseHealthy` still false) — the sanity fallback must still fire.
         await vi.advanceTimersByTimeAsync(SANITY_POLL_MIN_MS + 1);
         expect(fetchCalls).toBe(2);
 
-        // 📡️ SSE opens — the very next sanity tick must be a no-op while it stays healthy.
-        const source = FakeEventSource.instances.at(-1)!;
-        source.onopen?.();
-        expect(state.sseHealthy).toBe(true);
+        const stream = endpoint.streams.at(-1)!;
+        stream.handlers.opened?.("resumed");
+        expect(state.watchHealthy).toBe(true);
         await vi.advanceTimersByTimeAsync(SANITY_POLL_MIN_MS + 1);
-        expect(fetchCalls).toBe(2); // suppressed — no new fetch while SSE is healthy.
+        expect(fetchCalls).toBe(2);
 
-        // 📴️ SSE drops — the fallback must resume on the next tick.
-        source.onerror?.();
-        expect(state.sseHealthy).toBe(false);
+        stream.handlers.end?.("failed", "route-removed");
+        expect(state.watchHealthy).toBe(false);
         await vi.advanceTimersByTimeAsync(SANITY_POLL_MIN_MS + 1);
         expect(fetchCalls).toBe(3);
       } finally {
@@ -6412,34 +6411,41 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         vi.useRealTimers();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         closeArtifact("doc-sanity");
+        installStreamMuxEndpoint(null);
       }
     });
 
-    it("a post-open SSE drop reconnects with jittered backoff", async () => {
-      FakeEventSource.instances = [];
-      (globalThis as unknown as { EventSource: unknown }).EventSource = FakeEventSource;
+    it("opens ONE backbone.folder stream per folder document: fresh opens and notices revalidate, closing cancels it", async () => {
+      const endpoint = new FakeStreamEndpoint();
+      installStreamMuxEndpoint(endpoint);
+      let fetchCalls = 0;
       const originalFetch = globalThis.fetch;
-      (globalThis as unknown as { fetch: unknown }).fetch = async () => notFoundResponse();
-      vi.useFakeTimers();
-
+      (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+        fetchCalls += 1;
+        return notFoundResponse();
+      };
       try {
-        openArtifact(folderOnlyConfig("doc-sse-reconnect"));
-        await vi.advanceTimersByTimeAsync(0);
-        expect(FakeEventSource.instances).toHaveLength(1);
-
-        const first = FakeEventSource.instances[0]!;
-        first.onopen?.();
-        first.onerror?.(); // drops AFTER a successful open — the bug finding 2 is about.
-        expect(first.closed).toBe(true);
-
-        // 🔁️ Reconnect is jittered within [SSE_RECONNECT_MIN_MS, SSE_RECONNECT_MAX_MS] — advancing
-        // past the max guarantees the next attempt has fired regardless of the random draw.
-        await vi.advanceTimersByTimeAsync(SSE_RECONNECT_MAX_MS + 1);
-        expect(FakeEventSource.instances.length).toBeGreaterThan(1);
+        openArtifact(folderOnlyConfig("doc-stream"));
+        await flushMicrotasks();
+        expect(endpoint.streams.map((stream) => stream.route)).toEqual(["backbone.folder"]);
+        expect(endpoint.streams[0]!.key.startsWith("folder://")).toBe(true);
+        expect(fetchCalls).toBe(1);
+        const stream = endpoint.streams[0]!;
+        stream.handlers.opened?.("resumed");
+        await flushMicrotasks();
+        expect(fetchCalls).toBe(1);
+        stream.handlers.opened?.("fresh");
+        await flushMicrotasks();
+        expect(fetchCalls).toBe(2);
+        await stream.handlers.data?.("changed");
+        expect(fetchCalls).toBe(3);
+        expect(stream.closed).toBe(false);
+        closeArtifact("doc-stream");
+        expect(stream.closed).toBe(true);
       } finally {
-        vi.useRealTimers();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
-        closeArtifact("doc-sse-reconnect");
+        closeArtifact("doc-stream");
+        installStreamMuxEndpoint(null);
       }
     });
 
@@ -6450,12 +6456,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         capturedSignal = init?.signal ?? undefined;
         return new Promise(() => {}); // never settles — only `closeArtifact` can end this.
       };
-      const originalEventSource = (globalThis as unknown as { EventSource: unknown }).EventSource;
-      (globalThis as unknown as { EventSource: unknown }).EventSource = class {
-        constructor() {
-          throw new Error("no SSE in this test");
-        }
-      };
+      installStreamMuxEndpoint(null);
 
       try {
         openArtifact(folderOnlyConfig("doc-abort"));
@@ -6467,7 +6468,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(capturedSignal?.aborted).toBe(true);
       } finally {
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
-        (globalThis as unknown as { EventSource: unknown }).EventSource = originalEventSource;
       }
     });
 
@@ -6624,7 +6624,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     // 🧬️ Coordinator follow-up (finding 4b): `retryWithJitteredBackoff`'s attempt counter grows for
-    // the life of one call and never resets after success — `connectHub`/`connectSseOnce` now loop
+    // the life of one call and never resets after success — `connectHub` now loops
     // fresh calls via `reconnectForever`, resetting only after SUSTAINED health, never on "socket
     // opened" alone. `Math.random` is pinned throughout (not to 0 — that would collapse every
     // jittered delay to its floor and hide growth entirely) so the exact backoff value at every
@@ -6740,40 +6740,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    it("an SSE drop after sustained health resets ITS backoff too (the same fix applied to connectSseOnce)", async () => {
-      FakeEventSource.instances = [];
-      (globalThis as unknown as { EventSource: unknown }).EventSource = FakeEventSource;
-      const originalFetch = globalThis.fetch;
-      (globalThis as unknown as { fetch: unknown }).fetch = async () => notFoundResponse();
-      vi.useFakeTimers();
-      // 🎯 SSE's own formula: `minMs=1000, maxMs=30000` → attempt 1 = 1000+0.5*(2000-1000)=1500ms.
-      const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.5);
-
-      try {
-        openArtifact(folderOnlyConfig("doc-sse-reset"));
-        await vi.advanceTimersByTimeAsync(0); // bootstrap read + first SSE connect attempt.
-        expect(FakeEventSource.instances).toHaveLength(1);
-
-        const healthy = FakeEventSource.instances[0]!;
-        healthy.onopen?.();
-        await vi.advanceTimersByTimeAsync(SUSTAINED_HEALTHY_MS + 1);
-        healthy.onerror?.(); // drops AFTER sustained health.
-        await vi.advanceTimersByTimeAsync(0); // fresh reconnectForever cycle's immediate first attempt.
-        expect(FakeEventSource.instances).toHaveLength(2);
-
-        // 🎯 That fresh attempt also fails fast — the wait before the NEXT one must be the reset
-        // (attempt 1 ≈ 1500ms), not a continuation of any prior accumulation (there was none yet in
-        // this call, so this mirrors the hub test's decisive-window shape at SSE's own numbers).
-        FakeEventSource.instances[1]!.onerror?.();
-        await vi.advanceTimersByTimeAsync(1600);
-        expect(FakeEventSource.instances).toHaveLength(3);
-      } finally {
-        randomSpy.mockRestore();
-        vi.useRealTimers();
-        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
-        closeArtifact("doc-sse-reset");
-      }
-    });
   });
   //#endregion 🔖️OfflineResilienceTests
 
@@ -6929,7 +6895,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           fields.checkpoint = { ...fields.checkpoint, baselineFrontier: { ...fields.checkpoint.baselineFrontier, documentId } };
           state.executionTargetLease = !actorBound ? null : new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, hexBytes(fixture.componentHex), hexBytes(fixture.descriptorHex));
           state.actor = "hub.v1.self";
-          const envelope = { mutation_id: `${documentId}:m-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n } };
+          const envelope = { mutation_id: `${documentId}:m-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n } };
           const batch = encodeBatch([envelope]);
           const frontier = { document_id: documentId, head_edit_ordinal: 1, head_edit_id: envelope.mutation_id, last_commit_seq: 1, chain_hash: new Array(32).fill(1) };
           posted.length = 0;
@@ -6978,7 +6944,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           state.pendingBatches.set(7, [local]);
           const frontier = (ordinal: number, head: string) => ({ document_id: documentId, head_edit_ordinal: ordinal, head_edit_id: head, last_commit_seq: ordinal, chain_hash: new Array(32).fill(ordinal) });
           if (interleaved) {
-            const remote = { mutation_id: `${documentId}:peer-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n } };
+            const remote = { mutation_id: `${documentId}:peer-1`, document_id: documentId, actor: "hub.v1.peer", dependencies: [], observed: null, target: [], diff: { schema: "gis.map.operation", payload: encodePackValue({ op: 1 }) }, inverse: { schema: "gis.map.operation.inverse", payload: encodePackValue(null) }, timestamp: { actor: 2n, physical_ms: 3n, logical: 0n } };
             await handleHubFrame(state, { Commands: { envelopes: [{ ...remote, diff: { schema: remote.diff.schema, payload: Array.from(remote.diff.payload) }, inverse: { schema: remote.inverse.schema, payload: Array.from(remote.inverse.payload) }, timestamp: { actor: 2, physical_ms: 3, logical: 0 } }], origin: "hub.v1.peer", frontier: frontier(1, remote.mutation_id) } } as unknown as Parameters<typeof handleHubFrame>[1], null, null, encodeBatch([remote]));
           }
           expect(state.remoteFoldedOverLocal, documentId).toBe(interleaved);

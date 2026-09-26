@@ -34,3 +34,5 @@ async fn high_strength_connection_example_fixture_parses_and_round_trips() {
     assert!(document.load_cases.iter().any(|lc| lc.kind == "imposed"));
     store::os_store::test_support::assert_dsl_round_trip(&document);
 }
+
+

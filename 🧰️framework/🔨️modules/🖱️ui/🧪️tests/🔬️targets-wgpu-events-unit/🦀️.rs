@@ -232,8 +232,9 @@ fn keyboard_movement_reveals_the_highlighted_select_row_without_committing_it() 
     assert_eq!(state.highlighted, Some(6));
     assert!(state.scroll_offset.1 > 0.0, "moving the active descendant to an offscreen row requests nearest-edge reveal");
     let revealed = crate::wgpu::select::select_popup_geometry(trigger, 7, &theme, tree.node(root).unwrap().layout.height, state.scroll_offset.1, 0.0);
-    let row = crate::wgpu::select::select_popup_row_hit_rect(trigger, 6, revealed, &theme);
-    assert!(row.h > 0.0, "the highlighted row enters the accepted viewport");
+    let viewport = crate::wgpu::select::select_popup_viewport_rect(revealed);
+    let row = crate::wgpu::select::select_popup_row_rect(trigger, 6, revealed, &theme);
+    assert!(row.y >= viewport.y - 0.001 && row.y + row.h <= viewport.y + viewport.h + 0.001, "the highlighted row is fully visible inside the accepted viewport");
     assert!(matches!(&tree.node(select).unwrap().spec.0, UiNode::Select(node) if node.value == "row-1"), "revealing a highlight does not commit it");
 }
 

@@ -251,6 +251,15 @@
         "{workspaceRoot}/bun.lock"
       ]
     },
+    "test-windows-command-paths": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test windows-command-paths"
+      }
+    },
     "test-kind-only-basename": {
       "executor": "nx:run-commands",
       "cache": true,

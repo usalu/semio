@@ -38,6 +38,14 @@ struct MutationSourceAuthority {
 
 type MutationDomainOperations = Vec<(String, String)>;
 
+/// 🧭️ Workspace-relative locator of the taxonomy's generated mutation-source-authority projection (`bun nx run
+/// @semio-tech/dsl-derive-rs:generate`), the only authority file an expansion reads and tracks, so an edit elsewhere in the taxonomy,
+/// `nx.json` or any `📋️project.json` never invalidates a crate that derives mutations.
+const MUTATION_AUTHORITY_LOCATOR: &str = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔣️mutation-authority.json";
+
+/// 🪪️ Schema id the projection must declare (`MutationSourceAuthorityProjectionV1` in `🧬️schema/🔣️.json`).
+const MUTATION_AUTHORITY_SCHEMA: &str = "semio.dsl.mutation-source-authority/v1";
+
 #[derive(Debug)]
 struct MutationAuthorityCommon {
     workspace_root: PathBuf,
@@ -69,19 +77,16 @@ fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<Mutat
     let source_path = mutation_authority_normalize(source, compiler_cwd)?;
     let workspace_root = mutation_authority_workspace_root(&source_path)?;
     mutation_authority_no_follow(&workspace_root, &source_path, false)?;
-    let project_path = workspace_root.join("📋️project.json");
-    mutation_authority_no_follow(&workspace_root, &project_path, false)?;
-    let project: serde_json::Value = serde_json::from_slice(&fs::read(&project_path).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
-    let locator = project.pointer("/metadata/semio/taxonomy").and_then(serde_json::Value::as_str).ok_or_else(|| "missing metadata.semio.taxonomy".to_string())?;
-    let taxonomy_path = mutation_authority_locator(&workspace_root, locator)?;
-    mutation_authority_no_follow(&workspace_root, &taxonomy_path, false)?;
-    let taxonomy: serde_json::Value = serde_json::from_slice(&fs::read(&taxonomy_path).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
-    let source_filename = mutation_authority_filename(&taxonomy, taxonomy.get("mutationComponentFileKindId").and_then(serde_json::Value::as_str).ok_or_else(|| "missing mutationComponentFileKindId".to_string())?)?;
-    let descriptor_filename = mutation_authority_filename(&taxonomy, taxonomy.get("mutationDescriptorFileKindId").and_then(serde_json::Value::as_str).ok_or_else(|| "missing mutationDescriptorFileKindId".to_string())?)?;
-    let mutation_collection = mutation_authority_collection(&taxonomy)?;
-    let mutation_payload_facet = mutation_authority_payload_facet(&taxonomy)?;
-    let domain_owners = mutation_authority_domain_owners(&taxonomy, &mutation_collection)?;
-    let aggregate_sources = mutation_authority_aggregate_sources(&taxonomy, &mutation_collection)?;
+    let taxonomy_path = mutation_authority_locator(&workspace_root, MUTATION_AUTHORITY_LOCATOR)?;
+    mutation_authority_no_follow(&workspace_root, &taxonomy_path, false).map_err(|error| format!("mutation authority projection {MUTATION_AUTHORITY_LOCATOR}: {error}; run bun nx run @semio-tech/dsl-derive-rs:generate"))?;
+    let authority: serde_json::Value = serde_json::from_slice(&fs::read(&taxonomy_path).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
+    if authority.get("schema").and_then(serde_json::Value::as_str) != Some(MUTATION_AUTHORITY_SCHEMA) { return Err("mutation authority projection declares another schema".to_string()); }
+    let source_filename = mutation_authority_segment(&authority, "sourceFilename")?;
+    let descriptor_filename = mutation_authority_segment(&authority, "descriptorFilename")?;
+    let mutation_collection = mutation_authority_segment(&authority, "mutationCollection")?;
+    let mutation_payload_facet = mutation_authority_segment(&authority, "mutationPayloadFacet")?;
+    let domain_owners = mutation_authority_domain_owners(&authority, &mutation_collection)?;
+    let aggregate_sources = mutation_authority_aggregate_sources(&authority, &mutation_collection)?;
     Ok(MutationAuthorityCommon { workspace_root, source_path, taxonomy_path, mutation_collection, mutation_payload_facet, source_filename, descriptor_filename, domain_owners, aggregate_sources })
 }
 
@@ -299,33 +304,17 @@ fn mutation_authority_no_follow(root: &Path, target: &Path, directory: bool) -> 
 }
 
 fn mutation_authority_locator(root: &Path, locator: &str) -> Result<PathBuf, String> {
-    if locator.is_empty() || locator.contains('\0') || locator.contains('\\') || locator.starts_with('/') || locator.as_bytes().get(1) == Some(&b':') { return Err("taxonomy locator is not normalized repository-relative path".to_string()); }
+    if locator.is_empty() || locator.contains('\0') || locator.contains('\\') || locator.starts_with('/') || locator.as_bytes().get(1) == Some(&b':') { return Err("mutation authority locator is not a normalized repository-relative path".to_string()); }
     let mut target = root.to_path_buf();
     for segment in locator.split('/') {
-        if segment.is_empty() || segment == "." || segment == ".." || segment.eq_ignore_ascii_case("compose") { return Err("taxonomy locator has rejected path component".to_string()); }
+        if segment.is_empty() || segment == "." || segment == ".." || segment.eq_ignore_ascii_case("compose") { return Err("mutation authority locator has a rejected path component".to_string()); }
         target.push(segment);
     }
     Ok(target)
 }
 
-fn mutation_authority_filename(taxonomy: &serde_json::Value, file_kind_id: &str) -> Result<String, String> {
-    let file_kind = taxonomy.get("fileKinds").and_then(serde_json::Value::as_object).and_then(|kinds| kinds.get(file_kind_id)).and_then(serde_json::Value::as_object).ok_or_else(|| "taxonomy file kind is missing".to_string())?;
-    let emoji = file_kind.get("emoji").and_then(serde_json::Value::as_str).filter(|value| !value.is_empty()).ok_or_else(|| "taxonomy file kind emoji is missing".to_string())?;
-    let extension = file_kind.get("extensionChains").and_then(serde_json::Value::as_array).and_then(|values| values.first()).and_then(serde_json::Value::as_str).filter(|value| value.starts_with('.')).ok_or_else(|| "taxonomy file kind canonical extension is missing".to_string())?;
-    Ok(format!("{emoji}{extension}"))
-}
-
-fn mutation_authority_collection(taxonomy: &serde_json::Value) -> Result<String, String> {
-    let collections = taxonomy.get("semanticCollections").and_then(serde_json::Value::as_object).ok_or_else(|| "taxonomy semantic collections are missing".to_string())?;
-    let mutations: Vec<&String> = collections.iter().filter_map(|(name, definition)| (definition.get("kind").and_then(serde_json::Value::as_str) == Some("mutation")).then_some(name)).collect();
-    if mutations.len() != 1 || mutations[0].contains('/') { return Err("taxonomy mutation collection is ambiguous".to_string()); }
-    Ok(mutations[0].to_string())
-}
-
-fn mutation_authority_payload_facet(taxonomy: &serde_json::Value) -> Result<String, String> {
-    let facet = taxonomy.get("mutationBehaviorFacetDirs").and_then(serde_json::Value::as_array).and_then(|values| values.first()).and_then(serde_json::Value::as_str).ok_or_else(|| "taxonomy primary mutation behavior facet is missing".to_string())?;
-    if facet.is_empty() || facet.contains('/') || facet.contains('\\') || facet.eq_ignore_ascii_case("compose") { return Err("taxonomy primary mutation behavior facet is not a portable directory".to_string()); }
-    Ok(facet.to_string())
+fn mutation_authority_segment(authority: &serde_json::Value, key: &str) -> Result<String, String> {
+    authority.get(key).and_then(serde_json::Value::as_str).filter(|value| mutation_authority_owner_segment(value)).map(str::to_string).ok_or_else(|| format!("mutation authority projection {key} is not one portable path segment"))
 }
 
 fn mutation_authority_relative(root: &Path, path: &Path) -> Result<String, String> {
@@ -562,10 +551,10 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let source_path = match mutation_authority_relative(&authority.workspace_root, &authority.source_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let descriptor_path = match mutation_authority_relative(&authority.workspace_root, &authority.descriptor_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
     let taxonomy_path = match mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
-    let dependency_paths = [authority.workspace_root.join("nx.json"), authority.workspace_root.join("📋️project.json"), authority.taxonomy_path.clone(), authority.descriptor_path.clone()];
+    let dependency_paths = [authority.taxonomy_path.clone(), authority.descriptor_path.clone()];
     let dependency_paths: Result<Vec<_>, _> = dependency_paths.iter().map(|path| mutation_leaf_include_path(path)).collect();
     let dependency_paths = match dependency_paths { Ok(paths) => paths, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
-    let [nx_path, project_path, taxonomy_dependency, descriptor_dependency]: [String; 4] = match dependency_paths.try_into() { Ok(paths) => paths, Err(_) => unreachable!() };
+    let [taxonomy_dependency, descriptor_dependency]: [String; 2] = match dependency_paths.try_into() { Ok(paths) => paths, Err(_) => unreachable!() };
     let name = &input.ident;
     let contract = &attrs.contract;
     let owner = &authority.owner;
@@ -573,8 +562,6 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let descriptor = emit_mutation_leaf_descriptor(contract, &descriptor);
     let workspace_token = workspace_token.iter();
     quote! {
-        const _: &str = ::core::include_str!(#nx_path);
-        const _: &str = ::core::include_str!(#project_path);
         const _: &str = ::core::include_str!(#taxonomy_dependency);
         const _: &str = ::core::include_str!(#descriptor_dependency);
         impl #impl_generics #contract::MutationLeaf for #name #ty_generics #where_clause {
@@ -1650,7 +1637,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     let workspace_token = mutation_authority_workspace_token(&authority.workspace_root, &authority.taxonomy_path).map_err(map_error)?;
     let mutation_root = mutation_authority_relative(&authority.workspace_root, &authority.mutation_root).map_err(map_error)?;
     let taxonomy_path = mutation_authority_relative(&authority.workspace_root, &authority.taxonomy_path).map_err(map_error)?;
-    let dependency_paths = [authority.workspace_root.join("nx.json"), authority.workspace_root.join("📋️project.json"), authority.taxonomy_path.clone()];
+    let dependency_paths = [authority.taxonomy_path.clone()];
     let dependencies = dependency_paths.iter().map(|path| mutation_leaf_include_path(path)).collect::<Result<Vec<_>, _>>().map_err(map_error)?;
     let source_filename = &authority.source_filename;
     let descriptor_filename = &authority.descriptor_filename;
@@ -1804,6 +1791,10 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
             fn timestamp(&self) -> Option<::semio_framework_os_kernel::HybridLogicalTimestamp> {
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#timestamp_arms),* }
+            }
+            fn conflict_target(&self) -> Vec<String> {
+                let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
+                match self { #(#target_arms),* }
             }
             fn may_emit_foreign_steps(&self) -> bool {
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;

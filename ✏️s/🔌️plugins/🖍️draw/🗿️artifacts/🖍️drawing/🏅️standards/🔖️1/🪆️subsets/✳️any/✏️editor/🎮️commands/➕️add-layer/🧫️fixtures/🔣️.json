@@ -1,0 +1,15 @@
+{
+  "kinds": [
+    "shape:rect",
+    "shape:ellipse",
+    "shape:line",
+    "shape:polygon",
+    "path",
+    "text",
+    "image",
+    "group",
+    "boolean",
+    "trace"
+  ],
+  "repetitions": 3
+}

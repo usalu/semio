@@ -1,10 +1,9 @@
 //! 🖼️ 🖼️ Raster play app commands command — `move-layer`.
 
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
-use crate::editor::raster::layer_id_from_tree_row_id;
 use crate::mutations::reorder_layers;
 use crate::op::RasterMutation;
-use crate::standards::v1::subsets::any::schema::find_layer;
+use crate::standards::v1::subsets::any::schema::{find_layer, locate_layer};
 use crate::{RasterLayerNode, RasterSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,23 +16,35 @@ pub struct MoveLayer {
     pub drop_position: String,
 }
 
-/// 🌳️ This is the layer-tree DRAG gesture (drop onto/into another row) — a list REPOSITION, so it
-/// now emits `reorder-layers`, never the spatial `move-layer` (which is `transform.x`/`.y`).
-pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
-    let document = doc.snapshot;
-    if find_layer(&document.layers, &payload.layer_id).is_none() {
-        return Ok(Emit::default());
+/// 🌳️ Resolve a tree drop to an index in the destination after removing the source.
+fn resolve_drop(payload: &MoveLayer, document: &RasterSnapshot) -> Result<Option<reorder_layers::mutation::ReorderLayers>, Fault> {
+    if !matches!(payload.drop_position.as_str(), "before" | "after" | "inside") { return Err(Fault::from("raster-layer-drop-position-invalid")); }
+    let source = find_layer(&document.layers, &payload.layer_id).ok_or_else(|| Fault::from("raster-layer-source-missing"))?;
+    let target = find_layer(&document.layers, &payload.target_row_id).ok_or_else(|| Fault::from("raster-layer-target-missing"))?;
+    if payload.layer_id == payload.target_row_id { return Ok(None); }
+    if let RasterLayerNode::Group { children, .. } = source {
+        if find_layer(children, &payload.target_row_id).is_some() { return Err(Fault::from("raster-layer-drop-cycle")); }
     }
-    let parent_id = layer_id_from_tree_row_id(&payload.target_row_id).and_then(|id| find_layer(&document.layers, &id).and_then(|entry| matches!(entry, RasterLayerNode::Group { .. }).then_some(id)));
-    let index = if payload.drop_position == "before" {
-        0
-    } else if let Some(parent) = &parent_id {
-        match find_layer(&document.layers, parent) {
-            Some(RasterLayerNode::Group { children, .. }) => children.len(),
-            _ => 0,
-        }
+    let (source_parent, source_index) = locate_layer(&document.layers, &payload.layer_id).unwrap();
+    let (parent_id, mut index) = if payload.drop_position == "inside" {
+        let RasterLayerNode::Group { children, .. } = target else { return Err(Fault::from("raster-layer-drop-requires-group")); };
+        (Some(payload.target_row_id.clone()), children.len())
     } else {
-        document.layers.len()
+        let (parent, index) = locate_layer(&document.layers, &payload.target_row_id).unwrap();
+        (parent, index + usize::from(payload.drop_position == "after"))
     };
-    Ok(Emit::mutations(vec![RasterMutation::ReorderLayers(reorder_layers::mutation::ReorderLayers { layer_id: payload.layer_id.clone(), parent_id, index })]))
+    if source_parent == parent_id && source_index < index { index -= 1; }
+    if source_parent == parent_id && source_index == index { return Ok(None); }
+    Ok(Some(reorder_layers::mutation::ReorderLayers { layer_id: payload.layer_id.clone(), parent_id, index }))
 }
+
+pub fn handle(payload: &MoveLayer, doc: &ArtifactView<'_, RasterSnapshot>, _cfg: &ConfigView<'_, RasterConfig>) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
+    Ok(match resolve_drop(payload, doc.snapshot)? {
+        Some(change) => Emit::mutations(vec![RasterMutation::ReorderLayers(change)]),
+        None => Emit::default(),
+    })
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

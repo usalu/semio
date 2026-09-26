@@ -449,6 +449,12 @@ fn history_redo_handler(actions: &ActionAdapter, arguments: serde_json::Value) -
 /// `workspace` and `bridge` carry the progressive-enhancement tier: a tool's PRESENCE in
 /// `tools/list` never depends on either being bound — only a call's RESULT does, as a structured,
 /// retryable `PLUGIN_UNAVAILABLE` naming exactly which binding is missing.
+///
+/// 💬️ Cloned up front: `principal` is moved into the inference job tools further down, and the
+/// conversation tool is the only other one that gates on it.
+///
+/// 💬️ The agent's own voice. Registered from the SAME principal the mutation tools are gated on,
+/// because it is the one UI tool a scope decides.
 pub fn build_tool_registry(
     catalog: std::sync::Arc<Catalog>,
     actions: std::sync::Arc<ActionAdapter>,
@@ -457,8 +463,6 @@ pub fn build_tool_registry(
     bridge: Option<BridgeSlot>,
 ) -> InMemoryToolRegistry {
     let mut registry = InMemoryToolRegistry::new();
-    // 💬️ Cloned up front: `principal` is moved into the inference job tools further down, and the
-    // conversation tool is the only other one that gates on it.
     let (conversation_actions, conversation_principal) = (actions.clone(), principal.clone());
 
     let search_tool = tool_from_capability(catalog.get("capabilities.search").expect("capabilities.search compiled"), "capabilities_search");
@@ -532,14 +536,8 @@ pub fn build_tool_registry(
 
     register_artifact_tools(&mut registry, workspace.clone());
     register_inference_tools(&mut registry, workspace.clone());
-    //#region 💡️Inference
     register_inference_job_tools(&mut registry, catalog.clone(), workspace.clone(), actions.clone(), principal.clone(), default_session());
-    //#endregion 💡️Inference
-    //#region 💬️Conversation
-    // 💬️ The agent's own voice. Registered from the SAME principal the mutation tools are gated on,
-    // because it is the one UI tool a scope decides.
     register_conversation_tools(&mut registry, bridge.clone(), conversation_actions, conversation_principal);
-    //#endregion 💬️Conversation
     register_ui_tools(&mut registry, bridge, workspace);
 
     registry
@@ -631,6 +629,9 @@ fn publishing_agent_conversation(server: McpServer, bridge: Option<BridgeSlot>, 
 /// parameter on `build_server_with_principal` itself: that function's 3-argument shape has live
 /// callers in this same in-flight packet's own tests (`P6-actions-policy`) this packet must not
 /// disturb mid-flight.
+///
+/// 🗿️ The workspace reads this adapter's own guest instances back for `artifact_snapshot`, so a
+/// snapshot shows the document as the agent just left it rather than as it was created.
 pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<ArtifactChannels>, runtime: GatewayRuntime) -> McpServer {
     let catalog = workspace.discovery_catalog().unwrap_or_else(|_| gateway_only_catalog());
     let handles = std::sync::Arc::new(HandleTable::new());
@@ -638,8 +639,6 @@ pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
     let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, runtime.auto_approve, client));
     actions.bind_history_undo_port(workspace.clone());
-    // 🗿️ The workspace reads this adapter's own guest instances back for `artifact_snapshot`, so a
-    // snapshot shows the document as the agent just left it rather than as it was created.
     workspace.bind_root_action_adapter(actions.clone());
     actions.bind_approval_coordinator(runtime.approval_coordinator());
     let label = principal.label.clone();
@@ -722,14 +721,15 @@ fn workspace_tool_catalog_meta(workspace: &HeadlessWorkspace) -> Option<serde_js
 /// re-registering `context_resolve` here replaces `build_tool_registry`'s backend-independent
 /// handler with one that answers from the real, live workspace (real open artifacts, real
 /// `catalog_hash`, real `active_artifact_id`) — never a fabricated session.
+///
+/// 🐚️ THIS is where a session's document owner is chosen — once, and reported in the
+/// same breath. `SessionChannelBinding::resolve` is sticky, so the `channel` a client
+/// reads here is the channel every later `action_invoke`/`history_undo` on this
+/// session executes through.
 fn registry_override_context_resolve(tools: &mut InMemoryToolRegistry, context_tool: Tool, workspace: std::sync::Arc<HeadlessWorkspace>, principal_id: String, channel_binding: std::sync::Arc<crate::shell_channel::SessionChannelBinding>) {
     tools
         .register(context_tool, move |_arguments| match workspace.resolve_context(&principal_id) {
             Ok(mut summary) => {
-                // 🐚️ THIS is where a session's document owner is chosen — once, and reported in the
-                // same breath. `SessionChannelBinding::resolve` is sticky, so the `channel` a client
-                // reads here is the channel every later `action_invoke`/`history_undo` on this
-                // session executes through.
                 summary.channel = channel_binding.resolve().label().to_string();
                 CallToolResult::ok(vec![ContentBlock::Text { text: format!("session {} resolved on the {} channel", summary.session_id, summary.channel) }], Some(serde_json::to_value(&summary).unwrap_or(serde_json::Value::Null)))
             }
@@ -832,6 +832,27 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
 /// built on [`UnboundArtifactChannel`] — every mutation-protocol call then answers the typed,
 /// retryable `PLUGIN_UNAVAILABLE` naming both flags, the same answer the `🗿️artifact` tools' own
 /// tier-1 gate gives. There is no scripted stand-in on any production path any more.
+///
+/// 🤖️ Filled by the agent branch below and applied before the workspace is opened: a process
+/// that exchanged a delegation IS that agent principal, and every surface that names a
+/// principal — `context_resolve`, the audit sink, the policy gate — must say so rather than
+/// the `--principal` default the launcher happened to pass (observed live 2026-09-20:
+/// `context_resolve` reported `agent:local` while the process was acting as
+/// `agent:<delegation id>`).
+///
+/// 🤖️ Agent mode: a delegation a human minted for this agent, read from a 0600 file (or
+/// an inherited descriptor), exchanged once at `POST /auth/agent-sessions`. The session
+/// it returns is an ordinary hub session whose *kind* is `agent`, so everything below
+/// this line is identical to a human's — and everything above the hub's presence
+/// normalization now knows this peer is an agent principal, not the delegating human.
+///
+/// 🐚️ Both routes are built; `SessionChannelBinding` picks one per session at `context_resolve`
+/// time and `ContextSummary.channel` reports which. With no shell attached this behaves exactly
+/// as the pre-LB1 gateway did — the headless workspace, unchanged.
+///
+/// 🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
+/// inside the workspace; publishing the binding there is what keeps a `shell` session from having
+/// two document owners (`📓️lb1…` §7.3 step 1).
 fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, mut runtime: GatewayRuntime) -> Result<McpServer, GatewayError> {
     let origin_label;
     let workspace = if let Some(folder) = folder {
@@ -840,19 +861,8 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
         std::sync::Arc::new(HeadlessWorkspace::open_folder(std::path::PathBuf::from(folder), principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect(), catalog)?)
     } else if let Some(hub) = hub {
         origin_label = format!("hub {}/{}", hub.base_url, hub.space_id);
-        // 🤖️ Filled by the agent branch below and applied before the workspace is opened: a process
-        // that exchanged a delegation IS that agent principal, and every surface that names a
-        // principal — `context_resolve`, the audit sink, the policy gate — must say so rather than
-        // the `--principal` default the launcher happened to pass (observed live 2026-09-20:
-        // `context_resolve` reported `agent:local` while the process was acting as
-        // `agent:<delegation id>`).
         let mut adopted: Option<(String, String)> = None;
         let credential = match &hub.credential {
-            // 🤖️ Agent mode: a delegation a human minted for this agent, read from a 0600 file (or
-            // an inherited descriptor), exchanged once at `POST /auth/agent-sessions`. The session
-            // it returns is an ordinary hub session whose *kind* is `agent`, so everything below
-            // this line is identical to a human's — and everything above the hub's presence
-            // normalization now knows this peer is an agent principal, not the delegating human.
             Some(source) => {
                 let delegation = source.load()?;
                 if delegation.space_id() != hub.space_id {
@@ -879,15 +889,9 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
         return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)), runtime));
     };
     eprintln!("[semio-os-mcp] real per-capability ArtifactChannel routing bound for {origin_label}");
-    // 🐚️ Both routes are built; `SessionChannelBinding` picks one per session at `context_resolve`
-    // time and `ContextSummary.channel` reports which. With no shell attached this behaves exactly
-    // as the pre-LB1 gateway did — the headless workspace, unchanged.
     let binding = std::sync::Arc::new(crate::shell_channel::SessionChannelBinding::new(runtime.bridge.clone()));
     runtime.channel_binding = Some(std::sync::Arc::clone(&binding));
     let catalog = std::sync::Arc::new(build_catalog());
-    // 🐚️ The artifact-level verbs (`artifact_create`, `artifact_export`) open a channel of their own
-    // inside the workspace; publishing the binding there is what keeps a `shell` session from having
-    // two document owners (`📓️lb1…` §7.3 step 1).
     workspace.bind_shell_route(std::sync::Arc::clone(&binding), std::sync::Arc::clone(&catalog));
     let channel: Box<ArtifactChannels> = Box::new(ArtifactChannels::Shell(crate::workspace::ShellRoutedArtifactChannel::new(binding, catalog, workspace.open_routing_channel())));
     Ok(build_server_with_workspace(principal, audit, workspace, channel, runtime))
@@ -989,6 +993,11 @@ impl Drop for StdioBridgeAttachment {
 /// `NullBackend`/`UnboundArtifactChannel` — the audit lane writes to `~/.semio/agent/audit` (D7:
 /// local folder lane from day one). `options.auto_approve` carries the parsed `--auto-approve
 /// never|readonly|all` policy; `Never` stays the default.
+///
+/// 📤️ The server→client notification lane: `resources/updated` for a subscribed artifact,
+/// `resources/list_changed` for a changed roster, `progress` for a `_meta.progressToken` call.
+/// It rides the same single-owner `StdioLines` channel the elicitation request does, so a
+/// notification emitted from inside a tool call reaches the client mid-call.
 pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "stdio agent", &options.scopes, None);
     if principal.scopes.is_empty() {
@@ -1004,10 +1013,6 @@ pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let runtime = GatewayRuntime { bridge: attachment.as_ref().map(|_| bridge_slot.clone()), elicitation: Some(elicitation.clone()), auto_approve: options.auto_approve, channel_binding: None };
     let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
     let features = server.client_features();
-    // 📤️ The server→client notification lane: `resources/updated` for a subscribed artifact,
-    // `resources/list_changed` for a changed roster, `progress` for a `_meta.progressToken` call.
-    // It rides the same single-owner `StdioLines` channel the elicitation request does, so a
-    // notification emitted from inside a tool call reaches the client mid-call.
     let notifications = crate::notify::notification_slot();
     let server = server.publishing_notifications_into(notifications.clone());
     let mut transport = StdioTransport::new(std::io::BufReader::new(std::io::stdin()), std::io::stdout(), std::io::stderr())

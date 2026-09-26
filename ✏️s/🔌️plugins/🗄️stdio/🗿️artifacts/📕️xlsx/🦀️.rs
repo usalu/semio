@@ -175,7 +175,7 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
-        id: "stdio.xlsx".into(),
+        id: "s.stdio.xlsx".into(),
         name: "Xlsx".into(),
         source_format: STDIO_XLSX_DOCUMENT_SCHEMA.into(),
         component_kind: "stdio".into(),

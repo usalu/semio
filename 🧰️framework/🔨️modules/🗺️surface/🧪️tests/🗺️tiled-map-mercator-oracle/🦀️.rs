@@ -8,18 +8,17 @@
 //! CLAUDE.md's "at least one language-agnostic test per feature, validated against a third-party
 //! library" requirement for Web-Mercator projection and tile selection.
 //!
-//! `lodBands` are NOT checked here — no third-party reference exists for the repository-owned
-//! `GIS_MAP_LOD_MAX_SPAN_DEG`/`GIS_MAP_LOD_TILE_Z` band scheme, and the functions that resolve them
-//! (`active_map_lod`, `viewport_lon_span_degrees`) are crate-private, reachable only from
-//! `tiled-map/🦀️.rs`'s own `mod tests` — see `.🧬semio/…/GIS-MAP-END-TO-END/📓️research/📝️map-math-oracle-tests.md` for the ready-to-apply diff covering those, plus the zoom/pan invariants
-//! that need `MAX_VISIBLE_TILE_REQUESTS`.
+//! `lodBands` are repository-owned specification vectors with no third-party reference; they, the three
+//! differential vector sets and the four camera invariants are also run through the platform by the
+//! case's own adapters (`🐍️.py` oracle, `🦀️.rs` subject), which read `map_lod_band` and
+//! `MAX_VISIBLE_TILE_REQUESTS` from the crate's public surface.
 //!
 //! @see 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧪️tests/🕸️web-mercator-tile-oracle/🥒️.feature
 
 use semio_framework_surface::tiled_map::canvas::camera::{screen_to_world, Camera, Viewport};
 use semio_framework_surface::tiled_map::projection::{lonlat_to_world, tile_world_rect, world_to_lonlat, WORLD_HALF};
 use semio_framework_surface::tiled_map::tiles::visible_tiles;
-use semio_framework_surface::tiled_map::{MapHost, MAP_CAMERA_ZOOM_MIN};
+use semio_framework_surface::tiled_map::{MapHost, MAP_CAMERA_ZOOM_MIN, MAX_VISIBLE_TILE_REQUESTS};
 use serde_json::Value;
 use std::path::PathBuf;
 
@@ -176,10 +175,6 @@ fn zoom_in_then_out_by_one_wheel_step_returns_original_zoom() {
 
 #[test]
 fn visible_tile_count_stays_within_the_request_budget() {
-    // 256 mirrors the crate-private `MAX_VISIBLE_TILE_REQUESTS` at
-    // 🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs:96 — not reachable from outside the
-    // crate, so this bound is duplicated here and pinned again from inside `mod tests` in the diff.
-    const EXPECTED_MAX_VISIBLE_TILE_REQUESTS: usize = 256;
     for zoom in [MAP_CAMERA_ZOOM_MIN, 5_000.0, 500_000.0, 100_000_000.0] {
         let mut host = MapHost::new();
         host.set_size(1920, 1080, 2.0);
@@ -187,7 +182,7 @@ fn visible_tile_count_stays_within_the_request_budget() {
         host.fit_world_camera();
         let raster_z = host.pick_raster_tile_zoom();
         let vector_z = host.pick_vector_tile_zoom();
-        assert!(visible_tiles(&host.camera, &host.viewport, raster_z).len() <= EXPECTED_MAX_VISIBLE_TILE_REQUESTS);
-        assert!(visible_tiles(&host.camera, &host.viewport, vector_z).len() <= EXPECTED_MAX_VISIBLE_TILE_REQUESTS);
+        assert!(visible_tiles(&host.camera, &host.viewport, raster_z).len() <= MAX_VISIBLE_TILE_REQUESTS);
+        assert!(visible_tiles(&host.camera, &host.viewport, vector_z).len() <= MAX_VISIBLE_TILE_REQUESTS);
     }
 }

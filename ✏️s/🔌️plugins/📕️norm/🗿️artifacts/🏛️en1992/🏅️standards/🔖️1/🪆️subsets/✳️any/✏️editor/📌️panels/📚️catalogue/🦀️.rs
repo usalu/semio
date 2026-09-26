@@ -15,26 +15,28 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 📚️Materials
+/// 🪨 Full concrete catalogue C12/15–C100/115 (EN 1992-1-1 Table 3.1) — shared f_ck with evaluate().
+pub const TABLE_3_1_FCK_MPA: &[(i32, &str)] = &[
+    (12, "C12/15"),
+    (16, "C16/20"),
+    (20, "C20/25"),
+    (25, "C25/30"),
+    (30, "C30/37"),
+    (35, "C35/45"),
+    (40, "C40/50"),
+    (45, "C45/55"),
+    (50, "C50/60"),
+    (55, "C55/67"),
+    (60, "C60/75"),
+    (70, "C70/85"),
+    (80, "C80/95"),
+    (90, "C90/105"),
+    (100, "C100/115"),
+];
+
 /// 🪨 Full concrete catalogue C12/15–C100/115 (EN 1992-1-1 Table 3.1).
 pub fn concrete_catalogue() -> Vec<ConcreteGrade> {
-    const CLASSES: &[(i32, &str)] = &[
-        (12, "C12/15"),
-        (16, "C16/20"),
-        (20, "C20/25"),
-        (25, "C25/30"),
-        (30, "C30/37"),
-        (35, "C35/45"),
-        (40, "C40/50"),
-        (45, "C45/55"),
-        (50, "C50/60"),
-        (55, "C55/67"),
-        (60, "C60/75"),
-        (70, "C70/85"),
-        (80, "C80/95"),
-        (90, "C90/105"),
-        (100, "C100/115"),
-    ];
-    CLASSES
+    TABLE_3_1_FCK_MPA
         .iter()
         .map(|(fck, name)| ConcreteGrade::from_f_ck(format!("c{fck}"), *name, (*fck as f64) * 1.0e6))
         .collect()
@@ -141,8 +143,9 @@ pub fn render(
     examples: Vec<semio_framework_plugin::ExampleSource>,
     locale: semio_framework_plugin::Locale,
     controller_id: &'static str,
+    windows: &semio_framework_plugin::TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    crate::app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

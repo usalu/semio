@@ -189,7 +189,7 @@ fn paint_retained_map_document(document: &ui_contract::UiDocumentLease, surface_
     let mut cursor = crate::interpreter::UiDocumentFrameCursor::default();
     let complete = (0..(1 << 20)).any(|_| {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
-        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface_id };
+        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface_id };
         let done = crate::interpreter::render_ui_document_step(&mut cursor, document, bounds, &mut ctx, surface_id, "map.lifecycle.fixture", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
         crate::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
         assert!(done || !cursor.terminal_is_fault(), "Map lifecycle document faulted in phase {}", cursor.phase_name());
@@ -319,7 +319,10 @@ pub(super) struct RetainedSurfacePaint {
 
 /// 🪟️ Drives an EngineCanvas scene through the retained document and Interpreter admission seam.
 pub(super) fn paint_retained_surface_scene(scene: &UiComponentSceneNode, bounds: Rect) -> RetainedSurfacePaint {
-    let window_id = scene.surface_id.as_str();
+    paint_retained_surface_in_window(scene, bounds, &scene.surface_id)
+}
+
+pub(super) fn paint_retained_surface_in_window(scene: &UiComponentSceneNode, bounds: Rect, window_id: &str) -> RetainedSurfacePaint {
     let document = retained_document(window_id, 1, 1, vec![retained_surface_record(scene)]);
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -332,7 +335,7 @@ pub(super) fn paint_retained_surface_scene(scene: &UiComponentSceneNode, bounds:
     let mut cursor = crate::interpreter::UiDocumentFrameCursor::default();
     let complete = (0..(1 << 20)).any(|_| {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, bounds.h);
-        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id };
+        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id };
         let done = crate::interpreter::render_ui_document_step(&mut cursor, &document, bounds, &mut ctx, window_id, &scene.controller_id, ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts);
         crate::os_host::finish_cpu_only_fixture_component_close(|owner| drop_engine_surface(&owner.host_id));
         assert!(done || !cursor.terminal_is_fault(), "retained EngineCanvas document faulted in phase {}", cursor.phase_name());
@@ -361,7 +364,7 @@ fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: crate::scenes
     let mut world_resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
     {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
+        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: crate::scenes::SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
         let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
         for _ in 0..4096 {
             match crate::scenes::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts, ui_wgpu::wgpu::UiDriverDrag::Handle, 1) {

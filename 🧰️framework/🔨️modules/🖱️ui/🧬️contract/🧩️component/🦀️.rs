@@ -564,8 +564,11 @@ pub struct TreeSectionProps {
 /// the old inline `control: Option<UiControlNode>` are now ordinary children on the record (the
 /// `UiControlNode` enum does not get ported — every one of its old variants is already a
 /// [`Component`] variant in its own right, so a control-as-child-node needs no separate wrapper
-/// type). The row's primary click action (old `action: Option<ActionDescriptor>`) moved to the
-/// record's `bindings` (`Trigger::Activate`).
+/// type). [`TreeItemProps::inline_toolbar`] identifies the one direct horizontal Toolbar child whose
+/// real Button children remain independently focusable and actionable inside the row, while
+/// [`TreeItemProps::detail`] identifies one direct Surface child placed below the row. The row's
+/// primary click action (old `action: Option<ActionDescriptor>`) moved to the record's `bindings`
+/// (`Trigger::Activate`).
 // 🌱️ No `ToValue`/`FromValue` here: `row_actions: UiFixedList<RowAction>` needs `RowAction: ToValue`,
 // which RowAction deliberately does not implement (embeds `UiValue`) — see its own note above.
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -594,6 +597,15 @@ pub struct TreeItemProps {
     /// needs no argument map and no per-row binding of its own.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub granularity: Option<crate::UiText>,
+    /// 🎛️ A direct `ContainerRole::Toolbar` child laid out horizontally inside this row. The
+    /// document validator requires the target to be one of this record's direct children and every
+    /// toolbar child to be a real [`Component::Button`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inline_toolbar: Option<crate::UiNodeId>,
+    /// 🎞️ A direct Surface child placed in a bounded detail band below this row. It is neither an
+    /// inline control nor a nested TreeItem, and remains a real independently hosted scene.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<crate::UiNodeId>,
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub row_actions: crate::UiFixedList<RowAction>,
 }
@@ -614,6 +626,8 @@ impl TreeItemProps {
             dimmed: self.dimmed,
             window: self.window,
             granularity: self.granularity.clone(),
+            inline_toolbar: self.inline_toolbar,
+            detail: self.detail,
             row_actions,
         })
     }

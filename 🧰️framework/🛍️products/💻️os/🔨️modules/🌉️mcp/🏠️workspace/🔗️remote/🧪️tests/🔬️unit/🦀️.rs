@@ -59,6 +59,10 @@ impl DirectoryTransport for RecordingTransport {
         self.responses.lock().unwrap().pop_front().ok_or_else(|| TransportError::Io("fixture response exhausted".to_string()))
     }
 
+    async fn get_accepting(&self, _ctx: &OperationContext, _url: &str, _bearer: Option<&str>, _accept: &str) -> Result<HttpResponse, TransportError> {
+        Err(TransportError::Io("fixture binary reads are not exercised".into()))
+    }
+
     fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
         Err(TransportError::Io("fixture socket grants are not exercised".into()))
     }
@@ -72,6 +76,10 @@ impl DirectoryTransport for ObservedTransport {
     type Ws = ObservedWs;
 
     async fn http(&self, _ctx: &OperationContext, _method: HttpMethod, _url: &str, _bearer: Option<&str>, _body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+        Err(TransportError::Io("observed transport has no HTTP fixture".to_string()))
+    }
+
+    async fn get_accepting(&self, _ctx: &OperationContext, _url: &str, _bearer: Option<&str>, _accept: &str) -> Result<HttpResponse, TransportError> {
         Err(TransportError::Io("observed transport has no HTTP fixture".to_string()))
     }
 

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "projectRoot": "a/p",
+  "files": ["a/p/src/x.ts", "a/p/🧫️fixtures/f.json", "b/q/y.ts", "b/q/🧫️fixtures/g.json", "package.json"],
+  "cases": [
+    {
+      "id": "workspace-negation-without-a-workspace-positive",
+      "namedInputs": { "default": ["{projectRoot}/**/*"], "subject": ["default", "!{workspaceRoot}/**/🧫️fixtures/**/*"] },
+      "closed": false,
+      "planned": ["a/p/src/x.ts", "a/p/🧫️fixtures/f.json", "b/q/y.ts", "package.json"]
+    },
+    {
+      "id": "workspace-negation-beside-its-positive",
+      "namedInputs": { "subject": ["{projectRoot}/**/*", "{workspaceRoot}/b/q/**/*", "!{workspaceRoot}/**/🧫️fixtures/**/*"] },
+      "closed": true,
+      "planned": ["a/p/src/x.ts", "a/p/🧫️fixtures/f.json", "b/q/y.ts"]
+    },
+    {
+      "id": "workspace-positive-through-a-reference",
+      "namedInputs": { "shared": ["{workspaceRoot}/b/q/**/*"], "subject": ["{projectRoot}/**/*", "shared", "!{workspaceRoot}/**/🧫️fixtures/**/*"] },
+      "closed": true,
+      "planned": ["a/p/src/x.ts", "a/p/🧫️fixtures/f.json", "b/q/y.ts"]
+    },
+    {
+      "id": "project-negation-through-a-reference",
+      "namedInputs": { "default": ["{projectRoot}/**/*"], "subject": ["default", "!{projectRoot}/**/🧫️fixtures/**/*"] },
+      "closed": true,
+      "planned": ["a/p/src/x.ts"]
+    }
+  ]
+}

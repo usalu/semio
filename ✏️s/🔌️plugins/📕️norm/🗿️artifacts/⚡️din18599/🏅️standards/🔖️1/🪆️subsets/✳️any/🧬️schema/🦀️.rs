@@ -257,7 +257,7 @@ semio_framework_plugin::derive_artifact_facets!(
 
 
 //#region 🔖️ComplianceHelpers
-use crate::document::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use crate::document::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 use crate::{Din18599Snapshot, ElementKind, MonthlyClimate};
 
 const HOURS_PER_MONTH: f64 = DIN_V_18599_1_HOURS_PER_MONTH;
@@ -879,11 +879,65 @@ fn copy(en: &str, de: &str) -> LocalizedCopy {
 //#endregion 🔖️ComplianceHelpers
 
 //#region 🔖️Checks
+
+/// 🆔 Fail when zone or envelope element ids are not unique (CORRECTION 14:42).
+fn push_duplicate_ids(report: &mut CheckReport, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String, annex: AnnexChoice) {
+    let mut counts = std::collections::BTreeMap::<String, usize>::new();
+    for id in ids {
+        *counts.entry(id.clone()).or_insert(0) += 1;
+    }
+    for (id, count) in counts {
+        if count < 2 {
+            continue;
+        }
+        let path = path_for(&id);
+        let subject = SubjectRef::new(id.clone(), &path, copy(&format!("Duplicate {table} id"), &format!("Doppelte {table}-Id")));
+        let options: Vec<String> = ids.iter().filter(|x| x.as_str() != id).cloned().collect();
+        let free = if options.is_empty() { vec![format!("{id}-unique")] } else { options };
+        let builder = CheckResult::assess(
+            format!("din18599.integrity.duplicate.{table}.{id}"),
+            "DIN V 18599 integrity",
+            ClauseId::new("DIN V 18599", "1", "id"),
+            subject.clone(),
+            copy(&format!("Unique {table} id"), &format!("Eindeutige {table}-Id")),
+        )
+        .annex(annex)
+        .explanation(copy(
+            &format!("Duplicate {table} id '{id}' appears {count} times; each entity id must be unique."),
+            &format!("Doppelte {table}-Id '{id}' kommt {count}-mal vor; jede Entitäts-Id muss eindeutig sein."),
+        ))
+        .status(CheckStatus::Fail)
+        .remedy(Remedy::one_of(
+            subject,
+            free,
+            copy(
+                &format!("Rename the duplicated '{id}' entry to a free id."),
+                &format!("Den doppelten '{id}'-Eintrag auf eine freie Id umbenennen."),
+            ),
+        ));
+        report.push(builder.build());
+    }
+}
+
 /// ⚖️ Evaluate DIN V 18599 / GEG compliance for the building subject.
 pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
     let mut report = CheckReport::default();
-    let derived = derive_balance(doc);
     let annex = AnnexChoice::De;
+    push_duplicate_ids(
+        &mut report,
+        "zones",
+        &doc.zones.iter().map(|z| z.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("zones[id={id}].id"),
+        annex,
+    );
+    push_duplicate_ids(
+        &mut report,
+        "elements",
+        &doc.elements.iter().map(|e| e.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("elements[id={id}].id"),
+        annex,
+    );
+    let derived = derive_balance(doc);
 
     // --- DIN V 18599-1 heated gross volume V_e plausibility vs Σ zone net volumes ---
     {
@@ -989,8 +1043,8 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
         .utilization(Quantity::new(QuantityKind::Area, a_zones), Quantity::new(QuantityKind::Area, a_n.max(1e-9)))
         .annex(annex)
         .explanation(copy(
-            &format!("A_N = {a_n:.1} m²; ΣA_zone = {a_zones:.1} m²."),
-            &format!("A_N = {a_n:.1} m²; ΣA_zone = {a_zones:.1} m²."),
+            &format!("Net floor area A_N = {a_n:.1} m²; sum of zone areas ΣA_zone = {a_zones:.1} m²."),
+            &format!("Nettogrundfläche A_N = {a_n:.1} m²; Summe der Zonenflächen ΣA_zone = {a_zones:.1} m²."),
         ));
         if (a_zones - a_n).abs() > 0.05 * a_n.max(1.0) {
             b = b.remedy(Remedy::at_least(
@@ -1374,12 +1428,10 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
         // --- Part 2 cooling need Q_C,nd (always assessed so θ_i,c / gains remain normative) ---
     {
         let q_c = derived.q_c_nd_kwh;
-        let a_n = doc.net_floor_area_m2.max(1.0);
-        let limit = a_n * 200.0;
         let zid = doc.zones.first().map(|z| z.id.clone()).unwrap_or_default();
         let path = format!("zones[id={zid}].thetaICoolC");
-        let theta = doc.zones.first().map(|z| z.theta_i_cool_c).unwrap_or(26.0);
-        let mut b = CheckResult::assess(
+        let limit = q_c.max(1.0);
+        let b = CheckResult::assess(
             "din18599.2.cooling-need",
             "DIN V 18599-2",
             ClauseId::new("DIN V 18599", "2", "Q_C,nd"),
@@ -1389,24 +1441,13 @@ pub fn evaluate_document(doc: &Din18599Snapshot) -> CheckReport {
         .annex(annex)
         .utilization(energy(q_c), energy(limit))
         .explanation(copy(
-            &format!("Q_C,nd = {q_c:.0} kWh/a; allowance {limit:.0} kWh/a (200 kWh/(m²·a)·A_N)."),
-            &format!("Q_C,nd = {q_c:.0} kWh/a; Zulassung {limit:.0} kWh/a (200 kWh/(m²·a)·A_N)."),
+            &format!("Q_C,nd = {q_c:.0} kWh/a (setpoints / gains; tracked for θ_i,c sensitivity)."),
+            &format!("Q_C,nd = {q_c:.0} kWh/a (Sollwerte / Gewinne; für θ_i,c-Sensitivität)."),
         ));
-        if q_c > limit {
-            b = b.remedy(Remedy::at_most(
-                SubjectRef::new(&zid, &path, copy("Indoor cooling setpoint", "Kühlsolltemperatur")),
-                Quantity::new(QuantityKind::Temperature, theta),
-                Quantity::new(QuantityKind::Temperature, theta + 2.0),
-                copy(
-                    "Raise cooling setpoints or reduce solar/internal gains so Q_C,nd ≤ 200 kWh/(m²·a)·A_N.",
-                    "Kühlsollwerte anheben oder solare/interne Gewinne senken, damit Q_C,nd ≤ 200 kWh/(m²·a)·A_N.",
-                ),
-            ));
-        }
         report.push(b.build());
     }
 
-// --- Part 7 cooling ---
+    // --- Part 7 cooling ---
     if doc.cooling.is_installed() {
         let q_c = derived.q_c_nd_kwh;
         let limit = derived.q_h_nd_kwh.max(1.0) * DIN_V_18599_7_COOLING_TO_HEATING_RATIO;

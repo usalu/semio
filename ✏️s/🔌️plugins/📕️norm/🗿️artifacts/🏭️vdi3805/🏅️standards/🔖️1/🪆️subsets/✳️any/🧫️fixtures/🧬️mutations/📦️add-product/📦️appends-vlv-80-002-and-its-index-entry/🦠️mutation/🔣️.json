@@ -1,10 +1,11 @@
 {
   "AddProduct": {
     "product": {
+      "id": "VLV-80-002",
       "identity": {
-        "manufacturer_code": "DEMO",
-        "product_group": "HV",
-        "article_number": "VLV-80-002"
+        "manufacturerCode": "DEMO",
+        "productGroup": "HV",
+        "articleNumber": "VLV-80-002"
       },
       "title": [
         {
@@ -20,8 +21,6 @@
       "records": [],
       "configuration": {
         "id": "cfg.VLV-80-002",
-        "geometry_ref": null,
-        "function_refs": [],
         "attributes": {
           "kind": "valveHeating",
           "dn": 80,
@@ -30,14 +29,15 @@
           "connectionType": "flange",
           "authorityMin": 0.3,
           "authorityMax": 0.7
-        }
+        },
+        "geometryRef": null,
+        "functionRefs": []
       },
       "accessories": [],
       "components": [],
       "extensions": {
         "fields": {}
-      },
-      "id": "VLV-80-002"
+      }
     },
     "index": null
   }

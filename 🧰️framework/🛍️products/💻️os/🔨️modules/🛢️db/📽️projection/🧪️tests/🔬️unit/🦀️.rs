@@ -165,6 +165,8 @@ async fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope
         document_id: protocol::ArtifactId(document.to_string()),
         actor: protocol::ActorId("actor-1".to_string()),
         dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
         timestamp: protocol::HybridLogicalTimestamp::new(1, seq),

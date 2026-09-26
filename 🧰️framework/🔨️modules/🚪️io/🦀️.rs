@@ -1136,7 +1136,7 @@ pub struct IoFallbackRegistrationError {
 }
 
 /// 🔌️ Install the fallback dispatcher. Call exactly once, before any `io_dispatch` call that
-/// should reach it (host boot / guest `ensure_plugin_initialized`). Re-registration is idempotent
+/// should reach it (host boot / the guest runtime ensure `plugin_exports!` generates). Re-registration is idempotent
 /// only for the same descriptor and executable identity; every other race is a typed conflict.
 pub async fn set_io_fallback_dispatcher(dispatcher: IoFallbackDispatcher) -> Result<(), IoFallbackRegistrationError> {
     match IO_FALLBACK.get() {

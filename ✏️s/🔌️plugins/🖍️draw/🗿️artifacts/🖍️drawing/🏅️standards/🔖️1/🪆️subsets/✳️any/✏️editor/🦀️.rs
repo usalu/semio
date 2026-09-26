@@ -10,7 +10,7 @@
 use crate::editor::drawing::commands::canvas_pointer_down::{DrawingGesturePreview, DrawingSession};
 use crate::editor::drawing::commands::{
     add_layer, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, combine_boolean, commit_document, delete_layer, drop_layer_kind, duplicate_layer, engagement_input,
-    engagement_submit, export_document, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
+    engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_fixture_json, set_selected_opacity, set_snapshot, toggle_layer_visible,
 };
 use crate::editor::drawing::modes::edit;
 use crate::editor::drawing::modes::edit::windows::canvas as canvas_window;
@@ -179,13 +179,20 @@ fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
             semio_framework_plugin::ActionArgOption::new("locked", LocalizedLabel::native("Locked", "Gesperrt")),
             semio_framework_plugin::ActionArgOption::new("blendMode", LocalizedLabel::native("Blend Mode", "Mischmodus")),
             semio_framework_plugin::ActionArgOption::new("booleanOperation", LocalizedLabel::native("Boolean Operation", "Boolean-Operation")),
+            semio_framework_plugin::ActionArgOption::new("fillEnabled", LocalizedLabel::native("Fill Enabled", "Füllung aktiv")),
+            semio_framework_plugin::ActionArgOption::new("strokeEnabled", LocalizedLabel::native("Stroke Enabled", "Kontur aktiv")),
+            semio_framework_plugin::ActionArgOption::new("strokeColor", LocalizedLabel::native("Stroke Color", "Konturfarbe")),
             semio_framework_plugin::ActionArgOption::new("fillColor", LocalizedLabel::native("Fill Colour", "Füllfarbe")),
+            semio_framework_plugin::ActionArgOption::new("strokeCap", LocalizedLabel::native("Line Caps", "Linienenden")),
+            semio_framework_plugin::ActionArgOption::new("strokeJoin", LocalizedLabel::native("Line Joins", "Linienverbindungen")),
+            semio_framework_plugin::ActionArgOption::new("strokeDash", LocalizedLabel::native("Dash Pattern", "Strichmuster")),
             semio_framework_plugin::ActionArgOption::new("strokeWidth", LocalizedLabel::native("Stroke Width", "Strichstärke")),
             semio_framework_plugin::ActionArgOption::new("transformX", LocalizedLabel::native("Transform X", "Transformation X")),
             semio_framework_plugin::ActionArgOption::new("transformY", LocalizedLabel::native("Transform Y", "Transformation Y")),
             semio_framework_plugin::ActionArgOption::new("transformScaleX", LocalizedLabel::native("Scale X", "Skalierung X")),
             semio_framework_plugin::ActionArgOption::new("transformScaleY", LocalizedLabel::native("Scale Y", "Skalierung Y")),
             semio_framework_plugin::ActionArgOption::new("transformRotation", LocalizedLabel::native("Rotation", "Drehung")),
+            semio_framework_plugin::ActionArgOption::new("rotationDegrees", LocalizedLabel::native("Rotation (°)", "Drehung (°)")),
             semio_framework_plugin::ActionArgOption::new("traceThreshold", LocalizedLabel::native("Trace Threshold", "Schwellenwert")),
             semio_framework_plugin::ActionArgOption::new("traceSimplify", LocalizedLabel::native("Trace Simplify", "Vereinfachung")),
         ],
@@ -236,6 +243,9 @@ semio_framework_plugin::app_commands! {
         "canvasCommitDraft" as "canvas-commit-draft" => canvas_commit_draft::CanvasCommitDraft,
         "canvasEscape" as "canvas-escape" => canvas_escape::CanvasEscape,
         "exportDocument" as "export-document" => export_document::ExportDocument,
+        "editSelection" as "edit-selection" => edit_selection::EditSelection,
+        "editPath" as "edit-path" => edit_path::EditPath,
+        "editFill" as "edit-fill" => edit_fill::EditFill,
     }
 }
 
@@ -356,6 +366,48 @@ mod args_bridge {
             "deleteLayer" => DrawingCommand::DeleteLayer(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
             "duplicateLayer" => DrawingCommand::DuplicateLayer(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
             "toggleLayerVisible" => DrawingCommand::ToggleLayerVisible(decode(action, fold(args, &[("id", "layer_id")], &[]))?),
+            "editFill" => {
+                let mut value = plain();
+                if let dsl::DslValue::Object(entries) = &mut value {
+                    let edit = entries.iter().find(|(key,_)| key == "edit").map(|(_,value)| value.clone()).ok_or_else(|| Fault::from("Missing fill edit"))?;
+                    let mut edit = if let dsl::DslValue::String(json) = edit { dsl::json::from_json_str::<dsl::DslValue>(&json).map_err(|error| Fault::from(error.to_string()))? } else { edit };
+                    if let (Some((_,input)),dsl::DslValue::Object(fields)) = (entries.iter().find(|(key,_)| key == "value"),&mut edit) {
+                        let kind = fields.iter().find(|(key,_)| key == "kind").and_then(|(_,value)| value.as_str()).unwrap_or("");
+                        let input = if matches!(kind,"type"|"color") {
+                            dsl::DslValue::String(input.as_str().ok_or_else(|| Fault::from("Choose a fill value"))?.into())
+                        } else {
+                            let number = match input { dsl::DslValue::String(text) => text.parse::<f64>().ok(), other => <f64 as dsl::FromValue>::from_value(other.clone()).ok() }.filter(|number| number.is_finite()).ok_or_else(|| Fault::from("Enter a finite number"))?;
+                            dsl::DslValue::Number(dsl::Number::Float(number))
+                        };
+                        put(fields,"value",input);
+                    }
+                    put(entries,"edit",integral(edit));
+                }
+                DrawingCommand::EditFill(decode(action,value)?)
+            },
+            "editPath" => {
+                let mut value = plain();
+                if let dsl::DslValue::Object(entries) = &mut value {
+                    let edit = entries.iter().find(|(key, _)| key == "edit").map(|(_, value)| value.clone()).ok_or_else(|| Fault::from("Missing path edit"))?;
+                    let mut edit = if let dsl::DslValue::String(json) = edit { dsl::json::from_json_str::<dsl::DslValue>(&json).map_err(|error| Fault::from(error.to_string()))? } else { edit };
+                    if let Some((_, input)) = entries.iter().find(|(key, _)| key == "value") {
+                        let number = match input {
+                            dsl::DslValue::String(text) => text.parse::<f64>().ok(),
+                            other => <f64 as dsl::FromValue>::from_value(other.clone()).ok(),
+                        }.filter(|number| number.is_finite()).ok_or_else(|| Fault::from("Enter a finite coordinate"))?;
+                        if let dsl::DslValue::Object(fields) = &mut edit { put(fields, "value", dsl::DslValue::Number(dsl::Number::Float(number))); }
+                    }
+                    put(entries, "edit", integral(edit));
+                }
+                DrawingCommand::EditPath(decode(action, value)?)
+            },
+            "editSelection" => {
+                let mut value = plain();
+                if let dsl::DslValue::Object(entries) = &mut value {
+                    if !entries.iter().any(|(key, _)| key == "ids") { put(entries, "ids", dsl::DslValue::Array(Vec::new())); }
+                }
+                DrawingCommand::EditSelection(decode(action, value)?)
+            },
             "combineBoolean" => DrawingCommand::CombineBoolean(decode(action, fold(args, &[("layer_ids", "ids")], &[]))?),
             "patchLayer" => DrawingCommand::PatchLayer(decode(action, fold(args, &[("id", "layer_id")], &["value"]))?),
             "patchLayers" => DrawingCommand::PatchLayers(decode(action, fold(args, &[("ids", "layer_ids")], &["value"]))?),
@@ -377,7 +429,7 @@ mod args_bridge {
 //#region 🧵️GestureOperationJobs
 const DRAWING_GESTURE_TOOL_IDS: &[&str] = &["canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDoubleClick", "canvasCommitDraft", "canvasEscape"];
 const DRAWING_GESTURE_RAW_BYTES: usize = 8_192;
-const DRAWING_GESTURE_RETAINED_BYTES: usize = 32_768;
+const DRAWING_GESTURE_RETAINED_BYTES: usize = 65_536;
 
 /// 🛣️ One publication lane row per gesture route, read off each route's real `Emit` construction, not
 /// off its `ActionKind`: every gesture that reaches a commit does so through
@@ -555,6 +607,7 @@ impl DrawingInstanceOperationOwner {
                 }
             };
             let query = session.point_query.take().expect("the exact published query remains retained");
+            if let Some(start) = query.drag_start { session.prepare_layer_move(snapshot,query.cursor.best.as_ref(),start); }
             let effect = if query.hover { canvas_pointer_down::interaction_hover_effect_from_targets(targets) } else { canvas_pointer_down::interaction_select_effect_from_targets(targets, &query.merge) };
             let mut emit = Emit::default();
             emit.effects.push(effect);
@@ -564,6 +617,18 @@ impl DrawingInstanceOperationOwner {
                 self.active = None;
             }
             return Ok(Some((emit, window_transient)));
+        }
+        if let DrawingCommand::CanvasPointerDown(pointer) = command {
+            if active_utility_id == "selectDirect" && !pointer.shift && !pointer.ctrl && !pointer.meta && pointer.generation.is_none() {
+                let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
+                let world = [x,y];
+                session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility:active_utility_id.into(),world,shift:false,ctrl:false,meta:false },snapshot,config);
+                let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX/session.window_config.viewport.zoom.max(1e-6);
+                let mut query = canvas_pointer_down::DrawingPointQuery::new(command.command_id(),canvas_pointer_down::TracePointerJob::new_query(snapshot,world,tolerance,false),false,"replace".into(),false);
+                query.drag_start = Some(world);
+                session.point_query = Some(query);
+                return Ok(None);
+            }
         }
         if let DrawingCommand::CanvasPointerMove(payload) = command {
             if session.gesture.matches("idle") {
@@ -582,8 +647,19 @@ impl DrawingInstanceOperationOwner {
             }
         }
         let retained_emit = match command {
+            DrawingCommand::CanvasPointerMove(pointer) if session.gesture.matches("moving_layer") => {
+                let [x,y] = pointer.last_sample();
+                let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,x,y,pointer.width,pointer.height);
+                session.move_layer_preview([x,y]);
+                Some(Some(Emit::default()))
+            }
+            DrawingCommand::CanvasPointerMove(payload) if session.gesture.matches("marqueeing") && session.gesture.context.method == "lasso" => Some(session.advance_lasso_move(payload,snapshot,config)),
             // 🚫️ A cancelled release clears a live drag and selects/commits nothing.
             DrawingCommand::CanvasPointerUp(payload) if payload.cancelled => Some(Some(canvas_pointer_up::cancel_gesture(session, snapshot, config))),
+            DrawingCommand::CanvasPointerUp(pointer) if session.layer_move.is_some() => {
+                let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
+                Some(Some(session.finish_layer_move([x,y],snapshot,config)?))
+            }
             DrawingCommand::CanvasPointerUp(payload) => {
                 let (world_x, world_y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport, payload.x, payload.y, payload.width, payload.height);
                 Some(session.step_gesture_retained(
@@ -975,6 +1051,9 @@ const DRAWING_BOUNDED_TOOL_IDS: &[&str] = &[
     "setCameraZoom",
     "engagementInput",
     "exportDocument",
+    "editSelection",
+    "editPath",
+    "editFill",
 ];
 const DRAWING_BOUNDED_PAYLOAD_SCHEMA: &str = "drawing.tool-command.v1";
 const DRAWING_BOUNDED_RAW_BYTES: usize = 65_536;
@@ -998,6 +1077,9 @@ const DRAWING_BOUNDED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactT
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "deleteLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "duplicateLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLayerVisible", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editFill", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "editPath", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "combineBoolean", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayer", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchLayers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -1367,7 +1449,7 @@ impl DrawingBoundedProofs {
         tools: [
             "setSnapshot", "commitDocument", "setFixtureJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
             "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
-            "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput", "exportDocument",
+            "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput", "exportDocument", "editSelection", "editPath", "editFill",
         ]
     }
 }
@@ -1406,7 +1488,7 @@ fn render_drawing_body(
         DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility),
         DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels, &windows),
-        DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, active_utility),
+        DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, &[], labels, &windows),
         _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("drawing.body.label", "the fixed Drawing unknown-body label exceeds its UI bound")),
     }?;
     Ok(semio_framework_plugin::built_to_component_tree(root))
@@ -1654,6 +1736,21 @@ impl ArtifactEditor for DrawingPlayApp {
         render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &preview, view_state)
     }
 
+    fn render_with_request_context(
+        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, DrawingSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
+        interaction: &InteractionView<'_>,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        if body_key == DRAWING_PLAY_BODY_PROPERTIES {
+            return properties_panel::render(doc.snapshot, &interaction.selection(DRAWING_INTERACTION_DOMAIN).ids, semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, body_key)).map(semio_framework_plugin::built_to_component_tree);
+        }
+        Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
+    }
+
     fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
         // 🧮️ The status row reports the LIVE top-level layer count (selection is framework-owned and not
@@ -1821,6 +1918,29 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                     ]),
             )
             .action_interactive_job("combineBoolean", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("editSelection", LocalizedLabel::native("Arrange Selection", "Auswahl anordnen"), ActionKind::Mutation)
+                .with_args(vec![semio_framework_plugin::ActionArgDef::select("operation", LocalizedLabel::native("Operation", "Aktion"), vec![
+                    semio_framework_plugin::ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppieren")),
+                    semio_framework_plugin::ActionArgOption::new("duplicate", LocalizedLabel::native("Duplicate", "Duplizieren")),
+                    semio_framework_plugin::ActionArgOption::new("delete", LocalizedLabel::native("Delete", "Löschen")),
+                    semio_framework_plugin::ActionArgOption::new("bringToFront", LocalizedLabel::native("Bring to Front", "In den Vordergrund")),
+                    semio_framework_plugin::ActionArgOption::new("sendToBack", LocalizedLabel::native("Send to Back", "In den Hintergrund")),
+                    semio_framework_plugin::ActionArgOption::new("alignLeft", LocalizedLabel::native("Align Left", "Links ausrichten")),
+                    semio_framework_plugin::ActionArgOption::new("alignCenter", LocalizedLabel::native("Align Center", "Horizontal zentrieren")),
+                    semio_framework_plugin::ActionArgOption::new("alignRight", LocalizedLabel::native("Align Right", "Rechts ausrichten")),
+                    semio_framework_plugin::ActionArgOption::new("alignTop", LocalizedLabel::native("Align Top", "Oben ausrichten")),
+                    semio_framework_plugin::ActionArgOption::new("alignMiddle", LocalizedLabel::native("Align Middle", "Vertikal zentrieren")),
+                    semio_framework_plugin::ActionArgOption::new("alignBottom", LocalizedLabel::native("Align Bottom", "Unten ausrichten")),
+                    semio_framework_plugin::ActionArgOption::new("distributeHorizontal", LocalizedLabel::native("Distribute Horizontally", "Horizontal verteilen")),
+                    semio_framework_plugin::ActionArgOption::new("distributeVertical", LocalizedLabel::native("Distribute Vertically", "Vertikal verteilen")),
+                ]).required(), semio_framework_plugin::ActionArgDef::text_list("ids", LocalizedLabel::native("Layers", "Ebenen"))]))
+            .action_interactive_job("editSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("editPath", LocalizedLabel::native("Edit Path", "Pfad bearbeiten"), ActionKind::Mutation)
+                .with_args([semio_framework_plugin::ActionArgDef::text("layerId", LocalizedLabel::native("Path", "Pfad")).required(), semio_framework_plugin::ActionArgDef::json_text("edit", LocalizedLabel::native("Node Edit", "Knotenbearbeitung")).required()]))
+            .action_interactive_job("editPath", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("editFill", LocalizedLabel::native("Edit Fill", "Füllung bearbeiten"), ActionKind::Mutation)
+                .with_args([semio_framework_plugin::ActionArgDef::text("layerId", LocalizedLabel::native("Layer", "Ebene")).required(), semio_framework_plugin::ActionArgDef::json_text("edit", LocalizedLabel::native("Fill Edit", "Füllungsbearbeitung")).required()]))
+            .action_interactive_job("editFill", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(
                 semio_framework_plugin::ActionDefinition::bounded_catalog("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native(

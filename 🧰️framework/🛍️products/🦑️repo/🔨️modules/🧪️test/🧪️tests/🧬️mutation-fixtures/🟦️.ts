@@ -15,7 +15,7 @@ import { inventoryTaxonomy } from "../../../📚️library/🧹️normalization/
 
 const taxonomy = testTaxonomy(repoRootFromHere());
 const catalog = { id: "thing-v1", capability: "thing-mutate", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️any", kinds: ["change-value"], vectors: [{ mutationId: "change-value", sourceMutationDirectoryName: vectors.mutation, mutationDirectoryName: vectors.mutation, scenarios: [{ id: "changes-the-value", directoryName: vectors.scenario }] }] };
-const contribution = { owner: vectors.owner, manifestPath: `${vectors.owner}/🔣️oracle.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], migrationStatus: {} };
+const contribution = { owner: vectors.owner, manifestPath: `${vectors.owner}/🔣️oracle.json`, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], subjectFeatures: [], mutationCatalogs: [catalog], migrationStatus: {} };
 const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [contribution] } as unknown as OracleRegistry;
 
 test("mutation fixture examples satisfy the owning schema", () => {

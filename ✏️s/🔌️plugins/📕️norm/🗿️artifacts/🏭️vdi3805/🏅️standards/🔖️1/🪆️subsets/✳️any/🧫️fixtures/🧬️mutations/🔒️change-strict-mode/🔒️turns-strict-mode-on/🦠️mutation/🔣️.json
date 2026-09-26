@@ -1,5 +1,5 @@
 {
   "ChangeStrictMode": {
-    "new_strict_mode": true
+    "newStrictMode": true
   }
 }

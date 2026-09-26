@@ -338,7 +338,7 @@ describe("agent delegation contract", () => {
     expect(agentDelegationErrorFromResponseV1(403, JSON.stringify({ schema: "semio.hub.auth.agent-error/v1", error: "invented" }))).toBe("forbidden");
     expect(agentDelegationErrorFromResponseV1(403, "<html>proxy</html>")).toBe("forbidden");
     expect(agentDelegationListPathV1("space a")).toBe("/auth/agent-delegations?space=space%20a");
-    expect(agentDelegationRevokePathV1("dlg/1")).toBe("/auth/agent-delegations/dlg%2F1");
+    expect(agentDelegationRevokePathV1("dlg/1")).toBe("/auth/agent-delegations/dlg%2F1/revoke");
     expect(() => agentDelegationRevokePathV1("")).toThrow();
   });
 
@@ -474,14 +474,14 @@ describe("agent delegation surface", () => {
 //#endregion 🖥️Surface
 
 //#region 🔗️Hook
-function DelegationHarness({ port }: { readonly port: HubConnectionPortV1 }): ReactElement {
+function DelegationHarness({ port, spaceId = SPACE }: { readonly port: HubConnectionPortV1; readonly spaceId?: string | null }): ReactElement {
   const hub = useHubConnection(port);
   const { watchSpaceMembers } = hub;
-  useEffect(() => watchSpaceMembers(SPACE), [watchSpaceMembers]);
+  useEffect(() => watchSpaceMembers(spaceId), [spaceId, watchSpaceMembers]);
   return (
     <div>
       <AgentDelegations
-        spaceId={SPACE}
+        spaceId={spaceId}
         rows={hub.delegations}
         phase={hub.delegationPhase}
         error={hub.delegationError}
@@ -569,6 +569,31 @@ describe("agent delegation lane", () => {
     expect(view.container.querySelector("[data-semio-hub-agent-mcp] [role='alert']")?.textContent).toContain("could not be installed");
     expect(view.container.querySelector("[data-semio-hub-agent-mcp-config]")).toBeNull();
   });
+
+  it("ends an install at its terminal phase when the host answers late, after the shell's session passed through no space and back", async () => {
+    const answers: { resolve: (receipt: Awaited<ReturnType<NonNullable<HubConnectionPortV1["installAgentCredential"]>>>) => void }[] = [];
+    const base = delegationPort({ install: "ok" });
+    const port: HubConnectionPortV1 = {
+      ...base,
+      installAgentCredential: (request) => new Promise((resolve) => answers.push({ resolve: (receipt) => resolve({ ...receipt, credentialPath: `/home/ada/.semio/agent/credentials/${agentCredentialInstallFileNameV1(request.delegationId)}` }) })),
+    };
+    const view = render(<DelegationHarness port={port} />);
+    await waitFor(() => expect(view.container.querySelector('[data-testid="count"]')?.textContent).toBe("1"));
+    fireEvent.change(view.container.querySelector("input[data-element-alias='os.hub.agent.name']")!, { target: { value: "New agent" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create delegation" }));
+    await waitFor(() => expect(view.container.querySelector("[data-semio-hub-agent-mcp]")?.getAttribute("data-semio-hub-agent-mcp")).toBe("idle"));
+    fireEvent.click(screen.getByRole("button", { name: "Set up MCP client" }));
+    await waitFor(() => expect(view.container.querySelector("[data-semio-hub-agent-mcp]")?.getAttribute("data-semio-hub-agent-mcp")).toBe("installing"));
+    view.rerender(<DelegationHarness port={port} spaceId={null} />);
+    expect(view.container.querySelector("[data-semio-hub-agent-mcp]")?.getAttribute("data-semio-hub-agent-mcp"), "a session re-established under the pane keeps the credential").toBe("installing");
+    view.rerender(<DelegationHarness port={port} />);
+    expect(answers).toHaveLength(1);
+    answers[0]!.resolve({ schema: "semio.os.agent-credential-install-receipt/v1", credentialPath: "", launcher: LAUNCHER });
+    await waitFor(() => expect(view.container.querySelector("[data-semio-hub-agent-mcp]")?.getAttribute("data-semio-hub-agent-mcp")).toBe("ready"));
+    expect(JSON.parse(view.container.querySelector("[data-semio-hub-agent-mcp-config]")?.textContent ?? "{}").mcpServers["semio-new-agent"].args).toContain(SPACE);
+    view.rerender(<DelegationHarness port={port} spaceId="space-other" />);
+    await waitFor(() => expect(view.container.querySelector("[data-semio-hub-agent-credential]"), "another space's pane never shows this delegation's credential").toBeNull());
+  }, 30_000);
 
   it("names every MCP client control in en and de", async () => {
     const ready = { phase: "ready" as const, config: "{}\n" };

@@ -22,3 +22,6 @@ p8 (landing window, all as ONE command: `python3 .tmp-ticket/wp-p8/p8-land.py --
   migrated HostOnly). Descriptor changes (interactiveJob dispositions, publication lanes) → `describe` regen in the restage.
   Already in the tree since before rule 20 and still to restage: writer ([DEBUG] prints removed), procedural gen3d viewer
   (setActiveExample not destructive).
+p8 update 15:5x: `p8-land.py` (dry run: all 6 default sets clean on the tree) — agent-lane also moves the architect law's
+  agent pin (test-only); law adds the AJV twin + SDK `test` script hook (no runtime change); `p8-orphan` is HELD (not in
+  the default order; lands only with the content-addressed-child class fix). Logs/backups: `.🧬semio/🌐hub/s12-p8-land/`.

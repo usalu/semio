@@ -1,0 +1,26 @@
+{
+  "version": "6.0",
+  "nxVersion": "23.2.0",
+  "pathMappings": {},
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {
+      "pixels-verification": [
+        {
+          "file": "nx.json",
+          "hash": "8186554140500648004"
+        },
+        {
+          "file": "package.json",
+          "hash": "13169457727726787992"
+        },
+        {
+          "file": "project.json",
+          "hash": "1795324768162794996"
+        }
+      ]
+    },
+    "nonProjectFiles": []
+  },
+  "externalNodesHash": "3244421341483603138"
+}

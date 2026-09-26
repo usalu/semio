@@ -1,0 +1,319 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/observability/schema.json",
+  "title": "Hub observability",
+  "description": "📊️ What `GET /admin/api/observability` answers an administrator: counters and latency percentiles, never records — per declared trace event, per registered route, for the compiled-guest residency and for the DB I/O the process performed since it started. Records go to the sink the operator configured, where their retention and access policy live.",
+  "$ref": "#/$defs/HubObservabilityV1",
+  "$defs": {
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "micros": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "description": "Microseconds; a sample above the ceiling counts as the ceiling."
+    },
+    "HubTraceEventRowV1": {
+      "description": "One trace event's counters since boot: outcomes and the latency percentiles of its last 64 timed records.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event",
+        "started",
+        "ok",
+        "refused",
+        "failed",
+        "cancelled",
+        "total",
+        "samples",
+        "p50Us",
+        "p95Us",
+        "p99Us"
+      ],
+      "properties": {
+        "event": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "started": {
+          "$ref": "#/$defs/count"
+        },
+        "ok": {
+          "$ref": "#/$defs/count"
+        },
+        "refused": {
+          "$ref": "#/$defs/count"
+        },
+        "failed": {
+          "$ref": "#/$defs/count"
+        },
+        "cancelled": {
+          "$ref": "#/$defs/count"
+        },
+        "total": {
+          "$ref": "#/$defs/count"
+        },
+        "samples": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "p50Us": {
+          "$ref": "#/$defs/micros"
+        },
+        "p95Us": {
+          "$ref": "#/$defs/micros"
+        },
+        "p99Us": {
+          "$ref": "#/$defs/micros"
+        }
+      }
+    },
+    "HubRouteLatencyV1": {
+      "description": "One registered route's answers since boot, keyed by its method and route template (never a concrete path, so the table is bounded by the router): how many requests it answered, by class, and the latency percentiles of its last 64 answers. `rateLimited` counts `429`s the route itself answered; the router's per-address limiter answers before routing and reports under the `server.rate-limit` event.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "route",
+        "requests",
+        "successes",
+        "clientRefusals",
+        "rateLimited",
+        "unavailable",
+        "serverFailures",
+        "samples",
+        "p50Us",
+        "p95Us",
+        "p99Us",
+        "maxUs"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "pattern": "^[A-Z]{3,7}$"
+        },
+        "route": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "requests": {
+          "$ref": "#/$defs/count"
+        },
+        "successes": {
+          "$ref": "#/$defs/count",
+          "description": "Answers below `400`, upgrades included."
+        },
+        "clientRefusals": {
+          "$ref": "#/$defs/count",
+          "description": "`4xx` answers other than `429`."
+        },
+        "rateLimited": {
+          "$ref": "#/$defs/count",
+          "description": "`429` answers."
+        },
+        "unavailable": {
+          "$ref": "#/$defs/count",
+          "description": "`503` answers: an admission, a subsystem or a capacity that was taken."
+        },
+        "serverFailures": {
+          "$ref": "#/$defs/count",
+          "description": "`5xx` answers other than `503`."
+        },
+        "samples": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "p50Us": {
+          "$ref": "#/$defs/micros"
+        },
+        "p95Us": {
+          "$ref": "#/$defs/micros"
+        },
+        "p99Us": {
+          "$ref": "#/$defs/micros"
+        },
+        "maxUs": {
+          "$ref": "#/$defs/micros"
+        }
+      }
+    },
+    "HubDbIoKindV1": {
+      "description": "The DB I/O one task kind cost since the process started: typed tasks submitted, executor steps driven, worker-pool turns spent, and the submissions that found a fixed DB I/O capacity taken and waited for it — how many, for how long, and how many of those waits still ended in the refusal.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "tasks",
+        "steps",
+        "turns",
+        "admissionWaits",
+        "admissionWaitMicros",
+        "admissionRefusals"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]{1,63}$"
+        },
+        "tasks": {
+          "$ref": "#/$defs/count"
+        },
+        "steps": {
+          "$ref": "#/$defs/count"
+        },
+        "turns": {
+          "$ref": "#/$defs/count"
+        },
+        "admissionWaits": {
+          "$ref": "#/$defs/count",
+          "description": "Submissions that waited for admission (one per submission, not per retry)."
+        },
+        "admissionWaitMicros": {
+          "$ref": "#/$defs/count",
+          "description": "Microseconds those submissions spent waiting."
+        },
+        "admissionRefusals": {
+          "$ref": "#/$defs/count",
+          "description": "Waits that still ended in the refusal (the admission deadline passed or the waiter table was full)."
+        }
+      }
+    },
+    "HubDbIoCensusV1": {
+      "description": "The process-wide DB I/O census: totals and every task kind that saw I/O or waited for admission.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tasks",
+        "steps",
+        "turns",
+        "admissionWaits",
+        "admissionWaitMicros",
+        "admissionRefusals",
+        "kinds"
+      ],
+      "properties": {
+        "tasks": {
+          "$ref": "#/$defs/count"
+        },
+        "steps": {
+          "$ref": "#/$defs/count"
+        },
+        "turns": {
+          "$ref": "#/$defs/count"
+        },
+        "admissionWaits": {
+          "$ref": "#/$defs/count"
+        },
+        "admissionWaitMicros": {
+          "$ref": "#/$defs/count"
+        },
+        "admissionRefusals": {
+          "$ref": "#/$defs/count"
+        },
+        "kinds": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/HubDbIoKindV1"
+          }
+        }
+      }
+    },
+    "HubObservabilityV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "level",
+        "uptimeMs",
+        "droppedEvents",
+        "declaredEvents",
+        "rows",
+        "routes",
+        "routesOverflowed",
+        "residency",
+        "catalog",
+        "dbIo"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.observability/v1"
+        },
+        "level": {
+          "enum": [
+            "off",
+            "error",
+            "warn",
+            "info",
+            "debug"
+          ]
+        },
+        "uptimeMs": {
+          "$ref": "#/$defs/count"
+        },
+        "droppedEvents": {
+          "$ref": "#/$defs/count",
+          "description": "Events the bounded event table refused; non-zero means an event name is being built from request data."
+        },
+        "declaredEvents": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "rows": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/HubTraceEventRowV1"
+          }
+        },
+        "routes": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/HubRouteLatencyV1"
+          }
+        },
+        "routesOverflowed": {
+          "$ref": "#/$defs/count",
+          "description": "Answers of routes beyond the table's bound, which only a router with more than 256 method and template pairs produces."
+        },
+        "residency": {
+          "description": "The compiled-guest residency of the loaded trusted catalog, or `null` when this hub has none.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json#/$defs/TrustedCatalogGuestResidencyStateV1"
+            }
+          ]
+        },
+        "catalog": {
+          "description": "How far the loaded trusted catalog's load and codec-row verification have come (verification continues in the background once the hub serves), or `null` when this hub has none.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/hub/artifact-authority/trusted-catalog/schema.json#/$defs/TrustedCatalogLoadProgressV1"
+            }
+          ]
+        },
+        "dbIo": {
+          "$ref": "#/$defs/HubDbIoCensusV1"
+        }
+      }
+    }
+  }
+}

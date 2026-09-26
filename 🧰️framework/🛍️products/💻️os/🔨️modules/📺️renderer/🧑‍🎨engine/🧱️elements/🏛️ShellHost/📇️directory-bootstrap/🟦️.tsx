@@ -1,5 +1,5 @@
 import React from "react";
-import { SemioFaultError, resolveWindowActions, type AppDefinition } from "@semio-tech/framework";
+import { SemioFaultError, dialectCoordinate, resolveWindowActions, type AppDefinition } from "@semio-tech/framework";
 import type { BackboneWorkerRequest, BackboneWorkerResponse } from "@semio-tech/framework-os";
 import type { PluginOperationCompletion, PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import type { ViewModel } from "../../🐚️Shell/🟦️.tsx";
@@ -86,6 +86,16 @@ export function parseDirectoryProjectionReceiptV1(value: unknown): DirectoryProj
 
 function actionAvailable(app: AppDefinition, actionId: string): boolean {
   return app.windowKinds.some((window) => resolveWindowActions(app, window).some((action) => action.id === actionId));
+}
+
+/** 🏠️ The Home surface a directory owner feeds: the visible session app when it is the landing app itself or the landing
+ * dialect's other role (the read-only Home viewer), and it declares the sealed-page feed — else `null`. The viewer folds
+ * the same pages into its own config store, so a Home opened as a viewer lists the signed-in human's hub spaces instead
+ * of only this device's rows (ticket 26/09/23 S16, audit s13 §6 #16). Rows: `🧫️fixtures/📇️directory-bootstrap/🔣️.json`
+ * `ownerSurfaces`. */
+export function directoryHomeOwnerAppV1(landing: AppDefinition, visible: AppDefinition): AppDefinition | null {
+  const sameSurface = visible.id === landing.id || (visible.dialect !== undefined && landing.dialect !== undefined && dialectCoordinate(visible.dialect) === dialectCoordinate(landing.dialect));
+  return sameSurface && actionAvailable(visible, "applyDirectoryEventPage") ? visible : null;
 }
 
 function identityField(value: string): boolean {

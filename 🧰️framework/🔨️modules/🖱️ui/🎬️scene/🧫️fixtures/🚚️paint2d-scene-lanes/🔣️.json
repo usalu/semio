@@ -11,6 +11,8 @@
     "activeUtility",
     "brushSize",
     "brushOpacity",
+    "brushColor",
+    "brushHardness",
     "viewMode",
     "compositeViewportJson",
     "lanes"
@@ -38,7 +40,9 @@
       "activeUtility": "brush",
       "brushSize": 4.0,
       "brushOpacity": 1.0,
-      "viewMode": "composite"
+      "viewMode": "composite",
+      "brushColor": "#e07020",
+      "brushHardness": 0.25
     },
     "laneTexts": {
       "framework.scene.paint2d.documentSync": "{\"revision\":3,\"layers\":[{\"id\":\"base\",\"kind\":\"raster\"}]}",
@@ -64,7 +68,9 @@
           "bytes": 59,
           "hash": "4ae639c70f2cf7e4"
         }
-      ]
+      ],
+      "brushColor": "#e07020",
+      "brushHardness": 0.25
     }
   }
 }

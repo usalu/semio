@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.ui.diff-view-produced-surface.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "before", "after", "mode", "language", "expected", "conflicts", "selectedConflictId", "producer"],
+  "properties": {
+    "schema": { "const": "semio.ui.diff-view-produced-surface.v1" },
+    "before": { "type": "string" },
+    "after": { "type": "string" },
+    "mode": { "enum": ["unified", "split"] },
+    "language": { "type": "string", "minLength": 1 },
+    "expected": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "text"],
+        "properties": {
+          "kind": { "enum": ["equal", "remove", "add"] },
+          "text": { "type": "string" }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "quarantined", "code", "message", "after", "accept", "discard"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "quarantined": { "type": "boolean" },
+          "code": { "type": "string", "minLength": 1 },
+          "message": { "type": "string", "minLength": 1 },
+          "after": { "type": "string", "minLength": 1 },
+          "accept": { "type": "string", "minLength": 1 },
+          "discard": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "selectedConflictId": { "type": "string", "minLength": 1 },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windowId", "bodyKey", "surfaceKind"],
+      "properties": {
+        "windowId": { "type": "string", "minLength": 1 },
+        "bodyKey": { "type": "string", "minLength": 1 },
+        "surfaceKind": { "const": "diffView" }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "source": "a.a",
+    "target": "drawing-play-layers.shape.b.b",
+    "position": "after",
+    "accepted": true,
+    "index": 1
+  },
+  {
+    "source": "a.a",
+    "target": "drawing-play-layers.shape.b.b",
+    "position": "inside",
+    "accepted": false
+  },
+  {
+    "source": "g.g",
+    "target": "drawing-play-layers.group.g.g",
+    "position": "inside",
+    "accepted": false
+  },
+  {
+    "source": "a.a",
+    "target": "missing",
+    "position": "after",
+    "accepted": false
+  },
+  {
+    "source": "a.a",
+    "target": "drawing-play-layers",
+    "position": "after",
+    "accepted": true,
+    "index": 2
+  }
+]

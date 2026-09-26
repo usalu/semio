@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
-/** 📦️ Extension package router: `bun ./📜️script.ts <test|package|describe>`. */
+/** 📦️ Extension package router: `bun ./📜️script.ts <test|package>`. */
 import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargoTestBudgeted, runExtensionComponentPackage } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { describeExtensionComponent } from "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -17,11 +16,5 @@ class PackageScript extends BundleScript {
   }
 }
 
-class DescribeScript extends BundleScript {
-  run(): void {
-    process.exit(describeExtensionComponent(this.repoRoot, import.meta.dir));
-  }
-}
-
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("package", PackageScript).register("describe", DescribeScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("package", PackageScript);
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

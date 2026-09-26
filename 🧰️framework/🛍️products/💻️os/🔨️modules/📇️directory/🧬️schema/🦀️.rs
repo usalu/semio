@@ -45,6 +45,12 @@ pub use document_check_in::{
     DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentCheckInV1, DOCUMENT_CHECK_IN_MAX_BYTES, DOCUMENT_CHECK_IN_SCHEMA_V1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1,
 };
 
+#[path = "🪢️canonical-checkpoint-pair-v1/🦀️.rs"]
+pub mod canonical_checkpoint_pair;
+pub use canonical_checkpoint_pair::{
+    decode_canonical_checkpoint_pair_v1, CanonicalCheckpointPairRefusalV1, CanonicalCheckpointPairV1, CANONICAL_CHECKPOINT_PAIR_MAX_WIRE_BYTES, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE_V1,
+};
+
 #[path = "🌐️browser-actor/🦀️.rs"]
 pub mod browser_actor;
 pub use browser_actor::{
@@ -2819,6 +2825,14 @@ pub struct RebootstrapRequired {
     pub baseline_frontier: ArtifactFrontier,
 }
 
+/// 🔑️ Which way one reader's own access to a space moved.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "lowercase")]
+pub enum DirectoryAccessChange {
+    Granted,
+    Revoked,
+}
+
 /// 📡️ One `/directory/socket/v1` text frame (contract C1/C2) — subscribe, then gap-free replay.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "lowercase", rename_all_fields = "camelCase")]
@@ -2842,6 +2856,15 @@ pub enum DirectoryStreamMessage {
     #[value(rename = "rebootstrap-required")]
     RebootstrapRequired {
         control: RebootstrapRequired,
+    },
+    /// 🔑️ The reader's OWN access to one space moved (a membership granted, an invite redeemed, a membership revoked):
+    /// the directory events it may read changed retroactively — a space's earlier events became visible or invisible —
+    /// so its projection re-reads the directory from the origin. Derived per reader by the hub's directory socket from
+    /// the committed membership event; never published on the shared bus.
+    #[value(rename = "access-changed")]
+    AccessChanged {
+        space_id: String,
+        change: DirectoryAccessChange,
     },
 }
 //#endregion 🔖️Stream

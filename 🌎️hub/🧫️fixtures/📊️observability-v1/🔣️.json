@@ -1,0 +1,1730 @@
+{
+  "schema": "semio.hub.observability-fixture/v1",
+  "description": "📊️ Language-neutral law of the hub's route metrics and observability body: `observations` fed in order into the route table (method, route template, status, microseconds) yield exactly `routes` — requests by class (below 400 success, 429 rate-limited, other 4xx client refusal, 503 unavailable, other 5xx server failure), and p50/p95/p99 of each route's last 64 samples as the sample at index floor(n × p) of the ascending samples, every sample clamped to 4294967295 µs. `body` is a complete `HubObservabilityV1` with those routes; every `invalidBodies` entry violates the schema.",
+  "observations": [
+    {
+      "method": "POST",
+      "route": "/spaces/{space_id}/artifact-creations",
+      "status": 200,
+      "durationUs": 100
+    },
+    {
+      "method": "POST",
+      "route": "/spaces/{space_id}/artifact-creations",
+      "status": 200,
+      "durationUs": 200
+    },
+    {
+      "method": "POST",
+      "route": "/spaces/{space_id}/artifact-creations",
+      "status": 404,
+      "durationUs": 300
+    },
+    {
+      "method": "POST",
+      "route": "/spaces/{space_id}/artifact-creations",
+      "status": 429,
+      "durationUs": 400
+    },
+    {
+      "method": "POST",
+      "route": "/spaces/{space_id}/artifact-creations",
+      "status": 503,
+      "durationUs": 500
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 10
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 20
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 30
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 40
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 50
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 60
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 70
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 80
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 90
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 100
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 110
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 120
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 130
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 140
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 150
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 160
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 170
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 180
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 190
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 200
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 210
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 220
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 230
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 240
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 250
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 260
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 270
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 280
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 290
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 300
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 310
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 320
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 330
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 340
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 350
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 360
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 370
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 380
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 390
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 400
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 410
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 420
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 430
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 440
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 450
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 460
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 470
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 480
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 490
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 500
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 510
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 520
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 530
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 540
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 550
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 560
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 570
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 580
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 590
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 600
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 610
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 620
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 630
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 640
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 650
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 660
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 670
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 680
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 690
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "status": 101,
+      "durationUs": 700
+    },
+    {
+      "method": "GET",
+      "route": "/readyz",
+      "status": 500,
+      "durationUs": 5000000000
+    },
+    {
+      "method": "GET",
+      "route": "/readyz",
+      "status": 504,
+      "durationUs": 7
+    }
+  ],
+  "routes": [
+    {
+      "method": "GET",
+      "route": "/readyz",
+      "requests": 2,
+      "successes": 0,
+      "clientRefusals": 0,
+      "rateLimited": 0,
+      "unavailable": 0,
+      "serverFailures": 2,
+      "samples": 2,
+      "p50Us": 4294967295,
+      "p95Us": 4294967295,
+      "p99Us": 4294967295,
+      "maxUs": 4294967295
+    },
+    {
+      "method": "GET",
+      "route": "/scopes/{scope}/document/ws",
+      "requests": 70,
+      "successes": 70,
+      "clientRefusals": 0,
+      "rateLimited": 0,
+      "unavailable": 0,
+      "serverFailures": 0,
+      "samples": 64,
+      "p50Us": 390,
+      "p95Us": 670,
+      "p99Us": 700,
+      "maxUs": 700
+    },
+    {
+      "method": "POST",
+      "route": "/spaces/{space_id}/artifact-creations",
+      "requests": 5,
+      "successes": 2,
+      "clientRefusals": 1,
+      "rateLimited": 1,
+      "unavailable": 1,
+      "serverFailures": 0,
+      "samples": 5,
+      "p50Us": 300,
+      "p95Us": 500,
+      "p99Us": 500,
+      "maxUs": 500
+    }
+  ],
+  "body": {
+    "schema": "semio.hub.observability/v1",
+    "level": "info",
+    "uptimeMs": 1234,
+    "droppedEvents": 0,
+    "declaredEvents": [
+      "server.artifact.creation",
+      "server.artifact.maintenance",
+      "server.auth.agent.delegate",
+      "server.auth.agent.list",
+      "server.auth.agent.revoke",
+      "server.auth.agent.session",
+      "server.auth.credential.change",
+      "server.auth.session.mint",
+      "server.auth.session.read",
+      "server.auth.session.revoke",
+      "server.boot",
+      "server.catalog.publication",
+      "server.directory.backend",
+      "server.directory.command",
+      "server.directory.socket",
+      "server.document.check-in",
+      "server.document.socket",
+      "server.presence.expiry",
+      "server.presence.join",
+      "server.presence.leave",
+      "server.rate-limit",
+      "server.readiness",
+      "server.request",
+      "server.saga.drain",
+      "server.shutdown"
+    ],
+    "rows": [],
+    "routes": [
+      {
+        "method": "GET",
+        "route": "/readyz",
+        "requests": 2,
+        "successes": 0,
+        "clientRefusals": 0,
+        "rateLimited": 0,
+        "unavailable": 0,
+        "serverFailures": 2,
+        "samples": 2,
+        "p50Us": 4294967295,
+        "p95Us": 4294967295,
+        "p99Us": 4294967295,
+        "maxUs": 4294967295
+      },
+      {
+        "method": "GET",
+        "route": "/scopes/{scope}/document/ws",
+        "requests": 70,
+        "successes": 70,
+        "clientRefusals": 0,
+        "rateLimited": 0,
+        "unavailable": 0,
+        "serverFailures": 0,
+        "samples": 64,
+        "p50Us": 390,
+        "p95Us": 670,
+        "p99Us": 700,
+        "maxUs": 700
+      },
+      {
+        "method": "POST",
+        "route": "/spaces/{space_id}/artifact-creations",
+        "requests": 5,
+        "successes": 2,
+        "clientRefusals": 1,
+        "rateLimited": 1,
+        "unavailable": 1,
+        "serverFailures": 0,
+        "samples": 5,
+        "p50Us": 300,
+        "p95Us": 500,
+        "p99Us": 500,
+        "maxUs": 500
+      }
+    ],
+    "routesOverflowed": 0,
+    "residency": {
+      "budgetBytes": 67108864,
+      "registeredGuests": 9,
+      "residentGuests": 3,
+      "residentBytes": 50000000,
+      "hits": 40,
+      "compiles": 12,
+      "admitted": 4,
+      "bypassed": 8,
+      "released": 1,
+      "compileMicros": 5400000
+    },
+    "catalog": {
+      "packages": [
+        {
+          "pluginId": "note",
+          "componentBytes": 14932128,
+          "phase": "ready",
+          "rows": 1,
+          "rowsPinned": 0,
+          "rowsVerified": 1
+        },
+        {
+          "pluginId": "gis",
+          "componentBytes": 50359040,
+          "phase": "verifying",
+          "rows": 2,
+          "rowsPinned": 2,
+          "rowsVerified": 0
+        },
+        {
+          "pluginId": "puzzle",
+          "componentBytes": 28251060,
+          "phase": "staged",
+          "rows": 3,
+          "rowsPinned": 0,
+          "rowsVerified": 0
+        }
+      ],
+      "packagesTotal": 3,
+      "packagesReady": 1,
+      "packagesRefused": 0,
+      "componentBytesTotal": 93542228,
+      "componentBytesRead": 93542228,
+      "rowsTotal": 6,
+      "rowsPinned": 2,
+      "rowsVerified": 1
+    },
+    "dbIo": {
+      "tasks": 30,
+      "steps": 42,
+      "turns": 31,
+      "admissionWaits": 3,
+      "admissionWaitMicros": 41250,
+      "admissionRefusals": 1,
+      "kinds": [
+        {
+          "kind": "WalAppend",
+          "tasks": 10,
+          "steps": 12,
+          "turns": 10,
+          "admissionWaits": 0,
+          "admissionWaitMicros": 0,
+          "admissionRefusals": 0
+        },
+        {
+          "kind": "WalSync",
+          "tasks": 20,
+          "steps": 30,
+          "turns": 21,
+          "admissionWaits": 3,
+          "admissionWaitMicros": 41250,
+          "admissionRefusals": 1
+        }
+      ]
+    }
+  },
+  "invalidBodies": [
+    {
+      "name": "missing-db-io",
+      "body": {
+        "schema": "semio.hub.observability/v1",
+        "level": "info",
+        "uptimeMs": 1234,
+        "droppedEvents": 0,
+        "declaredEvents": [
+          "server.artifact.creation",
+          "server.artifact.maintenance",
+          "server.auth.agent.delegate",
+          "server.auth.agent.list",
+          "server.auth.agent.revoke",
+          "server.auth.agent.session",
+          "server.auth.credential.change",
+          "server.auth.session.mint",
+          "server.auth.session.read",
+          "server.auth.session.revoke",
+          "server.boot",
+          "server.catalog.publication",
+          "server.directory.backend",
+          "server.directory.command",
+          "server.directory.socket",
+          "server.document.check-in",
+          "server.document.socket",
+          "server.presence.expiry",
+          "server.presence.join",
+          "server.presence.leave",
+          "server.rate-limit",
+          "server.readiness",
+          "server.request",
+          "server.saga.drain",
+          "server.shutdown"
+        ],
+        "rows": [],
+        "routes": [
+          {
+            "method": "GET",
+            "route": "/readyz",
+            "requests": 2,
+            "successes": 0,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 2,
+            "samples": 2,
+            "p50Us": 4294967295,
+            "p95Us": 4294967295,
+            "p99Us": 4294967295,
+            "maxUs": 4294967295
+          },
+          {
+            "method": "GET",
+            "route": "/scopes/{scope}/document/ws",
+            "requests": 70,
+            "successes": 70,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 0,
+            "samples": 64,
+            "p50Us": 390,
+            "p95Us": 670,
+            "p99Us": 700,
+            "maxUs": 700
+          },
+          {
+            "method": "POST",
+            "route": "/spaces/{space_id}/artifact-creations",
+            "requests": 5,
+            "successes": 2,
+            "clientRefusals": 1,
+            "rateLimited": 1,
+            "unavailable": 1,
+            "serverFailures": 0,
+            "samples": 5,
+            "p50Us": 300,
+            "p95Us": 500,
+            "p99Us": 500,
+            "maxUs": 500
+          }
+        ],
+        "routesOverflowed": 0,
+        "residency": {
+          "budgetBytes": 67108864,
+          "registeredGuests": 9,
+          "residentGuests": 3,
+          "residentBytes": 50000000,
+          "hits": 40,
+          "compiles": 12,
+          "admitted": 4,
+          "bypassed": 8,
+          "released": 1,
+          "compileMicros": 5400000
+        },
+        "catalog": {
+          "packages": [
+            {
+              "pluginId": "note",
+              "componentBytes": 14932128,
+              "phase": "ready",
+              "rows": 1,
+              "rowsPinned": 0,
+              "rowsVerified": 1
+            },
+            {
+              "pluginId": "gis",
+              "componentBytes": 50359040,
+              "phase": "verifying",
+              "rows": 2,
+              "rowsPinned": 2,
+              "rowsVerified": 0
+            },
+            {
+              "pluginId": "puzzle",
+              "componentBytes": 28251060,
+              "phase": "staged",
+              "rows": 3,
+              "rowsPinned": 0,
+              "rowsVerified": 0
+            }
+          ],
+          "packagesTotal": 3,
+          "packagesReady": 1,
+          "packagesRefused": 0,
+          "componentBytesTotal": 93542228,
+          "componentBytesRead": 93542228,
+          "rowsTotal": 6,
+          "rowsPinned": 2,
+          "rowsVerified": 1
+        }
+      }
+    },
+    {
+      "name": "unknown-field",
+      "body": {
+        "schema": "semio.hub.observability/v1",
+        "level": "info",
+        "uptimeMs": 1234,
+        "droppedEvents": 0,
+        "declaredEvents": [
+          "server.artifact.creation",
+          "server.artifact.maintenance",
+          "server.auth.agent.delegate",
+          "server.auth.agent.list",
+          "server.auth.agent.revoke",
+          "server.auth.agent.session",
+          "server.auth.credential.change",
+          "server.auth.session.mint",
+          "server.auth.session.read",
+          "server.auth.session.revoke",
+          "server.boot",
+          "server.catalog.publication",
+          "server.directory.backend",
+          "server.directory.command",
+          "server.directory.socket",
+          "server.document.check-in",
+          "server.document.socket",
+          "server.presence.expiry",
+          "server.presence.join",
+          "server.presence.leave",
+          "server.rate-limit",
+          "server.readiness",
+          "server.request",
+          "server.saga.drain",
+          "server.shutdown"
+        ],
+        "rows": [],
+        "routes": [
+          {
+            "method": "GET",
+            "route": "/readyz",
+            "requests": 2,
+            "successes": 0,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 2,
+            "samples": 2,
+            "p50Us": 4294967295,
+            "p95Us": 4294967295,
+            "p99Us": 4294967295,
+            "maxUs": 4294967295
+          },
+          {
+            "method": "GET",
+            "route": "/scopes/{scope}/document/ws",
+            "requests": 70,
+            "successes": 70,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 0,
+            "samples": 64,
+            "p50Us": 390,
+            "p95Us": 670,
+            "p99Us": 700,
+            "maxUs": 700
+          },
+          {
+            "method": "POST",
+            "route": "/spaces/{space_id}/artifact-creations",
+            "requests": 5,
+            "successes": 2,
+            "clientRefusals": 1,
+            "rateLimited": 1,
+            "unavailable": 1,
+            "serverFailures": 0,
+            "samples": 5,
+            "p50Us": 300,
+            "p95Us": 500,
+            "p99Us": 500,
+            "maxUs": 500
+          }
+        ],
+        "routesOverflowed": 0,
+        "residency": {
+          "budgetBytes": 67108864,
+          "registeredGuests": 9,
+          "residentGuests": 3,
+          "residentBytes": 50000000,
+          "hits": 40,
+          "compiles": 12,
+          "admitted": 4,
+          "bypassed": 8,
+          "released": 1,
+          "compileMicros": 5400000
+        },
+        "catalog": {
+          "packages": [
+            {
+              "pluginId": "note",
+              "componentBytes": 14932128,
+              "phase": "ready",
+              "rows": 1,
+              "rowsPinned": 0,
+              "rowsVerified": 1
+            },
+            {
+              "pluginId": "gis",
+              "componentBytes": 50359040,
+              "phase": "verifying",
+              "rows": 2,
+              "rowsPinned": 2,
+              "rowsVerified": 0
+            },
+            {
+              "pluginId": "puzzle",
+              "componentBytes": 28251060,
+              "phase": "staged",
+              "rows": 3,
+              "rowsPinned": 0,
+              "rowsVerified": 0
+            }
+          ],
+          "packagesTotal": 3,
+          "packagesReady": 1,
+          "packagesRefused": 0,
+          "componentBytesTotal": 93542228,
+          "componentBytesRead": 93542228,
+          "rowsTotal": 6,
+          "rowsPinned": 2,
+          "rowsVerified": 1
+        },
+        "dbIo": {
+          "tasks": 30,
+          "steps": 42,
+          "turns": 31,
+          "admissionWaits": 3,
+          "admissionWaitMicros": 41250,
+          "admissionRefusals": 1,
+          "kinds": [
+            {
+              "kind": "WalAppend",
+              "tasks": 10,
+              "steps": 12,
+              "turns": 10,
+              "admissionWaits": 0,
+              "admissionWaitMicros": 0,
+              "admissionRefusals": 0
+            },
+            {
+              "kind": "WalSync",
+              "tasks": 20,
+              "steps": 30,
+              "turns": 21,
+              "admissionWaits": 3,
+              "admissionWaitMicros": 41250,
+              "admissionRefusals": 1
+            }
+          ]
+        },
+        "records": []
+      }
+    },
+    {
+      "name": "lowercase-method",
+      "body": {
+        "schema": "semio.hub.observability/v1",
+        "level": "info",
+        "uptimeMs": 1234,
+        "droppedEvents": 0,
+        "declaredEvents": [
+          "server.artifact.creation",
+          "server.artifact.maintenance",
+          "server.auth.agent.delegate",
+          "server.auth.agent.list",
+          "server.auth.agent.revoke",
+          "server.auth.agent.session",
+          "server.auth.credential.change",
+          "server.auth.session.mint",
+          "server.auth.session.read",
+          "server.auth.session.revoke",
+          "server.boot",
+          "server.catalog.publication",
+          "server.directory.backend",
+          "server.directory.command",
+          "server.directory.socket",
+          "server.document.check-in",
+          "server.document.socket",
+          "server.presence.expiry",
+          "server.presence.join",
+          "server.presence.leave",
+          "server.rate-limit",
+          "server.readiness",
+          "server.request",
+          "server.saga.drain",
+          "server.shutdown"
+        ],
+        "rows": [],
+        "routes": [
+          {
+            "method": "get",
+            "route": "/readyz",
+            "requests": 2,
+            "successes": 0,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 2,
+            "samples": 2,
+            "p50Us": 4294967295,
+            "p95Us": 4294967295,
+            "p99Us": 4294967295,
+            "maxUs": 4294967295
+          }
+        ],
+        "routesOverflowed": 0,
+        "residency": {
+          "budgetBytes": 67108864,
+          "registeredGuests": 9,
+          "residentGuests": 3,
+          "residentBytes": 50000000,
+          "hits": 40,
+          "compiles": 12,
+          "admitted": 4,
+          "bypassed": 8,
+          "released": 1,
+          "compileMicros": 5400000
+        },
+        "catalog": {
+          "packages": [
+            {
+              "pluginId": "note",
+              "componentBytes": 14932128,
+              "phase": "ready",
+              "rows": 1,
+              "rowsPinned": 0,
+              "rowsVerified": 1
+            },
+            {
+              "pluginId": "gis",
+              "componentBytes": 50359040,
+              "phase": "verifying",
+              "rows": 2,
+              "rowsPinned": 2,
+              "rowsVerified": 0
+            },
+            {
+              "pluginId": "puzzle",
+              "componentBytes": 28251060,
+              "phase": "staged",
+              "rows": 3,
+              "rowsPinned": 0,
+              "rowsVerified": 0
+            }
+          ],
+          "packagesTotal": 3,
+          "packagesReady": 1,
+          "packagesRefused": 0,
+          "componentBytesTotal": 93542228,
+          "componentBytesRead": 93542228,
+          "rowsTotal": 6,
+          "rowsPinned": 2,
+          "rowsVerified": 1
+        },
+        "dbIo": {
+          "tasks": 30,
+          "steps": 42,
+          "turns": 31,
+          "admissionWaits": 3,
+          "admissionWaitMicros": 41250,
+          "admissionRefusals": 1,
+          "kinds": [
+            {
+              "kind": "WalAppend",
+              "tasks": 10,
+              "steps": 12,
+              "turns": 10,
+              "admissionWaits": 0,
+              "admissionWaitMicros": 0,
+              "admissionRefusals": 0
+            },
+            {
+              "kind": "WalSync",
+              "tasks": 20,
+              "steps": 30,
+              "turns": 21,
+              "admissionWaits": 3,
+              "admissionWaitMicros": 41250,
+              "admissionRefusals": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "residency-extra-field",
+      "body": {
+        "schema": "semio.hub.observability/v1",
+        "level": "info",
+        "uptimeMs": 1234,
+        "droppedEvents": 0,
+        "declaredEvents": [
+          "server.artifact.creation",
+          "server.artifact.maintenance",
+          "server.auth.agent.delegate",
+          "server.auth.agent.list",
+          "server.auth.agent.revoke",
+          "server.auth.agent.session",
+          "server.auth.credential.change",
+          "server.auth.session.mint",
+          "server.auth.session.read",
+          "server.auth.session.revoke",
+          "server.boot",
+          "server.catalog.publication",
+          "server.directory.backend",
+          "server.directory.command",
+          "server.directory.socket",
+          "server.document.check-in",
+          "server.document.socket",
+          "server.presence.expiry",
+          "server.presence.join",
+          "server.presence.leave",
+          "server.rate-limit",
+          "server.readiness",
+          "server.request",
+          "server.saga.drain",
+          "server.shutdown"
+        ],
+        "rows": [],
+        "routes": [
+          {
+            "method": "GET",
+            "route": "/readyz",
+            "requests": 2,
+            "successes": 0,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 2,
+            "samples": 2,
+            "p50Us": 4294967295,
+            "p95Us": 4294967295,
+            "p99Us": 4294967295,
+            "maxUs": 4294967295
+          },
+          {
+            "method": "GET",
+            "route": "/scopes/{scope}/document/ws",
+            "requests": 70,
+            "successes": 70,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 0,
+            "samples": 64,
+            "p50Us": 390,
+            "p95Us": 670,
+            "p99Us": 700,
+            "maxUs": 700
+          },
+          {
+            "method": "POST",
+            "route": "/spaces/{space_id}/artifact-creations",
+            "requests": 5,
+            "successes": 2,
+            "clientRefusals": 1,
+            "rateLimited": 1,
+            "unavailable": 1,
+            "serverFailures": 0,
+            "samples": 5,
+            "p50Us": 300,
+            "p95Us": 500,
+            "p99Us": 500,
+            "maxUs": 500
+          }
+        ],
+        "routesOverflowed": 0,
+        "residency": {
+          "budgetBytes": 67108864,
+          "registeredGuests": 9,
+          "residentGuests": 3,
+          "residentBytes": 50000000,
+          "hits": 40,
+          "compiles": 12,
+          "admitted": 4,
+          "bypassed": 8,
+          "released": 1,
+          "compileMicros": 5400000,
+          "guests": []
+        },
+        "catalog": {
+          "packages": [
+            {
+              "pluginId": "note",
+              "componentBytes": 14932128,
+              "phase": "ready",
+              "rows": 1,
+              "rowsPinned": 0,
+              "rowsVerified": 1
+            },
+            {
+              "pluginId": "gis",
+              "componentBytes": 50359040,
+              "phase": "verifying",
+              "rows": 2,
+              "rowsPinned": 2,
+              "rowsVerified": 0
+            },
+            {
+              "pluginId": "puzzle",
+              "componentBytes": 28251060,
+              "phase": "staged",
+              "rows": 3,
+              "rowsPinned": 0,
+              "rowsVerified": 0
+            }
+          ],
+          "packagesTotal": 3,
+          "packagesReady": 1,
+          "packagesRefused": 0,
+          "componentBytesTotal": 93542228,
+          "componentBytesRead": 93542228,
+          "rowsTotal": 6,
+          "rowsPinned": 2,
+          "rowsVerified": 1
+        },
+        "dbIo": {
+          "tasks": 30,
+          "steps": 42,
+          "turns": 31,
+          "admissionWaits": 3,
+          "admissionWaitMicros": 41250,
+          "admissionRefusals": 1,
+          "kinds": [
+            {
+              "kind": "WalAppend",
+              "tasks": 10,
+              "steps": 12,
+              "turns": 10,
+              "admissionWaits": 0,
+              "admissionWaitMicros": 0,
+              "admissionRefusals": 0
+            },
+            {
+              "kind": "WalSync",
+              "tasks": 20,
+              "steps": 30,
+              "turns": 21,
+              "admissionWaits": 3,
+              "admissionWaitMicros": 41250,
+              "admissionRefusals": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "negative-count",
+      "body": {
+        "schema": "semio.hub.observability/v1",
+        "level": "info",
+        "uptimeMs": 1234,
+        "droppedEvents": -1,
+        "declaredEvents": [
+          "server.artifact.creation",
+          "server.artifact.maintenance",
+          "server.auth.agent.delegate",
+          "server.auth.agent.list",
+          "server.auth.agent.revoke",
+          "server.auth.agent.session",
+          "server.auth.credential.change",
+          "server.auth.session.mint",
+          "server.auth.session.read",
+          "server.auth.session.revoke",
+          "server.boot",
+          "server.catalog.publication",
+          "server.directory.backend",
+          "server.directory.command",
+          "server.directory.socket",
+          "server.document.check-in",
+          "server.document.socket",
+          "server.presence.expiry",
+          "server.presence.join",
+          "server.presence.leave",
+          "server.rate-limit",
+          "server.readiness",
+          "server.request",
+          "server.saga.drain",
+          "server.shutdown"
+        ],
+        "rows": [],
+        "routes": [
+          {
+            "method": "GET",
+            "route": "/readyz",
+            "requests": 2,
+            "successes": 0,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 2,
+            "samples": 2,
+            "p50Us": 4294967295,
+            "p95Us": 4294967295,
+            "p99Us": 4294967295,
+            "maxUs": 4294967295
+          },
+          {
+            "method": "GET",
+            "route": "/scopes/{scope}/document/ws",
+            "requests": 70,
+            "successes": 70,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 0,
+            "samples": 64,
+            "p50Us": 390,
+            "p95Us": 670,
+            "p99Us": 700,
+            "maxUs": 700
+          },
+          {
+            "method": "POST",
+            "route": "/spaces/{space_id}/artifact-creations",
+            "requests": 5,
+            "successes": 2,
+            "clientRefusals": 1,
+            "rateLimited": 1,
+            "unavailable": 1,
+            "serverFailures": 0,
+            "samples": 5,
+            "p50Us": 300,
+            "p95Us": 500,
+            "p99Us": 500,
+            "maxUs": 500
+          }
+        ],
+        "routesOverflowed": 0,
+        "residency": {
+          "budgetBytes": 67108864,
+          "registeredGuests": 9,
+          "residentGuests": 3,
+          "residentBytes": 50000000,
+          "hits": 40,
+          "compiles": 12,
+          "admitted": 4,
+          "bypassed": 8,
+          "released": 1,
+          "compileMicros": 5400000
+        },
+        "catalog": {
+          "packages": [
+            {
+              "pluginId": "note",
+              "componentBytes": 14932128,
+              "phase": "ready",
+              "rows": 1,
+              "rowsPinned": 0,
+              "rowsVerified": 1
+            },
+            {
+              "pluginId": "gis",
+              "componentBytes": 50359040,
+              "phase": "verifying",
+              "rows": 2,
+              "rowsPinned": 2,
+              "rowsVerified": 0
+            },
+            {
+              "pluginId": "puzzle",
+              "componentBytes": 28251060,
+              "phase": "staged",
+              "rows": 3,
+              "rowsPinned": 0,
+              "rowsVerified": 0
+            }
+          ],
+          "packagesTotal": 3,
+          "packagesReady": 1,
+          "packagesRefused": 0,
+          "componentBytesTotal": 93542228,
+          "componentBytesRead": 93542228,
+          "rowsTotal": 6,
+          "rowsPinned": 2,
+          "rowsVerified": 1
+        },
+        "dbIo": {
+          "tasks": 30,
+          "steps": 42,
+          "turns": 31,
+          "admissionWaits": 3,
+          "admissionWaitMicros": 41250,
+          "admissionRefusals": 1,
+          "kinds": [
+            {
+              "kind": "WalAppend",
+              "tasks": 10,
+              "steps": 12,
+              "turns": 10,
+              "admissionWaits": 0,
+              "admissionWaitMicros": 0,
+              "admissionRefusals": 0
+            },
+            {
+              "kind": "WalSync",
+              "tasks": 20,
+              "steps": 30,
+              "turns": 21,
+              "admissionWaits": 3,
+              "admissionWaitMicros": 41250,
+              "admissionRefusals": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "wrong-schema",
+      "body": {
+        "schema": "semio.hub.observability/v2",
+        "level": "info",
+        "uptimeMs": 1234,
+        "droppedEvents": 0,
+        "declaredEvents": [
+          "server.artifact.creation",
+          "server.artifact.maintenance",
+          "server.auth.agent.delegate",
+          "server.auth.agent.list",
+          "server.auth.agent.revoke",
+          "server.auth.agent.session",
+          "server.auth.credential.change",
+          "server.auth.session.mint",
+          "server.auth.session.read",
+          "server.auth.session.revoke",
+          "server.boot",
+          "server.catalog.publication",
+          "server.directory.backend",
+          "server.directory.command",
+          "server.directory.socket",
+          "server.document.check-in",
+          "server.document.socket",
+          "server.presence.expiry",
+          "server.presence.join",
+          "server.presence.leave",
+          "server.rate-limit",
+          "server.readiness",
+          "server.request",
+          "server.saga.drain",
+          "server.shutdown"
+        ],
+        "rows": [],
+        "routes": [
+          {
+            "method": "GET",
+            "route": "/readyz",
+            "requests": 2,
+            "successes": 0,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 2,
+            "samples": 2,
+            "p50Us": 4294967295,
+            "p95Us": 4294967295,
+            "p99Us": 4294967295,
+            "maxUs": 4294967295
+          },
+          {
+            "method": "GET",
+            "route": "/scopes/{scope}/document/ws",
+            "requests": 70,
+            "successes": 70,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 0,
+            "samples": 64,
+            "p50Us": 390,
+            "p95Us": 670,
+            "p99Us": 700,
+            "maxUs": 700
+          },
+          {
+            "method": "POST",
+            "route": "/spaces/{space_id}/artifact-creations",
+            "requests": 5,
+            "successes": 2,
+            "clientRefusals": 1,
+            "rateLimited": 1,
+            "unavailable": 1,
+            "serverFailures": 0,
+            "samples": 5,
+            "p50Us": 300,
+            "p95Us": 500,
+            "p99Us": 500,
+            "maxUs": 500
+          }
+        ],
+        "routesOverflowed": 0,
+        "residency": {
+          "budgetBytes": 67108864,
+          "registeredGuests": 9,
+          "residentGuests": 3,
+          "residentBytes": 50000000,
+          "hits": 40,
+          "compiles": 12,
+          "admitted": 4,
+          "bypassed": 8,
+          "released": 1,
+          "compileMicros": 5400000
+        },
+        "catalog": {
+          "packages": [
+            {
+              "pluginId": "note",
+              "componentBytes": 14932128,
+              "phase": "ready",
+              "rows": 1,
+              "rowsPinned": 0,
+              "rowsVerified": 1
+            },
+            {
+              "pluginId": "gis",
+              "componentBytes": 50359040,
+              "phase": "verifying",
+              "rows": 2,
+              "rowsPinned": 2,
+              "rowsVerified": 0
+            },
+            {
+              "pluginId": "puzzle",
+              "componentBytes": 28251060,
+              "phase": "staged",
+              "rows": 3,
+              "rowsPinned": 0,
+              "rowsVerified": 0
+            }
+          ],
+          "packagesTotal": 3,
+          "packagesReady": 1,
+          "packagesRefused": 0,
+          "componentBytesTotal": 93542228,
+          "componentBytesRead": 93542228,
+          "rowsTotal": 6,
+          "rowsPinned": 2,
+          "rowsVerified": 1
+        },
+        "dbIo": {
+          "tasks": 30,
+          "steps": 42,
+          "turns": 31,
+          "admissionWaits": 3,
+          "admissionWaitMicros": 41250,
+          "admissionRefusals": 1,
+          "kinds": [
+            {
+              "kind": "WalAppend",
+              "tasks": 10,
+              "steps": 12,
+              "turns": 10,
+              "admissionWaits": 0,
+              "admissionWaitMicros": 0,
+              "admissionRefusals": 0
+            },
+            {
+              "kind": "WalSync",
+              "tasks": 20,
+              "steps": 30,
+              "turns": 21,
+              "admissionWaits": 3,
+              "admissionWaitMicros": 41250,
+              "admissionRefusals": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "unknown-package-phase",
+      "body": {
+        "schema": "semio.hub.observability/v1",
+        "level": "info",
+        "uptimeMs": 1234,
+        "droppedEvents": 0,
+        "declaredEvents": [
+          "server.artifact.creation",
+          "server.artifact.maintenance",
+          "server.auth.agent.delegate",
+          "server.auth.agent.list",
+          "server.auth.agent.revoke",
+          "server.auth.agent.session",
+          "server.auth.credential.change",
+          "server.auth.session.mint",
+          "server.auth.session.read",
+          "server.auth.session.revoke",
+          "server.boot",
+          "server.catalog.publication",
+          "server.directory.backend",
+          "server.directory.command",
+          "server.directory.socket",
+          "server.document.check-in",
+          "server.document.socket",
+          "server.presence.expiry",
+          "server.presence.join",
+          "server.presence.leave",
+          "server.rate-limit",
+          "server.readiness",
+          "server.request",
+          "server.saga.drain",
+          "server.shutdown"
+        ],
+        "rows": [],
+        "routes": [
+          {
+            "method": "GET",
+            "route": "/readyz",
+            "requests": 2,
+            "successes": 0,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 2,
+            "samples": 2,
+            "p50Us": 4294967295,
+            "p95Us": 4294967295,
+            "p99Us": 4294967295,
+            "maxUs": 4294967295
+          },
+          {
+            "method": "GET",
+            "route": "/scopes/{scope}/document/ws",
+            "requests": 70,
+            "successes": 70,
+            "clientRefusals": 0,
+            "rateLimited": 0,
+            "unavailable": 0,
+            "serverFailures": 0,
+            "samples": 64,
+            "p50Us": 390,
+            "p95Us": 670,
+            "p99Us": 700,
+            "maxUs": 700
+          },
+          {
+            "method": "POST",
+            "route": "/spaces/{space_id}/artifact-creations",
+            "requests": 5,
+            "successes": 2,
+            "clientRefusals": 1,
+            "rateLimited": 1,
+            "unavailable": 1,
+            "serverFailures": 0,
+            "samples": 5,
+            "p50Us": 300,
+            "p95Us": 500,
+            "p99Us": 500,
+            "maxUs": 500
+          }
+        ],
+        "routesOverflowed": 0,
+        "residency": {
+          "budgetBytes": 67108864,
+          "registeredGuests": 9,
+          "residentGuests": 3,
+          "residentBytes": 50000000,
+          "hits": 40,
+          "compiles": 12,
+          "admitted": 4,
+          "bypassed": 8,
+          "released": 1,
+          "compileMicros": 5400000
+        },
+        "catalog": {
+          "packages": [
+            {
+              "pluginId": "note",
+              "componentBytes": 14932128,
+              "phase": "loading",
+              "rows": 1,
+              "rowsPinned": 0,
+              "rowsVerified": 1
+            }
+          ],
+          "packagesTotal": 3,
+          "packagesReady": 1,
+          "packagesRefused": 0,
+          "componentBytesTotal": 93542228,
+          "componentBytesRead": 93542228,
+          "rowsTotal": 6,
+          "rowsPinned": 2,
+          "rowsVerified": 1
+        },
+        "dbIo": {
+          "tasks": 30,
+          "steps": 42,
+          "turns": 31,
+          "admissionWaits": 3,
+          "admissionWaitMicros": 41250,
+          "admissionRefusals": 1,
+          "kinds": [
+            {
+              "kind": "WalAppend",
+              "tasks": 10,
+              "steps": 12,
+              "turns": 10,
+              "admissionWaits": 0,
+              "admissionWaitMicros": 0,
+              "admissionRefusals": 0
+            },
+            {
+              "kind": "WalSync",
+              "tasks": 20,
+              "steps": 30,
+              "turns": 21,
+              "admissionWaits": 3,
+              "admissionWaitMicros": 41250,
+              "admissionRefusals": 1
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

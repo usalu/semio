@@ -22,6 +22,10 @@ pub struct RasterConfig {
     pub brush_size: f64,
     /// 🖌️ Brush opacity (0..1) — was `RasterPlayRuntime::brush_opacity`.
     pub brush_opacity: f64,
+    /// 🎨️ Session foreground color in hexadecimal RGB.
+    pub brush_color: String,
+    /// 🖌️ Solid fraction of the brush radius.
+    pub brush_hardness: f64,
     /// 🔭️ Navigator's last-known composite-window viewport size — was
     /// `RasterPlayRuntime::composite_viewport`.
     #[dsl(block)]
@@ -80,7 +84,19 @@ pub type RasterConfigViewportSize = crate::RasterViewportSize;
 
 impl Default for RasterConfig {
     fn default() -> Self {
-        Self { brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default() }
+        Self { brush_size: 24.0, brush_opacity: 1.0, brush_color: "#2878dc".into(), brush_hardness: 1.0, composite_viewport: None, camera: RasterCamera::default() }
+    }
+}
+
+/// 🎨️ Admits a complete RGB color without permissive CSS parsing.
+pub fn valid_brush_color(value: &str) -> bool {
+    value.len() == 7 && value.starts_with('#') && value.as_bytes()[1..].iter().all(u8::is_ascii_hexdigit)
+}
+
+impl RasterConfig {
+    pub fn brush_rgba(&self) -> [u8; 4] {
+        let value = u32::from_str_radix(self.brush_color.trim_start_matches('#'), 16).unwrap_or(0);
+        [(value >> 16) as u8, (value >> 8) as u8, value as u8, 255]
     }
 }
 
@@ -102,6 +118,10 @@ pub enum RasterConfigMutation {
     SetBrushSize { value: f64 },
     #[dsl(key = "brush-opacity")]
     SetBrushOpacity { value: f64 },
+    #[dsl(key = "brush-color")]
+    SetBrushColor { value: String },
+    #[dsl(key = "brush-hardness")]
+    SetBrushHardness { value: f64 },
     #[dsl(key = "composite-viewport")]
     SetCompositeViewport {
         #[dsl(block)]
@@ -255,6 +275,38 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             composition: protocol::MutationComposition::Atomic,
             required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
         },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎨️brush-color",
+            semantic_kind: "set-brush-color",
+            display_name: "Set Brush Color",
+            emoji: "🎨️",
+            aggregate_variant: "SetBrushColor",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🖌️brush-hardness",
+            semantic_kind: "set-brush-hardness",
+            display_name: "Set Brush Hardness",
+            emoji: "🖌️",
+            aggregate_variant: "SetBrushHardness",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -264,6 +316,8 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             Self::SetBrushOpacity { .. } => &Self::DESCRIPTORS[2],
             Self::SetCompositeViewport { .. } => &Self::DESCRIPTORS[3],
             Self::SetCamera { .. } => &Self::DESCRIPTORS[4],
+            Self::SetBrushColor { .. } => &Self::DESCRIPTORS[5],
+            Self::SetBrushHardness { .. } => &Self::DESCRIPTORS[6],
         }
     }
 
@@ -271,8 +325,18 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
         let mut next = base.clone();
         match self {
             RasterConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            RasterConfigMutation::SetBrushSize { value } => next.brush_size = *value,
-            RasterConfigMutation::SetBrushOpacity { value } => next.brush_opacity = value.clamp(0.0, 1.0),
+            RasterConfigMutation::SetBrushSize { value } => {
+                if value.is_finite() && (1.0..=2048.0).contains(value) { next.brush_size = *value; }
+            },
+            RasterConfigMutation::SetBrushOpacity { value } => {
+                if value.is_finite() && (0.0..=1.0).contains(value) { next.brush_opacity = *value; }
+            },
+            RasterConfigMutation::SetBrushColor { value } => {
+                if valid_brush_color(value) { next.brush_color = value.clone(); }
+            },
+            RasterConfigMutation::SetBrushHardness { value } => {
+                if value.is_finite() && (0.0..=1.0).contains(value) { next.brush_hardness = *value; }
+            },
             RasterConfigMutation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
             RasterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
         }

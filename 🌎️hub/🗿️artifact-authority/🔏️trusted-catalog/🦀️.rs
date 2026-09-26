@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
-use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA, TRUSTED_CATALOG_GUEST_RESIDENCY, GuestCodecVerificationV1, GUEST_CODEC_VERIFICATION_SCHEMA};
+use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA, TRUSTED_CATALOG_GUEST_RESIDENCY, TrustedCatalogGuestResidencyStateV1, TrustedCatalogGuestResidencyV1, TrustedCatalogLoadProgressV1, TrustedCatalogPackagePhaseV1, TrustedCatalogPackageProgressV1, GuestCodecVerificationV1, GUEST_CODEC_VERIFICATION_SCHEMA};
 
 #[path = "🌐️browser-actor/🦀️.rs"]
 mod browser_actor;
@@ -463,71 +463,197 @@ impl VerifiedTrustedPackage {
 const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget =
     semio_framework::kernel::Budget { fuel: 4_000_000_000, deadline_ms: 30_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 };
 
-/// 🧊️ Compiled values held within a declared memory budget: every value is charged its source's
-/// byte length, a newly compiled value makes room by releasing the least recently used values no
-/// call holds, and nothing is ever released for having been idle. A value a running call holds is
-/// never released, so a burst of held values may exceed the budget until they are dropped; the next
-/// compile then brings it back under. A released value compiles again on its next use.
+/// 🧊️ Compiled values held within an operator-configured memory budget (`TrustedCatalogGuestResidencyV1`):
+/// every value is charged its source's byte length, and every operation ([`OperationContext`]) that uses a
+/// value counts as one use of it however many calls it makes. A newly compiled value that fits stays resident.
+/// One that does not fit stays only when its uses before this operation outnumber those of every value it
+/// would release — the least recently used values no call holds, taken in that order — and otherwise serves
+/// the operation that compiled it (and any other that reaches it meanwhile) and is dropped with it. Use counts
+/// are capped and halve together after a declared number of uses per registered value, so a round-robin over
+/// more values than fit keeps a stable resident set instead of recompiling every value on every use, while a
+/// workload that moved on displaces the values it left. Nothing is released for idleness, a value a running
+/// call holds is never released, and a released value compiles again on its next use.
 pub(crate) struct GuestResidencyLedgerV1<T> {
-    maximum_bytes: u64,
+    budget_bytes: std::sync::atomic::AtomicU64,
+    access_count_ceiling: u32,
+    access_count_aging_per_guest: u64,
     clock: std::sync::atomic::AtomicU64,
+    accesses_since_aging: std::sync::atomic::AtomicU64,
+    hits: std::sync::atomic::AtomicU64,
+    compiles: std::sync::atomic::AtomicU64,
+    admitted: std::sync::atomic::AtomicU64,
+    bypassed: std::sync::atomic::AtomicU64,
     released: std::sync::atomic::AtomicU64,
+    compile_micros: std::sync::atomic::AtomicU64,
     slots: std::sync::Mutex<Vec<Arc<GuestResidencySlotV1<T>>>>,
 }
 
-struct GuestResidencySlotV1<T> {
-    resident: tokio::sync::Mutex<Option<Arc<T>>>,
-    charge_bytes: u64,
-    last_used: std::sync::atomic::AtomicU64,
+/// 🧩️ What one slot holds: nothing, a resident value, or a value that serves only the calls holding it.
+enum GuestResidentValueV1<T> {
+    Absent,
+    Resident(Arc<T>),
+    Held(std::sync::Weak<T>),
 }
 
-/// 📏️ What a residency ledger holds now: values resident, the bytes they are charged, the declared
-/// budget, and how many releases it made since the hub started.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct GuestResidencyStateV1 {
-    pub resident: usize,
-    pub resident_bytes: u64,
-    pub maximum_bytes: u64,
-    pub released: u64,
+struct GuestResidencySlotV1<T> {
+    value: tokio::sync::Mutex<GuestResidentValueV1<T>>,
+    charge_bytes: u64,
+    last_used: std::sync::atomic::AtomicU64,
+    access_count: std::sync::atomic::AtomicU32,
+    last_operation: std::sync::atomic::AtomicU64,
+    prior_uses: std::sync::atomic::AtomicU32,
+}
+
+impl<T> GuestResidencySlotV1<T> {
+    fn counts_as_resident(&self) -> bool {
+        self.value.try_lock().map_or(true, |value| match &*value {
+            GuestResidentValueV1::Resident(_) => true,
+            GuestResidentValueV1::Held(held) => held.strong_count() > 0,
+            GuestResidentValueV1::Absent => false,
+        })
+    }
+
+    fn charged(&self) -> bool {
+        self.value.try_lock().map_or(true, |value| matches!(&*value, GuestResidentValueV1::Resident(_)))
+    }
 }
 
 impl<T> GuestResidencyLedgerV1<T> {
-    pub(crate) fn new(maximum_bytes: u64) -> Arc<Self> {
-        Arc::new(Self { maximum_bytes, clock: std::sync::atomic::AtomicU64::new(0), released: std::sync::atomic::AtomicU64::new(0), slots: std::sync::Mutex::new(Vec::new()) })
+    pub(crate) fn new(residency: TrustedCatalogGuestResidencyV1) -> Arc<Self> {
+        let counter = || std::sync::atomic::AtomicU64::new(0);
+        Arc::new(Self {
+            budget_bytes: std::sync::atomic::AtomicU64::new(residency.resident_component_bytes),
+            access_count_ceiling: residency.access_count_ceiling,
+            access_count_aging_per_guest: residency.access_count_aging_per_guest.max(1),
+            clock: counter(),
+            accesses_since_aging: counter(),
+            hits: counter(),
+            compiles: counter(),
+            admitted: counter(),
+            bypassed: counter(),
+            released: counter(),
+            compile_micros: counter(),
+            slots: std::sync::Mutex::new(Vec::new()),
+        })
     }
 
     /// 🪪️ Registers one value charged `charge_bytes` once resident; answers its residency handle.
     pub(crate) fn register(self: &Arc<Self>, charge_bytes: u64) -> GuestResidencyV1<T> {
-        let slot = Arc::new(GuestResidencySlotV1 { resident: tokio::sync::Mutex::new(None), charge_bytes, last_used: std::sync::atomic::AtomicU64::new(0) });
+        let slot = Arc::new(GuestResidencySlotV1 {
+            value: tokio::sync::Mutex::new(GuestResidentValueV1::Absent),
+            charge_bytes,
+            last_used: std::sync::atomic::AtomicU64::new(0),
+            access_count: std::sync::atomic::AtomicU32::new(0),
+            last_operation: std::sync::atomic::AtomicU64::new(0),
+            prior_uses: std::sync::atomic::AtomicU32::new(0),
+        });
         self.slots.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(Arc::clone(&slot));
         GuestResidencyV1 { ledger: Arc::clone(self), slot }
     }
 
-    /// 🧺️ Releases least recently used values no call holds until the resident charge fits the
-    /// budget, never `keep`. A slot someone is compiling or acquiring right now counts as resident.
-    fn make_room(&self, keep: &Arc<GuestResidencySlotV1<T>>) {
-        let slots = self.slots.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
-        let mut resident_bytes: u64 = slots.iter().filter(|slot| slot.resident.try_lock().map_or(true, |resident| resident.is_some())).map(|slot| slot.charge_bytes).sum();
-        let mut candidates: Vec<&Arc<GuestResidencySlotV1<T>>> = slots.iter().filter(|slot| !Arc::ptr_eq(slot, keep)).collect();
-        candidates.sort_by_key(|slot| slot.last_used.load(std::sync::atomic::Ordering::Acquire));
-        for slot in candidates {
-            if resident_bytes <= self.maximum_bytes {
+    fn snapshot(&self) -> Vec<Arc<GuestResidencySlotV1<T>>> {
+        self.slots.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+    }
+
+    /// 🎚️ Applies a new budget and releases least recently used values no call holds until the resident
+    /// charge fits it.
+    pub(crate) fn configure(&self, budget_bytes: u64) {
+        self.budget_bytes.store(budget_bytes, std::sync::atomic::Ordering::Release);
+        let mut slots = self.snapshot();
+        slots.sort_by_key(|slot| slot.last_used.load(std::sync::atomic::Ordering::Acquire));
+        let mut charged: u64 = slots.iter().filter(|slot| slot.charged()).map(|slot| slot.charge_bytes).sum();
+        for slot in slots {
+            if charged <= budget_bytes {
                 break;
             }
-            let Ok(mut resident) = slot.resident.try_lock() else { continue };
-            if resident.as_ref().is_some_and(|value| Arc::strong_count(value) == 1) {
-                resident.take();
-                resident_bytes = resident_bytes.saturating_sub(slot.charge_bytes);
+            let Ok(mut value) = slot.value.try_lock() else { continue };
+            if matches!(&*value, GuestResidentValueV1::Resident(resident) if Arc::strong_count(resident) == 1) {
+                *value = GuestResidentValueV1::Absent;
+                charged = charged.saturating_sub(slot.charge_bytes);
                 self.released.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             }
         }
     }
 
+    /// 🕰️ Records one call of `operation`: the slot becomes the most recently used, and the operation's first
+    /// call counts one use (capped); every `accessCountAgingPerGuest × registered` uses all counts halve.
+    /// Answers the slot's uses before this operation and whether this call was the operation's first.
+    fn touch(&self, slot: &GuestResidencySlotV1<T>, operation: u64) -> (u32, bool) {
+        let tick = self.clock.fetch_add(1, std::sync::atomic::Ordering::AcqRel) + 1;
+        slot.last_used.store(tick, std::sync::atomic::Ordering::Release);
+        if slot.last_operation.swap(operation, std::sync::atomic::Ordering::AcqRel) == operation {
+            return (slot.prior_uses.load(std::sync::atomic::Ordering::Acquire), false);
+        }
+        let slots = self.snapshot();
+        let window = self.access_count_aging_per_guest.saturating_mul(u64::try_from(slots.len()).unwrap_or(u64::MAX).max(1));
+        let aged = self.accesses_since_aging.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |uses| Some(if uses + 1 >= window { 0 } else { uses + 1 })).is_ok_and(|uses| uses + 1 >= window);
+        if aged {
+            for slot in slots {
+                let _ = slot.access_count.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count| Some(count / 2));
+            }
+        }
+        let ceiling = self.access_count_ceiling;
+        let prior = slot.access_count.fetch_update(std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire, |count| (count < ceiling).then_some(count + 1)).unwrap_or_else(|count| count);
+        slot.prior_uses.store(prior, std::sync::atomic::Ordering::Release);
+        (prior, true)
+    }
+
+    /// ⚖️ Whether `keep`'s compiled value stays resident: it fits, or its `prior` uses outnumber those of every
+    /// least recently used unheld value it would release, which are then released. Never admits a value larger
+    /// than the whole budget. A slot another call is compiling or acquiring right now counts as charged.
+    fn admit(&self, keep: &Arc<GuestResidencySlotV1<T>>, prior: u32) -> bool {
+        let budget = self.budget_bytes.load(std::sync::atomic::Ordering::Acquire);
+        if keep.charge_bytes > budget {
+            return false;
+        }
+        let slots = self.snapshot();
+        let others: Vec<&Arc<GuestResidencySlotV1<T>>> = slots.iter().filter(|slot| !Arc::ptr_eq(slot, keep)).collect();
+        let charged: u64 = others.iter().filter(|slot| slot.charged()).map(|slot| slot.charge_bytes).sum();
+        let excess = charged.saturating_add(keep.charge_bytes).saturating_sub(budget);
+        if excess == 0 {
+            return true;
+        }
+        let mut candidates: Vec<(&Arc<GuestResidencySlotV1<T>>, tokio::sync::MutexGuard<'_, GuestResidentValueV1<T>>)> = others
+            .iter()
+            .filter_map(|slot| slot.value.try_lock().ok().filter(|value| matches!(&**value, GuestResidentValueV1::Resident(resident) if Arc::strong_count(resident) == 1)).map(|value| (*slot, value)))
+            .collect();
+        candidates.sort_by_key(|(slot, _)| slot.last_used.load(std::sync::atomic::Ordering::Acquire));
+        let (mut freed, mut victim_count, mut hottest_victim) = (0u64, 0usize, 0u32);
+        for (slot, _) in &candidates {
+            if freed >= excess {
+                break;
+            }
+            freed = freed.saturating_add(slot.charge_bytes);
+            victim_count += 1;
+            hottest_victim = hottest_victim.max(slot.access_count.load(std::sync::atomic::Ordering::Acquire));
+        }
+        if freed < excess || prior <= hottest_victim {
+            return false;
+        }
+        for (_, value) in candidates.iter_mut().take(victim_count) {
+            **value = GuestResidentValueV1::Absent;
+        }
+        self.released.fetch_add(u64::try_from(victim_count).unwrap_or(u64::MAX), std::sync::atomic::Ordering::AcqRel);
+        true
+    }
+
     /// 📏️ The ledger's state now.
-    pub(crate) fn state(&self) -> GuestResidencyStateV1 {
-        let slots = self.slots.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
-        let resident: Vec<_> = slots.iter().filter(|slot| slot.resident.try_lock().map_or(true, |resident| resident.is_some())).collect();
-        GuestResidencyStateV1 { resident: resident.len(), resident_bytes: resident.iter().map(|slot| slot.charge_bytes).sum(), maximum_bytes: self.maximum_bytes, released: self.released.load(std::sync::atomic::Ordering::Acquire) }
+    pub(crate) fn state(&self) -> TrustedCatalogGuestResidencyStateV1 {
+        let slots = self.snapshot();
+        let resident: Vec<_> = slots.iter().filter(|slot| slot.counts_as_resident()).collect();
+        let load = |counter: &std::sync::atomic::AtomicU64| counter.load(std::sync::atomic::Ordering::Acquire);
+        TrustedCatalogGuestResidencyStateV1 {
+            budget_bytes: load(&self.budget_bytes),
+            registered_guests: u64::try_from(slots.len()).unwrap_or(u64::MAX),
+            resident_guests: u64::try_from(resident.len()).unwrap_or(u64::MAX),
+            resident_bytes: resident.iter().map(|slot| slot.charge_bytes).sum(),
+            hits: load(&self.hits),
+            compiles: load(&self.compiles),
+            admitted: load(&self.admitted),
+            bypassed: load(&self.bypassed),
+            released: load(&self.released),
+            compile_micros: load(&self.compile_micros),
+        }
     }
 }
 
@@ -537,55 +663,201 @@ pub(crate) struct GuestResidencyV1<T> {
     slot: Arc<GuestResidencySlotV1<T>>,
 }
 
-impl<T> GuestResidencyV1<T> {
-    /// 🔑️ The resident value, compiled by `compile` when none is resident (one compile at a time);
-    /// a new compile makes room within the ledger's budget.
-    pub(crate) async fn acquire<F, Fut>(&self, compile: F) -> Result<Arc<T>, AuthorityError>
+impl<T: Send + Sync + 'static> GuestResidencyV1<T> {
+    /// 🔑️ The resident or held value for one call of `context`'s operation, compiled by `compile` when there is
+    /// none (one compile at a time). A value that is not admitted stays with the operation that compiled it — and
+    /// with any other operation that reaches it meanwhile — and is dropped with the last of them; a held value
+    /// is admitted as soon as its uses outnumber the values it would release.
+    pub(crate) async fn acquire<F, Fut>(&self, context: &OperationContext<'_>, compile: F) -> Result<Arc<T>, AuthorityError>
     where
         F: FnOnce() -> Fut,
         Fut: std::future::Future<Output = Result<T, AuthorityError>>,
     {
-        let mut resident = self.slot.resident.lock().await;
-        let tick = self.ledger.clock.fetch_add(1, std::sync::atomic::Ordering::AcqRel) + 1;
-        self.slot.last_used.store(tick, std::sync::atomic::Ordering::Release);
-        if let Some(value) = resident.as_ref() {
-            return Ok(Arc::clone(value));
+        let mut value = self.slot.value.lock().await;
+        let (prior, first_call) = self.ledger.touch(&self.slot, context.serial());
+        let present = match &*value {
+            GuestResidentValueV1::Resident(resident) => Some((Arc::clone(resident), true)),
+            GuestResidentValueV1::Held(held) => held.upgrade().map(|held| (held, false)),
+            GuestResidentValueV1::Absent => None,
+        };
+        if let Some((present, resident)) = present {
+            self.ledger.hits.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            if !resident {
+                if self.ledger.admit(&self.slot, prior) {
+                    self.ledger.admitted.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                    *value = GuestResidentValueV1::Resident(Arc::clone(&present));
+                } else if first_call {
+                    context.retain(Arc::clone(&present) as Arc<dyn std::any::Any + Send + Sync>);
+                }
+            }
+            return Ok(present);
         }
-        let value = Arc::new(compile().await?);
-        *resident = Some(Arc::clone(&value));
-        drop(resident);
-        self.ledger.make_room(&self.slot);
-        Ok(value)
+        let started = std::time::Instant::now();
+        let compiled = Arc::new(compile().await?);
+        self.ledger.compile_micros.fetch_add(u64::try_from(started.elapsed().as_micros()).unwrap_or(u64::MAX), std::sync::atomic::Ordering::AcqRel);
+        self.ledger.compiles.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        *value = if self.ledger.admit(&self.slot, prior) {
+            self.ledger.admitted.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            GuestResidentValueV1::Resident(Arc::clone(&compiled))
+        } else {
+            self.ledger.bypassed.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            context.retain(Arc::clone(&compiled) as Arc<dyn std::any::Any + Send + Sync>);
+            GuestResidentValueV1::Held(Arc::downgrade(&compiled))
+        };
+        Ok(compiled)
     }
+}
 
-    /// 📏️ Whether a compiled value is resident now.
+impl<T> GuestResidencyV1<T> {
+    /// 📏️ Whether a compiled value stays resident now (not merely held by a running operation).
     #[cfg(test)]
     pub(crate) fn is_resident(&self) -> bool {
-        self.slot.resident.try_lock().map_or(true, |resident| resident.is_some())
+        self.slot.charged()
+    }
+}
+
+/// 📈️ The live [`TrustedCatalogLoadProgressV1`] of one catalog: its load and its background verification
+/// report into it, and the hub reads it for `/readyz` while it starts and for its admin observability route.
+#[derive(Default)]
+pub struct TrustedCatalogLoadProgressCellV1 {
+    progress: std::sync::Mutex<TrustedCatalogLoadProgressV1>,
+}
+
+impl TrustedCatalogLoadProgressCellV1 {
+    /// 📸️ The progress now.
+    pub fn snapshot(&self) -> TrustedCatalogLoadProgressV1 {
+        self.progress.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+    }
+
+    fn update(&self, change: impl FnOnce(&mut TrustedCatalogLoadProgressV1)) {
+        let mut progress = self.progress.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        change(&mut progress);
+        progress.packages_total = u64::try_from(progress.packages.len()).unwrap_or(u64::MAX);
+        progress.packages_ready = u64::try_from(progress.packages.iter().filter(|package| package.phase == TrustedCatalogPackagePhaseV1::Ready).count()).unwrap_or(u64::MAX);
+        progress.packages_refused = u64::try_from(progress.packages.iter().filter(|package| package.phase == TrustedCatalogPackagePhaseV1::Refused).count()).unwrap_or(u64::MAX);
+        progress.component_bytes_total = progress.packages.iter().map(|package| package.component_bytes).sum();
+        progress.rows_total = progress.packages.iter().map(|package| package.rows).sum();
+        progress.rows_pinned = progress.packages.iter().map(|package| package.rows_pinned).sum();
+        progress.rows_verified = progress.packages.iter().map(|package| package.rows_verified).sum();
+    }
+
+    fn select(&self, packages: Vec<TrustedCatalogPackageProgressV1>) {
+        self.update(|progress| *progress = TrustedCatalogLoadProgressV1 { packages, ..TrustedCatalogLoadProgressV1::default() });
+    }
+
+    fn package(&self, position: usize, change: impl FnOnce(&mut TrustedCatalogPackageProgressV1)) {
+        self.update(|progress| {
+            if let Some(package) = progress.packages.get_mut(position) {
+                change(package);
+            }
+        });
+    }
+
+    fn phase(&self, position: usize, phase: TrustedCatalogPackagePhaseV1) {
+        self.package(position, |package| package.phase = phase);
+    }
+
+    fn component_read(&self, position: usize) {
+        self.update(|progress| {
+            if let Some(bytes) = progress.packages.get(position).map(|package| package.component_bytes) {
+                progress.component_bytes_read = progress.component_bytes_read.saturating_add(bytes);
+            }
+        });
     }
 }
 
 /// 🗜️ One verified package's actor, compiled when a document operation needs it and kept within the
-/// catalog's residency budget (`TrustedCatalogGuestResidencyV1.residentComponentBytesMaximum`, least
-/// recently used first). Catalog verification compiles a guest-codec package once to pin its pack
-/// fingerprints and drops that compile again, so a hub's compiled guests are bounded by the budget,
-/// never one per package it ever served.
+/// catalog's residency budget ([`GuestResidencyLedgerV1`]). Its codec rows that neither a linked native
+/// codec nor this engine's verification memory pinned at load (`rows`) are pinned against the component's
+/// own `pack-schema-hash` once, before its first codec call — by the catalog's background verification or
+/// by that call, whichever comes first — so a hub serves without interpreting its whole catalog first and
+/// no codec call ever runs on a row its component did not answer as the trust record says.
 struct GuestArtifactComponent {
     runtime: Arc<semio_framework_plugin_host::OwnedRuntime>,
     package: PackageRef,
     component: TrustedCatalogAsset,
     compiled: GuestResidencyV1<semio_framework_plugin_host::CompiledHandle>,
+    position: usize,
+    component_sha256: [u8; 32],
+    rows: Vec<(String, [u8; 32])>,
+    verified: tokio::sync::OnceCell<Result<(), String>>,
+    verifications: Arc<GuestCodecVerificationCacheV1>,
+    progress: Arc<TrustedCatalogLoadProgressCellV1>,
 }
 
 impl GuestArtifactComponent {
     async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_framework_plugin_host::CompiledHandle>, AuthorityError> {
         self.compiled
-            .acquire(|| async {
+            .acquire(context, || async {
                 let bytes = self.component.read(context).await?;
                 let (runtime, package) = (Arc::clone(&self.runtime), self.package.clone());
                 interpret_off_worker(context, move |_handle, _progress| runtime.compile_component(&package, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))
             })
             .await
+    }
+
+    /// 🔐️ Every row of `rows` pinned against this component's own answer, once for the catalog's lifetime. A
+    /// caller that cancels or stalls leaves the rows for the next caller; a component that answers a row
+    /// differently from its trust record, or does not compile, refuses every codec call of its package.
+    async fn verified(&self, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        if self.rows.is_empty() {
+            return Ok(());
+        }
+        let outcome = self
+            .verified
+            .get_or_try_init(|| async {
+                self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Verifying);
+                match self.verify_rows(context).await {
+                    Ok(()) => {
+                        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Ready);
+                        Ok(Ok(()))
+                    }
+                    Err(error @ (AuthorityError::Cancelled | AuthorityError::Stalled | AuthorityError::DeadlineExceeded)) => {
+                        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Staged);
+                        Err(error)
+                    }
+                    Err(AuthorityError::Catalog(refusal)) => {
+                        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Refused);
+                        Ok(Err(refusal))
+                    }
+                    Err(error) => {
+                        self.progress.phase(self.position, TrustedCatalogPackagePhaseV1::Refused);
+                        Ok(Err(error.to_string()))
+                    }
+                }
+            })
+            .await?;
+        outcome.clone().map_err(AuthorityError::Catalog)
+    }
+
+    /// 🔐️ Interprets every pending row on one compile, several at once ([`guest_verification_concurrency`]),
+    /// compares each answer with its trust record and remembers it for this engine.
+    async fn verify_rows(&self, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        use futures::StreamExt;
+        let schemas = self.rows.iter().map(|(schema, _)| schema.as_str()).collect::<Vec<_>>().join(", ");
+        let compiled = self.compiled(context).await.map_err(|error| catalog_error(format!("{schemas}: {error}")))?;
+        let rows = self.rows.iter().map(|(schema, expected)| {
+            let compiled = Arc::clone(&compiled);
+            async move {
+                context.checkpoint()?;
+                let (runtime, row_schema) = (Arc::clone(&self.runtime), schema.clone());
+                let observed = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
+                    .await?
+                    .map_err(|error| catalog_error(format!("{schema}: {error}")))?;
+                context.checkpoint()?;
+                if observed != *expected {
+                    return Err(catalog(&format!("{schema}: guest artifact codec schema hash differs from its trust record")));
+                }
+                self.verifications.remember(&self.component_sha256, schema, &observed).await;
+                self.progress.package(self.position, |package| package.rows_verified = package.rows_verified.saturating_add(1));
+                Ok::<_, AuthorityError>(())
+            }
+        });
+        let mut running = futures::stream::iter(rows).buffer_unordered(guest_verification_concurrency());
+        while let Some(row) = running.next().await {
+            row?;
+        }
+        Ok(())
     }
 }
 
@@ -606,6 +878,7 @@ impl GuestArtifactCodecBinding {
     /// exactly like a wedged one. Cancellation is not read inside the interpretation: a caller that
     /// stops waiting is released at once and the call ends on its own fuel bound.
     async fn genesis(&self, document_id: &str, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await?;
         let (runtime, schema, document_id) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), document_id.to_string());
         let pair = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_genesis_observed(&compiled, &schema, &document_id, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
@@ -615,6 +888,7 @@ impl GuestArtifactCodecBinding {
     }
 
     async fn print_mirror(&self, pair: &ArtifactPair, stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
         let (runtime, schema, pack, spr) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), pair.pack.clone(), pair.spr.clone());
         let mirror = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_print_mirror_observed(&compiled, &schema, &pack, &spr, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
@@ -627,6 +901,7 @@ impl GuestArtifactCodecBinding {
     }
 
     async fn apply_ops(&self, pair: ArtifactPair, encoded: Vec<u8>, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await?;
         let (runtime, schema) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone());
         let next = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_apply_ops_observed(&compiled, &schema, &pair.pack, &pair.spr, &encoded, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
@@ -638,6 +913,7 @@ impl GuestArtifactCodecBinding {
     /// 📜️ The guest's own replica fold of a ledger stream; fuel progress reaches the caller's stall
     /// bound exactly as [`Self::genesis`]'s does.
     async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+        self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await?;
         let (runtime, schema, envelopes) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), envelopes.to_vec());
         let next = interpret_off_worker(context, move |handle, progress| {
@@ -759,6 +1035,8 @@ impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
 /// 🗂️ Process-lifetime snapshot produced only after complete bundle verification and codec activation.
 pub struct VerifiedTrustedCatalog {
     residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_host::CompiledHandle>>,
+    guests: Box<[Arc<GuestArtifactComponent>]>,
+    progress: Arc<TrustedCatalogLoadProgressCellV1>,
     packages: Box<[VerifiedTrustedPackage]>,
     codecs: Box<[VerifiedNativeArtifactCodec]>,
     open_targets: Box<[VerifiedDocumentOpenSelectionV1]>,
@@ -792,10 +1070,37 @@ impl VerifiedTrustedCatalog {
         &self.packages
     }
 
-    /// 📏️ How many compiled guests are resident now, the bytes they are charged, the declared budget
-    /// and the releases made so far.
-    pub fn guest_residency(&self) -> GuestResidencyStateV1 {
+    /// 📏️ What the compiled-guest residency holds now and has done since the catalog loaded.
+    pub fn guest_residency(&self) -> TrustedCatalogGuestResidencyStateV1 {
         self.residency.state()
+    }
+
+    /// 🎚️ Applies the operator's residency budget (`OS_HUB_GUEST_RESIDENCY_BYTES`), releasing least recently
+    /// used unheld guests until the resident charge fits it.
+    pub fn configure_guest_residency(&self, residency: TrustedCatalogGuestResidencyV1) {
+        self.residency.configure(residency.resident_component_bytes);
+    }
+
+    /// 📈️ How far this catalog's load and codec-row verification have come.
+    pub fn load_progress(&self) -> TrustedCatalogLoadProgressV1 {
+        self.progress.snapshot()
+    }
+
+    /// 🔐️ Pins every package's rows that still wait for their component's answer, smallest component first, so the
+    /// most packages are ready soonest; a codec call that reaches a package first verifies it itself and this
+    /// pass waits for it. A refused package is recorded in [`Self::load_progress`] and the pass moves on; the
+    /// pass stops at cancellation or a stall of `context`.
+    pub async fn verify_pending_guests(&self, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+        let mut pending: Vec<&Arc<GuestArtifactComponent>> = self.guests.iter().filter(|guest| !guest.rows.is_empty() && guest.verified.get().is_none()).collect();
+        pending.sort_by_key(|guest| guest.component.byte_length());
+        for guest in pending {
+            context.checkpoint()?;
+            match guest.verified(context).await {
+                Ok(()) | Err(AuthorityError::Catalog(_)) => {}
+                Err(error) => return Err(error),
+            }
+        }
+        Ok(())
     }
 
     /// 🧪️ Returns the exact number of activated artifact identities.
@@ -982,6 +1287,7 @@ pub(crate) fn guest_codec_engine_identity() -> String {
 /// live inside `trusted-catalog/` so they travel with a copied or restored catalog. Reading or writing a
 /// record never decides a verification: an unreadable record is a miss, and a record that cannot be
 /// written is recomputed on the next boot.
+#[derive(Clone)]
 pub(crate) struct GuestCodecVerificationCacheV1 {
     root: Option<std::path::PathBuf>,
     engine: String,
@@ -1044,73 +1350,11 @@ impl GuestCodecVerificationCacheV1 {
     }
 }
 
-/// 🔐️ One package whose unlinked codec rows must be pinned against its own component's answer.
-struct GuestVerificationV1 {
-    position: usize,
-    package: PackageRef,
-    component: TrustedCatalogAsset,
-    component_sha256: [u8; 32],
-    rows: Vec<(String, [u8; 32])>,
-}
-
-/// 🧵️ How many packages a catalog load verifies at once: the declared residency bound, never more
-/// than half the cores this hub may use, never fewer than one.
+/// 🧵️ How many codec rows of one package are interpreted at once: the declared residency bound, never
+/// more than half the cores this hub may use, never fewer than one.
 pub(crate) fn guest_verification_concurrency() -> usize {
     let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
     TRUSTED_CATALOG_GUEST_RESIDENCY.concurrent_verifications.min(cores / 2).max(1)
-}
-
-/// 🔐️ Pins every unlinked codec row against its component's own `pack-schema-hash`, several rows at
-/// once ([`guest_verification_concurrency`]) — rows of one package too, since each row interprets on its
-/// own instance of the package's one compile. The largest components start first, because a load
-/// lasts as long as its slowest package. A package compiles once, on its first row, and its compile is
-/// dropped with its last row; every observed hash is compared with its trust record and remembered for
-/// this engine. Answers the `(package position, artifact schema)` rows it verified.
-async fn verify_guest_rows(runtime: &Arc<semio_framework_plugin_host::OwnedRuntime>, mut packages: Vec<GuestVerificationV1>, verifications: &GuestCodecVerificationCacheV1, context: &OperationContext<'_>) -> Result<BTreeSet<(usize, String)>, AuthorityError> {
-    use futures::StreamExt;
-    packages.sort_by_key(|package| std::cmp::Reverse(package.component.byte_length()));
-    let rows = packages.into_iter().flat_map(|mut package| {
-        let rows = std::mem::take(&mut package.rows);
-        let schemas = rows.iter().map(|(schema, _)| schema.as_str()).collect::<Vec<_>>().join(", ");
-        let slot = Arc::new(GuestVerificationSlotV1 { package, schemas, compiled: tokio::sync::OnceCell::new() });
-        rows.into_iter().map(move |(schema, expected)| (Arc::clone(&slot), schema, expected))
-    });
-    let mut running = futures::stream::iter(rows.map(|(slot, schema, expected)| verify_guest_row(runtime, slot, schema, expected, verifications, context))).buffer_unordered(guest_verification_concurrency());
-    let mut verified = BTreeSet::new();
-    while let Some(row) = running.next().await {
-        verified.insert(row?);
-    }
-    Ok(verified)
-}
-
-/// 🧩️ One package under verification: its one compile, shared by its rows and dropped with the last.
-struct GuestVerificationSlotV1 {
-    package: GuestVerificationV1,
-    schemas: String,
-    compiled: tokio::sync::OnceCell<Arc<semio_framework_plugin_host::CompiledHandle>>,
-}
-
-async fn verify_guest_row(runtime: &Arc<semio_framework_plugin_host::OwnedRuntime>, slot: Arc<GuestVerificationSlotV1>, schema: String, expected: [u8; 32], verifications: &GuestCodecVerificationCacheV1, context: &OperationContext<'_>) -> Result<(usize, String), AuthorityError> {
-    context.checkpoint()?;
-    let compiled = slot
-        .compiled
-        .get_or_try_init(|| async {
-            let bytes = slot.package.component.read(context).await?;
-            let (compiler, reference) = (Arc::clone(runtime), slot.package.package.clone());
-            let compiled = interpret_off_worker(context, move |_handle, _progress| compiler.compile_component(&reference, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", slot.schemas)))?;
-            Ok::<_, AuthorityError>(Arc::new(compiled))
-        })
-        .await?;
-    let (interpreter, compiled, row_schema) = (Arc::clone(runtime), Arc::clone(compiled), schema.clone());
-    let observed = interpret_off_worker(context, move |handle, progress| handle.block_on(interpreter.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
-        .await?
-        .map_err(|error| catalog_error(format!("{schema}: {error}")))?;
-    context.checkpoint()?;
-    if observed != expected {
-        return Err(catalog("guest artifact codec schema hash differs from its trust record"));
-    }
-    verifications.remember(&slot.package.component_sha256, &schema, &observed).await;
-    Ok((slot.package.position, schema))
 }
 
 /// 🏗️ Stateless verifier for one explicitly selected immutable trust bundle.
@@ -1170,6 +1414,10 @@ impl TrustedCatalogLoader {
         Ok(catalog)
     }
 
+    /// 📦️ One selected package whose files, digests, descriptor and browser actor are already
+    /// verified, held until the whole closure is proven so no provider sees a package belonging to a
+    /// closure that is still able to be refused. Component and actor bytes are not held: each was
+    /// read, hashed and dropped, and is retained by identity.
     async fn verify_selected(
         root: &Arc<TrustedCatalogGenerationRoot>,
         bundle_path: TrustedCatalogRelativePathV1,
@@ -1181,9 +1429,19 @@ impl TrustedCatalogLoader {
     ) -> Result<(VerifiedTrustedCatalog, Vec<ArtifactCodec>), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
         let guest_runtime = Arc::new(semio_framework_plugin_host::OwnedRuntime::new());
-        let residency = GuestResidencyLedgerV1::new(TRUSTED_CATALOG_GUEST_RESIDENCY.resident_component_bytes_maximum);
+        let residency = GuestResidencyLedgerV1::new(TRUSTED_CATALOG_GUEST_RESIDENCY);
+        let progress = context.catalog_progress().unwrap_or_default();
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
         let SelectedTrustedBundleV1 { package_indices: order, profile } = validate_bundle(&bundle, profile_id)?;
+        progress.select(
+            order
+                .iter()
+                .map(|index| {
+                    let record = &bundle.packages[*index];
+                    TrustedCatalogPackageProgressV1 { plugin_id: record.plugin_id.clone(), component_bytes: record.component.byte_length, phase: TrustedCatalogPackagePhaseV1::Pending, rows: u64::try_from(record.native_codecs.len()).unwrap_or(u64::MAX), rows_pinned: 0, rows_verified: 0 }
+                })
+                .collect(),
+        );
         let order_len = u64::try_from(order.len()).map_err(|error| catalog_error(error))?;
         let total_units = order_len.checked_mul(4).and_then(|units| units.checked_add(1)).ok_or_else(|| catalog("catalog progress total overflow"))?;
         let requirements = order
@@ -1206,10 +1464,6 @@ impl TrustedCatalogLoader {
         let mut registration_codecs = Vec::new();
         let mut resolved_paths = BTreeSet::from([bundle_path]);
 
-        /// 📦️ One selected package whose files, digests, descriptor and browser actor are already
-        /// verified, held until the whole closure is proven so no provider sees a package belonging to a
-        /// closure that is still able to be refused. Component and actor bytes are not held: each was
-        /// read, hashed and dropped, and is retained by identity.
         struct StagedTrustedPackage<'a> {
             position: usize,
             record: &'a TrustedBundlePackageV1,
@@ -1228,6 +1482,7 @@ impl TrustedCatalogLoader {
         let mut plugin_module_files = BTreeMap::new();
         for (position, index) in order.into_iter().enumerate() {
             context.checkpoint()?;
+            progress.phase(position, TrustedCatalogPackagePhaseV1::Reading);
             let record = &bundle.packages[index];
             let component_path = TrustedCatalogRelativePathV1::parse(&record.component.path)?;
             if !resolved_paths.insert(component_path.clone()) {
@@ -1240,6 +1495,7 @@ impl TrustedCatalogLoader {
             verify_digest(&record.component.sha256, component_sha256, "component sha256")?;
             verify_digest(&record.component.blake3, component_blake3, "component blake3")?;
             let component = TrustedCatalogAsset::retained(TrustedRetainedFile::new(Arc::clone(root), component_path, record.component.byte_length, component_sha256, Some(component_blake3)));
+            progress.component_read(position);
             report_package_progress(context, position, 1, total_units)?;
 
             let descriptor_path = TrustedCatalogRelativePathV1::parse(&record.descriptor.path)?;
@@ -1272,12 +1528,12 @@ impl TrustedCatalogLoader {
             };
             let plugin_module = verify_plugin_module(root, record, &hex_lower(&component_sha256), &hex_lower(&descriptor_sha256), &mut resolved_paths, &mut plugin_module_files, context).await?;
             report_package_progress(context, position, 3, total_units)?;
+            progress.phase(position, TrustedCatalogPackagePhaseV1::Staged);
             staged.push(StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module });
         }
 
         let mut previews = Vec::with_capacity(staged.len());
-        let mut guest_rows = Vec::new();
-        let mut pinned_guest_rows = BTreeSet::new();
+        let mut pending_rows = BTreeMap::new();
         for stage in &staged {
             context.checkpoint()?;
             let native_bindings = providers.preview(NativeCodecProviderPackageV1 { plugin_id: &stage.record.plugin_id, package_id: &stage.record.package_id, version: &stage.record.version }, &stage.descriptor, context)?;
@@ -1293,18 +1549,22 @@ impl TrustedCatalogLoader {
                     return Err(catalog("artifact codec schema hash is zero"));
                 }
                 if verifications.recall(&stage.component_sha256, &expected.artifact_schema).await == Some(expected_hash) {
-                    context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: GUEST_CODEC_BUDGET.fuel, total_units: GUEST_CODEC_BUDGET.fuel })?;
-                    pinned_guest_rows.insert((stage.position, expected.artifact_schema.clone()));
                     continue;
                 }
                 rows.push((expected.artifact_schema.clone(), expected_hash));
             }
-            if !rows.is_empty() {
-                guest_rows.push(GuestVerificationV1 { position: stage.position, package: PackageRef { package: PackageId(stage.record.package_id.clone()), hash: PackageHash(stage.component_blake3) }, component: stage.component.clone(), component_sha256: stage.component_sha256, rows });
-            }
+            let pinned = u64::try_from(stage.record.native_codecs.len() - rows.len()).unwrap_or(u64::MAX);
+            progress.package(stage.position, |package| {
+                package.rows_pinned = pinned;
+                if rows.is_empty() {
+                    package.phase = TrustedCatalogPackagePhaseV1::Ready;
+                }
+            });
+            pending_rows.insert(stage.position, rows);
             previews.push(native_bindings);
         }
-        pinned_guest_rows.extend(verify_guest_rows(&guest_runtime, guest_rows, verifications, context).await?);
+        let verifications = Arc::new(verifications.clone());
+        let mut guests = Vec::with_capacity(staged.len());
 
         for (stage, native_bindings) in staged.into_iter().zip(previews) {
             let StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module } = stage;
@@ -1317,7 +1577,14 @@ impl TrustedCatalogLoader {
                 package: package_ref.clone(),
                 component: component.clone(),
                 compiled: residency.register(record.component.byte_length),
+                position,
+                component_sha256,
+                rows: pending_rows.remove(&position).unwrap_or_default(),
+                verified: tokio::sync::OnceCell::new(),
+                verifications: Arc::clone(&verifications),
+                progress: Arc::clone(&progress),
             });
+            guests.push(Arc::clone(&guest));
 
             for expected in &record.native_codecs {
                 if codecs.len() >= TRUSTED_CATALOG_MAX_CODECS {
@@ -1329,18 +1596,11 @@ impl TrustedCatalogLoader {
                     return Err(catalog("artifact codec schema hash is zero"));
                 }
                 let binding = binding_map.get(&key);
-                match binding {
-                    Some(binding) => {
-                        if binding.codec.pack_schema_hash == [0; 32] || binding.codec.pack_schema_hash != expected_hash || binding.codec.schema != expected.artifact_schema {
-                            return Err(catalog("native codec schema hash is zero or mismatched"));
-                        }
-                        consumed_bindings.insert(key);
+                if let Some(binding) = binding {
+                    if binding.codec.pack_schema_hash == [0; 32] || binding.codec.pack_schema_hash != expected_hash || binding.codec.schema != expected.artifact_schema {
+                        return Err(catalog("native codec schema hash is zero or mismatched"));
                     }
-                    // 🔐️ No linked codec for this package, so the carried row was pinned against the
-                    // COMPONENT's own answer — remembered for this engine, or interpreted above on bytes
-                    // reread and re-verified against the digests.
-                    None if pinned_guest_rows.contains(&(position, expected.artifact_schema.clone())) => {}
-                    None => return Err(catalog("guest artifact codec row was never verified against its component")),
+                    consumed_bindings.insert(key);
                 }
                 let identity = TrustedArtifactIdentity {
                     plugin_id: record.plugin_id.clone(),
@@ -1440,7 +1700,7 @@ impl TrustedCatalogLoader {
         if generation_id != profile.generation_id {
             return Err(catalog("trusted profile generation differs from the completely verified package, codec, and target closure"));
         }
-        let catalog = VerifiedTrustedCatalog { residency, packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), open_targets: open_targets.into_boxed_slice(), generation_id };
+        let catalog = VerifiedTrustedCatalog { residency, guests: guests.into_boxed_slice(), progress, packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), open_targets: open_targets.into_boxed_slice(), generation_id };
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: total_units, total_units })?;
         Ok((catalog, registration_codecs))
     }
@@ -1694,6 +1954,10 @@ fn append_trusted_profile_dependencies(encoded: &mut Vec<u8>, dependencies: &[Tr
     Ok(())
 }
 
+/// 🎯️ The whole SET, in one canonical order, so a generation id names every creatable kind it
+/// admits — not merely the first (ticket 26/09/18 slice TC3b). The count is framed ahead of the
+/// rows exactly as the selected closure's is, so adding a target can never collide with a
+/// different bundle whose rows happen to concatenate identically.
 fn trusted_profile_generation(bundle: &TrustedBundleV1, profile: &TrustedBundleProfileV1) -> Result<String, AuthorityError> {
     let mut encoded = Vec::new();
     encoded.extend_from_slice(b"semio/hub/trusted-profile-generation/v1\0");
@@ -1737,10 +2001,6 @@ fn trusted_profile_generation(bundle: &TrustedBundleV1, profile: &TrustedBundleP
             append_document_open_catalog_field(&mut encoded, decode_digest(&codec.pack_schema_hash, "profile codec pack schema hash")?.as_slice())?;
         }
     }
-    // 🎯️ The whole SET, in one canonical order, so a generation id names every creatable kind it
-    // admits — not merely the first (ticket 26/09/18 slice TC3b). The count is framed ahead of the
-    // rows exactly as the selected closure's is, so adding a target can never collide with a
-    // different bundle whose rows happen to concatenate identically.
     let mut selected = profile.open_targets.iter().collect::<Vec<_>>();
     selected.sort_by(|left, right| {
         (&left.package.plugin_id, &left.package.package_id, &left.package.version, &left.target.artifact_kind, &left.target.artifact_schema, &left.target.surface_id, left.target.role as u8)
@@ -1824,6 +2084,17 @@ fn validate_file(file: &TrustedBundleFileV1, maximum: u64) -> Result<(), Authori
     Ok(())
 }
 
+/// 🎯️ An open target carries TWO artifact-kind ids from two deliberately distinct spaces, and they
+/// are never equal in a real bundle: `artifact_kind` is the manifest `ArtifactKindSpec::id`
+/// (`stdio.json` — `validate_descriptor_open_target` requires a manifest kind with exactly that id
+/// and schema), while `parent_dialect` is the owning app's `Dialect`, whose kind is the descriptor
+/// id (`s.stdio.json` — the same function requires `app.dialect == target.parent_dialect`). Every
+/// stdio artifact ships both spellings (`📜️native-codec-factories.json`: `artifact_kind` is
+/// `stdio.<x>` for all of them; every `Viewer::builder(…)` dialect is `s.stdio.<x>`). This loop
+/// used to refuse a target whose two spellings differed, which made every real stdio bundle
+/// unloadable and left `artifactAuthority` permanently not-ready. Binding is enforced where it is
+/// meaningful: to a native codec of the same package below, and to the descriptor's own app and
+/// artifact kind in `validate_descriptor_open_target`.
 fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<SelectedTrustedBundleV1, AuthorityError> {
     if bundle.schema_version != 3 || bundle.packages.is_empty() || bundle.packages.len() > TRUSTED_CATALOG_MAX_PACKAGES || bundle.profiles.is_empty() || bundle.profiles.len() > TRUSTED_BUNDLE_MAX_PROFILES || !valid_identity(profile_id) {
         return Err(catalog("trusted bundle shape or version is invalid"));
@@ -1876,17 +2147,6 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
                 return Err(catalog("trusted native codec identity is empty, zero, or duplicated"));
             }
         }
-        // 🎯️ An open target carries TWO artifact-kind ids from two deliberately distinct spaces, and they
-        // are never equal in a real bundle: `artifact_kind` is the manifest `ArtifactKindSpec::id`
-        // (`stdio.json` — `validate_descriptor_open_target` requires a manifest kind with exactly that id
-        // and schema), while `parent_dialect` is the owning app's `Dialect`, whose kind is the descriptor
-        // id (`s.stdio.json` — the same function requires `app.dialect == target.parent_dialect`). Every
-        // stdio artifact ships both spellings (`📜️native-codec-factories.json`: `artifact_kind` is
-        // `stdio.<x>` for all of them; every `Viewer::builder(…)` dialect is `s.stdio.<x>`). This loop
-        // used to refuse a target whose two spellings differed, which made every real stdio bundle
-        // unloadable and left `artifactAuthority` permanently not-ready. Binding is enforced where it is
-        // meaningful: to a native codec of the same package below, and to the descriptor's own app and
-        // artifact kind in `validate_descriptor_open_target`.
         let mut open_target_keys = BTreeSet::new();
         for target in &package.open_targets {
             let expected_grant = TrustedBundleGrantV1 { read: true, write: matches!(target.role, TrustedBundleOpenRole::Editor), observe: true };
@@ -1975,38 +2235,20 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
         }
         if profile.id == "local-stdio-gis-open-v1" {
             let identities = profile.selected_closure.iter().map(|identity| (identity.plugin_id.as_str(), identity.package_id.as_str())).collect::<Vec<_>>();
-            let target_count = bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>();
             let gis = bundle.packages.iter().find(|package| package.plugin_id == "gis");
             let stdio = bundle.packages.iter().find(|package| package.plugin_id == "stdio");
-            let map_dialect = semio_framework::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() };
-            let exact_map_surface = |target: &TrustedBundleOpenTargetV1, role: TrustedBundleOpenRole, surface: &str, window: &str| {
-                target.artifact_kind == "s.gis.gismap"
-                    && target.artifact_schema == "gis.map"
-                    && target.surface_id == surface
-                    && target.app_id == surface
-                    && target.window_kind_id == window
-                    && target.parent_dialect == map_dialect
-                    && target.role == role
-                    && target.renderer_target == TrustedBundleRendererTarget::Wasm
-                    && target.grant == (TrustedBundleGrantV1 { read: true, write: role == TrustedBundleOpenRole::Editor, observe: true })
-            };
             if identities != [("gis", "semio:gis"), ("stdio", "semio:stdio")]
                 || bundle.packages.len() != 2
-                || target_count != 2
                 || gis.is_none_or(|package| {
                     package.native_codecs.len() != 2
                         || package.dependencies.as_slice() != std::slice::from_ref(&profile.selected_closure[1])
-                        || package.open_targets.len() != 2
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gismap" && codec.artifact_schema == "gis.map")
                         || !package.native_codecs.iter().any(|codec| codec.artifact_kind == "s.gis.gisterrain" && codec.artifact_schema == "gis.terrain")
                 })
-                || stdio.is_none_or(|package| package.native_codecs.len() != 26 || !package.open_targets.is_empty() || !package.dependencies.is_empty())
-                || profile.open_targets.len() != 2
-                || profile.open_targets.iter().any(|selected| selected.package.plugin_id != "gis")
-                || !profile.open_targets.iter().any(|selected| exact_map_surface(&selected.target, TrustedBundleOpenRole::Editor, "s.gis.gismap@1/*#editor", "gis2d-main"))
-                || !profile.open_targets.iter().any(|selected| exact_map_surface(&selected.target, TrustedBundleOpenRole::Viewer, "s.gis.gismap@1/*#viewer", "gis2d-view-map"))
+                || stdio.is_none_or(|package| package.native_codecs.len() != 26 || !package.dependencies.is_empty())
+                || profile.open_targets.len() != bundle.packages.iter().map(|package| package.open_targets.len()).sum::<usize>()
             {
-                return Err(catalog("local stdio plus GIS profile is not its exact closed two-package map editor and viewer authority"));
+                return Err(catalog("local stdio plus GIS profile is not its exact closed two-package native-codec closure opening every package target"));
             }
         }
         if profile.id == profile_id {
@@ -2253,8 +2495,7 @@ pub fn write_fixture_plugin_module(root: &Path, plugin_id: &str, package_id: &st
 #[cfg(all(feature = "native-artifact-execution", any(test, feature = "integration-fixtures")))]
 fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
     let dependency = semio_s_plugin_stdio::registry::native_artifact_catalog_dependency().map_err(catalog_error)?;
-    let semio_framework::VersionReq::Exact(version) = dependency.version else { return Err(catalog("compiled Stdio fixture dependency is not exact")); };
-    let version = version.to_string();
+    let version = dependency.version.0.to_string();
     let receipts = semio_s_plugin_stdio::registry::native_codec_factory_receipts().map_err(catalog_error)?;
     let mut builder = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Stdio Fixture").version(version.clone()).package_id("semio:stdio");
     for kind in semio_s_plugin_stdio::registry::native_codec_artifact_kinds() {

@@ -60,7 +60,7 @@ async fn a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest(
     let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-contributor-ok")
         .label("Builder Test Contributor Ok")
         .version("0.1.0").package_id("semio:builder-test-contributor-ok")
-        .depends_on("builder-test-dep-target-ok", semio_framework::VersionReq::Any)
+        .depends_on("builder-test-dep-target-ok", semio_framework::tree_pin!())
         .contributes(contribution("s.builder-test-dep-target-ok.thing").await)
         .try_build()
         .expect("a contribution onto a direct dependency must be accepted");

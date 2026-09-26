@@ -37,16 +37,16 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// 🎚️ The live chrome measures for this window, collected from its `☑️options/*` components.
-pub fn window_measures(config: &RasterConfig) -> Vec<WindowMeasure> {
-    vec![options::brush::measure(config), options::eraser::measure(config)]
+pub fn window_measures(config: &RasterConfig, labels: &crate::editor::raster::terminology::RasterPlayLabels) -> Vec<WindowMeasure> {
+    vec![options::brush::measure(config, labels), options::eraser::measure(config, labels)]
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
 /// 🎬️ Encodes the shared `Paint2dScene` behind the semantic surface contract — the app's controller is
 /// resolved by the host from the owning app instance now, so the surface node carries only the scene.
-pub fn render(document: &RasterDocument, config: &RasterConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    scene_surface(RASTER_PLAY_SURFACE_COMPOSITE, ContractSurfaceKind::Paint2d, &raster_scene(document, config, active_utility, "composite"))
+pub fn render(document: &RasterDocument, config: &RasterConfig, active_utility: &str, selected_ids: &[String], hovered_id: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+    scene_surface(RASTER_PLAY_SURFACE_COMPOSITE, ContractSurfaceKind::Paint2d, &raster_scene(document, config, active_utility, "composite", selected_ids, hovered_id))
 }
 //#endregion 🔖️Render
 

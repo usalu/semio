@@ -25,7 +25,7 @@ async fn contributed_entry(mutation_id: &str, contributor: &str, artifact_kind: 
 async fn owner_and_contributed_rows_both_resolve_correctly() {
     let router = ArtifactMutationRouter::new();
     router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color").await]).await.unwrap();
-    let dependency = semio_framework::PluginDependency::new("owner", semio_framework::VersionReq::Any);
+    let dependency = semio_framework::PluginDependency::new("owner", semio_framework::tree_pin!());
     router.register_roster("contributor", &[dependency], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap();
 
     assert_eq!(router.resolve("s.owner.widget", "widget.doc#set-color").await.unwrap(), MutationOwnership::Owner { plugin_id: "owner".into() });
@@ -54,7 +54,7 @@ async fn conflicting_owner_rows_are_rejected_unless_byte_identical() {
 async fn unregister_drops_only_that_plugins_rows() {
     let router = ArtifactMutationRouter::new();
     router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color").await]).await.unwrap();
-    let dependency = semio_framework::PluginDependency::new("owner", semio_framework::VersionReq::Any);
+    let dependency = semio_framework::PluginDependency::new("owner", semio_framework::tree_pin!());
     router.register_roster("contributor", &[dependency], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap();
     router.unregister_plugin("contributor").await.unwrap();
     assert_eq!(router.roster().await.unwrap().len(), 1);
