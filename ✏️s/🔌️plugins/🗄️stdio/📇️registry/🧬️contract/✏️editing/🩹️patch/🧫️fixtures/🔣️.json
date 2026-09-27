@@ -1,0 +1,558 @@
+{
+  "schema": "semio.stdio.snapshot-patch-fixtures.v1",
+  "base": {
+    "title": "Before",
+    "list": [
+      "first",
+      "second",
+      "third"
+    ],
+    "metadata": {
+      "a/b~c": "Grüße 🌍",
+      "old": "Keep"
+    }
+  },
+  "cases": [
+    {
+      "id": "field",
+      "event": {
+        "operation": "setValue",
+        "path": "/title",
+        "value": "After"
+      },
+      "oracle": [
+        {
+          "op": "replace",
+          "path": "/title",
+          "value": "After"
+        }
+      ]
+    },
+    {
+      "id": "append",
+      "event": {
+        "operation": "insertValue",
+        "path": "/list/-",
+        "value": "last"
+      },
+      "oracle": [
+        {
+          "op": "add",
+          "path": "/list/-",
+          "value": "last"
+        }
+      ]
+    },
+    {
+      "id": "remove",
+      "event": {
+        "operation": "removeValue",
+        "path": "/list/1"
+      },
+      "oracle": [
+        {
+          "op": "remove",
+          "path": "/list/1"
+        }
+      ]
+    },
+    {
+      "id": "move",
+      "event": {
+        "operation": "moveValue",
+        "from": "/list/0",
+        "path": "/list/2"
+      },
+      "oracle": [
+        {
+          "op": "move",
+          "from": "/list/0",
+          "path": "/list/2"
+        }
+      ]
+    },
+    {
+      "id": "move-to-end",
+      "event": {
+        "operation": "moveValue",
+        "from": "/list/0",
+        "path": "/list/-"
+      },
+      "oracle": [
+        {
+          "op": "move",
+          "from": "/list/0",
+          "path": "/list/-"
+        }
+      ]
+    },
+    {
+      "id": "rename-escaped-key",
+      "event": {
+        "operation": "renameKey",
+        "path": "/metadata/a~1b~0c",
+        "key": ""
+      },
+      "oracle": [
+        {
+          "op": "move",
+          "from": "/metadata/a~1b~0c",
+          "path": "/metadata/"
+        }
+      ]
+    },
+    {
+      "id": "cross-parent-move",
+      "event": {
+        "operation": "moveValue",
+        "from": "/list/0",
+        "path": "/metadata/first"
+      },
+      "oracle": [
+        {
+          "op": "move",
+          "from": "/list/0",
+          "path": "/metadata/first"
+        }
+      ]
+    },
+    {
+      "id": "same-path",
+      "event": {
+        "operation": "moveValue",
+        "from": "/list/1",
+        "path": "/list/1"
+      },
+      "oracle": []
+    }
+  ],
+  "rejected": [
+    {
+      "id": "duplicate-key",
+      "event": {
+        "operation": "renameKey",
+        "path": "/metadata/a~1b~0c",
+        "key": "old"
+      }
+    },
+    {
+      "id": "move-descendant",
+      "event": {
+        "operation": "moveValue",
+        "from": "/metadata",
+        "path": "/metadata/child"
+      }
+    },
+    {
+      "id": "rename-array-index",
+      "event": {
+        "operation": "renameKey",
+        "path": "/list/0",
+        "key": "1"
+      }
+    },
+    {
+      "id": "missing-remove",
+      "event": {
+        "operation": "removeValue",
+        "path": "/metadata/absent"
+      }
+    }
+  ],
+  "large": {
+    "bytes": 2097152,
+    "fill": 42,
+    "metadataPath": "/title",
+    "value": "Large edit",
+    "maximumPatchBytes": 1024
+  },
+  "admission": {
+    "event": {
+      "operation": "setValue",
+      "path": "/title",
+      "value": "Admitted without projecting bytes"
+    },
+    "expected": true,
+    "maximumNodes": 65536,
+    "maximumDepth": 128,
+    "maximumRawBytes": 16777216,
+    "maximumPointerSegments": 128
+  },
+  "payload": {
+    "before": [
+      7,
+      9
+    ],
+    "cases": [
+      {
+        "id": "replace-payload",
+        "event": {
+          "operation": "setValue",
+          "path": "",
+          "value": [
+            8,
+            10
+          ]
+        },
+        "expected": [
+          8,
+          10
+        ]
+      },
+      {
+        "id": "edit-first-payload-byte",
+        "event": {
+          "operation": "setValue",
+          "path": "/0",
+          "value": 8
+        },
+        "expected": [
+          8,
+          9
+        ]
+      },
+      {
+        "id": "insert-payload-byte",
+        "event": {
+          "operation": "insertValue",
+          "path": "/0",
+          "value": 8
+        },
+        "expected": [
+          8,
+          7,
+          9
+        ]
+      },
+      {
+        "id": "remove-payload-byte",
+        "event": {
+          "operation": "removeValue",
+          "path": "/1"
+        },
+        "expected": [
+          7
+        ]
+      },
+      {
+        "id": "move-payload-byte",
+        "event": {
+          "operation": "moveValue",
+          "from": "/0",
+          "path": "/1"
+        },
+        "expected": [
+          9,
+          7
+        ]
+      }
+    ]
+  },
+  "shiftedParent": {
+    "schema": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "object",
+            "required": [
+              "children"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "children": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "before": [
+      7,
+      9,
+      {
+        "children": []
+      }
+    ],
+    "event": {
+      "operation": "moveValue",
+      "from": "/0",
+      "path": "/1/children/0"
+    },
+    "oracle": [
+      {
+        "op": "remove",
+        "path": "/0"
+      },
+      {
+        "op": "add",
+        "path": "/1/children/0",
+        "value": 7
+      }
+    ],
+    "expected": [
+      9,
+      {
+        "children": [
+          7
+        ]
+      }
+    ]
+  },
+  "publication": {
+    "before": {
+      "title": "Before",
+      "payload": [
+        7,
+        9
+      ]
+    },
+    "expected": {
+      "title": "After",
+      "payload": [
+        7,
+        9
+      ]
+    },
+    "oracle": [
+      {
+        "op": "replace",
+        "path": "/title",
+        "value": "After"
+      }
+    ],
+    "maximumBytes": 1048576,
+    "cases": [
+      {
+        "id": "wrapped-forward-at-limit",
+        "forwardBytes": 1048576,
+        "inverseBytes": 0,
+        "emitted": "expected",
+        "error": null
+      },
+      {
+        "id": "wrapped-forward-over-limit",
+        "forwardBytes": 1048577,
+        "inverseBytes": 0,
+        "emitted": "expected",
+        "error": "snapshot-edit.publication-limit"
+      },
+      {
+        "id": "exact-inverse-at-limit",
+        "forwardBytes": 0,
+        "inverseBytes": 1048576,
+        "emitted": "expected",
+        "error": null
+      },
+      {
+        "id": "exact-inverse-over-limit",
+        "forwardBytes": 0,
+        "inverseBytes": 1048577,
+        "emitted": "expected",
+        "error": "snapshot-edit.publication-limit"
+      },
+      {
+        "id": "accepted-no-op-refused",
+        "forwardBytes": 0,
+        "inverseBytes": 0,
+        "emitted": "before",
+        "error": "snapshot-edit.publication-mismatch"
+      },
+      {
+        "id": "unrelated-payload-loss-refused",
+        "forwardBytes": 0,
+        "inverseBytes": 0,
+        "emitted": {
+          "title": "After",
+          "payload": []
+        },
+        "error": "snapshot-edit.publication-mismatch"
+      },
+      {
+        "id": "encoded-no-op-inverse-refused",
+        "forwardBytes": 0,
+        "inverseBytes": 0,
+        "emitted": "expected",
+        "brokenInverse": true,
+        "error": "snapshot-edit.inverse-mismatch"
+      }
+    ]
+  },
+  "nativePilots": {
+    "csv": {
+      "directory": "📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any",
+      "tagging": "internal",
+      "discriminator": "patchSnapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 6,
+      "before": {
+        "schema": "stdio.csv",
+        "hasHeader": true,
+        "records": [
+          {
+            "fields": [
+              {
+                "value": "x",
+                "quoted": true
+              }
+            ]
+          }
+        ]
+      },
+      "largeValuePath": "/records/0/fields/0/value",
+      "largeValueBytes": 2097152,
+      "event": {
+        "operation": "setValue",
+        "path": "/hasHeader",
+        "value": false
+      },
+      "maximumPatchBytes": 1048576
+    },
+    "json": {
+      "directory": "🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base",
+      "tagging": "adjacent",
+      "discriminator": "patchSnapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 6,
+      "before": {
+        "schema": "stdio.json",
+        "value": {
+          "kind": "object",
+          "members": [
+            {
+              "key": "payload",
+              "value": {
+                "kind": "string",
+                "value": "x"
+              }
+            }
+          ]
+        }
+      },
+      "largeValuePath": "/value/members/0/value/value",
+      "largeValueBytes": 2097152,
+      "event": {
+        "operation": "setValue",
+        "path": "/value/members/0/key",
+        "value": "renamed"
+      },
+      "maximumPatchBytes": 1048576
+    },
+    "png": {
+      "directory": "📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+      "tagging": "adjacent",
+      "discriminator": "patch-snapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 19,
+      "before": {
+        "gama": 45455,
+        "pixels": "x"
+      },
+      "largeValuePath": "/pixels",
+      "largeValueBytes": 2097152,
+      "event": {
+        "operation": "setValue",
+        "path": "/gama",
+        "value": 50000
+      },
+      "maximumPatchBytes": 1048576
+    },
+    "jpg": {
+      "directory": "📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document",
+      "tagging": "adjacent",
+      "discriminator": "patch-snapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 13,
+      "before": {
+        "reEncodeQuality": 90,
+        "pixels": "x"
+      },
+      "largeValuePath": "/pixels",
+      "largeValueBytes": 2097152,
+      "event": {
+        "operation": "setValue",
+        "path": "/reEncodeQuality",
+        "value": 73
+      },
+      "maximumPatchBytes": 1048576
+    },
+    "tiff": {
+      "directory": "🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document",
+      "tagging": "adjacent",
+      "discriminator": "patch-snapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 9,
+      "before": {
+        "byteOrder": "little",
+        "pixels": "x"
+      },
+      "largeValuePath": "/pixels",
+      "largeValueBytes": 2097152,
+      "event": {
+        "operation": "setValue",
+        "path": "/byteOrder",
+        "value": "big"
+      },
+      "maximumPatchBytes": 1048576
+    },
+    "mp4": {
+      "directory": "🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
+      "tagging": "internal",
+      "discriminator": "patchSnapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 9,
+      "before": {
+        "movie": {
+          "title": "Before"
+        },
+        "tracks": [
+          {
+            "samples": [
+              {
+                "data": "x"
+              }
+            ]
+          }
+        ]
+      },
+      "largeValuePath": "/tracks/0/samples/0/data",
+      "largeValueBytes": 2097152,
+      "event": {
+        "operation": "setValue",
+        "path": "/movie/title",
+        "value": "Edited title"
+      },
+      "maximumPatchBytes": 1048576
+    },
+    "wav": {
+      "directory": "🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any",
+      "tagging": "internal",
+      "discriminator": "patchSnapshot",
+      "textOpcode": "patch-snapshot",
+      "binaryTag": 5,
+      "before": {
+        "fmt": {
+          "sampleRate": 44100
+        },
+        "data": {
+          "value": "x"
+        }
+      },
+      "largeValuePath": "/data/value",
+      "largeValueBytes": 2097152,
+      "event": {
+        "operation": "setValue",
+        "path": "/fmt/sampleRate",
+        "value": 48000
+      },
+      "maximumPatchBytes": 1048576
+    }
+  }
+}

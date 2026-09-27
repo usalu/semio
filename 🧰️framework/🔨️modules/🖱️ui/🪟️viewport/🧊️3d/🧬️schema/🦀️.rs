@@ -302,7 +302,14 @@ impl Viewport3dProjectionPreferences {
         projection_range(self.fov, 15.0, 120.0, "fov")?;
         projection_range(self.two_point_shift, -1.0, 1.0, "twoPointShift")?;
         projection_range(self.curvilinear_fov, 60.0, 160.0, "curvilinearFov")?;
-        projection_range(self.curvilinear_strength, 0.0, 1.0, "curvilinearStrength")
+        projection_range(self.curvilinear_strength, 0.0, 1.0, "curvilinearStrength")?;
+        let (angle_a, angle_b) = match self.axonometric_variant {
+            Viewport3dAxonometricVariant::Isometric => (30.0, 30.0),
+            Viewport3dAxonometricVariant::Dimetric => (self.axonometric_angle_a, self.axonometric_angle_a),
+            Viewport3dAxonometricVariant::Trimetric => (self.axonometric_angle_a, self.axonometric_angle_b),
+        };
+        validate_axonometric_corner(angle_a, angle_b)?;
+        Ok(())
     }
 }
 
@@ -549,11 +556,44 @@ impl FromValue for Viewport3dProjectionOrientation {
 }
 
 /// 🎯️ Active mathematical projection snapshot transported to a renderer.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Viewport3dProjectionSpec {
     pub mode: Viewport3dProjectionMode,
     pub orientation: Viewport3dProjectionOrientation,
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Viewport3dProjectionSpecSerde {
+    mode: Viewport3dProjectionMode,
+    orientation: Viewport3dProjectionOrientation,
+}
+
+impl<'de> serde::Deserialize<'de> for Viewport3dProjectionSpec {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <Viewport3dProjectionSpecSerde as serde::Deserialize>::deserialize(deserializer)?;
+        let spec = Self { mode: value.mode, orientation: value.orientation };
+        spec.validate().map_err(serde::de::Error::custom)?;
+        Ok(spec)
+    }
+}
+
+impl Viewport3dProjectionSpec {
+    pub fn validate(&self) -> Result<(), ValueError> {
+        self.mode.validate()?;
+        if matches!(self.orientation, Viewport3dProjectionOrientation::Corner { .. }) {
+            if let Viewport3dProjectionMode::Axonometric { variant, angle_a, angle_b } = self.mode {
+                let (angle_a, angle_b) = match variant {
+                    Viewport3dAxonometricVariant::Isometric => (30.0, 30.0),
+                    Viewport3dAxonometricVariant::Dimetric => (angle_a, angle_a),
+                    Viewport3dAxonometricVariant::Trimetric => (angle_a, angle_b),
+                };
+                validate_axonometric_corner(angle_a, angle_b)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl ToValue for Viewport3dProjectionSpec {
@@ -563,7 +603,10 @@ impl ToValue for Viewport3dProjectionSpec {
 impl FromValue for Viewport3dProjectionSpec {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut entries = crate::fields(value, &["mode", "orientation"])?;
-        Ok(Self { mode: crate::take(&mut entries, "mode")?, orientation: crate::take(&mut entries, "orientation")? })
+        let spec = Self { mode: crate::take(&mut entries, "mode")?, orientation: crate::take(&mut entries, "orientation")? };
+        crate::finish(entries)?;
+        spec.validate()?;
+        Ok(spec)
     }
 }
 
@@ -611,4 +654,9 @@ pub fn derive_active_projection(preferences: &Viewport3dProjectionPreferences) -
 
 fn projection_range(value: f64, minimum: f64, maximum: f64, name: &str) -> Result<(), ValueError> {
     if value.is_finite() && value >= minimum && value <= maximum { Ok(()) } else { Err(ValueError::new("viewport projection value is outside its declared range").under(name)) }
+}
+
+fn validate_axonometric_corner(angle_a: f64, angle_b: f64) -> Result<(), ValueError> {
+    let product = angle_a.to_radians().tan() * angle_b.to_radians().tan();
+    if product.is_finite() && product <= 1.0 { Ok(()) } else { Err(ValueError::new("axonometric corner angles do not define a real camera elevation").under("mode")) }
 }

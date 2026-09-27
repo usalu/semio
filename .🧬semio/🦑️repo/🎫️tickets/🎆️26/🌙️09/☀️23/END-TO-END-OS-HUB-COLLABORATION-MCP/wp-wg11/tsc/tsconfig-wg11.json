@@ -1,0 +1,6 @@
+{
+  "extends": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false },
+  "include": [],
+  "files": ["/Users/ueli/Documents/semio/.tmp-ticket/wp-wg11/harness/🤝️hub-collaboration/🟦️.ts"]
+}

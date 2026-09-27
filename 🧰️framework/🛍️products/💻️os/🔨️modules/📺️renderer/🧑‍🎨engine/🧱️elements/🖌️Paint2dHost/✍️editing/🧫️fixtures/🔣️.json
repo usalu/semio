@@ -199,5 +199,178 @@
       "value": 128
     },
     "cancellationAfter": 32768
+  },
+  "maskCases": [
+    {
+      "name": "linked mask follows nested owner transform",
+      "document": {
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 2
+            },
+            "children": [
+              {
+                "kind": "pixel",
+                "id": "p",
+                "name": "Paint",
+                "width": 20,
+                "height": 10,
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "rotation": 90
+                },
+                "mask": {
+                  "enabled": false,
+                  "linked": true,
+                  "invert": true,
+                  "imageKey": "m",
+                  "width": 6,
+                  "height": 2,
+                  "transform": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {
+        "m": {
+          "width": 3,
+          "height": 1
+        }
+      },
+      "worldPoint": [
+        12,
+        30
+      ],
+      "pixelPoint": [
+        1.5,
+        0.5
+      ],
+      "svgTransform": "translate(10 20) scale(2) translate(3 4) rotate(90) translate(1 2) translate(-3 -1) scale(2)"
+    },
+    {
+      "name": "unlinked mask follows parent coordinates",
+      "document": {
+        "layers": [
+          {
+            "kind": "group",
+            "id": "g",
+            "visible": true,
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 2
+            },
+            "children": [
+              {
+                "kind": "pixel",
+                "id": "p",
+                "name": "Paint",
+                "width": 20,
+                "height": 10,
+                "transform": {
+                  "x": 3,
+                  "y": 4,
+                  "rotation": 90
+                },
+                "mask": {
+                  "enabled": false,
+                  "linked": false,
+                  "invert": true,
+                  "imageKey": "m",
+                  "width": 6,
+                  "height": 2,
+                  "transform": {
+                    "x": 1,
+                    "y": 2
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "assets": {
+        "m": {
+          "width": 3,
+          "height": 1
+        }
+      },
+      "worldPoint": [
+        12,
+        24
+      ],
+      "pixelPoint": [
+        1.5,
+        0.5
+      ],
+      "svgTransform": "translate(10 20) scale(2) translate(1 2) translate(-3 -1) scale(2)"
+    }
+  ],
+  "selectionEditing": {
+    "cases": [
+      {
+        "name": "Select all replaces fractional coverage",
+        "mode": "all",
+        "mask": [
+          0,
+          64,
+          128,
+          255
+        ],
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ]
+      },
+      {
+        "name": "Invert retains fractional coverage",
+        "mode": "invert",
+        "mask": [
+          0,
+          64,
+          128,
+          255
+        ],
+        "expected": [
+          255,
+          191,
+          127,
+          0
+        ]
+      },
+      {
+        "name": "Invert an unrestricted selection starts with every pixel",
+        "mode": "invert",
+        "mask": null,
+        "expected": [
+          255,
+          255,
+          255,
+          255
+        ]
+      }
+    ],
+    "length": 65539,
+    "progress": [
+      32768,
+      65536,
+      65539
+    ]
   }
 }

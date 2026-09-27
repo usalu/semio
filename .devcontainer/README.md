@@ -8,13 +8,17 @@ Devcontainer configuration and lifecycle scripts.
 
 Devcontainer configuration with VS Code customizations, container/remote env, post-create/start/attach commands, and persisted volumes for AI auth, editor server state, GitKraken workspace state, and the shared `.🧬semio/🦑️repo/⚡️cache` root (cargo, Nx, Playwright, and every other repo-managed build cache).
 
+It forwards exactly the ports the launch rows start (a law in `⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🚀️runtime-bootstrap` keeps the list equal to the rows): `os-hub` 8787 (`🛠️dev🗄️os-hub`), the `s` React serve 6070 and its two-person pair 6072/6073, the `s` wgpu serve 6066 and 6067/6068, Storybook 6010, and the MCP Inspector 6274/6277. `hostRequirements` states what a container that builds the hub needs (4 CPUs, 8 GB memory, 32 GB disk: a fresh-clone run measured 7 GB and 25 GB). The hub's Postgres/Neo4j backends (`os-hub-ts:backend-up`) run in the container's own Docker daemon (`docker-in-docker`), whose state persists in that feature's volume.
+
+On macOS, Docker Desktop must be allowed to read the folder the repository lives in (System Settings → Privacy & Security → Files and Folders / Full Disk Access for Docker); without it the bind mount of the checkout fails with `operation not permitted`.
+
 ## docker-compose.yml
 
-Compose stack for the devcontainer: **`compose`** only.
+Compose stack for the devcontainer: one service, **`semio`**. It sets no project, image or container name, so the devcontainer CLI names the project after the checkout folder and two checkouts run side by side.
 
 ## Dependency Preparation
 
-The image provides Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. Nx comes from the repository's locked tooling bootstrap. Container creation invokes `bun nx run workspace:deps-javascript`, which synchronizes the frozen Bun lockfile without building applications. Select additional dependency environments and project builds through their Nx launch configurations. Post-start and post-attach remain separate lifecycle hooks.
+The image provides Bun 1.3.14 and Node 24.15.0 from pinned, checksum-verified Linux x64/arm64 archives. Nx comes from the repository's locked tooling bootstrap. Container creation invokes `bun nx run workspace:setup` (every language environment, the generated sources, the agent instruction aliases and both MCP binaries); the hub and the `s` serves then start from their launch rows. Select additional dependency environments and project builds through their Nx launch configurations. Post-start and post-attach remain separate lifecycle hooks.
 
 ## post-start.sh
 

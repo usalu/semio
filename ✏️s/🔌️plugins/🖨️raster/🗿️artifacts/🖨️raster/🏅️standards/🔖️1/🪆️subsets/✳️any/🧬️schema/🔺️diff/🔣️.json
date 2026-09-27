@@ -297,8 +297,50 @@
         "pixelTransform": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/artifact.json#/$defs/RasterTransform"
         },
-        "adjustmentParameter": {
-          "$ref": "#/$defs/RasterAdjustmentParameter"
+        "adjustmentParameters": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/RasterAdjustmentParameter"
+          },
+          "anyOf": [
+            {
+              "items": [
+                {
+                  "properties": {
+                    "parameter": {
+                      "const": "brightness"
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "parameter": {
+                      "const": "contrast"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "items": [
+                {
+                  "properties": {
+                    "parameter": {
+                      "const": "contrast"
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "parameter": {
+                      "const": "brightness"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
         }
       }
     },

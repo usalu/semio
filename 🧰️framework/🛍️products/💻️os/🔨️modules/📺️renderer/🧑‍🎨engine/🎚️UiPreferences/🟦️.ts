@@ -3,7 +3,8 @@
 import { OsShellConfig, type StoragePort } from "@semio-tech/framework";
 import { parseUiDriver, parseUiTheme, type ElementsSurfaceAppearance, type UiChromeLayout, type UiDriver, type UiLocale, type UiTheme } from "@semio-tech/ui-react";
 import { applyUiPreferencesConfigMutation, UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1, type UiPreferencesConfigMutation } from "../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
-import { parseUiPreferences, type UiDriver as CanonicalUiDriver, type UiPreferences, type UiTheme as CanonicalUiTheme } from "../../../../🎚️config/🧬️schema/🟦️.ts";
+import { USER_PREFERENCE_MUTATION_MAX_BYTES } from "../../../📇️directory/🧬️schema/🟦️.ts";
+import { parseUiPreferences, type UiDriver as CanonicalUiDriver, type UiPreferences, type UiTheme as CanonicalUiTheme, type UserNamedLayout } from "../../../../🎚️config/🧬️schema/🟦️.ts";
 
 export const UI_PREFERENCES_CONFIG_SCHEMA = "os.config.ui-preferences";
 
@@ -31,6 +32,7 @@ export interface ResolvedUiPreferences {
   readonly themeId: string;
   readonly customThemes: Record<string, UiTheme>;
   readonly keybindingOverrides: Record<string, string>;
+  readonly namedLayouts: Readonly<Record<string, Readonly<Record<string, UserNamedLayout>>>>;
 }
 
 export const emptyUiPreferences = (): UiPreferences => ({
@@ -43,6 +45,7 @@ export const emptyUiPreferences = (): UiPreferences => ({
   themeId: null,
   customThemes: {},
   keybindingOverrides: {},
+  namedLayouts: {},
 });
 
 function rawUiPreferencesEventLog(storage: StoragePort): string | undefined {
@@ -162,6 +165,7 @@ function uiPreferenceSlotV1(mutation: UiPreferencesConfigMutation): string {
   if (mutation.mutation === "setKeybindingOverride") return `${key}:${mutation.controlId}`;
   if (mutation.mutation === "setCustomTheme") return `${key}:${mutation.themeId}`;
   if (mutation.mutation === "setCustomDriver") return `${key}:${mutation.driverId}`;
+  if (mutation.mutation === "setNamedLayout") return `${key}:${JSON.stringify([mutation.appId, mutation.layoutId])}`;
   return key;
 }
 
@@ -217,14 +221,29 @@ function writeUiPreferenceLane(storage: StoragePort, state: UiPreferenceLaneStat
   new OsShellConfig(storage).setPreference(UI_PREFERENCES_LANE_CONFIG_SCHEMA, JSON.stringify({ version: 1, lanes: { ...log.lanes, [state.lane]: { afterSeq: state.afterSeq, outbox: state.outbox } } } satisfies UiPreferenceLaneLogV1));
 }
 
+/** 🌐️ What the shell says when a shared change is larger than one hub preference record
+ * (`USER_PREFERENCE_MUTATION_MAX_BYTES`, e.g. a very large saved layout): it is kept on this device only. */
+export const UI_PREFERENCE_UNSHARED_TEXT_V1 = {
+  en: "This change is too large to reach your other devices — it is kept on this device only.",
+  de: "Diese Änderung ist zu groß für deine anderen Geräte — sie bleibt nur auf diesem Gerät.",
+} as const;
+
+/** 📏️ Whether a shared change fits one hub preference record once enveloped (`{ id, mutation }`). */
+export function uiPreferenceFitsLaneV1(mutation: UiPreferencesConfigMutation): boolean {
+  return new TextEncoder().encode(uiPreferenceEnvelopeTextV1({ id: "0".repeat(32), mutation })).length <= USER_PREFERENCE_MUTATION_MAX_BYTES;
+}
+
 /** ✍️ One user change, local-first: applied to this device's log at once and, for a shared preference on a signed-in
- * lane, queued for the hub. Returns the queued entry the caller sends (`null` for a device-local change or no lane). */
-export function commitUiPreferenceOnLaneV1(storage: StoragePort, mutation: UiPreferencesConfigMutation, lane: string | null, mintId: () => string): { readonly preferences: UiPreferences; readonly queued: UiPreferenceLaneEntryV1 | null } {
+ * lane, queued for the hub. Returns the queued entry the caller sends (`null` for a device-local change or no lane);
+ * `unshared` says a shared change was too large for one hub record and stays on this device
+ * ({@link uiPreferenceFitsLaneV1}). */
+export function commitUiPreferenceOnLaneV1(storage: StoragePort, mutation: UiPreferencesConfigMutation, lane: string | null, mintId: () => string): { readonly preferences: UiPreferences; readonly queued: UiPreferenceLaneEntryV1 | null; readonly unshared: boolean } {
   const preferences = commitUiPreferencesConfigMutation(storage, mutation);
-  if (lane === null || uiPreferenceMutationDataClassV1(mutation) !== "persistedShared") return { preferences, queued: null };
+  if (lane === null || uiPreferenceMutationDataClassV1(mutation) !== "persistedShared") return { preferences, queued: null, unshared: false };
+  if (!uiPreferenceFitsLaneV1(mutation)) return { preferences, queued: null, unshared: true };
   const queued: UiPreferenceLaneEntryV1 = { id: mintId(), requestId: mintId(), mutation };
   writeUiPreferenceLane(storage, queueUiPreferenceLaneV1(readUiPreferenceLane(storage, lane), queued));
-  return { preferences, queued };
+  return { preferences, queued, unshared: false };
 }
 
 /** 📥️ Folds one lane page into this device's log and lane state ({@link foldUiPreferenceLaneEventsV1}). */
@@ -283,6 +302,7 @@ export function resolveUiPreferences(
     themeId: preferences.themeId ?? fallback.themeId,
     customThemes: resolveCustomThemes(preferences.customThemes),
     keybindingOverrides: { ...preferences.keybindingOverrides },
+    namedLayouts: preferences.namedLayouts,
   };
 }
 
@@ -290,5 +310,5 @@ if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🎚️canonical-os-ui-preferences/🟦️.ts");
   await registerTests1(import.meta.vitest, { commitUiPreferencesConfigMutation, readUiPreferenceEvents, readUiPreferences, replayUiPreferenceEvents, resolveUiPreferences, subscribeUiPreferences, UI_PREFERENCES_CONFIG_SCHEMA }, { url: import.meta.url });
   const { registerTests1: registerPreferenceLaneTests } = await import("./🧪️tests/🌐️preference-lane/🟦️.ts");
-  await registerPreferenceLaneTests(import.meta.vitest, { commitUiPreferenceOnLaneV1, foldUiPreferenceLanePageV1, readUiPreferenceLane, readUiPreferences, replayUiPreferenceEvents, uiPreferenceEnvelopeTextV1, parseUiPreferenceEnvelopeV1, UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceLaneKeyV1 }, { url: import.meta.url });
+  await registerPreferenceLaneTests(import.meta.vitest, { commitUiPreferenceOnLaneV1, foldUiPreferenceLanePageV1, readUiPreferenceLane, readUiPreferences, replayUiPreferenceEvents, uiPreferenceEnvelopeTextV1, uiPreferenceFitsLaneV1, parseUiPreferenceEnvelopeV1, UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceLaneKeyV1 }, { url: import.meta.url });
 }

@@ -2202,10 +2202,7 @@ impl HubDirectory for Neo4jDirectory {
             return Ok(SocketSessionBindingStatus::Expired);
         }
         let role = space_id.and_then(|_| row.get::<String>("role").ok().and_then(|role| SpaceRole::parse(&role)));
-        if space_id.is_some() && role.is_none() {
-            return Ok(SocketSessionBindingStatus::MembershipLost);
-        }
-        Ok(SocketSessionBindingStatus::Active { role, expires_at_ms: record.expires_at })
+        super::capped_socket_session_binding(self, &record, space_id, role).await
     }
 
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {

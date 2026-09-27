@@ -26,8 +26,8 @@ fn permissive(width: u32, height: u32) -> Grid2dSnapshot {
 #[test]
 fn the_same_seed_solves_to_the_same_assignment() {
     let document = permissive(4, 3);
-    let first = solve_with_job(&document).expect("solve completes");
-    let second = solve_with_job(&document).expect("solve repeats");
+    let first = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solve completes");
+    let second = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solve repeats");
     assert!(!first.contradiction, "a permissive rule set is satisfiable");
     assert_eq!(first.assignments.len(), 12, "every unmasked cell is assigned");
     assert_eq!(first.assignments, second.assignments, "the solve must be a pure function of the document, seed included");
@@ -37,7 +37,7 @@ fn the_same_seed_solves_to_the_same_assignment() {
 fn a_different_seed_is_still_a_valid_solve() {
     let mut document = permissive(4, 3);
     document.seed = 4_242;
-    let commit = solve_with_job(&document).expect("solve completes");
+    let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solve completes");
     assert!(!commit.contradiction);
     assert!(commit.assignments.iter().all(|(_, _, tile)| tile == "ink" || tile == "void"));
 }
@@ -46,7 +46,7 @@ fn a_different_seed_is_still_a_valid_solve() {
 fn an_empty_rule_set_contradicts_the_moment_two_cells_are_adjacent() {
     let mut document = permissive(3, 1);
     document.rules.clear();
-    let commit = solve_with_job(&document).expect("solve completes");
+    let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solve completes");
     assert!(commit.contradiction, "with no rule authored every pair is forbidden, so a 3×1 grid is unsatisfiable");
     assert!(commit.assignments.is_empty());
 }
@@ -54,7 +54,7 @@ fn an_empty_rule_set_contradicts_the_moment_two_cells_are_adjacent() {
 #[test]
 fn a_document_with_no_tiles_contradicts_without_reaching_the_solver() {
     let document = Grid2dSnapshot { width: 2, height: 2, ..Default::default() };
-    let commit = solve_with_job(&document).expect("solve completes");
+    let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solve completes");
     assert!(commit.contradiction);
 }
 
@@ -62,7 +62,7 @@ fn a_document_with_no_tiles_contradicts_without_reaching_the_solver() {
 fn a_masked_cell_is_omitted_from_the_assignment() {
     let mut document = permissive(3, 2);
     document.masked = vec![WfcCell2d { x: 2, y: 1 }];
-    let commit = solve_with_job(&document).expect("solve completes");
+    let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solve completes");
     assert_eq!(commit.assignments.len(), 5, "the masked cell carries no assignment");
     assert!(commit.assignments.iter().all(|(x, y, _)| !(*x == 2 && *y == 1)));
 }
@@ -71,7 +71,7 @@ fn a_masked_cell_is_omitted_from_the_assignment() {
 fn a_pinned_cell_keeps_the_tile_it_was_pinned_to() {
     let mut document = permissive(3, 2);
     document.pinned = vec![WfcPinnedCell2d { x: 1, y: 1, tile_id: "ink".into() }];
-    let commit = solve_with_job(&document).expect("solve completes");
+    let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solve completes");
     let pinned = commit.assignments.iter().find(|(x, y, _)| *x == 1 && *y == 1).expect("the pinned cell is assigned");
     assert_eq!(pinned.2, "ink");
 }
@@ -81,7 +81,7 @@ fn the_entropy_map_states_one_row_per_cell_and_zero_where_the_cell_is_determined
     let mut document = permissive(3, 2);
     document.pinned = vec![WfcPinnedCell2d { x: 0, y: 0, tile_id: "ink".into() }];
     document.masked = vec![WfcCell2d { x: 2, y: 1 }];
-    let commit = solve_with_job(&document).expect("solve completes");
+    let commit = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("solve completes");
     assert_eq!(commit.entropy.len(), 6);
     let value_at = |x: u32, y: u32| commit.entropy.iter().find(|(ex, ey, _)| *ex == x && *ey == y).map(|(_, _, value)| *value).expect("cell present");
     assert_eq!(value_at(0, 0), 0.0, "a pinned cell is fully determined");

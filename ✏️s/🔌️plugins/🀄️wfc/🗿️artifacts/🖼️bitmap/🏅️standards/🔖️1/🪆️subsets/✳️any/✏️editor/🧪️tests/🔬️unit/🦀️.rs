@@ -288,7 +288,7 @@ fn a_partial_fill_render_differs_from_empty_and_finished() {
 
     let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
     let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None);
-    let finished_pixels = crate::inferences::solve_with_job(&snapshot).expect("oracle");
+    let finished_pixels = crate::inferences::solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("oracle");
     let finished = BitmapTransient {
         output_pixels: if finished_pixels.contradiction { None } else { Some(finished_pixels.pixels.clone()) },
         contradiction: finished_pixels.contradiction,

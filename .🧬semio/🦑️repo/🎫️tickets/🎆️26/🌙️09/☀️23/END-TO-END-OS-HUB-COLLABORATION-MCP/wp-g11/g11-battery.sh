@@ -12,6 +12,7 @@ H="/Users/ueli/Documents/semio/.🧬semio/🌐hub"
 OUT="$H/s13-g11-logs/battery-$TAG"; mkdir -p "$OUT"
 MCP_RS="/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust"
 export S_AGENT_BRIDGE_DIR="$H/s13-g11-bridge"
+[ -n "${G11_GATEWAY_BIN:-}" ] && export SEMIO_OS_MCP_BIN="$G11_GATEWAY_BIN"
 summary() { echo "$(date +%H:%M:%S) $1" | tee -a "$OUT/summary.txt"; }
 counts() { echo "$(/usr/bin/grep -c '^PASS' "$1") PASS / $(/usr/bin/grep -c '^FAIL' "$1") FAIL"; }
 summary "battery $TAG hub=$HUB serve=:$PORT"
@@ -31,6 +32,7 @@ OS_MCP_HUB_ORIGIN="$HUB" S_OS_MCP_QUARTET_OUT="$OUT/quartet" bun ./📜️script
 summary "quartet rc=$? $(counts "$OUT/quartet.txt")"
 OS_MCP_HUB_ORIGIN="$HUB" bun ./📜️script.ts hub-agent-participant-check > "$OUT/hub-agent-participant.txt" 2>&1
 summary "hub-agent-participant rc=$? $(/usr/bin/grep -c 'PASS' "$OUT/hub-agent-participant.txt") PASS lines"
+touch "$(dirname "$ADMIN")/admin-request"; sleep 8
 OS_MCP_HUB_ORIGIN="$HUB" OS_HUB_ADMIN_CAPABILITY_FILE="$ADMIN" S_OS_MCP_SECURITY_OUT="$OUT/security" bun ./📜️script.ts security-check > "$OUT/security.txt" 2>&1
 summary "security rc=$? $(counts "$OUT/security.txt")"
 if [ -n "$SERVE_PID" ]; then

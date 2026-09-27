@@ -1,0 +1,27 @@
+🤖️ P9 prepared patch set (session 14): the agent lane previews every app-owned job, and an agent names the nodes
+trinity's `patchNodes` acts on.
+
+1. Agent-lane preview for plugin-owned tool-command jobs. The MCP gateway's `action_prepare` reaches the guest's
+   `preview_addressed_action`, which ran only the SDK's own retained command (`ArtifactRetainedCommandJob::preview_emit`
+   after downcasting the built payload) and refused every other job shape `interactive-job.preview-unsupported` — puzzle
+   2d/3d/5d and writer (their own `*.tool-command.v1` jobs) could not be mutated over MCP at all. The preview now begins
+   the SAME retained-wire admission the shell's `dispatch_action` begins, builds the SAME job (`A::build_tool_job`),
+   dispatches it through the SAME factory entry (`dispatch_wire_retained_with_spec`) and drives it through its own
+   steps on the calling turn (`drive_agent_lane_preview`: a caller-driven `BatchJobSession`, each step bounded by the
+   job's contract, the run by a 2 s wall budget, a 65 536-turn budget and a keyed cancellation lease) to the completion
+   it would publish — publishing nothing. A download completion and the existing uncarried lanes are refused
+   `interactive-job.agent-lane-uncarried`; an exhausted budget `interactive-job.preview-budget`; a job fault answers
+   what the shell's fault page carries, a retained reducer refusal its own code (`reducer_fault_of_detail`). The preview
+   answers `jobSteps` beside its op counts. Removed as dead: `ArtifactRetainedCommandJob::preview_emit`,
+   `ToolPayload::into_inner`, `require_proof_operation_authority`, the `preview-unsupported` fault.
+   Laws: the language-agnostic fixture `🔌️plugin/🧫️fixtures/🤖️agent-lane-preview-verdicts.json` (9 cases) read by the
+   Rust law `app::agent_lane_preview_tests` (scripted job through the real driver) and its AJV twin
+   `🔌️plugin/🧪️tests/🤖️agent-lane-preview/🟦️.ts` (run by the SDK `test` script); reducer-detail round trip;
+   `artifact_app_laws::probe_agent_lane` (the declared-verb probe over named verbs, no perturbation) and one law per
+   surface — puzzle 2d/3d/5d and writer — over the verbs the semio MCP coverage battery tries.
+2. Trinity `patchNodes` targets. `nodeIds` is declared `ActionArgDef::entity_ids(.., "ast"|"graph", "node")` (an
+   array of `entityId`s of the interaction granularity whose selection the verb otherwise reads); the definition build
+   refuses an entity kind no declared interaction granularity answers; an empty target list is refused
+   `app.command.targets-required` (was `app.command.invalid-args`), which reaches the agent by name through the
+   preview. The rail keeps its text control: empty still means the selection. Laws: builder entity-kind law, jack
+   agent-lane law (named → the preview renames as the shell does; unnamed → refused by name), updated refusal laws.

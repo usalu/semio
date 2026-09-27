@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::examples::tower_stack;
-use crate::inferences::solve_with_job;
+use crate::inferences::solve_with_clock;
 use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
 use semio_framework_plugin::{LocalizedLabel, ToolRunJobPort};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
@@ -89,7 +89,7 @@ fn the_language_agnostic_partial_vector_decodes_to_the_normative_shape() {
 #[test]
 fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
     let snapshot = Arc::new(tower_stack::snapshot());
-    let oracle = solve_with_job(&snapshot).expect("tower-stack solves");
+    let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("tower-stack solves");
     let finished = oracle.assignments.len();
     assert!(finished > 2, "the fixture must leave room to collapse");
     let expected = payload_from_commit(&snapshot, &oracle);
@@ -157,7 +157,7 @@ fn aborting_mid_run_cancels_and_never_writes_set_solve() {
 #[test]
 fn the_final_payload_matches_solve_with_job_for_tower_stack() {
     let snapshot = Arc::new(tower_stack::snapshot());
-    let oracle = solve_with_job(&snapshot).expect("tower-stack solves");
+    let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("tower-stack solves");
     let expected = payload_from_commit(&snapshot, &oracle);
     let mut job = Wfc3dFillRunJob::new(identity(), snapshot, ToolRunJobPort::default());
     let operation = semio_framework_job::allocate_operation_id();

@@ -1,6 +1,8 @@
 /** 🧬️ Mp4Mutation — named-variant vocabulary. Mirrors 🦀️.rs field-for-field. */
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type Mp4Mutation =
   | { mutation: "setSnapshot"; snapshot: import("../📸️snapshot/🟦️").Mp4Snapshot }
+  | { mutation: "patchSnapshot"; patch: SnapshotPatch }
   | { mutation: "setFtyp"; ftyp: import("../📸️snapshot/🟦️").Mp4Ftyp }
   | { mutation: "insertTrack"; index: number; track: import("../📸️snapshot/🟦️").Mp4Track }
   | { mutation: "removeTrack"; index: number }

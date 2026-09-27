@@ -337,6 +337,7 @@ fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_
     let (x, y, width, height) = ui.windows.get(window_id).and_then(|window| window.presented_tree.mounted_layout(presented)).expect("presented stepper bounds");
     ui.dispatch_pointer_event(window_id, 1, UiEvent::PointerDown { x: x + width - height * 0.5, y: y + height * 0.5, button: PointerButton::Primary, modifiers: Default::default() });
     let tooltip_deadline = clock_origin + f64::from(TOOLTIP_DWELL_SECONDS);
+    let caret_deadline = clock_origin + crate::wgpu::events::CARET_BLINK_SECONDS;
     let first_deadline = clock_origin + (hold["delayMs"].as_f64().unwrap() + hold["intervalMs"].as_f64().unwrap()) / 1000.0;
     assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, Some(tooltip_deadline))));
     let accepted = vec![(window_id.to_string(), surface)];
@@ -345,33 +346,41 @@ fn window_clock_keeps_a_noop_candidate_sealed_and_invalidates_it_once_when_hold_
     let revealed = ui.advance_window_clock(window_id, tooltip_deadline).expect("tooltip clock step");
     assert!(revealed.interaction_changed);
     assert_eq!(revealed.tooltip, TooltipStep::Reveal(presented));
-    assert_eq!(revealed.next_deadline, Some(first_deadline));
+    assert_eq!(revealed.next_deadline, Some(caret_deadline));
 
     drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
     assert!(ui.seal_presented_input_candidate(71, &[window_id.to_string()]));
-    let noop = ui.advance_window_clock(window_id, tooltip_deadline + (first_deadline - tooltip_deadline) * 0.5).expect("clock step");
-    assert_eq!((noop.surface, noop.interaction_changed, noop.tooltip, noop.next_deadline), (surface, false, TooltipStep::Idle, Some(first_deadline)));
+    let noop = ui.advance_window_clock(window_id, tooltip_deadline + (caret_deadline - tooltip_deadline) * 0.5).expect("clock step");
+    assert_eq!((noop.surface, noop.interaction_changed, noop.tooltip, noop.next_deadline), (surface, false, TooltipStep::Idle, Some(caret_deadline)));
     assert!(ui.candidate_is_sealed_for(window_id, 71), "pure elapsed time does not starve an already sealed candidate");
+
+    let blink = ui.advance_window_clock(window_id, caret_deadline).expect("caret step");
+    assert!(blink.interaction_changed);
+    assert_eq!((blink.tooltip, blink.caret.is_some(), blink.next_deadline), (TooltipStep::Idle, true, Some(first_deadline)));
+    assert!(!ui.candidate_is_sealed_for(window_id, 71), "the due accepted caret invalidates the stale candidate once");
+    assert!(ui.discard_presented_input_candidate(71));
+    drive_scene_lifetime_reconcile(&mut ui, window_id, generation);
+    assert!(ui.seal_presented_input_candidate(72, &[window_id.to_string()]));
 
     let repeated = ui.advance_window_clock(window_id, first_deadline).expect("repeat step");
     assert!(repeated.interaction_changed);
     assert_eq!(repeated.tooltip, TooltipStep::Idle);
-    assert!(!ui.candidate_is_sealed_for(window_id, 71), "the due repeat changes presented state and invalidates the stale candidate exactly once");
+    assert!(!ui.candidate_is_sealed_for(window_id, 72), "the due repeat changes presented state and invalidates the stale candidate exactly once");
     let live_text = ui.windows.get(window_id).and_then(|window| window.presented_tree.node(presented)).and_then(|node| node.state.edit.as_ref()).map(|edit| edit.text.as_str());
     let expected = hold["atFirstInterval"].as_i64().unwrap().to_string();
     assert_eq!(live_text, Some(expected.as_str()));
 
-    assert!(ui.discard_presented_input_candidate(71));
-    assert!(ui.seal_presented_input_candidate(72, &[]));
+    assert!(ui.discard_presented_input_candidate(72));
+    assert!(ui.seal_presented_input_candidate(73, &[]));
     assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, Some(first_deadline + hold["intervalMs"].as_f64().unwrap() / 1000.0))), "sealing an unaccepted hidden roster cannot mutate the still-visible accepted interaction");
     assert_eq!(ui.surfaces_next_clock_deadline(&accepted), Some(first_deadline + hold["intervalMs"].as_f64().unwrap() / 1000.0));
-    assert!(ui.discard_presented_input_candidate(72));
+    assert!(ui.discard_presented_input_candidate(73));
     assert!(ui.window_next_clock_deadline(window_id).is_some_and(|(_, deadline)| deadline.is_some()), "discarding the hidden candidate preserves the accepted hold");
     assert!(ui.surfaces_next_clock_deadline(&accepted).is_some(), "discard preserves the accepted roster deadline");
     let window = ui.windows.get_mut(window_id).expect("clock window");
     window.presented_tooltip = Some(PresentedTooltip { surface, document_id: UiNodeId(2), label: "Increase".into(), accessibility_generation: window.presented_accessibility_generation, interaction_epoch: window.presented_interaction_epoch });
-    assert!(ui.seal_presented_input_candidate(73, &[]));
-    assert!(ui.acknowledge_presented_input(73), "accepting an empty visibility roster retires hidden clock owners");
+    assert!(ui.seal_presented_input_candidate(74, &[]));
+    assert!(ui.acknowledge_presented_input(74), "accepting an empty visibility roster retires hidden clock owners");
     assert_eq!(ui.window_next_clock_deadline(window_id), Some((surface, None)));
     assert_eq!(ui.surfaces_next_clock_deadline(&accepted), None);
     assert!(ui.windows.get(window_id).expect("hidden clock window").presented_tooltip.is_none(), "hidden acceptance clears the presented tooltip with its clock state");
@@ -2619,8 +2628,12 @@ fn render_widget_slider_registers_meta_and_live_value_unless_disabled() {
     let mut h = WidgetHarness::new();
     let enabled = WidgetNode::Slider { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, ready: None, disabled: false, on_change: Some(action()) };
     render_widget(&enabled, VIEWPORT, &mut h.ctx());
-    assert!(h.maps.slider_metas.contains_key("sl"));
+    let presentation = crate::wgpu::layout::slider_control_presentation(VIEWPORT, 0.5, 0.0, 1.0, None, Theme::default().gap_standard, ui_contract::FlowInline::Ltr).slider;
+    let meta = h.maps.slider_metas.get("sl").expect("enabled slider meta");
+    assert_eq!((meta.bounds_x, meta.bounds_w), (presentation.track_cell.x, presentation.track_cell.w));
     assert!(h.maps.slider_live_values.contains_key("sl"));
+    let hit = h.input.staged_hits().iter().find(|hit| hit.kind == HitKind::Slider).expect("enabled slider hit");
+    assert_eq!(hit.rect, presentation.track_cell, "immediate pointer authority excludes the inert readout cell");
 
     let mut h2 = WidgetHarness::new();
     let disabled = WidgetNode::Slider { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, ready: None, disabled: true, on_change: Some(action()) };

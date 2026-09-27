@@ -57,8 +57,21 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
     let case = edits.get(&definition.id).or_else(|| edits.get(family)).unwrap_or_else(|| panic!("{} needs a meaningful edit fixture", definition.id));
     let base = E::initial_snapshot();
     let before = snapshot_json(&base);
+    for row in fixture["rejectedActions"].as_array().unwrap() {
+        let arguments: DslValue = pack::json::from_json_str(&row["arguments"].to_string()).unwrap();
+        let command = E::command_from_action(row["id"].as_str().unwrap(), Some(&arguments)).expect("invalid detail is still a well-formed command");
+        assert!(artifact_app_laws::reduce_editor_command::<E>(&command, &base).is_err(), "{} direct command must protect schema identity", definition.id);
+        assert_eq!(snapshot_json(&base), before, "{} refused direct command preserves its snapshot", definition.id);
+    }
     let mut after = before.clone();
     let path = case["path"].as_str().unwrap();
+    let unchanged_arguments = serde_json::json!({ "path": path, "value": before.pointer(path).expect("no-op fixture path") });
+    let unchanged_arguments: DslValue = pack::json::from_json_str(&unchanged_arguments.to_string()).unwrap();
+    let unchanged_command = E::command_from_action("setSnapshotValue", Some(&unchanged_arguments)).unwrap();
+    let unchanged_event = E::snapshot_edit_event(&unchanged_command).unwrap();
+    assert!(E::snapshot_edit_is_admitted(unchanged_event, &base), "{} must admit unchanged field values", definition.id);
+    let unchanged = artifact_app_laws::reduce_editor_command::<E>(&unchanged_command, &base).expect("unchanged field is a successful no-op");
+    assert!(unchanged.artifact_mutations.is_empty(), "{} unchanged field must not create a history event", definition.id);
     *after.pointer_mut(path).unwrap_or_else(|| panic!("{} has no editable fixture path {path}", definition.id)) = case["value"].clone();
     assert_ne!(before, after, "{} fixture must change a real detail", definition.id);
     let arguments = serde_json::json!({ "path": path, "value": case["value"] });
@@ -66,7 +79,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
     let command = E::command_from_action("setSnapshotValue", Some(&arguments)).expect("typed detail command");
     let event = E::snapshot_edit_event(&command).expect("detail event is routed");
     assert!(E::snapshot_edit_is_admitted(event, &base), "{} initial document must admit a detail edit", definition.id);
-    let emit = E::snapshot_edit_emit(event, &base).expect("detail reducer accepts valid fixture");
+    let emit = artifact_app_laws::reduce_editor_command::<E>(&command, &base).expect("direct detail reducer accepts valid fixture");
     assert!(!emit.artifact_mutations.is_empty(), "{} must publish an artifact event", definition.id);
     let mut projected = base.clone();
     let mut inverses = Vec::new();
@@ -156,7 +169,6 @@ fn assembled_plugin_exposes_every_editable_artifact() {
             assert!(app.actions.iter().any(|action| action.id == *id), "{} does not expose {id}", app.id);
         }
     }
-    println!("[DEBUG] stdio plugin assembles all {} editable artifact subsets", fixture["editorCount"]);
 }
 
 macro_rules! editor_catalog_laws {

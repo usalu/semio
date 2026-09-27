@@ -10119,9 +10119,8 @@ thread_local! {
     static HOST_APPEARANCE: std::cell::Cell<HostAppearance> = const { std::cell::Cell::new(HostAppearance { preference: HostAppearancePreference::Unset, system_dark: false }) };
 }
 
-/// 🌓️ Publishes the host's appearance inputs. Every door calls it before the mount that opens the
-/// session and again whenever either input changes; the next frame's `ThemeResolve` phase re-reads
-/// it, so nothing has to be invalidated by hand.
+/// 🌓️ Publishes the host's appearance inputs. This value store owns no scheduler: each live host
+/// requests a frame after a change, and the next frame's `ThemeResolve` phase re-reads it.
 pub fn set_host_appearance(appearance: HostAppearance) {
     HOST_APPEARANCE.with(|cell| cell.set(appearance));
 }
@@ -15667,6 +15666,12 @@ enum AppPresentInputWait {
     SceneIntent,
 }
 
+impl AppPresentInputWait {
+    fn awaiting_runtime(self, phase: AppPresentPhase) -> bool {
+        matches!(phase, AppPresentPhase::Render | AppPresentPhase::Acknowledge) && matches!(self, Self::InteractionCheckout { .. })
+    }
+}
+
 type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, u32)>, (u32, u32, usize), usize, AppPresentInputWait, u64);
 
 /// 🐕️ Consecutive non-advancing `Pending` answers after which a pending presentation is aborted
@@ -15680,6 +15685,11 @@ const APP_PRESENT_STALL_STEPS: u32 = 4_096;
 /// step a signature has repeated [`APP_PRESENT_STALL_STEPS`] times, `None` on every other step, and a
 /// reset the moment any term of the signature moves.
 fn note_present_stall_signature(watch: &mut AppPresentStallWatch, signature: AppPresentProgress) -> Option<String> {
+    if signature.6.awaiting_runtime(signature.0) {
+        watch.signature = None;
+        watch.steps = 0;
+        return None;
+    }
     if watch.signature != Some(signature) {
         watch.signature = Some(signature);
         watch.steps = 0;
@@ -15790,6 +15800,7 @@ pub(crate) enum AppPresentStep {
     Complete {
         generation: semio_framework_trace::Generation,
         cursor: SemioCursor,
+        theme_dark: bool,
         fullscreen: Option<bool>,
         cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
         retained_control_deadline: Option<f64>,
@@ -16044,6 +16055,10 @@ impl AppPresenter {
 
     pub(crate) fn has_pending_presentation(&self) -> bool {
         self.pending.is_some() || self.retirement.is_some() || self.retained_fault.is_some() || self.gate.has_pending_acknowledgement()
+    }
+
+    pub(crate) fn awaiting_runtime(&self) -> bool {
+        self.pending.as_ref().is_some_and(|cursor| cursor.input_wait.awaiting_runtime(cursor.phase))
     }
 
     pub(crate) fn holds_presented_input_publication(&self) -> bool {
@@ -16712,6 +16727,7 @@ impl AppPresenter {
                 let fullscreen = self.window.is_none().then_some(cursor.frame.fullscreen).flatten();
                 let Some(mut completed) = self.pending.take() else { return Err("completed presentation cursor was missing".to_string()) };
                 let accepted_cursor = completed.frame.cursor;
+                let accepted_theme_dark = completed.frame.theme_dark;
                 let accepted_generation = completed.frame.generation;
                 let cursor_wake = completed.frame.cursor_wake.take();
                 let retained_control_deadline = completed.retained_control_deadline;
@@ -16724,7 +16740,7 @@ impl AppPresenter {
                     return Err("completed presentation retirement capacity exhausted".to_string());
                 }
                 retirement.completed_frame = Some(completed.frame);
-                Ok(AppPresentStep::Complete { generation: accepted_generation, cursor: accepted_cursor, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives })
+                Ok(AppPresentStep::Complete { generation: accepted_generation, cursor: accepted_cursor, theme_dark: accepted_theme_dark, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives })
             }
         }
     }
@@ -17382,6 +17398,22 @@ impl AppRuntime {
                         pointer_drag_kind: self.input.drag.kind,
                     },
                 );
+                let connection_cursor = matches!(base_cursor, SemioCursor::Default)
+                    && self
+                        .shell
+                        .scene_pointer_target_at(self.last_pointer_x, self.last_pointer_y, &self.input, &self.theme)
+                        .filter(|target| target.kind == ui_wgpu::wgpu::SurfaceKind::NodeGraph)
+                        .and_then(|target| {
+                            self.shell.node_graph_states.get(&target.host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                                engine_canvas::node_graph_connection_cursor_active(
+                                    &target.host_id,
+                                    f64::from(self.last_pointer_x - surface.bounds.x),
+                                    f64::from(self.last_pointer_y - surface.bounds.y),
+                                )
+                            })
+                        })
+                        .unwrap_or(false);
+                let base_cursor = if connection_cursor { SemioCursor::CrosshairCentered } else { base_cursor };
                 cursor.cursor = match self.shell.utility_cursor_override(self.last_pointer_x, self.last_pointer_y) {
                     Some(utility_cursor) if matches!(base_cursor, SemioCursor::Default | SemioCursor::Grab | SemioCursor::Selectable | SemioCursor::Pointer) => utility_cursor,
                     _ => base_cursor,

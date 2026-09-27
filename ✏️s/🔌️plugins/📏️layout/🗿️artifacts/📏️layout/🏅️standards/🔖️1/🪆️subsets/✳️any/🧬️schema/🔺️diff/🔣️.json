@@ -1193,10 +1193,13 @@
         "y",
         "width",
         "height",
+        "rotation",
         "fill",
         "stroke",
         "wrap_mode",
-        "columns"
+        "columns",
+        "locked",
+        "visible"
       ],
       "properties": {
         "x": {
@@ -1230,6 +1233,16 @@
           ]
         },
         "height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotation": {
           "anyOf": [
             {
               "type": "number"
@@ -1284,6 +1297,26 @@
             {
               "type": "integer",
               "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "locked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "visible": {
+          "anyOf": [
+            {
+              "type": "boolean"
             },
             {
               "type": "null"

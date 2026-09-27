@@ -361,16 +361,6 @@ if (import.meta.vitest) {
 }
 //#endregion 🌐️BackboneEnvelopeIo
 
-/** @deprecated Use {@link decodeDocumentPackSnapshot}. */
-export function documentFromEnvelopeJson(_envelopeJson: string): unknown {
-  throw new Error("documentFromEnvelopeJson removed — use decodeDocumentPackSnapshot on binary bundle bytes");
-}
-
-/** @deprecated Use {@link encodeDocumentPackBundle}. */
-export function wrapArtifactEnvelope(_document: unknown, _documentId: string, _uri: string): string {
-  throw new Error("wrapArtifactEnvelope removed — use encodeDocumentPackBundle");
-}
-
 //#region 🔀️BackboneMessage
 export type BinaryBackboneMessage =
   | { readonly kind: "genesis"; readonly pack: Uint8Array }
@@ -4101,7 +4091,6 @@ export class AppChannelClient {
       throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): missing admission Done frame for seq ${operation}`);
     }
     let cancellationSent = false;
-    let debugArchivePoll = 0;
     for (;;) {
       if (signal?.aborted && !cancellationSent) {
         const cancelSequence = this.nextSeq();
@@ -4120,7 +4109,6 @@ export class AppChannelClient {
       );
       if (!frame) throw new Error(`AppChannelClient.loadDocumentArchive(${this.appId}): missing operation status for ${operation}`);
       const status = frame.DocumentArchiveLoad.status;
-      if (debugArchivePoll++ % 100 === 0) console.debug("[DEBUG] document archive restore", this.appId, status);
       progress?.(status);
       if (status.state === "pending" || status.state === "running") {
         await Promise.resolve();
@@ -4568,6 +4556,34 @@ if (import.meta.vitest) {
   await registerDocumentEchoSuppressionTests(import.meta.vitest, { admitRemoteEnvelopes, noteAuthoredEnvelopeIds });
 }
 //#endregion 🔁️DocumentEchoSuppression
+
+//#region ⏳️TransientApplyRefusal
+/** ⏳️ The `code` of the one `MutationMessage` a hub answers in `ApplyOutcome::Rejected.messages` when it refused a document batch for a
+ * TRANSIENT reason (the db could not admit it now, the sender's command rate is paced out): nothing was applied, so the client keeps the
+ * batch and resends it — the TS twin of the hub's `HUB_TRANSIENT_APPLY_REFUSAL_CODE` (`🌎️hub/🚧️refusal`).
+ * @see ../../../🌎️hub/🚧️refusal/🧬️schema/🔣️.json */
+export const HUB_TRANSIENT_APPLY_REFUSAL_CODE = "hub.unavailable";
+
+/** ⏳️ Whether a refusal's `messages` are exactly the hub's transient refusal (`HubTransientApplyRefusalMessageV1`): one message, level
+ * `warning`, the declared code, a non-empty reason and no other field. Every other refusal is permanent: the batch is rolled back. */
+export function hubTransientApplyRefusalV1(messages: ArrayLike<number>): boolean {
+  if (messages.length === 0) return false;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(new TextDecoder().decode(Uint8Array.from(messages)));
+  } catch {
+    return false;
+  }
+  if (!Array.isArray(parsed) || parsed.length !== 1 || typeof parsed[0] !== "object" || parsed[0] === null) return false;
+  const message = parsed[0] as Record<string, unknown>;
+  return Object.keys(message).sort().join(",") === "code,level,message" && message.level === "warning" && message.code === HUB_TRANSIENT_APPLY_REFUSAL_CODE && typeof message.message === "string" && message.message.length > 0;
+}
+
+if (import.meta.vitest) {
+  const { registerTransientApplyRefusalTests } = await import("./🧪️tests/⏳️transient-apply-refusal/🟦️.ts");
+  await registerTransientApplyRefusalTests(import.meta.vitest, { HUB_TRANSIENT_APPLY_REFUSAL_CODE, hubTransientApplyRefusalV1 });
+}
+//#endregion ⏳️TransientApplyRefusal
 
 //#region 🔑️DirectoryAccessChanged
 if (import.meta.vitest) {

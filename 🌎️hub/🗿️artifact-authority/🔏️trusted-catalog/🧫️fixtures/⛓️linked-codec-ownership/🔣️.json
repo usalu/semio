@@ -1,0 +1,26 @@
+{
+  "schema": "semio.hub.linked-codec-ownership/v1",
+  "cases": [
+    {
+      "id": "definition-only-kinds-are-unowned",
+      "declared": [["s.stdio.csv", "stdio.csv"], ["s.stdio.txt", "stdio.txt"], ["s.stdio.html", "stdio.html"]],
+      "linked": [{ "artifactKind": "s.stdio.csv", "artifactSchema": "stdio.csv", "packSchemaHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }],
+      "unowned": ["s.stdio.html", "s.stdio.txt"]
+    },
+    {
+      "id": "every-declared-kind-linked",
+      "declared": [["s.gis.gismap", "gis.map"], ["s.gis.gisterrain", "gis.terrain"]],
+      "linked": [
+        { "artifactKind": "s.gis.gismap", "artifactSchema": "gis.map", "packSchemaHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+        { "artifactKind": "s.gis.gisterrain", "artifactSchema": "gis.terrain", "packSchemaHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+      ],
+      "unowned": []
+    },
+    {
+      "id": "schema-conflict-refuses",
+      "declared": [["s.stdio.csv", "stdio.tsv"]],
+      "linked": [{ "artifactKind": "s.stdio.csv", "artifactSchema": "stdio.csv", "packSchemaHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }],
+      "refusal": "linked codec s.stdio.csv carries schema stdio.csv, its descriptor declares stdio.tsv"
+    }
+  ]
+}

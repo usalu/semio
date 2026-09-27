@@ -22,7 +22,7 @@ use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
 use ui_wgpu::wgpu::Rect;
 use ui_wgpu::wgpu::Rgba;
 use ui_wgpu::wgpu::UiPresence;
-use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, foreground_on_fill, push_icon, render_widget, HitKind, HitTarget, Theme, UiDriverDrag, WidgetNode};
+use ui_wgpu::wgpu::{draw_text, draw_text_face, draw_text_weighted, draw_text_wrapped, foreground_on_fill, push_icon, render_widget, HitKind, HitTarget, TextFace, Theme, UiDriverDrag, WidgetNode};
 use ui_wgpu::wgpu::{ActionDescriptor, PreparedRasterProducer, PreparedRasterRejected, PreparedRasterReservation, SurfaceKind, UiComponentSceneNode};
 
 //#region SceneRuntime
@@ -504,6 +504,24 @@ pub(crate) struct BlockListAccessibilityControl {
     pub(crate) action: ActionDescriptor,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct EventFeedAccessibilityControl {
+    pub(crate) key: String,
+    pub(crate) entry_id: String,
+    pub(crate) label: String,
+    pub(crate) rect: Rect,
+    pub(crate) action: Option<ActionDescriptor>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct GraphTimelineAccessibilityControl {
+    pub(crate) key: String,
+    pub(crate) checkpoint_id: String,
+    pub(crate) label: String,
+    pub(crate) rect: Rect,
+    pub(crate) action: ActionDescriptor,
+}
+
 #[derive(Clone, Debug)]
 struct SceneAccessibilityPresentation<T> {
     candidate: Option<Vec<T>>,
@@ -585,8 +603,11 @@ struct SceneSurfaceState {
     host_temporal: HostTemporalPresentation,
     table_accessibility: SceneAccessibilityPresentation<TableStepperAccessibilityCell>,
     table_editable_accessibility: SceneAccessibilityPresentation<TableEditableTextAccessibilityCell>,
+    table_button_accessibility: SceneAccessibilityPresentation<TableButtonAccessibilityCell>,
     vfs_accessibility: SceneAccessibilityPresentation<VfsAccessibilityControl>,
     block_list_accessibility: SceneAccessibilityPresentation<BlockListAccessibilityControl>,
+    event_feed_accessibility: SceneAccessibilityPresentation<EventFeedAccessibilityControl>,
+    graph_timeline_accessibility: SceneAccessibilityPresentation<GraphTimelineAccessibilityControl>,
     //#region GenericPointerDispatch
     last_pointer_pos: (f32, f32),
     //#endregion GenericPointerDispatch
@@ -1951,7 +1972,7 @@ thread_local! {
 #[cfg(not(target_arch = "wasm32"))]
 static SCENE_INPUT_THEME: WorkerCell<Option<Theme>> = WorkerCell::new();
 
-fn remember_scene_theme(theme: &Theme) {
+pub(crate) fn remember_scene_theme(theme: &Theme) {
     SCENE_INPUT_THEME.with(|cell| {
         *cell.borrow_mut() = Some(*theme);
     });
@@ -2064,7 +2085,8 @@ impl CanvasPointerWire {
         self
     }
 
-    fn sampled(mut self) -> Self {
+    fn sampled(mut self,modifiers: SceneModifiers) -> Self {
+        self.modifiers = modifiers;
         self.sampled = true;
         self
     }
@@ -2329,6 +2351,7 @@ pub fn canvas_pointer_move_into(
     document_generation: u64,
     x: f32,
     y: f32,
+    modifiers: SceneModifiers,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     cancel_stale_canvas_authority(window_id, &scene.host_id, document_generation, input)?;
@@ -2344,7 +2367,7 @@ pub fn canvas_pointer_move_into(
     let (drag_dx, drag_dy) = active.as_ref().map(|active| (x - active.last_x, y - active.last_y)).unwrap_or((0.0, 0.0));
     let pan = active.as_ref().is_some_and(|active| active.kind == CanvasGestureKind::Pan);
     let action = down && !pan;
-    let wire = CanvasPointerWire::new(inner, &viewport, x, y).sampled();
+    let wire = CanvasPointerWire::new(inner, &viewport, x, y).sampled(modifiers);
     let mut batch = action
         .then(|| {
             let bytes = canvas_pointer_action_bytes(scene, "canvasPointerMove")?;
@@ -3035,8 +3058,8 @@ fn scene_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, th
     match scene.component_kind {
         SurfaceKind::Table => table_hit(scene, bounds, x, y, theme, modifiers, driver_drag),
         SurfaceKind::VirtualFileSystem => vfs_hit(scene, bounds, x, y, theme, activate, modifiers),
-        SurfaceKind::GraphTimeline => graph_timeline_hit(scene, bounds, y, theme),
-        SurfaceKind::EventFeed => event_feed_hit(scene, bounds, y, theme),
+        SurfaceKind::GraphTimeline => graph_timeline_hit(scene, bounds, x, y, theme),
+        SurfaceKind::EventFeed => event_feed_hit(scene, bounds, x, y, theme),
         SurfaceKind::BlockList => block_list_hit(scene, bounds, x, y, theme, driver_drag),
         _ => None,
     }
@@ -3103,7 +3126,7 @@ pub fn scene_context_menu_target(scene: &UiComponentSceneNode, bounds: Rect, x: 
     match scene.component_kind {
         SurfaceKind::Table => table_context_menu_target(scene, bounds, y, &theme),
         SurfaceKind::VirtualFileSystem => vfs_context_menu_target(scene, bounds, y, &theme),
-        SurfaceKind::EventFeed => event_feed_context_menu_target(scene, bounds, y, &theme),
+        SurfaceKind::EventFeed => event_feed_context_menu_target(scene, bounds, x, y, &theme),
         SurfaceKind::InkCanvas => ink_canvas_context_menu_target(scene, bounds, x, y),
         SurfaceKind::Paint2d => {
             let selection_json = scene.paint_2d.as_ref().map(|paint| paint.selection_json.clone()).unwrap_or_else(|| "[]".into());
@@ -3182,19 +3205,22 @@ fn vfs_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, y: f32, th
 
 /// 📜️ `{domain:"entry"}` for the log row under `y`, no selection — an `EventFeedScene` tracks none
 /// (`📡️EventFeedHost/🟦️.tsx:89`).
-fn event_feed_context_menu_target(scene: &UiComponentSceneNode, inner: Rect, y: f32, theme: &Theme) -> SceneContextMenuTarget {
+fn event_feed_context_menu_target(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> SceneContextMenuTarget {
     let Some(feed) = scene.event_feed.as_ref() else {
         return SceneContextMenuTarget::default();
     };
     let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).unwrap_or_default();
-    let row_h = theme.control_height;
-    let mut top = inner.y - scroll_offset(&scene.host_id, "feed");
+    let layout = event_feed_layout(bounds, theme);
+    if !layout.inner.contains(x, y) {
+        return SceneContextMenuTarget::default();
+    }
+    let mut top = layout.inner.y - scroll_offset(&scene.host_id, "feed");
     for entry in &entries {
-        let entry_h = event_feed_row_height(entry, row_h, theme);
-        if y >= top && y < top + entry_h {
+        let entry_h = event_feed_row_height(entry, &layout);
+        if Rect::new(layout.inner.x, top, layout.inner.w, entry_h).contains(x, y) {
             return SceneContextMenuTarget { hits: vec![ui_wgpu::wgpu::ContextMenuHit { domain: "entry".into(), id: entry.id.clone(), label: None }], selection: Vec::new(), text: None };
         }
-        top += entry_h;
+        top += entry_h + layout.card_gap;
     }
     SceneContextMenuTarget::default()
 }
@@ -3884,6 +3910,31 @@ fn table_row_buttons(buttons: &[TableCellButtonPayload]) -> Vec<&TableCellButton
     buttons.iter().filter(|button| button.placement.as_deref().unwrap_or("row") == "row").collect()
 }
 
+/// 📐️ One logical segment shared by Table paint, pointer routing and accessibility.
+fn table_segment_rect(rect: Rect, index: usize, count: usize) -> Option<Rect> {
+    if count == 0 || index >= count || rect.w <= 0.0 || rect.h <= 0.0 || !rect.x.is_finite() || !rect.y.is_finite() || !rect.w.is_finite() || !rect.h.is_finite() {
+        return None;
+    }
+    let width = rect.w / count as f32;
+    (width.is_finite() && width > 0.0).then(|| Rect::new(rect.x + index as f32 * width, rect.y, width, rect.h))
+}
+
+/// 🎯️ The segment whose half-open horizontal interval owns one pointer coordinate.
+fn table_segment_index_at_x(rect: Rect, x: f32, count: usize) -> Option<usize> {
+    (0..count).find(|index| table_segment_rect(rect, *index, count).is_some_and(|segment| x >= segment.x && x < segment.x + segment.w))
+}
+
+/// ✂️ The visible intersection accessibility may announce inside the Table body.
+fn table_visible_rect(rect: Rect, clip: Rect) -> Option<Rect> {
+    let x = rect.x.max(clip.x);
+    let y = rect.y.max(clip.y);
+    let right = (rect.x + rect.w).min(clip.x + clip.w);
+    let bottom = (rect.y + rect.h).min(clip.y + clip.h);
+    let width = right - x;
+    let height = bottom - y;
+    (width.is_finite() && height.is_finite() && width > 0.0 && height > 0.0).then(|| Rect::new(x, y, width, height))
+}
+
 /// 🧾️ Renders a table cell's interactive controls (stepper/buttons) directly, or returns the plain
 /// text to draw for text/number/legacy-string cells.
 fn render_table_cell(cell: &Value, id: &str, rect: Rect, ctx: &mut FrameworkWidgetContext<'_>) -> Option<String> {
@@ -3901,10 +3952,9 @@ fn render_table_cell(cell: &Value, id: &str, rect: Rect, ctx: &mut FrameworkWidg
             None
         }
         TableCellPayload::Stepper { value, min, max, step, action } => {
-            let seg = rect.w / 3.0;
-            let minus = Rect::new(rect.x, rect.y, seg, rect.h);
-            let center = Rect::new(rect.x + seg, rect.y, seg, rect.h);
-            let plus = Rect::new(rect.x + seg * 2.0, rect.y, seg, rect.h);
+            let Some(minus) = table_segment_rect(rect, 0, 3) else { return None };
+            let Some(center) = table_segment_rect(rect, 1, 3) else { return None };
+            let Some(plus) = table_segment_rect(rect, 2, 3) else { return None };
             render_widget(&WidgetNode::Button { id: None, icon_id: None, label: "−".into(), event: (value > min).then(|| merge_action_args(&action, json!({ "delta": -step }))) }, minus, ctx);
             render_widget(&WidgetNode::Text { value: format!("{value:.0}"), emphasize: false }, center, ctx);
             render_widget(&WidgetNode::Button { id: None, icon_id: None, label: "+".into(), event: (value < max).then(|| merge_action_args(&action, json!({ "delta": step }))) }, plus, ctx);
@@ -3915,9 +3965,8 @@ fn render_table_cell(cell: &Value, id: &str, rect: Rect, ctx: &mut FrameworkWidg
             if row_buttons.is_empty() {
                 return None;
             }
-            let seg = rect.w / row_buttons.len() as f32;
             for (index, button) in row_buttons.iter().enumerate() {
-                let button_rect = Rect::new(rect.x + index as f32 * seg, rect.y, seg, rect.h);
+                let Some(button_rect) = table_segment_rect(rect, index, row_buttons.len()) else { continue };
                 render_widget(&WidgetNode::Button { id: None, icon_id: IconName::from_str(&button.icon_id), label: button.label.clone().unwrap_or_default(), event: Some(button.action.clone()) }, button_rect, ctx);
             }
             None
@@ -4012,11 +4061,9 @@ fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<Action
     let payload = serde_json::from_value::<TableCellPayload>(cell.clone()).ok()?;
     match payload {
         TableCellPayload::Stepper { value, min, max, step, action } => {
-            let seg = (cell_rect.w / 3.0).max(1.0);
-            let slot = ((x - cell_rect.x) / seg).floor();
-            Some(match slot as i64 {
-                0 if value > min => Some(merge_action_args(&action, json!({ "delta": -step }))),
-                2 if value < max => Some(merge_action_args(&action, json!({ "delta": step }))),
+            Some(match table_segment_index_at_x(cell_rect, x, 3) {
+                Some(0) if value > min => Some(merge_action_args(&action, json!({ "delta": -step }))),
+                Some(2) if value < max => Some(merge_action_args(&action, json!({ "delta": step }))),
                 _ => None,
             })
         }
@@ -4025,9 +4072,7 @@ fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<Action
             if row_buttons.is_empty() {
                 return None;
             }
-            let seg = (cell_rect.w / row_buttons.len() as f32).max(1.0);
-            let index = ((x - cell_rect.x) / seg).floor();
-            Some(usize::try_from(index as i64).ok().and_then(|index| row_buttons.get(index)).map(|button| button.action.clone()))
+            Some(table_segment_index_at_x(cell_rect, x, row_buttons.len()).and_then(|index| row_buttons.get(index)).map(|button| button.action.clone()))
         }
         TableCellPayload::EditableText { .. } => Some(None),
         TableCellPayload::Text { .. } | TableCellPayload::Number { .. } => None,
@@ -4058,6 +4103,7 @@ pub(crate) enum TableEditableTextCommitOutcome {
     Unchanged,
     Committed,
     Publishing,
+    AwaitingEcho,
     Conflict,
 }
 
@@ -4078,6 +4124,17 @@ pub(crate) struct TableEditableTextAccessibilityCell {
     pub(crate) label: String,
     pub(crate) target: TableEditableTextFocusTarget,
     pub(crate) rect: Rect,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct TableButtonAccessibilityCell {
+    pub(crate) key: String,
+    pub(crate) label: String,
+    pub(crate) row_id: String,
+    pub(crate) column_id: String,
+    pub(crate) button_index: usize,
+    pub(crate) rect: Rect,
+    pub(crate) action: ActionDescriptor,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -4146,6 +4203,7 @@ pub(crate) fn table_editable_text_commit_owned(
     column_id: &str,
     base: &str,
     draft: String,
+    awaiting_echo: Option<&str>,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Option<Result<TableEditableTextCommitOutcome, ui_wgpu::wgpu::BoundedActionFault>> {
     let table = scene.table.as_ref()?;
@@ -4156,6 +4214,18 @@ pub(crate) fn table_editable_text_commit_owned(
     let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
     let (_, row) = rows.iter().enumerate().find(|(index, row)| table_row_id(row, *index) == row_id)?;
     let TableCellPayload::EditableText { value, action } = serde_json::from_value::<TableCellPayload>(row.get(column_id)?.clone()).ok()? else { return None };
+    if let Some(awaiting_echo) = awaiting_echo {
+        if value == awaiting_echo {
+            if draft == value {
+                return Some(Ok(TableEditableTextCommitOutcome::Unchanged));
+            }
+            return Some(input.begin_retained_string_action_owned(action, "value".into(), draft).map(|_| TableEditableTextCommitOutcome::Publishing));
+        } else if value == base && draft == awaiting_echo {
+            return Some(Ok(TableEditableTextCommitOutcome::AwaitingEcho));
+        } else {
+            return Some(Ok(TableEditableTextCommitOutcome::Conflict));
+        }
+    }
     if draft == value {
         return Some(Ok(TableEditableTextCommitOutcome::Unchanged));
     }
@@ -4192,8 +4262,7 @@ pub(crate) fn table_stepper_focus_target(scene: &UiComponentSceneNode, inner: Re
     if !cell_rect.contains(x, y) || !matches!(serde_json::from_value::<TableCellPayload>(row.get(&column.id)?.clone()).ok()?, TableCellPayload::Stepper { .. }) {
         return None;
     }
-    let segment = (cell_rect.w / 3.0).max(1.0);
-    (usize::try_from(((x - cell_rect.x) / segment).floor() as i64).ok()? == 1).then(|| TableStepperFocusTarget { row_id, column_id: column.id.clone() })
+    table_segment_rect(cell_rect, 1, 3)?.contains(x, y).then(|| TableStepperFocusTarget { row_id, column_id: column.id.clone() })
 }
 
 /** ♿️ Projects every visible stepper readout from the exact accepted Table geometry. These
@@ -4218,8 +4287,7 @@ pub(crate) fn table_stepper_accessibility_cells(scene: &UiComponentSceneNode, in
             let Some(cell) = row.get(&column.id) else { continue };
             let Ok(TableCellPayload::Stepper { value, min, max, .. }) = serde_json::from_value::<TableCellPayload>(cell.clone()) else { continue };
             let cell_rect = table_cell_rect(inner, row_y, column_index, &metrics, driver_drag, draggable);
-            let segment = cell_rect.w / 3.0;
-            let rect = Rect::new(cell_rect.x + segment, cell_rect.y, segment, cell_rect.h);
+            let Some(rect) = table_segment_rect(cell_rect, 1, 3).and_then(|rect| table_visible_rect(rect, metrics.body)) else { continue };
             cells.push(TableStepperAccessibilityCell {
                 key: format!("{}.row.{}.{}.stepper", scene.host_id, row_id, column.id),
                 label: column.label.clone(),
@@ -4262,6 +4330,63 @@ pub(crate) fn table_editable_text_accessibility_cells(scene: &UiComponentSceneNo
         }
     }
     cells
+}
+
+/** 🔘️ Projects every visible row-placement Table button from the same segmented cell geometry as paint and pointer hit testing. */
+pub(crate) fn table_button_accessibility_cells(scene: &UiComponentSceneNode, inner: Rect, driver_drag: UiDriverDrag) -> Vec<TableButtonAccessibilityCell> {
+    let Some(table) = scene.table.as_ref() else { return Vec::new() };
+    let Ok(columns) = serde_json::from_str::<Vec<TableColumn>>(&table.columns_json) else { return Vec::new() };
+    let Ok(rows) = serde_json::from_str::<Vec<Value>>(&table.rows_json) else { return Vec::new() };
+    let theme = scene_input_theme();
+    let metrics = table_metrics(inner, columns.len(), &theme);
+    let scroll = scroll_offset(&scene.host_id, "body");
+    let mut cells = Vec::new();
+    for (row_index, row) in rows.iter().enumerate() {
+        let row_y = metrics.body.y + row_index as f32 * metrics.row_h - scroll;
+        if row_y + metrics.row_h <= metrics.body.y || row_y >= metrics.body.y + metrics.body.h {
+            continue;
+        }
+        let row_id = table_row_id(row, row_index);
+        let draggable = table.row_drag_mime.is_some() && row.get("_drag").is_some();
+        for (column_index, column) in columns.iter().enumerate() {
+            let Some(cell) = row.get(&column.id) else { continue };
+            let Ok(TableCellPayload::Buttons { buttons }) = serde_json::from_value::<TableCellPayload>(cell.clone()) else { continue };
+            let row_buttons = table_row_buttons(&buttons);
+            if row_buttons.is_empty() {
+                continue;
+            }
+            let cell_rect = table_cell_rect(inner, row_y, column_index, &metrics, driver_drag, draggable);
+            let button_count = row_buttons.len();
+            for (button_index, button) in row_buttons.into_iter().enumerate() {
+                let Some(rect) = table_segment_rect(cell_rect, button_index, button_count).and_then(|rect| table_visible_rect(rect, metrics.body)) else { continue };
+                cells.push(TableButtonAccessibilityCell {
+                    key: format!("{}.row.{}.{}.{}", scene.host_id, row_id, column.id, button_index),
+                    label: button.label.clone().unwrap_or_default(),
+                    row_id: row_id.clone(),
+                    column_id: column.id.clone(),
+                    button_index,
+                    rect,
+                    action: button.action.clone(),
+                });
+            }
+        }
+    }
+    cells
+}
+
+pub(crate) fn table_button_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+    let control = accepted_table_button_accessibility_cells(&scene.host_id).into_iter().find(|control| control.key == key)?;
+    let table = scene.table.as_ref()?;
+    let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).ok()?;
+    if !columns.iter().any(|column| column.id == control.column_id) {
+        return None;
+    }
+    let rows: Vec<Value> = serde_json::from_str(&table.rows_json).ok()?;
+    let (_, row) = rows.iter().enumerate().find(|(index, row)| table_row_id(row, *index) == control.row_id)?;
+    let TableCellPayload::Buttons { buttons } = serde_json::from_value::<TableCellPayload>(row.get(&control.column_id)?.clone()).ok()? else { return None };
+    let button = table_row_buttons(&buttons).get(control.button_index).copied()?;
+    let expected_key = format!("{}.row.{}.{}.{}", scene.host_id, control.row_id, control.column_id, control.button_index);
+    (control.key == expected_key && button.label.as_deref().unwrap_or_default() == control.label && button.action == control.action).then(|| write_scene_action(input, &control.action))
 }
 
 /** ⌨️ Re-resolves a focused Table stepper against the current accepted scene before every key,
@@ -4350,6 +4475,7 @@ fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &
 fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, driver_drag: UiDriverDrag) {
     let theme = ctx.theme;
     let Some(table) = &scene.table else {
+        stage_table_button_accessibility_cells(&scene.host_id, Vec::new());
         return render_placeholder("table", bounds, ctx);
     };
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).unwrap_or_default();
@@ -4411,7 +4537,6 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         }
         ctx.draw.push_line(row_rect.x, row_rect.y + row_rect.h - theme.stroke_hairline, row_rect.x + row_rect.w, row_rect.y + row_rect.h - theme.stroke_hairline, theme.separator, 1.0);
         for (col_index, column) in columns.iter().enumerate() {
-            let x = body.x + col_index as f32 * col_w;
             let cell_rect = table_cell_rect(inner, y, col_index, &metrics, driver_drag, draggable);
             let text = match row.get(&column.id) {
                 Some(value) => render_table_cell(value, &format!("{}.row.{}.{}.editable", scene.host_id, row_id, column.id), cell_rect, ctx),
@@ -4437,6 +4562,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
     }
     stage_table_stepper_accessibility_cells(&scene.host_id, table_stepper_accessibility_cells(scene, bounds, driver_drag));
     stage_table_editable_text_accessibility_cells(&scene.host_id, table_editable_text_accessibility_cells(scene, bounds, driver_drag));
+    stage_table_button_accessibility_cells(&scene.host_id, table_button_accessibility_cells(scene, bounds, driver_drag));
     ctx.draw.pop_scissor();
 }
 
@@ -4960,6 +5086,51 @@ fn diff_line_no(index: usize) -> Option<u32> {
 /// 📏️ One gutter column's width. React gives each number span `w-10` — Tailwind's 2.5rem, 40 logical
 /// px at the default root font size (`🔺️DiffViewHost/🟦️.tsx:106-107`, `:123`).
 const DIFF_GUTTER_COLUMN_W: f32 = 40.0;
+const DIFF_MARKER_COLUMN_REM: f32 = 0.75;
+
+#[derive(Clone, Copy, Debug)]
+struct DiffViewMetrics {
+    inner: Rect,
+    row_height: f32,
+    unified_before_right_x: f32,
+    unified_after_right_x: f32,
+    unified_marker_x: f32,
+    unified_text_x: f32,
+    unified_text_width: f32,
+    split_pane_width: f32,
+    split_divider_x: f32,
+    split_divider_width: f32,
+    split_right_x: f32,
+    split_text_width: f32,
+}
+
+fn diff_view_metrics(bounds: Rect, theme: &Theme) -> DiffViewMetrics {
+    let (pad, gap) = (theme.padding_standard, theme.gap_standard);
+    let inner = Rect::new(bounds.x + pad, bounds.y + pad, (bounds.w - pad * 2.0).max(0.0), (bounds.h - pad * 2.0).max(0.0));
+    let row_content_x = inner.x + pad;
+    let unified_before_right_x = row_content_x + DIFF_GUTTER_COLUMN_W;
+    let unified_after_right_x = unified_before_right_x + gap + DIFF_GUTTER_COLUMN_W;
+    let unified_marker_x = unified_after_right_x + gap;
+    let unified_text_x = unified_marker_x + theme.root_rem_pixels * DIFF_MARKER_COLUMN_REM + gap;
+    let split_divider_width = theme.stroke_hairline.max(1.0);
+    let split_pane_width = ((inner.w - gap * 2.0 - split_divider_width) * 0.5).max(1.0);
+    let split_divider_x = inner.x + split_pane_width + gap;
+    let split_right_x = split_divider_x + split_divider_width + gap;
+    DiffViewMetrics {
+        inner,
+        row_height: ui_wgpu::wgpu::text::line_height(theme.font_size_small),
+        unified_before_right_x,
+        unified_after_right_x,
+        unified_marker_x,
+        unified_text_x,
+        unified_text_width: (inner.x + inner.w - pad - unified_text_x).max(1.0),
+        split_pane_width,
+        split_divider_x,
+        split_divider_width,
+        split_right_x,
+        split_text_width: (split_pane_width - pad * 2.0 - DIFF_GUTTER_COLUMN_W - gap).max(1.0),
+    }
+}
 
 /// 🔢️ Draws one right-aligned, muted gutter number inside the column whose RIGHT edge is `right_x`,
 /// exactly React's `text-right tabular-nums text-muted-foreground` span. A `None` number prints
@@ -4969,8 +5140,8 @@ fn draw_diff_gutter_number(ctx: &mut FrameworkWidgetContext<'_>, number: Option<
         return;
     };
     let text = number.to_string();
-    let width = ctx.atlas.measure_text(&text, size).0;
-    draw_text(ctx, &text, right_x - width, baseline_y, size, color);
+    let width = ctx.atlas.measure_text_face(TextFace::Mono, &text, size).0;
+    draw_text_face(ctx, TextFace::Mono, &text, right_x - width, baseline_y, size, color);
 }
 
 fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
@@ -5053,12 +5224,8 @@ fn split_diff_rows<'a>(operations: &[DiffLine<'a>]) -> Vec<(Option<DiffLine<'a>>
     rows
 }
 
-/// 🩹️ Renders `SurfaceKind::DiffView`: a line-level diff of `before`/`after`, either as a single
-/// scrolling column with `+`/`-` markers (default, or `mode: "unified"`) or as two aligned columns
-/// (`mode: "split"`). Add/remove TEXT is tinted with the theme's `accent`/`error` tokens and equal
-/// text stays full-brightness `theme.text`, matching `DIFF_LINE_CLASS`'s per-line text-color classes
-/// in `🔺️DiffViewHost/🟦️.tsx` — never a whole-row background wash. Every row is preceded by React's
-/// muted, right-aligned line-number gutter (`beforeNo`/`afterNo`).
+/// 🩹️ Renders `SurfaceKind::DiffView` with React's inset, Share Tech Mono face, 16 px line
+/// boxes, semantic added/removed ink, fixed number gutters, and preserved-space wrapping.
 fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(diff) = &scene.diff_view else {
@@ -5067,64 +5234,84 @@ fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     let before_lines: Vec<&str> = diff.before.split('\n').collect();
     let after_lines: Vec<&str> = diff.after.split('\n').collect();
     let operations = diff_lines(&before_lines, &after_lines);
-    let inner = bounds;
     let pad = theme.padding_standard;
-    let row_h = theme.font_size_small + pad * 0.5;
+    let gap = theme.gap_standard;
+    let size = theme.font_size_small;
+    let metrics = diff_view_metrics(bounds, theme);
+    let (inner, row_h) = (metrics.inner, metrics.row_height);
     let split = diff.mode.as_deref() == Some("split");
 
     let scroll = scroll_offset(&scene.host_id, "diff");
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scroll_key(&scene.host_id, "diff")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
-    ctx.draw.push_scissor(inner);
+    ctx.input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(scroll_key(&scene.host_id, "diff")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+    ctx.draw.push_scissor(bounds);
     reserve_list_rows(ctx, list_visible_row_capacity(inner, row_h));
     if operations.is_empty() {
-        draw_text(ctx, "—", inner.x + pad, inner.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+        draw_text_face(ctx, TextFace::Mono, "—", inner.x + pad, inner.y + size, size, theme.text_muted);
         ctx.draw.pop_scissor();
         return;
     }
 
-    let col_w = if split { (inner.w * 0.5).max(1.0) } else { inner.w };
-    let right_x = inner.x + col_w;
-    // 🔢️ The line-number gutter React prints ahead of every line: TWO columns in unified mode
-    // (`beforeNo` then `afterNo`), ONE per pane in split mode (`🔺️DiffViewHost/🟦️.tsx:106-107`,
-    // `:123`). It is muted, right-aligned and non-selectable there; here it is muted, right-aligned
-    // and carries no hit target, and the line text starts after it.
-    let gutter_w = if split { DIFF_GUTTER_COLUMN_W } else { DIFF_GUTTER_COLUMN_W * 2.0 + pad };
     if split {
-        for (row_index, (left, right)) in split_diff_rows(&operations).iter().enumerate() {
-            let y = inner.y + row_index as f32 * row_h - scroll;
-            if y + row_h < inner.y || y > inner.y + inner.h {
+        let mut plans = Vec::new();
+        let mut content_h = 0.0f32;
+        for (left, right) in split_diff_rows(&operations) {
+            let left_lines = left.map_or_else(|| vec![0..0], |line| ctx.atlas.pre_wrap_lines(TextFace::Mono, line.text, metrics.split_text_width, size));
+            let right_lines = right.map_or_else(|| vec![0..0], |line| ctx.atlas.pre_wrap_lines(TextFace::Mono, line.text, metrics.split_text_width, size));
+            let height = left_lines.len().max(right_lines.len()).max(1) as f32 * row_h;
+            plans.push((content_h, height, left, left_lines, right, right_lines));
+            content_h += height;
+        }
+        ctx.draw.push_line(metrics.split_divider_x + metrics.split_divider_width * 0.5, inner.y - scroll, metrics.split_divider_x + metrics.split_divider_width * 0.5, inner.y + content_h - scroll, theme.separator, metrics.split_divider_width);
+        for (offset, height, left, left_lines, right, right_lines) in plans {
+            let y = inner.y + offset - scroll;
+            if y + height < inner.y || y > inner.y + inner.h {
                 continue;
             }
-            let baseline = y + row_h * 0.7;
-            draw_diff_gutter_number(ctx, left.and_then(|line| line.before_no), inner.x + pad + gutter_w, baseline, theme.font_size_small, theme.text_muted);
-            draw_diff_gutter_number(ctx, right.and_then(|line| line.after_no), right_x + pad + gutter_w, baseline, theme.font_size_small, theme.text_muted);
+            let baseline = y + size;
+            draw_diff_gutter_number(ctx, left.and_then(|line| line.before_no), inner.x + pad + DIFF_GUTTER_COLUMN_W, baseline, size, theme.text_muted);
+            draw_diff_gutter_number(ctx, right.and_then(|line| line.after_no), metrics.split_right_x + pad + DIFF_GUTTER_COLUMN_W, baseline, size, theme.text_muted);
             if let Some(line) = left {
                 let color = if line.operation == DiffLineOperation::Removed { theme.error } else { theme.text };
-                draw_text(ctx, line.text, inner.x + pad + gutter_w + pad, baseline, theme.font_size_small, color);
+                for (index, range) in left_lines.into_iter().enumerate() {
+                    draw_text_face(ctx, TextFace::Mono, &line.text[range], inner.x + pad + DIFF_GUTTER_COLUMN_W + gap, baseline + index as f32 * row_h, size, color);
+                }
             }
             if let Some(line) = right {
-                let color = if line.operation == DiffLineOperation::Added { theme.accent } else { theme.text };
-                draw_text(ctx, line.text, right_x + pad + gutter_w + pad, baseline, theme.font_size_small, color);
+                let color = if line.operation == DiffLineOperation::Added { theme.diff_added } else { theme.text };
+                for (index, range) in right_lines.into_iter().enumerate() {
+                    draw_text_face(ctx, TextFace::Mono, &line.text[range], metrics.split_right_x + pad + DIFF_GUTTER_COLUMN_W + gap, baseline + index as f32 * row_h, size, color);
+                }
             }
-            ctx.draw.push_line(right_x, y, right_x, y + row_h, theme.separator, theme.stroke_hairline);
         }
         ctx.draw.pop_scissor();
         return;
     }
-    for (row_index, line) in operations.iter().enumerate() {
-        let y = inner.y + row_index as f32 * row_h - scroll;
-        if y + row_h < inner.y || y > inner.y + inner.h {
+
+    let mut plans = Vec::new();
+    let mut content_h = 0.0f32;
+    for line in operations {
+        let lines = ctx.atlas.pre_wrap_lines(TextFace::Mono, line.text, metrics.unified_text_width, size);
+        let height = lines.len().max(1) as f32 * row_h;
+        plans.push((content_h, height, line, lines));
+        content_h += height;
+    }
+    for (offset, height, line, lines) in plans {
+        let y = inner.y + offset - scroll;
+        if y + height < inner.y || y > inner.y + inner.h {
             continue;
         }
-        let baseline = y + row_h * 0.7;
-        draw_diff_gutter_number(ctx, line.before_no, inner.x + pad + DIFF_GUTTER_COLUMN_W, baseline, theme.font_size_small, theme.text_muted);
-        draw_diff_gutter_number(ctx, line.after_no, inner.x + pad + DIFF_GUTTER_COLUMN_W * 2.0 + pad, baseline, theme.font_size_small, theme.text_muted);
+        let baseline = y + size;
+        draw_diff_gutter_number(ctx, line.before_no, metrics.unified_before_right_x, baseline, size, theme.text_muted);
+        draw_diff_gutter_number(ctx, line.after_no, metrics.unified_after_right_x, baseline, size, theme.text_muted);
         let (marker, color) = match line.operation {
-            DiffLineOperation::Added => ('+', theme.accent),
+            DiffLineOperation::Added => ('+', theme.diff_added),
             DiffLineOperation::Removed => ('-', theme.error),
             DiffLineOperation::Equal => (' ', theme.text),
         };
-        draw_text(ctx, &format!("{marker} {}", line.text), inner.x + pad + gutter_w + pad, baseline, theme.font_size_small, color);
+        draw_text_face(ctx, TextFace::Mono, &marker.to_string(), metrics.unified_marker_x, baseline, size, color);
+        for (index, range) in lines.into_iter().enumerate() {
+            draw_text_face(ctx, TextFace::Mono, &line.text[range], metrics.unified_text_x, baseline + index as f32 * row_h, size, color);
+        }
     }
     ctx.draw.pop_scissor();
 }
@@ -5257,6 +5444,14 @@ pub(crate) fn stage_block_list_accessibility_controls(host_id: &str, controls: V
     mutate_scene_state(host_id, |state| state.block_list_accessibility.stage(controls));
 }
 
+pub(crate) fn stage_event_feed_accessibility_controls(host_id: &str, controls: Vec<EventFeedAccessibilityControl>) {
+    mutate_scene_state(host_id, |state| state.event_feed_accessibility.stage(controls));
+}
+
+pub(crate) fn stage_graph_timeline_accessibility_controls(host_id: &str, controls: Vec<GraphTimelineAccessibilityControl>) {
+    mutate_scene_state(host_id, |state| state.graph_timeline_accessibility.stage(controls));
+}
+
 pub(crate) fn stage_table_stepper_accessibility_cells(host_id: &str, cells: Vec<TableStepperAccessibilityCell>) {
     mutate_scene_state(host_id, |state| state.table_accessibility.stage(cells));
 }
@@ -5265,12 +5460,20 @@ pub(crate) fn stage_table_editable_text_accessibility_cells(host_id: &str, cells
     mutate_scene_state(host_id, |state| state.table_editable_accessibility.stage(cells));
 }
 
+pub(crate) fn stage_table_button_accessibility_cells(host_id: &str, cells: Vec<TableButtonAccessibilityCell>) {
+    mutate_scene_state(host_id, |state| state.table_button_accessibility.stage(cells));
+}
+
 pub(crate) fn accepted_table_stepper_accessibility_cells(host_id: &str) -> Vec<TableStepperAccessibilityCell> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.table_accessibility.accepted.clone()).unwrap_or_default())
 }
 
 pub(crate) fn accepted_table_editable_text_accessibility_cells(host_id: &str) -> Vec<TableEditableTextAccessibilityCell> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.table_editable_accessibility.accepted.clone()).unwrap_or_default())
+}
+
+pub(crate) fn accepted_table_button_accessibility_cells(host_id: &str) -> Vec<TableButtonAccessibilityCell> {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.table_button_accessibility.accepted.clone()).unwrap_or_default())
 }
 
 pub(crate) fn seal_table_stepper_accessibility_candidates(epoch: u64) {
@@ -5285,6 +5488,14 @@ pub(crate) fn seal_table_editable_text_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.table_editable_accessibility.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn seal_table_button_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_button_accessibility.seal(epoch);
         }
     });
 }
@@ -5305,6 +5516,14 @@ pub(crate) fn acknowledge_table_editable_text_accessibility_candidates(epoch: u6
     });
 }
 
+pub(crate) fn acknowledge_table_button_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_button_accessibility.acknowledge(epoch);
+        }
+    });
+}
+
 pub(crate) fn discard_table_stepper_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
@@ -5321,12 +5540,28 @@ pub(crate) fn discard_table_editable_text_accessibility_candidates(epoch: u64) {
     });
 }
 
+pub(crate) fn discard_table_button_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.table_button_accessibility.discard(epoch);
+        }
+    });
+}
+
 pub(crate) fn accepted_vfs_accessibility_controls(host_id: &str) -> Vec<VfsAccessibilityControl> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.vfs_accessibility.accepted.clone()).unwrap_or_default())
 }
 
 pub(crate) fn accepted_block_list_accessibility_controls(host_id: &str) -> Vec<BlockListAccessibilityControl> {
     SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.block_list_accessibility.accepted.clone()).unwrap_or_default())
+}
+
+pub(crate) fn accepted_event_feed_accessibility_controls(host_id: &str) -> Vec<EventFeedAccessibilityControl> {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.event_feed_accessibility.accepted.clone()).unwrap_or_default())
+}
+
+pub(crate) fn accepted_graph_timeline_accessibility_controls(host_id: &str) -> Vec<GraphTimelineAccessibilityControl> {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.graph_timeline_accessibility.accepted.clone()).unwrap_or_default())
 }
 
 pub(crate) fn vfs_accessibility_control_survives_candidate(host_id: &str, target: &VfsAccessibilityFocusTarget, epoch: u64) -> bool {
@@ -5386,114 +5621,246 @@ pub(crate) fn discard_block_list_accessibility_candidates(epoch: u64) {
     });
 }
 
+pub(crate) fn seal_event_feed_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.event_feed_accessibility.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn acknowledge_event_feed_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.event_feed_accessibility.acknowledge(epoch);
+        }
+    });
+}
+
+pub(crate) fn discard_event_feed_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.event_feed_accessibility.discard(epoch);
+        }
+    });
+}
+
+pub(crate) fn seal_graph_timeline_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.graph_timeline_accessibility.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn acknowledge_graph_timeline_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.graph_timeline_accessibility.acknowledge(epoch);
+        }
+    });
+}
+
+pub(crate) fn discard_graph_timeline_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.graph_timeline_accessibility.discard(epoch);
+        }
+    });
+}
+
 fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
     match tone {
-        Some("error") | Some("danger") => theme.error,
-        Some("success") | Some("positive") => theme.accent,
-        Some("pending") | Some("warning") => theme.temporary,
-        _ => theme.text_muted,
+        Some("success") => theme.success,
+        Some("warning") => theme.warning,
+        Some("error") | Some("fatal") => theme.error,
+        _ => theme.text,
     }
 }
 
-fn event_feed_row_height(entry: &EventFeedEntryJson, row_h: f32, theme: &Theme) -> f32 {
-    row_h + entry.detail.as_ref().map_or(0.0, |_| theme.font_size_small + theme.padding_standard * 0.25)
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct EventFeedLayout {
+    inner: Rect,
+    card_gap: f32,
+    card_padding: f32,
+    line_height: f32,
+    icon_size: f32,
+    time_font_size: f32,
+}
+
+fn event_feed_layout(bounds: Rect, theme: &Theme) -> EventFeedLayout {
+    EventFeedLayout {
+        inner: bounds.inset(theme.padding_standard),
+        card_gap: theme.gap_standard,
+        card_padding: theme.padding_standard,
+        line_height: theme.root_rem_pixels,
+        icon_size: theme.control_height_small,
+        time_font_size: theme.root_rem_pixels * 0.625,
+    }
+}
+
+fn event_feed_row_height(entry: &EventFeedEntryJson, layout: &EventFeedLayout) -> f32 {
+    layout.card_padding * 2.0 + layout.line_height * if entry.detail.is_some() { 2.0 } else { 1.0 }
+}
+
+fn event_feed_visible_card(card: Rect, inner: Rect) -> Option<Rect> {
+    let left = card.x.max(inner.x);
+    let top = card.y.max(inner.y);
+    let right = (card.x + card.w).min(inner.x + inner.w);
+    let bottom = (card.y + card.h).min(inner.y + inner.h);
+    (right > left && bottom > top).then(|| Rect::new(left, top, right - left, bottom - top))
 }
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::EventFeed`: the entry whose variable-height
 /// band contains `y`. Row activation sends `{ surfaceId, id }` — the payload
 /// `📡️EventFeedHost/🟦️.tsx`'s own `onClick` sends; this renderer used to send `{ entryId }`, which
 /// no host reads.
-fn event_feed_hit(scene: &UiComponentSceneNode, inner: Rect, y: f32, theme: &Theme) -> Option<SceneListHit> {
+fn event_feed_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> Option<SceneListHit> {
     let feed = scene.event_feed.as_ref()?;
     let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).unwrap_or_default();
-    let row_h = theme.control_height;
+    let layout = event_feed_layout(bounds, theme);
+    if !layout.inner.contains(x, y) {
+        return None;
+    }
     let scroll = scroll_offset(&scene.host_id, "feed");
-    let mut top = inner.y - scroll;
+    let mut top = layout.inner.y - scroll;
     for entry in &entries {
-        let entry_h = event_feed_row_height(entry, row_h, theme);
-        if y >= top && y < top + entry_h {
+        let entry_h = event_feed_row_height(entry, &layout);
+        let card = Rect::new(layout.inner.x, top, layout.inner.w, entry_h);
+        if event_feed_visible_card(card, layout.inner).is_some_and(|card| card.contains(x, y)) {
             let action = feed.activate_action.as_deref().map(|action| scene_action(scene, action, json!({ "surfaceId": scene.surface_id, "id": entry.id })));
             return Some(SceneListHit::row(format!("{}.feed.{}", scene.host_id, entry.id), action));
         }
-        top += entry_h;
+        top += entry_h + layout.card_gap;
     }
     None
 }
 
-/// 📜️ Renders `SurfaceKind::EventFeed`: a scrollable list of text rows (`entries_json`), each a tone
-/// dot + optional icon + time-of-day + title, with an optional detail line beneath. When `follow` is
+fn event_feed_accessibility_label(entry: &EventFeedEntryJson, time_label: Option<&str>) -> String {
+    std::iter::once(entry.title.as_str()).chain(time_label).chain(entry.detail.as_deref()).filter(|part| !part.is_empty()).collect::<Vec<_>>().join(" ")
+}
+
+fn event_feed_accessibility_controls(
+    scene: &UiComponentSceneNode,
+    layout: &EventFeedLayout,
+    entries: &[EventFeedEntryJson],
+    heights: &[f32],
+    scroll: f32,
+    time_reply: Option<&ui_contract::HostTemporalFormatReplyV1>,
+) -> Vec<EventFeedAccessibilityControl> {
+    let inner = layout.inner;
+    let action = scene.event_feed.as_ref().and_then(|feed| feed.activate_action.as_deref());
+    let mut y = inner.y - scroll;
+    entries
+        .iter()
+        .zip(heights)
+        .filter_map(|(entry, height)| {
+            let card = event_feed_visible_card(Rect::new(inner.x, y, inner.w, *height), inner);
+            y += *height + layout.card_gap;
+            let rect = card?;
+            let key = format!("{}.feed.{}", scene.host_id, entry.id);
+            let time_label = time_reply.and_then(|reply| reply.label(&event_feed_time_id(entry.timestamp_ms)));
+            Some(EventFeedAccessibilityControl {
+                key,
+                entry_id: entry.id.clone(),
+                label: event_feed_accessibility_label(entry, time_label),
+                rect,
+                action: action.map(|action| scene_action(scene, action, json!({ "surfaceId": scene.surface_id, "id": entry.id }))),
+            })
+        })
+        .collect()
+}
+
+pub(crate) fn event_feed_accessibility_activate(scene: &UiComponentSceneNode, key: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+    let control = accepted_event_feed_accessibility_controls(&scene.host_id).into_iter().find(|control| control.key == key)?;
+    let action = control.action.as_ref()?;
+    let feed = scene.event_feed.as_ref()?;
+    let action_name = feed.activate_action.as_deref()?;
+    let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).ok()?;
+    let expected = scene_action(scene, action_name, json!({ "surfaceId": scene.surface_id, "id": control.entry_id }));
+    (entries.iter().any(|entry| entry.id == control.entry_id) && *action == expected).then(|| write_scene_action(input, action))
+}
+
+/// 📜️ Renders `SurfaceKind::EventFeed`: a scrollable list of cards (`entries_json`), each with an
+/// optional icon, time-of-day and weighted tone title, plus an optional detail line. When `follow` is
 /// set the feed snaps to its bottom every frame (log-tail behaviour); a manual wheel-scroll on a
 /// following feed is overridden on the next render, the same tradeoff a live log tail makes.
 fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(feed) = &scene.event_feed else {
+        stage_event_feed_accessibility_controls(&scene.host_id, Vec::new());
         return render_placeholder("event-feed", bounds, ctx);
     };
     let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).unwrap_or_default();
     let time_request = event_feed_time_request(&entries);
     let time_reply = host_temporal_reply(&scene.host_id, &time_request);
-    let inner = bounds;
-    let pad = theme.padding_standard;
-    let row_h = theme.control_height;
+    let layout = event_feed_layout(bounds, theme);
+    let inner = layout.inner;
+    let pad = layout.card_padding;
     if entries.is_empty() {
-        draw_text(ctx, "—", inner.x + pad, inner.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+        stage_event_feed_accessibility_controls(&scene.host_id, Vec::new());
+        draw_text(ctx, "—", inner.x + pad, inner.y + layout.line_height * 0.7, theme.font_size_small, theme.text_muted);
         return;
     }
 
-    let heights: Vec<f32> = entries.iter().map(|entry| event_feed_row_height(entry, row_h, theme)).collect();
-    let content_h: f32 = heights.iter().sum();
+    let heights: Vec<f32> = entries.iter().map(|entry| event_feed_row_height(entry, &layout)).collect();
+    let content_h: f32 = heights.iter().sum::<f32>() + layout.card_gap * heights.len().saturating_sub(1) as f32;
     if feed.follow.unwrap_or(false) {
         set_scroll_offset(&scene.host_id, "feed", (content_h - inner.h).max(0.0));
     }
     let scroll = scroll_offset(&scene.host_id, "feed");
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scroll_key(&scene.host_id, "feed")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+    stage_event_feed_accessibility_controls(&scene.host_id, event_feed_accessibility_controls(scene, &layout, &entries, &heights, scroll, time_reply.as_ref()));
+    ctx.input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(scroll_key(&scene.host_id, "feed")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     ctx.draw.push_scissor(inner);
-    reserve_list_rows(ctx, list_visible_row_capacity(inner, row_h));
+    reserve_list_rows(ctx, list_visible_row_capacity(inner, layout.card_padding * 2.0 + layout.line_height + layout.card_gap));
     let hovered_row = scene_hovered_control_id(&scene.host_id).or_else(|| ctx.input.hovered_id.clone());
     let mut y = inner.y - scroll;
     for entry in entries.iter() {
-        let entry_h = event_feed_row_height(entry, row_h, theme);
+        let entry_h = event_feed_row_height(entry, &layout);
         if y + entry_h < inner.y || y > inner.y + inner.h {
-            y += entry_h;
+            y += entry_h + layout.card_gap;
             continue;
         }
         let control_id = format!("{}.feed.{}", scene.host_id, entry.id);
         let hovered = hovered_row.as_deref() == Some(control_id.as_str());
         let row_rect = Rect::new(inner.x, y, inner.w, entry_h);
+        let visible_row_rect = event_feed_visible_card(row_rect, inner).expect("visible EventFeed card");
         if hovered {
-            ctx.draw.push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover);
+            ctx.draw.push_rounded([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover, theme.border_radius);
         }
-        ctx.draw.push_line(row_rect.x, row_rect.y + row_rect.h - theme.stroke_hairline, row_rect.x + row_rect.w, row_rect.y + row_rect.h - theme.stroke_hairline, theme.separator, 1.0);
 
         let tone_color = event_feed_tone_color(entry.tone.as_deref(), theme);
-        let title_tone_color = match entry.tone.as_deref() {
-            None | Some("info") => theme.text,
-            _ => tone_color,
-        };
-        let dot_y = y + row_h * 0.5;
-        ctx.draw.push_rounded([inner.x + pad, dot_y - 3.0, 6.0, 6.0], tone_color, 3.0);
-        let mut title_x = inner.x + pad + 6.0 + pad * 0.5;
+        let mut title_x = inner.x + pad;
 
         if !entry.icon_id.is_empty() {
             if let Some(icons) = ctx.icons {
                 if let Some(uv) = icons.icon_uv(&entry.icon_id) {
-                    ctx.draw.push_textured([title_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, foreground_on_fill(theme, theme.text_element, false, hovered));
-                    title_x += 14.0 + pad * 0.5;
+                    ctx.draw.push_textured([title_x, y + pad, layout.icon_size, layout.icon_size], uv, foreground_on_fill(theme, theme.text_element, false, hovered));
+                    title_x += layout.icon_size + theme.gap_standard;
                 }
             }
         }
 
-        if let Some(time_label) = time_reply.as_ref().and_then(|reply| reply.label(&event_feed_time_id(entry.timestamp_ms))) {
-            let time_width = ctx.atlas.measure_text(time_label, theme.font_size_small).0;
-            draw_text(ctx, time_label, title_x, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
-            title_x += time_width + pad * 0.5;
+        let content_right = inner.x + inner.w - pad;
+        let time_label = time_reply.as_ref().and_then(|reply| reply.label(&event_feed_time_id(entry.timestamp_ms)));
+        let time_x = time_label.map(|label| (content_right - ctx.atlas.measure_text(label, layout.time_font_size).0).max(title_x));
+        let title_right = time_x.map_or(content_right, |x| x - theme.gap_standard);
+        if title_right > title_x {
+            ctx.draw.push_scissor(Rect::new(title_x, y + pad, title_right - title_x, layout.line_height));
+            let weight = if entry.tone.as_deref() == Some("fatal") { ui_wgpu::wgpu::TextWeight::Semibold } else { ui_wgpu::wgpu::TextWeight::Medium };
+            draw_text_weighted(ctx.draw, ctx.atlas, &entry.title, title_x, y + pad + layout.line_height * 0.7, theme.font_size_small, tone_color, weight);
+            ctx.draw.pop_scissor();
         }
-        draw_text(ctx, &entry.title, title_x, y + row_h * 0.65, theme.font_size_small, title_tone_color);
+        if let (Some(time_label), Some(time_x)) = (time_label, time_x) {
+            draw_text(ctx, time_label, time_x, y + pad + layout.line_height * 0.7, layout.time_font_size, foreground_on_fill(theme, theme.text_muted, false, hovered));
+        }
         if let Some(detail) = &entry.detail {
-            draw_text(ctx, detail, inner.x + pad, y + row_h + theme.font_size_small * 0.9, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
+            ctx.draw.push_scissor(Rect::new(title_x, y + pad + layout.line_height, (content_right - title_x).max(0.0), layout.line_height));
+            draw_text(ctx, detail, title_x, y + pad + layout.line_height * 1.7, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
+            ctx.draw.pop_scissor();
         }
         if let Some(action) = &feed.activate_action {
             ctx.input.register_hit(HitTarget {
-                rect: row_rect,
+                rect: visible_row_rect,
                 event: Some(scene_action(scene, action, json!({ "surfaceId": scene.surface_id, "id": entry.id }))),
                 control_id: Some(control_id),
                 kind: HitKind::Generic,
@@ -5501,7 +5868,7 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
                 drag_data: None,
             });
         }
-        y += entry_h;
+        y += entry_h + layout.card_gap;
     }
     ctx.draw.pop_scissor();
 }
@@ -5544,17 +5911,17 @@ struct HistoryColumnJson {
     #[serde(default)]
     description: Option<String>,
     #[serde(default)]
+    mutation_level: Option<String>,
+    #[serde(default)]
     lane: usize,
 }
 
 const HISTORY_LANE_PITCH: f32 = 16.0;
 const HISTORY_LANE_PAD: f32 = 8.0;
 const HISTORY_AUTHOR_SLOT: f32 = 40.0;
-const HISTORY_AVATAR_SIZE: f32 = 20.0;
-const HISTORY_AVATAR_OVERLAP: f32 = 8.0;
 
-fn history_avatar_x(base: f32, index: usize) -> f32 {
-    base + index as f32 * (HISTORY_AVATAR_SIZE - HISTORY_AVATAR_OVERLAP)
+fn history_avatar_x(base: f32, index: usize, size: f32, overlap: f32) -> f32 {
+    base + index as f32 * (size - overlap)
 }
 
 fn history_avatar_image_id(host_id: &str, checkpoint_id: &str, author: &HistoryColumnAuthorJson, index: usize) -> String {
@@ -5618,20 +5985,125 @@ fn graph_timeline_avatar_initials(name: &str) -> String {
     }
 }
 
-fn paint_history_avatar(ctx: &mut FrameworkWidgetContext<'_>, image_id: &str, author: Option<&HistoryColumnAuthorJson>, x: f32, y: f32) {
+fn paint_history_avatar(ctx: &mut FrameworkWidgetContext<'_>, image_id: &str, author: Option<&HistoryColumnAuthorJson>, x: f32, y: f32, size: f32) {
     let theme = ctx.theme;
-    let rect = Rect::new(x, y, HISTORY_AVATAR_SIZE, HISTORY_AVATAR_SIZE);
-    ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.panel_border, HISTORY_AVATAR_SIZE * 0.5);
+    let rect = Rect::new(x, y, size, size);
+    ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.panel_border, size * 0.5);
     let inside = [rect.x + 1.0, rect.y + 1.0, rect.w - 2.0, rect.h - 2.0];
     let image = author.and_then(|author| author.avatar.as_deref()).and_then(|source| crate::interpreter::current_ui_image_key(image_id, source));
     if let Some(key) = image {
-        ctx.draw.push_rounded_raster_quad(&key, inside, [0.0, 0.0, 1.0, 1.0], 1.0, (HISTORY_AVATAR_SIZE - 2.0) * 0.5);
+        ctx.draw.push_rounded_raster_quad(&key, inside, [0.0, 0.0, 1.0, 1.0], 1.0, (size - 2.0) * 0.5);
         return;
     }
-    ctx.draw.push_rounded(inside, theme.muted, (HISTORY_AVATAR_SIZE - 2.0) * 0.5);
+    ctx.draw.push_rounded(inside, theme.muted, (size - 2.0) * 0.5);
     let initials = author.map(|author| graph_timeline_avatar_initials(&author.name)).unwrap_or_else(|| "?".to_string());
     let width = ctx.atlas.measure_text(&initials, theme.font_size_small).0;
-    draw_text(ctx, &initials, rect.x + (HISTORY_AVATAR_SIZE - width) * 0.5, rect.y + HISTORY_AVATAR_SIZE * 0.7, theme.font_size_small, theme.text);
+    draw_text(ctx, &initials, rect.x + (size - width) * 0.5, rect.y + size * 0.7, theme.font_size_small, theme.text);
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct GraphTimelineLayout {
+    inner: Rect,
+    row_height: f32,
+    label_track_width: f32,
+    graph_width: f32,
+    graph_column_width: f32,
+    selectable_width: f32,
+    avatar_size: f32,
+    avatar_overlap: f32,
+}
+
+fn graph_timeline_label_text_width(text: &str, theme: &Theme) -> f32 {
+    text.chars().count() as f32 * theme.font_size_small * 0.43
+}
+
+fn graph_timeline_label_track_width(columns: &[HistoryColumnJson], theme: &Theme) -> f32 {
+    let chip_padding = theme.root_rem_pixels * 0.375;
+    let chip_gap = theme.root_rem_pixels * 0.25;
+    columns
+        .iter()
+        .map(|column| {
+            let content = if column.labels.is_empty() {
+                graph_timeline_label_text_width("checkpoint", theme)
+            } else {
+                column.labels.iter().map(|label| graph_timeline_label_text_width(label, theme) + chip_padding * 2.0).sum::<f32>() + chip_gap * column.labels.len().saturating_sub(1) as f32
+            };
+            content + theme.padding_standard * 2.0
+        })
+        .fold(0.0, f32::max)
+}
+
+/// 📐️ One accepted geometry authority shared by GraphTimeline paint, pointer, scrolling and AT.
+fn graph_timeline_layout(bounds: Rect, columns: &[HistoryColumnJson], theme: &Theme) -> GraphTimelineLayout {
+    let inner = bounds.inset(theme.padding_standard);
+    let graph_width = history_graph_width(history_lane_count(columns));
+    let graph_column_width = graph_width + HISTORY_AUTHOR_SLOT;
+    let label_track_width = graph_timeline_label_track_width(columns, theme).min((inner.w - graph_column_width).max(0.0));
+    GraphTimelineLayout {
+        inner,
+        row_height: theme.tree_row_height,
+        label_track_width,
+        graph_width,
+        graph_column_width,
+        selectable_width: (label_track_width + graph_column_width).min(inner.w).max(0.0),
+        avatar_size: theme.control_height_small,
+        avatar_overlap: theme.root_rem_pixels * 0.5,
+    }
+}
+
+fn graph_timeline_mutation_tone(level: &str, theme: &Theme) -> Option<(Rgba, Rgba)> {
+    match level {
+        "info" => Some((theme.accent, theme.active_foreground)),
+        "warning" => Some((theme.warning.with_alpha(0.2), theme.warning)),
+        "error" => Some((theme.error.with_alpha(0.2), theme.error)),
+        "fatal" => Some((theme.error, theme.active_foreground)),
+        _ => None,
+    }
+}
+
+fn graph_timeline_accessible_name(column: &HistoryColumnJson) -> String {
+    if column.labels.is_empty() { column.checkpoint_id.clone() } else { column.labels.join(", ") }
+}
+
+pub(crate) fn graph_timeline_accessibility_controls(scene: &UiComponentSceneNode, bounds: Rect, theme: &Theme) -> Vec<GraphTimelineAccessibilityControl> {
+    let Some(history) = scene.graph_timeline.as_ref() else { return Vec::new() };
+    let Ok(columns) = serde_json::from_str::<Vec<HistoryColumnJson>>(&history.columns_json) else { return Vec::new() };
+    let layout = graph_timeline_layout(bounds, &columns, theme);
+    let inner = layout.inner;
+    let scroll = scroll_offset(&scene.host_id, "history");
+    columns
+        .iter()
+        .enumerate()
+        .filter_map(|(row_index, column)| {
+            let y = inner.y + row_index as f32 * layout.row_height - scroll;
+            let clipped_y = y.max(inner.y);
+            let rect = Rect::new(inner.x, clipped_y, layout.selectable_width, (y + layout.row_height).min(inner.y + inner.h) - clipped_y);
+            (rect.w > 0.0 && rect.h > 0.0).then(|| {
+                let action = scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }));
+                GraphTimelineAccessibilityControl {
+                    key: format!("{}.history.{}", scene.host_id, column.checkpoint_id),
+                    checkpoint_id: column.checkpoint_id.clone(),
+                    label: graph_timeline_accessible_name(column),
+                    rect,
+                    action,
+                }
+            })
+        })
+        .collect()
+}
+
+pub(crate) fn graph_timeline_accessibility_activate(
+    scene: &UiComponentSceneNode,
+    key: &str,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Option<Result<(), ui_wgpu::wgpu::BoundedActionFault>> {
+    let control = accepted_graph_timeline_accessibility_controls(&scene.host_id).into_iter().find(|control| control.key == key)?;
+    let history = scene.graph_timeline.as_ref()?;
+    let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).ok()?;
+    let column = columns.iter().find(|column| column.checkpoint_id == control.checkpoint_id)?;
+    let expected_key = format!("{}.history.{}", scene.host_id, column.checkpoint_id);
+    let action = scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }));
+    (control.key == expected_key && control.label == graph_timeline_accessible_name(column) && control.action == action).then(|| write_scene_action(input, &control.action))
 }
 
 /// 🕰️ Renders `SurfaceKind::GraphTimeline`: the checkpoint history graph — lane guides, parent
@@ -5644,26 +6116,29 @@ fn paint_history_avatar(ctx: &mut FrameworkWidgetContext<'_>, image_id: &str, au
 /// previously read as visibly heavier than React's thin, faded rail.
 fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
+    stage_graph_timeline_accessibility_controls(&scene.host_id, graph_timeline_accessibility_controls(scene, bounds, theme));
     let Some(history) = &scene.graph_timeline else {
         return render_placeholder("graph-timeline", bounds, ctx);
     };
     let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).unwrap_or_default();
-    let inner = bounds;
-    let row_h = theme.control_height * 1.33;
+    let layout = graph_timeline_layout(bounds, &columns, theme);
+    let inner = layout.inner;
+    let row_h = layout.row_height;
     let pad = theme.padding_standard;
     if columns.is_empty() {
         draw_text(ctx, "—", inner.x + pad, inner.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
         return;
     }
     let lane_count = history_lane_count(&columns);
-    let graph_width = history_graph_width(lane_count);
-    let graph_col_w = graph_width + HISTORY_AUTHOR_SLOT;
-    let labels_col_w = (inner.w * 0.28).max(96.0);
+    let graph_width = layout.graph_width;
+    let graph_col_w = layout.graph_column_width;
+    let labels_col_w = layout.label_track_width;
+    let selectable_w = layout.selectable_width;
     let guides = history_row_lane_guides(&columns, lane_count);
     let row_by_id: HashMap<&str, usize> = columns.iter().enumerate().map(|(index, column)| (column.checkpoint_id.as_str(), index)).collect();
 
     let scroll = scroll_offset(&scene.host_id, "history");
-    ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scroll_key(&scene.host_id, "history")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
+    ctx.input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(scroll_key(&scene.host_id, "history")), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None });
     ctx.draw.push_scissor(inner);
     reserve_list_rows(ctx, list_visible_row_capacity(inner, row_h));
     let hovered_row = scene_hovered_control_id(&scene.host_id).or_else(|| ctx.input.hovered_id.clone());
@@ -5678,8 +6153,9 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
         let control_id = format!("{}.history.{}", scene.host_id, column.checkpoint_id);
         let hovered = hovered_row.as_deref() == Some(control_id.as_str());
         let row_rect = Rect::new(inner.x, y, inner.w, row_h);
+        let selectable_rect = Rect::new(inner.x, y.max(inner.y), selectable_w, (y + row_h).min(inner.y + inner.h) - y.max(inner.y));
         if hovered {
-            ctx.draw.push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover);
+            ctx.draw.push_solid([selectable_rect.x, selectable_rect.y, selectable_rect.w, selectable_rect.h], theme.row_hover);
         }
         ctx.draw.push_line(row_rect.x, row_rect.y + row_rect.h - theme.stroke_hairline, row_rect.x + row_rect.w, row_rect.y + row_rect.h - theme.stroke_hairline, theme.separator, 1.0);
 
@@ -5688,13 +6164,14 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
             draw_text(ctx, "checkpoint", label_x, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
         } else {
             for label in &column.labels {
-                let chip_w = (label.len() as f32 * 6.0 + pad * 2.0).min((inner.x + labels_col_w - label_x).max(0.0));
+                let chip_w = (graph_timeline_label_text_width(label, theme) + theme.root_rem_pixels * 0.75).min((inner.x + labels_col_w - pad - label_x).max(0.0));
                 if chip_w <= 0.0 {
                     break;
                 }
-                ctx.draw.push_rounded([label_x, y + row_h * 0.5 - 9.0, chip_w, 18.0], theme.accent, 4.0);
-                draw_text(ctx, label, label_x + 4.0, y + row_h * 0.5 + 4.0, theme.font_size_small, theme.active_foreground);
-                label_x += chip_w + 4.0;
+                let chip_h = theme.control_height_small;
+                ctx.draw.push_rounded([label_x, y + (row_h - chip_h) * 0.5, chip_w, chip_h], theme.accent, theme.border_radius);
+                draw_text(ctx, label, label_x + theme.root_rem_pixels * 0.375, y + row_h * 0.5 + theme.font_size_small * 0.35, theme.font_size_small, theme.active_foreground);
+                label_x += chip_w + theme.root_rem_pixels * 0.25;
             }
         }
 
@@ -5726,23 +6203,32 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
         let dot_y = y + row_h * 0.5;
         ctx.draw.push_rounded([dot_x - 3.0, dot_y - 3.0, 6.0, 6.0], theme.text, 3.0);
 
-        let avatar_x = graph_x0 + graph_width + 4.0;
-        let avatar_y = y + row_h * 0.5 - HISTORY_AVATAR_SIZE * 0.5;
+        let avatar_x = graph_x0 + (history_lane_x(column.lane, lane_count, graph_width) - 12.0).max(0.0);
+        let avatar_y = y + row_h * 0.5 - layout.avatar_size * 0.5;
         if column.authors.is_empty() {
-            paint_history_avatar(ctx, &format!("{}.history.avatar.{}.unknown", scene.host_id, column.checkpoint_id), None, avatar_x, avatar_y);
+            paint_history_avatar(ctx, &format!("{}.history.avatar.{}.unknown", scene.host_id, column.checkpoint_id), None, avatar_x, avatar_y, layout.avatar_size);
         } else {
             for (author_index, author) in column.authors.iter().enumerate() {
                 let image_id = history_avatar_image_id(&scene.host_id, &column.checkpoint_id, author, author_index);
-                paint_history_avatar(ctx, &image_id, Some(author), history_avatar_x(avatar_x, author_index), avatar_y);
+                paint_history_avatar(ctx, &image_id, Some(author), history_avatar_x(avatar_x, author_index, layout.avatar_size, layout.avatar_overlap), avatar_y, layout.avatar_size);
             }
         }
 
+        let mut description_x = desc_x + pad;
+        if let Some((level, (fill, text))) = column.mutation_level.as_deref().and_then(|level| graph_timeline_mutation_tone(level, theme).map(|tone| (level, tone))) {
+            let label = level.to_uppercase();
+            let badge_w = graph_timeline_label_text_width(&label, theme) + theme.root_rem_pixels * 0.75;
+            let badge_h = layout.avatar_size;
+            ctx.draw.push_rounded([description_x, y + (row_h - badge_h) * 0.5, badge_w, badge_h], fill, theme.border_radius);
+            draw_text(ctx, &label, description_x + theme.root_rem_pixels * 0.375, y + row_h * 0.5 + theme.font_size_small * 0.35, theme.font_size_small, text);
+            description_x += badge_w + theme.root_rem_pixels * 0.25;
+        }
         if let Some(description) = &column.description {
-            draw_text(ctx, description, desc_x + pad, y + row_h * 0.65, theme.font_size_small, foreground_on_fill(theme, theme.text_muted, false, hovered));
+            draw_text(ctx, description, description_x, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
         }
 
         ctx.input.register_hit(HitTarget {
-            rect: row_rect,
+            rect: selectable_rect,
             event: Some(scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }))),
             control_id: Some(control_id),
             kind: HitKind::Generic,
@@ -5752,14 +6238,17 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
     }
     ctx.draw.pop_scissor();
 }
-/// 🎯️ Resolves a pointer point inside a `SurfaceKind::GraphTimeline` — the checkpoint row band
-/// containing `y`. Rows are a uniform `control_height * 1.33`, the same pitch the paint lays out.
-fn graph_timeline_hit(scene: &UiComponentSceneNode, inner: Rect, y: f32, theme: &Theme) -> Option<SceneListHit> {
+/// 🎯️ Resolves the painted labels and graph area; description cells never check out a checkpoint.
+fn graph_timeline_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> Option<SceneListHit> {
     let history = scene.graph_timeline.as_ref()?;
     let columns: Vec<HistoryColumnJson> = serde_json::from_str(&history.columns_json).unwrap_or_default();
-    let row_h = theme.control_height * 1.33;
+    let layout = graph_timeline_layout(bounds, &columns, theme);
+    let inner = layout.inner;
+    if x < inner.x || x >= inner.x + layout.selectable_width || y < inner.y || y >= inner.y + inner.h {
+        return None;
+    }
     let scroll = scroll_offset(&scene.host_id, "history");
-    let index = usize::try_from(((y - inner.y + scroll) / row_h.max(1.0)).floor() as i64).ok()?;
+    let index = usize::try_from(((y - inner.y + scroll) / layout.row_height.max(1.0)).floor() as i64).ok()?;
     let column = columns.get(index)?;
     let action = scene_action(scene, "checkoutCheckpoint", json!({ "checkpointId": column.checkpoint_id }));
     Some(SceneListHit::row(format!("{}.history.{}", scene.host_id, column.checkpoint_id), Some(action)))

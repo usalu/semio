@@ -24,6 +24,25 @@ async fn one_mebibyte_sample_lane_edits_without_generic_value_expansion() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
+    let mut snapshot = WavSnapshot::default();
+    snapshot.fmt.bits_per_sample = 8;
+    snapshot.fmt.byte_rate = snapshot.fmt.sample_rate;
+    snapshot.fmt.block_align = 1;
+    snapshot.data = WavData::Raw(vec![1, 2]);
+    let event = editing::SnapshotEditEvent::SetValue { path: "/data/kind".into(), value: dsl::DslValue::String("pcm8".into()) };
+    let next = wavEditor_snapshot_edit(&event, &snapshot).expect("data discriminator edit");
+    assert_eq!(next.data, WavData::Pcm8(vec![1, 2]));
+    let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("data discriminator edit emits");
+    let [mutation] = emit.artifact_mutations.as_slice() else { panic!("data discriminator edit must emit one mutation") };
+    let published = protocol::MutationDiff::apply(<WavMutation as protocol::Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("data discriminator mutation applies");
+    assert_eq!(published.data, WavData::Pcm8(vec![1, 2]));
+    let native = crate::standards::riff_pcm::subsets::any::io::encode_wav(&published);
+    let reopened = crate::standards::riff_pcm::subsets::any::io::decode_wav(&native).expect("edited WAV reopens");
+    assert_eq!(reopened.data, WavData::Pcm8(vec![1, 2]));
+}
+
+#[semio_framework_async_macros::async_test]
 async fn sample_edit_set_snapshot_replays_and_inverts_without_losing_siblings() {
     let base = WavSnapshot { data: WavData::Raw(vec![1, 2, 3]), ..WavSnapshot::default() };
     let event = editing::SnapshotEditEvent::SetValue { path: "/data/value/1".into(), value: dsl::DslValue::Number(dsl::Number::UInt(9)) };

@@ -1,5 +1,17 @@
 use super::*;
 
+#[test]
+fn set_node_requires_a_complete_address_and_value_without_forbidding_empty_text() {
+    assert!(json_i_json_command_from_action(JSON_I_JSON_KIT_ACTION_ID, None).is_err());
+    let missing_value = dsl::DslValue::object([("nodeId".into(), dsl::DslValue::String(main::JSON_ROOT_NODE_ID.into()))]);
+    assert!(json_i_json_command_from_action(JSON_I_JSON_KIT_ACTION_ID, Some(&missing_value)).is_err());
+    let args = dsl::DslValue::object([
+        ("nodeId".into(), dsl::DslValue::String(main::JSON_ROOT_NODE_ID.into())),
+        ("value".into(), dsl::DslValue::String(String::new())),
+    ]);
+    assert!(matches!(json_i_json_command_from_action(JSON_I_JSON_KIT_ACTION_ID, Some(&args)), Ok(JsonIJsonIJsonEditorCommand::SetNode { value, .. }) if value.is_empty()));
+}
+
 #[semio_framework_async_macros::async_test]
 async fn create_json_i_json_editor_builds_a_definition_for_the_editor_role() {
     let def = create_json_i_json_editor();

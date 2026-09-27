@@ -2509,7 +2509,6 @@ import {
   selectQuarantinedConflicts,
   isFlowGraphScene,
   mergeRecordPreservingIdentity,
-  parseSpaceShellPath,
   parseShellRoute,
   pluginAvailabilityRouteV1,
   pluginShouldReceiveContributions,
@@ -3423,6 +3422,22 @@ describe("shell store reducer", () => {
     expect(opened.windowUi).toBe(state.windowUi);
     expect(shellStateUnchanged(state, opened)).toBe(false);
     expect(shellStateUnchanged(state, state)).toBe(true);
+  });
+
+  it("structurally shares a re-observed interaction state and an unchanged spawned-window projection, so a world hover echo re-renders no unchanged shell slice", () => {
+    const state = baseState();
+    const read = (): ShellState["interaction"] => ({ selection: { vortex: { granularity: "object", ids: ["seed-left-001"] } }, hover: {}, activeMode: { vortex: "multiple" }, activeGranularity: { vortex: "object" } });
+    const observed = shellReducer(state, { type: "INTERACTION_STATE_OBSERVED", state: read() });
+    expect(observed).not.toBe(state);
+    expect(shellReducer(observed, { type: "INTERACTION_STATE_OBSERVED", state: read() })).toBe(observed);
+    const hovered = shellReducer(observed, { type: "INTERACTION_STATE_OBSERVED", state: { ...read(), hover: { vortex: { channel: "pointer", ids: ["seed-left-001"] } } } });
+    expect(hovered.interaction.hover).toEqual({ vortex: { channel: "pointer", ids: ["seed-left-001"] } });
+    expect(hovered.interaction.selection).toBe(observed.interaction.selection);
+    expect(hovered.interaction.activeMode).toBe(observed.interaction.activeMode);
+    expect(hovered.interaction.activeGranularity).toBe(observed.interaction.activeGranularity);
+    expect(hovered.spawnedWindow).toBe(observed.spawnedWindow);
+    expect(shellReducer(state, { type: "SET_SPAWNED_WINDOW_UI", value: (current) => current })).toBe(state);
+    expect(shellReducer(state, { type: "SET_SPAWNED_WINDOW_UI", value: (current) => current, fault: null })).toBe(state);
   });
 
   it("starts, advances, and dismisses an introduction via SET_INTRODUCTION_STEP without touching unrelated slices", () => {
@@ -7526,6 +7541,11 @@ describe("framework renderer hosts", () => {
         });
         const area = view.container.querySelector("textarea")!;
         for (const key of law.typed) fireEvent.keyDown(area, { key });
+        const typedAfterNewOwner = (law as { readonly typedAfterNewOwner?: readonly string[] }).typedAfterNewOwner ?? [];
+        if (typedAfterNewOwner.length > 0) {
+          view.rerender(createElement(TextEditorHost, { node: { type: "componentScene", surfaceId: "writer.delivery", controllerId: "writer", componentKind: "text-editor", textEditor: { buffer: law.initial, selectionJson: JSON.stringify({ start: law.initial.length, end: law.initial.length }) } }, onAction: (action: ActionDescriptor) => onAction(action) } as never));
+          for (const key of typedAfterNewOwner) fireEvent.keyDown(view.container.querySelector("textarea")!, { key });
+        }
         expect(dispatched).toEqual(law.expected[0]);
         await reactAct(async () => {
           completions.shift()!(law.outcome === "accepted" ? undefined : { kind: "refused", reason: law.outcome });
@@ -7537,7 +7557,7 @@ describe("framework renderer hosts", () => {
           });
         await waitFor(() => expect(dispatched).toEqual(law.expected[2]));
         expect(area.getAttribute("aria-readonly")).toBe(String(law.readOnly));
-        expect(text).toBe(law.outcome === "accepted" ? law.initial + law.typed.join("") : law.initial);
+        expect(text).toBe(law.outcome === "accepted" ? law.initial + [...law.typed, ...typedAfterNewOwner].join("") : law.initial);
       } finally {
         view.unmount();
         factory.mockRestore();
@@ -9639,18 +9659,12 @@ describe("s workflow flow routing", () => {
     expect(resolveHostSnapshotWidgetInstanceId("not json", "widget-1")).toBeUndefined();
   });
 
-  it("parses studio and studio+instance shell paths, and rejects non-studio routes", () => {
-    expect(parseSpaceShellPath("/spaces/my-studio")).toEqual({ spaceId: "my-studio", instanceId: undefined });
-    expect(parseSpaceShellPath("/spaces/my-studio/instances/inst-1")).toEqual({ spaceId: "my-studio", instanceId: "inst-1" });
-    expect(parseSpaceShellPath("/")).toBeNull();
-    expect(parseSpaceShellPath("/spaces/my-studio/instances/inst-1/extra")).toBeNull();
-  });
-
   it("classifies shell routes into landing, space, and notFound", () => {
     expect(parseShellRoute("/")).toEqual({ kind: "landing" });
     expect(parseShellRoute("/spaces/my-studio")).toEqual({ kind: "space", spaceId: "my-studio", instanceId: undefined });
     expect(parseShellRoute("/spaces/my-studio/instances/inst-1")).toEqual({ kind: "space", spaceId: "my-studio", instanceId: "inst-1" });
     expect(parseShellRoute("/unknown/path")).toEqual({ kind: "notFound", path: "/unknown/path" });
+    expect(parseShellRoute("/spaces/my-studio/instances/inst-1/extra")).toEqual({ kind: "notFound", path: "/spaces/my-studio/instances/inst-1/extra" });
   });
 
   // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C3/§C6 — pure-function
@@ -12470,20 +12484,20 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
       children: [{ kind: "window" as const, id: "main", title: uiDataLabel("Main Window") }],
     };
 
-    const retitledDeNative = retitleWindowLayoutNode(layout, windowKinds, [], "native", "de");
+    const retitledDeNative = retitleWindowLayoutNode(layout, windowKinds, [], "native", "de", {});
     expect(retitledDeNative).toEqual({
       kind: "stack",
       children: [{ kind: "window", id: "main", title: "Hauptfenster" }],
     });
 
-    const retitledDeReuse = retitleWindowLayoutNode(layout, windowKinds, [], "reuse", "de");
+    const retitledDeReuse = retitleWindowLayoutNode(layout, windowKinds, [], "reuse", "de", {});
     expect(retitledDeReuse).toEqual({
       kind: "stack",
       children: [{ kind: "window", id: "main", title: "Hauptkomponente" }],
     });
   });
 
-  it("re-derives titles for extra window instances based on their windowKindId", () => {
+  it("preserves authored titles for extra window instances on locale changes", () => {
     const windowKinds = [
       {
         id: "puzzle3d-main",
@@ -12493,16 +12507,16 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
         },
       },
     ];
-    const extraInstances = [{ id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "3D Editor" }];
+    const extraInstances = [{ id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "Top" }];
     const layout = {
       kind: "stack" as const,
-      children: [{ kind: "window" as const, id: "puzzle3d-main-top", title: uiDataLabel("3D Editor") }],
+      children: [{ kind: "window" as const, id: "puzzle3d-main-top", title: uiDataLabel("Top") }],
     };
 
-    const retitled = retitleWindowLayoutNode(layout, windowKinds, extraInstances, "reuse", "de");
+    const retitled = retitleWindowLayoutNode(layout, windowKinds, extraInstances, "reuse", "de", {});
     expect(retitled).toEqual({
       kind: "stack",
-      children: [{ kind: "window", id: "puzzle3d-main-top", title: "3D-Komponente" }],
+      children: [{ kind: "window", id: "puzzle3d-main-top", title: "Top" }],
     });
   });
 });

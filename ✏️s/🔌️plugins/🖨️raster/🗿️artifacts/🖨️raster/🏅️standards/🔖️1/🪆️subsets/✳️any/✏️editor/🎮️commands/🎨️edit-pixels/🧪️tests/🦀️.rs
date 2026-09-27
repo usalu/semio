@@ -15,7 +15,7 @@ fn edit_pixels_keeps_the_source_asset_when_a_mask_references_it() {
         *mask=Some(crate::RasterLayerMask {enabled:true,linked:true,invert:false,width:Some(2),height:Some(2),image_key:Some(key.into()),transform:crate::RasterTransform::default()});
     }
     let command=EditPixels {layer_id:layer_node_id(&document.layers[0]).to_owned(),expected_image_key:Some(key.into()),operation:fixture["operation"].to_string(),selection:None};
-    let (mut job,layer,parent,index)=prepare(&command,&document).unwrap();
+    let (mut job,layer,parent,index)=finish_preparation(&command,&document);
     while !job.advance(4).unwrap().done {}
     let mut encoder=PngEncodeJob::new(job.into_result().unwrap()).unwrap();
     while !encoder.advance().unwrap().done {}
@@ -51,7 +51,7 @@ fn edit_pixels_preserves_layer_identity_and_tree_address() {
     document.layers.push(crate::standards::v1::subsets::any::schema::create_pixel_layer("Test", 2, 2));
     let id = crate::standards::v1::subsets::any::schema::layer_node_id(&document.layers[0]).to_string();
     let command = EditPixels { layer_id: id.clone(), expected_image_key: None, operation: "{\"kind\":\"fill\",\"color\":[255,0,0,255]}".into(), selection: None };
-    let (mut job, layer, parent, index) = prepare(&command, &document).unwrap();
+    let (mut job, layer, parent, index) = finish_preparation(&command, &document);
     assert_eq!(index, 0);
     assert_eq!(parent, None);
     assert_eq!(crate::standards::v1::subsets::any::schema::layer_node_id(&layer), id);
@@ -78,7 +78,7 @@ fn edit_pixels_publication_round_trips_through_history() {
     let id=layer_node_id(&document.layers[0]).to_owned();
     let before=document.clone();
     let command=EditPixels {layer_id:id.clone(),expected_image_key:None,operation:"{\"kind\":\"fill\",\"color\":[255,0,0,255]}".into(),selection:None};
-    let (mut job,layer,parent,index)=prepare(&command,&document).unwrap();
+    let (mut job,layer,parent,index)=finish_preparation(&command,&document);
     job.advance(4).unwrap();
     let mut encoder=PngEncodeJob::new(job.into_result().unwrap()).unwrap();
     while !encoder.advance().unwrap().done {}
@@ -106,4 +106,47 @@ fn edit_pixels_publication_round_trips_through_history() {
     for mutation in emit.artifact_mutations {mutation.retire_cold();}
     retire_raster_snapshot(document);
     retire_raster_snapshot(before);
+}
+
+fn finish_preparation(command:&EditPixels,document:&RasterSnapshot)->(PixelEditJob,RasterLayerNode,Option<String>,usize) {
+    let mut candidate=prepare(command,document).unwrap();
+    while !candidate.advance(document,32768).unwrap() {}
+    candidate.into_job().unwrap()
+}
+
+#[test]
+fn pixel_source_preparation_is_bounded_and_cancellable() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    for source in [false,true] {
+        let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+        let width=fixture["width"].as_u64().unwrap() as u32;let height=fixture["height"].as_u64().unwrap() as u32;
+        let mut layer=crate::standards::v1::subsets::any::schema::create_pixel_layer("Paint",width,height);
+        let id=layer_node_id(&layer).to_owned();
+        let key=source.then(||"source".to_owned());
+        if source {
+            let pixels=fixture["sourcePixel"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect::<Vec<_>>().repeat((width*height) as usize);
+            let asset=RasterImageAsset {mime:"image/png".into(),data:semio_framework_pixels::encode_png(&RasterImage {width,height,pixels}).unwrap()};
+            document.assets.insert("source".into(),crate::mint_raster_asset_child("source",&asset)).unwrap();
+            let RasterLayerNode::Pixel {image_key,..}=&mut layer else {panic!("pixel")};*image_key=key.clone();
+        }
+        document.layers.push(layer);
+        let command=EditPixels {layer_id:id,expected_image_key:key,operation:fixture["operation"].to_string(),selection:Some(fixture["selection"].to_string())};
+        let mut candidate=prepare(&command,&document).unwrap();
+        assert!(candidate.image.pixels.is_empty());assert!(candidate.selection.as_ref().unwrap().is_empty());
+        assert!(!candidate.advance(&document,0).unwrap());assert!(candidate.image.pixels.is_empty());
+        assert!(!candidate.advance(&document,fixture["grant"].as_u64().unwrap() as usize).unwrap());
+        let prepared=fixture["expectedPreparedPixels"].as_u64().unwrap() as usize;
+        assert_eq!(candidate.image.pixels.len(),prepared*4);assert_eq!(candidate.selection.as_ref().unwrap().len(),prepared);
+        assert_eq!(candidate.selection.as_ref().unwrap()[32767],128);
+        let mut work=PixelEditWork {preparing:Some(candidate),..Default::default()};
+        work.begin_close();assert!(!work.terminal_is_empty());
+        assert!(matches!(work.close_step(1,262144),semio_framework_job::InteractiveJobCloseStep::Complete));assert!(work.terminal_is_empty());
+        let (mut job,..)=finish_preparation(&command,&document);
+        while !job.advance(4096).unwrap().done {}
+        let pixels=&job.result().unwrap().pixels;
+        let expected=fixture[if source {"expectedSelectedPixel"} else {"expectedBlankSelectedPixel"}].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();
+        assert_eq!(&pixels[32767*4..32769*4],expected.repeat(2));
+        assert_eq!(&pixels[..4],if source {&[10,20,30,255]} else {&[0,0,0,0]});
+        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+    }
 }

@@ -68,17 +68,20 @@ impl MutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection 
         vec![Self { selected: base.selected.clone() }.into()]
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&{
-        match &self.selected {
-            None => "Clear test config selection".into(),
-            Some(value) => format!("Change test config selection to {value}"),
-        }
-        }, &{
-        match &self.selected {
-            None => "Testkonfigurationsauswahl leeren".into(),
-            Some(value) => format!("Testkonfigurationsauswahl auf {value} ändern"),
-        }
-        })
+        protocol::LocalizedLabel::native(
+            &{
+                match &self.selected {
+                    None => "Clear test config selection".into(),
+                    Some(value) => format!("Change test config selection to {value}"),
+                }
+            },
+            &{
+                match &self.selected {
+                    None => "Testkonfigurationsauswahl leeren".into(),
+                    Some(value) => format!("Testkonfigurationsauswahl auf {value} ändern"),
+                }
+            },
+        )
     }
 }
 

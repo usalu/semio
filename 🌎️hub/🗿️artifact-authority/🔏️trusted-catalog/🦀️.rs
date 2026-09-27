@@ -488,6 +488,20 @@ pub(crate) struct GuestResidencyLedgerV1<T> {
     slots: std::sync::Mutex<Vec<Arc<GuestResidencySlotV1<T>>>>,
 }
 
+/// 📏️ What a resident value holds beyond the bytes it was registered with, measured on the value itself once it exists
+/// and again after every codec call that used it — a guest's state can grow with its first call.
+pub(crate) trait GuestResidentFootprintV1 {
+    /// 📐️ The bytes the value holds beyond its registration charge.
+    fn footprint_bytes(&self) -> u64;
+}
+
+impl GuestResidentFootprintV1 for semio_framework_plugin_host::CompiledHandle {
+    /// 🧩️ A compiled handle holds its parsed component, which its registration charges, and nothing beyond it.
+    fn footprint_bytes(&self) -> u64 {
+        0
+    }
+}
+
 /// 🧩️ What one slot holds: nothing, a resident value, or a value that serves only the calls holding it.
 enum GuestResidentValueV1<T> {
     Absent,
@@ -498,6 +512,7 @@ enum GuestResidentValueV1<T> {
 struct GuestResidencySlotV1<T> {
     value: tokio::sync::Mutex<GuestResidentValueV1<T>>,
     charge_bytes: u64,
+    footprint_bytes: std::sync::atomic::AtomicU64,
     last_used: std::sync::atomic::AtomicU64,
     access_count: std::sync::atomic::AtomicU32,
     last_operation: std::sync::atomic::AtomicU64,
@@ -515,6 +530,11 @@ impl<T> GuestResidencySlotV1<T> {
 
     fn charged(&self) -> bool {
         self.value.try_lock().map_or(true, |value| matches!(&*value, GuestResidentValueV1::Resident(_)))
+    }
+
+    /// 📏️ What the slot's value is charged: its registered bytes and its measured footprint.
+    fn charge(&self) -> u64 {
+        self.charge_bytes.saturating_add(self.footprint_bytes.load(std::sync::atomic::Ordering::Acquire))
     }
 }
 
@@ -542,6 +562,7 @@ impl<T> GuestResidencyLedgerV1<T> {
         let slot = Arc::new(GuestResidencySlotV1 {
             value: tokio::sync::Mutex::new(GuestResidentValueV1::Absent),
             charge_bytes,
+            footprint_bytes: std::sync::atomic::AtomicU64::new(0),
             last_used: std::sync::atomic::AtomicU64::new(0),
             access_count: std::sync::atomic::AtomicU32::new(0),
             last_operation: std::sync::atomic::AtomicU64::new(0),
@@ -561,7 +582,7 @@ impl<T> GuestResidencyLedgerV1<T> {
         self.budget_bytes.store(budget_bytes, std::sync::atomic::Ordering::Release);
         let mut slots = self.snapshot();
         slots.sort_by_key(|slot| slot.last_used.load(std::sync::atomic::Ordering::Acquire));
-        let mut charged: u64 = slots.iter().filter(|slot| slot.charged()).map(|slot| slot.charge_bytes).sum();
+        let mut charged: u64 = slots.iter().filter(|slot| slot.charged()).map(|slot| slot.charge()).sum();
         for slot in slots {
             if charged <= budget_bytes {
                 break;
@@ -569,7 +590,7 @@ impl<T> GuestResidencyLedgerV1<T> {
             let Ok(mut value) = slot.value.try_lock() else { continue };
             if matches!(&*value, GuestResidentValueV1::Resident(resident) if Arc::strong_count(resident) == 1) {
                 *value = GuestResidentValueV1::Absent;
-                charged = charged.saturating_sub(slot.charge_bytes);
+                charged = charged.saturating_sub(slot.charge());
                 self.released.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             }
         }
@@ -603,13 +624,13 @@ impl<T> GuestResidencyLedgerV1<T> {
     /// than the whole budget. A slot another call is compiling or acquiring right now counts as charged.
     fn admit(&self, keep: &Arc<GuestResidencySlotV1<T>>, prior: u32) -> bool {
         let budget = self.budget_bytes.load(std::sync::atomic::Ordering::Acquire);
-        if keep.charge_bytes > budget {
+        if keep.charge() > budget {
             return false;
         }
         let slots = self.snapshot();
         let others: Vec<&Arc<GuestResidencySlotV1<T>>> = slots.iter().filter(|slot| !Arc::ptr_eq(slot, keep)).collect();
-        let charged: u64 = others.iter().filter(|slot| slot.charged()).map(|slot| slot.charge_bytes).sum();
-        let excess = charged.saturating_add(keep.charge_bytes).saturating_sub(budget);
+        let charged: u64 = others.iter().filter(|slot| slot.charged()).map(|slot| slot.charge()).sum();
+        let excess = charged.saturating_add(keep.charge()).saturating_sub(budget);
         if excess == 0 {
             return true;
         }
@@ -623,7 +644,7 @@ impl<T> GuestResidencyLedgerV1<T> {
             if freed >= excess {
                 break;
             }
-            freed = freed.saturating_add(slot.charge_bytes);
+            freed = freed.saturating_add(slot.charge());
             victim_count += 1;
             hottest_victim = hottest_victim.max(slot.access_count.load(std::sync::atomic::Ordering::Acquire));
         }
@@ -646,7 +667,8 @@ impl<T> GuestResidencyLedgerV1<T> {
             budget_bytes: load(&self.budget_bytes),
             registered_guests: u64::try_from(slots.len()).unwrap_or(u64::MAX),
             resident_guests: u64::try_from(resident.len()).unwrap_or(u64::MAX),
-            resident_bytes: resident.iter().map(|slot| slot.charge_bytes).sum(),
+            resident_bytes: resident.iter().map(|slot| slot.charge()).sum(),
+            footprint_bytes: resident.iter().map(|slot| slot.footprint_bytes.load(std::sync::atomic::Ordering::Acquire)).sum(),
             hits: load(&self.hits),
             compiles: load(&self.compiles),
             admitted: load(&self.admitted),
@@ -663,7 +685,7 @@ pub(crate) struct GuestResidencyV1<T> {
     slot: Arc<GuestResidencySlotV1<T>>,
 }
 
-impl<T: Send + Sync + 'static> GuestResidencyV1<T> {
+impl<T: GuestResidentFootprintV1 + Send + Sync + 'static> GuestResidencyV1<T> {
     /// 🔑️ The resident or held value for one call of `context`'s operation, compiled by `compile` when there is
     /// none (one compile at a time). A value that is not admitted stays with the operation that compiled it — and
     /// with any other operation that reaches it meanwhile — and is dropped with the last of them; a held value
@@ -696,6 +718,7 @@ impl<T: Send + Sync + 'static> GuestResidencyV1<T> {
         let compiled = Arc::new(compile().await?);
         self.ledger.compile_micros.fetch_add(u64::try_from(started.elapsed().as_micros()).unwrap_or(u64::MAX), std::sync::atomic::Ordering::AcqRel);
         self.ledger.compiles.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        self.slot.footprint_bytes.store(compiled.footprint_bytes(), std::sync::atomic::Ordering::Release);
         *value = if self.ledger.admit(&self.slot, prior) {
             self.ledger.admitted.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
             GuestResidentValueV1::Resident(Arc::clone(&compiled))
@@ -705,6 +728,31 @@ impl<T: Send + Sync + 'static> GuestResidencyV1<T> {
             GuestResidentValueV1::Held(Arc::downgrade(&compiled))
         };
         Ok(compiled)
+    }
+
+    /// 📏️ Charges `value` what it holds now ([`GuestResidentFootprintV1`]) after a call of `context`'s operation used it.
+    /// A resident value that grew past what the budget has left stays resident only when its uses before this operation
+    /// outnumber those of every least recently used unheld value it would release — which are then released — and
+    /// otherwise serves the operations holding it (this one among them) and is dropped with the last of them. A held value
+    /// is charged its growth when it is next admitted; a value the slot no longer holds changes nothing.
+    pub(crate) async fn remeasure(&self, value: &Arc<T>, context: &OperationContext<'_>) {
+        let footprint = value.footprint_bytes();
+        if self.slot.footprint_bytes.load(std::sync::atomic::Ordering::Acquire) == footprint {
+            return;
+        }
+        let mut held = self.slot.value.lock().await;
+        let resident = match &*held {
+            GuestResidentValueV1::Resident(resident) if Arc::ptr_eq(resident, value) => true,
+            GuestResidentValueV1::Held(weak) if std::ptr::eq(weak.as_ptr(), Arc::as_ptr(value)) => false,
+            GuestResidentValueV1::Resident(_) | GuestResidentValueV1::Held(_) | GuestResidentValueV1::Absent => return,
+        };
+        self.slot.footprint_bytes.store(footprint, std::sync::atomic::Ordering::Release);
+        if !resident || self.ledger.admit(&self.slot, self.slot.prior_uses.load(std::sync::atomic::Ordering::Acquire)) {
+            return;
+        }
+        *held = GuestResidentValueV1::Held(Arc::downgrade(value));
+        context.retain(Arc::clone(value) as Arc<dyn std::any::Any + Send + Sync>);
+        self.ledger.released.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
     }
 }
 
@@ -792,7 +840,7 @@ impl GuestArtifactComponent {
                 context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 0, total_units: 1 })?;
                 let bytes = self.component.read(context).await?;
                 let (runtime, package) = (Arc::clone(&self.runtime), self.package.clone());
-                let compiled = interpret_off_worker(context, move |_handle, _progress| runtime.compile_component(&package, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
+                let compiled = interpret_off_worker(context, move |_handle, _progress, _cancellation| runtime.compile_component(&package, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
                 context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 1, total_units: 1 })?;
                 Ok(compiled)
             })
@@ -841,17 +889,23 @@ impl GuestArtifactComponent {
         let compiled = self.compiled(context).await.map_err(|error| catalog_error(format!("{schemas}: {error}")))?;
         let pending: Vec<_> = self.rows.iter().map(|(schema, expected)| self.verify_row(Arc::clone(&compiled), schema, *expected, context)).collect();
         let mut running = futures::stream::iter(pending).buffer_unordered(guest_verification_concurrency());
+        let mut verified = Ok(());
         while let Some(row) = running.next().await {
-            row?;
+            if let Err(error) = row {
+                verified = Err(error);
+                break;
+            }
         }
-        Ok(())
+        drop(running);
+        self.compiled.remeasure(&compiled, context).await;
+        verified
     }
 
     /// 🔐️ One row: the component's own `pack-schema-hash`, compared with the trust record and remembered for this engine.
     async fn verify_row(&self, compiled: Arc<semio_framework_plugin_host::CompiledHandle>, schema: &str, expected: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
         let (runtime, row_schema) = (Arc::clone(&self.runtime), schema.to_string());
-        let observed = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
+        let observed = interpret_off_worker(context, move |handle, progress, cancellation| handle.block_on(runtime.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel), cancellation)))
             .await?
             .map_err(|error| catalog_error(format!("{schema}: {error}")))?;
         context.checkpoint()?;
@@ -878,25 +932,25 @@ impl GuestArtifactCodecBinding {
     /// does — the interpreter walks a ≈ 48 MB component's whole app bundle — so the guest's own
     /// fuel progress is reported into the caller's context as it happens: under a stall bound a
     /// checkpoint is what says "still moving", and without these an honest interpreter would look
-    /// exactly like a wedged one. Cancellation is not read inside the interpretation: a caller that
-    /// stops waiting is released at once and the call ends on its own fuel bound.
+    /// exactly like a wedged one. A caller that stops waiting ends the interpretation at its next
+    /// step ([`interpret_off_worker`]).
     async fn genesis(&self, document_id: &str, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await?;
-        let (runtime, schema, document_id) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), document_id.to_string());
-        let pair = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_genesis_observed(&compiled, &schema, &document_id, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
-            .await?
-            .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
+        let (runtime, schema, document_id, guest) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), document_id.to_string(), Arc::clone(&compiled));
+        let answer = interpret_off_worker(context, move |handle, progress, cancellation| handle.block_on(runtime.codec_genesis_observed(&guest, &schema, &document_id, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel), cancellation))).await?;
+        self.component.compiled.remeasure(&compiled, context).await;
+        let pair = answer.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Input, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: pair.pack, spr: pair.spr })
     }
 
     async fn print_mirror(&self, pair: &ArtifactPair, stage: ArtifactValidationStage, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
-        let (runtime, schema, pack, spr) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), pair.pack.clone(), pair.spr.clone());
-        let mirror = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_print_mirror_observed(&compiled, &schema, &pack, &spr, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
-            .await?
-            .map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
+        let (runtime, schema, pack, spr, guest) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), pair.pack.clone(), pair.spr.clone(), Arc::clone(&compiled));
+        let answer = interpret_off_worker(context, move |handle, progress, cancellation| handle.block_on(runtime.codec_print_mirror_observed(&guest, &schema, &pack, &spr, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel), cancellation))).await?;
+        self.component.compiled.remeasure(&compiled, context).await;
+        let mirror = answer.map_err(|error| AuthorityError::Codec { stage, message: bounded_message(error) })?;
         if mirror.dsl.len().checked_add(mirror.ops.len()).is_none_or(|length| length > AUTHORITY_MAX_CODEC_TEXT_BYTES) {
             return Err(AuthorityError::ResourceLimit("codec text byte"));
         }
@@ -906,10 +960,10 @@ impl GuestArtifactCodecBinding {
     async fn apply_ops(&self, pair: ArtifactPair, encoded: Vec<u8>, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await?;
-        let (runtime, schema) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone());
-        let next = interpret_off_worker(context, move |handle, progress| handle.block_on(runtime.codec_apply_ops_observed(&compiled, &schema, &pair.pack, &pair.spr, &encoded, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel))))
-            .await?
-            .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        let (runtime, schema, guest) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), Arc::clone(&compiled));
+        let answer = interpret_off_worker(context, move |handle, progress, cancellation| handle.block_on(runtime.codec_apply_ops_observed(&guest, &schema, &pair.pack, &pair.spr, &encoded, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel), cancellation))).await?;
+        self.component.compiled.remeasure(&compiled, context).await;
+        let next = answer.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: next.pack, spr: next.spr })
     }
 
@@ -918,12 +972,13 @@ impl GuestArtifactCodecBinding {
     async fn replay_envelopes(&self, pair: ArtifactPair, envelopes: &[u8], context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await?;
-        let (runtime, schema, envelopes) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), envelopes.to_vec());
-        let next = interpret_off_worker(context, move |handle, progress| {
-            handle.block_on(runtime.codec_replay_envelopes_observed(&compiled, &schema, &pair.pack, &pair.spr, &envelopes, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel)))
+        let (runtime, schema, envelopes, guest) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), envelopes.to_vec(), Arc::clone(&compiled));
+        let answer = interpret_off_worker(context, move |handle, progress, cancellation| {
+            handle.block_on(runtime.codec_replay_envelopes_observed(&guest, &schema, &pair.pack, &pair.spr, &envelopes, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel), cancellation))
         })
-        .await?
-        .map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
+        .await?;
+        self.component.compiled.remeasure(&compiled, context).await;
+        let next = answer.map_err(|error| AuthorityError::Codec { stage: ArtifactValidationStage::Output, message: bounded_message(error) })?;
         Ok(ArtifactPair { pack: next.pack, spr: next.spr })
     }
 }
@@ -932,27 +987,54 @@ impl GuestArtifactCodecBinding {
 /// that awaits it: a call interprets for seconds to minutes, and on a worker it would stall every
 /// request, socket and timer queued behind it (a sign-in, a presence heartbeat, an edit's ack). The
 /// call's fuel observations reach the caller's context while it runs — each one a checkpoint of its
-/// stall bound — and the first observation after the caller cancelled (or stalled) releases the caller
-/// with that outcome while the call ends on its own fuel bound; dropping the caller releases it at once.
-/// The outer result is the caller's own outcome, the inner one the guest's answer. Guest codec calls
-/// belong to the hub's runtime; outside one they are refused.
+/// stall bound — and the call observes its caller: once the caller is released — refused at an
+/// observation, cancelled (seen within [`GUEST_CALL_CANCELLATION_POLL`] between observations), or
+/// dropped mid-await like the background verification a hub shutdown aborts — the interpreter ends
+/// the call at its next step, so no interpretation outlives the operation that asked for it and a
+/// runtime being dropped waits for none. The outer result is the caller's own outcome, the inner one
+/// the guest's answer. Guest codec calls belong to the hub's runtime; outside one they are refused.
 async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_host::TurnFault>, AuthorityError>
 where
     T: Send + 'static,
-    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64)) -> Result<T, semio_framework_plugin_host::TurnFault> + Send + 'static,
+    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64), &semio_framework_plugin_host::GuestCallCancellation) -> Result<T, semio_framework_plugin_host::TurnFault> + Send + 'static,
 {
     let handle = tokio::runtime::Handle::try_current().map_err(|_| catalog("guest codec calls run on the hub runtime"))?;
     let (sender, mut observations) = tokio::sync::mpsc::unbounded_channel::<u64>();
-    let blocking = handle.clone();
+    let released = GuestCallRelease(semio_framework_plugin_host::GuestCallCancellation::default());
+    let (blocking, cancellation) = (handle.clone(), released.0.clone());
     let joined = handle.spawn_blocking(move || {
-        call(&blocking, &mut |fuel| {
-            let _ = sender.send(fuel);
-        })
+        call(
+            &blocking,
+            &mut |fuel| {
+                let _ = sender.send(fuel);
+            },
+            &cancellation,
+        )
     });
-    while let Some(fuel) = observations.recv().await {
-        context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: fuel.min(GUEST_CODEC_BUDGET.fuel), total_units: GUEST_CODEC_BUDGET.fuel })?;
+    loop {
+        match tokio::time::timeout(GUEST_CALL_CANCELLATION_POLL, observations.recv()).await {
+            Ok(Some(fuel)) => context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCodecExecuting, completed_units: fuel.min(GUEST_CODEC_BUDGET.fuel), total_units: GUEST_CODEC_BUDGET.fuel })?,
+            Ok(None) => break,
+            Err(_) if context.is_cancelled() => return Err(AuthorityError::Cancelled),
+            Err(_) => {}
+        }
     }
     Ok(joined.await.unwrap_or_else(|error| Err(semio_framework_plugin_host::TurnFault::Trapped(format!("guest codec call ended abnormally: {error}")))))
+}
+
+/// ⏲️ How often a caller awaiting a guest call between two fuel observations (one per 25 M fuel or 5 s)
+/// looks at its own cancellation.
+const GUEST_CALL_CANCELLATION_POLL: std::time::Duration = std::time::Duration::from_millis(50);
+
+/// 🧯️ The awaiting side of one guest call: however its caller is released — answered, refused, cancelled or
+/// dropped mid-await — the call is cancelled, which ends its interpretation at the next step (a call that already
+/// returned is unaffected).
+struct GuestCallRelease(semio_framework_plugin_host::GuestCallCancellation);
+
+impl Drop for GuestCallRelease {
+    fn drop(&mut self) {
+        self.0.cancel();
+    }
 }
 
 /// 🧪️ One immutable authority identity bound to its executable. `codec` is `Some` only for a package
@@ -2306,18 +2388,32 @@ fn validate_native_bindings(bindings: &[NativeCodecBinding]) -> Result<BTreeMap<
     Ok(map)
 }
 
+/// 🪪️ A decoded descriptor must be exactly the package its trust record names, speaking this hub's app channel.
+/// A refusal names the package and every field that differs; a catalog published for another app channel is named as
+/// such, because the operator's remedy (publish the catalog again with this tree) differs from a tampered descriptor's.
 fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &PackageDescriptor, packages: &[TrustedBundlePackageV1]) -> Result<(), AuthorityError> {
-    if descriptor.descriptor_version != 1
-        || !valid_package_id(&descriptor.package_id)
-        || descriptor.package_id != record.package_id
-        || !record.role.matches(descriptor.role)
-        || descriptor.manifest.plugin_id != record.plugin_id
-        || descriptor.manifest.version != record.version
-        || descriptor.hashes.wasm_sha256 != record.component.sha256
-        || descriptor.execution_protocol != record.execution_protocol
-        || descriptor.execution_protocol.app_channel_version != directory::os_spr::CHANNEL_VERSION
-    {
-        return Err(catalog("decoded package descriptor identity does not exactly match its trust record"));
+    let differing: Vec<&str> = [
+        (descriptor.descriptor_version != 1, "descriptorVersion"),
+        (!valid_package_id(&descriptor.package_id) || descriptor.package_id != record.package_id, "packageId"),
+        (!record.role.matches(descriptor.role), "role"),
+        (descriptor.manifest.plugin_id != record.plugin_id, "pluginId"),
+        (descriptor.manifest.version != record.version, "version"),
+        (descriptor.hashes.wasm_sha256 != record.component.sha256, "wasmSha256"),
+        (descriptor.execution_protocol != record.execution_protocol, "executionProtocol"),
+    ]
+    .into_iter()
+    .filter_map(|(differs, field)| differs.then_some(field))
+    .collect();
+    if !differing.is_empty() {
+        return Err(catalog(&format!("package {} descriptor identity does not exactly match its trust record: {}", record.package_id, differing.join(", "))));
+    }
+    if descriptor.execution_protocol.app_channel_version != directory::os_spr::CHANNEL_VERSION {
+        return Err(catalog(&format!(
+            "package {} was published for app channel {} but this hub speaks app channel {}: publish the trusted catalog again with this hub's tree",
+            record.package_id,
+            descriptor.execution_protocol.app_channel_version,
+            directory::os_spr::CHANNEL_VERSION
+        )));
     }
     if decode_digest(&descriptor.hashes.core_wasm_sha256, "descriptor core wasm sha256")? == [0; 32] || decode_digest(&descriptor.hashes.descriptor_sha256, "descriptor metadata sha256")? == [0; 32] {
         return Err(catalog("decoded package descriptor hash metadata is zero"));

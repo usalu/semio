@@ -48,7 +48,7 @@ vi.mock("@semio-tech/infinite-canvas-react-renderer", async (importOriginal) => 
         },
         onPointerMove: (event: ReactPointerEvent<HTMLCanvasElement>) => {
           const [x, y] = local(event);
-          session.pointerMove(x, y);
+          session.pointerMove(x, y, {shift:event.shiftKey,ctrl:event.ctrlKey,meta:event.metaKey,alt:event.altKey});
         },
         onPointerUp: (event: ReactPointerEvent<HTMLCanvasElement>) => {
           const [x, y] = local(event);
@@ -202,6 +202,8 @@ describe("🖱️ Canvas2d mounted input contract", () => {
     expect(actions.at(-1)?.args?.cancelled).toBe(true);
 
     const cancelledCount = actions.length;
+    fireEvent.pointerMove(canvas, { pointerId: 7, buttons: 1, clientX: law.points.move.x + 20, clientY: law.points.move.y + 20 });
+    fireEvent.pointerUp(canvas, { pointerId: 7, button: 0, clientX: law.points.terminal.x + 20, clientY: law.points.terminal.y + 20 });
     fireEvent.pointerCancel(canvas, { pointerId: 7 });
     await settle();
     expect(actions).toHaveLength(cancelledCount);

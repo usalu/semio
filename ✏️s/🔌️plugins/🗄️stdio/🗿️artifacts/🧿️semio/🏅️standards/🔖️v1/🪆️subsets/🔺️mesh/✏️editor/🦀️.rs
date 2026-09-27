@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+    ActionArgDef, ActionDefinition, ActionKind, ArgSchema, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
 use store::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
@@ -29,13 +29,13 @@ pub const SEMIO_MESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 /// mutation today (only insert/remove/whole-document `SetSnapshot`).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SemioMeshSetVertexArgs {
-    pub mesh_index: usize,
-    pub primitive_index: usize,
+    pub mesh_id: String,
+    pub primitive_id: String,
     pub vertex_index: usize,
     pub point: [f64; 3],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SemioMeshEditCommand {
     SetVertex(SemioMeshSetVertexArgs),
 }
@@ -43,22 +43,40 @@ pub enum SemioMeshEditCommand {
 impl protocol::OpBinary for SemioMeshEditCommand {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let SemioMeshEditCommand::SetVertex(args) = self;
-        let payload = serde_json::json!({ "meshIndex": args.mesh_index, "primitiveIndex": args.primitive_index, "vertexIndex": args.vertex_index, "point": args.point });
+        let payload = serde_json::json!({ "meshId": args.mesh_id.as_str(), "primitiveId": args.primitive_id.as_str(), "vertexIndex": args.vertex_index, "point": args.point });
         Ok(serde_json::to_vec(&payload).unwrap_or_default())
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let value: serde_json::Value = serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: error.to_string() })?;
-        let mesh_index = value.get("meshIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        let primitive_index = value.get("primitiveIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        let vertex_index = value.get("vertexIndex").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-        let point = value.get("point").and_then(|v| v.as_array()).map_or([0.0, 0.0, 0.0], |array| {
-            let get = |index: usize| array.get(index).and_then(|value| value.as_f64()).unwrap_or(0.0);
-            [get(0), get(1), get(2)]
-        });
-        Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_index, primitive_index, vertex_index, point }))
+        let mesh_id = value.get("meshId").and_then(|v| v.as_str()).filter(|v| !v.is_empty()).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "meshId is required".into() })?.to_owned();
+        let primitive_id = value.get("primitiveId").and_then(|v| v.as_str()).filter(|v| !v.is_empty()).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "primitiveId is required".into() })?.to_owned();
+        let vertex_index = value.get("vertexIndex").and_then(|v| v.as_u64()).and_then(|v| usize::try_from(v).ok()).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "vertexIndex is required".into() })?;
+        let point_value = value.get("point").and_then(|v| v.as_array()).filter(|v| v.len() == 3).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "point must contain three finite numbers".into() })?;
+        let component = |index: usize| point_value[index].as_f64().filter(|v| v.is_finite()).ok_or_else(|| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "point must contain three finite numbers".into() });
+        let point = [component(0)?, component(1)?, component(2)?];
+        Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_id, primitive_id, vertex_index, point }))
     }
 }
 semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(SemioMeshEditCommand, ["set-vertex"]);
+
+fn vertex_index_arg() -> ActionArgDef {
+    let mut argument = ActionArgDef::number("vertexIndex", LocalizedLabel::native("Vertex Index", "Vertexindex")).required();
+    if let ArgSchema::Number { min, step, integer, .. } = &mut argument.schema {
+        *min = Some(0.0);
+        *step = Some(1.0);
+        *integer = true;
+    }
+    argument
+}
+
+pub fn set_vertex_action() -> ActionDefinition {
+    ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Move Vertex", "Vertex verschieben"), ActionKind::Mutation).with_args(vec![
+        ActionArgDef::text("meshId", LocalizedLabel::native("Mesh ID", "Mesh-ID")).required(),
+        ActionArgDef::text("primitiveId", LocalizedLabel::native("Primitive ID", "Primitiv-ID")).required(),
+        vertex_index_arg(),
+        ActionArgDef::vec3("point", LocalizedLabel::native("Target Point", "Zielpunkt")).required(),
+    ])
+}
 //#endregion 🔖️Command
 
 //#region 🔖️Editor
@@ -109,14 +127,10 @@ impl ArtifactEditor for SemioMeshEditor {
             let editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        let Some(mesh) = doc.snapshot.meshes.get(args.mesh_index) else {
-            return Ok(Emit::default());
-        };
-        let Some(primitive) = mesh.primitives.get(args.primitive_index) else {
-            return Ok(Emit::default());
-        };
+        let Some(mesh) = doc.snapshot.meshes.iter().find(|mesh| mesh.id == args.mesh_id) else { return Err(Fault::from(format!("mesh '{}' does not exist", args.mesh_id))); };
+        let Some(primitive) = mesh.primitives.iter().find(|primitive| primitive.id == args.primitive_id) else { return Err(Fault::from(format!("primitive '{}' does not exist in mesh '{}'", args.primitive_id, args.mesh_id))); };
         if primitive.positions.get(args.vertex_index).is_none() {
-            return Ok(Emit::default());
+            return Err(Fault::from(format!("vertex {} does not exist in primitive '{}'", args.vertex_index, args.primitive_id)));
         }
         let new_point = crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
         let mutation = SemioMeshMutation::MoveVertex(crate::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex { mesh_id: mesh.id.clone(), primitive_id: primitive.id.clone(), vertex_index: args.vertex_index, new_point });
@@ -136,16 +150,13 @@ impl ArtifactEditor for SemioMeshEditor {
             if action != "set-vertex" {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioMeshEditor")));
             }
-            let field = |key: &str| args.and_then(|value| value.get(key));
-            let unsigned_field = |key: &str| field(key).and_then(DslValue::as_f64).filter(|number| number.is_finite() && *number >= 0.0).map(|number| number as usize);
-            let mesh_index = unsigned_field("meshIndex").unwrap_or(0);
-            let primitive_index = unsigned_field("primitiveIndex").unwrap_or(0);
-            let vertex_index = unsigned_field("vertexIndex").unwrap_or(0);
-            let point = field("point").and_then(DslValue::as_array).map_or([0.0, 0.0, 0.0], |array| {
-                let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
-                [get(0), get(1), get(2)]
-            });
-            Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_index, primitive_index, vertex_index, point }))
+            let field = |key: &str| args.and_then(|value| value.get(key)).ok_or_else(|| Fault::from(format!("set-vertex requires '{key}'")));
+            let mesh_id = field("meshId")?.as_str().filter(|value| !value.is_empty()).ok_or_else(|| Fault::from("set-vertex meshId must be non-empty text"))?.to_owned();
+            let primitive_id = field("primitiveId")?.as_str().filter(|value| !value.is_empty()).ok_or_else(|| Fault::from("set-vertex primitiveId must be non-empty text"))?.to_owned();
+            let vertex_number = field("vertexIndex")?.as_f64().filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= usize::MAX as f64).ok_or_else(|| Fault::from("set-vertex vertexIndex must be a non-negative integer"))?;
+            let point_value = field("point")?.as_array().filter(|value| value.len() == 3).ok_or_else(|| Fault::from("set-vertex point must contain three finite numbers"))?;
+            let component = |index: usize| point_value[index].as_f64().filter(|value| value.is_finite()).ok_or_else(|| Fault::from("set-vertex point must contain three finite numbers"));
+            Ok(SemioMeshEditCommand::SetVertex(SemioMeshSetVertexArgs { mesh_id, primitive_id, vertex_index: vertex_number as usize, point: [component(0)?, component(1)?, component(2)?] }))
         })
     }
 }
@@ -155,11 +166,8 @@ impl editing::SnapshotEditingEditor for SemioMeshEditor {
         match command { editing::SnapshotEditingCommand::Edit(event) => Some(event), _ => None }
     }
 
-    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SemioMeshMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
@@ -168,7 +176,7 @@ impl editing::SnapshotEditingEditor for SemioMeshEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_mesh_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(SEMIO_MESH_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_MESH_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout());
+    let builder = Editor::builder(SEMIO_MESH_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_MESH_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(set_vertex_action());
     editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

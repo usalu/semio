@@ -90,7 +90,7 @@ impl protocol::OpBinary for EpwEditorCommand {
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(EpwEditorCommand, []);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(EpwEditorCommand, ["set-cell"]);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
@@ -118,7 +118,8 @@ impl ArtifactEditor for EpwEditor {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.stdio.epw@energyplus/*#editor",
         artifact_schema: "stdio.epw",
-        preparation: "stdio-epw-snapshot-edit"
+        preparation: "stdio-epw-snapshot-edit",
+        bounded_native: true
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -128,17 +129,18 @@ impl ArtifactEditor for EpwEditor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "set-cell" => {
-                let raw_column = semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["column", "columnName"], "");
-                let column = raw_column
-                    .parse::<usize>()
-                    .ok()
-                    .and_then(|index| main::EPW_TABLE_COLUMNS.get(index).copied())
-                    .unwrap_or(raw_column.as_str())
-                    .to_string();
+                let column_index = semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "column")? as usize;
+                let column = main::EPW_TABLE_COLUMNS.get(column_index).ok_or_else(|| {
+                    Fault::new(
+                        semio_framework_plugin::FaultOrigin::App,
+                        semio_framework_plugin::FaultCode::new("stdio.epw.column-range"),
+                        format!("EPW column index {column_index} is outside the {} editable fields", main::EPW_TABLE_COLUMNS.len()),
+                    )
+                })?;
                 Ok(EpwEditorCommand::SetCell {
-                    row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0),
-                    column,
-                    value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], ""),
+                    row: semio_s_artifact_stdio_contract::window_kit_required_index_argument(args, "row")?,
+                    column: (*column).to_string(),
+                    value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")?,
                 })
             }
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.epw.unhandled-action"), format!("unknown epw editor action '{other}'"))),
@@ -150,8 +152,7 @@ impl ArtifactEditor for EpwEditor {
     }
 
     /// ✏️ Resolves the addressed column to its canonical wire index and emits one
-    /// `EpwMutation::SetRecordField`. An out-of-range row or unknown column is a documented no-op
-    /// (`Emit::default()`), never a panic.
+    /// `EpwMutation::SetRecordField` through the same guarded reducer as retained execution.
     fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
@@ -165,11 +166,7 @@ impl ArtifactEditor for EpwEditor {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        let Some(field_index) = main::EPW_TABLE_COLUMNS.iter().position(|candidate| candidate == column) else { return Ok(Emit::default()) };
-        if doc.snapshot.records.get(*row as usize).is_none() {
-            return Ok(Emit::default());
-        }
-        Ok(Emit { artifact_mutations: vec![EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: *row as usize, field_index, value: value.clone() })], description: Some(format!("Set {column}")), ..Default::default() })
+        epw_set_cell_emit(doc.snapshot, *row, column, value)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -187,6 +184,32 @@ impl ArtifactEditor for EpwEditor {
     }
 }
 
+fn epw_set_cell_emit(snapshot: &EpwSnapshot, row: u32, column: &str, value: &str) -> Result<Emit<EpwMutation>, Fault> {
+    let field_index = main::EPW_TABLE_COLUMNS.iter().position(|candidate| candidate == &column).ok_or_else(|| {
+        Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("stdio.epw.column-range"),
+            format!("EPW column '{column}' is not an editable record field"),
+        )
+    })?;
+    if snapshot.records.get(row as usize).is_none() {
+        return Err(Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("stdio.epw.row-range"),
+            format!("EPW row {row} is outside the {} available records", snapshot.records.len()),
+        ));
+    }
+    Ok(Emit {
+        artifact_mutations: vec![EpwMutation::SetRecordField(set_record_field::SetRecordField {
+            record_index: row as usize,
+            field_index,
+            value: value.to_string(),
+        })],
+        description: Some(format!("Set {column}")),
+        ..Default::default()
+    })
+}
+
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for EpwEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&semio_s_artifact_stdio_contract::editing::SnapshotEditEvent> {
         match command {
@@ -195,13 +218,26 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for EpwEdit
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
+}
+
+semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
+    editor: EpwEditor,
+    tools: ["set-cell"],
+    payload_schema: "semio.stdio.epw-cell-edit-command.v1",
+    reduce: |command, snapshot| {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(EpwEditorCommand::SetCell { row, column, value }) = command else {
+            return Err(Fault::new(
+                semio_framework_plugin::FaultOrigin::App,
+                semio_framework_plugin::FaultCode::new("stdio.epw.command-mismatch"),
+                "EPW cell editing received another command",
+            ));
+        };
+        epw_set_cell_emit(snapshot, *row, column, value)
+    },
 }
 //#endregion 🔖️Editor
 

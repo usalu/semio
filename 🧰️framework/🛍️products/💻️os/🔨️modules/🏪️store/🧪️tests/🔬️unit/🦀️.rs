@@ -5418,6 +5418,10 @@ async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its
     assert_eq!(history.doc_id, "demo-apply-ops");
     assert_eq!(history.schema, "test.document-codec-apply-ops/v1");
     assert_eq!(history.edits.len(), 1, "one op in the batch must land exactly one edit, got {}", history.edits.len());
+    let passed = (codec.apply_ops_binary)(&applied.0, &applied.1, &crate::os_spr::encode_ops_vec(&[])).await.expect("an empty batch passes a populated pair through");
+    assert!(!passed.0.is_empty() && !passed.1.is_empty(), "an empty batch over a populated pair returns that pair");
+    let mirror = (codec.print_mirror)(&applied.0, &applied.1).await.expect("a populated pair mirrors");
+    assert!(mirror.ops.contains("set-n"), "the mirror prints the pair's edit: {}", mirror.ops);
 }
 
 /// 📜️ The hub's Check In fold is a replica's own fold: replaying an author's whole ledger (two

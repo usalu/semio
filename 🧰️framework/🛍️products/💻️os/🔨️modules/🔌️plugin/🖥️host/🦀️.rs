@@ -792,6 +792,27 @@ pub enum TurnFault {
     Trapped(String),
     DeadlineExceeded,
     FuelExhausted,
+    /// ⛔️ The caller's [`GuestCallCancellation`] ended the call between two interpreter steps.
+    Cancelled,
+}
+
+/// 🧯️ A guest codec call's cancellation, observed by the owned interpreter between every two steps
+/// (`OWNED_STEP_FUEL` instructions): a caller that is gone — a cancelled creation, the hub's background catalog
+/// verification aborted by a SIGTERM — ends the interpretation at once instead of letting it run on to its own fuel
+/// bound (measured before: a verification kept the hub process alive 17.9–25.2 s after its `server.shutdown`).
+#[derive(Clone, Debug, Default)]
+pub struct GuestCallCancellation(Arc<AtomicBool>);
+
+impl GuestCallCancellation {
+    /// 🛑️ Ends the call at the interpreter's next step.
+    pub fn cancel(&self) {
+        self.0.store(true, std::sync::atomic::Ordering::Release);
+    }
+
+    /// 🔎️ Whether the call was cancelled.
+    pub fn is_cancelled(&self) -> bool {
+        self.0.load(std::sync::atomic::Ordering::Acquire)
+    }
 }
 
 impl std::fmt::Display for TurnFault {
@@ -803,6 +824,7 @@ impl std::fmt::Display for TurnFault {
             Self::Trapped(message) => write!(formatter, "guest trapped: {message}"),
             Self::DeadlineExceeded => formatter.write_str("epoch deadline exceeded"),
             Self::FuelExhausted => formatter.write_str("fuel exhausted"),
+            Self::Cancelled => formatter.write_str("guest call cancelled by its caller"),
         }
     }
 }
@@ -1510,32 +1532,32 @@ impl OwnedRuntime {
     /// apply from the component itself, so a package whose Rust codec the server does not link is
     /// still fully creatable and editable. The instance is created and dropped per call — nothing
     /// here observes or mutates live actor state.
-    fn codec_call<T: serde::de::DeserializeOwned>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<T, TurnFault> {
+    fn codec_call<T: serde::de::DeserializeOwned>(&self, compiled: &CompiledHandle, operation: OwnedOperation, input: &OwnedCodecInput<'_>, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<T, TurnFault> {
         let mut instance = self.instantiate_actor(compiled, RuntimeActorId(0)).map_err(TurnFault::Host)?;
         let state = owned_state_mut(&mut instance)?;
         let encoded = serde_json::to_vec(input).map_err(|error| PluginHostError::Json(error.to_string()))?;
         begin_owned_operation(state, operation, Some(encoded))?;
-        let invocation = resume_owned_operation_observed(state, operation, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress)?;
+        let invocation = resume_owned_operation_observed(state, operation, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress, cancellation)?;
         decode_owned_result(&invocation.output)
     }
 
     /// 🧬️ `codec.pack-schema-hash` — the kind's 32-byte structural snapshot fingerprint.
     pub async fn codec_pack_schema_hash(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: Budget) -> Result<[u8; 32], TurnFault> {
-        self.codec_pack_schema_hash_observed(compiled, artifact_schema, budget, |_, _| {}).await
+        self.codec_pack_schema_hash_observed(compiled, artifact_schema, budget, |_, _| {}, &GuestCallCancellation::default()).await
     }
 
     /// 🧬️ `codec.pack-schema-hash` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`].
     /// Catalog startup verifies every unlinked package through this call under
     /// `OperationContext::stall_bounded`; without guest fuel reaching that context a 30 s quiet span
     /// on a loaded machine looks like a wedged load (`trusted-catalog-load-stalled-before-it-finished`).
-    pub async fn codec_pack_schema_hash_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<[u8; 32], TurnFault> {
-        let bytes: Vec<u8> = self.codec_call(compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema, document_id: "", pack: &[], spr: &[], ops: &[] }, budget, progress)?;
+    pub async fn codec_pack_schema_hash_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<[u8; 32], TurnFault> {
+        let bytes: Vec<u8> = self.codec_call(compiled, OwnedOperation::PackSchemaHash, &OwnedCodecInput { artifact_schema, document_id: "", pack: &[], spr: &[], ops: &[] }, budget, progress, Some(cancellation))?;
         <[u8; 32]>::try_from(bytes.as_slice()).map_err(|_| TurnFault::Trapped("guest pack schema hash is not 32 bytes".to_string()))
     }
 
     /// 🌱️ `codec.genesis` — the canonical empty document of `artifact_schema` at `document_id`.
     pub async fn codec_genesis(&self, compiled: &CompiledHandle, artifact_schema: &str, document_id: &str, budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_genesis_observed(compiled, artifact_schema, document_id, budget, |_, _| {}).await
+        self.codec_genesis_observed(compiled, artifact_schema, document_id, budget, |_, _| {}, &GuestCallCancellation::default()).await
     }
 
     /// 📈️ `codec.genesis` with bounded fuel-progress observations, for a caller whose own bound is a
@@ -1545,36 +1567,36 @@ impl OwnedRuntime {
     /// is stepping from one that is wedged, and has to pick between refusing honest work and never
     /// refusing anything. The observations are the same ones `describe_observed` reports: one per
     /// 25 M fuel or per 5 s, whichever comes first.
-    pub async fn codec_genesis_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, document_id: &str, budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::Genesis, &OwnedCodecInput { artifact_schema, document_id, pack: &[], spr: &[], ops: &[] }, budget, progress)
+    pub async fn codec_genesis_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, document_id: &str, budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::Genesis, &OwnedCodecInput { artifact_schema, document_id, pack: &[], spr: &[], ops: &[] }, budget, progress, Some(cancellation))
     }
 
     /// 📥️ `codec.print-mirror` — the host's pair-validation fence for an unlinked package.
     pub async fn codec_print_mirror(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: Budget) -> Result<GuestDocumentMirror, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, |_, _| {})
+        self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, |_, _| {}, None)
     }
 
     /// 📥️ `codec.print-mirror` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`]:
     /// validating a large document's pair interprets for as long as a genesis does.
-    pub async fn codec_print_mirror_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentMirror, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, progress)
+    pub async fn codec_print_mirror_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentMirror, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::PrintMirror, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: &[] }, budget, progress, Some(cancellation))
     }
 
     /// 🧩️ `codec.apply-ops` — the host-authoritative edit apply for an unlinked package.
     pub async fn codec_apply_ops(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {})
+        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, |_, _| {}, None)
     }
 
     /// 🧩️ `codec.apply-ops` with the same stall-bound fuel observations as [`Self::codec_genesis_observed`].
-    pub async fn codec_apply_ops_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, progress)
+    pub async fn codec_apply_ops_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], ops: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::ApplyOps, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops }, budget, progress, Some(cancellation))
     }
 
     /// 📜️ `codec.replay-envelopes` — the hub's Check In fold, with the same stall-bound fuel
     /// observations as [`Self::codec_genesis_observed`]: a long ledger tail is the longest guest call
     /// a Check In makes, so its fuel progress is what its stall bound watches.
-    pub async fn codec_replay_envelopes_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentPair, TurnFault> {
-        self.codec_call(compiled, OwnedOperation::ReplayEnvelopes, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: envelopes }, budget, progress)
+    pub async fn codec_replay_envelopes_observed(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8], budget: Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentPair, TurnFault> {
+        self.codec_call(compiled, OwnedOperation::ReplayEnvelopes, &OwnedCodecInput { artifact_schema, document_id: "", pack, spr, ops: envelopes }, budget, progress, Some(cancellation))
     }
 
     /// 📈️ Executes owned `describe` with bounded fuel-progress observations for build tooling.
@@ -1582,7 +1604,7 @@ impl OwnedRuntime {
         let mut instance = self.instantiate_actor(compiled, RuntimeActorId(0)).map_err(TurnFault::Host)?;
         let state = owned_state_mut(&mut instance)?;
         begin_owned_operation(state, OwnedOperation::Describe, None)?;
-        resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress).map(|invocation| invocation.output)
+        resume_owned_operation_observed(state, OwnedOperation::Describe, budget.fuel, budget.deadline_ms, OwnedDeadline::NoFuelProgress, progress, None).map(|invocation| invocation.output)
     }
 }
 
@@ -1758,10 +1780,10 @@ enum OwnedDeadline {
 }
 
 fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32) -> Result<OwnedInvocation, TurnFault> {
-    resume_owned_operation_observed(state, operation, fuel, deadline_ms, OwnedDeadline::TotalWall, |_, _| {})
+    resume_owned_operation_observed(state, operation, fuel, deadline_ms, OwnedDeadline::TotalWall, |_, _| {}, None)
 }
 
-fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, mut progress: impl FnMut(u64, std::time::Duration)) -> Result<OwnedInvocation, TurnFault> {
+fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32, deadline: OwnedDeadline, mut progress: impl FnMut(u64, std::time::Duration), cancellation: Option<&GuestCallCancellation>) -> Result<OwnedInvocation, TurnFault> {
     let started = std::time::Instant::now();
     let mut fuel_moved_at = started;
     let mut remaining = fuel;
@@ -1769,6 +1791,10 @@ fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: Ow
     let mut next_progress_elapsed = std::time::Duration::from_secs(5);
     loop {
         let elapsed = started.elapsed();
+        if cancellation.is_some_and(GuestCallCancellation::is_cancelled) {
+            progress(fuel.saturating_sub(remaining), elapsed);
+            return Err(TurnFault::Cancelled);
+        }
         let against_deadline = match deadline {
             OwnedDeadline::TotalWall => elapsed,
             OwnedDeadline::NoFuelProgress => fuel_moved_at.elapsed(),
@@ -2638,10 +2664,10 @@ impl GuestRuntimes {
     }
 
     /// 📜️ `codec.replay-envelopes` — the hub's Check In fold; `progress` sees the owned interpreter's
-    /// fuel observations.
-    pub async fn codec_replay_envelopes(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8], budget: &Budget, progress: impl FnMut(u64, std::time::Duration)) -> Result<GuestDocumentPair, TurnFault> {
+    /// fuel observations and `cancellation` ends its interpretation between two steps.
+    pub async fn codec_replay_envelopes(&self, compiled: &CompiledHandle, artifact_schema: &str, pack: &[u8], spr: &[u8], envelopes: &[u8], budget: &Budget, progress: impl FnMut(u64, std::time::Duration), cancellation: &GuestCallCancellation) -> Result<GuestDocumentPair, TurnFault> {
         match self {
-            Self::Owned(runtime) => runtime.codec_replay_envelopes_observed(compiled, artifact_schema, pack, spr, envelopes, budget.clone(), progress).await,
+            Self::Owned(runtime) => runtime.codec_replay_envelopes_observed(compiled, artifact_schema, pack, spr, envelopes, budget.clone(), progress, cancellation).await,
             Self::Wasmtime(runtime) => runtime.codec_replay_envelopes(compiled, artifact_schema, pack, spr, envelopes, budget).await,
             #[cfg(test)]
             Self::Mock(_) | Self::Recording(_) => Err(TurnFault::Trapped("codec.replay-envelopes has no scripted runtime — it needs a real component".to_string())),

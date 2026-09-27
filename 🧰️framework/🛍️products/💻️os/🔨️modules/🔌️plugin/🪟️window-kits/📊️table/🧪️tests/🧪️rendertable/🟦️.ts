@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "renderTable" | "renderTableRows">, source: TestSource): Promise<void> {
-  const { renderTable, renderTableRows } = dependencies;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "renderEditableTable" | "renderTable" | "renderTableRows">, source: TestSource): Promise<void> {
+  const { renderEditableTable, renderTable, renderTableRows } = dependencies;
   type ActionDescriptor = import("../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").ActionDescriptor;
 
   const { describe, expect, it } = vitest;
@@ -32,6 +32,22 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(columns.some((column) => column.id === "actions")).toBe(true);
       expect(rows[0]?.actions.buttons[0]?.iconId).toBe("trash-2");
       expect(rows[0]?.actions.buttons[0]?.action).toEqual(action);
+    });
+  });
+  describe("renderEditableTable", () => {
+    it("preserves a cell's stable address and optimistic revision", () => {
+      const action: ActionDescriptor = {
+        controllerId: "s.stdio.xlsx@ecma-376/*#editor",
+        action: "set-cell",
+        args: { sheetName: "Sheet 1", row: 41, column: 7, revision: "0123456789abcdef" },
+      };
+      const node = renderEditableTable(
+        { columns: ["Sheet", "Value"], rows: [["Sheet 1", "before"]] },
+        [{ rowIndex: 0, columnIndex: 1, action }],
+      );
+      if (node.type !== "componentScene") throw new Error("expected componentScene");
+      const rows = JSON.parse(node.table?.rowsJson ?? "[]") as Record<string, { kind: string; value: string; action: ActionDescriptor }>[];
+      expect(rows[0]?.["1"]).toEqual({ kind: "editableText", value: "before", action });
     });
   });
 

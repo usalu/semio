@@ -94,10 +94,21 @@ fn contains_layer(node: &RasterLayerNode, target_id: &str) -> bool {
 
 fn validate_layer_patch(node: &RasterLayerNode, patch: &RasterLayerPatch) -> protocol::MutationApplyResult<()> {
     let invalid = match node {
-        RasterLayerNode::Pixel { .. } => patch.adjustment_kind.is_some(),
-        RasterLayerNode::Group { .. } => patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some(),
+        RasterLayerNode::Pixel { .. } => patch.adjustment_kind.is_some() || patch.adjustment_parameters.is_some(),
+        RasterLayerNode::Group { .. } => patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.width.is_some() || patch.height.is_some() || patch.adjustment_kind.is_some() || patch.adjustment_parameters.is_some(),
         RasterLayerNode::Adjustment { .. } => patch.mask_content.is_some() || patch.pixel_content.is_some() || patch.pixel_transform.is_some() || patch.transform_x.is_some() || patch.transform_y.is_some() || patch.width.is_some() || patch.height.is_some(),
     };
+    if let Some(parameters) = &patch.adjustment_parameters {
+        if parameters.len()>2 || parameters.iter().enumerate().any(|(index,row)| !matches!(row.parameter.as_str(),"brightness"|"contrast") || row.value.is_some_and(|v| !v.get().is_finite() || !(-1.0..=1.0).contains(&v.get())) || parameters[..index].iter().any(|prior| prior.parameter==row.parameter)) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-parameter","invalid adjustment parameter patch"));
+        }
+        if let RasterLayerNode::Adjustment {params,..}=node {
+            if parameters.iter().any(|row| params.get(&row.parameter).is_some_and(|v|v.as_f64().is_none())) {return Err(protocol::MutationApplyError::new("mutation.apply.parameter-type","existing adjustment parameter must be numeric"));}
+            let added=parameters.iter().filter(|row| row.value.is_some()&&!params.contains_key(&row.parameter)).count();
+            let removed=parameters.iter().filter(|row|row.value.is_none()&&params.contains_key(&row.parameter)).count();
+            if params.len()+added-removed>crate::RASTER_OWNED_MAP_CAPACITY {return Err(protocol::MutationApplyError::new("mutation.apply.parameter-capacity","adjustment parameter capacity exceeded"));}
+        }
+    }
     if invalid {
         return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer patch contains fields unsupported by the target layer kind"));
     }
@@ -180,7 +191,15 @@ fn apply_layer_patch(node: &mut RasterLayerNode, patch: &RasterLayerPatch) -> Ra
                 transform.y = value;
             }
         }
-        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, adjustment_kind, .. } => {
+        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, adjustment_kind, params, .. } => {
+            if let Some(parameters)=&patch.adjustment_parameters {
+                inverse.adjustment_parameters=Some(parameters.iter().map(|row| {
+                    let previous=params.remove_entry(&row.parameter).map(|mut entry| entry.take().1);
+                    let value=previous.as_ref().and_then(crate::RasterAdjustmentNumber::from_parameter);
+                    crate::RasterAdjustmentParameter {parameter:row.parameter.clone(),value}
+                }).collect());
+                for row in parameters {if let Some(next)=row.value {params.insert(row.parameter.clone(),next.literal()).expect("validated parameter fits owned map");}}
+            }
             if let Some(value) = &patch.name {
                 inverse.name = Some(name.clone());
                 *name = value.clone();
@@ -330,7 +349,8 @@ pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta)
     }
     let mut next = layers.to_vec();
     for id in &delta.removed {
-        remove_layer_from_tree(&mut next, id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist after structural edits").at(["removed", id.as_str()]))?;
+        let removed = remove_layer_from_tree(&mut next, id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "removed layer does not exist after structural edits").at(["removed", id.as_str()]))?;
+        crate::retire_raster_layer(removed);
     }
     for (index, entry) in delta.patched.iter().enumerate() {
         apply_layer_patch_entry(&mut next, entry).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
@@ -504,6 +524,12 @@ fn absorb_layer_patch(dst: &mut RasterLayerPatch, src: RasterLayerPatch) {
     take!(transform_y);
     take!(width);
     take!(height);
+    if let Some(parameters)=src.adjustment_parameters {
+        let target=dst.adjustment_parameters.get_or_insert_with(Vec::new);
+        for parameter in parameters {
+            if let Some(prior)=target.iter_mut().find(|prior|prior.parameter==parameter.parameter) {*prior=parameter;} else {target.push(parameter);}
+        }
+    }
     take!(adjustment_kind);
     take!(mask_content);
     take!(pixel_content);

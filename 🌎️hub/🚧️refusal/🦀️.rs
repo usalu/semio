@@ -79,6 +79,19 @@ pub const HUB_CREDENTIAL_REFUSAL: HubCredentialRefusalV1 = HubCredentialRefusalV
     message: HubCredentialRefusalMessageV1 { en: "Your sign-in is no longer valid. Sign in again.", de: "Ihre Anmeldung ist nicht mehr gültig. Bitte melden Sie sich erneut an." },
 };
 
+/// ⏳️ `HubTransientApplyRefusalCodeV1`: the `code` of the one message a transiently refused document batch carries, so the
+/// client resends the batch instead of rolling it back.
+pub const HUB_TRANSIENT_APPLY_REFUSAL_CODE: &str = "hub.unavailable";
+
+/// 📏️ `HubTransientApplyRefusalMessageV1.message`'s bound in characters.
+pub const HUB_TRANSIENT_APPLY_REFUSAL_MESSAGE_MAX_CHARS: usize = 1024;
+
+/// ✂️ The hub's reason as a `HubTransientApplyRefusalMessageV1.message`: non-empty and within its declared bound.
+pub fn hub_transient_apply_refusal_message(reason: &str) -> String {
+    let bounded: String = reason.chars().take(HUB_TRANSIENT_APPLY_REFUSAL_MESSAGE_MAX_CHARS).collect();
+    if bounded.is_empty() { HUB_TRANSIENT_APPLY_REFUSAL_CODE.to_string() } else { bounded }
+}
+
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

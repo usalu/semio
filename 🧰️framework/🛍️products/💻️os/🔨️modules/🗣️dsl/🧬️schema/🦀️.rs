@@ -341,7 +341,7 @@ mod json_schema_tests;
 /// `FieldValue`) share these method names — a type deriving both `DslRecord`/`DslScalar` AND
 /// `ToValue`/`FromValue` must disambiguate with UFCS (`<T as value::ToValue>::to_value(&x)`) at
 /// any call site where both traits are in scope.
-pub use protocol::value::{from_dsl_value, ordered, to_dsl_value, DslValue, FromValue, Number, ToValue, ValueError};
+pub use protocol::value::{from_dsl_value, ordered, to_dsl_value, DslValue, FromValue, Number, ToValue, ValueEdit, ValueError, ValueShape};
 
 /// @emoji 🕸️ One endpoint (and optional edge) of a wire-literal.
 #[derive(Clone, Debug, PartialEq, Default)]

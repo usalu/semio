@@ -1,5 +1,5 @@
 # 🧬️ LayoutMutation — closed semantic mutation vocabulary for the layout document, mirrors
-# `🧬️mutations/🦀️.rs`'s `LayoutMutation` enum and its 25 per-verb leaf structs
+# `🧬️mutations/🦀️.rs`'s `LayoutMutation` enum and its 28 per-verb leaf structs
 # field-for-field. GraphQL unions self-discriminate via `__typename`, so the wire-level JSON tagging
 # scheme (layout's enum has no `#[serde(tag = ...)]`, hence an externally-tagged `{ "Variant": {...}
 # }` shape on the JSON side — see the TS sibling file's header for the full citation) has no bearing
@@ -234,6 +234,12 @@ type ResizeFrame {
   new_height: Float!
 }
 
+type RotateFrame {
+  page_id: String!
+  frame_id: String!
+  new_rotation: Float!
+}
+
 type ChangeFrameFill {
   page_id: String!
   frame_id: String!
@@ -258,6 +264,19 @@ type ChangeFrameColumns {
   new_columns: Int!
 }
 
+type UpdateGrid {
+  baseline_grid: Float!
+  baseline_offset: Float!
+  snap_to_baseline: Boolean!
+}
+
+type SetFrameFlags {
+  page_id: String!
+  frame_id: String!
+  locked: Boolean
+  visible: Boolean
+}
+
 union LayoutMutation =
     RenameLayout
   | ChangePrintTarget
@@ -280,7 +299,10 @@ union LayoutMutation =
   | DeleteFrame
   | MoveFrame
   | ResizeFrame
+  | RotateFrame
   | ChangeFrameFill
   | ChangeFrameStroke
   | ChangeFrameWrapMode
   | ChangeFrameColumns
+  | UpdateGrid
+  | SetFrameFlags

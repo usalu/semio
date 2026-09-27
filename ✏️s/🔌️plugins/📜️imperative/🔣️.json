@@ -4647,8 +4647,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "e7a56dbe9b39c3c8e653c760e192b78a3976d34f02e17f3792894756847b543f",
-    "coreWasmSha256": "2313d57906e66e25b309bae1e974c993314fb11bd4ada707d2efa6e9076a2fc6",
-    "descriptorSha256": "4745288427cb0177a86cf3d4eda27c4f197df5f9507aaa6465a68b324a058c8a"
+    "wasmSha256": "ab7ceb6a474de70215f20ecae72e7b8111c86f350bc3afd596d7a7045a09e9a1",
+    "coreWasmSha256": "fab3d4aecc1aa41fc5005c223aa86f6f2d84cdff1aa47af8789f404b5eca467f",
+    "descriptorSha256": "d5adc4710c8b8116ddbcc742407a672d07b49dc58f7001d2e23294a7a3b67eb0"
   }
 }

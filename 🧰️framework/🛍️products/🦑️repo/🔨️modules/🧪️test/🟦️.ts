@@ -1181,6 +1181,20 @@ export function fixtureFilesUnder(repoRoot: string, relDir: string | null): stri
 //#endregion 🧫️Fixtures
 
 //#region 📋️Plan
+/**
+ * 📥️ The raw bytes each subject host produced, keyed by SCENARIO id and then by implementation. A byte-decoding oracle
+ * (`@oracle-input-subject-raw`) judges one scenario's output at a time, so the routing must never fold a case's
+ * scenarios into one map: a flat implementation → path map hands every oracle scenario the LAST subject scenario's bytes.
+ */
+export type SubjectRawInputs = Readonly<Record<string, Readonly<Partial<Record<Implementation, string>>>>>;
+
+/** 📥️ Routes every passed subject result that produced raw bytes to its own scenario id. */
+export function subjectRawInputsByScenario(results: readonly TestResult[]): SubjectRawInputs {
+  const routed: Record<string, Partial<Record<Implementation, string>>> = {};
+  for (const result of results) if (result.role === "subject" && result.status === "passed" && result.output.rawPath !== undefined) (routed[result.scenario] ??= {})[result.implementation] = result.output.rawPath;
+  return routed;
+}
+
 /** 📋️ The owned execution plan one native host receives — hosts never re-parse the feature. */
 export type TestCasePlan = Readonly<{
   schemaVersion: 2;
@@ -1201,8 +1215,8 @@ export type TestCasePlan = Readonly<{
   comparison: ComparisonProfile;
   /** 📥️ The subject artifact an oracle consumes when the feature declares an external byte decoder. */
   oracleInput: "subject-raw" | null;
-  /** 📦️ Raw outputs produced by subject hosts before this oracle host starts. */
-  subjectRawInputs?: Readonly<Partial<Record<Implementation, string>>>;
+  /** 📦️ Raw outputs produced by subject hosts before this oracle host starts, per scenario id then implementation. */
+  subjectRawInputs?: SubjectRawInputs;
   /** ⚖️ The multi-artifact, externally-probed pipeline this case compares under, when it produces more than a projection. */
   comparisonPipeline: string | null;
   toleranceProfile: string | null;
@@ -3106,6 +3120,8 @@ export type AdapterContext = Readonly<{
   fixtureBytes(uri: string): Uint8Array;
   /** 🧫️ Copies an immutable fixture into the case's work directory and returns the mutable copy's path. */
   copyFixture(uri: string, as?: string): string;
+  /** 📥️ Bytes THIS scenario's subject host produced in `implementation`, for an `@oracle-input-subject-raw` oracle; throws when absent. */
+  subjectRawBytes(implementation: Implementation): Uint8Array;
   /** 📦️ Directory a handler writes its produced artifact bundle into. */
   artifactDir: string;
   /** 📦️ Absolute path to write one named result artifact to — `<artifactDir>/<scenario id>/<role>/<filename>`, so a
@@ -3200,6 +3216,11 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
     },
     fixture: lookup,
     fixtureBytes: (uri) => readFileSync(lookup(uri)),
+    subjectRawBytes: (implementation) => {
+      const path = plan.subjectRawInputs?.[scenario.id]?.[implementation];
+      if (path === undefined) throw new Error(`scenario ${scenario.id} has no raw subject output from ${implementation}; run its subject phase before this byte-decoding oracle`);
+      return readFileSync(path);
+    },
     copyFixture: (uri, as) => {
       const source = lookup(uri);
       const target = join(workDir, as ?? basename(source));

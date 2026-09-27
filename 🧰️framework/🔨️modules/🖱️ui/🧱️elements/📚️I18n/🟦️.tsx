@@ -317,6 +317,8 @@ export type UiTranslationSchema = {
       readonly setDriver: UiLabelValue;
       readonly openTaskManager: UiLabelValue;
       readonly openHub: UiLabelValue;
+      readonly exportDocument: UiLabelValue;
+      readonly importDocument: UiLabelValue;
     };
     /** @emoji 🧭️ Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
      * activate/close/split/open-in-new-window, panel toggle/tab) — logged into the plugin's session-only command-history panel. */

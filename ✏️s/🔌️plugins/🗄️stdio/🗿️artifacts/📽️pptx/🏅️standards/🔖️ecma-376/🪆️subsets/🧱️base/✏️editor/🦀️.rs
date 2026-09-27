@@ -1,12 +1,12 @@
 //! ✏️ Pptx editor — the FIRST authored `ArtifactEditor` surface for `s.stdio.pptx@ecma-376/*`
 //! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). One real window, `🪟️main`
-//! (`DocumentWindowKit`), rendering one page per slide and editing the FIRST text-bearing shape on
+//! (`DocumentWindowKit`), rendering one page per slide and editing every addressed text-bearing shape on
 //! that slide through the artifact's own `PptxMutation::SetShapeText`.
 
 use crate::editor::pptx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::pptx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
 use crate::schema::mutations::{set_shape_text, set_snapshot};
-use crate::schema::snapshot::{PptxParagraph, PptxShape, PptxSlide};
+use crate::schema::snapshot::{PptxParagraph, PptxShape};
 use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
@@ -25,61 +25,58 @@ pub const PPTX_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx"
 /// (one page per slide, see the window's own `render` doc comment).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum PptxEditorCommand {
-    SetPage { index: u32, text: String },
+    SetPage { page: u32, item: u32, revision: String, text: String },
 }
 
-impl protocol::OpText for PptxEditorCommand {
-    fn print_op(&self) -> String {
-        let PptxEditorCommand::SetPage { index, text } = self;
-        format!("set-page index={index} text={}", text.replace('\\', "\\\\").replace('\n', "\\n").replace(' ', "\\s"))
-    }
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let rest = line.strip_prefix("set-page ").ok_or_else(|| store::TextError::new(format!("pptx editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
-        let mut index = None;
-        let mut text = String::new();
-        for token in rest.split(' ') {
-            let (key, raw) = token.split_once('=').ok_or_else(|| store::TextError::new(format!("pptx editor command: bad token {token:?}"), dsl::TextSpan::at(1, 1)))?;
-            let decoded = raw.replace("\\s", " ").replace("\\n", "\n").replace("\\\\", "\\");
-            match key {
-                "index" => index = decoded.parse::<u32>().ok(),
-                "text" => text = decoded,
-                _ => {}
-            }
-        }
-        let index = index.ok_or_else(|| store::TextError::new("pptx editor command: missing index", dsl::TextSpan::at(1, 1)))?;
-        Ok(PptxEditorCommand::SetPage { index, text })
-    }
-}
-
-impl protocol::OpBinary for PptxEditorCommand {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(<Self as protocol::OpText>::print_op(self).into_bytes())
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let line = String::from_utf8(bytes.to_vec()).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx editor command utf8", offset: 0, detail: error.to_string() })?;
-        <Self as protocol::OpText>::parse_op(&line).map_err(|error| protocol::ProtocolError::Malformed { what: "pptx editor command", offset: 0, detail: error.to_string() })
-    }
-}
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(PptxEditorCommand, []);
+semio_s_artifact_stdio_contract::impl_serde_op_codec!(PptxEditorCommand, "pptx editor command");
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(PptxEditorCommand, ["set-page"]);
 //#endregion 🔖️Command
 
 //#region 🔖️Helpers
-/// 🧮️ The FIRST `TextBox`/`Placeholder` shape on a slide — the only shape `set-page` can ever
-/// address (see `handle`'s own doc comment for the honest multi-shape scope note).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn first_text_shape_index(slide: &PptxSlide) -> Option<usize> {
-    slide.shapes.iter().position(|shape| matches!(shape, PptxShape::TextBox { .. } | PptxShape::Placeholder { .. }))
+fn shape_text(shape: &PptxShape) -> Option<String> {
+    match shape {
+        PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => Some(text_frame.iter().map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str()).collect::<String>()).collect::<Vec<_>>().join("\n")),
+        PptxShape::Picture { .. } | PptxShape::Other { .. } => None,
+    }
 }
 
-/// 🧮️ Pure `set-page` -> `PptxMutation` mapping, standalone so it is directly unit-testable
-/// without constructing a full `ArtifactView`. `None` covers "slide index out of range" and "no
-/// text-bearing shape on that slide" — both documented no-ops.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_set_page_mutation(snapshot: &PptxSnapshot, slide_index: usize, text: &str) -> Option<PptxMutation> {
-    let slide = snapshot.presentation.slides.get(slide_index)?;
-    let shape_index = first_text_shape_index(slide)?;
-    let text_frame: Vec<PptxParagraph> = text.split('\n').map(PptxParagraph::text).collect();
-    Some(PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index, shape_index, text_frame }))
+fn replacement_text_frame(shape: &PptxShape, text: &str) -> Option<Vec<PptxParagraph>> {
+    let current = match shape {
+        PptxShape::TextBox { text_frame, .. } | PptxShape::Placeholder { text_frame, .. } => text_frame,
+        PptxShape::Picture { .. } | PptxShape::Other { .. } => return None,
+    };
+    let mut current = current.iter().cloned();
+    Some(
+        text.split('\n')
+            .map(|line| {
+                let mut paragraph = current.next().unwrap_or_default();
+                if paragraph.runs.is_empty() {
+                    paragraph = PptxParagraph::text(line);
+                } else {
+                    paragraph.runs[0].text = line.to_string();
+                    for run in &mut paragraph.runs[1..] {
+                        run.text.clear();
+                    }
+                }
+                paragraph
+            })
+            .collect(),
+    )
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_set_page_mutation(snapshot: &PptxSnapshot, page: usize, item: usize, revision: &str, text: &str) -> Result<Option<PptxMutation>, Fault> {
+    let slide = snapshot.presentation.slides.get(page).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.stale-slide"), format!("PPTX slide {page} no longer exists")))?;
+    let shape = slide.shapes.get(item).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.stale-shape"), format!("PPTX shape {page}/{item} no longer exists")))?;
+    let current =
+        shape_text(shape).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.set-page.unsupported-target"), format!("PPTX shape {page}/{item} has no editable text frame")))?;
+    semio_s_artifact_stdio_contract::require_window_kit_document_revision(&current, revision, "stdio.pptx.set-page.conflict")?;
+    if current == text {
+        return Ok(None);
+    }
+    let text_frame = replacement_text_frame(shape, text).expect("a text-bearing shape has a text frame");
+    Ok(Some(PptxMutation::SetShapeText(set_shape_text::SetShapeText { slide_index: page, shape_index: item, text_frame })))
 }
 //#endregion 🔖️Helpers
 
@@ -107,7 +104,8 @@ impl ArtifactEditor for PptxEditor {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
         controller: "s.stdio.pptx@ecma-376/*#editor",
         artifact_schema: "stdio.pptx",
-        preparation: "stdio-pptx-base-snapshot-edit"
+        preparation: "stdio-pptx-base-snapshot-edit",
+        bounded_native: true
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -116,10 +114,10 @@ impl ArtifactEditor for PptxEditor {
 
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
-            "set-page" => Ok(PptxEditorCommand::SetPage {
-                index: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["index", "page", "row"], 0),
-                text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text", "value"], ""),
-            }),
+            "set-page" => {
+                let edit = semio_s_artifact_stdio_contract::window_kit_document_text_edit(args)?;
+                Ok(PptxEditorCommand::SetPage { page: edit.page, item: edit.item, revision: edit.revision, text: edit.text })
+            }
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pptx.base.unhandled-action"), format!("unknown pptx editor action '{other}'"))),
         })
     }
@@ -128,13 +126,8 @@ impl ArtifactEditor for PptxEditor {
         PptxSnapshot::default()
     }
 
-    /// ✏️ `set-page` writes `text` (split on `\n` into one `PptxParagraph` per line, each a single
-    /// plain run) into the FIRST text-bearing shape on the addressed slide, via
-    /// `PptxMutation::SetShapeText`. A slide's rendered page text is the CONCATENATION of every
-    /// text-bearing shape (see the window's own `render`), but only shape 0 is writable through this
-    /// simple page view — a multi-shape slide's other shapes are read-only here; a real per-shape
-    /// editor is future work, not faked. A slide with no text-bearing shape, or an out-of-range
-    /// `index`, is a documented no-op (`Emit::default()`).
+    /// ✏️ Replaces the addressed text-bearing shape after its optimistic revision matches.
+    /// Existing paragraph and run formatting is retained wherever a submitted line corresponds.
     fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
@@ -144,20 +137,19 @@ impl ArtifactEditor for PptxEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(PptxEditorCommand::SetPage { index, text }) = command else {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(PptxEditorCommand::SetPage { page, item, revision, text }) = command else {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        let slide_index = *index as usize;
-        match build_set_page_mutation(doc.snapshot, slide_index, text) {
-            Some(mutation) => Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {slide_index}")), ..Default::default() }),
-            None => Ok(Emit::default()),
-        }
+        let page = *page as usize;
+        let item = *item as usize;
+        let Some(mutation) = build_set_page_mutation(doc.snapshot, page, item, revision, text)? else { return Ok(Emit::default()) };
+        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set slide {page} shape {item}")), ..Default::default() })
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale).map(semio_framework_plugin::built_to_component_tree),
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,
                 view_state.locale,
@@ -178,14 +170,26 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for PptxEdi
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
-
-    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
+
+semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
+    editor: PptxEditor,
+    tools: ["set-page"],
+    payload_schema: "semio.stdio.document-text-edit-command.v1",
+    reduce: |command, snapshot| {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(PptxEditorCommand::SetPage { page, item, revision, text }) = command else {
+            return Err(Fault::from("stdio-pptx-native-edit-command-mismatch"));
+        };
+        let page = *page as usize;
+        let item = *item as usize;
+        let Some(mutation) = build_set_page_mutation(snapshot, page, item, revision, text)? else { return Ok(Emit::default()) };
+        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set slide {page} shape {item}")), ..Default::default() })
+    },
+}
+
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
@@ -198,8 +202,7 @@ pub fn create_pptx_editor() -> semio_framework_plugin::AppDefinition {
         .default_mode_id(edit::PPTX_EDIT_MODE_ID)
         .window_kind_def(main::definition())
         .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
-        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Presentation"))
-        ;
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Presentation"));
     semio_s_artifact_stdio_contract::editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

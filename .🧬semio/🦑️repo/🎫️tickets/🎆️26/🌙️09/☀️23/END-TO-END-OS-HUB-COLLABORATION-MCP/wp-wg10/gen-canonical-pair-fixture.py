@@ -115,6 +115,22 @@ ADMISSIONS = [
     {"id": "aggregate-differs", "pair": "genesis", "scope": SCOPE, "expected": checkpoint_of(g, aggregateSha256="66" * 32), "refusal": "canonical-checkpoint-pair.aggregate"},
 ]
 
+def control_of(pair, **over):
+    sel = pair["selection"]
+    control = {"scope": SCOPE, "checkpointId": sel["checkpointId"], "descriptorDigestV1": sel["descriptorDigestV1"], "baselineFrontier": sel["baselineFrontier"]}
+    control.update(over)
+    return control
+
+
+REBOOTSTRAP_ADMISSIONS = [
+    {"id": "checked-in-exact", "pair": "checked-in-multi-record", "control": control_of(PAIRS[1]), "refusal": None},
+    {"id": "genesis-exact", "pair": "genesis", "control": control_of(g), "refusal": None},
+    {"id": "foreign-document", "pair": "genesis", "control": control_of(g, scope=dict(SCOPE, documentId="artifact-foreign")), "refusal": "canonical-checkpoint-pair.scope"},
+    {"id": "checkpoint-moved-again", "pair": "checked-in-multi-record", "control": control_of(PAIRS[1], checkpointId="77" * 32), "refusal": "canonical-checkpoint-pair.checkpoint"},
+    {"id": "descriptor-changed", "pair": "genesis", "control": control_of(g, descriptorDigestV1="88" * 32), "refusal": "canonical-checkpoint-pair.descriptor"},
+    {"id": "baseline-differs", "pair": "checked-in-multi-record", "control": control_of(PAIRS[1], baselineFrontier=GENESIS), "refusal": "canonical-checkpoint-pair.baseline"},
+]
+
 fixture = {
     "schema": "semio.hub.canonical-checkpoint-pair-fixture/v1",
     "mediaType": "application/vnd.semio.canonical-checkpoint-pair.v1",
@@ -122,6 +138,7 @@ fixture = {
     "pairs": PAIRS,
     "refusals": [{"id": f"{code}-{index}", "stage": stage, "bodyHex": data.hex(), "refusal": f"canonical-checkpoint-pair.{code}"} for index, (code, stage, data) in enumerate(REFUSALS)],
     "admissions": ADMISSIONS,
+    "rebootstrapAdmissions": REBOOTSTRAP_ADMISSIONS,
 }
 OUT.write_text(json.dumps(fixture, indent=2, ensure_ascii=False) + "\n")
 print(OUT, OUT.stat().st_size)

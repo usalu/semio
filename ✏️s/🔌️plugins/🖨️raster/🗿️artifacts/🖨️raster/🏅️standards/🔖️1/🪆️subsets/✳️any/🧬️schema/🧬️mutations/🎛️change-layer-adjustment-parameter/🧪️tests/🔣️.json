@@ -14,6 +14,11 @@
       "parameter": "brightness",
       "before": -0.5,
       "after": null
+    },
+    {
+      "parameter": "brightness",
+      "before": 1,
+      "after": 0.25
     }
   ],
   "invalid": [
@@ -43,5 +48,80 @@
       "brightness": "Helligkeit",
       "contrast": "Kontrast"
     }
-  }
+  },
+  "parameterPatches": [
+    {
+      "parameters": [],
+      "valid": true
+    },
+    {
+      "parameters": [
+        {
+          "parameter": "brightness",
+          "value": 0.2
+        },
+        {
+          "parameter": "contrast",
+          "value": -0.3
+        }
+      ],
+      "valid": true
+    },
+    {
+      "parameters": [
+        {
+          "parameter": "contrast",
+          "value": null
+        },
+        {
+          "parameter": "brightness",
+          "value": 1
+        }
+      ],
+      "valid": true
+    },
+    {
+      "parameters": [
+        {
+          "parameter": "brightness",
+          "value": 0.2
+        },
+        {
+          "parameter": "brightness",
+          "value": 0.3
+        }
+      ],
+      "valid": false
+    },
+    {
+      "parameters": [
+        {
+          "parameter": "contrast",
+          "value": null
+        },
+        {
+          "parameter": "contrast",
+          "value": -0.3
+        }
+      ],
+      "valid": false
+    },
+    {
+      "parameters": [
+        {
+          "parameter": "brightness",
+          "value": 0.2
+        },
+        {
+          "parameter": "contrast",
+          "value": -0.3
+        },
+        {
+          "parameter": "brightness",
+          "value": null
+        }
+      ],
+      "valid": false
+    }
+  ]
 }

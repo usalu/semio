@@ -63,7 +63,7 @@ def census(ext_dir):
             actions += 1
             if not localized_ok(action.get("label")):
                 gaps.append(f"action {action.get('id')} label")
-            if not localized_ok(action.get("description")):
+            if not localized_ok(action.get("description") or (action.get("semantics") or {}).get("description")):
                 gaps.append(f"action {action.get('id')} description")
         for wk in app.get("windowKinds", []):
             if not localized_ok(wk.get("label")):
@@ -71,7 +71,7 @@ def census(ext_dir):
     for command in m.get("commands", []):
         if not localized_ok(command.get("label")):
             gaps.append(f"command {command.get('id')} label")
-        if not localized_ok(command.get("description")):
+        if not localized_ok(command.get("description") or (command.get("semantics") or {}).get("description")):
             gaps.append(f"command {command.get('id')} description")
     row.update({"apps": apps, "actions": actions, "commands": len(m.get("commands", [])), "artifactKinds": m.get("artifactKinds", []), "topics": [t.get("topic") for t in m.get("topicContributions", [])], "gaps": gaps})
     return row

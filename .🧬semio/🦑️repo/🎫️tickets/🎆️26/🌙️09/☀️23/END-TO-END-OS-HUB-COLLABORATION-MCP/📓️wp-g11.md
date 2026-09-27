@@ -101,3 +101,44 @@ Owns outcome 4 (semio MCP `semio-framework-os-mcp`, `mcp__semio__*`, never the r
 - 10:50 os-mcp Rust quick **471/471**, 35 skipped (nextest 61.8 s; build 568 s via the native mutex). Nothing of mine runs; live items wait for the chain.
 - 10:5x battery rewritten onto the product gates (`g11-battery.sh <hubOrigin> <admin-capability.json> <tag>`: S4 en/de → quartet →
   participant → security → plugin coverage). **Blocked on W3's chain** (guests re-materialized + 7800 on B3); resume = run the battery.
+- 13:58 **battery b3-1** on 7800 (B3, 13:57): S4 en 3/8, de 3/8 — both stop at the official SDK client's connect. Root: the gateway cannot
+  bind ANY current hub: `DirectoryClient::open_stream_ws` (kernel) sends `{}` to `POST /directory/socket-grants`, the hub route
+  requires an empty body since 09-26 11:22 → `413` in 0.7 ms (`g11-directory-dial-probe.ts`); the MCP discarded the dial error.
+  14:03 kernel fix landed (coordinator exception, row in `📓️landing.md`), os-mcp now names the dial cause; gate green, restaged
+  gateway binds 7800 (14:10). WG10 told (native shell directory door, same client). Battery b3-1 stopped (quartet would hang).
+- 14:10–14:29 **battery b3-2** (7800 B3, gateway with the grant fix): **quartet 19/19** (rows 9/14/16/17 green: grid3d guest solve →
+  result, gis approve commits → hub head 0→1, agent B sees headSeq 0→1; H11's hub fixes hold live), **hub-agent-participant 17/17**,
+  security 3/6, S4 en/de blocked (serves refused to boot on a peer's invalid taxonomy edit, restored by the coordinator 14:53),
+  plugin coverage (folder lane, non-destructive verbs): **71/71 kinds created, 41/71 mutated**; the former P8 lane-parity reds
+  **cad, flow, sequence now 1/1** (carrier + P8 agent-lane). Remaining reds by cause: puzzle 2d/3d/5d + writer
+  `interactive-job.preview-unsupported` (their own tool-command jobs have no agent preview → guest, P8 class; the MCP answered
+  INTERNAL → now PLUGIN_UNAVAILABLE + en/de remedy); norm ×15 `insertItem`/`removeItem` read an undeclared `path` ("path must not
+  be empty", guest: declare the arg); stdio html/json/md/txt/xml "no snapshot schema is registered" (guest); trinity jack needs a
+  selection/attached window; space home `set-cell` no proof + `importSpace` BatchOnly (P8 routed); demonstrator/home/space/playbook
+  procedural: no non-destructive candidate.
+- 14:5x security analysis (`g11-refused-relay-probe.ts`, 7800): the harness's S2/S4a reds were harness faults (it invoked without
+  `artifact_open`, so the edit went to the gateway's local `plugin:note` instance, hub head stayed 0). With the note open:
+  **(a) a `read`-audience delegation EDITED the hub note** (`relay:acknowledged`, hub head 0→1) → hub-side authorization defect
+  (reported to main/H11 with the reproducer); (b) after revoke the connected agent's next request is refused
+  `PERMISSION_DENIED hub session is unauthorized` ✓. S1 found a real MCP gap: **`ui_focus`, `ui_reveal` and all five `artifact_*`
+  tools checked no scope** (a `workspace.read` agent could create artifacts and drive the human's shell). Fixed at the root:
+  `policy::authorize_capability_scopes` (one rule), `artifact.*` declare `artifacts.read`/`artifacts.write`, `ui.focus`/`ui.reveal`
+  declare `shell.control`, and their registrations authorize BEFORE reading arguments or reaching a bridge/workspace; laws
+  `every_artifact_tool_refuses_a_principal_without_its_scope_before_it_reads_its_arguments`,
+  `ui_focus_and_ui_reveal_refuse_a_principal_without_ui_control_before_any_argument_or_bridge_check`. Security harness now opens
+  the note first, probes `artifact_create`, and checks the hub head for S2. Gate (check + quick + restage) queued in the native lane.
+
+### Guest-side coverage reds routed for window 3 (coordinator 15:2x)
+
+| kinds | red (MCP answer) | cause | owner |
+|---|---|---|---|
+| puzzle 2d/3d/5d, writer | `interactive-job.preview-unsupported` (now PLUGIN_UNAVAILABLE + en/de remedy) | the plugin's own tool-command job has no agent-lane preview (P8 preview runs only framework job shapes) | P8 successor / SDK owner (agent-lane preview for plugin tool-command jobs) |
+| norm ×15 | INTERNAL "path must not be empty" (`insertItem`/`removeItem`) | handlers read an undeclared `path` arg (`✏️s/🔌️plugins/📕️norm/🖥️app-surface/🦀️.rs:295`) → agents cannot pass it | N1 |
+| stdio html/json/md/txt/xml | INTERNAL "no snapshot schema is registered for s.stdio.<kind> at $.schema" | snapshot edit verbs without a registered snapshot schema | LB |
+| trinity jack | INTERNAL "patchNodes needs node ids or a node selection" / window transient needs an attached window | selection/window-bound verbs on the headless lane | trinity owner (declare ids arg; typed precondition code) |
+| space home | `set-cell` no exact proof (INTERNAL), `importSpace` BatchOnly | routed by P8 (space home IO job) | P8 successor |
+- 15:00–15:40 scope gate (native lane, 4th in queue): **not verified** — `semio-framework-plugin-host` red on H11's in-flight
+  `GuestCallCancellation` edit (host/🦀️.rs:2670 E0061), which blocks every crate above it (os-mcp included); told H11; gate
+  requeued (`gate-scopes-2.txt`). My last source edits were before 15:45 (rule 33). H11 root-caused the read-audience write:
+  agent sessions took the delegating human's role in every space → `principal_ceiling` (hub-only, pending); probe row (a) reruns
+  when 7800 carries it.

@@ -13,6 +13,7 @@ export interface TsvMainViewModel {
 export interface TsvSetCell {
   row: number;
   column: number;
+  revision: string;
   value: string;
 }
 

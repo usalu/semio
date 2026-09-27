@@ -162,8 +162,8 @@ fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
 
 #[test]
 fn drawing_retained_decoder_is_incremental_exact_and_fail_closed() {
-    let pointer_move = wire(&DrawingCommand::CanvasPointerMove(crate::editor::drawing::commands::canvas_pointer_move::CanvasPointerMove { x: 1.0, y: 2.0, width: 10.0, height: 10.0, samples: Vec::new() }));
-    let pointer_up = wire(&DrawingCommand::CanvasPointerUp(crate::editor::drawing::commands::canvas_pointer_up::CanvasPointerUp { x: 1.0, y: 2.0, width: 10.0, height: 10.0, shift: false, ctrl: false, meta: false, cancelled: false }));
+    let pointer_move = wire(&DrawingCommand::CanvasPointerMove(crate::editor::drawing::commands::canvas_pointer_move::CanvasPointerMove { shift: false, alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, samples: Vec::new() }));
+    let pointer_up = wire(&DrawingCommand::CanvasPointerUp(crate::editor::drawing::commands::canvas_pointer_up::CanvasPointerUp { alt: false,  x: 1.0, y: 2.0, width: 10.0, height: 10.0, shift: false, ctrl: false, meta: false, cancelled: false }));
     assert!(decode_retained("canvasPointerMove", &pointer_move));
     assert!(decode_retained("canvasEscape", &wire(&DrawingCommand::CanvasEscape(crate::editor::drawing::commands::canvas_escape::CanvasEscape {}))));
     assert!(!decode_retained("canvasPointerMove", &pointer_up), "a variant swap rejects");

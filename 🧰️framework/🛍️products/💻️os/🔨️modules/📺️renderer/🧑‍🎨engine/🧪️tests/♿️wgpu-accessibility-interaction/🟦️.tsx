@@ -235,7 +235,7 @@ describe("wgpu accessibility interaction contract", () => {
     expect(validate(accessibilityVisibilityFixture), JSON.stringify(validate.errors)).toBe(true);
   });
 
-  it("matches the production React Mode roving Dock tab keyboard contract", () => {
+  it.each(dockTabKeyboardFixture.cases)("matches the production React Mode roving Dock tab keyboard contract: $id", (row) => {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(dockTabKeyboardSchema);
     expect(validate(dockTabKeyboardFixture), JSON.stringify(validate.errors)).toBe(true);
     vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
@@ -244,21 +244,19 @@ describe("wgpu accessibility interaction contract", () => {
     document.body.append(container);
     const root = createRoot(container);
     try {
-      for (const row of dockTabKeyboardFixture.cases) {
-        act(() => root.render(<DockTabKeyboardOracle key={row.id} />));
-        const tabs = Array.from(container.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
-        const activeIds = new Set(dockTabKeyboardFixture.stacks.map((stack) => stack.active));
-        expect(tabs.filter((tab) => tab.tabIndex === 0).map((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId)).toEqual([...activeIds]);
-        const from = tabs.find((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId === row.from)!;
-        act(() => from.focus());
-        act(() => from.dispatchEvent(new KeyboardEvent("keydown", { key: row.key, bubbles: true, cancelable: true })));
-        const focused = document.activeElement as HTMLButtonElement;
-        expect(focused.closest<HTMLElement>("[data-window-id]")?.dataset.windowId).toBe(row.focus);
-        if (row.activate === null) {
-          expect(tabs.filter((tab) => tab.getAttribute("aria-selected") === "true").map((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId)).toEqual([...activeIds]);
-        } else {
-          expect(container.querySelector(`[data-window-id="${row.activate}"] [role="tab"]`)?.getAttribute("aria-selected")).toBe("true");
-        }
+      act(() => root.render(<DockTabKeyboardOracle key={row.id} />));
+      const tabs = Array.from(container.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+      const activeIds = new Set(dockTabKeyboardFixture.stacks.map((stack) => stack.active));
+      expect(tabs.filter((tab) => tab.tabIndex === 0).map((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId)).toEqual([...activeIds]);
+      const from = tabs.find((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId === row.from)!;
+      act(() => from.focus());
+      act(() => from.dispatchEvent(new KeyboardEvent("keydown", { key: row.key, bubbles: true, cancelable: true })));
+      const focused = document.activeElement as HTMLButtonElement;
+      expect(focused.closest<HTMLElement>("[data-window-id]")?.dataset.windowId).toBe(row.focus);
+      if (row.activate === null) {
+        expect(tabs.filter((tab) => tab.getAttribute("aria-selected") === "true").map((tab) => tab.closest<HTMLElement>("[data-window-id]")?.dataset.windowId)).toEqual([...activeIds]);
+      } else {
+        expect(container.querySelector(`[data-window-id="${row.activate}"] [role="tab"]`)?.getAttribute("aria-selected")).toBe("true");
       }
     } finally {
       act(() => root.unmount());

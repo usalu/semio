@@ -1,6 +1,7 @@
 //! 🧪 Fill tool laws — definition, progressive payloads, abort, oracle parity, and the language-agnostic vector.
 
 use super::*;
+use crate::schema::inferences::solve_with_clock;
 use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
 
@@ -85,7 +86,7 @@ fn the_language_agnostic_partial_vector_decodes_to_the_normative_shape() {
 fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
     preview::clear_fill_commit_for_test();
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
-    let oracle = solve_with_job(&snapshot).expect("blocks solves");
+    let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("blocks solves");
     let finished = oracle.assignments.len();
     assert!(finished > 2, "the fixture must leave room to collapse");
     let mut job = Grid3dFillRunJob::new(identity(), snapshot, Some("fill-test".into()));
@@ -151,7 +152,7 @@ fn aborting_mid_run_cancels_and_never_stores_residency() {
 fn the_final_payload_matches_solve_with_job_for_blocks() {
     preview::clear_fill_commit_for_test();
     let snapshot = Arc::new(crate::examples::blocks::snapshot());
-    let oracle = solve_with_job(&snapshot).expect("blocks solves");
+    let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("blocks solves");
     let mut job = Grid3dFillRunJob::new(identity(), snapshot, Some("fill-oracle".into()));
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
     let mut sequence = 0;

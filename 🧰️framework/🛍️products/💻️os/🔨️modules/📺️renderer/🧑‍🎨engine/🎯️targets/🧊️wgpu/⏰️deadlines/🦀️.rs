@@ -27,6 +27,17 @@ impl AcceptedAnimationClock {
     }
 }
 
+/// 🅿️ Parks accepted presentation clocks while an external runtime owner prevents publication.
+pub(crate) fn sync_presented_deadlines(scheduler: &mut ui_render::FrameScheduler, animation: &mut AcceptedAnimationClock, control: Option<ui_render::Deadline>, now_seconds: f64, awaiting_runtime: bool) {
+    if awaiting_runtime {
+        scheduler.replace_deadline(UI_ANIMATION_CLOCK, None);
+        scheduler.replace_deadline(RETAINED_CONTROL_CLOCK, None);
+    } else {
+        animation.sync(scheduler, now_seconds);
+        scheduler.replace_deadline(RETAINED_CONTROL_CLOCK, control);
+    }
+}
+
 /// 🎞️ Keeps the shared 1.6/3.2-second shader phase precise at every monotonic clock magnitude.
 pub(crate) fn ui_animation_seconds(now_us: Option<u64>) -> f32 {
     now_us.map_or(0.0, |now| (now % 3_200_000) as f32 / 1_000_000.0)

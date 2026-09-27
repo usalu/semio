@@ -528,6 +528,134 @@
           }
         }
       ]
+    },
+    {
+      "id": "lost-ack-committed-op-settles",
+      "title": "A Committed Op Whose Ack Was Lost Settles From The Tail And Is Never Resent",
+      "documentId": "parity-doc",
+      "spaceId": "parity-space",
+      "actor": "local-actor",
+      "steps": [
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "queueMutation",
+            "mutationId": "lost-1",
+            "n": 1
+          }
+        },
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "connectSocket",
+            "actor": "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s7",
+            "resumeToken": "resume-7",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 0,
+              "headEditId": "genesis",
+              "lastCommitSeq": 0,
+              "chainHashByte": 1
+            },
+            "bootstrap": "none"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "color": 2
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "outboxMutationIds": [],
+            "pendingBatchCount": 1
+          }
+        },
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "failConnection"
+          }
+        },
+        {
+          "op": "localDispatch",
+          "dispatch": {
+            "kind": "connectSocket",
+            "actor": "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "welcome",
+            "sessionId": "s8",
+            "resumeToken": "resume-8",
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 1,
+              "headEditId": "lost-1",
+              "lastCommitSeq": 1,
+              "chainHashByte": 2
+            },
+            "bootstrap": "tail"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "commands",
+            "origin": "hub.catch-up",
+            "envelopes": [
+              {
+                "mutationId": "lost-1",
+                "n": 1
+              }
+            ],
+            "frontier": {
+              "documentId": "parity-doc",
+              "headEditOrdinal": 1,
+              "headEditId": "lost-1",
+              "lastCommitSeq": 1,
+              "chainHashByte": 2
+            }
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "outboxMutationIds": [],
+            "pendingBatchCount": 0,
+            "frontierEditId": "lost-1"
+          }
+        },
+        {
+          "op": "serverFrame",
+          "frame": {
+            "kind": "session",
+            "actor": "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "color": 2
+          }
+        },
+        {
+          "op": "expect",
+          "expect": {
+            "outboxMutationIds": [],
+            "pendingBatchCount": 0,
+            "socketActorConfirmed": true
+          }
+        }
+      ]
     }
   ]
 }

@@ -18,11 +18,8 @@ export default {
     root: testRoot,
     name: "@semio-tech/s-2d-js",
     environment: "node",
-    // 🩹️ In-source (`import.meta.vitest`) suite in `../../🟦️.ts` — `include` names ACTUAL TEST FILES,
-    // and no file named literally "index.ts" exists here (the real file is `../../🟦️.ts`), so this was
-    // silently collecting zero tests while `nx test` reported success. See the os-dev/replication
-    // configs' note on why `include` must stay empty for an in-source suite.
-    include: [],
+    // 🧪️ The scene suite is in-source; line-layout fixtures have a dedicated test module.
+    include: ["../../📝️text/🧪️tests/🔬️unit/🟦️.ts"],
     includeSource: ["../../🟦️.ts"],
     coverage: { include: ["../../🟦️.ts"] },
     passWithNoTests: false,

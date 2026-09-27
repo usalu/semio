@@ -62,7 +62,7 @@ export interface RasterMaskContent { mask: RasterLayerMask | null }
 export interface RasterAdjustmentParameter {parameter: "brightness" | "contrast"; value: number | null}
 
 export interface RasterLayerPatch {
-  adjustmentParameter?: RasterAdjustmentParameter;
+  adjustmentParameters?: RasterAdjustmentParameter[];
   maskContent?: RasterMaskContent;
   pixelContent?: RasterPixelContent;
   pixelTransform?: RasterTransform;
@@ -207,6 +207,14 @@ export function parseRasterAdjustmentParameter(value: unknown, at = "$"): Raster
   return {parameter:row.parameter,value:number};
 }
 
+/** 🎛️ Compose at most two distinct tone parameters. */
+export function parseRasterAdjustmentParameters(value: unknown, at = "$"): RasterAdjustmentParameter[] {
+  if (!Array.isArray(value) || value.length > 2) return rasterRasterDiffGuardReject(at,"invalid adjustment parameter list");
+  const result=value.map((row,index)=>parseRasterAdjustmentParameter(row,at+"["+index+"]"));
+  if (new Set(result.map(row=>row.parameter)).size !== result.length) return rasterRasterDiffGuardReject(at,"duplicate adjustment parameter");
+  return result;
+}
+
 export function parseRasterLayerPatch(value: unknown, at = "$"): RasterLayerPatch {
   const row = rasterRasterDiffGuardObject(value, at);
   return {
@@ -220,7 +228,7 @@ export function parseRasterLayerPatch(value: unknown, at = "$"): RasterLayerPatc
     height: row["height"] == null ? undefined : rasterRasterDiffGuardInteger(row["height"], `${at}.height`, { minimum: 0 }),
     ...(row.pixelContent == null ? {} : {pixelContent: parseRasterPixelContent(row.pixelContent, `${at}.pixelContent`)}),
     ...(row.pixelTransform == null ? {} : {pixelTransform: parseRasterTransform(row.pixelTransform, `${at}.pixelTransform`)}),
-    ...(row.adjustmentParameter == null ? {} : {adjustmentParameter: parseRasterAdjustmentParameter(row.adjustmentParameter, `${at}.adjustmentParameter`)}),
+    ...(row.adjustmentParameters == null ? {} : {adjustmentParameters: parseRasterAdjustmentParameters(row.adjustmentParameters, `${at}.adjustmentParameters`)}),
     ...(row.maskContent == null ? {} : {maskContent: parseRasterMaskContent(row.maskContent, `${at}.maskContent`)}),
     adjustmentKind: row["adjustmentKind"] == null ? undefined : rasterRasterDiffGuardString(row["adjustmentKind"], `${at}.adjustmentKind`),
   };

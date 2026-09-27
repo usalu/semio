@@ -12,7 +12,8 @@ Slice N1, session 13 (2026-09-26 20:3x). Coordinator = main chat. Predecessor: t
 |---|------|-------|----------|
 | 1 | repo contract gate: norm → 0 HIGH (classify, root cause, fix tree or rule) | in progress: root cause found; layout fixes + codec bridge LANDED; vector regeneration pending the native lane | `generated/contract-1.txt`, landing row N1 05:29 |
 | 2 | descriptor/describe freshness, en + de for 15 families, exact manifest pins | en + de: 374 mutation labels fixed + census law green; landing pending wasm32 (queue); describe = W3's rebuild | `generated/label-census-3.txt`, `check-native-3.txt` |
-| 3 | norm in `s` (after W3 restage) + hub creation of norm kinds (after all-package publish) | pending (blocked on W3) | — |
+| 3 | norm in `s` (after W3 restage) + hub creation of norm kinds (after all-package publish) | S16 matrix norm 12/15 (fixtures stale) → fixtures prepared for window 3 | S16 report |
+| 4 | (window 2) norm plugin test reds: surface en1991 example, compliance-gate E0382 | LANDED on check-green 15:4x; test run queued native | landing row N1 window 2 |
 
 ### Log
 
@@ -84,3 +85,29 @@ Slice N1, session 13 (2026-09-26 20:3x). Coordinator = main chat. Predecessor: t
   `🧪️tests/🧩️example/` move) → now discovered from the tree.
 - 06:0x native `--lib --tests` of the 13 label crates: **exit 0, 540 warnings** (`check-native-3.txt`, 6.6 min).
   wasm32 queued behind s17 (holding 06:04), ld, wg10 (ticket 05:51).
+- 06:1x coordinator: label fix kept under rule 29 (wasm32 = REBUILD fast gate); the queued wasm32 check of the 13 label
+  crates actually ran 06:35: **exit 0** (`generated/check-wasm-2.txt`). Landing row written.
+- 06:1x–06:32 (test-only, after the label landing): every family's independent evaluate/compliance oracle now lives at one
+  place, `🔮️oracles/⚖️compliance/🐍️.py` (`n1-compliance-oracles.py`: din18599, en1997, en1996 out of stub "test cases" with
+  4-line scenario-less features; en1995/en1999 `🐍️evaluate.py`, en1991 `evaluate_en1991.py`, din4108/en1998 `🔮️oracles/🐍️.py`
+  moved; 8 Rust parity tests rewritten; the 4 stub cases deleted). 4 parity tests wrote scratch files into the CLOSED norm
+  ticket's `🗑️generated/` → now `std::env::temp_dir()`. Native `--tests` of the 9 affected crates: **exit 0**
+  (`check-native-4.txt`, 17 min under load).
+- 06:35 → 14:50 cut twice (usage limit); REBUILD b3 ran, 7800 on B3 (rule 31); window 2 opened 14:2x (rule 32/33).
+- 14:2x coordinator: two norm test reds → (a) `🧪️tests/🔬️surface/🦀️.rs` referenced en1991's `retail_hydrocarbon_fire`
+  (removed by Wave C) → the case now loads `multi_fail_noncompliant`; (b) `🧪️tests/🚦️compliance-gate/🦀️.rs` E0382 (the
+  first remedy loop consumed `applicables`, the sequential pass reused it) → `for &(remedy_index, remedy) in &applicables`.
+  `cargo check -p semio-s-plugin-norm --lib --tests` (native lane): 14:22 run died on a peer's in-flight
+  `ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY` (private const used by the plugin; the owner made it `pub` at 14:56) →
+  re-run **exit 0, 426 warnings** (`check-plugin-2.txt`). Test run + emitter build queued in the native lane
+  (`n1-lane-run.sh`, detached pid 35260, capture `generated/lane-run-1.txt`).
+- 15:0x coordinator (S16 matrix, norm 12/15): norm mutation fixtures fail `setSnapshot` → jsonschema census
+  (`n1-validate-fixtures.py`, `generated/validate-fixtures-0.txt`): en1990 0/20, din16798 0/124, din4108 0/56, en1993 0/34,
+  en1994 0/50, en1996 0/44, en1998 0/96 schema-valid; en1991/en1992/en1997/en1999 have none; din18599 6/6, vdi3805 38/38,
+  iso16757 58/58, en1995 132/132 schema-valid but vdi3805/iso16757 still fail production decode (schema looser than the
+  codec). Fix path = the emitter (production-encoded vectors) → `n1-materialize.ts`, then jsonschema + production decode.
+- 15:4x coordinator: land (a)+(b) on check-green → row written ("check exit 0; tests queued native"). Fixture
+  regeneration + vdi3805 `EditionProfileChoice` (value_derive writes `Legacy`, fixtures/schema `legacy`; schema leaves the
+  map values free strings) + iso16757 catalogue spellings (schema/fixtures snake_case `edition_profile`, decoder camelCase)
+  → ONE prepared set for window 3 (snapshot schemas are `include_str!`ed into the guests, so they are guest edits).
+  SH1 owns the en1993 `📝️text/📖️.grammar.semio` fix (told them I have no overlapping hunk).

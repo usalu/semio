@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::rc::Rc;
 use ui_host::{WindowDelegate, WindowMetrics};
-use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PhysicalSize, PointerButton, PointerId, PointerInfo, PointerKind};
+use ui_render::{DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PhysicalSize, PointerButton, PointerId, PointerInfo, PointerKind};
 use ui_wgpu::wgpu::{ActionDescriptor, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, OffscreenPresentToken, PointerModifiers, Theme};
 use wasm_bindgen::prelude::*;
 
@@ -366,18 +366,19 @@ impl BrowserRendererWorker {
         if let Some(detail) = present_fault.clone() {
             self.quarantined = Some(detail);
         }
-        let continue_frame = host.take_cursor_wake_directive().is_some()
-            || crate::os_host::component_surface_close_occupied()
-            || host.runtime.has_pending_text_work()
-            || host.runtime.has_pending_world3d_work()
-            || host.runtime.has_pending_settle()
-            || host.runtime.has_pending_applies()
-            || host.frame_build.has_live_session()
-            || host.presenter.has_pending_presentation();
+        let continue_frame = !host.presenter.awaiting_runtime()
+            && (host.take_cursor_wake_directive().is_some()
+                || crate::os_host::component_surface_close_occupied()
+                || host.runtime.has_pending_text_work()
+                || host.runtime.has_pending_world3d_work()
+                || host.runtime.has_pending_settle()
+                || host.runtime.has_pending_applies()
+                || host.frame_build.has_live_session()
+                || host.presenter.has_pending_presentation());
         encode_tick_timed(
             generation,
             BrowserTickOutput {
-                cursor: cursor_name(outcome.cursor),
+                cursor: outcome.cursor_css,
                 fullscreen: host.platform_fullscreen.take(),
                 // 🎞️ A live frame build and an unapplied runtime completion each owe the shell another
                 // frame. Without them a settled browser shell ticks only on input, so a build that needed
@@ -897,16 +898,6 @@ pub async fn semio_wgpu_worker_bootstrap(canvas: web_sys::OffscreenCanvas, plugi
     Ok(BrowserRendererBootstrap { gpu: Some(gpu), plugins, plugin_filter, width, height, dpr, wake, atlas: None, icons: None, entries: None, shell: None, phase: 0 })
 }
 //#endregion 🚀️Boot
-
-fn cursor_name(cursor: CursorRequest) -> &'static str {
-    match cursor {
-        CursorRequest::Default => "default",
-        CursorRequest::Pointer => "pointer",
-        CursorRequest::Text => "text",
-        CursorRequest::Grab => "grab",
-        CursorRequest::Grabbing => "grabbing",
-    }
-}
 
 fn encode_tick(output: BrowserTickOutput) -> Result<String, JsValue> {
     serde_json::to_string(&output).map_err(|error| js_error("tick-encode", &error.to_string()))

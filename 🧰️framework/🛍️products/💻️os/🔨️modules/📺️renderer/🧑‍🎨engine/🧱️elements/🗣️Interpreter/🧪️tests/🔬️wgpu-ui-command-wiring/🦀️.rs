@@ -1473,16 +1473,43 @@ fn accepted_accessibility_table_value_echo_blurs_while_refusal_preserves_the_dra
     let acceptance = &fixture["acceptance"];
     let base = acceptance["base"].as_str().unwrap();
     let draft = acceptance["draft"].as_str().unwrap();
+    let awaiting_echo = acceptance["awaitingEcho"].as_str().unwrap();
     let target = || crate::scenes::TableEditableTextFocusTarget { row_id: "row-2".into(), column_id: "value".into(), value: base.into() };
 
-    let accepted_window = "accepted-accessibility-table-value-echo";
-    let accepted_node = seed_scene_window_with(accepted_window, table_editable_text_scene_node_with_value(acceptance["acceptedPersisted"].as_str().unwrap()));
-    let accepted_generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(accepted_window)).unwrap();
+    let pending_window = "pending-accessibility-table-value";
+    let pending_node = seed_scene_window_with(pending_window, table_editable_text_scene_node_with_value(base));
+    let pending_generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(pending_window)).unwrap();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    UI_ENGINE.with(|cell| focus_table_editable_text(&cell.borrow(), accepted_window, accepted_generation, accepted_node, "table-editable-text-focus", target(), &mut input)).expect("accepted cell focus");
-    set_focused_table_editable_text_draft(accepted_window, accepted_node, "table-editable-text-focus", "row-2", "value", draft);
-    assert!(blur_focused_table_editable_text_for_pointer(None, true, 0, &mut input));
-    assert!(FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| cell.borrow().is_none()), "the accepted scene echo rebases the accessibility draft and releases focus");
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(pending_window);
+    publish_accessibility_visible_documents();
+    let textbox = published_accessibility_nodes_for_test(pending_window).into_iter().find(|node| node.role == "textbox").expect("editable table textbox");
+    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Focus, &mut input).is_some());
+    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Value(draft.into()), &mut input).is_some());
+    let actions = crate::collect_fixture_actions(&mut input);
+    let publication_count_before_echo = acceptance["publicationCountBeforeEcho"].as_u64().unwrap();
+    assert_eq!(actions.len() as u64, publication_count_before_echo, "the accepted accessibility value publishes once");
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(pending_window);
+    publish_accessibility_visible_documents();
+    let pending_textbox = published_accessibility_nodes_for_test(pending_window).into_iter().find(|node| node.key == textbox.key).expect("pending editable table textbox");
+    assert_eq!(pending_textbox.busy, acceptance["busyBeforeEcho"].as_bool().unwrap());
+    assert_eq!(pending_textbox.value_text.as_deref(), Some(draft));
+    assert!(dispatch_accessibility_event(pending_window, pending_generation, textbox.node_id, &textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Blur, &mut input).is_some());
+    let blur_actions = crate::collect_fixture_actions(&mut input);
+    assert_eq!(publication_count_before_echo + blur_actions.len() as u64, acceptance["publicationCountAfterBlur"].as_u64().unwrap(), "blur before the scene echo cannot republish the accepted accessibility value");
+    assert_eq!(focused_table_editable_text_draft(pending_window, pending_node, "table-editable-text-focus", "row-2", "value").as_deref(), Some(draft));
+    assert!(FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| cell.borrow().as_ref().is_some_and(|focus| focus.awaiting_echo.as_deref() == Some(awaiting_echo))));
+
+    seed_scene_window_with(pending_window, table_editable_text_scene_node_with_value(acceptance["acceptedPersisted"].as_str().unwrap()));
+    let echoed_generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(pending_window)).unwrap();
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(pending_window);
+    publish_accessibility_visible_documents();
+    let echoed_textbox = published_accessibility_nodes_for_test(pending_window).into_iter().find(|node| node.role == "textbox").expect("echoed editable table textbox");
+    assert!(dispatch_accessibility_event(pending_window, echoed_generation, echoed_textbox.node_id, &echoed_textbox.key, ui_wgpu::wgpu::AccessibilityUiEvent::Blur, &mut input).is_some());
+    assert!(crate::collect_fixture_actions(&mut input).is_empty(), "the authoritative scene echo cannot publish the accepted value again");
+    assert!(FOCUSED_TABLE_EDITABLE_TEXT.with(|cell| cell.borrow().is_none()), "the authoritative scene echo rebases the accessibility draft and releases focus");
     assert!(!input.retained_action_pending());
 
     let refused_window = "refused-accessibility-table-value";
@@ -1496,9 +1523,9 @@ fn accepted_accessibility_table_value_echo_blurs_while_refusal_preserves_the_dra
     input.cancel_retained_action();
     assert_eq!(focused_table_editable_text_draft(refused_window, refused_node, "table-editable-text-focus", "row-2", "value").as_deref(), Some(draft), "cancellation preserves the refused draft");
     let other = crate::scenes::TableEditableTextFocusTarget { row_id: "other-row".into(), column_id: "value".into(), value: "other".into() };
-    UI_ENGINE.with(|cell| focus_table_editable_text(&cell.borrow(), refused_window, refused_generation, refused_node, "table-editable-text-focus", other, &mut input)).expect("focus transfer retries the refused edit");
-    assert!(input.retained_action_pending());
-    assert_eq!(focused_table_editable_text_draft(refused_window, refused_node, "table-editable-text-focus", "row-2", "value").as_deref(), Some(draft), "a retrying focus transfer keeps the refused cell and draft focused");
+    UI_ENGINE.with(|cell| focus_table_editable_text(&cell.borrow(), refused_window, refused_generation, refused_node, "table-editable-text-focus", other, &mut input)).expect("focus transfer preserves the unacknowledged edit");
+    assert!(!input.retained_action_pending(), "focus transfer cannot duplicate a publication awaiting its scene echo");
+    assert_eq!(focused_table_editable_text_draft(refused_window, refused_node, "table-editable-text-focus", "row-2", "value").as_deref(), Some(draft), "an unacknowledged edit keeps the original cell and draft focused");
     input.cancel_retained_action();
     clear_focused_table_editable_text(&mut input);
 }
@@ -1678,6 +1705,176 @@ fn accepted_block_list_buttons_publish_localized_actions_and_reject_a_retired_pa
     crate::scenes::seal_block_list_accessibility_candidates(804);
     crate::scenes::acknowledge_block_list_accessibility_candidates(804);
     assert!(dispatch_accessibility_event(window_id, generation, palette_node.node_id, &palette_node.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none());
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+}
+
+#[test]
+fn accepted_event_feed_rows_publish_tabbable_buttons_read_only_text_and_exact_actions() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📡️EventFeedHost/🧫️fixtures/♿️accessible-entry/🔣️.json"))).expect("EventFeed accessible entry fixture");
+    let actionable = &fixture["cases"][0];
+    let passive = &fixture["cases"][1];
+    let window_id = "accepted-event-feed-controls";
+    let host_id = fixture["hostId"].as_str().unwrap();
+    let mut scene_node = component_scene_ui(host_id, ui_wgpu::wgpu::SurfaceKind::EventFeed);
+    let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
+    scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
+    scene.controller_id = fixture["controllerId"].as_str().unwrap().into();
+    scene.event_feed = Some(ui_wgpu::wgpu::EventFeedScene {
+        entries_json: serde_json::json!([actionable["entry"].clone()]).to_string(),
+        follow: None,
+        activate_action: actionable["activateAction"].as_str().map(str::to_owned),
+        domain_id: None,
+    });
+    let node = seed_scene_window_with(window_id, scene_node);
+    assert!(crate::scenes::mount_scene_identity(&retained_scene_target(window_id, node).expect("retained EventFeed target")));
+    let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
+    let expected_action = &actionable["expected"]["action"];
+    let control = crate::scenes::EventFeedAccessibilityControl {
+        key: actionable["expected"]["key"].as_str().unwrap().into(),
+        entry_id: actionable["entry"]["id"].as_str().unwrap().into(),
+        label: actionable["expected"]["accessibleName"].as_str().unwrap().into(),
+        rect: Rect::new(0.0, 12.0, 320.0, 24.0),
+        action: Some(ActionDescriptor {
+            controller_id: expected_action["controllerId"].as_str().unwrap().into(),
+            action: expected_action["action"].as_str().unwrap().into(),
+            args: crate::action_args_json!({
+                "surfaceId": expected_action["args"]["surfaceId"].as_str().unwrap(),
+                "id": expected_action["args"]["id"].as_str().unwrap()
+            }),
+        }),
+    };
+    crate::scenes::stage_event_feed_accessibility_controls(host_id, vec![control.clone()]);
+
+    let passive_window_id = "accepted-passive-event-feed-controls";
+    let passive_host_id = "feed-ax-passive-host";
+    let mut passive_scene_node = component_scene_ui(passive_host_id, ui_wgpu::wgpu::SurfaceKind::EventFeed);
+    let UiNode::ComponentScene(passive_scene) = &mut passive_scene_node else { unreachable!() };
+    passive_scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
+    passive_scene.controller_id = fixture["controllerId"].as_str().unwrap().into();
+    passive_scene.event_feed = Some(ui_wgpu::wgpu::EventFeedScene { entries_json: serde_json::json!([passive["entry"].clone()]).to_string(), follow: None, activate_action: None, domain_id: None });
+    let passive_scene_node = seed_scene_window_with(passive_window_id, passive_scene_node);
+    assert!(crate::scenes::mount_scene_identity(&retained_scene_target(passive_window_id, passive_scene_node).expect("retained passive EventFeed target")));
+    let passive_key = format!("{passive_host_id}.feed.{}", passive["entry"]["id"].as_str().unwrap());
+    crate::scenes::stage_event_feed_accessibility_controls(
+        passive_host_id,
+        vec![crate::scenes::EventFeedAccessibilityControl {
+            key: passive_key.clone(),
+            entry_id: passive["entry"]["id"].as_str().unwrap().into(),
+            label: passive["expected"]["accessibleName"].as_str().unwrap().into(),
+            rect: Rect::new(0.0, 12.0, 320.0, 24.0),
+            action: None,
+        }],
+    );
+
+    crate::scenes::seal_event_feed_accessibility_candidates(805);
+    crate::scenes::acknowledge_event_feed_accessibility_candidates(805);
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window_id);
+    note_accessibility_visible_document(passive_window_id);
+    publish_accessibility_visible_documents();
+    let button = published_accessibility_nodes_for_test(window_id).into_iter().find(|entry| entry.key == control.key).expect("accepted EventFeed button");
+    assert_eq!((button.role.as_str(), button.label.as_deref(), button.focusable, button.tabbable, button.actionable), ("button", Some(control.label.as_str()), true, true, true));
+    let paragraph = published_accessibility_nodes_for_test(passive_window_id).into_iter().find(|entry| entry.key == passive_key).expect("accepted passive EventFeed text");
+    assert_eq!((paragraph.role.as_str(), paragraph.focusable, paragraph.tabbable, paragraph.actionable), ("paragraph", false, false, false));
+
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    let actions = crate::collect_fixture_actions(&mut input);
+    assert_eq!(actions.len(), 1);
+    assert_eq!(actions[0].controller_id, expected_action["controllerId"].as_str().unwrap());
+    assert_eq!(actions[0].action, expected_action["action"].as_str().unwrap());
+    assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str), expected_action["args"]["surfaceId"].as_str());
+    assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("id")).and_then(semio_framework::DslValue::as_str), expected_action["args"]["id"].as_str());
+
+    crate::scenes::stage_event_feed_accessibility_controls(host_id, Vec::new());
+    crate::scenes::seal_event_feed_accessibility_candidates(806);
+    crate::scenes::acknowledge_event_feed_accessibility_candidates(806);
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none());
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+}
+
+#[test]
+fn accepted_table_row_button_publishes_one_tabbable_exact_action_and_rejects_stale_addresses() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button accessibility fixture");
+    let window_id = "accepted-table-row-button";
+    let host_id = fixture["hostId"].as_str().unwrap();
+    let mut scene_node = component_scene_ui(host_id, ui_wgpu::wgpu::SurfaceKind::Table);
+    let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
+    scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
+    scene.controller_id = fixture["controllerId"].as_str().unwrap().into();
+    scene.table = Some(ui_wgpu::wgpu::TableScene::base(fixture["columns"].to_string(), serde_json::Value::Array(vec![fixture["row"].clone()]).to_string()));
+    crate::scenes::remember_scene_theme(&Theme::default());
+    let controls = crate::scenes::table_button_accessibility_cells(scene, Rect::new(0.0, 0.0, 400.0, 300.0), ui_wgpu::wgpu::UiDriverDrag::Handle);
+    assert_eq!(controls.len(), 1);
+    let control = controls[0].clone();
+    let node = seed_scene_window_with(window_id, scene_node);
+    assert!(crate::scenes::mount_scene_identity(&retained_scene_target(window_id, node).expect("retained Table target")));
+    let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
+    crate::scenes::stage_table_button_accessibility_cells(host_id, controls);
+    crate::scenes::seal_table_button_accessibility_candidates(902);
+    crate::scenes::acknowledge_table_button_accessibility_candidates(902);
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window_id);
+    publish_accessibility_visible_documents();
+    let button = published_accessibility_nodes_for_test(window_id).into_iter().find(|entry| entry.key == control.key).expect("accepted Table row button");
+    assert_eq!((button.role.as_str(), button.label.as_deref(), button.focusable, button.tabbable, button.actionable), ("button", fixture["expected"]["label"].as_str(), true, true, true));
+
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation + 1, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(), "a stale window generation is inert");
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, "table-ax-host.row.stale.actions.0", ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(), "a stale key is inert");
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    let actions = crate::collect_fixture_actions(&mut input);
+    assert_eq!(actions.len(), 1);
+    assert_eq!(serde_json::to_value(&actions[0]).expect("action json"), fixture["expected"]["action"]);
+
+    crate::scenes::stage_table_button_accessibility_cells(host_id, Vec::new());
+    crate::scenes::seal_table_button_accessibility_candidates(903);
+    crate::scenes::acknowledge_table_button_accessibility_candidates(903);
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none());
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+}
+
+#[test]
+fn accepted_graph_checkpoint_publishes_one_tabbable_exact_action_and_rejects_stale_addresses() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/🌳️GraphTimelineHost/🧫️fixtures/🎯️checkpoint-hit/🔣️.json"))).expect("GraphTimeline checkpoint fixture");
+    let expected = &fixture["accessibility"];
+    let window_id = "accepted-graph-checkpoint";
+    let host_id = fixture["hostId"].as_str().unwrap();
+    let mut scene_node = component_scene_ui(host_id, ui_wgpu::wgpu::SurfaceKind::GraphTimeline);
+    let UiNode::ComponentScene(scene) = &mut scene_node else { unreachable!() };
+    scene.surface_id = fixture["surfaceId"].as_str().unwrap().into();
+    scene.controller_id = fixture["controllerId"].as_str().unwrap().into();
+    scene.graph_timeline = Some(ui_wgpu::wgpu::GraphTimelineScene { columns_json: fixture["columns"].to_string() });
+    let values = fixture["bounds"].as_array().unwrap();
+    let bounds = Rect::new(values[0].as_f64().unwrap() as f32, values[1].as_f64().unwrap() as f32, values[2].as_f64().unwrap() as f32, values[3].as_f64().unwrap() as f32);
+    let controls = crate::scenes::graph_timeline_accessibility_controls(scene, bounds, &Theme::default());
+    let control = controls.iter().find(|control| control.key == expected["key"].as_str().unwrap()).expect("expected checkpoint").clone();
+    let node = seed_scene_window_with(window_id, scene_node);
+    assert!(crate::scenes::mount_scene_identity(&retained_scene_target(window_id, node).expect("retained GraphTimeline target")));
+    let generation = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)).unwrap();
+    crate::scenes::stage_graph_timeline_accessibility_controls(host_id, controls);
+    crate::scenes::seal_graph_timeline_accessibility_candidates(922);
+    crate::scenes::acknowledge_graph_timeline_accessibility_candidates(922);
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window_id);
+    publish_accessibility_visible_documents();
+    let button = published_accessibility_nodes_for_test(window_id).into_iter().find(|entry| entry.key == control.key).expect("accepted GraphTimeline checkpoint button");
+    assert_eq!((button.role.as_str(), button.label.as_deref(), button.focusable, button.tabbable, button.actionable), (expected["role"].as_str().unwrap(), expected["accessibleName"].as_str(), true, true, true));
+
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    assert!(dispatch_accessibility_event(window_id, generation + 1, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(), "a stale window generation is inert");
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, "history-host.history.stale", ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none(), "a stale key is inert");
+    assert!(crate::collect_fixture_actions(&mut input).is_empty());
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_some());
+    let actions = crate::collect_fixture_actions(&mut input);
+    assert_eq!(actions.len(), 1);
+    assert_eq!(serde_json::to_value(&actions[0]).expect("action json"), expected["action"]);
+
+    crate::scenes::stage_graph_timeline_accessibility_controls(host_id, Vec::new());
+    crate::scenes::seal_graph_timeline_accessibility_candidates(923);
+    crate::scenes::acknowledge_graph_timeline_accessibility_candidates(923);
+    assert!(dispatch_accessibility_event(window_id, generation, button.node_id, &button.key, ui_wgpu::wgpu::AccessibilityUiEvent::Activate, &mut input).is_none());
     assert!(crate::collect_fixture_actions(&mut input).is_empty());
 }
 

@@ -122,7 +122,19 @@ export type { BufferGeometry, Camera as ThreeCamera, Group, MeshStandardMaterial
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
+import { Clone } from "@react-three/drei/core/Clone.js";
+import { Edges } from "@react-three/drei/core/Edges.js";
+import { GizmoHelper } from "@react-three/drei/core/GizmoHelper.js";
+import { GizmoViewport } from "@react-three/drei/core/GizmoViewport.js";
+import { Grid } from "@react-three/drei/core/Grid.js";
+import { Line as DreiLine } from "@react-three/drei/core/Line.js";
+import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
+import { OrthographicCamera } from "@react-three/drei/core/OrthographicCamera.js";
+import { Outlines } from "@react-three/drei/core/Outlines.js";
+import { PerspectiveCamera } from "@react-three/drei/core/PerspectiveCamera.js";
+import { Text as DreiText } from "@react-three/drei/core/Text.js";
+import { TransformControls } from "@react-three/drei/core/TransformControls.js";
+import { useGLTF } from "@react-three/drei/core/Gltf.js";
 import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, ThreeEvent, useFrame, useStore, useThree } from "@react-three/fiber";
 import { rankFuzzyItems, type FuzzySearchField, type FuzzySearchOptions, type FuzzySearchResult } from "../../🔨️modules/🔎️fuzzy-ranking/🟦️.ts";
 import { UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForMatches, elementsSurfaceDeviceIsMobile, type ElementsSurfaceDevice } from "../../📱️device/🟦️.ts";
@@ -2800,6 +2812,8 @@ export const uiChromeTranslationBundles = {
           setDriver: { label: { normal: "Treiber festlegen", beginner: "Treiber festlegen" } },
           openTaskManager: { label: { normal: "Aufgaben öffnen", beginner: "Aufgaben öffnen" } },
           openHub: { label: { normal: "Hub und Bereiche öffnen", beginner: "Mit anderen arbeiten" } },
+          exportDocument: { label: { normal: "Dokument exportieren", beginner: "Dokument als Datei sichern" } },
+          importDocument: { label: { normal: "Dokument importieren…", beginner: "Dokument aus Datei öffnen…" } },
         },
         shellCommand: {
           dockMove: { label: { normal: "Panel-Tab verschieben", beginner: "Panel-Tab verschieben" } },
@@ -3722,6 +3736,8 @@ export const uiChromeTranslationBundles = {
           setDriver: { label: { normal: "Set Driver", beginner: "Set Driver" } },
           openTaskManager: { label: { normal: "Open Tasks", beginner: "Open Tasks" } },
           openHub: { label: { normal: "Open Hub and Spaces", beginner: "Work With Others" } },
+          exportDocument: { label: { normal: "Export Document", beginner: "Save Document as File" } },
+          importDocument: { label: { normal: "Import Document…", beginner: "Open Document from File…" } },
         },
         shellCommand: {
           dockMove: { label: { normal: "Move Panel Tab", beginner: "Move Panel Tab" } },
@@ -9632,11 +9648,6 @@ export function NavbarTrailingChromeSlot({
   );
 }
 
-/** @emoji 🖥️ @deprecated Use {@link NavbarTrailingChromeSlot}; kept for story/tests that only need fullscreen. */
-export function NavbarTrailingFullscreenSlot({ onToggle }: { readonly onToggle?: () => void } = {}) {
-  return <NavbarTrailingChromeSlot showFullscreenToggle onFullscreenToggle={onToggle} />;
-}
-
 // #endregion 🖥️Fullscreen
 
 // #region 🩺️Navbar
@@ -11687,7 +11698,11 @@ export { CSS as DndCSS } from "@dnd-kit/utilities";
 // #endregion 🌩️DnD Kit
 
 // #region 📰️Three.js
-export { Select as DreiSelect, Edges, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Sphere, useFBX, useGLTF } from "@react-three/drei";
+export { Select as DreiSelect } from "@react-three/drei/web/Select.js";
+export { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF };
+export { Line } from "@react-three/drei/core/Line.js";
+export { Sphere } from "@react-three/drei/core/shapes.js";
+export { useFBX } from "@react-three/drei/core/Fbx.js";
 export { Canvas as ThreeCanvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 export * as THREE from "three";
 export { OBJLoader } from "three/addons/loaders/OBJLoader.js";

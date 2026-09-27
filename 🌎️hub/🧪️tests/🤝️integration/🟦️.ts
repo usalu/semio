@@ -140,6 +140,7 @@ describe("hub harness quick contract", () => {
     const validatePipe = localBootstrapExport("LocalBootstrapPipeV1");
     const validateReadiness = localBootstrapExport("LocalBootstrapReadinessV1");
     const validateCredential = localBootstrapExport("LocalBootstrapCredentialEnvelopeV1");
+    const validateLiveness = localBootstrapExport("LocalBootstrapLivenessV1");
     const exports = [
       [validatePipe, fixture.initialize, fixture.hello, fixture.issue],
       [localBootstrapExport("LocalBootstrapPipeInitializeV1"), fixture.initialize],
@@ -148,6 +149,7 @@ describe("hub harness quick contract", () => {
       [localBootstrapExport("LocalBootstrapProfileV1"), ...fixture.initialize.profiles],
       [validateCredential, fixture.credential],
       [validateReadiness, fixture.ready, fixture.bootstrapReadyButArtifactUnavailable, fixture.notReady, fixture.starting],
+      [validateLiveness, fixture.live],
     ] as const;
     for (const [validate, ...values] of exports) for (const value of values) expect(validate(value), "validate rejected its own fixture").toBe(true);
     const oversizedDevice = structuredClone(fixture.issue);
@@ -167,6 +169,8 @@ describe("hub harness quick contract", () => {
     expect(validateReadiness({ ...fixture.ready, artifactAuthority: { ready: false } })).toBe(false);
     expect(validateReadiness({ ...fixture.bootstrapReadyButArtifactUnavailable, status: "ready" })).toBe(false);
     expect(validateReadiness({ ...fixture.ready, startup: fixture.starting.startup }), "a ready hub never reports startup progress").toBe(false);
+    expect(validateLiveness({ ...fixture.live, status: "ready" }), "liveness is only ever live").toBe(false);
+    expect(validateLiveness({ ...fixture.live, blockedBy: [] }), "liveness says nothing about readiness").toBe(false);
     expect(validateReadiness({ ...fixture.starting, startup: { ...fixture.starting.startup, stage: "Guest Codec" } })).toBe(false);
     expect(validateCredential({ ...fixture.credential, sessionKind: "external" })).toBe(false);
     expect(validateCredential({ ...fixture.credential, authorizationGeneration: 0 })).toBe(false);

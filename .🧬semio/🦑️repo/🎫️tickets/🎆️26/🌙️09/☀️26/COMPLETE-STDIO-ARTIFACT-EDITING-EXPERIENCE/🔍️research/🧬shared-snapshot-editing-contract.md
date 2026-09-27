@@ -57,6 +57,45 @@ The language-neutral fixture applies scalar, map, sequence, optional, enum, larg
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🧪️tests/🔬️wgpu-table/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🔬️wgpu-ui-command-wiring/🦀️.rs`
+
+## Validated Dispatch and Bounded Admission Audit
+
+The final dispatch graph has one validation boundary. All 88 `SnapshotEditingEditor` implementations expose their format-specific publication through `snapshot_edit_mutations`; the only call to that raw hook is the default `snapshot_edit_emit`. Direct editor handles route snapshot commands through that default method. Retained factories recognize the six shared action IDs before their native routes, verify the event action matches the requested tool, and reduce through the same default method. The two macro-supplied native factories and every explicit native factory also compare the decoded command ID with the requested tool ID. No override, recursive call, or alternate raw dispatch path remains.
+
+Retained admission no longer converts the complete snapshot to `DslValue`. It first bounds the encoded incoming event to 16 MiB, then enforces 65,536 incoming value nodes, 128 nested levels, unique object keys, finite numbers, valid RFC 6901 escapes, and 128 pointer segments. It uses `value_shape_at_path` only for the addressed value or parent. Source replacement validates duplicate keys and parses only its submitted source. The neutral compact-patch fixture now includes the admission contract, and its Rust regression admits a metadata edit beside a 2 MiB byte sibling while refusing excess raw bytes, nodes, depth, path segments, malformed pointers, duplicate values, and duplicate source keys.
+
+No new Cargo run was started because multiple retained native lanes remain active. The WGPU awaiting-echo run is still process `30640` / `34180` with log `🗑️generated/wgpu-table-awaiting-echo.log`; it remains in nextest discovery with no compiler or test result. The empty-enum derive run is still process `43179` / `43896` with log `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/RASTER-PLUGIN-END-TO-END/🗑️generated/raster-adjustment-value-derive-2.log`; it also remains in nextest discovery with no diagnostic.
+
+### Admission edited-file ledger
+
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🩹️patch/🧪️tests/🦀️.rs`
+
+## Direct Typed-Path Value Codec
+
+The domain-neutral value codec now exposes three bounded readers and one atomic writer. `value_at_path` projects only the requested subtree, `value_shape_at_path` reports scalar kind or container length without projecting children, `value_key_at_path` returns one serialized object key by ordinal, and `edit_value_at_path` applies `Set`, `Insert`, or `Remove` to already-decoded RFC 6901 segments. Array reads accept canonical decimal indices; only insert accepts `-`. Missing keys, duplicate insertions, noncanonical indices, fixed-container length changes, type errors, and custom-codec refusals return `ValueError` before the owning field is assigned.
+
+Container implementations traverse vectors, deques, arrays, tuples, boxes, options, sets, ordered maps, hash maps, and `DslValue` directly. Generated records honor wire renames, skip predicates, flattened fields, and paired custom codecs. Generated external, adjacent, and internal enum representations traverse their active payload directly, including tag/content keys and internally tagged object payloads. A custom serialized composite without the matching decoder is explicitly uneditable below its wire field.
+
+The neutral fixture is shared with the TypeScript fast-json-patch/Ajv suite. The native derive integration consumes its 14 accepted cases, eight rejected cases, custom codec cases, all three enum tagging modes, flattening, Unicode/escaped/empty keys, canonical indices, atomic refusal, and the 2 MiB unchanged-sibling witness. It also checks object-key paging and enum shape queries. Public `ValueEdit` and `ValueShape` reexports are available from protocol value, OS DSL schema, and the OS kernel crate root.
+
+### Direct-path validation status
+
+- TypeScript fixture/oracle result owned by the coordinator: 50 tests / 102 assertions passed before compact-patch additions; the compact-patch suite later passed 64 tests / 150 assertions.
+- Native focused command: `NX_DAEMON=false NX_PLUGIN_NO_TIMEOUTS=true NX_WORKSPACE_DATA_DIRECTORY='<ticket>/🗑️generated/nx-data' bun nx run @semio-tech/value-derive-rs:test -- --test typed_path`.
+- Its redirected output is `🗑️generated/value-typed-path-native.log`. Nextest run `27607ff8-c41b-4a6a-a547-950d9b2c04f8` passed all 7 tests in 35 ms; Nx completed successfully after 20m37s of shared queue and build time. The regressions include fields named `path`, `index`, and `edit`, a `PathBuf` capture witness, and a second decode trait with a colliding `from_value` method.
+- A later shipping WASM compilation exposed zero-variant enums as a derive edge case: matching `self` left `&EmptyEnum` and `&mut EmptyEnum` inhabited even though the enum itself is uninhabited. The generator now emits exhaustive `match *self {}` bodies for the root encoder, all three path readers, and the path writer. Tagged and untagged empty-enum derives are compile-law fixtures; decode still returns a normal unknown-variant error. A standalone Rust compile proves the shared and mutable uninhabited match forms. A pre-existing focused Nx run is compiling `typed_path` and `deny_unknown_fields_enums` together as processes `43179` / `43896`; its log is `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️05/RASTER-PLUGIN-END-TO-END/🗑️generated/raster-adjustment-value-derive-2.log`. It remains queued in Cargo with no source diagnostic. The coordinator's shipping component run is independently compiling the patched derive and had progressed through `semio-framework-ui-contract` without the former E0004 diagnostic when this worker handed off; its log is `🗑️generated/full-catalog-component-current-2.log`. The earlier 7/7 result predates this edge-case regression, so neither active run is reported as passing yet.
+
+### Direct-path edited-file ledger
+
+- `🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🧪️tests/🧭️typed-path/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧬️schema/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚡️quick/🟦️.ts`
@@ -113,14 +152,14 @@ It has emitted no compiler diagnostic yet. Two renderer Cargo jobs were waiting 
 
 The React explicit-draft state transition now recomputes conflict status on every local edit. When a local draft becomes byte-equal to the collaborator's current persisted text, it rebases the draft to that value and clears both `dirty` and `conflicted`; Apply and the conflict alert can no longer remain latched around a clean draft. The language-neutral explicit-draft fixture carries the `A` / local `D` / collaborator `B` / matching `B` sequence.
 
-WGPU editable-table focus now owns both its original persisted base and its current draft. Commit resolution first recognizes `draft == persisted` as the accepted authoritative echo, then detects a true collaborator conflict, and otherwise starts a retryable retained publication. Pointer blur, accessibility blur, and focus transfer release the cell after an accepted echo. Refused or cancelled publication keeps the draft and cell focus; a focus transfer also waits while the retryable publication remains pending. The shared editable-table fixture describes accepted, refused, and collaborator outcomes and is consumed by both React reconciliation tests and WGPU scene/runtime tests.
+WGPU editable-table focus now owns its original persisted base, current draft, and one explicit value awaiting its scene echo. A successful retained publication enters `AwaitingEcho`; accessibility exposes the textbox as busy, and pointer blur, accessibility blur, Enter, or focus transfer cannot publish that value again while the accepted scene still shows the original base. An authoritative echo rebases the editor and releases it, a later draft can publish from the echoed base, and a different collaborator value remains a conflict. A publication fault never enters the awaiting state, so its visible fault and local draft remain retryable. The shared editable-table fixture describes accepted, refused, pending-echo, and collaborator outcomes. The WGPU runtime law keeps the same focused cell through `Focus(A) → Value(B) → Blur before echo → scene echo(B) → Blur`, asserting one publication before the echo, none after it, busy projection while pending, retained draft on cancellation, and final focus release.
 
 Details paths that exceed the flat `List<Text>` carrier no longer silently become readonly. The coordinated Details implementation renders the provider's complete typed snapshot as an explicit Apply/Discard source draft routed through `replaceSnapshotSource`; a lazy provider with neither a bindable path nor source returns an assembly error. Its 160 KiB Unicode-key regression checks that the resulting scene remains editable and explicitly committed.
 
 ### Follow-up validation status
 
 - React quick run attempts and their exact output are in `🗑️generated/react-explicit-conflict-rerun.log`, `react-explicit-conflict-final.log`, and `react-explicit-conflict-final2.log`. The first two exposed incomplete test-host session mocks; the third proved the full host harness was unsuitable in this jsdom suite because the asynchronous WASM loader was not ready. That harness was removed. The stable pure state-transition regression remains in the normal quick suite; `react-explicit-conflict-green.log` is the active/final rerun log.
-- The WGPU runtime test is queued behind three already-running renderer Cargo/Nx jobs. No duplicate Cargo job was started. It covers accepted echo → blur, refused publication → cancellation with draft retention, and refused focus transfer.
+- The WGPU focused command is session `77139`, redirected to `🗑️generated/wgpu-table-awaiting-echo.log`. It covers the same focused cell through accessibility `Focus(A) → Value(B) → Blur before echo → scene echo(B) → Blur`, with exactly one publication, busy awaiting state, authoritative echo rebase and focus release, cancellation/draft retention, focus transfer suppression, and the scene-level pending/echo transitions. The session is alive inside `bun ./📜️script.ts test-wgpu-unit`; it has no compiler diagnostic and remains behind the broad renderer Cargo lane. Bun emitted its known `NO_COLOR` / `FORCE_COLOR` `getColorDepth` warning before Nx entered the task; this did not terminate or fail the invocation.
 - The Details 160 KiB pointer fallback test is queued in the stdio contract run owned by the Details integrator.
 
 ### Follow-up edited-file ledger
@@ -134,3 +173,52 @@ Details paths that exceed the flat `List<Text>` carrier no longer silently becom
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🧪️tests/🔬️wgpu-table/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🧪️tests/🔬️wgpu-ui-command-wiring/🦀️.rs`
+
+
+## Office Primary Document Editing
+
+The shared document window now declares an honest `set-page` command with four required typed arguments: non-negative integer `page`, non-negative integer `item`, `revision`, and empty-string-capable `text`. Its editable renderer creates a unique, prefilled `TextDraftView` for every writable item. Apply is explicit; Discard remains local; stale revisions show a localized conflict; retained execution exposes Applying, Cancel, and failure labels in English and German. The draft revision is a deterministic FNV-1a digest of the exact UTF-8 persisted text.
+
+DOCX renders one draft for each paragraph block and addresses the original body index. Applying preserves the paragraph and run records, writes the new text into the first run, and empties later run text while retaining their formatting. Tables are not presented as a lossy primary text edit; their full structure stays editable in Details. PPTX renders one draft for each text-bearing shape, addresses slide and shape ordinals, preserves paragraph/run records where lines correspond, adds typed paragraphs for new lines, and removes only text paragraphs beyond the submitted line count. PDF renders one draft per page and replaces its faithful Unicode text projection through `SetPageContent`: the first Unicode text operand carries the submitted text, later Unicode text operands become empty, encoded text operands and every non-text operation remain intact, and a page without Unicode text receives a bounded text object only when the submitted text is nonempty. Missing addresses, unsupported targets, nonzero PDF/DOCX item addresses, and stale revisions return faults without a mutation.
+
+Native primary actions share one retained route. `BoundedNativeEditingEditor` supplies exact tool IDs, publication contracts, payload schema, admission extent, and native mutation reduction. `BoundedNativeEditToolJobFactory<E>` validates command/tool identity, bounds and pages the wire command, and publishes only declared lanes. Adding `bounded_native: true` to `snapshot_details_editor_support!` mounts its proof, factory, and builder alongside the six shared Details actions. All 16 DOCX/PPTX/PDF editor roots roster and mount `set-page`; XLSX, EPW, and ZIP also consume this surface.
+
+The first native helper incorrectly equated two durable edit rows with two units of computation. `BoundedArtifactCommandWork::step` called the complete reducer once, while the generic `BoundedConfigPreparation::advance` called `Mutation::inverse`, `Mutation::diff`, `MutationDiff::apply`, and `prepare_one_item` in one scheduler grant. The Store's `ArtifactStoreOneItemSealer` pages canonical encoding only after the inverse and post snapshot already exist. It therefore cannot make an artifact-sized clone or scan cooperative.
+
+The route now exposes both real retained seams without changing existing call sites. `BoundedNativeEditingEditor::native_edit_work` supplies an editor-owned `ArtifactCommandWork<EditorApp<Self>>`; the macro accepts an optional `work:` builder. `native_edit_preparation_route` supplies an exact mutation predicate plus an app-owned `ArtifactStoreOneItemPreparationFactory`; the macro accepts an optional `preparation_route:` builder. `snapshot_details_editor_support!` installs a predicate router in front of the shared snapshot preparation factory. A recognized native mutation stays on its native factory even when preflight or begin refuses it, so an invalid or oversized native operation cannot bypass domain validation through the fallback. Unrecognized shared snapshot mutations continue through the fallback.
+
+The proven model is Flow's phased preparation: retain the immutable base and mutation owners, advance domain hashing/copy/recipe work one semantic unit per grant, build the exact inverse and post root, then call `begin_one_item_seal`; cancellation and close retire every partial owner through bounded cursors. Stdio format owners can now implement that same model behind the shared route. Existing DOCX/PPTX/PDF snapshots still own nested `Vec`, `String`, OPC, and operation trees directly. Applying their diffs clones those aggregate owners, so merely splitting inverse, diff, and apply into three scheduler calls would remain false boundedness. A truthful office preparation needs either domain cursors for every nested owner or a model refactor to chunked/shared immutable owners. The current generic fallback remains valid only for mutations whose inverse, diff, and apply are intrinsically bounded independently of snapshot size; the new native hooks must be mounted before claiming cooperative large-document publication for the office routes.
+
+Primary document commands now reject missing text instead of silently clearing content. Stale revisions are checked before no-op detection; an identical submitted draft produces no mutation or history row. The `set-page` action remains registered for its prefilled draft controls but is hidden from the ordinary command palette because its revision token and stable address are renderer-supplied concurrency data. Representative DOCX, PPTX, and PDF host laws invoke the registered retained action, verify one publication, stale refusal with snapshot preservation, an identical no-op with no extra history, and undo/redo restoration. These native laws remain pending Rust compilation behind the shared graph.
+
+The language-neutral editable-document fixture carries English and German Unicode drafts, exact addresses, revisions, and labels. Its Rust scene law checks the action metadata and rendered draft settings. Ajv 2020 independently validates the fixture against its language-neutral schema, and the TypeScript implementation computes the same revision and draft descriptor from the validated vectors.
+
+### Office validation status
+
+- `NX_DAEMON=false NX_PLUGIN_NO_TIMEOUTS=true NX_WORKSPACE_DATA_DIRECTORY='<ticket>/🗑️generated/nx-data' bun nx run @semio-tech/plugin-window-kits:test` passed 6 files and 9 tests. Log: `🗑️generated/document-window-kit-ts-test.log`.
+- `NX_DAEMON=false NX_PLUGIN_NO_TIMEOUTS=true NX_WORKSPACE_DATA_DIRECTORY='<ticket>/🗑️generated/nx-data' bun nx run @semio-tech/plugin-window-kits:typecheck` passed. Log: `🗑️generated/document-window-kit-ts-typecheck.log`.
+- No new Cargo job was launched because broad native/WASM/catalog checks were already active. The shared retained factory and 16 office mounts therefore remain pending native compilation/runtime confirmation.
+- `@semio-tech/stdio-snapshot-editing-js:test` passed 78 tests / 238 assertions after adding the retained native route/cancellation fixture and its independent Ajv oracle. Log: `🗑️generated/retained-native-route-ts.log`.
+- Focused native command: `NX_DAEMON=false NX_PLUGIN_NO_TIMEOUTS=true NX_WORKSPACE_DATA_DIRECTORY='<ticket>/🗑️generated/nx-data' bun nx run @semio-tech/stdio-artifact-contract-rs:test -- --lib retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable`. Log: `🗑️generated/retained-native-route-rust.log`; the run ended after 50.2 seconds with two route-test inference diagnostics and one location-stripped borrowed-value diagnostic. Explicit preparation-factory trait-object annotations repair the two inference sites. The borrowed-value diagnostic awaits the already-running shared native compile for a source location, so no native pass is claimed.
+- The next full component run reached malformed hand-authored escaping in four DOCX/PPTX sibling command codecs. All six DOCX/PPTX facets now use the shared structured JSON `impl_serde_op_codec!` path, two malformed PPTX newline literals were repaired, and `rustfmt --edition 2021 --check` parses all 16 DOCX/PPTX/PDF editor roots. Runtime compilation remains pending the coordinator's warm retry.
+- The coordinator's full component run `full-catalog-component-current-5.log` stopped after 15m20s in unrelated PNG imports (`InteractiveJobCloseStep` and inaccessible `patch_pixel_region`) before it could validate the final office/shared-native edits.
+
+### Office edited-file ledger
+
+- `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-window-kits/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📃️document/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📃️document/🧪️tests/🧪️renderdocument/🟦️.ts`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📃️document/🧫️fixtures/✏️editable/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📃️document/🧫️fixtures/✏️editable/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/{🧬️schema/🔣️.json,🔣️.json}`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🧪️tests/🔬️unit/{🦀️.rs,🟦️.test.ts}`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/🪟️details/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/{🧱️base,📏️strict,🔄️transitional}/✏️editor/🦀️.rs` and their primary-window Rust modules/tests
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/{🧱️base,🔒️strict,🌉️transitional}/✏️editor/🦀️.rs` and their primary-window Rust modules/tests
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/{4️⃣1.4,7️⃣1.7}/🪆️subsets/*/✏️editor/🦀️.rs` and their primary-window Rust modules/tests
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`

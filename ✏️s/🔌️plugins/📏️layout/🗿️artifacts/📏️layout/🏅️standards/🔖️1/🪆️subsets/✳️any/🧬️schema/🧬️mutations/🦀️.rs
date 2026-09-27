@@ -17,7 +17,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{
     change_data_fields, change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode, change_link_path, change_page_height, change_page_width, change_print_target, create_frame, create_link, create_page, create_story,
-    delete_frame, delete_link, delete_page, delete_story, edit_story, move_frame, rename_layout, rename_page, reorder_pages, resize_frame, rotate_frame, update_page_columns, update_page_margins,
+    delete_frame, delete_link, delete_page, delete_story, edit_story, move_frame, rename_layout, rename_page, reorder_pages, resize_frame, rotate_frame, set_frame_flags, update_grid, update_page_columns, update_page_margins,
 };
 
 //#region 🔖️Mutations
@@ -53,6 +53,8 @@ pub enum LayoutMutation {
     ChangeFrameStroke(change_frame_stroke::ChangeFrameStroke),
     ChangeFrameWrapMode(change_frame_wrap_mode::ChangeFrameWrapMode),
     ChangeFrameColumns(change_frame_columns::ChangeFrameColumns),
+    UpdateGrid(update_grid::UpdateGrid),
+    SetFrameFlags(set_frame_flags::SetFrameFlags),
 }
 
 //#endregion 🔖️Mutations
@@ -172,6 +174,8 @@ pub const KINDS: &[&str] = &[
     "change-frame-stroke",
     "change-frame-wrap-mode",
     "change-frame-columns",
+    "update-grid",
+    "set-frame-flags",
 ];
 //#endregion 🔖️Kinds
 

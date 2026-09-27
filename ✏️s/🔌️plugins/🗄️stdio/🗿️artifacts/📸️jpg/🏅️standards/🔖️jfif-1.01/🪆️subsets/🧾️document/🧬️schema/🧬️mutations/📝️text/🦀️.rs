@@ -10,6 +10,7 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<JpgMutation, String>,
 }
 pub const REGISTRY: &[Entry] = &[
+    crate::schema::mutations::patch_snapshot::text::CODEC,
     crate::schema::mutations::set_snapshot::text::CODEC,
     crate::schema::mutations::change_jfif_header::text::CODEC,
     crate::schema::mutations::replace_quant_table::text::CODEC,

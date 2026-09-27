@@ -59,16 +59,60 @@
     "Operation": {
       "oneOf": [
         {
-          "type": "object", "additionalProperties": false,
-          "required": ["kind", "points", "size", "opacity", "hardness", "color", "erase"],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "points",
+            "size",
+            "opacity",
+            "hardness",
+            "color",
+            "erase"
+          ],
           "properties": {
-            "kind": {"const": "stroke"},
-            "points": {"type": "array", "minItems": 1, "maxItems": 2048, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}}},
-            "size": {"type": "number", "minimum": 0.1, "maximum": 4096},
-            "opacity": {"type": "number", "minimum": 0, "maximum": 1},
-            "hardness": {"type": "number", "minimum": 0, "maximum": 1},
-            "color": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"$ref": "#/$defs/Byte"}},
-            "erase": {"type": "boolean"}
+            "kind": {
+              "const": "stroke"
+            },
+            "points": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 2048,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "size": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 4096
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "hardness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "color": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "$ref": "#/$defs/Byte"
+              }
+            },
+            "erase": {
+              "type": "boolean"
+            }
           }
         },
         {
@@ -116,12 +160,114 @@
             }
           },
           "allOf": [
-            {"if":{"properties":{"kind":{"enum":["brightness","contrast","saturation"]}}},"then":{"properties":{"value":{"minimum":-1,"maximum":1}}}},
-            {"if":{"properties":{"kind":{"const":"gamma"}}},"then":{"properties":{"value":{"minimum":0.01,"maximum":10}}}},
-            {"if":{"properties":{"kind":{"const":"threshold"}}},"then":{"properties":{"value":{"minimum":0,"maximum":255}}}},
-            {"if":{"properties":{"kind":{"const":"posterize"}}},"then":{"properties":{"value":{"type":"integer","minimum":2,"maximum":256}}}},
-            {"if":{"properties":{"kind":{"const":"blur"}}},"then":{"properties":{"value":{"type":"integer","minimum":0,"maximum":16}}}},
-            {"if":{"properties":{"kind":{"const":"sharpen"}}},"then":{"properties":{"value":{"minimum":0,"maximum":5}}}}
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "brightness",
+                      "contrast",
+                      "saturation"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": -1,
+                    "maximum": 1
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "gamma"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": 0.01,
+                    "maximum": 10
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "threshold"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "posterize"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "type": "integer",
+                    "minimum": 2,
+                    "maximum": 256
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "blur"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 16
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "sharpen"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "value": {
+                    "minimum": 0,
+                    "maximum": 5
+                  }
+                }
+              }
+            }
           ]
         },
         {
@@ -207,6 +353,78 @@
               }
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "points",
+            "size",
+            "opacity",
+            "hardness",
+            "alpha"
+          ],
+          "properties": {
+            "kind": {
+              "const": "alphaStroke"
+            },
+            "points": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 2048,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "size": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 4096
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "hardness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "alpha": {
+              "$ref": "#/$defs/Byte"
+            }
+          },
+          "description": "Paints alpha toward the target byte using maximum stroke coverage multiplied by brush opacity and selection coverage exactly once. RGB bytes are preserved even at zero alpha. Repeated overlapping segments do not accumulate opacity within one stroke."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "alpha",
+            "opacity"
+          ],
+          "properties": {
+            "kind": {
+              "const": "alphaFill"
+            },
+            "alpha": {
+              "$ref": "#/$defs/Byte"
+            },
+            "opacity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "description": "Replaces alpha toward a target byte with opacity multiplied by selection coverage exactly once. RGB is preserved."
         }
       ]
     }

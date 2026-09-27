@@ -26,7 +26,7 @@ test("shape conversion preserves primitive outlines and independent ellipse geom
       }
       if(segment.kind!=="close") from=new Vector2(...segment.to);
     }
-    const source={id:"shape",kind:"shape",name:"Original",transform:{x:5,y:6,scaleX:2,scaleY:3,rotation:.4},attributes:{opacity:.5},shapeKind:item.kind,[item.kind]:item.geometry};
+    const source={id:"shape",kind:"shape",name:"Original",transform:{x:5,y:6,scaleX:2,scaleY:3,rotation:.4,shear:.5},attributes:{opacity:.5},shapeKind:item.kind,[item.kind]:item.geometry};
     const oracle=produce(source,draft=>{ draft.kind="path"; delete (draft as Record<string,unknown>).shapeKind; delete (draft as Record<string,unknown>)[item.kind]; (draft as Record<string,unknown>).segments=result; });
     expect(oracle.id).toBe(source.id);
     expect(oracle.transform).toEqual(source.transform);

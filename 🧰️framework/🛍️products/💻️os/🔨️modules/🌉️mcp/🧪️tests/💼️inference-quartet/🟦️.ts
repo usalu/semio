@@ -8,7 +8,7 @@
  * committed edit in its own authenticated view, and the human reads the advanced ledger head. Every row is required.
  *
  * Configuration by environment: `OS_MCP_HUB_ORIGIN` (default `http://127.0.0.1:8787`), `OS_MCP_HUB_EMAIL` /
- * `OS_MCP_HUB_PASSWORD` (default the first local user), `S_OS_MCP_QUARTET_OUT` (captures, default
+ * `OS_MCP_HUB_PASSWORD` (required: the human; `blocked` without them), `S_OS_MCP_QUARTET_OUT` (captures, default
  * `🌉️mcp/🤖️generated/💼️inference-quartet`). The gateway binary is `requireMcpBinary` (`SEMIO_OS_MCP_BIN` overrides).
  * Promoted from the ticket harnesses `wp-g9/g9-quartet-live.ts` → `wp-g10` → `wp-g11/g11-quartet-live.ts` (ticket 26/09/23).
  */
@@ -22,8 +22,8 @@ import { sealSpaceArtifactCreateV1 } from "../../../📇️directory/🧬️sche
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../📇️directory/🧬️schema/🟦️.ts";
 import { createSpaceCommandV1 } from "../../../📇️directory/🏘️spaces/🟦️.ts";
 import { agentDelegationRevokePathV1 } from "../../../📇️directory/🤖️delegations/🟦️.ts";
-import { requireMcpBinary } from "../../🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { hubCredentialFromEnv, isAcceptancePreconditionMissing, requireMcpBinary } from "../../🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findRepoRoot(start: string): string {
@@ -39,10 +39,11 @@ const repoRoot = findRepoRoot(here);
 const ORIGIN = (process.env.OS_MCP_HUB_ORIGIN ?? "http://127.0.0.1:8787").replace(/\/$/u, "");
 const BINARY = requireMcpBinary(repoRoot);
 const OUT = process.env.S_OS_MCP_QUARTET_OUT ?? join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️generated/💼️inference-quartet");
-const EMAIL = process.env.OS_MCP_HUB_EMAIL ?? "user1@semio.dev";
-const PASSWORD = process.env.OS_MCP_HUB_PASSWORD ?? "gm1-local-dev-pass-1";
 mkdirSync(OUT, { recursive: true });
 const startedAt = new Date();
+await withAcceptanceRecord(repoRoot, "mcp-inference-quartet", async () => void hubCredentialFromEnv(), isAcceptancePreconditionMissing);
+if (process.exitCode) process.exit(1);
+const credential = hubCredentialFromEnv();
 const at = () => `${((Date.now() - startedAt.getTime()) / 1000).toFixed(1)}s`;
 const rows: Array<{ step: string; ok: boolean; detail: string }> = [];
 const transcript: unknown[] = [];
@@ -160,7 +161,7 @@ let agentB: Agent | undefined;
 let human = "";
 const delegations: string[] = [];
 try {
-  const signIn = await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: EMAIL, password: PASSWORD, deviceInstanceId: `quartet${randomBytes(12).toString("hex")}`, clientClass: "browser" });
+  const signIn = await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: `quartet${randomBytes(12).toString("hex")}`, clientClass: "browser" });
   human = String(signIn.json?.token ?? "");
   const readiness = await hub("GET", "/readyz");
   row("0 the hub publishes the inference services it executes", Array.isArray(readiness.json?.features?.inferenceServices), `features.inferenceServices=${JSON.stringify(readiness.json?.features?.inferenceServices)}`);

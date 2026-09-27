@@ -9,7 +9,7 @@
  * that was already connected is refused on its next request. Every row is required.
  *
  * Configuration by environment (the siblings' names): `OS_MCP_HUB_ORIGIN` (default `http://127.0.0.1:8787`),
- * `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD` (default the `dev s` local user), `S_OS_MCP_LIVE_SHELL_URL` (default
+ * `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD` (required: the human; `blocked` without them), `S_OS_MCP_LIVE_SHELL_URL` (default
  * `http://127.0.0.1:6080`, a serve joined to that hub), `S_OS_MCP_LIVE_LOCALE` (`en` | `de`), `S_OS_MCP_USER_PATH_OUT`
  * (captures, default `🌉️mcp/🤖️generated/🚶️user-path`). Promoted from the ticket harness `wp-g10/g10-user-path.ts` →
  * `wp-g11/g11-user-path.ts` (ticket 26/09/23, G10/G11 S4).
@@ -25,7 +25,8 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { sealSpaceArtifactCreateV1 } from "../../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../📇️directory/🧬️schema/🟦️.ts";
 import { createSpaceCommandV1 } from "../../../📇️directory/🏘️spaces/🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { hubCredentialFromEnv, isAcceptancePreconditionMissing } from "../../🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findRepoRoot(start: string): string {
@@ -40,13 +41,14 @@ function findRepoRoot(start: string): string {
 const repoRoot = findRepoRoot(here);
 const HUB = (process.env.OS_MCP_HUB_ORIGIN ?? "http://127.0.0.1:8787").replace(/\/$/u, "");
 const SHELL = (process.env.S_OS_MCP_LIVE_SHELL_URL ?? "http://127.0.0.1:6080").replace(/\/$/u, "");
-const EMAIL = process.env.OS_MCP_HUB_EMAIL ?? "user1@semio.dev";
-const PASSWORD = process.env.OS_MCP_HUB_PASSWORD ?? "gm1-local-dev-pass-1";
 const LOCALE = process.env.S_OS_MCP_LIVE_LOCALE === "de" ? "de" : "en";
 const OUT = process.env.S_OS_MCP_USER_PATH_OUT ?? join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️generated/🚶️user-path");
 const WORDS = { en: { install: "Set up MCP client", once: "Approve Once" }, de: { install: "MCP-Client einrichten", once: "Einmal genehmigen" } }[LOCALE];
 mkdirSync(OUT, { recursive: true });
 const startedAt = new Date();
+await withAcceptanceRecord(repoRoot, "mcp-user-path", async () => void hubCredentialFromEnv(), isAcceptancePreconditionMissing);
+if (process.exitCode) process.exit(1);
+const credential = hubCredentialFromEnv();
 const seconds = (): string => ((Date.now() - startedAt.getTime()) / 1000).toFixed(1);
 const rows: { step: string; ok: boolean; detail: string; at: string }[] = [];
 const row = (step: string, ok: boolean, detail: string): void => {
@@ -85,7 +87,7 @@ async function skipTours(page: Page): Promise<void> {
 
 /** 🌱️ The user's fresh space with one note, through the hub's own authorities; stops at the first refused step and names it. */
 async function setupNote(): Promise<{ spaceId: string; documentId: string; detail: string }> {
-  const setup = await hub("POST", "/auth/sessions", undefined, JSON.stringify({ schema: "semio.hub.auth.credential-sign-in/v1", email: EMAIL, password: PASSWORD, deviceInstanceId: `userpath${randomBytes(10).toString("hex")}`, clientClass: "browser" }));
+  const setup = await hub("POST", "/auth/sessions", undefined, JSON.stringify({ schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: `userpath${randomBytes(10).toString("hex")}`, clientClass: "browser" }));
   const token = String(setup.json?.token ?? "");
   if (!token) return { spaceId: "", documentId: "", detail: unreachable ? `hub ${HUB} unreachable: ${unreachable}` : `sign-in refused (${setup.status})` };
   const spaceName = `User path ${LOCALE} ${randomBytes(3).toString("hex")}`;
@@ -124,8 +126,8 @@ if (documentId.length > 0) {
     await page.locator("[data-semio-hub-sign-in]").first().click();
     const workspace = page.locator("[data-semio-hub-workspace]");
     await workspace.waitFor({ state: "visible", timeout: 30_000 });
-    await workspace.locator('input[type="email"]').fill(EMAIL);
-    await workspace.locator('input[type="password"]').fill(PASSWORD);
+    await workspace.locator('input[type="email"]').fill(credential.email);
+    await workspace.locator('input[type="password"]').fill(credential.password);
     await workspace.locator('form:has(input[type="password"]) button[type="submit"]').first().click();
     await page.waitForFunction((id) => document.querySelector("[data-semio-hub-agent-space]")?.getAttribute("data-semio-hub-agent-space") === id, spaceId, { timeout: 90_000 });
     row("1 a clean profile signs in through the shell and lands in the space", true, `space=${spaceId}`);

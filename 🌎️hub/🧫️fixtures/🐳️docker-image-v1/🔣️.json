@@ -1,0 +1,50 @@
+{
+  "schema": "semio.hub.docker-image-fixture/v1",
+  "runNames": {
+    "tag": "local",
+    "runId": "m3x9k2-a1b2c3",
+    "expected": {
+      "image": "semio/os-hub:local",
+      "container": "semio-hub-image-m3x9k2-a1b2c3",
+      "seed": "semio-hub-image-m3x9k2-a1b2c3-seed",
+      "volume": "semio-hub-image-m3x9k2-a1b2c3-data"
+    }
+  },
+  "build": [
+    { "tag": "local", "jobs": null, "argv": ["build", "--progress=plain", "--file", "🌎️hub/Dockerfile", "--tag", "semio/os-hub:local", "."] },
+    { "tag": "ci", "jobs": 2, "argv": ["build", "--progress=plain", "--build-arg", "CARGO_BUILD_JOBS=2", "--file", "🌎️hub/Dockerfile", "--tag", "semio/os-hub:ci", "."] }
+  ],
+  "seed": ["create", "--name", "semio-hub-image-m3x9k2-a1b2c3-seed", "--user", "root", "--entrypoint", "/bin/sh", "--volume", "semio-hub-image-m3x9k2-a1b2c3-data:/srv/semio-hub/data", "semio/os-hub:local", "-c", "chown -R semio:semio /srv/semio-hub/data && chmod 700 /srv/semio-hub/data /srv/semio-hub/data/trusted-catalog"],
+  "credential": {
+    "email": "docker-smoke@semio.dev",
+    "displayName": "Docker Smoke",
+    "argv": ["run", "--rm", "--interactive", "--volume", "semio-hub-image-m3x9k2-a1b2c3-data:/srv/semio-hub/data", "semio/os-hub:local", "credential", "set", "--email", "docker-smoke@semio.dev", "--display-name", "Docker Smoke"]
+  },
+  "run": {
+    "port": 8190,
+    "email": "docker-smoke@semio.dev",
+    "allowedOrigin": "https://s.example.com",
+    "argv": ["run", "--detach", "--name", "semio-hub-image-m3x9k2-a1b2c3", "--publish", "127.0.0.1:8190:8787", "--volume", "semio-hub-image-m3x9k2-a1b2c3-data:/srv/semio-hub/data", "--env", "OS_HUB_ADMIN_SUBJECTS=credential.password.v1:docker-smoke@semio.dev", "--env", "OS_HUB_ALLOWED_ORIGINS=https://s.example.com", "--env", "OS_HUB_TRUSTED_FORWARDING=proxy", "--stop-timeout", "30", "semio/os-hub:local"]
+  },
+  "forwarding": {
+    "forwardedHost": "hub.example.test",
+    "incoming": {
+      "host": "127.0.0.1:1",
+      "connection": "keep-alive",
+      "keep-alive": "timeout=5",
+      "accept-encoding": "gzip",
+      "authorization": "Bearer fixture-token",
+      "x-forwarded-proto": "http",
+      "x-semio-fixture": "kept"
+    },
+    "expected": {
+      "authorization": "Bearer fixture-token",
+      "x-forwarded-proto": "https",
+      "x-forwarded-host": "hub.example.test",
+      "x-semio-fixture": "kept"
+    },
+    "dropped": ["host", "connection", "keep-alive", "accept-encoding"],
+    "subprotocols": ["semio.session.v1", "fixture-token"],
+    "closeCode": 4401
+  }
+}

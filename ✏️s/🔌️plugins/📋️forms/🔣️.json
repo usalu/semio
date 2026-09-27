@@ -3669,6 +3669,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3774,6 +3784,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3867,6 +3887,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -5034,6 +5064,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5139,6 +5179,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5232,6 +5282,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -5398,7 +5458,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -5501,8 +5561,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "b8790c7a2ac2c5b1fdf1a1c1375a153a1db99a834787cdbae07e3066838b2935",
-    "coreWasmSha256": "ef26bbb4fcb41a4883d6cd85109e06e65d615c65d50c4d3e63d92b487451de5a",
-    "descriptorSha256": "1240a71174e80b9580b63186965e566ecc5c12fd93eaad2714a09b739645bfbc"
+    "wasmSha256": "4ac1fec616dda28fe1f61b0a4a08e67116d1e8ffc412dadbd45051bf9a823336",
+    "coreWasmSha256": "4afd577dc5b2389ca5feaefabd8afc8755fe79719089c3fc07f6f9ec797e836c",
+    "descriptorSha256": "a4b54e00f567808d3504b864705154a666c9ed288ac51ea6ad4c652eff376fcb"
   }
 }

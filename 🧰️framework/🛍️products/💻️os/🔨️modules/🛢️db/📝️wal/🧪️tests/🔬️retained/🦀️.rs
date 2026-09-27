@@ -41,7 +41,7 @@ async fn assert_artifact_wal_fail_stop_case(name: &str) {
     let command = WalBytes::try_admit(format!("fault-{name}").into_bytes(), 64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(command)).is_ok());
-    let error = wal.submit(&storage, &batch, DurabilityClass::Fsync, 1).await.unwrap_err();
+    let error = wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 1).await.unwrap_err();
     match case["expectedError"].as_str().unwrap() {
         "Corrupt" => assert!(matches!(error, DbError::Corrupt(message) if message.contains("append returned segment length"))),
         "Io" => assert!(matches!(error, DbError::Io(_))),
@@ -49,7 +49,7 @@ async fn assert_artifact_wal_fail_stop_case(name: &str) {
     }
     let append_calls = storage.append_calls().await;
     let sync_calls = storage.sync_calls().await;
-    assert!(matches!(wal.submit(&storage, &batch, DurabilityClass::Fsync, 2).await, Err(DbError::Closed)));
+    assert!(matches!(wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 2).await, Err(DbError::Closed)));
     assert!(matches!(wal.force_flush(&storage).await, Err(DbError::Closed)));
     assert!(matches!(wal.rotate(&storage, 2).await, Err(DbError::Closed)));
     assert_eq!(storage.append_calls().await, append_calls, "a poisoned writer must never retry its uncertain suffix");
@@ -135,7 +135,7 @@ async fn wal_replay_cancel_resume_close_and_fragment_crc_are_deterministic() {
     let bytes = WalBytes::try_admit(vec![0xA5; db_storage::DB_IO_PAGE_BYTES + 1], (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(bytes)).is_ok());
-    wal.submit(&storage, &batch, DurabilityClass::Fsync, 0).await.unwrap();
+    wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 0).await.unwrap();
     while batch.close_step().unwrap() {}
     wal.close().await.unwrap();
 
@@ -175,7 +175,7 @@ async fn wal_replay_cancellation_remains_set_while_close_reaches_terminal_empty(
     let bytes = WalBytes::try_admit(vec![0x5A; db_storage::DB_IO_PAGE_BYTES + 1], (db_storage::DB_IO_PAGE_BYTES + 1) as u64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(bytes)).is_ok());
-    wal.submit(&storage, &batch, DurabilityClass::Fsync, 0).await.unwrap();
+    wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 0).await.unwrap();
     while batch.close_step().unwrap() {}
     wal.close().await.unwrap();
 
@@ -212,7 +212,7 @@ async fn artifact_wal_repeated_open_close_is_page_budget_neutral() {
     let command = WalBytes::try_admit(b"after-repeated-close".to_vec(), 64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(command)).is_ok());
-    assert!(wal.submit(&storage, &batch, DurabilityClass::Fsync, 101).await.unwrap().committed);
+    assert!(wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 101).await.unwrap().committed);
     while batch.close_step().unwrap() {}
     wal.close().await.unwrap();
     assert!(wal.terminal_is_empty());
@@ -228,7 +228,7 @@ async fn artifact_wal_close_rejects_pending_records_and_closed_writes() {
     let command = WalBytes::try_admit(b"pending".to_vec(), 64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(command)).is_ok());
-    assert!(!wal.submit(&storage, &batch, DurabilityClass::Memory, 1).await.unwrap().committed);
+    assert!(!wal.submit(&storage, &[], &batch, DurabilityClass::Memory, 1).await.unwrap().committed);
     while batch.close_step().unwrap() {}
     assert!(matches!(std::future::poll_fn(|context| wal.poll_close(context)).await, Err(DbError::InvalidArgument(message)) if message.contains("force_flush")));
     assert!(!wal.terminal_is_empty());
@@ -237,7 +237,7 @@ async fn artifact_wal_close_rejects_pending_records_and_closed_writes() {
     assert!(wal.terminal_is_empty());
 
     let empty = WalRecordBatch::new();
-    assert!(matches!(wal.submit(&storage, &empty, DurabilityClass::Memory, 2).await, Err(DbError::Closed)));
+    assert!(matches!(wal.submit(&storage, &[], &empty, DurabilityClass::Memory, 2).await, Err(DbError::Closed)));
     assert!(matches!(wal.force_flush(&storage).await, Err(DbError::Closed)));
     assert!(matches!(wal.rotate(&storage, 2).await, Err(DbError::Closed)));
 }
@@ -270,7 +270,7 @@ async fn artifact_wal_successor_failure_after_seal_is_fail_stop_until_reopen() {
     let command = WalBytes::try_admit(b"committed-before-successor-failure".to_vec(), 64, &mut admission).await.unwrap();
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(command)).is_ok());
-    assert!(matches!(wal.submit(&storage, &batch, DurabilityClass::Fsync, 1).await, Err(DbError::Io(_))));
+    assert!(matches!(wal.submit(&storage, &[], &batch, DurabilityClass::Fsync, 1).await, Err(DbError::Io(_))));
     while batch.close_step().unwrap() {}
     assert_eq!(storage.segment_state(&document, 0).await.unwrap(), db_storage::WalSegmentState::Sealed);
     let sealed = fail_stop_segment_bytes(&storage, &document).await;

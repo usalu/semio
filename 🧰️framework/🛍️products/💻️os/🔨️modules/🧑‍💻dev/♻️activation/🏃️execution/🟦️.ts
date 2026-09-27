@@ -127,7 +127,7 @@ class ActivationScript extends BundleScript {
         const digest = await activationFilesDigest(artifactFiles(moduleDirectory), controller.signal);
         const catalogEntry = catalog.get(pluginId);
         const sourceRoot = catalogEntry ? join(repoRoot, catalogEntry.cratePath, "..", "..") : moduleDirectory;
-        const sourceContentSha256 = writeStagedSourceFreshness(moduleDirectory, sourceRoot);
+        const sourceContentSha256 = await writeStagedSourceFreshness(moduleDirectory, sourceRoot, controller.signal);
         completed.push({ pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex"), sourceContentSha256 });
       }
       const previous = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;

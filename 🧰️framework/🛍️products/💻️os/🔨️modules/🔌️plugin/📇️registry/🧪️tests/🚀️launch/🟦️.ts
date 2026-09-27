@@ -186,7 +186,7 @@ type RenderedLaunch = {
 
 /** ♻️ Renders `.vscode/launch.json` once for the whole block (seed + playground registry + every declared project target) —
  * the discovery walks over the workspace cost seconds, and every assertion below reads the same output. */
-let renderedLaunch: Promise<{ readonly text: string; readonly launch: RenderedLaunch; readonly projects: readonly { readonly project: string; readonly targets: readonly string[] }[] }> | undefined;
+let renderedLaunch: Promise<{ readonly text: string; readonly launch: RenderedLaunch; readonly projects: readonly { readonly project: string; readonly path: string; readonly targets: readonly string[] }[] }> | undefined;
 const renderLaunch = () => (renderedLaunch ??= (async () => {
   const repoRoot = getWorkspaceRoot();
   const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");

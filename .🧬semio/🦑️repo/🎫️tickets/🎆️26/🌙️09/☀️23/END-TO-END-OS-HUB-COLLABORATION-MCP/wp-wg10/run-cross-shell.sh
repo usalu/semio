@@ -1,8 +1,7 @@
 #!/bin/zsh
-# WG10 session 13 (copy of WG8 s12 run-cross-shell.sh): the cross-shell journey — native wgpu user A (Rust law) + React `s` user B (browser driver) on one hub document.
-# Usage: [CROSS_MODE=edits|cursors] zsh run-cross-shell.sh <tag> <hubOrigin> <reactUrl>   (no defaults: every hub origin is passed explicitly, rule 23)
-#   (launch detached: setopt no_bg_nice; nohup zsh run-cross-shell.sh … & disown)
-# edits = block2d co-editing law, cursors = puzzle2d board-cursor law.
+# WG10 session 13 (from WG8 s12 run-cross-shell.sh): the cross-shell journey — native wgpu user A (the Rust law, from the durable
+# renderer test binary) + React `s` user B (Playwright driver, ONE headless browser) on one hub document.
+# Usage: [CROSS_MODE=edits|cursors] [CROSS_LOCALE=en|de] zsh run-cross-shell.sh <tag> <hubOrigin> <reactUrl>   (no defaults, rule 23)
 TAG="$1"; HUB="$2"; REACT="$3"
 [ -n "$TAG" ] && [ -n "$HUB" ] && [ -n "$REACT" ] || { echo "usage: run-cross-shell.sh <tag> <hubOrigin> <reactUrl>"; exit 2; }
 export CROSS_MODE="${CROSS_MODE:-edits}"
@@ -11,17 +10,16 @@ LAW=a_native_and_a_react_user_collaborate_on_one_hub_document
 ROOT="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-wg10-captures/cross-shell-$TAG"
 rm -rf "$ROOT"; mkdir -p "$ROOT/handshake" "$ROOT/react"
 cd /Users/ueli/Documents/semio
-export CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=/Users/ueli/Documents/semio/.tmp-ticket/wp-wg10/target CARGO_BUILD_BUILD_DIR=${WG10_BUILD_DIR:-/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/build-fleet-b}
-export SEMIO_PLUGIN=block2d
+export SEMIO_PLUGIN=block2d RUST_MIN_STACK=8388608
 export SEMIO_PLUGIN_MODULES="/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/dist/runtime/native/release/block2d"
+export SEMIO_EXECUTION_TARGET_STORE_DIR="/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-wg10-execution-targets"
 export SEMIO_HUB_LIVE_ORIGIN="$HUB" SEMIO_HUB_LIVE_EMAIL=user1@semio.dev SEMIO_HUB_LIVE_PASSWORD=gm1-local-dev-pass-1 SEMIO_HUB_LIVE_PEER_EMAIL=user2@semio.dev
 export SEMIO_CROSS_SHELL_DIR="$ROOT/handshake" CROSS_B_EMAIL=user2@semio.dev CROSS_B_PASSWORD=gm1-local-dev-pass-2
 echo "START $(date '+%F %T') tag=$TAG mode=$CROSS_MODE law=$LAW hub=$HUB react=$REACT pid=$$"
-nice -n 10 cargo test -p semio-framework-os-renderer-wgpu --lib --no-run > "$ROOT/build.txt" 2>&1 || { echo "BUILD rc=$?"; exit 1; }
-bun .tmp-ticket/wp-wg8/cross-shell.mjs "$REACT" "$ROOT/handshake" "$ROOT/react" > "$ROOT/react.txt" 2>&1 &
+bun .tmp-ticket/wp-wg10/cross-shell.mjs "$REACT" "$ROOT/handshake" "$ROOT/react" > "$ROOT/react.txt" 2>&1 &
 DRIVER=$!
 echo "DRIVER pid=$DRIVER"
-nice -n 10 cargo test -p semio-framework-os-renderer-wgpu --lib --no-fail-fast -- "shell::hub_projection_workspace_tests::$LAW" --exact --ignored --nocapture > "$ROOT/native.txt" 2>&1
+nice -n 10 "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-wg10-bin/renderer-tests" "shell::hub_projection_workspace_tests::$LAW" --exact --ignored --nocapture --test-threads=1 > "$ROOT/native.txt" 2>&1
 echo "NATIVE rc=$? $(date '+%F %T')"
 wait $DRIVER
 echo "DRIVER rc=$? $(date '+%F %T')"

@@ -14,6 +14,7 @@ pub struct Entry {
 }
 pub const REGISTRY: &[Entry] = &[
     crate::schema::mutations::set_snapshot::binary::CODEC,
+    crate::schema::mutations::patch_snapshot::binary::CODEC,
     crate::schema::mutations::change_header::binary::CODEC,
     crate::schema::mutations::replace_palette::binary::CODEC,
     crate::schema::mutations::change_transparency::binary::CODEC,

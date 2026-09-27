@@ -97,7 +97,7 @@
       ],
       "label": "A",
       "layoutLabel": "Renamed A",
-      "maximized": null
+      "maximized": 1
     },
     {
       "id": "template-only",
@@ -137,6 +137,8 @@
     "extraId": "b-2",
     "kindId": "b",
     "bakedTitle": "Top",
+    "retainedTitle": "Top",
+    "maximized": 1,
     "resolvedTitle": "B",
     "locale": "de"
   },

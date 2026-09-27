@@ -97,7 +97,7 @@ fn gradients_text_images_opacity_and_arcs_paint_through_their_pdf_constructs() {
     assert!(content.contains("/GS1 gs"));
     assert!(content.contains("0 0 0 RG 1.5 w 1 J 2 j\n[4 2] 0 d"), "round caps, bevel joins, dash: {content}");
     assert!(content.contains("W* n\n/Sh1 sh"), "the gradient fill clips through the outline");
-    assert!(content.contains("BT /F1 14 Tf 0.1 0.2 0.3 rg 1 0 0 -1 0 0 Tm (Hi \\(there\\) \\\\ caf\\351) Tj ET"), "text escapes and WinAnsi: {content}");
+    assert!(content.contains("BT /F1 14 Tf 0.1 0.2 0.3 rg 0 Tr 1 0 0 -1 0 14 Tm (Hi \\(there\\) \\\\ caf\\351) Tj ET"), "text escapes and WinAnsi: {content}");
     assert!(content.contains("q 40 0 0 -30 0 30 cm /Im1 Do Q"), "the image is drawn upright at the node origin: {content}");
     assert!(content.contains(" c\n"), "the arc and the quad became cubics: {content}");
     assert!(content.matches(" c\n").count() >= 2);
@@ -133,4 +133,28 @@ fn numbers_and_strings_follow_the_pdf_lexicon() {
     assert_eq!(num(f64::NAN), "0");
     assert_eq!(pdf_string("a(b)c\\d\né"), "a\\(b\\)c\\\\d\\n\\351");
     assert_eq!(pdf_string("日本"), "??");
+}
+
+#[test]
+fn text_export_preserves_lines_origin_and_paint_modes() {
+    let mut text = create_drawing_text_layer("Lines");
+    let DrawingLayerNode::Text(body) = &mut text else { unreachable!() };
+    body.x = 7.0;
+    body.y = 11.0;
+    body.content = "First\r\n\r\nThird".into();
+    body.size = 10.0;
+    body.base.attributes.stroke = Some(StrokeStyle { color: [1.0, 0.0, 0.0, 1.0], width: 2.0, cap: "butt".into(), join: "miter".into(), dash: None });
+    let mut doc = DrawingSnapshot { layers: vec![text], ..Default::default() };
+    let content = inflate_content(&drawing_document_to_pdf(&doc).unwrap());
+    assert!(content.contains("1 0 0 1 7 11 cm"));
+    assert!(content.contains("2 Tr 1 0 0 -1 0 10 Tm (First) Tj ET"));
+    assert!(content.contains("2 Tr 1 0 0 -1 0 34 Tm (Third) Tj ET"));
+    let DrawingLayerNode::Text(body) = &mut doc.layers[0] else { unreachable!() };
+    body.base.attributes.fill = None;
+    let content = inflate_content(&drawing_document_to_pdf(&doc).unwrap());
+    assert!(content.contains("1 Tr 1 0 0 -1 0 10 Tm (First) Tj ET"));
+    let DrawingLayerNode::Text(body) = &mut doc.layers[0] else { unreachable!() };
+    body.base.attributes.stroke = None;
+    let content = inflate_content(&drawing_document_to_pdf(&doc).unwrap());
+    assert!(!content.contains("Tj"));
 }

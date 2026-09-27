@@ -1,0 +1,55 @@
+{
+  "cases": [
+    {
+      "content": "",
+      "lines": [
+        ""
+      ],
+      "size": 10,
+      "extent": [
+        0,
+        12
+      ]
+    },
+    {
+      "content": "Grüße 🌍\r\n\r\n123\rEnde\n",
+      "lines": [
+        "Grüße 🌍",
+        "",
+        "123",
+        "Ende",
+        ""
+      ],
+      "size": 10,
+      "extent": [
+        42,
+        60
+      ]
+    },
+    {
+      "content": "a\nb",
+      "lines": [
+        "a",
+        "b"
+      ],
+      "size": 20,
+      "extent": [
+        12,
+        48
+      ]
+    },
+    {
+      "content": "x\r\ry",
+      "lines": [
+        "x",
+        "",
+        "y"
+      ],
+      "size": 5,
+      "extent": [
+        3,
+        18
+      ]
+    }
+  ]
+}

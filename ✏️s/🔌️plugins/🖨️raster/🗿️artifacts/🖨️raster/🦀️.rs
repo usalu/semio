@@ -732,10 +732,39 @@ pub struct RasterMaskContent {
     pub mask: Option<RasterLayerMask>,
 }
 
+/// 🔢️ Bounded tone number retaining integer/decimal identity for exact history.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RasterAdjustmentNumber(dsl::Number);
+impl RasterAdjustmentNumber {
+    pub fn decimal(value:f64)->Self {Self(dsl::Number::Float(value))}
+    pub fn get(self)->f64 {self.0.as_f64()}
+    pub fn from_parameter(value:&dsl::DslValue)->Option<Self> {if let dsl::DslValue::Number(number)=value {Some(Self(*number))} else {None}}
+    pub fn literal(self)->dsl::DslValue {dsl::DslValue::Number(self.0)}
+    pub(crate) fn digest(self)->[u8;9] {
+        let mut result=[0;9];
+        let (tag,bytes)=match self.0 {dsl::Number::UInt(value)=>(1,value.to_be_bytes()),dsl::Number::Int(value)=>(2,value.to_be_bytes()),dsl::Number::Float(value)=>(3,value.to_bits().to_be_bytes())};
+        result[0]=tag;result[1..].copy_from_slice(&bytes);result
+    }
+}
+impl dsl::ToValue for RasterAdjustmentNumber {fn to_value(&self)->dsl::DslValue {self.literal()}}
+impl dsl::FromValue for RasterAdjustmentNumber {
+    fn from_value(value:dsl::DslValue)->Result<Self,dsl::ValueError> {
+        Self::from_parameter(&value).filter(|n|n.get().is_finite()&&(-1.0..=1.0).contains(&n.get())).ok_or_else(||dsl::ValueError::new("adjustment number must be within -1 and 1"))
+    }
+}
+impl dsl::DslField for RasterAdjustmentNumber {
+    fn shape()->dsl::Shape {dsl::Shape::Value}
+    fn to_value(&self)->dsl::FieldValue {dsl::FieldValue::Value(self.literal())}
+    fn from_value(value:&dsl::FieldValue)->Result<Self,String> {
+        let dsl::FieldValue::Value(value)=value else {return Err("expected adjustment number".into());};
+        <Self as dsl::FromValue>::from_value(value.clone()).map_err(|error|error.to_string())
+    }
+}
+
 /// 🎚️ One parameter replacement; an absent value restores its implicit default.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
-pub struct RasterAdjustmentParameter {pub parameter:String,pub value:Option<f64>}
+pub struct RasterAdjustmentParameter {pub parameter:String,pub value:Option<RasterAdjustmentNumber>}
 
 /// 🩹️ Sparse patch applied to a single `RasterLayerNode` — the `PatchLayer` operation's payload, and
 /// (with fields swapped for their prior values) its own mechanical inverse.
@@ -744,7 +773,7 @@ pub struct RasterAdjustmentParameter {pub parameter:String,pub value:Option<f64>
 pub struct RasterLayerPatch {
     #[dsl(block)]
     #[value(skip_serializing_if = "Option::is_none")]
-    pub adjustment_parameter: Option<RasterAdjustmentParameter>,
+    pub adjustment_parameters: Option<Vec<RasterAdjustmentParameter>>,
     #[dsl(block)]
     #[value(skip_serializing_if = "Option::is_none")]
     pub mask_content: Option<RasterMaskContent>,
@@ -1157,6 +1186,8 @@ pub mod standards {
                         pub mod change_layer_pixels;
                         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎭️change-layer-mask/🦀️.rs"]
                         pub mod change_layer_mask;
+                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-layer-adjustment-parameter/🦀️.rs"]
+                        pub mod change_layer_adjustment_parameter;
                         #[path = "."]
                         pub mod remove_layer_asset {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️remove-layer-asset/🦀️.rs"]
@@ -1481,6 +1512,12 @@ pub mod editor {
             pub mod set_composite_viewport;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️edit-pixels/🦀️.rs"]
             pub mod edit_pixels;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️edit-mask/🦀️.rs"]
+            pub mod edit_mask;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🥞️flatten-layers/🦀️.rs"]
+            pub mod flatten_layers;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🫳️merge-down/🦀️.rs"]
+            pub mod merge_down;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎭️mask-from-selection/🦀️.rs"]
             pub mod mask_from_selection;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👓️set-layer-visible/🦀️.rs"]

@@ -67,11 +67,11 @@ fn render_produces_a_surface_for_every_example() {
 #[test]
 fn a_partial_fill_preview_differs_from_empty_and_finished() {
     use crate::editor::wfc2d::modes::edit::tools::fill::Wfc2dFillTickPayload;
-    use crate::inferences::solve_with_job;
+    use crate::inferences::solve_with_clock;
     use std::collections::BTreeMap;
 
     let document = crate::examples::hex_ring::document();
-    let oracle = solve_with_job(&document).expect("hex-ring solves");
+    let oracle = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("hex-ring solves");
     let empty = preview_layers_json(&document, &Wfc2dTransient::default(), None);
     let finished_transient = Wfc2dTransient {
         assignments: oracle.assignments.iter().map(|(slot_id, tile_id)| Wfc2dAssignment { slot_id: slot_id.clone(), tile_id: tile_id.clone() }).collect(),

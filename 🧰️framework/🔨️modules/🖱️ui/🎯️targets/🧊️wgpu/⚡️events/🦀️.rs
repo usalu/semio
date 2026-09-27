@@ -1676,7 +1676,7 @@ impl EventRouter {
         let Some((leaf, entered)) = self.hover_since else {
             return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
         };
-        if self.hover_revealed == Some(leaf) || seconds - entered < f64::from(TOOLTIP_DWELL_SECONDS) {
+        if self.hover_revealed == Some(leaf) || seconds < entered + TOOLTIP_DWELL_SECONDS {
             return RouterClockStep { tooltip: TooltipStep::Idle, caret, commands: Vec::new(), changed, next_deadline: self.next_clock_deadline() };
         }
         self.hover_revealed = Some(leaf);

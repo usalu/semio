@@ -1147,9 +1147,6 @@ export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, nu
   "semio-s-plugin-sourcing-windows": { quick: 600_000 },
 };
 
-/** ⏱️Deprecated alias for the fundamental-level budget; kept for straggling call sites during the leveled-test migration. */
-export const DEFAULT_TEST_BUDGET_MS = TEST_LEVEL_BUDGET_MS.fundamental;
-
 function isTestLevel(value: string | undefined): value is TestLevel {
   return !!value && (TEST_LEVELS as readonly string[]).includes(value);
 }

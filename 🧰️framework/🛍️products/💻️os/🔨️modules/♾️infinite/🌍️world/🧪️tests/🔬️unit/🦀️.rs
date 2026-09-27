@@ -648,6 +648,7 @@ fn world_component_cursor_steps_one_topology_item_and_rejects_aba() {
         local_y: 0.0,
         viewport: Rect { x: 0.0, y: 0.0, w: 100.0, h: 100.0 },
         view_projection: Mat4::identity(),
+        projection_spec: ui_wgpu::wgpu::default_projection_spec(),
         origin: Vec3::new(0.0, 0.0, 2.0),
         direction: Vec3::new(0.0, 0.0, -1.0),
         slot: object.slot,
@@ -985,7 +986,7 @@ fn world_marquee_mesh_cursor_matches_legacy_window_crossing_disjoint_and_degener
     for points in cases {
         let crossing = marquee_is_crossing_from_path(&points, false);
         let (meshes, draws) = legacy_geometry_fixture(&state);
-        let legacy = screen_select_instances(&meshes, &draws, view_projection, viewport.w, viewport.h, &points, true, crossing);
+        let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, true, crossing);
         let retained = world_marquee_cursor_ids(&state, &points);
         assert_eq!(retained, legacy, "points={points:?}");
     }
@@ -997,7 +998,7 @@ fn world_marquee_mesh_cursor_preserves_legacy_multi_page_draw_order() {
     let points = [[0.0, 0.0], [400.0, 400.0]];
     let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
     let (meshes, draws) = legacy_geometry_fixture(&state);
-    let legacy = screen_select_instances(&meshes, &draws, view_projection, 400.0, 400.0, &points, true, false);
+    let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), 400.0, 400.0, &points, true, false);
     let retained = world_marquee_cursor_ids(&state, &points);
     assert_eq!(retained, legacy);
     assert_eq!(retained.len(), WORLD_MARQUEE_RESULT_PAGE_CAPACITY + 1);
@@ -1011,7 +1012,7 @@ fn world_marquee_lasso_edge_cursor_matches_legacy_and_rejects_object_aba() {
     let view_projection = state.orbit.to_camera().view_proj(800.0, 800.0);
     let points = [[0.0, 0.0], [400.0, 0.0], [400.0, 400.0], [0.0, 400.0]];
     let (meshes, draws) = legacy_geometry_fixture(&state);
-    let legacy = screen_select_instances(&meshes, &draws, view_projection, viewport.w, viewport.h, &points, false, marquee_is_crossing_from_path(&points, true));
+    let legacy = screen_select_instances(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, false, marquee_is_crossing_from_path(&points, true));
     assert_eq!(world_marquee_cursor_ids(&state, &points), legacy);
 
     let mut gesture = WorldMarqueeGesture::new(state.interaction_revision, 7, points[0]);
@@ -1071,7 +1072,7 @@ fn world_component_marquee_cursor_matches_legacy_vertex_edge_face_geometry() {
     for granularity in ["vertex", "edge", "face"] {
         state.granularity = granularity.into();
         let (meshes, draws) = legacy_geometry_fixture(&state);
-        let mut legacy: Vec<u32> = screen_select_components(&meshes, &draws, view_projection, viewport.w, viewport.h, &points, true, granularity, None, false).into_iter().map(|id| id.parse().expect("numeric component id")).collect();
+        let mut legacy: Vec<u32> = screen_select_components(&meshes, &draws, view_projection, ui_wgpu::wgpu::default_projection_spec(), viewport.w, viewport.h, &points, true, granularity, None, false).into_iter().map(|id| id.parse().expect("numeric component id")).collect();
         legacy.sort_unstable();
         assert!(!legacy.is_empty(), "the oracle must answer a component census, not an empty one: granularity={granularity}");
         assert_eq!(world_component_marquee_cursor_ids(&state, &points), legacy, "granularity={granularity}");
@@ -4351,13 +4352,12 @@ fn initial_projection_template_seeds_the_actual_delivered_camera_before_fit() {
     let fixture = camera_framing_fixture();
     let viewport = Rect::new(0.0, 0.0, fixture["viewport"][0].as_f64().unwrap() as f32, fixture["viewport"][1].as_f64().unwrap() as f32);
     let mut state = World3dState::new("surface-template".into(), "controller".into());
-    let direction = [0.75, -0.75, 0.55];
-    let up = [0.0, 0.0, 1.0];
-    assert!(!apply_world3d_initial_projection_seed(&mut state, CameraProjection3d::Perspective, ui_wgpu::wgpu::WorldProjectionOrientation::Free, false, direction, up), "a template never races ahead of the delivered camera lease");
+    let spec = ui_wgpu::wgpu::default_projection_spec();
+    assert!(!apply_world3d_initial_projection_seed(&mut state, spec), "a template never races ahead of the delivered camera lease");
 
     drive_scene_bridge(&mut state, &camera_framing_scene(&fixture, "perspective", true, None), viewport);
-    assert!(apply_world3d_initial_projection_seed(&mut state, CameraProjection3d::Perspective, ui_wgpu::wgpu::WorldProjectionOrientation::Free, false, direction, up));
-    assert!(!apply_world3d_initial_projection_seed(&mut state, CameraProjection3d::Perspective, ui_wgpu::wgpu::WorldProjectionOrientation::Free, false, direction, up), "the same pane consumes its initial template once");
+    assert!(apply_world3d_initial_projection_seed(&mut state, spec));
+    assert!(!apply_world3d_initial_projection_seed(&mut state, spec), "the same pane consumes its initial template once");
     drive_camera_fit(&mut state);
     assert_camera_fit(&state, &fixture["expect"]["perspectiveThreePoint"]);
 }
@@ -4394,7 +4394,8 @@ fn initial_projection_seed_preserves_the_delivered_url_draw_asset_request_and_lo
         assert!(turn < 4_095, "url snapshot did not apply inside its fixture ceiling");
     }
     assert!(state.draw_rebuild.is_some(), "the applied delivery retains its sealed rebuild for the next transaction");
-    assert!(apply_world3d_initial_projection_seed(&mut state, CameraProjection3d::Orthographic, ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top), false, [0.0, 0.0, 1.0], [0.0, 1.0, 0.0],));
+    let top_spec = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
+    assert!(apply_world3d_initial_projection_seed(&mut state, top_spec));
     sync_world3d_state(&mut state, &scene, bounds);
     assert!(!state.projection_frame_owed, "the exact Top document sync consumes its content-frame request");
     assert!((state.orbit.target.x - 2.0).abs() < 1e-5, "the pre-asset Top frame targets the raw instance position");
@@ -4947,10 +4948,11 @@ fn the_live_camera_row_reports_the_orbit_and_not_the_wire() {
     assert_eq!(before["projection"]["mode"]["kind"], "perspective", "🎥️ an untouched pane opens perspective");
     assert_eq!(before["userMoved"], serde_json::Value::Bool(false));
 
-    assert!(apply_world3d_projection_spec(&mut state, CameraProjection3d::Orthographic, ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top), false));
+    let top_spec = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
+    assert!(apply_world3d_projection_spec(&mut state, top_spec));
     let after = world3d_live_camera_json(&state);
     assert_eq!(after["projection"]["mode"]["kind"], "orthographic", "🎥️ the switch is visible in the row the probe reads");
-    assert_eq!(after["projection"]["orientation"], "Cardinal(Top)", "🎥️ and so is the plane its framing measures in");
+    assert_eq!(after["projection"]["orientation"]["type"], "cardinal", "🎥️ and so is the plane its framing measures in");
     assert!(after["zoom"].as_f64().unwrap_or_default() > 1.0, "🎥️ a parallel pane reports its real frustum scale: {}", after["zoom"]);
 
     state.orbit.target = Vec3::new(3.5, 0.0, 0.005);
@@ -4974,17 +4976,18 @@ fn a_projection_selection_rearms_the_panes_framing() {
     state.projection_frame_key = Some(7);
     state.projection_frame_zoom = Some(3.0);
 
-    let top = ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top);
-    assert!(apply_world3d_projection_spec(&mut state, CameraProjection3d::Orthographic, top, false), "📐️ the press moves the pane");
+    let top = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Orthographic {}, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Top } };
+    assert!(apply_world3d_projection_spec(&mut state, top), "📐️ the press moves the pane");
     assert!(state.projection_frame_owed, "📐️ and owes one framing, immune to the ownership latch the settle it queues arms");
     assert!(state.projection_selected, "📐️ and holds its own spec from here on, React's `externalPendingProjectionSpec`");
     assert_eq!(state.projection_frame_key, None, "📐️ and forgets the extent it last framed");
     assert_eq!(state.projection_frame_zoom, None);
-    assert_eq!(state.projection_orientation, top);
+    assert_eq!(state.projection_spec, top);
 
-    assert!(!apply_world3d_projection_spec(&mut state, CameraProjection3d::Orthographic, top, false), "📐️ pressing the SAME row again changes nothing");
-    assert!(apply_world3d_projection_spec(&mut state, CameraProjection3d::Orthographic, ui_wgpu::wgpu::WorldProjectionOrientation::Free, true), "📐️ but a row with the same family and another plane does — Cabinet after Orthographic");
-    assert!(state.projection_oblique_off_axis, "📐️ a free oblique frames in (x, z), which is a framing input, not a camera one");
+    assert!(!apply_world3d_projection_spec(&mut state, top), "📐️ pressing the SAME row again changes nothing");
+    let cabinet = semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::Oblique { variant: semio_framework_ui_viewport::Viewport3dObliqueVariant::Cabinet, angle: 45.0, depth_scale: 0.5 }, orientation: semio_framework_ui_viewport::Viewport3dProjectionOrientation::Free {} };
+    assert!(apply_world3d_projection_spec(&mut state, cabinet), "📐️ but a row with the same family and another plane does — Cabinet after Orthographic");
+    assert_eq!(state.projection_spec, cabinet, "📐️ a free oblique retains every framing and shear parameter");
 
     // 📐️ And the wire never takes the selection back. The settle a press queues publishes
     // `setCamera`, whose payload carries no `projection` member at all, so the guest's echo always
@@ -4992,7 +4995,7 @@ fn a_projection_selection_rearms_the_panes_framing() {
     // round trip.
     let mut wired = World3dState::new("surface".into(), "controller".into());
     wired.bounds = Rect::new(0.0, 0.0, 478.0, 814.0);
-    assert!(apply_world3d_projection_spec(&mut wired, CameraProjection3d::Orthographic, top, false));
+    assert!(apply_world3d_projection_spec(&mut wired, top));
     let echo = OrbitController { projection: CameraProjection3d::Perspective, target: Vec3::new(7.0, 0.0, 0.01), ..OrbitController::default() };
     let held = OrbitController { projection: wired.orbit.projection, ..echo.clone() };
     assert_eq!(held.projection, CameraProjection3d::Orthographic, "📐️ the echoed pose lands, the echoed FAMILY does not");

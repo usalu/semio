@@ -2600,11 +2600,26 @@ impl SegmentWriter {
     async fn append_record(&mut self, record: &WalRecord, now_ms: u64) -> Result<u64, DbError> {
         self.buf()?.admit(wal_frame_bytes(record.retained_shape().1)?)?;
         let offset = record.write_retained(self.writer_mut()?).await?;
+        self.appended(now_ms);
+        Ok(offset)
+    }
+
+    /// @emoji 📨️ Appends one `WAL_COMMAND` record straight from the command's own encoded bytes — the same frame
+    /// `WalRecord::Command` writes, without first staging the bytes in DB I/O pages.
+    async fn append_command(&mut self, command: &[u8], now_ms: u64) -> Result<u64, DbError> {
+        self.buf()?.admit(wal_frame_bytes(command.len())?)?;
+        let mut record = self.writer_mut()?.begin_identity_record(WAL_COMMAND, true, command.len()).await.map_err(protocol_err)?;
+        wal_record_write(&mut record, command).await?;
+        let offset = record.finish().await.map_err(protocol_err)?;
+        self.appended(now_ms);
+        Ok(offset)
+    }
+
+    fn appended(&mut self, now_ms: u64) {
         if self.pending_records == 0 {
             self.oldest_pending_at_ms = Some(now_ms);
         }
         self.pending_records += 1;
-        Ok(offset)
     }
 
     /// @emoji 📏️ Bytes written since the last flush — not yet visible to `WalStorage`.
@@ -2710,16 +2725,16 @@ fn wal_frame_bytes(payload: usize) -> Result<u64, DbError> {
     body.checked_add(wal_varint_len(body) as u64 + 8).ok_or(DbError::LimitExceeded("wal frame bytes"))
 }
 
-/// @emoji 🎟️ Bytes one submitted transaction adds to its segment: its framed records plus the
+/// @emoji 🎟️ Bytes one submitted transaction adds to its segment: its framed commands and records plus the
 /// commit that may seal them.
-fn wal_submit_reservation(records: &WalRecordBatch) -> Result<u64, DbError> {
-    wal_transaction_frame_bytes(records)?.checked_add(protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal transaction reservation"))
+fn wal_submit_reservation(commands: &[Vec<u8>], records: &WalRecordBatch) -> Result<u64, DbError> {
+    wal_transaction_frame_bytes(commands, records)?.checked_add(protocol::format::COMMIT_FRAME_LEN).ok_or(DbError::LimitExceeded("wal transaction reservation"))
 }
 
-fn wal_transaction_frame_bytes(records: &WalRecordBatch) -> Result<u64, DbError> {
+fn wal_transaction_frame_bytes(commands: &[Vec<u8>], records: &WalRecordBatch) -> Result<u64, DbError> {
     let mut bytes = wal_frame_bytes(8)?.checked_add(wal_frame_bytes(12)?).ok_or(DbError::LimitExceeded("wal transaction bytes"))?;
-    for record in records.iter() {
-        bytes = bytes.checked_add(wal_frame_bytes(record.retained_shape().1)?).ok_or(DbError::LimitExceeded("wal transaction bytes"))?;
+    for payload in commands.iter().map(Vec::len).chain(records.iter().map(|record| record.retained_shape().1)) {
+        bytes = bytes.checked_add(wal_frame_bytes(payload)?).ok_or(DbError::LimitExceeded("wal transaction bytes"))?;
     }
     Ok(bytes)
 }
@@ -3040,9 +3055,9 @@ impl ArtifactWal {
 
     /// 📐️ Validates the complete framed transaction against the current or successor
     /// readable-segment bound without consuming a transaction id or beginning storage I/O.
-    pub(crate) fn preflight_submit(&self, records: &WalRecordBatch) -> Result<bool, DbError> {
+    pub(crate) fn preflight_submit(&self, commands: &[Vec<u8>], records: &WalRecordBatch) -> Result<bool, DbError> {
         self.active.ensure_open()?;
-        let reservation = wal_submit_reservation(records)?;
+        let reservation = wal_submit_reservation(commands, records)?;
         self.next_tx_id.checked_add(1).ok_or(DbError::LimitExceeded("wal transaction sequence"))?;
         if self.active.total_len()?.checked_add(reservation).ok_or(DbError::LimitExceeded("wal segment reservation"))? <= db_storage::DB_IO_MAX_READ_BYTES {
             return Ok(false);
@@ -3055,27 +3070,33 @@ impl ArtifactWal {
         Ok(true)
     }
 
-    /// @emoji ✍️ Appends `records` as one transaction (`WAL_TX_BEGIN` .. `WAL_TX_COMMIT`), then
-    /// group-commits per `GroupCommitPolicy` — except `durability >= Fsync` always forces an
-    /// immediate commit, since deferring one can never satisfy a durability request stronger than
-    /// what's already flushed. Rotates to a new segment (sealing this one first, which forces a
-    /// commit if anything is still pending) once the active segment crosses `max_segment_bytes`.
-    pub async fn submit(&mut self, storage: &impl db_storage::WalStorage, records: &WalRecordBatch, durability: DurabilityClass, now_ms: u64) -> Result<WalAppendReceipt, DbError> {
-        let rotate = self.preflight_submit(records)?;
+    /// @emoji ✍️ Appends `commands` (each a `WAL_COMMAND` record written from its own encoded bytes) and then
+    /// `records` as one transaction (`WAL_TX_BEGIN` .. `WAL_TX_COMMIT`), then group-commits per `GroupCommitPolicy` —
+    /// except `durability >= Fsync` always forces an immediate commit, since deferring one can never satisfy a
+    /// durability request stronger than what's already flushed. Rotates to a new segment (sealing this one first, which
+    /// forces a commit if anything is still pending) once the active segment crosses `max_segment_bytes`. Commands take
+    /// no DB I/O page credit of their own: a whole declared-legal command batch (`protocol`'s document backbone batch
+    /// maximum, 256 KiB of encoded envelopes) is one transaction bounded only by the readable segment.
+    pub async fn submit(&mut self, storage: &impl db_storage::WalStorage, commands: &[Vec<u8>], records: &WalRecordBatch, durability: DurabilityClass, now_ms: u64) -> Result<WalAppendReceipt, DbError> {
+        let rotate = self.preflight_submit(commands, records)?;
         let next_tx_id = self.next_tx_id.checked_add(1).ok_or(DbError::LimitExceeded("wal transaction sequence"))?;
         if rotate {
             self.rotate(storage, now_ms).await?;
         }
-        self.active.buf()?.admit(wal_submit_reservation(records)?)?;
+        self.active.buf()?.admit(wal_submit_reservation(commands, records)?)?;
+        let record_count = u32::try_from(commands.len() + records.len()).map_err(|_| DbError::LimitExceeded("wal transaction record count"))?;
         let tx_id = self.next_tx_id;
         self.next_tx_id = next_tx_id;
         let segment_index = self.active.index;
 
         self.active.append_record(&WalRecord::TxBegin { tx_id }, now_ms).await?;
+        for command in commands {
+            self.active.append_command(command, now_ms).await?;
+        }
         for record in records.iter() {
             self.active.append_record(record, now_ms).await?;
         }
-        self.active.append_record(&WalRecord::TxCommit { tx_id, record_count: records.len() as u32 }, now_ms).await?;
+        self.active.append_record(&WalRecord::TxCommit { tx_id, record_count }, now_ms).await?;
 
         let forced = matches!(durability, DurabilityClass::Fsync | DurabilityClass::Quorum(_));
         let due = forced || self.policy.is_due(self.active.pending_bytes()?, self.active.pending_records, self.active.oldest_pending_at_ms, now_ms);

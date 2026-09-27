@@ -22,6 +22,98 @@ pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
 /// 🧬️ Artifact schema descriptor id.
 pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
 
+/// ✏️ Replaces the Unicode text projection while preserving every non-text page-content operator.
+pub fn replace_page_unicode_text(page: &schema::snapshot::PdfPage, text: &str) -> Vec<schema::snapshot::PdfOp> {
+    use schema::snapshot::{PdfOp, PdfTextArrayItem, PdfTextString};
+
+    fn replace_text_string(value: &mut PdfTextString, replacement: &mut Option<String>) {
+        let PdfTextString::Text { text } = value else { return };
+        *text = replacement.take().unwrap_or_default();
+    }
+
+    let mut content = page.content.clone();
+    let mut replacement = Some(text.to_string());
+    for operation in &mut content {
+        match operation {
+            PdfOp::ShowText { text } | PdfOp::NextLineShowText { text } | PdfOp::NextLineShowTextSpaced { text, .. } => replace_text_string(text, &mut replacement),
+            PdfOp::ShowTextArray { items } => {
+                for item in items {
+                    if let PdfTextArrayItem::Text { text } = item {
+                        *text = replacement.take().unwrap_or_default();
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    if replacement.as_deref().is_some_and(|text| !text.is_empty()) {
+        content.extend([PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text(replacement.take().expect("pending replacement")) }, PdfOp::EndText]);
+    }
+    content
+}
+
+/// 📄️ Builds one exact, reversible PDF page-text replacement or rejects an invalid/stale target.
+pub fn page_text_edit_mutation(snapshot: &PdfSnapshot, page: u32, item: u32, revision: &str, text: &str) -> Result<Option<PdfMutation>, semio_framework_plugin::Fault> {
+    if item != 0 {
+        return Err(semio_framework_plugin::Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("stdio.pdf.set-page.invalid-item"),
+            "PDF page drafts require item zero",
+        ));
+    }
+    let page_index = page as usize;
+    let target = snapshot.pages.get(page_index).ok_or_else(|| {
+        semio_framework_plugin::Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("stdio.pdf.set-page.stale-target"),
+            format!("PDF page {page_index} no longer exists"),
+        )
+    })?;
+    semio_s_artifact_stdio_contract::require_window_kit_document_revision(&target.text(), revision, "stdio.pdf.set-page.conflict")?;
+    if target.text() == text {
+        return Ok(None);
+    }
+    Ok(Some(PdfMutation::SetPageContent(schema::mutations::SetPageContent { index: page_index, content: replace_page_unicode_text(target, text) })))
+}
+
+#[cfg(test)]
+mod document_text_edit_tests {
+    use super::*;
+    use schema::snapshot::{PdfOp, PdfPage, PdfTextString};
+
+    #[test]
+    fn replacement_preserves_non_text_operations_and_replaces_instead_of_appending() {
+        let mut page = PdfPage::default();
+        page.content = vec![
+            PdfOp::Save,
+            PdfOp::BeginText,
+            PdfOp::ShowText { text: PdfTextString::text("old") },
+            PdfOp::NextLineShowText { text: PdfTextString::text("tail") },
+            PdfOp::EndText,
+            PdfOp::Restore,
+        ];
+        page.content = replace_page_unicode_text(&page, "new\ncontent");
+        assert_eq!(page.text(), "new\ncontent");
+        assert!(matches!(page.content.first(), Some(PdfOp::Save)));
+        assert!(matches!(page.content.last(), Some(PdfOp::Restore)));
+        assert_eq!(page.content.len(), 6);
+    }
+
+    #[test]
+    fn page_text_edit_rejects_missing_stale_and_non_text_addresses() {
+        let mut snapshot = PdfSnapshot::default();
+        snapshot.pages.push(PdfPage::default());
+        let revision = semio_framework_plugin::app::DocumentWindowKit::text_revision("");
+        assert!(page_text_edit_mutation(&snapshot, 1, 0, &revision, "draft").is_err());
+        assert!(page_text_edit_mutation(&snapshot, 0, 1, &revision, "draft").is_err());
+        assert!(page_text_edit_mutation(&snapshot, 0, 0, "0000000000000000", "draft").is_err());
+        let Some(PdfMutation::SetPageContent(edit)) = page_text_edit_mutation(&snapshot, 0, 0, &revision, "draft").expect("addressed edit") else { panic!("set page content") };
+        let mut page = snapshot.pages[0].clone();
+        page.content = edit.content;
+        assert_eq!(page.text(), "draft");
+    }
+}
+
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
 

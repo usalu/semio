@@ -33,6 +33,7 @@
       "required": [
         "version",
         "aggregateBytes",
+        "fixedBackingBytes",
         "documentBytes",
         "residentSlots",
         "surfaceBytes",
@@ -59,6 +60,7 @@
       "properties": {
         "version": { "const": 1 },
         "aggregateBytes": { "const": 52559872 },
+        "fixedBackingBytes": { "type": "integer", "minimum": 0 },
         "documentBytes": { "const": 821248 },
         "residentSlots": { "const": 64 },
         "surfaceBytes": { "const": 8388608 },

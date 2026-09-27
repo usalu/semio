@@ -1,0 +1,13 @@
+{
+  "layers": {
+    "patched": [
+      {
+        "id": "caption",
+        "patch": {
+          "textContent": "Grüße 🌍\n123",
+          "textSize": 36
+        }
+      }
+    ]
+  }
+}

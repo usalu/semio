@@ -1,0 +1,6 @@
+{
+  "mutation": "updateText",
+  "layerId": "caption",
+  "content": "Grüße 🌍\n123",
+  "size": 36
+}

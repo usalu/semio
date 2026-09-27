@@ -1346,6 +1346,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds one to the demo document's counter.",
+                  "de": "Erhöht den Zähler des Demodokuments um eins."
+                },
+                "reuse": {
+                  "en": "Adds one to the demo document's counter.",
+                  "de": "Erhöht den Zähler des Demodokuments um eins."
+                }
               }
             }
           },
@@ -1390,6 +1400,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of the demo document (title, counter, status or notes) from a text value.",
+                  "de": "Setzt ein Feld des Demodokuments (Titel, Zähler, Status oder Notizen) aus einem Textwert."
+                },
+                "reuse": {
+                  "en": "Sets one field of the demo document (title, counter, status or notes) from a text value.",
+                  "de": "Setzt ein Feld des Demodokuments (Titel, Zähler, Status oder Notizen) aus einem Textwert."
+                }
               }
             }
           },
@@ -1434,6 +1454,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Reads the given text as the demo document's projection and writes the title, counter, status and notes that differ; consecutive typing merges.",
+                  "de": "Liest den angegebenen Text als Projektion des Demodokuments und schreibt abweichenden Titel, Zähler, Status und Notizen; fortlaufendes Tippen wird zusammengefasst."
+                },
+                "reuse": {
+                  "en": "Reads the given text as the demo document's projection and writes the title, counter, status and notes that differ; consecutive typing merges.",
+                  "de": "Liest den angegebenen Text als Projektion des Demodokuments und schreibt abweichenden Titel, Zähler, Status und Notizen; fortlaufendes Tippen wird zusammengefasst."
+                }
               }
             }
           },
@@ -1478,6 +1508,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Reads the given text as the demo document's projection and writes every field that differs as one edit.",
+                  "de": "Liest den angegebenen Text als Projektion des Demodokuments und schreibt jedes abweichende Feld als eine Änderung."
+                },
+                "reuse": {
+                  "en": "Reads the given text as the demo document's projection and writes every field that differs as one edit.",
+                  "de": "Liest den angegebenen Text als Projektion des Demodokuments und schreibt jedes abweichende Feld als eine Änderung."
+                }
               }
             }
           },
@@ -1496,7 +1536,7 @@
             "kind": "view",
             "iconId": "eye",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -1523,7 +1563,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -1784,6 +1825,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole demo document with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte Demodokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole demo document with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte Demodokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -2515,6 +2566,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -2620,6 +2681,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -2713,6 +2784,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -3768,6 +3849,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3873,6 +3964,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3966,6 +4067,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4117,7 +4228,7 @@
         "payload": {
           "codecs": [
             {
-              "artifactKind": "stdio.avi",
+              "artifactKind": "s.stdio.avi",
               "definitionIdentity": "s.stdio.avi",
               "descriptorCodecId": "s.stdio.avi.standard.1-0.codec.native-document.v1",
               "extension": "semio",
@@ -4127,7 +4238,7 @@
               "schema": "stdio.avi"
             },
             {
-              "artifactKind": "stdio.bcf",
+              "artifactKind": "s.stdio.bcf",
               "definitionIdentity": "s.stdio.bcf",
               "descriptorCodecId": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
               "extension": "bcf",
@@ -4137,7 +4248,7 @@
               "schema": "stdio.bcf"
             },
             {
-              "artifactKind": "stdio.csv",
+              "artifactKind": "s.stdio.csv",
               "definitionIdentity": "s.stdio.csv",
               "descriptorCodecId": "s.stdio.csv.standard.rfc4180.codec.native-document.v1",
               "extension": "csv",
@@ -4147,7 +4258,7 @@
               "schema": "stdio.csv"
             },
             {
-              "artifactKind": "stdio.deflate",
+              "artifactKind": "s.stdio.deflate",
               "definitionIdentity": "s.stdio.deflate",
               "descriptorCodecId": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
               "extension": "zz",
@@ -4157,7 +4268,7 @@
               "schema": "stdio.deflate"
             },
             {
-              "artifactKind": "stdio.docx",
+              "artifactKind": "s.stdio.docx",
               "definitionIdentity": "s.stdio.docx",
               "descriptorCodecId": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
               "extension": "docx",
@@ -4167,7 +4278,7 @@
               "schema": "stdio.docx"
             },
             {
-              "artifactKind": "stdio.dwg",
+              "artifactKind": "s.stdio.dwg",
               "definitionIdentity": "s.stdio.dwg",
               "descriptorCodecId": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
               "extension": "dwg",
@@ -4177,7 +4288,7 @@
               "schema": "stdio.dwg"
             },
             {
-              "artifactKind": "stdio.dxf",
+              "artifactKind": "s.stdio.dxf",
               "definitionIdentity": "s.stdio.dxf",
               "descriptorCodecId": "s.stdio.dxf.standard.r12.codec.native-document.v1",
               "extension": "dxf",
@@ -4197,7 +4308,7 @@
               "schema": "stdio.gltf"
             },
             {
-              "artifactKind": "stdio.jpg",
+              "artifactKind": "s.stdio.jpg",
               "definitionIdentity": "s.stdio.jpg",
               "descriptorCodecId": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
               "extension": "jpg",
@@ -4207,7 +4318,7 @@
               "schema": "stdio.jpg"
             },
             {
-              "artifactKind": "stdio.json",
+              "artifactKind": "s.stdio.json",
               "definitionIdentity": "s.stdio.json",
               "descriptorCodecId": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
               "extension": "json",
@@ -4217,7 +4328,7 @@
               "schema": "stdio.json"
             },
             {
-              "artifactKind": "stdio.las",
+              "artifactKind": "s.stdio.las",
               "definitionIdentity": "s.stdio.las",
               "descriptorCodecId": "s.stdio.las.standard.1-0.codec.native-document.v1",
               "extension": "las",
@@ -4227,7 +4338,7 @@
               "schema": "stdio.las"
             },
             {
-              "artifactKind": "stdio.md",
+              "artifactKind": "s.stdio.md",
               "definitionIdentity": "s.stdio.md",
               "descriptorCodecId": "s.stdio.md.standard.commonmark.codec.native-document.v1",
               "extension": "md",
@@ -4237,7 +4348,7 @@
               "schema": "stdio.md"
             },
             {
-              "artifactKind": "stdio.mp3",
+              "artifactKind": "s.stdio.mp3",
               "definitionIdentity": "s.stdio.mp3",
               "descriptorCodecId": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
               "extension": "mp3",
@@ -4247,7 +4358,7 @@
               "schema": "stdio.mp3"
             },
             {
-              "artifactKind": "stdio.mp4",
+              "artifactKind": "s.stdio.mp4",
               "definitionIdentity": "s.stdio.mp4",
               "descriptorCodecId": "s.stdio.mp4.standard.isobmff.codec.native-document.v1",
               "extension": "semio",
@@ -4257,7 +4368,7 @@
               "schema": "stdio.mp4"
             },
             {
-              "artifactKind": "stdio.obj",
+              "artifactKind": "s.stdio.obj",
               "definitionIdentity": "s.stdio.obj",
               "descriptorCodecId": "s.stdio.obj.standard.3-0.codec.native-document.v1",
               "extension": "obj",
@@ -4267,7 +4378,7 @@
               "schema": "stdio.obj"
             },
             {
-              "artifactKind": "stdio.pdf",
+              "artifactKind": "s.stdio.pdf",
               "definitionIdentity": "s.stdio.pdf",
               "descriptorCodecId": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
               "extension": "pdf",
@@ -4277,7 +4388,7 @@
               "schema": "stdio.pdf"
             },
             {
-              "artifactKind": "stdio.ply",
+              "artifactKind": "s.stdio.ply",
               "definitionIdentity": "s.stdio.ply",
               "descriptorCodecId": "s.stdio.ply.standard.1-0.codec.native-document.v1",
               "extension": "ply",
@@ -4287,7 +4398,7 @@
               "schema": "stdio.ply"
             },
             {
-              "artifactKind": "stdio.png",
+              "artifactKind": "s.stdio.png",
               "definitionIdentity": "s.stdio.png",
               "descriptorCodecId": "s.stdio.png.standard.1-2.codec.native-document.v1",
               "extension": "png",
@@ -4297,7 +4408,7 @@
               "schema": "stdio.png"
             },
             {
-              "artifactKind": "stdio.pptx",
+              "artifactKind": "s.stdio.pptx",
               "definitionIdentity": "s.stdio.pptx",
               "descriptorCodecId": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
               "extension": "pptx",
@@ -4307,7 +4418,7 @@
               "schema": "stdio.pptx"
             },
             {
-              "artifactKind": "stdio.step",
+              "artifactKind": "s.stdio.step",
               "definitionIdentity": "s.stdio.step",
               "descriptorCodecId": "s.stdio.step.standard.ap214.codec.native-document.v1",
               "extension": "step",
@@ -4317,7 +4428,7 @@
               "schema": "stdio.step"
             },
             {
-              "artifactKind": "stdio.stl",
+              "artifactKind": "s.stdio.stl",
               "definitionIdentity": "s.stdio.stl",
               "descriptorCodecId": "s.stdio.stl.standard.ascii.codec.native-document.v1",
               "extension": "stl",
@@ -4327,7 +4438,7 @@
               "schema": "stdio.stl"
             },
             {
-              "artifactKind": "stdio.svg",
+              "artifactKind": "s.stdio.svg",
               "definitionIdentity": "s.stdio.svg",
               "descriptorCodecId": "s.stdio.svg.standard.1-1.codec.native-document.v1",
               "extension": "svg",
@@ -4337,7 +4448,7 @@
               "schema": "stdio.svg"
             },
             {
-              "artifactKind": "stdio.tiff",
+              "artifactKind": "s.stdio.tiff",
               "definitionIdentity": "s.stdio.tiff",
               "descriptorCodecId": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
               "extension": "tiff",
@@ -4347,7 +4458,7 @@
               "schema": "stdio.tiff"
             },
             {
-              "artifactKind": "stdio.xlsx",
+              "artifactKind": "s.stdio.xlsx",
               "definitionIdentity": "s.stdio.xlsx",
               "descriptorCodecId": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
               "extension": "xlsx",
@@ -4357,7 +4468,7 @@
               "schema": "stdio.xlsx"
             },
             {
-              "artifactKind": "stdio.xml",
+              "artifactKind": "s.stdio.xml",
               "definitionIdentity": "s.stdio.xml",
               "descriptorCodecId": "s.stdio.xml.standard.1-0.codec.native-document.v1",
               "extension": "xml",
@@ -4367,7 +4478,7 @@
               "schema": "stdio.xml"
             },
             {
-              "artifactKind": "stdio.zip",
+              "artifactKind": "s.stdio.zip",
               "definitionIdentity": "s.stdio.zip",
               "descriptorCodecId": "s.stdio.zip.standard.2-0.codec.native-document.v1",
               "extension": "zip",
@@ -4488,7 +4599,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "6eefc8dadd0b70991f3a1612aaba19876f9a1d749f4ed1d54936aad0c35d4f5e",
+                  "descriptorSha256": "7e10db01773592e1dc6ab8ea03be73009d7c42833bba306439e99778475a35f4",
                   "executable": true,
                   "identity": "s.stdio.avi.standard.1-0.codec.native-document.v1",
                   "kind": "codec",
@@ -4713,7 +4824,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "1cfcefad347c5e644def6aa3888d30ca843d280c7133b166a31b32b1b69f3335",
+                  "descriptorSha256": "c63c6c2d82bc46151f3883187fb7ee5cfc2949cce0bb633fb0a63ade871c3fe1",
                   "executable": true,
                   "identity": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
                   "kind": "codec",
@@ -5096,7 +5207,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "28199dd71115752d9224acd4497236f59a12076e6f67c15d893823f269b33e58",
+                  "descriptorSha256": "27659c72fdac9012bf09f9f7af08a31c1e09848cb0024283c6d44f3749b64e41",
                   "executable": true,
                   "identity": "s.stdio.csv.standard.rfc4180.codec.native-document.v1",
                   "kind": "codec",
@@ -5321,7 +5432,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "8b38033d79ff772ec1fcdbc9997c79e71637f24af2bcf88f5194ed0a8f8c4808",
+                  "descriptorSha256": "0062298f952390326684961651c659509b2268e126ada14d773d835b037942a7",
                   "executable": true,
                   "identity": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
                   "kind": "codec",
@@ -5572,7 +5683,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "1d306fbe915486966e72c27bc4764a6d1727405168ff23f0cc7899539daeb778",
+                  "descriptorSha256": "b48bdc8f2737f7d565e5a38e942abc43573e32b4f767f709c190c8899e035b08",
                   "executable": true,
                   "identity": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
                   "kind": "codec",
@@ -5872,7 +5983,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "15ed3cdb2dec68c2c1b2240db91a642968544ec465226f4c4327e33b186cd335",
+                  "descriptorSha256": "79d72f3117620e9edcc0c0516695e65d5ea8776bdc8580af8defac30308ba5c4",
                   "executable": true,
                   "identity": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
                   "kind": "codec",
@@ -6080,7 +6191,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "1e98c2c85a9fb54e3c4f9f697752123cb363301c03041f1b9c249940a15a22d9",
+                  "descriptorSha256": "4a79dfa5e0ac023b80b7f33bb1cdb3ec8330d51cdf919ffba9cc3caaf504ceda",
                   "executable": true,
                   "identity": "s.stdio.dxf.standard.r12.codec.native-document.v1",
                   "kind": "codec",
@@ -7891,7 +8002,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "be7afa595a53294a5c94f2f34a5d1dc430ffcc56ab3a5718cb9738d37f2e8b33",
+                  "descriptorSha256": "dde55c75a45b407d69085c19bfcc0bef9021519dc5783543314871a1ce5e72d8",
                   "executable": true,
                   "identity": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
                   "kind": "codec",
@@ -8155,7 +8266,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "fbe1d64a450e6b320d459abec1ccd0be37622018c92fa9af28590728cdc649b7",
+                  "descriptorSha256": "b93f6c5dc4ea6cd0800acdc19e4fd9912db059e31cc2237f8f71e2399863be19",
                   "executable": true,
                   "identity": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
                   "kind": "codec",
@@ -8406,7 +8517,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "e1cf7f29af75462a8efe0142d108fe825a26299e11f0687cbe7b94651fa228b8",
+                  "descriptorSha256": "cae0d33659bc8dada2ac4ad716cd3de1b30684f05d1d561870382d54e391ed92",
                   "executable": true,
                   "identity": "s.stdio.las.standard.1-0.codec.native-document.v1",
                   "kind": "codec",
@@ -8631,7 +8742,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "8d527b0a8b237c001347f7746351ff64b1ce1d8aa97372f7e0581ebc078655e4",
+                  "descriptorSha256": "9e1505b3efd799d40c7b62508e31e923ea9d907e8fee797f0d8f32425821b489",
                   "executable": true,
                   "identity": "s.stdio.md.standard.commonmark.codec.native-document.v1",
                   "kind": "codec",
@@ -8791,7 +8902,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "816f4e06dc12454baa0367672061d66bc307e119b6cb3e9ffe09bfd57f537cb1",
+                  "descriptorSha256": "c4c44d8d67a230c73c5fa2d59d74908a7d92110b251e81e647030a12ad1f49c0",
                   "executable": true,
                   "identity": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
                   "kind": "codec",
@@ -8951,7 +9062,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "45db59832e2ba9d3b7ab9f87783f95d1adc711ec2a8f133c496a4ac347a86ab4",
+                  "descriptorSha256": "c9e89077f25539d66aea1755c31bfda59848f642cfc01c8e657c790543c6eaec",
                   "executable": true,
                   "identity": "s.stdio.mp4.standard.isobmff.codec.native-document.v1",
                   "kind": "codec",
@@ -9176,7 +9287,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2afcf7751f7693bd7bff6891bc6d7caed0ca56652fcc85d949a07a7e6c0e9e2c",
+                  "descriptorSha256": "aa5bbbf1ec6bbff8ae36a1c52841635b565a1f7505cb3d88e1fdd811feed2f92",
                   "executable": true,
                   "identity": "s.stdio.obj.standard.3-0.codec.native-document.v1",
                   "kind": "codec",
@@ -9626,7 +9737,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "0db2bc98cf03e64162079152cdebba56c2ec8ec48f6157cffe2cce75e47c5b3c",
+                  "descriptorSha256": "d83996b51eded9d311503fa094b120d2dd819d139627a668a325903b8c6f3e0a",
                   "executable": true,
                   "identity": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
                   "kind": "codec",
@@ -9987,7 +10098,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2fc20a5cee3d7a05aadba0a44e31aabafbf18b2d5e5affa83b7701eb8e4dc8d0",
+                  "descriptorSha256": "e15420378f6735eb39ab4c1c21c3ad05625549767d8b29726b8d7601408d31f8",
                   "executable": true,
                   "identity": "s.stdio.ply.standard.1-0.codec.native-document.v1",
                   "kind": "codec",
@@ -10212,7 +10323,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "f6f7a5da245f544053ba12e639ac1387737871f96e5ccd6d02a40ea6b4d45832",
+                  "descriptorSha256": "89e14f95978cae1081ba3562002fb6109a5a2bf83ca1aa06b8820bd8a1c88076",
                   "executable": true,
                   "identity": "s.stdio.png.standard.1-2.codec.native-document.v1",
                   "kind": "codec",
@@ -10463,7 +10574,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "6f18cbf981cab8dd651a8e190be8559f6da998e75c3c84ebdabe61dc2d05b64b",
+                  "descriptorSha256": "9bbaf1e54a64ac4e701331a1a1a8ec99828d0af2e208aca22863a52650ef9d02",
                   "executable": true,
                   "identity": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
                   "kind": "codec",
@@ -10871,7 +10982,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "b904fda72806fd496d86c4bb935a6a57e864f4d68b163d2874adcd8901aba308",
+                  "descriptorSha256": "d73951674ac925819be10143b255ba93df8c029f16c3cc7562aa8bea7ac889fb",
                   "executable": true,
                   "identity": "s.stdio.step.standard.ap214.codec.native-document.v1",
                   "kind": "codec",
@@ -11174,7 +11285,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "e7f293c9f2667d3617a0ef8c2db91fe120675e0d16026bb3698db18b95efb1d2",
+                  "descriptorSha256": "37844b03b9fbd99b5c621ff255d8d783e89e2b55cdd59c8fc217fe2a23ba426a",
                   "executable": true,
                   "identity": "s.stdio.stl.standard.ascii.codec.native-document.v1",
                   "kind": "codec",
@@ -11425,7 +11536,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "d498880a8aa62d49bac163295e862111512f0a2f4d495fc54b78519ca0f49abf",
+                  "descriptorSha256": "2244db3daf963bec7bda5fe4b081030d97905db470dabaee0c197aa0d8fd9907",
                   "executable": true,
                   "identity": "s.stdio.svg.standard.1-1.codec.native-document.v1",
                   "kind": "codec",
@@ -11689,7 +11800,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "85f918dad0e7ca269bb08503142f838802e90bf4d4955230505961051f0f461c",
+                  "descriptorSha256": "ead22eea0b802de4e105bd3e4848d92ef7799bd13960674806650803583d805a",
                   "executable": true,
                   "identity": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
                   "kind": "codec",
@@ -12207,7 +12318,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "004f3f6cfe6ff6efbe2afbc5ebd88bb79cd12d4a6d4f6603a7ed16f54ee3f02c",
+                  "descriptorSha256": "dd03f01ef5af5f439b541dac6d459428e6b406086740696ed055aa68db49dd9b",
                   "executable": true,
                   "identity": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
                   "kind": "codec",
@@ -12471,7 +12582,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "5a52f073b143d9410cf77f5a912d2cc991c5238d8b802649522265161df287b8",
+                  "descriptorSha256": "3f7228a2b8b699607fad627f7916ed5cb87142f7eebdc04d90d519438bccd494",
                   "executable": true,
                   "identity": "s.stdio.xml.standard.1-0.codec.native-document.v1",
                   "kind": "codec",
@@ -12722,7 +12833,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "205b9e81e0d5cbd30386cec552efcbd8a6fe8c429f64a0294b8a606f9475c2af",
+                  "descriptorSha256": "374e8fd91f0a1625c0a96ed54062f8997d2f68d98875d1f94e77af7988f7ac50",
                   "executable": true,
                   "identity": "s.stdio.zip.standard.2-0.codec.native-document.v1",
                   "kind": "codec",
@@ -12819,7 +12930,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -12907,7 +13018,7 @@
         "payload": {
           "codecs": [
             {
-              "artifactKind": "stdio.avi",
+              "artifactKind": "s.stdio.avi",
               "definitionIdentity": "s.stdio.avi",
               "descriptorCodecId": "s.stdio.avi.standard.1-0.codec.native-document.v1",
               "extension": "semio",
@@ -12917,7 +13028,7 @@
               "schema": "stdio.avi"
             },
             {
-              "artifactKind": "stdio.bcf",
+              "artifactKind": "s.stdio.bcf",
               "definitionIdentity": "s.stdio.bcf",
               "descriptorCodecId": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
               "extension": "bcf",
@@ -12927,7 +13038,7 @@
               "schema": "stdio.bcf"
             },
             {
-              "artifactKind": "stdio.csv",
+              "artifactKind": "s.stdio.csv",
               "definitionIdentity": "s.stdio.csv",
               "descriptorCodecId": "s.stdio.csv.standard.rfc4180.codec.native-document.v1",
               "extension": "csv",
@@ -12937,7 +13048,7 @@
               "schema": "stdio.csv"
             },
             {
-              "artifactKind": "stdio.deflate",
+              "artifactKind": "s.stdio.deflate",
               "definitionIdentity": "s.stdio.deflate",
               "descriptorCodecId": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
               "extension": "zz",
@@ -12947,7 +13058,7 @@
               "schema": "stdio.deflate"
             },
             {
-              "artifactKind": "stdio.docx",
+              "artifactKind": "s.stdio.docx",
               "definitionIdentity": "s.stdio.docx",
               "descriptorCodecId": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
               "extension": "docx",
@@ -12957,7 +13068,7 @@
               "schema": "stdio.docx"
             },
             {
-              "artifactKind": "stdio.dwg",
+              "artifactKind": "s.stdio.dwg",
               "definitionIdentity": "s.stdio.dwg",
               "descriptorCodecId": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
               "extension": "dwg",
@@ -12967,7 +13078,7 @@
               "schema": "stdio.dwg"
             },
             {
-              "artifactKind": "stdio.dxf",
+              "artifactKind": "s.stdio.dxf",
               "definitionIdentity": "s.stdio.dxf",
               "descriptorCodecId": "s.stdio.dxf.standard.r12.codec.native-document.v1",
               "extension": "dxf",
@@ -12987,7 +13098,7 @@
               "schema": "stdio.gltf"
             },
             {
-              "artifactKind": "stdio.jpg",
+              "artifactKind": "s.stdio.jpg",
               "definitionIdentity": "s.stdio.jpg",
               "descriptorCodecId": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
               "extension": "jpg",
@@ -12997,7 +13108,7 @@
               "schema": "stdio.jpg"
             },
             {
-              "artifactKind": "stdio.json",
+              "artifactKind": "s.stdio.json",
               "definitionIdentity": "s.stdio.json",
               "descriptorCodecId": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
               "extension": "json",
@@ -13007,7 +13118,7 @@
               "schema": "stdio.json"
             },
             {
-              "artifactKind": "stdio.las",
+              "artifactKind": "s.stdio.las",
               "definitionIdentity": "s.stdio.las",
               "descriptorCodecId": "s.stdio.las.standard.1-0.codec.native-document.v1",
               "extension": "las",
@@ -13017,7 +13128,7 @@
               "schema": "stdio.las"
             },
             {
-              "artifactKind": "stdio.md",
+              "artifactKind": "s.stdio.md",
               "definitionIdentity": "s.stdio.md",
               "descriptorCodecId": "s.stdio.md.standard.commonmark.codec.native-document.v1",
               "extension": "md",
@@ -13027,7 +13138,7 @@
               "schema": "stdio.md"
             },
             {
-              "artifactKind": "stdio.mp3",
+              "artifactKind": "s.stdio.mp3",
               "definitionIdentity": "s.stdio.mp3",
               "descriptorCodecId": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
               "extension": "mp3",
@@ -13037,7 +13148,7 @@
               "schema": "stdio.mp3"
             },
             {
-              "artifactKind": "stdio.mp4",
+              "artifactKind": "s.stdio.mp4",
               "definitionIdentity": "s.stdio.mp4",
               "descriptorCodecId": "s.stdio.mp4.standard.isobmff.codec.native-document.v1",
               "extension": "semio",
@@ -13047,7 +13158,7 @@
               "schema": "stdio.mp4"
             },
             {
-              "artifactKind": "stdio.obj",
+              "artifactKind": "s.stdio.obj",
               "definitionIdentity": "s.stdio.obj",
               "descriptorCodecId": "s.stdio.obj.standard.3-0.codec.native-document.v1",
               "extension": "obj",
@@ -13057,7 +13168,7 @@
               "schema": "stdio.obj"
             },
             {
-              "artifactKind": "stdio.pdf",
+              "artifactKind": "s.stdio.pdf",
               "definitionIdentity": "s.stdio.pdf",
               "descriptorCodecId": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
               "extension": "pdf",
@@ -13067,7 +13178,7 @@
               "schema": "stdio.pdf"
             },
             {
-              "artifactKind": "stdio.ply",
+              "artifactKind": "s.stdio.ply",
               "definitionIdentity": "s.stdio.ply",
               "descriptorCodecId": "s.stdio.ply.standard.1-0.codec.native-document.v1",
               "extension": "ply",
@@ -13077,7 +13188,7 @@
               "schema": "stdio.ply"
             },
             {
-              "artifactKind": "stdio.png",
+              "artifactKind": "s.stdio.png",
               "definitionIdentity": "s.stdio.png",
               "descriptorCodecId": "s.stdio.png.standard.1-2.codec.native-document.v1",
               "extension": "png",
@@ -13087,7 +13198,7 @@
               "schema": "stdio.png"
             },
             {
-              "artifactKind": "stdio.pptx",
+              "artifactKind": "s.stdio.pptx",
               "definitionIdentity": "s.stdio.pptx",
               "descriptorCodecId": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
               "extension": "pptx",
@@ -13097,7 +13208,7 @@
               "schema": "stdio.pptx"
             },
             {
-              "artifactKind": "stdio.step",
+              "artifactKind": "s.stdio.step",
               "definitionIdentity": "s.stdio.step",
               "descriptorCodecId": "s.stdio.step.standard.ap214.codec.native-document.v1",
               "extension": "step",
@@ -13107,7 +13218,7 @@
               "schema": "stdio.step"
             },
             {
-              "artifactKind": "stdio.stl",
+              "artifactKind": "s.stdio.stl",
               "definitionIdentity": "s.stdio.stl",
               "descriptorCodecId": "s.stdio.stl.standard.ascii.codec.native-document.v1",
               "extension": "stl",
@@ -13117,7 +13228,7 @@
               "schema": "stdio.stl"
             },
             {
-              "artifactKind": "stdio.svg",
+              "artifactKind": "s.stdio.svg",
               "definitionIdentity": "s.stdio.svg",
               "descriptorCodecId": "s.stdio.svg.standard.1-1.codec.native-document.v1",
               "extension": "svg",
@@ -13127,7 +13238,7 @@
               "schema": "stdio.svg"
             },
             {
-              "artifactKind": "stdio.tiff",
+              "artifactKind": "s.stdio.tiff",
               "definitionIdentity": "s.stdio.tiff",
               "descriptorCodecId": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
               "extension": "tiff",
@@ -13137,7 +13248,7 @@
               "schema": "stdio.tiff"
             },
             {
-              "artifactKind": "stdio.xlsx",
+              "artifactKind": "s.stdio.xlsx",
               "definitionIdentity": "s.stdio.xlsx",
               "descriptorCodecId": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
               "extension": "xlsx",
@@ -13147,7 +13258,7 @@
               "schema": "stdio.xlsx"
             },
             {
-              "artifactKind": "stdio.xml",
+              "artifactKind": "s.stdio.xml",
               "definitionIdentity": "s.stdio.xml",
               "descriptorCodecId": "s.stdio.xml.standard.1-0.codec.native-document.v1",
               "extension": "xml",
@@ -13157,7 +13268,7 @@
               "schema": "stdio.xml"
             },
             {
-              "artifactKind": "stdio.zip",
+              "artifactKind": "s.stdio.zip",
               "definitionIdentity": "s.stdio.zip",
               "descriptorCodecId": "s.stdio.zip.standard.2-0.codec.native-document.v1",
               "extension": "zip",
@@ -13278,7 +13389,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "6eefc8dadd0b70991f3a1612aaba19876f9a1d749f4ed1d54936aad0c35d4f5e",
+                  "descriptorSha256": "7e10db01773592e1dc6ab8ea03be73009d7c42833bba306439e99778475a35f4",
                   "executable": true,
                   "identity": "s.stdio.avi.standard.1-0.codec.native-document.v1",
                   "kind": "codec",
@@ -13503,7 +13614,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "1cfcefad347c5e644def6aa3888d30ca843d280c7133b166a31b32b1b69f3335",
+                  "descriptorSha256": "c63c6c2d82bc46151f3883187fb7ee5cfc2949cce0bb633fb0a63ade871c3fe1",
                   "executable": true,
                   "identity": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
                   "kind": "codec",
@@ -13886,7 +13997,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "28199dd71115752d9224acd4497236f59a12076e6f67c15d893823f269b33e58",
+                  "descriptorSha256": "27659c72fdac9012bf09f9f7af08a31c1e09848cb0024283c6d44f3749b64e41",
                   "executable": true,
                   "identity": "s.stdio.csv.standard.rfc4180.codec.native-document.v1",
                   "kind": "codec",
@@ -14111,7 +14222,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "8b38033d79ff772ec1fcdbc9997c79e71637f24af2bcf88f5194ed0a8f8c4808",
+                  "descriptorSha256": "0062298f952390326684961651c659509b2268e126ada14d773d835b037942a7",
                   "executable": true,
                   "identity": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
                   "kind": "codec",
@@ -14362,7 +14473,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "1d306fbe915486966e72c27bc4764a6d1727405168ff23f0cc7899539daeb778",
+                  "descriptorSha256": "b48bdc8f2737f7d565e5a38e942abc43573e32b4f767f709c190c8899e035b08",
                   "executable": true,
                   "identity": "s.stdio.docx.standard.ecma-376.codec.native-document.v1",
                   "kind": "codec",
@@ -14662,7 +14773,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "15ed3cdb2dec68c2c1b2240db91a642968544ec465226f4c4327e33b186cd335",
+                  "descriptorSha256": "79d72f3117620e9edcc0c0516695e65d5ea8776bdc8580af8defac30308ba5c4",
                   "executable": true,
                   "identity": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
                   "kind": "codec",
@@ -14870,7 +14981,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "1e98c2c85a9fb54e3c4f9f697752123cb363301c03041f1b9c249940a15a22d9",
+                  "descriptorSha256": "4a79dfa5e0ac023b80b7f33bb1cdb3ec8330d51cdf919ffba9cc3caaf504ceda",
                   "executable": true,
                   "identity": "s.stdio.dxf.standard.r12.codec.native-document.v1",
                   "kind": "codec",
@@ -16681,7 +16792,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "be7afa595a53294a5c94f2f34a5d1dc430ffcc56ab3a5718cb9738d37f2e8b33",
+                  "descriptorSha256": "dde55c75a45b407d69085c19bfcc0bef9021519dc5783543314871a1ce5e72d8",
                   "executable": true,
                   "identity": "s.stdio.jpg.standard.jfif-1-01.codec.native-document.v1",
                   "kind": "codec",
@@ -16945,7 +17056,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "fbe1d64a450e6b320d459abec1ccd0be37622018c92fa9af28590728cdc649b7",
+                  "descriptorSha256": "b93f6c5dc4ea6cd0800acdc19e4fd9912db059e31cc2237f8f71e2399863be19",
                   "executable": true,
                   "identity": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
                   "kind": "codec",
@@ -17196,7 +17307,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "e1cf7f29af75462a8efe0142d108fe825a26299e11f0687cbe7b94651fa228b8",
+                  "descriptorSha256": "cae0d33659bc8dada2ac4ad716cd3de1b30684f05d1d561870382d54e391ed92",
                   "executable": true,
                   "identity": "s.stdio.las.standard.1-0.codec.native-document.v1",
                   "kind": "codec",
@@ -17421,7 +17532,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "8d527b0a8b237c001347f7746351ff64b1ce1d8aa97372f7e0581ebc078655e4",
+                  "descriptorSha256": "9e1505b3efd799d40c7b62508e31e923ea9d907e8fee797f0d8f32425821b489",
                   "executable": true,
                   "identity": "s.stdio.md.standard.commonmark.codec.native-document.v1",
                   "kind": "codec",
@@ -17581,7 +17692,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "816f4e06dc12454baa0367672061d66bc307e119b6cb3e9ffe09bfd57f537cb1",
+                  "descriptorSha256": "c4c44d8d67a230c73c5fa2d59d74908a7d92110b251e81e647030a12ad1f49c0",
                   "executable": true,
                   "identity": "s.stdio.mp3.standard.mpeg1-layer3.codec.native-document.v1",
                   "kind": "codec",
@@ -17741,7 +17852,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "45db59832e2ba9d3b7ab9f87783f95d1adc711ec2a8f133c496a4ac347a86ab4",
+                  "descriptorSha256": "c9e89077f25539d66aea1755c31bfda59848f642cfc01c8e657c790543c6eaec",
                   "executable": true,
                   "identity": "s.stdio.mp4.standard.isobmff.codec.native-document.v1",
                   "kind": "codec",
@@ -17966,7 +18077,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2afcf7751f7693bd7bff6891bc6d7caed0ca56652fcc85d949a07a7e6c0e9e2c",
+                  "descriptorSha256": "aa5bbbf1ec6bbff8ae36a1c52841635b565a1f7505cb3d88e1fdd811feed2f92",
                   "executable": true,
                   "identity": "s.stdio.obj.standard.3-0.codec.native-document.v1",
                   "kind": "codec",
@@ -18416,7 +18527,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "0db2bc98cf03e64162079152cdebba56c2ec8ec48f6157cffe2cce75e47c5b3c",
+                  "descriptorSha256": "d83996b51eded9d311503fa094b120d2dd819d139627a668a325903b8c6f3e0a",
                   "executable": true,
                   "identity": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
                   "kind": "codec",
@@ -18777,7 +18888,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "2fc20a5cee3d7a05aadba0a44e31aabafbf18b2d5e5affa83b7701eb8e4dc8d0",
+                  "descriptorSha256": "e15420378f6735eb39ab4c1c21c3ad05625549767d8b29726b8d7601408d31f8",
                   "executable": true,
                   "identity": "s.stdio.ply.standard.1-0.codec.native-document.v1",
                   "kind": "codec",
@@ -19002,7 +19113,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "f6f7a5da245f544053ba12e639ac1387737871f96e5ccd6d02a40ea6b4d45832",
+                  "descriptorSha256": "89e14f95978cae1081ba3562002fb6109a5a2bf83ca1aa06b8820bd8a1c88076",
                   "executable": true,
                   "identity": "s.stdio.png.standard.1-2.codec.native-document.v1",
                   "kind": "codec",
@@ -19253,7 +19364,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "6f18cbf981cab8dd651a8e190be8559f6da998e75c3c84ebdabe61dc2d05b64b",
+                  "descriptorSha256": "9bbaf1e54a64ac4e701331a1a1a8ec99828d0af2e208aca22863a52650ef9d02",
                   "executable": true,
                   "identity": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
                   "kind": "codec",
@@ -19661,7 +19772,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "b904fda72806fd496d86c4bb935a6a57e864f4d68b163d2874adcd8901aba308",
+                  "descriptorSha256": "d73951674ac925819be10143b255ba93df8c029f16c3cc7562aa8bea7ac889fb",
                   "executable": true,
                   "identity": "s.stdio.step.standard.ap214.codec.native-document.v1",
                   "kind": "codec",
@@ -19964,7 +20075,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "e7f293c9f2667d3617a0ef8c2db91fe120675e0d16026bb3698db18b95efb1d2",
+                  "descriptorSha256": "37844b03b9fbd99b5c621ff255d8d783e89e2b55cdd59c8fc217fe2a23ba426a",
                   "executable": true,
                   "identity": "s.stdio.stl.standard.ascii.codec.native-document.v1",
                   "kind": "codec",
@@ -20215,7 +20326,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "d498880a8aa62d49bac163295e862111512f0a2f4d495fc54b78519ca0f49abf",
+                  "descriptorSha256": "2244db3daf963bec7bda5fe4b081030d97905db470dabaee0c197aa0d8fd9907",
                   "executable": true,
                   "identity": "s.stdio.svg.standard.1-1.codec.native-document.v1",
                   "kind": "codec",
@@ -20479,7 +20590,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "85f918dad0e7ca269bb08503142f838802e90bf4d4955230505961051f0f461c",
+                  "descriptorSha256": "ead22eea0b802de4e105bd3e4848d92ef7799bd13960674806650803583d805a",
                   "executable": true,
                   "identity": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
                   "kind": "codec",
@@ -20997,7 +21108,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "004f3f6cfe6ff6efbe2afbc5ebd88bb79cd12d4a6d4f6603a7ed16f54ee3f02c",
+                  "descriptorSha256": "dd03f01ef5af5f439b541dac6d459428e6b406086740696ed055aa68db49dd9b",
                   "executable": true,
                   "identity": "s.stdio.xlsx.standard.ecma-376.codec.native-document.v1",
                   "kind": "codec",
@@ -21261,7 +21372,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "5a52f073b143d9410cf77f5a912d2cc991c5238d8b802649522265161df287b8",
+                  "descriptorSha256": "3f7228a2b8b699607fad627f7916ed5cb87142f7eebdc04d90d519438bccd494",
                   "executable": true,
                   "identity": "s.stdio.xml.standard.1-0.codec.native-document.v1",
                   "kind": "codec",
@@ -21512,7 +21623,7 @@
                 },
                 {
                   "claims": [],
-                  "descriptorSha256": "205b9e81e0d5cbd30386cec552efcbd8a6fe8c429f64a0294b8a606f9475c2af",
+                  "descriptorSha256": "374e8fd91f0a1625c0a96ed54062f8997d2f68d98875d1f94e77af7988f7ac50",
                   "executable": true,
                   "identity": "s.stdio.zip.standard.2-0.codec.native-document.v1",
                   "kind": "codec",
@@ -21585,8 +21696,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "f616fb7670a3354f58790282bd498739fd897d320056c83c3741811826bbc93a",
-    "coreWasmSha256": "1a56be8ff206db55ab9877e90e63326abd169a9f6a3cbfc381efac3997c59786",
-    "descriptorSha256": "459a9239e6962e98ee597a17dc64e6fdcd68bc4ee0a8fea37efd3438c0f0d805"
+    "wasmSha256": "554947b85f9361b6d5bc48fb36ecd5cc16c79cd2128e2bd06c597f4cdcb59e1b",
+    "coreWasmSha256": "da654fb8b7d282e09d7c4d4935c17cb4a375ee4942d4efdd281c59fff915d2c7",
+    "descriptorSha256": "1014c500b8eea0f22a8868f2e25d62e0768d2e268175b99febb953ba924715a5"
   }
 }

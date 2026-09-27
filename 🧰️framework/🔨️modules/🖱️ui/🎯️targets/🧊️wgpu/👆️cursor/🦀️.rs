@@ -22,6 +22,7 @@ pub enum SemioCursor {
     NeswResize,
     Move,
     Crosshair,
+    CrosshairCentered,
     NotAllowed,
 }
 
@@ -173,8 +174,10 @@ pub fn semio_cursor_css(cursor: SemioCursor, dark: bool) -> &'static str {
         (SemioCursor::NeswResize, true) => "url(/🖼️assets/👆️cursor/↗️nesw-resize/🌙️dark.svg) 16 16, nesw-resize",
         (SemioCursor::Move, false) => "url(/🖼️assets/👆️cursor/🧭️move/✏️light-source.svg) 16 16, move",
         (SemioCursor::Move, true) => "url(/🖼️assets/👆️cursor/🧭️move/🌙️dark.svg) 16 16, move",
-        (SemioCursor::Crosshair, false) => "url(/🖼️assets/👆️cursor/🎯️crosshair/☀️light.svg) 16 16, crosshair",
-        (SemioCursor::Crosshair, true) => "url(/🖼️assets/👆️cursor/🎯️crosshair/🌙️dark.svg) 16 16, crosshair",
+        (SemioCursor::Crosshair, false) => "url(/🖼️assets/👆️cursor/🎯️crosshair/☀️light.svg) 0 0, crosshair",
+        (SemioCursor::Crosshair, true) => "url(/🖼️assets/👆️cursor/🎯️crosshair/🌙️dark.svg) 0 0, crosshair",
+        (SemioCursor::CrosshairCentered, false) => "url(/🖼️assets/👆️cursor/🎯️crosshair/☀️light.svg) 16 16, crosshair",
+        (SemioCursor::CrosshairCentered, true) => "url(/🖼️assets/👆️cursor/🎯️crosshair/🌙️dark.svg) 16 16, crosshair",
         (SemioCursor::NotAllowed, false) => "url(/🖼️assets/👆️cursor/🚫️not-allowed/☀️light.svg) 0 0, not-allowed",
         (SemioCursor::NotAllowed, true) => "url(/🖼️assets/👆️cursor/🚫️not-allowed/🌙️dark.svg) 0 0, not-allowed",
     }
@@ -219,7 +222,7 @@ fn winit_cursor_icon(cursor: SemioCursor) -> winit::window::CursorIcon {
         SemioCursor::NwseResize => CursorIcon::NwseResize,
         SemioCursor::NeswResize => CursorIcon::NeswResize,
         SemioCursor::Move => CursorIcon::Move,
-        SemioCursor::Crosshair => CursorIcon::Crosshair,
+        SemioCursor::Crosshair | SemioCursor::CrosshairCentered => CursorIcon::Crosshair,
         SemioCursor::NotAllowed => CursorIcon::NotAllowed,
     }
 }

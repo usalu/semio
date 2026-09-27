@@ -64,6 +64,12 @@ describe("Select", () => {
   it("mounts scoped bottom and flipped-top content at the fixture's viewport-local origin", async () => {
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(retainedSelectOriginSchema);
     expect(validate(retainedSelectOriginFixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(retainedSelectOriginFixture.row.menuHeight).toBe(
+      retainedSelectOriginFixture.row.borderWidth * 2
+      + retainedSelectOriginFixture.row.scrollBandHeight * 2
+      + retainedSelectOriginFixture.row.padding * 2
+      + (retainedSelectOriginFixture.row.lineHeight + retainedSelectOriginFixture.row.padding * 2) * retainedSelectOriginFixture.row.itemCount,
+    );
     const [originX, originY] = retainedSelectOriginFixture.viewport.origin;
     const [viewportWidth, viewportHeight] = retainedSelectOriginFixture.viewport.size;
     for (const testCase of retainedSelectOriginFixture.cases) {

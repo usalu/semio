@@ -365,17 +365,19 @@ pub use kernel_3d_scene::{
     WORLD_FRAME_BOUNDS_MARGIN, WORLD_SHADOW_FAR, WORLD_SHADOW_HALF_EXTENT, WORLD_SHADOW_LIGHT_DISTANCE, WORLD_SHADOW_MAP_SIZE, WORLD_SHADOW_NEAR,
 };
 pub use kernel_3d_scene::{
-    adaptive_orbit_camera_far, camera_grid_visible_radius, frame_projection_orbit_to_bounds, lod_grid_step_world, lod_orbit_distance_for_camera, world_projection_matched_ortho_zoom, world_projection_matched_perspective_distance,
+    adaptive_orbit_camera_far, camera_grid_visible_radius, default_projection_spec, frame_projection_orbit_to_bounds, frame_projection_orbit_to_spec_bounds, lod_grid_step_world, lod_orbit_distance_for_camera,
+    projection_spec_family, projection_spec_fov_degrees, projection_spec_matrix, projection_spec_oblique_shear, projection_spec_orientation_look, projection_spec_project_ndc, projection_spec_project_point, projection_spec_ray_from_screen, projection_spec_unproject_ndc,
+    projection_spec_view_proj, world_projection_matched_ortho_zoom, world_projection_matched_perspective_distance,
     world_projection_ortho_zoom, world_projection_view_half_extent, CameraProjection3d, WorldCardinalView, WorldProjectionOrientation, WORLD_LOD_REFERENCE_FOV_DEG, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_ORBIT_CAMERA_NEAR,
-    WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM, WORLD_PROJECTION_FRAME_PADDING,
+    SceneCurvilinear3d, WORLD_ORBIT_PARALLEL_DEFAULT_ZOOM, WORLD_PROJECTION_FRAME_PADDING,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 #[cfg(feature = "wgpu-engine")]
-pub use text::{faux_bold_offset, fetch_font_bytes, FontAtlas, TextWeight};
+pub use text::{faux_bold_offset, fetch_font_bytes, FontAtlas, TextFace, TextWeight};
 #[cfg(feature = "wgpu-engine")]
 pub use widgets::{
-    draw_icon, draw_text, draw_text_overlay, draw_text_weighted, draw_text_wrapped, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem,
+    draw_icon, draw_text, draw_text_face, draw_text_face_on, draw_text_overlay, draw_text_weighted, draw_text_wrapped, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem,
     TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
 };
 // 🔼️ The two seams a host's own press/close handling needs to make a long `Select`'s scroll

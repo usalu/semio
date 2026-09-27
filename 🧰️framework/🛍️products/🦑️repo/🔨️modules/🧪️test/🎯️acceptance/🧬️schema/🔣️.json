@@ -33,6 +33,40 @@
       }
     },
     "requirement": { "enum": ["hub", "serve", "localServe", "backends", "hubAdmin"] },
+    "outcomeId": { "type": "string", "pattern": "^[1-5]$" },
+    "planOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "$ref": "#/$defs/outcomeId" },
+        "title": { "$ref": "#/$defs/localizedText" }
+      }
+    },
+    "planProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "readyPath", "readyBoundMs", "project", "target", "args", "requires"],
+      "properties": {
+        "url": { "type": "string", "pattern": "^http://(127\\.0\\.0\\.1|localhost):\\d{2,5}/?$", "maxLength": 64 },
+        "readyPath": { "type": "string", "pattern": "^/", "maxLength": 128 },
+        "readyBoundMs": { "type": "integer", "minimum": 1000, "maximum": 7200000 },
+        "project": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "target": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "args": { "type": "array", "maxItems": 16, "items": { "type": "string", "minLength": 1, "maxLength": 256 } },
+        "env": { "type": "object", "maxProperties": 16, "additionalProperties": { "type": "string", "maxLength": 512 } },
+        "requires": { "type": "array", "uniqueItems": true, "items": { "enum": ["hub"] } }
+      }
+    },
+    "planProviders": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hub": { "$ref": "#/$defs/planProvider" },
+        "serve": { "$ref": "#/$defs/planProvider" },
+        "localServe": { "$ref": "#/$defs/planProvider" }
+      }
+    },
     "planCheck": {
       "type": "object",
       "additionalProperties": false,
@@ -65,11 +99,13 @@
     "goalPlan": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "id", "title", "steps"],
+      "required": ["schema", "id", "title", "outcomes", "steps"],
       "properties": {
         "schema": { "const": "semio.acceptance.goal-plan/v1" },
         "id": { "$ref": "#/$defs/checkId" },
         "title": { "$ref": "#/$defs/localizedText" },
+        "outcomes": { "type": "array", "minItems": 1, "maxItems": 5, "uniqueItems": true, "items": { "$ref": "#/$defs/planOutcome" } },
+        "providers": { "$ref": "#/$defs/planProviders" },
         "steps": { "type": "array", "minItems": 1, "maxItems": 32, "items": { "$ref": "#/$defs/planStep" } }
       }
     },
@@ -83,10 +119,32 @@
         "checks": { "type": "array", "items": { "$ref": "#/$defs/checkResult" } }
       }
     },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pass", "fail", "blocked", "skipped"],
+      "properties": {
+        "pass": { "type": "integer", "minimum": 0 },
+        "fail": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "summaryOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "totals", "checks"],
+      "properties": {
+        "id": { "$ref": "#/$defs/outcomeId" },
+        "status": { "$ref": "#/$defs/status" },
+        "totals": { "$ref": "#/$defs/totals" },
+        "checks": { "type": "array", "items": { "$ref": "#/$defs/checkId" } }
+      }
+    },
     "goalSummary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "plan", "hub", "serve", "localServe", "startedAt", "finishedAt", "verdict", "totals", "steps"],
+      "required": ["schema", "plan", "hub", "serve", "localServe", "startedAt", "finishedAt", "verdict", "totals", "outcomes", "steps"],
       "properties": {
         "schema": { "const": "semio.acceptance.goal-summary/v1" },
         "plan": { "$ref": "#/$defs/checkId" },
@@ -96,17 +154,8 @@
         "startedAt": { "$ref": "#/$defs/timestamp" },
         "finishedAt": { "$ref": "#/$defs/timestamp" },
         "verdict": { "$ref": "#/$defs/status" },
-        "totals": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["pass", "fail", "blocked", "skipped"],
-          "properties": {
-            "pass": { "type": "integer", "minimum": 0 },
-            "fail": { "type": "integer", "minimum": 0 },
-            "blocked": { "type": "integer", "minimum": 0 },
-            "skipped": { "type": "integer", "minimum": 0 }
-          }
-        },
+        "totals": { "$ref": "#/$defs/totals" },
+        "outcomes": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/summaryOutcome" } },
         "steps": { "type": "array", "items": { "$ref": "#/$defs/summaryStep" } }
       }
     }

@@ -72,6 +72,25 @@ mod present_stall_watch_tests {
     }
 
     #[test]
+    fn a_live_checkout_parks_the_watch_until_runnable_work_resumes() {
+        let mut watch = AppPresentStallWatch::default();
+        let mut progress = (AppPresentPhase::Render, 0, 0, None, (0, 0, 0), 0, AppPresentInputWait::None, 0);
+        for _ in 0..APP_PRESENT_STALL_STEPS {
+            assert!(note_present_stall_signature(&mut watch, progress).is_none());
+        }
+        progress.6 = AppPresentInputWait::InteractionCheckout { site: "fixture", request: "none" };
+        for _ in 0..(APP_PRESENT_STALL_STEPS * 2) {
+            assert!(note_present_stall_signature(&mut watch, progress).is_none());
+            assert_eq!(watch.steps, 0);
+        }
+        progress.6 = AppPresentInputWait::None;
+        for _ in 0..APP_PRESENT_STALL_STEPS {
+            assert!(note_present_stall_signature(&mut watch, progress).is_none());
+        }
+        assert!(note_present_stall_signature(&mut watch, progress).is_some());
+    }
+
+    #[test]
     fn a_cursor_that_moves_after_the_ceiling_rearms_the_watchdog() {
         let mut watch = AppPresentStallWatch::default();
         let frozen: AppPresentProgress = (AppPresentPhase::Engine, 0usize, 0usize, None, (0, 0, 0), 0, AppPresentInputWait::None, 0);

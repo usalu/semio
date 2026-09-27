@@ -117,8 +117,12 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     await receiver.settleAll();
     expect(receiver.sent.map((entry) => entry.action)).toEqual(["canvasPointerMove", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
     expect(receiver.sent[3]!.args).toMatchObject({ x: 30, y: 40, cancelled: true, shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
-    // 🔁️ A second cancel after the gesture closed is a no-op, and a fresh press opens a new gesture.
+    // 🔁️ The cancelled pointer's stale continuation and a duplicate cancel are no-ops, and a fresh press opens a new gesture.
+    live.pointerMove(50, 60);
+    live.pointerUp(50, 60, { shift: false, ctrl: false, meta: false, alt: false });
     live.pointerCancel();
+    await receiver.settleAll();
+    expect(receiver.sent.length).toBe(4);
     live.pointerDown(1, 1, 0, false, { shift: false, ctrl: false, meta: false, alt: false });
     await receiver.settleAll();
     expect(receiver.sent.length).toBe(5);
@@ -134,9 +138,9 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     };
     try {
       const lane = createCanvasPointerGestureLane(receiver.dispatch, () => ({ width: 640, height: 480 }));
-      lane.begin(1, [0, 0], { button: 0, shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
-      lane.offer([1, 1]);
-      lane.end([2, 2], { shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
+      lane.begin(1, [0, 0, {shift:false,ctrl:false,meta:false,alt:false}], { button: 0, shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
+      lane.offer([1, 1, {shift:false,ctrl:false,meta:false,alt:false}]);
+      lane.end([2, 2, {shift:false,ctrl:false,meta:false,alt:false}], { shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
       expect(lane.inFlight()).toBe(true);
       await receiver.rejectOne();
       expect(warned.length).toBe(1);
@@ -166,3 +170,19 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     expect(receiver.sent[0]!.args).toMatchObject({ x: 200, y: 200 });
   });
 });
+
+ it("retains move modifiers at sampling time across delayed dispatch and release", async () => {
+    const receiver = manualReceiver();
+    const live = session(receiver.dispatch);
+    const keys = { shift: true, alt: true, ctrl: false, meta: false };
+    live.pointerDown(0, 0, 0, false);
+    live.pointerMove(10, 20, keys);
+    keys.shift = false;
+    keys.alt = false;
+    live.pointerUp(10, 20, keys);
+    live.pointerMove(30, 40, keys);
+    await receiver.settleAll();
+    expect(receiver.sent[1]!.args).toMatchObject({ x: 10, y: 20, shift: true, alt: true, samples: [[10,20]] });
+    expect(receiver.sent[2]!.args).toMatchObject({ shift: false, alt: false, cancelled: false });
+    expect(receiver.sent[3]!.args).toMatchObject({ x: 30, y: 40, shift: false, alt: false });
+  });

@@ -406,9 +406,35 @@ pub fn rgba_to_text(color: &Option<[f32; 4]>) -> String {
     color.map(|channels| channels.iter().map(|channel| channel.to_string()).collect::<Vec<_>>().join(", ")).unwrap_or_default()
 }
 
-/// 🎨️ Parses a comma-separated `r, g, b, a` text field value back into an RGBA color, or `None` if it
-/// does not have exactly four numeric components.
+fn color_channel(value: f32) -> u8 {
+    (value.clamp(0.0, 1.0) * 255.0).round() as u8
+}
+
+/// 🎨️ `#rrggbb` for a color input. An absent color is black so the picker still has a value.
+pub fn rgba_to_hex(color: &Option<[f32; 4]>) -> String {
+    let [red, green, blue, _] = color.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+    format!("#{:02x}{:02x}{:02x}", color_channel(red), color_channel(green), color_channel(blue))
+}
+
+fn hex_byte(text: &str) -> Option<u8> {
+    u8::from_str_radix(text, 16).ok()
+}
+
+/// 🎨️ Parses `r, g, b, a` or `#rgb` / `#rrggbb` / `#rrggbbaa` into an RGBA color.
 pub fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
+    let text = text.trim();
+    if let Some(hex) = text.strip_prefix('#') {
+        let (red, green, blue, alpha) = match hex.len() {
+            3 => {
+                let chars: Vec<char> = hex.chars().collect();
+                (hex_byte(&format!("{}{}", chars[0], chars[0]))?, hex_byte(&format!("{}{}", chars[1], chars[1]))?, hex_byte(&format!("{}{}", chars[2], chars[2]))?, 255)
+            }
+            6 => (hex_byte(&hex[0..2])?, hex_byte(&hex[2..4])?, hex_byte(&hex[4..6])?, 255),
+            8 => (hex_byte(&hex[0..2])?, hex_byte(&hex[2..4])?, hex_byte(&hex[4..6])?, hex_byte(&hex[6..8])?),
+            _ => return None,
+        };
+        return Some([red as f32 / 255.0, green as f32 / 255.0, blue as f32 / 255.0, alpha as f32 / 255.0]);
+    }
     let parts: Vec<f32> = text.split(',').filter_map(|part| part.trim().parse::<f32>().ok()).collect();
     (parts.len() == 4).then(|| [parts[0], parts[1], parts[2], parts[3]])
 }

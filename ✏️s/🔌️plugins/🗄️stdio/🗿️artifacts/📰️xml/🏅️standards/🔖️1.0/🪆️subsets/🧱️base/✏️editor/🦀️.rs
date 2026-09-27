@@ -180,7 +180,10 @@ fn xml_any_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Re
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(XmlAnyEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        XML_ANY_KIT_ACTION_ID => Ok(XmlAnyEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
+        XML_ANY_KIT_ACTION_ID => Ok(XmlAnyEditorCommand::SetNode {
+            node_id: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "nodeId")?,
+            value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")?,
+        }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.xml.unhandled-action"),
@@ -509,11 +512,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XmlAnyE
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| XmlMutation::SetSnapshot(
             crate::schema::mutations::set_snapshot::SetSnapshot { snapshot },
         ))

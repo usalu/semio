@@ -1,0 +1,13 @@
+[package]
+name = "av2-rs-check"
+version = "0.0.0"
+edition = "2021"
+
+[workspace]
+
+[lib]
+path = "src/lib.rs"
+
+[dev-dependencies]
+serde_json = "1"
+semio-framework-hash = { path = "hash" }

@@ -669,13 +669,13 @@ pub mod examples {
     }
     #[path = "."]
     pub mod compliant {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗compliant/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏗️compliant/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod noncompliant {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚨noncompliant/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚨️noncompliant/🦀️.rs"]
         mod component;
         pub use component::*;
     }

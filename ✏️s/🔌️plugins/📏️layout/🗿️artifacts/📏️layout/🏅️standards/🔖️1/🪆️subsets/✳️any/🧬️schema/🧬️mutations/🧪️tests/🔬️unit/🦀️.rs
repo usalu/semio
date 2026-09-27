@@ -332,7 +332,7 @@ async fn edit_story_and_create_link_obey_the_inverse_law() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(LayoutMutation::kinds().len(), 26, "25 verbs plus rotate-frame");
+    assert_eq!(LayoutMutation::kinds().len(), 28, "25 verbs plus rotate-frame, update-grid and set-frame-flags");
     let mutation = LayoutMutation::RenameLayout(rename_layout::RenameLayout { new_name: "x".into() });
     assert_eq!(mutation.semantics().kind, "rename-layout");
     assert_eq!(mutation.semantics().record, "RenamedLayout");

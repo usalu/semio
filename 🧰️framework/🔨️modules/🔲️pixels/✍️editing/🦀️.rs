@@ -16,6 +16,15 @@ pub struct PixelBrush {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct PixelAlphaBrush {
+    pub points: Vec<[f64; 2]>,
+    pub size: f64,
+    pub opacity: f64,
+    pub hardness: f64,
+    pub alpha: u8,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum PixelOperation {
     Invert,
     Grayscale,
@@ -36,6 +45,8 @@ pub enum PixelOperation {
     Crop { x: u32, y: u32, width: u32, height: u32 },
     Fill(PixelColor),
     Stroke(PixelBrush),
+    AlphaStroke(PixelAlphaBrush),
+    AlphaFill { alpha: u8, opacity: f64 },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -137,6 +148,14 @@ fn weighted_sample(image: &RasterImage, x: f64, y: f64) -> PixelColor {
 }
 
 impl PixelOperation {
+    fn stroke(&self) -> Option<(&[[f64;2]], f64, f64, f64)> {
+        match self {
+            Self::Stroke(brush)=>Some((&brush.points,brush.size,brush.opacity,brush.hardness)),
+            Self::AlphaStroke(brush)=>Some((&brush.points,brush.size,brush.opacity,brush.hardness)),
+            _=>None,
+        }
+    }
+
     fn extent(&self, source: &RasterImage) -> (u32, u32) {
         match self {
             Self::RotateClockwise | Self::RotateCounterclockwise => (source.height, source.width),
@@ -147,13 +166,14 @@ impl PixelOperation {
 
     fn validate(&self, source: &RasterImage, selected: bool) -> Result<(), PixelEditError> {
         let finite_range = |value: f64, min: f64, max: f64| value.is_finite() && value >= min && value <= max;
-        if let Self::Stroke(brush) = self {
-            if !(1..=2048).contains(&brush.points.len()) || !brush.points.iter().flatten().all(|p| p.is_finite())
-                || !finite_range(brush.size, 0.1, 4096.0) || !finite_range(brush.opacity, 0.0, 1.0) || !finite_range(brush.hardness, 0.0, 1.0) {
+        if let Some((points,size,opacity,hardness)) = self.stroke() {
+            if !(1..=2048).contains(&points.len()) || !points.iter().flatten().all(|p| p.is_finite())
+                || !finite_range(size, 0.1, 4096.0) || !finite_range(opacity, 0.0, 1.0) || !finite_range(hardness, 0.0, 1.0) {
                 return Err(PixelEditError::Invalid("Invalid brush stroke"));
             }
         }
         let valid = match *self {
+            Self::AlphaFill {opacity,..} => finite_range(opacity,0.0,1.0),
             Self::Brightness(v) | Self::Contrast(v) | Self::Saturation(v) => finite_range(v, -1.0, 1.0),
             Self::Gamma(v) => finite_range(v, 0.01, 10.0),
             Self::Threshold(v) => finite_range(v, 0.0, 255.0),
@@ -176,12 +196,12 @@ impl PixelOperation {
 
     fn filtered(&self, image: &RasterImage, x: u32, y: u32, selection_coverage: f64, stroke_segments: &[usize]) -> PixelColor {
         let original = sample(image, x.into(), y.into());
-        if let Self::Stroke(brush) = self {
-            let radius = brush.size / 2.0;
+        if let Some((points,size,opacity,hardness)) = self.stroke() {
+            let radius = size / 2.0;
             let mut coverage = 0.0_f64;
             for &index in stroke_segments {
-                let to = &brush.points[index];
-                let from = brush.points[index.saturating_sub(1)];
+                let to = &points[index];
+                let from = points[index.saturating_sub(1)];
                 let (px, py) = (f64::from(x) + 0.5, f64::from(y) + 0.5);
                 if px < from[0].min(to[0]) - radius || px > from[0].max(to[0]) + radius || py < from[1].min(to[1]) - radius || py > from[1].max(to[1]) + radius {
                     continue;
@@ -190,12 +210,16 @@ impl PixelOperation {
                 let length = dx * dx + dy * dy;
                 let t = if length == 0.0 { 0.0 } else { ((px - from[0]) * dx + (py - from[1]) * dy) / length }.clamp(0.0, 1.0);
                 let distance = (px - from[0] - t * dx).hypot(py - from[1] - t * dy);
-                let core = radius * brush.hardness;
+                let core = radius * hardness;
                 let amount = if distance > radius { 0 } else if distance <= core { 255 } else { byte(255.0 * (radius - distance) / (radius - core)) };
                 coverage = coverage.max(f64::from(amount) / 255.0);
             }
-            let opacity = coverage * brush.opacity * selection_coverage;
+            let opacity = coverage * opacity * selection_coverage;
             if opacity == 0.0 { return original; }
+            if let Self::AlphaStroke(brush)=self {
+                return [original[0],original[1],original[2],byte(f64::from(original[3])+(f64::from(brush.alpha)-f64::from(original[3]))*opacity)];
+            }
+            let Self::Stroke(brush)=self else {unreachable!()};
             if brush.erase {
                 let alpha = byte(f64::from(original[3]) * (1.0 - opacity));
                 return if alpha > 0 { [original[0], original[1], original[2], alpha] } else { [0; 4] };
@@ -204,6 +228,7 @@ impl PixelOperation {
         }
         match *self {
             Self::Clear => return [0; 4],
+            Self::AlphaFill {alpha,opacity} => return [original[0],original[1],original[2],byte(f64::from(original[3])+(f64::from(alpha)-f64::from(original[3]))*opacity*selection_coverage)],
             Self::Fill(color) => return source_over(original, color, selection_coverage),
             Self::FlipHorizontal => return sample(image, i64::from(image.width) - i64::from(x) - 1, y.into()),
             Self::FlipVertical => return sample(image, x.into(), i64::from(image.height) - i64::from(y) - 1),
@@ -280,11 +305,11 @@ impl PixelEditJob {
         }
         operation.validate(&source, selection.is_some())?;
         let (width, height) = operation.extent(&source);
-        Ok(Self { source, output: RasterImage::new(width, height), operation, selection, cursor: 0, cancelled: false, stroke_segments: Vec::new() })
+        Ok(Self { source, output: RasterImage {width,height,pixels:Vec::with_capacity(width as usize*height as usize*4)}, operation, selection, cursor: 0, cancelled: false, stroke_segments: Vec::new() })
     }
 
     pub fn recommended_grant(&self) -> usize {
-        match self.operation { PixelOperation::Blur(_) => 128, PixelOperation::Stroke(_) => 256, _ => 4096 }
+        match self.operation { PixelOperation::Blur(_) => 128, PixelOperation::Stroke(_) | PixelOperation::AlphaStroke(_) => 256, _ => 4096 }
     }
 
     pub fn advance(&mut self, pixel_budget: usize) -> Result<PixelProgress, PixelEditError> {
@@ -294,18 +319,19 @@ impl PixelEditJob {
         if !(1..=65536).contains(&pixel_budget) {
             return Err(PixelEditError::Invalid("Pixel budget must be 1–65536"));
         }
-        let total = self.output.pixels.len() / 4;
+        let total = self.output.width as usize * self.output.height as usize;
         let end = total.min(self.cursor + pixel_budget);
+        self.output.pixels.resize(end*4,0);
         while self.cursor < end {
             let x = self.cursor % self.output.width as usize;
             let y = self.cursor / self.output.width as usize;
             if x == 0 {
-                if let PixelOperation::Stroke(brush) = &self.operation {
+                if let Some((points,size,..)) = self.operation.stroke() {
                     self.stroke_segments.clear();
                     let py = y as f64 + 0.5;
-                    for (index, to) in brush.points.iter().enumerate() {
-                        let from = brush.points[index.saturating_sub(1)];
-                        if py >= from[1].min(to[1]) - brush.size / 2.0 && py <= from[1].max(to[1]) + brush.size / 2.0 {
+                    for (index, to) in points.iter().enumerate() {
+                        let from = points[index.saturating_sub(1)];
+                        if py >= from[1].min(to[1]) - size / 2.0 && py <= from[1].max(to[1]) + size / 2.0 {
                             self.stroke_segments.push(index);
                         }
                     }
@@ -314,7 +340,7 @@ impl PixelEditJob {
             let coverage = f64::from(self.selection.as_ref().map_or(255, |mask| mask[self.cursor])) / 255.0;
             let before = sample(&self.source, x as i64, y as i64);
             let after = if coverage == 0.0 { before } else { self.operation.filtered(&self.source, x as u32, y as u32, coverage, &self.stroke_segments) };
-            let mix = if matches!(self.operation, PixelOperation::Fill(_) | PixelOperation::Stroke(_)) { 1.0 } else { coverage };
+            let mix = if matches!(self.operation, PixelOperation::Fill(_) | PixelOperation::Stroke(_) | PixelOperation::AlphaStroke(_) | PixelOperation::AlphaFill {..}) { 1.0 } else { coverage };
             let target = &mut self.output.pixels[self.cursor * 4..self.cursor * 4 + 4];
             for c in 0..4 {
                 target[c] = byte(f64::from(before[c]) + (f64::from(after[c]) - f64::from(before[c])) * mix);
@@ -341,7 +367,7 @@ impl PixelEditJob {
         if self.cancelled {
             return Err(PixelEditError::Cancelled);
         }
-        if self.cursor != self.output.pixels.len() / 4 {
+        if self.cursor != self.output.width as usize * self.output.height as usize {
             return Err(PixelEditError::Incomplete);
         }
         Ok(&self.output)

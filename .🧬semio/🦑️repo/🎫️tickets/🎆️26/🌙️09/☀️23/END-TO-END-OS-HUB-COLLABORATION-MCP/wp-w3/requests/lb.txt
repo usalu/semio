@@ -4,3 +4,6 @@ semio-s-plugin-gis, semio-s-artifact-gis-gismap, semio-s-artifact-gis-gisterrain
 semio-s-plugin-vcs, semio-s-artifact-vcs-vcs  D1: 5 descriptions + noMutation → Chrome
 semio-s-plugin-demonstrator  code unchanged; embeds the gis panes whose descriptions/audiences changed → re-describe
 semio-s-plugin-energy, semio-s-artifact-energy-model  T12 energy drift: dead `if false { return Vec::new(); }` removed from the delete-fenestration / delete-shading-surface inverses
+# Landing window 2 (27 14:10)
+semio-s-artifact-stdio-semio  lb-p1: BrepCurve/BrepCurve2/BrepSurface `rename_all_fields = "camelCase"` — brep curve/surface member names on the wire become the schema's camelCase (radiusMajor, controlPoints, halfAngle, xAxis …); stdio re-describe + release
+semio-s-plugin-stdio  lb-p4: test-only (new `shipped_fleet` integration test, `editor_catalog` required-features, dev-dependency feature) — no guest code change beyond lb-p3's shipped/library split (applied by the coordinator 12:1x)

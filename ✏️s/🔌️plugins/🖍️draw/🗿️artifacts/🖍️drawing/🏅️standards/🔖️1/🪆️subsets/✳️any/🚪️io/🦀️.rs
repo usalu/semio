@@ -16,30 +16,6 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{
     DrawCanvas as SemioDrawCanvas, DrawLayer as SemioDrawLayer, DrawNode as SemioDrawNode, DrawStyle as SemioDrawStyle, PathSegment as SemioPathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
 };
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::write_svg_xml;
-use semio_s_artifact_stdio_svg::SvgSnapshot;
-
-/// 🕳️ stdio_gap: `s.stdio.semio/v1/drawing` bridges only to svg/dxf/pdf (per the master plan's
-/// format lattice — dwg lives under `s.stdio.semio/v1/cad`, standard `ac1024`, a different hub
-/// entirely). There is no route from `SemioDrawingSnapshot` to DWG bytes today, so this plugin's
-/// former ad-hoc `drawing_document_json_to_dwg_bytes`/`drawing_document_json_from_dwg` pair was deleted
-/// outright rather than hand-rolling DWG again — see `w5b-w-report.md` `stdio_gaps`.
-const SEMIO_DRAWING_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework::StandardId("v1"), subset: semio_framework::SubsetId("drawing") };
-const SVG_DIALECT: semio_framework::Dialect = semio_framework::Dialect { artifact_kind: "s.stdio.svg", standard: semio_framework::StandardId("1.1"), subset: semio_framework::SubsetId::ANY };
-
-/// 📌️ W5b-close fix: registers stdio's semio/drawing subset composer (svg/dxf/pdf io entries)
-/// into the process-global `io` registry exactly once, so `io_dispatch` below resolves the
-/// drawing→svg bridge regardless of host-boot ordering — a bare `cargo test` process never runs
-/// the plugin-host boot path that would normally call this. Mirrors 🗒️note's/📏️layout's/🌍️gis's
-/// own `ensure_..._registered()` helper (w5b-verify-report.md §6b flagged drawing as the one sibling
-/// that had not added this, causing `drawing_document_to_svg_bridges_shape_text_image_and_gradient_nodes_through_semio_drawing`
-/// and `drawing_io_declares_vector_out_and_export_media_covers_both_ports` to fail with "no composer
-/// registered").
-fn ensure_semio_drawing_bridge_registered() {
-    static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::register);
-}
-
 fn resolve_drawing_document_artboard(doc: &DrawingSnapshot) -> (u32, u32) {
     if let Some(artboard) = &doc.artboard {
         return (artboard.width.max(1.0).round() as u32, artboard.height.max(1.0).round() as u32);
@@ -122,9 +98,13 @@ fn decode_data_uri_bytes(uri: &str) -> Option<(String, Vec<u8>)> {
 /// the pre-migration SVG renderer's own `<g transform="matrix(...)"><path/></g>` shape).
 fn semio_drawing_node_from_scene_node(node: &DrawingSceneNode, styles: &mut Vec<SemioDrawStyle>) -> Option<SemioDrawNode> {
     let style = intern_semio_style(styles, node);
-    let leaf = if let Some(text) = &node.text {
-        SemioDrawNode::Text { value: text.content.clone(), at: SemioPoint2 { x: 0.0, y: text.size }, style }
-    } else if let Some(image) = &node.image {
+    if let Some(text) = &node.text {
+        let children = semio_s_2d::text::drawing_text_lines(&text.content).enumerate().filter(|(_, line)| !line.is_empty()).map(|(index, line)| {
+            SemioDrawNode::Text { value: line.to_owned(), at: SemioPoint2 { x: 0.0, y: text.size + index as f64 * text.size * semio_s_2d::text::DRAWING_TEXT_LINE_HEIGHT }, style: style.clone() }
+        }).collect();
+        return Some(SemioDrawNode::Group { transform: matrix_to_semio_transform(node.transform), children });
+    }
+    let leaf = if let Some(image) = &node.image {
         let (mime, bytes) = decode_data_uri_bytes(&image.src).unwrap_or_default();
         SemioDrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: image.width, height: image.height, mime, bytes }
     } else {
@@ -152,30 +132,10 @@ pub fn drawing_document_to_semio_drawing(doc: &DrawingSnapshot) -> SemioDrawingS
     }
 }
 
-/// @emoji 🌉️ Serializes a drawing document to SVG markup and raster dimensions by building a real
-/// [SemioDrawingSnapshot] and dispatching through stdio's real semio/drawing↔svg bridge
-/// (`io_dispatch`) — replaces the deleted hand-rolled SVG string builder.
+/// 🎨️ Exports the authored scene through the typed SVG serializer.
 pub fn drawing_document_to_svg(doc: &DrawingSnapshot) -> Result<(String, u32, u32), String> {
-    ensure_semio_drawing_bridge_registered();
-    let (width, height) = resolve_drawing_document_artboard(doc);
-    let semio_drawing = drawing_document_to_semio_drawing(doc);
-    let key = semio_framework::IoKey {
-        artifact_kind: SEMIO_DRAWING_DIALECT.artifact_kind.into(),
-        standard: SEMIO_DRAWING_DIALECT.standard.0.into(),
-        subset: SEMIO_DRAWING_DIALECT.subset.0.into(),
-        direction: semio_framework::IoDirection::Export,
-        format_kind: SVG_DIALECT.artifact_kind.into(),
-        format_standard: SVG_DIALECT.standard.0.into(),
-        format_subset: SVG_DIALECT.subset.0.into(),
-    };
-    let sources = [semio_framework::ErasedComposeSource { dialect: SEMIO_DRAWING_DIALECT, payload: semio_framework::IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&semio_drawing)) }];
-    let composed = semio_framework::resolve_ready(semio_framework::io_dispatch(&key, &sources)).map_err(|error| error.message)?;
-    let bytes = match composed.payload {
-        semio_framework::IoPayload::Binary(bytes) => bytes,
-        semio_framework::IoPayload::Text(text) => text.into_bytes(),
-    };
-    let svg = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
-    Ok((write_svg_xml(&svg.doc), width, height))
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
+    export::svg::v1_1::any::drawing_document_to_svg(doc)
 }
 
 pub fn drawing_document_json_to_svg(value: &dsl::DslValue) -> Result<(String, u32, u32), String> {

@@ -1,0 +1,65 @@
+{
+  "fontconfig": {
+    "aliases": {
+      "sans-serif": ["Noto Sans", "Noto Color Emoji"],
+      "serif": ["Noto Serif", "Noto Color Emoji"],
+      "monospace": ["Noto Sans Mono", "Noto Color Emoji"]
+    },
+    "emojiFamily": "Noto Color Emoji"
+  },
+  "architectures": [
+    { "arch": "x64", "debian": "amd64", "f3d": "x86_64", "gk": "amd64" },
+    { "arch": "arm64", "debian": "arm64", "f3d": "arm64", "gk": "arm64" },
+    { "arch": "ia32", "debian": null, "f3d": null, "gk": "386" },
+    { "arch": "s390x", "debian": null, "f3d": null, "gk": null }
+  ],
+  "editorOrder": [
+    { "env": {}, "order": ["antigravity", "windsurf", "cursor", "code-insiders", "code"] },
+    { "env": { "TERM_PROGRAM": "vscode" }, "order": ["code", "code-insiders", "antigravity", "windsurf", "cursor"] },
+    { "env": { "CURSOR_IPC_HOOK_CLI": "/tmp/vscode-ipc-fixture.sock" }, "order": ["cursor", "antigravity", "windsurf", "code-insiders", "code"] },
+    { "env": { "TERM_PROGRAM": "windsurf", "VSCODE_IPC_HOOK_CLI": "/tmp/vscode-ipc-fixture.sock" }, "order": ["windsurf", "code", "code-insiders", "antigravity", "cursor"] }
+  ],
+  "release": {
+    "assets": [
+      { "name": "gk_3.1.40_darwin_arm64.zip", "browser_download_url": "https://example.test/gk_darwin_arm64.zip" },
+      { "name": "gk_3.1.40_linux_amd64.zip", "browser_download_url": "https://example.test/gk_linux_amd64.zip" },
+      { "name": "gk_3.1.40_linux_arm64.zip", "browser_download_url": "https://example.test/gk_linux_arm64.zip" },
+      { "name": "F3D-3.5.0-Linux-x86_64.deb", "browser_download_url": "https://example.test/F3D-Linux-x86_64.deb" }
+    ]
+  },
+  "releaseCases": [
+    { "suffix": "linux_amd64.zip", "url": "https://example.test/gk_linux_amd64.zip" },
+    { "suffix": "linux_arm64.zip", "url": "https://example.test/gk_linux_arm64.zip" },
+    { "suffix": "Linux-x86_64.deb", "url": "https://example.test/F3D-Linux-x86_64.deb" },
+    { "suffix": "linux_riscv64.zip", "url": null }
+  ],
+  "gitKrakenInfo": [
+    { "info": "", "state": "absent" },
+    { "info": "you do not have any workspaces", "state": "absent" },
+    { "info": "Error: no workspace with name semio", "state": "absent" },
+    { "info": "Workspace: semio\n  /workspaces/semio\n", "state": "present" }
+  ],
+  "safeDirectories": {
+    "listed": ["/workspaces/semio", "/elsewhere"],
+    "required": ["/workspaces/semio", "/workspaces/semio/♻️mit-bestand/🔎️recherche", "/workspaces/semio"],
+    "missing": ["/workspaces/semio/♻️mit-bestand/🔎️recherche"]
+  },
+  "claudeAuth": [
+    { "id": "home-file-moves-into-volume", "home": { ".claude.json": "home" }, "volume": {}, "expected": { ".claude.json": "home" } },
+    { "id": "volume-wins-over-home-file", "home": { ".claude.json": "home" }, "volume": { ".claude.json": "volume" }, "expected": { ".claude.json": "volume" } },
+    { "id": "volume-only-gets-linked", "home": {}, "volume": { ".claude.json.backup": "backup" }, "expected": { ".claude.json.backup": "backup" } },
+    { "id": "nothing-to-do", "home": {}, "volume": {}, "expected": {} }
+  ],
+  "extension": {
+    "publisher": "semio-tech",
+    "name": "repo",
+    "cases": [
+      { "id": "first-cli-confirms", "build": 0, "vsix": true, "clis": ["/usr/bin/code", "/usr/bin/cursor"], "listed": { "/usr/bin/code": "semio-tech.repo\n" }, "unreachable": [], "installedVia": "/usr/bin/code", "installCalls": 1, "listCalls": 1 },
+      { "id": "unreachable-editor-then-next", "build": 0, "vsix": true, "clis": ["/usr/bin/code", "/usr/bin/cursor"], "listed": { "/usr/bin/cursor": "other.extension\nsemio-tech.repo\n" }, "unreachable": ["/usr/bin/code"], "installedVia": "/usr/bin/cursor", "installCalls": 2, "listCalls": 1 },
+      { "id": "packaging-fails", "build": 1, "vsix": true, "clis": ["/usr/bin/code"], "listed": {}, "unreachable": [], "installedVia": null, "installCalls": 0, "listCalls": 0 },
+      { "id": "never-listed", "build": 0, "vsix": true, "clis": ["/usr/bin/code"], "listed": { "/usr/bin/code": "other.extension\n" }, "unreachable": [], "installedVia": null, "installCalls": 1, "listCalls": 1 },
+      { "id": "vsix-missing", "build": 0, "vsix": false, "clis": ["/usr/bin/code"], "listed": {}, "unreachable": [], "installedVia": null, "installCalls": 0, "listCalls": 0 }
+    ]
+  },
+  "forbiddenCommands": ["git reset", "git clean", "git stash", "rm -rf /var/lib", "DETACH DELETE"]
+}

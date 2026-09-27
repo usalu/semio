@@ -16,7 +16,7 @@ export interface ParentPagePatch { name: string | null }
 export interface SpreadPatch { name: string | null }
 export interface TextStoryPatch { content: string | null }
 export interface ImageLinkPatch { path: string | null }
-export interface FramePatch { x: number | null; y: number | null; width: number | null; height: number | null; fill: [number, number, number, number] | null; stroke: [number, number, number, number] | null; wrap_mode: string | null; columns: number | null }
+export interface FramePatch { x: number | null; y: number | null; width: number | null; height: number | null; rotation: number | null; fill: [number, number, number, number] | null; stroke: [number, number, number, number] | null; wrap_mode: string | null; columns: number | null; locked: boolean | null; visible: boolean | null }
 export interface PageFrameAdded { frame: Frame; index: number | null; layer_id: string | null }
 export interface PageFramePatched { frame_id: string; patch: FramePatch }
 export interface PagePatch { name: string | null; width: number | null; height: number | null; margin_top: number | null; margin_right: number | null; margin_bottom: number | null; margin_left: number | null; columns_count: number | null; columns_gutter: number | null; frame_added: PageFrameAdded | null; frame_removed: string | null; frame_patched: PageFramePatched | null }

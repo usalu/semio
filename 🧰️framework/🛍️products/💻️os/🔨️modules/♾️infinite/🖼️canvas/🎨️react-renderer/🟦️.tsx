@@ -195,7 +195,7 @@ export interface GraphWasmSession {
   renderFrame(): void;
   detachGpu?(): void;
   pointerDown?(x: number, y: number, button: number, extend: boolean, modifiers?: CanvasInputModifiers): void;
-  pointerMove?(x: number, y: number): void;
+  pointerMove?(x: number, y: number, modifiers?: CanvasInputModifiers): void;
   pointerUp?(x: number, y: number, modifiers?: CanvasInputModifiers): void;
   /** 🚫️ The pointer left the canvas, the browser took the pointer (`pointercancel`) or capture was lost
    * mid-gesture. This is a CANCEL, never a release: {@link GraphWasmCanvas} used to map `pointerleave` to
@@ -278,7 +278,7 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       }
       if (verdict.kind !== "single") return;
       const rect = canvas.getBoundingClientRect();
-      session.pointerMove?.(ev.clientX - rect.left, ev.clientY - rect.top);
+      session.pointerMove?.(ev.clientX - rect.left, ev.clientY - rect.top, modifiersOf(ev));
       scheduler.paintNow();
     };
     const onPointerUp = (ev: PointerEvent) => {

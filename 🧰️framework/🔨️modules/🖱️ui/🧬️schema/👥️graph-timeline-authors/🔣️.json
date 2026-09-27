@@ -8,9 +8,9 @@
   "properties": {
     "schemaVersion": { "const": 1 },
     "checkpointId": { "type": "string", "minLength": 1 },
-    "avatarSize": { "const": 20.0 },
+    "avatarSize": { "const": 16.0 },
     "overlap": { "const": 8.0 },
-    "advance": { "const": 12.0 },
+    "advance": { "const": 8.0 },
     "authors": {
       "type": "array",
       "minItems": 2,

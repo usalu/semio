@@ -61,6 +61,7 @@ import {
   DOCUMENT_LINK_ACCESS_REFUSED_STATUSES,
   admitRemoteEnvelopes,
   noteAuthoredEnvelopeIds,
+  hubTransientApplyRefusalV1,
   HUB_RECONNECT_MAX_MS,
   HUB_RECONNECT_MIN_MS,
   createSocketGrantIssuerV1,
@@ -575,6 +576,10 @@ export type ArtifactState = {
   link: DocumentLink;
   /** 🔌️ Fires at the suspended link's expiry ({@link documentLinkExpiresAtMs}) and retires the child once it expired. */
   linkShortageTimer: ReturnType<typeof setTimeout> | null;
+  /** ⏳️ The hub refused a batch for a transient reason ({@link hubTransientApplyRefusalV1}): the batch went back to the front of
+   * the outbox, every later batch waits behind it, and the outbox drains one batch of at most `batchLimit` envelopes after
+   * `backoffMs` (doubled per refusal, capped). Cleared by the next `Accepted`. */
+  transientRefusal: { timer: ReturnType<typeof setTimeout> | null; backoffMs: number; batchLimit: number } | null;
   browserActorViewState: ResolvedPluginViewState | null;
   /** 🛟️ Handle for the recursive, jittered sanity-poll reschedule (finding 1) — a plain
    * `ReturnType<typeof setTimeout>`, not `setInterval`, because each tick schedules its OWN next
@@ -3991,9 +3996,11 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
         resolve();
         return;
       }
-      if (sustainedHealthReached) {
+      if (sustainedHealthReached || state.artifactRebootstrapRequired) {
         // ♻️ Resets the DISPLAY estimate to match the real reset: `reconnectForever` is about to
-        // start a brand-new `retryWithJitteredBackoff` call for the next cycle.
+        // start a brand-new `retryWithJitteredBackoff` call for the next cycle. A close this worker made
+        // to rebuild the document (`requireArtifactRebootstrap`) is no link failure either: the rebuild
+        // reconnects at once instead of inheriting the backoff of an earlier outage.
         state.reconnectDelayMs = HUB_RECONNECT_MIN_MS;
         setRemote(state, { kind: "backoff", retryInMs: 0 });
         resolve();
@@ -4014,7 +4021,7 @@ async function connectHubOnce(state: ArtifactState, binding: Extract<Persistence
  * long-healthy session from inheriting a large accumulated backoff on its next ordinary blip. */
 function connectHub(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub", dataClass: "persistedShared" }>): void {
   if (state.closed) return;
-  void reconnectForever(state.docAbort.signal, () => connectHubOnce(state, binding), HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS);
+  void reconnectForever(state.docAbort.signal, () => connectHubOnce(state, binding).catch((error: unknown) => { console.warn("[DEBUG] c13 connectHubOnce", state.config.documentId, binding.requestedSurfaceId ?? binding.installedTarget?.surface.surfaceId, String(error)); throw error; }), HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS);
 }
 
 function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane): void {
@@ -4036,9 +4043,35 @@ function documentBackboneRelayReady(state: ArtifactState): boolean {
   return state.hubActorReady && state.socket?.readyState === WebSocket.OPEN && documentBackboneAdmissionReady(state);
 }
 
+/** 📦️ Most envelopes one `Commands` batch carries while the outbox drains (after a reconnect, behind a transient refusal): the
+ * outbox goes out one bounded batch at a time, each after the previous one's `Ack`, so a queue that grew during a connection
+ * shortage never reaches the hub as one oversized batch (ticket 26/09/23 C12, run `c12short3`: a whole-outbox batch was refused
+ * `DB I/O aggregate admission exhausted` and every keystroke typed during the cut was lost). */
+const HUB_OUTBOX_BATCH_ENVELOPES = 16;
+/** ⏳️ Resend delay after a transient refusal: doubled per consecutive refusal between these bounds, jittered. */
+const HUB_TRANSIENT_REFUSAL_MIN_MS = 250;
+const HUB_TRANSIENT_REFUSAL_MAX_MS = 5_000;
+
 function flushMutationsToHubIfReady(state: ArtifactState): void {
-  if (!documentBackboneRelayReady(state) || state.outbox.length === 0) return;
-  relayMutationsToHub(state, state.outbox.splice(0));
+  if (!documentBackboneRelayReady(state) || state.outbox.length === 0 || state.pendingBatches.size > 0 || state.transientRefusal?.timer != null) return;
+  sendCommandsBatch(state, state.outbox.splice(0, state.transientRefusal?.batchLimit ?? HUB_OUTBOX_BATCH_ENVELOPES));
+}
+
+/** ⏳️ Keeps a batch the hub refused for a transient reason: its envelopes return to the front of the outbox (nothing was applied,
+ * nothing is rolled back or rebuilt), the next drain is bounded to half the refused batch and resent after a jittered backoff. */
+function resendAfterTransientRefusal(state: ArtifactState, sent: readonly MutationEnvelope[]): void {
+  const ids = new Set(sent.map((envelope) => envelope.id));
+  state.outbox = [...sent, ...state.outbox.filter((envelope) => !ids.has(envelope.id))];
+  const previous = state.transientRefusal;
+  if (previous?.timer != null) clearTimeout(previous.timer);
+  const backoffMs = Math.min(HUB_TRANSIENT_REFUSAL_MAX_MS, Math.max(HUB_TRANSIENT_REFUSAL_MIN_MS, (previous?.backoffMs ?? 0) * 2));
+  const refusal: NonNullable<ArtifactState["transientRefusal"]> = { timer: null, backoffMs, batchLimit: Math.max(1, Math.ceil(sent.length / 2)) };
+  refusal.timer = setTimeout(() => {
+    refusal.timer = null;
+    if (state.transientRefusal === refusal) flushMutationsToHubIfReady(state);
+  }, backoffMs / 2 + Math.random() * (backoffMs / 2));
+  state.transientRefusal = refusal;
+  setStatus(state, { pendingMutations: state.pendingMutations.length });
 }
 
 /** 🧺️ Builds + sends one `Commands` batch, tracking it in `pendingBatches` for {@link handleAck}.
@@ -4059,10 +4092,17 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
     rejectReadOnlyExecutionTarget(state, envelopes);
     return;
   }
-  if (!documentBackboneRelayReady(state)) {
+  if (!documentBackboneRelayReady(state) || state.outbox.length > 0 || state.transientRefusal !== null) {
     queueOutbox(state, envelopes);
+    flushMutationsToHubIfReady(state);
     return;
   }
+  sendCommandsBatch(state, envelopes);
+}
+
+/** 🧺️ Sends one `Commands` batch on the live socket and tracks it in `pendingBatches` for {@link handleAck}. */
+function sendCommandsBatch(state: ArtifactState, envelopes: readonly MutationEnvelope[]): void {
+  if (envelopes.length === 0) return;
   const batchId = state.nextBatchId;
   state.nextBatchId += 1;
   const wireEnvelopes = envelopes.map((envelope) => {
@@ -4174,14 +4214,20 @@ async function handleAck(state: ArtifactState, batchId: number, stages: readonly
     const sent = state.pendingBatches.get(batchId);
     state.pendingBatches.delete(batchId);
     if (!sent) continue;
+    const outcome = stage.Applied.outcome;
+    if (typeof outcome === "object" && "Rejected" in outcome && hubTransientApplyRefusalV1(outcome.Rejected.messages)) {
+      resendAfterTransientRefusal(state, sent);
+      continue;
+    }
     releaseDocumentBackboneOwnership(state, sent);
     const sentIds = new Set(sent.map((envelope) => envelope.id));
     state.pendingMutations = state.pendingMutations.filter((envelope) => !sentIds.has(envelope.id));
 
-    const outcome = stage.Applied.outcome;
     let ackOutcome: CommandAckOutcome;
     let reorder = false;
     if (outcome === "Accepted") {
+      if (state.transientRefusal?.timer != null) clearTimeout(state.transientRefusal.timer);
+      state.transientRefusal = null;
       ackOutcome = { kind: "accepted" };
       reorder = state.remoteFoldedOverLocal && state.pendingMutations.length === 0 && documentAwaitsBrowserActor(state);
     } else if ("Transformed" in outcome) {
@@ -4195,6 +4241,7 @@ async function handleAck(state: ArtifactState, batchId: number, stages: readonly
     emitEvent(state, { kind: "commandOutcome", batchId, outcome: ackOutcome });
     if (reorder) await requireArtifactRebootstrap(state);
   }
+  flushMutationsToHubIfReady(state);
 }
 
 function equalByteArrays(left: ArrayLike<number>, right: ArrayLike<number>): boolean {
@@ -4492,6 +4539,13 @@ function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = s
   socket?.close();
 }
 
+/** 🔁️ Rebuilds this document from the hub's authoritative state (a remote fold over pending local operations, a hub
+ * `RebootstrapRequired`): drops the local pair, frontier and resume token, closes the socket and reconnects at once with no
+ * frontier. An actor-bound document is rebuilt exactly like a first open: the hub's `Welcome` carries only its tail (the hub
+ * serves a canonical pair over the `active-checkpoint/pair` route, never on the socket), the new actor child is seeded from
+ * that route once the `Session` admits it, and the tail follows. Requiring the pair inside the `Welcome` left every such
+ * rebuild refused forever and the document empty (ticket 26/09/23 LD item 3, live on B3: 15 s cut → B's socket closed every
+ * 15–20 s). */
 async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
   state.remoteFoldedOverLocal = false;
   const owner = captureArtifactRebootstrapOwner(state);
@@ -4782,6 +4836,7 @@ async function handleHubFrame(
   if ("Welcome" in frame) {
     requeuePendingBatches(state);
     const bootstrap = frame.Welcome.bootstrap;
+    if ((bootstrap === "None" || bootstrap === "Tail") && state.artifactRebootstrapRequired && documentAwaitsBrowserActor(state)) abortArtifactRebootstrap(state);
     if (bootstrap === "None") {
       if (state.artifactRebootstrapRequired) {
         clearArtifactRebootstrapDeadline(state, state.artifactRebootstrapOwner);
@@ -7086,6 +7141,7 @@ function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId
     remoteFoldedOverLocal: false,
     link: { kind: "linked" },
     linkShortageTimer: null,
+    transientRefusal: null,
     browserActorViewState: null,
     sanityPollTimer: null,
     watchHealthy: false,
@@ -7173,6 +7229,8 @@ function closeArtifactRuntime(runtimeKey: string): void {
   dropDocumentExecutionTargetLease(state);
   state.socket?.close();
   if (state.sanityPollTimer != null) clearTimeout(state.sanityPollTimer);
+  if (state.transientRefusal?.timer != null) clearTimeout(state.transientRefusal.timer);
+  state.transientRefusal = null;
   state.channel.close();
   state.exactLocalEnvelopes = new WeakMap();
   state.pendingDocumentBackboneBytes = 0;

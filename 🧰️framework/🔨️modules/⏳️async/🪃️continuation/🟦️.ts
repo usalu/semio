@@ -14,7 +14,7 @@
  *
  * 📐️ The contract, in one line each:
  * - `delayMs <= 0` is a CONTINUATION: an unthrottled macrotask, never a timer. It runs before any
- *   timer this scheduler still holds, and a chain of them advances the wall clock by nothing.
+ *   scheduler deadline that is not yet due; a virtual chain adds no artificial clock delay.
  * - `delayMs > 0` is a DEADLINE: a real timer, but ONE host timer for the whole scheduler (armed at
  *   the earliest deadline and re-armed on drain) instead of one per request.
  * - every request is cancellable, and requests sharing a `key` coalesce to a single run that keeps
@@ -56,12 +56,18 @@ const TIMER_EPSILON_MS = 1;
 
 let sharedMacrotaskPost: ((run: () => void) => void) | null = null;
 
-/** 📮️ The process-wide unthrottled macrotask port. One `MessageChannel` is enough for every
- * scheduler: a post carries no payload, it only asks the event loop for a turn. Built lazily so
+/** 📮️ The process-wide unthrottled macrotask port. Native hosts use their immediate queue so
+ * continuously posted messages cannot starve timers; browsers share one `MessageChannel`. Built lazily so
  * importing this module costs nothing, and `unref`'d where the host offers it (node keeps a started
  * port ref'd, which would hold a script open forever). */
 const macrotaskPort = (): ((run: () => void) => void) => {
   if (sharedMacrotaskPost) return sharedMacrotaskPost;
+  const host = globalThis as { process?: { versions?: { node?: string; bun?: string } }; setImmediate?: (run: () => void) => unknown };
+  const immediate = host.setImmediate;
+  if ((host.process?.versions?.node || host.process?.versions?.bun) && typeof immediate === "function") {
+    sharedMacrotaskPost = (run) => { immediate(run); };
+    return sharedMacrotaskPost;
+  }
   const channel = typeof MessageChannel === "function" ? new MessageChannel() : null;
   if (!channel) {
     sharedMacrotaskPost = (run) => {
@@ -82,7 +88,7 @@ const macrotaskPort = (): ((run: () => void) => void) => {
   return sharedMacrotaskPost;
 };
 
-/** 🌐️ The real host's ports: `MessageChannel` for continuations, `setTimeout` for deadlines. */
+/** 🌐️ The real host's ports: native immediate queue or browser messages for continuations, timers for deadlines. */
 export const defaultContinuationPorts = (): ContinuationPorts => ({
   postMacrotask: (run) => macrotaskPort()(run),
   setTimer: (run, delayMs) => setTimeout(run, delayMs),
@@ -347,7 +353,7 @@ export type ContinuationCase = Readonly<{
   expectedCompletionMs: number;
 }>;
 
-export type ContinuationSuite = Readonly<{ law: string; provenance: string; cases: readonly ContinuationCase[] }>;
+export type ContinuationSuite = Readonly<{ law: string; provenance: string; fairness: Readonly<{ deadlineMs: number; maximumContinuations: number; expectedDeadlineObserved: boolean }>; cases: readonly ContinuationCase[] }>;
 
 export type ContinuationCaseRun = Readonly<{ order: readonly string[]; completionMs: number }>;
 

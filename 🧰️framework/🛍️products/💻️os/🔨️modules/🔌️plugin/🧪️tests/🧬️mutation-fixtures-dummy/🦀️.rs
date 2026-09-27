@@ -5,8 +5,8 @@ pub(crate) use mutations::{DummyMutation, SetDummyCount};
 // 🧪️ Proves each `artifact_app_laws` primitive against a minimal dummy `ArtifactApp` before any real app
 // adopts them.
 use crate::app::artifact_app_laws::{
-    assert_registered_ingest_idempotent, assert_registered_ingest_idempotent_with_members, assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members, assert_undo_redo_round_trip,
-    close_registered_fixture_app, meta, new_app, new_registered_app,
+    assert_registered_ingest_idempotent, assert_registered_ingest_idempotent_with_members, assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members, assert_undo_redo_round_trip, close_registered_fixture_app,
+    meta, new_app, new_registered_app,
 };
 use crate::app::{
     built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
@@ -423,13 +423,6 @@ impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
 /// threaded through every rung and not just accepted at the signature.
 #[semio_framework_async_macros::async_test]
 async fn registered_laws_accept_an_explicit_member_roster() {
-    assert_two_registered_instances_converge_with_members::<DummyApp, DummyMembers, i32, _, _>(
-        "mem://testkit-converge-members",
-        dummy_manifest,
-        DummyCommand::Increment,
-        DummyCommand::Increment,
-        |app| app.snapshot().unwrap().count,
-    )
-    .await;
+    assert_two_registered_instances_converge_with_members::<DummyApp, DummyMembers, i32, _, _>("mem://testkit-converge-members", dummy_manifest, DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
     assert_registered_ingest_idempotent_with_members::<DummyApp, DummyMembers, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
 }

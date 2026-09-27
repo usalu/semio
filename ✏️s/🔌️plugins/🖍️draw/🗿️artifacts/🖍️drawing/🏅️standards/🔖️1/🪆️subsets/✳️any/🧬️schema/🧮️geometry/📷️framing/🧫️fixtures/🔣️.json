@@ -241,9 +241,9 @@
       ],
       "expected": [
         0,
-        -10,
+        0,
         24,
-        2
+        12
       ]
     },
     {
@@ -451,6 +451,36 @@
         -10,
         20,
         40
+      ]
+    },
+    {
+      "name": "multiline-text-rotated",
+      "nodes": [
+        {
+          "id": "shape",
+          "transform": [
+            0,
+            2,
+            -3,
+            0,
+            100,
+            200
+          ],
+          "segments": [],
+          "opacity": 1,
+          "blendMode": "normal",
+          "visible": true,
+          "text": {
+            "content": "A\r\n\r\n🌍",
+            "size": 10
+          }
+        }
+      ],
+      "expected": [
+        -8,
+        200,
+        100,
+        212
       ]
     }
   ]

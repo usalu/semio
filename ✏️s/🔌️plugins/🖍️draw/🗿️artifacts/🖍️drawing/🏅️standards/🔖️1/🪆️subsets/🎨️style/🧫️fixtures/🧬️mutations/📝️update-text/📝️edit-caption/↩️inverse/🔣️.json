@@ -1,0 +1,8 @@
+[
+  {
+    "mutation": "updateText",
+    "layerId": "caption",
+    "content": "Text",
+    "size": 24
+  }
+]

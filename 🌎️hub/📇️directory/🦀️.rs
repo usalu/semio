@@ -119,6 +119,15 @@ pub mod model {
                 _ => None,
             }
         }
+
+        /// @emoji 🧢️ This role capped by `ceiling`: an author under a spectator ceiling is a spectator, and no
+        /// ceiling ever raises a spectator.
+        pub fn within(self, ceiling: SpaceRole) -> SpaceRole {
+            match (self, ceiling) {
+                (SpaceRole::Author, SpaceRole::Author) => SpaceRole::Author,
+                _ => SpaceRole::Spectator,
+            }
+        }
     }
 
     #[derive(Clone, Debug, PartialEq)]
@@ -183,6 +192,44 @@ pub mod model {
         pub authorization_generation: u64,
         pub device_instance_id: String,
         pub session_kind: AuthSessionKind,
+    }
+
+    impl AuthSessionRecord {
+        /// @emoji 🎚️ Who this session asks a space-role question as ([`super::HubDirectory::principal_role`]).
+        pub fn principal(&self) -> DirectoryPrincipalV1<'_> {
+            DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
+        }
+    }
+
+    /// @emoji 🎚️ The authenticated principal of one space-role question: the session's account, its kind and its
+    /// device instance — for an [`AuthSessionKind::Agent`] session, the id of the delegation it was minted from.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct DirectoryPrincipalV1<'a> {
+        pub user_id: &'a str,
+        pub session_kind: AuthSessionKind,
+        pub device_instance_id: &'a str,
+    }
+
+    /// @emoji 🧢️ What one session caps its account's membership roles at ([`super::HubDirectory::principal_ceiling`]).
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum DirectoryPrincipalCeilingV1 {
+        /// @emoji 🙋️ A human session: its account's membership roles, uncapped.
+        Account,
+        /// @emoji 🤖️ A live agent delegation: its one space only, at most its audience's role.
+        Delegation { space_id: String, role: SpaceRole },
+        /// @emoji 🚫️ A revoked, expired, foreign or unknown delegation: no role anywhere.
+        Nothing,
+    }
+
+    impl DirectoryPrincipalCeilingV1 {
+        /// @emoji 🧢️ `membership` in `space_id` under this ceiling.
+        pub fn cap(&self, space_id: &str, membership: Option<SpaceRole>) -> Option<SpaceRole> {
+            match self {
+                Self::Account => membership,
+                Self::Delegation { space_id: scoped, role } => membership.filter(|_| scoped == space_id).map(|membership| membership.within(*role)),
+                Self::Nothing => None,
+            }
+        }
     }
 
     /// @emoji 🎁️ A newly issued session plus its one-time plaintext capability.
@@ -387,10 +434,11 @@ pub mod model {
         pub capability: super::ShareCapability,
     }
 
-    /// @emoji 🪪️ Current durable status for an id-bound session socket subject.
+    /// @emoji 🪪️ Current durable status for an id-bound session socket subject: an active binding names the session's
+    /// kind with its (ceiling-capped) role, because the declared policy grants an agent session other roles than a human's.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum SocketSessionBindingStatus {
-        Active { role: Option<SpaceRole>, expires_at_ms: i64 },
+        Active { role: Option<SpaceRole>, expires_at_ms: i64, session_kind: AuthSessionKind },
         Revoked,
         Expired,
         MembershipLost,
@@ -3138,6 +3186,16 @@ impl<S: ArtifactChunkCasStorage> crate::artifact_authority::VerifiedCheckpointPu
 }
 //#endregion 🔖️Service
 
+/// @emoji 🧢️ The one tail of every backend's `socket_session_binding`: the session's membership role in the asked space
+/// under its principal's ceiling ([`HubDirectory::principal_ceiling`]); a space it holds no role in is `MembershipLost`.
+async fn capped_socket_session_binding<D: HubDirectory>(directory: &D, record: &AuthSessionRecord, space_id: Option<&str>, membership: Option<SpaceRole>) -> DirectoryResult<SocketSessionBindingStatus> {
+    let Some(space_id) = space_id else { return Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms: record.expires_at, session_kind: record.session_kind }) };
+    Ok(match directory.principal_ceiling(record.principal()).await?.cap(space_id, membership) {
+        Some(role) => SocketSessionBindingStatus::Active { role: Some(role), expires_at_ms: record.expires_at, session_kind: record.session_kind },
+        None => SocketSessionBindingStatus::MembershipLost,
+    })
+}
+
 //#region 🔖️Trait
 /// @emoji 🗄️ Backend-agnostic os-hub identity/tenancy directory. Implemented once per backend
 /// (sqlite/postgres/neo4j); `HubState` holds an `Arc<HubDirectories>` (see `//#region 🔖️Dispatch`
@@ -3191,6 +3249,27 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// archive laws and to compute `archive-space`'s demote-every-author events.
     async fn list_members(&self, space_id: &str) -> DirectoryResult<Vec<(UserRecord, SpaceRole)>>;
     async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>>;
+    /// 🧢️ THE rule every hub authorization derives a session's space roles under: what `principal`'s session caps its
+    /// account's membership roles at. A human session is uncapped. An agent session holds at most its delegation's
+    /// audience ([`AgentAudience::space_role`]) and only in the delegation's one space — and nothing once the delegation
+    /// is revoked, expired or not its account's — whatever the delegating account may do itself.
+    async fn principal_ceiling(&self, principal: DirectoryPrincipalV1<'_>) -> DirectoryResult<DirectoryPrincipalCeilingV1> {
+        if !principal.session_kind.is_agent() {
+            return Ok(DirectoryPrincipalCeilingV1::Account);
+        }
+        Ok(match self.agent_delegation(principal.device_instance_id).await? {
+            Some(delegation) if delegation.delegating_user_id == principal.user_id && delegation.revoked_at.is_none() && delegation.expires_at > now_ms() => {
+                DirectoryPrincipalCeilingV1::Delegation { space_id: delegation.space_id, role: delegation.audience.space_role() }
+            }
+            _ => DirectoryPrincipalCeilingV1::Nothing,
+        })
+    }
+    /// 🎚️ The role `principal` holds in `space_id`: its account's membership role under its
+    /// [`Self::principal_ceiling`].
+    async fn principal_role(&self, space_id: &str, principal: DirectoryPrincipalV1<'_>) -> DirectoryResult<Option<SpaceRole>> {
+        let ceiling = self.principal_ceiling(principal).await?;
+        Ok(ceiling.cap(space_id, self.get_role(space_id, principal.user_id).await?))
+    }
     /// 🏛️ One keyset-ordered bounded administration member window (`user_id ASC`), projected to
     /// display columns inside the backend so no credential-bearing record is ever constructed.
     async fn list_space_administration_members_page(&self, space_id: &str, after_user_id: Option<&str>, limit: usize) -> DirectoryResult<Vec<SpaceAdministrationMemberRow>>;
@@ -3305,6 +3384,10 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// 🤖️ Loads one delegation by the selector half of a presented capability. The secret is never
     /// compared here — [`agent_session_preflight`] owns that law.
     async fn load_agent_delegation(&self, _selector: &str) -> DirectoryResult<Option<AgentDelegationRecord>> {
+        Err(DirectoryError::Backend("agent delegation is unavailable for this backend".into()))
+    }
+    /// 🤖️ Loads one delegation by its id — what an agent session's device instance names.
+    async fn agent_delegation(&self, _delegation_id: &str) -> DirectoryResult<Option<AgentDelegationRecord>> {
         Err(DirectoryError::Backend("agent delegation is unavailable for this backend".into()))
     }
     //#endregion
@@ -4172,6 +4255,17 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.load_agent_delegation(selector).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.load_agent_delegation(selector).await,
+        }
+    }
+
+    async fn agent_delegation(&self, delegation_id: &str) -> DirectoryResult<Option<AgentDelegationRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.agent_delegation(delegation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.agent_delegation(delegation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.agent_delegation(delegation_id).await,
         }
     }
 

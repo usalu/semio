@@ -207,10 +207,6 @@ export function mergeById<T extends { id: string }>(base: readonly T[] | undefin
   return [...merged.values()];
 }
 
-export function mergeNamedLayouts(base: readonly NamedLayout[] | undefined, extension: readonly NamedLayout[] | undefined): NamedLayout[] {
-  return mergeById(base, extension) ?? [];
-}
-
 export type PlatformSubscriber = () => void;
 
 export abstract class Store<TSnapshot> {
@@ -241,13 +237,13 @@ export interface StoragePort {
   remove(key: string): void;
 }
 
-/** @emoji 🎚️ The single persisted local-only OS shell configuration document. The four shell
- * projections share this schema and storage key, so persistence has one authority rather than
- * independent key-value stores that can drift across shell instances. */
+/** @emoji 🎚️ The single persisted local-only OS shell configuration document. The three device-local shell
+ * projections share this schema and storage key, so persistence has one authority rather than independent key-value
+ * stores that can drift across shell instances. Saved named layouts are not among them: they are the user's
+ * `setNamedLayout` preference events (`💻️os/🎚️config` UI preferences), which follow the user to every device. */
 export interface OsShellConfigSnapshot {
   readonly version: 1;
   readonly preferences: Readonly<Record<string, string>>;
-  readonly namedLayouts: Readonly<Record<string, readonly NamedLayout[]>>;
   readonly dockLayouts: {
     readonly os?: DockSkeleton;
     readonly apps: Readonly<Record<string, DockSkeleton>>;
@@ -265,7 +261,7 @@ export interface OsShellConfigSnapshot {
 const OS_SHELL_CONFIG_STORAGE_KEY = "semio.os.config";
 
 function emptyOsShellConfig(): OsShellConfigSnapshot {
-  return { version: 1, preferences: {}, namedLayouts: {}, dockLayouts: { apps: {} }, dockUi: { apps: {} }, windowPanes: { apps: {} } };
+  return { version: 1, preferences: {}, dockLayouts: { apps: {} }, dockUi: { apps: {} }, windowPanes: { apps: {} } };
 }
 
 /** @emoji 🎚️ Typed config-lane adapter over the host's storage port. Writes always re-read the
@@ -283,7 +279,7 @@ export class OsShellConfig extends Store<OsShellConfigSnapshot> {
     if (!raw) return emptyOsShellConfig();
     try {
       const parsed = JSON.parse(raw) as Partial<OsShellConfigSnapshot>;
-      if (parsed.version !== 1 || !parsed.preferences || !parsed.namedLayouts || !parsed.dockLayouts?.apps || !parsed.dockUi?.apps || !parsed.windowPanes?.apps) return emptyOsShellConfig();
+      if (parsed.version !== 1 || !parsed.preferences || !parsed.dockLayouts?.apps || !parsed.dockUi?.apps || !parsed.windowPanes?.apps) return emptyOsShellConfig();
       return parsed as OsShellConfigSnapshot;
     } catch {
       return emptyOsShellConfig();
@@ -307,57 +303,6 @@ export class OsShellConfig extends Store<OsShellConfigSnapshot> {
   reset(): void {
     this.storage.remove(OS_SHELL_CONFIG_STORAGE_KEY);
     this.notify();
-  }
-}
-
-export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
-  private layouts: NamedLayout[] = [];
-  private readonly config: OsShellConfig;
-  private readonly appId: string;
-
-  constructor(
-    appId: string,
-    storage: StoragePort,
-  ) {
-    super();
-    this.appId = appId;
-    this.config = new OsShellConfig(storage);
-    this.layouts = this.readPersisted();
-  }
-
-  getSnapshot(): readonly NamedLayout[] {
-    return this.layouts;
-  }
-
-  save(layout: NamedLayout): void {
-    const next = mergeNamedLayouts(
-      this.layouts.filter((entry) => entry.id !== layout.id),
-      [layout],
-    );
-    this.layouts = next;
-    this.persist();
-    this.notify();
-  }
-
-  remove(layoutId: string): void {
-    const next = this.layouts.filter((entry) => entry.id !== layoutId);
-    if (next.length === this.layouts.length) return;
-    this.layouts = next;
-    this.persist();
-    this.notify();
-  }
-
-  private readPersisted(): NamedLayout[] {
-    const parsed = this.config.getSnapshot().namedLayouts[this.appId];
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (entry): entry is NamedLayout =>
-        Boolean(entry) && typeof entry === "object" && typeof entry.id === "string" && typeof entry.label === "string" && entry.origin === "user" && Boolean(entry.layout),
-    );
-  }
-
-  private persist(): void {
-    this.config.update((current) => ({ ...current, namedLayouts: { ...current.namedLayouts, [this.appId]: this.layouts } }));
   }
 }
 

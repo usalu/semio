@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/wgpu-browser-cursor-presentation.json",
+  "title": "WGPU Browser Cursor Presentation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contractVersion", "cases"],
+  "properties": {
+    "contractVersion": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 30,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cursor", "themeDark", "css"],
+        "properties": {
+          "cursor": {
+            "enum": ["Default", "Pointer", "Selectable", "Foldable", "Grab", "Grabbing", "Text", "EwResize", "NsResize", "NwseResize", "NeswResize", "Move", "Crosshair", "CrosshairCentered", "NotAllowed"]
+          },
+          "themeDark": { "type": "boolean" },
+          "css": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

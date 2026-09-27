@@ -265,10 +265,7 @@ impl editing::SnapshotEditingEditor for SemioDocumentEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { SemioDocumentEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
-    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SemioDocumentMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot }))
     }
 }

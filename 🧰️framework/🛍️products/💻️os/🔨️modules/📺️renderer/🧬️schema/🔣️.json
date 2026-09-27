@@ -685,6 +685,89 @@
         "opening.surface-required"
       ]
     },
+    "SharedDocumentOpeningAccessV1": {
+      "description": "👁️ One shared-document opening access decision: the signed-in human `userId` opens a document of `spaceId` whose directory events so far are `events`, and `role` is the surface role the shell requests — the editor only when the caller's member role permits `document.write` under the hub's declared access policy (the hub issues exactly that surface for that role and refuses any other), the viewer for a Spectator, a removed member or a non-member, null when the events hold no such space.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "spaceId",
+        "userId",
+        "events",
+        "role"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "spaceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "required": [
+              "seq",
+              "spaceId",
+              "recordedAtMs",
+              "body"
+            ],
+            "properties": {
+              "seq": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "spaceId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "recordedAtMs": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "body": {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                }
+              }
+            }
+          }
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "editor",
+                "viewer"
+              ]
+            }
+          ]
+        }
+      }
+    },
     "DocumentOpeningScopeResolutionV1": {
       "description": "🧭️ One document-opening scope resolution: a reference plus the shell context it is resolved in, settling either into exact targets or into a typed refusal. Never both.",
       "type": "object",

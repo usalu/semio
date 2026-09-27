@@ -160,6 +160,7 @@ mod subject {
     fn restore_mutation(applied: &WavMutation, original: &WavSnapshot) -> WavMutation {
         match applied {
             WavMutation::SetSnapshot(_) => WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
+            WavMutation::PatchSnapshot(_) => WavMutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
             WavMutation::SetFmt(_) => WavMutation::SetFmt(mutations::set_fmt::SetFmt { fmt: original.fmt.clone() }),
             WavMutation::SetData(_) => WavMutation::SetData(mutations::set_data::SetData { data: original.data.clone() }),
             WavMutation::SetOtherChunks(_) => WavMutation::SetOtherChunks(mutations::set_other_chunks::SetOtherChunks { chunks: original.other_chunks.clone() }),

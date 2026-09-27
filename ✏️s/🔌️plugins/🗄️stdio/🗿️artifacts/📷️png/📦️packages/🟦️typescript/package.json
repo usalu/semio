@@ -23,6 +23,11 @@
     }
   },
   "dependencies": {},
+  "devDependencies": {
+    "@types/pngjs": "^6.0.5",
+    "pngjs": "^7.0.0",
+    "vitest": "^4.0.17"
+  },
   "license": "LGPL-3.0-or-later",
   "repository": {
     "type": "git",

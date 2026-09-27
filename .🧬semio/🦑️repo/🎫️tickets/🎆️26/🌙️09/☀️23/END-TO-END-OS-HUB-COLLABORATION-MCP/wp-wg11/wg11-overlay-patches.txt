@@ -1,0 +1,4 @@
+# window-3 patches proven together in the overlay (paths relative to wp-wg11/)
+../wp-wg10/patch-rebootstrap-reseed.py
+wg11-board-presence-pointer-patch.py
+wg11-text-accessible-name-patch.py

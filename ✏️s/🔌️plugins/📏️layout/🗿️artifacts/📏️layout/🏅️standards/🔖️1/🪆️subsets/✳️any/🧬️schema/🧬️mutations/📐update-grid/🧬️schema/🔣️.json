@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-grid/schema.json",
+  "title": "UpdateGrid",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "baselineGrid",
+    "baselineOffset",
+    "snapToBaseline"
+  ],
+  "properties": {
+    "baselineGrid": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "baselineOffset": {
+      "type": "number"
+    },
+    "snapToBaseline": {
+      "type": "boolean"
+    }
+  }
+}

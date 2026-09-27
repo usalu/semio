@@ -15,10 +15,11 @@ export interface PptxTransitionalMainViewModel {
   pages: PptxTransitionalMainPage[];
 }
 
-/** ✏️ `set-page` payload shape — mirrors `PptxTransitionalEditorCommand::SetPage`. Only writes
- * the FIRST text-bearing shape on the addressed slide (see the Rust window's own doc comment). */
+/** ✏️ Strict optimistic-concurrency payload for one prefilled document text draft. */
 export interface PptxTransitionalSetPage {
-  index: number;
+  page: number;
+  item: number;
+  revision: string;
   text: string;
 }
 

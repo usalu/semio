@@ -47,6 +47,7 @@ replication = { path = "../../../../../../../../../🔨️modules/📡️replica
 semio-framework-os-config = { workspace = true }
 semio-framework-os-shell = { workspace = true }
 ui_wgpu = { path = "../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
+semio-framework-ui-viewport = { path = "../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 # 🖥️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `winit_app.rs`/`os_host.rs` already
 # named `ui_host::{WindowDelegate, WindowMetrics, RedrawOutcome, should_request_redraw, PointerRegistry,
 # pointer_info_for_mouse, ...}` throughout (the `os-host` packet's own `WindowDelegate for OsHost` seam),

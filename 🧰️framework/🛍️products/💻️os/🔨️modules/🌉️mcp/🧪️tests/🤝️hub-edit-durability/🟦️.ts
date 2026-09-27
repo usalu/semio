@@ -17,7 +17,7 @@
  *   OS_MCP_HUB_BINARY    the `os-hub` executable to boot
  *   OS_MCP_HUB_DATA_DIR  a published catalog root (note in its generation) holding the human's credential (copied, never mutated)
  *   OS_MCP_HUB_PORT      loopback port (default 7852)
- *   OS_MCP_HUB_EMAIL / OS_MCP_HUB_PASSWORD  the human (defaults `user1@semio.dev`)
+ *   OS_MCP_HUB_EMAIL / OS_MCP_HUB_PASSWORD  the human (required)
  *   SEMIO_TEST_ARTIFACT_DIR  where the run copy of the data directory lives (default: tmpdir)
  */
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -25,7 +25,7 @@ import { randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { McpClientSession, mcpServerEntries, requireMcpBinary } from "../../🟦️.ts";
+import { hubCredentialFromEnv, McpClientSession, mcpServerEntries, requireMcpBinary } from "../../🟦️.ts";
 import { decodePresencePeer, decodeServerFrame, encodeClientFrame } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
 import { sealSpaceArtifactCreateV1 } from "../../../📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts";
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../📇️directory/🧬️schema/🟦️.ts";
@@ -51,8 +51,7 @@ const BINARY = process.env.OS_MCP_HUB_BINARY ?? "";
 const SOURCE = process.env.OS_MCP_HUB_DATA_DIR ?? "";
 const PORT = Number(process.env.OS_MCP_HUB_PORT ?? 7852);
 const ORIGIN = `http://127.0.0.1:${PORT}`;
-const EMAIL = process.env.OS_MCP_HUB_EMAIL ?? "user1@semio.dev";
-const PASSWORD = process.env.OS_MCP_HUB_PASSWORD ?? "gm1-local-dev-pass-1";
+const credential = hubCredentialFromEnv();
 if (!existsSync(BINARY) || !existsSync(SOURCE)) throw new Error(`hub-edit-durability-check needs OS_MCP_HUB_BINARY and OS_MCP_HUB_DATA_DIR (got ${BINARY || "<unset>"}, ${SOURCE || "<unset>"})`);
 
 type Row = { readonly step: string; readonly ok: boolean; readonly detail: string };
@@ -152,7 +151,7 @@ let current = await bootHub();
 row("0 the gate's own hub is ready", current.readiness?.status === "ready" && current.readiness?.features?.mcpWorkspace === true, `${ORIGIN} status=${current.readiness?.status} data=${dataDir}`);
 const sockets: WebSocket[] = [];
 try {
-  const signIn = await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: EMAIL, password: PASSWORD, deviceInstanceId: `hubeditdurability${randomBytes(8).toString("hex")}`, clientClass: "browser" });
+  const signIn = await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: `hubeditdurability${randomBytes(8).toString("hex")}`, clientClass: "browser" });
   const token = String(signIn.json?.token ?? "");
   row("1 the human signs in", signIn.status === 200 && token.length > 0, `HTTP ${signIn.status}`);
   const spaceName = `Hub edit durability ${randomBytes(4).toString("hex")}`;
@@ -232,7 +231,7 @@ try {
   for (const socket of sockets.splice(0)) socket.close();
   await finishLocalHub(current.run);
   current = await bootHub();
-  const reToken = String((await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: EMAIL, password: PASSWORD, deviceInstanceId: `hubeditdurability${randomBytes(8).toString("hex")}`, clientClass: "browser" })).json?.token ?? "");
+  const reToken = String((await hub("POST", "/auth/sessions", undefined, { schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: `hubeditdurability${randomBytes(8).toString("hex")}`, clientClass: "browser" })).json?.token ?? "");
   const headAfterRestart = Number((await hub("GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}`, reToken)).json?.head_seq ?? -1);
   row("9 a hub restart preserves the ledger head", current.readiness?.status === "ready" && headAfterRestart === headBeforeRestart && headAfterRestart >= fixture.lanes.length, `head_seq ${headBeforeRestart}→${headAfterRestart}`);
   const rejoin = await documentSocket(reToken, spaceId, documentId, surfaceId);

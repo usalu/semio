@@ -20,7 +20,8 @@
             "y": 0.0,
             "scaleX": 1.0,
             "scaleY": 1.0,
-            "rotation": 0.0
+            "rotation": 0.0,
+            "shear": 0
           },
           "attributes": {},
           "shapeKind": "circle",

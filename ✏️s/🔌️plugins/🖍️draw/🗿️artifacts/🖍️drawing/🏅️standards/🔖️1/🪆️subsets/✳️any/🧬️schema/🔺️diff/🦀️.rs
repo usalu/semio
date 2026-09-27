@@ -109,6 +109,8 @@ pub struct DrawingLayerPatch {
     pub trace_params_json: Option<String>,
     pub layer_json: Option<String>,
     pub path_segments: Option<Vec<crate::PathSegment>>,
+    pub text_content: Option<String>,
+    pub text_size: Option<f64>,
 }
 //#endregion 🔖️DeltaHelpers
 
@@ -257,6 +259,14 @@ fn apply_layer_patch(layer: &mut DrawingLayerNode, patch: &DrawingLayerPatch) ->
         let DrawingLayerNode::Path(path) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Geometry target is not a path")); };
         path.segments = segments.clone();
     }
+    if patch.text_content.is_some() || patch.text_size.is_some() {
+        let DrawingLayerNode::Text(text) = layer else { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "Text target has another kind")); };
+        if let Some(size) = patch.text_size {
+            if !size.is_finite() || size <= 0.0 { return Err(protocol::MutationApplyError::new("mutation.apply.invalid-value", "Invalid text size")); }
+            text.size = size;
+        }
+        if let Some(content) = &patch.text_content { text.content = content.clone(); }
+    }
     let base = layer_base_mut(layer);
     if let Some(visible) = patch.visible {
         base.visible = visible;
@@ -319,6 +329,8 @@ fn merge_layer_patch(dst: &mut DrawingLayerPatch, mut src: DrawingLayerPatch) {
     take!(trace_params_json);
     take!(layer_json);
     take!(path_segments);
+    take!(text_content);
+    take!(text_size);
 }
 
 fn apply_assets_delta(assets: &mut BTreeMap<String, DrawingImageAsset>, delta: &DrawingAssetsDelta) -> protocol::MutationApplyResult<()> {
@@ -515,4 +527,9 @@ pub fn diff_assets(entries: DrawingAssetsDelta) -> DrawingDiff {
 /// ✏️ Replaces only the path geometry facet.
 pub fn diff_set_path_geometry(layer_id: &str, segments: &[crate::PathSegment]) -> DrawingDiff {
     layer_base_patch(layer_id, DrawingLayerPatch { path_segments: Some(segments.to_vec()), ..Default::default() })
+}
+
+/// 📝️ Replaces the editable text facet without touching its layer base.
+pub fn diff_set_text(layer_id: &str, content: &str, size: f64) -> DrawingDiff {
+    layer_base_patch(layer_id, DrawingLayerPatch { text_content: Some(content.into()), text_size: Some(size), ..Default::default() })
 }

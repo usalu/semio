@@ -1,43 +1,39 @@
-//! 🎒️ Zip editor (2.0/🧱️base) — the `main` window: the archive as a directly editable tree, built
-//! from the framework `TreeWindowKit` (contract §2.6). Root node addresses the archive-level
-//! `comment`; one leaf per `ZipEntry`, labeled with its name and decompressed byte size. Scope note:
-//! `set-node` can rename the comment or an entry's NAME, never an entry's byte payload — real
-//! per-byte content editing isn't representable through a label-editing tree control, so it stays
-//! out of this first pass (documented honestly, matching energy's own `SetStructureField` scope
-//! note, rather than faking full data-editing through a tree).
+//! 🎒️ Windowed archive comment and entry-name drafts.
 
 use crate::ZipSnapshot;
-use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
+use semio_framework_plugin::app::{TreeWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 
-/// 🌳️ The root node's fixed id — the one `set-node` target that renames the archive's own
-/// `comment`, shared by `render` and the surface root's `ZipEditorCommand::SetNode` dispatch.
-pub const COMMENT_NODE_ID: &str = "comment";
-/// 🌳️ Prefix for an entry leaf's node id — `"{ENTRY_NODE_PREFIX}{index}"` indexes `ZipSnapshot.entries`.
-pub const ENTRY_NODE_PREFIX: &str = "entry:";
+pub use crate::editor::editing::{COMMENT_NODE_ID, ENTRY_NODE_PREFIX, entry_node_id};
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::zip::base::create_zip_any_editor`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Archive", "Archiv"), icon_id: "archive".into(), ..TreeWindowKit::editable_window_kind() }
+    let mut definition = TreeWindowKit::editable_window_kind();
+    definition.label = LocalizedLabel::native("Archive", "Archiv");
+    definition.icon_id = "archive".into();
+    if let Some(action) = definition.actions.iter_mut().find(|action| action.id == "set-node") {
+        action.in_palette = false;
+        action.args = vec![
+            semio_framework_plugin::ActionArgDef::text("nodeId", LocalizedLabel::native("Entry", "Eintrag")).required(),
+            semio_framework_plugin::ActionArgDef::text("value", LocalizedLabel::native("Name or comment", "Name oder Kommentar")).min_length(0).required(),
+            semio_framework_plugin::ActionArgDef::text("revision", LocalizedLabel::native("Saved revision", "Gespeicherte Revision")).required(),
+        ];
+    }
+    definition
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Real `ZipSnapshot -> BuiltNode`: root = the archive comment (a real `set-node` edit target), one
-/// leaf per entry labeled `"{name} ({n} bytes)"` (the leaf's NAME is a real `set-node` edit target
-/// via `ENTRY_NODE_PREFIX`; the byte count is a read-only label, not addressable).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &ZipSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let children = document.entries.iter().enumerate().map(|(index, entry)| TreeNodeView { id: format!("{ENTRY_NODE_PREFIX}{index}"), label: format!("{} ({} bytes)", entry.name, entry.data.len()), children: Vec::new() }).collect();
-    let root = TreeNodeView { id: COMMENT_NODE_ID.into(), label: format!("Comment: {}", document.comment), children };
-    TreeWindowKit::render_windowed(&TreeView { roots: vec![root] }, windows)
+/// ✏️ Shares the same localized, guarded editing controls across ZIP dialects.
+pub fn render(document: &ZipSnapshot, windows: &TreeWindows<'_>, locale: semio_framework_plugin::Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    crate::editor::editing::render(document, windows, locale)
 }
 //#endregion 🔖️Render
 

@@ -435,6 +435,100 @@ describe("wgpu frame-Worker step budget", () => {
     expect(frameMessages).toHaveLength(fixture.runtimeWakeRetry.frameMessages);
   });
 
+  it("parks a live presenter checkout and preserves runtime wakes outside and inside its frame callback", () => {
+    const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8")).presenterWait as {
+      continueFrame: false;
+      callbacksWhileWaiting: number;
+      wakeTiming: ("afterPark" | "insideFrame")[];
+      callbackOwners: WorkerTurnOwner[];
+      frameOutcomes: string[];
+    };
+    for (const timing of fixture.wakeTiming) {
+      const callbacks: (() => void)[] = [];
+      const owners: WorkerTurnOwner[] = [];
+      const outcomes: string[] = [];
+      const scheduler = new FrameTurnScheduler(
+        (callback) => callbacks.push(callback),
+        () => {
+          owners.push("frame");
+          outcomes.push(outcomes.length === 0 ? "awaitingRuntime" : "presented");
+          if (outcomes.length === 1 && timing === "insideFrame") scheduler.requestRuntimeWake();
+          return fixture.continueFrame;
+        },
+        () => true,
+        () => { owners.push("assetDecode"); return false; },
+      );
+      scheduler.request();
+      callbacks.shift()!();
+      if (timing === "afterPark") {
+        expect(callbacks).toHaveLength(fixture.callbacksWhileWaiting);
+        scheduler.requestRuntimeWake();
+      }
+      for (let callback = callbacks.shift(); callback; callback = callbacks.shift()) {
+        callback();
+        expect(callbacks.length).toBeLessThanOrEqual(1);
+        expect(owners.length).toBeLessThanOrEqual(fixture.callbackOwners.length);
+      }
+      expect(owners).toEqual(fixture.callbackOwners);
+      expect(outcomes).toEqual(fixture.frameOutcomes);
+    }
+    const source = readFileSync(BROWSER_WORKER_RS, "utf8");
+    const start = source.indexOf("let continue_frame =");
+    const continuation = source.slice(start, source.indexOf("encode_tick_timed(", start));
+    expect(continuation).toMatch(/let continue_frame = !host\.presenter\.awaiting_runtime\(\)\s*&&\s*\(host\.take_cursor_wake_directive\(\)\.is_some\(\)/);
+    expect(continuation.trim()).toMatch(/\|\| host\.presenter\.has_pending_presentation\(\)\);$/);
+  });
+
+  it("matches Chromium task delivery for parked presenter completion and reentrant wake", async () => {
+    const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8")).presenterWait;
+    const { chromium } = await import("playwright");
+    const browser = await chromium.launch({ headless: true });
+    try {
+      const page = await browser.newPage();
+      const observed = await page.evaluate(async (timings: string[]) => {
+        const results = [];
+        for (const timing of timings) {
+          results.push(await new Promise<{ owners: string[]; outcomes: string[]; callbacksWhileWaiting: number }>((complete) => {
+            const channel = new MessageChannel();
+            const owners: string[] = [];
+            const outcomes: string[] = [];
+            let callbacksWhileWaiting = -1;
+            let handback!: () => void;
+            const completion = new Promise<void>((resolve) => { handback = resolve; });
+            void completion.then(() => {
+              callbacksWhileWaiting = owners.length - 1;
+              channel.port2.postMessage("assetDecode");
+              channel.port2.postMessage("frame");
+            });
+            channel.port1.onmessage = (event: MessageEvent<string>) => {
+              owners.push(event.data);
+              if (event.data !== "frame") return;
+              outcomes.push(outcomes.length === 0 ? "awaitingRuntime" : "presented");
+              if (outcomes.length === 1) {
+                if (timing === "insideFrame") handback();
+                else setTimeout(handback, 0);
+              } else {
+                channel.port1.close();
+                channel.port2.close();
+                complete({ owners, outcomes, callbacksWhileWaiting });
+              }
+            };
+            channel.port2.postMessage("frame");
+          }));
+        }
+        return results;
+      }, fixture.wakeTiming);
+      for (const result of observed) {
+        expect(result.owners).toEqual(fixture.callbackOwners);
+        expect(result.outcomes).toEqual(fixture.frameOutcomes);
+        expect(result.callbacksWhileWaiting).toBe(fixture.callbacksWhileWaiting);
+      }
+      console.info("[DEBUG] Chromium completion handback resumed parked presentation without idle callbacks for both wake timings");
+    } finally {
+      await browser.close();
+    }
+  }, 15_000);
+
   it("keeps an actual Worker task armed while the retained runtime frame remains pending", async () => {
     const fixture = JSON.parse(readFileSync(FRAME_TURN_FIXTURE, "utf8")) as {
       readonly runtimeTurns: readonly { readonly phase: string; readonly requestFrame: boolean; readonly continueFrame: boolean }[];

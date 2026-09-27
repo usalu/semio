@@ -1,0 +1,7 @@
+[package]
+name = "semio-framework-hash"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-av1-overlay/🧰️framework/🔨️modules/🔏️hash/🦀️.rs"

@@ -160,6 +160,30 @@ mod window_kits_tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn table_kit_editable_cells_preserve_stable_address_and_revision_arguments() {
+        let mut args = UiMapBuilder::try_new().expect("argument map");
+        args.try_insert("sheetName".into(), UiValue::Text(UiText::try_from_str("Sheet 1").unwrap())).unwrap();
+        args.try_insert("row".into(), UiValue::Number(41.0)).unwrap();
+        args.try_insert("column".into(), UiValue::Number(7.0)).unwrap();
+        args.try_insert("revision".into(), UiValue::Text(UiText::try_from_str("0123456789abcdef").unwrap())).unwrap();
+        let view = TableView { columns: vec!["Sheet".into(), "Value".into()], rows: vec![vec!["Sheet 1".into(), "before".into()]] };
+        let node = TableWindowKit::render_editable_cells(
+            &view,
+            "s.stdio.xlsx@ecma-376/*#editor",
+            &[EditableTableCell::new(0, 1, "set-cell", UiValue::Map(args.finish()))],
+        )
+        .expect("editable table scene");
+        let Component::Surface(props) = &node.component else { panic!("expected Surface") };
+        let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(props).expect("table scene");
+        let rows: serde_json::Value = serde_json::from_str(&scene.rows_json).expect("rows json");
+        assert_eq!(rows[0]["1"]["kind"], "editableText");
+        assert_eq!(rows[0]["1"]["action"]["args"]["sheetName"], "Sheet 1");
+        assert_eq!(rows[0]["1"]["action"]["args"]["row"], 41);
+        assert_eq!(rows[0]["1"]["action"]["args"]["column"], 7);
+        assert_eq!(rows[0]["1"]["action"]["args"]["revision"], "0123456789abcdef");
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn table_kit_pages_large_tables_without_losing_rows() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️table-lanes/🔣️.json")).unwrap();
         let count = fixture["rowCount"].as_u64().unwrap() as usize;
@@ -345,6 +369,63 @@ mod window_kits_tests {
         let stack = DocumentWindowKit::render(&view).expect("bounded fixture");
         assert!(matches!(stack.component, Component::TreeSection(_)));
         assert_eq!(stack.children.len(), 2);
+    }
+
+    fn first_surface(node: &BuiltNode) -> Option<&BuiltNode> {
+        matches!(node.component, Component::Surface(_)).then_some(node).or_else(|| node.children.iter().find_map(first_surface))
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_kit_declares_required_address_revision_and_text_arguments() {
+        let definition = DocumentWindowKit::editable_window_kind();
+        let action = definition.actions.first().expect("set-page action");
+        assert!(!action.in_palette, "revision-addressed document edits are dispatched only by prefilled page controls");
+        assert_eq!(action.args.iter().map(|argument| argument.id.as_str()).collect::<Vec<_>>(), ["page", "item", "revision", "text"]);
+        assert!(action.args.iter().all(|argument| argument.required));
+        assert!(matches!(&action.args[0].schema, semio_framework::ArgSchema::Number { integer: true, min: Some(0.0), .. }));
+        assert!(matches!(&action.args[1].schema, semio_framework::ArgSchema::Number { integer: true, min: Some(0.0), .. }));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn document_kit_editable_drafts_match_the_language_neutral_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️window-kits/📃️document/🧫️fixtures/✏️editable/🔣️.json")).expect("fixture json");
+        for case in fixture["cases"].as_array().expect("cases") {
+            let locale = match case["locale"].as_str() {
+                Some("de") => Locale::De,
+                Some("en") => Locale::En,
+                other => panic!("unsupported fixture locale {other:?}"),
+            };
+            let page_index = case["page"].as_u64().expect("page") as u32;
+            let item_index = case["item"].as_u64().expect("item") as u32;
+            let text = case["text"].as_str().expect("text");
+            assert_eq!(DocumentWindowKit::text_revision(text), case["revision"].as_str().expect("revision"));
+            let node = DocumentWindowKit::render_editable_windowed(
+                &EditableDocumentView { pages: vec![EditableDocumentPage { page_index, item_index, text: text.into() }] },
+                &TreeWindows::unhosted(),
+                locale,
+            )
+            .expect("editable document");
+            let surface = first_surface(&node).expect("prefilled draft surface");
+            let Component::Surface(props) = &surface.component else { unreachable!() };
+            let mut scene: semio_framework_ui_scene::TextEditorScene = semio_framework_ui_scene::decode(props).expect("text scene");
+            for carrier in &surface.children {
+                assert!(semio_framework_ui_scene::SceneDoc::merge_lane(&mut scene, carrier.key.as_str(), artifact_app_laws::built_carrier_text(carrier)));
+            }
+            assert_eq!(scene.buffer, text);
+            let settings: serde_json::Value = serde_json::from_str(scene.settings_json.as_deref().expect("draft settings")).expect("settings json");
+            assert_eq!(settings["readOnly"], false);
+            assert_eq!(settings["editAction"], "set-page");
+            assert_eq!(settings["editArgument"], "text");
+            assert_eq!(settings["commit"], "explicit");
+            assert_eq!(settings["editArguments"]["page"], page_index);
+            assert_eq!(settings["editArguments"]["item"], item_index);
+            assert_eq!(settings["editArguments"]["revision"], case["revision"]);
+            assert_eq!(settings["applyLabel"], case["labels"]["apply"]);
+            assert_eq!(settings["discardLabel"], case["labels"]["discard"]);
+            assert_eq!(settings["cancelLabel"], case["labels"]["cancel"]);
+            assert!(settings["conflictLabel"].as_str().is_some_and(|label| !label.is_empty()));
+            assert!(settings["failedLabel"].as_str().is_some_and(|label| !label.is_empty()));
+        }
     }
 
     #[semio_framework_async_macros::async_test]

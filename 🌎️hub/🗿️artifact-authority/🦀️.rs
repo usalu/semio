@@ -289,6 +289,12 @@ impl<'a> OperationContext<'a> {
         self.checkpoint()
     }
 
+    /// 🛑️ Whether the caller cancelled this operation — observed without counting as a checkpoint, so work that
+    /// only waits (a guest call between two fuel observations) never restamps its stall bound.
+    pub(crate) fn is_cancelled(&self) -> bool {
+        self.control.is_cancelled()
+    }
+
     /// 📡️ Observes a completed durable transition without reinterpreting it as cancellation.
     pub(crate) fn report_committed(&self, progress: AuthorityProgress) {
         self.control.report(progress);

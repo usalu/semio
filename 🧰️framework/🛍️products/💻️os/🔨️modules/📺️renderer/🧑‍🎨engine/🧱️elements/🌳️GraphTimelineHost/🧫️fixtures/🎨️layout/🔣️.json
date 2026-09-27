@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "viewport": { "width": 400, "height": 160 },
+  "columns": [
+    {
+      "checkpointId": "c4",
+      "timestamp": "2026-09-27T10:04:00Z",
+      "labels": ["feature-hosts"],
+      "authors": [{ "id": "u1", "name": "Ueli" }, { "id": "u4", "name": "Ada" }],
+      "parentCheckpointId": "c2",
+      "description": "wire up TableHost story",
+      "lane": 1,
+      "alternativeIds": ["hosts"],
+      "mutationLevel": "warning"
+    },
+    {
+      "checkpointId": "c3",
+      "timestamp": "2026-09-27T10:03:00Z",
+      "labels": ["feature-editor"],
+      "authors": [{ "id": "u2", "name": "Nadia" }],
+      "parentCheckpointId": "c2",
+      "description": "editor wasm gate",
+      "lane": 2,
+      "alternativeIds": ["editor"]
+    },
+    {
+      "checkpointId": "c2",
+      "timestamp": "2026-09-27T10:02:00Z",
+      "labels": [],
+      "authors": [{ "id": "u1", "name": "Ueli" }],
+      "parentCheckpointId": "c1",
+      "description": "split scopes",
+      "lane": 0,
+      "alternativeIds": []
+    },
+    {
+      "checkpointId": "c1",
+      "timestamp": "2026-09-27T10:01:00Z",
+      "labels": ["main"],
+      "authors": [{ "id": "u3", "name": "Priya" }],
+      "description": "root",
+      "lane": 0,
+      "alternativeIds": []
+    }
+  ],
+  "expected": {
+    "hostPaddingPx": 3.2,
+    "rowHeightPx": 24,
+    "graphWidthPx": 64,
+    "graphColumnWidthPx": 104,
+    "labelTrackPx": 80.9375,
+    "labelTrackTolerancePx": 1,
+    "labelTrackMaximumViewportFraction": 0.28,
+    "checkpointId": "c4",
+    "laneNodeXPx": 32,
+    "authorLeftPx": 20,
+    "avatarSizePx": 16,
+    "avatarOverlapPx": 8,
+    "mutationLevel": "warning",
+    "descriptionInert": true
+  }
+}

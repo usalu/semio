@@ -1,0 +1,310 @@
+[
+  {
+    "name": "corner resize",
+    "handle": 4,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      110,
+      100
+    ],
+    "end": [
+      210,
+      180
+    ],
+    "constrained": false,
+    "matrix": [
+      2,
+      0,
+      0,
+      2,
+      -10,
+      -20
+    ],
+    "centered": false
+  },
+  {
+    "name": "north edge resize",
+    "handle": 1,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      60,
+      20
+    ],
+    "end": [
+      60,
+      -60
+    ],
+    "constrained": false,
+    "matrix": [
+      1,
+      0,
+      0,
+      2,
+      0,
+      -100
+    ],
+    "centered": false
+  },
+  {
+    "name": "reflection past opposite edge",
+    "handle": 7,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      10,
+      60
+    ],
+    "end": [
+      210,
+      60
+    ],
+    "constrained": false,
+    "matrix": [
+      -1,
+      0,
+      0,
+      1,
+      220,
+      0
+    ],
+    "centered": false
+  },
+  {
+    "name": "rotate quarter turn",
+    "handle": 8,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      110,
+      60
+    ],
+    "end": [
+      60,
+      110
+    ],
+    "constrained": false,
+    "matrix": [
+      0,
+      1,
+      -1,
+      0,
+      120,
+      0
+    ],
+    "centered": false
+  },
+  {
+    "name": "preserve aspect ratio",
+    "handle": 4,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      110,
+      100
+    ],
+    "end": [
+      210,
+      140
+    ],
+    "constrained": true,
+    "matrix": [
+      2,
+      0,
+      0,
+      2,
+      -10,
+      -20
+    ],
+    "centered": false
+  },
+  {
+    "name": "return to origin",
+    "handle": 4,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      110,
+      100
+    ],
+    "end": [
+      110,
+      100
+    ],
+    "constrained": false,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    "centered": false
+  },
+  {
+    "name": "constrained rotation snaps clockwise or counterclockwise",
+    "handle": 8,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      110,
+      60
+    ],
+    "end": [
+      106.98463103929542,
+      42.89899283371656
+    ],
+    "constrained": true,
+    "matrix": [
+      0.9659258262890683,
+      -0.25881904510252074,
+      0.25881904510252074,
+      0.9659258262890683,
+      -13.484692283495345,
+      17.573593128807147
+    ],
+    "centered": false
+  },
+  {
+    "name": "centered corner resize",
+    "handle": 4,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      110,
+      100
+    ],
+    "end": [
+      160,
+      140
+    ],
+    "constrained": false,
+    "centered": true,
+    "matrix": [
+      2,
+      0,
+      0,
+      2,
+      -60,
+      -60
+    ]
+  },
+  {
+    "name": "centered edge resize",
+    "handle": 1,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      60,
+      20
+    ],
+    "end": [
+      60,
+      -20
+    ],
+    "constrained": false,
+    "centered": true,
+    "matrix": [
+      1,
+      0,
+      0,
+      2,
+      0,
+      -60
+    ]
+  },
+  {
+    "name": "centered aspect resize",
+    "handle": 4,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      110,
+      100
+    ],
+    "end": [
+      160,
+      110
+    ],
+    "constrained": true,
+    "centered": true,
+    "matrix": [
+      2,
+      0,
+      0,
+      2,
+      -60,
+      -60
+    ]
+  },
+  {
+    "name": "centered reflection",
+    "handle": 7,
+    "bounds": [
+      10,
+      20,
+      100,
+      80
+    ],
+    "start": [
+      10,
+      60
+    ],
+    "end": [
+      110,
+      60
+    ],
+    "constrained": false,
+    "centered": true,
+    "matrix": [
+      -1,
+      0,
+      0,
+      1,
+      120,
+      0
+    ]
+  }
+]

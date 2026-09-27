@@ -10,8 +10,8 @@ Handovers: `📓️wp-c10.md` items 3/5/6/7, `📓️wp-h9.md` row Qa, `📓️w
 |---|---|---|
 | 1 | Guest store re-announces an Accepted op (blocks collab-e2e STEPs 4/8/11/12/13) | **LANDED 19:56, root-fixed + law**: native law 1/1 (mutant red), vitest 2/2, native + wasm32 (wasip2, unknown-unknown `sync`) green; W3 request `ld.txt` (kernel, replication) — needs W3's rebuild to reach the live guests |
 | 2 | H9 Qa opaque concurrency + field precision | **LANDED (10:0x)**: envelope `observed` (advisory) + `target` (declared fields); db grades only unseen foreign same-target writes; native + wasm32 green; laws: db 1/1, store 1/1, hub vigilant 1/1, replication 293/293, vitest 108/108 + 12/12; hubs need fresh roots (rule 23) |
-| 3 | C10 item 6 RED: B's staged submit held during a 5–20 s cut | **OPEN — needs a live repro on a B3 hub** (code read: no link gate in Shell mailbox / `dispatchDirectBrowserActorCommand` / worker `dispatchAction`; prime suspect = the FIFO action lane waiting in `awaitUiQuiescence` on a `viewRefresh` that a staged form's view-state change starts; plan below) |
-| 4 | C10 item 5: same-field conflict loser sees localized outcome, author never keeps a refused edit | **law level DONE (10:2x)**: hub vigilant law (item 2) refuses the unseen same-target write with `mutation.clamped`; Shell corpus `⚔️hub-command-rejection` +1 row with that exact payload → en/de notice, **2/2**; author laws (worker: refused/transformed batch rebootstraps the actor; remote-over-local rebuild) **2/2**; live proof after B3 (vigilant own hub) |
+| 3 | C10 item 6 RED: B's staged submit held during a 5–20 s cut | **DONE (15:2x)**: original hold does not reproduce on B3 (staged submit applied at +3.5 s of the cut); the real red was the rebuild after reconnect (socket closed every 15–20 s, B empty) → **root-fixed in the worker + law (red→green) + live 7/7** |
+| 4 | C10 item 5: same-field conflict loser sees localized outcome, author never keeps a refused edit | **DONE live (15:3x)**: vigilant hub 8130, 12 s cut: de 4/5 + en 5/5 — loser sees "Änderung vom Hub abgelehnt: Jemand anderes hat gleichzeitig dieselbe Stelle geändert" / "Change refused by the hub: Someone else changed the same part at the same time", keeps no refused text, both converge on the winner; hub WAL holds only the winner's edit (+ its check-in transition, which the probe's head+1 criterion counted in the de run) |
 
 ### Log
 
@@ -123,3 +123,40 @@ Handovers: `📓️wp-c10.md` items 3/5/6/7, `📓️wp-h9.md` row Qa, `📓️w
   `artifact_history_empty_and_two_batch_replay_are_deterministic` (store Drop witness), 2/2 green alone. Landing row added.
   Envelope readers now covered: `causal` record/batch codec, value codec, TS twin ×2, app-channel paged writer, sync size estimate, hub
   inference canonical command (+2 TS oracles), db history walker; DB1's WAL decoder delegates to `protocol::decode_envelope`.
+- 14:0x **Item 3 live (B3).** Own hub **8130** (current-tree binary `s13-w3-bin/…/os-hub` sha 962ba372…, B3 clone generation e3c0c98e…,
+  fresh root `.🧬semio/🌐hub/s13-ld-hub-8130`, normal policy, hold pid 6334), serves `s` dev lane **6630** (A → 8130, pid 6480) and **6631**
+  (B → link proxy **8131** → 8130, control 8132, proxy pid 6478; serve pid 6486); harness copied from C10 into `wp-ld/live/` (outputs to
+  `wp-ld/generated/`), temporary `[DEBUG] ld` timing in the worker + mailbox (`wp-ld/live/ld-debug.py`, `--reverse` removes).
+  Run `ldout-1` (de, 15 s real cut, note): no freeze (worst frame 15 ms), German link state, **B's staged submit applied DURING the cut
+  at +3.8 s** (worker `action-in … suspended=true`, `awaitUiQuiescence` waited 0 ms, mailbox never queued behind anything), A's too,
+  hub head 1→4. **The original item-3 RED does not reproduce on B3.** New RED: after the link returns B's document socket is upgraded
+  and closed by the client within 10–250 ms, every ~15–20 s (hub log: `server.document.socket` upgrade → closed), B ends on an empty
+  document (#93, below the baseline) while A shows both edits. Socket-close / rebootstrap / bootstrap-reject instrumentation added;
+  the next run waits for the coordinator's "go" (fleet memory warning, 14:1x).
+- 15:0x **Item 3 root cause (instrumented run `ldout-2`).** After the reconnect B's cut-time edit is Accepted; A's edit had been folded
+  over it → `requireArtifactRebootstrap` (C10's divergence rule) closes the socket and waits for a `Welcome` carrying the canonical
+  pair. The hub never sends one: `db.hello` → `decide_bootstrap` answers None/Tail (floor 0), and pairs are served only over
+  `GET …/active-checkpoint/pair`. So the rebuild's first reconnect came only after the outage backoff (15 s, deadline exceeded) and
+  every later `Welcome` Tail was refused ("artifact rebootstrap returned tail without a canonical pair") → close → reopen, forever;
+  B's document stayed empty. **Fix** (worker, host TS): an actor-bound rebuild accepts the `Welcome` None/Tail exactly like a first
+  open (`abortArtifactRebootstrap`, the new child is seeded from the pair route once `Session` admits it, then the tail); the socket
+  `onclose` treats a rebuild's own close like a healthy close (reconnect at once, no outage backoff); `requireArtifactRebootstrap`
+  documented. Law: schema + fixture `🔁️document-rebuild-welcome` (actor Tail/None accepted, local Tail/None refused) → worker
+  `document rebuild welcome` **1/1**, mutant (fix line removed) **red** on the actor row; fold + peer-refetch neighbours 2/2; os
+  typecheck **EXIT 0, 0 errors**. Live `ldout-3` (de, 15 s cut): **7/7**, converged at +37 s; B re-seeded 1.4 s after the rebuild close.
+  Instrumentation removed (`ld-debug.py --reverse`, 0 `[DEBUG] ld` left).
+- 15:2x **Rust twin: NOT landing.** `🔄️sync` `on_hub_frame` (both actors) has the same dead "pair inside the Welcome" rule, reached by
+  every hub `RebootstrapRequired` (GIS approval checkpoints, socket lag). But the native actor cannot fetch a pair itself: its pair is
+  verified and loaded into the guest by the shell (`seed_hub_document`), so accepting the tail in the actor alone would keep the
+  diverged guest. The real fix spans the native/wgpu shell (re-seed the guest from `active-checkpoint/pair` on a rebuild) → routed to
+  WG10/WG9 with this finding; no half-applied change.
+- 15:3x **Item 4 live** on a vigilant hub 8130 (fresh root, `OS_HUB_MERGE_POLICY=vigilant` confirmed in the hub's environment; the
+  normal hub stopped, its pids were mine): `ldconf-1` (de) 4/5, `ldconf-2` (en) **5/5** — see status table. The de run's only red is the
+  probe's `headAfter == headBefore + 1`: the WAL holds exactly `edit-fac3…#0` (A) + `transition-9009…` (A's auto check-in), no op of B.
+- 15:4x **Infra stopped** (all mine, verified by ppid): vigilant hub 8130 (hold 32016 / os-hub 32024; the normal hub hold 6334 / os-hub
+  6336 was stopped at 15:1x), link proxy 8131 (6478), serves 6630 (6480 → vite 6499) and 6631 (6486 → vite 6500); ports 8130/8131/6630/6631
+  free. Restart recipe: `OS_HUB_MERGE_POLICY=<normal|vigilant> zsh .tmp-ticket/wp-ld/live/c10-hub.sh 8130 <B3 catalog> <s13-w3-bin os-hub>
+  <name>`; proxy `python3 .tmp-ticket/wp-w2/w2-detach.py <log> bun <abs>/wp-ld/live/c10-link-proxy.ts 8131 8130 8132`; serves
+  `… zsh <abs>/wp-ld/live/serve.sh s 6630 http://127.0.0.1:8130 dev` / `… s 6631 http://127.0.0.1:8131 dev`; probes
+  `wp-ld/live/probe-s12-outage.mjs`, `probe-s12-conflict.mjs` (env `S_MATRIX_HUB`, `S_MATRIX_ADMIN_FILE`, `S_CONFLICT_*`). Durable data
+  `.🧬semio/🌐hub/s13-ld-*`.

@@ -106,6 +106,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Adds a new parameter generation, a named set of input values, to the generate mode's list; generations live in the window, not in the document.",
+                      "de": "Fügt der Liste des Generieren-Modus eine neue Parametergeneration hinzu, einen benannten Satz von Eingabewerten; Generationen liegen im Fenster, nicht im Dokument."
+                    },
+                    "reuse": {
+                      "en": "Adds a new parameter generation, a named set of input values, to the generate mode's list; generations live in the window, not in the document.",
+                      "de": "Fügt der Liste des Generieren-Modus eine neue Parametergeneration hinzu, einen benannten Satz von Eingabewerten; Generationen liegen im Fenster, nicht im Dokument."
+                    }
                   }
                 }
               },
@@ -152,6 +162,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Removes one parameter generation by id from the generate mode's list; the flow graph is not changed.",
+                      "de": "Entfernt eine Parametergeneration anhand ihrer Id aus der Liste des Generieren-Modus; der Flow-Graph ändert sich nicht."
+                    },
+                    "reuse": {
+                      "en": "Removes one parameter generation by id from the generate mode's list; the flow graph is not changed.",
+                      "de": "Entfernt eine Parametergeneration anhand ihrer Id aus der Liste des Generieren-Modus; der Flow-Graph ändert sich nicht."
+                    }
                   }
                 }
               },
@@ -245,6 +265,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Renames one parameter generation of the generate mode's list.",
+                      "de": "Benennt eine Parametergeneration in der Liste des Generieren-Modus um."
+                    },
+                    "reuse": {
+                      "en": "Renames one parameter generation of the generate mode's list.",
+                      "de": "Benennt eine Parametergeneration in der Liste des Generieren-Modus um."
+                    }
                   }
                 }
               },
@@ -291,6 +321,16 @@
                     "cancellable": false,
                     "class": "interactive",
                     "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets the value one input question takes in a parameter generation (the selected one when no id is given) and re-evaluates its preview.",
+                      "de": "Setzt den Wert, den eine Eingabefrage in einer Parametergeneration annimmt (ohne Id in der ausgewählten), und wertet ihre Vorschau neu aus."
+                    },
+                    "reuse": {
+                      "en": "Sets the value one input question takes in a parameter generation (the selected one when no id is given) and re-evaluates its preview.",
+                      "de": "Setzt den Wert, den eine Eingabefrage in einer Parametergeneration annimmt (ohne Id in der ausgewählten), und wertet ihre Vorschau neu aus."
+                    }
                   }
                 }
               }
@@ -3516,6 +3556,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a new widget of the given kind (an input such as a slider or note, or an operator, optionally a specific neuron kind) to the flow canvas at x, y.",
+                  "de": "Fügt der Flow-Fläche an x, y ein neues Widget der angegebenen Art hinzu (eine Eingabe wie Schieberegler oder Notiz oder einen Operator, optional eine bestimmte Neuronart)."
+                },
+                "reuse": {
+                  "en": "Adds a new widget of the given kind (an input such as a slider or note, or an operator, optionally a specific neuron kind) to the flow canvas at x, y.",
+                  "de": "Fügt der Flow-Fläche an x, y ein neues Widget der angegebenen Art hinzu (eine Eingabe wie Schieberegler oder Notiz oder einen Operator, optional eine bestimmte Neuronart)."
+                }
               }
             }
           },
@@ -3533,7 +3583,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "widgetId",
+                "label": {
+                  "native": {
+                    "en": "Widget Id",
+                    "de": "Widget-ID"
+                  },
+                  "reuse": {
+                    "en": "Widget Id",
+                    "de": "Widget-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -3560,6 +3628,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one widget by id from the flow graph together with every synapse attached to it.",
+                  "de": "Entfernt ein Widget anhand seiner Id samt aller angeschlossenen Synapsen aus dem Flow-Graphen."
+                },
+                "reuse": {
+                  "en": "Removes one widget by id from the flow graph together with every synapse attached to it.",
+                  "de": "Entfernt ein Widget anhand seiner Id samt aller angeschlossenen Synapsen aus dem Flow-Graphen."
+                }
               }
             }
           },
@@ -3577,7 +3655,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "widgetId",
+                "label": {
+                  "native": {
+                    "en": "Widget Id",
+                    "de": "Widget-ID"
+                  },
+                  "reuse": {
+                    "en": "Widget Id",
+                    "de": "Widget-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -3604,6 +3700,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Copies one widget by id into a new widget next to it, connected from the original, as one undoable edit; an unknown id is refused.",
+                  "de": "Kopiert ein Widget anhand seiner Id in ein neues, vom Original aus verbundenes Widget daneben, als eine rückgängig machbare Änderung; eine unbekannte Id wird abgelehnt."
+                },
+                "reuse": {
+                  "en": "Copies one widget by id into a new widget next to it, connected from the original, as one undoable edit; an unknown id is refused.",
+                  "de": "Kopiert ein Widget anhand seiner Id in ein neues, vom Original aus verbundenes Widget daneben, als eine rückgängig machbare Änderung; eine unbekannte Id wird abgelehnt."
+                }
               }
             }
           },
@@ -3649,6 +3755,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every selected widget and synapse from the flow graph.",
+                  "de": "Löscht alle ausgewählten Widgets und Synapsen aus dem Flow-Graphen."
+                },
+                "reuse": {
+                  "en": "Deletes every selected widget and synapse from the flow graph.",
+                  "de": "Löscht alle ausgewählten Widgets und Synapsen aus dem Flow-Graphen."
+                }
               }
             }
           },
@@ -3666,7 +3782,25 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "synapseId",
+                "label": {
+                  "native": {
+                    "en": "Synapse Id",
+                    "de": "Synapsen-ID"
+                  },
+                  "reuse": {
+                    "en": "Synapse Id",
+                    "de": "Synapsen-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -3693,6 +3827,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Removes one synapse (a connection between two ports) by id from the flow graph.",
+                  "de": "Entfernt eine Synapse (eine Verbindung zwischen zwei Ports) anhand ihrer Id aus dem Flow-Graphen."
+                },
+                "reuse": {
+                  "en": "Removes one synapse (a connection between two ports) by id from the flow graph.",
+                  "de": "Entfernt eine Synapse (eine Verbindung zwischen zwei Ports) anhand ihrer Id aus dem Flow-Graphen."
+                }
               }
             }
           },
@@ -3710,7 +3854,76 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "sourceNodeId",
+                "label": {
+                  "native": {
+                    "en": "Source Widget Id",
+                    "de": "Quell-Widget-ID"
+                  },
+                  "reuse": {
+                    "en": "Source Widget Id",
+                    "de": "Quell-Widget-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "sourcePortId",
+                "label": {
+                  "native": {
+                    "en": "Source Port",
+                    "de": "Quellanschluss"
+                  },
+                  "reuse": {
+                    "en": "Source Port",
+                    "de": "Quellanschluss"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "targetNodeId",
+                "label": {
+                  "native": {
+                    "en": "Target Widget Id",
+                    "de": "Ziel-Widget-ID"
+                  },
+                  "reuse": {
+                    "en": "Target Widget Id",
+                    "de": "Ziel-Widget-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "targetPortId",
+                "label": {
+                  "native": {
+                    "en": "Target Port",
+                    "de": "Zielanschluss"
+                  },
+                  "reuse": {
+                    "en": "Target Port",
+                    "de": "Zielanschluss"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -3737,6 +3950,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Connects an output port of one widget to an input port of another with a new synapse; an unknown widget or an incompatible connection is refused.",
+                  "de": "Verbindet einen Ausgangsport eines Widgets mit einem Eingangsport eines anderen durch eine neue Synapse; ein unbekanntes Widget oder eine unverträgliche Verbindung wird abgelehnt."
+                },
+                "reuse": {
+                  "en": "Connects an output port of one widget to an input port of another with a new synapse; an unknown widget or an incompatible connection is refused.",
+                  "de": "Verbindet einen Ausgangsport eines Widgets mit einem Eingangsport eines anderen durch eine neue Synapse; ein unbekanntes Widget oder eine unverträgliche Verbindung wird abgelehnt."
+                }
               }
             }
           },
@@ -3754,7 +3977,61 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "nodeId",
+                "label": {
+                  "native": {
+                    "en": "Widget Id",
+                    "de": "Widget-ID"
+                  },
+                  "reuse": {
+                    "en": "Widget Id",
+                    "de": "Widget-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "x",
+                "label": {
+                  "native": {
+                    "en": "X",
+                    "de": "X"
+                  },
+                  "reuse": {
+                    "en": "X",
+                    "de": "X"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false
+              },
+              {
+                "id": "y",
+                "label": {
+                  "native": {
+                    "en": "Y",
+                    "de": "Y"
+                  },
+                  "reuse": {
+                    "en": "Y",
+                    "de": "Y"
+                  }
+                },
+                "schema": {
+                  "kind": "number",
+                  "integer": false
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -3781,6 +4058,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves one widget to the canvas position x, y; consecutive moves of the same widget merge into one edit.",
+                  "de": "Verschiebt ein Widget an die Position x, y der Fläche; aufeinanderfolgende Verschiebungen desselben Widgets werden zu einer Änderung zusammengefasst."
+                },
+                "reuse": {
+                  "en": "Moves one widget to the canvas position x, y; consecutive moves of the same widget merge into one edit.",
+                  "de": "Verschiebt ein Widget an die Position x, y der Fläche; aufeinanderfolgende Verschiebungen desselben Widgets werden zu einer Änderung zusammengefasst."
+                }
               }
             }
           },
@@ -3807,7 +4094,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -3826,6 +4113,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Lays out every widget of the flow graph automatically from left to right, overwriting their manual positions.",
+                  "de": "Ordnet alle Widgets des Flow-Graphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."
+                },
+                "reuse": {
+                  "en": "Lays out every widget of the flow graph automatically from left to right, overwriting their manual positions.",
+                  "de": "Ordnet alle Widgets des Flow-Graphen automatisch von links nach rechts an und überschreibt ihre manuellen Positionen."
+                }
               }
             }
           },
@@ -3843,7 +4140,90 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "widgetIds",
+                "label": {
+                  "native": {
+                    "en": "Widget Ids",
+                    "de": "Widget-IDs"
+                  },
+                  "reuse": {
+                    "en": "Widget Ids",
+                    "de": "Widget-IDs"
+                  }
+                },
+                "schema": {
+                  "kind": "array",
+                  "items": {
+                    "kind": "string"
+                  }
+                },
+                "required": false
+              },
+              {
+                "id": "field",
+                "label": {
+                  "native": {
+                    "en": "Field",
+                    "de": "Feld"
+                  },
+                  "reuse": {
+                    "en": "Field",
+                    "de": "Feld"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "value",
+                      "label": {
+                        "native": {
+                          "en": "Slider Value",
+                          "de": "Reglerwert"
+                        },
+                        "reuse": {
+                          "en": "Slider Value",
+                          "de": "Reglerwert"
+                        }
+                      }
+                    },
+                    {
+                      "value": "text",
+                      "label": {
+                        "native": {
+                          "en": "Note Text",
+                          "de": "Notiztext"
+                        },
+                        "reuse": {
+                          "en": "Note Text",
+                          "de": "Notiztext"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
+              },
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "reuse": {
+                    "en": "Value",
+                    "de": "Wert"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -3870,6 +4250,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field on several widgets at once: a slider's value or a note's text.",
+                  "de": "Setzt ein Feld auf mehreren Widgets zugleich: den Wert eines Schiebereglers oder den Text einer Notiz."
+                },
+                "reuse": {
+                  "en": "Sets one field on several widgets at once: a slider's value or a note's text.",
+                  "de": "Setzt ein Feld auf mehreren Widgets zugleich: den Wert eines Schiebereglers oder den Text einer Notiz."
+                }
               }
             }
           },
@@ -3887,7 +4277,42 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "oldId",
+                "label": {
+                  "native": {
+                    "en": "Widget Id",
+                    "de": "Widget-ID"
+                  },
+                  "reuse": {
+                    "en": "Widget Id",
+                    "de": "Widget-ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              },
+              {
+                "id": "value",
+                "label": {
+                  "native": {
+                    "en": "New Id",
+                    "de": "Neue ID"
+                  },
+                  "reuse": {
+                    "en": "New Id",
+                    "de": "Neue ID"
+                  }
+                },
+                "schema": {
+                  "kind": "string"
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -3914,6 +4339,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Renames a widget's id from the old id to a new one and updates every synapse that referenced it; a taken or empty id changes nothing.",
+                  "de": "Benennt die Id eines Widgets von der alten in eine neue um und aktualisiert alle Synapsen, die darauf verweisen; eine vergebene oder leere Id ändert nichts."
+                },
+                "reuse": {
+                  "en": "Renames a widget's id from the old id to a new one and updates every synapse that referenced it; a taken or empty id changes nothing.",
+                  "de": "Benennt die Id eines Widgets von der alten in eine neue um und aktualisiert alle Synapsen, die darauf verweisen; eine vergebene oder leere Id ändert nichts."
+                }
               }
             }
           },
@@ -3932,7 +4367,7 @@
             "kind": "mutation",
             "iconId": "sparkles",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "writes": [
@@ -3958,7 +4393,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -3976,7 +4412,7 @@
             "kind": "mutation",
             "iconId": "sparkles",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "writes": [
@@ -4002,7 +4438,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -4046,6 +4483,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Runs one automation of an installed flow extension, such as auto-layout (Reorganize) or auto-evaluate (Evaluate), when that automation is enabled.",
+                  "de": "Führt eine Automatisierung einer installierten Flow-Erweiterung aus, etwa automatisches Anordnen (Neu anordnen) oder automatisches Auswerten (Auswerten), sofern sie aktiviert ist."
+                },
+                "reuse": {
+                  "en": "Runs one automation of an installed flow extension, such as auto-layout (Reorganize) or auto-evaluate (Evaluate), when that automation is enabled.",
+                  "de": "Führt eine Automatisierung einer installierten Flow-Erweiterung aus, etwa automatisches Anordnen (Neu anordnen) oder automatisches Auswerten (Auswerten), sofern sie aktiviert ist."
+                }
               }
             }
           },
@@ -4063,7 +4510,40 @@
             },
             "kind": "mutation",
             "iconId": "sparkles",
-            "args": [],
+            "args": [
+              {
+                "id": "exampleId",
+                "label": {
+                  "native": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  },
+                  "reuse": {
+                    "en": "Example",
+                    "de": "Beispiel"
+                  }
+                },
+                "schema": {
+                  "kind": "string",
+                  "options": [
+                    {
+                      "value": "demo",
+                      "label": {
+                        "native": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        },
+                        "reuse": {
+                          "en": "Demo",
+                          "de": "Demo"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "required": false
+              }
+            ],
             "inPalette": true,
             "semantics": {
               "effects": {
@@ -4090,6 +4570,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole flow graph with the bundled demo graph, or with an empty graph for an empty id; other ids change nothing.",
+                  "de": "Ersetzt den gesamten Flow-Graphen durch den mitgelieferten Demo-Graphen, bei leerer Id durch einen leeren Graphen; andere Ids ändern nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole flow graph with the bundled demo graph, or with an empty graph for an empty id; other ids change nothing.",
+                  "de": "Ersetzt den gesamten Flow-Graphen durch den mitgelieferten Demo-Graphen, bei leerer Id durch einen leeren Graphen; andere Ids ändern nichts."
+                }
               }
             }
           },
@@ -4135,6 +4625,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Evaluates every widget whose result is not computed yet and shows the results on the canvas; the graph itself is not changed.",
+                  "de": "Wertet alle Widgets aus, deren Ergebnis noch nicht berechnet ist, und zeigt die Ergebnisse auf der Fläche; der Graph selbst ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Evaluates every widget whose result is not computed yet and shows the results on the canvas; the graph itself is not changed.",
+                  "de": "Wertet alle Widgets aus, deren Ergebnis noch nicht berechnet ist, und zeigt die Ergebnisse auf der Fläche; der Graph selbst ändert sich nicht."
+                }
               }
             }
           },
@@ -4181,6 +4681,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Zooms the main window onto the selected widgets; only the view changes.",
+                  "de": "Zoomt das Hauptfenster auf die ausgewählten Widgets; nur die Ansicht ändert sich."
+                },
+                "reuse": {
+                  "en": "Zooms the main window onto the selected widgets; only the view changes.",
+                  "de": "Zoomt das Hauptfenster auf die ausgewählten Widgets; nur die Ansicht ändert sich."
+                }
               }
             }
           },
@@ -5455,6 +5965,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5560,6 +6080,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5653,6 +6183,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -6905,6 +7445,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -7010,6 +7560,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -7103,6 +7663,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -7269,7 +7839,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -7439,8 +8009,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "91fdf0b50e7149ecd828552577deaf53aefb27297ac072a4d8f4758be042f94d",
-    "coreWasmSha256": "a8c11c8d655e3320160713e39a1bd8c7b3f04d679142244dfde9c3e8e31d257e",
-    "descriptorSha256": "45180defd8b71e69eda73c1153ab1c023f7c0d8f1d1fe0bf9b9c20c002794a3c"
+    "wasmSha256": "773fc49c0207a63969bf2a2fbee7f5a44694975db408e1f44f58a4fa23d07e44",
+    "coreWasmSha256": "055d54407bb6b3443bd7e4e584e751a801e0a70ec9ddd1159122577835099bdf",
+    "descriptorSha256": "33ed40918af5b6232bb5dfb15530e1e647efc1f0f687a8e8162c31a8ac3ed6d0"
   }
 }

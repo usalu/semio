@@ -20,6 +20,7 @@ pub use super::remove_unknown_chunk::RemoveUnknownChunkMutation;
 pub use super::replace_palette::ReplacePaletteMutation;
 pub use super::replace_pixels::ReplacePixelsMutation;
 pub use super::patch_pixels::PatchPixelsMutation;
+pub use super::patch_snapshot::PatchSnapshot;
 pub use super::replace_text_chunk::ReplaceTextChunkMutation;
 pub use super::set_snapshot::SetSnapshot;
 //#endregion Owners
@@ -30,6 +31,7 @@ pub use super::set_snapshot::SetSnapshot;
 #[mutations(snapshot = PngSnapshot, diff = PngDiff, schema = "s.stdio.png")]
 pub enum PngMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(PatchSnapshot),
     ChangeHeader(ChangeHeaderMutation),
     ReplacePalette(ReplacePaletteMutation),
     ChangeTransparency(ChangeTransparencyMutation),
@@ -54,6 +56,7 @@ pub enum PngMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
     vec![
         PngMutation::SetSnapshot(SetSnapshot { snapshot: PngSnapshot::default() }),
+        crate::schema::mutations::patch_snapshot::test_case(),
         crate::schema::mutations::change_header::test_case(),
         crate::schema::mutations::replace_palette::test_case(),
         crate::schema::mutations::change_transparency::test_case(),

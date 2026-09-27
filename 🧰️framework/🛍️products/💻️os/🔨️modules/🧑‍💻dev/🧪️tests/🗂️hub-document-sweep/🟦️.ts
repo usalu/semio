@@ -23,7 +23,7 @@ import { join, resolve } from "node:path";
 import type { BrowserContext, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
-import { FAULT, NOISE, awaitBeacon, click, dismissIntroduction, mutateUndoRedo, readMatrixPins, readShell, unfoldActionsRail } from "../🧮️program-matrix/🟦️.ts";
+import { FAULT, NOISE, awaitBeacon, click, dismissIntroduction, mutateUndoRedo, readMatrixPins, readShell, unfoldActionsRail, withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 //#region 🔖️Journey
@@ -119,7 +119,7 @@ const storeState = (page: Page): Promise<unknown> =>
     .catch((error: unknown) => ({ error: String(error).slice(0, 120) }));
 
 /** 🔎️ The kinds the space index's staged `createArtifact` form offers: each option's encoded choice (kind id + dialect). */
-async function stagedKinds(page: Page): Promise<{ kindId: string; plugin: string; value: string }[]> {
+export async function stagedKinds(page: Page): Promise<{ kindId: string; plugin: string; value: string }[]> {
   return page.evaluate(() =>
     [...document.querySelectorAll('[data-slot="window-action-pane"] select option, select option')]
       .map((element) => (element as HTMLOptionElement).value)
@@ -158,7 +158,7 @@ export type HubDocumentSweepOptions = Readonly<{
 /** 🧾️ One kind's row. */
 export type HubSweepRow = Record<string, unknown> & { kindId: string; plugin: string; pass: boolean; faults: string[]; notices: Notice[] };
 
-async function openSweepSpace(page: Page, options: HubDocumentSweepOptions, row: HubSweepRow): Promise<string | null> {
+export async function openSweepSpace(page: Page, options: HubDocumentSweepOptions, row: HubSweepRow): Promise<string | null> {
   await page.goto(options.baseUrl, { waitUntil: "commit", timeout: 300_000 });
   row.beacon = await awaitBeacon(page, Date.now() + 300_000);
   await dismissIntroduction(page);
@@ -185,7 +185,7 @@ async function openSweepSpace(page: Page, options: HubDocumentSweepOptions, row:
 }
 
 /** 🌱️ Stages `createArtifact` with a name and the kind picked by its encoded choice; answers the submit outcome. */
-async function createKind(page: Page, kindValue: string, name: string): Promise<string> {
+export async function createKind(page: Page, kindValue: string, name: string): Promise<string> {
   const createRow = page.locator('[data-slot="window-action-pane"] [id="action.createArtifact"]').first();
   if ((await createRow.count()) === 0) return "no action.createArtifact row";
   await createRow.click({ force: true }).catch(() => undefined);
@@ -354,15 +354,17 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
   return value === undefined || value.startsWith("--") ? undefined : value;
 }
 
-/** 🚪️ `verify hub-sweep <serveUrl> [--locale en|de] [--space <name>] [--kinds <kindId,…>] [--saga-ms <n>] [--puzzle-saga-ms <n>]
- * [--reopen] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]` — the serve must be joined to a hub (a
- * scratch browser profile is used and removed unless `--profile` names one to keep, e.g. to measure a later session);
+/** 🚪️ `verify hub-sweep --serve <url> --hub <url> [--locale en|de] [--space <name>] [--kinds <kindId,…>] [--saga-ms <n>]
+ * [--puzzle-saga-ms <n>] [--reopen] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]` — runs against the
+ * serve `--serve` names, joined to the hub `--hub` names (reused, or started and stopped by `withDevServe`; a scratch browser
+ * profile is used and removed unless `--profile` names one to keep, e.g. to measure a later session);
  * credentials `OS_HUB_PROBE_EMAIL` / `OS_HUB_PROBE_PASSWORD` (default the development hub's first user). Writes
  * `hub-sweep.json` + one screenshot per kind under `<out>/<tag>/`, publishes the acceptance record, exits non-zero unless
  * every selected kind passes. */
 export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
-  const baseUrl = segments[0];
-  if (!baseUrl || baseUrl.startsWith("--")) throw new Error("usage: verify hub-sweep <serveUrl> [--locale en|de] [--space <name>] [--kinds …] [--saga-ms <n>] [--puzzle-saga-ms <n>] [--reopen] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]");
+  const serveUrl = flagValue(segments, "--serve");
+  const hubUrl = flagValue(segments, "--hub");
+  if (!serveUrl || !hubUrl) throw new Error("usage: verify hub-sweep --serve <url> --hub <url> [--locale en|de] [--space <name>] [--kinds …] [--saga-ms <n>] [--puzzle-saga-ms <n>] [--reopen] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]");
   const locale = flagValue(segments, "--locale") === "de" ? "de" : "en";
   const tag = flagValue(segments, "--tag") ?? `hub-sweep-${locale}`;
   const cancelMode = flagValue(segments, "--cancel");
@@ -374,7 +376,7 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
   const startedAt = new Date();
   const profile = flagValue(segments, "--profile");
   const scratchProfile = profile === undefined ? mkdtempSync(join(tmpdir(), "semio-hub-sweep-profile-")) : undefined;
-  await withAcceptanceRecord(repoRoot, "hub-document-sweep", async () => {
+  await withAcceptanceRecord(repoRoot, "hub-document-sweep", () => withDevServe(repoRoot, "hub-document-sweep", { serveUrl, hubUrl, locale, signal: controller.signal, startedAt }, async (baseUrl) => {
     const outDir = join(resolve(flagValue(segments, "--out") ?? defaultOutDir), tag);
     const report = await runHubDocumentSweep({
       baseUrl,
@@ -412,7 +414,7 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
     );
     console.log(`[hub-sweep] === ${tag}: PASS ${passed}/${total} → ${outDir} ===`);
     if (status !== "pass") process.exitCode = 1;
-  });
+  }));
   if (scratchProfile) rmSync(scratchProfile, { recursive: true, force: true });
   process.removeListener("SIGINT", abort);
   process.removeListener("SIGTERM", abort);

@@ -1429,6 +1429,114 @@
             }
           },
           {
+            "id": "editPixels",
+            "label": {
+              "native": {
+                "en": "Edit Pixels",
+                "de": "Pixel bearbeiten"
+              },
+              "reuse": {
+                "en": "Edit Pixels",
+                "de": "Pixel bearbeiten"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Applies a cancellable pixel operation to the selected layer and records the result in shared history.",
+                  "de": "Wendet eine abbrechbare Pixeloperation auf die gewählte Ebene an und speichert das Ergebnis im gemeinsamen Verlauf."
+                },
+                "reuse": {
+                  "en": "Applies a cancellable pixel operation to the selected layer and records the result in shared history.",
+                  "de": "Wendet eine abbrechbare Pixeloperation auf die gewählte Ebene an und speichert das Ergebnis im gemeinsamen Verlauf."
+                }
+              }
+            }
+          },
+          {
+            "id": "maskFromSelection",
+            "label": {
+              "native": {
+                "en": "Mask From Selection",
+                "de": "Maske aus Auswahl"
+              },
+              "reuse": {
+                "en": "Mask From Selection",
+                "de": "Maske aus Auswahl"
+              }
+            },
+            "kind": "mutation",
+            "iconId": "sparkles",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "writes": [
+                  "artifact:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": true
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.write"
+                ],
+                "approval": "whenDestructive"
+              },
+              "execution": {
+                "preview": "diff",
+                "undo": {
+                  "kind": "inverse"
+                },
+                "idempotency": "none",
+                "expectedRevision": true,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Creates an undoable layer mask from the current pixel selection.",
+                  "de": "Erstellt eine rückgängig machbare Ebenenmaske aus der aktuellen Pixelauswahl."
+                },
+                "reuse": {
+                  "en": "Creates an undoable layer mask from the current pixel selection.",
+                  "de": "Erstellt eine rückgängig machbare Ebenenmaske aus der aktuellen Pixelauswahl."
+                }
+              }
+            }
+          },
+          {
             "id": "setActiveExample",
             "label": {
               "native": {
@@ -2027,6 +2135,96 @@
                   "en": "Sets the painting brush opacity for this session.",
                   "de": "Legt die Pinseldeckkraft für diese Sitzung fest."
                 }
+              }
+            }
+          },
+          {
+            "id": "setBrushColor",
+            "label": {
+              "native": {
+                "en": "Set Foreground Color",
+                "de": "Vordergrundfarbe festlegen"
+              },
+              "reuse": {
+                "en": "Set Foreground Color",
+                "de": "Vordergrundfarbe festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
+              }
+            }
+          },
+          {
+            "id": "setBrushHardness",
+            "label": {
+              "native": {
+                "en": "Set Brush Hardness",
+                "de": "Pinselhärte festlegen"
+              },
+              "reuse": {
+                "en": "Set Brush Hardness",
+                "de": "Pinselhärte festlegen"
+              }
+            },
+            "kind": "view",
+            "iconId": "eye",
+            "args": [],
+            "inPalette": false,
+            "semantics": {
+              "effects": {
+                "reads": [
+                  "config:{self}"
+                ],
+                "external": false,
+                "destructive": false,
+                "reversible": false
+              },
+              "policy": {
+                "scopes": [
+                  "artifacts.read",
+                  "shell.observe"
+                ],
+                "approval": "never"
+              },
+              "execution": {
+                "preview": "none",
+                "undo": {
+                  "kind": "none"
+                },
+                "idempotency": "none",
+                "expectedRevision": false,
+                "cancellable": false,
+                "class": "interactive",
+                "interactiveJob": "migrated"
               }
             }
           },
@@ -2973,6 +3171,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3078,6 +3286,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3171,6 +3389,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4378,6 +4606,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -4483,6 +4721,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -4576,6 +4824,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -4759,7 +5017,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -5056,8 +5314,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "55de7cdc4a8d4f4030180f56776bb7122f2dc101f8fb4fb940ee99d83e5ae194",
-    "coreWasmSha256": "a59ea4ce868ac444d31370231e3a8063a1555195bd60c9997f3ed69479990d8a",
-    "descriptorSha256": "c017921beb0a655e57cdbdf4dc541f72acb6caac76b12920c838c59ae2a88e76"
+    "wasmSha256": "0b7758bfc5cea2f5f6a38c20ae858723a97353f8c84ad926ffe8fca6a10c108f",
+    "coreWasmSha256": "d9f0b37e4b980f45f83a1aac6e39b7c15fb49e58631c1884880d7888136eddff",
+    "descriptorSha256": "b58d647636d8c0a857a9688b697312ea803ff834448d0dadbb13c438f2a00f7a"
   }
 }

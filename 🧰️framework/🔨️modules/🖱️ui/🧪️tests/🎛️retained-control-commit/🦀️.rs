@@ -21,6 +21,7 @@ use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiIconSelectNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSliderNode, UiStackNode, UiToggleNode};
 use crate::wgpu::tree::{Node, NodeKey, UiTree, WidgetSpec};
+use crate::wgpu::layout::slider_control_presentation;
 use crate::wgpu::IconName;
 use dsl::DslValue;
 use serde_json::Value;
@@ -238,8 +239,9 @@ fn a_dragged_slider_reports_every_intermediate_value() {
     let control = place(&mut tree, Some(root), 1, control_node(case), (20.0, 0.0, 100.0, 24.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
-    let moved = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 70.0, y: 12.0, modifiers: Default::default() });
+    let presentation = slider_control_presentation(crate::wgpu::geometry::Rect::new(20.0, 0.0, 100.0, 24.0), 0.0, 0.0, 10.0, None, crate::wgpu::theme::Theme::default().gap_standard, ui_contract::FlowInline::Ltr).slider;
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: presentation.track_cell.x, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let moved = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: presentation.track_cell.x + presentation.track_cell.w * 0.5, y: 12.0, modifiers: Default::default() });
 
     let value = moved
         .iter()

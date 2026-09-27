@@ -54,6 +54,8 @@ import { runToolRunMatrixCli } from "../⏯️tool-run-matrix/🟦️.ts";
 
 import { runHubDocumentSweepCli } from "../🗂️hub-document-sweep/🟦️.ts";
 
+import { runIoMatrixCli } from "../🚪️io-matrix/🟦️.ts";
+
 import { runConnectionBudgetCli } from "../🔀️connection-budget/🟦️.ts";
 
 import { runIdleBudgetCli } from "../💤️idle-budget/🟦️.ts";
@@ -77,6 +79,10 @@ class VerifyScript extends BundleScript {
     }
     if (segments[0] === "hub-sweep") {
       await runHubDocumentSweepCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🗂️hub-document-sweep"), segments.slice(1));
+      return;
+    }
+    if (segments[0] === "io") {
+      await runIoMatrixCli(repoRoot, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🤖️generated/🚪️io-matrix"), segments.slice(1));
       return;
     }
     if (segments[0] === "two-human") {

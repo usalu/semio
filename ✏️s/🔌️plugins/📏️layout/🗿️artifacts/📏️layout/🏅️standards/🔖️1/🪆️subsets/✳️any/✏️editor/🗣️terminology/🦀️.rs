@@ -22,6 +22,39 @@ semio_framework_plugin::app_labels! {
         kind_rect: native_en "Rectangle", native_de "Rechteck", reuse_en "Rectangle", reuse_de "Rechteck";
         kind_text: native_en "Text Frame", native_de "Textrahmen", reuse_en "Text Frame", reuse_de "Textrahmen";
         kind_image: native_en "Image Frame", native_de "Bildrahmen", reuse_en "Image Frame", reuse_de "Bildrahmen";
+        kind_png: native_en "PNG", native_de "PNG", reuse_en "PNG", reuse_de "PNG";
+        kind_jpg: native_en "JPEG", native_de "JPEG", reuse_en "JPEG", reuse_de "JPEG";
+        kind_gif: native_en "GIF", native_de "GIF", reuse_en "GIF", reuse_de "GIF";
+        kind_bmp: native_en "BMP", native_de "BMP", reuse_en "BMP", reuse_de "BMP";
+        kind_tiff: native_en "TIFF", native_de "TIFF", reuse_en "TIFF", reuse_de "TIFF";
+        kind_pdf: native_en "PDF", native_de "PDF", reuse_en "PDF", reuse_de "PDF";
+        kind_svg: native_en "SVG", native_de "SVG", reuse_en "SVG", reuse_de "SVG";
+        kind_drawing: native_en "Drawing", native_de "Zeichnung", reuse_en "Drawing", reuse_de "Zeichnung";
+        kind_dwg: native_en "DWG", native_de "DWG", reuse_en "DWG", reuse_de "DWG";
+        kind_dxf: native_en "DXF", native_de "DXF", reuse_en "DXF", reuse_de "DXF";
+        kind_raster: native_en "Raster", native_de "Raster", reuse_en "Raster", reuse_de "Raster";
+        kind_bitmap: native_en "Bitmap", native_de "Bitmap", reuse_en "Bitmap", reuse_de "Bitmap";
+        kind_cad: native_en "CAD", native_de "CAD", reuse_en "CAD", reuse_de "CAD";
+        kind_map: native_en "Map", native_de "Karte", reuse_en "Map", reuse_de "Karte";
+        kind_fem2d: native_en "FEM 2D", native_de "FEM 2D", reuse_en "FEM 2D", reuse_de "FEM 2D";
+        kind_note: native_en "Note", native_de "Notiz", reuse_en "Note", reuse_de "Notiz";
+        kind_writer: native_en "Writer", native_de "Text", reuse_en "Writer", reuse_de "Text";
+        kind_forms: native_en "Forms", native_de "Formulare", reuse_en "Forms", reuse_de "Formulare";
+        kind_flow: native_en "Flow", native_de "Fluss", reuse_en "Flow", reuse_de "Fluss";
+        kind_equation: native_en "Equation", native_de "Gleichung", reuse_en "Equation", reuse_de "Gleichung";
+        kind_puzzle2d: native_en "Puzzle 2D", native_de "Puzzle 2D", reuse_en "Puzzle 2D", reuse_de "Puzzle 2D";
+        kind_block2d: native_en "Block 2D", native_de "Block 2D", reuse_en "Block 2D", reuse_de "Block 2D";
+        kind_generation2d: native_en "Generation 2D", native_de "Generierung 2D", reuse_en "Generation 2D", reuse_de "Generierung 2D";
+        kind_terrain: native_en "Terrain", native_de "Gelände", reuse_en "Terrain", reuse_de "Gelände";
+        kind_grid2d: native_en "Grid 2D", native_de "Gitter 2D", reuse_en "Grid 2D", reuse_de "Gitter 2D";
+        kind_wfc2d: native_en "WFC 2D", native_de "WFC 2D", reuse_en "WFC 2D", reuse_de "WFC 2D";
+        kind_presentation: native_en "Presentation", native_de "Präsentation", reuse_en "Presentation", reuse_de "Präsentation";
+        kind_sequence: native_en "Sequence", native_de "Sequenz", reuse_en "Sequence", reuse_de "Sequenz";
+        kind_wires: native_en "Wires", native_de "Drähte", reuse_en "Wires", reuse_de "Drähte";
+        rotation: native_en "Rotation", native_de "Drehung", reuse_en "Rotation", reuse_de "Drehung";
+        print_target: native_en "Print Target", native_de "Druckziel", reuse_en "Print Target", reuse_de "Druckziel";
+        data_fields: native_en "Data Fields", native_de "Datenfelder", reuse_en "Data Fields", reuse_de "Datenfelder";
+        group_document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
         inspection: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
@@ -86,6 +119,35 @@ pub fn catalogue_kind_label(kind: &'static str, labels: &LayoutLabels) -> Label 
         "rect" => labels.kind_rect.into(),
         "text" => labels.kind_text.into(),
         "image" => labels.kind_image.into(),
+        "png" => labels.kind_png.into(),
+        "jpg" => labels.kind_jpg.into(),
+        "gif" => labels.kind_gif.into(),
+        "bmp" => labels.kind_bmp.into(),
+        "tiff" => labels.kind_tiff.into(),
+        "pdf" => labels.kind_pdf.into(),
+        "svg" => labels.kind_svg.into(),
+        "drawing" => labels.kind_drawing.into(),
+        "dwg" => labels.kind_dwg.into(),
+        "dxf" => labels.kind_dxf.into(),
+        "raster" => labels.kind_raster.into(),
+        "bitmap" => labels.kind_bitmap.into(),
+        "cad" => labels.kind_cad.into(),
+        "map" => labels.kind_map.into(),
+        "fem2d" => labels.kind_fem2d.into(),
+        "note" => labels.kind_note.into(),
+        "writer" => labels.kind_writer.into(),
+        "forms" => labels.kind_forms.into(),
+        "flow" => labels.kind_flow.into(),
+        "equation" => labels.kind_equation.into(),
+        "puzzle2d" => labels.kind_puzzle2d.into(),
+        "block2d" => labels.kind_block2d.into(),
+        "generation2d" => labels.kind_generation2d.into(),
+        "terrain" => labels.kind_terrain.into(),
+        "grid2d" => labels.kind_grid2d.into(),
+        "wfc2d" => labels.kind_wfc2d.into(),
+        "presentation" => labels.kind_presentation.into(),
+        "sequence" => labels.kind_sequence.into(),
+        "wires" => labels.kind_wires.into(),
         _ => Label::data(kind),
     }
 }

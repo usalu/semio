@@ -21,3 +21,6 @@ pub mod booleans;
 #[cfg(feature = "trace")]
 #[path = "../../🔍️trace/🦀️.rs"]
 pub mod trace;
+
+#[path = "../../📝️text/🦀️.rs"]
+pub mod text;

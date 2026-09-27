@@ -236,7 +236,7 @@ fn populated_full_documents_admit_sixty_and_refuse_the_sixty_first_on_bytes() {
     let admitted_roots = data["fullDocumentAdmittedRoots"].as_u64().unwrap() as usize;
     let refused_root = data["fullDocumentRefusedRoot"].as_u64().unwrap() as usize;
     assert_eq!(full.bytes, data["fullDocumentBytes"].as_u64().unwrap() as usize);
-    assert_eq!(UiResidentPermit::contract_backing_bytes(), data["measured"]["fixedBackingBytes"].as_u64().unwrap() as usize);
+    assert_eq!(UiResidentPermit::contract_backing_bytes(), data["fixedBackingBytes"].as_u64().unwrap() as usize);
     let before = UiResidentPermit::snapshot().unwrap();
     let mut admitted = Vec::new();
     for root in 1..=admitted_roots {

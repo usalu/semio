@@ -72,7 +72,7 @@
         "cases": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["noToken", "expiredToken", "publicWithoutMembership", "memberReady", "sameDocumentOtherSpace", "memberRevoked", "streamReconnect"],
+          "required": ["noToken", "expiredToken", "publicWithoutMembership", "memberReady", "sameDocumentOtherSpace", "memberRevoked", "streamReconnect", "agentBelowMembership", "humanBelowMembership", "principalAboveMembership"],
           "properties": {
             "noToken": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
             "expiredToken": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
@@ -80,7 +80,10 @@
             "memberReady": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
             "sameDocumentOtherSpace": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
             "memberRevoked": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
-            "streamReconnect": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" }
+            "streamReconnect": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "agentBelowMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "humanBelowMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" },
+            "principalAboveMembership": { "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1" }
           }
         }
       }

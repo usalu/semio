@@ -1,0 +1,473 @@
+{
+  "_comment": "R10 window-3 input: nx targets, curated seed rows and goal-plan checks handed over by slices (preamble 14 rule 17). Applied only by wp-r10/window3-apply.ts in window 3; launch.json is then rendered by the registry generator.",
+  "targets": [
+    {
+      "from": "S20",
+      "project": "@semio-tech/framework-os-dev",
+      "projectJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "name": "io-matrix",
+      "command": "bun ./📜️script.ts verify io",
+      "forwardAllArgs": true,
+      "cache": false
+    },
+    {
+      "from": "G12",
+      "project": "@semio-tech/framework-os-dev",
+      "projectJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "name": "channel-version-check",
+      "command": "bun ./📜️script.ts channel-version check",
+      "forwardAllArgs": true,
+      "cache": false
+    },
+    {
+      "from": "G12",
+      "project": "@semio-tech/framework-os-dev",
+      "projectJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "name": "channel-version-generate",
+      "command": "bun ./📜️script.ts channel-version generate",
+      "forwardAllArgs": true,
+      "cache": false
+    },
+    {
+      "from": "R10",
+      "project": "@semio-tech/framework-os-dev",
+      "projectJson": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json",
+      "name": "serve-hold",
+      "command": "bun ./📜️script.ts serve-hold",
+      "forwardAllArgs": true,
+      "cache": false
+    },
+    {
+      "from": "H13",
+      "project": "os-hub-ts",
+      "projectJson": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+      "name": "agent-ceiling-check",
+      "command": "bun ./📜️script.ts agent-ceiling-check",
+      "forwardAllArgs": true,
+      "cache": false
+    },
+    {
+      "from": "H14",
+      "project": "os-hub-ts",
+      "projectJson": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+      "name": "shutdown-drill",
+      "command": "bun ./📜️script.ts shutdown-drill",
+      "forwardAllArgs": true,
+      "cache": false
+    },
+    {
+      "from": "H13",
+      "project": "os-hub",
+      "projectJson": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+      "name": "hostile-input-check",
+      "command": "bun ./📜️script.ts hostile-input-check",
+      "forwardAllArgs": true,
+      "cache": false
+    },
+    {
+      "from": "Z4",
+      "project": "os-hub-ts",
+      "projectJson": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+      "name": "docker-image-build",
+      "command": "bun ./📜️script.ts docker-image-build",
+      "forwardAllArgs": true,
+      "cache": false,
+      "dependsOn": [
+        "workspace:prepare"
+      ]
+    },
+    {
+      "from": "Z4",
+      "project": "os-hub-ts",
+      "projectJson": "🌎️hub/📦️packages/🟦️typescript/📋️project.json",
+      "name": "docker-image-check",
+      "command": "bun ./📜️script.ts docker-image-check",
+      "forwardAllArgs": true,
+      "cache": false
+    }
+  ],
+  "seedRows": [
+    {
+      "from": "G12",
+      "after": "📦️check🧹️fixture-sweep",
+      "row": {
+        "name": "📦️check📡️channel-version",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/framework-os-dev:channel-version-check",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "4_build",
+          "order": 206.171
+        }
+      }
+    },
+    {
+      "from": "G12",
+      "after": "📦️check📡️channel-version",
+      "row": {
+        "name": "🛠️dev📡️channel-version🏭️generate",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/framework-os-dev:channel-version-generate",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "4_build",
+          "order": 206.172
+        }
+      }
+    },
+    {
+      "from": "R10/S20/H13/H14",
+      "after": "⚖️gate🎯️repo-goal",
+      "row": {
+        "name": "⚖️gate🎯️repo-goal🔗️hub",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal -- --hub ${input:acceptanceHubUrl} --serve ${input:acceptanceServeUrl} --local-serve ${input:acceptanceLocalServeUrl} --users ${input:acceptanceUsers}",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "4_gate",
+          "order": 411.221
+        }
+      }
+    },
+    {
+      "from": "R10/S20/H13/H14",
+      "after": "⚖️gate🗂️hub-document-sweep⚛️react🌐️de",
+      "row": {
+        "name": "⚖️gate🚪️io-matrix⚛️react",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/framework-os-dev:io-matrix -- --serve http://127.0.0.1:6070/ --locale en",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "4_gate",
+          "order": 411.255
+        }
+      }
+    },
+    {
+      "from": "R10/S20/H13/H14",
+      "after": "⚖️gate🚪️io-matrix⚛️react",
+      "row": {
+        "name": "⚖️gate🚪️io-matrix⚛️react🌐️de",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run @semio-tech/framework-os-dev:io-matrix -- --serve http://127.0.0.1:6070/ --locale de",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "4_gate",
+          "order": 411.256
+        }
+      }
+    },
+    {
+      "from": "R10/S20/H13/H14",
+      "after": "⚖️gate💾️hub-backup-restore",
+      "row": {
+        "name": "⚖️gate🛑️hub-graceful-shutdown",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run os-hub-ts:shutdown-drill",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "4_gate",
+          "order": 411.315
+        }
+      }
+    },
+    {
+      "from": "R10/S20/H13/H14",
+      "after": "⚖️gate🏷️hub-freshness",
+      "row": {
+        "name": "⚖️gate🤖️hub-agent-ceiling",
+        "type": "node-terminal",
+        "request": "launch",
+        "command": "bun nx run os-hub-ts:agent-ceiling-check -- --hub ${input:acceptanceHubUrl} --locale en",
+        "cwd": "${workspaceFolder}",
+        "presentation": {
+          "group": "4_gate",
+          "order": 411.335
+        }
+      }
+    }
+  ],
+  "seedRowEdits": [
+    {
+      "from": "R10",
+      "name": "⚖️gate🎯️repo-goal",
+      "command": "bun nx run @semio-tech/repo-test-domain:acceptance-goal"
+    },
+    {
+      "from": "S18",
+      "name": "⚖️gate🧮️program-matrix⚛️react",
+      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- --serve http://127.0.0.1:6070/ --tag launch-en --locale en --roles editor,viewer"
+    },
+    {
+      "from": "S18",
+      "name": "⚖️gate🧮️program-matrix⚛️react🌐️de",
+      "command": "bun nx run @semio-tech/framework-os-dev:program-matrix -- --serve http://127.0.0.1:6070/ --tag launch-de --locale de --roles editor,viewer"
+    },
+    {
+      "from": "S18",
+      "name": "⚖️gate⏯️tool-run⚛️react",
+      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- --serve http://127.0.0.1:6070/ --tag launch-en --locale en"
+    },
+    {
+      "from": "S18",
+      "name": "⚖️gate⏯️tool-run⚛️react🌐️de",
+      "command": "bun nx run @semio-tech/framework-os-dev:tool-run-matrix -- --serve http://127.0.0.1:6070/ --tag launch-de --locale de"
+    },
+    {
+      "from": "S18",
+      "name": "⚖️gate🗂️hub-document-sweep⚛️react",
+      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- --serve http://127.0.0.1:6071/ --hub ${input:acceptanceHubUrl} --tag launch-en --locale en"
+    },
+    {
+      "from": "S18",
+      "name": "⚖️gate🗂️hub-document-sweep⚛️react🌐️de",
+      "command": "bun nx run @semio-tech/framework-os-dev:hub-document-sweep -- --serve http://127.0.0.1:6071/ --hub ${input:acceptanceHubUrl} --tag launch-de --locale de"
+    }
+  ],
+  "planChecks": [
+    {
+      "from": "H13",
+      "step": "hub-operations",
+      "check": {
+        "id": "hub-agent-ceiling",
+        "title": {
+          "en": "Agents hold at most their delegation's audience in its one space",
+          "de": "Agenten halten höchstens die Zielgruppe ihrer Delegation in deren einem Raum"
+        },
+        "criteria": [
+          "2.13"
+        ],
+        "project": "os-hub-ts",
+        "target": "agent-ceiling-check",
+        "args": [
+          "--hub",
+          "{hub}",
+          "--locale",
+          "en"
+        ],
+        "env": {
+          "OS_HUB_PROBE_EMAIL": "{user1Email}",
+          "OS_HUB_PROBE_PASSWORD": "{user1Password}",
+          "OS_HUB_PROBE_MEMBER_EMAIL": "{user2Email}"
+        },
+        "requires": [
+          "hub"
+        ],
+        "browsers": 0
+      }
+    },
+    {
+      "from": "H14",
+      "step": "hub-operations",
+      "check": {
+        "id": "hub-graceful-shutdown",
+        "title": {
+          "en": "Hub graceful-shutdown drill",
+          "de": "Hub-Drill: geordnetes Herunterfahren"
+        },
+        "criteria": [
+          "2.10"
+        ],
+        "project": "os-hub-ts",
+        "target": "shutdown-drill",
+        "args": [
+          "--kind",
+          "note",
+          "--edits",
+          "20",
+          "--rounds",
+          "1"
+        ],
+        "env": {
+          "OS_HUB_BINARY": "{hubBinary}"
+        },
+        "requires": [],
+        "browsers": 0
+      }
+    },
+    {
+      "from": "S20",
+      "step": "frontend",
+      "check": {
+        "id": "io-matrix-en",
+        "title": {
+          "en": "Export and import through s, per kind, English",
+          "de": "Export und Import über s, pro Art, Englisch"
+        },
+        "criteria": [
+          "1.7"
+        ],
+        "project": "@semio-tech/framework-os-dev",
+        "target": "io-matrix",
+        "args": [
+          "--serve",
+          "{localServe}",
+          "--locale",
+          "en",
+          "--tag",
+          "goal-en"
+        ],
+        "requires": [
+          "localServe"
+        ],
+        "browsers": 1
+      }
+    },
+    {
+      "from": "S20",
+      "step": "frontend",
+      "check": {
+        "id": "io-matrix-de",
+        "title": {
+          "en": "Export and import through s, per kind, German",
+          "de": "Export und Import über s, pro Art, Deutsch"
+        },
+        "criteria": [
+          "1.7",
+          "5.2"
+        ],
+        "project": "@semio-tech/framework-os-dev",
+        "target": "io-matrix",
+        "args": [
+          "--serve",
+          "{localServe}",
+          "--locale",
+          "de",
+          "--tag",
+          "goal-de"
+        ],
+        "requires": [
+          "localServe"
+        ],
+        "browsers": 1
+      }
+    },
+    {
+      "from": "H13",
+      "step": "hub-laws",
+      "check": {
+        "id": "hub-hostile-input",
+        "title": {
+          "en": "The hub survives hostile and generated input on every route and socket",
+          "de": "Der Hub übersteht feindliche und generierte Eingaben auf jeder Route und jedem Socket"
+        },
+        "criteria": [
+          "2.13"
+        ],
+        "project": "os-hub",
+        "target": "hostile-input-check",
+        "args": [
+          "--locale",
+          "en"
+        ],
+        "requires": [],
+        "browsers": 0
+      }
+    }
+  ],
+  "pending": [
+    "WG11: verb hub-collaboration-acceptance (renderer-wgpu 📦️packages/🟦️typescript/📜️script.ts); full spec in 📓️wp-wg11.md 'RELAY spec' once live",
+    "S20: second check command-reachability-live (1.8) — invocation not specified yet (same verb? flag?)",
+    "Z4: Windows-safe launch rows — process3d test-diff row single-quoted 'test(…)' → double quotes; 🖱️mcpinspector🌉️os row `npx --yes …` → `bun x @modelcontextprotocol/inspector …` (seed edits, pending exact row text)"
+  ],
+  "newDirectories": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🚪️io-matrix",
+      "from": "S20"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🤝️hub-collaboration",
+      "from": "WG11"
+    },
+    {
+      "path": "🌎️hub/🧪️tests/🤖️agent-ceiling",
+      "from": "H13"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🎒️zip",
+      "from": "R10 owned-zip",
+      "parentKind": "members-of-modules"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🧫️fixtures/🎒️zip-archive-cases",
+      "from": "R10 owned-zip",
+      "parentKind": "fixtures"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/🧪️tests/🔬️media-export-raster-unit",
+      "from": "R10 owned-png",
+      "parentKind": "tests"
+    },
+    {
+      "path": "🌎️hub/🚧️refusal/🧫️fixtures/⏳️transient-apply-refusal-v1",
+      "from": "H13",
+      "parentKind": "fixtures"
+    }
+  ],
+  "seedInputEdits": [
+    {
+      "from": "R10",
+      "id": "acceptanceHubUrl",
+      "default": "http://127.0.0.1:8787"
+    }
+  ],
+  "planSteps": [
+    {
+      "from": "Z4",
+      "after": "hub-operations",
+      "step": {
+        "id": "hub-image",
+        "title": {
+          "en": "Hub container image: build and check",
+          "de": "Hub-Container-Abbild: bauen und prüfen"
+        },
+        "mode": "serial",
+        "gatesRest": false,
+        "optional": true,
+        "checks": [
+          {
+            "id": "hub-image-build",
+            "title": {
+              "en": "Build the hub container image",
+              "de": "Hub-Container-Abbild bauen"
+            },
+            "criteria": [
+              "2.8"
+            ],
+            "project": "os-hub-ts",
+            "target": "docker-image-build",
+            "args": [],
+            "requires": [],
+            "browsers": 0
+          },
+          {
+            "id": "hub-image-check",
+            "title": {
+              "en": "Check the hub container image",
+              "de": "Hub-Container-Abbild prüfen"
+            },
+            "criteria": [
+              "2.8",
+              "5.1"
+            ],
+            "project": "os-hub-ts",
+            "target": "docker-image-check",
+            "args": [],
+            "env": {
+              "OS_HUB_PROBE_EMAIL": "{user1Email}",
+              "OS_HUB_PROBE_PASSWORD": "{user1Password}"
+            },
+            "requires": [],
+            "browsers": 0
+          }
+        ]
+      }
+    }
+  ]
+}

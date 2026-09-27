@@ -32,12 +32,14 @@ pub struct ZipEntriesDiff {
     pub modified: Vec<ZipEntryModified>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<ZipEntry>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<Vec<String>>,
 }
 
 impl ZipEntriesDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn is_empty(&self) -> bool {
-        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() && self.order.is_none()
     }
 }
 
@@ -87,6 +89,18 @@ fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>)
         (Some(value), None) | (None, Some(value)) => return Some(value),
         (Some(first), Some(second)) => (first, second),
     };
+    let order = second.order.clone().or_else(|| first.order.take().map(|mut order| {
+        let removed: HashSet<&str> = second.removed.iter().map(String::as_str).collect();
+        order.retain(|name| !removed.contains(name.as_str()));
+        let renamed: HashMap<&str, &str> = second.modified.iter().filter_map(|entry| entry.diff.name.as_ref().map(|name| (entry.name.as_str(), name.as_str()))).collect();
+        for name in &mut order {
+            if let Some(renamed) = renamed.get(name.as_str()) {
+                *name = (*renamed).into();
+            }
+        }
+        order.extend(second.added.iter().map(|entry| entry.name.clone()));
+        order
+    }));
     let renamed: HashMap<String, String> = first.modified.iter().filter_map(|item| item.diff.name.as_ref().map(|name| (item.name.clone(), name.clone()))).collect();
     let reverse: HashMap<&str, &str> = renamed.iter().map(|(base, current)| (current.as_str(), base.as_str())).collect();
     let added_names: HashSet<String> = first.added.iter().map(|item| item.name.clone()).collect();
@@ -123,7 +137,7 @@ fn absorb_entries(first: Option<ZipEntriesDiff>, second: Option<ZipEntriesDiff>)
         }
     }
     added.extend(second.added);
-    let result = ZipEntriesDiff { removed, modified, added };
+    let result = ZipEntriesDiff { removed, modified, added, order };
     (!result.is_empty()).then_some(result)
 }
 //#endregion 🔖️EntryLogic
@@ -147,8 +161,11 @@ impl MutationDiff<ZipSnapshot> for ZipDiff {
                 }
             }
             next.entries.extend(diff.added.iter().cloned());
+            if let Some(order) = &diff.order {
+                let mut entries: HashMap<String, ZipEntry> = next.entries.into_iter().map(|entry| (entry.name.clone(), entry)).collect();
+                next.entries = order.iter().map(|name| entries.remove(name).expect("validated ZIP order")).collect();
+            }
         }
-        next.entries.sort_by(|left, right| left.name.cmp(&right.name));
         Ok(next)
     }
 
@@ -192,6 +209,12 @@ fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApp
             return Err(MutationApplyError::new("mutation.apply.duplicate-target", "ZIP entry addition conflicts with the target archive").at(["entries", "added"]));
         }
     }
+    if let Some(order) = &diff.order {
+        let ordered: HashSet<&str> = order.iter().map(String::as_str).collect();
+        if ordered.len() != order.len() || ordered != occupied {
+            return Err(MutationApplyError::new("mutation.apply.invalid-order", "ZIP entry order must contain every resulting member exactly once").at(["entries", "order"]));
+        }
+    }
     Ok(())
 }
 
@@ -214,8 +237,10 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
                 (diff != ZipEntryDiff::default()).then_some(ZipEntryModified { name: entry.name.clone(), diff })
             })
             .collect();
-        let added = other.entries.iter().filter(|entry| !base_names.contains(entry.name.as_str())).cloned().collect();
-        let entries = ZipEntriesDiff { removed, modified, added };
+        let added: Vec<ZipEntry> = other.entries.iter().filter(|entry| !base_names.contains(entry.name.as_str())).cloned().collect();
+        let natural_order = base.entries.iter().filter(|entry| other_names.contains(entry.name.as_str())).map(|entry| entry.name.as_str()).chain(added.iter().map(|entry| entry.name.as_str()));
+        let order = (!natural_order.eq(other.entries.iter().map(|entry| entry.name.as_str()))).then(|| other.entries.iter().map(|entry| entry.name.clone()).collect());
+        let entries = ZipEntriesDiff { removed, modified, added, order };
         Self { comment, entries: (!entries.is_empty()).then_some(entries) }
     }
 
@@ -237,8 +262,18 @@ pub fn diff_set_archive_comment(comment: &str) -> ZipDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_add_entry(entry: ZipEntry) -> ZipDiff {
-    ZipDiff { comment: None, entries: Some(ZipEntriesDiff { added: vec![entry], ..Default::default() }) }
+pub fn diff_add_entry(base: &ZipSnapshot, entry: ZipEntry, before: Option<&str>) -> ZipDiff {
+    let order = before.map(|before| {
+        let mut names = Vec::with_capacity(base.entries.len() + 1);
+        for existing in &base.entries {
+            if existing.name == before {
+                names.push(entry.name.clone());
+            }
+            names.push(existing.name.clone());
+        }
+        names
+    });
+    ZipDiff { comment: None, entries: Some(ZipEntriesDiff { added: vec![entry], order, ..Default::default() }) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

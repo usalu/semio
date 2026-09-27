@@ -699,7 +699,7 @@ function createCelebratingConicMaterial(opacity = 1): ShaderMaterial {
 //#endregion 🎉️WorldInstanceCelebrate
 //#endregion WorldMeshPaint
 
-type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
+export type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
 
 /** 📐️ A `camera_json.projection` field is the composed mode ⊗ orientation taxonomy object. */
 function parseWorldProjectionField(value: unknown): WorldProjectionSpec | undefined {
@@ -5265,6 +5265,67 @@ export function WorldOrbitProjectionSwitchPane({ spec, onSpecChange, windowEleme
  * host can't otherwise tell which pane it is; provided per-pane around each `<InterpretedUiNode>` call. */
 export const WindowInstanceIdContext = createContext<string | null>(null);
 
+export type World3dRetainedViewportV1 = Readonly<{
+  camera: WorldParsedCameraState | null;
+  viewportOwned: boolean;
+  userMovedFitRevision: number | null;
+  detachEpoch: number;
+  projectionContentFrameSeeded: boolean;
+  lastDispatchedCamera: WorldCameraState | null;
+  observedSceneCameraJson: string;
+  sceneCameraAttachJson: string;
+  pendingProjectionSpec: WorldProjectionSpec | null;
+}>;
+
+/** @emoji 📷️ Shell-session owner of live per-window world viewports. */
+export class World3dWindowViewStoreV1 {
+  readonly #views = new Map<string, World3dRetainedViewportV1>();
+  #owner: string | null = null;
+
+  admitOwner(owner: string | null): void {
+    if (this.#owner === owner) return;
+    this.#owner = owner;
+    this.#views.clear();
+  }
+
+  read(windowId: string | null): World3dRetainedViewportV1 | null {
+    return windowId ? (this.#views.get(windowId) ?? null) : null;
+  }
+
+  write(windowId: string | null, viewport: World3dRetainedViewportV1): void {
+    if (windowId) this.#views.set(windowId, viewport);
+  }
+
+  retire(windowId: string | null): void {
+    if (windowId) this.#views.delete(windowId);
+  }
+}
+
+/** @emoji 🪪️ Keeps independently-lived primary and spawned program viewport owners apart. */
+export class World3dWindowViewRegistryV1 {
+  readonly #stores = new Map<string, World3dWindowViewStoreV1>();
+
+  scope(owner: string): World3dWindowViewStoreV1 {
+    const retained = this.#stores.get(owner);
+    if (retained) return retained;
+    const created = new World3dWindowViewStoreV1();
+    created.admitOwner(owner);
+    this.#stores.set(owner, created);
+    return created;
+  }
+
+  retireOwner(owner: string | null): void {
+    if (owner) this.#stores.delete(owner);
+  }
+
+  retireWindow(windowId: string | null): void {
+    for (const store of this.#stores.values()) store.retire(windowId);
+  }
+}
+
+/** @emoji 🐚️ The current shell session's live world viewport owner. */
+export const World3dWindowViewStoreContext = createContext<World3dWindowViewStoreV1 | null>(null);
+
 /** @emoji 🪟️ One-shot initial camera pose, keyed by window instance id, consumed by {@link World3dHost} on
  * mount and then discarded — the side-channel a Display "Windows" drag-and-drop template uses to seed a
  * freshly-opened pane's projection (dragging "Top" opens a pane that starts in the Top view, etc.). */
@@ -5287,6 +5348,11 @@ function peekPendingWorldProjection(windowId: string | null): WorldProjectionSpe
 export function clearPendingWorldProjection(windowId: string | null): void {
   if (!windowId) return;
   pendingWorldProjectionByWindowId.delete(windowId);
+}
+
+/** @emoji 🪦️ Retires projection seeds owned by a session that is leaving the shell. */
+export function clearPendingWorldProjections(windowIds: readonly string[]): void {
+  for (const windowId of windowIds) pendingWorldProjectionByWindowId.delete(windowId);
 }
 //#endregion WorldWindowInstance
 
@@ -5500,6 +5566,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     return shellScope.selection.subscribe(() => setPersistentSelectionMode(shellScope.selection.get()));
   }, [shellScope]);
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const windowViewStore = useContext(World3dWindowViewStoreContext);
   const setWindowTitle = useContext(SetWindowTitleContext);
   const setWindowIcon = useContext(SetWindowIconContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
@@ -5521,29 +5588,31 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     return instances.length > 0 ? autofitCameraFromInstances(instances) : parsedCamera;
   }, [instances, parsedCamera, sceneCameraJson]);
   const contentBounds = useMemo(() => worldSceneContentBounds(world3dFramingInstances(instances), references), [instances, references]);
+  const [retainedViewport] = useState(() => windowViewStore?.read(windowInstanceId) ?? null);
   const pendingProjectionSpecRef = useRef<WorldProjectionSpec | null>(null);
   const [viewportCamera, setViewportCamera] = useState<WorldParsedCameraState | null>(() => {
+    if (retainedViewport) return retainedViewport.camera;
     const pendingSpec = peekPendingWorldProjection(windowInstanceId);
     if (!pendingSpec) return null;
     pendingProjectionSpecRef.current = pendingSpec;
     return seedPendingWorldProjectionCamera(pendingSpec, sceneCamera, instances, references);
   });
-  const [projectionFramePending, setProjectionFramePending] = useState(() => pendingProjectionSpecRef.current !== null);
-  const [viewportOwned, setViewportOwned] = useState(false);
+  const [projectionFramePending, setProjectionFramePending] = useState(() => retainedViewport === null && pendingProjectionSpecRef.current !== null);
+  const [viewportOwned, setViewportOwned] = useState(retainedViewport?.viewportOwned ?? false);
   const [cameraNavigating, setCameraNavigating] = useState(false);
   /** 🔒️ The fit revision the USER last moved this camera on. While it names the live revision the auto-fit
    * lane stands down; a new revision (a document/example swap) is a new framing the user has not refused yet.
    * Deliberately not `viewportOwned`, which the auto-fit's own `onFitted` sets. */
-  const [userMovedFitRevision, setUserMovedFitRevision] = useState<number | null>(null);
+  const [userMovedFitRevision, setUserMovedFitRevision] = useState<number | null>(retainedViewport?.userMovedFitRevision ?? null);
   const liveFitRevisionRef = useRef(0);
   const noteUserMovedCamera = useCallback(() => setUserMovedFitRevision(liveFitRevisionRef.current), []);
-  const [detachEpoch, setDetachEpoch] = useState(0);
+  const [detachEpoch, setDetachEpoch] = useState(retainedViewport?.detachEpoch ?? 0);
   /** 📷️ First content-frame remounts orbit controls; later tool-driven bound expansions only soft-update the camera. */
-  const projectionContentFrameSeededRef = useRef(false);
-  const previousSceneCameraJsonRef = useRef(sceneCameraJson);
+  const projectionContentFrameSeededRef = useRef(retainedViewport?.projectionContentFrameSeeded ?? false);
+  const previousSceneCameraJsonRef = useRef(retainedViewport?.observedSceneCameraJson ?? sceneCameraJson);
   /** 🧭️ The last camera pose this component itself dispatched via debounced `setCamera` — lets the reattach
    * effect below recognize the plugin echoing it straight back (see `shouldReattachWorldViewportCamera`). */
-  const lastDispatchedWorldCameraRef = useRef<WorldCameraState | null>(null);
+  const lastDispatchedWorldCameraRef = useRef<WorldCameraState | null>(retainedViewport?.lastDispatchedCamera ?? null);
   /** 📷️ The scene-camera text the RIG is seeded from — advanced only by a genuine EXTERNAL camera change,
    * never by the plugin echoing this component's own `setCamera` straight back.
    *
@@ -5556,12 +5625,47 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
    * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`). The reattach
    * predicate already knows which changes are external; the seed key now reads its verdict instead of
    * re-deciding from the text. */
-  const [sceneCameraAttachJson, setSceneCameraAttachJson] = useState(sceneCameraJson);
+  const [sceneCameraAttachJson, setSceneCameraAttachJson] = useState(retainedViewport?.sceneCameraAttachJson ?? sceneCameraJson);
+  const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = useState<WorldProjectionSpec | null>(retainedViewport?.pendingProjectionSpec ?? null);
+  const retainedPendingProjectionSpecRef = useRef(retainedViewport?.pendingProjectionSpec ?? null);
+  const retainedViewportSnapshotRef = useRef<World3dRetainedViewportV1>({
+    camera: viewportCamera,
+    viewportOwned,
+    userMovedFitRevision,
+    detachEpoch,
+    projectionContentFrameSeeded: projectionContentFrameSeededRef.current,
+    lastDispatchedCamera: lastDispatchedWorldCameraRef.current,
+    observedSceneCameraJson: previousSceneCameraJsonRef.current,
+    sceneCameraAttachJson,
+    pendingProjectionSpec: retainedPendingProjectionSpecRef.current,
+  });
+  const retainViewport = useCallback(
+    (patch: Partial<World3dRetainedViewportV1>) => {
+      const next = { ...retainedViewportSnapshotRef.current, ...patch };
+      retainedViewportSnapshotRef.current = next;
+      windowViewStore?.write(windowInstanceId, next);
+    },
+    [windowInstanceId, windowViewStore],
+  );
+  useLayoutEffect(() => {
+    retainViewport({
+      camera: viewportCamera,
+      viewportOwned,
+      userMovedFitRevision,
+      detachEpoch,
+      projectionContentFrameSeeded: projectionContentFrameSeededRef.current,
+      lastDispatchedCamera: lastDispatchedWorldCameraRef.current,
+      observedSceneCameraJson: previousSceneCameraJsonRef.current,
+      sceneCameraAttachJson,
+      pendingProjectionSpec: retainedPendingProjectionSpecRef.current,
+    });
+  }, [detachEpoch, retainViewport, sceneCameraAttachJson, userMovedFitRevision, viewportCamera, viewportOwned]);
   useEffect(() => {
     // 🧭️ Always advance the tracking ref, even when we're about to suppress a reattach below — otherwise the
     // NEXT comparison would still diff against this stale value instead of the pose we just saw.
     const previousSceneCameraJson = previousSceneCameraJsonRef.current;
     previousSceneCameraJsonRef.current = sceneCameraJson;
+    retainViewport({ observedSceneCameraJson: sceneCameraJson });
     if (!shouldReattachWorldViewportCamera(previousSceneCameraJson, sceneCameraJson, lastDispatchedWorldCameraRef.current)) return;
     setSceneCameraAttachJson(sceneCameraJson);
     setViewportCamera(null);
@@ -5577,7 +5681,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     setDetachEpoch(0);
     setProjectionFramePending(Boolean(pendingProjectionSpecRef.current));
     projectionContentFrameSeededRef.current = false;
-  }, [sceneCameraJson]);
+  }, [retainViewport, sceneCameraJson]);
   const cameraState = viewportCamera ?? sceneCamera;
 
   const cameraSeedKey = world3dViewportCameraSeedKey(sceneCameraAttachJson, detachEpoch);
@@ -5605,12 +5709,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       set: (pose) => {
         if (pose.kind !== "orbit") return;
         const live = cameraStateRef.current;
-        setViewportCamera({ ...live, position: pose.position, target: pose.target, up: pose.up ?? live.up, fov: pose.fov ?? live.fov });
+        const next = { ...live, position: pose.position, target: pose.target, up: pose.up ?? live.up, fov: pose.fov ?? live.fov };
+        setViewportCamera(next);
+        retainViewport({ camera: next });
         setDetachEpoch((epoch) => epoch + 1);
       },
     };
     return registerTutorialCameraDriver(windowInstanceId, driver);
-  }, [windowInstanceId]);
+  }, [retainViewport, windowInstanceId]);
   // 🧊️ The retained mesh set advances per mesh, so a refresh that republishes an unchanged mesh keeps
   // that record's object identity and the instanced layer keeps its already-built buffers.
   const meshResidencyRef = useRef<WorldMeshResidencyV1 | null>(null);
@@ -5889,11 +5995,15 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const adoptViewportCamera = useCallback(
     (next: WorldCameraState, applyToRig: boolean) => {
-      setViewportCamera((prev) => mergeWorldViewportCamera(prev ?? sceneCamera, next));
+      setViewportCamera((prev) => {
+        const merged = mergeWorldViewportCamera(prev ?? sceneCamera, next);
+        retainViewport({ camera: merged, viewportOwned: true });
+        return merged;
+      });
       setViewportOwned(true);
       if (applyToRig) setDetachEpoch((epoch) => epoch + 1);
     },
-    [sceneCamera],
+    [retainViewport, sceneCamera],
   );
 
   // 🧭️ Syncs a completed user-driven camera gesture (orbit/pan/zoom end, gizmo view snap) to the plugin so
@@ -5911,10 +6021,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       cameraDispatchTimeoutRef.current = setTimeout(() => {
         cameraDispatchTimeoutRef.current = null;
         lastDispatchedWorldCameraRef.current = state;
+        retainViewport({ lastDispatchedCamera: state });
         dispatch("setCamera", worldCameraSetCameraDispatchArgs(windowInstanceId ?? node.surfaceId, state));
       }, CAMERA_SYNC_DEBOUNCE_MS);
     },
-    [dispatch, node.surfaceId, windowInstanceId],
+    [dispatch, node.surfaceId, retainViewport, windowInstanceId],
   );
   useEffect(
     () => () => {
@@ -6656,14 +6767,16 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   useEffect(() => {
     const pending = peekPendingWorldProjection(windowInstanceId);
-    if (pending) syncProjectionWindowChrome(pending);
-  }, [syncProjectionWindowChrome, windowInstanceId]);
+    if (pending && windowInstanceId) setWindowIcon?.(windowInstanceId, worldProjectionSpecIconId(pending) as IconName);
+  }, [setWindowIcon, windowInstanceId]);
 
   // 🧭️ Gizmo/axis-indicator camera snap — a discrete view change the user clicked, so (like
   // `handleCameraChange`) it also dispatches, debounced identically.
   const handleGizmoCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, true);
+      retainedPendingProjectionSpecRef.current = null;
+      retainViewport({ pendingProjectionSpec: null });
       noteUserMovedCamera();
       if (state.projectionSpec) syncProjectionWindowChrome(state.projectionSpec);
       dispatchWorldCameraDebounced(state);
@@ -6671,7 +6784,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     [adoptViewportCamera, noteUserMovedCamera, syncProjectionWindowChrome, dispatchWorldCameraDebounced],
   );
 
-  const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
   const [pendingProjectionSpec, setPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
 
   // 🧭️ User-driven projection-kind switch (`WorldOrbitProjectionSwitchPane`) — view-state only, never
@@ -6683,21 +6795,25 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   // handler instead of doing anything.
   const handleProjectionKindChange = useCallback(
     (spec: WorldProjectionSpec) => {
+      retainedPendingProjectionSpecRef.current = spec;
       setExternalPendingProjectionSpec(spec);
+      retainViewport({ pendingProjectionSpec: spec });
       syncProjectionWindowChrome(spec);
     },
-    [syncProjectionWindowChrome],
+    [retainViewport, syncProjectionWindowChrome],
   );
 
   const handleProjectionContentFrame = useCallback((state: WorldParsedCameraState) => {
     setViewportCamera(state);
     if (!projectionContentFrameSeededRef.current) {
       projectionContentFrameSeededRef.current = true;
+      retainViewport({ projectionContentFrameSeeded: true });
       setDetachEpoch((epoch) => epoch + 1);
     }
+    retainViewport({ camera: state, viewportOwned: true });
     setViewportOwned(true);
     setProjectionFramePending(false);
-  }, []);
+  }, [retainViewport]);
 
   const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? worldProjectionDefaults("orthographic") : worldProjectionDefaults("threePoint"));
   /** 📷️ Keep fitting the live content bounds into seeded projection panes (esp. orthographic Top) until the

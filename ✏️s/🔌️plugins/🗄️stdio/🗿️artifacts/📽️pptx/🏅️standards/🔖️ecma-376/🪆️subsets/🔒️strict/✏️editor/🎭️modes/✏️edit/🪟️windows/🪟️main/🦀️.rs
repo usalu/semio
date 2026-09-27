@@ -6,8 +6,8 @@
 
 use crate::schema::snapshot::{PptxParagraph, PptxShape};
 use crate::PptxSnapshot;
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -37,16 +37,25 @@ fn shape_text(shape: &PptxShape) -> Option<String> {
     }
 }
 
-/// ✏️ Real `PptxSnapshot -> BuiltNode`: one `DocumentPage` per slide.
+/// ✏️ Builds one faithfully addressed draft per text-bearing slide shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &PptxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let pages = document.presentation.slides.iter().map(|slide| DocumentPage { text: slide.shapes.iter().filter_map(shape_text).collect::<Vec<_>>().join("\n") }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+fn editable_pages(document: &PptxSnapshot) -> Vec<EditableDocumentPage> {
+    document
+        .presentation
+        .slides
+        .iter()
+        .enumerate()
+        .flat_map(|(page_index, slide)| slide.shapes.iter().enumerate().filter_map(move |(item_index, shape)| shape_text(shape).map(|text| EditableDocumentPage { page_index: page_index as u32, item_index: item_index as u32, text })))
+        .collect()
 }
 
-pub fn render_windowed(document: &PptxSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let pages = document.presentation.slides.iter().map(|slide| DocumentPage { text: slide.shapes.iter().filter_map(shape_text).collect::<Vec<_>>().join("\n") }).collect();
-    DocumentWindowKit::render_windowed(&DocumentView { pages }, windows)
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn render(document: &PptxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document) }, &TreeWindows::unhosted(), Locale::En)
+}
+
+pub fn render_windowed(document: &PptxSnapshot, windows: &TreeWindows<'_>, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document) }, windows, locale)
 }
 //#endregion 🔖️Render
 

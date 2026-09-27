@@ -27,10 +27,13 @@ line = rename layout
      | delete frame
      | move frame
      | resize frame
+     | rotate frame
      | change frame fill
      | change frame stroke
      | change frame wrap mode
-     | change frame columns ;
+     | change frame columns
+     | update grid
+     | set frame flags ;
 rename layout = 'rename-layout', space, text ;
 change print target = 'change-print-target', space, [ text ] ;
 change data fields = 'change-data-fields', space, [ text ] ;
@@ -52,10 +55,13 @@ create frame = 'create-frame', space, id, space, block, space, [ number ], space
 delete frame = 'delete-frame', space, id, space, id ;
 move frame = 'move-frame', space, id, space, id, space, number, space, number ;
 resize frame = 'resize-frame', space, id, space, id, space, number, space, number ;
+rotate frame = 'rotate-frame', space, id, space, id, space, number ;
 change frame fill = 'change-frame-fill', space, id, space, id, space, [ block ] ;
 change frame stroke = 'change-frame-stroke', space, id, space, id, space, [ block ] ;
 change frame wrap mode = 'change-frame-wrap-mode', space, id, space, id, space, text ;
 change frame columns = 'change-frame-columns', space, id, space, id, space, number ;
+update grid = 'update-grid', space, number, space, number, space, boolean ;
+set frame flags = 'set-frame-flags', space, id, space, id, space, [ boolean ], space, [ boolean ] ;
 id = octet, { octet } ;
 number = octet, { octet } ;
 text = octet, { octet } ;

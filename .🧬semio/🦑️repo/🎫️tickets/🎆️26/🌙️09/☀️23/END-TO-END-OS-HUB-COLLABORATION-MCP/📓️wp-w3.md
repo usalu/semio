@@ -12,8 +12,25 @@ data `.🧬semio/🌐hub/s13-w3-*`. Handover: [📓️wp-w2.md](📓️wp-w2.md)
 | 3 | Land W2's prepared sets (item4 + supervised 7800 restart; `VersionReq` narrowing moved to S17 by the coordinator) | **LANDED** item4 20:48 (auto-committed 22:00); laws green; native check **green 05:23** (kernel, os-mcp, os-run, plugin-host `--lib --tests`); supervised restart = `w3-restart-7800.sh` + `w3-hub-resume.sh` |
 | 4 | Kernel derive macro reads a narrow generated input | **LANDED** 20:4x: committed projection `✨️derive/🔣️mutation-authority.json` (schema + generator contract + generate/preview/check verbs), expansions include only it; derive tests 16/16; kernel lib + lib-test check green 05:13; a peer regenerated the projection at 00:44 after a taxonomy edit (`check-generated` fresh) |
 | 5 | Requests triage (`wp-w1`, `wp-w2`, `wp-w3` requests) | **DONE** 21:2x (table below): all served by the consolidated rebuild + catalogs, except WG9's browser wgpu renderer `wasm-release` and P8's un-landed patch sets → routed to main |
-| 6 | ONE consolidated chain (rebuild-all → B3 → 7800 → `--packages all` → 7800) | **RUNNING** b3 run 2 since 10:55 (chain pid 16364, `.🧬semio/🌐hub/s13-w3-logs/chain-b3.txt`); run 1 stopped 10:55 after raster + forms compile errors (fixed by T13 + owner) 05:2x (early steps dry-run, lane orchestration simulated); prepared 21:2x: `wp-w3/w3-chain.sh b3|all` (+ `w3-restart-7800.sh`, `w3-hub-hold.ts`, `w3-hub-resume.sh`, `w3-open-plan-probe.ts`); product chain gained `provenance`, `mutation-authority`, `flow-core-bindings`, `preflight-catalog` steps; waits for REBUILD START |
-| 7 | Hub Handoff rewrite when 7800 serves the all-package catalog | PENDING (after chain `all`); 7800 is DOWN since the overnight loss (hold 28673/hub 54029 gone), it returns with chain `b3` on a fresh root |
+| 6 | ONE consolidated chain (rebuild-all → B3 → 7800 → `--packages all` → 7800) | b3 **DONE** (run 6: B3 published 13:54, 7800 READY 13:57); phase `final` PREPARED + dry-run 14:15, waits for the end of landing window 2 05:2x (early steps dry-run, lane orchestration simulated); prepared 21:2x: `wp-w3/w3-chain.sh b3|all` (+ `w3-restart-7800.sh`, `w3-hub-hold.ts`, `w3-hub-resume.sh`, `w3-open-plan-probe.ts`); product chain gained `provenance`, `mutation-authority`, `flow-core-bindings`, `preflight-catalog` steps; waits for REBUILD START |
+| 7 | Hub Handoff rewrite when 7800 serves the all-package catalog | B3 handoff WRITTEN (7800 ready on B3 13:57); ALL handoff after phase `final` |
+
+### Hub Handoff (7800)
+
+**CATALOG B3, READY since 2026-09-27 13:57** (chain b3 run 6; boot ~30 s). Next: phase `final` (`--packages all`) moves 7800 to a fresh root;
+this B3 root and binary stay for rollback.
+
+| what | value |
+|---|---|
+| URL | `http://127.0.0.1:7800` (loopback, development), `/readyz` `status: ready` (runId `fd90596d4296708cc463c42c0170a410`) |
+| catalog | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-w3-catalog-b3`: profile `local-stdio-gis-note-animate-block-writer-draw-puzzle-wfc-open-v1`, generation `e3c0c98ef201c30195f1cdbb5cadd1c490e4ca5edf3e67a23e3adf1b428dfc0d`, bundle sha256 `fdf20877049a4a14e60a3084391d5da9c4bd765e5c7a8d03b8fc25fe7377f055` (published 13:54, 330 s, current-tree envelope wire) |
+| binary | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-w3-bin/s13-w3-hub-7800-b3/os-hub` (sha256 `962ba3726a70d1945bb1ae935c024636b506a48a0e627c8843f62aa10c3afd4c`, `os-hub:build-dev` 13:54) + `os-hub.sources.json` beside it; `bun nx run os-hub-ts:hub-freshness --hub http://127.0.0.1:7800` works (14:1x: `stale`, 8004 sources, landing window 2 edits after the 13:54 build) |
+| data root | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-w3-hub-7800-b3` (fresh, new envelope wire) |
+| hold | supervised `wp-w3/w3-hub-hold.ts` pid `4540`, hub pid `4548`; state `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-w3-state-7800/{pids.txt,status.txt,hold.txt,capture.txt,ready.json,admin-capability.json}` |
+| users | `user1@semio.dev` / `gm1-local-dev-pass-1` (`01a0e2b9-7c61-7c91-90c1-9bf87c0e570b`), `user2@semio.dev` / `gm1-local-dev-pass-2` (`01a0e2b9-7c83-7dfa-ad7a-f970740183b5`) |
+| admin | `/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-w3-state-7800/admin-capability.json` (`0600`, one `admin-relay` session, 15 min); fresh one: `touch …/s13-w3-state-7800/admin-request` |
+| stop / resume | stop: `touch /Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-w3-state-7800/stop`; after a whole-process loss: `zsh .tmp-ticket/wp-w3/w3-hub-resume.sh s13-w3-hub-7800-b3` |
+| MCP | `semio-framework-os-mcp` built by the chain (`@semio-tech/framework-os-mcp-rs:build`, 13:56); agent credential recipe as in W2's handoff (`POST /auth/agent-delegations`) |
 
 ### Session 13 Log
 
@@ -176,3 +193,44 @@ Ticket scripts (`wp-w3/`): `w3-chain.sh`, `w3-wasm-hold.sh`, `w3-lane.sh`, `w3-r
   forward lane's stdio wasm-release build (nx 72813 → cargo 73798 → rustc 82552, 48 min into its single LTO crate). Run-1 logs renamed
   `s13-w3-logs/run1-*`. `w3-wasm-hold.sh` failure summary fixed for nx-prefixed lines (every failing crate + first real error), replaced by
   rename so a running hold keeps its open inode. 10:55:53 run 2 launched by the coordinator (chain 16364).
+- 11:0x–12:08 **run 2**: gate green again (wasip2 94 s, kernel[sync] 82 s, renderer 190 s, stdio check), components 59/60 green; forward
+  lane: stdio release rc=1 (waited on the survivor, which the coordinator killed at 11:5x in a memory emergency: swap 45/47 GB, the
+  components' stdio wasm-dev rustc reached an 85 GB footprint), gis cut at the failure. **stdio failed to link**:
+  `wasm-component-ld … failed to encode component … functions count exceeds limit of 1000000`. Root cause (measured by diff):
+  the Codex stdio rollout (`🗄️stdio/🔌️plugin/🦀️.rs` mtime 01:15, `📦️packages/🦀️rust/Cargo.toml` 01:19; auto-committed 11:30 in
+  `6b8089dcb21`) deleted the `full-app-catalog` / document-catalog split, so the default `plugin-root` component now closes `StdioApps`
+  over all 88 subsets (176 apps, was 18). The deleted doc comment recorded the same measurement (≈600 000 functions for that fleet →
+  over wasmparser's 1 000 000 ceiling, "library fleet only"). The 176-app monomorphisation in one CGU is also what drove rustc to 85 GB.
+  My fast gate cannot see it (`cargo check` does no codegen or link). Routed to main (owner: Codex stdio team): restore the split, or
+  split stdio into several components (design change). Chain ended 12:08:55 cleanly (no cargo left, mutex released).
+- 12:1x–13:57 (coordinator-run relaunches while I was cut; from `chain-b3.txt`): runs 3–5 failed on 29 norm example slugs (coordinator
+  renamed), Nx replaying cached registry steps (coordinator added `--skip-nx-cache` to generate/check/activate-s/verify-s in
+  `🔁️rebuild/🔣️.json`), stdio html/tsv/txt open targets without linked codecs (LB: publisher treats them as unowned); stdio's 18-app
+  component split restored by LB (lb-p3). **Run 6**: rebuild-all 1007 s, preflight 24 s, **B3 published 13:54 (330 s)**, renderer
+  wasm-release rc=0 13:49 (beside the bootstrap), hub build 23 s, os-mcp build 122 s, restart 7 s → **7800 READY on B3 ~13:57**. At 14:0x
+  the coordinator stopped the chain (rest-warm lane + hold; G11's kernel `DirectoryClient` fix forces a full recompile) and opened
+  landing window 2, so the chain's own post-ready verification did not run; measured since: `/readyz` ready, `hub-freshness` works
+  (`stale` after landing-window edits, as expected). Hub Handoff (B3) written above.
+- 14:1x **phase `final`** (replaces the `all` phase): `w3-chain.sh final` = hub build-dev prewarm ‖ ONE wasm hold (`w3-wasm-hold.sh final`:
+  forward warm lane over every release in the `--packages all` order, starts after the prewarm ‖ rebuild-all --to flow-core-bindings →
+  preflight all → `--packages all` bootstrap into `s13-w3-catalog-all` ‖ reverse lane (renderer wasm-release first, never cut; then
+  releases from the end) → `final-publish.rc`) → os-hub build-dev + os-mcp build → `w3-restart-7800.sh` onto a fresh root
+  `s13-w3-hub-7800-all` (stops B3 hold 4540/hub 4548 via its stop file; B3 root + binary kept for rollback) → readiness, `/readyz`,
+  `hub-freshness`, footprint, open-plan probe over every creatable kind, footprint. Refuses when the all root or a published all catalog
+  already exists. `W3_DIR` added to the overrides. **Dry run** (fake `bun`, pass-through mutex, stub restart, scratch hub root): whole
+  sequence rc=0 in 41 s — prewarm → rebuild → preflight → publish → rc hand-off → hub/mcp build → restart → READY → freshness → probe →
+  footprints → DONE; lanes stop/cut as designed.
+- 15:0x **release plugin-module root (WG9 finding)**: `…/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules` is written by
+  `@semio-tech/framework-plugin-web:support-release` (`🧵️shard/🟨️shard-worker.js` = `shardWorkerSource()`, `🪞️vendor/…/🪟️preview2-shim` copied
+  and patched by `patchPreview2ShimGuestLogClassification`/`…LineRelease`, the guestslim font seed) and by every component's inferred
+  `materialize-release` (dependsOn `component-release` + `support-release`; per module `🟨️.js` = `hostShimSource()`, `🌉️bridge.js` =
+  `pluginComponentBridgeSource()`, the jco output post-processed by `rewritePreview2ShimImports`/`rewriteJcoAsyncResultLifting`/
+  `rewriteJcoComponentAssetUrls` + wasm-opt'd cores, descriptor copies). Nothing had run them since 09-25 (the rebuild chain only runs
+  `materialize-dev`). New check `wp-w3/w3-release-root-check.ts <dev|release>` (shard worker == `shardWorkerSource()` and has `case
+  "codec"`, 60/60 registry modules present with all listed files, host shim == `hostShimSource()`, vendor cli.js present); oracle: dev
+  root **passes** (60/60, 0 findings), release root **failed** (shard stale, no codec case). 15:0x ran `support release` directly (1 s, no
+  cargo): release check **passes** now (shard current with the codec case) — WG9's release serves get the current worker immediately.
+  Phase `final` gained, in the hold after the publication rc (so 7800's move is not delayed): `support-release --skip-nx-cache` →
+  `nx run-many -t materialize-release --skip-nx-cache --parallel=2` (all 60 components, release builds warm from the lanes) →
+  `w3-release-root-check.ts release`; the chain prints the result after its final wait. Dry run rc=0 (the check ran for real against the
+  then-stale root and reported its 2 findings, as designed).

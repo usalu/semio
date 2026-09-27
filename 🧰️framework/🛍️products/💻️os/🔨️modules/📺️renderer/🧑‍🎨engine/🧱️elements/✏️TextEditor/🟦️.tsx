@@ -10,7 +10,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, type Rea
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
-import { textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
+import { TEXT_EDITOR_SCENE_LANES, textEditorActions, type ActionDescriptor, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene } from "@semio-tech/framework";
 import { encodePackValue } from "@semio-tech/framework-os";
 import { openSurfaceContextMenu, parseSceneJsonField, useShellContextMenuFallback, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { mapContextMenuSpecs } from "../🌐️World3dHost/🟦️.tsx";
@@ -263,9 +263,34 @@ type TextEditorOutboxV1 = { readonly text: string; readonly start: number; reado
 /** @emoji 🧮️ Most edits one editor keeps in flight before an echo acknowledges them. */
 const TEXT_EDITOR_PENDING_EDIT_LIMIT = 256;
 
-/** @emoji ✂️ A scene without the fields an echo of the editor's own state must not apply — its buffer and its selection. */
-function sceneWithoutEchoedText(scene: TextEditorScene): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(scene).filter(([key]) => key !== "buffer" && key !== "selectionJson"));
+/** @emoji 🪞️ The scene fields an echo of the editor's own state carries back — its text and its selection. */
+const TEXT_EDITOR_ECHOED_FIELDS: ReadonlySet<string> = new Set(["buffer", "selectionJson"]);
+
+/** @emoji 🧾️ Whether a paged-carrier lane transports an echoed field: its ref (`bytes` + `hash` of the buffer) changes with
+ * every keystroke, so an echo that kept it would re-sync — and repaint — an unchanged editor once per key. Read at call time:
+ * the lane table is imported through a module cycle and is not initialised while this module evaluates. */
+function textEditorEchoedLaneV1(lane: string): boolean {
+  return TEXT_EDITOR_SCENE_LANES.some((entry) => entry.lane === lane && TEXT_EDITOR_ECHOED_FIELDS.has(entry.field));
+}
+
+/** @emoji ✂️ A scene without what an echo of the editor's own state must not apply — its buffer, its selection and the
+ * lane refs that describe the buffer; every other field (tokens, diagnostics, completions…) stays and syncs. */
+export function sceneWithoutEchoedTextV1(scene: TextEditorScene): Record<string, unknown> {
+  const lanes = scene.lanes?.filter((ref) => !textEditorEchoedLaneV1(ref.lane));
+  return Object.fromEntries(Object.entries(scene).flatMap(([key, value]): [string, unknown][] => (TEXT_EDITOR_ECHOED_FIELDS.has(key) ? [] : key === "lanes" ? (lanes?.length ? [[key, lanes]] : []) : [[key, value]])));
+}
+
+/** @emoji 📦️ The pack the editor syncs for `scene`: the whole scene when it is external (another author's text), else the
+ * scene without the echo of its own state (ticket 26/09/23 F3: the buffer's lane ref made every echo re-sync). */
+export function textEditorSyncPackV1(scene: TextEditorScene, external: boolean): Uint8Array {
+  return new Uint8Array(encodePackValue(external ? scene : sceneWithoutEchoedTextV1(scene)));
+}
+
+/** @emoji 🟰️ Whether two encoded scene packs carry the same bytes. */
+export function sameScenePackV1(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index++) if (left[index] !== right[index]) return false;
+  return true;
 }
 
 function parseJsonOr<T>(json: string | undefined, fallback: T): T {
@@ -343,6 +368,14 @@ export function changeTextEditorExplicitDraft(state: TextEditorExplicitDraftStat
 //#endregion EditingHelpers
 
 //#region WasmEditorSurface
+/** @emoji 🖋️ The canvas text editor. It never paints on its own: the session {@link GraphWasmCanvas} hands it is the
+ * frame-demanding handle, where every call invalidates and the canvas paints once at the next frame. Its handlers used to
+ * call `renderFrame` (a synchronous paint) after every change on top of that, and every echo of its own edit was synced
+ * again even when its pack was byte-identical to the one already applied (the selection round trip), so one keystroke
+ * painted 3.7–4.1 times — writer 4.13, trinity jack 3.67 per key, measured by the latency gate's paint hook (ticket
+ * 26/09/23 F2). A scene pack is now synced once per session.
+ *
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/⏱️interaction-latency/🟦️.ts */
 function WasmEditorSurface({
   scene,
   controllerId,
@@ -367,6 +400,7 @@ function WasmEditorSurface({
   const lastHoverRangeRef = useRef<SpanRange | null>(null);
   const echoStateRef = useRef<TextEditorEchoStateV1>({ pending: [], acknowledged: null });
   const reconciledRef = useRef<{ readonly scene: TextEditorScene; readonly pack: Uint8Array } | null>(null);
+  const syncedRef = useRef<{ readonly session: FrameworkEditorSession; readonly pack: Uint8Array } | null>(null);
   const explicitHistoryRef = useRef<{ past: string[]; current: string; future: string[] }>({ past: [], current: scene.buffer, future: [] });
 
   useEffect(() => {
@@ -391,11 +425,17 @@ function WasmEditorSurface({
   /** 📮️ ONE round trip in flight per editor, latest state wins: a typed run is delivered as the newest full text (plus the
    * selection that goes with it) whenever the previous delivery settled, never one `textEdit` + one `textSelect` per key —
    * sustained typing at 40 keys/s filled the per-actor command queue (`queue-full`, > 256 pending turns) and dropped keys
-   * (ticket 26/09/23 F1). The texts that do go out are the ones the echo reconciliation waits for. */
+   * (ticket 26/09/23 F1). The texts that do go out are the ones the echo reconciliation waits for. The dispatcher lives as long
+   * as the surface and reads its owner through `deliveryOwnerRef`: a dispatcher rebuilt on every new `onAction` identity left
+   * the previous one flushing its own stale pending text AFTER the newer one had gone out, so the guest took an older buffer
+   * last and the author's final keys vanished (ticket 26/09/23 C11, probe `c11typing3`). */
+  const deliveryOwnerRef = useRef({ controllerId, explicitDraft, onAction, onDraftChange, surfaceId });
+  deliveryOwnerRef.current = { controllerId, explicitDraft, onAction, onDraftChange, surfaceId };
   const deliver = useMemo(
     () =>
       createCoalescingActionDispatcher<TextEditorOutboxV1>(
         async (next) => {
+          const { controllerId, explicitDraft, onAction, onDraftChange, surfaceId } = deliveryOwnerRef.current;
           if (explicitDraft) {
             const history = explicitHistoryRef.current;
             if (history.current !== next.text) explicitHistoryRef.current = { past: [...history.past, history.current].slice(-256), current: next.text, future: [] };
@@ -425,7 +465,7 @@ function WasmEditorSurface({
         },
         (a, b) => a.text === b.text && a.start === b.start && a.end === b.end,
       ),
-    [controllerId, explicitDraft, onAction, onDraftChange, surfaceId],
+    [],
   );
   const sendEdit = useCallback(
     (text: string) => {
@@ -447,7 +487,6 @@ function WasmEditorSurface({
     const session = sessionRef.current;
     session?.setText(next);
     session?.setSelectionRange(next.length, next.length);
-    session?.renderFrame();
     echoStateRef.current = { pending: [], acknowledged: next };
     onDraftChange?.(next);
     return true;
@@ -458,15 +497,19 @@ function WasmEditorSurface({
       if (renameActiveRef.current) return;
       if (resync) {
         echoStateRef.current = { pending: [], acknowledged: scene.buffer };
-        reconciledRef.current = { scene, pack: new Uint8Array(encodePackValue(scene)) };
+        reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, true) };
       } else if (reconciledRef.current?.scene !== scene) {
         const echo = reconcileTextEditorEchoV1(echoStateRef.current, scene.buffer);
         echoStateRef.current = { pending: echo.pending, acknowledged: echo.acknowledged };
-        reconciledRef.current = { scene, pack: new Uint8Array(encodePackValue(echo.external ? scene : sceneWithoutEchoedText(scene))) };
+        reconciledRef.current = { scene, pack: textEditorSyncPackV1(scene, echo.external) };
       }
+      const session = sessionRef.current;
+      const pack = reconciledRef.current.pack;
+      if (session === null) return;
+      if (!resync && syncedRef.current?.session === session && sameScenePackV1(syncedRef.current.pack, pack)) return;
+      syncedRef.current = { session, pack };
       try {
-        sessionRef.current?.syncFromScenePack?.(reconciledRef.current.pack);
-        sessionRef.current?.renderFrame();
+        session.syncFromScenePack?.(pack);
       } catch (error) {
       }
     },
@@ -486,11 +529,6 @@ function WasmEditorSurface({
   useCanvasAppearanceSync(
     () => {
       syncSessionCanvasTheme(sessionRef.current);
-      try {
-        sessionRef.current?.renderFrame();
-      } catch {
-        /* gpu not ready */
-      }
     },
     true,
     wasmEditorSurfaceShellScope?.rootRef.current ?? undefined,
@@ -548,7 +586,6 @@ function WasmEditorSurface({
       const session = sessionRef.current;
       if (!session) return;
       session.setCaretVisible(visible);
-      session.renderFrame();
     });
     caretCadenceRef.current = cadence;
     return () => {
@@ -567,7 +604,6 @@ function WasmEditorSurface({
       if (!session || readOnlyRef.current || data.length === 0) return;
       session.insertText(data);
       sendEdit(session.text());
-      session.renderFrame();
       emitSelection();
     };
     sink.addEventListener("beforeinput", onBeforeInput);
@@ -679,7 +715,6 @@ function WasmEditorSurface({
       session.setSelectionRange(prefixStart, caret);
       session.replaceSelection(item.insertText ?? item.label);
       sendEdit(session.text());
-      session.renderFrame();
       emitSelection();
       setCompletionsOpen(false);
     },
@@ -702,7 +737,6 @@ function WasmEditorSurface({
       session.setText(preview.text);
       session.setSelectionOccurrencesJson(JSON.stringify(preview.occurrences));
       session.setExtraCaretsJson(JSON.stringify(preview.occurrences.map((occ) => occ.start)));
-      session.renderFrame();
       setRenameDraft({ ...renameDraft, text: nextText });
     },
     [renameDraft, scene.buffer],
@@ -720,7 +754,6 @@ function WasmEditorSurface({
     const session = sessionRef.current;
     if (session) {
       session.setText(scene.buffer);
-      session.renderFrame();
     }
     renameActiveRef.current = false;
     setRenameDraft(null);
@@ -752,12 +785,10 @@ function WasmEditorSurface({
           const sy = event.clientY - rect.top;
           if (event.detail >= 2) {
             session.selectSpanAtScreen(sx, sy);
-            session.renderFrame();
             emitSelection();
             return;
           }
           session.pointerDownScreen(sx, sy, event.button);
-          session.renderFrame();
           emitSelection();
         }}
         onPointerMove={(event) => {
@@ -778,28 +809,24 @@ function WasmEditorSurface({
           } catch {
             /* hover range unavailable */
           }
-          session.renderFrame();
         }}
         onPointerUp={(event) => {
           const session = sessionRef.current;
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
           session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.buttons);
-          session.renderFrame();
           emitSelection();
         }}
         onPointerCancel={() => {
           const session = sessionRef.current;
           if (!session) return;
           session.pointerCancelScreen();
-          session.renderFrame();
         }}
         onWheel={(event) => {
           const session = sessionRef.current;
           if (!session) return;
           event.preventDefault();
           session.wheelScrollScreen(event.deltaY);
-          session.renderFrame();
           dispatch("setCamera", { camera: JSON.parse(session.cameraJson()) });
           publishCaretPresence();
           setPresenceFrame((frame) => frame + 1);
@@ -816,7 +843,6 @@ function WasmEditorSurface({
           const sy = event.clientY - rect.top;
           session.pointerDownScreen(sx, sy, 0);
           session.pointerUpScreen(sx, sy, 0);
-          session.renderFrame();
           emitSelection();
           if (event.altKey && completions.length > 0) {
             openCompletions();
@@ -828,7 +854,6 @@ function WasmEditorSurface({
             requestCompletions: openCompletions,
             selectToken: () => {
               session.selectSpanAt(session.caret());
-              session.renderFrame();
               emitSelection();
             },
             selectLine: () => {
@@ -849,12 +874,10 @@ function WasmEditorSurface({
               for (let i = 0; i < lineIndex; i++) offset += (lines[i]?.length ?? 0) + 1;
               const lineLength = lines[lineIndex]?.length ?? 0;
               session.setSelectionRange(offset, offset + lineLength);
-              session.renderFrame();
               emitSelection();
             },
             selectAll: () => {
               session.setSelectionRange(0, scene.buffer.length);
-              session.renderFrame();
               emitSelection();
             },
             commitRename: () => {
@@ -967,7 +990,6 @@ function WasmEditorSurface({
           if (!session || readOnlyRef.current || event.data.length === 0) return;
           session.insertText(event.data);
           sendEdit(session.text());
-          session.renderFrame();
           emitSelection();
         }}
         onPaste={(event) => {
@@ -977,7 +999,6 @@ function WasmEditorSurface({
           if (!session || readOnlyRef.current || pasted.length === 0) return;
           session.replaceSelection(pasted);
           sendEdit(session.text());
-          session.renderFrame();
           emitSelection();
         }}
         onCopy={(event) => {
@@ -995,7 +1016,6 @@ function WasmEditorSurface({
           if (readOnlyRef.current) return;
           session.replaceSelection("");
           sendEdit(session.text());
-          session.renderFrame();
           emitSelection();
         }}
         onKeyDown={(event) => {
@@ -1030,7 +1050,6 @@ function WasmEditorSurface({
           if (event.key === "a" && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
             session?.selectAll();
-            session?.renderFrame();
             emitSelection();
             return;
           }
@@ -1068,42 +1087,36 @@ function WasmEditorSurface({
           if (event.key === "ArrowLeft") {
             event.preventDefault();
             session.moveLeft(extend);
-            session.renderFrame();
             emitSelection();
             return;
           }
           if (event.key === "ArrowRight") {
             event.preventDefault();
             session.moveRight(extend);
-            session.renderFrame();
             emitSelection();
             return;
           }
           if (event.key === "ArrowUp") {
             event.preventDefault();
             session.moveUp(extend);
-            session.renderFrame();
             emitSelection();
             return;
           }
           if (event.key === "ArrowDown") {
             event.preventDefault();
             session.moveDown(extend);
-            session.renderFrame();
             emitSelection();
             return;
           }
           if (event.key === "Home") {
             event.preventDefault();
             session.moveLineStart(extend);
-            session.renderFrame();
             emitSelection();
             return;
           }
           if (event.key === "End") {
             event.preventDefault();
             session.moveLineEnd(extend);
-            session.renderFrame();
             emitSelection();
             return;
           }
@@ -1111,7 +1124,6 @@ function WasmEditorSurface({
             event.preventDefault();
             session.insertText(session.tabInsertText());
             sendEdit(session.text());
-            session.renderFrame();
             emitSelection();
             return;
           }
@@ -1121,7 +1133,6 @@ function WasmEditorSurface({
             if (allowed) {
               session.insertText("\n");
               sendEdit(session.text());
-              session.renderFrame();
               emitSelection();
             }
             return;
@@ -1130,7 +1141,6 @@ function WasmEditorSurface({
             event.preventDefault();
             session.insertText(event.key);
             sendEdit(session.text());
-            session.renderFrame();
             emitSelection();
             return;
           }
@@ -1138,7 +1148,6 @@ function WasmEditorSurface({
             event.preventDefault();
             session.backspace();
             sendEdit(session.text());
-            session.renderFrame();
             emitSelection();
             return;
           }
@@ -1146,7 +1155,6 @@ function WasmEditorSurface({
             event.preventDefault();
             session.deleteForward();
             sendEdit(session.text());
-            session.renderFrame();
             emitSelection();
           }
         }}

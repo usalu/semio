@@ -23,6 +23,7 @@ semio-framework-hash = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-ui-contract = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-binary = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
@@ -31,5 +32,6 @@ semio-s-artifact-stdio-xml = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+zip = { version = "6", default-features = false, features = ["deflate"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

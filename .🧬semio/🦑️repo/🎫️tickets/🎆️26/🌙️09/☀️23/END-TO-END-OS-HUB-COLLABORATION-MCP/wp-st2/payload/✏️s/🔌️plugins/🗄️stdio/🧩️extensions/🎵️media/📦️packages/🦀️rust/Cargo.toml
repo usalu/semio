@@ -1,0 +1,65 @@
+[package]
+name = "semio-s-plugin-stdio-media"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio family component: the mp4/mp3/wav/avi audio and video apps"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:stdio-media"
+
+# 🔗️ `stdio` owns every kind this family opens (definitions, codecs, hub-native codec closure); the family ships only the
+# apps, so the host loads `stdio` beside it (`.depends_on("stdio", tree_pin!())` mirrors this row).
+[package.metadata.semio]
+role = "plugin"
+depends-on = ["stdio"]
+
+# 🎮️ ONE row per shipped editor, each pinning its own `app`: `semio-tech play`'s coverage laws reach every editor a
+# descriptor declares and every viewer through its pane's editor⇄viewer switch exactly when every shipped app owns a
+# row, and `🗄️stdio/🧪️tests/🚢️shipped-fleet` asserts these rows ARE the shipped editors. Ports continue stdio's block.
+[[package.metadata.semio.playground]]
+variant = "stdio-mp4"
+app = "s.stdio.mp4@isobmff/*#editor"
+aliases = ["stdio mp4"]
+ports = { react = 6231, wgpu = 6331 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-mp3"
+app = "s.stdio.mp3@mpeg1-layer3/*#editor"
+aliases = ["stdio mp3"]
+ports = { react = 6232, wgpu = 6332 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-wav"
+app = "s.stdio.wav@riff-pcm/*#editor"
+aliases = ["stdio wave"]
+ports = { react = 6233, wgpu = 6333 }
+
+[[package.metadata.semio.playground]]
+variant = "stdio-avi"
+app = "s.stdio.avi@1.0/*#editor"
+aliases = ["stdio avi"]
+ports = { react = 6234, wgpu = 6334 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../🦀️.rs"
+
+[features]
+# 🔌️ The WASM component entry point (`plugin_exports!`). Default-on so this family builds as its own component, and
+# switched off by any crate that links it as a library (the stdio census law links every family at once).
+default = ["plugin-root"]
+plugin-root = ["semio-framework-plugin/component-guest"]
+
+[dependencies]
+semio-s-artifact-stdio-mp4 = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-mp3 = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-wav = { workspace = true, features = ["component-app-assembly"] }
+semio-s-artifact-stdio-avi = { workspace = true, features = ["component-app-assembly"] }
+semio-framework = { workspace = true }
+semio-framework-dispatch-macros = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value-derive = { workspace = true }

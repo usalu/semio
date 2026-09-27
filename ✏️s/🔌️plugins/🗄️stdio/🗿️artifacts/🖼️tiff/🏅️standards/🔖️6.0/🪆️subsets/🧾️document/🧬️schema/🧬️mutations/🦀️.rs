@@ -15,12 +15,14 @@ pub use super::replace_tag::ReplaceTagMutation;
 
 //#region Aggregate
 use super::set_snapshot::SetSnapshot;
+use super::patch_snapshot::PatchSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = TiffSnapshot, diff = TiffDiff, schema = "s.stdio.tiff")]
 pub enum TiffMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(PatchSnapshot),
     ChangeByteOrder(ChangeByteOrderMutation),
     InsertIfd(InsertIfdMutation),
     RemoveIfd(RemoveIfdMutation),
@@ -34,6 +36,7 @@ pub enum TiffMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
     vec![
+        crate::schema::mutations::patch_snapshot::test_case(),
         crate::schema::mutations::change_byte_order::test_case(),
         crate::schema::mutations::insert_ifd::test_case(),
         crate::schema::mutations::remove_ifd::test_case(),

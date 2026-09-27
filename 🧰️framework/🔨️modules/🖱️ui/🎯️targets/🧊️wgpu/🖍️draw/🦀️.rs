@@ -3,7 +3,7 @@
 
 use super::kernel_3d_scene::{Mat4Math, ProceduralGrid3d, ScenePass3d, PROCEDURAL_GRID_CELL_THICKNESS, PROCEDURAL_GRID_FADE_STRENGTH};
 use crate::wgpu::prepared::{PreparedRasterPages, RasterContentIdentity};
-use crate::wgpu::shaders::{world3d_painted_shader, BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_CELEBRATION_SHADER, WORLD3D_GRID_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER};
+use crate::wgpu::shaders::{world3d_painted_shader, BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_CELEBRATION_SHADER, WORLD3D_GRID_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER, WORLD3D_TEXTURED_SHADER, WORLD_CURVILINEAR_SHADER};
 #[cfg(test)]
 use crate::wgpu::theme::Rgba;
 use crate::wgpu::theme::Theme;
@@ -22,6 +22,14 @@ pub const SCENE_MIP_LEVELS: u32 = 5;
 struct BlurGlobals {
     src_mip: f32,
     _pad: [f32; 7],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+struct CurvilinearGlobals {
+    viewport: [f32; 4],
+    surface_size: [f32; 2],
+    fov_strength: [f32; 2],
 }
 
 #[repr(C)]
@@ -165,8 +173,11 @@ impl SceneColorTarget {
 /// acquire and its composite in different host pumps, every painted boot had them in the same one.
 /// One extra full-surface blit buys an acquire→present span that cannot straddle a task.
 pub struct PreparedCompositeTarget {
+    texture: wgpu::Texture,
     view: wgpu::TextureView,
     world_encoded_view: wgpu::TextureView,
+    curvilinear_scratch: wgpu::Texture,
+    curvilinear_scratch_view: wgpu::TextureView,
     sampler: wgpu::Sampler,
     width: u32,
     height: u32,
@@ -189,13 +200,24 @@ impl PreparedCompositeTarget {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: world_encoded_format,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC,
             view_formats: &[format, world_encoded_format],
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_composite_color_view"), format: Some(format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
         let world_encoded_view = texture.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_composite_world_encoded_view"), format: Some(world_encoded_format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
+        let curvilinear_scratch = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("prepared_curvilinear_scratch"),
+            size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: world_encoded_format,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[world_encoded_format],
+        });
+        let curvilinear_scratch_view = curvilinear_scratch.create_view(&wgpu::TextureViewDescriptor { label: Some("prepared_curvilinear_scratch_view"), format: Some(world_encoded_format), dimension: Some(wgpu::TextureViewDimension::D2), ..Default::default() });
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("prepared_composite_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, ..Default::default() });
-        *target = Some(Self { view, world_encoded_view, sampler, width, height });
+        *target = Some(Self { texture, view, world_encoded_view, curvilinear_scratch, curvilinear_scratch_view, sampler, width, height });
     }
 
     pub fn view(&self) -> &wgpu::TextureView {
@@ -204,6 +226,14 @@ impl PreparedCompositeTarget {
 
     pub fn world_encoded_view(&self) -> &wgpu::TextureView {
         &self.world_encoded_view
+    }
+
+    fn copy_to_curvilinear_scratch(&self, encoder: &mut wgpu::CommandEncoder) {
+        encoder.copy_texture_to_texture(
+            wgpu::TexelCopyTextureInfo { texture: &self.texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+            wgpu::TexelCopyTextureInfo { texture: &self.curvilinear_scratch, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+            wgpu::Extent3d { width: self.width, height: self.height, depth_or_array_layers: 1 },
+        );
     }
 }
 
@@ -2678,6 +2708,7 @@ pub(crate) struct UiPipelines {
     blur_downsample_pipeline: wgpu::RenderPipeline,
     scene_blit_pipeline: wgpu::RenderPipeline,
     glass_pipeline: wgpu::RenderPipeline,
+    world_curvilinear_pipeline: wgpu::RenderPipeline,
     quad_vertex_buffer: wgpu::Buffer,
     world_plane_vertex_buffer: wgpu::Buffer,
     world_plane_sampler: wgpu::Sampler,
@@ -2685,11 +2716,13 @@ pub(crate) struct UiPipelines {
     world_grid_bind_group: wgpu::BindGroup,
     globals_buffer: wgpu::Buffer,
     blur_globals_buffer: wgpu::Buffer,
+    curvilinear_globals_buffer: wgpu::Buffer,
     world_globals_ring: WorldGlobalsRing,
     world_bind_group_layout: wgpu::BindGroupLayout,
     world_shadow_bind_group_layout: wgpu::BindGroupLayout,
     world_shadow_target: WorldShadowTarget,
     blur_bind_group_layout: wgpu::BindGroupLayout,
+    curvilinear_bind_group_layout: wgpu::BindGroupLayout,
     scene_bind_group_layout: wgpu::BindGroupLayout,
     glyph_texture: wgpu::Texture,
     glyph_sampler: wgpu::Sampler,
@@ -3284,6 +3317,7 @@ impl UiPipelines {
         let blur_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("blur_downsample_shader"), source: wgpu::ShaderSource::Wgsl(BLUR_DOWNSAMPLE_SHADER.into()) });
         let scene_blit_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("scene_blit_shader"), source: wgpu::ShaderSource::Wgsl(SCENE_BLIT_SHADER.into()) });
         let glass_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("glass_shader"), source: wgpu::ShaderSource::Wgsl(GLASS_SHADER.into()) });
+        let world_curvilinear_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor { label: Some("world_curvilinear_shader"), source: wgpu::ShaderSource::Wgsl(WORLD_CURVILINEAR_SHADER.into()) });
 
         let blur_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("blur_downsample_layout"),
@@ -3300,6 +3334,15 @@ impl UiPipelines {
                     ty: wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: true }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false },
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry { binding: 2, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), count: None },
+            ],
+        });
+
+        let curvilinear_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("world_curvilinear_layout"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry { binding: 0, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Buffer { ty: wgpu::BufferBindingType::Uniform, has_dynamic_offset: false, min_binding_size: std::num::NonZeroU64::new(size_of::<CurvilinearGlobals>() as u64) }, count: None },
+                wgpu::BindGroupLayoutEntry { binding: 1, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: true }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false }, count: None },
                 wgpu::BindGroupLayoutEntry { binding: 2, visibility: wgpu::ShaderStages::FRAGMENT, ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering), count: None },
             ],
         });
@@ -3558,6 +3601,24 @@ impl UiPipelines {
 
         let blur_globals_buffer =
             device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("blur_globals"), contents: bytemuck::bytes_of(&BlurGlobals { src_mip: 0.0, _pad: [0.0; 7] }), usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST });
+        let curvilinear_globals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("world_curvilinear_globals"),
+            contents: bytemuck::bytes_of(&CurvilinearGlobals::zeroed()),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
+
+        let world_curvilinear_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world_curvilinear_pipeline_layout"), bind_group_layouts: &[Some(&curvilinear_bind_group_layout)], immediate_size: 0 });
+        let world_curvilinear_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world_curvilinear_pipeline"),
+            layout: Some(&world_curvilinear_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_curvilinear_shader, entry_point: Some("vs_main"), buffers: &[], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState { module: &world_curvilinear_shader, entry_point: Some("fs_main"), targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })], compilation_options: Default::default() }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
 
         let blur_downsample_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("blur_downsample_pipeline_layout"), bind_group_layouts: &[Some(&blur_bind_group_layout)], immediate_size: 0 });
         let blur_downsample_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -3649,6 +3710,7 @@ impl UiPipelines {
             blur_downsample_pipeline,
             scene_blit_pipeline,
             glass_pipeline,
+            world_curvilinear_pipeline,
             quad_vertex_buffer,
             world_plane_vertex_buffer,
             world_plane_sampler,
@@ -3656,11 +3718,13 @@ impl UiPipelines {
             world_grid_bind_group,
             globals_buffer,
             blur_globals_buffer,
+            curvilinear_globals_buffer,
             world_globals_ring,
             world_bind_group_layout,
             world_shadow_bind_group_layout,
             world_shadow_target,
             blur_bind_group_layout,
+            curvilinear_bind_group_layout,
             scene_bind_group_layout,
             glyph_texture,
             glyph_sampler,
@@ -4591,6 +4655,51 @@ impl UiPipelines {
         pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
         pass.set_vertex_buffer(0, line_buffer);
         pass.draw(0..2, 0..1);
+        Ok(())
+    }
+
+    /// 🐟️ Copies one completed World viewport and remaps it in image space like React's curvilinear pass.
+    pub fn encode_prepared_world_curvilinear(
+        &self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        composite: &PreparedCompositeTarget,
+        pass_owner: &ScenePass3d,
+        scene_scissor: ScissorRect,
+    ) -> Result<(), &'static str> {
+        let Some(curvilinear) = pass_owner.curvilinear else { return Err("prepared curvilinear pass had no descriptor") };
+        let scale = self.surface_scale;
+        let viewport = [pass_owner.viewport[0] * scale, pass_owner.viewport[1] * scale, pass_owner.viewport[2] * scale, pass_owner.viewport[3] * scale];
+        queue.write_buffer(
+            &self.curvilinear_globals_buffer,
+            0,
+            bytemuck::bytes_of(&CurvilinearGlobals { viewport, surface_size: [composite.width as f32, composite.height as f32], fov_strength: [curvilinear.fov_radians, curvilinear.strength] }),
+        );
+        composite.copy_to_curvilinear_scratch(encoder);
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("prepared_world_curvilinear_bind_group"),
+            layout: &self.curvilinear_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: self.curvilinear_globals_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&composite.curvilinear_scratch_view) },
+                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&composite.sampler) },
+            ],
+        });
+        let mut render = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("prepared_world_curvilinear"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment { view: composite.world_encoded_view(), resolve_target: None, ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store }, depth_slice: None })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+        render.set_viewport(viewport[0], viewport[1], viewport[2].max(1.0), viewport[3].max(1.0), 0.0, 1.0);
+        let scene_scissor = self.physical_scissor(scene_scissor);
+        render.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
+        render.set_pipeline(&self.world_curvilinear_pipeline);
+        render.set_bind_group(0, &bind_group, &[]);
+        render.draw(0..6, 0..1);
         Ok(())
     }
 

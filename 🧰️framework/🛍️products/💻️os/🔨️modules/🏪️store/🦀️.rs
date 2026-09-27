@@ -10805,7 +10805,7 @@ impl ArtifactCodec {
                     let parsed = parse_document_pack::<P, Mutation>(pack, spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
                     let envelope = parsed.into_envelope();
                     let printed = print_document_pack(&envelope).await;
-                    drop(envelope.into_owners());
+                    envelope.retire_unadopted();
                     let files = printed?;
                     return Ok((files.pack, files.spr, files.ops));
                 }
@@ -16585,6 +16585,20 @@ where
     /// 🧺️ Confirms owned-store disposal for document and local lane snapshots alike.
     pub fn close_owned_terminal_is_empty(&self) -> bool {
         self.close_owned_store_terminal_is_empty()
+    }
+
+    /// ♻️ Retires one snapshot alias a client held beside the store (a tool run's base or overlay, a folded intermediate):
+    /// the last alias hands its snapshot to the exact owned-value retirement the store's own returned reads use, any other
+    /// alias only drops its count. A client never drops an alias plainly — a snapshot whose roots must be retired (an
+    /// `OrderedMap`) panics on a plain drop of its last owner.
+    pub fn retire_snapshot_alias(&self, alias: Arc<P>) -> Result<Box<dyn ErasedSnapshotRetirement>, VcsError>
+    where
+        P: Sync,
+    {
+        let Some(factory) = (*self.initial_snapshot_retirement_factory).clone() else {
+            return Err(VcsError::ValidationFailed("a snapshot alias retirement requires its exact owned-snapshot retirement factory".into()));
+        };
+        Ok(Box::new(ReturnedSnapshotReadRetirement::new(alias, factory)))
     }
 
     pub fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError>

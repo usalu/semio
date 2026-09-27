@@ -22,7 +22,7 @@ start mutation
 # byte-exact token order.
 mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-layer-visible
      / change-layer-opacity / change-layer-blend-mode / move-layer / resize-layer
-     / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels / change-layer-mask
+     / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels / change-layer-mask / change-layer-adjustment-parameter
 
 create-layer = "create-layer" SP index SP layer SP ("parent=" id)?
 delete-layer = "delete-layer" SP "id=" id
@@ -64,3 +64,5 @@ content-block = "content" "{" "image-key=" id? SP "width=" number? SP "height=" 
 
 change-layer-mask = "change-layer-mask" SP "id=" id SP expected-mask-block? SP mask-block?
 expected-mask-block = "expected" "{" "enabled=" bool SP "linked=" bool SP "invert=" bool SP "width=" number? SP "height=" number? SP "image-key=" id? SP transform-block "}"
+
+change-layer-adjustment-parameter = "change-layer-adjustment-parameter" SP "id=" id SP text SP ("expected=" number)? SP ("value=" number)?

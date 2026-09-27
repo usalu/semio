@@ -1,0 +1,57 @@
+//#region 🔖️Literal
+/// @emoji 🧾️ Builds a [`DslValue`] from a JSON-shaped literal — the first-party replacement for
+/// `serde_json::json!` + `DslValue::from` at every action-argument site. Grammar: `null`, `true`,
+/// `false`, `[ … ]`, `{ key: value, … }` (a key is a string literal or any expression convertible
+/// `Into<String>`, e.g. a `const`), and any other expression, converted through [`ToValue`]. Object
+/// entries keep their written order (a `DslValue::Object` is ordered); trailing commas are
+/// accepted. The equivalence law against `serde_json::json!` lives in `🧪️tests/🔬️unit/🦀️.rs`.
+#[macro_export]
+macro_rules! dsl_value {
+    (@array [$($elements:expr,)*]) => { ::std::vec![$($elements,)*] };
+    (@array [$($elements:expr),*]) => { ::std::vec![$($elements),*] };
+    (@array [$($elements:expr,)*] null $($rest:tt)*) => { $crate::dsl_value!(@array [$($elements,)* $crate::dsl_value!(null)] $($rest)*) };
+    (@array [$($elements:expr,)*] true $($rest:tt)*) => { $crate::dsl_value!(@array [$($elements,)* $crate::dsl_value!(true)] $($rest)*) };
+    (@array [$($elements:expr,)*] false $($rest:tt)*) => { $crate::dsl_value!(@array [$($elements,)* $crate::dsl_value!(false)] $($rest)*) };
+    (@array [$($elements:expr,)*] [$($array:tt)*] $($rest:tt)*) => { $crate::dsl_value!(@array [$($elements,)* $crate::dsl_value!([$($array)*])] $($rest)*) };
+    (@array [$($elements:expr,)*] {$($object:tt)*} $($rest:tt)*) => { $crate::dsl_value!(@array [$($elements,)* $crate::dsl_value!({$($object)*})] $($rest)*) };
+    (@array [$($elements:expr,)*] $next:expr, $($rest:tt)*) => { $crate::dsl_value!(@array [$($elements,)* $crate::dsl_value!($next),] $($rest)*) };
+    (@array [$($elements:expr,)*] $last:expr) => { $crate::dsl_value!(@array [$($elements,)* $crate::dsl_value!($last)]) };
+    (@array [$($elements:expr),*] , $($rest:tt)*) => { $crate::dsl_value!(@array [$($elements,)*] $($rest)*) };
+    (@array [$($elements:expr),*] $unexpected:tt $($rest:tt)*) => { ::std::compile_error!("dsl_value!: unexpected token in array") };
+    (@object $entries:ident () () ()) => {};
+    (@object $entries:ident [$($key:tt)+] ($value:expr) , $($rest:tt)*) => {
+        $entries.push((::std::string::String::from($($key)+), $value));
+        $crate::dsl_value!(@object $entries () ($($rest)*) ($($rest)*));
+    };
+    (@object $entries:ident [$($key:tt)+] ($value:expr) $unexpected:tt $($rest:tt)*) => { ::std::compile_error!("dsl_value!: expected `,` after an object entry") };
+    (@object $entries:ident [$($key:tt)+] ($value:expr)) => { $entries.push((::std::string::String::from($($key)+), $value)); };
+    (@object $entries:ident ($($key:tt)+) (: null $($rest:tt)*) $copy:tt) => { $crate::dsl_value!(@object $entries [$($key)+] ($crate::dsl_value!(null)) $($rest)*); };
+    (@object $entries:ident ($($key:tt)+) (: true $($rest:tt)*) $copy:tt) => { $crate::dsl_value!(@object $entries [$($key)+] ($crate::dsl_value!(true)) $($rest)*); };
+    (@object $entries:ident ($($key:tt)+) (: false $($rest:tt)*) $copy:tt) => { $crate::dsl_value!(@object $entries [$($key)+] ($crate::dsl_value!(false)) $($rest)*); };
+    (@object $entries:ident ($($key:tt)+) (: [$($array:tt)*] $($rest:tt)*) $copy:tt) => { $crate::dsl_value!(@object $entries [$($key)+] ($crate::dsl_value!([$($array)*])) $($rest)*); };
+    (@object $entries:ident ($($key:tt)+) (: {$($object:tt)*} $($rest:tt)*) $copy:tt) => { $crate::dsl_value!(@object $entries [$($key)+] ($crate::dsl_value!({$($object)*})) $($rest)*); };
+    (@object $entries:ident ($($key:tt)+) (: $value:expr , $($rest:tt)*) $copy:tt) => { $crate::dsl_value!(@object $entries [$($key)+] ($crate::dsl_value!($value)) , $($rest)*); };
+    (@object $entries:ident ($($key:tt)+) (: $value:expr) $copy:tt) => { $crate::dsl_value!(@object $entries [$($key)+] ($crate::dsl_value!($value))); };
+    (@object $entries:ident ($($key:tt)+) (:) $copy:tt) => { ::std::compile_error!("dsl_value!: missing value after `:`") };
+    (@object $entries:ident ($($key:tt)+) () $copy:tt) => { ::std::compile_error!("dsl_value!: missing `:` after an object key") };
+    (@object $entries:ident () (: $($rest:tt)*) ($colon:tt $($copy:tt)*)) => { ::std::compile_error!("dsl_value!: unexpected `:`") };
+    (@object $entries:ident ($($key:tt)*) (, $($rest:tt)*) ($comma:tt $($copy:tt)*)) => { ::std::compile_error!("dsl_value!: unexpected `,`") };
+    (@object $entries:ident () (($key:expr) : $($rest:tt)*) $copy:tt) => { $crate::dsl_value!(@object $entries ($key) (: $($rest)*) (: $($rest)*)); };
+    (@object $entries:ident ($($key:tt)*) ($tt:tt $($rest:tt)*) $copy:tt) => { $crate::dsl_value!(@object $entries ($($key)* $tt) ($($rest)*) ($($rest)*)); };
+    (null) => { $crate::value::DslValue::Null };
+    (true) => { $crate::value::DslValue::Bool(true) };
+    (false) => { $crate::value::DslValue::Bool(false) };
+    ([]) => { $crate::value::DslValue::Array(::std::vec::Vec::new()) };
+    ([ $($tt:tt)+ ]) => { $crate::value::DslValue::Array($crate::dsl_value!(@array [] $($tt)+)) };
+    ({}) => { $crate::value::DslValue::Object(::std::vec::Vec::new()) };
+    ({ $($tt:tt)+ }) => {
+        $crate::value::DslValue::Object({
+            let mut entries: ::std::vec::Vec<(::std::string::String, $crate::value::DslValue)> = ::std::vec::Vec::new();
+            $crate::dsl_value!(@object entries () ($($tt)+) ($($tt)+));
+            entries
+        })
+    };
+    ($other:expr) => { $crate::value::ToValue::to_value(&$other) };
+}
+//#endregion 🔖️Literal
+

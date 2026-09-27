@@ -483,7 +483,7 @@ fn ui_focus_capability() -> CapabilityDefinition {
         input_schema: ui_focus_input_schema(),
         output_schema: ui_focus_output_schema(),
         effects: Default::default(),
-        policy: Default::default(),
+        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId("shell.control".into())], ..Default::default() },
         execution: Default::default(),
         exposure: ToolExposure::Direct { tool_name: "ui_focus".to_string() },
         presentation: CapabilityPresentation { icon_id: Some("focus".to_string()), category: Some("ui".to_string()), keys: None, in_palette: false, args: Vec::new() },
@@ -506,7 +506,7 @@ fn ui_reveal_capability() -> CapabilityDefinition {
         input_schema: ui_reveal_input_schema(),
         output_schema: ui_reveal_output_schema(),
         effects: Default::default(),
-        policy: Default::default(),
+        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId("shell.control".into())], ..Default::default() },
         execution: Default::default(),
         exposure: ToolExposure::Direct { tool_name: "ui_reveal".to_string() },
         presentation: CapabilityPresentation { icon_id: Some("reveal".to_string()), category: Some("ui".to_string()), keys: None, in_palette: false, args: Vec::new() },
@@ -670,20 +670,30 @@ fn job_cancel_handler(arguments: serde_json::Value) -> CallToolResult {
 /// `tools/list`, regardless of tier (§ module doc). `_workspace` is accepted (not yet read) for
 /// seam symmetry with `read_ui_resource`/a later packet that scopes jobs to one workspace; today's
 /// job seam is the process-wide [`job_registry`], deliberately workspace-independent.
-pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<BridgeSlot>, _workspace: Option<Arc<HeadlessWorkspace>>) {
+pub fn register_ui_tools(registry: &mut InMemoryToolRegistry, bridge: Option<BridgeSlot>, _workspace: Option<Arc<HeadlessWorkspace>>, principal: crate::policy::AgentPrincipal) {
     let mut ui_focus = Tool::new("ui_focus", ui_focus_input_schema());
     ui_focus.title = Some("Focus Window".to_string());
     ui_focus.description = Some("Focuses a window on the attached shell (omit windowId to clear focus).".to_string());
     ui_focus.output_schema = Some(ui_focus_output_schema());
-    let focus_bridge = bridge.clone();
-    registry.register(ui_focus, move |arguments| ui_focus_handler(resolve_bridge(focus_bridge.as_ref()), arguments)).expect("ui_focus is a valid tool name");
+    let (focus_bridge, focus_principal, focus_capability) = (bridge.clone(), principal.clone(), ui_focus_capability());
+    registry
+        .register(ui_focus, move |arguments| match crate::policy::authorize_capability_scopes(&focus_principal, &focus_capability) {
+            Ok(()) => ui_focus_handler(resolve_bridge(focus_bridge.as_ref()), arguments),
+            Err(error) => CallToolResult::tool_error(&error),
+        })
+        .expect("ui_focus is a valid tool name");
 
     let mut ui_reveal = Tool::new("ui_reveal", ui_reveal_input_schema());
     ui_reveal.title = Some("Reveal In Panel".to_string());
     ui_reveal.description = Some("Makes a panel visible and navigates it to the given path on the attached shell.".to_string());
     ui_reveal.output_schema = Some(ui_reveal_output_schema());
-    let reveal_bridge = bridge.clone();
-    registry.register(ui_reveal, move |arguments| ui_reveal_handler(resolve_bridge(reveal_bridge.as_ref()), arguments)).expect("ui_reveal is a valid tool name");
+    let (reveal_bridge, reveal_principal, reveal_capability) = (bridge.clone(), principal, ui_reveal_capability());
+    registry
+        .register(ui_reveal, move |arguments| match crate::policy::authorize_capability_scopes(&reveal_principal, &reveal_capability) {
+            Ok(()) => ui_reveal_handler(resolve_bridge(reveal_bridge.as_ref()), arguments),
+            Err(error) => CallToolResult::tool_error(&error),
+        })
+        .expect("ui_reveal is a valid tool name");
 
     let mut job_get = Tool::new("job_get", job_get_input_schema());
     job_get.title = Some("Get Job".to_string());

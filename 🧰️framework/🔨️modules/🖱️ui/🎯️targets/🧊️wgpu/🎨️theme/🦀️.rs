@@ -170,6 +170,8 @@ pub struct Theme {
     pub diagram_field_reaction: Rgba,
     pub diagram_field_displacement: Rgba,
     pub error: Rgba,
+    /// ➕️ Added-code foreground shared with React's `text-diff-added` utility.
+    pub diff_added: Rgba,
     /// ✅️ Settled-and-accepted outcome paint (validated commit, passed check) — the positive
     /// counterpart of [`Theme::error`]; renderers take outcome colors from here, never inline.
     pub success: Rgba,
@@ -306,6 +308,7 @@ fn from_chrome(chrome: &ChromePalette, outcome: &OutcomePalette, diagram: &Diagr
         diagram_field_reaction: Rgba::from_token(&diagram.field_reaction),
         diagram_field_displacement: Rgba::from_token(&diagram.field_displacement),
         error: Rgba::from_token(&outcome.error),
+        diff_added: Rgba::from_token(&colors::DIFF_ADDED),
         success: Rgba::from_token(&outcome.success),
         progress: Rgba::from_token(&outcome.progress),
         warning: Rgba::from_token(&outcome.warning),

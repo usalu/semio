@@ -11,8 +11,8 @@ Status legend: **measured** = ran here, capture named; **unverified** = read fro
 | # | item | state | evidence |
 |---|---|---|---|
 | F2-1 | per-origin connection budget: inventory per origin at install time → ONE multiplexed channel per origin (schema-first frame contract TS + Rust twin, progress/cancel, backpressure, reconnect+resume), fixture law + third-party oracle, live before/after + stress | **done, measured live + permanent gate**: long-lived HTTP/1.1 streams on the serve origin **4–5 of 6 → 0**; every watch/folder/job stream on ONE WebSocket per page (workers bridged); stress 66 streams + 300 fetches on one link: 300/300 fetches, 96/96 folder notices (per-stream SSE contrast: 0/300 fetches in 20 s). Law 81/81 (AJV oracle), framework 265/265, store 9/9. Gate `@semio-tech/framework-os-dev:connection-budget` (`verify connections`, launch row, acceptance check `connection-budget`) **PASS** on 6580; its NetLog oracle is red on the pre-mux log (18 idle holds). Rust twin: none — no Rust consumer (checked) | `f2-conn-{hub2,after2}.json`, `f2-stress-stress1.json`, `f2-sse-contrast.txt`, `connection-budget-2.txt` |
-| F2-2 | runtime performance sweep: cold `dev s` boot timeline, first paint, hub document open latency, hub catalog plugin install, typing/paint latency in 3 editors → root-fix top offenders + laws | **in progress** — boot profiled (`f2-boot.mjs`); 3 root fixes landed + laws: file validators/304 (warm reload 25.4 → 0.1–0.7 MB), pack key comparator (no per-compare encoder), manifest encode/decode round trip removed (boot main-thread busy 3.8 → 1.9 s, long tasks 12 → 1–3). Next: serve-start/transform-cold boot, hub doc open, hub install, typing in 3 editors | `f2-boot-{b2,a1}.json`, `test-styling-1.txt` |
-| F2-3 | idle cost re-verify (F1 146/146) on the current tree; memory growth over 30 min with 10 windows; + Vite HMR under Bun (root fix + law + live proof) | **idle: done — 148/148 PASS** on the post-rebuild tree (77 editors + 71 viewers; max 0.1 main frames/s, 0 rAF/s, 0 draws/s, max main busy 1.88 %, nothing after any close); gates `:idle-budget` + `:memory-soak` landed (launch rows, acceptance checks), reducer law 3/3. **HMR: done, live-proven** — served-module edit → page hot update in 475 ms, no reload (6581, launch-row default HMR); law `♨️hot-update` 2/2: exactly 1 update per write (in-place 45 ms, atomic 24 ms), unwatched control 0; fixed real-path replay (symlinked roots delivered 0) + `add`+`change` double replay. **Found + fixed: Vite restart/close under Bun wedges under a connected page** (unreachable after restart, 0 `close` events; node 4 ms) → `semioServeCloseVitePlugin` in all 5 serve configs: restart 9 ms, 1 close event, 1 update/write after; red without it; live config-entry edit on 6581 → reconnected 3.0 s, HTTP 200. **Memory soak: PASS** — 10 editors open for 30 min on 6580: JS heap 101.28 → 101.31 MB (0.001 MB/min), workers 40.19 → 38.97 MB (0 MB/min), DOM nodes 1632 → 1632, listeners 1263 → 1263, 0 frames/s | `idle.json` (s13-all), `soak.json` (s13-soak), `memory-soak-s13.txt`, `test-hot-update-{5,6,red}.txt`, `hmr-live.txt`, `f2-hmr-live.json`, `f2-vite-close.ts` |
+| F2-2 | runtime performance sweep: cold `dev s` boot timeline, first paint, hub document open latency, hub catalog plugin install, typing/paint latency in 3 editors → root-fix top offenders + laws | **in progress** — boot profiled (`f2-boot.mjs`); root fixes landed + laws: file validators/304 (warm reload 25.4 → 0.1–0.7 MB), pack key comparator (no per-compare encoder), manifest encode/decode round trip removed (boot main-thread busy 3.8 → 1.9 s, long tasks 12 → 1–3); **typing paints: the latency gate's paint count was vacuous (0 classes hooked: the page's 250-entry Resource Timing buffer was full) → fixed + a scenario that hooks nothing now fails; then measured writer 4.13 / jack 3.67 paints per key → 1.13 / 1.79–2.13** (TextEditor no longer paints on its own and skips byte-identical echo packs); draw drag now measured (1.06). **Cold boot: 909 → 453 modules, 62.4 → 40.4 MB JS, FCP 2.4 → 0.73–0.90 s, ready 3.5 → 1.66–1.81 s, all 60 plugins loaded 3.5 → 2.0–2.2 s** (drei member imports + prebundled three-stdlib; law: browser-graph `denySpecifiers`). Gate at load 7.8–10.7: writer/jack/draw **PASS** (p95 48.7 / 36.9 / 28.8 ms), dag BLOCKED by load only (2.06 paints, p95 18.4 ms). Open: hub doc open / hub install (7800 down) | `f2-boot-{b2,a1,c1,c2,c3,c4}.json`, `interaction-latency-s13-{b,g}.txt`, `f2-paint-stacks-*.json` |
+| F2-3 | idle cost re-verify (F1 146/146) on the current tree; memory growth over 30 min with 10 windows; + Vite HMR under Bun (root fix + law + live proof) | **done** — **idle: 148/148 PASS** on the post-rebuild tree (77 editors + 71 viewers; max 0.1 main frames/s, 0 rAF/s, 0 draws/s, max main busy 1.88 %, nothing after any close); gates `:idle-budget` + `:memory-soak` landed (launch rows, acceptance checks), reducer law 3/3. **HMR: done, live-proven** — served-module edit → page hot update in 475 ms, no reload (6581, launch-row default HMR); law `♨️hot-update` 2/2: exactly 1 update per write (in-place 45 ms, atomic 24 ms), unwatched control 0; fixed real-path replay (symlinked roots delivered 0) + `add`+`change` double replay. **Found + fixed: Vite restart/close under Bun wedges under a connected page** (unreachable after restart, 0 `close` events; node 4 ms) → `semioServeCloseVitePlugin` in all 5 serve configs: restart 9 ms, 1 close event, 1 update/write after; red without it; live config-entry edit on 6581 → reconnected 3.0 s, HTTP 200. **Memory soak: PASS** — 10 editors open for 30 min on 6580: JS heap 101.28 → 101.31 MB (0.001 MB/min), workers 40.19 → 38.97 MB (0 MB/min), DOM nodes 1632 → 1632, listeners 1263 → 1263, 0 frames/s | `idle.json` (s13-all), `soak.json` (s13-soak), `memory-soak-s13.txt`, `test-hot-update-{5,6,red}.txt`, `hmr-live.txt`, `f2-hmr-live.json`, `f2-vite-close.ts` |
 
 ### Session 13 log
 
@@ -257,6 +257,60 @@ Status legend: **measured** = ran here, capture named; **unverified** = read fro
   dag/dag, demonstrator/playground, draw/drawing, energy/model, fem/fem2d) for 30 min, 31 post-GC samples: JS heap 101.28 →
   101.31 MB (slope 0.001 MB/min, bound 0.5), workers 40.19 → 38.97 MB (0 MB/min), DOM nodes 1632 → 1632, listeners 1263 → 1263,
   0 frames/s / 0 rAF/s / 0 draws/s in every sample. Load 7–42 during the run (counts and heap, not timings, are the verdict).
+- 11:26–11:52 **F2-2 typing paints (latency gate):** the first gate run (`interaction-latency-s13.txt`) reported `0 paints/input` for
+  every scenario with `classes: []` — the paint half of the gate was vacuous. Cause: the hook finds the canvas session modules
+  through Resource Timing entries, and the page's default 250-entry buffer is full long before a program opens (the `s` boot loads
+  ~515 scripts; probe `f2-latency-modules.mjs`: default buffer → 0 session modules, 100 000 → `framework_editor.js` with
+  `EditorSession`/`DagSession`). Fixed in `🧑‍💻dev/🧪️tests/⏱️interaction-latency/🟦️.ts`: the init script sizes the buffer, host-element
+  session classes count too (the draw canvas paints in JS: `JsonLayersCanvasSession`), and a scenario that hooks no class FAILS.
+  **Red with the real count** (`-b`): writer **4.13**, jack **3.67** paints per key (bound 2), draw unmeasured, dag 2.06.
+  Stacks (`f2-paint-stacks.mjs` → `f2-paint-stacks-{writer,trinity}.json`): every paint goes through `GraphWasmCanvas`'s
+  demand scheduler; per key one paint right after the key, then one or two more 50–190 ms later. Root cause in
+  `✏️TextEditor/🟦️.tsx`: (1) 33 handler call sites called `renderFrame` on the frame-demanding handle, a SYNCHRONOUS paint on top of
+  the invalidation every session call already makes; (2) every echo of the editor's own edit was synced again, even when the
+  reconciled pack was byte-identical (the selection round trip). A first attempt that coalesced the calls into an own rAF made it
+  worse (5.75 / 4.83: two schedulers painting one frame) and was removed. Fix: the editor never paints on its own (the handle
+  invalidates, the canvas paints once per frame), and a pack is synced once per session (`sameScenePackV1`). **After:** writer
+  **1.13**, jack **1.79–2.13** (the key + the guest's re-highlighted echo + the caret cadence inside the window; bound set to 2.5
+  from this measurement), draw **1.06**, dag 2.06. Full gate at load 7.8–9.7 (`-g`): writer PASS p95 48.7 ms, jack PASS 36.9 ms,
+  draw PASS 28.8 ms, dag BLOCKED (load 10.7 > 10 cores; 2.06 paints, p95 18.4 ms). Engine suites (engine-contract,
+  surface-idle-frames, caret-cadence) **708/708**, engine quick 17/17, `tsc` clean.
+- 11:55–12:08 **F2-2 cold boot: the drei barrel.** `f2-boot.mjs` now also sums the boot's bytes per node_modules package. Cold boot
+  of `s` on :6580 at load 8 (`c1`): FCP 2.4 s, ready 3.5 s, all 60 plugins 3.5 s, **909 modules / 62.4 MB of JS**, of which
+  three-stdlib 282 files 15.7 MB, hls.js 5.05 MB, @react-three/drei 157 files 4.05 MB, camera-controls, maath, gainmap, detect-gpu,
+  meshline, @use-gesture, stats-gl… Cause: drei and fiber are excluded from prebundling (one Canvas store), and
+  `@react-three/drei` is aliased to drei's `index.js`, so the three ui files importing the barrel (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`,
+  `🧱️elements/🎬️Scene`, `🧱️elements/🔌️Ports`) made the browser fetch all of drei core + web raw, and every drei control imports
+  `three-stdlib`'s index, which nothing ever scanned (an excluded package's imports are not discovered). Fixes: (1) every drei
+  member is imported from its own module (`@react-three/drei/core/<Member>.js`, `web/Select.js`; exports checked per file) →
+  `c2`: 735 modules / 51.6 MB, drei 20 files 0.32 MB, no hls/mediapipe/camera-controls; (2) `three-stdlib` joins the scene-host
+  optimizer includes (`PLAYGROUND_SCENE_HOST_ESM_INCLUDE` in the styling builder, law case in `playgroundSceneHostOptimizeDeps`,
+  3/3) → restarted 6580 (`serve-6580-g.txt`, re-optimized in < 1 s) → `c3`/`c4` at load 7: **453 modules / 40.4 MB, DCL 0.54–0.65 s,
+  FCP 0.73–0.90 s, ready 1.66–1.81 s, all 60 plugins 1.98–2.24 s**. Runtime check (`f2-open-drei3d.json`): cad, puzzle3d,
+  block3d and architect editors open with 0 errors and no "multiple instances of three" warning; the puzzle3d perspective view
+  renders with the drei gizmo (screenshot). **Law:** browser-graph contract `denySpecifiers` (`🧑‍💻dev/🧫️fixtures/🌐️browser-graph.json`)
+  + test "imports no denied barrel specifier from any browser-served module" — PASS, **red** with one barrel import put back into
+  Scene (`test-browser-graph-red.txt`); the esbuild oracle test also asserts it (that test is red for the older ShellHost
+  `?worker&url` reason). `tsc` clean for the four files.
+- 12:0x **field sign of the close hang:** Vite pid 50336 (raster serve, `:6060`, started 09-26 21:5x, orphaned) is alive at 0 % CPU
+  with no socket at all and `:6060` refuses — a Vite that stopped listening and never finished closing (pre-plugin code). Not mine,
+  left alone; told main.
+- 12:1x **paused by the coordinator** (memory cleanup): main stopped my 6580 serve and the orphaned 50336; no servers, browsers or
+  builds of mine are running. Open for the resume once 7800 is on B3: (1) hub document open (click → editable) and hub catalog
+  plugin install timings through V1's two-human gate (`timings.createToMountedMs` / `openRowToMountedMs`), then set and send V1
+  (`a919ab599c212eb8b`) the final `--max-create-to-mounted-ms` / `--max-open-to-mounted-ms` from those measurements;
+  (2) the remaining cold-boot bytes, for the record: the 8.4 MB guest font pack (`🪞️vendor/🔤️guestslim-typst-fonts.bin`,
+  `🎠️kernel/🟦️.ts` `defaultGuestSlimAssetFetcher`) is required before the first guest surface, so it stays; it goes over the wire
+  uncompressed in dev. Next biggest: prebundled three-stdlib 4.5 MB, fiber 2.1 MB, ShellHost 2.1 MB, icons 1.8 MB, and 17.3 MB of
+  plugin descriptor JSON (all revalidated by 304 on warm reloads since the validators fix).
+- 14:0x **resume: hub timings on 7800 (catalog B3), then HELD by the coordinator (memory warning, 14:0x).** Serve recipe
+  (C10's `serve.sh`: `S_HUB_URL=http://127.0.0.1:7800 S_LOCAL_ONLY=1 SEMIO_VITE_HMR=0 serve s react dev` on 6580) booted in
+  < 1 min; the gate (`verify two-human`, default development users) created space `01a0e2bd-fba0-7ed9-9ef1-413c8b5bc50f` and
+  discovered the six requested kinds (2d.block, 2d.drawing, 2d.puzzle, 3d.puzzle, animate.presentation, text.document), then I
+  stopped it on the hold before any kind ran (verify pid 6799 + its Chromium 6823: the nx wrapper's group kill does NOT reach
+  them — nx starts the verify in its own process group; the launcher below starts the verify directly) and stopped the serve.
+  Ready to go: `wp-f2/f2-hub-timings.sh <tag>` (serve + gate detached, one browser; puzzle 2d then 3d separates the catalog
+  install from the open itself). No timings measured yet.
 
 ## For S16
 

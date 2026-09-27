@@ -106,6 +106,12 @@
     "capability": "session.v1.00112233445566778899aabbccddeeff.000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
     "proof": "ac9d07307ff952a2c12323a05161c4d561f73dcf4c0a558d92c7311688b0cd45"
   },
+  "live": {
+    "schema": "semio.hub.liveness/v1",
+    "status": "live",
+    "runId": "00112233445566778899aabbccddeeff",
+    "uptimeMs": 19166698
+  },
   "ready": {
     "schema": "semio.hub.readiness/v1",
     "status": "ready",

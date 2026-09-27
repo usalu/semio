@@ -309,7 +309,7 @@ fn assert_canvas_pan_case(case_id: &str) {
     let button = row["button"].as_i64().unwrap() as i16;
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     assert!(canvas_pointer_button_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, start_x, start_y, true, button, SceneModifiers::default(), &mut input).unwrap());
-    assert!(canvas_pointer_move_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, SceneModifiers::default(), &mut input).unwrap());
     assert!(canvas_pointer_button_into(&node, bounds, ui_render::PointerId(1), "canvas2d-camera-window", 1, end_x, end_y, false, button, SceneModifiers::default(), &mut input).unwrap());
     let actions = catalogue_actions(&mut input);
     assert_eq!(
@@ -370,9 +370,16 @@ fn foreign_pointer_cancel_preserves_the_canvas_gesture_owner() {
     assert!(canvas_pointer_button_into(&node, bounds, owner, "canvas2d-owner-window", 1, 40.0, 50.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
     assert!(!cancel_canvas_pointer_gesture_for(foreign, &mut input));
     assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(owner).is_some()));
-    assert!(canvas_pointer_move_into(&node, bounds, owner, "canvas2d-owner-window", 1, 80.0, 90.0, &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&node, bounds, owner, "canvas2d-owner-window", 1, 80.0, 90.0, SceneModifiers {shift:true,alt:true,ctrl:false,meta:false}, &mut input).unwrap());
     assert!(canvas_pointer_button_into(&node, bounds, owner, "canvas2d-owner-window", 1, 80.0, 90.0, false, 0, SceneModifiers::default(), &mut input).unwrap());
-    assert_eq!(catalogue_actions(&mut input).iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
+    let actions=catalogue_actions(&mut input);
+    assert_eq!(actions.iter().map(|action|action.action.as_str()).collect::<Vec<_>>(),["canvasPointerDown","canvasPointerMove","canvasPointerUp"]);
+    let args=Value::from(actions[1].args.as_ref().unwrap());
+    assert_eq!(args["shift"],true);
+    assert_eq!(args["alt"],true);
+    let released=Value::from(actions[2].args.as_ref().unwrap());
+    assert_eq!(released["shift"],false);
+    assert_eq!(released["alt"],false);
 }
 
 #[test]
@@ -390,7 +397,7 @@ fn two_canvas_documents_keep_independent_pointer_gestures() {
     assert!(cancel_canvas_pointer_gesture_for(second_pointer, &mut input));
     assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(first_pointer).is_some()));
     assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(second_pointer).is_none()));
-    assert!(canvas_pointer_move_into(&first, bounds, first_pointer, "canvas2d-first-window", 1, 80.0, 90.0, &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&first, bounds, first_pointer, "canvas2d-first-window", 1, 80.0, 90.0, SceneModifiers::default(), &mut input).unwrap());
     assert!(canvas_pointer_button_into(&first, bounds, first_pointer, "canvas2d-first-window", 1, 80.0, 90.0, false, 0, SceneModifiers::default(), &mut input).unwrap());
 
     let actions = catalogue_actions(&mut input);

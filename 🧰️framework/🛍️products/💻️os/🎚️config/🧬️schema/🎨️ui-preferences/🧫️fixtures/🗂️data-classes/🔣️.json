@@ -9,6 +9,7 @@
     { "mutation": { "mutation": "setTerminology", "terminology": "beginner" }, "key": "terminology", "dataClass": "persistedShared" },
     { "mutation": { "mutation": "setTheme", "themeId": "semio" }, "key": "themeId", "dataClass": "persistedShared" },
     { "mutation": { "mutation": "setCustomTheme", "themeId": "mine", "theme": { "themeId": "mine", "label": "Mine", "config": {} } }, "key": "customThemes", "dataClass": "persistedShared" },
-    { "mutation": { "mutation": "setKeybindingOverride", "controlId": "undo", "keys": "ctrl+alt+k" }, "key": "keybindingOverrides", "dataClass": "persistedShared" }
+    { "mutation": { "mutation": "setKeybindingOverride", "controlId": "undo", "keys": "ctrl+alt+k" }, "key": "keybindingOverrides", "dataClass": "persistedShared" },
+    { "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1", "layout": { "label": "Wide", "layout": { "root": { "kind": "stack", "children": [] } } } }, "key": "namedLayouts", "dataClass": "persistedShared" }
   ]
 }

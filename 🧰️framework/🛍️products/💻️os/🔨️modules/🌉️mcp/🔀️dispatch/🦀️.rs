@@ -261,11 +261,13 @@ pub struct ArtifactDocumentBinding {
     pub spr: Vec<u8>,
 }
 
-/// 📮️ Whether a hub document acknowledged the envelopes one commit relayed to it.
+/// 📮️ Whether a hub document acknowledged the envelopes one commit relayed to it — and, when its link is
+/// terminal (`access-revoked`, `link-expired`), the code that says the hub will never take them.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HubRelayOutcome {
     pub acknowledged: bool,
     pub detail: String,
+    pub refused: Option<String>,
 }
 
 /// 📥️ Replies — [`AppFrame::Error`] is a COMMAND-level (business) failure (e.g. generation-mismatch,
@@ -343,6 +345,18 @@ pub trait HistoryUndoPort: Send + Sync {
 /// download or request, extension calls or follow-up tasks. The verb runs only from the shell.
 pub const AGENT_LANE_UNCARRIED_FAULT_CODE: &str = "interactive-job.agent-lane-uncarried";
 
+/// 🧭️ The fault the same preview answers for a verb whose retained job has no agent-lane preview at all (a plugin's own
+/// tool-command job); like [`AGENT_LANE_UNCARRIED_FAULT_CODE`] the verb runs only from the shell.
+pub const AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE: &str = "interactive-job.preview-unsupported";
+
+/// ⏱️ The fault the same preview answers for a job still running past its preview budget; like
+/// [`AGENT_LANE_UNCARRIED_FAULT_CODE`] the verb runs only from the shell.
+pub const AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE: &str = "interactive-job.preview-budget";
+
+/// 🎯️ The fault a verb answers when it names no targets and the agent lane holds no selection to take them from — the
+/// agent must pass the ids the verb declares.
+pub const COMMAND_TARGETS_REQUIRED_FAULT_CODE: &str = "app.command.targets-required";
+
 /// 🗣️ What the agent tells its human about an [`AGENT_LANE_UNCARRIED_FAULT_CODE`] refusal, `(en, de)`.
 pub const AGENT_LANE_UNCARRIED_REMEDY: (&str, &str) = (
     "This action runs only in the semio shell; ask your human to run it there.",
@@ -369,14 +383,17 @@ fn map_fault(fault: &Fault) -> GatewayError {
         "transaction.member-rejected" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()),
         "interactive-job.not-ui-safe" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
         "interactive-job.preview-output" => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
-        AGENT_LANE_UNCARRIED_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone())
-            .with_details(serde_json::json!({ "faultCode": AGENT_LANE_UNCARRIED_FAULT_CODE, "remedy": { "en": AGENT_LANE_UNCARRIED_REMEDY.0, "de": AGENT_LANE_UNCARRIED_REMEDY.1 } })),
+        COMMAND_TARGETS_REQUIRED_FAULT_CODE => GatewayError::new(GatewayErrorCode::InputInvalid, fault.message.clone()),
+        AGENT_LANE_UNCARRIED_FAULT_CODE | AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE | AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone())
+            .with_details(serde_json::json!({ "faultCode": fault.code, "remedy": { "en": AGENT_LANE_UNCARRIED_REMEDY.0, "de": AGENT_LANE_UNCARRIED_REMEDY.1 } })),
         "transaction.generation-mismatch" => GatewayError::new(GatewayErrorCode::RevisionConflict, fault.message.clone()),
         "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
         "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),
         "capability.not-found" => GatewayError::new(GatewayErrorCode::NotFound, fault.message.clone()),
         "plugin.unavailable" | "workspace.unbound" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
         ACTIVATION_CANCELLED_FAULT_CODE => GatewayError::new(GatewayErrorCode::Cancelled, fault.message.clone()),
+        code if code == store::sync::DocumentLinkStatus::AccessRevoked.code() => GatewayError::new(GatewayErrorCode::PermissionDenied, fault.message.clone()),
+        code if code == store::sync::DocumentLinkStatus::LinkExpired.code() => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()),
         _ => GatewayError::new(GatewayErrorCode::Internal, fault.message.clone()),
     }
 }
@@ -1166,6 +1183,10 @@ impl ActionAdapter {
         let origin = MutationOrigin::Agent { principal: principal.id.clone(), invocation_id: invocation_id.clone() };
         let commit_result = match self.transaction_prepare_with_retry(record.instance, record.ops.clone(), &format!("agent invoke {}", record.capability_id), origin, now_ms) {
             Ok(txn_id) => match self.exchange_one(record.instance, AppCommand::TransactionCommit { txn_id: txn_id.clone() }) {
+                Ok(AppFrame::TransactionCommitted { edit_id, relay: Some(HubRelayOutcome { refused: Some(code), detail, .. }), .. }) => {
+                    let _ = self.exchange_one(record.instance, AppCommand::TransactionUndo { group_id: txn_id.clone() });
+                    Err(map_fault(&Fault { code, message: format!("the hub refused edit {edit_id} ({detail}); it was reverted in this session") }))
+                }
                 Ok(AppFrame::TransactionCommitted { edit_id, relay, .. }) => {
                     let after = match self.exchange_one(record.instance, AppCommand::ReadHistory) {
                         Ok(AppFrame::HistorySnapshot(revision)) => revision,

@@ -8,6 +8,14 @@ import { spawnSync } from "node:child_process";
 interface DevcontainerConfig {
   readonly postCreateCommand: readonly string[];
   readonly features: Readonly<Record<string, { readonly version?: string; readonly moby?: boolean }>>;
+  readonly forwardPorts: readonly number[];
+  readonly portsAttributes: Readonly<Record<string, { readonly label: string }>>;
+}
+
+/** 🚪️ The launch rows whose servers the devcontainer forwards: one port each, named in the row's environment. */
+interface LaunchRow {
+  readonly name: string;
+  readonly env?: Readonly<Record<string, string>>;
 }
 
 /** 🚀️ Verifies the image's pinned runtime acquisition before application dependency synchronization. */
@@ -28,6 +36,18 @@ export function testContainerRuntimeBootstrap(workspace: string): void {
   assert.equal(config.features["ghcr.io/devcontainers/features/rust:1"]?.version, "none", "rust-toolchain.toml is the only toolchain pin");
   assert.ok(!Object.keys(config.features).some((key) => /\/nx:/.test(key)), "Nx must come from the repository's locked bootstrap");
   assert.deepEqual(config.features[fixture.dockerDaemonFeature.id], fixture.dockerDaemonFeature.options, "Hub backends publish on 127.0.0.1, so the devcontainer needs its own Docker daemon (docker-in-docker, Docker CE on Ubuntu noble), not the host's socket");
+  const launchSource = readFileSync(join(workspace, ".vscode/launch.json"), "utf8"), launch = (Bun.JSONC.parse(launchSource) as { configurations: LaunchRow[] }).configurations;
+  assert.deepEqual(launch.map((row) => row.name), (require("jsonc-parser").parse(launchSource) as { configurations: LaunchRow[] }).configurations.map((row) => row.name));
+  const served = fixture.forwardedLaunchRows.map((name: string) => {
+    const row = launch.find((candidate) => candidate.name === name);
+    assert.ok(row, `Forwarded launch row ${name} is absent from .vscode/launch.json`);
+    const ports = Object.entries(row.env ?? {}).filter(([key]) => key.endsWith("_PORT")).map(([, value]) => Number(value));
+    assert.equal(ports.length, 1, `${name} must name exactly one server port`);
+    return ports[0];
+  });
+  const expectedPorts = [...served, ...fixture.forwardedToolPorts].sort((left: number, right: number) => left - right);
+  assert.deepEqual([...config.forwardPorts].sort((left, right) => left - right), expectedPorts, "The devcontainer forwards exactly the hub, the `s` serves and the tool ports its launch rows start");
+  assert.deepEqual(Object.keys(config.portsAttributes).map(Number).sort((left, right) => left - right), expectedPorts, "Every forwarded port carries a label");
   assert.equal(JSON.parse(readFileSync(join(workspace, "package.json"), "utf8")).packageManager, `bun@${fixture.bun}`);
   assert.ok(dockerfile.includes(`ARG BUN_VERSION=${fixture.bun}\n`));
   assert.ok(dockerfile.includes(`ARG NODE_VERSION=${fixture.node}\n`));
@@ -55,5 +75,5 @@ export function testContainerRuntimeBootstrap(workspace: string): void {
     }
     for (const architecture of fixture.rejectedArchitectures) assert.notEqual(spawnSync("sh", ["-ec", command], { env: { ...process.env, runtime_arch: architecture }, encoding: "utf8", timeout: 5000 }).status, 0);
   }
-  console.log("[DEBUG] Container runtime pins, checksum-before-extraction, repository Nx ownership and JSONC/lodash/native shell oracles PASS");
+  console.log("✅️ Container runtime pins, checksum-before-extraction, repository Nx ownership, forwarded launch-row ports and JSONC/lodash/native shell oracles PASS");
 }

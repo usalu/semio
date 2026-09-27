@@ -49,6 +49,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-has-header",
         "insert-record",
         "remove-record",

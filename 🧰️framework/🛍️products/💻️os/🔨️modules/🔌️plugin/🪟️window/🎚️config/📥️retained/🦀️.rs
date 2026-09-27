@@ -139,32 +139,11 @@ enum BuiltValue {
 }
 
 enum ValueFrame {
-    Record {
-        kind: store::mounted_pack_rt::RetainedValueContainer,
-        spec: Option<store::mounted_pack_rt::RecordSpec>,
-        fields: HashMap<u16, store::mounted_pack_rt::FieldValue>,
-        field: Option<u16>,
-    },
-    Sequence {
-        kind: store::mounted_pack_rt::RetainedValueContainer,
-        element: ExpectedValue,
-        values: Vec<BuiltValue>,
-    },
-    Map {
-        dsl: bool,
-        element: ExpectedValue,
-        values: Vec<(String, BuiltValue)>,
-        key: Option<String>,
-    },
-    Statements {
-        variants: Vec<(String, fn() -> store::mounted_pack_rt::RecordSpec)>,
-        values: Vec<(String, store::mounted_pack_rt::RecordValue)>,
-        keyword: Option<String>,
-    },
-    Bytes {
-        values: Vec<u8>,
-        remaining: usize,
-    },
+    Record { kind: store::mounted_pack_rt::RetainedValueContainer, spec: Option<store::mounted_pack_rt::RecordSpec>, fields: HashMap<u16, store::mounted_pack_rt::FieldValue>, field: Option<u16> },
+    Sequence { kind: store::mounted_pack_rt::RetainedValueContainer, element: ExpectedValue, values: Vec<BuiltValue> },
+    Map { dsl: bool, element: ExpectedValue, values: Vec<(String, BuiltValue)>, key: Option<String> },
+    Statements { variants: Vec<(String, fn() -> store::mounted_pack_rt::RecordSpec)>, values: Vec<(String, store::mounted_pack_rt::RecordValue)>, keyword: Option<String> },
+    Bytes { values: Vec<u8>, remaining: usize },
 }
 
 #[derive(Clone, Copy)]
@@ -231,9 +210,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             Some(ValueFrame::Record { spec, field: Some(field), .. }) => Ok(ExpectedValue::field(spec.as_ref().and_then(|spec| spec.fields.iter().find(|candidate| candidate.id == *field)).map(|field| field.shape.clone()))),
             Some(ValueFrame::Sequence { element, .. }) => Ok(element.clone()),
             Some(ValueFrame::Map { element, key: Some(_), .. }) => Ok(element.clone()),
-            Some(ValueFrame::Statements { variants, keyword: Some(keyword), .. }) => Ok(ExpectedValue::field(
-                variants.iter().find(|(candidate, _)| candidate == keyword).map(|(_, spec)| store::mounted_pack_rt::Shape::Record(*spec)),
-            )),
+            Some(ValueFrame::Statements { variants, keyword: Some(keyword), .. }) => Ok(ExpectedValue::field(variants.iter().find(|(candidate, _)| candidate == keyword).map(|(_, spec)| store::mounted_pack_rt::Shape::Record(*spec)))),
             _ => Err(WindowConfigPackLoadDiagnostic::TypedState),
         }
     }
@@ -261,11 +238,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     fn shape_is_tuple_valued(shape: Option<&store::mounted_pack_rt::Shape>) -> bool {
         matches!(
             shape,
-            Some(store::mounted_pack_rt::Shape::Tuple(_, _))
-                | Some(store::mounted_pack_rt::Shape::Coord(_))
-                | Some(store::mounted_pack_rt::Shape::Dir)
-                | Some(store::mounted_pack_rt::Shape::Dim(_))
-                | Some(store::mounted_pack_rt::Shape::Range)
+            Some(store::mounted_pack_rt::Shape::Tuple(_, _)) | Some(store::mounted_pack_rt::Shape::Coord(_)) | Some(store::mounted_pack_rt::Shape::Dir) | Some(store::mounted_pack_rt::Shape::Dim(_)) | Some(store::mounted_pack_rt::Shape::Range)
         )
     }
 
@@ -276,9 +249,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             // 📍️ Coordinate/direction/dimension/range literals are fixed-arity tuples of floats; their
             // elements carry no element shape of their own, so name it here rather than leave every
             // component shapeless.
-            Some(store::mounted_pack_rt::Shape::Coord(_)) | Some(store::mounted_pack_rt::Shape::Dir) | Some(store::mounted_pack_rt::Shape::Dim(_)) | Some(store::mounted_pack_rt::Shape::Range) => {
-                Some(store::mounted_pack_rt::Shape::Float)
-            }
+            Some(store::mounted_pack_rt::Shape::Coord(_)) | Some(store::mounted_pack_rt::Shape::Dir) | Some(store::mounted_pack_rt::Shape::Dim(_)) | Some(store::mounted_pack_rt::Shape::Range) => Some(store::mounted_pack_rt::Shape::Float),
             _ => None,
         };
         ExpectedValue { shape, dsl: expected.dsl }
@@ -337,11 +308,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                 _ => return Err(WindowConfigPackLoadDiagnostic::TypedState),
             },
             StringTarget::Value(expected) => {
-                let value = if expected.dsl {
-                    BuiltValue::Dsl(store::mounted_pack_rt::DslValue::String(owner.value))
-                } else {
-                    BuiltValue::Field(store::mounted_pack_rt::FieldValue::Text(owner.value))
-                };
+                let value = if expected.dsl { BuiltValue::Dsl(store::mounted_pack_rt::DslValue::String(owner.value)) } else { BuiltValue::Field(store::mounted_pack_rt::FieldValue::Text(owner.value)) };
                 self.emit(value)?;
             }
         }
@@ -412,10 +379,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                 fields.try_reserve(count).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
                 self.stack.push(ValueFrame::Record { kind, spec, fields, field: None });
             }
-            store::mounted_pack_rt::RetainedValueContainer::Tuple
-            | store::mounted_pack_rt::RetainedValueContainer::List
-            | store::mounted_pack_rt::RetainedValueContainer::PackedF64
-            | store::mounted_pack_rt::RetainedValueContainer::PackedVarint => {
+            store::mounted_pack_rt::RetainedValueContainer::Tuple | store::mounted_pack_rt::RetainedValueContainer::List | store::mounted_pack_rt::RetainedValueContainer::PackedF64 | store::mounted_pack_rt::RetainedValueContainer::PackedVarint => {
                 let mut values = Vec::new();
                 values.try_reserve_exact(count).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
                 self.stack.push(ValueFrame::Sequence { kind, element: Self::child_element(&expected), values });
@@ -434,9 +398,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                 values.try_reserve_exact(count).map_err(|_| WindowConfigPackLoadDiagnostic::Capacity)?;
                 self.stack.push(ValueFrame::Statements { variants, values, keyword: None });
             }
-            store::mounted_pack_rt::RetainedValueContainer::ChunkedBytes
-            | store::mounted_pack_rt::RetainedValueContainer::Table
-            | store::mounted_pack_rt::RetainedValueContainer::Wire => return Err(WindowConfigPackLoadDiagnostic::TypedState),
+            store::mounted_pack_rt::RetainedValueContainer::ChunkedBytes | store::mounted_pack_rt::RetainedValueContainer::Table | store::mounted_pack_rt::RetainedValueContainer::Wire => return Err(WindowConfigPackLoadDiagnostic::TypedState),
         }
         Ok(())
     }
@@ -461,18 +423,12 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
                 BuiltValue::Field(if tuple { store::mounted_pack_rt::FieldValue::Tuple(values) } else { store::mounted_pack_rt::FieldValue::List(values) })
             }
             ValueFrame::Map { dsl: true, values, key: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Map => {
-                BuiltValue::Dsl(store::mounted_pack_rt::DslValue::Object(
-                    values.into_iter().map(|(key, value)| Self::into_dsl(value).map(|value| (key, value))).collect::<Result<Vec<_>, _>>()?,
-                ))
+                BuiltValue::Dsl(store::mounted_pack_rt::DslValue::Object(values.into_iter().map(|(key, value)| Self::into_dsl(value).map(|value| (key, value))).collect::<Result<Vec<_>, _>>()?))
             }
             ValueFrame::Map { dsl: false, values, key: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Map => {
-                BuiltValue::Field(store::mounted_pack_rt::FieldValue::Map(
-                    values.into_iter().map(|(key, value)| Self::into_field(value).map(|value| (key, value))).collect::<Result<Vec<_>, _>>()?,
-                ))
+                BuiltValue::Field(store::mounted_pack_rt::FieldValue::Map(values.into_iter().map(|(key, value)| Self::into_field(value).map(|value| (key, value))).collect::<Result<Vec<_>, _>>()?))
             }
-            ValueFrame::Statements { values, keyword: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Statements => {
-                BuiltValue::Field(store::mounted_pack_rt::FieldValue::Statements(values))
-            }
+            ValueFrame::Statements { values, keyword: None, .. } if kind == store::mounted_pack_rt::RetainedValueContainer::Statements => BuiltValue::Field(store::mounted_pack_rt::FieldValue::Statements(values)),
             _ => return Err(WindowConfigPackLoadDiagnostic::TypedState),
         };
         self.emit(value)
@@ -582,11 +538,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
             Token::F64(bits) => {
                 self.tag.take();
                 let expected = self.expected()?;
-                let built = if expected.dsl {
-                    BuiltValue::Dsl(store::mounted_pack_rt::DslValue::float(f64::from_bits(bits)))
-                } else {
-                    BuiltValue::Field(store::mounted_pack_rt::FieldValue::Float(f64::from_bits(bits)))
-                };
+                let built = if expected.dsl { BuiltValue::Dsl(store::mounted_pack_rt::DslValue::float(f64::from_bits(bits))) } else { BuiltValue::Field(store::mounted_pack_rt::FieldValue::Float(f64::from_bits(bits))) };
                 self.emit(built)?;
             }
             Token::End(kind) => self.end_container(kind)?,
@@ -703,10 +655,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         if maximum_bytes < header_bytes {
             return Ok(false);
         }
-        if pack.len() <= header_bytes
-            || pack.get(..8) != Some(store::semio_format::BINARY_MAGIC.as_slice())
-            || pack.get(8..12).and_then(|bytes| <[u8; 4]>::try_from(bytes).ok()).map(u32::from_le_bytes) != Some(expected_token_bytes as u32)
-        {
+        if pack.len() <= header_bytes || pack.get(..8) != Some(store::semio_format::BINARY_MAGIC.as_slice()) || pack.get(8..12).and_then(|bytes| <[u8; 4]>::try_from(bytes).ok()).map(u32::from_le_bytes) != Some(expected_token_bytes as u32) {
             return Err(WindowConfigPackLoadDiagnostic::EnvelopeIdentity);
         }
         let token = pack.get(12..header_bytes).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
@@ -724,21 +673,12 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         }
         let maximum_items = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
         let maximum_allocation = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES;
-        let limits = || store::mounted_pack_rt::PackLimits {
-            max_file_len: inner_len as u64,
-            max_segment_len: inner_len as u64,
-            max_symbols: maximum_items as u32,
-            max_depth: 64,
-            max_items: maximum_items as u64,
-            max_total_alloc: maximum_allocation as u64,
-        };
+        let limits =
+            || store::mounted_pack_rt::PackLimits { max_file_len: inner_len as u64, max_segment_len: inner_len as u64, max_symbols: maximum_items as u32, max_depth: 64, max_items: maximum_items as u64, max_total_alloc: maximum_allocation as u64 };
         *self.source = Some(store::mounted_pack_rt::RetainedPackSourceCursor::try_new(pages, inner_len, maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
         *self.anchor = Some(store::mounted_pack_rt::RetainedPackAnchorCursor::new());
         *self.segment = Some(store::mounted_pack_rt::RetainedPackSegmentCursor::try_new(limits(), maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
-        *self.catalog = Some(
-            store::mounted_pack_rt::RetainedPackCatalogCursor::try_new(limits(), maximum_items, inner_len, inner_len, maximum_items, maximum_allocation)
-                .map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?,
-        );
+        *self.catalog = Some(store::mounted_pack_rt::RetainedPackCatalogCursor::try_new(limits(), maximum_items, inner_len, inner_len, maximum_items, maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
         *self.value = Some(store::mounted_pack_rt::RetainedValueCursor::try_new(limits(), maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
         *self.typed = Some(RetainedWindowConfigTypedState::<O>::new()?);
         self.hasher.update(&pack[..header_bytes]);
@@ -1179,11 +1119,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                     return self.pending();
                 }
                 let spr_len = self.files.as_ref().expect("retained window config SPR input remains").spr.len();
-                let limits = store::RetainedSprLimits {
-                    file_bytes: spr_len as u64,
-                    frame_body_bytes: spr_len as u64,
-                    records: store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u64,
-                };
+                let limits = store::RetainedSprLimits { file_bytes: spr_len as u64, frame_body_bytes: spr_len as u64, records: store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u64 };
                 match store::RetainedHistoryDecode::new_persisted_document(spr_len, limits) {
                     Ok(decoder) => {
                         *self.history_decode = Some(decoder);

@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/csv/rfc4180/any/mutation/patch-snapshot/schema.json",
+  "title": "PatchSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["patch"],
+  "properties": {
+    "patch": { "$ref": "semio.stdio.snapshot-patch.v1" },
+    "mutation": { "const": "patchSnapshot", "description": "Aggregate discriminator spliced in by CsvMutation; absent when the payload stands alone." }
+  }
+}

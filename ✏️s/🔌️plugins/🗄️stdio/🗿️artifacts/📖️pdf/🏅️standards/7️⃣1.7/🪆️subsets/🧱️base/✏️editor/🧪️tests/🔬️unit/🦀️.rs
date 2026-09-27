@@ -17,3 +17,57 @@ async fn editor_declares_the_main_window() {
     let def = create_pdf17_editor();
     assert!(def.window_kinds.iter().any(|w| w.id == main::WINDOW_KIND_ID));
 }
+
+#[semio_framework_async_macros::async_test]
+async fn missing_set_page_payload_is_rejected() {
+    assert!(<Pdf17Editor as ArtifactEditor>::command_from_action("set-page", None).is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn explicit_nonzero_page_payload_is_preserved() {
+    let args = dsl::DslValue::Object(vec![
+        ("page".into(), dsl::DslValue::float(3.0)),
+        ("item".into(), dsl::DslValue::float(0.0)),
+        ("revision".into(), dsl::DslValue::String("0123456789abcdef".into())),
+        ("text".into(), dsl::DslValue::String("replacement".into())),
+    ]);
+    let command = <Pdf17Editor as ArtifactEditor>::command_from_action("set-page", Some(&args)).expect("typed payload");
+    assert!(matches!(command, semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf17EditorCommand::SetPage { page: 3, item: 0, revision, text }) if revision == "0123456789abcdef" && text == "replacement"));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn registered_pdf_draft_publishes_once_refuses_stale_and_undoes_redoes() {
+    use crate::schema::snapshot::{PdfOp, PdfPage, PdfTextString};
+    use semio_framework_plugin::app::DocumentWindowKit;
+    use semio_framework_plugin::{artifact_app_laws, EditorApp, PluginApp};
+
+    let mut original = PdfSnapshot::default();
+    original.pages.push(PdfPage { content: vec![PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text("before") }, PdfOp::EndText], ..Default::default() });
+    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }).await;
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, STDIO_PDF_DOCUMENT_SCHEMA) else { panic!("PDF fixture produces a document load") };
+    app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.unwrap();
+    let meta = artifact_app_laws::meta("local");
+    let arguments = |revision: String, text: &str| {
+        dsl::DslValue::object([("page".into(), dsl::DslValue::float(0.0)), ("item".into(), dsl::DslValue::float(0.0)), ("revision".into(), dsl::DslValue::String(revision)), ("text".into(), dsl::DslValue::String(text.into()))])
+    };
+
+    let edit = arguments(DocumentWindowKit::text_revision("before"), "after");
+    app.handle_action("set-page", Some(&edit), &meta).await.unwrap();
+    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
+    let expected = app.snapshot().unwrap().clone();
+    assert_eq!(expected.pages[0].text(), "after");
+
+    let no_op = arguments(DocumentWindowKit::text_revision("after"), "after");
+    app.handle_action("set-page", Some(&no_op), &meta).await.unwrap();
+    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.unwrap();
+    artifact_app_laws::settle_history_verb(&mut app, "undo", meta.instance_id).await;
+    assert_eq!(app.snapshot().unwrap(), original, "an identical Apply must not add a history entry");
+    artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id).await;
+    assert_eq!(app.snapshot().unwrap(), expected);
+
+    let stale = arguments(DocumentWindowKit::text_revision("before"), "refused draft");
+    app.handle_action("set-page", Some(&stale), &meta).await.unwrap();
+    assert!(artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.is_err());
+    assert_eq!(app.snapshot().unwrap(), expected, "a refused draft must preserve every PDF page operator");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}

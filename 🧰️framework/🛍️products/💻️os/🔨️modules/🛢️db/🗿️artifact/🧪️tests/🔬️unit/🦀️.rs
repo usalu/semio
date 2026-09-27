@@ -662,7 +662,7 @@ async fn artifact_history_and_opener_reject_neutral_inner_documents_and_frontier
             });
         }
         let facet = backing.wal().await;
-        engine.wal.submit(&facet, &records, DurabilityClass::Fsync, 1).await.unwrap();
+        engine.wal.submit(&facet, &[], &records, DurabilityClass::Fsync, 1).await.unwrap();
         while records.close_step().unwrap() {
             semio_framework_async::yield_once().await;
         }
@@ -1457,7 +1457,7 @@ async fn committed_durable_group_decision_accepts_only_one_exact_event_transacti
     let mut wal = db_wal::ArtifactWal::create(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await.unwrap();
     for (ordinal, row) in fixture["committedDecisionWitnessCases"].as_array().unwrap().iter().filter(|row| row["transaction"] == "committed").enumerate() {
         let mut records = durable_group_witness_batch(row["recordKinds"].as_array().unwrap(), &canonical_pack).await;
-        let receipt = wal.submit(&wal_storage, &records, DurabilityClass::Fsync, ordinal as u64 + 1).await.unwrap();
+        let receipt = wal.submit(&wal_storage, &[], &records, DurabilityClass::Fsync, ordinal as u64 + 1).await.unwrap();
         assert!(receipt.committed);
         close_wal_record_batch(&mut records).await.unwrap();
     }
@@ -1525,7 +1525,7 @@ async fn committed_durable_group_recovery_consumes_wal_witness_and_returns_exact
     let wal_storage = backing.wal().await;
     let mut wal = db_wal::ArtifactWal::create(&wal_storage, document.clone(), db_wal::GroupCommitPolicy::default(), 0).await.unwrap();
     let mut records = durable_group_witness_batch(&[serde_json::Value::String("event".to_string())], &canonical_pack).await;
-    wal.submit(&wal_storage, &records, DurabilityClass::Fsync, 1).await.unwrap();
+    wal.submit(&wal_storage, &[], &records, DurabilityClass::Fsync, 1).await.unwrap();
     close_wal_record_batch(&mut records).await.unwrap();
     wal.close().await.unwrap();
     let mut replay =

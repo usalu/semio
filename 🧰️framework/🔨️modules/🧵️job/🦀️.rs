@@ -90,6 +90,14 @@ pub fn default_now_us() -> Option<u64> {
     semio_framework_trace::try_now_us()
 }
 
+/// 🧮️ Deterministic per-thread clock that advances one microsecond per read: correctness laws drive
+/// jobs with it so a descheduled test thread never trips the wall-clock overrun quarantine, while
+/// timing laws and production keep [`default_now_us`].
+pub fn logical_now_us() -> Option<u64> {
+    thread_local! { static LOGICAL_NOW_US: std::cell::Cell<u64> = const { std::cell::Cell::new(0) }; }
+    Some(LOGICAL_NOW_US.with(|now| { now.set(now.get() + 1); now.get() }))
+}
+
 /// 🌐️ Converts the browser's fractional monotonic milliseconds without losing its sub-ms precision.
 pub fn microseconds_from_milliseconds(milliseconds: f64) -> Option<u64> {
     semio_framework_trace::microseconds_from_milliseconds(milliseconds)

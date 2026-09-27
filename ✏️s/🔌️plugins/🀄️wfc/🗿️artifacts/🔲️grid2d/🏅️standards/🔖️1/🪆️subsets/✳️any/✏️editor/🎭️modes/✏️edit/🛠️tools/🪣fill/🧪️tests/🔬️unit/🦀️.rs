@@ -1,6 +1,7 @@
 //! 🧪 Fill tool laws — definition, progressive payloads, abort, oracle parity, and the language-agnostic vector.
 
 use super::*;
+use crate::schema::inferences::solve_with_clock;
 use crate::examples::grid2d::pipes;
 use semio_framework_job::{Generation, InteractiveJobCloseStep, OperationId, StepBudget};
 use semio_framework_tool_run::{ToolRunId, ToolRunTick};
@@ -86,7 +87,7 @@ fn the_language_agnostic_partial_vector_decodes_to_the_normative_shape() {
 #[test]
 fn stepping_publishes_a_strictly_increasing_partial_before_the_finish() {
     let snapshot = Arc::new(pipes::document());
-    let oracle = solve_with_job(&snapshot).expect("pipes solves");
+    let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("pipes solves");
     let finished = oracle.assignments.len();
     assert!(finished > 2, "the fixture must leave room to collapse");
     let mut job = Grid2dFillRunJob::new(identity(), snapshot, ToolRunJobPort::default());
@@ -149,7 +150,7 @@ fn aborting_mid_run_cancels_and_never_dispatches_commit_fill() {
 #[test]
 fn the_final_payload_matches_solve_with_job_for_pipes() {
     let snapshot = Arc::new(pipes::document());
-    let oracle = solve_with_job(&snapshot).expect("pipes solves");
+    let oracle = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("pipes solves");
     let mut job = Grid2dFillRunJob::new(identity(), snapshot, ToolRunJobPort::default());
     let (operation, generation, cancel) = (semio_framework_job::allocate_operation_id(), Generation(1), semio_framework_job::root_cancel_token());
     let mut sequence = 0;

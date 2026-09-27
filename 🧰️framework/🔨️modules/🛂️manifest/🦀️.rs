@@ -347,6 +347,11 @@ impl ActionArgDef {
         Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None })
     }
 
+    /// @emoji 🔢️ A non-negative 32-bit ordinal.
+    pub fn index(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        Self::with_schema(id, label, ArgSchema::Number { min: Some(0.0), max: Some(u32::MAX as f64), step: Some(1.0), integer: true, unit: None })
+    }
+
     /// @emoji 🎚️ A bounded slider argument.
     pub fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
         let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None });
@@ -3423,6 +3428,10 @@ impl<T> NonEmptyVec<T> {
 
     pub fn first_mut(&mut self) -> &mut T {
         &mut self.first
+    }
+
+    pub fn push(&mut self, value: T) {
+        self.rest.push(value);
     }
 }
 

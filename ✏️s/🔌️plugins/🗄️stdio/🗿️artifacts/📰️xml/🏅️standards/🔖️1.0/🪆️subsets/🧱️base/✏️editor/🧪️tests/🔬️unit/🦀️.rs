@@ -1,5 +1,17 @@
 use super::*;
 
+#[test]
+fn set_node_requires_a_complete_address_and_allows_an_explicit_empty_text_node() {
+    assert!(xml_any_command_from_action(XML_ANY_KIT_ACTION_ID, None).is_err());
+    let missing_value = dsl::DslValue::object([("nodeId".into(), dsl::DslValue::String("0".into()))]);
+    assert!(xml_any_command_from_action(XML_ANY_KIT_ACTION_ID, Some(&missing_value)).is_err());
+    let args = dsl::DslValue::object([
+        ("nodeId".into(), dsl::DslValue::String("0".into())),
+        ("value".into(), dsl::DslValue::String(String::new())),
+    ]);
+    assert!(matches!(xml_any_command_from_action(XML_ANY_KIT_ACTION_ID, Some(&args)), Ok(XmlAnyEditorCommand::SetNode { value, .. }) if value.is_empty()));
+}
+
 #[semio_framework_async_macros::async_test]
 async fn create_xml_editor_builds_a_definition_for_the_editor_role() {
     let def = create_xml_editor();

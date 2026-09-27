@@ -1289,14 +1289,32 @@ impl DocumentState {
         self.values.content_hash(&mut control).await
     }
 
-    /// @emoji ✍️ Applies one envelope's flattened path-value entries, returning the new state, the
-    /// `TouchedSet` it wrote, and any conflicts (a path whose last writer is neither `mutation_id`
-    /// itself nor a declared `dependencies` member).
-    async fn apply_entries(&mut self, mutation_id: &protocol::MutationId, dependencies: &[protocol::MutationId], entries: &[(String, Option<DslValue>)]) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
+    /// @emoji 🧭️ What applying one envelope's flattened path-value entries would touch and conflict with, decided
+    /// without applying anything: a path's last writer is `written`'s (an earlier envelope of the same batch) or else
+    /// the state's own, and a conflict is a last writer that is neither `mutation_id` itself nor a declared
+    /// `dependencies` member. `written` gains this envelope's paths.
+    fn plan_entries(&self, mutation_id: &protocol::MutationId, dependencies: &[protocol::MutationId], entries: &[(String, Option<DslValue>)], written: &mut HashMap<String, protocol::MutationId>) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
         check_len(entries.len() as u64, 64, "db_artifact::retained_state_mutations")?;
+        let mut touched = db_state::TouchedSet::new();
+        let mut conflicts = Vec::new();
+        for (path, _) in entries {
+            if let Some(previous_writer) = written.get(path).or_else(|| self.last_writer.get(path)) {
+                if previous_writer != mutation_id && !dependencies.contains(previous_writer) {
+                    conflicts.push(ConflictRecord { command_id: mutation_id.clone(), conflicting_with: previous_writer.clone(), path: path.clone() });
+                }
+            }
+            touched.record(db_state::TouchedRegion::write(path.clone()));
+            written.insert(path.clone(), mutation_id.clone());
+        }
+        Ok((touched, conflicts))
+    }
+
+    /// @emoji ✍️ Applies one planned envelope's entries ([`Self::plan_entries`]): every value, already encoded, set at
+    /// its path, every `None` a deletion, and `mutation_id` recorded as each path's last writer.
+    async fn apply_entries(&mut self, mutation_id: &protocol::MutationId, entries: Vec<(String, Option<Vec<u8>>)>) -> Result<(), DbError> {
         if entries.is_empty() {
             while artifact_state_retirement_maintenance_step()? {}
-            return Ok((db_state::TouchedSet::new(), Vec::new()));
+            return Ok(());
         }
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let mut control = db_state::StateCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 65_536)?;
@@ -1309,32 +1327,26 @@ impl DocumentState {
             };
             retirements[index] = Some(reservation);
         }
-        for (index, (path, value)) in entries.iter().enumerate() {
-            let Some(dsl_value) = value else { continue };
-            let bytes = store::pack_rt::encode_wire_value(dsl_value);
-            match db_state::StateEntry::try_admit(path, bytes, MAX_STATE_PAGE_VALUE_BYTES, &mut control).await {
-                Ok(entry) => staged[index] = Some(entry),
-                Err(rejected) => {
-                    let error = format!("retained state admission failed: {}", rejected.error());
-                    let retirement = retirements[index].take().ok_or_else(|| DbError::Internal("retained state refusal lost retirement preflight".to_string()))?;
-                    release_artifact_state_retirements(&mut retirements);
-                    install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::rejected(retirement, rejected, staged));
-                    return Err(DbError::InvalidArgument(error));
+        let mut paths = Vec::with_capacity(entries.len());
+        for (index, (path, value)) in entries.into_iter().enumerate() {
+            if let Some(bytes) = value {
+                match db_state::StateEntry::try_admit(&path, bytes, MAX_STATE_PAGE_VALUE_BYTES, &mut control).await {
+                    Ok(entry) => staged[index] = Some(entry),
+                    Err(rejected) => {
+                        let error = format!("retained state admission failed: {}", rejected.error());
+                        let retirement = retirements[index].take().ok_or_else(|| DbError::Internal("retained state refusal lost retirement preflight".to_string()))?;
+                        release_artifact_state_retirements(&mut retirements);
+                        install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::rejected(retirement, rejected, staged));
+                        return Err(DbError::InvalidArgument(error));
+                    }
                 }
             }
+            paths.push(path);
         }
-        let mut touched = db_state::TouchedSet::new();
-        let mut conflicts = Vec::new();
-        for (index, (path, value)) in entries.iter().enumerate() {
-            if let Some(previous_writer) = self.last_writer.get(path) {
-                if previous_writer != mutation_id && !dependencies.contains(previous_writer) {
-                    conflicts.push(ConflictRecord { command_id: mutation_id.clone(), conflicting_with: previous_writer.clone(), path: path.clone() });
-                }
-            }
-            match value {
-                Some(_) => {
-                    let retirement = retirements[index].take().ok_or_else(|| DbError::Internal("retained state staging lost retirement admission".to_string()))?;
-                    let entry = staged[index].take().ok_or_else(|| DbError::Internal("retained state staging lost entry".to_string()))?;
+        for (index, path) in paths.into_iter().enumerate() {
+            let retirement = retirements[index].take().ok_or_else(|| DbError::Internal("retained state staging lost retirement admission".to_string()))?;
+            match staged[index].take() {
+                Some(entry) => {
                     let replaced = match self.values.insert(entry) {
                         Ok(replaced) => replaced,
                         Err(rejected) => {
@@ -1344,28 +1356,20 @@ impl DocumentState {
                             return Err(DbError::LimitExceeded("retained state entries"));
                         }
                     };
-                    if let Some(replaced) = replaced {
-                        install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::entry(retirement, replaced));
-                    } else {
-                        let mut unused = Some(retirement);
-                        release_artifact_state_retirement(&mut unused);
+                    match replaced {
+                        Some(replaced) => install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::entry(retirement, replaced)),
+                        None => release_artifact_state_retirement(&mut Some(retirement)),
                     }
                 }
-                None => {
-                    let retirement = retirements[index].take().ok_or_else(|| DbError::Internal("retained state removal lost retirement preflight".to_string()))?;
-                    if let Some(removed) = self.values.remove(path) {
-                        install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::entry(retirement, removed));
-                    } else {
-                        let mut unused = Some(retirement);
-                        release_artifact_state_retirement(&mut unused);
-                    }
-                }
+                None => match self.values.remove(&path) {
+                    Some(removed) => install_reserved_artifact_state_owner(ArtifactStateRetirementCursor::entry(retirement, removed)),
+                    None => release_artifact_state_retirement(&mut Some(retirement)),
+                },
             }
-            touched.record(db_state::TouchedRegion::write(path.clone()));
-            self.last_writer = self.last_writer.insert(path.clone(), mutation_id.clone());
+            self.last_writer = self.last_writer.insert(path, mutation_id.clone());
         }
         while artifact_state_retirement_maintenance_step()? {}
-        Ok((touched, conflicts))
+        Ok(())
     }
 }
 //#endregion 🔖️State
@@ -1996,15 +2000,13 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         }
     }
 
-    /// @emoji ✅️🚫️ Dependency + dedupe + execute for one envelope, shared by `submit` (before the
-    /// WAL write) and `open`'s replay (after it). `batch_ids` is the set of operation ids already
-    /// seen earlier in the SAME transaction (a multi-envelope batch may reference its own earlier
-    /// members as dependencies). Returns `(touched, conflicts, applied_now)`; `applied_now` is
-    /// `false` (with empty touched/conflicts) if `envelope.mutation_id` was already applied in an
-    /// earlier commit — the per-envelope half of this crate's dedupe law.
-    async fn apply_one(&mut self, envelope: &protocol::MutationEnvelope, batch_ids: &HashSet<String>) -> Result<(db_state::TouchedSet, Vec<ConflictRecord>, bool), DbError> {
+    /// @emoji 🧭️ Plans `envelope` against this engine and the batch so far without applying anything: `None` when it is
+    /// already applied (the per-envelope half of the dedupe law), else its decoded entries — values encoded as the state
+    /// stores them — with the regions it touches and the conflicts it meets. Refuses an envelope whose dependency is
+    /// neither applied, nor earlier in `batch_ids`, nor folded by a durable group decision.
+    async fn plan_one(&self, envelope: &protocol::MutationEnvelope, batch_ids: &HashSet<String>, written: &mut HashMap<String, protocol::MutationId>) -> Result<Option<PlannedEntries>, DbError> {
         if self.applied.contains_key(&envelope.mutation_id.0) {
-            return Ok((db_state::TouchedSet::new(), Vec::new(), false));
+            return Ok(None);
         }
         for dependency in &envelope.dependencies {
             if !self.applied.contains_key(&dependency.0) && !batch_ids.contains(&dependency.0) && !self.names_durable_group_operation(&dependency.0) {
@@ -2013,11 +2015,17 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         }
         let entries = diff_entries(&envelope.diff).await?;
         check_len(entries.len() as u64, self.config.limits.max_batch_commands as u64, "db_artifact::diff_entries")?;
-        let (touched, conflicts) = self.state.apply_entries(&envelope.mutation_id, &envelope.dependencies, &entries).await?;
+        let (touched, conflicts) = self.state.plan_entries(&envelope.mutation_id, &envelope.dependencies, &entries, written)?;
+        let entries = entries.into_iter().map(|(path, value)| (path, value.map(|value| store::pack_rt::encode_wire_value(&value)))).collect();
+        Ok(Some(PlannedEntries { entries, touched, conflicts }))
+    }
+
+    /// @emoji ✍️ Applies one planned envelope to the document state and records it as applied.
+    async fn commit_one(&mut self, envelope: &protocol::MutationEnvelope, entries: Vec<(String, Option<Vec<u8>>)>) -> Result<(), DbError> {
+        self.state.apply_entries(&envelope.mutation_id, entries).await?;
         self.applied.insert(envelope.mutation_id.0.clone(), envelope.clone());
-        let actor_seq = self.actor_seq.entry(envelope.actor.0.clone()).or_insert(0);
-        *actor_seq += 1;
-        Ok((touched, conflicts, true))
+        *self.actor_seq.entry(envelope.actor.0.clone()).or_insert(0) += 1;
+        Ok(())
     }
 
     /// @emoji 👁️ Whether `dependency` names an operation a committed durable group decision folded: the
@@ -2069,17 +2077,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         }
 
         let mut batch_ids: HashSet<String> = HashSet::new();
-        let mut records = db_wal::WalRecordBatch::new();
-        let wal_cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let mut wal_control = db_wal::WalCursorControl::new(wal_cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)?;
-        let mut touched_all = db_state::TouchedSet::new();
-        let mut conflicts_all: Vec<ConflictRecord> = Vec::new();
-        // 🎯️ Third tuple element (`Vec<u8>`, the envelope's own encoded bytes) is kept alongside so
-        // the outbox push below the outcome-step gate doesn't have to re-encode.
-        let mut newly_applied: Vec<(protocol::MutationEnvelope, db_state::TouchedSet, Vec<u8>)> = Vec::new();
-        let mut staging_operation: Option<u64> = None;
-        let mut applied_actor_seqs: Vec<u64> = Vec::new();
-
+        let mut written: HashMap<String, protocol::MutationId> = HashMap::new();
+        let mut planned: Vec<(&protocol::MutationEnvelope, PlannedEntries)> = Vec::new();
+        let mut commands: Vec<Vec<u8>> = Vec::new();
         for envelope in &batch.envelopes {
             // authz: the `AuthzHook` seam (defaults to `AllowAll`; `db_engine`'s `SecurityAuthzHook`
             // wraps a real `db_security::SecurityGate` here).
@@ -2100,29 +2100,15 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             protocol::encode_envelope(envelope, &mut envelope_bytes);
             check_len(envelope_bytes.len() as u64, self.config.limits.max_command_bytes, "db_artifact::envelope_bytes")?;
 
-            // base-resolve/deps + execute
-            let (touched, conflicts, applied_now) = self.apply_one(envelope, &batch_ids).await?;
+            let plan = self.plan_one(envelope, &batch_ids, &mut written).await?;
             batch_ids.insert(envelope.mutation_id.0.clone());
-            if !applied_now {
-                continue;
+            if let Some(plan) = plan {
+                planned.push((envelope, plan));
+                commands.push(envelope_bytes);
             }
-            applied_actor_seqs.push(*self.actor_seq.get(&envelope.actor.0).unwrap_or(&0));
-
-            for region in &touched.regions {
-                touched_all.record(region.clone());
-            }
-            conflicts_all.extend(conflicts);
-
-            let command_bytes = match staging_operation {
-                None => admit_wal_bytes(envelope_bytes.clone(), self.config.limits.max_command_bytes, &mut wal_control).await?,
-                Some(operation) => db_wal::WalBytes::copy_for_operation(operation, &envelope_bytes, &mut wal_control).await?,
-            };
-            staging_operation = Some(command_bytes.operation());
-            push_wal_record(&mut records, db_wal::WalRecord::Command(command_bytes), &mut wal_control).await?;
-            newly_applied.push((envelope.clone(), touched, envelope_bytes));
         }
 
-        if newly_applied.is_empty() {
+        if planned.is_empty() {
             // Every envelope in this (re-)submitted batch was already durable individually — a
             // full no-op commit, per-envelope half of the dedupe law (see `apply_one`'s doc).
             let receipt = CommandReceipt { command_id, frontier: self.frontier.clone(), durability: options.durability, conflicts: Vec::new(), state_hash: Some(self.state.content_hash().await?), messages: Vec::new() };
@@ -2134,11 +2120,11 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         // findings (probed against recent commit history) into graded `protocol::MutationMessage`s,
         // then let `options.policy` decide before touching `self.recent_touches`/`self.outbox`/the
         // WAL at all — a rejected batch must leave every one of those untouched.
-        let batch_touches: Vec<db_conflict::CommandTouch> = newly_applied.iter().map(|(envelope, touched, _)| command_touch(envelope, touched)).collect();
+        let batch_touches: Vec<db_conflict::CommandTouch> = planned.iter().map(|(envelope, plan)| command_touch(envelope, &plan.touched)).collect();
         let mut messages: Vec<protocol::MutationMessage> = Vec::new();
-        for (index, (envelope, _, _)) in newly_applied.iter().enumerate() {
+        for (index, (envelope, _)) in planned.iter().enumerate() {
             for unseen in unseen_concurrent_writes(&self.recent_touches, &batch_touches[..index], envelope) {
-                let unseen_target = self.recent_targets.get(&unseen.command_id.0).map(Vec::as_slice).or_else(|| newly_applied[..index].iter().find(|(earlier, _, _)| earlier.mutation_id == unseen.command_id).map(|(earlier, _, _)| earlier.target.as_slice())).unwrap_or(&[]);
+                let unseen_target = self.recent_targets.get(&unseen.command_id.0).map(Vec::as_slice).or_else(|| planned[..index].iter().find(|(earlier, _)| earlier.mutation_id == unseen.command_id).map(|(earlier, _)| earlier.target.as_slice())).unwrap_or(&[]);
                 messages.extend(grade_concurrent_write(&batch_touches[index], &envelope.target, unseen, unseen_target).await);
             }
         }
@@ -2148,30 +2134,49 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             }
         }
 
+        let head_seq = self.frontier.head_seq.checked_add(planned.len() as u64).ok_or(DbError::LimitExceeded("db_artifact::head_seq"))?;
+        let mut records = db_wal::WalRecordBatch::new();
+        let _ = records.push(db_wal::WalRecord::Frontier(Frontier { document: self.document.clone(), head_seq, commit_seq: self.frontier.commit_seq + 1, chain_hash: [0; 32], epoch: self.frontier.epoch }));
+        self.wal.preflight_submit(&commands, &records)?;
+        let _ = records.close_step()?;
+
+        let mut touched_all = db_state::TouchedSet::new();
+        let mut conflicts_all: Vec<ConflictRecord> = Vec::new();
+        let mut applied_actor_seqs: Vec<u64> = Vec::with_capacity(planned.len());
+        let mut newly_applied: Vec<(&protocol::MutationEnvelope, db_state::TouchedSet)> = Vec::with_capacity(planned.len());
+        for (envelope, plan) in planned {
+            self.commit_one(envelope, plan.entries).await?;
+            applied_actor_seqs.push(*self.actor_seq.get(&envelope.actor.0).unwrap_or(&0));
+            for region in &plan.touched.regions {
+                touched_all.record(region.clone());
+            }
+            conflicts_all.extend(plan.conflicts);
+            newly_applied.push((envelope, plan.touched));
+        }
+
         // Bookkeeping for `preview_conflicts`'s real, additive `db_conflict::ConflictDetector`
         // integration (see its own doc) — `submit`'s own returned `ConflictRecord`s stay this
         // crate's original path-granular last-writer detection above (see `🔖️Conflict`'s doc). Only
         // reached once the outcome step above has accepted the batch.
-        for (envelope, _, _) in &newly_applied {
+        for (envelope, _) in &newly_applied {
             self.remember_target(envelope);
         }
         for touch in batch_touches {
             remember_recent_touch(&mut self.recent_touches, touch);
         }
-        for (envelope, _, bytes) in &newly_applied {
+        for ((envelope, _), bytes) in newly_applied.iter().zip(&commands) {
             self.outbox.push(OutboxEntry { mutation_id: envelope.mutation_id.clone(), bytes: bytes.clone() });
         }
 
         // publish: compute + WAL-append the new frontier in the same transaction as its commands
-        let new_frontier =
-            Frontier { document: self.document.clone(), head_seq: self.frontier.head_seq + newly_applied.len() as u64, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().await?.0, epoch: self.frontier.epoch };
-        push_wal_record(&mut records, db_wal::WalRecord::Frontier(new_frontier.clone()), &mut wal_control).await?;
+        let new_frontier = Frontier { document: self.document.clone(), head_seq, commit_seq: self.frontier.commit_seq + 1, chain_hash: self.state.content_hash().await?.0, epoch: self.frontier.epoch };
+        let mut records = db_wal::WalRecordBatch::new();
+        let _ = records.push(db_wal::WalRecord::Frontier(new_frontier.clone()));
 
         // WAL append + durability (ArtifactWal::submit wraps `records` in its own TxBegin/TxCommit)
         let wal_facet = self.storage.wal().await;
-        let appended = self.wal.submit(&wal_facet, &records, options.durability, now_ms).await?;
+        let appended = self.wal.submit(&wal_facet, &commands, &records, options.durability, now_ms).await?;
         drop(wal_facet);
-        wal_control.grant()?;
         let _ = records.close_step()?;
         drop(records);
         self.frontier = new_frontier.clone();
@@ -2179,7 +2184,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         // publish: index entries join the backlog; full runs are written, bounded per commit
         let base_seq = self.frontier.head_seq - newly_applied.len() as u64;
         let queued = ArtifactIndexWatermarks::default();
-        for (offset, ((envelope, _, _), actor_seq)) in newly_applied.iter().zip(&applied_actor_seqs).enumerate() {
+        for (offset, ((envelope, _), actor_seq)) in newly_applied.iter().zip(&applied_actor_seqs).enumerate() {
             let seq = base_seq + offset as u64 + 1;
             let location = db_index::RecordLocation { segment: appended.segment_index, offset: seq, len: 1 };
             self.index_backlog.queue_command(&queued, seq, location, to_core_actor_id(&envelope.actor).await, *actor_seq);
@@ -2195,7 +2200,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let projection_classes = (self.config.projections)();
         if !projection_classes.is_empty() {
             let engine = db_projection::ProjectionEngine::new(&index_facet, self.document.clone(), projection_classes).await?;
-            for (offset, (envelope, touched, _)) in newly_applied.iter().enumerate() {
+            for (offset, (envelope, touched)) in newly_applied.iter().enumerate() {
                 engine.apply_envelope(base_seq + offset as u64 + 1, envelope, touched).await?;
             }
         }
@@ -2203,12 +2208,12 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
 
         // preview-reconcile
         self.previews.reconcile_with(&db_preview::LandedCommand { frontier: new_frontier.clone(), touched: touched_all.clone() }, &db_preview::DbConflictOracle::default());
-        self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _, _)| envelope.mutation_id.clone()).collect(), touched: touched_all });
+        self.commit_log.push(CommitNotification { frontier: new_frontier.clone(), operation_ids: newly_applied.iter().map(|(envelope, _)| envelope.mutation_id.clone()).collect(), touched: touched_all });
         self.head_edit_id = Some(command_id.clone());
 
         // vcs (best-effort: this crate never blocks a commit on the vcs seam's outcome; a disabled
         // vcs feature supplies `NullVersionGraph`, whose `Unimplemented` is tolerated here)
-        for (envelope, _, _) in &newly_applied {
+        for (envelope, _) in &newly_applied {
             match self
                 .config
                 .version_graph
@@ -2314,7 +2319,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             let close = close_wal_record_batch(&mut records).await;
             return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(close.err().unwrap_or(error)));
         }
-        if let Err(error) = self.wal.preflight_submit(&records) {
+        if let Err(error) = self.wal.preflight_submit(&[], &records) {
             let close = close_wal_record_batch(&mut records).await;
             return Ok(ArtifactDurableGroupJournalAppendV1::Rejected(close.err().unwrap_or(error)));
         }
@@ -2323,7 +2328,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             return Ok(ArtifactDurableGroupJournalAppendV1::Absent);
         }
         let wal_facet = self.storage.wal().await;
-        let append = self.wal.submit(&wal_facet, &records, DurabilityClass::Fsync, now_ms).await;
+        let append = self.wal.submit(&wal_facet, &[], &records, DurabilityClass::Fsync, now_ms).await;
         drop(wal_facet);
         let close = close_wal_record_batch(&mut records).await;
         let receipt = match (append, close) {

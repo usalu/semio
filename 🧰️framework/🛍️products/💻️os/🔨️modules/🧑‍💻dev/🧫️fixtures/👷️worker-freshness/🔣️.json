@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "before": { "name": "initialExport", "value": "before atomic replacement" },
+  "after": { "name": "replacementExport", "value": "after atomic replacement" }
+}

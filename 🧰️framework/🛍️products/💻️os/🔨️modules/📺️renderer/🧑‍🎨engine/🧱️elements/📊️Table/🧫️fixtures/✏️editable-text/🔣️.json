@@ -23,8 +23,12 @@
   "acceptance": {
     "base": "A",
     "draft": "B",
+    "awaitingEcho": "B",
     "acceptedPersisted": "B",
     "refusedPersisted": "A",
-    "collaboratorPersisted": "C"
+    "collaboratorPersisted": "C",
+    "publicationCountBeforeEcho": 1,
+    "publicationCountAfterBlur": 1,
+    "busyBeforeEcho": true
   }
 }

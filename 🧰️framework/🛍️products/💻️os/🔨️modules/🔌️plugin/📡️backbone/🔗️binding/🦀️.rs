@@ -43,14 +43,7 @@ impl DocumentBackboneBindingCommandV1 {
             DocumentBackboneBindingOperationV1::Retire => "retire",
         };
         let bytes = store::pack_rt::encode_wire_value(
-            &DocumentBackboneBindingWireV1 {
-                schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1.into(),
-                operation: operation.into(),
-                instance_id: self.instance_id,
-                binding_generation: self.binding_generation,
-                uri: self.uri.clone(),
-            }
-            .to_value(),
+            &DocumentBackboneBindingWireV1 { schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1.into(), operation: operation.into(), instance_id: self.instance_id, binding_generation: self.binding_generation, uri: self.uri.clone() }.to_value(),
         );
         if bytes.len() > DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES {
             return Err("plugin.document-backbone.binding-capacity".into());
@@ -158,11 +151,7 @@ pub fn require_document_backbone_binding_receipt_v1(payload: &[u8], command: &Do
         return Err("plugin.document-backbone.receipt-noncanonical".into());
     }
     let receipt = DocumentBackboneBindingReceiptWireV1::from_value(value).map_err(|error| error.to_string())?;
-    if receipt.schema != DOCUMENT_BACKBONE_BINDING_RECEIPT_SCHEMA_V1
-        || receipt.instance_id != command.instance_id
-        || receipt.binding_generation != command.binding_generation
-        || receipt.uri != command.uri
-    {
+    if receipt.schema != DOCUMENT_BACKBONE_BINDING_RECEIPT_SCHEMA_V1 || receipt.instance_id != command.instance_id || receipt.binding_generation != command.binding_generation || receipt.uri != command.uri {
         return Err("plugin.document-backbone.receipt-owner".into());
     }
     let expected = match command.operation {

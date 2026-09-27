@@ -15,12 +15,15 @@
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import type { Browser, BrowserContext, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
-import { FAULT, NOISE, clickUncovered, fillStagedArgument, readMatrixPins, readShell, submitStagedVerb, unfoldActionsRail } from "../🧮️program-matrix/🟦️.ts";
+import { FAULT, NOISE, clickUncovered, fillStagedArgument, readMatrixPins, readShell, submitStagedVerb, unfoldActionsRail, withDevServe } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { hubProbeCall, hubProbeOpenDocument, hubProbeSignIn } from "../../../../../../../🌎️hub/🤝️integration-harness/🟦️.ts";
+import { createSpaceCommandV1 } from "../../../📇️directory/🏘️spaces/🟦️.ts";
+import { directoryCommandRequestJson, sealDirectoryCommandRequestV1, type DirectorySpaceRole } from "../../../📇️directory/🧬️schema/🟦️.ts";
 
 //#region 🔖️Sessions
 /** 🔑️ One human: a hub credential. */
@@ -49,6 +52,9 @@ async function openSessions(browser: Browser, urls: readonly string[], humans: r
     });
     page.on("pageerror", (error) => lines.push(`${ms()} pageerror ${String(error).slice(0, 900)}`));
     page.on("websocket", (socket) => socket.on("close", () => lines.push(`${ms()} ws-closed ${socket.url().replace(/^wss?:\/\/[^/]+/u, "").slice(0, 160)}`)));
+    page.on("request", (request) => {
+      if (request.url().includes("/directory/event-page/v1?after=0")) lines.push(`${ms()} request /directory/event-page/v1?after=0`);
+    });
     sessions.push({ human, url: urls[index] ?? urls[0]!, context, page, lines });
   }
   return sessions;
@@ -195,14 +201,18 @@ const PLUGIN_BY_KIND: Readonly<Record<string, string>> = { "2d.drawing": "draw",
 /** 🪟️ The shell's own chrome windows — a document is mounted once a window other than these shows. */
 const SHELL_WINDOWS = new Set(["framework.window.table", "s-home-main"]);
 
+/** ⏱️ How often a mount is polled; a mount is stamped when the poll that sees it runs, before the panels are unfolded, so a
+ * timing carries at most one poll interval of slack (it used to carry a 1 s poll plus ~2 s of panel clicks and pauses). */
+const MOUNT_POLL_MS = 200;
+
 async function awaitMounted(session: Session, deadlineMs: number) {
   const mounted = await until(async () => {
     const shell = await readShell(session.page);
     const status = await readStatus(session.page);
     const documentWindows = shell.windowIds.filter((id) => !SHELL_WINDOWS.has(id));
     const painted = await session.page.evaluate(() => [...document.querySelectorAll('[data-slot="window-body"]')].some((body) => body.querySelectorAll("*").length > 20));
-    return documentWindows.length > 0 && painted && status.executionTarget.length === 0 && !new URL(session.page.url()).pathname.endsWith("/") ? { ...shell, windowIds: documentWindows } : null;
-  }, deadlineMs, 1_000);
+    return documentWindows.length > 0 && painted && status.executionTarget.length === 0 && !new URL(session.page.url()).pathname.endsWith("/") ? { ...shell, windowIds: documentWindows, mountedAt: Date.now() } : null;
+  }, deadlineMs, MOUNT_POLL_MS);
   if (!mounted) throw new Error(`not mounted within ${deadlineMs} ms: ${JSON.stringify(await readStatus(session.page))}`);
   await unfoldActionsRail(session.page);
   await session.page.locator('[data-slot="panel-tab-button"][id="framework.panel.history"]').first().click({ force: true }).catch(() => undefined);
@@ -221,6 +231,23 @@ async function settleAfterLoad(session: Session, cursor: number, quietMs = 12_00
     const fresh = session.lines.slice(seen);
     seen = session.lines.length;
     if (fresh.some((line) => /space index opening failed|event-page\/v1\?after=0/u.test(line))) quietSince = Date.now();
+    if (Date.now() - quietSince >= quietMs && (await create.count()) > 0) return true;
+    await session.page.waitForTimeout(500);
+  }
+  return false;
+}
+
+/** 🏠️ Sign-in re-bootstraps Home's directory seconds later (a second `event-page/v1?after=0` under a new socket grant), and a
+ * dialog opened before that is closed by it: waits until Home has been quiet for `quietMs` and is mounted. */
+async function settleHome(session: Session, quietMs = 8_000, deadlineMs = 60_000): Promise<boolean> {
+  const create = session.page.locator('[data-ui-node-key="s-home-create-space"]').first();
+  const begun = Date.now();
+  let quietSince = Date.now();
+  let seen = 0;
+  while (Date.now() - begun < deadlineMs) {
+    const fresh = session.lines.slice(seen);
+    seen = session.lines.length;
+    if (fresh.some((line) => /event-page\/v1\?after=0|ws-closed \/directory\/socket/u.test(line))) quietSince = Date.now();
     if (Date.now() - quietSince >= quietMs && (await create.count()) > 0) return true;
     await session.page.waitForTimeout(500);
   }
@@ -305,6 +332,20 @@ const seenText = (value: string | { missed: string }): string => (typeof value =
 
 /** ✏️ Dispatches the plugin's pinned document verb once (staged arguments filled); answers whether the author's own view
  * moved within 20 s. A still-open staged form is submitted directly. */
+/** 👥️ The pinned arguments of `plugin`'s verb made distinct per human: a text value gains the human's label, a numeric one
+ * (a seed, a count) is offset by 6 for the second human, a JSON string literal gains it inside its quotes, a live id stays
+ * live — so two humans never write the same value and
+ * each edit is a visible change (a set-style verb would otherwise rewrite the first human's value unchanged). */
+export function personalArgs(pinned: Readonly<Record<string, string>>, label: string, liveId: string): Record<string, string> {
+  const personal = (value: string): string => {
+    if (value === liveId) return value;
+    if (/^-?\d+(\.\d+)?$/u.test(value)) return String(Number(value) + (label === "user2" ? 6 : 0));
+    if (/^".*"$/su.test(value)) return JSON.stringify(`${JSON.parse(value) as string} ${label}`);
+    return `${value} ${label}`;
+  };
+  return Object.fromEntries(Object.entries(pinned).map(([key, value]) => [key, personal(value)]));
+}
+
 async function edit(session: Session, plugin: string, pins: ReturnType<typeof readMatrixPins>) {
   const verb = pins.pluginVerbs[plugin];
   if (verb === undefined) throw new Error(`no pinned document verb for plugin ${plugin}`);
@@ -312,7 +353,7 @@ async function edit(session: Session, plugin: string, pins: ReturnType<typeof re
   const staged = await session.page.locator(`[id$=".action.${verb}.execute"]`).first().isVisible().catch(() => false);
   if (!staged) await clickUncovered(session.page, `[data-slot="window-action-pane"] [id="action.${verb}"]`);
   await pause(session, 1_000);
-  for (const [key, value] of Object.entries(pins.pluginArgs[`${plugin}.${verb}`] ?? pins.pluginArgs[verb] ?? {})) await fillStagedArgument(session.page, key, value, pins.liveId);
+  for (const [key, value] of Object.entries(personalArgs(pins.pluginArgs[`${plugin}.${verb}`] ?? pins.pluginArgs[verb] ?? {}, session.human.label, pins.liveId))) await fillStagedArgument(session.page, key, value, pins.liveId);
   await submitStagedVerb(session.page, verb);
   const after = await awaitText(session, (now) => now !== before, 20_000);
   return { verb, after: seenText(after), applied: typeof after === "string" };
@@ -325,11 +366,35 @@ async function undo(session: Session, verb: "undo" | "redo" = "undo") {
   return { after: seenText(after), undone: typeof after === "string" };
 }
 
-/** 🗄️ The hub's own head sequence of a document through the admin API, when an admin capability file was given. */
-async function hubHead(hub: string, adminCapabilityFile: string | null, artifactId: string): Promise<number | string | null> {
+/** 🔑️ The capability the local hub launcher publishes in `admin-capability.json`, and its refresh contract: an admin-relay
+ * capability lives 15 minutes; writing the sibling `admin-request` file asks the launcher (the `startLocalHub` hold) for a
+ * fresh one, which it writes into the same capability file. */
+const readCapability = (file: string): string => String((JSON.parse(readFileSync(file, "utf8")) as { capability?: unknown }).capability ?? "");
+
+async function refreshCapability(file: string): Promise<boolean> {
+  const before = readCapability(file);
+  writeFileSync(join(dirname(file), "admin-request"), "");
+  for (const deadline = Date.now() + 15_000; Date.now() < deadline; ) {
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 500));
+    const now = (() => {
+      try {
+        return readCapability(file);
+      } catch {
+        return before;
+      }
+    })();
+    if (now !== before && now.length > 0) return true;
+  }
+  return false;
+}
+
+/** 🗄️ The hub's own head sequence of a document through the admin API, when an admin capability file was given; an expired
+ * capability (401) is refreshed once through the launcher's `admin-request` contract and the read retried. */
+export async function hubHead(hub: string, adminCapabilityFile: string | null, artifactId: string): Promise<number | string | null> {
   if (!adminCapabilityFile) return null;
-  const { capability } = JSON.parse(readFileSync(adminCapabilityFile, "utf8")) as { capability: string };
-  const response = await fetch(`${hub}/admin/api/documents`, { headers: { authorization: `Bearer ${capability}` } }).catch(() => null);
+  const read = (): Promise<Response | null> => fetch(`${hub}/admin/api/documents`, { headers: { authorization: `Bearer ${readCapability(adminCapabilityFile)}` }, signal: AbortSignal.timeout(60_000) }).catch(() => null);
+  let response = await read();
+  if (response?.status === 401 && (await refreshCapability(adminCapabilityFile))) response = await read();
   if (response === null || !response.ok) return `admin ${response?.status ?? "unreachable"}`;
   const body = (await response.json()) as { rows: { descriptor: { documentId: string }; headSeq: number }[] };
   return body.rows.find((row) => row.descriptor.documentId === artifactId)?.headSeq ?? null;
@@ -344,9 +409,262 @@ async function awaitSharedSpace(session: Session, spaceId: string, misses: unkno
 }
 //#endregion 🔖️Journey
 
+//#region 🔖️Journeys
+/** 🧭️ What one kind's journey gets once A created and opened the document and B opened it from the Space index. */
+type JourneyContext = Readonly<{ A: Session; B: Session; check: (name: string, pass: boolean, detail: unknown) => void; plugin: string; pins: ReturnType<typeof readMatrixPins>; options: TwoHumanOptions; spaceId: string; artifactId: string; misses: unknown[] }>;
+
+/** ✏️ Both humans author: A edits → B sees, B edits → A sees, A undoes their OWN edit (B's stays), B undoes theirs (both back
+ * to the start), B redoes (both see it again), both reload and reopen and converge. */
+async function editJourney({ A, B, check, plugin, pins, options, spaceId, artifactId, misses }: JourneyContext): Promise<void> {
+    const initial = [await docText(A), await docText(B)] as const;
+    const head0 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
+    const aEdit = await edit(A, plugin, pins);
+    const bSawA = await awaitText(B, (now) => now !== initial[1], 30_000);
+    check("A edits → B sees", aEdit.applied && typeof bSawA === "string", { verb: aEdit.verb, a: short(aEdit.after), b: short(seenText(bSawA)), hubHead: [head0, await hubHead(options.hub, options.adminCapabilityFile, artifactId)] });
+    const afterA = [await docText(A), await docText(B)] as const;
+    const bEdit = await edit(B, plugin, pins);
+    const aSawB = await awaitText(A, (now) => now !== afterA[0], 30_000);
+    check("B edits → A sees", bEdit.applied && typeof aSawB === "string", { b: short(bEdit.after), a: short(seenText(aSawB)) });
+    const afterBoth = [await docText(A), await docText(B)] as const;
+    const headBeforeAUndo = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
+    const undoCursor = [A.lines.length, B.lines.length] as const;
+    const aUndo = await undo(A);
+    const agreed = await until(async () => {
+      const [a, b] = [await docText(A), await docText(B)];
+      return a === b ? a : null;
+    }, 30_000);
+    const headAfterAUndo = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
+    const undoFaults = [...faultsSince(A, undoCursor[0]), ...faultsSince(B, undoCursor[1])];
+    const headAdvanced = typeof headBeforeAUndo !== "number" || typeof headAfterAUndo !== "number" || headAfterAUndo > headBeforeAUndo;
+    const additive = aUndo.undone;
+    check("A undoes own (B's stays)", agreed !== null && agreed !== initial[0] && undoFaults.length === 0 && headAdvanced && (additive || agreed === afterBoth[0]), { kind: additive ? "additive (A's element removed)" : "set (B's later value stands)", a: short(await docText(A)), b: short(await docText(B)), faults: undoFaults.slice(0, 3), hubHead: [headBeforeAUndo, headAfterAUndo] });
+    const bUndo = await undo(B);
+    const backToInitial = await until(async () => {
+      const [a, b] = [await docText(A), await docText(B)];
+      return a === initial[0] && b === initial[1] ? { a, b } : null;
+    }, 30_000);
+    check("B undoes own (both back to the start)", bUndo.undone && backToInitial !== null, { a: short(await docText(A)), b: short(await docText(B)), initial: initial.map(short) });
+    const bRedo = await undo(B, "redo");
+    const redone = await until(async () => {
+      const [a, b] = [await docText(A), await docText(B)];
+      return a !== initial[0] && b !== initial[1] && a === b ? { a } : null;
+    }, 30_000);
+    check("B redoes own (both see it again)", bRedo.undone && redone !== null, { b: short(bRedo.after), a: short(await docText(A)) });
+    const settled = [await docText(A), await docText(B)] as const;
+    for (const session of [A, B]) await session.page.reload({ waitUntil: "domcontentloaded" });
+    for (const session of [A, B]) await boot(session);
+    await openRow(A, spaceId, artifactId, misses);
+    await openRow(B, spaceId, artifactId, misses);
+    await awaitMounted(A, options.mountBudgetMs);
+    await awaitMounted(B, options.mountBudgetMs);
+    const converged = await until(async () => {
+      const [a, b] = [await docText(A), await docText(B)];
+      return a === settled[0] && b === settled[1] ? { a: short(a) } : null;
+    }, 45_000);
+    check("reload converges", converged !== null, { settled: settled.map(short), afterReload: [short(await docText(A)), short(await docText(B))], hubHead: await hubHead(options.hub, options.adminCapabilityFile, artifactId) });
+}
+
+/** 🏷️ The document surfaces a human's shell mounted (`data-surface-id`, `<dialect>#editor|#viewer`), the navbar role chip
+ * (`data-role` + its localized text) and the transient notices it shows. */
+const surfaceReading = (page: Page): Promise<{ surfaces: string[]; chips: string[]; notices: string[] }> =>
+  page.evaluate(() => ({
+    surfaces: [...new Set([...document.querySelectorAll("[data-surface-id]")].map((element) => element.getAttribute("data-surface-id") ?? "").filter((id) => id.includes("#")))],
+    chips: [...document.querySelectorAll('[data-slot="surface-role-chip"]')].map((element) => `${element.getAttribute("data-role")}:${(element.textContent ?? "").trim()}`),
+    notices: [...document.querySelectorAll("[data-semio-transient-notice]")].map((element) => (element.textContent ?? "").replace(/\s+/gu, " ").trim()).filter(Boolean),
+  }));
+
+/** 🎛️ The ids among `ids` a human can press: present, visible and neither `disabled` nor `aria-disabled`. */
+const pressableControls = (page: Page, ids: readonly string[]): Promise<string[]> =>
+  page.evaluate(
+    (wanted) =>
+      wanted.filter((id) =>
+        [...document.querySelectorAll(`[id="${id}"]`)].some((element) => element instanceof HTMLElement && element.offsetParent !== null && !element.hasAttribute("disabled") && element.getAttribute("aria-disabled") !== "true"),
+      ),
+    [...ids],
+  );
+
+/** 👁️ Every way a viewer can try to change the document: typing and deleting in the first document window body (text
+ * editors, focused canvases), the plugin's pinned verb and Undo/Redo when the pane lists them, and the undo shortcut. */
+async function attemptViewerEdits(session: Session, verb: string): Promise<string[]> {
+  const tried: string[] = [];
+  const body = session.page.locator('[data-slot="window-body"]').last();
+  const box = await body.boundingBox().catch(() => null);
+  if (box !== null) {
+    await session.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    tried.push("click");
+  }
+  const editable = session.page.locator('[data-slot="window-body"] textarea, [data-slot="window-body"] [contenteditable="true"], [data-slot="window-body"] input:not([type="hidden"])').first();
+  if ((await editable.count()) > 0) {
+    await editable.focus().catch(() => undefined);
+    tried.push("focus-editable");
+  }
+  await session.page.keyboard.type("viewer-attempt", { delay: 30 });
+  await session.page.keyboard.press("Backspace");
+  await session.page.keyboard.press("Delete");
+  tried.push("keys");
+  for (const id of [`action.${verb}`, "action.undo", "action.redo"]) {
+    if ((await session.page.locator(`[data-slot="window-action-pane"] [id="${id}"]`).count()) === 0) continue;
+    tried.push(`${id}:${await clickUncovered(session.page, `[data-slot="window-action-pane"] [id="${id}"]`)}`);
+    await pause(session, 600);
+  }
+  await session.page.keyboard.press(process.platform === "darwin" ? "Meta+z" : "Control+z");
+  tried.push("undo-shortcut");
+  return tried;
+}
+
+/** 👁️ B is a Spectator of the space: B's open lands on the kind's viewer surface and the navbar says so in B's language, B is
+ * offered no edit control, every edit B attempts leaves both views and the hub head unchanged, B still sees A's edit live,
+ * and a write crafted with B's own credential straight onto the document socket is refused by the hub (the viewer's plan
+ * grants no write) while A's view stays put. */
+async function viewerJourney({ A, B, check, plugin, pins, options, spaceId, artifactId }: JourneyContext): Promise<void> {
+  const verb = pins.pluginVerbs[plugin] ?? "";
+  const chipText = options.locale === "de" ? "Betrachter" : "Viewer";
+  const readingB = await surfaceReading(B.page);
+  check("B holds the viewer surface", readingB.surfaces.length > 0 && readingB.surfaces.every((id) => id.endsWith("#viewer")) && readingB.chips.includes(`viewer:${chipText}`), { b: readingB, a: (await surfaceReading(A.page)).surfaces });
+  const offered = await pressableControls(B.page, [`action.${verb}`, "action.undo", "action.redo"]);
+  check("viewer offers no edit control", offered.length === 0, { offered, actions: (await readShell(B.page)).actions.slice(0, 16) });
+  const before = [await docText(A), await docText(B)] as const;
+  const head0 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
+  const cursor = B.lines.length;
+  const tried = await attemptViewerEdits(B, verb);
+  await pause(B, 3_000);
+  const after = [await docText(A), await docText(B)] as const;
+  const head1 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
+  const notices = (await surfaceReading(B.page)).notices;
+  check("viewer edit attempts change nothing", after[0] === before[0] && after[1] === before[1] && head1 === head0, { tried, a: [short(before[0]), short(after[0])], b: [short(before[1]), short(after[1])], hubHead: [head0, head1], faults: faultsSince(B, cursor).slice(0, 4) });
+  check("viewer is told why, in its language", readingB.chips.includes(`viewer:${chipText}`) && (notices.some((text) => (options.locale === "de" ? /schreibgeschützt/u : /read-only/iu).test(text)) || offered.length === 0), { chips: readingB.chips, notices, offered });
+  const aEdit = await edit(A, plugin, pins);
+  const bSaw = await awaitText(B, (now) => now !== after[1], 30_000);
+  check("A edits → viewer sees it live", aEdit.applied && typeof bSaw === "string", { verb: aEdit.verb, a: short(aEdit.after), b: short(seenText(bSaw)) });
+  const settled = [await docText(A), await docText(B)] as const;
+  const head2 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
+  const crafted = await hubProbeSignIn(options.hub, B.human.email, B.human.password, "twohumanviewer")
+    .then((token) => hubProbeOpenDocument(options.hub, token, spaceId, artifactId, `two-human-viewer-${Date.now()}`))
+    .then(async (socket) => {
+      const answered = await socket.submit(0, "");
+      socket.close();
+      return { role: String(socket.plan?.surface?.role), write: Boolean(socket.plan?.grant?.write), accepted: answered.accepted, stages: JSON.stringify(answered.ack.stages).slice(0, 300) };
+    })
+    .catch((error: unknown) => ({ role: "unopened", write: false, accepted: false, stages: String(error instanceof Error ? error.message : error).slice(0, 300) }));
+  await pause(A, 3_000);
+  const head3 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
+  const aAfterCraft = await docText(A);
+  check("hub refuses a write crafted with the viewer's credential", crafted.role === "viewer" && !crafted.write && !crafted.accepted && head3 === head2 && aAfterCraft === settled[0], { crafted, hubHead: [head2, head3], a: short(aAfterCraft) });
+}
+
+/** ⏪️ A `Revert` history transition naming `mutationIds`, shaped the way a replica sends one (`semio.history.transition`:
+ * tag 0, varint count, varint-length UTF-8 ids) — what another actor would have to send to undo someone else's operations.
+ * @see ../../../../../../🔨️modules/📡️replication/🔗️causal/🔀️transition/🦀️.rs */
+function revertTransitionEnvelope(documentId: string, mutationIds: readonly string[]): Record<string, unknown> {
+  const payload: number[] = [0];
+  const varint = (value: number): void => {
+    let rest = value;
+    while (rest >= 0x80) {
+      payload.push((rest & 0x7f) | 0x80);
+      rest >>>= 7;
+    }
+    payload.push(rest);
+  };
+  varint(mutationIds.length);
+  for (const id of mutationIds) {
+    const utf8 = new TextEncoder().encode(id);
+    varint(utf8.length);
+    payload.push(...utf8);
+  }
+  return { mutation_id: `transition-crafted-${crypto.randomUUID()}`, document_id: documentId, actor: "", dependencies: [...mutationIds], observed: null, target: [], diff: { schema: "semio.history.transition", payload }, inverse: { schema: "semio.history.transition", payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 } };
+}
+
+/** ⏪️ Undo and redo across two authors (row 3.11): each human's undo withdraws only their own newest edit and redo restores
+ * only their own — B's undo takes B's edit back and a second one finds nothing of A's to take; A's undo under B's later edit
+ * keeps B's edit (the later edits replay on the state without A's, a later value of the same field stands) — both views
+ * converge after every step and the hub head advances with every committed transition; and a `Revert` crafted by another
+ * actor that names A's operations changes nothing on either view (an undo belongs to its author). */
+async function crossUndoJourney({ A, B, check, plugin, pins, options, spaceId, artifactId }: JourneyContext): Promise<void> {
+  const crafted = await hubProbeSignIn(options.hub, B.human.email, B.human.password, "twohumanundo").then((token) => hubProbeOpenDocument(options.hub, token, spaceId, artifactId, `two-human-undo-${Date.now()}`));
+  const head = (): Promise<number | string | null> => hubHead(options.hub, options.adminCapabilityFile, artifactId);
+  const both = async (): Promise<readonly [string, string]> => [await docText(A), await docText(B)] as const;
+  const agreeOn = (expected: readonly [string, string]) => until(async () => {
+    const [a, b] = await both();
+    return a === expected[0] && b === expected[1] ? a : null;
+  }, 30_000);
+  const advanced = (before: number | string | null, after: number | string | null): boolean => typeof before !== "number" || typeof after !== "number" || after > before;
+  try {
+    const initial = await both();
+    const relayedBeforeA = crafted.relayedEnvelopes().length;
+    const aEdit = await edit(A, plugin, pins);
+    const bSawA = await awaitText(B, (now) => now !== initial[1], 30_000);
+    check("A edits → B sees", aEdit.applied && typeof bSawA === "string", { verb: aEdit.verb, a: short(aEdit.after), b: short(seenText(bSawA)) });
+    await pause(A, 2_000);
+    const aOperations = crafted.relayedEnvelopes().slice(relayedBeforeA).filter((envelope) => envelope?.diff?.schema !== "semio.history.transition").map((envelope) => String(envelope.mutation_id));
+    const afterA = await both();
+    const bEdit = await edit(B, plugin, pins);
+    const aSawB = await awaitText(A, (now) => now !== afterA[0], 30_000);
+    check("B edits → A sees", bEdit.applied && typeof aSawB === "string", { b: short(bEdit.after), a: short(seenText(aSawB)) });
+    const afterBoth = await both();
+    const cursor = [A.lines.length, B.lines.length] as const;
+    const head0 = await head();
+    const bUndo = await undo(B);
+    const backToA = await agreeOn(afterA);
+    const head1 = await head();
+    check("B's undo withdraws only B's edit", bUndo.undone && backToA !== null && advanced(head0, head1), { a: short(await docText(A)), b: short(await docText(B)), expected: afterA.map(short), hubHead: [head0, head1] });
+    const bUndoAgain = await undo(B);
+    const stillA = await both();
+    const head2 = await head();
+    check("B's next undo leaves A's edit alone", !bUndoAgain.undone && stillA[0] === afterA[0] && stillA[1] === afterA[1] && head2 === head1, { a: short(stillA[0]), b: short(stillA[1]), hubHead: [head1, head2], faults: [...faultsSince(A, cursor[0]), ...faultsSince(B, cursor[1])].slice(0, 3) });
+    const bRedo = await undo(B, "redo");
+    const redone = await agreeOn(afterBoth);
+    check("B's redo restores only B's edit", bRedo.undone && redone !== null, { a: short(await docText(A)), b: short(await docText(B)), expected: afterBoth.map(short) });
+    const head3 = await head();
+    await undo(A);
+    const agreed = await until(async () => {
+      const [a, b] = await both();
+      return a === b && a !== afterBoth[0] ? a : a === b && a === afterBoth[0] && advanced(head3, await head()) ? a : null;
+    }, 30_000);
+    const head4 = await head();
+    check("A's undo under B's later edit keeps B's edit", agreed !== null && agreed !== initial[0] && agreed !== afterA[0] && advanced(head3, head4), { kind: agreed === afterBoth[0] ? "set (B's later value stands)" : "additive (A's element withdrawn, B's replayed)", a: short(await docText(A)), b: short(await docText(B)), hubHead: [head3, head4] });
+    await undo(A, "redo");
+    const aRedone = await agreeOn(afterBoth);
+    check("A's redo restores A's edit under B's", aRedone !== null, { a: short(await docText(A)), b: short(await docText(B)), expected: afterBoth.map(short) });
+    const head5 = await head();
+    const answered = aOperations.length === 0 ? null : await crafted.submitEnvelopes(1, [revertTransitionEnvelope(artifactId, aOperations)]);
+    await pause(A, 6_000);
+    const afterCraft = await both();
+    check("another actor's crafted undo of A's edit changes nothing", aOperations.length > 0 && afterCraft[0] === afterBoth[0] && afterCraft[1] === afterBoth[1], { aOperations, hubAccepted: answered?.accepted ?? null, stages: answered === null ? null : JSON.stringify(answered.ack.stages).slice(0, 240), a: short(afterCraft[0]), b: short(afterCraft[1]), expected: afterBoth.map(short), hubHead: [head5, await head()] });
+  } finally {
+    crafted.close();
+  }
+}
+
+/** 🌱️ Creates a public studio as `owner` and makes `memberEmail` a member with `role`, through the same sealed directory
+ * commands the Home dialogs post (a journey whose subject is not the space dialogs does not depend on them). */
+async function seedSharedSpaceThroughHub(hub: string, owner: Human, memberEmail: string, role: DirectorySpaceRole, name: string): Promise<string> {
+  const token = await hubProbeSignIn(hub, owner.email, owner.password, "twohumanseed");
+  const command = (body: Parameters<typeof sealDirectoryCommandRequestV1>[1]) => hubProbeCall(hub, "POST", "/directory/commands", token, directoryCommandRequestJson(sealDirectoryCommandRequestV1(crypto.randomUUID().replaceAll("-", ""), body)));
+  const created = await command(createSpaceCommandV1(name, "studio", "public"));
+  const spaceId = created.json?.events?.find((event: { body?: { kind?: string } }) => event?.body?.kind === "space.created")?.body?.spaceId;
+  if (created.status !== 202 || typeof spaceId !== "string") throw new Error(`seed create-space ${created.status} ${created.text.slice(0, 200)}`);
+  const shared = await command({ kind: "upsert-member", spaceId, email: memberEmail, role });
+  if (shared.status !== 202) throw new Error(`seed upsert-member ${shared.status} ${shared.text.slice(0, 200)}`);
+  return spaceId;
+}
+
+/** 🗺️ The journeys a run can drive: how the shared space is set up (the Home dialogs, or the hub's directory commands), the
+ * role B is invited with, and how many checks a kind passes with. */
+const JOURNEYS: Readonly<Record<TwoHumanJourney, Readonly<{ run: (context: JourneyContext) => Promise<void>; seed: "ui" | "hub"; shareRole: RegExp; memberRole: DirectorySpaceRole; checks: number; check: string }>>> = {
+  edit: { run: editJourney, seed: "ui", shareRole: /author|autor/iu, memberRole: "author", checks: 10, check: "two-human" },
+  viewer: { run: viewerJourney, seed: "hub", shareRole: /spectator|betrachter/iu, memberRole: "spectator", checks: 10, check: "two-human-viewer" },
+  "cross-undo": { run: crossUndoJourney, seed: "hub", shareRole: /author|autor/iu, memberRole: "author", checks: 12, check: "two-human-cross-undo" },
+};
+//#endregion 🔖️Journeys
+
 //#region 🔖️TwoHuman
+/** 🧭️ The per-kind journey of a run: both humans author (`edit`), B is a Spectator (`viewer`), or both author and undo/redo
+ * across each other's edits (`cross-undo`). */
+export type TwoHumanJourney = "edit" | "viewer" | "cross-undo";
+
 /** 🎛️ One two-human run. */
 export type TwoHumanOptions = Readonly<{
+  journey: TwoHumanJourney;
   hub: string;
   serves: readonly [string, string];
   humans: readonly [Human, Human];
@@ -360,10 +678,10 @@ export type TwoHumanOptions = Readonly<{
   signal: AbortSignal;
 }>;
 
-type KindRow = { kindId: string; label: string; plugin?: string; artifactId?: string; timings?: { createToMountedMs?: number; openRowToMountedMs?: number }; checks: Record<string, { pass: boolean; detail: unknown }>; faults: { A: string[]; B: string[] }; pass: boolean };
+type KindRow = { kindId: string; label: string; plugin?: string; artifactId?: string; timings?: { createToMountedMs?: number; openRowToMountedMs?: number; createStartedAtMs?: number; openStartedAtMs?: number }; checks: Record<string, { pass: boolean; detail: unknown }>; faults: { A: string[]; B: string[] }; pass: boolean };
 
 /** 📊️ The run's report, rewritten after every kind. */
-export type TwoHumanReport = { tag: string; hub: string; serves: readonly string[]; locale: string; startedAt: string; finishedAt?: string; spaceId: string | null; kinds: string[]; rows: KindRow[]; misses: unknown[]; fatal?: string; cancelled?: boolean };
+export type TwoHumanReport = { tag: string; journey: TwoHumanJourney; hub: string; serves: readonly string[]; locale: string; startedAt: string; finishedAt?: string; spaceId: string | null; kinds: string[]; rows: KindRow[]; misses: unknown[]; fatal?: string; cancelled?: boolean };
 
 /** 👥️ Runs the two-human journey over every selected creatable kind; the report is flushed after every kind and the
  * signal ends the run after the current kind. */
@@ -372,7 +690,7 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
   const outDir = join(options.outDir, options.tag);
   mkdirSync(outDir, { recursive: true });
   const browserLocale = options.locale === "de" ? "de-DE" : "en-US";
-  const report: TwoHumanReport = { tag: options.tag, hub: options.hub, serves: options.serves, locale: browserLocale, startedAt: new Date().toISOString(), spaceId: options.spaceId, kinds: [], rows: [], misses: [] };
+  const report: TwoHumanReport = { tag: options.tag, journey: options.journey, hub: options.hub, serves: options.serves, locale: browserLocale, startedAt: new Date().toISOString(), spaceId: options.spaceId, kinds: [], rows: [], misses: [] };
   ensureParityPlaywrightBrowsersPath();
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal", "--ignore-gpu-blocklist"] });
@@ -387,9 +705,11 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
   try {
     for (const session of [A, B]) await boot(session);
     for (const session of [A, B]) await signIn(session);
-    await pause(A, 5_000);
+    for (const session of [A, B]) await settleHome(session);
     let spaceId = options.spaceId;
-    if (spaceId === null) {
+    if (spaceId === null && JOURNEYS[options.journey].seed === "hub") {
+      spaceId = await seedSharedSpaceThroughHub(options.hub, A.human, B.human.email, JOURNEYS[options.journey].memberRole, `Two Human ${options.tag} ${Date.now() % 100000}`);
+    } else if (spaceId === null) {
       const spaceName = `Two Human ${options.tag} ${Date.now() % 100000}`;
       await activate(A.page, "s-home-create-space");
       await dialog(A.page).waitFor({ state: "visible", timeout: 20_000 });
@@ -401,7 +721,7 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
       await clickRowAction(A.page, "space", spaceId, /^(share|teilen)\b/iu);
       await dialog(A.page).waitFor({ state: "visible", timeout: 20_000 });
       await A.page.locator("#email").fill(B.human.email);
-      await selectOption(A.page, "role", /author|autor/iu);
+      await selectOption(A.page, "role", JOURNEYS[options.journey].shareRole);
       await submitDialog(A.page);
       await awaitSharedSpace(B, spaceId, report.misses);
     }
@@ -431,7 +751,7 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
         const artifactId = await createArtifact(A, `Two Human ${kind.kindId} ${Date.now() % 100000}`, kind, options.mountBudgetMs);
         row.artifactId = artifactId;
         const shellA = await awaitMounted(A, options.mountBudgetMs);
-        row.timings = { createToMountedMs: Date.now() - createdAt };
+        row.timings = { createToMountedMs: shellA.mountedAt - createdAt, createStartedAtMs: createdAt - started };
         const plugin = /^s\.([a-z0-9-]+)\./u.exec(String((JSON.parse(kind.value) as { dialect?: { artifactKind?: string } }).dialect?.artifactKind ?? ""))?.[1] ?? PLUGIN_BY_KIND[kind.kindId] ?? "";
         row.plugin = plugin;
         check("A creates + opens", true, { artifactId, windows: shellA.windowIds });
@@ -440,7 +760,7 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
         const openedAt = Date.now();
         await clickRowAction(B.page, "artifact", artifactId, /^(open|öffnen)\b/iu);
         const shellB = await awaitMounted(B, options.mountBudgetMs);
-        row.timings = { ...row.timings, openRowToMountedMs: Date.now() - openedAt };
+        row.timings = { ...row.timings, openRowToMountedMs: shellB.mountedAt - openedAt, openStartedAtMs: openedAt - started };
         check("B opens via Space index", true, { windows: shellB.windowIds });
         const presence = await until(async () => {
           const [a, b] = [await readStatus(A.page), await readStatus(B.page)];
@@ -455,50 +775,14 @@ export async function runTwoHuman(options: TwoHumanOptions): Promise<TwoHumanRep
           }
         const windowFaults = [...faultsSince(A, windowCursor[0]), ...faultsSince(B, windowCursor[1])];
         check("every window takes focus and commands", windowFaults.length === 0 && shellA.windowIds.length > 0, { windows: shellA.windowIds, faults: windowFaults.slice(0, 4) });
-        const initial = [await docText(A), await docText(B)] as const;
-        const head0 = await hubHead(options.hub, options.adminCapabilityFile, artifactId);
-        const aEdit = await edit(A, plugin, pins);
-        const bSawA = await awaitText(B, (now) => now !== initial[1], 30_000);
-        check("A edits → B sees", aEdit.applied && typeof bSawA === "string", { verb: aEdit.verb, a: short(aEdit.after), b: short(seenText(bSawA)), hubHead: [head0, await hubHead(options.hub, options.adminCapabilityFile, artifactId)] });
-        const afterA = [await docText(A), await docText(B)] as const;
-        const bEdit = await edit(B, plugin, pins);
-        const aSawB = await awaitText(A, (now) => now !== afterA[0], 30_000);
-        check("B edits → A sees", bEdit.applied && typeof aSawB === "string", { b: short(bEdit.after), a: short(seenText(aSawB)) });
-        const afterBoth = [await docText(A), await docText(B)] as const;
-        const aUndo = await undo(A);
-        const bAfterAUndo = await awaitText(B, (now) => now !== afterBoth[1], 30_000);
-        check("A undoes own (B's stays)", aUndo.undone && typeof bAfterAUndo === "string" && aUndo.after !== initial[0], { a: short(aUndo.after), b: short(seenText(bAfterAUndo)) });
-        const bUndo = await undo(B);
-        const backToInitial = await until(async () => {
-          const [a, b] = [await docText(A), await docText(B)];
-          return a === initial[0] && b === initial[1] ? { a, b } : null;
-        }, 30_000);
-        check("B undoes own (both back to the start)", bUndo.undone && backToInitial !== null, { a: short(await docText(A)), b: short(await docText(B)), initial: initial.map(short) });
-        const bRedo = await undo(B, "redo");
-        const redone = await until(async () => {
-          const [a, b] = [await docText(A), await docText(B)];
-          return a !== initial[0] && b !== initial[1] && a === b ? { a } : null;
-        }, 30_000);
-        check("B redoes own (both see it again)", bRedo.undone && redone !== null, { b: short(bRedo.after), a: short(await docText(A)) });
-        const settled = [await docText(A), await docText(B)] as const;
-        for (const session of [A, B]) await session.page.reload({ waitUntil: "domcontentloaded" });
-        for (const session of [A, B]) await boot(session);
-        await openRow(A, spaceId, artifactId, report.misses);
-        await openRow(B, spaceId, artifactId, report.misses);
-        await awaitMounted(A, options.mountBudgetMs);
-        await awaitMounted(B, options.mountBudgetMs);
-        const converged = await until(async () => {
-          const [a, b] = [await docText(A), await docText(B)];
-          return a === settled[0] && b === settled[1] ? { a: short(a) } : null;
-        }, 45_000);
-        check("reload converges", converged !== null, { settled: settled.map(short), afterReload: [short(await docText(A)), short(await docText(B))], hubHead: await hubHead(options.hub, options.adminCapabilityFile, artifactId) });
+        await JOURNEYS[options.journey].run({ A, B, check, plugin, pins, options, spaceId, artifactId, misses: report.misses });
       } catch (error) {
         check("journey", false, String(error instanceof Error ? error.message : error).slice(0, 600));
         await shot(A, `${kind.kindId}-fail`);
         await shot(B, `${kind.kindId}-fail`);
       }
       row.faults = { A: faultsSince(A, cursors[0]), B: faultsSince(B, cursors[1]) };
-      row.pass = Object.values(row.checks).every((entry) => entry.pass) && Object.keys(row.checks).length >= 10;
+      row.pass = Object.values(row.checks).every((entry) => entry.pass) && Object.keys(row.checks).length >= JOURNEYS[options.journey].checks;
       report.rows.push(row);
       flush();
       log(`${index + 1}/${kinds.length} ${row.pass ? "PASS" : "FAIL"} ${kind.kindId} (${Object.values(row.checks).filter((entry) => entry.pass).length}/${Object.keys(row.checks).length} checks, faults A ${row.faults.A.length} B ${row.faults.B.length})`);
@@ -540,8 +824,8 @@ function readHumans(segments: readonly string[]): readonly [Human, Human] {
   return [{ label: "user1", ...users[0]! }, { label: "user2", ...users[1]! }];
 }
 
-/** 🚪️ `verify two-human --hub <url> --serve <url> [--serve-b <url>] [--locale en|de] [--kinds <kindId,…>] [--space <id>]
- * [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>] [--max-create-to-mounted-ms <n>]
+/** 🚪️ `verify two-human --hub <url> --serve <url> [--serve-b <url>] [--journey edit|viewer|cross-undo] [--locale en|de] [--kinds <kindId,…>]
+ * [--space <id>] [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>] [--max-create-to-mounted-ms <n>]
  * [--max-open-to-mounted-ms <n>] [--mount-budget-ms <n>]` — runs the journey (a creation or an open waits up to
  * `--mount-budget-ms`, default 15 min, for the document to mount; the latency bounds judge it), writes `report.json`,
  * `console.txt` and failure screenshots under `<out>/<tag>/`, publishes the acceptance record, exits non-zero unless every
@@ -549,19 +833,26 @@ function readHumans(segments: readonly string[]): readonly [Human, Human] {
 export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
   const hub = flagValue(segments, "--hub");
   const serve = flagValue(segments, "--serve");
-  if (!hub || !serve) throw new Error("usage: verify two-human --hub <url> --serve <url> [--serve-b <url>] [--locale en|de] [--kinds …] [--space <id>] [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>]");
+  if (!hub || !serve) throw new Error("usage: verify two-human --hub <url> --serve <url> [--serve-b <url>] [--journey edit|viewer|cross-undo] [--locale en|de] [--kinds …] [--space <id>] [--tag <t>] [--out <dir>] [--admin-capability <file>] [--users <json>]");
+  const journey = flagValue(segments, "--journey") ?? "edit";
+  if (!(journey in JOURNEYS)) throw new Error(`verify two-human: unknown --journey ${journey} (${Object.keys(JOURNEYS).join("|")})`);
+  const { check } = JOURNEYS[journey as TwoHumanJourney];
   const locale = flagValue(segments, "--locale") === "de" ? "de" : "en";
-  const tag = flagValue(segments, "--tag") ?? `two-human-${locale}`;
+  const tag = flagValue(segments, "--tag") ?? `${check}-${locale}`;
   const controller = new AbortController();
   const cancel = (): void => controller.abort();
   process.once("SIGINT", cancel);
   process.once("SIGTERM", cancel);
   const startedAt = new Date();
-  await withAcceptanceRecord(repoRoot, "two-human", async () => {
+  const serveB = flagValue(segments, "--serve-b") ?? serve;
+  const hubUrl = hub.replace(/\/$/u, "");
+  const served = (url: string, run: (baseUrl: string) => Promise<void>): Promise<void> => withDevServe(repoRoot, check, { serveUrl: url, hubUrl, locale, signal: controller.signal, startedAt }, run);
+  const body = async (serveUrl: string, serveBUrl: string): Promise<void> => {
     const outDir = resolve(flagValue(segments, "--out") ?? defaultOutDir);
     const report = await runTwoHuman({
-      hub: hub.replace(/\/$/u, ""),
-      serves: [serve, flagValue(segments, "--serve-b") ?? serve],
+      journey: journey as TwoHumanJourney,
+      hub: hubUrl,
+      serves: [serveUrl, serveBUrl],
       humans: readHumans(segments),
       locale,
       kinds: (flagValue(segments, "--kinds") ?? "").split(",").filter(Boolean),
@@ -588,20 +879,21 @@ export async function runTwoHumanCli(repoRoot: string, defaultOutDir: string, se
     publishAcceptanceCheckResult(
       repoRoot,
       acceptanceCheckResult({
-        check: "two-human",
+        check,
         status,
         startedAt,
         measured: { locale, kinds: total, passed, failed: total - passed, routeMisses: report.misses.length, fatal: Boolean(report.fatal), cancelled: Boolean(report.cancelled), createToMountedP50Ms: p50(createTimes), createToMountedMaxMs: createTimes.at(-1) ?? -1, openRowToMountedP50Ms: p50(openTimes), openRowToMountedMaxMs: openTimes.at(-1) ?? -1, createBoundMs: createBoundMs ?? -1, openBoundMs: openBoundMs ?? -1, overBound: slow.length },
         summary: {
-          en: `${passed}/${total} kinds pass the two-human journey in ${locale}; ${latency.en}${failing.length ? `; failing: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; fatal: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
-          de: `${passed}/${total} Arten bestehen den Zwei-Personen-Weg in ${locale}; ${latency.de}${failing.length ? `; fehlgeschlagen: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; Abbruch: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
+          en: `${passed}/${total} kinds pass the two-human ${journey} journey in ${locale}; ${latency.en}${failing.length ? `; failing: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; fatal: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
+          de: `${passed}/${total} Arten bestehen den Zwei-Personen-Weg (${journey}) in ${locale}; ${latency.de}${failing.length ? `; fehlgeschlagen: ${failing.slice(0, 4).join("; ")}` : ""}${report.fatal ? `; Abbruch: ${report.fatal.split("\n")[0]!.slice(0, 160)}` : ""}`,
         },
         evidence: [join(outDir, tag, "report.json")],
       }),
     );
     console.log(`[two-human] === ${tag}: PASS ${passed}/${total} → ${join(outDir, tag)} ===`);
     if (status !== "pass") process.exitCode = 1;
-  });
+  };
+  await withAcceptanceRecord(repoRoot, check, () => served(serve, (serveUrl) => (serveB === serve ? body(serveUrl, serveUrl) : served(serveB, (serveBUrl) => body(serveUrl, serveBUrl)))));
   process.removeListener("SIGINT", cancel);
   process.removeListener("SIGTERM", cancel);
 }

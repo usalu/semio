@@ -20,5 +20,11 @@ async fn render_lists_one_row_per_cell() {
     let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
     assert_eq!(columns, vec![serde_json::json!({ "id": "0", "label": "sheet" }), serde_json::json!({ "id": "1", "label": "row" }), serde_json::json!({ "id": "2", "label": "col" }), serde_json::json!({ "id": "3", "label": "value" })]);
     let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
-    assert_eq!(rows, vec![serde_json::json!({ "id": "0", "0": "Sheet1", "1": "1", "2": "0", "3": "1" })]);
+    assert_eq!(rows[0]["0"], "Sheet1");
+    assert_eq!(rows[0]["3"]["kind"], "editableText");
+    assert_eq!(rows[0]["3"]["action"]["controllerId"], "s.stdio.xlsx@ecma-376/transitional#editor");
+    assert_eq!(rows[0]["3"]["action"]["args"]["sheetName"], "Sheet1");
+    assert_eq!(rows[0]["3"]["action"]["args"]["row"], 1);
+    assert_eq!(rows[0]["3"]["action"]["args"]["column"], 0);
+    assert_eq!(rows[0]["3"]["action"]["args"]["revision"], xlsx_cell_revision(&XlsxCellValue::Number(1.0)));
 }

@@ -871,6 +871,60 @@ return textureSampleLevel(scene_tex, scene_samp, in.uv, 0.0);
 }
 "#;
 
+pub const WORLD_CURVILINEAR_SHADER: &str = r#"
+struct CurvilinearGlobals {
+viewport: vec4<f32>,
+surface_size: vec2<f32>,
+fov_strength: vec2<f32>,
+}
+
+@group(0) @binding(0) var<uniform> globals: CurvilinearGlobals;
+@group(0) @binding(1) var capture_tex: texture_2d<f32>;
+@group(0) @binding(2) var capture_samp: sampler;
+
+struct VertexOutput {
+@builtin(position) clip_position: vec4<f32>,
+@location(0) uv: vec2<f32>,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) vid: u32) -> VertexOutput {
+var positions = array<vec2<f32>, 6>(
+    vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(-1.0, 1.0),
+    vec2<f32>(-1.0, 1.0), vec2<f32>(1.0, -1.0), vec2<f32>(1.0, 1.0)
+);
+var uvs = array<vec2<f32>, 6>(
+    vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 0.0),
+    vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 1.0), vec2<f32>(1.0, 0.0)
+);
+var out: VertexOutput;
+out.clip_position = vec4<f32>(positions[vid], 0.0, 1.0);
+out.uv = uvs[vid];
+return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+let ndc = in.uv * 2.0 - 1.0;
+let aspect = globals.viewport.z / max(1.0, globals.viewport.w);
+let scaled = vec2<f32>(ndc.x * aspect, ndc.y);
+let radius = length(scaled);
+var source_ndc = ndc;
+if (radius > 0.00001) {
+    let rectilinear_radius = tan(radius * globals.fov_strength.x * 0.5) / tan(globals.fov_strength.x * 0.5);
+    let source_radius = mix(radius, rectilinear_radius, globals.fov_strength.y);
+    let scale = source_radius / radius;
+    source_ndc = vec2<f32>(scaled.x * scale / aspect, scaled.y * scale);
+}
+let source_local = source_ndc * 0.5 + 0.5;
+if (source_local.x < 0.0 || source_local.x > 1.0 || source_local.y < 0.0 || source_local.y > 1.0) {
+    return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+}
+let source_pixel = globals.viewport.xy + source_local * globals.viewport.zw;
+return textureSampleLevel(capture_tex, capture_samp, source_pixel / globals.surface_size, 0.0);
+}
+"#;
+
 pub const GLASS_SHADER: &str = r#"
 struct Globals {
 screen_size: vec2<f32>,

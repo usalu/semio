@@ -1,5 +1,5 @@
 {
-  "note": "Preference lane scenarios (ticket 26/09/23 U5): two devices A and B of one hub user and the hub's per-user preference log. Steps: `commit` a user change on a device (local-first; a persistedShared one is queued), `deliver` a device's queued changes to the hub (idempotent by request id; a device that never delivers is offline), `fold` the hub's events after a device's frontier into it. `expected` lists each device's projection of the named keys and how many events the hub holds.",
+  "note": "Preference lane scenarios (ticket 26/09/23 U5): two devices A and B of one hub user and the hub's per-user preference log. Steps: `commit` a user change on a device (local-first; a persistedShared one is queued), `deliver` a device's queued changes to the hub (idempotent by request id; a device that never delivers is offline), `fold` the hub's events after a device's frontier into it. `expected` lists each device's projection of the named keys and how many events the hub holds. Saved named layouts (`setNamedLayout`, ticket 26/09/23 S18) are shared preferences like any other: `namedLayouts.valid` / `namedLayouts.invalid` are saved layouts the schema (`$defs.UserNamedLayout`, checked by Ajv) and the parser both admit / refuse; `namedLayouts.oversizeWindows` is how many windows make a saved layout too large for one hub record (it stays on the device).",
   "scenarios": [
     {
       "id": "a-change-reaches-the-other-device",
@@ -68,6 +68,46 @@
         { "fold": "A" }
       ],
       "expected": { "A": { "appearance": "system" }, "B": { "appearance": "system" }, "hubEvents": 1 }
+    },
+    {
+      "id": "a-saved-layout-follows-the-user",
+      "steps": [
+        { "commit": { "device": "A", "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1790520000000", "layout": { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } },
+        { "deliver": "A" },
+        { "fold": "B" },
+        { "fold": "A" }
+      ],
+      "expected": { "A": { "namedLayouts": { "s.draw.2d@1/*#editor": { "user-1790520000000": { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } }, "B": { "namedLayouts": { "s.draw.2d@1/*#editor": { "user-1790520000000": { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } }, "hubEvents": 1 }
+    },
+    {
+      "id": "a-deleted-layout-leaves-every-device",
+      "steps": [
+        { "commit": { "device": "A", "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1790520000000", "layout": { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } } } } },
+        { "deliver": "A" },
+        { "fold": "B" },
+        { "commit": { "device": "B", "mutation": { "mutation": "setNamedLayout", "appId": "s.draw.2d@1/*#editor", "layoutId": "user-1790520000000", "layout": null } } },
+        { "deliver": "B" },
+        { "fold": "A" },
+        { "fold": "B" }
+      ],
+      "expected": { "A": { "namedLayouts": {} }, "B": { "namedLayouts": {} }, "hubEvents": 2 }
     }
-  ]
+  ],
+  "namedLayouts": {
+    "valid": [
+      { "label": "Wide", "layout": { "root": { "kind": "row", "children": [{ "kind": "stack", "size": 0.6, "children": [{ "kind": "window", "windowKindId": "draw-main", "title": "Canvas" }] }, { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "draw-layers", "corner": "topRight" }] }] } } },
+      { "label": "Solo", "layout": { "root": { "kind": "stack", "children": [] } } },
+      { "label": "Nested", "layout": { "root": { "kind": "column", "children": [{ "kind": "row", "children": [{ "kind": "stack", "children": [{ "kind": "window", "windowKindId": "a", "instanceId": "a-2", "templateId": "t" }] }] }] } } }
+    ],
+    "invalid": [
+      { "label": "", "layout": { "root": { "kind": "stack", "children": [] } } },
+      { "label": "No root", "layout": {} },
+      { "label": "Window at root", "layout": { "root": { "kind": "window", "windowKindId": "a" } } },
+      { "label": "Stack in stack", "layout": { "root": { "kind": "stack", "children": [{ "kind": "stack", "children": [] }] } } },
+      { "label": "Bad corner", "layout": { "root": { "kind": "stack", "children": [{ "kind": "window", "windowKindId": "a", "corner": "middle" }] } } },
+      { "label": "Extra", "layout": { "root": { "kind": "stack", "children": [] } }, "id": "x" },
+      { "label": "Size", "layout": { "root": { "kind": "row", "size": "wide", "children": [] } } }
+    ],
+    "oversizeWindows": 60
+  }
 }

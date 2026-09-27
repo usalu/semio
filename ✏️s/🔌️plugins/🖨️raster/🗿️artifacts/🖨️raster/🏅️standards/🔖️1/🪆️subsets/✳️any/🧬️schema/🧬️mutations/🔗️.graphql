@@ -81,7 +81,10 @@ type RasterPixelContent {
   height: Int
 }
 
+type ChangeLayerAdjustmentParameter {layerId: String! parameter: String! expected: Float value: Float}
+
 union RasterMutation =
+    ChangeLayerAdjustmentParameter |
     CreateLayer
   | DeleteLayer
   | ReorderLayers

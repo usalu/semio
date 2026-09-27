@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+"""🧬️ AV2: writes tsconfig-av2.json — a tsc program over the overlay copies of every TS file the video-render slice touches."""
+import json
+o = "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s13-av1-overlay"
+files = ["🧰️framework/🔨️modules/🎠️kernel/🟦️.ts", "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🟦️.ts", "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧵️video-render-job/🟦️.ts", "🧰️framework/🔨️modules/🖌️raster/🎥️video/🟦️.ts", "🧰️framework/🔨️modules/🖌️raster/🎥️video/🧪️tests/🔬️unit/🟦️.ts", "🧰️framework/🔨️modules/🖌️raster/🎥️video/🧪️tests/🎞️ffmpeg-decode/🟦️.ts", "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🧪️tests/🔬️unit/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx", "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"]
+cfg = {"extends": o + "/🧰️framework/🛍️products/💻️os/tsconfig.json", "compilerOptions": {"noEmit": True, "incremental": False}, "include": [], "files": [o + "/" + f for f in files]}
+json.dump(cfg, open("tsconfig-av2.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)

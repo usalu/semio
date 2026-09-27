@@ -209,13 +209,8 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         let partition = self.partition(&authority.window_id);
         authority.generation = partition.store.generation_now();
         let snapshot = partition.store.current_read_erased().map_err(Fault::from)?;
-        authority.snapshot = WindowTransientSnapshot {
-            window_id: authority.window_id.clone(),
-            window_kind_id: O::WINDOW_KIND_ID,
-            generation: authority.generation,
-            document_generation: authority.snapshot.document_generation,
-            snapshot: Arc::new(snapshot),
-        };
+        authority.snapshot =
+            WindowTransientSnapshot { window_id: authority.window_id.clone(), window_kind_id: O::WINDOW_KIND_ID, generation: authority.generation, document_generation: authority.snapshot.document_generation, snapshot: Arc::new(snapshot) };
         Ok(())
     }
 
@@ -329,10 +324,7 @@ impl WindowTransientOwnerRegistry {
         if authority.snapshot.document_generation != self.document_generation {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.document-generation"), "window transient refresh belongs to a replaced document"));
         }
-        self.owners
-            .get_mut(authority.window_kind_id.as_str())
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient refresh has no registered concrete window owner"))?
-            .refresh(authority)
+        self.owners.get_mut(authority.window_kind_id.as_str()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-transient.owner"), "window transient refresh has no registered concrete window owner"))?.refresh(authority)
     }
 
     pub(crate) fn capture(&mut self, view_state: Option<&ViewModel>) -> Result<Option<WindowTransientAuthority>, Fault> {

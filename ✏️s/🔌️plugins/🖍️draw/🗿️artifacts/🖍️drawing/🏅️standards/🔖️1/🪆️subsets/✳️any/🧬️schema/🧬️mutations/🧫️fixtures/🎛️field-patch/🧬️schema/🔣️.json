@@ -7,7 +7,8 @@
       "properties": {
         "field": {
           "enum": [
-            "name"
+            "name",
+            "textContent"
           ]
         },
         "value": {
@@ -90,7 +91,8 @@
             "transformX",
             "transformY",
             "transformRotation",
-            "rotationDegrees"
+            "rotationDegrees",
+            "transformShear"
           ]
         },
         "value": {
@@ -181,8 +183,7 @@
           ]
         },
         "value": {
-          "type": "number",
-          "exclusiveMinimum": 0
+          "type": "number"
         }
       },
       "required": [
@@ -247,6 +248,25 @@
           "type": "string",
           "maxLength": 128,
           "pattern": "^[ \\t\\r\\n]*(?:(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[ \\t\\r\\n]+(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+))*)?[ \\t\\r\\n]*$"
+        }
+      },
+      "required": [
+        "field",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "field": {
+          "enum": [
+            "textSize"
+          ]
+        },
+        "value": {
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       },
       "required": [

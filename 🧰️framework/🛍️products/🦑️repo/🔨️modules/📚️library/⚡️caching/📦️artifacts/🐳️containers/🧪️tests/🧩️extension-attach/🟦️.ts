@@ -50,5 +50,5 @@ ${block}`;
   }
   assert.equal((block.match(/bun nx run /g) ?? []).length, 1);
   assert.ok(!block.includes(" -ot ") && !block.includes("needs_rebuild"));
-  console.log(`[DEBUG] Extension attach delegates packaging once to Nx and skips stale installation after failure${native ? "; native Bash covers current/stale/missing archives" : ""} PASS`);
+  console.log(`✅️ Extension attach delegates packaging once to Nx and skips stale installation after failure${native ? "; native Bash covers current/stale/missing archives" : ""} PASS`);
 }

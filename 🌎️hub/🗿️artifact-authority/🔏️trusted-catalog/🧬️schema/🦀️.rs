@@ -111,6 +111,7 @@ pub struct TrustedCatalogGuestResidencyStateV1 {
     pub registered_guests: u64,
     pub resident_guests: u64,
     pub resident_bytes: u64,
+    pub footprint_bytes: u64,
     pub hits: u64,
     pub compiles: u64,
     pub admitted: u64,

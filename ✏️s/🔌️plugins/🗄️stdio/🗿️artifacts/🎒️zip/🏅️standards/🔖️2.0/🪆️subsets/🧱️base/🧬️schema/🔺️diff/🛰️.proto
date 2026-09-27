@@ -3,5 +3,6 @@ package semio.s_stdio_zip.diff;
 message ZipEntry { string name = 1; bytes data = 2; }
 message ZipEntryDiff { optional string name = 1; optional bytes data = 2; }
 message ZipEntryModified { string name = 1; ZipEntryDiff diff = 2; }
-message ZipEntriesDiff { repeated string removed = 1; repeated ZipEntryModified modified = 2; repeated ZipEntry added = 3; }
+message ZipEntryOrder { repeated string names = 1; }
+message ZipEntriesDiff { repeated string removed = 1; repeated ZipEntryModified modified = 2; repeated ZipEntry added = 3; ZipEntryOrder order = 4; }
 message ZipDiff { optional string comment = 1; ZipEntriesDiff entries = 2; }

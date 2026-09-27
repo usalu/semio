@@ -106,6 +106,11 @@ pub struct OsHost {
     component_surface_close: Option<ComponentSurfaceCloseOwner>,
 }
 
+#[cfg(target_arch = "wasm32")]
+pub(crate) struct BrowserRedrawOutcome {
+    pub cursor_css: &'static str,
+}
+
 struct OsHostRetirementState {
     runtime: Option<RuntimeMailbox>,
     presenter: Option<AppPresenter>,
@@ -620,7 +625,7 @@ impl OsHost {
             present_fault: None,
             events: ui_host::EventQueue::new(),
             ui_token: ui_host::UiThreadToken::mint_for_host(),
-            snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, None)),
+            snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, CursorRequest::Default, ui_wgpu::wgpu::SemioCursor::Default, false, None)),
             frame_build: crate::frame_job::FrameBuildHandle::new(),
             surface_resize: crate::surface_lane::SurfaceResizeAuthority::new(semio_framework_trace::allocate_operation_id()),
             component_surface_close: None,

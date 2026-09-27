@@ -19,6 +19,28 @@ fn repo_root() -> std::path::PathBuf {
     engine_root().join("../../../../../..").canonicalize().expect("repo root")
 }
 
+#[test]
+fn explicit_window_titles_follow_the_live_session_owner() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).unwrap();
+    let mut shell = super::window_pane_chrome_tests::split_pane_shell();
+    for owner in fixture["owners"].as_array().unwrap() {
+        let session = shell.session.as_mut().unwrap();
+        session.plugin_id = owner["pluginId"].as_str().unwrap().into();
+        session.instance_id = owner["instanceId"].as_u64().unwrap() as u32;
+        session.app.id = owner["appId"].as_str().unwrap().into();
+        assert_eq!(shell.window_title_override("pane-top"), None);
+        shell.sync_dock();
+        assert!(shell.window_title_overrides.is_empty());
+        assert!(shell.apply_window_title_host_command("pane-top", fixture["explicitBaseTitle"].as_str().unwrap()));
+        shell.sync_dock();
+        assert_eq!(shell.window_title_override("pane-top"), fixture["explicitBaseTitle"].as_str());
+        assert_eq!(shell.window_title_override("pane-perspective"), None);
+    }
+    shell.session = None;
+    shell.sync_dock();
+    assert!(shell.window_title_overrides.is_empty());
+}
+
 fn chrome_geometry_fixture() -> Value {
     let path = repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🔝️navbar-centered-band/🔣️.json");
     serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("navbar centered-band fixture")
@@ -133,12 +155,51 @@ fn the_projection_chip_folds_its_own_pane_and_switches_its_template() {
     assert_eq!(shell.world3d_states.get("pane-top").map(infinite_world::world::world3d_camera_projection), Some(ui_wgpu::wgpu::CameraProjection3d::Perspective), "🔀️ the pane opens on its delivered family");
     press(&mut shell, "shell.projection.template.pane-top::orthographic".into());
     assert_eq!(shell.world_projection_template_id("pane-top"), "orthographic");
+    let title_fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).unwrap();
+    for transition in title_fixture["transitions"].as_array().unwrap() {
+        shell.locale_id = transition["locale"].as_str().unwrap().into();
+        shell.sync_dock();
+        let (titles, _) = shell.dock_chrome_maps();
+        assert_eq!(titles["pane-top"], title_fixture["explicitBaseTitle"].as_str().unwrap());
+        assert_eq!(titles["pane-perspective"], "Perspective");
+    }
     // 🔀️ The switch is not a label: it moves the pane's CAMERA onto the other family and queues the
     // settle that publishes the new pose, exactly as React's remount does.
     assert_eq!(shell.world3d_states.get("pane-top").map(infinite_world::world::world3d_camera_projection), Some(ui_wgpu::wgpu::CameraProjection3d::Orthographic), "🔀️ pressing a Parallel row makes the pane's camera parallel");
     assert!(shell.world3d_states.get("pane-top").is_some_and(infinite_world::world::world3d_pending_camera_settle), "🔀️ and queues the camera settle that dispatches it");
     assert_eq!(shell.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top"), "projection-orthographic", "🔀️ the chip wears the selected template's icon, as React's `worldProjectionSpecIconId(spec)` pane icon does");
     assert_eq!(shell.world_projection_template_id("pane-perspective"), WORLD_PROJECTION_DEFAULT_TEMPLATE_ID, "🔀️ the selection is per pane");
+
+    shell.layout_override = shell.session.as_ref().unwrap().app.default_layout.clone();
+    if let ui_wgpu::wgpu::WindowLayoutRoot::Axis(axis) = &mut shell.layout_override.as_mut().unwrap().root {
+        if let ui_wgpu::wgpu::WindowLayoutChild::Stack(stack) = &mut axis.children[0] {
+            stack.children[0].template_id = Some(format!("world-projection:{}", title_fixture["instances"][0]["initialProjection"]));
+        }
+    }
+    shell.world_projection_template.remove("pane-top");
+    shell.sync_dock();
+    assert_eq!(shell.world_projection_template_id("pane-top"), "orthographic");
+    for seed in title_fixture["retainedOrientations"].as_array().unwrap() {
+        let orientation = if seed["type"] == "cardinal" { ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Front) } else { ui_wgpu::wgpu::WorldProjectionOrientation::Free };
+        let world = shell.world3d_states.get_mut("pane-top").unwrap();
+        let typed_orientation = if seed["type"] == "cardinal" {
+            semio_framework_ui_viewport::Viewport3dProjectionOrientation::Cardinal { view: semio_framework_ui_viewport::Viewport3dOrthographicView::Front }
+        } else {
+            semio_framework_ui_viewport::Viewport3dProjectionOrientation::Free {}
+        };
+        infinite_world::world::apply_world3d_projection_spec(world, semio_framework_ui_viewport::Viewport3dProjectionSpec { mode: semio_framework_ui_viewport::Viewport3dProjectionMode::ThreePoint { fov: 50.0 }, orientation: typed_orientation });
+        for branch in title_fixture["projectionBranches"].as_array().unwrap() {
+            press(&mut shell, format!("shell.projection.template.pane-top::{}", branch["pressed"].as_str().unwrap()));
+            shell.sync_dock();
+            assert_eq!(shell.world_projection_template_id("pane-top"), branch["effective"].as_str().unwrap());
+            assert_eq!(shell.dock_chrome_maps().0["pane-top"], branch["title"].as_str().unwrap());
+            assert_eq!(shell.window_pane_chip_icon_id(WindowPaneChip::Projection, "pane-top"), branch["icon"].as_str().unwrap());
+            let family = if branch["family"] == "orthographic" { ui_wgpu::wgpu::CameraProjection3d::Orthographic } else { ui_wgpu::wgpu::CameraProjection3d::Perspective };
+            assert_eq!(shell.world3d_states.get("pane-top").map(infinite_world::world::world3d_camera_projection), Some(family));
+            assert_eq!(shell.world3d_states.get("pane-top").map(infinite_world::world::world3d_projection_orientation), Some(orientation));
+            assert_eq!(shell.dock_chrome_maps().0["pane-perspective"], "Perspective");
+        }
+    }
 
     press(&mut shell, WindowPaneChip::Projection.control_id("pane-top", false));
     assert!(shell.projection_pane_folded("pane-top"), "🔀️ the same id folds it again");

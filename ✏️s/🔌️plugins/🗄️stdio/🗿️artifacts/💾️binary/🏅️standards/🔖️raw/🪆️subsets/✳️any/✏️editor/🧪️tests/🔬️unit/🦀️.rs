@@ -31,4 +31,18 @@ async fn parse_hex_dump_round_trips_a_rendered_snapshot() {
 #[semio_framework_async_macros::async_test]
 async fn parse_hex_dump_rejects_odd_length_hex() {
     assert!(parse_hex_dump("abc").is_none());
+    assert!(parse_hex_dump("€0").is_none());
+}
+
+#[test]
+fn text_edit_requires_an_explicit_text_argument_and_allows_intentional_empty_bytes() {
+    assert!(<BinaryEditor as ArtifactEditor>::command_from_action("textEdit", None).is_err());
+    let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(String::new()))]);
+    let command = <BinaryEditor as ArtifactEditor>::command_from_action("textEdit", Some(&args)).expect("explicit empty text");
+    let source = BinarySnapshot { bytes: vec![1, 2, 3], ..BinarySnapshot::default() };
+    let emitted = binary_text_emit(&command, &source).expect("empty hex intentionally clears the byte buffer");
+    assert!(matches!(
+        emitted.artifact_mutations.as_slice(),
+        [BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: 0, remove_len: 3, insert })] if insert.is_empty()
+    ));
 }

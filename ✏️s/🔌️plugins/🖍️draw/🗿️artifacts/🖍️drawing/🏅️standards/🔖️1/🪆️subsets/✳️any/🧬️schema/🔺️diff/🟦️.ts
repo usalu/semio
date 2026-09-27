@@ -87,6 +87,8 @@ export interface DrawingLayerPatch {
   traceParamsJson?: string;
   layerJson?: string;
   pathSegments?: PathSegment[];
+  textContent?: string;
+  textSize?: number;
 }
 
 //#region 🚪️Parsers
@@ -201,6 +203,8 @@ export function parseDrawingLayerPatch(value: unknown, at = "$"): DrawingLayerPa
     booleanOperation: text("booleanOperation"),
     traceParamsJson: text("traceParamsJson"),
     layerJson: text("layerJson"),
+    textContent: text("textContent"),
+    textSize: row["textSize"] == null ? undefined : drawingDrawingDiffGuardNumber(row["textSize"], `${at}.textSize`),
     pathSegments: row["pathSegments"] == null ? undefined : drawingDrawingDiffGuardArray(row["pathSegments"], `${at}.pathSegments`).map((item, index) => parsePathSegment(item, `${at}.pathSegments[${index}]`)),
   };
 }

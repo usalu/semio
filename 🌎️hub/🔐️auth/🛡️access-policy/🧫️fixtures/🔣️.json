@@ -1052,6 +1052,393 @@
       ],
       "action": "preference.read",
       "permitted": false
+    },
+    {
+      "name": "agent-reader space.create in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "space.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader space.rename in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "space.rename",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader space.visibility in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "space.visibility",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader space.archive in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "space.archive",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader space.delete in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "space.delete",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader member.upsert in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "member.upsert",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader member.remove in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "member.remove",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader invite.create in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "invite.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader invite.revoke in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "invite.revoke",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader document.announce in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "document.announce",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader agent.delegate in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "agent.delegate",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader document.read in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-reader document.write in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader document.check-in in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader artifact.create in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader blob.read in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-reader blob.write in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader preference.record in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "preference.record",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-reader preference.read in a studio",
+      "roles": [
+        "agent-reader"
+      ],
+      "action": "preference.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor space.create in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "space.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor space.rename in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "space.rename",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor space.visibility in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "space.visibility",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor space.archive in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "space.archive",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor space.delete in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "space.delete",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor member.upsert in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "member.upsert",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor member.remove in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "member.remove",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor invite.create in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "invite.create",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor invite.revoke in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "invite.revoke",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor document.announce in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "document.announce",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-editor agent.delegate in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "agent.delegate",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor document.read in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "document.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-editor document.write in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "document.write",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-editor document.check-in in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-editor artifact.create in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-editor blob.read in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "blob.read",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-editor blob.write in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "blob.write",
+      "spaceKind": "studio",
+      "permitted": true
+    },
+    {
+      "name": "agent-editor preference.record in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "preference.record",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor preference.read in a studio",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "preference.read",
+      "spaceKind": "studio",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor document.write in an archive",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "document.write",
+      "spaceKind": "archive",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor document.check-in in an archive",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "document.check-in",
+      "spaceKind": "archive",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor artifact.create in an archive",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "artifact.create",
+      "spaceKind": "archive",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor blob.write in an archive",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "blob.write",
+      "spaceKind": "archive",
+      "permitted": false
+    },
+    {
+      "name": "agent-editor document.read in an archive",
+      "roles": [
+        "agent-editor"
+      ],
+      "action": "document.read",
+      "spaceKind": "archive",
+      "permitted": true
     }
   ]
 }

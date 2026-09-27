@@ -25,6 +25,11 @@ fn operation(value: &Value) -> PixelOperation {
         "gamma" => PixelOperation::Gamma(amount),
         "threshold" => PixelOperation::Threshold(amount),
         "fill" => PixelOperation::Fill(bytes(&value["color"]).try_into().unwrap()),
+        "alphaFill" => PixelOperation::AlphaFill {alpha:value["alpha"].as_u64().unwrap() as u8,opacity:value["opacity"].as_f64().unwrap()},
+        "alphaStroke" => PixelOperation::AlphaStroke(PixelAlphaBrush {
+            points: value["points"].as_array().unwrap().iter().map(|point| [point[0].as_f64().unwrap(),point[1].as_f64().unwrap()]).collect(),
+            size:value["size"].as_f64().unwrap(),opacity:value["opacity"].as_f64().unwrap(),hardness:value["hardness"].as_f64().unwrap(),alpha:value["alpha"].as_u64().unwrap() as u8,
+        }),
         "stroke" => PixelOperation::Stroke(PixelBrush {
             points: value["points"].as_array().unwrap().iter().map(|point| [point[0].as_f64().unwrap(), point[1].as_f64().unwrap()]).collect(),
             size: value["size"].as_f64().unwrap(), opacity: value["opacity"].as_f64().unwrap(), hardness: value["hardness"].as_f64().unwrap(),
@@ -110,4 +115,37 @@ fn pixel_editing_stroke_interpolates_without_opacity_buildup() {
     let mut job = PixelEditJob::new(RasterImage::new(5,1), PixelOperation::Stroke(brush), None).unwrap();
     assert!(job.advance(5).unwrap().done);
     assert_eq!(job.result().unwrap().pixels, [255,0,0,128].repeat(5));
+}
+
+#[test]
+fn alpha_brush_jobs_are_bounded_and_cancellable() {
+    let mut brush=PixelAlphaBrush {points:vec![[0.5,0.5]],size:2.0,opacity:1.0,hardness:1.0,alpha:255};
+    let mut job=PixelEditJob::new(RasterImage::new(2,2),PixelOperation::AlphaStroke(brush.clone()),None).unwrap();
+    assert_eq!(job.recommended_grant(),256);
+    assert_eq!(job.advance(1).unwrap().completed,1);
+    assert!(job.result().is_err());
+    job.cancel();assert!(job.result().is_err());assert!(job.advance(1).is_err());
+    brush.opacity=f64::NAN;
+    assert!(PixelEditJob::new(RasterImage::new(2,2),PixelOperation::AlphaStroke(brush),None).is_err());
+}
+
+#[test]
+fn output_initialization_follows_pixel_grants() {
+    let fixture=fixture();let case=&fixture["outputGrants"];
+    let width=case["width"].as_u64().unwrap() as u32;let height=case["height"].as_u64().unwrap() as u32;
+    let source=RasterImage {width,height,pixels:bytes(&case["sourcePixel"]).repeat((width*height) as usize)};
+    let mut oracle=image::RgbaImage::from_raw(width,height,source.pixels.clone()).unwrap();
+    image::imageops::invert(&mut oracle);
+    let mut job=PixelEditJob::new(source,operation(&case["operation"]),None).unwrap();
+    assert!(job.output.pixels.is_empty());assert!(job.result().is_err());
+    for (grant,completed) in case["grants"].as_array().unwrap().iter().zip(case["completed"].as_array().unwrap()) {
+        let expected=completed.as_u64().unwrap() as usize;
+        let progress=job.advance(grant.as_u64().unwrap() as usize).unwrap();
+        assert_eq!(progress.completed,expected);assert_eq!(progress.total,(width*height) as usize);
+        assert_eq!(job.output.pixels.len(),expected*4);
+        assert_eq!(progress.done,expected==(width*height) as usize);
+        if !progress.done {assert!(job.result().is_err());}
+    }
+    assert_eq!(job.result().unwrap().pixels,bytes(&case["expectedPixel"]).repeat((width*height) as usize));
+    assert_eq!(job.result().unwrap().pixels,oracle.into_raw());
 }

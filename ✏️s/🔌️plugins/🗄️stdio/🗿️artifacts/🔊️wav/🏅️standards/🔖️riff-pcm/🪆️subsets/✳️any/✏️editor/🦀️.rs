@@ -201,11 +201,8 @@ fn wavEditor_snapshot_edit(event: &editing::SnapshotEditEvent, snapshot: &WavSna
             return Ok(next);
         }
     }
-    let mut bounded = snapshot.clone();
-    let data = std::mem::replace(&mut bounded.data, wavEditor_empty_data(&snapshot.data));
-    let mut next = editing::apply_snapshot_edit(&bounded, event).map_err(|error| wavEditor_edit_fault(error.code, error.to_string()))?;
-    next.data = data;
-    Ok(next)
+    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| wavEditor_edit_fault(error.code, error.to_string()))?;
+    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, WAV_DIALECT, STDIO_WAV_DOCUMENT_SCHEMA).map_err(|error| wavEditor_edit_fault(error.code, error.to_string()))
 }
 struct WavDetailsProvider<'a> {
     snapshot: &'a WavSnapshot,
@@ -360,18 +357,7 @@ impl editing::SnapshotEditingEditor for WavEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { WavEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        let shape_is_admitted = match event {
-            editing::SnapshotEditEvent::SetValue { path, .. } | editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } | editing::SnapshotEditEvent::RenameKey { path, .. } => path.len() <= 4_096,
-            editing::SnapshotEditEvent::MoveValue { from, path } => from.len() <= 4_096 && path.len() <= 4_096,
-            editing::SnapshotEditEvent::ReplaceSource { source } => editing::snapshot_edit_source_is_admitted(source),
-        };
-        if !shape_is_admitted { return false; }
-        let Ok(emit) = <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, snapshot) else { return false };
-        let fits = |mutation: &Self::Mutation| <Self::Mutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-        !emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| fits(mutation) && <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, snapshot).iter().all(fits))
-    }
-    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         if let Some(patch) = wavEditor_direct_patch(event, snapshot)? {
             return Ok(Emit { artifact_mutations: vec![WavMutation::PatchData(patch)], description: Some("Edit WAV samples".into()), ..Default::default() });
         }
@@ -380,7 +366,7 @@ impl editing::SnapshotEditingEditor for WavEditor {
             (true, false, false) => WavMutation::SetFmt(set_fmt::SetFmt { fmt: next.fmt }),
             (false, true, false) => WavMutation::SetData(set_data::SetData { data: next.data }),
             (false, false, true) => WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: next.other_chunks }),
-            _ => WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next }),
+            _ => return editing::snapshot_edit_patch(event, snapshot, |patch| WavMutation::PatchSnapshot(crate::standards::riff_pcm::subsets::any::schema::mutations::patch_snapshot::PatchSnapshot { patch })),
         };
         Ok(Emit { artifact_mutations: vec![mutation], description: Some("Edit WAV details".into()), ..Default::default() })
     }

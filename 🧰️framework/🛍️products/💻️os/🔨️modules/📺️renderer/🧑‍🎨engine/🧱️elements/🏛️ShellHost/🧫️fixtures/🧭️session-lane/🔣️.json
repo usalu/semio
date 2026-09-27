@@ -1,5 +1,5 @@
 {
-  "note": "Shell session lane (ticket 26/09/23 U5): route applications and session re-establishments run one at a time in request order; a route waiting at the end of the lane absorbs later route requests (latest wins); nothing is dropped; a failure settles only its own requests. Steps: route <uri> | job <name> request work; finish <name> | fail <name> settle the application running now. `started` is the order applications began; `requests` is each request step's outcome in step order. `routes`: whether a shell URI addresses an overlay (`/hub`, opened on the spot and never queued) or a session route (queued on the lane). `sessionRoutes`: the route the session stands at for a shell URI and the route it was at before (an overlay keeps the route it was opened over). `identities`: where the hub identity stands for a shell state. `admissions`: whether a session route applies under an identity resolution (a space route waits for the human it is opened for, or opens offline when the hub does not answer).",
+  "note": "Shell session lane (ticket 26/09/23 U5): route applications and session re-establishments run one at a time in request order; a route waiting at the end of the lane absorbs later route requests (latest wins); nothing is dropped; a failure settles only its own requests. Steps: route <uri> | job <name> request work; finish <name> | fail <name> settle the application running now. `started` is the order applications began; `requests` is each request step's outcome in step order. `routes`: whether a shell URI addresses an overlay (`/hub`, opened on the spot and never queued) or a session route (queued on the lane). `sessionRoutes`: the route the session stands at for a shell URI and the route it was at before (an overlay keeps the route it was opened over). `identities`: where the hub identity stands for a shell state. `admissions`: whether a session route applies under an identity resolution (a space route waits for the human it is opened for, or opens offline when the hub does not answer). `humanChanges`: what a change of the signed-in human (previous → current; an empty user id is no human) asks of the session the shell shows — `keep`, `refresh` (a first human for a session assembled signed-out, or a new display name) or `re-establish` (the session was assembled for another human).",
   "scenarios": [
     {
       "id": "route-asked-mid-flight-runs-after-it",
@@ -878,5 +878,16 @@
       "text": "Der Hub antwortet nicht — dieser Space öffnet sich mit dem, was dieses Gerät hat.",
       "action": null
     }
+  ],
+  "humanChanges": [
+    { "previous": null, "current": null, "expected": "keep" },
+    { "previous": null, "current": { "userId": "u1", "displayName": "Ada" }, "expected": "refresh" },
+    { "previous": { "userId": "", "displayName": "" }, "current": { "userId": "u1", "displayName": "Ada" }, "expected": "refresh" },
+    { "previous": { "userId": "u1", "displayName": "Ada" }, "current": { "userId": "u1", "displayName": "Ada" }, "expected": "keep" },
+    { "previous": { "userId": "u1", "displayName": "Ada" }, "current": { "userId": "u1", "displayName": "Ada Lovelace" }, "expected": "refresh" },
+    { "previous": { "userId": "u1", "displayName": "Ada" }, "current": { "userId": "u2", "displayName": "Ada" }, "expected": "re-establish" },
+    { "previous": { "userId": "u1", "displayName": "Ada" }, "current": null, "expected": "re-establish" },
+    { "previous": { "userId": "u1", "displayName": "Ada" }, "current": { "userId": "", "displayName": "Ada" }, "expected": "re-establish" },
+    { "previous": null, "current": { "userId": "", "displayName": "Guest" }, "expected": "refresh" }
   ]
 }

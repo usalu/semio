@@ -116,12 +116,12 @@ set_active_example_case!(
     semio_s_artifact_norm_en1990::En1990Snapshot
 );
 set_active_example_case!(
-    en1991_set_active_example_loads_retail_hydrocarbon_fire,
+    en1991_set_active_example_loads_multi_fail_noncompliant,
     semio_s_artifact_norm_en1991::editor::en1991::create_en1991_app,
     semio_s_artifact_norm_en1991::editor::en1991::En1991Command,
     semio_s_artifact_norm_en1991::editor::en1991::commands::set_active_example,
-    semio_s_artifact_norm_en1991::retail_hydrocarbon_fire::ID,
-    semio_s_artifact_norm_en1991::retail_hydrocarbon_fire::PRIMARY_TEXT,
+    semio_s_artifact_norm_en1991::multi_fail_noncompliant::ID,
+    semio_s_artifact_norm_en1991::multi_fail_noncompliant::PRIMARY_TEXT,
     semio_s_artifact_norm_en1991::En1991Snapshot
 );
 set_active_example_case!(

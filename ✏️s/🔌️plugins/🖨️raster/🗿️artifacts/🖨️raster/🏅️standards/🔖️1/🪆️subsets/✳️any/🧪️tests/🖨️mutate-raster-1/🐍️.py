@@ -63,6 +63,7 @@ KINDS = (
     "add-layer-asset",
     "remove-layer-asset",
     "change-layer-pixels",
+    "change-layer-adjustment-parameter",
 )
 """🏷️ Every kind the catalog declares."""
 
@@ -80,6 +81,7 @@ TAGS = {
     "add-layer-asset": "addLayerAsset",
     "remove-layer-asset": "removeLayerAsset",
     "change-layer-pixels": "changeLayerPixels",
+    "change-layer-adjustment-parameter": "changeLayerAdjustmentParameter",
 }
 """🔤️ The internally tagged `mutation` discriminator of each kind, as the committed schema spells it."""
 
@@ -244,6 +246,16 @@ def apply_mutation(document, mutation):
         elif kind == "move-layer":
             node["transform"]["x"] = float(mutation["newX"])
             node["transform"]["y"] = float(mutation["newY"])
+        elif kind == "change-layer-adjustment-parameter":
+            parameter = mutation["parameter"]
+            if node["kind"] != "adjustment" or node["adjustmentKind"] != "brightnessContrast" or parameter not in ("brightness", "contrast") or node["params"].get(parameter) != mutation["expected"]:
+                raise AssertionError("Adjustment revision mismatch")
+            if mutation["value"] is None:
+                node["params"].pop(parameter, None)
+            else:
+                if not -1 <= mutation["value"] <= 1:
+                    raise AssertionError("Adjustment outside allowed range")
+                node["params"][parameter] = mutation["value"]
         elif kind == "change-layer-pixels":
             if node["kind"] != "pixel" or node["imageKey"] != mutation["expectedImageKey"]:
                 raise AssertionError("Pixel revision mismatch")
@@ -293,6 +305,8 @@ def inverse_mutation(document, mutation):
         return {"mutation": TAGS[kind], "layerId": node["id"], "newBlendMode": node["blendMode"]}
     if kind == "move-layer":
         return {"mutation": TAGS[kind], "layerId": node["id"], "newX": node["transform"]["x"], "newY": node["transform"]["y"]}
+    if kind == "change-layer-adjustment-parameter":
+        return {"mutation": TAGS[kind], "layerId": node["id"], "parameter": mutation["parameter"], "expected": mutation["value"], "value": node["params"].get(mutation["parameter"])}
     if kind == "change-layer-pixels":
         return {"mutation": TAGS[kind], "layerId": node["id"], "expectedImageKey": mutation["content"]["imageKey"], "content": {key: node[key] for key in ("imageKey", "width", "height")}, "transform": copy.deepcopy(node["transform"]) if mutation.get("transform") is not None else None}
     if kind == "resize-layer":

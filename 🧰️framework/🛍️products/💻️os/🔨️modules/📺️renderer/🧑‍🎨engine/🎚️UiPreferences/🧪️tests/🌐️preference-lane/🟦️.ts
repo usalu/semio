@@ -1,7 +1,8 @@
 import Ajv from "ajv";
 import { createMemoryStoragePort, createScopedStoragePort, type StoragePort } from "@semio-tech/framework";
 import { UI_PREFERENCE_MUTATION_KEYS, uiPreferenceMutationDataClassV1, type UiPreferencesConfigMutation } from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
-import { UI_PREFERENCE_DATA_CLASSES, type UiPreferences } from "../../../../../../🎚️config/🧬️schema/🟦️.ts";
+import { parseUserNamedLayout, UI_PREFERENCE_DATA_CLASSES, type UiPreferences, type UserNamedLayout } from "../../../../../../🎚️config/🧬️schema/🟦️.ts";
+import uiPreferencesSchema from "../../../../../../🎚️config/🧬️schema/🎨️ui-preferences/🔣️.json" with { type: "json" };
 import mutationSchema from "../../../../../../🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🧬️schema/🔣️.json" with { type: "json" };
 import dataClassFixture from "../../../../../../🎚️config/🧬️schema/🎨️ui-preferences/🧫️fixtures/🗂️data-classes/🔣️.json" with { type: "json" };
 import directorySchema from "../../../../../../🔨️modules/📇️directory/🧬️schema/🔣️.json" with { type: "json" };
@@ -19,7 +20,7 @@ type HubEvent = { readonly seq: number; readonly requestId: string; readonly sch
  * changes); every recorded event must satisfy the directory's own JSON schema under Ajv. */
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Record<string, any>, _source: { readonly url: string }): Promise<void> {
   const { describe, expect, it } = vitest;
-  const { commitUiPreferenceOnLaneV1, foldUiPreferenceLanePageV1, readUiPreferenceLane, readUiPreferences, replayUiPreferenceEvents, uiPreferenceEnvelopeTextV1, parseUiPreferenceEnvelopeV1, UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceLaneKeyV1 } = dependencies;
+  const { commitUiPreferenceOnLaneV1, foldUiPreferenceLanePageV1, readUiPreferenceLane, readUiPreferences, replayUiPreferenceEvents, uiPreferenceEnvelopeTextV1, uiPreferenceFitsLaneV1, parseUiPreferenceEnvelopeV1, UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceLaneKeyV1 } = dependencies;
 
   describe("per-user preference lane", () => {
     it("declares a data class for every key and a key for every mutation, in the schemas, equal to the fixture", () => {
@@ -85,6 +86,48 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           }
         }
       }
+    });
+
+    it("admits exactly the saved layouts the schema admits — Ajv over both schemas and the parser agree", () => {
+      const inPreferences = new Ajv({ strict: true }).addSchema(uiPreferencesSchema).getSchema(`${uiPreferencesSchema.$id}#/$defs/UserNamedLayout`)!;
+      const inMutation = new Ajv({ strict: true }).compile(mutationSchema);
+      const parses = (layout: unknown): boolean => {
+        try {
+          parseUserNamedLayout(layout);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      for (const [rows, admitted] of [[fixture.namedLayouts.valid, true], [fixture.namedLayouts.invalid, false]] as const) {
+        for (const layout of rows) {
+          expect(inPreferences(layout), `${JSON.stringify(layout)}: preferences schema`).toBe(admitted);
+          expect(inMutation({ mutation: "setNamedLayout", appId: "s.draw.2d@1/*#editor", layoutId: "user-1", layout }), `${JSON.stringify(layout)}: mutation schema`).toBe(admitted);
+          expect(parses(layout), `${JSON.stringify(layout)}: parser`).toBe(admitted);
+        }
+      }
+    });
+
+    it("keeps a saved layout too large for one hub record on this device only, and shares one that fits", () => {
+      const lane = uiPreferenceLaneKeyV1("http://127.0.0.1:7800/", "u1");
+      const window = (index: number) => ({ kind: "window" as const, windowKindId: `draw-window-${index}`, title: `Window ${index}` });
+      const huge: UserNamedLayout = { label: "Huge", layout: { root: { kind: "row", children: [{ kind: "stack", children: Array.from({ length: fixture.namedLayouts.oversizeWindows }, (_, index) => window(index)) }] } } };
+      const small = fixture.namedLayouts.valid[0] as unknown as UserNamedLayout;
+      const oversized: UiPreferencesConfigMutation = { mutation: "setNamedLayout", appId: "s.draw.2d@1/*#editor", layoutId: "user-2", layout: huge };
+      const fitting: UiPreferencesConfigMutation = { mutation: "setNamedLayout", appId: "s.draw.2d@1/*#editor", layoutId: "user-1", layout: small };
+      expect(uiPreferenceFitsLaneV1(oversized)).toBe(false);
+      expect(validUserPreferenceRecordV1(UI_PREFERENCES_LANE_SCHEMA_V1, uiPreferenceEnvelopeTextV1({ id: "0".repeat(32), mutation: oversized })), "the hub's own bound refuses it too").toBe(false);
+      expect(uiPreferenceFitsLaneV1(fitting)).toBe(true);
+      const device = createMemoryStoragePort();
+      let minted = 0;
+      const mint = (): string => (++minted).toString(16).padStart(32, "0");
+      const big = commitUiPreferenceOnLaneV1(device, oversized, lane, mint);
+      expect({ queued: big.queued, unshared: big.unshared }).toEqual({ queued: null, unshared: true });
+      expect(readUiPreferenceLane(device, lane).outbox).toEqual([]);
+      const kept = commitUiPreferenceOnLaneV1(device, fitting, lane, mint);
+      expect(kept.unshared).toBe(false);
+      expect(readUiPreferenceLane(device, lane).outbox.map((entry: { mutation: UiPreferencesConfigMutation }) => entry.mutation)).toEqual([fitting]);
+      expect((readUiPreferences(device) as UiPreferences).namedLayouts).toEqual({ "s.draw.2d@1/*#editor": { "user-1": small, "user-2": huge } });
     });
 
     it("refuses a recorded change that is foreign, device-local or malformed", () => {

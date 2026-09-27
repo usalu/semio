@@ -35,3 +35,16 @@ fn the_credential_refusal_is_the_declared_schema_body() {
     assert_eq!(body.as_object().unwrap().len(), 4);
     assert_eq!(refusal_code(HUB_CREDENTIAL_REFUSAL.status), Some(HUB_CREDENTIAL_REFUSAL.code));
 }
+
+/// ⏳️ The Rust transient-apply refusal is `HubTransientApplyRefusalCodeV1` / `HubTransientApplyRefusalMessageV1`: the code
+/// is the declared const and every reason becomes a non-empty message within the declared bound.
+#[test]
+fn the_transient_apply_refusal_is_the_declared_schema_message() {
+    let module: serde_json::Value = serde_json::from_str(HUB_REFUSAL_SCHEMA_JSON).unwrap();
+    assert_eq!(module["$defs"]["HubTransientApplyRefusalCodeV1"]["const"], HUB_TRANSIENT_APPLY_REFUSAL_CODE);
+    let message = &module["$defs"]["HubTransientApplyRefusalMessageV1"]["properties"]["message"];
+    assert_eq!(message["maxLength"].as_u64(), Some(HUB_TRANSIENT_APPLY_REFUSAL_MESSAGE_MAX_CHARS as u64));
+    assert_eq!(hub_transient_apply_refusal_message("DB I/O aggregate admission exhausted"), "DB I/O aggregate admission exhausted");
+    assert_eq!(hub_transient_apply_refusal_message(""), HUB_TRANSIENT_APPLY_REFUSAL_CODE);
+    assert_eq!(hub_transient_apply_refusal_message(&"é".repeat(5000)).chars().count(), HUB_TRANSIENT_APPLY_REFUSAL_MESSAGE_MAX_CHARS);
+}

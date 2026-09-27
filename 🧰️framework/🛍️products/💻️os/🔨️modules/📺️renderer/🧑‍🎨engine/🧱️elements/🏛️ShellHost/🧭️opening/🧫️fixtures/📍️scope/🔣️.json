@@ -1,5 +1,392 @@
 {
   "schema": "semio.renderer.document-opening-scope.v1",
+  "accessCases": [
+    {
+      "id": "author-opens-the-editor",
+      "spaceId": "space-s",
+      "userId": "u-owner",
+      "events": [
+        {
+          "seq": 1,
+          "spaceId": "space-s",
+          "recordedAtMs": 1001,
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-s",
+            "name": "Studio",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          }
+        },
+        {
+          "seq": 2,
+          "spaceId": "space-s",
+          "recordedAtMs": 1002,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "author"
+          }
+        },
+        {
+          "seq": 3,
+          "spaceId": "space-s",
+          "recordedAtMs": 1003,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "spectator"
+          }
+        }
+      ],
+      "role": "editor"
+    },
+    {
+      "id": "spectator-opens-the-viewer",
+      "spaceId": "space-s",
+      "userId": "u-viewer",
+      "events": [
+        {
+          "seq": 1,
+          "spaceId": "space-s",
+          "recordedAtMs": 1001,
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-s",
+            "name": "Studio",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          }
+        },
+        {
+          "seq": 2,
+          "spaceId": "space-s",
+          "recordedAtMs": 1002,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "author"
+          }
+        },
+        {
+          "seq": 3,
+          "spaceId": "space-s",
+          "recordedAtMs": 1003,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "spectator"
+          }
+        }
+      ],
+      "role": "viewer"
+    },
+    {
+      "id": "non-member-opens-the-viewer",
+      "spaceId": "space-s",
+      "userId": "u-stranger",
+      "events": [
+        {
+          "seq": 1,
+          "spaceId": "space-s",
+          "recordedAtMs": 1001,
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-s",
+            "name": "Studio",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          }
+        },
+        {
+          "seq": 2,
+          "spaceId": "space-s",
+          "recordedAtMs": 1002,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "author"
+          }
+        },
+        {
+          "seq": 3,
+          "spaceId": "space-s",
+          "recordedAtMs": 1003,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "spectator"
+          }
+        }
+      ],
+      "role": "viewer"
+    },
+    {
+      "id": "promoted-spectator-opens-the-editor",
+      "spaceId": "space-s",
+      "userId": "u-viewer",
+      "events": [
+        {
+          "seq": 1,
+          "spaceId": "space-s",
+          "recordedAtMs": 1001,
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-s",
+            "name": "Studio",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          }
+        },
+        {
+          "seq": 2,
+          "spaceId": "space-s",
+          "recordedAtMs": 1002,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "author"
+          }
+        },
+        {
+          "seq": 3,
+          "spaceId": "space-s",
+          "recordedAtMs": 1003,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "spectator"
+          }
+        },
+        {
+          "seq": 4,
+          "spaceId": "space-s",
+          "recordedAtMs": 1004,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "author"
+          }
+        }
+      ],
+      "role": "editor"
+    },
+    {
+      "id": "demoted-author-opens-the-viewer",
+      "spaceId": "space-s",
+      "userId": "u-owner",
+      "events": [
+        {
+          "seq": 1,
+          "spaceId": "space-s",
+          "recordedAtMs": 1001,
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-s",
+            "name": "Studio",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          }
+        },
+        {
+          "seq": 2,
+          "spaceId": "space-s",
+          "recordedAtMs": 1002,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "author"
+          }
+        },
+        {
+          "seq": 3,
+          "spaceId": "space-s",
+          "recordedAtMs": 1003,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "spectator"
+          }
+        },
+        {
+          "seq": 4,
+          "spaceId": "space-s",
+          "recordedAtMs": 1004,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "spectator"
+          }
+        }
+      ],
+      "role": "viewer"
+    },
+    {
+      "id": "removed-author-opens-the-viewer",
+      "spaceId": "space-s",
+      "userId": "u-owner",
+      "events": [
+        {
+          "seq": 1,
+          "spaceId": "space-s",
+          "recordedAtMs": 1001,
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-s",
+            "name": "Studio",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          }
+        },
+        {
+          "seq": 2,
+          "spaceId": "space-s",
+          "recordedAtMs": 1002,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "author"
+          }
+        },
+        {
+          "seq": 3,
+          "spaceId": "space-s",
+          "recordedAtMs": 1003,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "spectator"
+          }
+        },
+        {
+          "seq": 4,
+          "spaceId": "space-s",
+          "recordedAtMs": 1004,
+          "body": {
+            "kind": "member.removed",
+            "spaceId": "space-s",
+            "userId": "u-owner"
+          }
+        }
+      ],
+      "role": "viewer"
+    },
+    {
+      "id": "archived-space-opens-the-viewer",
+      "spaceId": "space-s",
+      "userId": "u-owner",
+      "events": [
+        {
+          "seq": 1,
+          "spaceId": "space-s",
+          "recordedAtMs": 1001,
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-s",
+            "name": "Studio",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          }
+        },
+        {
+          "seq": 2,
+          "spaceId": "space-s",
+          "recordedAtMs": 1002,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "author"
+          }
+        },
+        {
+          "seq": 3,
+          "spaceId": "space-s",
+          "recordedAtMs": 1003,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "spectator"
+          }
+        },
+        {
+          "seq": 4,
+          "spaceId": "space-s",
+          "recordedAtMs": 1004,
+          "body": {
+            "kind": "space.archived",
+            "spaceId": "space-s"
+          }
+        }
+      ],
+      "role": "viewer"
+    },
+    {
+      "id": "unknown-space-decides-nothing",
+      "spaceId": "space-other",
+      "userId": "u-owner",
+      "events": [
+        {
+          "seq": 1,
+          "spaceId": "space-s",
+          "recordedAtMs": 1001,
+          "body": {
+            "kind": "space.created",
+            "spaceId": "space-s",
+            "name": "Studio",
+            "spaceKind": "studio",
+            "visibility": "private",
+            "ownerUserId": "u-owner"
+          }
+        },
+        {
+          "seq": 2,
+          "spaceId": "space-s",
+          "recordedAtMs": 1002,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-owner",
+            "role": "author"
+          }
+        },
+        {
+          "seq": 3,
+          "spaceId": "space-s",
+          "recordedAtMs": 1003,
+          "body": {
+            "kind": "member.upserted",
+            "spaceId": "space-s",
+            "userId": "u-viewer",
+            "role": "spectator"
+          }
+        }
+      ],
+      "role": null
+    }
+  ],
   "cases": [
     {
       "id": "shared-scope-wins-over-route",

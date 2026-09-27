@@ -1,7 +1,21 @@
+import { readFileSync } from "node:fs";
+import Ajv2020 from "ajv/dist/2020";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "renderDocument">, source: TestSource): Promise<void> {
-  const { renderDocument } = dependencies;
+type Fixture = {
+  readonly cases: readonly {
+    readonly locale: "en" | "de";
+    readonly page: number;
+    readonly item: number;
+    readonly text: string;
+    readonly revision: string;
+    readonly labels: { readonly apply: string; readonly discard: string; readonly cancel: string };
+  }[];
+};
+
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "renderDocument" | "editableDocumentDraft">, source: TestSource): Promise<void> {
+  const { renderDocument, editableDocumentDraft } = dependencies;
 
   const { describe, expect, it } = vitest;
   describe("renderDocument", () => {
@@ -9,6 +23,22 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const node = renderDocument({ pages: [{ text: "p1" }, { text: "p2" }] });
       if (node.component.type !== "container") throw new Error("expected container");
       expect(node.children.length).toBe(2);
+    });
+
+    it("matches the language-neutral editable draft fixture", () => {
+      const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/✏️editable/🔣️.json", source.url), "utf8")) as Fixture;
+      const schema = JSON.parse(readFileSync(new URL("./🧫️fixtures/✏️editable/🧬️schema/🔣️.json", source.url), "utf8"));
+      const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+      expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
+      for (const testCase of fixture.cases) {
+        expect(editableDocumentDraft({ pageIndex: testCase.page, itemIndex: testCase.item, text: testCase.text }, testCase.locale)).toEqual({
+          page: testCase.page,
+          item: testCase.item,
+          revision: testCase.revision,
+          text: testCase.text,
+          labels: testCase.labels,
+        });
+      }
     });
   });
 

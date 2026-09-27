@@ -7,13 +7,13 @@ use crate::editor::tsv::modes::edit;
 use crate::editor::tsv::modes::edit::windows::main;
 use crate::standards::iana::subsets::any::schema::mutations::set_cell;
 use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId,
-    SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactStoreInitializationJob, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
+    Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+    ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
 };
+use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — verified against the artifact's own `🚪️io`/`🧬️schema` `DIALECT`
@@ -24,13 +24,22 @@ pub const TSV_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.tsv", 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
 /// action (`set-cell`, contract §2.6) can trigger. `row`/`column` index `TsvSnapshot.records`
-/// directly (no header-offset math, unlike csv).
+/// directly and `revision` prevents a concurrent row shift from redirecting the edit.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum TsvEditorCommand {
-    SetCell { row: u32, column: u32, value: String },
-    EditSnapshot { event: SnapshotEditEvent },
+    SetCell {
+        row: u32,
+        column: u32,
+        revision: String,
+        value: String,
+    },
+    EditSnapshot {
+        event: SnapshotEditEvent,
+    },
     /// 🎬️ The navbar example picker's payload — see the `🧵️RetainedRoutes` region below.
-    SetActiveExample { example_id: String },
+    SetActiveExample {
+        example_id: String,
+    },
 }
 
 fn hex_encode(bytes: &[u8]) -> String {
@@ -38,16 +47,29 @@ fn hex_encode(bytes: &[u8]) -> String {
 }
 
 fn hex_decode(text: &str) -> Result<Vec<u8>, String> {
-    if !text.len().is_multiple_of(2) {
-        return Err("odd-length hex string".into());
+    fn nibble(value: u8) -> Option<u8> {
+        match value {
+            b'0'..=b'9' => Some(value - b'0'),
+            b'a'..=b'f' => Some(value - b'a' + 10),
+            b'A'..=b'F' => Some(value - b'A' + 10),
+            _ => None,
+        }
     }
-    (0..text.len()).step_by(2).map(|index| u8::from_str_radix(&text[index..index + 2], 16).map_err(|error| error.to_string())).collect()
+    let mut pairs = text.as_bytes().chunks_exact(2);
+    let decoded = pairs.by_ref().map(|pair| Ok((nibble(pair[0]).ok_or_else(|| "invalid hexadecimal".to_string())? << 4) | nibble(pair[1]).ok_or_else(|| "invalid hexadecimal".to_string())?)).collect::<Result<Vec<_>, String>>()?;
+    if pairs.remainder().is_empty() {
+        Ok(decoded)
+    } else {
+        Err("odd-length hex string".into())
+    }
 }
 
 impl protocol::OpText for TsvEditorCommand {
     fn print_op(&self) -> String {
         match self {
-            TsvEditorCommand::SetCell { row, column, value } => format!("set-cell row={row} column={column} value={}", hex_encode(value.as_bytes())),
+            TsvEditorCommand::SetCell { row, column, revision, value } => {
+                format!("set-cell row={row} column={column} revision={} value={}", hex_encode(revision.as_bytes()), hex_encode(value.as_bytes()))
+            }
             TsvEditorCommand::EditSnapshot { event } => format!("snapshot-edit event={}", hex_encode(&<SnapshotEditEvent as protocol::OpBinary>::encode_op(event).expect("snapshot edit event encodes"))),
             TsvEditorCommand::SetActiveExample { example_id } => format!("active-example id={}", hex_encode(example_id.as_bytes())),
         }
@@ -66,21 +88,31 @@ impl protocol::OpText for TsvEditorCommand {
         let rest = line.strip_prefix("set-cell ").ok_or_else(|| store::TextError::new(format!("tsv editor command: unknown line {line:?}"), dsl::TextSpan::at(1, 1)))?;
         let mut row = None;
         let mut column = None;
-        let mut value = String::new();
+        let mut revision = None;
+        let mut value = None;
         for token in rest.split(' ') {
             let (key, raw) = token.split_once('=').ok_or_else(|| store::TextError::new(format!("tsv editor command: bad token {token:?}"), dsl::TextSpan::at(1, 1)))?;
             match key {
                 "row" => row = raw.parse::<u32>().ok(),
                 "column" => column = raw.parse::<u32>().ok(),
+                "revision" => {
+                    revision = Some(
+                        String::from_utf8(hex_decode(raw).map_err(|error| store::TextError::new(format!("tsv editor command: invalid revision hex {error}"), dsl::TextSpan::at(1, 1)))?)
+                            .map_err(|error| store::TextError::new(format!("tsv editor command: invalid revision utf8 {error}"), dsl::TextSpan::at(1, 1)))?,
+                    )
+                }
                 "value" => {
-                    value = String::from_utf8(hex_decode(raw).map_err(|error| store::TextError::new(format!("tsv editor command: invalid value hex {error}"), dsl::TextSpan::at(1, 1)))?)
-                        .map_err(|error| store::TextError::new(format!("tsv editor command: invalid value utf8 {error}"), dsl::TextSpan::at(1, 1)))?
+                    value = Some(
+                        String::from_utf8(hex_decode(raw).map_err(|error| store::TextError::new(format!("tsv editor command: invalid value hex {error}"), dsl::TextSpan::at(1, 1)))?)
+                            .map_err(|error| store::TextError::new(format!("tsv editor command: invalid value utf8 {error}"), dsl::TextSpan::at(1, 1)))?,
+                    )
                 }
                 _ => {}
             }
         }
-        let (row, column) = row.zip(column).ok_or_else(|| store::TextError::new("tsv editor command: missing row/column", dsl::TextSpan::at(1, 1)))?;
-        Ok(TsvEditorCommand::SetCell { row, column, value })
+        let (row, column, revision, value) =
+            row.zip(column).zip(revision).zip(value).map(|(((row, column), revision), value)| (row, column, revision, value)).ok_or_else(|| store::TextError::new("tsv editor command: missing row/column/revision/value", dsl::TextSpan::at(1, 1)))?;
+        Ok(TsvEditorCommand::SetCell { row, column, revision, value })
     }
 }
 
@@ -158,12 +190,11 @@ fn tsv_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(TsvEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        TSV_KIT_ACTION_ID => Ok(TsvEditorCommand::SetCell { row: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["row"], 0), column: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["column"], 0), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
-        other => Err(Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.tsv.unhandled-action"),
-            format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-cell)"),
-        )),
+        TSV_KIT_ACTION_ID => {
+            let edit = semio_s_artifact_stdio_contract::window_kit_revisioned_cell_edit(args)?;
+            Ok(TsvEditorCommand::SetCell { row: edit.row, column: edit.column, revision: edit.revision, value: edit.value })
+        }
+        other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.unhandled-action"), format!("action '{other}' is not one of this editor's declared verbs (setActiveExample, set-cell)"))),
     }
 }
 
@@ -186,20 +217,24 @@ fn tsv_retained_extent(_command: &TsvEditorCommand, _snapshot: &TsvSnapshot, _in
 /// its document, `set-cell` becomes this artifact's own mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn tsv_emit(command: &TsvEditorCommand, snapshot: &TsvSnapshot) -> Result<Emit<TsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    let (row, column, value) = match command {
+    tsv_emit_at_revision(command, snapshot, None)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn tsv_emit_at_revision(command: &TsvEditorCommand, snapshot: &TsvSnapshot, canonical_revision: Option<&str>) -> Result<Emit<TsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+    let (row, column, revision, value) = match command {
         TsvEditorCommand::SetActiveExample { example_id } => {
-            return Ok(Emit {
-                effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tsv_example_snapshot(example_id), STDIO_TSV_DOCUMENT_SCHEMA)],
-                description: Some(format!("Load example {example_id}")),
-                ..Default::default()
-            })
+            return Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tsv_example_snapshot(example_id), STDIO_TSV_DOCUMENT_SCHEMA)], description: Some(format!("Load example {example_id}")), ..Default::default() })
         }
-        TsvEditorCommand::SetCell { row, column, value } => (row, column, value),
+        TsvEditorCommand::SetCell { row, column, revision, value } => (row, column, revision, value),
         TsvEditorCommand::EditSnapshot { .. } => return Err(Fault::from("stdio-tsv-snapshot-edit-routed-to-native-reducer")),
     };
-    if snapshot.records.get(*row as usize).is_none() {
-        return Ok(Emit::default());
+    let current_revision = canonical_revision.map(str::to_owned).unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(snapshot));
+    if current_revision != *revision {
+        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.table-conflict"), "The TSV document changed before this cell draft was applied."));
     }
+    let record = snapshot.records.get(*row as usize).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.row-stale"), format!("TSV row {row} no longer exists")))?;
+    record.get(*column as usize).ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.column-stale"), format!("TSV cell {row},{column} no longer exists")))?;
     Ok(Emit { artifact_mutations: vec![TsvMutation::SetCell(set_cell::SetCell { row_index: *row as usize, field_index: *column as usize, value: value.clone() })], description: Some(format!("Set cell {row},{column}")), ..Default::default() })
 }
 
@@ -213,9 +248,10 @@ fn tsv_retained_reduce(
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TsvEditor>>>,
-    _operation: &AppOperationContext,
+    operation: &AppOperationContext,
 ) -> Result<Emit<TsvMutation, NoConfigMutation, NoDraftMutation>, Fault> {
-    tsv_emit(command, snapshot)
+    let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision);
+    tsv_emit_at_revision(command, snapshot, Some(&revision))
 }
 
 struct TsvRetainedCommandJobFactory {
@@ -428,7 +464,7 @@ impl ArtifactEditor for TsvEditor {
         TsvSnapshot::default()
     }
 
-    /// ✏️ Out-of-range row is a documented no-op (`Emit::default()`), never a panic.
+    /// ✏️ Stale revisions, rows, and columns fault without publishing a mutation.
     fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
@@ -440,13 +476,22 @@ impl ArtifactEditor for TsvEditor {
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
             TsvEditorCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
-            _ => tsv_emit(command, doc.snapshot),
+            _ => {
+                let revision = doc.operation_optional().map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision));
+                tsv_emit_at_revision(command, doc.snapshot, revision.as_deref())
+            }
         }
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => {
+                let revision = doc
+                    .render_operation()
+                    .map(|operation| semio_s_artifact_stdio_contract::window_kit_canonical_revision(operation.canonical_base_revision))
+                    .unwrap_or_else(|| semio_s_artifact_stdio_contract::window_kit_snapshot_revision(doc.snapshot));
+                main::render_revisioned(doc.snapshot, &revision).map(semio_framework_plugin::built_to_component_tree)
+            }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,
                 view_state.locale,
@@ -467,14 +512,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TsvEdit
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
-
-    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| TsvMutation::SetSnapshot(
-            crate::standards::iana::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot },
-        ))
+    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| TsvMutation::SetSnapshot(crate::standards::iana::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
     }
 }
 //#endregion 🔖️Editor

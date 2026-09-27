@@ -109,6 +109,22 @@ message ChangeFrameColumns {
   string frame_id = 2;
   uint32 new_columns = 3;
 }
+message RotateFrame {
+  string page_id = 1;
+  string frame_id = 2;
+  double new_rotation = 3;
+}
+message UpdateGrid {
+  double baseline_grid = 1;
+  double baseline_offset = 2;
+  bool snap_to_baseline = 3;
+}
+message SetFrameFlags {
+  string page_id = 1;
+  string frame_id = 2;
+  optional bool locked = 3;
+  optional bool visible = 4;
+}
 
 message LayoutMutation {
   oneof kind {
@@ -137,5 +153,8 @@ message LayoutMutation {
     ChangeFrameStroke change_frame_stroke = 23;
     ChangeFrameWrapMode change_frame_wrap_mode = 24;
     ChangeFrameColumns change_frame_columns = 25;
+    UpdateGrid update_grid = 26;
+    SetFrameFlags set_frame_flags = 27;
+    RotateFrame rotate_frame = 28;
   }
 }

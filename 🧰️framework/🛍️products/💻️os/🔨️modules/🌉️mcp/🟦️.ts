@@ -299,6 +299,26 @@ const MCP_CLIENT_PROTOCOL_VERSION = "2025-06-18";
  * a pristine environment would never re-prove that. */
 const MCP_CLIENT_HARNESS_ENVIRONMENT: Readonly<Record<string, string>> = { CLAUDE_CODE_SESSION_ID: "mcp-client-e2e", CLAUDE_CODE_MESSAGING_TOKEN: "mcp-client-e2e" };
 
+/** 🚧️ A precondition an acceptance harness cannot run without — a hub origin, a credential, an admin capability file.
+ * The harness records `blocked` (never `fail`) and names the environment variable that supplies it. */
+export class AcceptancePreconditionMissing extends Error {}
+
+/** 🔐️ The environment variable `name`, or the {@link AcceptancePreconditionMissing} naming it: credentials and hub
+ * coordinates reach a harness only through its environment — never argv, never a default written in source. */
+export function requiredHarnessEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new AcceptancePreconditionMissing(`${name} is not set`);
+  return value;
+}
+
+/** 🔐️ The human a hub harness signs in as, from `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD`. */
+export function hubCredentialFromEnv(): { readonly email: string; readonly password: string } {
+  return { email: requiredHarnessEnv("OS_MCP_HUB_EMAIL"), password: requiredHarnessEnv("OS_MCP_HUB_PASSWORD") };
+}
+
+/** 🚦️ The `blockedWhen` of every os-mcp harness's acceptance record. */
+export const isAcceptancePreconditionMissing = (error: unknown): boolean => error instanceof AcceptancePreconditionMissing;
+
 /** 📖️ The `.mcp.json` server table at `repoRoot` — the single source this driver spawns from, so a
  * change to how clients launch a server is a change this gate immediately exercises. */
 export function mcpServerEntries(repoRoot: string): Record<string, McpServerEntry> {

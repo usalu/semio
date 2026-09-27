@@ -22,7 +22,7 @@ import { join, resolve } from "node:path";
 import type { Browser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
-import { awaitBeacon, click, clickUncovered, dismissIntroduction, readShell, seatLocale, witness } from "../🧮️program-matrix/🟦️.ts";
+import { awaitBeacon, click, clickUncovered, dismissIntroduction, readShell, seatLocale, withDevServe, witness } from "../🧮️program-matrix/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 /** 🧰️ One program that declares a tool, and the example a run of it needs (`first` = the first non-empty one). */
@@ -322,12 +322,13 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
   return value === undefined || value.startsWith("--") ? undefined : value;
 }
 
-/** 🚪️ `verify tool-run <baseUrl> [--tag <t>] [--locale en|de] [--only <plugin/appId substring>,…] [--no-pause] [--run-ms <n>]
- * [--out <dir>]` — writes `tool-run.json` + screenshots under `<out>/<tag>/`, publishes the acceptance record, exits non-zero
+/** 🚪️ `verify tool-run --serve <url> [--tag <t>] [--locale en|de] [--only <plugin/appId substring>,…] [--no-pause]
+ * [--run-ms <n>] [--out <dir>]` — runs against the local-only serve `--serve` names (reused, or started and stopped by
+ * `withDevServe`), writes `tool-run.json` + screenshots under `<out>/<tag>/`, publishes the acceptance record, exits non-zero
  * unless every selected program passes. */
 export async function runToolRunMatrixCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
-  const baseUrl = segments[0];
-  if (!baseUrl || baseUrl.startsWith("--")) throw new Error("usage: verify tool-run <baseUrl> [--tag <t>] [--locale en|de] [--only …] [--no-pause] [--run-ms <n>] [--out <dir>]");
+  const serveUrl = flagValue(segments, "--serve");
+  if (!serveUrl) throw new Error("usage: verify tool-run --serve <url> [--tag <t>] [--locale en|de] [--only …] [--no-pause] [--run-ms <n>] [--out <dir>]");
   const locale = flagValue(segments, "--locale") ?? "en";
   const tag = flagValue(segments, "--tag") ?? `tool-run-${locale}`;
   const controller = new AbortController();
@@ -335,7 +336,7 @@ export async function runToolRunMatrixCli(repoRoot: string, defaultOutDir: strin
   process.once("SIGINT", cancel);
   process.once("SIGTERM", cancel);
   const startedAt = new Date();
-  await withAcceptanceRecord(repoRoot, "tool-run-matrix", async () => {
+  await withAcceptanceRecord(repoRoot, "tool-run-matrix", () => withDevServe(repoRoot, "tool-run-matrix", { serveUrl, locale, signal: controller.signal, startedAt }, async (baseUrl) => {
     const outDir = join(resolve(flagValue(segments, "--out") ?? defaultOutDir), tag);
     const report = await runToolRunMatrix({ baseUrl, tag, locale, only: (flagValue(segments, "--only") ?? "").split(",").filter(Boolean), pause: !segments.includes("--no-pause"), runMs: Number(flagValue(segments, "--run-ms") ?? 120_000), outDir, signal: controller.signal });
     const passed = report.rows.filter((row) => row.pass).length;
@@ -359,7 +360,7 @@ export async function runToolRunMatrixCli(repoRoot: string, defaultOutDir: strin
     );
     console.log(`[tool-run] === ${tag}: PASS ${passed}/${total} → ${outDir} ===`);
     if (status !== "pass") process.exitCode = 1;
-  });
+  }));
   process.removeListener("SIGINT", cancel);
   process.removeListener("SIGTERM", cancel);
 }

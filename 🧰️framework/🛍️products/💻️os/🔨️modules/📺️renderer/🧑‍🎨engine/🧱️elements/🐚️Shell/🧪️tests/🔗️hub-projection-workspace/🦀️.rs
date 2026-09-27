@@ -118,6 +118,22 @@ fn hub_verb(shell: &mut ShellState, verb: &str, args: &[(&str, &str)]) {
     drive(shell.handle_hub_workspace_action(verb, args));
     #[cfg(target_arch = "wasm32")]
     semio_framework_async::block_on(shell.handle_hub_workspace_action(verb, args));
+    settle_hub_workspace(shell);
+}
+
+/// 🔐️ Pumps the directory lane until the hub workspace's spawned requests (sign-in, spaces) have answered — the
+/// verbs only arm them now, and a frame applies the answer.
+fn settle_hub_workspace(shell: &mut ShellState) {
+    while !shell.hub_workspace_settled() {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = crate::pump_renderer_io_sessions(1);
+            drive(shell.pump_directory_events());
+        }
+        #[cfg(target_arch = "wasm32")]
+        semio_framework_async::block_on(shell.pump_directory_events());
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
 }
 
 fn hub_attribute_values(node: &UiNode, attribute: &str, found: &mut Vec<String>) {
@@ -1229,4 +1245,46 @@ fn pump_until(shell: &mut ShellState, budget: std::time::Duration, done: impl Fn
         std::thread::sleep(std::time::Duration::from_millis(25));
     }
     None
+}
+
+
+/// 🔐️ LAW (ticket 26/09/23 session 12, runs s12g/s12h): the sign-in and the spaces read never hold the frame's
+/// interaction state. The verbs only ARM a [`ShellHubTask`] and return — so the chrome shows `Signing in…` with its
+/// Cancel while the hub hashes — the directory pump applies the answer, and Cancel ends the request: a cancelled
+/// sign-in's late answer is never applied.
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn the_sign_in_verb_arms_a_task_and_returns_while_the_hub_is_still_answering() {
+    let source = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
+    let dispatch = source.split("async fn handle_hub_workspace_action(").nth(1).expect("the hub verb dispatch exists");
+    let dispatch = &dispatch[..dispatch.find("\n    }\n").expect("the dispatch closes")];
+    assert!(dispatch.contains("hub_action::SIGN_IN => self.start_hub_sign_in(),"), "SIGN_IN arms and returns");
+    assert!(dispatch.contains("hub_action::REFRESH_SPACES => self.start_hub_spaces_reload(),"), "REFRESH_SPACES arms and returns");
+    assert!(!source.contains("run_hub_sign_in_turn") && !source.contains("reload_hub_spaces().await"), "no hub leg is awaited inside a verb");
+
+    let mut shell = shell();
+    hub_verb(&mut shell, crate::hub_connection::action::SET_EMAIL, &[("value", "user1@semio.dev")]);
+    hub_verb(&mut shell, crate::hub_connection::action::SET_PASSWORD, &[("value", "correct horse battery staple")]);
+    let (sender, receiver) = std::sync::mpsc::channel();
+    shell.hub_workspace.session = reduce_hub_session(&shell.hub_workspace.session, &HubSessionEvent::Submit);
+    shell.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
+    assert_eq!(shell.hub_workspace.session.phase, HubSessionPhase::SigningIn);
+    for locale in [Locale::En, Locale::De] {
+        let tree = serde_json::to_string(&crate::hub_connection::build_hub_workspace_ui(&shell.hub_workspace, locale)).expect("hub tree json");
+        assert!(tree.contains("framework.hub.sign-in.cancel"), "a running sign-in offers Cancel ({locale:?})");
+    }
+    assert!(!shell.poll_hub_workspace_tasks(), "nothing is applied before the hub answers");
+    sender.send(ShellHubSignInAnswer::Failed { code: HubSignInErrorCode::InvalidCredentials, retry_after_seconds: None }).expect("the task answers");
+    assert!(shell.poll_hub_workspace_tasks(), "the pump applies the answer");
+    assert!(shell.hub_workspace_settled());
+    assert_eq!(shell.hub_workspace.session.error, Some(HubSignInErrorCode::InvalidCredentials));
+
+    let (late, receiver) = std::sync::mpsc::channel();
+    shell.hub_workspace.session = reduce_hub_session(&shell.hub_workspace.session, &HubSessionEvent::Submit);
+    shell.hub_sign_in_task = Some(ShellHubTask { receiver, cancel: CancelToken::root_now(), task: None });
+    hub_verb(&mut shell, crate::hub_connection::action::CANCEL_SIGN_IN, &[]);
+    assert!(shell.hub_workspace_settled(), "Cancel ends the request");
+    let _ = late.send(ShellHubSignInAnswer::Unverified);
+    assert!(!shell.poll_hub_workspace_tasks(), "a cancelled sign-in's late answer is never applied");
+    assert_eq!(shell.hub_workspace.session.error, Some(HubSignInErrorCode::Cancelled));
 }

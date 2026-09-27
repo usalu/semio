@@ -164,7 +164,6 @@ fn retained_window_input_retirement_reaches_later_partitions_and_kinds() {
     eprintln!("[DEBUG] blocked partition and owner kind do not starve later owners; zero grants preserve both cursors");
 }
 
-
 #[test]
 fn retained_window_input_refresh_admits_live_generation_after_a_committed_write() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️retained-window-input/🔣️.json")).unwrap();

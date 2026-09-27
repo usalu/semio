@@ -406,6 +406,8 @@ pub mod examples {
 #[cfg(feature = "component-app-assembly")]
 #[path = "."]
 pub mod editor {
+    #[path = "✏️editor/🦀️.rs"]
+    pub(crate) mod editing;
     #[path = "."]
     pub mod zip {
         #[path = "."]

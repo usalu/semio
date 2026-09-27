@@ -26,4 +26,3 @@ fn framework_empty_state_contract_rejects_foreign_fields_and_bytes() {
     verify_empty_state::<crate::NoTransient>();
     eprintln!("[DEBUG] Framework NoConfig/NoDraft/NoPresence/NoTransient accepted only empty state across 13 neutral admission vectors each");
 }
-

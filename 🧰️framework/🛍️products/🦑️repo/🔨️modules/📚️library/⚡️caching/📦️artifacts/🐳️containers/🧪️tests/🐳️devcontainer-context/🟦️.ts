@@ -15,5 +15,5 @@ export function testDevcontainerContext(workspace: string): void {
   const patterns = readFileSync(join(context, ".dockerignore"), "utf8").trim().split("\n");
   assert.deepEqual(patterns, fixture.patterns);
   for (const path of fixture.ignored) assert.equal(require("minimatch").minimatch(path, patterns[0], { dot: true }), true, path);
-  console.log("[DEBUG] Devcontainer build uses only its environment directory and excludes all ordinary context files; YAML/minimatch oracle PASS");
+  console.log("✅️ Devcontainer build uses only its environment directory and excludes all ordinary context files; YAML/minimatch oracle PASS");
 }

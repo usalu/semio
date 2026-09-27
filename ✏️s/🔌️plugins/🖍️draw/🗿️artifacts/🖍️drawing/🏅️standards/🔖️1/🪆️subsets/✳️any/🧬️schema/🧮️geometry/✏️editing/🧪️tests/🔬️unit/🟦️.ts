@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { CubicBezierCurve, QuadraticBezierCurve, LineCurve, EllipseCurve, Vector2, Box2, Matrix3 } from "three";
 import { produce } from "immer";
-import { editPath, type PathEdit } from "../../🟦️.ts";
+import { editPath, dragPathPoint, type PathEdit } from "../../🟦️.ts";
 import { arcGeometry, arcPoint, segmentBounds, type Point, type Matrix } from "../../../🟦️.ts";
 import boundsFixture from "../../../🧫️fixtures/🔄️arc-bounds/🔣️.json";
 import type { PathSegment } from "../../../../🟦️.ts";
@@ -129,5 +129,45 @@ test("arc extrema agree with shared fixtures and an independent ellipse", () => 
     const box=new Box2().setFromPoints(oracle.getPoints(1000).map(point=>point.applyMatrix3(matrix)));
     const expected=[box.min.x,box.min.y,box.max.x-box.min.x,box.max.y-box.min.y];
     for(let axis=0;axis<4;axis++) expect(bounds[axis]).toBeCloseTo(expected[axis]!,10);
+  }
+});
+
+ test("two-axis node positioning preserves adjacent tangents and source ownership",()=>{
+  for(const item of fixture.filter(row=>row.name.startsWith("position-") && !('error' in row))) {
+    const before=item.before as PathSegment[],saved=structuredClone(before),operation=item.operation as Extract<PathEdit,{kind:"position"}>;
+    const result=editPath(before,operation);
+    const oracle=produce(before,draft=>{
+      const node=draft[operation.index]!;
+      if(node.kind!=="cubic")throw new Error("Expected fixture cubic");
+      if(operation.point==="control1")node.ctrl1=[...operation.to];
+      else {
+        const delta=new Vector2(...operation.to).sub(new Vector2(...node.to));
+        node.to=[...operation.to];
+        const incoming=new Vector2(...node.ctrl2).add(delta);node.ctrl2=[incoming.x,incoming.y];
+        const next=draft[operation.index+1];
+        if(next?.kind==="quad") {const outgoing=new Vector2(...next.ctrl).add(delta);next.ctrl=[outgoing.x,outgoing.y];}
+      }
+    });
+    expect(result).toEqual(oracle);expect(before).toEqual(saved);
+    expect(()=>editPath(before,{...operation,to:[Infinity,0]})).toThrow();
+    expect(before).toEqual(saved);
+  }
+ });
+
+import drags from "../../🧫️fixtures/🖱️drag/🔣️.json";
+test("node pointer deltas stay correct through affine ancestors without snapping to the press",()=>{
+  for(const sample of drags){
+    const segment=sample.segment as PathSegment,point=sample.point as "anchor"|"control1"|"control2";
+    const result=dragPathPoint(segment,point,sample.matrix as Matrix,sample.start as Point,sample.end as Point,sample.constrained);
+    if("error" in sample){expect(result).toBeNull();continue;}
+    expect(result![0]).toBeCloseTo(sample.to![0]!,12);expect(result![1]).toBeCloseTo(sample.to![1]!,12);
+    const [a,b,c,d,e,f]=sample.matrix,matrix=new Matrix3().set(a!,c!,e!,b!,d!,f!,0,0,1);
+    const local=point==="anchor" && segment.kind!=="close"?segment.to:segment.kind==="quad"?segment.ctrl:[0,0];
+    const world=new Vector2(...local).applyMatrix3(matrix);
+    let dx=sample.end[0]!-sample.start[0]!,dy=sample.end[1]!-sample.start[1]!;
+    if(sample.constrained){if(Math.abs(dx)>=Math.abs(dy))dy=0;else dx=0;}
+    const oracle=world.add(new Vector2(dx,dy)).applyMatrix3(matrix.clone().invert());
+    expect(result![0]).toBeCloseTo(oracle.x,12);expect(result![1]).toBeCloseTo(oracle.y,12);
+    expect(dragPathPoint(segment,point,sample.matrix as Matrix,sample.start as Point,sample.start as Point,false)).toEqual(local);
   }
 });

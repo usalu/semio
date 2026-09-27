@@ -1,0 +1,13 @@
+{
+  "schema": "semio.ui.diff-view-presentation.v1",
+  "host": { "width": 400, "height": 160, "inset": 3.2 },
+  "typography": { "family": "Share Tech Mono", "size": 11.2, "lineHeight": 16, "gap": 3.2 },
+  "colors": {
+    "equal": [0, 17, 23, 255],
+    "added": [0, 212, 146, 255],
+    "removed": [166, 0, 9, 255]
+  },
+  "unified": { "contentWidth": 393.625, "rowHeight": 16, "textX": 107.9375 },
+  "split": { "paneWidth": 193.125, "rightX": 203.6875, "leftTextX": 49.5625, "rightTextX": 250.0625 },
+  "preWrap": { "hostWidth": 160, "text": "a  b  c  d", "expectedLines": ["a  b  c  ", "d"] }
+}

@@ -1275,7 +1275,7 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         if ctx.cancel.is_cancelled_now() {
             return Err(DirectoryClientError::Cancelled);
         }
-        let mut receipt = self.issue_socket_grant(ctx, "/directory/socket-grants", b"{}", timeout_ms)?;
+        let mut receipt = self.issue_socket_grant(ctx, "/directory/socket-grants", b"", timeout_ms)?;
         if ctx.cancel.is_cancelled_now() {
             return Err(DirectoryClientError::Cancelled);
         }

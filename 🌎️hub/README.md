@@ -129,6 +129,9 @@ engine's verification memory (`trusted-catalog/guest-codec-verifications/`) pins
 pinned against its component's own `pack-schema-hash` in the background once the hub serves (smallest component first)
 or by the package's first codec call — no codec call ever runs on an unpinned row, and a component that answers
 differently refuses its whole package. `GET /admin/api/observability` → `catalog` shows the progress after boot.
+A catalog whose files or descriptors do not match their trust records fails the boot (a descriptor refusal names the
+package and every differing field); a catalog published by a tree that speaks another app channel fails it naming the
+package and both channels — publish the catalog again with this hub's tree.
 
 ## Environment variables
 
@@ -148,9 +151,11 @@ loading and no schema/validation layer. Defaults are the literal fallbacks in th
 | `OS_HUB_ADMIN_SUBJECTS` | empty | Comma-separated `provider:subject` identities granted the admin surface; max 64, duplicates rejected. Required in production mode. For a password credential the provider is literally `credential.password.v1` (`🔐️auth/🦀️.rs`, `CREDENTIAL_IDENTITY_PROVIDER`) and the subject is the email `credential set` was given, e.g. `credential.password.v1:ada@example.com`. A mismatched provider string still boots — the admin routes simply answer `401` for everyone. |
 | `OS_HUB_ADMIN_DIR` | the admin SPA's built `📤️dist` next to the crate | Static asset root for the admin SPA. Set it when the binary is not co-located with its source tree. |
 | `OS_HUB_EXTENSIONS_DIR` | `{OS_HUB_DATA}/extension-modules` | Extension module root; created at boot. |
-| `OS_HUB_GUEST_RESIDENCY_BYTES` | `268435456` (256 MiB) | Component bytes whose compiled guests stay resident (`TrustedCatalogGuestResidencyV1.residentComponentBytes`, 0 … 16 GiB, decimal bytes; anything else fails boot). A guest that does not fit stays only when it was used in more operations than every least-recently-used guest it would release, else it serves the operation that compiled it and is dropped with it — a rotation over more kinds than fit keeps a stable resident set instead of recompiling every kind. `0` keeps nothing resident. Live counters: `GET /admin/api/observability` → `residency`. |
+| `OS_HUB_GUEST_RESIDENCY_BYTES` | `268435456` (256 MiB) | Bytes the resident compiled guests may hold (`TrustedCatalogGuestResidencyV1.residentComponentBytes`, 0 … 16 GiB, decimal bytes; anything else fails boot): each guest is charged its component bytes plus what it holds beyond them, measured after every codec call that used it (`footprintBytes`). A guest that does not fit stays only when it was used in more operations than every least-recently-used guest it would release, else it serves the operation that compiled it and is dropped with it — a rotation over more kinds than fit keeps a stable resident set instead of recompiling every kind. `0` keeps nothing resident. Live counters: `GET /admin/api/observability` → `residency`. |
 | `OS_HUB_MERGE_POLICY` | `normal` | `laissez-faire` \| `normal` \| `vigilant`, read once at startup. An unknown value warns and falls back — it does not fail boot. |
 | `OS_HUB_ARTIFACT_CAS_SWEEP_EXECUTE` | `false` | `true`/`1` lets the artifact-CAS maintenance supervisor actually delete swept chunks; anything but `true`/`false`/`1`/`0`/empty fails boot. |
+| `SEMIO_TRACE_LEVEL` | `info` | `off` \| `error` \| `warn` \| `info` \| `debug`: the lowest level the structured trace records (see "Health endpoints"). An unparseable value falls back to `info` rather than failing boot over a diagnostic setting. |
+| `SEMIO_TRACE_SINK` | `stderr` | `stderr` \| `stdout` \| `none` \| `file:<path>` (JSON lines appended). A file that cannot be opened writes to stderr and says so in its first record. |
 | `OS_HUB_TEST_INFERENCE_CHECKPOINT_FD` | unset | Test-only: an inherited fd the harness steps inference checkpoints over. Never set it in a deployment. |
 
 ### Document store (`OS_HUB_STORAGE_BACKEND`)
@@ -335,11 +340,11 @@ today is that a loopback hub no longer hands a credentialed grant to `https://ev
 
 | route | meaning |
 |---|---|
-| `GET /healthz` | Liveness. Always `200` while the process serves: `{schema: "semio.hub.liveness/v1", status: "live", runId, uptimeMs}`. It says nothing about readiness. |
-| `GET /readyz` | Readiness. `200` when every gate is open, **`503` otherwise**, with the same body either way. |
+| `GET /healthz` | Liveness (`LocalBootstrapLivenessV1`, [schema](🚀️local-bootstrap/🧬️schema/🔣️.json)). Always `200` while the process serves: `{schema: "semio.hub.liveness/v1", status: "live", runId, uptimeMs}`. It says nothing about readiness. |
+| `GET /readyz` | Readiness (`LocalBootstrapReadinessV1`, [schema](🚀️local-bootstrap/🧬️schema/🔣️.json)). `200` when every gate is open, **`503` otherwise**, with the same body either way: `{schema: "semio.hub.readiness/v1", status, runId, mode, bindScope, authentication, directory, storage, artifactCasBarrier, artifactPublication, artifactCasSweeper, artifactAuthority, adminAssets, features, blockedBy?, startup?}` (`?`: present only while not ready). |
 | `GET /admin/api/observability` | Counters and latency percentiles, behind the same admin capability as every other `/admin/api` route (`HubObservabilityV1`, [schema](📊️observability/🧬️schema/🔣️.json)): `{schema: "semio.hub.observability/v1", level, uptimeMs, droppedEvents, declaredEvents, rows: [{event, started, ok, refused, failed, cancelled, total, samples, p50Us, p95Us, p99Us}], routes: [{method, route, requests, successes, clientRefusals, rateLimited, unavailable, serverFailures, samples, p50Us, p95Us, p99Us, maxUs}], routesOverflowed, residency, catalog, dbIo}`. `routes` is keyed by method + route template (never a concrete path, at most 256 rows) and counts every answer of a matched route, including the rate limiter's `429`s; `residency` and `catalog` are `null` on a hub without a trusted catalog; `dbIo` is the database I/O census incl. admission waits. The admin UI's Observability tab reads it every 5 s. |
 
-`/readyz`'s body names what is closed and why rather than claiming a bare status: `blocked_by` is a
+`/readyz`'s body names what is closed and why rather than claiming a bare status: `blockedBy` is a
 list of `{gate, reason}` pairs (e.g. `artifactCasSweeper` /
 `artifact-cas-maintenance-supervisor-failed-closed`), and the authentication block carries
 `publicSessionIssuance`. Point a load balancer at `/readyz` and a process supervisor at `/healthz`.
@@ -347,7 +352,8 @@ list of `{gate, reason}` pairs (e.g. `artifactCasSweeper` /
 The hub binds its port **before** it opens its stores and loads the trusted catalog, so a booting hub
 answers instead of refusing connections: `/healthz` is `200 live` at once, `/readyz` is `503` with every
 component gate `hub-starting`, `artifactAuthority` `trusted-catalog-loading` and a `startup` object
-(`{stage, completedUnits, totalUnits}`, the catalog load's latest progress, e.g. `guest-codec-executing`),
+(`{stage, completedUnits, totalUnits, catalog?}`, the catalog load's latest progress, e.g. `guest-codec-executing`, and once
+the load selected its packages every package's phase, component bytes and codec rows),
 and every other route is a signed `503 unavailable` with `Retry-After: 5`. The first boot on a catalog
 interprets each package's guest once to pin its pack-schema hashes (minutes for a large catalog); the
 hub remembers each verification under `trusted-catalog/guest-codec-verifications/`, keyed by component,
@@ -542,6 +548,15 @@ docker run --rm -p 127.0.0.1:8787:8787 -v semio-hub-data:/srv/semio-hub/data \
 docker compose -f 🌎️hub/compose.yaml up --build
 docker compose -f 🌎️hub/compose.yaml --profile postgres up --build
 ```
+
+Both steps are permanent `os-hub-ts` verbs (`🌎️hub/🧪️tests/🐳️docker-image`), each publishing an acceptance record:
+`bun ./📜️script.ts docker-image-build [--tag <t>] [--jobs <n>]` is the cold build (full client output in
+`🗑️generated/docker-image-build.log`), and `bun ./📜️script.ts docker-image-check [--tag <t>] [--catalog-root <root>]
+[--kind <kindId>]` runs that image in the posture above on a fresh volume — the catalog goes in with `docker cp` and the
+credential on stdin, nothing is bind-mounted — behind a loopback stand-in for the TLS terminator
+(`hubForwardingProxy`), then requires `/readyz`, `/healthz`, the cleartext refusal, a two-client relay over one new
+document and a `docker stop` that drains to exit code 0. The build context is a *prepared* checkout: the crates include
+generated sources that `workspace:prepare` publishes. Give the builder ~2.5 GiB per compiler job (`--jobs`).
 
 The entrypoint is `os-hub` itself under `tini`. Inside the container the bind is `0.0.0.0` — that is
 the container's own interface, and a loopback bind inside a container makes `-p` unreachable — so
@@ -739,7 +754,7 @@ An operator should know these before putting anything real into a hub:
   the router's real socket routes, not configs anyone has loaded.
 - **No Prometheus/OpenTelemetry exposition.** Structured tracing and per-event counters *are*
   shipped (`SEMIO_TRACE_LEVEL`/`SEMIO_TRACE_SINK`, `GET /admin/api/observability`, see
-  "Health and readiness"); what does not exist is a scrape endpoint in anyone else's format, so a
+  "Health endpoints"); what does not exist is a scrape endpoint in anyone else's format, so a
   Prometheus-based stack needs an exporter in front of the admin route.
 - **No cross-version *migration*.** Each durable store now stamps its format version on creation and
   refuses a data root written by a different one with a named error, so an upgrade cannot corrupt

@@ -17,7 +17,10 @@ fn empty_transient_retirement_waits_for_read_release_and_matches_neutral_vectors
     let mut held_read_blocks = false;
     for _ in 0..maximum_steps {
         match disposer.close_step(&mut owner, 1, maximum_bytes).expect("close with held read") {
-            PluginCloseStep::Blocked { .. } => { held_read_blocks = true; break; }
+            PluginCloseStep::Blocked { .. } => {
+                held_read_blocks = true;
+                break;
+            }
             PluginCloseStep::Pending { released_items, released_bytes } => {
                 assert!(released_items <= 1 && released_bytes <= maximum_bytes);
             }
@@ -29,7 +32,10 @@ fn empty_transient_retirement_waits_for_read_release_and_matches_neutral_vectors
     let mut released_read_completes = false;
     for _ in 0..maximum_steps {
         match disposer.close_step(&mut owner, 1, maximum_bytes).expect("close after read release") {
-            PluginCloseStep::Complete => { released_read_completes = true; break; }
+            PluginCloseStep::Complete => {
+                released_read_completes = true;
+                break;
+            }
             PluginCloseStep::Pending { released_items, released_bytes } => {
                 assert!(released_items <= 1 && released_bytes <= maximum_bytes);
             }

@@ -130,7 +130,7 @@ async fn a_compiled_guest_that_fits_stays_resident_and_idleness_releases_nothing
     residency_operation(&control, &a, b"a", 1, &compiles).await;
     tokio::time::sleep(std::time::Duration::from_millis(20)).await;
     assert!(a.is_resident() && b.is_resident(), "idleness alone releases nothing");
-    assert_eq!(ledger.state(), TrustedCatalogGuestResidencyStateV1 { budget_bytes: 2_000, registered_guests: 2, resident_guests: 2, resident_bytes: 2_000, hits: 1, compiles: 2, admitted: 2, bypassed: 0, released: 0, compile_micros: ledger.state().compile_micros });
+    assert_eq!(ledger.state(), TrustedCatalogGuestResidencyStateV1 { budget_bytes: 2_000, registered_guests: 2, resident_guests: 2, resident_bytes: 2_000, footprint_bytes: 0, hits: 1, compiles: 2, admitted: 2, bypassed: 0, released: 0, compile_micros: ledger.state().compile_micros });
 }
 
 /// 🧮️ An operation counts one use however many calls it makes, a guest that does not fit serves every call
@@ -299,9 +299,65 @@ async fn concurrent_operations_share_one_compile() {
     assert!(cold.is_resident() && !hot.is_resident(), "the guest eight operations used displaced the one two used");
 }
 
+impl GuestResidentFootprintV1 for Vec<u8> {
+    /// 📏️ A byte-charged test value holds only the bytes it was registered with.
+    fn footprint_bytes(&self) -> u64 {
+        0
+    }
+}
+
+/// 📐️ A test guest whose state grows in a call, as a compiled guest's does when its first codec call assembles its origin.
+struct GrowingGuest(std::sync::atomic::AtomicU64);
+
+impl GuestResidentFootprintV1 for GrowingGuest {
+    /// 📐️ What the call left the guest holding.
+    fn footprint_bytes(&self) -> u64 {
+        self.0.load(Ordering::SeqCst)
+    }
+}
+
+/// 🧪️ One operation's single call on `slot`, after which its guest holds `footprint` bytes beyond its registration.
+async fn growing_operation(control: &TestControl, slot: &GuestResidencyV1<GrowingGuest>, footprint: u64) {
+    let context = control.context();
+    let guest = slot.acquire(&context, || async { Ok::<_, AuthorityError>(GrowingGuest(std::sync::atomic::AtomicU64::new(0))) }).await.unwrap();
+    guest.0.store(footprint, Ordering::SeqCst);
+    slot.remeasure(&guest, &context).await;
+}
+
+/// 📐️ A guest is charged what it holds after each call, not only what it was registered with: one that grew past what the
+/// budget has left stays by releasing the least recently used unheld guests when it was used in more operations than they
+/// were, a guest that then does not fit is served without staying, and one that grew past the whole budget serves the
+/// operation holding it and is dropped with it.
+#[tokio::test]
+async fn a_guest_that_grows_in_a_call_is_charged_what_it_holds() {
+    let control = TestControl::new();
+    let ledger = GuestResidencyLedgerV1::<GrowingGuest>::new(TrustedCatalogGuestResidencyV1 { resident_component_bytes: 3_000, ..TRUSTED_CATALOG_GUEST_RESIDENCY });
+    let (a, b) = (ledger.register(1_000), ledger.register(1_000));
+    growing_operation(&control, &b, 0).await;
+    growing_operation(&control, &a, 0).await;
+    growing_operation(&control, &a, 0).await;
+    assert!(a.is_resident() && b.is_resident());
+    assert_eq!((ledger.state().resident_bytes, ledger.state().footprint_bytes), (2_000, 0));
+    growing_operation(&control, &a, 1_500).await;
+    let grown = ledger.state();
+    assert!(a.is_resident() && !b.is_resident(), "the grown guest, used in more operations, displaced the least recently used one");
+    assert_eq!((grown.resident_guests, grown.resident_bytes, grown.footprint_bytes, grown.released), (1, 2_500, 1_500, 1));
+    growing_operation(&control, &b, 0).await;
+    assert!(a.is_resident() && !b.is_resident() && ledger.state().bypassed == 1, "a guest used less often than the grown one is served without staying");
+    let context = control.context();
+    let guest = a.acquire(&context, || async { Ok::<_, AuthorityError>(GrowingGuest(std::sync::atomic::AtomicU64::new(0))) }).await.unwrap();
+    guest.0.store(2_500, Ordering::SeqCst);
+    a.remeasure(&guest, &context).await;
+    assert!(!a.is_resident() && ledger.state().resident_guests == 1, "a guest grown past the whole budget stays only with the operation holding it");
+    drop((guest, context));
+    let released = ledger.state();
+    assert_eq!((released.resident_guests, released.resident_bytes, released.footprint_bytes, released.released), (0, 0, 0, 2), "and is dropped with it");
+}
+
 /// 🧵️ A guest codec call interprets on the blocking pool, never on the worker awaiting it: another
 /// task on a one-thread runtime keeps running for the whole call, every fuel observation reaches the
-/// caller's context in order, and a cancelled caller is released at its next observation.
+/// caller's context in order, and a cancelled caller is released at its next observation — or within
+/// the poll between observations — with the call itself cancelled, as it is when the caller is dropped.
 #[test]
 fn guest_codec_calls_run_off_the_async_worker_and_relay_their_fuel() {
     let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
@@ -318,7 +374,7 @@ fn guest_codec_calls_run_off_the_async_worker_and_relay_their_fuel() {
                 }
             })
         };
-        let answer = interpret_off_worker(&context, |_handle, progress| {
+        let answer = interpret_off_worker(&context, |_handle, progress, _cancellation| {
             for fuel in [10, 20, 30] {
                 std::thread::sleep(std::time::Duration::from_millis(100));
                 progress(fuel);
@@ -330,18 +386,87 @@ fn guest_codec_calls_run_off_the_async_worker_and_relay_their_fuel() {
         assert!(ticks.load(Ordering::SeqCst) >= 20, "the awaiting worker kept running other tasks: {} ticks", ticks.load(Ordering::SeqCst));
         let relayed: Vec<u64> = control.progress.lock().unwrap().iter().filter(|progress| progress.stage == AuthorityProgressStage::GuestCodecExecuting).map(|progress| progress.completed_units).collect();
         assert_eq!(relayed, vec![10, 20, 30]);
+        let observed = |observes: Arc<AtomicBool>| {
+            move |_handle: &tokio::runtime::Handle, progress: &mut dyn FnMut(u64), cancellation: &semio_framework_plugin_host::GuestCallCancellation| -> Result<u32, semio_framework_plugin_host::TurnFault> {
+                progress(1);
+                let started = std::time::Instant::now();
+                while !cancellation.is_cancelled() && started.elapsed() < std::time::Duration::from_secs(10) {
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                }
+                observes.store(cancellation.is_cancelled(), Ordering::SeqCst);
+                Err(semio_framework_plugin_host::TurnFault::Cancelled)
+            }
+        };
+        let settled = |observes: Arc<AtomicBool>| async move {
+            let started = std::time::Instant::now();
+            while !observes.load(Ordering::SeqCst) && started.elapsed() < std::time::Duration::from_secs(1) {
+                tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+            }
+            observes.load(Ordering::SeqCst)
+        };
         control.cancelled.store(true, Ordering::SeqCst);
+        let refused = Arc::new(AtomicBool::new(false));
         let started = std::time::Instant::now();
-        let cancelled = interpret_off_worker(&context, |_handle, progress| {
-            progress(1);
-            std::thread::sleep(std::time::Duration::from_millis(400));
-            Ok(0u32)
-        })
-        .await;
+        let cancelled = interpret_off_worker(&context, observed(refused.clone())).await;
         assert!(matches!(cancelled, Err(AuthorityError::Cancelled)), "{cancelled:?}");
         assert!(started.elapsed() < std::time::Duration::from_millis(300), "a cancelled caller is released at its next observation, not when the call ends");
+        assert!(settled(refused).await, "the released caller cancelled its call");
+        let quiet = Arc::new(AtomicBool::new(false));
+        let started = std::time::Instant::now();
+        let silent = interpret_off_worker(&context, {
+            let quiet = quiet.clone();
+            move |_handle, _progress, cancellation| {
+                while !cancellation.is_cancelled() && started.elapsed() < std::time::Duration::from_secs(10) {
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                }
+                quiet.store(cancellation.is_cancelled(), Ordering::SeqCst);
+                Ok(0u32)
+            }
+        })
+        .await;
+        assert!(matches!(silent, Err(AuthorityError::Cancelled)), "{silent:?}");
+        assert!(started.elapsed() < GUEST_CALL_CANCELLATION_POLL * 6, "a cancelled caller that sees no observation is released within its poll: {:?}", started.elapsed());
+        assert!(settled(quiet).await, "the call that reported nothing was cancelled too");
+        control.cancelled.store(false, Ordering::SeqCst);
+        let dropped = Arc::new(AtomicBool::new(false));
+        let abandoned = tokio::time::timeout(std::time::Duration::from_millis(100), interpret_off_worker(&context, observed(dropped.clone()))).await;
+        assert!(abandoned.is_err(), "an uncancelled caller keeps awaiting its call");
+        assert!(settled(dropped).await, "dropping the awaiting caller cancelled its call");
         ticker.abort();
     });
+}
+
+/// 🛑️ LAW (H11, session 13): a hub asked to stop exits within about a second while its background catalog
+/// verification interprets. The shutdown aborts the verification; the aborted verification cancels its guest call,
+/// which the interpreter ends at its next step; so dropping the runtime — what the hub's `main` does once `serve`
+/// returned — waits for no interpretation. Before the interpreter observed its caller the drop waited for the call's
+/// own fuel bound: SIGTERM → exit 17.9–25.2 s on catalog B3 (`📓️wp-h11.md`). The guest's `pack-schema-hash` never
+/// returns, so only the cancellation can end it.
+#[test]
+fn an_aborted_catalog_verification_leaves_no_interpretation_for_the_runtime_to_wait_on() {
+    let runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+    let mut fixture = prepared_fixture();
+    install_owned_guest(&mut fixture, OwnedTestHash::Spins);
+    let catalog = Arc::new(runtime.block_on(async { load_fixture(&fixture, &[], &TestControl::new().context()).await }).expect("a catalog whose row waits for its guest"));
+    let control = Arc::new(TestControl::new());
+    let verification = runtime.spawn({
+        let (catalog, control) = (catalog.clone(), control.clone());
+        async move { catalog.verify_pending_guests(&control.context()).await }
+    });
+    let interpreting = |control: &TestControl| control.progress.lock().unwrap().iter().any(|progress| progress.stage == AuthorityProgressStage::GuestCompiling && progress.completed_units == 1);
+    let waited = std::time::Instant::now();
+    while !interpreting(&*control) && waited.elapsed() < std::time::Duration::from_secs(30) {
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    assert!(interpreting(&*control), "the verification compiled its guest and interprets it");
+    std::thread::sleep(std::time::Duration::from_millis(200));
+    assert!(!verification.is_finished(), "the spinning guest keeps the verification in flight");
+    let started = std::time::Instant::now();
+    verification.abort();
+    let aborted = runtime.block_on(verification);
+    drop(runtime);
+    assert!(aborted.is_err_and(|error| error.is_cancelled()), "the shutdown aborted the verification");
+    assert!(started.elapsed() < std::time::Duration::from_secs(1), "the runtime was dropped with no interpretation left to wait on: {:?}", started.elapsed());
 }
 
 #[test]
@@ -1471,7 +1596,15 @@ fn descriptor_projection_rejects_package_conflicts_unknown_fields_and_duplicate_
     decode_package_descriptor(&canonical).unwrap_or_else(|error| panic!("canonical descriptor must decode: {error}"));
 
     let conflicting = decode_package_descriptor(&descriptor_bytes("fixture.editor", "semio:other-package", "1.2.3", component_sha256, Some("fixture.document@1"), Some(("fixture.base", "1.0.0")))).expect("structurally valid conflicting descriptor");
-    assert!(validate_descriptor(&bundle.packages[0], &conflicting, &bundle.packages).expect_err("package mismatch").to_string().contains("identity"));
+    let refusal = validate_descriptor(&bundle.packages[0], &conflicting, &bundle.packages).expect_err("package mismatch").to_string();
+    assert!(refusal.contains("identity") && refusal.contains("semio:fixture-editor") && refusal.ends_with("packageId"), "{refusal}");
+
+    let mut stale_record = bundle.packages[0].clone();
+    let mut stale = decode_package_descriptor(&canonical).expect("canonical descriptor");
+    stale_record.execution_protocol.app_channel_version = directory::os_spr::CHANNEL_VERSION - 1;
+    stale.execution_protocol.app_channel_version = directory::os_spr::CHANNEL_VERSION - 1;
+    let refusal = validate_descriptor(&stale_record, &stale, &bundle.packages).expect_err("a catalog of another app channel").to_string();
+    assert!(refusal.contains("semio:fixture-editor") && refusal.contains(&format!("app channel {}", directory::os_spr::CHANNEL_VERSION - 1)) && refusal.contains(&format!("speaks app channel {}", directory::os_spr::CHANNEL_VERSION)), "{refusal}");
 
     let mut unknown = os_store::pack_rt::decode_wire_value(&canonical).expect("canonical value");
     let DslValue::Object(fields) = &mut unknown else { panic!("descriptor object") };
@@ -1555,10 +1688,17 @@ async fn all_trust_failures_precede_activation_and_have_bounded_diagnostics() {
     assert!(catalog_error("x".repeat(AUTHORITY_MAX_DIAGNOSTIC_BYTES * 2)).to_string().len() <= AUTHORITY_MAX_DIAGNOSTIC_BYTES + 40);
 }
 
-/// 🧩️ A real owned-ABI guest, one memory page and the fourteen owned exports: `pack-schema-hash` answers `answer`,
-/// `genesis` answers the pair `([1, 2, 3], [4, 5])`, every other export answers nothing. Built byte by byte (the
+/// 🎲️ What [`owned_test_guest`]'s `pack-schema-hash` does: answer a hash, or loop until its interpretation is ended.
+#[derive(Clone, Copy)]
+enum OwnedTestHash {
+    Answers([u8; 32]),
+    Spins,
+}
+
+/// 🧩️ A real owned-ABI guest, one memory page and the fourteen owned exports: `pack-schema-hash` does what `hash`
+/// says, `genesis` answers the pair `([1, 2, 3], [4, 5])`, every other export answers nothing. Built byte by byte (the
 /// interpreter's own component framing), so a law runs the production interpreter without a plugin build.
-fn owned_test_guest(answer: [u8; 32]) -> Vec<u8> {
+fn owned_test_guest(hash: OwnedTestHash) -> Vec<u8> {
     fn uleb(mut value: u64, output: &mut Vec<u8>) {
         loop {
             let byte = (value & 0x7f) as u8;
@@ -1585,6 +1725,10 @@ fn owned_test_guest(answer: [u8; 32]) -> Vec<u8> {
         uleb(payload.len() as u64, output);
         output.extend(payload);
     }
+    let answer = match hash {
+        OwnedTestHash::Answers(answer) => answer,
+        OwnedTestHash::Spins => [0; 32],
+    };
     let hash_output = format!("{{\"Ok\":{}}}", serde_json::to_string(&answer.to_vec()).unwrap()).into_bytes();
     let genesis_output = br#"{"Ok":{"pack":[1,2,3],"spr":[4,5]}}"#.to_vec();
     let returning = |offset: i64, output: &[u8]| {
@@ -1600,7 +1744,10 @@ fn owned_test_guest(answer: [u8; 32]) -> Vec<u8> {
             semio_framework_plugin_host::interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
             semio_framework_plugin_host::interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
             semio_framework_plugin_host::interpreter::OwnedSemioExport::Checkpoint | semio_framework_plugin_host::interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
-            semio_framework_plugin_host::interpreter::OwnedSemioExport::PackSchemaHash => (3, returning(1024, &hash_output)),
+            semio_framework_plugin_host::interpreter::OwnedSemioExport::PackSchemaHash => match hash {
+                OwnedTestHash::Answers(_) => (3, returning(1024, &hash_output)),
+                OwnedTestHash::Spins => (3, vec![0x00, 0x03, 0x40, 0x0c, 0x00, 0x0b, 0x42, 0x00, 0x0b]),
+            },
             semio_framework_plugin_host::interpreter::OwnedSemioExport::Genesis => (3, returning(2048, &genesis_output)),
             _ => (3, vec![0x00, 0x42, 0x00, 0x0b]),
         })
@@ -1645,10 +1792,10 @@ fn owned_test_guest(answer: [u8; 32]) -> Vec<u8> {
     component
 }
 
-/// 🧩️ Replaces the fixture editor package's component with [`owned_test_guest`] answering `answer`, leaving its one
-/// codec row (`0x11 × 32`) to be pinned against the guest: no provider binds it.
-fn install_owned_guest(fixture: &mut FixtureDirectory, answer: [u8; 32]) {
-    let bytes = owned_test_guest(answer);
+/// 🧩️ Replaces the fixture editor package's component with [`owned_test_guest`] hashing as `hash` says, leaving its
+/// one codec row (`0x11 × 32`) to be pinned against the guest: no provider binds it.
+fn install_owned_guest(fixture: &mut FixtureDirectory, hash: OwnedTestHash) {
+    let bytes = owned_test_guest(hash);
     std::fs::write(fixture.component_path(0), &bytes).expect("owned guest component");
     let sha256 = hex_lower(&Sha256::digest(&bytes));
     let mut blake3 = Hasher::new();
@@ -1672,7 +1819,7 @@ async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
     let control = TestControl::new();
     let answered = |fixture: &FixtureDirectory, catalog: &VerifiedTrustedCatalog| catalog.codecs.iter().position(|codec| codec.identity.artifact_schema == fixture.schema).expect("the fixture row's codec");
     let mut fixture = prepared_fixture();
-    install_owned_guest(&mut fixture, [0x11; 32]);
+    install_owned_guest(&mut fixture, OwnedTestHash::Answers([0x11; 32]));
     let catalog = load_fixture(&fixture, &[], &control.context()).await.expect("a catalog whose row waits for its guest");
     catalog.configure_guest_residency(TrustedCatalogGuestResidencyV1 { resident_component_bytes: 0, ..TRUSTED_CATALOG_GUEST_RESIDENCY });
     let owner = &catalog.codecs[answered(&fixture, &catalog)];
@@ -1688,11 +1835,11 @@ async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
     let residency = catalog.guest_residency();
     assert_eq!((residency.compiles, residency.admitted), (2, 0), "the row was verified once; the second operation compiled again");
     assert_eq!(catalog.load_progress().rows_verified, 1);
-    std::fs::write(fixture.component_path(0), owned_test_guest([0x11; 32]).iter().rev().copied().collect::<Vec<u8>>()).expect("tamper the verified component");
+    std::fs::write(fixture.component_path(0), owned_test_guest(OwnedTestHash::Answers([0x11; 32])).iter().rev().copied().collect::<Vec<u8>>()).expect("tamper the verified component");
     assert!(owner.guest.genesis("document-1", &control.context()).await.is_err(), "bytes that changed after the verification are never compiled, so never served");
 
     let mut lying = prepared_fixture();
-    install_owned_guest(&mut lying, [0x22; 32]);
+    install_owned_guest(&mut lying, OwnedTestHash::Answers([0x22; 32]));
     let refused = load_fixture(&lying, &[], &control.context()).await.expect("a catalog whose guest will answer differently");
     let liar = &refused.codecs[answered(&lying, &refused)];
     let error = liar.guest.genesis("document-1", &control.context()).await.expect_err("a row answered differently is never served");
@@ -1702,7 +1849,7 @@ async fn no_codec_call_is_served_from_a_row_its_component_has_not_answered() {
     assert!(liar.guest.genesis("document-2", &control.context()).await.is_err(), "the refusal is permanent for the catalog");
 
     let mut background = prepared_fixture();
-    install_owned_guest(&mut background, [0x11; 32]);
+    install_owned_guest(&mut background, OwnedTestHash::Answers([0x11; 32]));
     let verified = load_fixture(&background, &[], &control.context()).await.expect("a catalog verified in the background");
     verified.verify_pending_guests(&control.context()).await.expect("background pass");
     let progress = verified.load_progress();

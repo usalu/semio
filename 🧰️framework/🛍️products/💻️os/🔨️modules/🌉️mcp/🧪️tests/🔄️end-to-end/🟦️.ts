@@ -185,7 +185,7 @@ describe("semio-os-mcp — end to end", () => {
 
   //#region 🔖️ProgressiveEnhancement
   it("tier 1 (no binding): workspace-backed tools degrade to a retryable PLUGIN_UNAVAILABLE naming the binding", async () => {
-    const proc = await openServer();
+    const proc = await openServer(["stdio", "--scopes", "workspace.read,artifact.write,inference.execute"]);
     for (const name of WORKSPACE_BACKED_TOOLS) {
       const response = await proc.request("tools/call", { name, arguments: { artifactId: "anything" } });
       expect(response.error, `${name} must not fail at the protocol level`).toBeUndefined();
@@ -199,7 +199,7 @@ describe("semio-os-mcp — end to end", () => {
   });
 
   it("tier 2 (stdio, no shell): UI tools report the missing shell, not a missing workspace", async () => {
-    const proc = await openServer(["stdio", "--folder", freshFolder()]);
+    const proc = await openServer(["stdio", "--folder", freshFolder(), "--scopes", "ui.control"]);
     for (const name of SHELL_BACKED_TOOLS) {
       const response = await proc.request("tools/call", { name, arguments: { windowId: "w1", anchor: "left", path: [] } });
       expect(response.error, `${name} must not fail at the protocol level`).toBeUndefined();

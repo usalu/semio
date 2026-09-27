@@ -4,6 +4,7 @@
 use ui_wgpu::wgpu::{gizmo, pick_closest_mesh_url, ray_pick_instance, ray_pick_mesh_detail};
 
 use crate::framework_surface_terrain::TerrainSessionCore;
+use semio_framework_ui_viewport::{Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec};
 // 🧩️ Every name below is target-neutral (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
 // wgpu-tier split): `draw_text`/`WidgetContext`/the paint half of `gizmo` are genuinely GPU-adjacent
 // (font/icon atlases) and are imported locally inside `render_world_3d`, the one function that is
@@ -517,8 +518,8 @@ pub struct WorldTutorialGeometry {
 /// 👻️ Projects one tutorial scene point through the live world camera into surface-local pixels.
 pub fn world3d_tutorial_scene_point(state: &World3dState, position: [f64; 3]) -> Option<[f32; 2]> {
     let camera = state.orbit.to_camera();
-    let view_projection = camera.view_proj(state.bounds.w.max(1.0), state.bounds.h.max(1.0));
-    ui_wgpu::wgpu::project_point(view_projection, Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32), state.bounds.w.max(1.0), state.bounds.h.max(1.0))
+    let view_projection = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, state.bounds.w.max(1.0), state.bounds.h.max(1.0));
+    ui_wgpu::wgpu::projection_spec_project_point(view_projection, state.projection_spec, Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32), state.bounds.w.max(1.0), state.bounds.h.max(1.0))
 }
 
 /// 👻️ Resolves the world host's semantic pick vocabulary from its retained live scene geometry.
@@ -1725,11 +1726,8 @@ pub struct World3dState {
     /// 📷️ The zoom that framing produced — a staged wire camera landing afterwards replaces the whole
     /// orbit, so the latch has to notice its own framing being overwritten and re-apply it.
     projection_frame_zoom: Option<f32>,
-    /// 📐️ React's `spec.orientation` off the delivered camera, or off the Projection pane's own
-    /// selection — the plane `world_projection_view_half_extent` measures the content box in.
-    projection_orientation: ui_wgpu::wgpu::WorldProjectionOrientation,
-    /// 📐️ React's `mode.kind === "oblique" && mode.variant !== "military"`.
-    projection_oblique_off_axis: bool,
+    /// 📐️ The accepted renderer-neutral projection mode × orientation for this pane.
+    projection_spec: Viewport3dProjectionSpec,
     /// 📐️ This pane holds its OWN projection spec — React's `externalPendingProjectionSpec`, which
     /// the delivered `cameraState.projectionSpec` never overrides while it is set.
     projection_selected: bool,
@@ -2043,8 +2041,7 @@ impl World3dState {
             fit_bounds_cursor: None,
             projection_frame_key: None,
             projection_frame_zoom: None,
-            projection_orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-            projection_oblique_off_axis: false,
+            projection_spec: ui_wgpu::wgpu::default_projection_spec(),
             projection_selected: false,
             projection_frame_owed: false,
             camera_user_moved: false,
@@ -3489,6 +3486,7 @@ struct WorldMarqueePickCursor {
     gesture: WorldMarqueeGesture,
     viewport: Rect,
     view_projection: Mat4,
+    projection_spec: Viewport3dProjectionSpec,
     rectangle: bool,
     component_kind: Option<WorldComponentKind>,
     crossing: Option<bool>,
@@ -3520,7 +3518,7 @@ impl WorldMarqueePickCursor {
             return None;
         }
         let camera = state.orbit.to_camera();
-        let view_projection = camera.view_proj(viewport.w, viewport.h);
+        let view_projection = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, viewport.w, viewport.h);
         let rectangle = state.selection_method != "lasso";
         let component_kind = match state.granularity.as_str() {
             "vertex" => Some(WorldComponentKind::Vertex),
@@ -3538,6 +3536,7 @@ impl WorldMarqueePickCursor {
             gesture,
             viewport,
             view_projection,
+            projection_spec: state.projection_spec,
             rectangle,
             component_kind,
             crossing,
@@ -3814,7 +3813,7 @@ impl WorldMarqueePickCursor {
                         return WorldInteractionStep::Stale;
                     };
                     let world = entry.model.transform_point(Vec3::new(point[0], point[1], point[2]));
-                    let Some(screen) = ui_wgpu::wgpu::project_point(self.view_projection, world, self.viewport.w, self.viewport.h) else {
+                    let Some(screen) = ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, world, self.viewport.w, self.viewport.h) else {
                         context.consume_fuel(1);
                         return WorldInteractionStep::Pending;
                     };
@@ -3830,7 +3829,7 @@ impl WorldMarqueePickCursor {
                     };
                     let a = entry.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
                     let b = entry.model.transform_point(Vec3::new(edge[1][0], edge[1][1], edge[1][2]));
-                    let (Some(screen_a), Some(screen_b)) = (ui_wgpu::wgpu::project_point(self.view_projection, a, self.viewport.w, self.viewport.h), ui_wgpu::wgpu::project_point(self.view_projection, b, self.viewport.w, self.viewport.h)) else {
+                    let (Some(screen_a), Some(screen_b)) = (ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, a, self.viewport.w, self.viewport.h), ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, b, self.viewport.w, self.viewport.h)) else {
                         context.consume_fuel(1);
                         return WorldInteractionStep::Pending;
                     };
@@ -3857,7 +3856,7 @@ impl WorldMarqueePickCursor {
                         let Some(world) = world_mesh_vertex(mesh, indices[corner]).map(|vertex| entry.model.transform_point(vertex)) else {
                             return WorldInteractionStep::Stale;
                         };
-                        let Some(screen) = ui_wgpu::wgpu::project_point(self.view_projection, world, self.viewport.w, self.viewport.h) else {
+                        let Some(screen) = ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, world, self.viewport.w, self.viewport.h) else {
                             context.consume_fuel(1);
                             return WorldInteractionStep::Pending;
                         };
@@ -3889,7 +3888,7 @@ impl WorldMarqueePickCursor {
             let Some(world) = world_mesh_vertex(mesh, index).map(|vertex| entry.model.transform_point(vertex)) else {
                 return WorldInteractionStep::Stale;
             };
-            let Some(point) = ui_wgpu::wgpu::project_point(self.view_projection, world, self.viewport.w, self.viewport.h) else {
+            let Some(point) = ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, world, self.viewport.w, self.viewport.h) else {
                 context.consume_fuel(1);
                 return WorldInteractionStep::Pending;
             };
@@ -3922,7 +3921,7 @@ impl WorldMarqueePickCursor {
             let Some(world) = world_mesh_vertex(mesh, indices[index]).map(|vertex| entry.model.transform_point(vertex)) else {
                 return WorldInteractionStep::Stale;
             };
-            let Some(point) = ui_wgpu::wgpu::project_point(self.view_projection, world, self.viewport.w, self.viewport.h) else {
+            let Some(point) = ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, world, self.viewport.w, self.viewport.h) else {
                 context.consume_fuel(1);
                 return WorldInteractionStep::Pending;
             };
@@ -4568,7 +4567,7 @@ impl WorldRayPickCursor {
     pub fn new(state: &World3dState, generation: u64, purpose: WorldRayPickPurpose, x: f32, y: f32) -> Option<Self> {
         let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
         let camera = state.orbit.to_camera();
-        let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+        let (origin, direction) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
         Some(Self {
             revision: state.interaction_revision,
             generation,
@@ -4899,7 +4898,7 @@ impl WorldObjectPickCursor {
     fn new(state: &World3dState, generation: u64, purpose: WorldObjectPickPurpose, x: f32, y: f32) -> Option<Self> {
         let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
         let camera = state.orbit.to_camera();
-        let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+        let (origin, direction) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
         Some(Self { revision: state.interaction_revision, generation, purpose, origin, direction, slot: 0, merge: 0, best: None, complete: false })
     }
 
@@ -5052,6 +5051,7 @@ struct WorldComponentPickCursor {
     local_y: f32,
     viewport: Rect,
     view_projection: Mat4,
+    projection_spec: Viewport3dProjectionSpec,
     origin: Vec3,
     direction: Vec3,
     slot: u16,
@@ -5075,9 +5075,9 @@ impl WorldComponentPickCursor {
         }
         let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
         let camera = state.orbit.to_camera();
-        let view_projection = camera.view_proj(viewport.w, viewport.h);
-        let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
-        Some(Self { revision: state.interaction_revision, generation, purpose, kind, local_x, local_y, viewport, view_projection, origin, direction, slot: 0, current: None, topology: 0, merge: 0, best: None, complete: false })
+        let view_projection = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, viewport.w, viewport.h);
+        let (origin, direction) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
+        Some(Self { revision: state.interaction_revision, generation, purpose, kind, local_x, local_y, viewport, view_projection, projection_spec: state.projection_spec, origin, direction, slot: 0, current: None, topology: 0, merge: 0, best: None, complete: false })
     }
 
     fn step(&mut self, state: &World3dState, generation: u64, context: &mut semio_framework_job::StepContext<'_>) -> WorldInteractionStep {
@@ -5136,7 +5136,7 @@ impl WorldComponentPickCursor {
         let candidate = match self.kind {
             WorldComponentKind::Vertex => mesh.vec3(Mesh3dField::Positions, index).ok().and_then(|point| {
                 let world = instance.model.transform_point(Vec3::new(point[0], point[1], point[2]));
-                ui_wgpu::wgpu::project_point(self.view_projection, world, self.viewport.w, self.viewport.h).and_then(|screen| {
+                ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, world, self.viewport.w, self.viewport.h).and_then(|screen| {
                     let dx = screen[0] - self.local_x;
                     let dy = screen[1] - self.local_y;
                     let distance = (dx * dx + dy * dy).sqrt();
@@ -5146,7 +5146,7 @@ impl WorldComponentPickCursor {
             WorldComponentKind::Edge => mesh.edge(index).ok().and_then(|edge| {
                 let a = instance.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
                 let b = instance.model.transform_point(Vec3::new(edge[1][0], edge[1][1], edge[1][2]));
-                let (Some(screen_a), Some(screen_b)) = (ui_wgpu::wgpu::project_point(self.view_projection, a, self.viewport.w, self.viewport.h), ui_wgpu::wgpu::project_point(self.view_projection, b, self.viewport.w, self.viewport.h)) else {
+                let (Some(screen_a), Some(screen_b)) = (ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, a, self.viewport.w, self.viewport.h), ui_wgpu::wgpu::projection_spec_project_point(self.view_projection, self.projection_spec, b, self.viewport.w, self.viewport.h)) else {
                     return None;
                 };
                 let screen_distance = ui_wgpu::wgpu::screen_segment_distance(self.local_x, self.local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]);
@@ -5371,7 +5371,7 @@ impl WorldGumballPickCursor {
                 return WorldInteractionStep::Pending;
             };
             let camera = state.orbit.to_camera();
-            let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+            let (origin, direction) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
             self.pivot = Some(pivot);
             self.origin = origin;
             self.direction = direction;
@@ -5541,7 +5541,7 @@ impl WorldGumballGesture {
             return WorldInteractionStep::Pending;
         };
         let camera = state.orbit.to_camera();
-        let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+        let (origin, direction) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
         let eye = gumball_eye(&camera, self.pivot);
         self.translate = Vec3::ZERO;
         self.angle = 0.0;
@@ -10359,7 +10359,7 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
     let pivot = selection_centroid(state)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let extent = gumball_extent(camera.position.sub(pivot).length());
     let pick_radius = extent * 0.08;
     let eye = gumball_eye(&camera, pivot);
@@ -10702,34 +10702,23 @@ fn advance_world3d_view_revision(state: &mut World3dState) {
 /// `orientationUnchanged` arm) and moves only the `zoom`: into the parallel family through
 /// `worldProjectionMatchedOrthoZoom`, so the apparent scale does not jump, and back out to the
 /// perspective identity.
-pub fn apply_world3d_projection(state: &mut World3dState, projection: CameraProjection3d) -> bool {
-    if state.orbit.projection == projection {
-        return false;
-    }
-    state.orbit.zoom = if projection.is_parallel() { ui_wgpu::wgpu::world_projection_matched_ortho_zoom(state.orbit.fov_y.to_degrees(), state.orbit.distance, state.bounds.h) } else { 1.0 };
-    state.orbit.projection = projection;
-    state.camera_user_moved = true;
-    advance_world3d_view_revision(state);
-    true
-}
-
 /// 📐️ A whole `WorldProjectionSpec` onto this surface — the family AND the plane its framing
 /// measures in. React's `handleProjectionKindChange` hands the pending spec to
 /// `seedPendingWorldProjectionCamera`, which re-runs `frameWorldProjectionPose` on it
 /// (`🌐️World3dHost/🟦️.tsx`), so a selection re-frames the pane rather than only re-projecting it.
 ///
-/// ⚖️ The framing latches are RELEASED here for exactly that reason: [`apply_world3d_projection`]
-/// arms `camera_user_moved`, which is the gate `sync_world3d_projection_content_frame` refuses on,
-/// so without this a pane switched to `Orthographic` would take the parallel frustum and keep the
-/// perspective pane's zoom forever.
-pub fn apply_world3d_projection_spec(state: &mut World3dState, projection: CameraProjection3d, orientation: ui_wgpu::wgpu::WorldProjectionOrientation, oblique_off_axis: bool) -> bool {
-    let reoriented = state.projection_orientation != orientation || state.projection_oblique_off_axis != oblique_off_axis;
-    let reprojected = apply_world3d_projection(state, projection);
-    if !reoriented && !reprojected {
+/// ⚖️ The framing latches are released here so a parallel selection recomputes its zoom.
+pub fn apply_world3d_projection_spec(state: &mut World3dState, spec: Viewport3dProjectionSpec) -> bool {
+    if state.projection_selected && state.projection_spec == spec {
         return false;
     }
-    state.projection_orientation = orientation;
-    state.projection_oblique_off_axis = oblique_off_axis;
+    let projection = ui_wgpu::wgpu::projection_spec_family(spec);
+    if state.orbit.projection != projection {
+        state.orbit.zoom = if projection.is_parallel() { ui_wgpu::wgpu::world_projection_matched_ortho_zoom(state.orbit.fov_y.to_degrees(), state.orbit.distance, state.bounds.h) } else { 1.0 };
+    }
+    state.orbit.projection = projection;
+    state.orbit.fov_y = ui_wgpu::wgpu::projection_spec_fov_degrees(spec).to_radians();
+    state.projection_spec = spec;
     state.projection_selected = true;
     state.projection_frame_owed = true;
     state.projection_frame_key = None;
@@ -10737,6 +10726,29 @@ pub fn apply_world3d_projection_spec(state: &mut World3dState, projection: Camer
     advance_world3d_view_revision(state);
     true
 }
+
+/// 🧭️ Changes a projection mode while preserving the live gizmo orientation.
+pub fn apply_world3d_projection_mode(state: &mut World3dState, mode: Viewport3dProjectionMode) -> bool {
+    apply_world3d_projection_spec(state, Viewport3dProjectionSpec { mode, orientation: state.projection_spec.orientation })
+}
+
+/// 🧭️ The live orientation retained across projection-mode changes.
+pub fn world3d_projection_orientation(state: &World3dState) -> ui_wgpu::wgpu::WorldProjectionOrientation {
+    match state.projection_spec.orientation {
+        Viewport3dProjectionOrientation::Cardinal { view } => ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(match view {
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Plan | semio_framework_ui_viewport::Viewport3dOrthographicView::Top => ui_wgpu::wgpu::WorldCardinalView::Top,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Bottom => ui_wgpu::wgpu::WorldCardinalView::Bottom,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Front => ui_wgpu::wgpu::WorldCardinalView::Front,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Back => ui_wgpu::wgpu::WorldCardinalView::Back,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Left => ui_wgpu::wgpu::WorldCardinalView::Left,
+            semio_framework_ui_viewport::Viewport3dOrthographicView::Right => ui_wgpu::wgpu::WorldCardinalView::Right,
+        }),
+        _ => ui_wgpu::wgpu::WorldProjectionOrientation::Free,
+    }
+}
+
+/// 📐️ The complete accepted projection retained across snapshot delivery and remounts.
+pub fn world3d_projection_spec(state: &World3dState) -> Viewport3dProjectionSpec { state.projection_spec }
 
 /// 📐️ Applies a display-template seed once, after the delivered camera has landed. React's pending
 /// window template seeds `WorldProjectionRig` before `WorldAutoFit`; keeping the live distance and
@@ -10748,27 +10760,24 @@ pub fn apply_world3d_projection_spec(state: &mut World3dState, projection: Camer
 /// view-state revision instead of losing the document and its GLB request ledger as stale.
 pub fn apply_world3d_initial_projection_seed(
     state: &mut World3dState,
-    projection: CameraProjection3d,
-    orientation: ui_wgpu::wgpu::WorldProjectionOrientation,
-    oblique_off_axis: bool,
-    direction: [f32; 3],
-    up: [f32; 3],
+    spec: Viewport3dProjectionSpec,
 ) -> bool {
     if state.projection_selected || state.snapshot_lease.is_none() {
         return false;
     }
-    let direction = Vec3::new(direction[0], direction[1], direction[2]);
+    let (direction, up) = ui_wgpu::wgpu::projection_spec_orientation_look(spec);
     let length = direction.length();
-    if !length.is_finite() || length <= 1e-6 || up.into_iter().any(|value| !value.is_finite()) {
+    if !length.is_finite() || length <= 1e-6 || up.to_array().into_iter().any(|value| !value.is_finite()) {
         return false;
     }
     let direction = direction.scale(1.0 / length);
     state.orbit.yaw = direction.y.atan2(direction.x);
     state.orbit.pitch = direction.z.clamp(-1.0, 1.0).asin();
-    state.orbit.up = Vec3::new(up[0], up[1], up[2]);
+    state.orbit.up = up;
+    let projection = ui_wgpu::wgpu::projection_spec_family(spec);
     state.orbit.projection = projection;
-    state.projection_orientation = orientation;
-    state.projection_oblique_off_axis = oblique_off_axis;
+    state.orbit.fov_y = ui_wgpu::wgpu::projection_spec_fov_degrees(spec).to_radians();
+    state.projection_spec = spec;
     state.projection_selected = true;
     state.projection_frame_owed = projection.is_parallel();
     state.projection_frame_key = None;
@@ -10785,7 +10794,7 @@ pub fn world3d_pending_camera_settle(state: &World3dState) -> bool {
 
 /// 🔎️ This surface's live camera family, for the pane chip that reports it.
 pub fn world3d_camera_projection(state: &World3dState) -> CameraProjection3d {
-    state.orbit.projection
+    ui_wgpu::wgpu::projection_spec_family(state.projection_spec)
 }
 
 /// 🎥️ This surface's LIVE orbit in the very shape `setCamera` carries — the row `dumpMeshStats`
@@ -10800,7 +10809,7 @@ pub fn world3d_live_camera_json(state: &World3dState) -> serde_json::Value {
         "up": [f64::from(camera.up.x), f64::from(camera.up.y), f64::from(camera.up.z)],
         "zoom": world3d_camera_zoom(&camera),
         "fov": f64::from(camera.fov_y.to_degrees()),
-        "projection": { "mode": { "kind": if camera.projection.is_parallel() { "orthographic" } else { "perspective" } }, "orientation": format!("{:?}", state.projection_orientation) },
+        "projection": state.projection_spec,
         "userMoved": state.camera_user_moved,
     })
 }
@@ -11106,7 +11115,11 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             // echo always arrives in the DELIVERED family. Measured live: the press moved the pane's
             // target onto the content centre and `liveCamera` still read `perspective` 8 s later
             // (`📓️w9b-projection-pane-framing-grid-materials.md` §1).
-            state.orbit = if state.projection_selected { OrbitController { projection: state.orbit.projection, ..orbit } } else { orbit };
+            state.orbit = if state.projection_selected {
+                OrbitController { projection: ui_wgpu::wgpu::projection_spec_family(state.projection_spec), fov_y: ui_wgpu::wgpu::projection_spec_fov_degrees(state.projection_spec).to_radians(), ..orbit }
+            } else {
+                orbit
+            };
         }
         state.interaction_revision = revision;
         state.snapshot_lease = Some(cursor.lease);
@@ -11486,77 +11499,21 @@ struct World3dSceneCameraRecord {
     fov: Option<f64>,
     #[serde(default)]
     zoom: Option<f64>,
-    /// 📐️ The composed mode ⊗ orientation taxonomy object React's `parseWorldProjectionField`
-    /// reads. Only the family (`mode.kind`) and its `fov` reach the camera; the orientation is
-    /// already baked into the delivered `position`/`up`.
+    /// 📐️ The complete composed mode × orientation taxonomy accepted by React and WGPU.
     #[serde(default)]
-    projection: Option<World3dSceneProjectionRecord>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct World3dSceneProjectionRecord {
-    #[serde(default)]
-    mode: Option<World3dSceneProjectionModeRecord>,
-    /// 📐️ React's `WorldProjectionSpec["orientation"]` — `{type:"cardinal", view:"top"}` or
-    /// `{type:"free", …}`. The pose it implies is already baked into the delivered `position`/`up`,
-    /// but the FRAMING reads it: `worldProjectionViewHalfExtent` measures the content box in the
-    /// plane this orientation names (`🎨️r3f/🟦️.tsx`).
-    #[serde(default)]
-    orientation: Option<World3dSceneProjectionOrientationRecord>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct World3dSceneProjectionModeRecord {
-    #[serde(default)]
-    kind: Option<String>,
-    #[serde(default)]
-    fov: Option<f64>,
-    /// 📐️ An oblique mode's variant — `cabinet`/`cavalier`/`military`. Only `military` frames like
-    /// a plan; the other two frame in the `(x, z)` plane (React's `worldProjectionViewHalfExtent`).
-    #[serde(default)]
-    variant: Option<String>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct World3dSceneProjectionOrientationRecord {
-    #[serde(default, rename = "type")]
-    kind: Option<String>,
-    #[serde(default)]
-    view: Option<String>,
+    projection: Option<Viewport3dProjectionSpec>,
 }
 
 impl World3dSceneCameraRecord {
     /// 📐️ React's `worldProjectionFamily` over the delivered spec.
     fn projection(&self) -> CameraProjection3d {
-        self.projection.as_ref().and_then(|spec| spec.mode.as_ref()).and_then(|mode| mode.kind.as_deref()).map_or(CameraProjection3d::Perspective, CameraProjection3d::from_mode_kind)
+        self.projection.map_or(CameraProjection3d::Perspective, ui_wgpu::wgpu::projection_spec_family)
     }
 
     /// 📐️ React's `worldProjectionPerspectiveFov` fallback chain: the record's own `fov`, else the
     /// mode's, else the 45° `parseCameraState` default.
     fn fov_degrees(&self) -> f64 {
-        self.fov.or_else(|| self.projection.as_ref().and_then(|spec| spec.mode.as_ref()).and_then(|mode| mode.fov)).unwrap_or(45.0)
-    }
-
-    /// 📐️ The orientation the framing measures in — React's `spec.orientation`, with an unnamed or
-    /// unknown one reading `free`, which is the isotropic branch of `worldProjectionViewHalfExtent`.
-    fn orientation(&self) -> ui_wgpu::wgpu::WorldProjectionOrientation {
-        self.projection
-            .as_ref()
-            .and_then(|spec| spec.orientation.as_ref())
-            .filter(|orientation| orientation.kind.as_deref() == Some("cardinal"))
-            .and_then(|orientation| orientation.view.as_deref())
-            .and_then(ui_wgpu::wgpu::WorldCardinalView::from_wire)
-            .map_or(ui_wgpu::wgpu::WorldProjectionOrientation::Free, ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal)
-    }
-
-    /// 📐️ React's `spec.mode.kind === "oblique" && spec.mode.variant !== "military"` — the one
-    /// non-cardinal case `worldProjectionViewHalfExtent` measures in a real plane instead of the
-    /// isotropic span.
-    fn oblique_off_axis(&self) -> bool {
-        self.projection.as_ref().and_then(|spec| spec.mode.as_ref()).is_some_and(|mode| mode.kind.as_deref() == Some("oblique") && mode.variant.as_deref() != Some("military"))
+        self.projection.map(|spec| f64::from(ui_wgpu::wgpu::projection_spec_fov_degrees(spec))).or(self.fov).unwrap_or(45.0)
     }
 }
 
@@ -11607,7 +11564,7 @@ fn sync_world3d_projection_content_frame(state: &mut World3dState) {
     if state.projection_frame_key == Some(key) && state.projection_frame_zoom == Some(state.orbit.zoom) {
         return;
     }
-    let framed = ui_wgpu::wgpu::frame_projection_orbit_to_bounds(&state.orbit, state.projection_orientation, state.projection_oblique_off_axis, minimum, maximum, state.bounds.w, state.bounds.h, ui_wgpu::wgpu::WORLD_PROJECTION_FRAME_PADDING);
+    let framed = ui_wgpu::wgpu::frame_projection_orbit_to_spec_bounds(&state.orbit, state.projection_spec, minimum, maximum, state.bounds.w, state.bounds.h, ui_wgpu::wgpu::WORLD_PROJECTION_FRAME_PADDING);
     state.projection_frame_key = Some(key);
     state.projection_frame_zoom = Some(framed.zoom);
     state.projection_frame_owed = false;
@@ -12185,8 +12142,9 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
             // own — React's `cameraState.projectionSpec ?? externalPendingProjectionSpec` precedence
             // (`🌐️World3dHost/🟦️.tsx`), the same rule the snapshot apply keeps for the family.
             if let Some(camera) = cursor.camera.as_ref().filter(|_| !state.projection_selected) {
-                state.projection_orientation = camera.orientation();
-                state.projection_oblique_off_axis = camera.oblique_off_axis();
+                if let Some(spec) = camera.projection {
+                    state.projection_spec = spec;
+                }
             }
             cursor.meshes.retain(World3dSceneMeshEntry::names_a_mesh);
             for mesh in &mut cursor.meshes {
@@ -12746,7 +12704,7 @@ pub fn render_world_3d(
         draw.shadow_role = world3d_shadow_role(World3dShadowGeometry::Terrain, shadow.enabled);
     }
     update_visible_chunks(state, camera.position);
-    let view_proj = camera.view_proj(inner.w, inner.h);
+    let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, inner.w, inner.h);
     let planes = frustum_planes(view_proj);
     let shadow_planes = directional_shadow_frustum_planes(light_dir);
     let mut culled_draws = Vec::new();
@@ -13031,6 +12989,10 @@ pub fn render_world_3d(
         translucent_draws,
         material_draws,
         textured_draws,
+        curvilinear: match state.projection_spec.mode {
+            Viewport3dProjectionMode::Curvilinear { fov, strength, .. } => Some(ui_wgpu::wgpu::SceneCurvilinear3d { fov_radians: (fov as f32).min(160.0).to_radians(), strength: strength as f32 }),
+            _ => None,
+        },
         ..Default::default()
     });
     if let Some(points) = world_marquee_overlay_points(state) {
@@ -13867,13 +13829,13 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     }
     let camera = state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let view_proj = camera.view_proj(inner.w, inner.h);
+    let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, inner.w, inner.h);
     let (polygon, rectangle, crossing) = marquee_local_polygon(state, inner);
     let (meshes, draws) = legacy_geometry_fixture(state);
     let ids = if component_mode_active(state) {
-        screen_select_components(&meshes, &draws, view_proj, inner.w, inner.h, &polygon, rectangle, state.granularity.as_str(), state.active_object_id.as_deref(), crossing)
+        screen_select_components(&meshes, &draws, view_proj, state.projection_spec, inner.w, inner.h, &polygon, rectangle, state.granularity.as_str(), state.active_object_id.as_deref(), crossing)
     } else {
-        screen_select_instances(&meshes, &draws, view_proj, inner.w, inner.h, &polygon, rectangle, crossing)
+        screen_select_instances(&meshes, &draws, view_proj, state.projection_spec, inner.w, inner.h, &polygon, rectangle, crossing)
     };
     state.marquee_points.clear();
     state.marquee_preview_ids.clear();
@@ -13930,7 +13892,7 @@ fn gumball_drag_update(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let local_x = x - inner.x;
     let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, inner.w, inner.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, inner.w, inner.h);
     let pivot = state.gumball_pivot;
     let eye = gumball_eye(&camera, pivot);
     reset_gumball_preview(state);
@@ -13980,7 +13942,7 @@ fn start_gumball_drag(state: &mut World3dState, handle: GumballHandle, x: f32, y
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let local_x = x - inner.x;
     let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, inner.w, inner.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, inner.w, inner.h);
     let eye = gumball_eye(&camera, pivot);
     state.gumball_handle = Some(handle);
     state.gumball_pivot = pivot;
@@ -14001,7 +13963,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
     let (local_x, local_y, rect) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (rect.w / rect.h.max(1.0)).max(0.1);
-    let view_proj = camera.view_proj(rect.w, rect.h);
+    let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, rect.w, rect.h);
     let granularity = state.granularity.as_str();
     match granularity {
         "vertex" => {
@@ -14018,7 +13980,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
                     for vertex_index in 0..schema.vertices {
                         let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
                         let world = instance.model.transform_point(Vec3::new(point[0], point[1], point[2]));
-                        let Some(screen) = ui_wgpu::wgpu::project_point(view_proj, world, rect.w, rect.h) else {
+                        let Some(screen) = ui_wgpu::wgpu::projection_spec_project_point(view_proj, state.projection_spec, world, rect.w, rect.h) else {
                             continue;
                         };
                         let dx = screen[0] - local_x;
@@ -14034,7 +13996,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "edge" => {
-            let (origin, dir) = camera.ray_from_screen(local_x, local_y, rect.w, rect.h);
+            let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, rect.w, rect.h);
             let mut best: Option<(f32, f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -14052,7 +14014,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
                         let Ok(edge) = mesh.edge(edge_index) else { continue };
                         let a = instance.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
                         let b = instance.model.transform_point(Vec3::new(edge[1][0], edge[1][1], edge[1][2]));
-                        let (Some(screen_a), Some(screen_b)) = (ui_wgpu::wgpu::project_point(view_proj, a, rect.w, rect.h), ui_wgpu::wgpu::project_point(view_proj, b, rect.w, rect.h)) else {
+                        let (Some(screen_a), Some(screen_b)) = (ui_wgpu::wgpu::projection_spec_project_point(view_proj, state.projection_spec, a, rect.w, rect.h), ui_wgpu::wgpu::projection_spec_project_point(view_proj, state.projection_spec, b, rect.w, rect.h)) else {
                             continue;
                         };
                         let screen_dist = ui_wgpu::wgpu::screen_segment_distance(local_x, local_y, screen_a[0], screen_a[1], screen_b[0], screen_b[1]);
@@ -14075,7 +14037,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
             return best.map(|(_, _, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "face" => {
-            let (origin, dir) = camera.ray_from_screen(local_x, local_y, rect.w, rect.h);
+            let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, rect.w, rect.h);
             let mut best: Option<(f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -14106,7 +14068,7 @@ fn pick_paint_hit(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String, f32, f32)> = None;
     for draw in &state.draws {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -14167,13 +14129,13 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
     }
     let camera = state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let view_proj = camera.view_proj(inner.w, inner.h);
+    let view_proj = ui_wgpu::wgpu::projection_spec_view_proj(&camera, state.projection_spec, inner.w, inner.h);
     let (polygon, rectangle, crossing) = marquee_local_polygon(state, inner);
     let (meshes, draws) = legacy_geometry_fixture(state);
     state.marquee_preview_ids = if component_mode_active(state) {
-        screen_select_components(&meshes, &draws, view_proj, inner.w, inner.h, &polygon, rectangle, state.granularity.as_str(), state.active_object_id.as_deref(), crossing)
+        screen_select_components(&meshes, &draws, view_proj, state.projection_spec, inner.w, inner.h, &polygon, rectangle, state.granularity.as_str(), state.active_object_id.as_deref(), crossing)
     } else {
-        screen_select_instances(&meshes, &draws, view_proj, inner.w, inner.h, &polygon, rectangle, crossing)
+        screen_select_instances(&meshes, &draws, view_proj, state.projection_spec, inner.w, inner.h, &polygon, rectangle, crossing)
     };
 }
 
@@ -14187,7 +14149,7 @@ fn pick_instance_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Optio
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String)> = None;
     for draw in &state.draws {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -14209,7 +14171,7 @@ fn pick_surface_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String, Vec3, Vec3)> = None;
     for draw in &state.draws {
         let Some(&mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -14345,7 +14307,7 @@ fn pick_vortex_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String)> = None;
     for vortex in &state.vortices {
         let position = vortex.position.unwrap_or([0.0, 0.0, 0.0]);
@@ -14370,7 +14332,7 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
     let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     let plane_normal = Vec3::new(0.0, 0.0, 1.0);
     let mut best: Option<(f32, String)> = None;
     for reference in &state.references {
@@ -14430,7 +14392,7 @@ fn update_dragged_instance_position(state: &mut World3dState, object_id: &str, p
 pub fn world3d_ground_plane_pick(state: &World3dState, x: f32, y: f32, plane_z: f32) -> Option<[f32; 3]> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
-    let (origin, dir) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
+    let (origin, dir) = ui_wgpu::wgpu::projection_spec_ray_from_screen(&camera, state.projection_spec, local_x, local_y, viewport.w, viewport.h);
     if dir.z.abs() < 1e-5 {
         return None;
     }

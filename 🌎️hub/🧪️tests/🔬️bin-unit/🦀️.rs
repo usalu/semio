@@ -149,6 +149,22 @@ fn every_served_readiness_body_is_the_declared_readiness_schema() {
     assert!(!schema.is_valid_json(&serde_json::to_string(&ready_with_startup).expect("readiness json")), "a ready hub never reports startup progress");
 }
 
+/// 💓️ The liveness body the boot server and the full router both answer (`hub_liveness`) is exactly the declared
+/// `LocalBootstrapLivenessV1` for a development run and for production's fixed run id, and it never claims readiness.
+#[test]
+fn the_served_liveness_body_is_the_declared_liveness_schema() {
+    let mut document: serde_json::Value = serde_json::from_str(include_str!("../../🚀️local-bootstrap/🧬️schema/🔣️.json")).expect("local-bootstrap schema module");
+    document["$ref"] = serde_json::Value::String("#/$defs/LocalBootstrapLivenessV1".into());
+    let schema = semio_framework_schema::OwnedJsonSchemaValidator::compile_with_documents(&document.to_string(), &[semio_hub::artifact_authority::trusted_catalog::schema::TRUSTED_CATALOG_SCHEMA_JSON]).expect("liveness schema compiles");
+    for run in ["00112233445566778899aabbccddeeff", "production"] {
+        let encoded = serde_json::to_string(&hub_liveness(run)).expect("liveness json");
+        assert!(schema.is_valid_json(&encoded), "{encoded}");
+    }
+    let mut claimed = serde_json::to_value(hub_liveness("production")).expect("liveness value");
+    claimed["status"] = serde_json::Value::String("ready".into());
+    assert!(!schema.is_valid_json(&claimed.to_string()), "a liveness body says live and nothing else");
+}
+
 /// 🌅️ A booting hub answers on its socket before its stores and catalog are up: `/healthz` live,
 /// `/readyz` `503 not-ready` with the catalog load's latest progress, every other route a signed
 /// `503` with `Retry-After`; then it hands the same listener to the full router, which answers on it
@@ -1792,6 +1808,31 @@ fn credential_optional_routes_refuse_a_revoked_or_forged_session_instead_of_answ
             assert_eq!(raw_http_get(addr, path, &[]).await.status, *anonymous, "{path}: the anonymous view stays open");
         }
     });
+}
+
+/// ⏳️ A document batch refused for a TRANSIENT reason carries exactly the declared `HubTransientApplyRefusalMessageV1`
+/// (`🚧️refusal/🧫️fixtures/⏳️transient-apply-refusal-v1`): the db engine's `Unavailable` (DB I/O admission or capacity
+/// exhausted) and a paced-out agent command answer `[{level: warning, code: hub.unavailable, message: <reason>}]`, so the
+/// client resends instead of discarding the batch; a permanent refusal carries no such message.
+#[test]
+fn a_transiently_refused_batch_names_the_declared_resend_code_and_a_permanent_one_does_not() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🚧️refusal/🧫️fixtures/⏳️transient-apply-refusal-v1/🔣️.json")).expect("transient refusal fixture");
+    let answer = &fixture["answer"];
+    for cause in fixture["causes"].as_array().expect("causes") {
+        let reason = cause["reason"].as_str().expect("reason");
+        let encoded = match cause["cause"].as_str() {
+            Some("db-unavailable") => messages_for_error(&db::DbError::Unavailable(reason.to_string())),
+            Some("agent-rate-limited") => transient_apply_refusal_messages(reason),
+            other => panic!("unknown transient cause {other:?}"),
+        };
+        let messages: serde_json::Value = serde_json::from_slice(&encoded).expect("messages are JSON");
+        assert_eq!(messages, serde_json::json!([{ "level": answer["level"], "code": answer["code"], "message": reason }]), "{cause}");
+    }
+    for cause in fixture["permanentCauses"].as_array().expect("permanent causes") {
+        let reason = cause["reason"].as_str().expect("reason").to_string();
+        assert!(messages_for_error(&db::DbError::InvalidArgument(reason.clone())).is_empty(), "{cause}");
+        assert!(messages_for_error(&db::DbError::Conflict(reason)).is_empty(), "{cause}");
+    }
 }
 
 /// 🏘️ A member of many spaces reads its space list and its event pages in bounded time, exactly: the list is one
@@ -4052,7 +4093,7 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         let (mut resend, _) = connect_async(document_socket_request(&url, &token)).await.expect("resend socket");
         resend.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("resend hello");
         assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Welcome { .. }));
-        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Commands { envelopes, .. } if envelopes[0].mutation_id == committed.mutation_id), "the reconnect is caught up with the committed edit");
+        assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Commands { envelopes, origin, .. } if envelopes[0].mutation_id == committed.mutation_id && origin.0 == HUB_CATCH_UP_ORIGIN), "the reconnect is caught up with the committed edit, under the hub's declared catch-up origin");
         assert!(matches!(next_server_frame(&mut resend).await, ServerFrame::Session { .. }));
         resend.send(client_binary(&ClientFrame::Commands { batch_id: 79, envelopes: vec![committed.clone()] }, Lane::Command).await).await.expect("resend after reconnect");
         let ack = next_server_frame(&mut resend).await;
@@ -4067,7 +4108,10 @@ fn socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live(
         let (mut legacy, _) = connect_async(document_socket_request(&url, &token)).await.expect("legacy rejection socket");
         legacy.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("initial socket hello");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Welcome { .. }));
-        assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { .. }), "a joiner behind the head is caught up before Session");
+        assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Commands { origin, .. } if origin.0 == HUB_CATCH_UP_ORIGIN && origin.0 != legacy_receipt.actor_id), "a joiner behind the head is caught up before Session, never under its own actor");
+        let echo_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/document-echo-suppression-v1/🔣️.json")).expect("echo suppression fixture");
+        assert_eq!(echo_fixture["hubCatchUpOrigin"].as_str(), Some(HUB_CATCH_UP_ORIGIN), "the hub's catch-up origin is the fixture's declared one");
+        assert_eq!(include_str!("../../🏗️bootstrap/🦀️.rs").matches("ActorId(HUB_CATCH_UP_ORIGIN.into())").count(), 2, "the hello tail and the FrontierAdvertise catch-up both carry the declared catch-up origin");
         assert!(matches!(next_server_frame(&mut legacy).await, ServerFrame::Session { .. }));
         legacy.send(WsMessage::Binary(vec![0, 0].into())).await.expect("legacy tag-zero frame");
         assert_eq!(next_close_code(&mut legacy, false).await, 4401, "v1 rejects the legacy actor/token carrier after upgrade");
@@ -4597,6 +4641,8 @@ fn admin_intent_binding_wire_matrix_is_exact_sorted_and_self_deduplicated() {
         expires_at_ms: i64::MAX,
         correlation_id: "binding-fixture".into(),
         peer_class: "test",
+        session_kind: AuthSessionKind::DevelopmentLocal,
+        device_instance_id: "admin-device".into(),
     };
     for row in fixture["bindings"].as_array().unwrap() {
         let intent: AdminIntentV1 = directory::os_pack::json::from_json_str(row["intentJson"].as_str().unwrap()).expect("actual closed administrator intent wire");
@@ -5371,6 +5417,8 @@ fn admin_document_cursor_is_principal_route_and_exact_page_bound() {
         expires_at_ms: now_ms() + 60_000,
         correlation_id: "correlation:admin".into(),
         peer_class: "admin-rest",
+        session_kind: AuthSessionKind::DevelopmentLocal,
+        device_instance_id: "admin-device".into(),
     };
     let cursor = admin_cursor_encode_scoped(&cursor_key, &principal, 5, Some("space:one"), ADMIN_PAGE_MAX).expect("document cursor");
     assert_eq!(cursor.len(), 84);
@@ -5423,6 +5471,8 @@ async fn retained_short_admin_shutdown_drains_before_bounded_abort_and_receipt_r
         expires_at_ms: now_ms() + 60_000,
         correlation_id: "correlation:retained".into(),
         peer_class: "admin-rest",
+        session_kind: AuthSessionKind::DevelopmentLocal,
+        device_instance_id: "admin-device".into(),
     };
     let metadata = AdminIntentMetadata { intent_kind: "delete-space", target_kind: "space", target_id: "space:one".into(), reason_code: None };
     let mut accepted = new_admin_audit_fact(&principal, "request:stale-accepted", &"11".repeat(32), "operation:stale-accepted", &metadata, "accepted", None, "accepted");
@@ -5561,6 +5611,8 @@ async fn admin_rebuild_slots_are_atomic_and_abort_closes_once() {
         expires_at_ms: now_ms() + 60_000,
         correlation_id: "correlation:admin".into(),
         peer_class: "admin-rest",
+        session_kind: AuthSessionKind::DevelopmentLocal,
+        device_instance_id: "admin-device".into(),
     };
     let metadata = AdminIntentMetadata { intent_kind: "rebuild-directory-projections", target_kind: "directory", target_id: "directory".into(), reason_code: None };
     let request_id = "request:abort";
@@ -7508,6 +7560,101 @@ fn a_withdrawn_delegation_admits_no_agent_edit_after_it_in_either_order() {
     });
 }
 
+/// 🎚️ LAW (G11 P0, session 13): an agent session holds at most its delegation's audience, and only in its delegation's
+/// one space, whatever its delegating author may do. On 7800 a `read` delegation's agent edited a hub note (the relay
+/// acknowledged, head 0 → 1): the hub resolved every agent session to its human's membership role. A `read` agent now
+/// resolves as a spectator — its edit on the document socket is never accepted and the head does not move —, an `edit`
+/// agent as an author whose edit is accepted (the negative law), neither holds any role in another space of the same
+/// human, and a directory socket binding reports the same capped role. The declared policy grants an agent only its
+/// agent role (`agent-reader`/`agent-editor`): never the owner's or an author's administration — no rename, invite,
+/// member change or archive, however much its human may do.
+#[test]
+fn an_agent_session_holds_at_most_its_delegations_audience_in_its_delegations_space() {
+    run_socket_test(|| async {
+        async fn agent(addr: SocketAddr, human: &TestIssuedSession, space_id: &str, audience: &str) -> String {
+            let bearer = format!("Bearer {}", human.token);
+            let receipt = json_body(&raw_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", bearer.as_str())], &agent_delegation_body(space_id, audience, 3_600)).await);
+            let delegation_bearer = format!("Bearer {}", receipt["token"].as_str().expect("delegation token"));
+            let minted = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body(audience)).await;
+            assert_eq!(minted.status, 200, "{}", String::from_utf8_lossy(&minted.body));
+            json_body(&minted)["token"].as_str().expect("agent session token").to_string()
+        }
+        async fn edit_accepted(state: &HubState, addr: SocketAddr, space_id: &str, document: &str, token: &str, batch_id: u64) -> (bool, u64, u64) {
+            let db_id = db_artifact_id(&DocumentScope::new(space_id.to_string(), document));
+            let actor = issue_document_socket_grant_fixture(Path((space_id.to_string(), document.to_string())), bearer_headers(token), State(state.clone())).await.expect("agent socket grant").0.actor_id;
+            let (mut socket, _) = connect_async(document_socket_request(&format!("ws://{addr}/scopes/{space_id}%2F{document}/document/ws"), token)).await.expect("agent document socket");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("agent hello");
+            assert!(matches!(next_server_frame_at(&mut socket, "agent welcome").await, ServerFrame::Welcome { .. }));
+            assert!(matches!(next_server_frame_at(&mut socket, "agent session").await, ServerFrame::Session { .. }));
+            let before = state.db.document(&db_id).await.expect("document handle").frontier().await.expect("frontier").commit_seq;
+            let mut edit = sample_envelope(&format!("{document}-agent-edit"), &WireArtifactId(document.into())).await;
+            edit.actor = ActorId(actor);
+            let _ = socket.send(client_binary(&ClientFrame::Commands { batch_id, envelopes: vec![edit] }, Lane::Command).await).await;
+            let accepted = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+                loop {
+                    match socket.next().await {
+                        Some(Ok(WsMessage::Binary(bytes))) => {
+                            if let Ok((_, ServerFrame::Ack { batch_id: acked, stages, .. })) = protocol::decode_server_frame(&bytes).await {
+                                if acked == batch_id {
+                                    return stages.iter().any(|stage| matches!(stage, AckStage::Applied { outcome } if matches!(outcome.as_ref(), ApplyOutcome::Accepted)));
+                                }
+                            }
+                        }
+                        Some(Ok(WsMessage::Close(_))) | None | Some(Err(_)) => return false,
+                        Some(Ok(_)) => {}
+                    }
+                }
+            })
+            .await
+            .unwrap_or(false);
+            let after = state.db.document(&db_id).await.expect("document handle").frontier().await.expect("frontier").commit_seq;
+            (accepted, before, after)
+        }
+        let state = test_state().await;
+        let human = issue_test_session(&state, "audience-human@example.com").await;
+        let space_id = create_space_for_test(&state, &human.user_id, "Audience space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+        let other_space = create_space_for_test(&state, &human.user_id, "Other space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+        for document in ["read-agent-doc", "edit-agent-doc"] {
+            announce_document_for_test(&state, &space_id, document).await;
+        }
+        announce_document_for_test(&state, &other_space, "other-doc").await;
+        let addr = spawn_server(state.clone()).await;
+        let reader = agent(addr, &human, &space_id, "read").await;
+        let editor = agent(addr, &human, &space_id, "edit").await;
+
+        for (who, token, role) in [("read", &reader, SpaceRole::Spectator), ("edit", &editor, SpaceRole::Author)] {
+            let session = state.directory.authenticate_session(&SessionCapability::parse(token).expect("agent capability")).await.expect("agent session read").expect("agent session");
+            assert_eq!(state.directory.principal_role(&space_id, session.principal()).await.expect("principal role"), Some(role), "{who}: its delegation's audience in its space");
+            assert_eq!(state.directory.principal_role(&other_space, session.principal()).await.expect("principal role"), None, "{who}: nothing in another space of its human");
+            assert!(
+                matches!(state.directory.socket_session_binding(&session.id, &session.user_id, session.authorization_generation, Some(&space_id), now_ms()).await, Ok(SocketSessionBindingStatus::Active { role: Some(bound), .. }) if bound == role),
+                "{who}: a socket binding reports the same capped role"
+            );
+            assert_eq!(state.directory.socket_session_binding(&session.id, &session.user_id, session.authorization_generation, Some(&other_space), now_ms()).await.expect("binding"), SocketSessionBindingStatus::MembershipLost, "{who}");
+            for command in [
+                DirectoryCommand::ArchiveSpace { space_id: space_id.clone() },
+                DirectoryCommand::RenameSpace { space_id: space_id.clone(), name: "Renamed by an agent".into() },
+                DirectoryCommand::UpsertMember { space_id: space_id.clone(), email: "invited-by-agent@example.com".into(), role: DirectorySpaceRole::Author },
+                DirectoryCommand::CreateInvite { space_id: space_id.clone(), role: DirectorySpaceRole::Author, ttl_secs: 3_600 },
+            ] {
+                assert_eq!(authorize_directory_command(&state, session.principal(), false, &command).await, Err(StatusCode::FORBIDDEN), "{who}: no administration: {command:?}");
+            }
+            assert!(issue_document_socket_grant_fixture(Path((other_space.clone(), "other-doc".to_string())), bearer_headers(token), State(state.clone())).await.is_err(), "{who}: no document of another space");
+        }
+        let human_session = state.directory.authenticate_session(&SessionCapability::parse(&human.token).expect("human capability")).await.expect("human session read").expect("human session");
+        for command in [DirectoryCommand::ArchiveSpace { space_id: space_id.clone() }, DirectoryCommand::RenameSpace { space_id: space_id.clone(), name: "Renamed by its owner".into() }] {
+            assert_eq!(authorize_directory_command(&state, human_session.principal(), false, &command).await, Ok(()), "the owner itself keeps its authority: {command:?}");
+        }
+
+        let (accepted, before, after) = edit_accepted(&state, addr, &space_id, "read-agent-doc", &reader, 61).await;
+        assert!(!accepted, "a read delegation's edit is never accepted");
+        assert_eq!(after, before, "a read delegation's edit left the document unchanged");
+        let (accepted, before, after) = edit_accepted(&state, addr, &space_id, "edit-agent-doc", &editor, 62).await;
+        assert!(accepted, "an edit delegation's edit is accepted");
+        assert!(after > before, "an edit delegation's edit moved the head: {before} -> {after}");
+    });
+}
+
 /// ⚔️ Two authors write the same part of one opaque document over the hub's document sockets (fixture
 /// `⚔️vigilant-concurrent-edit-v1`): a write whose author had not observed the other author's latest write to that
 /// part is concurrent with it — `Vigilant` refuses it with the typed `mutation.clamped` warning, `Normal` accepts it
@@ -8679,6 +8826,8 @@ mod long {
             expires_at_ms: now_ms() + 60_000,
             correlation_id: "correlation:admin".into(),
             peer_class: "admin-rest",
+            session_kind: AuthSessionKind::DevelopmentLocal,
+            device_instance_id: "admin-device".into(),
         };
         let rows = (0..ADMIN_PAGE_MAX).map(|index| os_directory::UserView { id: format!("user:{index}:{}", "i".repeat(4_000)), email: format!("{index}@{}", "e".repeat(4_000)), display_name: "n".repeat(4_000), created_at_ms: 0 }).collect();
         let page = admin_fit_page(rows, false, 7, |rows| admin_cursor_encode(&cursor_key, &principal, 2, rows.len())).expect("byte-bounded user page");

@@ -6,6 +6,39 @@ fn secondary_pointer_button_uses_context_menu_code() {
 }
 
 #[test]
+fn native_system_theme_change_merges_theme_into_the_pending_redraw_reason() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌓️native-theme-invalidation/🔣️.json")).expect("native theme invalidation fixture");
+    let reason = |tag: Option<&str>| match tag {
+        Some("inputState") => Some(InvalidationReason::INPUT_STATE),
+        Some("paint") => Some(InvalidationReason::PAINT),
+        None => None,
+        other => panic!("unknown invalidation reason {other:?}"),
+    };
+    for transition in fixture["transitions"].as_array().expect("theme transitions") {
+        let mut scheduler = ui_render::FrameScheduler::new();
+        if let Some(scheduled) = reason(transition["schedulerReason"].as_str()) {
+            scheduler.invalidate(scheduled);
+        }
+        let mut pending = reason(transition["pendingReason"].as_str());
+        let collected = invalidate_scheduler_redraw(&mut scheduler, &mut pending, 0.0, InvalidationReason::THEME).expect("theme change must schedule a frame");
+        let mut expected_collected = InvalidationReason::THEME;
+        if let Some(scheduled) = reason(transition["schedulerReason"].as_str()) {
+            expected_collected.insert(scheduled);
+        }
+        let expected = transition["expectedReasons"].as_array().expect("expected reasons").iter().fold(InvalidationReason::NONE, |mut expected, tag| {
+            expected.insert(reason(tag.as_str()).expect("expected reason tag"));
+            expected
+        });
+        assert_eq!(collected, expected_collected, "the scheduler drains only its own reasons plus this theme event");
+        assert_eq!(pending, Some(expected), "theme and every already-owned reason merge exactly once");
+        assert!(scheduler.should_render(0.0).is_none(), "the collected theme reason must not schedule a duplicate frame");
+        assert_eq!(pending.take(), Some(expected), "one redraw drains the complete union");
+        assert!(pending.take().is_none(), "the accepted redraw cannot be drained twice");
+        assert!(scheduler.should_render(0.0).is_none(), "the accepted redraw leaves no duplicate scheduler wake");
+    }
+}
+
+#[test]
 fn normalized_host_maps_table_stepper_navigation_keys_without_text_fallback() {
     for (key, expected) in [("Home", ui_wgpu::wgpu::KeyAction::Home), ("End", ui_wgpu::wgpu::KeyAction::End), ("PageUp", ui_wgpu::wgpu::KeyAction::PageUp), ("PageDown", ui_wgpu::wgpu::KeyAction::PageDown)] {
         assert_eq!(key_action_from_dispatch(key, true), Some(expected));

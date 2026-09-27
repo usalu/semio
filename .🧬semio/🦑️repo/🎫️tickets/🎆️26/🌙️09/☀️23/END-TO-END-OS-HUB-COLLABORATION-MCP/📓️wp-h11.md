@@ -20,6 +20,11 @@ opaque-concurrency), DB1 (db throughput).
 | C | Coordinator: 17 red hub `artifact_authority::` laws (LA) | **ROOT-FIXED**: G11's CHANNEL_VERSION 17→18 had stopped at Rust; host copies (directory schema JSON + TS, hub inference schema + TS, 11 fixtures) at 18, version-dependent digests + the frozen GIS inference identity chain re-derived by independent Python oracles; laws green except the chain-regenerated descriptors; `stdio-gis-bootstrap` generation → G11's single-source follow-up |
 | R | C11 relay: directory presence republished on every pointer move | **DONE**: projection-dedupe under the presence gate; law PASS |
 | Qa | H9 Qa db half (opaque concurrency) — only if LD asks | ON REQUEST (LD; H9's Qa superseded by LD's design) |
+| S | **P0 (G11 battery, coordinator 15:2x):** a `read`-audience delegation's agent EDITED a hub note on 7800 | **WRITTEN, hold10 queued** (native lane): root = every agent session resolved to its human's membership role. One rule `HubDirectory::principal_ceiling` (agent → its delegation's space only, role ≤ audience; revoked/expired/foreign → nothing) under `principal_role`, every backend's `socket_session_binding`, space list, event pages, directory commands (agents never Owner), admin auth refuses agent sessions. Law `an_agent_session_holds_at_most_its_delegations_audience_in_its_delegations_space`. OPEN finding: an `edit` agent is policy role Author → member.upsert/invite.create/space.rename (needs an `agent` policy role) |
+| A | Coordinator 15:4x: agents must never hold an author's administration (edit agent could rename/invite/member.upsert/create spaces) | **WRITTEN, hold10**: declared policy roles `agent-reader`/`agent-editor` (🔣️.json grants: reader = document.read/blob.read; editor = + write, check-in, artifact.create, blob.write, document.announce; archive deny covers editor) + schema enum + TS twin + 43 vectors (TS/Ajv oracle **PASS 2/2**, 160 vectors). `session_access_roles(kind, role)` is the one derivation (agent → its agent role only). `SocketSessionBindingStatus::Active` carries `session_kind` |
+| K | Coordinator (approved root fix): SIGTERM → exit 17.9–25.2 s with a catalog verification in flight; no grace fallback | **WRITTEN, hold10 queued**: `GuestCallCancellation` + `TurnFault::Cancelled` (plugin-host, checked every 4096-fuel step); `interpret_off_worker` cancels the call when its caller is released/dropped/cancelled (50 ms poll between observations); grace + its law removed, `main` plain again. Law `an_aborted_catalog_verification_leaves_no_interpretation_for_the_runtime_to_wait_on` (spinning owned guest, abort → runtime drop < 1 s) |
+| G | Growth e2e sqlite (8012, B3 binary) | growth itself PASS (24 docs, 3680 edits, ack medians first 119–153 / last 169–223 ms); **RED at SIGTERM: exit 1** — db shutdown deadline (10 s) in phase PoolUse, 2 `artifact_retirement` cursors (dropped authorities' closes) still holding the pool use. Open |
+| CI | C11: writer Check In refused `codec-refused` with no cause on the span | **WRITTEN** (hold10): the span detail is `<code>: <authority/ledger error>` (`CheckInEndV1`); diagnosis of the refusal itself after it lands |
 | — | Former 6/7/8 (all-package boot/readiness, residency LRU at scale, generative hostile-input law) | MOVED to H12 (coordinator 19:3x) |
 
 ### Session 13 log
@@ -303,4 +308,59 @@ opaque-concurrency), DB1 (db throughput).
 - `.vscode/launch.json`, `.vscode/🧩️launch.seed.jsonc`: fence rows ×3, directory-live-lanes rows ×2.
 - Ticket: `wp-h11/{h11-cargo.sh, h11-hub.sh, h11-hub-laws.sh, h11-native-hold*.sh, h11-open-plan-probe.ts, h11-directory-probe.ts,
   h11-restart-backup-drill.sh, channel18_oracle.py, channel18_inference_cascade.py, readyz-watch.sh, rss-sampler.sh}`.
+
+### B3 wave (2026-09-27 14:0x, preamble rule 31)
+- Binary `.🧬semio/🌐hub/s13-h11-bin/os-hub-b3` = copy of W3's current-tree `s13-w3-bin/s13-w3-hub-7800-b3/os-hub` (re-signed);
+  catalog = clones of `.🧬semio/🌐hub/s13-w3-catalog-b3` (generation `e3c0c98e…`, 9 packages, 43 rows); my hubs on 8011/8012,
+  fresh roots; never 7800's data. Old B2 root `s13-h11-hub-8010` + the 19:07 binary deleted (rule 23).
+- 13:59–14:01 **V1's permanent `os-hub-ts:backup-restore-drill` (note, 20 edits): PASS 6/6** (`s13-h11-logs/b3-drill-1.txt`):
+  ready 7.6 s, SIGTERM → exit 365 ms, archive 593 MB in 873 ms, 122 files restored byte-identical, then frontier, descriptor,
+  checkpoint pair, space listing and the next edit all equal/accepted. Acceptance record published (`hub-backup-restore PASS`).
+- 14:01 **hub 8011** (fresh root `s13-h11-hub-8011-b3`, no verification memory): **cold boot → `/readyz` 200 in 21.6 s** (per-package
+  catalog progress in `/readyz`; on B2 before H10/H12 it was 150–480 s). **Directory, 85 spaces: list best 5.1 ms / median 8.6 ms,
+  event pages 246 + 128 ms** (`dir-probe-8011-b3.txt`).
+- **Restart on the same root: 5/5** (`h11-restart-client.ts` = H10's client on the current envelope wire — H10's copy sends
+  envelopes without `observed`/`target` and crashes in `writeVecStr`): note + 20 edits → SIGTERM → restart → ready 10.6 s →
+  frontier/descriptor/checkpoint pair/listing equal, next edit accepted.
+- **Found: SIGTERM → exit 17.9–25.2 s** while the catalog's background verification interprets a guest (after the drill's own
+  runs, which stop before it starts, 365 ms): measured on 8011 with a log watch — `server.shutdown … database=closed` 106 ms after
+  SIGTERM, process exit 23 586 ms. Cause: `interpret_off_worker` releases its caller, but the blocking interpretation runs on to
+  its own fuel bound (4e9) and dropping the tokio runtime waits for it. **Fix (bootstrap `main`, compiling):** `run_hub_runtime` —
+  after `serve` returns, `shutdown_timeout(HUB_RUNTIME_SHUTDOWN_GRACE = 1 s)`; safe because nothing durable runs on that pool
+  (verification memory is staged + renamed async). Law `the_hub_process_exits_within_its_shutdown_grace_however_long_abandoned_blocking_work_runs`
+  (30 s blocking stand-in). Root (interpretation stops once its caller is cancelled; also a cancelled creation keeps a core busy
+  for minutes) is H12's interpreter path — H12 is paused; asked main for approval to do it.
+- 14:07 growth e2e sqlite launched (hub 8012, `h11-b3-growth.sh`, `b3-growth-sqlite-1.txt`).
+- 14:10 growth e2e sqlite **exit 1** (`b3-growth-sqlite-1.txt`, receipt `-receipt.json`): 24 documents created (1.5–146 s), 3680
+  edits accepted, ack latency flat (first/last medians 119–153 / 169–223 ms) — then SIGTERM → hub exit **1**: `database shutdown
+  deadline elapsed in phase Some(PoolUse): … retained pool-use owners 3 (= Database + 2), artifact_retirement 2`. Two dropped
+  artifact authorities' retirement cursors had not finished their close within `DATABASE_SHUTDOWN_DEADLINE` (10 s). Open.
+- 14:5x–15:10 coordinator-approved ROOT fix for the SIGTERM exit (no grace): plugin-host `GuestCallCancellation` (Arc<AtomicBool>)
+  + `TurnFault::Cancelled`; `resume_owned_operation_observed` checks it before every 4096-fuel step; `codec_*_observed` take it.
+  Hub trusted-catalog `interpret_off_worker`: a `GuestCallRelease` drop guard cancels the call however the awaiting caller ends
+  (answered, refused at an observation, cancelled — polled every 50 ms via the new non-restamping `OperationContext::is_cancelled`
+  — or dropped mid-await like the aborted background verification); the 5 codec call sites pass the token. `HUB_RUNTIME_SHUTDOWN_GRACE`
+  / `run_hub_runtime` and their law removed. Laws: `guest_codec_calls_run_off_the_async_worker_and_relay_their_fuel` extended
+  (refused / silent-cancelled / dropped caller → call cancelled), new `an_aborted_catalog_verification_leaves_no_interpretation_for_the_runtime_to_wait_on`
+  (owned test guest whose `pack-schema-hash` spins; `OwnedTestHash::{Answers, Spins}`). H12 told.
+- 15:11 hold10 queued on the native lane (position 9).
+- 15:1x G11 (then coordinator, P0): a `read` delegation's agent edits a hub note on 7800. Root: `resolve_auth`,
+  `authenticate_document_credential`, every `socket_session_binding` backend and 8 more sites asked `get_role(space, user_id)` —
+  the delegating human's membership — so an agent session was an Author wherever its human was, in every space of that human.
+  Fix (hub-only): `DirectoryPrincipalV1` (user, session kind, device instance = delegation id), `DirectoryPrincipalCeilingV1`
+  {Account, Delegation{space, role}, Nothing}, `HubDirectory::{principal_ceiling, principal_role, agent_delegation}` (sqlite by id;
+  pg/neo4j have no delegations), `SpaceRole::within`, shared `capped_socket_session_binding` tail for sqlite/pg/neo4j; every bootstrap
+  role read goes through it (document auth, directory commands — Owner only for human sessions —, space list, event pages, directory
+  sockets, rebootstrap, admin space pages, gis approval, agent delegation); `authenticate_admin_principal` refuses agent sessions.
+  Law `an_agent_session_holds_at_most_its_delegations_audience_in_its_delegations_space`. Hold10 reordered: P0 laws first.
+- 15:2x C11: writer Check In `codec-refused` with no cause. `CheckInEndV1 {refusal, cause}` carries the authority/ledger error to the
+  `server.document.check-in` span detail (`codec-refused: <error>`); in hold10.
+- 15:4x **my miss, broke the shared build:** `GuestRuntimes::codec_replay_envelopes` (plugin-host 2670) still called
+  `codec_replay_envelopes_observed` with 7 args (E0061) — my earlier grep had excluded the host file itself. WG9's and G11's native
+  checks went red. Fixed: the dispatch takes `cancellation` and forwards it; its one caller (🌉️mcp `guest_replay_envelopes`,
+  interprets inline in one poll) passes an explicit `GuestCallCancellation::default()`. Coordinator-exception check
+  `cargo check -p semio-framework-plugin-host -p semio-framework-plugin -p semio-framework-os-mcp --lib`: **EXIT 0** 15:45:16
+  (warnings for all three = type-checked; my 2 qualification warnings removed after). Full-tree grep of every changed signature
+  (🧰️framework, 🌎️hub, ✏️s): no other caller.
+- 15:5x agent role (coordinator yes): see row A. Policy consumers = hub only (`🔐️auth` rs/ts/schema/fixtures, hub TS tests).
 

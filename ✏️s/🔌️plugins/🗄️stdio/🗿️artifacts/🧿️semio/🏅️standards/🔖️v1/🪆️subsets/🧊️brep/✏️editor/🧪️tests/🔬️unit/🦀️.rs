@@ -29,9 +29,10 @@ fn one_vertex_snapshot() -> SemioBrepSnapshot {
 /// shape the shared `MeshWindowKit`'s `set-vertex` action carries.
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_parses_the_point_payload() {
-    let args = DslValue::Object(vec![("point".to_string(), DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]))]);
+    let args = DslValue::Object(vec![("vertexId".to_string(), DslValue::String("v1".into())), ("point".to_string(), DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]))]);
     let command = SemioBrepEditor::command_from_action("set-vertex", Some(&args)).expect("set-vertex is supported");
-    assert_eq!(command, editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point: [1.0, 2.0, 3.0] })));
+    assert_eq!(command, editing::SnapshotEditingCommand::Native(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { vertex_id: "v1".into(), point: [1.0, 2.0, 3.0] })));
+    assert!(SemioBrepEditor::command_from_action("set-vertex", Some(&DslValue::Object(vec![]))).is_err());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -39,12 +40,12 @@ async fn command_from_action_rejects_unknown_actions() {
     assert!(SemioBrepEditor::command_from_action("delete-vertex", None).is_err());
 }
 
-/// ✏️ 24-byte little-endian `[f64;3]` `OpBinary` round trip.
+/// ✏️ Stable vertex id plus little-endian `[f64;3]` `OpBinary` round trip.
 #[semio_framework_async_macros::async_test]
 async fn set_vertex_op_binary_round_trips() {
-    let command = SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point: [1.5, -2.25, 4.0] });
+    let command = SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { vertex_id: "v1".into(), point: [1.5, -2.25, 4.0] });
     let bytes = protocol::OpBinary::encode_op(&command).expect("encode");
-    assert_eq!(bytes.len(), 24);
+    assert_eq!(bytes.len(), 30);
     let back = <SemioBrepEditCommand as protocol::OpBinary>::decode_op(&bytes).expect("decode");
     assert_eq!(back, command);
 }
@@ -63,6 +64,16 @@ async fn dispatching_set_vertex_yields_a_move_vertex_mutation() {
 async fn dispatching_set_vertex_for_a_stale_selection_is_a_no_op() {
     let snapshot = one_vertex_snapshot();
     assert_eq!(move_vertex_mutation(&snapshot, "does-not-exist", [1.0, 1.0, 1.0]), None);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn set_vertex_is_visible_with_required_localized_arguments() {
+    let definition = create_semio_brep_editor();
+    let action = definition.actions.iter().find(|action| action.id == "set-vertex").expect("set-vertex action");
+    assert_eq!(action.args.len(), 2);
+    assert!(action.args.iter().all(|argument| argument.required));
+    assert_eq!(action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En), "Move Vertex");
+    assert_eq!(action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::De), "Vertex verschieben");
 }
 
 /// ✏️ Ticket goal: "applying it moves the vertex" — real `protocol::Mutation::diff`/

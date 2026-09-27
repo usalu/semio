@@ -8,7 +8,9 @@ export type PixelOperation =
   | { kind: "resize"; width: number; height: number; sampling: "nearest" | "bilinear" }
   | { kind: "crop"; x: number; y: number; width: number; height: number }
   | { kind: "fill"; color: PixelColor }
-  | ({ kind: "stroke"; points: readonly PixelPoint[]; erase: boolean } & PixelBrush);
+  | { kind: "alphaFill"; alpha: number; opacity: number }
+  | ({ kind: "stroke"; points: readonly PixelPoint[]; erase: boolean } & PixelBrush)
+  | ({ kind: "alphaStroke"; points: readonly PixelPoint[] } & PixelAlphaBrush);
 export type SelectionShape =
   | { kind: "rectangle" | "ellipse"; x: number; y: number; width: number; height: number }
   | { kind: "polygon"; points: readonly PixelPoint[] };
@@ -16,6 +18,7 @@ export type SelectionMerge = "replace" | "add" | "subtract" | "intersect";
 export type PixelProgress = { completed: number; total: number; done: boolean };
 export type PixelEditOptions = { selection?: Uint8Array; signal?: AbortSignal; chunkPixels?: number; onProgress?: (progress: PixelProgress) => void };
 export type PixelBrush = { size: number; opacity: number; hardness: number; color: PixelColor; erase?: boolean };
+export type PixelAlphaBrush = { size: number; opacity: number; hardness: number; alpha: number };
 export const MAX_IMAGE_SIDE = 16384;
 export const MAX_IMAGE_PIXELS = 16 * 1024 * 1024;
 
@@ -80,8 +83,10 @@ function validateOperation(image: PixelImage, operation: PixelOperation, selecte
     const range = numeric[operation.kind];
     if (!range || !bounded(operation.value,range[0],range[1])) invalid("Invalid filter parameter");
     if (["blur","posterize"].includes(operation.kind) && !Number.isInteger(operation.value)) invalid("Filter parameter must be an integer");
-  } else if (operation.kind === "stroke") {
+  } else if (operation.kind === "stroke" || operation.kind === "alphaStroke") {
     validateBrush(operation.points,operation);
+  } else if (operation.kind === "alphaFill") {
+    if (!Number.isInteger(operation.alpha) || !bounded(operation.alpha,0,255) || !bounded(operation.opacity,0,1)) invalid("Invalid alpha fill");
   } else if (operation.kind === "fill") validateColor(operation.color);
   else if (operation.kind === "crop") {
     if (![operation.x,operation.y].every(v => Number.isInteger(v) && v >= 0) || operation.x + operation.width > image.width || operation.y + operation.height > image.height) invalid("Crop lies outside image");
@@ -95,9 +100,10 @@ function validateOperation(image: PixelImage, operation: PixelOperation, selecte
 
 function filtered(image: PixelImage, x: number, y: number, operation: PixelOperation, coverage = 1): PixelColor {
   const original = sample(image,x,y);
+  if (operation.kind === "alphaFill") return [original[0],original[1],original[2],byte(original[3]+(operation.alpha-original[3])*operation.opacity*coverage)];
   if (operation.kind === "clear") return [0,0,0,0];
   if (operation.kind === "fill") return sourceOver(original,operation.color,coverage);
-  if (operation.kind === "stroke") {
+  if (operation.kind === "stroke" || operation.kind === "alphaStroke") {
     const radius=operation.size/2,core=radius*operation.hardness;
     let amount=0;
     for(let i=0;i<operation.points.length;i++) {
@@ -106,10 +112,7 @@ function filtered(image: PixelImage, x: number, y: number, operation: PixelOpera
       amount=Math.max(amount,distance>radius?0:distance<=core?255:byte(255*(radius-distance)/(radius-core)));
     }
     const opacity=amount/255*operation.opacity*coverage;
-    if(opacity===0) return original;
-    if(!operation.erase) return sourceOver(original,operation.color,opacity);
-    const alpha=byte(original[3]*(1-opacity));
-    return alpha>0?[original[0],original[1],original[2],alpha]:[0,0,0,0];
+    return brushPixel(original,operation,opacity);
   }
   if (operation.kind === "flipHorizontal") return sample(image,image.width-x-1,y);
   if (operation.kind === "flipVertical") return sample(image,x,image.height-y-1);
@@ -181,7 +184,7 @@ export class PixelEditJob {
       const coverage = (this.selection?.[this.cursor] ?? 255)/255;
       const before = sample(this.source,x,y);
       const after = coverage === 0 ? before : filtered(this.source,x,y,this.operation,coverage);
-      const mix = this.operation.kind === "fill" || this.operation.kind === "stroke" ? 1 : coverage;
+      const mix = this.operation.kind === "fill" || this.operation.kind === "stroke" || this.operation.kind === "alphaStroke" || this.operation.kind === "alphaFill" ? 1 : coverage;
       for (let c = 0; c < 4; c++) this.output.pixels[this.cursor*4+c] = byte(before[c]!+(after[c]!-before[c]!)*mix);
       if (this.operation.kind === "clear" && coverage > 0 && coverage < 1) {
         for (let c = 0; c < 3; c++) this.output.pixels[this.cursor*4+c] = this.output.pixels[this.cursor*4+3] ? before[c]! : 0;
@@ -205,6 +208,7 @@ export class PixelEditJob {
 export async function editImage(image: PixelImage, operation: PixelOperation, options: PixelEditOptions = {}): Promise<PixelImage> {
   if (options.signal?.aborted) aborted();
   if(operation.kind === "stroke") return paintStroke(image,operation.points,operation,options);
+  if(operation.kind === "alphaStroke") return paintAlphaStroke(image,operation.points,operation,options);
   const job = new PixelEditJob(image,operation,options.selection);
   try {
     while (true) {
@@ -343,12 +347,30 @@ function segmentDistance(x: number, y: number, from: PixelPoint, to: PixelPoint)
   return Math.hypot(x-from[0]-t*dx,y-from[1]-t*dy);
 }
 
-function validateBrush(points:readonly PixelPoint[],brush:PixelBrush):void {
-  validateColor(brush.color);
+function validateBrush(points:readonly PixelPoint[],brush:PixelBrush|PixelAlphaBrush):void {
+  if("alpha" in brush) {if(!Number.isInteger(brush.alpha)||!bounded(brush.alpha,0,255))invalid("Alpha must be a byte");}
+  else validateColor(brush.color);
   if (!bounded(brush.size,0.1,4096) || !bounded(brush.opacity,0,1) || !bounded(brush.hardness,0,1) || !points.length || points.length > 2048 || points.some(p => p.length !== 2 || !p.every(Number.isFinite))) invalid("Invalid brush stroke");
 }
 
 export async function paintStroke(image: PixelImage, points: readonly PixelPoint[], brush: PixelBrush, options: PixelEditOptions = {}): Promise<PixelImage> {
+  return paintBrush(image,points,brush,options);
+}
+
+/** 🎭️ Paint coverage independently of RGB, including fully hidden pixels. */
+export async function paintAlphaStroke(image:PixelImage,points:readonly PixelPoint[],brush:PixelAlphaBrush,options:PixelEditOptions={}):Promise<PixelImage> {
+  return paintBrush(image,points,brush,options);
+}
+
+function brushPixel(before:PixelColor,brush:PixelBrush|PixelAlphaBrush,amount:number):PixelColor {
+  if(amount===0)return before;
+  if("alpha" in brush)return [before[0],before[1],before[2],byte(before[3]+(brush.alpha-before[3])*amount)];
+  if(!brush.erase)return sourceOver(before,brush.color,amount);
+  const alpha=byte(before[3]*(1-amount));
+  return alpha>0?[before[0],before[1],before[2],alpha]:[0,0,0,0];
+}
+
+async function paintBrush(image:PixelImage,points:readonly PixelPoint[],brush:PixelBrush|PixelAlphaBrush,options:PixelEditOptions):Promise<PixelImage> {
   validateImage(image);
   validateMask(options.selection,image.width*image.height);
   validateBrush(points,brush);
@@ -385,9 +407,7 @@ export async function paintStroke(image: PixelImage, points: readonly PixelPoint
     const amount = coverage[index]!/255*(options.selection?.[index] ?? 255)/255*brush.opacity;
     if (amount === 0) continue;
     const before = sample(image,index%image.width,Math.floor(index/image.width));
-    const alpha = byte(before[3]*(1-amount));
-    const result: PixelColor = brush.erase ? alpha > 0 ? [before[0],before[1],before[2],alpha] : [0,0,0,0] : sourceOver(before,brush.color,amount);
-    pixels.set(result,index*4);
+    pixels.set(brushPixel(before,brush,amount),index*4);
   }
   options.onProgress?.({completed:points.length+1,total:points.length+1,done:true});
   if (options.signal?.aborted) aborted();

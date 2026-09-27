@@ -4,7 +4,7 @@
 //! columns are synthesized positionally (`Column N`).
 
 use crate::TsvSnapshot;
-use semio_framework_plugin::app::{EditableTableColumn, TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -16,7 +16,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 /// 🧱️ Stitched into the editor manifest by `crate::editor::tsv::create_tsv_editor`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..semio_s_artifact_stdio_contract::revision_addressed_table_window_kind() }
 }
 //#endregion 🔖️Definition
 
@@ -25,11 +25,17 @@ pub fn definition() -> WindowKindDefinition {
 /// grid directly (a 1:1 mapping onto `records`, unlike csv's header-offset math).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &TsvSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(document);
+    render_revisioned(document, &revision)
+}
+
+/// 🔐️ Renders against the store revision captured by the host without re-encoding the snapshot.
+pub fn render_revisioned(document: &TsvSnapshot, revision: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let width = document.records.iter().map(|record| record.len()).max().unwrap_or(0);
     let columns = (0..width).map(|index| format!("Column {}", index + 1)).collect::<Vec<_>>();
     let rows = document.records.clone();
-    let editable = (0..columns.len()).map(|index| EditableTableColumn::new(index, "set-cell")).collect::<Vec<_>>();
-    TableWindowKit::render_editable(&TableView { columns, rows }, "s.stdio.tsv@iana/*#editor", &editable)
+    let editable = semio_s_artifact_stdio_contract::window_kit_revisioned_editable_cells(&rows, "set-cell", revision)?;
+    TableWindowKit::render_editable_cells(&TableView { columns, rows }, "s.stdio.tsv@iana/*#editor", &editable)
 }
 //#endregion 🔖️Render
 

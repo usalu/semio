@@ -23,20 +23,24 @@ directory list / event pages fast). Boot 11 min at load 80.
 
 | # | Item | Status |
 |---|---|---|
-| 1 | collab-e2e 10/10 + STEP 14 (writer, draw, puzzle3d peer cursors + selections), presence symmetry, join/leave/expiry on 7800 | 8021 run `c11collab-1` (20:31): STEP 1, 3, 5, 7 PASS; STEP 4/8/11/12/13 FAIL (edits dead: envelope wire, rule 23); 9/10 SKIP (external hub); **STEP 2 FAIL → root-caused + fixed** (a human added to an existing space never received its `space.created`; `access-changed` + Home origin replay, below; live proof after the rebuild); STEP 6/14 see log |
-| 2 | Opening flakes of session-12 two-browser runs (S12-3g, "document closed", "target changed", session never switches) | **not reproduced on the current tree**: 8021, 10 two-browser opens (A via the creation saga, B via the Space index row; note ×7, writer ×2, draw ×1) all mounted, 0 "document closed" / "target changed" / never-switched; S12-3g gone (S15 09:4x + C10 route ledger). More samples come with every later run |
+| 1 | collab-e2e 10/10 + STEP 14 (writer, draw, puzzle3d peer cursors + selections), presence symmetry, join/leave/expiry on 7800 | **7800/B3 run b3-4: 6/14** (1, 2, 3, 4, 5, 7 PASS; 9/10 SKIP: external hub). STEP 14 writer caret leg PASS (x 74→382); draw/puzzle3d legs failed on harness row-open after the saga (fixed); 6 = Check In `codec-refused` (H11); 8 = typing after the refused check-in never relayed (under investigation); 11/13 = concurrent writer typing is whole-text last-writer-wins (guest design prepared); 12 = harness read local echo too early (fixed). Root-fixed on the way: author's last keys lost (TextEditor dispatcher), STEP 2 (`access-changed`) |
+| 2 | Opening flakes of session-12 two-browser runs (S12-3g, "document closed", "target changed", session never switches) | **not reproduced**: 8021 (10 opens) + 7800/B3 (all runs today: creation saga + Space-index row opens, 0 "document closed"/"target changed", `/spaces/<id>` misses 0). New: a dialog opened < ~8 s after sign-in is closed by Home's re-bootstrap → S16 |
 | 3 | G-P1-4: B's inspector reflects A's remote edit ≤ ~2 s, live | pending |
 | 4 | Durable collaborative undo/redo by two users + viewer read-only + removed member, live | pending |
-| 5 | Two-browser matrix over every hub-creatable kind on 7800 (A creates, B opens via Space index, both edit, own undo, presence, reload converges), en + de | 8021 dry run `c11mx2` (note, writer): open/presence/window-focus/A→B/reload PASS; found the author-self-repaint defect (below) + harness gaps (identical writer args for both humans, set-verb undo expectation) → fixed in the harness; **live EDIT legs blocked** since ~20:17 (landing `observed` envelope field: the tree's host refuses B2 guests' batches) until W3's rebuild + publish |
+| 5 | Two-browser matrix over every hub-creatable kind on 7800 (A creates, B opens via Space index, both edit, own undo, presence, reload converges), en + de | 7800/B3 **en running** (V1's permanent `two-human`, 19 kinds; with C11's per-human args + set-aware undo); 2d.block 9/9 checks PASS so far |
 | 6 | Zero-touch clean-state `dev s` / ▶️start with a local hub, timed (after the all-package publish) | waits for W3's `--packages all` publish |
 | 7 | Coordinator (audit s13 P1-4): an edit staged during a cut reaches the worker ~5 s after reconnect → verify LD's fix live, drop the outage probe's "stamp relative to the cut" workaround | waits for LD item 3 + restage |
 | 8 | Coordinator (audit s13 P2-3): one human's undo would erase a DIFFERENT peer's still-pending edit — define + prove the correct outcome live (law exists since session 11) | pending |
-| 9 | Coordinator (audit s13 P1-2): same-field conflict live, viewer role live, peer cursors live | viewer/cursor legs: pending; conflict leg after LD P0-1 + H11/LD Qa restage |
+| 9 | Coordinator (audit s13 P1-2): same-field conflict live, viewer role live, peer cursors live | cursors: writer caret live PASS on 7800 (collab b3-4); draw (Canvas2dHost presence, new) + puzzle3d pending re-run; vigilant hub 8022 READY for the conflict leg; viewer leg pending |
 
 ### Infra (pids I started)
 
 | What | pid | Port | Notes |
 |---|---|---|---|
+| **09-27 (live wave)** serves `s` dev → 7800 | 8832 / 8838 (w2-detach) | 6523 / 6524 | logs `s13-c11-logs/serve-652{3,4}-b3.txt` |
+| vigilant hub 8022 (B3 clone, 7800 binary, `OS_HUB_MERGE_POLICY=vigilant`) | hold 45592 / hub 45599 | 8022 | root `s13-c11-hub-8022-vigilant`, state `…-state` |
+| serves `s` dev → 8022 | 61785 / 61791 (w2-detach) | 6525 / 6526 | logs `s13-c11-logs/serve-652{5,6}-8022.txt` |
+| (09-26 entries below: all died in the overnight loss) | | | |
 | serve `s` dev → 7800 | 15754 | 6523 | `wp-c11/serve.sh`, log `s13-c11-logs/serve-6523.txt` |
 | serve `s` dev → 7800 | 15755 | 6524 | log `s13-c11-logs/serve-6524.txt` |
 | hub 8021 (B2 catalog clone + 19:07 current-tree `os-hub`, fresh root, user1/2/3 = 7800 passwords + `gm1-local-dev-pass-3`) | hold 27066 / hub 27070 | 8021 | `wp-c11/c11-hub.sh`; data `s13-c11-hub-8021`, state `…-state` (admin capability, `admin-request`); binary `s13-c11-bin/os-hub-hub-8021` (source sha256 `e2686559…`); ready 11 min at load 80 |
@@ -152,3 +156,62 @@ directory list / event pages fast). Boot 11 min at load 80.
   - Noted for H11: every presence beat that changes a peer's bytes republishes the space's directory `presence` projection to
     every member socket, although that projection (actor, user, surface, color) is unchanged by a pointer move — with live beats
     that is up to 10 redundant directory frames/s per moving human (each costs two authority reads per member socket).
+- 06:0x–06:3x (before the second cut): text peer carets — `TextPeerCaretsOverlayV1` (new, `👕️canvas-presence`): a text window's
+  peers publish their caret in the editor's WORLD coordinates on `space: "text"` (`caretWorldJson` + camera + size, from
+  `emitSelection` and after a wheel scroll); the viewer projects each through its own editor camera (`worldToScreenJson`) and
+  paints one caret per other actor (label, colour, localized `aria-label` en/de); the old fake publish (`pointer = [caret,0,0]` on a
+  `{0,0,1}`/`[1,1]` canvas) and its overlay are removed from `TextEditorHost`. Law: fixture `👕️canvas-presence/🧫️fixtures/✏️text-carets`
+  → suite `✏️text-carets` **3/3** (en + de + no projection), with `🎭️react-overlay` + `👕️peer-presence` 7/7 total. os tsc: 0 errors in my
+  files. H11 took the directory-presence republish note and landed "publish the directory projection only when it changes".
+- 06:15 landing native check moved to build-landing (coordinator stopped my build-fleet-b run 37461 after 16 min idle); run 5 was
+  still compiling when the fleet was cut ~06:35 → **no C11 landing row was written**. The set reached the tree anyway and W3's chain
+  b3 compiled it into the restaged guests and the 7800 binary (coordinator 14:0x: "restaged `s` guests include your access-changed
+  + Home after=0 fix"); the Rust laws I wrote (hub bin-unit ×2 + the revocation law change, Home guest unit law) have NOT been run.
+- 13:58 **resume (rule 31): 7800 READY on catalog B3** (current tree, channel 18, new envelope wire, fresh root, runId `fd90596d…`).
+  Live verification wave started: collab-e2e `c11collab-b3-1` (7800, harness serves 6521/6522, one headless Chromium).
+- 13:59–14:04 **collab-e2e `c11collab-b3-1` on 7800/B3: 6/14 PASS, 2 SKIP (9/10: external hub), 6 FAIL.** PASS: 1, **2 (added member told
+  live — the `access-changed` fix, red in `c11collab-1`)**, 3, **4 (typing reaches the peer; the fresh door artifact's first 2
+  envelopes name the artifact id)**, 5, 7. FAIL: 6 (check-in history entry not shown in 15 s), 8 (a later keystroke never reached
+  user2), 11 (the shared text lost characters of both markers), 12 (no local echo while `setOffline`), 13 (writers diverged; user2
+  empty), 14 (writer surface selector: the textarea is now a hidden input sink).
+- 14:0x–14:2x **FOUND + ROOT-FIXED — an author's last keystrokes vanished** (`probe-c11-typing.mjs`, two humans, one writer on 7800,
+  rounds of typed markers, per-round wire capture (every Commands/Ack decoded) + temporary `[DEBUG] c11` echo/deliver/sendEdit logs):
+  round 1 lost the author's last 1–2 chars in both views while every sent batch was Accepted. The trace shows the guest taking an
+  OLDER text after a newer one (`deliver "a0x3290"` at +0 ms, then `deliver "a0x329"` at +183 ms; earlier `"a0"` after `"a0x1"`)
+  — two coalescing dispatchers alive at once: `WasmEditorSurface`'s `deliver` was a `useMemo` over `[controllerId, explicitDraft,
+  onAction, onDraftChange, surfaceId]`, so every new `onAction` identity built a NEW dispatcher while the old one still had a send
+  in flight and a pending text; the new one sent the newest text at once, then the old one flushed its stale pending text last.
+  Fix (TS host, `✏️TextEditor`): one dispatcher per surface (`[]`), reading its owner through `deliveryOwnerRef`. Law: delivery
+  fixture `📮️delivery` + schema gain `typedAfterNewOwner` and the case `a-new-action-owner-mid-flight-keeps-one-delivery-order`
+  (the mounted React law re-renders the host with a new `onAction` mid-flight) → **5/5**; mutant (deps `[onAction]`) → **red** on
+  that case. Live after the fix (`c11typing4`, 5 alternating rounds A,B,A,B,A): **5/5 lossless, both views equal, settled 12–535 ms**.
+- **Still RED (not host-fixable): two humans typing into the same writer at the same time lose each other's characters**
+  (`c11typing2` round AB: A lost 3, B lost 7 chars; both views equal afterwards). The editor's `textEdit` carries the WHOLE text
+  ("Replaces the entire text of the document", `TextWindowKit`/writer), and the guest diffs it against ITS current buffer: when the
+  other human's operation was folded into the actor before this human's queued full text runs, the diff deletes the other human's
+  insertion (trace: B's `…a1b1` is followed by A's full text `…a1x2`, which removes `b1`). A host-side rebase cannot close it (the
+  stale full text is already queued in the actor). Needs a guest change → prepared as a design (below), guest edits frozen.
+- Removed all temporary `[DEBUG] c11` lines (worker 8 earlier, TextEditor 4 now); 0 left in the tree.
+- 14:56 collab-e2e `c11collab-b3-2` (7800, with the dispatcher fix) launched.
+- 14:56–15:16 collab-e2e `b3-2` / `b3-3`: 0/14 — STEP 1's Create Space dialog opened and was closed again by the Home
+  re-bootstrap that follows sign-in (user1 fetches `event-page/v1?after=0` a second time ~5–8 s after sign-in with a new socket
+  grant); the harness acted 2 s after sign-in. Probe `probe-c11-createspace.mjs` (5 s after sign-in): dialog opens, fields
+  `name/kind/visibility`. Routed the product side to S16; harness now waits for 8 s of directory quiet after sign-in
+  (`collabSettleAfterLoad(…, "s-home-create-space")`) and re-presses the toolbar button when no dialog opened.
+- 15:1x harness STEP 14 writer leg rewritten: a text peer's marker is its CARET (`collabAssertPeerCaretMoves`: the mover presses
+  Home then End in its editor; the observer's `[data-peer-caret]` must move right), both editors re-mounted before the leg.
+- 15:1x **routed to H11:** every writer Check In on 7800/B3 is refused `codec-refused` (4/4 today, 2.7–7.9 s; note on 8021
+  yesterday); the span drops the underlying `AuthorityError` → blocks collab STEP 6.
+- 15:1x V1 ported my matrix fixes (per-human args, set-aware undo) into the permanent `two-human` harness; tsc 0.
+- 15:20 collab-e2e `b3-4` launched; vigilant hub **8022** booting for the same-field conflict leg (B3 catalog clone, the 7800
+  binary `s13-w3-bin/s13-w3-hub-7800-b3/os-hub` sha256 `962ba372…`, `OS_HUB_MERGE_POLICY=vigilant`, fresh root
+  `s13-c11-hub-8022-vigilant`, hold pid 45592, users 1–3).
+- **Guest design (prepared, frozen until ALL PUBLISHED) — concurrent writer typing.** Writer's `textEdit` → `EditText { text }`
+  is a whole-document SET (op payload = the full text, target field `text`), so two humans typing at once is last-writer-wins on
+  the entire text (measured: `c11typing2` round AB lost 3 + 7 chars). Correct shape (event-sourced, no CRDT): the host already
+  knows its base (the last text it sent or saw acknowledged); `textEdit` carries `{ text, base }` (or the host sends a splice
+  `{ start, delete, insert, baseLength }`), the writer command computes the author's splice from `base → text`, rebases it through
+  the guest's current buffer (`base → current`, prefix/suffix splice; overlapping regions: the later author's insert after the
+  earlier one) and emits a `SpliceText { start, delete, insert }` mutation (inverse = the reverse splice), coalescing under the
+  existing `writer-text-edit` key. Field-precise vigilant conflicts then apply only to overlapping splices. Owner: writer + the
+  SDK text kit (T13/LB lineage) → coordinator.

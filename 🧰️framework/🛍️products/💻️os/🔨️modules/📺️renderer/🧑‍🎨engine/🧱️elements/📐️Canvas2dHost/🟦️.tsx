@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { drawSceneNode, isDecodedImage, type CanvasSceneNode } from "./🎨️paint/🟦️.ts";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
 import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
@@ -80,9 +81,7 @@ export function wheelCameraAtScreen(camera: CanvasCamera, screenX: number, scree
 //#endregion CanvasCameraMath
 
 //#region JsonLayersCanvasSession
-type CanvasGradientStop = { readonly offset?: number; readonly color?: readonly number[] };
-
-type CanvasLayerRecord = {
+type CanvasLayerRecord = CanvasSceneNode & {
   readonly id?: string;
   readonly kind?: string;
   readonly role?: string;
@@ -90,10 +89,6 @@ type CanvasLayerRecord = {
   readonly name?: string;
   readonly color?: string;
   readonly selected?: boolean;
-  readonly x?: number;
-  readonly y?: number;
-  readonly width?: number;
-  readonly height?: number;
   readonly x0?: number;
   readonly y0?: number;
   readonly y1?: number;
@@ -102,109 +97,7 @@ type CanvasLayerRecord = {
   readonly points?: readonly (readonly [number, number])[];
   readonly seams?: readonly number[];
   readonly base?: { readonly name?: string; readonly x?: number; readonly y?: number; readonly width?: number; readonly height?: number };
-  readonly transform?: readonly number[];
-  readonly segments?: readonly {
-    readonly kind?: string;
-    readonly to?: readonly [number, number];
-    readonly ctrl?: readonly [number, number];
-    readonly ctrl1?: readonly [number, number];
-    readonly ctrl2?: readonly [number, number];
-    readonly rx?: number;
-    readonly ry?: number;
-    readonly rotation?: number;
-    readonly largeArc?: boolean;
-    readonly sweep?: boolean;
-  }[];
-  readonly fill?: {
-    readonly kind?: string;
-    readonly color?: readonly number[];
-    readonly x1?: number;
-    readonly y1?: number;
-    readonly x2?: number;
-    readonly y2?: number;
-    readonly cx?: number;
-    readonly cy?: number;
-    readonly r?: number;
-    readonly stops?: readonly CanvasGradientStop[];
-  };
-  readonly stroke?: { readonly color?: readonly number[]; readonly width?: number; readonly dash?: readonly number[]; readonly cap?: string; readonly join?: string };
-  readonly opacity?: number;
-  readonly blendMode?: string;
-  readonly fillRule?: string;
-  readonly visible?: boolean;
-  readonly text?: { readonly content?: string; readonly size?: number };
-  readonly image?: { readonly src?: string; readonly width?: number; readonly height?: number };
 };
-
-function rgbaToCss(color: readonly number[] | undefined, opacity = 1): string {
-  if (!color || color.length < 3) return `rgba(148, 163, 184, ${opacity})`;
-  const alpha = (color[3] ?? 1) * opacity;
-  return `rgba(${color[0]! * 255}, ${color[1]! * 255}, ${color[2]! * 255}, ${alpha})`;
-}
-
-/** 🎨️ Maps a `draw.document` blend mode to its `GlobalCompositeOperation` equivalent (16 modes, matches `DRAW_BLEND_MODES`). */
-const BLEND_MODE_TO_COMPOSITE: Readonly<Record<string, GlobalCompositeOperation>> = {
-  normal: "source-over",
-  multiply: "multiply",
-  screen: "screen",
-  overlay: "overlay",
-  darken: "darken",
-  lighten: "lighten",
-  colorDodge: "color-dodge",
-  colorBurn: "color-burn",
-  hardLight: "hard-light",
-  softLight: "soft-light",
-  difference: "difference",
-  exclusion: "exclusion",
-  hue: "hue",
-  saturation: "saturation",
-  color: "color",
-  luminosity: "luminosity",
-};
-
-function blendModeToComposite(mode: string | undefined): GlobalCompositeOperation {
-  return BLEND_MODE_TO_COMPOSITE[mode ?? "normal"] ?? "source-over";
-}
-
-/** 🪣️ Resolves a fill record into a canvas paint — solid color or gradient (linear/radial, in local layer coordinates). */
-function fillStyleToPaint(ctx: CanvasRenderingContext2D, fill: CanvasLayerRecord["fill"], opacity: number): string | CanvasGradient | null {
-  if (!fill) return null;
-  if (fill.kind === "linearGradient" && fill.stops?.length) {
-    const gradient = ctx.createLinearGradient(fill.x1 ?? 0, fill.y1 ?? 0, fill.x2 ?? 0, fill.y2 ?? 0);
-    for (const stop of fill.stops) gradient.addColorStop(Math.min(1, Math.max(0, stop.offset ?? 0)), rgbaToCss(stop.color, opacity));
-    return gradient;
-  }
-  if (fill.kind === "radialGradient" && fill.stops?.length) {
-    const gradient = ctx.createRadialGradient(fill.cx ?? 0, fill.cy ?? 0, 0, fill.cx ?? 0, fill.cy ?? 0, Math.max(fill.r ?? 0, 0));
-    for (const stop of fill.stops) gradient.addColorStop(Math.min(1, Math.max(0, stop.offset ?? 0)), rgbaToCss(stop.color, opacity));
-    return gradient;
-  }
-  if (fill.color) return rgbaToCss(fill.color, opacity);
-  return null;
-}
-
-/** 🖊️ Builds a `Path2D` from the full (possibly multi-contour) segment list — evenodd fill handles holes correctly across contours. */
-function buildScenePath(segments: CanvasLayerRecord["segments"]): Path2D | null {
-  if (!segments?.length) return null;
-  const path = new Path2D();
-  for (const segment of segments) {
-    const kind = segment.kind ?? "line";
-    if (kind === "move" && segment.to) {
-      path.moveTo(segment.to[0]!, segment.to[1]!);
-    } else if (kind === "line" && segment.to) {
-      path.lineTo(segment.to[0]!, segment.to[1]!);
-    } else if (kind === "quad" && segment.ctrl && segment.to) {
-      path.quadraticCurveTo(segment.ctrl[0]!, segment.ctrl[1]!, segment.to[0]!, segment.to[1]!);
-    } else if (kind === "cubic" && segment.ctrl1 && segment.ctrl2 && segment.to) {
-      path.bezierCurveTo(segment.ctrl1[0]!, segment.ctrl1[1]!, segment.ctrl2[0]!, segment.ctrl2[1]!, segment.to[0]!, segment.to[1]!);
-    } else if (kind === "arc" && segment.to) {
-      path.lineTo(segment.to[0]!, segment.to[1]!);
-    } else if (kind === "close") {
-      path.closePath();
-    }
-  }
-  return path;
-}
 
 function layerColorCss(layer: CanvasLayerRecord, fallbackHue: number, opacity = 1): string {
   if (layer.color) {
@@ -216,69 +109,6 @@ function layerColorCss(layer: CanvasLayerRecord, fallbackHue: number, opacity = 
     }
   }
   return `hsla(${fallbackHue}, 70%, 55%, ${opacity})`;
-}
-
-function applySceneTransform(ctx: CanvasRenderingContext2D, transform: readonly number[] | undefined): void {
-  if (!transform || transform.length < 6) return;
-  const [a, b, c, d, e, f] = transform;
-  ctx.transform(a ?? 1, b ?? 0, c ?? 0, d ?? 1, e ?? 0, f ?? 0);
-}
-
-/** 🖼️ `complete` alone is NOT "this image can be drawn": it turns true for a FAILED load too, and
- * `drawImage` on a broken element throws an uncaught `InvalidStateError` that surfaces as a page
- * error (measured on 🎞️animate, whose demo deck names a source the dev server does not serve — five
- * of its six remaining console faults). A decoded raster always reports a non-zero `naturalWidth`. */
-function isDecodedImage(image: HTMLImageElement | undefined): image is HTMLImageElement {
-  return Boolean(image?.complete) && (image?.naturalWidth ?? 0) > 0;
-}
-
-function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasLayerRecord, zoom: number, imageCache: ReadonlyMap<string, HTMLImageElement>): void {
-  if (layer.visible === false) return;
-  const opacity = layer.opacity ?? 1;
-  ctx.save();
-  ctx.globalCompositeOperation = blendModeToComposite(layer.blendMode);
-  applySceneTransform(ctx, layer.transform);
-  const path = buildScenePath(layer.segments);
-  if (path) {
-    const fillRule = layer.fillRule === "nonzero" ? "nonzero" : "evenodd";
-    const fillPaint = fillStyleToPaint(ctx, layer.fill, opacity);
-    if (fillPaint) {
-      ctx.fillStyle = fillPaint;
-      ctx.fill(path, fillRule);
-    }
-    if (layer.stroke) {
-      ctx.strokeStyle = rgbaToCss(layer.stroke.color, opacity);
-      ctx.lineWidth = Math.max((layer.stroke.width ?? 1) / zoom, 1 / zoom);
-      ctx.lineCap = (layer.stroke.cap as CanvasLineCap) ?? "butt";
-      ctx.lineJoin = (layer.stroke.join as CanvasLineJoin) ?? "miter";
-      ctx.setLineDash(layer.stroke.dash?.map((value) => value / zoom) ?? []);
-      ctx.stroke(path);
-      ctx.setLineDash([]);
-    } else if (!fillPaint) {
-      ctx.strokeStyle = rgbaToCss([0.58, 0.64, 0.72, 0.95], opacity);
-      ctx.lineWidth = Math.max(1 / zoom, 1);
-      ctx.stroke(path);
-    }
-  }
-  if (layer.text?.content) {
-    const size = layer.text.size ?? 14;
-    const tx = layer.x ?? 0;
-    const ty = layer.y ?? 0;
-    ctx.fillStyle = layer.fill?.color ? rgbaToCss(layer.fill.color, opacity) : rgbaToCss([0.0, 0.0, 0.0, 1.0], opacity);
-    ctx.font = `${size}px ui-sans-serif, system-ui, sans-serif`;
-    ctx.fillText(layer.text.content, tx, ty + size);
-  }
-  if (layer.image?.src) {
-    const width = layer.image.width ?? layer.width ?? 64;
-    const height = layer.image.height ?? layer.height ?? 64;
-    const image = imageCache.get(layer.image.src);
-    if (isDecodedImage(image)) {
-      ctx.globalAlpha = opacity;
-      ctx.drawImage(image, 0, 0, width, height);
-      ctx.globalAlpha = 1;
-    }
-  }
-  ctx.restore();
 }
 
 function layerBounds(layer: CanvasLayerRecord): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null {
@@ -412,7 +242,12 @@ function drawInfiniteCanvasGrid(ctx: CanvasRenderingContext2D, camera: CanvasCam
 
 //#region CanvasPointerGestureLane
 /** 🖱️ One pointer sample in canvas (logical CSS-pixel) space. */
-export type CanvasPointerSample = readonly [number, number];
+export type CanvasPointerSample = readonly [number, number, CanvasInputModifiers];
+
+/** ⌨️ Copies keyboard state with the pointer position before dispatch is queued. */
+function pointerSample(x: number,y: number,modifiers?: CanvasInputModifiers): CanvasPointerSample {
+  return [x,y,{shift:modifiers?.shift??false,ctrl:modifiers?.ctrl??false,meta:modifiers?.meta??false,alt:modifiers?.alt??false}];
+}
 
 /** ⌨️ What a discrete gesture phase (`begin`/`end`) carries besides its sample: the button that pressed,
  * the modifiers held, and the viewport the sample is measured in — every field the pre-lane
@@ -457,7 +292,7 @@ export function createCanvasPointerGestureLane(dispatch: CanvasPointerDispatch, 
           const last = item.samples[item.samples.length - 1];
           if (last === undefined) return undefined;
           const viewport = size();
-          return dispatch("canvasPointerMove", { x: last[0], y: last[1], width: viewport.width, height: viewport.height, samples: item.samples.map(([x, y]) => [x, y]) });
+          return dispatch("canvasPointerMove", { x: last[0], y: last[1], ...last[2], width: viewport.width, height: viewport.height, samples: item.samples.map(([x, y]) => [x, y]) });
         }
         case "end": {
           const { sample, extra } = item;
@@ -491,6 +326,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
   private readonly lane: CanvasPointerGestureLane | null;
   private gestureCounter = 0;
   private lastSample: CanvasPointerSample | null = null;
+  private cancelledGestureAwaitingDown = false;
 
   private readLayersJson: () => string;
   private camera: CanvasCamera;
@@ -611,7 +447,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
     drawInfiniteCanvasGrid(ctx, this.camera, logicalWidth, logicalHeight, zoom, surface.grid);
     for (const [index, layer] of layers.entries()) {
       if (layer.segments?.length || layer.text || layer.image?.src) {
-        drawSceneNode(ctx, layer, zoom, this.imageCache);
+        drawSceneNode(ctx, layer, this.imageCache);
         continue;
       }
       if (layer.kind === "image" && layer.dataUrl) {
@@ -675,6 +511,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
   }
 
   pointerDown(x: number, y: number, button: number, _extend: boolean, modifiers?: CanvasInputModifiers): void {
+    this.cancelledGestureAwaitingDown = false;
     if (this.activeUtility === "transform") {
       return;
     }
@@ -684,9 +521,9 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
       this.panCameraStart = { x: this.camera.x, y: this.camera.y };
       return;
     }
-    this.lastSample = [x, y];
+    this.lastSample = pointerSample(x,y,modifiers);
     this.gestureCounter += 1;
-    this.lane?.begin(this.gestureCounter, [x, y], {
+    this.lane?.begin(this.gestureCounter, this.lastSample, {
       button,
       shift: modifiers?.shift ?? false,
       ctrl: modifiers?.ctrl ?? false,
@@ -697,7 +534,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
     });
   }
 
-  pointerMove(x: number, y: number): void {
+  pointerMove(x: number, y: number, modifiers?: CanvasInputModifiers): void {
     if (this.panning) {
       const zoom = this.camera.zoom || 1;
       const next = {
@@ -710,10 +547,11 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
       this.renderFrame();
       return;
     }
+    if (this.cancelledGestureAwaitingDown) return;
     // 🖱️ Hover moves outside a gesture batch through the same lane (the guest's hover hit-test only
     // needs the last sample either way); `begin` is reserved for the presses above.
-    this.lastSample = [x, y];
-    this.lane?.offer([x, y]);
+    this.lastSample = pointerSample(x,y,modifiers);
+    this.lane?.offer(this.lastSample);
   }
 
   pointerUp(x: number, y: number, modifiers?: CanvasInputModifiers): void {
@@ -721,7 +559,8 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
       this.panning = false;
       return;
     }
-    this.lastSample = [x, y];
+    if (this.cancelledGestureAwaitingDown) return;
+    this.lastSample = pointerSample(x,y,modifiers);
     const extra: CanvasPointerExtra = {
       shift: modifiers?.shift ?? false,
       ctrl: modifiers?.ctrl ?? false,
@@ -731,7 +570,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
       height: this.logicalHeight,
     };
     if (this.lane?.activeGesture() != null) {
-      this.lane.end([x, y], extra);
+      this.lane.end(this.lastSample, extra);
       return;
     }
     // 🐢️ A release with no open gesture (the `transform` utility swallows its press above; a press that
@@ -748,7 +587,9 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
       this.panning = false;
       return;
     }
+    const active = this.lane?.activeGesture() != null;
     this.lane?.cancel(this.lastSample);
+    if (active) this.cancelledGestureAwaitingDown = true;
   }
 
   doubleClick(x: number, y: number): void {

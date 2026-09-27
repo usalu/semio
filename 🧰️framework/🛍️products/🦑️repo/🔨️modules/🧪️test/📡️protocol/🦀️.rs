@@ -344,6 +344,15 @@ pub struct Fixture {
     pub digest: String,
 }
 
+/// 📥️ One raw output a subject host produced, routed to the scenario it belongs to, for an
+/// `@oracle-input-subject-raw` oracle: every oracle scenario decodes ITS OWN subject scenario's bytes.
+#[derive(Debug, Clone)]
+pub struct SubjectRawInput {
+    pub scenario: String,
+    pub implementation: String,
+    pub path: String,
+}
+
 /// 🥒️ One planned scenario, already expanded and level-filtered by the coordinator.
 #[derive(Debug, Clone)]
 pub struct Scenario {
@@ -398,7 +407,7 @@ pub struct Plan {
     /// mutable scratch copy is never mistaken for a result.
     pub artifact_dir: String,
     pub results_path: String,
-    pub subject_raw_inputs: Vec<(String, String)>,
+    pub subject_raw_inputs: Vec<SubjectRawInput>,
     pub fixtures: Vec<Fixture>,
     pub scenarios: Vec<Scenario>,
 }
@@ -454,11 +463,17 @@ impl Plan {
             _ => None,
         });
         let subject_raw_inputs = match value.get("subjectRawInputs") {
-            Some(Json::Object(entries)) => entries
+            Some(Json::Object(scenarios)) => scenarios
                 .iter()
-                .filter_map(|(implementation, path)| match path {
-                    Json::String(path) => Some((implementation.clone(), path.clone())),
-                    _ => None,
+                .flat_map(|(scenario, implementations)| match implementations {
+                    Json::Object(entries) => entries
+                        .iter()
+                        .filter_map(|(implementation, path)| match path {
+                            Json::String(path) => Some(SubjectRawInput { scenario: scenario.clone(), implementation: implementation.clone(), path: path.clone() }),
+                            _ => None,
+                        })
+                        .collect::<Vec<_>>(),
+                    _ => Vec::new(),
                 })
                 .collect(),
             _ => Vec::new(),

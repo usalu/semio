@@ -434,6 +434,7 @@ const browserContract = JSON.parse(readFileSync(join(packageDir, "../../🧫️f
   readonly extensionAlias: Readonly<Record<string, readonly string[]>>;
   readonly alias: readonly { readonly find: string; readonly replacement: string }[];
   readonly denyPackages: readonly string[];
+  readonly denySpecifiers: readonly { readonly specifier: string; readonly reason: string }[];
   readonly denyModules: readonly string[];
   readonly requireModules: readonly string[];
   readonly ambiguousDirectories: readonly { readonly directory: string; readonly kindBasename: string; readonly extensionlessResolvesTo: string; readonly browserEntry: string }[];
@@ -580,6 +581,12 @@ describe("browser entry module graph", () => {
     expect(violations, "a node-only package reached the browser dependency optimizer").toEqual([]);
   });
 
+  it("imports no denied barrel specifier from any browser-served module", () => {
+    const { packageEdges } = browserGraph();
+    const violations = browserContract.denySpecifiers.flatMap(({ specifier, reason }) => (packageEdges.get(specifier) ?? []).map((importer) => `${specifier} ← ${importer}: ${reason}`));
+    expect(violations, "a denied barrel reached the browser-served closure").toEqual([]);
+  });
+
   it("still reaches every module the playground boots through and stays inside the declared bound", () => {
     const { modules, packageEdges, unresolved } = browserGraph();
     for (const required of browserContract.requireModules) expect(modules).toContain(required);
@@ -592,6 +599,7 @@ describe("browser entry module graph", () => {
     const oracle = await esbuildBrowserGraph();
     for (const denied of browserContract.denyModules) expect(oracle.modules, denied).not.toContain(denied);
     expect(oracle.packages.filter((specifier) => deniedPackageOf(specifier) !== undefined)).toEqual([]);
+    expect(oracle.packages.filter((specifier) => browserContract.denySpecifiers.some((denied) => denied.specifier === specifier))).toEqual([]);
     // 🔁️ The safety-relevant direction: the walk above must not MISS an edge esbuild found — a guard that
     // under-walks is the dangerous one. The reverse is not asserted: esbuild drops an import statement whose
     // bindings are all unused (it assumes they were types), so its input set is legitimately the smaller one.

@@ -1,7 +1,7 @@
 use super::*;
 
 fn snapshot(revision: u64) -> RenderSnapshot {
-    RenderSnapshot::new(revision, CursorRequest::Default, None)
+    RenderSnapshot::new(revision, CursorRequest::Default, SemioCursor::Default, false, None)
 }
 
 #[test]
@@ -15,6 +15,15 @@ fn publish_then_acquire_sees_the_new_snapshot() {
     let sink = RenderSnapshotSink::new(snapshot(0));
     sink.publish(snapshot(1));
     assert_eq!(sink.acquire().revision, 1);
+}
+
+#[test]
+fn accepted_cursor_and_theme_publish_as_one_snapshot() {
+    let sink = RenderSnapshotSink::new(snapshot(0));
+    sink.publish(RenderSnapshot::new(1, CursorRequest::Default, SemioCursor::EwResize, true, None));
+    let acquired = sink.acquire();
+    assert_eq!(acquired.accepted_cursor, SemioCursor::EwResize);
+    assert!(acquired.accepted_theme_dark);
 }
 
 #[test]

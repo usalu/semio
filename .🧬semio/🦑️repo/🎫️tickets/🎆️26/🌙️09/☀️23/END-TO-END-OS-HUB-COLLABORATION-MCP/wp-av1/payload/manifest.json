@@ -1,0 +1,41 @@
+{
+ "edited": [
+  "🧰️framework/🔨️modules/🎠️kernel/🦀️.rs",
+  "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📥️imports/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+  "🧰️framework/📦️packages/🦀️rust/🦀️.rs",
+  "📜️script.ts",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🧪️tests/📡️wire-effect-round-trip/🦀️.rs",
+  "🧰️framework/🔨️modules/🖌️raster/🦀️.rs",
+  "🧰️framework/🔨️modules/🖌️raster/📦️packages/🦀️rust/Cargo.toml",
+  "🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🧵️TaskManager/🟦️.tsx",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️export-video-from-deck/🦀️.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️copy-prompt/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+  "✏️s/🔌️plugins/🎞️animate/🔣️.json"
+ ],
+ "new": [
+  "🧰️framework/🔨️modules/🖌️raster/🎥️video/🦀️.rs",
+  "🧰️framework/🔨️modules/🖌️raster/🎥️video/🟦️.ts",
+  "🧰️framework/🔨️modules/🖌️raster/🎥️video/🧫️fixtures/🔣️.json",
+  "🧰️framework/🔨️modules/🖌️raster/🎥️video/🧪️tests/🔬️unit/🦀️.rs",
+  "🧰️framework/🔨️modules/🖌️raster/🎥️video/🧪️tests/🔬️unit/🟦️.ts",
+  "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🎞️video-render-program/🔣️.json",
+  "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🦀️.rs",
+  "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🎞️video-render-program/🟦️.ts",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🟦️.ts",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎥️VideoRenderHost/🧪️tests/🔬️unit/🟦️.ts"
+ ]
+}

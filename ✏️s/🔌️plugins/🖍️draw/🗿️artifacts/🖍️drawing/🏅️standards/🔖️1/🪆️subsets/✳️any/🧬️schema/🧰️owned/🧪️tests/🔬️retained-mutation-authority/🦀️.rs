@@ -293,7 +293,7 @@ fn rich_layer() -> DrawingLayerNode {
     base.locked = true;
     base.opacity = 0.75;
     base.blend_mode = "multiply".into();
-    base.transform = crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5 };
+    base.transform = crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5, shear: 0.75 };
     base.attributes.fill = Some(FillStyle::RadialGradient { cx: 1.0, cy: 2.0, r: 3.0, stops: vec![GradientStop { offset: 0.25, color: [0.1, 0.2, 0.3, 0.4] }] });
     base.attributes.stroke = Some(StrokeStyle { color: [0.5, 0.6, 0.7, 0.8], width: 2.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0, 2.0]) });
     if let DrawingLayerNode::Group(value) = &mut group {
@@ -351,7 +351,7 @@ fn retained_drawing_mutation_candidate_covers_all_fourteen_variants_and_returns_
         DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id: shape.clone(), opacity: 0.5 }),
         DrawingMutation::SetLayerBlendMode(SetLayerBlendMode { layer_id: shape.clone(), blend_mode: "multiply".into() }),
         DrawingMutation::RenameLayer(RenameLayer { layer_id: shape.clone(), new_name: "Renamed".into() }),
-        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: shape.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5 } }),
+        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: shape.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 0.5, shear: 0.75 } }),
         DrawingMutation::ReplaceLayerFill(ReplaceLayerFill {
             layer_id: shape.clone(),
             fill: Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 1.0, 1.0] }] }),
@@ -1043,6 +1043,9 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
     crate::schema::layer_base_mut(&mut value).transform.rotation = 0.75;
     variants.push(value);
     let mut value = baseline.clone();
+    crate::schema::layer_base_mut(&mut value).transform.shear = 1.25;
+    variants.push(value);
+    let mut value = baseline.clone();
     crate::schema::layer_base_mut(&mut value).attributes.fill = Some(FillStyle::Solid { color: [0.9, 0.2, 0.3, 0.4] });
     variants.push(value);
     let mut value = baseline.clone();
@@ -1094,7 +1097,7 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
         DrawingMutation::SetLayerOpacity(SetLayerOpacity { layer_id: id.clone(), opacity: 0.25 }),
         DrawingMutation::SetLayerBlendMode(SetLayerBlendMode { layer_id: id.clone(), blend_mode: "screen".into() }),
         DrawingMutation::RenameLayer(RenameLayer { layer_id: id.clone(), new_name: "renamed".into() }),
-        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: id.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
+        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: id.clone(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0, shear: 0.0 } }),
         DrawingMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id: id.clone(), fill: Some(FillStyle::Solid { color: [0.1, 0.2, 0.3, 0.4] }) }),
         DrawingMutation::ReplaceLayerStroke(ReplaceLayerStroke { layer_id: id.clone(), stroke: Some(StrokeStyle { color: [0.1, 0.2, 0.3, 0.4], width: 2.0, cap: "round".into(), join: "bevel".into(), dash: Some(vec![1.0]) }) }),
         DrawingMutation::SetLayerBooleanOperation(SetLayerBooleanOperation { layer_id: id.clone(), boolean_operation: "intersect".into() }),
@@ -1118,8 +1121,12 @@ fn retained_drawing_schema_digest_distinguishes_every_nested_semantic_field() {
     );
     assert_mutation_digest_distinct(DrawingMutation::RenameLayer(RenameLayer { layer_id: "layer".into(), new_name: "left".into() }), DrawingMutation::RenameLayer(RenameLayer { layer_id: "layer".into(), new_name: "right".into() }));
     assert_mutation_digest_distinct(
-        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
-        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::DrawingTransform { x: 6.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0 } }),
+        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::DrawingTransform { x: 1.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0, shear: 0.0 } }),
+        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::DrawingTransform { x: 6.0, y: 2.0, scale_x: 3.0, scale_y: 4.0, rotation: 5.0, shear: 0.0 } }),
+    );
+    assert_mutation_digest_distinct(
+        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::DrawingTransform { x:1.0,y:2.0,scale_x:3.0,scale_y:4.0,rotation:5.0,shear:0.0 } }),
+        DrawingMutation::UpdateLayerTransform(UpdateLayerTransform { layer_id: "layer".into(), transform: crate::DrawingTransform { x:1.0,y:2.0,scale_x:3.0,scale_y:4.0,rotation:5.0,shear:0.5 } }),
     );
     assert_mutation_digest_distinct(
         DrawingMutation::ReplaceLayerFill(ReplaceLayerFill { layer_id: "layer".into(), fill: None }),
@@ -1505,4 +1512,57 @@ fn retained_path_geometry_digest_distinguishes_control_points() {
         crate::mutations::update_path_geometry("path".into(),vec![PathSegment::Cubic { ctrl1: [1.0,2.0], ctrl2: [3.0,4.0], to: [5.0,6.0] }]),
         crate::mutations::update_path_geometry("path".into(),vec![PathSegment::Cubic { ctrl1: [2.0,2.0], ctrl2: [3.0,4.0], to: [5.0,6.0] }]),
     );
+}
+
+#[test]
+fn retained_text_edit_preserves_identity_and_appearance() {
+    initialize_drawing_mutation_arena_pool_for_test();
+    let mut layer = crate::schema::create_drawing_text_layer("Caption");
+    crate::schema::layer_base_mut(&mut layer).opacity = 0.4;
+    let id = crate::schema::layer_id(&layer).to_string();
+    let source = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let mutation = crate::mutations::update_text(id.clone(), "Grüße 🌍\n123".into(), 36.0);
+    let result = apply(source, &mutation).expect("retained text mutation applies");
+    let DrawingLayerNode::Text(text) = &result.layers[0] else { panic!("Expected text") };
+    assert_eq!(text.content, "Grüße 🌍\n123");
+    assert_eq!(text.size, 36.0);
+    assert_eq!(text.base.id, id);
+    assert_eq!(text.base.opacity, 0.4);
+    drain_snapshot(result);
+    drain_mutation(mutation);
+}
+
+#[test]
+fn retained_text_digest_distinguishes_content_and_size() {
+    assert_mutation_digest_distinct(crate::mutations::update_text("text".into(), "A".into(), 24.0), crate::mutations::update_text("text".into(), "B".into(), 24.0));
+    assert_mutation_digest_distinct(crate::mutations::update_text("text".into(), "A".into(), 24.0), crate::mutations::update_text("text".into(), "A".into(), 36.0));
+}
+
+#[test]
+fn retained_text_edit_cancellation_keeps_the_complete_document() {
+    initialize_drawing_mutation_arena_pool_for_test();
+    let layer = crate::schema::create_drawing_text_layer("Caption");
+    let id = crate::schema::layer_id(&layer).to_string();
+    let mut source = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let expected = source.clone();
+    let mutation = crate::mutations::update_text(id, "😀🙂Grüße".into(), 36.0);
+    let operation = semio_framework_job::OperationId(8_091);
+    let generation = semio_framework_job::Generation(91);
+    let mut authority = borrowed_candidate(operation, generation).unwrap();
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut sequence = 0;
+    for _ in 0..100_000 {
+        if authority.text_clone.as_ref().is_some_and(|clone| clone.index == 4) { break; }
+        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), semio_framework_job::default_now_us, &mut sequence);
+        assert!(!authority.step(&mut source, &mutation, &mut context).unwrap());
+    }
+    assert_eq!(authority.text_clone.as_ref().unwrap().index, 4);
+    cancel.cancel_now();
+    let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel, semio_framework_job::default_now_us, &mut sequence);
+    assert_eq!(authority.step(&mut source, &mutation, &mut context), Err("drawing-store.mutation-candidate-cancelled"));
+    close_candidate(&mut authority, Some(&mut source));
+    assert_eq!(source, expected);
+    drain_snapshot(source);
+    drain_snapshot(expected);
+    drain_mutation(mutation);
 }

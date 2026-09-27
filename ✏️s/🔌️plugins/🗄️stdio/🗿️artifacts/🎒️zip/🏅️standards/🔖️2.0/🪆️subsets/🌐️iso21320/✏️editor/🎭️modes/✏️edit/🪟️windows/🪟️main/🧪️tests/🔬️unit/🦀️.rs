@@ -1,21 +1,22 @@
 use super::*;
-use crate::schema::snapshot::ZipEntry;
 
-#[semio_framework_async_macros::async_test]
-async fn definition_declares_a_tree_window() {
-    let def = definition();
-    assert_eq!(def.id, WINDOW_KIND_ID);
-    assert_eq!(def.body_key, BODY_KEY);
+#[test]
+fn archive_window_requires_complete_draft_arguments() {
+    let definition = definition();
+    assert_eq!(definition.id, WINDOW_KIND_ID);
+    assert_eq!(definition.body_key, BODY_KEY);
+    let action = definition.actions.iter().find(|action| action.id == "set-node").unwrap();
+    assert_eq!(action.args.len(), 3);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn render_lists_the_comment_root_and_one_leaf_per_entry() {
-    let document = ZipSnapshot { entries: vec![ZipEntry { name: "a.txt".into(), data: b"hi".to_vec() }], comment: "an archive".into(), ..ZipSnapshot::default() };
-    let node = render(&document, &semio_framework_plugin::TreeWindows::unhosted()).expect("render");
-    let section = node.children.get(0).expect("tree section");
-    let root = section.children.get(0).expect("tree root");
-    assert_eq!(root.key.as_str(), COMMENT_NODE_ID);
-    let children = &root.children;
-    assert_eq!(children.len(), 1);
-    assert_eq!(children.get(0).expect("child").key.as_str(), format!("{ENTRY_NODE_PREFIX}0"));
+#[test]
+fn archive_window_renders_explicit_localized_drafts() {
+    for locale in [semio_framework_plugin::Locale::En, semio_framework_plugin::Locale::De] {
+        let document = ZipSnapshot { comment: "Archive comment text".into(), ..Default::default() };
+        let node = render(&document, &TreeWindows::unhosted(), locale).unwrap();
+        assert_eq!(node.key.as_str(), "archive-fields");
+        assert_eq!(node.children[0].key.as_str(), "archive-field-0");
+        assert!(!node.children[0].children.is_empty());
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+    }
 }

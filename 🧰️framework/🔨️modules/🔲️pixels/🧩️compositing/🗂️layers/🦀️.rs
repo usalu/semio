@@ -1,6 +1,11 @@
 //! 🗂️ Retained preparation of centered raster layers for the shared compositor.
 use super::*;
 
+/// 🎭️ Effective coverage of an imported RGBA mask, shared by compositing and mask authoring.
+pub fn mask_coverage(pixel:[u8;4])->u8 {
+    ((0.2126*f64::from(pixel[0])+0.7152*f64::from(pixel[1])+0.0722*f64::from(pixel[2]))*f64::from(pixel[3])/255.0).round() as u8
+}
+
 #[derive(Clone,Copy,Debug)]
 pub struct RasterStackTransform {pub x:f64,pub y:f64,pub scale_x:f64,pub scale_y:f64,pub rotation:f64}
 #[derive(Clone,Debug)]
@@ -102,7 +107,7 @@ impl RasterStackJob {
         while budget>0&&self.preparation<self.preparations.len(){
             let prep=&mut self.preparations[self.preparation];let end=prep.coverage.len().min(prep.offset+budget);budget-=end-prep.offset;self.prepared+=end-prep.offset;
             let coverage=Arc::get_mut(&mut prep.coverage).unwrap();
-            for (offset,value) in coverage.iter_mut().enumerate().take(end).skip(prep.offset){let at=offset*4;let bytes=&prep.image.pixels;*value=((0.2126*f64::from(bytes[at])+0.7152*f64::from(bytes[at+1])+0.0722*f64::from(bytes[at+2]))*f64::from(bytes[at+3])/255.0).round() as u8;}
+            for (offset,value) in coverage.iter_mut().enumerate().take(end).skip(prep.offset){let at=offset*4;let bytes=&prep.image.pixels;*value=mask_coverage([bytes[at],bytes[at+1],bytes[at+2],bytes[at+3]]);}
             prep.offset=end;if end==coverage.len(){self.preparation+=1;}
         }
         if self.preparation==self.preparations.len()&&self.composite.is_none(){

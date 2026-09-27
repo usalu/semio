@@ -1,0 +1,10 @@
+{
+  "before": {"content": "Text", "size": 24},
+  "edits": [
+    {"content": "123", "size": 24},
+    {"content": "Grüße — Hello 🌍\n第二行", "size": 32},
+    {"content": "", "size": 0.5},
+    {"content": "Text", "size": 24}
+  ],
+  "invalidSizes": [0, -1, "24", null]
+}

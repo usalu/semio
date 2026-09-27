@@ -17,6 +17,8 @@ import type { SetLayerBlendMode } from "../../../🎨️style/🧬️schema/🧬
 import type { DuplicateLayer } from "../../../🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🦠️mutation/🟦️.ts";
 import type { ReorderLayer } from "../../../🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🦠️mutation/🟦️.ts";
 import type { DrawingLayerNode } from "../🟦️.ts";
+import type { UpdatePathGeometry } from "../../../🔀️transform/🧬️schema/🧬️mutations/✏️update-path-geometry/🦠️mutation/🟦️.ts";
+import type { UpdateText } from "../../../🎨️style/🧬️schema/🧬️mutations/📝️update-text/🦠️mutation/🟦️.ts";
 
 /** ✏️ Mirrors Rust `RenameLayer` (`✏️rename-layer/🦠️mutation/🦀️.rs`). */
 export interface RenameLayer {
@@ -30,6 +32,7 @@ export interface DrawingTransform {
   y: number;
   scaleX: number;
   scaleY: number;
+  shear: number;
   rotation: number;
 }
 
@@ -117,4 +120,6 @@ export type DrawingMutation =
   | ({ mutation: "createLayer" } & CreateLayer)
   | ({ mutation: "duplicateLayer" } & DuplicateLayer)
   | ({ mutation: "deleteLayer" } & DeleteLayer)
-  | ({ mutation: "reorderLayer" } & ReorderLayer);
+  | ({ mutation: "reorderLayer" } & ReorderLayer)
+  | ({ mutation: "updatePathGeometry" } & UpdatePathGeometry)
+  | ({ mutation: "updateText" } & UpdateText);

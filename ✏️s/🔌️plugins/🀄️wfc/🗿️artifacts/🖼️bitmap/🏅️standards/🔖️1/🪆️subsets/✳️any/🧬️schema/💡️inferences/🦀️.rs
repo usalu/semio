@@ -853,6 +853,12 @@ pub fn compile_bitmap_collapse(snapshot: &BitmapSnapshot) -> Result<BitmapCollap
 
 /// 🏁 Explicit headless adapter over the same complete parent job the public factory hands out.
 pub fn solve_with_job(snapshot: &BitmapSnapshot) -> Result<BitmapInferenceCommit, String> {
+    solve_with_clock(snapshot, semio_framework_job::default_now_us)
+}
+
+/// 🧮️ The same headless adapter driven by an injected clock, so correctness laws run on
+/// [`semio_framework_job::logical_now_us`] and never on a descheduled thread's wall clock.
+pub fn solve_with_clock(snapshot: &BitmapSnapshot, now_us: fn() -> Option<u64>) -> Result<BitmapInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
     let job = BitmapInferenceJob::new(operation, BitmapInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
     let params = semio_framework_job::BatchJobParams {
@@ -860,7 +866,7 @@ pub fn solve_with_job(snapshot: &BitmapSnapshot) -> Result<BitmapInferenceCommit
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
         config: semio_framework_job::BatchDriveConfig { site: "wfc.bitmap.inference.headless", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US },
-        now_us: semio_framework_job::default_now_us,
+        now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
         Ok(session) => session,

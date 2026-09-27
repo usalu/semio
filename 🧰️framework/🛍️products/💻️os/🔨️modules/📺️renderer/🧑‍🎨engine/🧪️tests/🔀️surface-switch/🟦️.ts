@@ -33,6 +33,7 @@ import {
   createSessionAppSwitchGateV1,
   createSessionWorkLedgerV1,
   createShellSessionLaneV1,
+  shellHumanChangeRecoveryV1,
   shellIdentityResolutionV1,
   shellRouteAdmissionTextV1,
   shellRouteAdmissionV1,
@@ -49,6 +50,8 @@ import {
   surfaceRoleAppsV1,
   surfaceSwitchBusyTextV1,
   type RoleSurfaceAppV1,
+  type ShellHumanChangeRecoveryV1,
+  type ShellHumanV1,
   type ShellIdentityResolutionV1,
   type ShellRouteAdmissionV1,
   type SessionAppSwitchQuiesceV1,
@@ -722,6 +725,7 @@ type SessionLaneFixtureV1 = {
   readonly identities: readonly { readonly state: Parameters<typeof shellIdentityResolutionV1>[0]; readonly expected: ShellIdentityResolutionV1 }[];
   readonly admissions: readonly { readonly route: string; readonly identity: ShellIdentityResolutionV1; readonly expected: ShellRouteAdmissionV1 }[];
   readonly admissionLabels: readonly { readonly admission: Exclude<ShellRouteAdmissionV1, "apply">; readonly locale: string; readonly text: string; readonly action: string | null }[];
+  readonly humanChanges: readonly { readonly previous: ShellHumanV1 | null; readonly current: ShellHumanV1 | null; readonly expected: ShellHumanChangeRecoveryV1 }[];
 };
 type SessionLaneUnderTestV1 = { readonly route: (uri: string) => Promise<void>; readonly run: (job: () => Promise<void>) => Promise<void>; readonly idle: () => boolean };
 
@@ -857,5 +861,32 @@ describe("shell session lane", () => {
     }
     assert.equal(fixture.admissionLabels.length, 6);
     for (const row of fixture.admissionLabels) assert.deepEqual(shellRouteAdmissionTextV1(row.admission, row.locale), { text: row.text, action: row.action }, `${row.admission}/${row.locale}`);
+  });
+
+  it("re-renders the shown session for a first human or a new display name and re-establishes it only for another human — equal to an XState oracle", () => {
+    const fixture = sessionLaneFixtureJson as SessionLaneFixtureV1;
+    assert(fixture.humanChanges.length >= 9);
+    const oracle = setup({ types: { context: {} as { readonly previous: ShellHumanV1 | null; readonly current: ShellHumanV1 | null } } }).createMachine({
+      context: ({ input }) => input as { readonly previous: ShellHumanV1 | null; readonly current: ShellHumanV1 | null },
+      initial: "deciding",
+      states: {
+        deciding: {
+          always: [
+            { guard: ({ context }) => (context.previous?.userId ?? "") !== "" && (context.previous?.userId ?? "") !== (context.current?.userId ?? ""), target: "re-establish" },
+            { guard: ({ context }) => (context.previous?.userId ?? "") !== (context.current?.userId ?? "") || (context.previous?.displayName ?? "") !== (context.current?.displayName ?? ""), target: "refresh" },
+            { target: "keep" },
+          ],
+        },
+        keep: { type: "final" },
+        refresh: { type: "final" },
+        "re-establish": { type: "final" },
+      },
+    });
+    for (const row of fixture.humanChanges) {
+      assert.equal(shellHumanChangeRecoveryV1(row.previous, row.current), row.expected, JSON.stringify(row));
+      const actor = createActor(oracle, { input: { previous: row.previous, current: row.current } }).start();
+      assert.equal(actor.getSnapshot().value, row.expected, `${JSON.stringify(row)}: XState oracle`);
+      actor.stop();
+    }
   });
 });

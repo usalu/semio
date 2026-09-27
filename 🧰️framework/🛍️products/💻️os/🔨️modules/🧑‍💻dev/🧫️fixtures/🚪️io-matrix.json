@@ -1,0 +1,145 @@
+{
+  "schema": "semio.os-dev.io-matrix/v1",
+  "why": "Every export and import control an editor offers in the Actions rail, keyed by the program-matrix row key `<plugin>/<kind>`. An export names the rail verb, its staged arguments and the file format a third-party parser must accept; an import names the verb that opens the host file picker (`picker`) or stages the file text into one argument (`argument`), and the export whose file it reads back, so the harness judges export → edit → import → export as one round trip. `reach` lists verbs that were `BatchOnlyPendingRewrite` (unreachable from any control) and must now dispatch from their rail row. Programs the live catalog lists without a row here are reported as having no export/import control.",
+  "programs": {
+    "animate/presentation": {
+      "exports": [{ "id": "video", "verb": "exportVideoFromDeck", "format": "any" }],
+      "imports": [],
+      "reach": ["exportVideoFromDeck"]
+    },
+    "architect/program": {
+      "exports": [
+        { "id": "dsl", "verb": "exportProgram", "format": "text" },
+        { "id": "csv", "verb": "exportRegistersCsv", "format": "csv" }
+      ],
+      "imports": [
+        { "id": "dsl", "verb": "importProgramRequest", "via": "picker", "from": "dsl" },
+        { "id": "csv", "verb": "importRegistersCsv", "via": "argument", "argument": "csv", "args": { "strategy": "replace" }, "from": "csv" }
+      ],
+      "reach": ["runAnalysis", "runReport", "runValidation", "search"]
+    },
+    "cad/cad": {
+      "exports": [
+        { "id": "step", "verb": "saveCurrent", "args": { "format": "step" }, "format": "step" },
+        { "id": "obj", "verb": "saveCurrent", "args": { "format": "obj" }, "format": "obj" },
+        { "id": "stl", "verb": "saveCurrent", "args": { "format": "stl" }, "format": "stl" }
+      ],
+      "imports": [{ "id": "step", "verb": "loadRawRequest", "via": "picker", "from": "step" }],
+      "reach": ["applyTransformation", "saveInPlay", "saveSelected", "importCadFile"]
+    },
+    "demonstrator/cad": {
+      "exports": [
+        { "id": "step", "verb": "saveCurrent", "args": { "format": "step" }, "format": "step" },
+        { "id": "obj", "verb": "saveCurrent", "args": { "format": "obj" }, "format": "obj" }
+      ],
+      "imports": [{ "id": "step", "verb": "loadRawRequest", "via": "picker", "from": "step" }],
+      "reach": ["applyTransformation", "saveInPlay", "saveSelected"]
+    },
+    "demonstrator/generation3d": {
+      "exports": [
+        { "id": "obj", "verb": "exportDocument", "args": { "format": "obj" }, "format": "obj" },
+        { "id": "stl", "verb": "exportDocument", "args": { "format": "stl" }, "format": "stl" }
+      ],
+      "imports": [{ "id": "obj", "verb": "importDocumentRequest", "via": "picker", "from": "obj" }],
+      "reach": []
+    },
+    "demonstrator/process3d": {
+      "exports": [
+        { "id": "step", "verb": "exportModel", "args": { "format": "step" }, "format": "step" },
+        { "id": "obj", "verb": "exportModel", "args": { "format": "obj" }, "format": "obj" }
+      ],
+      "imports": [{ "id": "obj", "verb": "loadModelRequest", "via": "picker", "from": "obj" }],
+      "reach": []
+    },
+    "demonstrator/puzzle3d": {
+      "exports": [{ "id": "json", "verb": "exportFixture", "format": "json" }],
+      "imports": [{ "id": "json", "verb": "openImportFixture", "via": "picker", "from": "json" }],
+      "reach": []
+    },
+    "draw/drawing": {
+      "exports": [
+        { "id": "pdf", "verb": "exportDocument", "args": { "format": "pdf" }, "format": "pdf" },
+        { "id": "svg", "verb": "exportDocument", "args": { "format": "svg" }, "format": "svg" }
+      ],
+      "imports": [],
+      "reach": []
+    },
+    "forms/forms": {
+      "exports": [{ "id": "dsl", "verb": "exportFixture", "format": "text" }],
+      "imports": [],
+      "reach": []
+    },
+    "layout/layout": {
+      "exports": [
+        { "id": "png", "verb": "exportPng", "format": "png" },
+        { "id": "svg", "verb": "exportSvg", "format": "svg" },
+        { "id": "pdf", "verb": "exportPdf", "format": "pdf" },
+        { "id": "package", "verb": "exportPackage", "format": "zip" }
+      ],
+      "imports": [],
+      "reach": []
+    },
+    "lowpoly/lowpoly": {
+      "exports": [
+        { "id": "obj", "verb": "exportMesh", "args": { "format": "obj" }, "format": "obj" },
+        { "id": "ply", "verb": "exportMesh", "args": { "format": "ply" }, "format": "ply" },
+        { "id": "stl", "verb": "exportMesh", "args": { "format": "stl" }, "format": "stl" }
+      ],
+      "imports": [{ "id": "obj", "verb": "loadMeshRequest", "via": "picker", "from": "obj" }],
+      "reach": []
+    },
+    "note/note": {
+      "exports": [{ "id": "note", "verb": "saveDownload", "format": "any" }],
+      "imports": [{ "id": "note", "verb": "loadRequest", "via": "picker", "from": "note" }],
+      "reach": []
+    },
+    "process/process3d": {
+      "exports": [
+        { "id": "step", "verb": "exportModel", "args": { "format": "step" }, "format": "step" },
+        { "id": "obj", "verb": "exportModel", "args": { "format": "obj" }, "format": "obj" },
+        { "id": "stl", "verb": "exportModel", "args": { "format": "stl" }, "format": "stl" },
+        { "id": "glb", "verb": "exportModel", "args": { "format": "glb" }, "format": "glb" }
+      ],
+      "imports": [{ "id": "obj", "verb": "loadModelRequest", "via": "picker", "from": "obj" }],
+      "reach": []
+    },
+    "procedural/generation3d": {
+      "exports": [
+        { "id": "obj", "verb": "exportDocument", "args": { "format": "obj" }, "format": "obj" },
+        { "id": "stl", "verb": "exportDocument", "args": { "format": "stl" }, "format": "stl" },
+        { "id": "ply", "verb": "exportDocument", "args": { "format": "ply" }, "format": "ply" },
+        { "id": "gltf", "verb": "exportDocument", "args": { "format": "gltf" }, "format": "gltf" }
+      ],
+      "imports": [{ "id": "obj", "verb": "importDocumentRequest", "via": "picker", "from": "obj" }],
+      "reach": []
+    },
+    "puzzle/puzzle2d": {
+      "exports": [{ "id": "json", "verb": "exportFixture", "format": "json" }],
+      "imports": [{ "id": "json", "verb": "openImportFixture", "via": "picker", "from": "json" }],
+      "reach": []
+    },
+    "puzzle/puzzle3d": {
+      "exports": [{ "id": "json", "verb": "exportFixture", "format": "json" }],
+      "imports": [{ "id": "json", "verb": "openImportFixture", "via": "picker", "from": "json" }],
+      "reach": []
+    },
+    "puzzle/puzzle5d": {
+      "exports": [{ "id": "json", "verb": "exportFixture", "format": "json" }],
+      "imports": [{ "id": "json", "verb": "openImportFixture", "via": "picker", "from": "json" }],
+      "reach": []
+    },
+    "remodel/remodeling": {
+      "exports": [{ "id": "qc", "verb": "exportQcReport", "format": "text" }],
+      "imports": [],
+      "reach": []
+    },
+    "shooting/shooting": {
+      "exports": [
+        { "id": "document", "verb": "saveDownload", "format": "text" },
+        { "id": "shot", "verb": "exportActiveShot", "format": "any" }
+      ],
+      "imports": [{ "id": "document", "verb": "loadRequest", "via": "picker", "from": "document" }],
+      "reach": []
+    }
+  }
+}

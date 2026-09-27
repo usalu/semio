@@ -61,11 +61,7 @@ pub(crate) fn test_child_handle(uri: &str) -> Result<store::ArtifactChild<TestSn
 impl crate::store::retirement::RetireOwned for TestSnapshot {
     fn retirement(self) -> Box<dyn crate::store::retirement::RetirementCursor> {
         let Self { count, label, slot } = self;
-        crate::store::retirement::sequence(vec![
-            crate::store::retirement::RetireOwned::retirement(count),
-            crate::store::retirement::RetireOwned::retirement(label),
-            crate::store::retirement::RetireOwned::retirement(slot),
-        ])
+        crate::store::retirement::sequence(vec![crate::store::retirement::RetireOwned::retirement(count), crate::store::retirement::RetireOwned::retirement(label), crate::store::retirement::RetireOwned::retirement(slot)])
     }
 }
 
@@ -156,6 +152,6 @@ impl protocol::MutationDiff<TestSnapshot> for TestDiff {
 //#region 🧬️Mutations
 #[path = "../../🧫️fixtures/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub(crate) use mutations::{SetSlotChildren, SetCount, SetLabel, TestMutation};
+pub(crate) use mutations::{SetCount, SetLabel, SetSlotChildren, TestMutation};
 //#endregion 🧬️Mutations
 //#endregion 🧬️TestDocumentMutationRoot

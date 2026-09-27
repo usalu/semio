@@ -465,7 +465,7 @@
       "expectShape": "phase=Render engine=0 upload=2 gpu-cursor=None upload-progress=(0, 0, 0) input-wait=RuntimeLock"
     },
     {
-      "why": "A live deferred checkout retains its exact work category and safe external request class in the terminal diagnostic.",
+      "why": "A live Render checkout is an external wait; unrelated input and deadline wakes cannot charge it as stalled work.",
       "signatures": [
         [
           "Render",
@@ -482,8 +482,48 @@
         ]
       ],
       "repeatEachFor": 4097,
+      "expectReports": 0
+    },
+    {
+      "why": "A live Acknowledge checkout also parks until its completion wakes the runtime.",
+      "signatures": [
+        [
+          "Acknowledge",
+          0,
+          1,
+          null,
+          [
+            0,
+            0,
+            0
+          ],
+          "InteractionCheckout",
+          0
+        ]
+      ],
+      "repeatEachFor": 8192,
+      "expectReports": 0
+    },
+    {
+      "why": "A stale checkout marker on an aborted cursor cannot hide retirement that stopped advancing.",
+      "signatures": [
+        [
+          "Aborted",
+          0,
+          1,
+          null,
+          [
+            0,
+            0,
+            0
+          ],
+          "InteractionCheckout",
+          0
+        ]
+      ],
+      "repeatEachFor": 4097,
       "expectReports": 1,
-      "expectShape": "phase=Render engine=0 upload=1 gpu-cursor=None upload-progress=(0, 0, 0) input-wait=InteractionCheckout { site: \"fixture\", request: \"none\" }"
+      "expectShape": "phase=Aborted engine=0 upload=1 gpu-cursor=None upload-progress=(0, 0, 0) input-wait=InteractionCheckout { site: \"fixture\", request: \"none\" }"
     }
   ]
 }

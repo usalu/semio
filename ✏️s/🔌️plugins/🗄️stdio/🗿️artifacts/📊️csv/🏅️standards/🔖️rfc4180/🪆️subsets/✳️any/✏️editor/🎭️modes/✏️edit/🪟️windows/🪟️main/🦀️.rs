@@ -4,7 +4,7 @@
 //! draws no structural distinction between a header and a data record, only this convention).
 
 use crate::CsvSnapshot;
-use semio_framework_plugin::app::{EditableTableColumn, TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
@@ -16,7 +16,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 /// 🧱️ Stitched into the editor manifest by `crate::editor::csv::create_csv_editor`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
+    WindowKindDefinition { label: LocalizedLabel::native("Table", "Tabelle"), icon_id: "table-2".into(), ..semio_s_artifact_stdio_contract::revision_addressed_table_window_kind() }
 }
 //#endregion 🔖️Definition
 
@@ -27,15 +27,21 @@ pub fn definition() -> WindowKindDefinition {
 /// `CsvMutation::SetField`'s `record_index`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &CsvSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(document);
+    render_revisioned(document, &revision)
+}
+
+/// 🔐️ Renders against the store revision captured by the host without re-encoding the snapshot.
+pub fn render_revisioned(document: &CsvSnapshot, revision: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (columns, data_rows): (Vec<String>, &[crate::CsvRecord]) = if document.has_header && !document.records.is_empty() {
         (document.records[0].fields.iter().map(|field| field.value.clone()).collect(), &document.records[1..])
     } else {
         let width = document.records.iter().map(|record| record.fields.len()).max().unwrap_or(0);
         ((0..width).map(|index| format!("Column {}", index + 1)).collect(), &document.records[..])
     };
-    let rows = data_rows.iter().map(|record| record.fields.iter().map(|field| field.value.clone()).collect()).collect();
-    let editable = (0..columns.len()).map(|index| EditableTableColumn::new(index, "set-cell")).collect::<Vec<_>>();
-    TableWindowKit::render_editable(&TableView { columns, rows }, "s.stdio.csv@rfc4180/*#editor", &editable)
+    let rows = data_rows.iter().map(|record| record.fields.iter().map(|field| field.value.clone()).collect()).collect::<Vec<Vec<String>>>();
+    let editable = semio_s_artifact_stdio_contract::window_kit_revisioned_editable_cells(&rows, "set-cell", revision)?;
+    TableWindowKit::render_editable_cells(&TableView { columns, rows }, "s.stdio.csv@rfc4180/*#editor", &editable)
 }
 //#endregion 🔖️Render
 

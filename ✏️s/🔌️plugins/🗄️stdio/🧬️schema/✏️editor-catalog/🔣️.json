@@ -8,6 +8,7 @@
     "formatCount",
     "detailsWindow",
     "actions",
+    "rejectedActions",
     "snapshotEdits",
     "editorApps"
   ],
@@ -44,6 +45,9 @@
           }
         }
       }
+    },
+    "rejectedActions": {
+      "$ref": "#/properties/actions"
     },
     "snapshotEdits": {
       "type": "object",

@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+    ActionArgDef, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
 use store::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
@@ -19,10 +19,6 @@ use semio_s_artifact_stdio_contract::editing;
 //#region 🔖️Dialect
 pub const SEMIO_BREP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
 pub const SEMIO_BREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
-/// 🕹️ Selection domain this editor reads picked vertex/edge/face ids from — one domain covering
-/// every entity kind (matching `process3d`'s own single-domain-per-artifact convention), never a
-/// per-kind split, since a `MeshWindowKit` scene has one shared picking channel.
-pub const SEMIO_BREP_INTERACTION_DOMAIN: &str = "brep";
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
@@ -31,45 +27,62 @@ pub const SEMIO_BREP_INTERACTION_DOMAIN: &str = "brep";
 /// (`SemioBrepMutation::MoveVertex { vertex_id, new_point }`), so the old "no by-index replace op
 /// exists, report don't invent" rationale no longer applies (it applied to `BrepLoopEdge`-shaped
 /// by-INDEX addressing; `move-vertex` addresses by persistent-label id instead, which the
-/// selection channel already resolves). The vertex id comes from the current selection (contract
-/// §2.6's own "set-vertex" example — the picked vertex, not a payload field); the target point
-/// comes from the action's own payload.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// selection channel already resolves). The action carries an explicit stable vertex id and target
+/// point, so keyboard and automation callers use the same validated address.
+#[derive(Clone, Debug, PartialEq)]
 pub struct SemioBrepSetVertexArgs {
+    pub vertex_id: String,
     pub point: [f64; 3],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SemioBrepEditCommand {
     SetVertex(SemioBrepSetVertexArgs),
 }
 
 impl protocol::OpBinary for SemioBrepEditCommand {
-    /// 🧬️ Fixed 24-byte little-endian `[f64;3]` payload — no JSON/serde dependency needed for
-    /// three floats (first-party, matches the repo's own "no runtime deps on external libraries"
-    /// rule better than the sibling `🔺️mesh` editor's `serde_json`-based encode).
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let SemioBrepEditCommand::SetVertex(args) = self;
-        let mut out = Vec::with_capacity(24);
+        let id = args.vertex_id.as_bytes();
+        let length = u32::try_from(id.len()).map_err(|_| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "vertexId is too long".into() })?;
+        let mut out = Vec::with_capacity(4 + id.len() + 24);
+        out.extend_from_slice(&length.to_le_bytes());
+        out.extend_from_slice(id);
         for component in args.point {
             out.extend_from_slice(&component.to_le_bytes());
         }
         Ok(out)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        if bytes.len() != 24 {
-            return Err(protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: format!("expected 24 bytes ([f64;3]), got {}", bytes.len()) });
+        if bytes.len() < 28 {
+            return Err(protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "missing vertexId or point".into() });
         }
-        let read = |i: usize| f64::from_le_bytes(bytes[i * 8..i * 8 + 8].try_into().expect("8-byte slice"));
-        Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point: [read(0), read(1), read(2)] }))
+        let length = u32::from_le_bytes(bytes[..4].try_into().expect("four-byte slice")) as usize;
+        if length == 0 || bytes.len() != 4 + length + 24 {
+            return Err(protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 0, detail: "invalid vertexId length".into() });
+        }
+        let vertex_id = std::str::from_utf8(&bytes[4..4 + length]).map_err(|error| protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 4, detail: error.to_string() })?.to_owned();
+        let point_bytes = &bytes[4 + length..];
+        let read = |i: usize| f64::from_le_bytes(point_bytes[i * 8..i * 8 + 8].try_into().expect("eight-byte slice"));
+        let point = [read(0), read(1), read(2)];
+        if point.iter().any(|value| !value.is_finite()) {
+            return Err(protocol::ProtocolError::Malformed { what: "set-vertex op", offset: 4 + length, detail: "point must contain finite numbers".into() });
+        }
+        Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { vertex_id, point }))
     }
 }
 semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(SemioBrepEditCommand, ["set-vertex"]);
+
+pub fn set_vertex_action() -> ActionDefinition {
+    ActionDefinition::bounded_catalog("set-vertex", LocalizedLabel::native("Move Vertex", "Vertex verschieben"), ActionKind::Mutation).with_args(vec![
+        ActionArgDef::text("vertexId", LocalizedLabel::native("Vertex ID", "Vertex-ID")).required(),
+        ActionArgDef::vec3("point", LocalizedLabel::native("Target Point", "Zielpunkt")).required(),
+    ])
+}
 //#endregion 🔖️Command
 
 //#region 🔖️Mutation
-/// ✏️ Pure core of `set-vertex`: given the already-resolved vertex id (from the current
-/// selection — see `SEMIO_BREP_INTERACTION_DOMAIN`) and target point, the mutation to emit —
+/// ✏️ Pure core of `set-vertex`: given the explicit stable vertex id and target point, the mutation to emit —
 /// `None` if the id doesn't name a live vertex in `snapshot` (matches `handle`'s own no-op-on-
 /// stale-selection behavior). Factored out of `handle` so it is unit-testable without needing a
 /// full `InteractionView` (whose fields are private outside the plugin crate — this is the
@@ -122,7 +135,7 @@ impl ArtifactEditor for SemioBrepEditor {
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        interaction: &InteractionView<'_>,
+        _interaction: &InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
@@ -131,11 +144,9 @@ impl ArtifactEditor for SemioBrepEditor {
             let editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        let selection = interaction.selection(SEMIO_BREP_INTERACTION_DOMAIN);
-        let Some(vertex_id) = selection.ids.first() else { return Ok(Emit::default()) };
-        match move_vertex_mutation(doc.snapshot, vertex_id, args.point) {
+        match move_vertex_mutation(doc.snapshot, &args.vertex_id, args.point) {
             Some(mutation) => Ok(Emit::mutations(vec![mutation])),
-            None => Ok(Emit::default()),
+            None => Err(Fault::from(format!("vertex '{}' does not exist", args.vertex_id))),
         }
     }
 
@@ -152,11 +163,11 @@ impl ArtifactEditor for SemioBrepEditor {
             if action != "set-vertex" {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.unsupported"), format!("action '{action}' is not supported by SemioBrepEditor")));
             }
-            let point = args.and_then(|value| value.get("point")).and_then(DslValue::as_array).map_or([0.0, 0.0, 0.0], |array| {
-                let get = |index: usize| array.get(index).and_then(DslValue::as_f64).unwrap_or(0.0);
-                [get(0), get(1), get(2)]
-            });
-            Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { point }))
+            let field = |key: &str| args.and_then(|value| value.get(key)).ok_or_else(|| Fault::from(format!("set-vertex requires '{key}'")));
+            let vertex_id = field("vertexId")?.as_str().filter(|value| !value.is_empty()).ok_or_else(|| Fault::from("set-vertex vertexId must be non-empty text"))?.to_owned();
+            let point_value = field("point")?.as_array().filter(|value| value.len() == 3).ok_or_else(|| Fault::from("set-vertex point must contain three finite numbers"))?;
+            let component = |index: usize| point_value[index].as_f64().filter(|value| value.is_finite()).ok_or_else(|| Fault::from("set-vertex point must contain three finite numbers"));
+            Ok(SemioBrepEditCommand::SetVertex(SemioBrepSetVertexArgs { vertex_id, point: [component(0)?, component(1)?, component(2)?] }))
         })
     }
 }
@@ -166,11 +177,8 @@ impl editing::SnapshotEditingEditor for SemioBrepEditor {
         match command { editing::SnapshotEditingCommand::Edit(event) => Some(event), _ => None }
     }
 
-    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| SemioBrepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
@@ -179,7 +187,7 @@ impl editing::SnapshotEditingEditor for SemioBrepEditor {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_brep_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(SEMIO_BREP_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_BREP_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout());
+    let builder = Editor::builder(SEMIO_BREP_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_BREP_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(set_vertex_action());
     editing::snapshot_edit_actions_with(builder).build_definition()
 }
 //#endregion 🔖️Manifest

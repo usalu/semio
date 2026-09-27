@@ -19,12 +19,14 @@ pub use super::replace_quant_table::ReplaceQuantTableMutation;
 
 //#region Aggregate
 use super::set_snapshot::SetSnapshot;
+use super::patch_snapshot::PatchSnapshot;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = JpgSnapshot, diff = JpgDiff, schema = "s.stdio.jpg")]
 pub enum JpgMutation {
     SetSnapshot(SetSnapshot),
+    PatchSnapshot(PatchSnapshot),
     ChangeJfifHeader(ChangeJfifHeaderMutation),
     ReplaceQuantTable(ReplaceQuantTableMutation),
     RemoveQuantTable(RemoveQuantTableMutation),
@@ -42,6 +44,7 @@ pub enum JpgMutation {
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<JpgMutation> {
     vec![
+        crate::schema::mutations::patch_snapshot::test_case(),
         crate::schema::mutations::change_jfif_header::test_case(),
         crate::schema::mutations::replace_quant_table::test_case(),
         crate::schema::mutations::remove_quant_table::test_case(),

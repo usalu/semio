@@ -4,7 +4,7 @@ use crate::{GatewayError, GatewayErrorCode};
 use semio_framework_async::{HostAsyncRuntime, OperationContext};
 use semio_framework_os_kernel::os_directory::{
     client::{DirectoryClient, DirectoryClientError, DirectoryTransport, HubSocketGrantSource, LocalHubCredential},
-    descriptor_digest_v1, hex_lower, DirectoryAccessChange, DirectoryEventBody, DirectorySpaceAdministrationPageV1, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
+    descriptor_digest_v1, hex_lower, DirectoryAccessChange, DirectoryEventBody, DirectorySessionKindV1, DirectorySpaceAdministrationPageV1, DirectorySpaceRole, DirectoryStreamMessage, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, MemberView,
 };
 use semio_framework_os_kernel::{FromValue, ToValue};
 use std::collections::{BTreeMap, HashMap};
@@ -434,7 +434,7 @@ impl HubRemoteBinding {
             DirectorySpaceAdministrationPageV1::Public { .. } => return self.fail(generation, HubBindingError::MembershipRequired),
         };
         let observed_event_seq = self.observed_event_seq.load(Ordering::SeqCst);
-        let snapshot = match self.validate_snapshot(session.user_id, session.expires_at, space, members, documents, observed_event_seq, ctx) {
+        let snapshot = match self.validate_snapshot(session.user_id, session.session_kind, session.expires_at, space, members, documents, observed_event_seq, ctx) {
             Ok(snapshot) => Arc::new(snapshot),
             Err(error) => return self.fail(generation, error),
         };
@@ -495,6 +495,13 @@ impl HubRemoteBinding {
 
     pub fn invalidate_stream(&self) {
         self.invalidate("hub directory stream continuity was lost");
+    }
+
+    /// 🩺️ Records why the live directory stream's last dial failed, without starting a refresh: the stream's own reconnect
+    /// ladder retries the dial, and a hub-bound refusal names this cause as its `lastFault`.
+    pub fn note_stream_fault(&self, cause: &str) {
+        *self.diagnostic.write().unwrap_or_else(PoisonError::into_inner) = Some(bounded_diagnostic(cause));
+        self.announce();
     }
 
     fn begin_refresh(&self, phase: HubBindingPhase, total: usize) -> u64 {
@@ -560,6 +567,7 @@ impl HubRemoteBinding {
     fn validate_snapshot(
         &self,
         authenticated_user_id: String,
+        session_kind: DirectorySessionKindV1,
         session_expires_at_ms: i64,
         space: MemberSpaceViewV1,
         members: Vec<MemberView>,
@@ -572,7 +580,7 @@ impl HubRemoteBinding {
         }
         validate_identity("space id", &space.id)?;
         let membership = members.into_iter().find(|member| member.user_id == authenticated_user_id).ok_or(HubBindingError::MembershipRequired)?;
-        if space.role != membership.role {
+        if !principal_role_admitted(session_kind, space.role, membership.role) {
             return Err(HubBindingError::MembershipRequired);
         }
         validate_document_count(documents.len(), space.document_count)?;
@@ -622,6 +630,13 @@ impl HubRemoteBinding {
         *self.catalog.write().unwrap_or_else(PoisonError::into_inner) = Some(Arc::new(AuthorizedCatalogSnapshot { authority_generation, selections, dialect_kinds }));
         self.announce();
     }
+}
+
+/// 🪜️ Whether the hub's role for the authenticated principal is one its account's membership admits: a human session
+/// holds exactly its member row's role; an agent session holds at most it (the hub caps an agent at its delegation's
+/// audience, so a `read` agent of an author account is a spectator), and no principal ever holds more.
+fn principal_role_admitted(session_kind: DirectorySessionKindV1, principal: DirectorySpaceRole, membership: DirectorySpaceRole) -> bool {
+    principal == membership || (session_kind == DirectorySessionKindV1::Agent && principal == DirectorySpaceRole::Spectator)
 }
 
 fn next_authority_generation() -> Result<u64, HubBindingError> {
@@ -990,9 +1005,10 @@ impl NativeHubBindingDriver {
             return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub directory stream did not enter its initial dial").retryable());
         };
         let authority_generation = binding.authority_generation.load(Ordering::SeqCst);
-        let connection = dial_client.open_stream_ws(&ctx, since, 1_000).map_err(|_| {
-            binding.invalidate_stream();
-            GatewayError::new(GatewayErrorCode::PluginUnavailable, "hub directory stream is unavailable; authenticated snapshot was not activated").retryable()
+        let connection = dial_client.open_stream_ws(&ctx, since, 1_000).map_err(|error| {
+            let refusal = directory_dial_refusal(&error);
+            binding.invalidate(&refusal.message);
+            refusal
         })?;
         match complete_authorized_directory_dial(&mut stream, &binding, &ctx, authority_generation, operation_now, connection) {
             DirectoryStreamTurn::Idle => {}
@@ -1064,6 +1080,7 @@ impl NativeHubBindingDriver {
                                     }
                                 }
                                 Err(error) => {
+                                    thread_binding.note_stream_fault(&directory_dial_refusal(&error).message);
                                     match stream.complete_dial(operation_now, Err(semio_framework_os_kernel::os_directory::client::TransportError::Io(error.to_string()))) {
                                         DirectoryStreamTurn::Closed | DirectoryStreamTurn::Revoked(_) => break,
                                         DirectoryStreamTurn::ReconnectAt(_) | DirectoryStreamTurn::Idle => {}
@@ -1189,6 +1206,13 @@ impl Drop for NativeHubBindingDriver {
             let _ = thread.join();
         }
     }
+}
+
+/// 🚪️ The refusal a hub binding answers when its directory stream cannot be dialled: retryable `PLUGIN_UNAVAILABLE` naming the
+/// dial's own cause (a refused socket grant's status and body, a transport fault), so an agent and its operator see WHY the
+/// authenticated snapshot was not activated instead of a bare "unavailable".
+pub(crate) fn directory_dial_refusal(cause: &impl std::fmt::Display) -> GatewayError {
+    GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("hub directory stream is unavailable ({cause}); authenticated snapshot was not activated")).retryable()
 }
 
 fn binding_error_to_gateway(error: HubBindingError) -> GatewayError {

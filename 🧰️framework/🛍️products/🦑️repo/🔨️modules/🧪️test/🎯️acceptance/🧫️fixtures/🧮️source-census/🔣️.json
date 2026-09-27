@@ -14,5 +14,12 @@
     { "name": "dereferenced loop id", "path": "✏️s/🔌️plugins/🔋️energy/x/🦀️.rs", "text": "for tool_id in IDS {\n    builder = builder.action_interactive_job(*tool_id, InteractiveJobClassification::Migrated);\n}\n", "expected": [{ "command": "tool_id", "classification": "Migrated", "line": 2 }], "calls": 1, "codeCalls": 1 },
     { "name": "a mention in a doc comment is not a declaration", "path": "✏️s/🔌️plugins/🗄️stdio/x/🦀️.rs", "text": "/// and `.action_interactive_job(.., Migrated)`: only Migrated survives\npub fn a() {}\n", "expected": [], "calls": 1, "codeCalls": 0 },
     { "name": "a variable classification is a call the census cannot classify", "path": "✏️s/🔌️plugins/x/🦀️.rs", "text": "b.action_interactive_job(\"a\", classification)\n", "expected": [], "calls": 1, "codeCalls": 1 }
+  ],
+  "docstrings": [
+    { "name": "a Rust docstring opening with its emoji", "path": "🧰️framework/x/🦀️.rs", "text": "/// 🧹️ Clears the cache.\nfn clear() {}\n", "expected": [] },
+    { "name": "the @emoji residue in front of a Rust docstring emoji", "path": "🧰️framework/x/🦀️.rs", "text": "/// @emoji 🧹️ Clears the cache.\n/// @emoji is not an opener here\nfn clear() {}\n", "expected": [{ "line": 1, "rule": "at-emoji" }] },
+    { "name": "a Rust docstring without an emoji, and a blank first doc line", "path": "🧰️framework/x/🦀️.rs", "text": "/// Plain summary.\nfn a() {}\n\n///\n/// ✅️ Opens on the second line.\nfn b() {}\n//// four slashes are not a doc\n", "expected": [{ "line": 1, "rule": "no-emoji" }] },
+    { "name": "an inner Rust module docstring with a symbol marker", "path": "🧰️framework/x/🦀️.rs", "text": "//! ⊕ Sums.\n", "expected": [] },
+    { "name": "TypeScript one-line and multi-line docstrings", "path": "🧰️framework/x/🟦️.ts", "text": "/** 🧹️ Clears. */\nexport const a = 1;\n/** @emoji 🧹️ Tagged. */\nexport const b = 2;\n/**\n * @emoji 🌐️ Tagged on the second line.\n */\nexport const c = 3;\n/**\n * plain\n */\nexport const d = 4;\n/**/\n", "expected": [{ "line": 3, "rule": "at-emoji" }, { "line": 6, "rule": "at-emoji" }, { "line": 10, "rule": "no-emoji" }] }
   ]
 }

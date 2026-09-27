@@ -1,0 +1,78 @@
+{
+  "schema": "semio.framework.renderer.table-button-accessibility.v1",
+  "hostId": "table-ax-host",
+  "surfaceId": "s.space.home",
+  "controllerId": "s.space.home",
+  "columns": [
+    { "id": "name", "label": "Name" },
+    { "id": "actions", "label": "Actions" }
+  ],
+  "row": {
+    "id": "space:sp-2",
+    "name": { "kind": "text", "value": "Werkstatt Ada" },
+    "actions": {
+      "kind": "buttons",
+      "buttons": [
+        {
+          "iconId": "folder-open",
+          "label": "Open: Werkstatt Ada",
+          "placement": "row",
+          "action": { "controllerId": "s.space.home", "action": "openSpace", "args": { "spaceId": "sp-2" } }
+        },
+        {
+          "iconId": "archive",
+          "label": "Archive: Werkstatt Ada",
+          "placement": "menu",
+          "action": { "controllerId": "s.space.home", "action": "archiveSpace", "args": { "spaceId": "sp-2" } }
+        }
+      ]
+    }
+  },
+  "expected": {
+    "key": "table-ax-host.row.space:sp-2.actions.0",
+    "role": "button",
+    "label": "Open: Werkstatt Ada",
+    "excludedMenuLabel": "Archive: Werkstatt Ada",
+    "focusable": true,
+    "tabbable": true,
+    "action": { "controllerId": "s.space.home", "action": "openSpace", "args": { "spaceId": "sp-2" } }
+  },
+  "geometryCases": [
+    {
+      "id": "one-pixel-two-buttons",
+      "cellRect": { "x": 10, "y": 20, "width": 1, "height": 4 },
+      "bodyRect": { "x": 10, "y": 20, "width": 1, "height": 4 },
+      "buttons": [
+        { "iconId": "folder-open", "label": "Open narrow", "placement": "row", "action": { "controllerId": "s.space.home", "action": "openNarrow", "args": { "spaceId": "sp-2" } } },
+        { "iconId": "copy", "label": "Copy narrow", "placement": "row", "action": { "controllerId": "s.space.home", "action": "copyNarrow", "args": { "spaceId": "sp-2" } } },
+        { "iconId": "archive", "label": "Archive narrow", "placement": "menu", "action": { "controllerId": "s.space.home", "action": "archiveNarrow", "args": { "spaceId": "sp-2" } } }
+      ],
+      "expectedVisibleRects": [
+        { "x": 10, "y": 20, "width": 0.5, "height": 4 },
+        { "x": 10.5, "y": 20, "width": 0.5, "height": 4 }
+      ],
+      "probes": [
+        { "x": 10.25, "y": 22, "buttonIndex": 0, "action": "openNarrow" },
+        { "x": 10.75, "y": 22, "buttonIndex": 1, "action": "copyNarrow" }
+      ]
+    },
+    {
+      "id": "body-edge-clips-both-axes",
+      "cellRect": { "x": 9.75, "y": 19, "width": 1, "height": 4 },
+      "bodyRect": { "x": 10, "y": 20, "width": 0.5, "height": 2 },
+      "buttons": [
+        { "iconId": "folder-open", "label": "Open edge", "placement": "row", "action": { "controllerId": "s.space.home", "action": "openEdge", "args": { "spaceId": "sp-2" } } },
+        { "iconId": "copy", "label": "Copy edge", "placement": "row", "action": { "controllerId": "s.space.home", "action": "copyEdge", "args": { "spaceId": "sp-2" } } },
+        { "iconId": "archive", "label": "Archive edge", "placement": "menu", "action": { "controllerId": "s.space.home", "action": "archiveEdge", "args": { "spaceId": "sp-2" } } }
+      ],
+      "expectedVisibleRects": [
+        { "x": 10, "y": 20, "width": 0.25, "height": 2 },
+        { "x": 10.25, "y": 20, "width": 0.25, "height": 2 }
+      ],
+      "probes": [
+        { "x": 10.125, "y": 21, "buttonIndex": 0, "action": "openEdge" },
+        { "x": 10.375, "y": 21, "buttonIndex": 1, "action": "copyEdge" }
+      ]
+    }
+  ]
+}

@@ -18,12 +18,11 @@ pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
 //#region 🔖️Curve
 /// 📈️ A b-rep edge's underlying 3D curve. Owned by `brep` (`w1b-type-ownership.md`).
 ///
-/// 🔣️ Unlike `serde`, this derive's own `rename_all` already applies to BOTH the variant name AND
-/// every struct-variant member name (see `🌱️value/✨️derive`'s module docs) — no separate
-/// `rename_all_fields` needed; `radiusMajor`/`controlPoints` etc. come out correctly from
-/// `rename_all = "camelCase"` alone.
+/// 🔣️ Container `rename_all` cases the variant names (`ellipse`, `nurbs`); `rename_all_fields` cases every
+/// struct-variant member (`radiusMajor`, `controlPoints`), exactly as the brep schema (`📸️snapshot/🔣️.json`)
+/// and serde state them (`🌱️value/✨️derive/🧪️tests/🐫️variant-field-casing`).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BrepCurve {
     Line {
         origin: SemioPoint3,
@@ -66,7 +65,7 @@ impl Default for BrepCurve {
 /// (`📸️snapshot/➰️curve/🦀️.rs`) field-for-field so [`Body::to_snapshot`]/[`Body::from_snapshot`]
 /// (`📸️snapshot/🔁️body/🦀️.rs`) round-trip it exactly, never approximated.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BrepCurve2 {
     Line { origin: SemioPoint2, direction: SemioPoint2 },
     Circle { center: SemioPoint2, radius: f64 },
@@ -86,10 +85,9 @@ impl Default for BrepCurve2 {
 //#region 🔖️Surface
 /// 🗺️ A b-rep face's underlying surface. Owned by `brep`.
 ///
-/// 🔣️ Same story as `BrepCurve` above — this derive's `rename_all` already covers struct-variant
-/// member names, so a bare `rename_all = "camelCase"` is enough.
+/// 🔣️ Cased like [`BrepCurve`]: variant names by `rename_all`, members by `rename_all_fields`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BrepSurface {
     Plane {
         origin: SemioPoint3,

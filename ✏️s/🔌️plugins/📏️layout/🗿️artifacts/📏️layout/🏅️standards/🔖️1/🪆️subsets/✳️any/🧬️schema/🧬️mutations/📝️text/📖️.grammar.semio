@@ -24,10 +24,13 @@ line = rename-layout
      / delete-frame
      / move-frame
      / resize-frame
+     / rotate-frame
      / change-frame-fill
      / change-frame-stroke
      / change-frame-wrap-mode
      / change-frame-columns
+     / update-grid
+     / set-frame-flags
 
 rename-layout = "rename-layout" SP text
 change-print-target = "change-print-target" SP text?
@@ -50,10 +53,13 @@ create-frame = "create-frame" SP id SP block SP number? SP id?
 delete-frame = "delete-frame" SP id SP id
 move-frame = "move-frame" SP id SP id SP number SP number
 resize-frame = "resize-frame" SP id SP id SP number SP number
+rotate-frame = "rotate-frame" SP id SP id SP number
 change-frame-fill = "change-frame-fill" SP id SP id SP block?
 change-frame-stroke = "change-frame-stroke" SP id SP id SP block?
 change-frame-wrap-mode = "change-frame-wrap-mode" SP id SP id SP text
 change-frame-columns = "change-frame-columns" SP id SP id SP number
+update-grid = "update-grid" SP number SP number SP boolean
+set-frame-flags = "set-frame-flags" SP id SP id SP boolean? SP boolean?
 
 id = OCTET+
 number = OCTET+

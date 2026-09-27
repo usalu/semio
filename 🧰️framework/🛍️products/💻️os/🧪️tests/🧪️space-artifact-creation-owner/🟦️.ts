@@ -6243,6 +6243,72 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
+    it("keeps and resends a batch the hub refused for a transient reason, drains the outbox in bounded batches, never rebuilds", async () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      const originalBroadcastChannel = globalThis.BroadcastChannel;
+      class BoundPortBroadcastChannel {
+        onmessage: ((event: MessageEvent) => void) | null = null;
+        postMessage(): void { throw new Error("bound document backbone must not echo before server authority"); }
+        close(): void {}
+      }
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
+      const actor = `hub.v1.${"5".repeat(64)}`;
+      testSeams.documentSocketGrantTestIssue = async () => ({ schema: "semio.hub.document-socket-grant/v1", protocol: "semio.session.v1", actorId: actor, expiresAtMs: Number.MAX_SAFE_INTEGER });
+      const documentId = "doc-ack-transient";
+      const edit = (id: string) => encodeBackboneMessage({
+        kind: "mutations",
+        envelopes: encodeDocumentBackboneEnvelopeBatchExact([{ mutation_id: id, document_id: documentId, actor: "caller", dependencies: [], observed: null, target: [], diff: { schema: "demo/v1", payload: encodePackValue(id) }, inverse: { schema: "demo/v1", payload: encodePackValue(null) }, timestamp: { actor: 1n, physical_ms: 2n, logical: 3n } }]),
+      });
+      const sentIds = (socket: FakeHubWebSocket) => socket.sent.flatMap((bytes) => {
+        const decoded = decodeClientFrame(bytes).frame;
+        return typeof decoded === "object" && decoded !== null && "Commands" in decoded ? [decoded.Commands.envelopes.map((envelope: { mutation_id: string }) => envelope.mutation_id)] : [];
+      });
+      const transient = Array.from(new TextEncoder().encode(JSON.stringify([{ level: "warning", code: "hub.unavailable", message: "DB I/O aggregate admission exhausted" }])));
+      const outcomes: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => outcomes.push(message);
+      try {
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", dataClass: "persistedShared", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        await flushSocketGrantTurns();
+        const socket = FakeHubWebSocket.instances[0]!;
+        socket.open();
+        const state = artifactState(documentId, "space-1")!;
+        installVerifiedDocumentBackbonePair(state);
+        await handleHubFrame(state, { Session: { actor, color: 1 } });
+        for (const id of ["first-edit", "second-edit"]) handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit(id) } });
+        expect(sentIds(socket)).toEqual([["first-edit"], ["second-edit"]]);
+        await handleAck(state, 0, [{ Applied: { outcome: { Rejected: { reason: "unavailable: DB I/O aggregate admission exhausted", messages: transient } } } }] as unknown as Parameters<typeof handleAck>[2]);
+        expect(state.artifactRebootstrapRequired).toBe(false);
+        expect(outcomes.some((message) => message.kind === "artifact-rebootstrap-required")).toBe(false);
+        expect(outcomes.some((message) => message.kind === "event" && message.event.kind === "commandOutcome")).toBe(false);
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual(["first-edit"]);
+        expect(state.pendingMutations.map((envelope) => envelope.id)).toEqual(["first-edit", "second-edit"]);
+        expect(state.transientRefusal?.batchLimit).toBe(1);
+        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit("third-edit") } });
+        expect(state.outbox.map((envelope) => envelope.id), "a later edit waits behind the refused batch").toEqual(["first-edit", "third-edit"]);
+        await handleAck(state, 1, [{ Applied: { outcome: "Accepted" } }]);
+        expect(state.transientRefusal, "an Accepted batch ends the refusal: the hub admits again").toBeNull();
+        expect(sentIds(socket).slice(2), "the refused edit goes out again first, the later one behind it").toEqual([["first-edit", "third-edit"]]);
+        await handleAck(state, 2, [{ Applied: { outcome: "Accepted" } }]);
+        expect(state.outbox).toEqual([]);
+        expect(state.pendingMutations).toEqual([]);
+        state.hubActorReady = false;
+        const queued = Array.from({ length: 20 }, (_, index) => `queued-${index}`);
+        for (const id of queued) handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit(id) } });
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual(queued);
+        state.hubActorReady = true;
+        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: edit("after-shortage") } });
+        expect(sentIds(socket).slice(3), "a grown outbox drains one bounded batch at a time, in order").toEqual([queued.slice(0, 16)]);
+        await handleAck(state, 3, [{ Applied: { outcome: "Accepted" } }]);
+        expect(sentIds(socket).slice(4)).toEqual([[...queued.slice(16), "after-shortage"]]);
+      } finally {
+        closeArtifact(documentId, "space-1");
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
+      }
+    });
+
     it("fences rebootstrap before mirror retirement and replays only the retained preexisting raw batch after exact catchup", async () => {
       FakeHubWebSocket.instances = [];
       const originalWebSocket = globalThis.WebSocket;
@@ -6999,6 +7065,58 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           expect(posted.filter((message) => message.kind === "event" && message.event.kind === "commandOutcome").map((message) => (message as { event: { outcome: unknown } }).event.outcome), documentId).toEqual([{ kind: "accepted" }]);
           expect(posted.some((message) => message.kind === "artifact-rebootstrap-required"), documentId).toBe(interleaved);
           expect(state.remoteFoldedOverLocal, documentId).toBe(false);
+          closeArtifactRuntime(state.runtimeKey);
+        }
+      } finally {
+        testSeams.workerPostTestSink = null;
+      }
+    });
+  });
+
+  describe("document rebuild welcome", () => {
+    it("rebuilds an actor-bound document on the hub's own tail and keeps refusing a bare tail elsewhere", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const corpus = JSON.parse(await readFile(new URL("./🔨️modules/🏪️store/🧫️fixtures/🔁️document-rebuild-welcome-v1/🔣️.json", source.url), "utf8")) as {
+        readonly rows: readonly Readonly<{ name: string; lane: "browser-actor" | "local"; welcome: "None" | "Tail"; accepted: boolean }>[];
+      };
+      const schema = JSON.parse(await readFile(new URL("./🔨️modules/🏪️store/🧬️schema/🔁️document-rebuild-welcome/🔣️.json", source.url), "utf8"));
+      const { default: Ajv } = await import("ajv");
+      const validate = new Ajv({ strict: false, allErrors: true }).compile(schema);
+      expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
+      const fixture = JSON.parse(await readFile(new URL("../../../🌎️hub/📇️directory/🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json", source.url), "utf8"));
+      const hexBytes = (hex: string): Uint8Array => Uint8Array.from({ length: hex.length / 2 }, (_unused, index) => Number.parseInt(hex.slice(index * 2, index * 2 + 2), 16));
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      try {
+        for (const [index, row] of corpus.rows.entries()) {
+          const documentId = `rebuild-welcome-${index}`;
+          openArtifact({ documentId, schema: fixture.manifest.artifact.schema, bindings: [], actor: "local-ui" });
+          const state = artifactState(documentId)!;
+          artifacts.delete(state.runtimeKey);
+          const binding = { kind: "hub", dataClass: "persistedShared", baseUrl: fixture.hubOrigin, spaceId: "rebuild-space", requestedSurfaceId: fixture.manifest.surface.surfaceId } as const;
+          state.config = { ...state.config, documentId, bindings: [binding] };
+          state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+          artifacts.set(state.runtimeKey, state);
+          if (row.lane === "browser-actor") {
+            const fields = structuredClone(fixture.manifest);
+            fields.scope = { spaceId: binding.spaceId, documentId };
+            fields.checkpoint = { ...fields.checkpoint, baselineFrontier: { ...fields.checkpoint.baselineFrontier, documentId } };
+            state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, hexBytes(fixture.componentHex), hexBytes(fixture.descriptorHex));
+          }
+          const frontier = { document_id: documentId, head_edit_ordinal: 2, head_edit_id: `${documentId}:head`, last_commit_seq: 2, chain_hash: new Array(32).fill(2) };
+          let closes = 0;
+          const stale = { close: () => closes++ } as unknown as WebSocket;
+          state.socket = stale;
+          await handleHubFrame(state, { RebootstrapRequired: { control: { space_id: binding.spaceId, document_id: documentId, checkpoint_id: new Array(32).fill(1), descriptor_hash: new Array(32).fill(3), baseline_frontier: frontier } } }, null, stale);
+          expect(closes, row.name).toBe(1);
+          expect(state.artifactRebootstrapRequired, row.name).toBe(true);
+          posted.length = 0;
+          const fresh = { close: () => closes++ } as unknown as WebSocket;
+          state.socket = fresh;
+          await handleHubFrame(state, { Welcome: { session_id: "session-rebuild", resume_token: "resume-rebuild", server_frontier: frontier, bootstrap: row.welcome } } as unknown as Parameters<typeof handleHubFrame>[1], null, fresh);
+          const failed = posted.some((message) => message.kind === "artifact-bootstrap-failed");
+          expect({ accepted: closes === 1 && !failed && !state.artifactRebootstrapRequired }, row.name).toEqual({ accepted: row.accepted });
+          if (row.accepted && row.welcome === "Tail") expect(state.requiredTailFrontier, row.name).toEqual(frontier);
           closeArtifactRuntime(state.runtimeKey);
         }
       } finally {

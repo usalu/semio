@@ -15,11 +15,11 @@ export interface DocxStrictMainViewModel {
   pages: DocxStrictMainPage[];
 }
 
-/** ✏️ `set-page` payload shape — mirrors `DocxStrictEditorCommand::SetPage`. Only addresses
- * `Paragraph` blocks (see the Rust window's own doc comment); `Table` blocks are a documented
- * no-op. */
+/** ✏️ Strict optimistic-concurrency payload for one prefilled document text draft. */
 export interface DocxStrictSetPage {
-  index: number;
+  page: number;
+  item: number;
+  revision: string;
   text: string;
 }
 

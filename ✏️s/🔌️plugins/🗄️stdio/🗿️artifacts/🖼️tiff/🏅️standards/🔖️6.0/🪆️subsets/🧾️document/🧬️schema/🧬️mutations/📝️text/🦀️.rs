@@ -10,6 +10,7 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<TiffMutation, String>,
 }
 pub const REGISTRY: &[Entry] = &[
+    crate::schema::mutations::patch_snapshot::text::CODEC,
     crate::schema::mutations::set_snapshot::text::CODEC,
     crate::schema::mutations::change_byte_order::text::CODEC,
     crate::schema::mutations::insert_ifd::text::CODEC,

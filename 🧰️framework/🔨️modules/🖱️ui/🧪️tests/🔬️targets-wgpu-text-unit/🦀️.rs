@@ -48,7 +48,7 @@ fn emoji_codepoints_resolve_through_the_noto_emoji_fallback_family() {
 fn packing_a_synthetic_color_glyph_lands_on_the_rgba_page_and_marks_it_dirty() {
     let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
     assert!(!atlas.take_color_dirty());
-    atlas.pack_glyph(('🔥', 32), super::RasterizedGlyph { bitmap: vec![255u8; 4 * 4 * 4], width: 4, height: 4, bearing_x: 0.0, bearing_y: 0.0, advance: 32.0, raster_scale: 1.0, is_color: true });
+    atlas.pack_glyph((super::TextFace::Sans, '🔥', 32), super::RasterizedGlyph { bitmap: vec![255u8; 4 * 4 * 4], width: 4, height: 4, bearing_x: 0.0, bearing_y: 0.0, advance: 32.0, raster_scale: 1.0, is_color: true });
     let glyph = atlas.ensure_glyph('🔥', 32.0);
     assert!(glyph.is_color);
     assert_eq!((glyph.width, glyph.height), (4, 4));
@@ -124,7 +124,7 @@ fn the_glyph_cache_key_is_the_device_size_not_the_logical_one() {
     atlas.set_raster_scale(2.0);
     atlas.ensure_glyph('A', 16.0);
     assert_eq!(atlas.glyphs.len(), 1);
-    assert!(atlas.glyphs.contains_key(&('A', 32)), "16 logical px at 2x must be cached under its 32 device px key");
+    assert!(atlas.glyphs.contains_key(&(super::TextFace::Sans, 'A', 32)), "16 logical px at 2x must be cached under its 32 device px key");
     atlas.ensure_glyph('A', 16.0);
     assert_eq!(atlas.glyphs.len(), 1, "the same logical size must hit the same cache row");
 }

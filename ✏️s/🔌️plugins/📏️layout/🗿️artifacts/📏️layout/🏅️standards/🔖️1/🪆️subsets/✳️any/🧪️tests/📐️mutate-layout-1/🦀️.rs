@@ -63,6 +63,8 @@ const KINDS: &[&str] = &[
     "change-frame-stroke",
     "change-frame-wrap-mode",
     "change-frame-columns",
+    "update-grid",
+    "set-frame-flags",
 ];
 
 /// 👁️ Kinds whose committed specification vector declares NO movement — a refusal or an accepted
@@ -218,6 +220,16 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
             include_str!("../../🧫️fixtures/🧬️mutations/🔢change-frame-columns/🔤️splits-the-text-frame-into-two-columns/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔢change-frame-columns/🔤️splits-the-text-frame-into-two-columns/🦠️mutation/🔣️.json"),
             include_str!("../../🧫️fixtures/🧬️mutations/🔢change-frame-columns/🔤️splits-the-text-frame-into-two-columns/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "update-grid" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/📐update-grid/📐️sets-an-18-point-baseline/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐update-grid/📐️sets-an-18-point-baseline/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐update-grid/📐️sets-an-18-point-baseline/📸️snapshot/➡️after/🔣️.json"),
+        ),
+        "set-frame-flags" => (
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒set-frame-flags/🔒️locks-frame-1/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒set-frame-flags/🔒️locks-frame-1/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒set-frame-flags/🔒️locks-frame-1/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-layout-1: {other:?} is not a declared kind of this subset"),
     }

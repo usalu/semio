@@ -29,14 +29,16 @@ pub enum DrawingMutation {
     DeleteLayer(DeleteLayer),
     ReorderLayer(ReorderLayer),
     UpdatePathGeometry(UpdatePathGeometry),
+    UpdateText(UpdateText),
 }
 //#endregion 🔖️Mutations
+pub use crate::standards::v1::subsets::style::schema::mutations::update_text::mutation::{update_text, UpdateText};
 
 //#region 🔖️FieldPatch
 /// ⌨️ Decode inspector input according to its field, preserving numeric-looking text.
 pub fn parse_layer_field_input(field: &str, value: &str) -> dsl::DslValue {
     let parsed = dsl::json::parse(value).ok().map(|parsed| dsl::json::to_dsl_value(&parsed));
-    if matches!(field, "name" | "blendMode" | "fillColor" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" | "booleanOperation") {
+    if matches!(field, "textContent" | "name" | "blendMode" | "fillColor" | "strokeColor" | "strokeCap" | "strokeJoin" | "strokeDash" | "booleanOperation") {
         if let Some(dsl::DslValue::String(text)) = parsed { return dsl::DslValue::String(text); }
         return dsl::DslValue::String(value.into());
     }
@@ -51,11 +53,13 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
     let finite = || value.as_f64().filter(|number| number.is_finite());
     match field {
         "name" => { value.as_str()?; }
+        "textContent" => { if !matches!(layer, DrawingLayerNode::Text(_)) { return None; } value.as_str()?; }
+        "textSize" => { if !matches!(layer, DrawingLayerNode::Text(_)) || finite()? <= 0.0 { return None; } }
         "visible" | "locked" | "fillEnabled" | "strokeEnabled" => { value.as_bool()?; }
         "opacity" | "traceThreshold" => { if !(0.0..=1.0).contains(&finite()?) { return None; } }
         "strokeWidth" | "traceSimplify" => { if finite()? < 0.0 { return None; } }
-        "transformX" | "transformY" | "transformRotation" | "rotationDegrees" => { finite()?; }
-        "transformScaleX" | "transformScaleY" => { if finite()? <= 0.0 { return None; } }
+        "transformX" | "transformY" | "transformRotation" | "transformShear" | "rotationDegrees" => { finite()?; }
+        "transformScaleX" | "transformScaleY" => { finite()?; }
         "fillColor" | "strokeColor" => {
             let color = value.as_str()?.strip_prefix('#')?;
             if !matches!(color.len(), 3 | 6) || !color.bytes().all(|byte| byte.is_ascii_hexdigit()) { return None; }
@@ -69,18 +73,23 @@ pub fn drawing_op_for_layer_field(doc: &DrawingSnapshot, layer_id: &str, field: 
     }
     let operation = match field {
         "name" => rename_layer(layer_id.into(), value.as_str().unwrap_or("").into()),
+        "textContent" | "textSize" => {
+            let DrawingLayerNode::Text(text) = layer else { return None; };
+            update_text(layer_id.into(), if field == "textContent" { value.as_str()?.into() } else { text.content.clone() }, if field == "textSize" { finite()? } else { text.size })
+        }
         "opacity" => set_layer_opacity(layer_id.into(), value.as_f64().unwrap_or(1.0)),
         "visible" => set_layer_visible(layer_id.into(), value.as_bool().unwrap_or(true)),
         "locked" => set_layer_locked(layer_id.into(), value.as_bool().unwrap_or(false)),
         "blendMode" => set_layer_blend_mode(layer_id.into(), value.as_str().unwrap_or("normal").into()),
         "booleanOperation" => set_layer_boolean_operation(layer_id.into(), value.as_str().unwrap_or("union").into()),
-        "transformX" | "transformY" | "transformScaleX" | "transformScaleY" | "transformRotation" | "rotationDegrees" => {
+        "transformX" | "transformY" | "transformScaleX" | "transformScaleY" | "transformRotation" | "transformShear" | "rotationDegrees" => {
             let mut transform = layer_base(layer).transform.clone();
             match field {
                 "transformX" => transform.x = value.as_f64().unwrap_or(0.0),
                 "transformY" => transform.y = value.as_f64().unwrap_or(0.0),
                 "transformScaleX" => transform.scale_x = value.as_f64().unwrap_or(1.0),
                 "transformScaleY" => transform.scale_y = value.as_f64().unwrap_or(1.0),
+                "transformShear" => transform.shear = finite()?,
                 "rotationDegrees" => transform.rotation = finite()?.to_radians(),
                 _ => transform.rotation = finite()?,
             }
@@ -277,6 +286,7 @@ pub const KINDS: &[&str] = &[
     "delete-layer",
     "reorder-layer",
     "update-path-geometry",
+    "update-text",
 ];
 //#endregion 🔖️Kinds
 

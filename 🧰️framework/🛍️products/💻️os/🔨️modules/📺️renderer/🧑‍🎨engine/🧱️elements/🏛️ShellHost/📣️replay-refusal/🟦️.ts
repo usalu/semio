@@ -18,6 +18,7 @@ export type ReplayRefusalReasonV1 =
   | "invalid-request"
   | "router-not-ready"
   | "open-rejected"
+  | "view-only-access"
   | "unrouted-command";
 
 export type ReplayRefusalLabelV1 = { readonly en: string; readonly de: string };
@@ -30,6 +31,7 @@ export const REPLAY_REFUSAL_LABELS_V1: Readonly<Record<ReplayRefusalReasonV1, Re
   "invalid-request": { en: "That command was incomplete and was not run.", de: "Dieser Befehl war unvollständig und wurde nicht ausgeführt." },
   "router-not-ready": { en: "The workspace is still loading — try again in a moment.", de: "Der Arbeitsbereich lädt noch — bitte gleich erneut versuchen." },
   "open-rejected": { en: "That document could not be opened.", de: "Dieses Dokument konnte nicht geöffnet werden." },
+  "view-only-access": { en: "You can only view documents in this space — editing needs the Author role.", de: "In diesem Space können Sie Dokumente nur ansehen — zum Bearbeiten ist die Rolle Autor nötig." },
   "unrouted-command": { en: "This shell has no route for that command.", de: "Diese Shell kennt keinen Weg für diesen Befehl." },
 };
 

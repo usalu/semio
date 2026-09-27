@@ -153,7 +153,10 @@ mod live {
             if archive.entries.iter().any(|entry| entry.name == name) {
                 return Err(format!("add entry: a member named {name:?} already exists"));
             }
-            archive.entries.push(IsoEntry { name, data: params.str("content").into_bytes(), method, encrypted: false });
+            let index = if params.get("before").is_some() {
+                archive.entries.iter().position(|entry| entry.name == params.str("before")).ok_or_else(|| "add entry: insertion anchor does not exist".to_string())?
+            } else { archive.entries.len() };
+            archive.entries.insert(index, IsoEntry { name, data: params.str("content").into_bytes(), method, encrypted: false });
             Ok(())
         };
         match spec.str("kind").as_str() {
@@ -247,7 +250,8 @@ mod live {
                 let name = params.str("name");
                 let removed = original.entries.iter().find(|entry| entry.name == name).cloned().ok_or_else(|| format!("inverse remove-entry: the original archive has no member named {name:?}"))?;
                 let mut restored = mutated;
-                restored.entries.push(removed);
+                let index = original.entries.iter().position(|entry| entry.name == name).unwrap();
+                restored.entries.insert(index, removed);
                 Ok(restored)
             }
             "rename-entry" => {

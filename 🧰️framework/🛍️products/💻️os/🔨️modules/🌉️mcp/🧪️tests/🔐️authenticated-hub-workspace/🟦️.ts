@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,6 +41,26 @@ describe("authenticated hub workspace fixture oracle", () => {
     ]);
     expect(ready.some((uri) => uri === "semio://artifact/shared-doc" || uri.endsWith("/schema") || uri.endsWith("/validation"))).toBe(false);
     expect(Object.values(fixture.cases).filter((entry: any) => entry.expected.state !== "ready").every((entry: any) => entry.expected.resourceUris.length === 0)).toBe(true);
+  });
+
+  test("a principal binds only at a role its account's member row admits: exactly it for a human, at most it for an agent", () => {
+    const rank: Record<string, number> = { spectator: 0, author: 1 };
+    const checked: string[] = [];
+    for (const [name, entry] of Object.entries(fixture.cases) as [string, any][]) {
+      const bodies = (entry.responses as any[]).map((response) => ({ text: response.canonicalBody as string | undefined, value: response.canonicalBody === undefined ? response.body : JSON.parse(response.canonicalBody) }));
+      const session = bodies.find((body) => body.value?.schema === "semio.directory.session-authority.v1")?.value;
+      const page = bodies.find((body) => body.value?.schema === "semio.directory.space-administration-page.v1");
+      if (!session || !page || page.value.access === "public") continue;
+      const unsigned = page.text!.replace(/,"receiptSha256":"[0-9a-f]{64}"\}$/u, "}");
+      expect(createHash("sha256").update(unsigned).digest("hex"), name).toBe(page.value.receiptSha256);
+      const row = page.value.members.rows.find((member: any) => member.userId === session.userId);
+      const role = page.value.space.role;
+      const admitted = row !== undefined && (role === row.role || (session.sessionKind === "agent" && rank[role]! < rank[row.role]!));
+      expect(entry.expected.errorCode === "PERMISSION_DENIED", name).toBe(!admitted);
+      checked.push(name);
+    }
+    expect(checked.sort()).toEqual(["agentBelowMembership", "humanBelowMembership", "memberReady", "principalAboveMembership", "sameDocumentOtherSpace"]);
+    expect(fixture.cases.agentBelowMembership.expected.state).toBe("ready");
   });
 
   test("remote authorization stays distinct from local principal claims and bearer material", () => {

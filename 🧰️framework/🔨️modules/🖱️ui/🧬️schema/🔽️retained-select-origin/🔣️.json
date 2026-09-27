@@ -21,10 +21,12 @@
     "row": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["lineHeight", "padding", "itemCount", "menuHeight"],
+      "required": ["lineHeight", "padding", "borderWidth", "scrollBandHeight", "itemCount", "menuHeight"],
       "properties": {
         "lineHeight": { "type": "number", "exclusiveMinimum": 0 },
         "padding": { "type": "number", "minimum": 0 },
+        "borderWidth": { "type": "number", "minimum": 0 },
+        "scrollBandHeight": { "type": "number", "minimum": 0 },
         "itemCount": { "type": "integer", "minimum": 1 },
         "menuHeight": { "type": "number", "exclusiveMinimum": 0 }
       }

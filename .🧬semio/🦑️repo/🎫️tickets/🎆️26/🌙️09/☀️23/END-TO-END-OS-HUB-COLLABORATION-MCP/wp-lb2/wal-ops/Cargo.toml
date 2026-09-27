@@ -1,0 +1,14 @@
+[package]
+name = "lb2-wal-ops"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "lb2-wal-ops"
+path = "src/main.rs"
+
+[dependencies]
+db = { package = "semio-framework-os-kernel-db", path = "../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust" }
+protocol = { package = "semio-framework-replication", path = "../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }

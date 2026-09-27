@@ -900,14 +900,16 @@
       ]
     },
     "HubAccessRoleV1": {
-      "description": "A role a principal holds for one request: admin (an operator subject), owner (the space's owner), author/spectator (its membership), share (an exact document share token), authenticated (any signed-in user).",
+      "description": "A role a principal holds for one request: admin (an operator subject), owner (the space's owner), author/spectator (its membership), share (an exact document share token), authenticated (any signed-in human), agent-reader/agent-editor (an agent session under a read/edit delegation, only in its delegation's space; an agent holds no human role).",
       "enum": [
         "admin",
         "owner",
         "author",
         "spectator",
         "share",
-        "authenticated"
+        "authenticated",
+        "agent-reader",
+        "agent-editor"
       ]
     },
     "HubAccessActionV1": {

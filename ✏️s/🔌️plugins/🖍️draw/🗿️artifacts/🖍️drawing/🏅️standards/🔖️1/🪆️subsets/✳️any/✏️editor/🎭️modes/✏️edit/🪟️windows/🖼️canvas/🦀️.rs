@@ -80,19 +80,34 @@ fn artboard_scene_records(document: &DrawingSnapshot) -> Vec<DslValue> {
     ]
 }
 
-/// 🕹️ `config` no longer carries `selected_ids`/`hovered_id` (ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection/hover are framework-owned state,
-/// and `ArtifactApp::render` is never given an `InteractionView`) — the selection/hover overlay
-/// records this function used to bake into `layersJson` are gone; the client renders that highlight
-/// itself from the framework's own interaction state now.
-pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
-    let scene_nodes = crate::schema::flatten_drawing_document_with_translation(document,preview.translation.as_ref());
+/// 🎯️ Projects the request-owned selection and the retained gesture preview into shared canvas paths.
+pub fn render(document: &DrawingSnapshot, config: &config::DrawingCanvasWindowConfig, preview: &DrawingGesturePreview, active_utility: &str, selection: &[String]) -> UiAssemblyResult<BuiltNode> {
+    let scene_nodes = crate::schema::flatten_drawing_document_with_transformation(document,preview.transformation.as_ref());
     let artboard_records = artboard_scene_records(document);
     let mut records: Vec<DslValue> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
     records.push(DslValue::object([("id".to_string(), DslValue::String("meta:utility".to_string())), ("role".to_string(), DslValue::String("meta".to_string())), ("utility".to_string(), DslValue::String(active_utility.to_string()))]));
     records.extend(artboard_records);
     for node in &scene_nodes {
         records.push(dsl::ToValue::to_value(node));
+    }
+    if active_utility=="selectDirect" {
+        if let Some(bounds)=crate::editor::drawing::commands::canvas_pointer_down::selected_transform_bounds(document,selection) {
+            let [x,y,w,h]=bounds;
+            let transform=preview.transformation.as_ref().map_or([1.0,0.0,0.0,1.0,0.0,0.0],|(_,matrix)|*matrix);
+            let zoom=config.viewport.zoom.max(1e-6);
+            let outline=vec![PathSegment::Move {to:[x,y]},PathSegment::Line {to:[x+w,y]},PathSegment::Line {to:[x+w,y+h]},PathSegment::Line {to:[x,y+h]},PathSegment::Close];
+            records.push(overlay_record("overlay:selection-bounds",transform,&outline,None,DRAWING_OVERLAY_SELECTION_STROKE,1.0/zoom));
+            let points=crate::schema::geometry::handles::handle_points(bounds,zoom);
+            let connector=vec![PathSegment::Move {to:points[1]},PathSegment::Line {to:points[8]}];
+            records.push(overlay_record("overlay:rotation-stem",transform,&connector,None,DRAWING_OVERLAY_SELECTION_STROKE,1.0/zoom));
+            for (index,point) in points.into_iter().enumerate() {
+                let [a,b,c,d,e,f]=transform;
+                let [cx,cy]=[a*point[0]+c*point[1]+e,b*point[0]+d*point[1]+f];
+                let radius=4.0/zoom;
+                let square=vec![PathSegment::Move {to:[cx-radius,cy-radius]},PathSegment::Line {to:[cx+radius,cy-radius]},PathSegment::Line {to:[cx+radius,cy+radius]},PathSegment::Line {to:[cx-radius,cy+radius]},PathSegment::Close];
+                records.push(overlay_record(&format!("overlay:transform-handle:{index}"),[1.0,0.0,0.0,1.0,0.0,0.0],&square,Some([1.0,1.0,1.0,1.0]),DRAWING_OVERLAY_SELECTION_STROKE,1.0/zoom));
+            }
+        }
     }
     if preview.phase == DrawingGesturePreviewPhase::Marquee {
         let ctx = &preview.context;

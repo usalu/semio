@@ -103,7 +103,7 @@ fn md_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(MdEditCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        MD_KIT_ACTION_ID => Ok(MdEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text"], "") }),
+        MD_KIT_ACTION_ID => Ok(MdEditCommand::ReplaceText { text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")? }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.md.unhandled-action"),
@@ -408,11 +408,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for MdEdito
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| MdMutation::SetSnapshot(SetSnapshot { snapshot }))
     }
 }

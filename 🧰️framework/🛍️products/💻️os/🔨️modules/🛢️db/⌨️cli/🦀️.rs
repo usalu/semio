@@ -1343,7 +1343,7 @@ async fn cmd_migrate(rest: &[String]) -> i32 {
             }
             return Err(("wal migration", db::DbError::LimitExceeded("cli wal record batch")));
         }
-        let submission = wal.submit(&storage, &records, db::DurabilityClass::Fsync, now).await;
+        let submission = wal.submit(&storage, &[], &records, db::DurabilityClass::Fsync, now).await;
         let batch_close = MountedWalBatchCommandClose::new(records).await;
         let receipt = match (submission, batch_close) {
             (Ok(receipt), Ok(_)) => receipt,

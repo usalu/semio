@@ -1,0 +1,12 @@
+[
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🔣️.json",
+  "old": "          \"role\": \"expected-after-gltf\",\n          \"path\": \"../../💎️material/🧫️fixtures/create-material-applied/after.gltf\",\n          \"mediaType\": \"model/gltf+json\",\n          \"sha256\": \"sha256:4fdfc06c6abc757d226ed5ce9c9ca92246ca650f2bd2527554aa3a4ab712d994\",\n          \"bytes\": 16577\n        }\n      ],\n      \"generator\": {\n",
+  "new": "          \"role\": \"expected-after-gltf\",\n          \"path\": \"../../💎️material/🧫️fixtures/create-material-applied/after.gltf\",\n          \"mediaType\": \"model/gltf+json\",\n          \"sha256\": \"sha256:4308e565bd052cf55428e8a7d7b2bb97b5159de2f9c49e975f6b4b533f0d560c\",\n          \"bytes\": 16540\n        }\n      ],\n      \"generator\": {\n"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔮️oracles/🔣️.json",
+  "old": "      \"comparisonProfile\": \"semantic-gltf-reader-v1\",\n      \"reproducible\": true,\n      \"family\": \"structural\",\n      \"notes\": \"Inserts a minimal default material at position 1 — create-material{position}.\"\n    },\n    {\n      \"schema\": \"semio.repository-test.fixture/v2\",\n",
+  "new": "      \"comparisonProfile\": \"semantic-gltf-reader-v1\",\n      \"reproducible\": true,\n      \"family\": \"structural\",\n      \"notes\": \"Inserts a default material at position 1, reindexing every primitive.material reference at or past it — create-material{position}.\"\n    },\n    {\n      \"schema\": \"semio.repository-test.fixture/v2\",\n"
+ }
+]

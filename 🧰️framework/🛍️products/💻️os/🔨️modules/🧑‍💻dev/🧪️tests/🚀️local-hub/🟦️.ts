@@ -3,10 +3,14 @@
  * ever bound its port —; the default hub is started once behind an owner lease that racing PROCESSES claim exactly once; a
  * catalog the current hub cannot load is republished (with progress and cancel) instead of booted; strict Ajv over the owned
  * schema `🧬️schema/🔣️.json` classifies every lease record and catalog header the way the product does; and the catalog
- * contract matches the publisher and loader it mirrors. No hub binary is built or run here. */
+ * contract matches the publisher and loader it mirrors. The shared serve fixture `ensureDevServe` (ticket 26/09/23 S18) is
+ * driven against real processes on a `detect-port` port: it reuses a serve that answers and never stops it, starts one on a
+ * free port and frees the port again, stops what it started on cancel, bound or early exit, and refuses a non-serve holder.
+ * No hub binary is built or run here. */
 
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
+import { createServer as createTcpServer } from "node:net";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -22,8 +26,14 @@ import {
   devHubRoleV1,
   devHubStatusTextV1,
   devHubWorldV1,
+  devServeCommandV1,
+  devServePlanV1,
+  devServePortV1,
+  devServeStatusTextV1,
+  devServeWorldV1,
   ensureCurrentTrustedCatalogV1,
   ensureDevLocalHub,
+  ensureDevServe,
   joinDevHubV1,
   ownDevHubV1,
   readDevHubLeaseV1,
@@ -31,6 +41,8 @@ import {
   type DevHubCatalogPublisherV1,
   type DevHubStatusV1,
   type DevHubWorldV1,
+  type DevServeSpawnRequestV1,
+  type DevServeStatusV1,
 } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import fixture from "../../🧫️fixtures/🚀️local-hub.json" with { type: "json" };
 import schema from "../../🧬️schema/🔣️.json" with { type: "json" };
@@ -294,6 +306,94 @@ describe("the development catalog", () => {
     const loader = readFileSync(join(REPO, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
     expect(loader).toContain(`bundle.schema_version != ${declared.schemaVersion.const}`);
   });
+});
+
+describe("the shared serve fixture", () => {
+  it("plans every port the way the fixture does and refuses the canonical hub port", () => {
+    for (const row of fixture.serves.plans) expect(devServePlanV1(row.port, row.answers, row.occupied), JSON.stringify(row)).toBe(row.plan);
+  });
+
+  it("turns every schema-valid spawn request into exactly the fixture's process, for the React and the wgpu shell, and the schema refuses the rest", () => {
+    const valid = contract("DevServeSpawnRequestV1");
+    for (const row of fixture.serves.spawns) {
+      expect(valid(row.request), JSON.stringify(row.request)).toBe(true);
+      expect(devServeCommandV1(row.request as DevServeSpawnRequestV1), JSON.stringify(row.request)).toEqual(row.command);
+      expect(existsSync(join(REPO, row.command.script)), row.command.script).toBe(true);
+    }
+    expect(new Set(fixture.serves.spawns.map((row) => `${row.request.renderer}/${row.request.profile}`)).size).toBe(4);
+    for (const request of fixture.serves.invalidRequests) expect(valid(request), JSON.stringify(request)).toBe(false);
+  });
+
+  it("reads the loopback port of a --serve url and refuses any other host or scheme", () => {
+    for (const row of fixture.serves.urls) {
+      if (row.port === null) expect(() => devServePortV1(row.url), row.url).toThrow(/dev serve/u);
+      else expect(devServePortV1(row.url), row.url).toBe(row.port);
+    }
+  });
+
+  it("says every progress line in English and German exactly as the fixture does", () => {
+    expect(new Set(fixture.serves.statuses.map((row) => row.status.kind)).size).toBe(5);
+    for (const row of fixture.serves.statuses) {
+      expect(devServeStatusTextV1(row.status as DevServeStatusV1, "en")).toBe(row.en);
+      expect(devServeStatusTextV1(row.status as DevServeStatusV1, "de")).toBe(row.de);
+    }
+  });
+
+  for (const row of fixture.serves.scenarios) {
+    it(row.name, async () => {
+      const port = await detectPort(0);
+      const logDir = scratch("serve-log");
+      const before =
+        row.before === "http"
+          ? createServer((_request, response) => response.end("serve")).listen(port, "127.0.0.1")
+          : row.before === "tcp"
+            ? createTcpServer((socket) => socket.destroy()).listen(port, "127.0.0.1")
+            : null;
+      if (before !== null) await new Promise<void>((resolveListening) => before.once("listening", () => resolveListening()));
+      const real = devServeWorldV1(REPO);
+      const validRequest = contract("DevServeSpawnRequestV1");
+      let spawned = 0;
+      const world = {
+        ...real,
+        spawnServe: (request: DevServeSpawnRequestV1) => {
+          expect(validRequest(request), JSON.stringify(request)).toBe(true);
+          spawned += 1;
+          const program = row.exits
+            ? "process.exit(3)"
+            : row.bootsAfterMs === null
+              ? "setInterval(() => undefined, 1000)"
+              : `setTimeout(() => require("node:http").createServer((q, r) => r.end("serve")).listen(${port}, "127.0.0.1"), ${row.bootsAfterMs})`;
+          const child = spawn(process.execPath, ["-e", program], { stdio: "ignore", detached: process.platform !== "win32" });
+          return { pid: child.pid!, exited: () => child.exitCode !== null || child.signalCode !== null };
+        },
+      };
+      const statuses: DevServeStatusV1[] = [];
+      const abort = new AbortController();
+      const cancel = row.cancelAfterMs === null ? null : setTimeout(() => abort.abort(new DOMException("cancelled", "AbortError")), row.cancelAfterMs);
+      try {
+        const outcome = await ensureDevServe({ repoRoot: REPO, port, locale: "en", signal: abort.signal, bootBoundMs: row.bootBoundMs, intervalMs: 1_000, logPath: join(logDir, "serve.log"), world, onProgress: (status) => void statuses.push(status) })
+          .then((fixtureServe) => ({ fixtureServe, error: null as string | null }))
+          .catch((error: unknown) => {
+            const message = error instanceof Error ? `${error.name} ${error.message}` : String(error);
+            const kind = /AbortError|cancelled/u.test(message) ? "cancelled" : /did not answer within/u.test(message) ? "bound" : /exited before it answered/u.test(message) ? "exited" : /does not answer as a serve/u.test(message) ? "occupied" : message;
+            return { fixtureServe: null, error: kind };
+          });
+        if (outcome.fixtureServe !== null) {
+          expect(outcome.fixtureServe.url).toBe(`http://127.0.0.1:${port}/`);
+          expect(await fetch(outcome.fixtureServe.url).then((response) => response.text()), "the fixture hands back a serve that answers").toBe("serve");
+          await outcome.fixtureServe.stop();
+        }
+        const kinds = statuses.map((status) => status.kind).filter((kind, index, all) => index === 0 || all[index - 1] !== kind);
+        expect({ reused: outcome.fixtureServe?.reused ?? null, statuses: kinds, error: outcome.error }).toEqual({ reused: row.expected.reused, statuses: row.expected.statuses, error: row.expected.error });
+        expect(spawned, "only a free port starts a serve").toBe(row.before === "none" ? 1 : 0);
+        if (row.expected.portFreeAfterStop) expect(await detectPort(port), "detect-port: stop() freed the port").toBe(port);
+        else expect(await detectPort(port), "detect-port: what was there before still holds the port").not.toBe(port);
+      } finally {
+        if (cancel !== null) clearTimeout(cancel);
+        if (before !== null) await new Promise<void>((resolveClosed) => before.close(() => resolveClosed()));
+      }
+    }, 40_000);
+  }
 });
 
 function readDevHubLeaseV1Json(record: unknown): unknown {

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Graph Timeline Checkpoint Hit Regions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "hostId", "controllerId", "surfaceId", "bounds", "columns", "cases", "accessibility"],
+  "properties": {
+    "version": { "const": 1 },
+    "hostId": { "type": "string", "minLength": 1 },
+    "controllerId": { "type": "string", "minLength": 1 },
+    "surfaceId": { "type": "string", "minLength": 1 },
+    "bounds": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 },
+    "columns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["checkpointId", "timestamp", "labels", "authors", "description", "lane", "alternativeIds"],
+        "properties": {
+          "checkpointId": { "type": "string" },
+          "timestamp": { "type": "string" },
+          "labels": { "type": "array", "items": { "type": "string" } },
+          "authors": { "type": "array", "maxItems": 0 },
+          "parentCheckpointId": { "type": "string" },
+          "description": { "type": "string" },
+          "lane": { "type": "integer", "minimum": 0 },
+          "alternativeIds": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "region", "row", "x", "action"],
+        "properties": {
+          "id": { "type": "string" },
+          "region": { "enum": ["labels", "graph", "description", "outside"] },
+          "row": { "type": "integer", "minimum": 0 },
+          "x": { "type": "number" },
+          "action": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["controllerId", "action", "args"],
+                "properties": {
+                  "controllerId": { "type": "string" },
+                  "action": { "const": "checkoutCheckpoint" },
+                  "args": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["checkpointId"],
+                    "properties": { "checkpointId": { "type": "string" } }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["checkpointId", "key", "accessibleName", "role", "action"],
+      "properties": {
+        "checkpointId": { "type": "string", "minLength": 1 },
+        "key": { "type": "string", "minLength": 1 },
+        "accessibleName": { "type": "string", "minLength": 1 },
+        "role": { "const": "button" },
+        "action": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["controllerId", "action", "args"],
+          "properties": {
+            "controllerId": { "type": "string" },
+            "action": { "const": "checkoutCheckpoint" },
+            "args": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["checkpointId"],
+              "properties": { "checkpointId": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

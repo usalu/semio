@@ -14,10 +14,12 @@
  * @see ../../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts */
 
 import { spawn } from "node:child_process";
-import { existsSync, linkSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, linkSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createConnection } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { BundleScript, isDevPortInUse } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { protectOwnerOnly } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔐️owner-only/🟦️.ts";
+import { terminateOwnedProcessTree } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { requestLocalBrokerSession, startLocalSessionBroker } from "../../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import {
   finishLocalHub,
@@ -559,3 +561,219 @@ export class DevLocalHubScript extends BundleScript {
     }
   }
 }
+
+//#region 🔖️DevServeFixture
+/** 🛎️ How long {@link ensureDevServe} waits for a serve it started to answer (a cold `s` Vite boot measured 55 s under a
+ * busy fleet, ticket 26/09/23 S18). */
+export const DEV_SERVE_BOOT_BOUND_MS = 300_000;
+/** 📣️ How often a booting serve is reported. */
+export const DEV_SERVE_STATUS_INTERVAL_MS = 5_000;
+/** 🚫️ Ports a serve fixture never binds: the canonical hub's. */
+export const DEV_SERVE_REFUSED_PORTS: readonly number[] = [7800];
+const DEV_SERVE_STOP_BOUND_MS = 15_000;
+
+/** 🧭️ What the fixture does with a port: `reuse` a serve that already answers (and never stops it), `spawn` one on a free
+ * port, refuse the canonical hub port, refuse a port someone else holds without answering as a serve. */
+export type DevServePlanV1 = "reuse" | "spawn" | "refuse-hub-port" | "refuse-occupied";
+
+export function devServePlanV1(port: number, answers: boolean, occupied: boolean): DevServePlanV1 {
+  if (DEV_SERVE_REFUSED_PORTS.includes(port)) return "refuse-hub-port";
+  if (answers) return "reuse";
+  return occupied ? "refuse-occupied" : "spawn";
+}
+
+/** 🔢️ The loopback port a `--serve <url>` names; a serve on another host can only be reused, never started, so it is
+ * refused here. */
+export function devServePortV1(serveUrl: string): number {
+  const url = new URL(serveUrl);
+  if (url.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)) throw new Error(`dev serve: ${serveUrl} is not a loopback http url`);
+  const port = Number(url.port || 80);
+  if (!Number.isSafeInteger(port) || port <= 0 || port > 65_535) throw new Error(`dev serve: invalid port in ${serveUrl}`);
+  return port;
+}
+
+/** 📣️ Everything the fixture reports, as data; the line is {@link devServeStatusTextV1}. */
+export type DevServeStatusV1 =
+  | { readonly kind: "reusing"; readonly url: string }
+  | { readonly kind: "spawning"; readonly url: string; readonly pid: number; readonly logPath: string }
+  | { readonly kind: "booting"; readonly url: string; readonly waitedMs: number; readonly boundMs: number }
+  | { readonly kind: "ready"; readonly url: string; readonly waitedMs: number }
+  | { readonly kind: "stopped"; readonly url: string };
+
+export function devServeStatusTextV1(status: DevServeStatusV1, locale: DevHubLocaleV1): string {
+  const de = locale === "de";
+  switch (status.kind) {
+    case "reusing":
+      return de ? `[dev-serve] ${status.url} antwortet bereits — wird mitbenutzt und nicht beendet` : `[dev-serve] ${status.url} already answers — reusing it, never stopping it`;
+    case "spawning":
+      return de ? `[dev-serve] starte die Shell unter ${status.url} (Prozess ${status.pid}, Protokoll ${status.logPath})` : `[dev-serve] starting the shell at ${status.url} (process ${status.pid}, log ${status.logPath})`;
+    case "booting":
+      return de ? `[dev-serve] warte auf ${status.url} (${seconds(status.waitedMs)} von ${seconds(status.boundMs)} s)` : `[dev-serve] waiting for ${status.url} (${seconds(status.waitedMs)} of ${seconds(status.boundMs)} s)`;
+    case "ready":
+      return de ? `[dev-serve] ${status.url} bereit nach ${seconds(status.waitedMs)} s` : `[dev-serve] ${status.url} ready after ${seconds(status.waitedMs)} s`;
+    case "stopped":
+      return de ? `[dev-serve] ${status.url} beendet` : `[dev-serve] stopped ${status.url}`;
+  }
+}
+
+/** 🖥️ Which shell a serve hosts: the React shell (`🧑‍💻dev` `serve <variant> react <profile>`) or the wgpu browser shell
+ * (`🧊️wgpu/🌐️server` `serve <variant> <profile> --port <port>`). */
+export type DevServeRendererV1 = "react" | "wgpu";
+export type DevServeProfileV1 = "dev" | "release";
+
+/** 🧾️ What the fixture asks its world to start (`DevServeSpawnRequestV1`, `🧑‍💻dev/🧬️schema/🔣️.json`): one shell serve on
+ * `port`, local-only unless `hubUrl` names the hub it joins, output in `logPath`. */
+export type DevServeSpawnRequestV1 = Readonly<{ port: number; variant: string; renderer: DevServeRendererV1; profile: DevServeProfileV1; hubUrl: string | null; logPath: string }>;
+
+/** 🧾️ The process a spawn request becomes: `bun <script> …args` in `cwd` (all repo-relative), with `env` over the
+ * caller's environment — a `null` value removes the variable, so a local-only serve never inherits a hub. */
+export type DevServeCommandV1 = Readonly<{ script: string; args: readonly string[]; cwd: string; env: Readonly<Record<string, string | null>> }>;
+
+const DEV_SERVE_WGPU_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts";
+
+/** 🧾️ Both spawn shapes, as data: HMR is off for either shell so no peer's edit reloads a page mid-run. */
+export function devServeCommandV1(request: DevServeSpawnRequestV1): DevServeCommandV1 {
+  const link = request.hubUrl === null ? { S_LOCAL_ONLY: "1", S_HUB_URL: null } : { S_LOCAL_ONLY: null, S_HUB_URL: request.hubUrl };
+  const env = { SEMIO_PLUGIN: request.variant, SEMIO_RENDERER: request.renderer, SEMIO_VITE_HMR: "0", S_OS_PORT: String(request.port), ...link };
+  return request.renderer === "react"
+    ? { script: DEV_LOCAL_HUB_OWNER_SCRIPT, args: ["serve", request.variant, "react", request.profile], cwd: dirname(DEV_LOCAL_HUB_OWNER_SCRIPT), env }
+    : { script: DEV_SERVE_WGPU_SCRIPT, args: ["serve", request.variant, request.profile, "--port", String(request.port)], cwd: dirname(DEV_SERVE_WGPU_SCRIPT), env };
+}
+
+/** 🔌️ The world the fixture acts on — the real one by default, a double in the laws. */
+export type DevServeWorldV1 = Readonly<{
+  answers: (url: string) => Promise<boolean>;
+  portInUse: (port: number) => Promise<boolean>;
+  spawnServe: (request: DevServeSpawnRequestV1) => Readonly<{ pid: number; exited: () => boolean }>;
+  terminate: (pid: number) => void;
+  now: () => number;
+  sleep: (ms: number) => Promise<void>;
+}>;
+
+/** 🛎️ A serve a harness runs against: `url` to drive, `reused` when it was already there, `stop()` ends only what the
+ * fixture itself started. */
+export type DevServeFixtureV1 = Readonly<{ url: string; reused: boolean; stop: () => Promise<void> }>;
+
+export type DevServeOptionsV1 = Readonly<{
+  repoRoot: string;
+  port: number;
+  variant?: string;
+  renderer?: DevServeRendererV1;
+  profile?: DevServeProfileV1;
+  locale?: DevHubLocaleV1;
+  hubUrl?: string;
+  signal?: AbortSignal;
+  onProgress?: (status: DevServeStatusV1, line: string) => void;
+  bootBoundMs?: number;
+  intervalMs?: number;
+  logPath?: string;
+  world?: DevServeWorldV1;
+}>;
+
+async function devServePortHeld(port: number): Promise<boolean> {
+  return await new Promise<boolean>((resolveHeld) => {
+    const socket = createConnection({ host: "127.0.0.1", port });
+    const settle = (held: boolean): void => {
+      socket.destroy();
+      resolveHeld(held);
+    };
+    socket.setTimeout(2_000);
+    socket.once("connect", () => settle(true));
+    socket.once("timeout", () => settle(false));
+    socket.once("error", () => settle(false));
+  });
+}
+
+async function devServeAnswers(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: "GET", signal: AbortSignal.timeout(3_000) });
+    await response.body?.cancel();
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/** 🌍️ The real world: {@link devServeCommandV1} under `bun` in its own process group, output in `logPath`. */
+export function devServeWorldV1(repoRoot: string): DevServeWorldV1 {
+  return {
+    answers: devServeAnswers,
+    portInUse: devServePortHeld,
+    spawnServe: (request) => {
+      mkdirSync(dirname(request.logPath), { recursive: true });
+      const log = openSync(request.logPath, "a");
+      const command = devServeCommandV1(request);
+      const env: NodeJS.ProcessEnv = { ...process.env };
+      for (const [name, value] of Object.entries(command.env)) {
+        if (value === null) delete env[name];
+        else env[name] = value;
+      }
+      const child = spawn(process.execPath, [join(repoRoot, command.script), ...command.args], { cwd: join(repoRoot, command.cwd), env, stdio: ["ignore", log, log], detached: process.platform !== "win32", windowsHide: true });
+      closeSync(log);
+      child.unref();
+      if (!child.pid) throw new Error(`dev serve: could not start the serve for port ${request.port}`);
+      return { pid: child.pid, exited: () => child.exitCode !== null || child.signalCode !== null };
+    },
+    terminate: terminateOwnedProcessTree,
+    now: () => Date.now(),
+    sleep: (ms) => new Promise<void>((resolveDelay) => setTimeout(resolveDelay, ms)),
+  };
+}
+
+/** 🛎️ The ONE shared serve fixture every browser harness runs against (ticket 26/09/23 S18, R10's productization
+ * contract): reuses a serve that already answers on `port` (and never stops it), otherwise starts the shell serve there
+ * ({@link devServeCommandV1}: `renderer` react or wgpu, `profile` dev or release; default the `s` React dev serve) —
+ * local-only, or joined to `hubUrl` — reports its boot with progress, honours `signal` (a cancelled boot stops what
+ * it started), and hands back `stop()` for exactly what it started. The canonical hub port and a port held by something
+ * that is not a serve are refused, never shared. `locale` is the language of the progress lines only; a harness seats the
+ * shell's own language itself. */
+export async function ensureDevServe(options: DevServeOptionsV1): Promise<DevServeFixtureV1> {
+  const world = options.world ?? devServeWorldV1(options.repoRoot);
+  const locale = options.locale ?? devHubLocaleV1();
+  const url = `http://127.0.0.1:${options.port}/`;
+  const report = (status: DevServeStatusV1): void => options.onProgress?.(status, devServeStatusTextV1(status, locale));
+  options.signal?.throwIfAborted();
+  const plan = devServePlanV1(options.port, await world.answers(url), await world.portInUse(options.port));
+  if (plan === "refuse-hub-port") throw new Error(`dev serve: port ${options.port} is the canonical hub's, never a serve's`);
+  if (plan === "refuse-occupied") throw new Error(`dev serve: port ${options.port} is held by a process that does not answer as a serve`);
+  if (plan === "reuse") {
+    report({ kind: "reusing", url });
+    return { url, reused: true, stop: async () => {} };
+  }
+  const logPath = options.logPath ?? join(options.repoRoot, ".🧬semio", "🌐hub", "dev-serves", `serve-${options.port}.log`);
+  const child = world.spawnServe({ port: options.port, variant: options.variant ?? "s", renderer: options.renderer ?? "react", profile: options.profile ?? "dev", hubUrl: options.hubUrl?.trim().replace(/\/+$/u, "") || null, logPath });
+  report({ kind: "spawning", url, pid: child.pid, logPath });
+  let stopped: Promise<void> | null = null;
+  const stop = (): Promise<void> =>
+    (stopped ??= (async () => {
+      world.terminate(child.pid);
+      const started = world.now();
+      while ((await world.portInUse(options.port)) && world.now() - started < DEV_SERVE_STOP_BOUND_MS) await world.sleep(200);
+      report({ kind: "stopped", url });
+    })());
+  const boundMs = options.bootBoundMs ?? DEV_SERVE_BOOT_BOUND_MS;
+  const intervalMs = options.intervalMs ?? DEV_SERVE_STATUS_INTERVAL_MS;
+  const started = world.now();
+  let reportedAt = started;
+  try {
+    for (;;) {
+      options.signal?.throwIfAborted();
+      if (await world.answers(url)) {
+        report({ kind: "ready", url, waitedMs: world.now() - started });
+        return { url, reused: false, stop };
+      }
+      if (child.exited()) throw new Error(`dev serve: the serve for ${url} exited before it answered — see ${logPath}`);
+      const waitedMs = world.now() - started;
+      if (waitedMs >= boundMs) throw new Error(`dev serve: ${url} did not answer within ${seconds(boundMs)} s — see ${logPath}`);
+      if (world.now() - reportedAt >= intervalMs) {
+        reportedAt = world.now();
+        report({ kind: "booting", url, waitedMs, boundMs });
+      }
+      await world.sleep(500);
+    }
+  } catch (error) {
+    await stop();
+    throw error;
+  }
+}
+//#endregion 🔖️DevServeFixture

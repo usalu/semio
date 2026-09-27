@@ -3166,15 +3166,15 @@
                 "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
-                "interactiveJob": "batchOnlyPendingRewrite"
+                "interactiveJob": "migrated"
               },
               "description": {
                 "native": {
-                  "en": "Bakes the staged transformation into the selected objects' geometry.",
+                  "en": "Bakes the staged transformation into the selected objects' geometry; refused until composed pane models support it.",
                   "de": "Schreibt die vorbereitete Transformation fest in die Geometrie der ausgewählten Objekte."
                 },
                 "reuse": {
-                  "en": "Bakes the staged transformation into the selected objects' geometry.",
+                  "en": "Bakes the staged transformation into the selected objects' geometry; refused until composed pane models support it.",
                   "de": "Schreibt die vorbereitete Transformation fest in die Geometrie der ausgewählten Objekte."
                 }
               }
@@ -3220,16 +3220,16 @@
                 "expectedRevision": true,
                 "cancellable": false,
                 "class": "interactive",
-                "interactiveJob": "batchOnlyPendingRewrite"
+                "interactiveJob": "migrated"
               },
               "description": {
                 "native": {
-                  "en": "Reads a CAD file (STEP, OBJ, STL) into the model.",
-                  "de": "Liest eine CAD-Datei (STEP, OBJ, STL) in das Modell ein."
+                  "en": "Replaces the whole CAD scene with a spatial scene file; single STEP, OBJ or STL objects are refused until composed pane models support them.",
+                  "de": "Ersetzt die gesamte CAD-Szene durch eine räumliche Szenendatei; einzelne STEP-, OBJ- oder STL-Objekte werden abgelehnt, bis zusammengesetzte Bereichsmodelle sie unterstützen."
                 },
                 "reuse": {
-                  "en": "Reads a CAD file (STEP, OBJ, STL) into the model.",
-                  "de": "Liest eine CAD-Datei (STEP, OBJ, STL) in das Modell ein."
+                  "en": "Replaces the whole CAD scene with a spatial scene file; single STEP, OBJ or STL objects are refused until composed pane models support them.",
+                  "de": "Ersetzt die gesamte CAD-Szene durch eine räumliche Szenendatei; einzelne STEP-, OBJ- oder STL-Objekte werden abgelehnt, bis zusammengesetzte Bereichsmodelle sie unterstützen."
                 }
               },
               "useWhen": [
@@ -4285,7 +4285,7 @@
                 "expectedRevision": false,
                 "cancellable": false,
                 "class": "interactive",
-                "interactiveJob": "batchOnlyPendingRewrite"
+                "interactiveJob": "migrated"
               },
               "description": {
                 "native": {
@@ -4336,7 +4336,7 @@
                 "expectedRevision": false,
                 "cancellable": false,
                 "class": "interactive",
-                "interactiveJob": "batchOnlyPendingRewrite"
+                "interactiveJob": "migrated"
               },
               "description": {
                 "native": {
@@ -4447,7 +4447,7 @@
                 "expectedRevision": false,
                 "cancellable": false,
                 "class": "interactive",
-                "interactiveJob": "batchOnlyPendingRewrite"
+                "interactiveJob": "migrated"
               },
               "description": {
                 "native": {
@@ -5324,6 +5324,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5429,6 +5439,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5522,6 +5542,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -6808,6 +6838,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -6913,6 +6953,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -7006,6 +7056,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -7172,7 +7232,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -7324,8 +7384,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "b100f2dff911e394560af7eb255fdfab7ab6258e464d5c69a8a548e344227568",
-    "coreWasmSha256": "549ada99e1f2200904c6794de2c6ec23c93ca39e4cf909acfaff2fe370e4b04e",
-    "descriptorSha256": "ed0c3ffc73b07ddd6c96b1a70cba7e52859f8a2939ed55eb23d8e06b284f6ea6"
+    "wasmSha256": "7b1b8a97daac05d82c518b91205d51b232698250d379d140ed47bbd51691b55a",
+    "coreWasmSha256": "43f177058586535825591f222a6bce64238bef1f864be505a4557d6a26a0a0ad",
+    "descriptorSha256": "822b0ceb6129996cf2f4c0e3a59652eb6d902f66056194e4ff0ffe778729e4fa"
   }
 }

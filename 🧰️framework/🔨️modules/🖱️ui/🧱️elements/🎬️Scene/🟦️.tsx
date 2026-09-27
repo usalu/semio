@@ -10,7 +10,12 @@ import { ephemeralBox } from "@semio-tech/framework";
 import * as React from "react";
 import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
-import { Edges, GizmoHelper, GizmoViewport, Grid, OrbitControls, useGLTF } from "@react-three/drei";
+import { Edges } from "@react-three/drei/core/Edges.js";
+import { GizmoHelper } from "@react-three/drei/core/GizmoHelper.js";
+import { GizmoViewport } from "@react-three/drei/core/GizmoViewport.js";
+import { Grid } from "@react-three/drei/core/Grid.js";
+import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
+import { useGLTF } from "@react-three/drei/core/Gltf.js";
 // 🧱️core: sceneHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // sceneHostPort.drei.Line at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️.tsx's header comment for why the barrel import caused a real bug).

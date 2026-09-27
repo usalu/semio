@@ -5,7 +5,9 @@ extension tiff
 start document
 comment none
 
-document = change-byte-order | insert-ifd | remove-ifd | replace-tag | remove-tag | replace-pixels
+document = set-snapshot-op | patch-snapshot-op | change-byte-order | insert-ifd | remove-ifd | replace-tag | remove-tag | replace-pixels
+
+patch-snapshot-op = "patch-snapshot" "patch" "=" hex
 
 change-byte-order = "change-byte-order" "byte-order" "=" byte-order-lit
 insert-ifd = "insert-ifd" "index" "=" INT "ifd" "=" ifd-lit

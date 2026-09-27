@@ -5,9 +5,10 @@ start op
 
 comment none
 
-op = set-snapshot-op | change-header-op | replace-palette-op | change-transparency-op | change-gamma-op | change-chromaticities-op | change-srgb-intent-op | change-physical-dims-op | change-timestamp-op | change-background-op | insert-text-chunk-op | remove-text-chunk-op | replace-text-chunk-op | replace-pixels-op | insert-unknown-chunk-op | remove-unknown-chunk-op | patch-pixels-op
+op = set-snapshot-op | patch-snapshot-op | change-header-op | replace-palette-op | change-transparency-op | change-gamma-op | change-chromaticities-op | change-srgb-intent-op | change-physical-dims-op | change-timestamp-op | change-background-op | insert-text-chunk-op | remove-text-chunk-op | replace-text-chunk-op | replace-pixels-op | insert-unknown-chunk-op | remove-unknown-chunk-op | patch-pixels-op
 
 set-snapshot-op = "set-snapshot" "snapshot" "=" hex
+patch-snapshot-op = "patch-snapshot" "patch" "=" hex
 change-header-op = "change-header" "width" "=" INT "height" "=" INT "bit-depth" "=" INT "color-type" "=" color-type "interlace" "=" bit
 replace-palette-op = "replace-palette" "plte" "=" palette-opt
 change-transparency-op = "change-transparency" "trns" "=" transparency-opt

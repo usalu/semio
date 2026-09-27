@@ -59,8 +59,7 @@ impl GlyphEntry {
 
 //#region 🅰️Weight
 
-/// 🅰️ The two faces the UI asks for — React's `font-semibold` vs its default weight
-/// (`🗣️Interpreter/🟦️.tsx:1168`'s `TextView`, which swaps ONLY the weight and keeps `text-sm`).
+/// 🅰️ The three weights the UI asks for — default, `font-medium`, and `font-semibold`.
 ///
 /// ⚠️ No bold Latin face ships in this repo: `🖼️assets/🔤️fonts/{🚀️anta,🧱️kelly-slab,⌨️share-tech-mono}`
 /// each carry `📖️regular` only (Anta and Share Tech Mono are single-weight upstream), and the only
@@ -73,6 +72,7 @@ impl GlyphEntry {
 pub enum TextWeight {
     #[default]
     Regular,
+    Medium,
     Semibold,
 }
 
@@ -91,9 +91,24 @@ impl TextWeight {
     pub const fn strikes(self) -> usize {
         match self {
             TextWeight::Regular => 1,
-            TextWeight::Semibold => 2,
+            TextWeight::Medium | TextWeight::Semibold => 2,
         }
     }
+
+    pub fn synthetic_offset(self, size_px: f32) -> Option<f32> {
+        match self {
+            TextWeight::Regular => None,
+            TextWeight::Medium => Some(faux_medium_offset(size_px)),
+            TextWeight::Semibold => Some(faux_bold_offset(size_px)),
+        }
+    }
+}
+
+fn faux_medium_offset(size_px: f32) -> f32 {
+    if !size_px.is_finite() || size_px <= 0.0 {
+        return 0.0;
+    }
+    (size_px * FAUX_MEDIUM_EM_RATIO).max(FAUX_MEDIUM_MIN_PX)
 }
 
 /// 🅰️ The x offset of a synthetic semibold's second strike, in LOGICAL pixels. CSS `font-weight: 600`
@@ -112,6 +127,8 @@ const FAUX_BOLD_EM_RATIO: f32 = 0.04;
 
 /// 🅰️ The floor below which a synthetic semibold would not show at all.
 const FAUX_BOLD_MIN_PX: f32 = 0.34;
+const FAUX_MEDIUM_EM_RATIO: f32 = 0.02;
+const FAUX_MEDIUM_MIN_PX: f32 = 0.17;
 
 //#endregion 🅰️Weight
 
@@ -122,6 +139,23 @@ const FAMILY_SANS: &str = "Anta";
 const FAMILY_SERIF: &str = "Kelly Slab";
 const FAMILY_MONO: &str = "Share Tech Mono";
 const FAMILY_EMOJI: &str = "Noto Emoji";
+
+/// 🔤️ Authored Latin face requested by one text run; emoji fallback remains shared.
+#[derive(Clone, Copy, Debug, Default, Hash, PartialEq, Eq)]
+pub enum TextFace {
+    #[default]
+    Sans,
+    Mono,
+}
+
+impl TextFace {
+    fn family(self) -> &'static str {
+        match self {
+            TextFace::Sans => FAMILY_SANS,
+            TextFace::Mono => FAMILY_MONO,
+        }
+    }
+}
 
 static ANTA_LATIN: &[u8] = include_bytes!("../../../../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf");
 static KELLY_SLAB_LATIN: &[u8] = include_bytes!("../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf");
@@ -526,7 +560,7 @@ pub struct FontAtlas {
     font_cx: FontContext,
     layout_cx: LayoutContext<[u8; 4]>,
     scale_cx: ScaleContext,
-    glyphs: HashMap<(char, u32), GlyphEntry>,
+    glyphs: HashMap<(TextFace, char, u32), GlyphEntry>,
     /// 📐️ Device pixels per logical pixel the atlas rasterises at — the ONLY place the surface
     /// scale factor reaches the text stack. Everything a caller passes in or reads back stays
     /// logical; see [`Self::set_raster_scale`].
@@ -712,7 +746,12 @@ impl FontAtlas {
     /// first). The key is the DEVICE size — `size_px * raster_scale` — so 16 logical px at 2× and
     /// 32 logical px at 1× stay distinct cache rows even though both rasterise 32 device px.
     pub fn ensure_glyph(&mut self, ch: char, size_px: f32) -> &GlyphEntry {
-        let key = (ch, Self::quantize_size(size_px * self.raster_scale));
+        self.ensure_glyph_for(TextFace::Sans, ch, size_px)
+    }
+
+    /// 🔤️ Resolves and caches one glyph under its authored face and device size.
+    pub fn ensure_glyph_for(&mut self, face: TextFace, ch: char, size_px: f32) -> &GlyphEntry {
+        let key = (face, ch, Self::quantize_size(size_px * self.raster_scale));
         if !self.glyphs.contains_key(&key) {
             self.rasterize_glyph(key);
         }
@@ -723,8 +762,8 @@ impl FontAtlas {
     /// is blank and zero-advance; a [`SYMBOL_FACE`] codepoint is drawn from this crate's own outlines
     /// (no shipped face carries one, in EITHER mode, on native or wasm); everything else goes to the
     /// atlas mode's own pipeline.
-    fn rasterize_glyph(&mut self, key: (char, u32)) {
-        let (ch, device_size_px) = key;
+    fn rasterize_glyph(&mut self, key: (TextFace, char, u32)) {
+        let (face, ch, device_size_px) = key;
         if is_zero_width_format_char(ch) {
             let glyph = self.blank_glyph();
             self.pack_glyph(key, glyph);
@@ -736,7 +775,7 @@ impl FontAtlas {
         }
         let glyph = match self.mode {
             AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch, device_size_px as f32),
-            AtlasMode::Shaped => self.rasterize_shaped_glyph(ch, device_size_px as f32),
+            AtlasMode::Shaped => self.rasterize_shaped_glyph(face, ch, device_size_px as f32),
         };
         self.pack_glyph(key, glyph);
     }
@@ -781,10 +820,10 @@ impl FontAtlas {
     /// is what performs family resolution and (via parley's built-in emoji-cluster detection)
     /// automatic fallback into the registered `GenericFamily::Emoji` family. Returns `None` when
     /// no registered font (including the emoji fallback) could shape the codepoint at all.
-    fn shape_single_char(&mut self, ch: char, size_px: f32) -> Option<ResolvedGlyph> {
+    fn shape_single_char(&mut self, face: TextFace, ch: char, size_px: f32) -> Option<ResolvedGlyph> {
         let text = ch.to_string();
         let mut builder = self.layout_cx.ranged_builder(&mut self.font_cx, &text, 1.0, true);
-        builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(FAMILY_SANS))));
+        builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(face.family()))));
         builder.push_default(StyleProperty::FontSize(size_px));
         let mut layout: parley::Layout<[u8; 4]> = builder.build(&text);
         layout.break_all_lines(None);
@@ -826,8 +865,8 @@ impl FontAtlas {
     /// (see `rasterize_bitmap_glyph`) when no registered font — including the emoji fallback —
     /// can shape `ch` at all (e.g. scripts none of Anta/Kelly Slab/Share Tech Mono/Noto Emoji
     /// cover, such as CJK or Arabic; a pre-existing limitation this atlas doesn't newly regress).
-    fn rasterize_shaped_glyph(&mut self, ch: char, size_px: f32) -> RasterizedGlyph {
-        let Some(resolved) = self.shape_single_char(ch, size_px) else {
+    fn rasterize_shaped_glyph(&mut self, face: TextFace, ch: char, size_px: f32) -> RasterizedGlyph {
+        let Some(resolved) = self.shape_single_char(face, ch, size_px) else {
             return self.rasterize_bitmap_glyph(ch, size_px);
         };
         if let Some(glyph) = self.render_resolved(&resolved, size_px) {
@@ -853,7 +892,7 @@ impl FontAtlas {
 
     /// 📐️ Bin-packs one rasterized glyph into the alpha (`pixels`) or color (`color_pixels`)
     /// atlas page, per `RasterizedGlyph::is_color`, and records the resulting `GlyphEntry`.
-    fn pack_glyph(&mut self, key: (char, u32), glyph: RasterizedGlyph) {
+    fn pack_glyph(&mut self, key: (TextFace, char, u32), glyph: RasterizedGlyph) {
         let RasterizedGlyph { bitmap, width, height, bearing_x, bearing_y, advance, raster_scale, is_color } = glyph;
         let (atlas_x, atlas_y) = if is_color {
             if self.color_cursor_x + width + 2 >= self.color_width {
@@ -900,10 +939,15 @@ impl FontAtlas {
     /// 📏️ Advance-summed width and the CSS line box height (`line_height`) — a single line of text
     /// occupies its whole line box in React, exactly as a wrapped paragraph's first line does.
     pub fn measure_text(&mut self, text: &str, size: f32) -> (f32, f32) {
+        self.measure_text_face(TextFace::Sans, text, size)
+    }
+
+    /// 📏️ Measures one run with the same face-specific advances its painter consumes.
+    pub fn measure_text_face(&mut self, face: TextFace, text: &str, size: f32) -> (f32, f32) {
         let mut width = 0.0f32;
         let mut max_height = 0.0f32;
         for ch in text.chars() {
-            let glyph = self.ensure_glyph(ch, size);
+            let glyph = self.ensure_glyph_for(face, ch, size);
             width += glyph.advance;
             max_height = max_height.max(glyph.logical_height() + glyph.bearing_y);
         }
@@ -913,8 +957,58 @@ impl FontAtlas {
     /// 📏️ The advance sum of one run of `text`, from `byte` up to `end` — the width a greedy wrap
     /// prices an unbreakable run at, off the very advances the painter then pens.
     pub fn measure_range(&mut self, text: &str, byte: usize, end: usize, size: f32) -> f32 {
+        self.measure_range_face(TextFace::Sans, text, byte, end, size)
+    }
+
+    /// 📏️ Measures a byte range with one face-specific glyph stream.
+    pub fn measure_range_face(&mut self, face: TextFace, text: &str, byte: usize, end: usize, size: f32) -> f32 {
         let Some(run) = text.get(byte..end) else { return 0.0 };
-        run.chars().map(|ch| self.ensure_glyph(ch, size).advance).sum()
+        run.chars().map(|ch| self.ensure_glyph_for(face, ch, size).advance).sum()
+    }
+
+    /// ↩️ Returns CSS `white-space: pre-wrap` line ranges while retaining repeated and trailing spaces.
+    pub fn pre_wrap_lines(&mut self, face: TextFace, text: &str, max_width: f32, size: f32) -> Vec<std::ops::Range<usize>> {
+        let limit = max_width.max(1.0);
+        let mut lines = Vec::new();
+        let mut byte = 0usize;
+        loop {
+            let line_start = byte;
+            let mut pen = 0.0f32;
+            let mut last_break = None;
+            let mut completed = false;
+            while let Some(ch) = text.get(byte..).and_then(|rest| rest.chars().next()) {
+                let next = byte + ch.len_utf8();
+                if ch == '\n' {
+                    lines.push(line_start..byte);
+                    byte = next;
+                    completed = true;
+                    break;
+                }
+                let advance = self.ensure_glyph_for(face, ch, size).advance;
+                if pen + advance > limit + LINE_BREAK_FIT_EPSILON && byte > line_start {
+                    if let Some(split) = last_break.filter(|split| *split > line_start) {
+                        lines.push(line_start..split);
+                        byte = split;
+                        completed = true;
+                        break;
+                    }
+                }
+                pen += advance;
+                byte = next;
+                if is_wrap_space(ch) {
+                    last_break = Some(next);
+                }
+            }
+            if !completed {
+                lines.push(line_start..text.len());
+                break;
+            }
+            if byte == text.len() {
+                lines.push(byte..byte);
+                break;
+            }
+        }
+        lines
     }
 
     /// ✂️ CSS greedy line breaking over `text` at `max_width`, as BYTE RANGES into `text` — the one

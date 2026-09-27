@@ -47,7 +47,7 @@ export type ResidencySample = Readonly<{ atMs: number; phase: string; rssMiB: nu
 export type ResidencyRow = { round: number; kindId: string; createMs?: number; openPlanStatus?: number; rssBeforeMiB?: number; rssAfterMiB?: number; residency?: TrustedCatalogGuestResidencyStateV1; pairDigest?: string; error?: string };
 
 /** 🔁️ One round's residency deltas and whether its resident set equals the previous round's. */
-export type ResidencyRound = { round: number; compiles: number; hits: number; admitted: number; bypassed: number; released: number; residentGuests: number; residentBytes: number; compileMs: number };
+export type ResidencyRound = { round: number; compiles: number; hits: number; admitted: number; bypassed: number; released: number; residentGuests: number; residentBytes: number; footprintBytes: number; compileMs: number };
 
 /** 📊️ The watch's report. */
 export type ResidencyReport = {
@@ -72,40 +72,101 @@ async function readResidency(hub: string, token: string): Promise<TrustedCatalog
   return answer.status === 200 && answer.json?.residency ? (answer.json.residency as TrustedCatalogGuestResidencyStateV1) : undefined;
 }
 
-/** 🧬️ SHA-256 of a document's active checkpoint pair content — the pack and SPR bytes of the canonical pair stream's data
- * records (`🛰️lag-rebootstrap`: frames of a u32 big-endian length and a payload; a data payload is kind 2, part, u32 ordinal,
- * u64 offset, u32 length, bytes), never its header, which names the checkpoint — with every occurrence of the document's
- * own id replaced by a fixed token. */
-async function pairDigest(hub: string, token: string, spaceId: string, documentId: string): Promise<string> {
-  const answer = await hubProbeCall(hub, "GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/active-checkpoint/pair`, token, undefined, "application/vnd.semio.canonical-checkpoint-pair.v1");
-  if (answer.status !== 200) throw new Error(`active pair ${answer.status}`);
-  const stream = Buffer.from(answer.bytes);
+/** 🧲️ The first bytes of an SPR record stream (`🧰️framework/🔨️modules/📡️replication/📐️format`, `MAGIC`). */
+const SPR_MAGIC = Buffer.from([0x89, 0x53, 0x50, 0x52, 0x0d, 0x0a, 0x1a, 0x0a]);
+/** 📏️ The fixed SPR header, whose CRC covers only constant fields. */
+const SPR_HEADER_BYTES = 32;
+/** ⛓️ The SPR commit record kind; its payload's bytes 32..64 are the chain hash over every earlier frame. */
+const SPR_RECORD_COMMIT = 0x0c;
+/** 🗜️ The SPR frame flag of a compressed payload, which is preceded by its raw length. */
+const SPR_FLAG_COMPRESSED = 0x01;
+
+function readVarint(bytes: Buffer, at: number): [number, number] {
+  let value = 0;
+  for (let shift = 0, cursor = at; cursor < bytes.length && shift <= 49; shift += 7, cursor += 1) {
+    value += (bytes[cursor]! & 0x7f) * 2 ** shift;
+    if ((bytes[cursor]! & 0x80) === 0) return [value, cursor + 1];
+  }
+  throw new Error(`SPR varint at ${at} is truncated or too long`);
+}
+
+function withoutDocumentId(bytes: Buffer, documentId: Buffer): Buffer[] {
+  const pieces: Buffer[] = [];
+  let from = 0;
+  for (let found = bytes.indexOf(documentId, from); found >= 0; found = bytes.indexOf(documentId, from)) {
+    pieces.push(bytes.subarray(from, found), Buffer.from("<document>"));
+    from = found + documentId.length;
+  }
+  pieces.push(bytes.subarray(from));
+  return pieces;
+}
+
+/** 🎞️ The SPR frames of `spr` as `[kind, flags, rawLength, payload]`, checked for structure (header magic, every frame's
+ * body length in bounds and its trailing `back_len` echoing the frame's own length) — the frame grammar of
+ * `📐️format::decode_frame_in_slice`, without its CRC check, which the hub's own decoder already ran. */
+export function sprFrames(spr: Buffer): { kind: number; flags: number; rawLength: number | null; payload: Buffer }[] {
+  if (spr.length < SPR_HEADER_BYTES || !spr.subarray(0, 8).equals(SPR_MAGIC)) throw new Error("not an SPR stream");
+  const frames = [];
+  for (let at = SPR_HEADER_BYTES; at < spr.length; ) {
+    const [bodyLength, bodyStart] = readVarint(spr, at);
+    const bodyEnd = bodyStart + bodyLength;
+    if (bodyLength < 2 || bodyEnd + 8 > spr.length) throw new Error(`SPR frame at ${at} overruns the stream`);
+    if (spr.readUInt32LE(bodyEnd + 4) !== bodyEnd + 8 - at) throw new Error(`SPR frame at ${at} does not echo its length`);
+    const [kind, flags] = [spr[bodyStart]!, spr[bodyStart + 1]!];
+    const [rawLength, payloadStart] = flags & SPR_FLAG_COMPRESSED ? readVarint(spr, bodyStart + 2) : [null, bodyStart + 2];
+    frames.push({ kind, flags, rawLength, payload: spr.subarray(payloadStart, bodyEnd) });
+    at = bodyEnd + 8;
+  }
+  return frames;
+}
+
+/** 🧬️ The content digest of a canonical checkpoint pair stream (`semio.hub.pair-content/v1`, fixture
+ * `🧫️fixtures/🪞️pair-content-v1`): what two documents of one kind share when their guests answered alike. The stream's
+ * header (it names the checkpoint) is skipped; its data records (kind 2: part, u32 ordinal, u64 offset, u32 length, bytes)
+ * are joined per part. The pack is taken whole; the SPR is taken frame by frame — header, then each frame's kind, flags, raw
+ * length and payload — without the fields derived from the bytes before them: every frame's CRC-32C and `back_len`, and a
+ * commit's chain hash. Every occurrence of the document's own id is replaced by `<document>` first. The integrity fields
+ * have to go because they are digests over the id-bearing records: two creations of the same kind under the same name
+ * differ in exactly those 40 bytes (genesis record CRC, commit chain hash, commit CRC). A compressed payload is taken as
+ * stored, so an id inside one is not replaced. */
+export function pairContentDigest(stream: Uint8Array, documentId: string): string {
+  const bytes = Buffer.from(stream);
   const parts = new Map<number, Buffer[]>();
-  for (let at = 0; at + 4 <= stream.length; ) {
-    const length = stream.readUInt32BE(at);
-    const payload = stream.subarray(at + 4, at + 4 + length);
-    if (payload[0] === 2 && payload.length >= 18) parts.set(payload[1]!, [...(parts.get(payload[1]!) ?? []), payload.subarray(18)]);
+  for (let at = 0; at + 4 <= bytes.length; ) {
+    const length = bytes.readUInt32BE(at);
+    const record = bytes.subarray(at + 4, at + 4 + length);
+    if (record[0] === 2 && record.length >= 18) parts.set(record[1]!, [...(parts.get(record[1]!) ?? []), record.subarray(18)]);
     at += 4 + length;
   }
   const id = Buffer.from(documentId, "utf8");
-  const hash = createHash("sha256");
-  for (const part of [...parts.keys()].sort()) {
-    const bytes = Buffer.concat(parts.get(part)!);
-    let from = 0;
-    for (let found = bytes.indexOf(id, from); found >= 0; found = bytes.indexOf(id, from)) {
-      hash.update(bytes.subarray(from, found)).update("<document>");
-      from = found + id.length;
+  const hash = createHash("sha256").update("semio.hub.pair-content/v1\n");
+  for (const part of [...parts.keys()].sort((left, right) => left - right)) {
+    const content = Buffer.concat(parts.get(part)!);
+    if (!content.subarray(0, 8).equals(SPR_MAGIC)) {
+      hash.update(`part ${part} pack\n`);
+      for (const piece of withoutDocumentId(content, id)) hash.update(piece);
+      continue;
     }
-    hash.update(bytes.subarray(from)).update(`<part ${part}>`);
+    hash.update(`part ${part} spr\n`).update(content.subarray(0, SPR_HEADER_BYTES));
+    for (const frame of sprFrames(content)) {
+      hash.update(`\nframe ${frame.kind} ${frame.flags} ${frame.rawLength ?? "-"}\n`);
+      for (const piece of withoutDocumentId(frame.kind === SPR_RECORD_COMMIT ? frame.payload.subarray(0, 32) : frame.payload, id)) hash.update(piece);
+    }
   }
   return hash.digest("hex");
+}
+
+async function pairDigest(hub: string, token: string, spaceId: string, documentId: string): Promise<string> {
+  const answer = await hubProbeCall(hub, "GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/active-checkpoint/pair`, token, undefined, "application/vnd.semio.canonical-checkpoint-pair.v1");
+  if (answer.status !== 200) throw new Error(`active pair ${answer.status}`);
+  return pairContentDigest(answer.bytes, documentId);
 }
 
 /** 📏️ The resident set of `pid` in MiB, from the operating system's process table. */
 export function residentMiB(pid: number): number {
   if (process.platform === "win32") {
     const answer = spawnSync("tasklist", ["/FI", `PID eq ${pid}`, "/FO", "CSV", "/NH"], { encoding: "utf8" });
-    const kib = Number((answer.stdout.split(",").at(-1) ?? "").replace(/[^0-9]/gu, ""));
+    const kib = Number((/"([^"]*)"\s*$/u.exec(answer.stdout.trim())?.[1] ?? "").replace(/[^0-9]/gu, ""));
     if (!Number.isFinite(kib) || kib <= 0) throw new Error(`tasklist reports no memory for pid ${pid}`);
     return kib / 1024;
   }
@@ -154,11 +215,11 @@ export async function runResidencyWatch(options: ResidencyWatchOptions): Promise
         row.residency = await readResidency(options.hub, token);
         row.rssAfterMiB = sample(phase);
         rows.push(row);
-        options.onProgress(`round ${round} ${index + 1}/${kinds.length} ${kind.kindId}: plan ${row.openPlanStatus ?? "-"} create ${row.createMs ?? "-"} ms rss ${row.rssBeforeMiB} → ${row.rssAfterMiB} MiB${row.residency ? ` resident ${row.residency.residentGuests}/${row.residency.registeredGuests} compiles ${row.residency.compiles} hits ${row.residency.hits} released ${row.residency.released}` : ""}${row.error ? ` ${row.error}` : ""}`);
+        options.onProgress(`round ${round} ${index + 1}/${kinds.length} ${kind.kindId}: plan ${row.openPlanStatus ?? "-"} create ${row.createMs ?? "-"} ms rss ${row.rssBeforeMiB} → ${row.rssAfterMiB} MiB${row.residency ? ` resident ${row.residency.residentGuests}/${row.residency.registeredGuests} footprint ${Math.round(row.residency.footprintBytes / 1_048_576)} MiB compiles ${row.residency.compiles} hits ${row.residency.hits} released ${row.residency.released}` : ""}${row.error ? ` ${row.error}` : ""}`);
       }
       const after = rows.at(-1)?.residency ?? previous;
       if (before && after) {
-        roundsReport.push({ round, compiles: after.compiles - before.compiles, hits: after.hits - before.hits, admitted: after.admitted - before.admitted, bypassed: after.bypassed - before.bypassed, released: after.released - before.released, residentGuests: after.residentGuests, residentBytes: after.residentBytes, compileMs: Math.round((after.compileMicros - before.compileMicros) / 1_000) });
+        roundsReport.push({ round, compiles: after.compiles - before.compiles, hits: after.hits - before.hits, admitted: after.admitted - before.admitted, bypassed: after.bypassed - before.bypassed, released: after.released - before.released, residentGuests: after.residentGuests, residentBytes: after.residentBytes, footprintBytes: after.footprintBytes, compileMs: Math.round((after.compileMicros - before.compileMicros) / 1_000) });
         options.onProgress(`round ${round}: ${JSON.stringify(roundsReport.at(-1))}`);
       }
       previous = after;

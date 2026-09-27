@@ -25,6 +25,8 @@ pub mod set_ftyp;
 pub mod set_sample_sync;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 #[path = "🎛️set-track-codec/🦀️.rs"]
 pub mod set_track_codec;
 #[path = "📐set-track-dimensions/🦀️.rs"]
@@ -39,6 +41,7 @@ pub mod set_track_dimensions;
 #[mutations(snapshot = Mp4Snapshot, diff = Mp4Diff, schema = "Mp4Mutation")]
 pub enum Mp4Mutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetFtyp(set_ftyp::SetFtyp),
     InsertTrack(insert_track::InsertTrack),
     RemoveTrack(remove_track::RemoveTrack),
@@ -53,7 +56,7 @@ pub enum Mp4Mutation {
 /// `../../🔣️oracle.json`'s own `kinds` list is checked against (the framework never
 /// parses Rust, so `kinds_const_matches_enum_variants_in_declaration_order` below is what keeps the
 /// declaration honest). Wave 7 fleet brief, ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
-pub const KINDS: &[&str] = &["set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
 
 fn track_diff_for(track_index: usize, inner: Mp4TrackDiff) -> Mp4Diff {
     Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: track_index, diff: inner }], added: vec![] }) }
@@ -114,6 +117,7 @@ impl OpBinary for Mp4Mutation {
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &Mp4Mutation, base: &Mp4Snapshot) -> protocol::MutationOutcome<Mp4Diff> {
     protocol::MutationOutcome::new(match this {
+        Mp4Mutation::PatchSnapshot(payload) => return protocol::MutationKind::diff(payload, base),
         Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <Mp4Diff as protocol::command::DiffAlgebra<Mp4Snapshot>>::between(base, snapshot),
         Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp }) => Mp4Diff { ftyp: Some(ftyp.clone()), movie: None, tracks: None },
         Mp4Mutation::InsertTrack(insert_track::InsertTrack { index, track }) => Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: track.clone() }] }) },
@@ -137,6 +141,7 @@ pub(crate) fn agg_diff(this: &Mp4Mutation, base: &Mp4Snapshot) -> protocol::Muta
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &Mp4Mutation, base: &Mp4Snapshot) -> Vec<Mp4Mutation> {
     match this {
+        Mp4Mutation::PatchSnapshot(payload) => protocol::MutationKind::inverse(payload, base),
         Mp4Mutation::SetSnapshot(_) => vec![Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         Mp4Mutation::SetFtyp(_) => vec![Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: base.ftyp.clone() })],
         Mp4Mutation::InsertTrack(insert_track::InsertTrack { index, .. }) => vec![Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: *index })],

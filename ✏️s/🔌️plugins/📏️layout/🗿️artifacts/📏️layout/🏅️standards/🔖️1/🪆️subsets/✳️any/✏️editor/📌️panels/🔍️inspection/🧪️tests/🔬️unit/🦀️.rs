@@ -10,6 +10,21 @@ async fn the_inspector_always_summarises_the_document() {
     assert!(json.contains("\"type\":\"tree\""), "inspection body must be a tree: {json}");
 }
 
+#[test]
+fn selected_frame_page_and_document_expose_edit_inputs() {
+    let snapshot = crate::standards::v1::subsets::any::schema::default_document();
+    let config = LayoutWindowConfig { active_page_id: "page-1".into(), ..LayoutWindowConfig::default() };
+    let interaction = LayoutInteractionSnapshot { ids: vec!["frame-1".into()], ..Default::default() };
+    let labels = crate::editor::layout::terminology::layout_labels(&semio_framework_plugin::ViewModel::default());
+    let node = render(&snapshot, &config, &interaction, labels).expect("inspector");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project inspector");
+    assert!(json.contains("patchFrame"), "{json}");
+    assert!(json.contains("patchPage"), "{json}");
+    assert!(json.contains("patchDocument"), "{json}");
+    assert!(json.contains("layout-play-inspector.patchFrame.x"), "{json}");
+    assert!(json.contains("\"type\":\"input\""), "{json}");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
     let definition = definition();

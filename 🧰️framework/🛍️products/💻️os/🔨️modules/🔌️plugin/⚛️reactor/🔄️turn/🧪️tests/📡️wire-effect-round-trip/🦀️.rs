@@ -4,13 +4,7 @@ use semio_framework::kernel::{Effect, RequestId};
 
 #[test]
 fn request_file_open_survives_wire_effect_round_trip() {
-    let effect = Effect::RequestFileOpen {
-        req: RequestId(121),
-        accept: "application/json,.json".into(),
-        read_as: Some("text".into()),
-        import_action: "importFixture".into(),
-        multiple: false,
-    };
+    let effect = Effect::RequestFileOpen { req: RequestId(121), accept: "application/json,.json".into(), read_as: Some("text".into()), import_action: "importFixture".into(), multiple: false };
     let bytes = store::pack_rt::encode_wire_value(&effect.to_value());
     let decoded = decode_wire_effect(&bytes).expect("RequestFileOpen must survive the browser wire table");
     match decoded {
@@ -92,7 +86,19 @@ fn all_effect_wire_fixtures() -> Vec<Effect> {
         Effect::DownloadMediaExport { filename: "a.bin".into(), mime_type: "application/octet-stream".into(), data: "AA==".into(), encoding: None },
         Effect::IconRenderExport { items: vec![IconRenderExportItem { filename: "i.png".into(), request: dsl::DslValue::Null }] },
         Effect::RequestFileOpen { req, accept: "*".into(), read_as: None, import_action: "import".into(), multiple: false },
-        Effect::RequestMediaFrames { req, accept: "video/*".into(), frame_action: "frame".into(), done_action: "done".into(), fallback_action: "fallback".into(), sample_stride: 0, max_frames: 0, max_long_edge_px: 0, fps_hint: 0.0, payload: None, args: None },
+        Effect::RequestMediaFrames {
+            req,
+            accept: "video/*".into(),
+            frame_action: "frame".into(),
+            done_action: "done".into(),
+            fallback_action: "fallback".into(),
+            sample_stride: 0,
+            max_frames: 0,
+            max_long_edge_px: 0,
+            fps_hint: 0.0,
+            payload: None,
+            args: None,
+        },
         Effect::SpawnPluginInstance { req, plugin_id: "p".into(), app_id: "a".into(), os_instance_id: None, label: None, document_json: None },
         Effect::OpenPluginInstance { plugin_id: "p".into(), app_id: "a".into(), os_instance_id: None },
         Effect::SetActiveUtility { window_id: "w".into(), utility_id: "u".into() },

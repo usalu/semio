@@ -8,12 +8,10 @@
     { "folder": "plain", "slug": "plain" }
   ],
   "prefixes": [
-    { "variant": "stdio-dwg-ac1018", "prefix": "🗄️stdio🖊️dwg4️⃣ac1018" },
-    { "variant": "stdio-dwg-ac1024", "prefix": "🗄️stdio🖊️dwg🔟ac1024" },
-    { "variant": "stdio-pdf14-a", "prefix": "🗄️stdio📖️pdf4️⃣1.4🗄️a" },
-    { "variant": "stdio-pdf17-a", "prefix": "🗄️stdio📖️pdf7️⃣1.7🗄️a" },
-    { "variant": "stdio-gif87a", "prefix": "🗄️stdio🎞️gif7️⃣87a" },
-    { "variant": "stdio-gif89a", "prefix": "🗄️stdio🎞️gif9️⃣89a" },
-    { "variant": "stdio-json-i", "prefix": "🗄️stdio🧾️json🛜️i-json" }
+    { "variant": "stdio", "prefix": "🗄️stdio📝️md" },
+    { "variant": "stdio-json", "prefix": "🗄️stdio🧾️json" },
+    { "variant": "stdio-json-i", "prefix": "🗄️stdio🧾️json🛜️i-json" },
+    { "variant": "stdio-xml", "prefix": "🗄️stdio📰️xml" },
+    { "variant": "stdio-xml-valid", "prefix": "🗄️stdio📰️xml✅️valid" }
   ]
 }

@@ -30,6 +30,8 @@ message DrawingLayerPatch {
   optional string trace_params_json = 10;
   optional string layer_json = 11;
   optional DrawingPathSegments path_segments = 12;
+  optional string text_content = 13;
+  optional double text_size = 14;
 }
 message DrawingDiff {
   optional semio.s.draw.drawing.artifact.DrawingArtifact artifact = 1;

@@ -37,6 +37,12 @@
     "esbuild",
     "enhanced-resolve"
   ],
+  "denySpecifiers": [
+    {
+      "specifier": "@react-three/drei",
+      "reason": "drei is excluded from prebundling (one Canvas store), so its barrel is served raw and a single import of it put all of drei core + web into every cold boot of s: 157 drei files, hls.js (5 MB), mediapipe, camera-controls, maath and more. Import each member's own module (`@react-three/drei/core/<Member>.js`, `@react-three/drei/web/<Member>.js`). Measured ticket 26/09/23 F2 on :6580: 909 → 735 boot modules, 62.4 → 51.6 MB."
+    }
+  ],
   "denyModules": [
     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts",

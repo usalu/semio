@@ -5,7 +5,7 @@ import { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } from 
 import { PreparationScript } from "../../♻️activation/🧰️preparation/🟦️.ts";
 import { ActivationScript } from "../../♻️activation/🏃️execution/🟦️.ts";
 import { ServeScript } from "../../♻️activation/🌐️serve/🟦️.ts";
-import { DevLocalHubScript } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
+import { DevLocalHubScript, devServePortV1, ensureDevServe } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 import { ColdBootCheckScript } from "../../♻️activation/🩺️readiness/🟦️.ts";
 import { CanonicalBootstrapFolderMirrorCheckScript } from "../../🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts";
 import { TestScript } from "../../🧪️tests/🏃️execution/🟦️.ts";
@@ -28,6 +28,27 @@ const router = new ScriptRouter(import.meta.dir)
   .register("activate", ActivationScript)
   .register("serve", ServeScript)
   .register("local-hub", DevLocalHubScript)
+  .register("serve-hold", class extends BundleScript {
+    /** 🛎️ `serve-hold --serve <url> [--hub <url>] [--variant <v>]`: holds the shared serve fixture (`ensureDevServe`) until
+     * SIGINT/SIGTERM, then stops only what it started — the zero-touch serve provider of the repository goal gate. */
+    async run(segments: string[]): Promise<void> {
+      const flag = (name: string): string | undefined => (segments.indexOf(name) >= 0 ? segments[segments.indexOf(name) + 1] : undefined);
+      const serveUrl = flag("--serve");
+      if (!serveUrl) throw new Error("usage: serve-hold --serve <url> [--hub <url>] [--variant <v>]");
+      const cancel = new AbortController();
+      const released = new Promise<void>((resolveRelease) => {
+        const release = (): void => {
+          cancel.abort();
+          resolveRelease();
+        };
+        process.once("SIGINT", release);
+        process.once("SIGTERM", release);
+      });
+      const fixture = await ensureDevServe({ repoRoot: this.repoRoot, port: devServePortV1(serveUrl), hubUrl: flag("--hub"), variant: flag("--variant"), signal: cancel.signal, onProgress: (_status, line) => console.log(line) });
+      await released;
+      await fixture.stop();
+    }
+  })
   .register("cold-boot-check", ColdBootCheckScript)
   .register("canonical-bootstrap-folder-mirror-check", CanonicalBootstrapFolderMirrorCheckScript)
   .register("closed-browser-component-factory-check", class extends BundleScript {

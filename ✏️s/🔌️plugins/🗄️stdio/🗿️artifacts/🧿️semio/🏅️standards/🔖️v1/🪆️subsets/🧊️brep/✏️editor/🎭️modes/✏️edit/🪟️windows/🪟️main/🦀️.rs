@@ -21,7 +21,9 @@ const SEMIO_BREP_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
 /// variant — `MeshWindowKit::editable_window_kind()` — carries the frozen `set-vertex` action.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    MeshWindowKit::editable_window_kind()
+    let mut definition = MeshWindowKit::editable_window_kind();
+    definition.actions = vec![crate::editor::semio_brep::set_vertex_action()];
+    definition
 }
 //#endregion 🔖️Definition
 

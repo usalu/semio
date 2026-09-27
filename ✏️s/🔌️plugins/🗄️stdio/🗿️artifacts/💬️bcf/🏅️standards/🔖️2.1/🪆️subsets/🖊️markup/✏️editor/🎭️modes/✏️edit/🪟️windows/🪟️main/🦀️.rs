@@ -3,7 +3,7 @@
 //! Render is identical to the viewer's read; mutation is the surface root's `handle()` responsibility.
 
 use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
-use semio_framework_plugin::app::{EditableTableColumn, TableView, TableWindowKit};
+use semio_framework_plugin::app::{TableView, TableWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
@@ -14,7 +14,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 //#region 🔖️Definition
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
-    TableWindowKit::editable_window_kind()
+    semio_s_artifact_stdio_contract::revision_addressed_table_window_kind()
 }
 //#endregion 🔖️Definition
 
@@ -28,9 +28,15 @@ fn columns_and_rows(document: &BcfSnapshot) -> (Vec<String>, Vec<Vec<String>>) {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &BcfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(document);
+    render_revisioned(document, &revision)
+}
+
+/// 🔐️ Renders against the store revision captured by the host without re-encoding the snapshot.
+pub fn render_revisioned(document: &BcfSnapshot, revision: &str) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (columns, rows) = columns_and_rows(document);
-    let editable = (0..columns.len()).map(|index| EditableTableColumn::new(index, "set-cell")).collect::<Vec<_>>();
-    TableWindowKit::render_editable(&TableView { columns, rows }, "s.stdio.bcf@2.1/*#editor", &editable)
+    let editable = semio_s_artifact_stdio_contract::window_kit_revisioned_editable_cells(&rows, "set-cell", revision)?;
+    TableWindowKit::render_editable_cells(&TableView { columns, rows }, "s.stdio.bcf@2.1/*#editor", &editable)
 }
 //#endregion 🔖️Render
 

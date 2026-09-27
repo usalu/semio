@@ -81,21 +81,8 @@ fn jpgAnyEditor_index(path: &str, prefix: &str, len: usize) -> Option<usize> {
     segment.parse::<usize>().ok().filter(|index| *index < len)
 }
 fn jpgAnyEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &JpgSnapshot) -> Result<JpgSnapshot, Fault> {
-    if let editing::SnapshotEditEvent::ReplaceSource { source } = event {
-        return editing::snapshot_from_edit_source(source).map_err(|error| jpgAnyEditor_edit_fault(error.code, error.to_string()));
-    }
-    if let editing::SnapshotEditEvent::SetValue { path, value } = event {
-        if path == "/pixels" {
-            let mut next = snapshot.clone();
-            next.pixels = <Vec<u8> as dsl::FromValue>::from_value(value.clone()).map_err(|error| jpgAnyEditor_edit_fault("stdio.jpg.invalid-pixels", error.to_string()))?;
-            return Ok(next);
-        }
-    }
-    let mut bounded = snapshot.clone();
-    let pixels = std::mem::take(&mut bounded.pixels);
-    let mut next = editing::apply_snapshot_edit(&bounded, event).map_err(|error| jpgAnyEditor_edit_fault(error.code, error.to_string()))?;
-    next.pixels = pixels;
-    Ok(next)
+    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| jpgAnyEditor_edit_fault(error.code, error.to_string()))?;
+    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA).map_err(|error| jpgAnyEditor_edit_fault(error.code, error.to_string()))
 }
 fn jpgAnyEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: JpgSnapshot) -> JpgMutation {
     let path = match event {
@@ -231,20 +218,13 @@ impl editing::SnapshotEditingEditor for JpgAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { JpgAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        let shape_is_admitted = match event {
-            editing::SnapshotEditEvent::SetValue { path, .. } | editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } | editing::SnapshotEditEvent::RenameKey { path, .. } => path.len() <= 4_096,
-            editing::SnapshotEditEvent::MoveValue { from, path } => from.len() <= 4_096 && path.len() <= 4_096,
-            editing::SnapshotEditEvent::ReplaceSource { source } => editing::snapshot_edit_source_is_admitted(source),
-        };
-        if !shape_is_admitted { return false; }
-        let Ok(emit) = <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, snapshot) else { return false };
-        let fits = |mutation: &Self::Mutation| <Self::Mutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-        !emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| fits(mutation) && <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, snapshot).iter().all(fits))
-    }
-    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         let next = jpgAnyEditor_bounded_edit(event, snapshot)?;
-        Ok(Emit { artifact_mutations: vec![jpgAnyEditor_compact_mutation(event, next)], description: Some("Edit JPEG details".into()), ..Default::default() })
+        let mutation = jpgAnyEditor_compact_mutation(event, next);
+        if !matches!(mutation, JpgMutation::SetSnapshot(_)) {
+            return Ok(Emit { artifact_mutations: vec![mutation], description: Some("Edit JPEG details".into()), ..Default::default() });
+        }
+        editing::snapshot_edit_patch(event, snapshot, |patch| JpgMutation::PatchSnapshot(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot { patch }))
     }
 }
 

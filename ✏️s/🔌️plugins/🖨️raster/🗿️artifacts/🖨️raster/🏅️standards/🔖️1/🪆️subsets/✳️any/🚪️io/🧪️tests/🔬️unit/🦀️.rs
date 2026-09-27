@@ -249,3 +249,29 @@ async fn advertised_stdio_kinds_exclude_every_declined_hop() {
     assert_eq!(crate::artifact_kind().export_stdio_kinds, export_stdio_kinds().to_vec());
     assert_eq!(crate::artifact_kind().import_stdio_kinds, import_stdio_kinds().to_vec());
 }
+
+#[semio_framework_async_macros::async_test]
+async fn composite_source_preparation_copies_unique_images_in_bounded_grants() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧱️preparation/🔣️.json")).unwrap();
+    let pixel:Vec<u8>=fixture["pixel"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap() as u8).collect();
+    let width=fixture["width"].as_u64().unwrap() as u32;let height=fixture["height"].as_u64().unwrap() as u32;
+    let mut document=document_with_solid_layer(pixel[0],pixel[1],pixel[2],pixel[3],width,height);
+    let mut duplicate=document.layers[0].clone();if let RasterLayerNode::Pixel {id,..}=&mut duplicate {id.push_str("-copy");}document.layers.push(duplicate);
+    let mut preparation=RasterStackPreparation::new(&document).unwrap();
+    assert_eq!(preparation.images.len(),fixture["uniqueImages"].as_u64().unwrap() as usize);
+    assert!(preparation.images.values().all(|image|image.pixels.is_empty()));
+    assert!(!preparation.advance(&document,0).unwrap());
+    for expected in fixture["completedPixels"].as_array().unwrap() {
+        let expected=expected.as_u64().unwrap() as usize;
+        let done=preparation.advance(&document,usize::MAX).unwrap();
+        assert_eq!(preparation.images.values().map(|image|image.pixels.len()/4).sum::<usize>(),expected);
+        assert_eq!(done,expected==(width*height) as usize);
+    }
+    let mut job=preparation.into_job().unwrap();while !job.advance(32768).unwrap().done {}
+    assert_eq!(job.into_result().unwrap().image.pixels,pixel.repeat((width*height) as usize));
+    let mut cancelled=RasterStackPreparation::new(&document).unwrap();cancelled.advance(&document,1).unwrap();cancelled.cancel();
+    assert!(cancelled.images.is_empty());assert!(cancelled.layers.is_empty());
+    assert!(cancelled.advance(&document,1).is_err());assert!(cancelled.into_job().is_err());
+    let incomplete=RasterStackPreparation::new(&document).unwrap();assert!(incomplete.into_job().is_err());
+    retire(document);
+}

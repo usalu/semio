@@ -21,6 +21,126 @@ async fn editor_declares_every_typed_snapshot_edit_action() {
     }
 }
 
+fn pixel_region_command() -> PngEditCommand {
+    let number = |value| dsl::DslValue::Number(dsl::Number::UInt(value));
+    pngEditor_command_from_action(
+        patch_pixel_region::ACTION_ID,
+        Some(&dsl::DslValue::object([
+            ("x".into(), number(1)),
+            ("y".into(), number(1)),
+            ("width".into(), number(2)),
+            ("height".into(), number(1)),
+            ("red".into(), number(10)),
+            ("green".into(), number(20)),
+            ("blue".into(), number(30)),
+            ("alpha".into(), number(128)),
+        ])),
+    )
+    .expect("typed pixel region action")
+}
+
+fn pixel_region_snapshot() -> PngSnapshot {
+    PngSnapshot { width: 4, height: 3, pixels: [1, 2, 3, 255].repeat(12), ..PngSnapshot::default() }
+}
+
+fn drive_pixel_region(command: &PngEditCommand, snapshot: &PngSnapshot) -> Vec<PngMutation> {
+    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    let config = NoConfig::default();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let interaction = protocol::InteractionState::default();
+    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-region-test".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] };
+    let mut work = patch_pixel_region::PatchPixelRegionWork::default();
+    assert!(work.extent(command, snapshot, &interaction, None).is_some());
+    for _ in 0..patch_pixel_region::CAPACITY.invertible_items() + 3 {
+        match work.step(&ArtifactCommandInputs { command, snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }).expect("pixel region work step") {
+            ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).expect("localized progress").contains("de")),
+            ArtifactCommandWorkStep::Complete(emit) => return emit.artifact_mutations,
+            ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::CompleteWithEphemeral { .. } => panic!("unexpected pixel region work step"),
+        }
+    }
+    panic!("pixel region work did not complete")
+}
+
+#[semio_framework_async_macros::async_test]
+async fn image_window_exposes_a_typed_localized_pixel_region_action() {
+    let definition = create_png_editor();
+    let action = definition.actions.iter().find(|action| action.id == patch_pixel_region::ACTION_ID).expect("pixel region app action");
+    assert_eq!(action.args.len(), 8);
+    assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+    assert!(action.args.iter().all(|argument| argument.required));
+    assert!(action.args.iter().all(|argument| matches!(argument.schema, semio_framework_plugin::ArgSchema::Number { integer: true, .. })));
+    let window = definition.window_kinds.iter().find(|window| window.id == main::WINDOW_KIND_ID).expect("image window");
+    let window_action = window.actions.iter().find(|action| action.id == patch_pixel_region::ACTION_ID).expect("visible image action");
+    assert_eq!(window_action.args.len(), 8);
+    assert_eq!(window_action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::En), "Paint Pixel Region");
+    assert_eq!(window_action.label.resolve(semio_framework_plugin::Terminology::Native, semio_framework_plugin::Locale::De), "Pixelbereich malen");
+}
+
+#[test]
+fn retained_pixel_region_publishes_exact_patch_pixels_and_native_png() {
+    use protocol::{Mutation, MutationDiff};
+    let base = pixel_region_snapshot();
+    let mutations = drive_pixel_region(&pixel_region_command(), &base);
+    assert!(!mutations.is_empty());
+    assert!(mutations.iter().all(|mutation| matches!(mutation, PngMutation::PatchPixels(_))));
+    let mut edited = base.clone();
+    for mutation in &mutations {
+        edited = mutation.diff(&edited).diff().apply(&edited).expect("apply pixel region patch");
+    }
+    let expected = [
+        1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255,
+        1, 2, 3, 255, 10, 20, 30, 128, 10, 20, 30, 128, 1, 2, 3, 255,
+        1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255,
+    ];
+    assert_eq!(edited.pixels, expected);
+    let native = crate::io::encode_png(&edited).expect("pixel-edited PNG encodes");
+    let reopened = crate::io::decode_png(&native).expect("pixel-edited PNG reopens");
+    assert_eq!(reopened.pixels, expected);
+}
+
+#[test]
+fn pixel_region_rejects_invalid_bounds_and_cancellation_discards_unpublished_patches() {
+    use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+    let snapshot = PngSnapshot { width: 1_024, height: 512, pixels: vec![7; 1_024 * 512 * 4], ..PngSnapshot::default() };
+    let invalid = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: 1_024, y: 0, width: 1, height: 1, red: 0, green: 0, blue: 0, alpha: 0 }));
+    let interaction = protocol::InteractionState::default();
+    let invalid_work = patch_pixel_region::PatchPixelRegionWork::default();
+    assert_eq!(invalid_work.extent(&invalid, &snapshot, &interaction, None), None);
+
+    let command = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: 1, y: 0, width: 1, height: 512, red: 9, green: 8, blue: 7, alpha: 6 }));
+    let config = NoConfig::default();
+    let history = semio_framework_plugin::HistoryView::empty();
+    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "png-pixel-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32] };
+    let mut work = patch_pixel_region::PatchPixelRegionWork::default();
+    let input = ArtifactCommandInputs { command: &command, snapshot: &snapshot, config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
+    assert!(matches!(work.step(&input).expect("prepare"), ArtifactCommandWorkStep::Progress { .. }));
+    assert!(matches!(work.step(&input).expect("first patch"), ArtifactCommandWorkStep::Progress { .. }));
+    work.begin_close();
+    while !work.terminal_is_empty() {
+        assert!(!matches!(work.close_step(1, patch_pixel_region::PATCH_PAYLOAD_BYTES), semio_framework_job::InteractiveJobCloseStep::Blocked));
+    }
+    assert!(snapshot.pixels.iter().all(|value| *value == 7));
+}
+
+#[test]
+fn retained_pixel_region_accepts_uhd_raster_with_bounded_patch_work() {
+    use protocol::{Mutation, MutationDiff, OpBinary};
+    let width = 3_840;
+    let height = 2_160;
+    let raster_bytes = width * height * 4;
+    assert!(raster_bytes <= patch_pixel_region::MAXIMUM_RASTER_BYTES);
+    let snapshot = PngSnapshot { width: width as u32, height: height as u32, pixels: vec![7; raster_bytes], ..PngSnapshot::default() };
+    let command = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: width as u32 - 1, y: height as u32 - 1, width: 1, height: 1, red: 9, green: 8, blue: 7, alpha: 6 }));
+    let mutations = drive_pixel_region(&command, &snapshot);
+    assert_eq!(mutations.len(), 1);
+    assert!(mutations[0].encode_op().expect("bounded UHD patch encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    let edited = mutations[0].diff(&snapshot).diff().apply(&snapshot).expect("bounded UHD patch applies");
+    assert_eq!(&edited.pixels[raster_bytes - 4..], &[9, 8, 7, 6]);
+    assert!(edited.pixels[..raster_bytes - 4].iter().all(|value| *value == 7));
+}
+
 #[test]
 fn snapshot_detail_edit_round_trips_through_native_history_and_codecs() {
     use protocol::{Mutation, MutationDiff, OpBinary, OpText};

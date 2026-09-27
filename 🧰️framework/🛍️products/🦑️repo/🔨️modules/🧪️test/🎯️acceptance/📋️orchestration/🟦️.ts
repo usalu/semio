@@ -66,8 +66,23 @@ export type GoalPlanCheck = Readonly<{
 /** 🪜️ One step of the goal plan: its checks run serially or in parallel; a failed gating step blocks the rest. */
 export type GoalPlanStep = Readonly<{ id: string; title: LocalizedText; mode: "serial" | "parallel"; gatesRest: boolean; optional?: boolean; checks: readonly GoalPlanCheck[] }>;
 
+/** 🏁️ One outcome of the repository goal; a check counts towards outcome `N` when one of its criteria is `N.x`
+ * (acceptance ledger numbering: 1 frontend, 2 hub, 3 collaboration, 4 AI over the semio MCP, 5 AGENTS.md). */
+export type GoalPlanOutcome = Readonly<{ id: "1" | "2" | "3" | "4" | "5"; title: LocalizedText }>;
+
+/** 🧩️ The requirements a provider can stand up when the command line does not name them. */
+export type ProvidedRequirement = "hub" | "serve" | "localServe";
+
+/** 🏗️ How the gate stands up one requirement zero-touch: an Nx target it holds for the whole run, answering at
+ * `url` + `readyPath` within `readyBoundMs`; `{hub}` and `{runDir}` are substituted in `args` and `env`. A process that
+ * exits while the url already answers is a reuse of a running server, not a failure. */
+export type GoalPlanProvider = Readonly<{ url: string; readyPath: string; readyBoundMs: number; project: string; target: string; args: readonly string[]; env?: Readonly<Record<string, string>>; requires: readonly "hub"[] }>;
+
 /** 🗺️ `semio.acceptance.goal-plan/v1`. */
-export type GoalPlan = Readonly<{ schema: "semio.acceptance.goal-plan/v1"; id: string; title: LocalizedText; steps: readonly GoalPlanStep[] }>;
+export type GoalPlan = Readonly<{ schema: "semio.acceptance.goal-plan/v1"; id: string; title: LocalizedText; outcomes: readonly GoalPlanOutcome[]; providers?: Readonly<Partial<Record<ProvidedRequirement, GoalPlanProvider>>>; steps: readonly GoalPlanStep[] }>;
+
+/** 🏁️ The verdict of one outcome over every selected check that serves it. */
+export type GoalSummaryOutcome = Readonly<{ id: GoalPlanOutcome["id"]; status: AcceptanceStatus; totals: Readonly<Record<AcceptanceStatus, number>>; checks: readonly string[] }>;
 
 /** 📊️ `semio.acceptance.goal-summary/v1`. */
 export type GoalSummary = Readonly<{
@@ -80,6 +95,7 @@ export type GoalSummary = Readonly<{
   finishedAt: string;
   verdict: AcceptanceStatus;
   totals: Readonly<Record<AcceptanceStatus, number>>;
+  outcomes: readonly GoalSummaryOutcome[];
   steps: readonly Readonly<{ id: string; status: AcceptanceStatus; checks: readonly AcceptanceCheckResult[] }>[];
 }>;
 
@@ -158,6 +174,9 @@ export function readGoalPlan(repoRoot: string, path = join(repoRoot, GOAL_PLAN_R
   const ids = checks.map((check) => check.id);
   const duplicate = ids.find((id, index) => ids.indexOf(id) !== index);
   if (duplicate) throw new Error(`goal plan check id ${duplicate} is not unique`);
+  const outcomes = new Set((plan as GoalPlan).outcomes.map((outcome) => outcome.id));
+  const orphan = checks.find((check) => check.criteria.some((criterion) => !outcomes.has(criterion.split(".")[0] as GoalPlanOutcome["id"])));
+  if (orphan) throw new Error(`goal plan check ${orphan.id} names a criterion of an outcome the plan does not declare`);
   return plan as GoalPlan;
 }
 //#endregion 🧬️Schema
@@ -238,10 +257,18 @@ export type GoalGateOptions = Readonly<{
   maxParallel: number;
   signal: AbortSignal;
   execute?: GoalGateExecutor;
+  provide?: GoalGateProvisioner;
 }>;
 
+/** 🏗️ Stands up one provider (the default spawns `bun nx run <project>:<target> -- <args>` in its own process group and
+ * waits for its url), reporting progress lines; resolves once the url answers, rejects on the bound, an early exit with
+ * nothing answering, or cancellation, and hands back `stop()` that ends exactly what it started. */
+export type GoalGateProvisioner = (repoRoot: string, requirement: ProvidedRequirement, provider: GoalPlanProvider, args: readonly string[], env: NodeJS.ProcessEnv, logPath: string, signal: AbortSignal, onProgress: (line: string) => void) => Promise<Readonly<{ stop: () => Promise<void> }>>;
+
 /** 🚀️ Runs one check's command with its environment and log file and resolves its exit code. The default spawns
- * `bun nx run <project>:<target> -- <args>` in its own process group; laws substitute a scripted executor. */
+ * `bun nx run <project>:<target> -- <args>` in its own process group with `NX_DAEMON=false` (every nx invocation of the
+ * gate computes its own project graph, so a wedged or foreign daemon cannot stall a check); laws substitute a scripted
+ * executor. */
 export type GoalGateExecutor = (repoRoot: string, check: GoalPlanCheck, args: readonly string[], env: NodeJS.ProcessEnv, logPath: string, children: Set<ChildProcess>) => Promise<number>;
 
 const spawnGoalGateCheck: GoalGateExecutor = (repoRoot, check, args, env, logPath, children) => {
@@ -263,6 +290,69 @@ const spawnGoalGateCheck: GoalGateExecutor = (repoRoot, check, args, env, logPat
   });
 };
 
+async function providerAnswers(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(5_000) });
+    await response.body?.cancel();
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+function terminateGroup(child: ChildProcess): void {
+  if (child.pid === undefined || child.exitCode !== null || child.signalCode !== null) return;
+  try {
+    if (process.platform === "win32") child.kill("SIGTERM");
+    else process.kill(-child.pid, "SIGTERM");
+  } catch {
+    child.kill("SIGTERM");
+  }
+}
+
+const provisionGoalGateRequirement: GoalGateProvisioner = async (repoRoot, requirement, provider, args, env, logPath, signal, onProgress) => {
+  const probe = `${provider.url.replace(/\/+$/u, "")}${provider.readyPath}`;
+  if (await providerAnswers(probe)) {
+    onProgress(`${requirement} already answers at ${provider.url} — reused, never stopped`);
+    return { stop: async () => {} };
+  }
+  const log = createWriteStream(logPath);
+  const child = spawn("bun", ["nx", "run", `${provider.project}:${provider.target}`, ...(args.length ? ["--", ...args] : [])], { cwd: repoRoot, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+  child.stdout?.pipe(log, { end: false });
+  child.stderr?.pipe(log, { end: false });
+  const exited = new Promise<void>((resolveExit) => child.once("close", () => resolveExit()));
+  const stop = async (): Promise<void> => {
+    terminateGroup(child);
+    await Promise.race([exited, new Promise((resolveDelay) => setTimeout(resolveDelay, 30_000))]);
+    log.end();
+  };
+  const started = Date.now();
+  let reported = started;
+  for (;;) {
+    if (signal.aborted) {
+      await stop();
+      throw new Error(`${requirement} provisioning cancelled`);
+    }
+    if (await providerAnswers(probe)) {
+      onProgress(`${requirement} ready at ${provider.url} after ${Math.round((Date.now() - started) / 1000)} s (${logPath})`);
+      return { stop };
+    }
+    if (child.exitCode !== null || child.signalCode !== null) {
+      log.end();
+      throw new Error(`${provider.project}:${provider.target} exited ${child.exitCode ?? child.signalCode} before ${probe} answered — see ${logPath}`);
+    }
+    if (Date.now() - started >= provider.readyBoundMs) {
+      await stop();
+      throw new Error(`${probe} did not answer within ${Math.round(provider.readyBoundMs / 1000)} s — see ${logPath}`);
+    }
+    if (Date.now() - reported >= 30_000) {
+      reported = Date.now();
+      onProgress(`${requirement} waiting for ${probe} (${Math.round((reported - started) / 1000)} of ${Math.round(provider.readyBoundMs / 1000)} s)`);
+    }
+    await new Promise((resolveDelay) => setTimeout(resolveDelay, 2_000));
+  }
+};
+
 const STATUS_WORD: Readonly<Record<AcceptanceStatus, LocalizedText>> = {
   pass: { en: "pass", de: "bestanden" },
   fail: { en: "fail", de: "fehlgeschlagen" },
@@ -277,6 +367,7 @@ const STATUS_WORD: Readonly<Record<AcceptanceStatus, LocalizedText>> = {
  * secret reaches a log line. */
 function substitute(value: string, options: GoalGateOptions): string {
   return value
+    .replaceAll("{runDir}", options.outDir)
     .replaceAll("{hub}", options.hub ?? "")
     .replaceAll("{serve}", options.serve ?? "")
     .replaceAll("{localServe}", options.localServe ?? "")
@@ -292,21 +383,26 @@ function syntheticResult(check: GoalPlanCheck, status: AcceptanceStatus, started
 /** 🐳️ The pre-step that stands up the shared postgres + neo4j servers once for every check requiring `backends`. */
 const GOAL_GATE_BACKENDS_CHECK: GoalPlanCheck = { id: "backends-up", title: { en: "Shared postgres and neo4j servers", de: "Gemeinsame postgres- und neo4j-Server" }, criteria: ["2.4"], project: "os-hub-ts", target: "backend-up", args: ["all"], requires: [], browsers: 0 };
 
+/** 🧯️ Why a provided requirement is absent: the provider's failure, in the gate's log language. */
+type ProvisionFailures = ReadonlyMap<ProvidedRequirement, string>;
+
 function missingRequirement(check: GoalPlanCheck, options: GoalGateOptions, backendsReady: boolean | null): AcceptanceRequirement | undefined {
   return check.requires.find((requirement) => (requirement === "hub" && !options.hub) || (requirement === "serve" && !options.serve) || (requirement === "localServe" && !options.localServe) || (requirement === "hubAdmin" && !options.hubAdminCapability) || (requirement === "backends" && backendsReady === false));
 }
 
-async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGateOptions, children: Set<ChildProcess>, backendsReady: boolean | null): Promise<AcceptanceCheckResult> {
+async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGateOptions, children: Set<ChildProcess>, backendsReady: boolean | null, provisionFailures: ProvisionFailures = new Map()): Promise<AcceptanceCheckResult> {
   const startedAt = new Date();
   const missing = missingRequirement(check, options, backendsReady);
   if (missing === "backends") return syntheticResult(check, "blocked", startedAt, { missing }, { en: "the shared postgres/neo4j servers did not start (os-hub-ts:backend-up)", de: "die gemeinsamen postgres/neo4j-Server starteten nicht (os-hub-ts:backend-up)" }, []);
+  const provisionFailure = missing === "hub" || missing === "serve" || missing === "localServe" ? provisionFailures.get(missing) : undefined;
+  if (provisionFailure && missing) return syntheticResult(check, "blocked", startedAt, { missing }, { en: `the gate could not stand up ${missing}: ${provisionFailure}`.slice(0, 1800), de: `das Tor konnte ${missing} nicht bereitstellen: ${provisionFailure}`.slice(0, 1800) }, []);
   if (missing) return syntheticResult(check, "blocked", startedAt, { missing }, { en: `needs --${missing} <url>`, de: `benötigt --${missing} <url>` }, []);
   if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, {}, { en: "cancelled before start", de: "vor dem Start abgebrochen" }, []);
   const resultPath = join(options.outDir, `${check.id}.json`);
   const logPath = join(options.outDir, `${check.id}.log`);
   const args = check.args.map((arg) => substitute(arg, options));
   const planned = Object.entries(check.env ?? {}).map(([key, value]) => [key, substitute(value, options)] as const).filter(([, value]) => value.length > 0);
-  const env = { ...process.env, ...Object.fromEntries(planned), [ACCEPTANCE_RESULT_ENV]: resultPath, NX_TUI: "false" };
+  const env = { ...process.env, ...Object.fromEntries(planned), [ACCEPTANCE_RESULT_ENV]: resultPath, NX_TUI: "false", NX_DAEMON: "false" };
   console.log(`[goal-gate] ▶ ${check.id}: bun nx run ${check.project}:${check.target}${args.length ? ` -- ${args.join(" ")}` : ""}`);
   const exitCode = await (options.execute ?? spawnGoalGateCheck)(repoRoot, check, args, env, logPath, children);
   if (options.signal.aborted) return syntheticResult(check, "skipped", startedAt, { exitCode }, { en: "cancelled while running", de: "während der Ausführung abgebrochen" }, [logPath]);
@@ -322,7 +418,7 @@ async function runCheck(repoRoot: string, check: GoalPlanCheck, options: GoalGat
   return syntheticResult(check, status, startedAt, { exitCode }, exitCode === 0 ? { en: `${check.project}:${check.target} exited 0`, de: `${check.project}:${check.target} endete mit 0` } : { en: `${check.project}:${check.target} exited ${exitCode}`, de: `${check.project}:${check.target} endete mit ${exitCode}` }, [logPath]);
 }
 
-async function runParallel(repoRoot: string, checks: readonly GoalPlanCheck[], options: GoalGateOptions, children: Set<ChildProcess>, backendsReady: boolean | null): Promise<AcceptanceCheckResult[]> {
+async function runParallel(repoRoot: string, checks: readonly GoalPlanCheck[], options: GoalGateOptions, children: Set<ChildProcess>, backendsReady: boolean | null, provisionFailures: ProvisionFailures): Promise<AcceptanceCheckResult[]> {
   const results = new Map<string, AcceptanceCheckResult>();
   const pending = [...checks];
   const running = new Map<string, Promise<void>>();
@@ -332,7 +428,7 @@ async function runParallel(repoRoot: string, checks: readonly GoalPlanCheck[], o
     if (index >= 0) {
       const check = pending.splice(index, 1)[0]!;
       browsers += check.browsers;
-      running.set(check.id, runCheck(repoRoot, check, options, children, backendsReady).then((result) => {
+      running.set(check.id, runCheck(repoRoot, check, options, children, backendsReady, provisionFailures).then((result) => {
         results.set(check.id, result);
         browsers -= check.browsers;
         running.delete(check.id);
@@ -351,10 +447,35 @@ function stepStatus(results: readonly AcceptanceCheckResult[]): AcceptanceStatus
   return results.some((result) => result.status === "skipped") ? "blocked" : "pass";
 }
 
-/** 📝️ The human summary of one run in one language: the verdict, the totals and one row per check. */
+function emptyTotals(): Record<AcceptanceStatus, number> {
+  return { pass: 0, fail: 0, blocked: 0, skipped: 0 };
+}
+
+/** 🏁️ The verdict of every declared outcome over the checks that serve it (a check serves outcome `N` through any
+ * criterion `N.x`): fail when one of them failed, blocked when one was blocked or skipped, pass when all passed, and
+ * skipped when the run selected none of them. */
+export function goalOutcomes(plan: GoalPlan, steps: GoalSummary["steps"]): GoalSummaryOutcome[] {
+  const criteria = new Map(plan.steps.flatMap((step) => step.checks).map((check) => [check.id, check.criteria] as const));
+  return plan.outcomes.map((outcome) => {
+    const results = steps.flatMap((step) => step.checks).filter((result) => (criteria.get(result.check) ?? []).some((criterion) => criterion.split(".")[0] === outcome.id));
+    const totals = emptyTotals();
+    for (const result of results) totals[result.status] += 1;
+    const status: AcceptanceStatus = results.length === 0 ? "skipped" : totals.fail > 0 ? "fail" : totals.blocked + totals.skipped > 0 ? "blocked" : "pass";
+    return { id: outcome.id, status, totals, checks: results.map((result) => result.check) };
+  });
+}
+
+/** 🏁️ The per-outcome verdict table of one run in one language — the answer to "is the goal met, and where not". */
+export function goalOutcomeTable(summary: GoalSummary, plan: GoalPlan, language: keyof LocalizedText): string[] {
+  const heading = language === "en" ? ["Outcome", "Verdict", "Pass", "Fail", "Blocked", "Skipped"] : ["Ergebnisziel", "Urteil", "Bestanden", "Fehlgeschlagen", "Blockiert", "Übersprungen"];
+  return [`| ${heading.join(" | ")} |`, `|${heading.map(() => "---").join("|")}|`, ...summary.outcomes.map((outcome) => `| ${outcome.id}. ${plan.outcomes.find((candidate) => candidate.id === outcome.id)?.title[language] ?? outcome.id} | **${STATUS_WORD[outcome.status][language]}** | ${outcome.totals.pass} | ${outcome.totals.fail} | ${outcome.totals.blocked} | ${outcome.totals.skipped} |`)];
+}
+
+/** 📝️ The human summary of one run in one language: the verdict, the per-outcome verdict table, the totals and one row
+ * per check. */
 export function goalSummaryMarkdown(summary: GoalSummary, plan: GoalPlan, language: keyof LocalizedText): string {
   const heading = language === "en" ? ["Step", "Check", "Status", "Seconds", "Summary"] : ["Schritt", "Prüfung", "Status", "Sekunden", "Zusammenfassung"];
-  const lines = [`# ${plan.title[language]}`, "", `${language === "en" ? "Verdict" : "Ergebnis"}: **${STATUS_WORD[summary.verdict][language]}** — ${Object.entries(summary.totals).map(([status, count]) => `${STATUS_WORD[status as AcceptanceStatus][language]} ${count}`).join(", ")}`, "", `Hub: ${summary.hub ?? "—"} · ${language === "en" ? "Serve" : "Oberfläche"}: ${summary.serve ?? "—"} · ${language === "en" ? "Local-only serve" : "Lokale Oberfläche"}: ${summary.localServe ?? "—"} · ${summary.startedAt} → ${summary.finishedAt}`, "", `| ${heading.join(" | ")} |`, `|${heading.map(() => "---").join("|")}|`];
+  const lines = [`# ${plan.title[language]}`, "", `${language === "en" ? "Verdict" : "Ergebnis"}: **${STATUS_WORD[summary.verdict][language]}** — ${Object.entries(summary.totals).map(([status, count]) => `${STATUS_WORD[status as AcceptanceStatus][language]} ${count}`).join(", ")}`, "", ...goalOutcomeTable(summary, plan, language), "", `Hub: ${summary.hub ?? "—"} · ${language === "en" ? "Serve" : "Oberfläche"}: ${summary.serve ?? "—"} · ${language === "en" ? "Local-only serve" : "Lokale Oberfläche"}: ${summary.localServe ?? "—"} · ${summary.startedAt} → ${summary.finishedAt}`, "", `| ${heading.join(" | ")} |`, `|${heading.map(() => "---").join("|")}|`];
   for (const step of summary.steps) {
     const planned = plan.steps.find((candidate) => candidate.id === step.id);
     for (const result of step.checks) {
@@ -365,60 +486,95 @@ export function goalSummaryMarkdown(summary: GoalSummary, plan: GoalPlan, langua
   return `${lines.join("\n")}\n`;
 }
 
+const PROVIDED_REQUIREMENTS: readonly ProvidedRequirement[] = ["hub", "serve", "localServe"];
+
+/** 🏗️ Stands up, in dependency order, every requirement the selected checks need that the command line did not name and
+ * the plan provides; returns the resolved options, the holders to stop at the end and why any provider failed. */
+async function provisionRequirements(repoRoot: string, plan: GoalPlan, selected: readonly GoalPlanStep[], options: GoalGateOptions): Promise<{ resolved: GoalGateOptions; holders: Readonly<{ stop: () => Promise<void> }>[]; failures: Map<ProvidedRequirement, string> }> {
+  const needed = new Set(selected.flatMap((step) => step.checks.flatMap((check) => check.requires)));
+  const values: Record<ProvidedRequirement, string | null> = { hub: options.hub, serve: options.serve, localServe: options.localServe };
+  if (needed.has("serve") && plan.providers?.serve?.requires.includes("hub")) needed.add("hub");
+  const holders: Readonly<{ stop: () => Promise<void> }>[] = [];
+  const failures = new Map<ProvidedRequirement, string>();
+  for (const requirement of PROVIDED_REQUIREMENTS) {
+    const provider = plan.providers?.[requirement];
+    if (!needed.has(requirement) || values[requirement] || !provider) continue;
+    if (options.signal.aborted) break;
+    const missing = provider.requires.find((dependency) => !values[dependency]);
+    if (missing) {
+      failures.set(requirement, `its provider needs ${missing}, which is absent`);
+      continue;
+    }
+    const current: GoalGateOptions = { ...options, ...values };
+    const args = provider.args.map((arg) => substitute(arg, current));
+    const env = { ...process.env, ...Object.fromEntries(Object.entries(provider.env ?? {}).map(([key, value]) => [key, substitute(value, current)])), NX_TUI: "false", NX_DAEMON: "false" };
+    const logPath = join(options.outDir, `provider-${requirement}.log`);
+    console.log(`[goal-gate] ▶ provider ${requirement}: bun nx run ${provider.project}:${provider.target}${args.length ? ` -- ${args.join(" ")}` : ""} → ${provider.url}`);
+    try {
+      holders.push(await (options.provide ?? provisionGoalGateRequirement)(repoRoot, requirement, provider, args, env, logPath, options.signal, (line) => console.log(`[goal-gate] … ${line}`)));
+      values[requirement] = provider.url;
+    } catch (error) {
+      const reason = String(error instanceof Error ? error.message : error).split("\n")[0]!.slice(0, 600);
+      failures.set(requirement, reason);
+      console.log(`[goal-gate] provider ${requirement} FAILED: ${reason}`);
+    }
+  }
+  return { resolved: { ...options, ...values }, holders, failures };
+}
+
 /** 🎯️ Runs the goal plan's steps in order — each step's checks serially or in parallel within the browser and process
- * budget — writes every check's record, `summary.json` (`semio.acceptance.goal-summary/v1`) and `summary.en.md` /
- * `summary.de.md` into `outDir`, and returns the summary. A failed gating step blocks every later step; cancellation
- * terminates the running checks' process groups and records the rest as skipped. */
-export async function runGoalGate(repoRoot: string, options: GoalGateOptions): Promise<GoalSummary> {
-  const plan = readGoalPlan(repoRoot, options.planPath);
-  mkdirSync(options.outDir, { recursive: true });
+ * budget — after standing up (zero-touch) every hub/serve the selected checks need and the command line did not name,
+ * writes every check's record, `summary.json` (`semio.acceptance.goal-summary/v1`) and `summary.en.md` / `summary.de.md`
+ * (per-outcome verdict table first) into `outDir`, stops what it stood up, and returns the summary. A failed gating step
+ * blocks every later step; cancellation terminates the running checks' process groups and records the rest as skipped. */
+export async function runGoalGate(repoRoot: string, requested: GoalGateOptions): Promise<GoalSummary> {
+  const plan = readGoalPlan(repoRoot, requested.planPath);
+  mkdirSync(requested.outDir, { recursive: true });
   const children = new Set<ChildProcess>();
   const terminate = (): void => {
-    for (const child of children) {
-      if (child.pid === undefined) continue;
-      try {
-        if (process.platform === "win32") child.kill("SIGTERM");
-        else process.kill(-child.pid, "SIGTERM");
-      } catch {
-        child.kill("SIGTERM");
-      }
-    }
+    for (const child of children) terminateGroup(child);
   };
-  options.signal.addEventListener("abort", terminate, { once: true });
+  requested.signal.addEventListener("abort", terminate, { once: true });
   const startedAt = new Date().toISOString();
   const steps: { id: string; status: AcceptanceStatus; checks: AcceptanceCheckResult[] }[] = [];
   let gatedBy: string | null = null;
-  const selected = plan.steps.filter((step) => (options.only.length ? options.only.includes(step.id) : !step.optional || options.includeOptional));
-  let backendsReady: boolean | null = null;
-  if (selected.some((step) => step.checks.some((check) => check.requires.includes("backends")))) {
-    const backendsLog = join(options.outDir, "backends-up.log");
-    console.log("[goal-gate] ▶ backends: bun nx run os-hub-ts:backend-up -- all (the shared postgres + neo4j servers, zero-touch)");
-    backendsReady = (await (options.execute ?? spawnGoalGateCheck)(repoRoot, GOAL_GATE_BACKENDS_CHECK, ["all"], { ...process.env, NX_TUI: "false" }, backendsLog, children)) === 0;
-    console.log(`[goal-gate] backends ${backendsReady ? "ready" : "NOT ready"} (${backendsLog})`);
-  }
-  for (const [index, step] of selected.entries()) {
-    console.log(`[goal-gate] step ${index + 1}/${selected.length} ${step.id} (${step.mode}, ${step.checks.length} checks): ${step.title.en}`);
-    let checks: AcceptanceCheckResult[];
-    if (gatedBy !== null) {
-      const now = new Date();
-      const gate = gatedBy;
-      checks = step.checks.map((check) => syntheticResult(check, "blocked", now, { gatedBy: gate }, { en: `blocked: gating step ${gate} did not pass`, de: `blockiert: der vorausgehende Schritt ${gate} ist nicht bestanden` }, []));
-    } else if (step.mode === "parallel") {
-      checks = await runParallel(repoRoot, step.checks, options, children, backendsReady);
-    } else {
-      checks = [];
-      for (const check of step.checks) checks.push(await runCheck(repoRoot, check, options, children, backendsReady));
+  const selected = plan.steps.filter((step) => (requested.only.length ? requested.only.includes(step.id) : !step.optional || requested.includeOptional));
+  const provisioned = await provisionRequirements(repoRoot, plan, selected, requested);
+  const options = provisioned.resolved;
+  try {
+    let backendsReady: boolean | null = null;
+    if (selected.some((step) => step.checks.some((check) => check.requires.includes("backends")))) {
+      const backendsLog = join(options.outDir, "backends-up.log");
+      console.log("[goal-gate] ▶ backends: bun nx run os-hub-ts:backend-up -- all (the shared postgres + neo4j servers, zero-touch)");
+      backendsReady = (await (options.execute ?? spawnGoalGateCheck)(repoRoot, GOAL_GATE_BACKENDS_CHECK, ["all"], { ...process.env, NX_TUI: "false", NX_DAEMON: "false" }, backendsLog, children)) === 0;
+      console.log(`[goal-gate] backends ${backendsReady ? "ready" : "NOT ready"} (${backendsLog})`);
     }
-    const status = stepStatus(checks);
-    steps.push({ id: step.id, status, checks });
-    for (const check of checks) console.log(`[goal-gate] ${check.status.toUpperCase().padEnd(7)} ${check.check} (${Math.round(check.durationMs / 1000)} s) — ${check.summary.en}`);
-    if (step.gatesRest && status !== "pass" && gatedBy === null) gatedBy = step.id;
+    for (const [index, step] of selected.entries()) {
+      console.log(`[goal-gate] step ${index + 1}/${selected.length} ${step.id} (${step.mode}, ${step.checks.length} checks): ${step.title.en}`);
+      let checks: AcceptanceCheckResult[];
+      if (gatedBy !== null) {
+        const now = new Date();
+        const gate = gatedBy;
+        checks = step.checks.map((check) => syntheticResult(check, "blocked", now, { gatedBy: gate }, { en: `blocked: gating step ${gate} did not pass`, de: `blockiert: der vorausgehende Schritt ${gate} ist nicht bestanden` }, []));
+      } else if (step.mode === "parallel") {
+        checks = await runParallel(repoRoot, step.checks, options, children, backendsReady, provisioned.failures);
+      } else {
+        checks = [];
+        for (const check of step.checks) checks.push(await runCheck(repoRoot, check, options, children, backendsReady, provisioned.failures));
+      }
+      const status = stepStatus(checks);
+      steps.push({ id: step.id, status, checks });
+      for (const check of checks) console.log(`[goal-gate] ${check.status.toUpperCase().padEnd(7)} ${check.check} (${Math.round(check.durationMs / 1000)} s) — ${check.summary.en}`);
+      if (step.gatesRest && status !== "pass" && gatedBy === null) gatedBy = step.id;
+    }
+  } finally {
+    requested.signal.removeEventListener("abort", terminate);
+    for (const holder of provisioned.holders.reverse()) await holder.stop();
   }
-  options.signal.removeEventListener("abort", terminate);
-  const totals: Record<AcceptanceStatus, number> = { pass: 0, fail: 0, blocked: 0, skipped: 0 };
+  const totals = emptyTotals();
   for (const step of steps) for (const check of step.checks) totals[check.status] += 1;
   const verdict: AcceptanceStatus = totals.fail > 0 ? "fail" : totals.blocked > 0 || totals.skipped > 0 ? "blocked" : "pass";
-  const summary: GoalSummary = { schema: "semio.acceptance.goal-summary/v1", plan: plan.id, hub: options.hub, serve: options.serve, localServe: options.localServe, startedAt, finishedAt: new Date().toISOString(), verdict, totals, steps };
+  const summary: GoalSummary = { schema: "semio.acceptance.goal-summary/v1", plan: plan.id, hub: options.hub, serve: options.serve, localServe: options.localServe, startedAt, finishedAt: new Date().toISOString(), verdict, totals, outcomes: goalOutcomes(plan, steps), steps };
   const violations = acceptanceSchemaViolations(repoRoot, "goalSummary", summary);
   if (violations.length) throw new Error(`goal summary violates the acceptance schema:\n${violations.join("\n")}`);
   writeFileSync(join(options.outDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`);
@@ -443,7 +599,8 @@ function option(segments: readonly string[], flag: string): string | undefined {
 }
 
 /** 🎯️ `acceptance goal [--hub <url>] [--serve <url>] [--local-serve <url>] [--hub-binary <path>] [--hub-admin-capability <file>] [--users <json>] [--plan <path>] [--only <step,…>]
- * [--out <dir>] [--include-optional] [--max-browsers <n>] [--max-parallel <n>]` and `acceptance plan` (prints the plan). */
+ * [--out <dir>] [--include-optional] [--max-browsers <n>] [--max-parallel <n>]` and `acceptance plan` (prints the plan).
+ * A hub or serve the command line does not name is stood up by the plan's provider and stopped after the run. */
 export class AcceptanceScript extends Script {
   async run(segments: string[]): Promise<void> {
     const [verb, ...rest] = segments;
@@ -481,6 +638,7 @@ export class AcceptanceScript extends Script {
       const plan = readGoalPlan(this.repoRoot, planPath);
       console.log(goalSummaryMarkdown(summary, plan, "en"));
       console.log(goalSummaryMarkdown(summary, plan, "de"));
+      for (const outcome of summary.outcomes) console.log(`[goal-gate] outcome ${outcome.id} ${outcome.status.toUpperCase()} (pass ${outcome.totals.pass}, fail ${outcome.totals.fail}, blocked ${outcome.totals.blocked}, skipped ${outcome.totals.skipped}) — ${plan.outcomes.find((candidate) => candidate.id === outcome.id)?.title.en ?? outcome.id}`);
       console.log(`[goal-gate] records: ${outDir}`);
       if (summary.verdict !== "pass") process.exitCode = 1;
     } finally {
@@ -604,6 +762,100 @@ export function runSourceCensus(repoRoot: string, signal: AbortSignal, onProgres
   const unparsed = [...codeCallsPerFile].filter(([path, entry]) => !entry.testOnly && entry.calls !== jobs.filter((job) => job.path === path).length).map(([path, entry]) => `${path}: ${entry.calls} calls in code, ${jobs.filter((job) => job.path === path).length} classified declarations`);
   onProgress(`${sources.length}/${sources.length} Rust sources scanned`);
   return { files: sources.length, placeholders, jobs, placeholderDisagreements, callDisagreements, unparsed };
+}
+
+/** 🏷️ One docstring opener that breaks AGENTS.md's emoji-first rule: the `@emoji` residue token in front of the emoji, or
+ * no emoji at all (a symbol glyph such as `⊕` or `√` counts as the marker). */
+export type DocstringHit = Readonly<{ path: string; line: number; rule: "at-emoji" | "no-emoji"; text: string }>;
+
+const DOCSTRING_MARKER = /^(?:\p{Extended_Pictographic}|\p{So}|\p{Sm}|\p{Regional_Indicator}|[0-9#*]\uFE0F?\u20E3)/u;
+
+function docstringHit(path: string, line: number, content: string): DocstringHit | null {
+  const text = content.trim();
+  if (text.length === 0) return null;
+  if (text.startsWith("@emoji")) return { path, line, rule: "at-emoji", text: text.slice(0, 80) };
+  return DOCSTRING_MARKER.test(text) ? null : { path, line, rule: "no-emoji", text: text.slice(0, 80) };
+}
+
+/** 🏷️ The opener of every docstring in one source: a Rust `///` / `//!` run's first non-empty line, a TypeScript `/** … *\/`
+ * block's first non-empty content line (on the `/**` line or a following ` * ` line). */
+export function docstringHitsOfText(path: string, text: string): DocstringHit[] {
+  const hits: DocstringHit[] = [];
+  const lines = text.split("\n");
+  if (path.endsWith(".rs")) {
+    let inRun = false;
+    let opened = false;
+    lines.forEach((raw, index) => {
+      const line = raw.trimStart();
+      const doc = /^\/\/[/!](?!\/)/u.test(line);
+      if (!doc) {
+        inRun = false;
+        return;
+      }
+      if (!inRun) opened = false;
+      inRun = true;
+      if (opened) return;
+      const content = line.slice(3);
+      if (content.trim().length === 0) return;
+      opened = true;
+      const hit = docstringHit(path, index + 1, content);
+      if (hit) hits.push(hit);
+    });
+    return hits;
+  }
+  let open = false;
+  lines.forEach((raw, index) => {
+    if (!open) {
+      const start = raw.indexOf("/**");
+      if (start < 0 || raw.slice(start, start + 4) === "/**/" ) return;
+      const rest = raw.slice(start + 3);
+      const closeAt = rest.indexOf("*/");
+      const content = closeAt >= 0 ? rest.slice(0, closeAt) : rest;
+      if (content.trim().length > 0) {
+        const hit = docstringHit(path, index + 1, content);
+        if (hit) hits.push(hit);
+        return;
+      }
+      open = closeAt < 0;
+      return;
+    }
+    const closeAt = raw.indexOf("*/");
+    const content = (closeAt >= 0 ? raw.slice(0, closeAt) : raw).replace(/^\s*\*?/u, "");
+    if (content.trim().length > 0) {
+      open = false;
+      const hit = docstringHit(path, index + 1, content);
+      if (hit) hits.push(hit);
+      return;
+    }
+    if (closeAt >= 0) open = false;
+  });
+  return hits;
+}
+
+/** 🏷️ The docstring census over every tracked Rust / TypeScript source outside the ticket tree, generated trees and
+ * declaration files, with its `@emoji` findings cross-checked line for line against `git grep` (the oracle). */
+export function runDocstringCensus(repoRoot: string, signal: AbortSignal, onProgress: (line: string) => void) {
+  const listed = spawnSync("git", ["ls-files", "-z", "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 });
+  if (listed.status !== 0) throw new Error(`git ls-files failed: ${listed.stderr}`);
+  const sources = listed.stdout.split("\0").filter(Boolean);
+  const hits: DocstringHit[] = [];
+  for (const [index, path] of sources.entries()) {
+    if (signal.aborted) throw new Error("docstring census cancelled");
+    if (index % 5000 === 0) onProgress(`${index}/${sources.length} sources scanned`);
+    let text: string;
+    try {
+      text = readFileSync(join(repoRoot, path), "utf8");
+    } catch {
+      continue;
+    }
+    hits.push(...docstringHitsOfText(path, text));
+  }
+  const grep = (pattern: string): string[] => spawnSync("git", ["grep", "-n", "-E", pattern, "--", "*.rs", "*.ts", "*.tsx", ":!.🧬semio", ":!*.d.ts", ":!**/🤖️generated/**"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 30 }).stdout.split("\n").filter(Boolean).map((row) => row.split(":").slice(0, 2).join(":"));
+  const oracle = new Set([...grep("(///|//!|/\\*\\*)[[:space:]]*@emoji"), ...grep("^[[:space:]]*\\*[[:space:]]*@emoji")]);
+  const scanned = new Set(hits.filter((hit) => hit.rule === "at-emoji").map((hit) => `${hit.path}:${hit.line}`));
+  const disagreements = [...oracle].filter((key) => !scanned.has(key)).concat([...scanned].filter((key) => !oracle.has(key)));
+  onProgress(`${sources.length}/${sources.length} sources scanned`);
+  return { files: sources.length, hits, disagreements };
 }
 //#endregion 🧮️SourceCensus
 

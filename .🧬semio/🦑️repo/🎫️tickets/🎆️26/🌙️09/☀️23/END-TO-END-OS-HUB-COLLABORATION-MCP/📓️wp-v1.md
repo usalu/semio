@@ -181,3 +181,22 @@ durable data `.🧬semio/🌐hub/s13-v1-*`. Builds/tests prefixed `nice -n 10`.
 - **Waiting** (coordinator 11:2x) for the live-verification wave after 7800 is on B3: then two-human en/de, user-path en/de,
   residency, hub-freshness (fresh case, the rebuilt hub's `os-hub.sources.json`), storm (via `backend-run` for pg/neo4j),
   tool-run + hub sweep (S16 first), and the full `⚖️gate🎯️repo-goal`.
+- 14:5x S16 edited the matrix pins after its post-restage run (en 53/75 → 62/63): architect `addElement` (+ `name` arg),
+  stdio txt/md/html `textEdit`, stdio json set-node values JSON-quoted; pins verified to load through `readMatrixPins` (measured).
+  S16's suggested follow-up for the live wave: stage norm's `setSnapshot` from the editor's own current document instead of the
+  (Wave-C-stale) mutation fixtures — queued, not started (coordinator: wait for the live-verification wave).
+- 15:0x S16: no norm-specific read surface; the plugin-neutral one is the host's `readAppDocumentPack(instanceId)` on the
+  PluginWasmHandle (live document `.spk` pack; confirmed present, law in `📺️renderer/…/🧪️tests/🔌️plugin-runtime`). Queued design for
+  the live wave: the matrix stages every `setSnapshot`-style verb from that pack decoded in-page to camelCase JSON (f64 carriers
+  kept exact), for every kind, not only norm — replaces the fixture read. Not started (paused).
+- 15:1x C11 (owner of the two-human matrix): three later fixes of its ticket script ported into `👥️two-human/🟦️.ts` (rule 21):
+  (1) `personalArgs` — each human's pinned verb args are distinct (text + " <label>", JSON string literals get it inside the quotes,
+  numbers +6 for user2, live ids untouched; exercised: `{"text":"Matrix writer buffer user2","seed":"13"}`), so a set-style verb's
+  second edit is a visible change; (2) "A undoes own (B's stays)" judged set-aware: both views agree, differ from the start, hub head
+  advanced (when an admin capability is given), 0 faults, and for a set verb the agreed view is B's later value; (3) windowed-table
+  paging was already in the port. tsc 0 errors; dry run against absent hub/serve → `blocked` record. C11's ✏️TextEditor delivery-race
+  fix is host code (no harness change).
+- 15:3x C11 live run on 7800 (permanent two-human): from the 2nd kind every `hubHead` read "admin 401" — the admin-relay capability
+  lives 15 min. Ported C11's refresh: on 401 the harness writes the sibling `admin-request` (the local hub launcher's contract) and waits
+  ≤ 15 s for the capability file to change, then retries once. Proof against a stub hub + stub launcher
+  (`wp-v1/v1-admin-refresh-proof.ts`): 401 → refresh → head 42 in 968 ms, next read 42 — PASS. tsc 0.

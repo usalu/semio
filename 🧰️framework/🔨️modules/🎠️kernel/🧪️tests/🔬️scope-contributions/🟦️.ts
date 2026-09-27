@@ -96,6 +96,20 @@ describe("scopeContributionsJson", () => {
     const scoped = JSON.parse(scopeContributionsJson([loaded[0]!, brep, loaded[2]!], "procedural", kinds)) as { pluginId: string }[];
     expect(scoped.map((entry) => entry.pluginId).sort()).toEqual(["flow-extension-brep", "procedural"]);
   });
+  it("resolves keyed kind fields from a document DSL, so a procedure's step operators reach their extension", () => {
+    const procedure = 'schema=procedure.document path={\n  steps=[ {\n    id="step-1" kind="state.set" params={\n      key="counter" value=1\n    }\n  }\n {\n    id="step-2" kind="log.print" params={\n      message="hello"\n    }\n  }\n  ]\n}';
+    const scope = resolveDocumentOperatorKinds([procedure]);
+    expect(scope).toEqual({ status: "resolved", kinds: ["state.set", "log.print"] });
+    const imperative = [
+      { pluginId: "imperative", manifest: manifest("imperative.module", { manifestJson: JSON.stringify({ contributes: { operators: [{ id: "procedure.example" }] } }) }) },
+      { pluginId: "imperative-extension-effect", manifest: manifest("imperative.module", { manifestJson: JSON.stringify({ contributes: { operators: [{ id: "state.set" }, { id: "log.print" }] } }) }) },
+      { pluginId: "imperative-extension-math", manifest: manifest("imperative.module", { manifestJson: JSON.stringify({ contributes: { operators: [{ id: "math.add" }] } }) }) },
+    ];
+    const kinds = scope.status === "resolved" ? scope.kinds : [];
+    const scoped = JSON.parse(scopeContributionsJson(imperative, "imperative", kinds, ["imperative.module"])) as { pluginId: string }[];
+    expect(scoped.map((entry) => entry.pluginId)).toEqual(["imperative", "imperative-extension-effect"]);
+    expect(reachableKindsFromUnknown(['target="imperative-flow-1!s.stdio.semio@v1/flow" id="step-1" schema=procedure.document'])).toEqual([]);
+  });
   it("resolves neuron-kind from the open document DSL and refuses a missing graph", () => {
     const dsl =
       'widgets {\n  neuron id="profile" neuron-kind=brep.curve.polygon\n  neuron id="extrusion-axis" neuron-kind=math.vector\n  neuron id="extrude" neuron-kind=brep.solid.extrude\n}';

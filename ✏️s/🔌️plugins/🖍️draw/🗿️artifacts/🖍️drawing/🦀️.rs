@@ -41,6 +41,7 @@ pub struct DrawingTransform {
     pub y: f64,
     pub scale_x: f64,
     pub scale_y: f64,
+    pub shear: f64,
     /// 📐️ Radians — `engine`'s compose/decompose matrix helpers call `.cos()`/`.sin()`
     /// directly on this field with no `to_radians()` conversion.
     #[dsl(angle = "rad")]
@@ -436,7 +437,7 @@ pub struct DrawingArtboard {
 }
 
 pub fn default_drawing_transform() -> DrawingTransform {
-    DrawingTransform { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
+    DrawingTransform { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0, shear: 0.0 }
 }
 
 pub fn default_drawing_trace_params() -> DrawingTraceParams {
@@ -805,6 +806,18 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod mutations {
+                        #[path = "."]
+                        pub mod update_text {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text/🧪️tests/🔬️unit/🦀️.rs"]
+                            mod tests;
+                        }
                         #[path = "."]
                         pub mod replace_layer_stroke {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🔺️diff/🦀️.rs"]

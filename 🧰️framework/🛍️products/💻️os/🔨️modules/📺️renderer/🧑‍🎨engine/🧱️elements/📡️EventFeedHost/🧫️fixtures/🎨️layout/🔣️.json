@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "viewport": { "width": 400, "height": 240 },
+  "surfaceId": "events.layout",
+  "controllerId": "events-layout-controller",
+  "activateAction": "openEntry",
+  "entries": [
+    {
+      "id": "info",
+      "timestampMs": 1790496000000,
+      "iconId": "info",
+      "title": "A very long informational event title that must truncate before its accepted time label",
+      "detail": "A long detail line that must remain within the card content bounds instead of entering another card.",
+      "tone": "info"
+    },
+    { "id": "success", "timestampMs": 1790496060000, "iconId": "check", "title": "Build completed", "tone": "success" },
+    { "id": "warning", "timestampMs": 1790496120000, "iconId": "triangle-alert", "title": "Checks degraded", "tone": "warning" },
+    { "id": "error", "timestampMs": 1790496180000, "iconId": "circle-alert", "title": "Build failed", "tone": "error" },
+    { "id": "fatal", "timestampMs": 1790496240000, "iconId": "circle-x", "title": "Session stopped", "tone": "fatal" }
+  ],
+  "expected": {
+    "hostPaddingPx": 3.2,
+    "cardGapPx": 3.2,
+    "cardPaddingPx": 3.2,
+    "cardRadiusPx": 0,
+    "plainCardHeightPx": 22.4,
+    "detailCardHeightPx": 38.4,
+    "iconSizePx": 16,
+    "contentGapPx": 3.2,
+    "titleFontSizePx": 11.2,
+    "titleLineHeightPx": 16,
+    "titleWeight": 500,
+    "fatalTitleWeight": 600,
+    "timeFontSizePx": 10,
+    "detailFontSizePx": 11.2,
+    "descriptionTruncated": true,
+    "toneSemantics": {
+      "info": "foreground",
+      "success": "success",
+      "warning": "warning",
+      "error": "error",
+      "fatal": "error-strong"
+    }
+  }
+}

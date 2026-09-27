@@ -1,0 +1,53 @@
+{
+  "schema": "semio.framework.renderer.event-feed-accessible-entry.v1",
+  "hostId": "feed-ax-host",
+  "surfaceId": "audit-events",
+  "controllerId": "controller.event-feed",
+  "acceptedTimeLabel": "14:05:06",
+  "cases": [
+    {
+      "id": "actionable-entry",
+      "activateAction": "openEntry",
+      "entry": {
+        "id": "event.actual:7",
+        "timestampMs": 1772956399000,
+        "iconId": "circle-check",
+        "title": "Build finished",
+        "detail": "3 warnings",
+        "tone": "success"
+      },
+      "expected": {
+        "key": "feed-ax-host.feed.event.actual:7",
+        "role": "button",
+        "accessibleName": "Build finished 14:05:06 3 warnings",
+        "focusable": true,
+        "tabbable": true,
+        "action": {
+          "controllerId": "controller.event-feed",
+          "action": "openEntry",
+          "args": { "surfaceId": "audit-events", "id": "event.actual:7" }
+        }
+      }
+    },
+    {
+      "id": "passive-entry",
+      "activateAction": null,
+      "entry": {
+        "id": "event.passive:8",
+        "timestampMs": 1772956399000,
+        "iconId": "info",
+        "title": "Cache retained",
+        "detail": "No action available",
+        "tone": "info"
+      },
+      "expected": {
+        "key": "feed-ax-host.feed.event.passive:8",
+        "role": "paragraph",
+        "accessibleName": "Cache retained 14:05:06 No action available",
+        "focusable": false,
+        "tabbable": false,
+        "action": null
+      }
+    }
+  ]
+}

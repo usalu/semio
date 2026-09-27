@@ -55,6 +55,38 @@ fn dark_theme_cursor_urls_use_dark_assets() {
     assert_eq!(semio_cursor_css(SemioCursor::Selectable, false), "url(/🖼️assets/👆️cursor/☑️selectable/☀️light.svg) 0 0, pointer");
 }
 
+#[test]
+fn browser_cursor_fixture_matches_every_canonical_theme_projection() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🎯️targets/🧊️wgpu/👆️cursor/🧫️fixtures/🔣️.json")).expect("browser cursor fixture");
+    let cases = fixture["cases"].as_array().expect("browser cursor cases");
+    assert_eq!(cases.len(), 30);
+    let mut covered = std::collections::HashSet::new();
+    for case in cases {
+        let tag = case["cursor"].as_str().expect("cursor tag");
+        let cursor = match tag {
+            "Default" => SemioCursor::Default,
+            "Pointer" => SemioCursor::Pointer,
+            "Selectable" => SemioCursor::Selectable,
+            "Foldable" => SemioCursor::Foldable,
+            "Grab" => SemioCursor::Grab,
+            "Grabbing" => SemioCursor::Grabbing,
+            "Text" => SemioCursor::Text,
+            "EwResize" => SemioCursor::EwResize,
+            "NsResize" => SemioCursor::NsResize,
+            "NwseResize" => SemioCursor::NwseResize,
+            "NeswResize" => SemioCursor::NeswResize,
+            "Move" => SemioCursor::Move,
+            "Crosshair" => SemioCursor::Crosshair,
+            "CrosshairCentered" => SemioCursor::CrosshairCentered,
+            "NotAllowed" => SemioCursor::NotAllowed,
+            _ => panic!("unknown cursor tag {tag}"),
+        };
+        let theme_dark = case["themeDark"].as_bool().expect("cursor theme");
+        assert!(covered.insert((tag, theme_dark)), "duplicate cursor/theme case {tag}/{theme_dark}");
+        assert_eq!(semio_cursor_css(cursor, theme_dark), case["css"].as_str().expect("cursor css"), "{tag}/{theme_dark}");
+    }
+}
+
 //#region 🔖️RetainedTreeCursorTests
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiInputNode, UiStackNode, UiTextNode};

@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-deflate"
+version = "0.1.0"
+edition = "2021"
+description = "R10 standalone check of the first-party zip container over the unchanged deflate sources"
+
+[workspace]
+
+[lib]
+path = "deflate/🦀️.rs"
+
+[dev-dependencies]
+miniz_oxide = "0.8"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+zip = { version = "2.4", default-features = false, features = ["deflate"] }

@@ -315,6 +315,7 @@ fn batch_marker_uses_existing_bounded_action_padding() {
         node_len: usize,
         byte_len: usize,
         root: Option<u16>,
+        receipt: Option<ActionQueueReceipt>,
     }
     assert_eq!(std::mem::size_of::<BoundedAction>(), std::mem::size_of::<BeforeBatchMarker>());
 }

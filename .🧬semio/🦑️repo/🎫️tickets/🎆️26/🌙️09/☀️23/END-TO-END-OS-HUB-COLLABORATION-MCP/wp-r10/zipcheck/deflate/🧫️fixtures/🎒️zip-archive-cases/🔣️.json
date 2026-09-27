@@ -1,0 +1,39 @@
+{
+  "schema": "semio.framework.deflate.zip-archive-cases/v1",
+  "crc32": [
+    { "input": "", "crc": "00000000" },
+    { "input": "a", "crc": "e8b7be43" },
+    { "input": "123456789", "crc": "cbf43926" },
+    { "input": "The quick brown fox jumps over the lazy dog", "crc": "414fa339" }
+  ],
+  "archives": [
+    {
+      "name": "extension package shape",
+      "entries": [
+        { "name": "manifest.json", "text": "{\"extensionId\":\"ext-sample\",\"packageFormat\":1}" },
+        { "name": "component.wasm", "text": "\u0000asm\u0001\u0000\u0000\u0000" },
+        { "name": "assets/icons/🧩️piece.svg", "text": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>" }
+      ]
+    },
+    {
+      "name": "collection export shape",
+      "entries": [
+        { "name": "collection.collection.pack", "text": "pack pack pack pack pack pack pack pack" },
+        { "name": "collection.collection.spr", "text": "" },
+        { "name": "Folder/Notes.pack", "text": "Notes" },
+        { "name": "Folder/Notes.spr", "text": "history history history history history history" }
+      ]
+    },
+    {
+      "name": "empty archive",
+      "entries": []
+    }
+  ],
+  "hostile": [
+    { "name": "no end record", "mutation": "truncate-to-21", "error": "Truncated" },
+    { "name": "end record overwritten", "mutation": "zero-last-22", "error": "Signature" },
+    { "name": "wrong central CRC", "mutation": "flip-central-crc", "error": "Crc" },
+    { "name": "zip64 entry count", "mutation": "entry-count-ffff", "error": "Unsupported" },
+    { "name": "encrypted entry", "mutation": "set-central-encryption-flag", "error": "Unsupported" }
+  ]
+}

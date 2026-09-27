@@ -117,7 +117,7 @@ mod subject {
                 },
             }),
             "set-archive-comment" => ZipMutation::SetArchiveComment(SetArchiveComment { comment: params.str("comment") }),
-            "add-entry" => ZipMutation::AddEntry(AddEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() } }),
+            "add-entry" => ZipMutation::AddEntry(AddEntry { entry: ZipEntry { name: params.str("name"), data: params.str("content").into_bytes() }, before: params.get("before").map(|_| params.str("before")) }),
             "remove-entry" => ZipMutation::RemoveEntry(RemoveEntry { name: params.str("name") }),
             "rename-entry" => ZipMutation::RenameEntry(RenameEntry { name: params.str("name"), new_name: params.str("newName") }),
             "set-entry-data" => ZipMutation::SetEntryData(SetEntryData { name: params.str("name"), data: params.str("content").into_bytes() }),
@@ -134,8 +134,8 @@ mod subject {
         match mutation {
             ZipMutation::SetSnapshot(_) => vec![ZipMutation::SetSnapshot(SetSnapshot { snapshot: original.clone() })],
             ZipMutation::SetArchiveComment(_) => vec![ZipMutation::SetArchiveComment(SetArchiveComment { comment: original.comment.clone() })],
-            ZipMutation::AddEntry(AddEntry { entry }) => vec![ZipMutation::RemoveEntry(RemoveEntry { name: entry.name.clone() })],
-            ZipMutation::RemoveEntry(RemoveEntry { name }) => original.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::AddEntry(AddEntry { entry: entry.clone() })]).unwrap_or_default(),
+            ZipMutation::AddEntry(AddEntry { entry, .. }) => vec![ZipMutation::RemoveEntry(RemoveEntry { name: entry.name.clone() })],
+            ZipMutation::RemoveEntry(RemoveEntry { name }) => original.entries.iter().position(|entry| entry.name == *name).map(|index| vec![ZipMutation::AddEntry(AddEntry { entry: original.entries[index].clone(), before: original.entries.get(index + 1).map(|entry| entry.name.clone()) })]).unwrap_or_default(),
             ZipMutation::RenameEntry(RenameEntry { name, new_name }) => vec![ZipMutation::RenameEntry(RenameEntry { name: new_name.clone(), new_name: name.clone() })],
             ZipMutation::SetEntryData(SetEntryData { name, .. }) => original.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default(),
         }

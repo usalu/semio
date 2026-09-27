@@ -29,3 +29,40 @@ fn kinds_match_the_enum_and_the_catalog() {
         assert_eq!(descriptor.binary_tag, Some(index as u32));
     }
 }
+
+#[test]
+fn canonical_tagged_mutations_match_the_owned_schema_validator() {
+    fn directories(path: &std::path::Path) -> Vec<std::path::PathBuf> {
+        std::fs::read_dir(path).unwrap().map(|entry| entry.unwrap().path()).filter(|path| path.is_dir()).collect()
+    }
+    let subsets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets");
+    let mut documents = vec![include_str!("../../../🔣️.json").to_owned()];
+    let mut fixtures = Vec::new();
+    for subset in ["🎨️style", "🏷️metadata", "🔀️transform", "🧱️structure"] {
+        let owner = subsets.join(subset);
+        for mutation in directories(&owner.join("🧬️schema/🧬️mutations")) {
+            documents.push(std::fs::read_to_string(mutation.join("🧬️schema/🔣️.json")).unwrap());
+        }
+        for mutation in directories(&owner.join("🧫️fixtures/🧬️mutations")) {
+            for scenario in directories(&mutation) {
+                fixtures.push(std::fs::read_to_string(scenario.join("🦠️mutation/🔣️.json")).unwrap());
+            }
+        }
+    }
+    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile_with_documents(include_str!("../../🔣️.json"), &documents.iter().map(String::as_str).collect::<Vec<_>>()).unwrap();
+    let mut kinds = std::collections::BTreeSet::new();
+    for fixture in &fixtures {
+        let mut value: serde_json::Value = serde_json::from_str(fixture).unwrap();
+        let mutation: DrawingMutation = serde_json::from_str(fixture).unwrap();
+        validator.validate_json(&serde_json::to_string(&mutation).unwrap()).unwrap();
+        kinds.insert(value["mutation"].as_str().unwrap().to_owned());
+        validator.validate_json(fixture).unwrap();
+        value["unexpected"] = serde_json::Value::Bool(true);
+        assert!(validator.validate_json(&value.to_string()).is_err());
+        value.as_object_mut().unwrap().remove("unexpected");
+        value["mutation"] = serde_json::Value::String("unknown".into());
+        assert!(validator.validate_json(&value.to_string()).is_err());
+    }
+    assert_eq!(kinds.len(), DrawingMutation::kinds().len());
+    eprintln!("[DEBUG] {} canonical tagged Drawing mutations match the owned schema validator and reject unknown tags and fields", kinds.len());
+}

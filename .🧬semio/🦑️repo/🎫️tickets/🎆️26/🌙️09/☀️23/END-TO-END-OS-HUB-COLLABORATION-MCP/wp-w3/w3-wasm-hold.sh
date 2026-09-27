@@ -4,17 +4,23 @@
 #        ‖ rebuild-all --to flow-core-bindings → catalog preflight → B3 bootstrap ‖ reverse lane (renderer wasm-release first, then B
 #        releases from the end) → <OUT>/b3-publish.rc → cut the reverse lane (the renderer always finishes) → rest-warm lane over the 25
 #        other packages in the `--packages all` order until the `all` phase touches <OUT>/rest-warm.stop.
-#   all  catalog preflight → `--packages all` bootstrap ‖ reverse lane over the 25 → <OUT>/all-publish.rc → cut the lane.
-# usage: zsh w3-wasm-hold.sh b3|all
+#   final forward warm lane (every release in the `--packages all` order, starts once the hub prewarm is done) ‖ rebuild-all
+#        --to flow-core-bindings → catalog preflight → `--packages all` bootstrap ‖ reverse lane (renderer wasm-release first, never
+#        cut; then releases from the end) → <OUT>/final-publish.rc → cut the reverse lane (the renderer always finishes) → the shared
+#        RELEASE plugin-module root re-materialized from the current tree (browser support = shard worker, preview2 vendor, fonts; every
+#        component's `materialize-release`) → `w3-release-root-check.ts release` (shard worker == `shardWorkerSource()` with the codec case,
+#        every module present with the current host shim).
+# usage: zsh w3-wasm-hold.sh b3|final
 setopt no_bg_nice
 set -u
 PHASE="$1"
 cd /Users/ueli/Documents/semio || exit 1
 H="${W3_HUB_ROOT:-/Users/ueli/Documents/semio/.🧬semio/🌐hub}"
 OUT="$H/s13-w3-logs"
-W=/Users/ueli/Documents/semio/.tmp-ticket/wp-w3
+W="${W3_DIR:-/Users/ueli/Documents/semio/.tmp-ticket/wp-w3}"
 B_ORDER=(stdio gis note animate block writer draw puzzle wfc)
 REST_ORDER=(architect cad dag demonstrator energy fem flow forms imperative layout lowpoly mathematical norm playbook procedural process raster reasoning remodel sequence shooting sourcing space trinity vcs)
+ALL_ORDER=(stdio gis animate architect block cad dag demonstrator draw energy fem flow forms imperative layout lowpoly mathematical norm note playbook procedural process puzzle raster reasoning remodel sequence shooting sourcing space trinity vcs wfc writer)
 log() { echo "[w3-$PHASE-wasm] $* $(date '+%F %T')"; }
 step() { local name="$1"; shift; log "START $name"; local s=$(date +%s); "$@" > "$OUT/$PHASE-$name.txt" 2>&1; local rc=$?; log "END $name rc=$rc wall=$(( $(date +%s) - s ))s"; return $rc; }
 cut_lane() {
@@ -50,16 +56,29 @@ case "$PHASE" in
     [ $rc = 0 ] || exit $rc
     [ -e "$OUT/rest-warm.stop" ] || step rest-warm zsh "$W/w3-lane.sh" "$OUT/rest-warm" "$OUT/rest-warm.stop" $REST_ORDER
     ;;
-  all)
-    rm -f "$OUT/all-lane-rev.stop" "$OUT/all-publish.rc"
-    step preflight bun nx run os-hub:trusted-catalog-preflight --packages all || exit 1
-    zsh "$W/w3-lane.sh" "$OUT/all-lane-rev" "$OUT/all-lane-rev.stop" ${(Oa)REST_ORDER} > "$OUT/all-lane-rev.txt" 2>&1 &
+  final)
+    rm -f "$OUT/final-warm-fwd.stop" "$OUT/final-lane-rev.stop" "$OUT/final-publish.rc"
+    ( until [ -e "$OUT/final-hub-prewarm.done" ] || [ -e "$OUT/final-warm-fwd.stop" ]; do sleep 20; done
+      zsh "$W/w3-lane.sh" "$OUT/final-warm-fwd" "$OUT/final-warm-fwd.stop" $ALL_ORDER ) > "$OUT/final-warm-fwd.txt" 2>&1 &
+    fwd=$!
+    step rebuild-all bun nx run @semio-tech/plugin-registry:rebuild-all --to flow-core-bindings --outputStyle=stream || { failure "$OUT/final-rebuild-all.txt"; cut_lane "$OUT/final-warm-fwd.stop"; wait $fwd; exit 1; }
+    step preflight bun nx run os-hub:trusted-catalog-preflight --packages all || { /usr/bin/grep -A8 'refused' "$OUT/final-preflight.txt" | sed 's/^/  | /'; cut_lane "$OUT/final-warm-fwd.stop"; wait $fwd; exit 1; }
+    touch "$OUT/final-warm-fwd.stop"
+    ( while kill -0 $fwd 2>/dev/null; do sleep 10; done
+      zsh "$W/w3-lane.sh" "$OUT/final-lane-rev" "$OUT/final-lane-rev.stop" renderer ${(Oa)ALL_ORDER} ) > "$OUT/final-lane-rev.txt" 2>&1 &
     rev=$!
     mkdir -p "$H/s13-w3-catalog-all"; chmod 700 "$H/s13-w3-catalog-all"
     step publish-all bootstrap "$H/s13-w3-catalog-all" all; rc=$?
-    echo $rc > "$OUT/all-publish.rc"
-    cut_lane "$OUT/all-lane-rev.stop"; wait $rev
-    exit $rc
+    echo $rc > "$OUT/final-publish.rc"
+    [ $rc = 0 ] || /usr/bin/grep -E 'error|Error' "$OUT/final-publish-all.txt" | tail -5 | sed 's/^/  | /'
+    cut_lane "$OUT/final-lane-rev.stop"; wait $fwd $rev
+    log "renderer $(/usr/bin/grep 'END renderer' "$OUT/final-lane-rev.txt" | tail -1)"
+    [ $rc = 0 ] || exit $rc
+    step release-support bun nx run @semio-tech/framework-plugin-web:support-release --skip-nx-cache --outputStyle=stream
+    step release-modules bun nx run-many -t materialize-release --skip-nx-cache --parallel=2 --outputStyle=stream
+    step release-root-check bun "$W/w3-release-root-check.ts" release; check=$?
+    log "release root $(/usr/bin/grep '\[w3-release-root-check\]' "$OUT/final-release-root-check.txt" | tail -1)"
+    exit $check
     ;;
   *) log "unknown phase"; exit 1 ;;
 esac

@@ -1922,10 +1922,7 @@ impl HubDirectory for PostgresDirectory {
             }
             None => None,
         };
-        if space_id.is_some() && role.is_none() {
-            return Ok(SocketSessionBindingStatus::MembershipLost);
-        }
-        Ok(SocketSessionBindingStatus::Active { role, expires_at_ms: record.expires_at })
+        super::capped_socket_session_binding(self, &record, space_id, role).await
     }
 
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {

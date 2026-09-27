@@ -207,3 +207,56 @@ fn chunk_boundary_progress_cancel_and_deadline_are_bounded() {
     assert_eq!(transfer.chunk(0, &context), Err(RebootstrapError::DeadlineExceeded));
     assert_eq!(control.progress.lock().expect("progress lock").len(), 2);
 }
+
+/// 🪞️ `bytes` fed to `hash` with every occurrence of `document_id` replaced by `<document>`, left to right.
+fn hash_without_document_id(hash: &mut Sha256, bytes: &[u8], document_id: &[u8]) {
+    let mut from = 0;
+    while let Some(found) = bytes[from..].windows(document_id.len()).position(|window| window == document_id) {
+        hash.update(&bytes[from..from + found]);
+        hash.update(b"<document>");
+        from += found + document_id.len();
+    }
+    hash.update(&bytes[from..]);
+}
+
+/// 🪞️ `semio.hub.pair-content/v1` under the production decoders: every captured pair of the language-neutral fixture
+/// `🧫️fixtures/🪞️pair-content-v1` decodes through [`decode_canonical_checkpoint_pair`] and the replication crate's SPR
+/// frame cursor into exactly the SPR frames the fixture lists, and hashes to the fixture's content digest — the digest
+/// the residency watch compares two creations of one kind by (TS twin `🧪️tests/🪞️pair-content`, whose node:crypto
+/// SHA-256 is the third-party oracle for the same digests). The pack is hashed whole; the SPR frame by frame without
+/// the fields derived from the bytes before them (each frame's CRC-32C and `back_len`, a commit's chain hash).
+#[tokio::test]
+async fn the_pair_content_digest_is_the_fixtures_under_the_production_decoder() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🪞️pair-content-v1/🔣️.json")).expect("pair-content fixture");
+    let pairs = fixture["pairs"].as_array().expect("fixture pairs");
+    assert!(!pairs.is_empty());
+    for pair in pairs {
+        let name = pair["name"].as_str().unwrap();
+        let document_id = pair["documentId"].as_str().unwrap();
+        let stream: Vec<u8> = (0..pair["streamHex"].as_str().unwrap().len()).step_by(2).map(|at| u8::from_str_radix(&pair["streamHex"].as_str().unwrap()[at..at + 2], 16).unwrap()).collect();
+        let decoded = decode_canonical_checkpoint_pair(&stream).unwrap_or_else(|error| panic!("{name}: the production decoder refuses the captured pair: {error:?}"));
+        assert_eq!(decoded.selection.scope.document_id, document_id, "{name}: the pair names its own document");
+        let mut hash = Sha256::new();
+        hash.update(b"semio.hub.pair-content/v1\n");
+        hash.update(b"part 1 pack\n");
+        hash_without_document_id(&mut hash, &decoded.pair.pack, document_id.as_bytes());
+        let spr = &decoded.pair.spr;
+        assert_eq!(spr.get(..8), Some(protocol::format::MAGIC.as_slice()), "{name}: the second part is an SPR stream");
+        hash.update(b"part 2 spr\n");
+        hash.update(&spr[..protocol::format::HEADER_SIZE]);
+        let mut frames = Vec::new();
+        let mut cursor = protocol::format::FrameCursor::new(spr, protocol::format::HEADER_SIZE as u64).await;
+        while let Some(frame) = cursor.next_frame().await.unwrap_or_else(|error| panic!("{name}: SPR frame refused: {error:?}")) {
+            hash.update(format!("\nframe {} {} {}\n", frame.kind, frame.flags, frame.raw_len.map_or("-".to_string(), |raw| raw.to_string())).as_bytes());
+            let content = if frame.kind == protocol::REC_COMMIT { &frame.stored[..32] } else { frame.stored };
+            hash_without_document_id(&mut hash, content, document_id.as_bytes());
+            frames.push(serde_json::json!({ "kind": frame.kind, "flags": frame.flags, "rawLength": frame.raw_len, "payloadLength": frame.stored.len() }));
+        }
+        assert_eq!(serde_json::Value::Array(frames), pair["sprFrames"], "{name}: the production SPR cursor reads the fixture's frames");
+        assert_eq!(hex_lower(&hash.finalize()), pair["contentDigest"].as_str().unwrap(), "{name}: content digest");
+    }
+    for group in fixture["sameContent"].as_array().unwrap() {
+        let digests: std::collections::BTreeSet<&str> = group.as_array().unwrap().iter().map(|name| pairs.iter().find(|pair| pair["name"] == *name).unwrap()["contentDigest"].as_str().unwrap()).collect();
+        assert_eq!(digests.len(), 1, "two creations of one kind share one content digest: {group}");
+    }
+}

@@ -14,6 +14,10 @@
     "mutation": {
       "const": "addDeflatedEntry",
       "description": "Aggregate discriminator spliced in by ZipIso21320Mutation; absent when the payload stands alone."
+    },
+    "before": {
+      "type": "string",
+      "description": "Existing member before which the new entry is inserted; omitted to append."
     }
   },
   "$defs": {

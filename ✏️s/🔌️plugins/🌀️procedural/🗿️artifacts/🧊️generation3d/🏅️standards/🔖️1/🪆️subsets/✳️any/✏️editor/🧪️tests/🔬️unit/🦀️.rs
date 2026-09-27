@@ -1302,6 +1302,30 @@ async fn refresh_pending_effects_starts_the_preview_eval_run() {
     assert_eq!(receipt.state.as_deref(), Some("finalized"), "the read-only run settles and finalizes itself: {receipt:?}");
 }
 
+/// ♻️ A replacing `toolRunStart` retires the replaced run's snapshots through the store, never by a plain drop. Measured live
+/// 2026-09-27 (`s` serve, V1 matrix en, `s13-s17-logs/live/gen3d-trap-1.txt`): after an `addWidget` moved the head and the
+/// store retired its own alias, the replaced previewEval run held the last `Arc<Generation3dSnapshot>` and its plain drop
+/// aborted the guest with `ordered-map root must be explicitly retired before drop` (`FlowHostSnapshot.layout`). Several
+/// edit → re-run rounds give the store's own retirement time to finish before each replacing start.
+#[semio_framework_async_macros::async_test]
+async fn a_replacing_preview_run_start_retires_the_previous_runs_last_snapshot_alias() {
+    let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();
+    let mut app = app().await;
+    context::dispatch(&mut app, Generation3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::standards::v1::subsets::any::schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS.into() })).await;
+    let (_, preview_view) = context::preview_views("procedural-preview-test", "procedural-preview-test-other");
+    for round in 0..4 {
+        let effects = app.pending_effects(Some(&preview_view)).await;
+        let receipt = context::drive_preview_run(&mut app, &preview_view, &effects).await;
+        assert_eq!(receipt.state.as_deref(), Some("finalized"), "round {round}: the read-only run settles and finalizes itself: {receipt:?}");
+        context::dispatch(&mut app, Generation3dCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), x: None, y: None })).await;
+        context::settle(&mut app).await;
+    }
+    let effects = app.pending_effects(Some(&preview_view)).await;
+    let receipt = context::drive_preview_run(&mut app, &preview_view, &effects).await;
+    assert_eq!(receipt.state.as_deref(), Some("finalized"), "the last replacing run finalizes with every earlier run's snapshots retired: {receipt:?}");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut *app);
+}
+
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trips_flow_graph_edits() {
     let _serial = crate::editor::generation3d::unit_tests::serial_execution::lock();

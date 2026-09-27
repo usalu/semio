@@ -5,7 +5,9 @@
  * wrong-schema body the law sends is invalid against the route's own declared request schema, that every
  * refusal body the status table yields is a valid `HubRefusalV1`, that a body naming a code outside the
  * declared vocabulary is not, and that the credential refusal of every credential-optional route
- * (`🚧️refusal/🧫️fixtures/🪪️credential-refusal-v1`) is a valid `HubCredentialRefusalV1` in en and de. OpenSSL's SHA-256 (`node:crypto`) — not the hub's own hash — reproduces the generative
+ * (`🚧️refusal/🧫️fixtures/🪪️credential-refusal-v1`) is a valid `HubCredentialRefusalV1` in en and de, and that the transient
+ * refusal a document batch carries (`🚧️refusal/🧫️fixtures/⏳️transient-apply-refusal-v1`) is a valid
+ * `HubTransientApplyRefusalMessageV1` while no near miss is. OpenSSL's SHA-256 (`node:crypto`) — not the hub's own hash — reproduces the generative
  * law's draw vectors (`generative.drawVectors`, Rust law `hostile_draws_reproduce_the_language_neutral_vectors`).
  */
 // #endregion Header
@@ -85,6 +87,20 @@ describe("hub hostile-input oracle", () => {
     for (const body of credential.invalidBodies) expect(validate(body), JSON.stringify(body)).toBe(false);
     const credentialOptional = fixture.routes.filter((route: any) => route.public === "credential-optional").map((route: any) => route.path);
     for (const path of credentialOptional) expect(credential.routes.map((route: any) => route.path), path).toContain(path);
+  });
+
+  it("a transiently refused batch's message is a valid HubTransientApplyRefusalMessageV1 for every cause, and no near miss is", () => {
+    const transient = read(hubRoot, "🚧️refusal", "🧫️fixtures", "⏳️transient-apply-refusal-v1", "🔣️.json");
+    const validate = compileDef(refusal, "HubTransientApplyRefusalMessageV1");
+    expect(transient.answer.code).toBe(refusal.$defs.HubTransientApplyRefusalCodeV1.const);
+    expect(transient.causes.length).toBeGreaterThanOrEqual(2);
+    for (const cause of transient.causes) {
+      const message = { level: transient.answer.level, code: transient.answer.code, message: cause.reason };
+      expect(validate(message), JSON.stringify(validate.errors)).toBe(true);
+    }
+    expect(new Set(transient.causes.map((cause: any) => cause.cause))).toEqual(new Set(["db-unavailable", "agent-rate-limited"]));
+    expect(transient.invalidMessages.length).toBeGreaterThanOrEqual(4);
+    for (const message of transient.invalidMessages) expect(validate(message), JSON.stringify(message)).toBe(false);
   });
 
   it("the fixture's oversized vector exceeds every declared body limit", () => {

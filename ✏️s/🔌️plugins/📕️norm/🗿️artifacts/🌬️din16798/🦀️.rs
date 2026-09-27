@@ -827,7 +827,7 @@ pub mod examples {
     }
     #[path = "."]
     pub mod residential_method3 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏠residential-method3/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏠️residential-method3/🦀️.rs"]
         mod component;
         pub use component::*;
     }

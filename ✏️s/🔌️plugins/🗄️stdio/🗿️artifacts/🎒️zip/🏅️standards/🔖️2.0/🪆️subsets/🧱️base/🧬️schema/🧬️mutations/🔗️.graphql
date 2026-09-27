@@ -25,6 +25,7 @@ type ZipMutation {
   snapshot: ZipSnapshot
   comment: String
   entry: ZipEntry
+  before: String
   name: String
   newName: String
   data: [Int!]

@@ -12,7 +12,7 @@
  * Every row is required.
  *
  * Configuration by environment: `OS_MCP_HUB_ORIGIN` (default `http://127.0.0.1:8787`), `OS_MCP_HUB_EMAIL` /
- * `OS_MCP_HUB_PASSWORD` (default the second local user), `OS_HUB_ADMIN_CAPABILITY_FILE` (the hub launcher's `0600`
+ * `OS_MCP_HUB_PASSWORD` (required: the human; `blocked` without them), `OS_HUB_ADMIN_CAPABILITY_FILE` (the hub launcher's `0600`
  * `admin-capability.json`, required for S4's connection census), `S_OS_MCP_SECURITY_OUT` (captures, default
  * `🌉️mcp/🤖️generated/🛡️security`). The gateway binary is `requireMcpBinary` (`SEMIO_OS_MCP_BIN` overrides).
  * Promoted from the ticket harness `wp-g11/g11-security-probe.ts` (ticket 26/09/23, G11 item 4).
@@ -27,8 +27,8 @@ import { sealSpaceArtifactCreateV1 } from "../../../📇️directory/🧬️sche
 import { directoryCommandRequestJson, sealDirectoryCommandRequestV1 } from "../../../📇️directory/🧬️schema/🟦️.ts";
 import { createSpaceCommandV1 } from "../../../📇️directory/🏘️spaces/🟦️.ts";
 import { agentDelegationRevokePathV1 } from "../../../📇️directory/🤖️delegations/🟦️.ts";
-import { requireMcpBinary } from "../../🟦️.ts";
-import { acceptanceCheckResult, publishAcceptanceCheckResult } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { hubCredentialFromEnv, isAcceptancePreconditionMissing, requireMcpBinary } from "../../🟦️.ts";
+import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 function findRepoRoot(start: string): string {
@@ -42,14 +42,15 @@ function findRepoRoot(start: string): string {
 }
 const repoRoot = findRepoRoot(here);
 const HUB = (process.env.OS_MCP_HUB_ORIGIN ?? "http://127.0.0.1:8787").replace(/\/$/u, "");
-const EMAIL = process.env.OS_MCP_HUB_EMAIL ?? "user2@semio.dev";
-const PASSWORD = process.env.OS_MCP_HUB_PASSWORD ?? "gm1-local-dev-pass-2";
 const ADMIN_FILE = process.env.OS_HUB_ADMIN_CAPABILITY_FILE ?? "";
 const OUT = process.env.S_OS_MCP_SECURITY_OUT ?? join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🤖️generated/🛡️security");
 const BINARY = requireMcpBinary(repoRoot);
 const CREDENTIALS = join(OUT, "credentials");
 mkdirSync(CREDENTIALS, { recursive: true, mode: 0o700 });
 const startedAt = new Date();
+await withAcceptanceRecord(repoRoot, "mcp-security", async () => void hubCredentialFromEnv(), isAcceptancePreconditionMissing);
+if (process.exitCode) process.exit(1);
+const credential = hubCredentialFromEnv();
 const seconds = (): string => ((Date.now() - startedAt.getTime()) / 1000).toFixed(1);
 const rows: { step: string; ok: boolean; detail: string; at: string }[] = [];
 const row = (step: string, ok: boolean, detail: string): void => {
@@ -110,7 +111,7 @@ async function noteSyncSessions(spaceId: string, noteId: string): Promise<number
 const clients: Client[] = [];
 try {
   if (!existsSync(ADMIN_FILE)) throw new Error("OS_HUB_ADMIN_CAPABILITY_FILE must name the hub launcher's admin-capability.json");
-  const signIn = await hub("POST", "/auth/sessions", undefined, JSON.stringify({ schema: "semio.hub.auth.credential-sign-in/v1", email: EMAIL, password: PASSWORD, deviceInstanceId: `security${randomBytes(12).toString("hex")}`, clientClass: "browser" }));
+  const signIn = await hub("POST", "/auth/sessions", undefined, JSON.stringify({ schema: "semio.hub.auth.credential-sign-in/v1", email: credential.email, password: credential.password, deviceInstanceId: `security${randomBytes(12).toString("hex")}`, clientClass: "browser" }));
   const human = String(signIn.json?.token ?? "");
   const spaceName = `Security ${randomBytes(3).toString("hex")}`;
   await hub("POST", "/directory/commands", human, directoryCommandRequestJson(sealDirectoryCommandRequestV1(randomBytes(16).toString("hex"), createSpaceCommandV1(spaceName, "atelier", "private"))));
@@ -141,8 +142,9 @@ try {
     { tool: "inference_list", args: {}, grantedBy: "workspace.read" },
     { tool: "action_prepare", args: { capabilityId: addBlock, input: { kind: "text" } }, grantedBy: "artifact.write" },
     { tool: "action_invoke", args: { capabilityId: addBlock, input: { kind: "text" } }, grantedBy: "artifact.write" },
-    { tool: "ui_reveal", args: { artifactId: noteId }, grantedBy: "ui.control" },
-    { tool: "ui_focus", args: { artifactId: noteId }, grantedBy: "ui.control" },
+    { tool: "artifact_create", args: { artifactId: `security-${randomBytes(3).toString("hex")}`, kind: String(kind?.kindId ?? "") }, grantedBy: "artifact.write" },
+    { tool: "ui_reveal", args: { anchor: "left", path: ["explorer"] }, grantedBy: "ui.control" },
+    { tool: "ui_focus", args: {}, grantedBy: "ui.control" },
     { tool: "conversation_reply", args: { text: "security scope probe" }, grantedBy: "conversation.write" },
   ];
   const table = ["| tool | granted by | read-only grant | full grant |", "|---|---|---|---|"];
@@ -158,12 +160,15 @@ try {
   row("S1 every tool outside a read-only grant is refused PERMISSION_DENIED and the full grant is never refused for a scope", scopesHold, `${probes.length} tools × 2 grants (scopes.md)`);
   await reader.close().catch(() => undefined);
 
+  const headBeforeRead = Number((await hub("GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(noteId)}`, human)).json?.head_seq ?? -1);
   const readOnly = await delegate(human, spaceId, "Security reader", "read");
   const readClient = await connect("security-read-audience", spaceId, readOnly.path, "workspace.read,artifact.write").catch((error: unknown) => error);
   if (readClient instanceof Client) {
-    const edit = await call(readClient, "action_invoke", { capabilityId: addBlock, input: { kind: "text" } });
+    const opened = await call(readClient, "artifact_open", { artifactId: noteId });
+    const edit = opened.isError ? opened : await call(readClient, "action_invoke", { capabilityId: addBlock, input: { kind: "text" } });
+    const headAfterRead = Number((await hub("GET", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(noteId)}`, human)).json?.head_seq ?? -1);
     await readClient.close().catch(() => undefined);
-    row("S2 a read delegation cannot edit even when its gateway claims artifact.write", edit.isError, edit.isError ? `refused ${edit.code}: ${edit.message}` : `edited: ${JSON.stringify(edit.content).slice(0, 160)}`);
+    row("S2 a read delegation cannot edit the hub document even when its gateway claims artifact.write", edit.isError && headAfterRead === headBeforeRead, edit.isError ? `refused ${edit.code}: ${edit.message}; hub head ${headBeforeRead}→${headAfterRead}` : `edited: ${JSON.stringify(edit.content).slice(0, 240)}; hub head ${headBeforeRead}→${headAfterRead}`);
   } else row("S2 a read delegation cannot edit even when its gateway claims artifact.write", true, `the gateway refused to bind a read delegation with a write grant: ${String(readClient).slice(0, 200)}`);
 
   const burst = await delegate(human, spaceId, "Security burst", "edit");
@@ -175,6 +180,7 @@ try {
   const limited = answers.filter((answer) => answer.status === 429);
   row("S3 a burst of agent-session exchanges for one delegation is rate-limited with Retry-After", limited.length > 0 && limited.every((answer) => Number(answer.retryAfter ?? 0) > 0), `statuses ${answers.map((answer) => answer.status).join(",")}`);
 
+  await call(full, "artifact_open", { artifactId: noteId });
   const before = await call(full, "action_invoke", { capabilityId: addBlock, input: { kind: "text" } });
   const listedBefore = await noteSyncSessions(spaceId, noteId);
   const revokeStarted = Date.now();

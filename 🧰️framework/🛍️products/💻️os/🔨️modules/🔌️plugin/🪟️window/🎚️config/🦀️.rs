@@ -377,7 +377,14 @@ struct WindowConfigPartition<O: WindowConfigOwner> {
 trait ErasedWindowConfigStoreOwner: Send {
     fn capture<'a>(&'a mut self, window_id: &'a str) -> Pin<Box<dyn Future<Output = Result<WindowConfigAuthority, Fault>> + 'a>>;
     fn dispatch<'a>(&'a mut self, actor: &'a str, mutation: WindowConfigMutation, description: Option<String>, coalesce_key: Option<String>) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>>;
-    fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation, coalesce_key: Option<&str>) -> Result<Box<dyn ErasedWindowConfigPublication>, RejectedWindowConfigEmission>;
+    fn begin(
+        &mut self,
+        operation: semio_framework_job::OperationId,
+        actor: String,
+        authority: &WindowConfigAuthority,
+        mutation: WindowConfigMutation,
+        coalesce_key: Option<&str>,
+    ) -> Result<Box<dyn ErasedWindowConfigPublication>, RejectedWindowConfigEmission>;
     fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
     fn refresh(&mut self, authority: &mut WindowConfigAuthority) -> Result<(), Fault>;
     fn packs<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<Vec<WindowConfigPack>, Fault>> + 'a>>;
@@ -444,7 +451,14 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         })
     }
 
-    fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation, coalesce_key: Option<&str>) -> Result<Box<dyn ErasedWindowConfigPublication>, RejectedWindowConfigEmission> {
+    fn begin(
+        &mut self,
+        operation: semio_framework_job::OperationId,
+        actor: String,
+        authority: &WindowConfigAuthority,
+        mutation: WindowConfigMutation,
+        coalesce_key: Option<&str>,
+    ) -> Result<Box<dyn ErasedWindowConfigPublication>, RejectedWindowConfigEmission> {
         let WindowConfigMutation { window_id, window_kind_id, mutation } = mutation;
         let typed = match mutation.downcast::<O::Mutation>() {
             Ok(typed) => typed,
@@ -643,15 +657,19 @@ impl WindowConfigOwnerRegistry {
             .await
     }
 
-    pub(crate) fn begin(&mut self, operation: semio_framework_job::OperationId, actor: String, authority: &WindowConfigAuthority, mutation: WindowConfigMutation, coalesce_key: Option<&str>) -> Result<Box<dyn ErasedWindowConfigPublication>, RejectedWindowConfigEmission> {
+    pub(crate) fn begin(
+        &mut self,
+        operation: semio_framework_job::OperationId,
+        actor: String,
+        authority: &WindowConfigAuthority,
+        mutation: WindowConfigMutation,
+        coalesce_key: Option<&str>,
+    ) -> Result<Box<dyn ErasedWindowConfigPublication>, RejectedWindowConfigEmission> {
         if let Err(fault) = self.validate_address(authority, &mutation) {
             return Err(RejectedWindowConfigEmission { mutation, fault });
         }
         let Some(owner) = self.owners.get_mut(authority.window_kind_id.as_str()) else {
-            return Err(RejectedWindowConfigEmission {
-                mutation,
-                fault: Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config emission has no registered concrete window owner"),
-            });
+            return Err(RejectedWindowConfigEmission { mutation, fault: Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config emission has no registered concrete window owner") });
         };
         owner.begin(operation, actor, authority, mutation, coalesce_key)
     }

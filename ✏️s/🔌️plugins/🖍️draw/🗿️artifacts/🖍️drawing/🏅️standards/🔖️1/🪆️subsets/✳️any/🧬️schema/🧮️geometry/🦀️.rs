@@ -1,6 +1,12 @@
 //! 📐️ Affine composition and exact cubic extrema, independent of rendering.
 #[path = "📷️framing/🦀️.rs"]
 pub mod framing;
+#[path = "↗️affine/🦀️.rs"]
+pub mod affine;
+#[path = "🎛️handles/🦀️.rs"]
+pub mod handles;
+#[path = "🎯️picking/🦀️.rs"]
+pub mod picking;
 #[path = "✏️editing/🦀️.rs"]
 pub mod editing;
 #[path = "🎯️selection/🦀️.rs"]

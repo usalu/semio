@@ -4954,6 +4954,12 @@ impl DagHost {
         !matches!(self.engine.interaction, InteractionMode::Idle) || self.minimap_widget_drag.is_some() || self.pan_anchor.is_some() || self.widget_drag.is_some() || self.pending_port_insert.is_some()
     }
 
+    /// 🔌️ Whether React Flow's centered connection cursor applies at this point: either the
+    /// live hit is a port handle or a wire draw/reconnect gesture owns the pointer beyond its source.
+    pub fn connection_cursor_active_at_screen(&self, sx: f64, sy: f64) -> bool {
+        matches!(self.engine.interaction, InteractionMode::DrawEdge { .. }) || self.screen_hit(sx, sy).handle
+    }
+
     /// 🖱️ Whether this SCREEN point belongs to the screen pointer path at all: the minimap widget, a
     /// wire handle, a port insertion target, or an inline widget. Exactly the four hits
     /// `bounded_node_hit_index` answers `Unsupported` for, asked as a question instead of as a fault.

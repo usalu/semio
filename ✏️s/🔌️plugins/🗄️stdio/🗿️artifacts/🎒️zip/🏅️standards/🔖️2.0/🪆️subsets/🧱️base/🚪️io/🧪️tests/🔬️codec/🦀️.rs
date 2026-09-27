@@ -224,14 +224,10 @@ fn decode_rich_synthetic_archive() {
     assert_eq!(snap.entries.len(), 5);
     assert_eq!(snap.comment, "archive-level comment");
 
-    // 🔤️ The physical member order of the container is NOT snapshot state: `decode_zip` canonicalizes
-    // to the same name-ascending order `encode_zip` writes, so the two are fixpoints of each other
-    // (see `decode_zip`'s ordering comment and `deterministic_logical_round_trip` below). Pinning the
-    // canonical order here is what makes the per-member lookups underneath unambiguous.
     assert_eq!(
         snap.entries.iter().map(|entry| entry.name.as_str()).collect::<Vec<_>>(),
-        vec!["café-\u{1F600}.txt", "caf\u{00e9}.txt", "huge-in-theory.bin", "stored.txt", "streamed.bin"],
-        "decoded members are canonically name-ascending, not in the archive's physical order"
+        vec!["stored.txt", "café-\u{1F600}.txt", "caf\u{00e9}.txt", "streamed.bin", "huge-in-theory.bin"],
+        "decoded members preserve the archive's authored physical order"
     );
     let member = |name: &str| snap.entries.iter().find(|entry| entry.name == name).unwrap_or_else(|| panic!("decoded archive has a {name} member")).data.clone();
 

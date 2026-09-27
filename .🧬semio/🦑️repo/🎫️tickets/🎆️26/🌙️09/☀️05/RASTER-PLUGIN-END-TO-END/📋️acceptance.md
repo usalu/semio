@@ -1,0 +1,54 @@
+# Raster End-User Acceptance
+
+The requested outcome remains a complete usable raster editor, not a collection of independently passing algorithms. This checklist consolidates the original acceptance in `📓️complete-editing.md`; it does not replace it or narrow the goal. A row is complete only when its end-user behavior and required implementations are verified together.
+
+| Requirement | Current evidence | Remaining proof or implementation |
+| --- | --- | --- |
+| Paint/erase real layer pixels with color, size, opacity, hardness, transforms and selections | Shared Rust/TypeScript pixel operations; authoritative editPixels command; earlier live publication/history recorded in the main notes | Revalidate after incremental source preparation. The completion promise is now preserved and 17 mounted tests verify duplicate-dispatch exclusion and applied/refused/superseded feedback; live rapid strokes and native surface parity remain pending. Layer protection is still missing. |
+| Usable layer management | Add, duplicate, delete, visibility, patch, move commands; corrected sibling-relative ordering and Inspector described in main notes | Flatten Layers is implemented with a 49-test Raster TypeScript pass; native/history proof now passed in the 275-test suite; live proof is pending. Merge Down is now authored for adjacent normal-blend pixel/group siblings, with 62 passing Raster TypeScript tests; native/history/UI tests are pending. Complete layer locking and broader selective merge behavior. Run a coherent layer workflow, including nested groups, undo/redo and reload. Export flattening is not a user editing command. |
+| Pixel and group masks | Selection masks, enable/invert and placement previously verified live. New editMask coverage brush, imported luminance/alpha normalization, expected descriptor guard, selection and linked/unlinked transforms; mounted pixel/group mask cases pass | Retained mask publication/history tests now passed in the 275-test native suite. Live erase/reveal, cancellation, undo/redo, both canvas views and saved document round-trip. Mask fill now has neutral/oracle and mounted pixel/group evidence; native publication and live fill remain pending. Native mask authoring controls and additional mask algorithms remain open. |
+| Rectangle/ellipse/lasso/contiguous-color selection with replace/add/subtract/intersect/invert | Shared algorithm fixtures and Sharp comparisons; mounted focus-preservation and cancellation tests | Full live selection workflow on transformed image/mask targets, keyboard-only operation, native UI parity and persisted-versus-ephemeral boundaries. |
+| Adjustments, filters, fill, crop, resize, rotation and flips | Shared core has these operations; tests cover oracle pixels and bounded progress. React controls dispatch authoritative commands | Live parameter validation and undo/redo for each family. Non-destructive brightness/contrast parameters passed current native tests; activation/live proof remains pending. Extend non-destructive algorithms beyond brightness/contrast where required by the editing workflow. |
+| Import, editable save/load and flattened export | Current editor exports artifact packs and composites through image:out; image:in owns a retained importer. Existing tests cover parts of codecs/compositing | Exercise file UI end to end with image import, editing, save, reload, and independent decoding of exported pixels. Verify layers/masks/adjustment parameters survive editable saves. Confirm large export cancellation and source preparation responsiveness. |
+| Accessible, localized and customizable interaction | English/German controls, semantic toolbar labels, focus tests and existing host customization | End-user keyboard audit, visible focus and understandable errors/progress, narrow-screen layout, no unresolved locale fallback, customization retention, and native control parity. |
+| Local-first multi-user history and cancellation | Canonical semantic mutations, retained work, immutable source-revision checks, history and asset ownership tests | Two-client current-source acceptance, conflict receipt and short disconnect recovery. Verify cancellation during preparation/compute/encoding and ensure no unpublished output enters history. |
+| Performance and bounded work | Pixel grants, selection scans and PNG encoder stages exist; latest native source preparation and output initialization are incremental | Shared pixels native suite now passed 33 tests (0 skipped), including current fill and bounded-output fixtures. Raster native tests now passed: 275 tests, no skips. Browser source/result copies still require bounded-work review. Raster composite source preparation now has a bounded stage, but existing export callers still drain it synchronously; retained flatten integration passed native/history checks but still needs live proof; retained export integration remains open. Run realistic large-image responsiveness checks. |
+| Packaging and verification | Bun/Nx and existing launch targets; no new runtime library; no modifying Git operation or worktree | Successful current native/React builds, final runtime logs and cleanup of ticket-generated outputs. Close the repo ticket only when all required work and evidence are complete. |
+
+## Active Verification
+
+As of this inspection, the following handles were confirmed live: Raster native 91306, activation 69010, pixels native 40901, value-derive 3198 (completed: 23 passed), hub-backed preview 78765. The local hub owner is waiting during its trusted-catalog bootstrap. A supported local-only preview is restarting under 4105 on port 6061 with HMR disabled (superseding 37310 and its earlier 82819 Nx sharing conflict) so single-user editing can be checked independently of that service; it is still running startup tasks. This does not replace the multi-user acceptance requirement.
+
+Mounted mask run 4 (50056) completed: all eight tests passed against the final corrected group fixture (`raster-mask-paint-react-4.log`). Recent TypeScript results are 106 shared pixels tests and 50 Raster tests, as recorded with their exact logs in the main notes. These results do not establish native or live feature completion.
+
+## Next Sequence
+
+1. Resolve the current native/build results and finish live mask and adjustment acceptance.
+2. Complete layer protection and merge/flatten editing through semantic events and retained jobs.
+3. Exercise the complete import/edit/save/reload/export workflow and correct any integration gaps.
+4. Complete native controls and interaction parity, then run accessibility, multi-user and large-image acceptance.
+5. Audit all rows against current source and runtime evidence, clean generated outputs and close the ticket only when the full requested outcome is achieved.
+
+Latest interaction verification: mask-fill run 45870 passed all eight mounted tests. The new alphaFill implementation passed shared-pixel (106) and Raster (50) suites after a three-case red run. The 6061 preview loaded the Raster editor, but HMR retired its instance and rejected selection; a full reload is pending. Do not count this as live command acceptance. The still-running native jobs have not yet established coverage for this source revision.
+
+Mask link/unlink control is an additional open layer-mask requirement: current renderers support both modes, but Inspector has no action. Lossless frame conversion can require shear, beyond the current translate/rotate/scale schema. Carry full affine support through schema, native/TypeScript rendering, pointer mapping and semantic undo before claiming position-preserving link/unlink.
+
+Pixels native session 40901 is now terminal, exit 0: **33 passed, 0 skipped**. Its private target directory resolved the observed verification delay without duplicating the intermediate cache. Other native/activation/preview sessions remain pending.
+
+The current frontend completion matrix passed 17 mounted cases. The full-host forwarding test and idle regression suite passed all three cases. Full Raster native 62344 ended on a shared UI token compile failure; the current token definition exists, and 91306 is the fresh isolated-output retry. Browser reload was blocked by browser URL policy, so no subsequent browser navigation was attempted and live acceptance remains open.
+
+## Selection Controls Verification
+
+Select All and Invert Selection now use cancellable 32,768-pixel grants with progress and yield points. Cancel preserves the previous selection; Deselect cancels preparation before clearing it. Shared pixels/host-helper validation passed 111 tests, and the initial mounted matrix passed 21 tests. The follow-up mounted run passed all 23 tests, including keyboard Ctrl/Cmd cancellation. This closes the synchronous fill/map loop for these controls only; browser image copies and selection merging still require review. Native 91306 and activation 69010 remain pending, and the recorded browser policy block remains in force.
+
+Native run 91306 completed with 270 passing and four failing tests out of 274. Mask/adjustment work compiled and its tests passed; flattening exposed cleanup and duplicate-identity faults. Those repairs and the two test-catalog corrections are recorded in the main notes and are awaiting final-source native validation.
+
+The native repair rerun completed successfully: `raster-native-isolated-target-2.log`, 275 passed, zero skipped, exit 0. This includes repeated layer creation, flatten compositing/inverse and retained undo/redo, mask editing and adjustment parameters. Live activation and end-user workflow acceptance remain outstanding.
+
+Final focused mounted verification after correcting the mask test readiness wait passed all 23 tests (`raster-selection-edit-react-3.log`, exit 0). The separate full-renderer census's reported stack-overflow failures remain tracked pending its final diagnostics or rerun.
+
+## Merge Down Verification In Progress
+
+The new command preserves the selected upper identity, parent/index, surrounding layers and shared assets, and uses the same cancellable baking pipeline as Flatten Image. Neutral/Sharp cases include nested layers and a masked translucent group (62 Raster TypeScript tests passed). Native run 39307 failed on a missing command-module import, now fixed. Native rerun 5119 and live acceptance remain outstanding. Arbitrary selected ranges, backdrop-dependent blends/adjustments, and arbitrary transformed-parent appearance still need broader coverage before the selective-merge requirement is complete.
+
+Merge Down native rerun 5119 compiled: 278/279 tests passed. Pixel/asset/history cases passed; the Inspector assertion read a field omitted by the fixture projection helper and has been corrected to inspect the actual node. Run 94651 includes that correction and a new 64-asset-capacity regression. Final-source native and live acceptance remain pending.

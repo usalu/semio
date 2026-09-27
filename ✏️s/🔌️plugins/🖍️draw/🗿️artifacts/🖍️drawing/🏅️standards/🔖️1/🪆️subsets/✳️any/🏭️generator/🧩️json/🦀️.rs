@@ -30,7 +30,7 @@ fn literal(text: &str) -> JsonValue {
 fn layer(id: &str, name: &str, locked: bool, blend: &str, x: &str) -> String {
     format!(
         r#"{{"kind": "shape", "id": "{id}", "name": "{name}", "visible": true, "locked": {locked}, "opacity": 1.0, "blendMode": "{blend}",
-            "transform": {{"x": {x}, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0}},
+            "transform": {{"x": {x}, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0, "shear": 0.0}},
             "attributes": {{}}, "shapeKind": "rect", "rect": {{"x": 0.0, "y": 0.0, "width": 120.0, "height": 80.0}}}}"#
     )
 }

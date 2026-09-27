@@ -319,6 +319,10 @@ export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId
 
 const CONTRIBUTION_KIND_KEYS = new Set(["kind", "neuron-kind", "neuronKind", "operator", "operatorKind", "operator-kind", "id"]);
 const CONTRIBUTION_KIND_RE = /^[A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+$/;
+/** 🗝️ The same keyed rule in a document's DSL notation: `kind="state.set"` is the text form of the JSON `{ "kind": "state.set" }`
+ * the object walk already reads (an imperative procedure step, measured 2026-09-27: its document is DSL text only, so its
+ * `imperative.module` operators were never reachable and no imperative extension was ever pushed). */
+const KEYED_DSL_KIND_RE = new RegExp(`(?:^|[\\s{,])(?:${[...CONTRIBUTION_KIND_KEYS].map((key) => key.replace(/-/g, "\\-")).join("|")})="?([A-Za-z][A-Za-z0-9]*(?:\\.[A-Za-z][A-Za-z0-9]*)+)"?(?=[\\s},]|$)`, "gm");
 
 function collectOperatorKinds(value: unknown, into: Set<string>, keyed = false): void {
   if (value == null) return;
@@ -328,6 +332,7 @@ function collectOperatorKinds(value: unknown, into: Set<string>, keyed = false):
     for (const match of value.matchAll(/neuron-kind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
     for (const match of value.matchAll(/neuron_kind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
     for (const match of value.matchAll(/neuronKind=([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z][A-Za-z0-9]*)+)/g)) into.add(match[1]!);
+    for (const match of value.matchAll(KEYED_DSL_KIND_RE)) if (match[1] !== "flow.extension") into.add(match[1]!);
     if (/create-widget|neuron-kind|neuron_kind|neuronKind|widgets\s*\{/.test(value)) {
       for (const match of value.matchAll(/\b([A-Za-z][A-Za-z0-9]+(?:\.[A-Za-z][A-Za-z0-9]+)+)\b/g)) {
         if (match[1] !== "flow.extension") into.add(match[1]!);

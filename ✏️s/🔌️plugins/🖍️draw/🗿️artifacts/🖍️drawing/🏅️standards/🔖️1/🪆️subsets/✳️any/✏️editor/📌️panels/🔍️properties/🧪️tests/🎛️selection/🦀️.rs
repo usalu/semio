@@ -137,3 +137,16 @@ fn inspector_controls_bind_the_events_the_host_dispatches() {
     }
     eprintln!("[DEBUG] inspector fields, gradient stops and path coordinates dispatch the bound host event in both locales");
 }
+
+#[test]
+fn text_inspector_is_multiline_localized_and_commits_on_blur() {
+    let layer = crate::schema::create_drawing_text_layer("Text");
+    let id = layer_base(&layer).id.clone();
+    let document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let view = ViewModel::default();
+    for labels in [&DrawingPlayLabels::NATIVE_EN, &DrawingPlayLabels::NATIVE_DE] {
+        let tree = render(&document, &[id.clone()], labels, &TreeWindows::for_body(&view, DRAWING_PLAY_BODY_PROPERTIES)).unwrap();
+        let json = project_and_retire_fixture_tree(built_to_component_tree(tree)).unwrap();
+        for value in [labels.text_content.as_str(), labels.text_size.as_str(), "textContent", "textSize", "longText", "blur", "patchLayers"] { assert!(json.contains(value), "missing {value}: {json}"); }
+    }
+}

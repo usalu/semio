@@ -1,0 +1,22 @@
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+const { hubHead } = await import("/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🟦️.ts");
+const dir = mkdtempSync(join(tmpdir(), "v1-admin-refresh-"));
+const file = join(dir, "admin-capability.json");
+writeFileSync(file, JSON.stringify({ capability: "expired" }));
+let valid = "expired-not";
+const server = Bun.serve({ port: 0, hostname: "127.0.0.1", fetch: (request) => (request.headers.get("authorization") === `Bearer ${valid}` ? Response.json({ rows: [{ descriptor: { documentId: "doc-1" }, headSeq: 42 }] }) : new Response("no", { status: 401 })) });
+const launcher = setInterval(() => {
+  if (!existsSync(join(dir, "admin-request"))) return;
+  rmSync(join(dir, "admin-request"));
+  valid = "fresh";
+  writeFileSync(file, JSON.stringify({ capability: "fresh" }));
+}, 200);
+const started = Date.now();
+const head = await hubHead(`http://127.0.0.1:${server.port}`, file, "doc-1");
+const again = await hubHead(`http://127.0.0.1:${server.port}`, file, "doc-1");
+clearInterval(launcher);
+server.stop();
+rmSync(dir, { recursive: true, force: true });
+console.log(`after 401 + refresh: ${head} (${Date.now() - started} ms); next read: ${again}; ${head === 42 && again === 42 ? "PASS" : "FAIL"}`);

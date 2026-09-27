@@ -2,6 +2,9 @@
 use crate::schema::diff::JsonDiff;
 use crate::JsonSnapshot;
 
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
+
 pub use super::insert_array_element::{InsertArrayElementMutation, InsertArrayElementPayload};
 pub use super::remove_array_element::{RemoveArrayElementMutation, RemoveArrayElementPayload};
 pub use super::remove_member::{RemoveMemberMutation, RemoveMemberPayload};
@@ -18,6 +21,7 @@ pub enum JsonMutation {
     InsertArrayElement(InsertArrayElementMutation),
     RemoveArrayElement(RemoveArrayElementMutation),
     SetScalar(SetScalarMutation),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
 }
 
 pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation) -> protocol::MutationOutcome<JsonDiff> {
@@ -32,6 +36,7 @@ pub fn apply_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonMutation)
 pub(crate) fn demo_mutation_cases() -> Vec<JsonMutation> {
     use crate::schema::snapshot::JsonValue;
     vec![
+        patch_snapshot::test_case(),
         JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload { path: Vec::new(), key: "member".into(), value: JsonValue::Null })),
         JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: Vec::new(), key: "member".into() })),
         JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload { path: Vec::new(), index: 0, value: JsonValue::Null })),

@@ -6,8 +6,14 @@
 //! `<lane> publication is retiring a rejected authority`, so the host saw
 //! `typed-operation failed: …` on every turn of the drain and `invokeExtension` never completed.
 
-use super::{ArtifactApp, ArtifactMutationOutcome, ArtifactView, ConfigView, DraftView, EngineHandles, InteractionView, PendingArtifactStorePublication, PendingArtifactStorePublicationRetirement, UiAssemblyResult, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry};
-use crate::app::{artifact_app_laws, artifact_app_laws::close_registered_fixture_app, built_text_to_component_tree, bounded_config_store_one_item_preparation_factory, bounded_config_store_owners, bounded_config_store_disposer, bounded_document_store_disposer, bounded_document_store_owners};
+use super::{
+    ArtifactApp, ArtifactMutationOutcome, ArtifactView, ConfigView, DraftView, EngineHandles, InteractionView, PendingArtifactStorePublication, PendingArtifactStorePublicationRetirement, UiAssemblyResult, WindowConfigMutation, WindowConfigOwner,
+    WindowConfigOwnerRegistry, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry,
+};
+use crate::app::{
+    artifact_app_laws, artifact_app_laws::close_registered_fixture_app, bounded_config_store_disposer, bounded_config_store_one_item_preparation_factory, bounded_config_store_owners, bounded_document_store_disposer, bounded_document_store_owners,
+    built_text_to_component_tree,
+};
 use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTransient, PublicationPresence, PublicationPresenceMutation, PublicationTransient, PublicationTransientMutation};
 use crate::store;
 use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, SetCount, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
@@ -371,11 +377,7 @@ fn retire_accepted(pending: &mut PendingArtifactStorePublication<RetirementApp>,
 }
 
 fn retirement_view() -> ViewModel {
-    ViewModel {
-        window_id: Some("publication-retirement-window-left".into()),
-        window_instances: vec![ViewWindowInstance { id: "publication-retirement-window-left".into(), window_kind_id: RETIREMENT_WINDOW_KIND.into() }],
-        ..Default::default()
-    }
+    ViewModel { window_id: Some("publication-retirement-window-left".into()), window_instances: vec![ViewWindowInstance { id: "publication-retirement-window-left".into(), window_kind_id: RETIREMENT_WINDOW_KIND.into() }], ..Default::default() }
 }
 
 fn document_mutation(value: i32) -> TestMutation {

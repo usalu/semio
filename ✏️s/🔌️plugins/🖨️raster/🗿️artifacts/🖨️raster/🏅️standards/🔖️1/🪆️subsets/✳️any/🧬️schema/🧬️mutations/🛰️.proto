@@ -81,6 +81,7 @@ message ChangeLayerMask {
   optional semio.s.raster.raster.artifact.RasterLayerMask expected = 2;
   optional semio.s.raster.raster.artifact.RasterLayerMask mask = 3;
 }
+message ChangeLayerAdjustmentParameter { string layer_id = 1; string parameter = 2; optional double expected = 3; optional double value = 4; }
 message RasterMutation {
   oneof mutation {
     CreateLayer create_layer = 1;
@@ -97,5 +98,6 @@ message RasterMutation {
     RemoveLayerAsset remove_layer_asset = 12;
     ChangeLayerPixels change_layer_pixels = 13;
     ChangeLayerMask change_layer_mask = 14;
+    ChangeLayerAdjustmentParameter change_layer_adjustment_parameter = 15;
   }
 }

@@ -1,5 +1,13 @@
 use super::*;
 
+#[test]
+fn text_to_rgba_accepts_comma_channels_and_hex() {
+    assert_eq!(text_to_rgba("0.5, 0.25, 0, 1"), Some([0.5, 0.25, 0.0, 1.0]));
+    assert_eq!(text_to_rgba("#fff"), Some([1.0, 1.0, 1.0, 1.0]));
+    assert_eq!(text_to_rgba("#0000ff80"), Some([0.0, 0.0, 1.0, 128.0 / 255.0]));
+    assert_eq!(rgba_to_hex(&Some([1.0, 0.0, 0.0, 0.5])), "#ff0000");
+}
+
 fn rect_frame(id: &str, visible: Option<bool>) -> crate::Frame {
     crate::Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: crate::LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
 }

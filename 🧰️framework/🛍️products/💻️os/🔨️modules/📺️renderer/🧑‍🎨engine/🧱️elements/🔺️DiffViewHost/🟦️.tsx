@@ -92,7 +92,7 @@ function buildSplitRows(diff: readonly DiffLine[]): SplitRow[] {
 //#region Rendering
 const DIFF_LINE_CLASS: Record<DiffLineKind, string> = {
   equal: "text-foreground",
-  add: "text-emerald-400",
+  add: "text-diff-added",
   remove: "text-destructive",
 };
 
@@ -106,25 +106,32 @@ function UnifiedDiff({ lines }: { readonly lines: readonly DiffLine[] }) {
           <span className="text-muted-foreground w-10 shrink-0 select-none text-right tabular-nums">{line.beforeNo ?? ""}</span>
           <span className="text-muted-foreground w-10 shrink-0 select-none text-right tabular-nums">{line.afterNo ?? ""}</span>
           <span className="w-3 shrink-0 select-none">{DIFF_LINE_PREFIX[line.kind]}</span>
-          <span>{line.text}</span>
+          <span className="min-w-0 flex-1">{line.text}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function SplitDiffPane({ rows, side }: { readonly rows: readonly SplitRow[]; readonly side: "left" | "right" }) {
+function SplitDiffLine({ line, side }: { readonly line?: DiffLine; readonly side: "left" | "right" }) {
   return (
-    <div className="semio-diff-view-split-pane min-w-0 flex-1 font-mono text-xs">
-      {rows.map((row, index) => {
-        const line = row[side];
-        return (
-          <div key={index} className={cn("flex gap-single whitespace-pre-wrap px-single", line ? DIFF_LINE_CLASS[line.kind] : "text-muted-foreground")}>
-            <span className="text-muted-foreground w-10 shrink-0 select-none text-right tabular-nums">{line ? (side === "left" ? line.beforeNo : line.afterNo) : ""}</span>
-            <span>{line?.text ?? ""}</span>
-          </div>
-        );
-      })}
+    <div className={cn("semio-diff-view-split-pane flex min-w-0 gap-single whitespace-pre-wrap px-single font-mono text-xs", line ? DIFF_LINE_CLASS[line.kind] : "text-muted-foreground")}>
+      <span className="text-muted-foreground w-10 shrink-0 select-none text-right tabular-nums">{line ? (side === "left" ? line.beforeNo : line.afterNo) : ""}</span>
+      <span className="min-w-0 flex-1">{line?.text ?? ""}</span>
+    </div>
+  );
+}
+
+function SplitDiff({ rows }: { readonly rows: readonly SplitRow[] }) {
+  return (
+    <div className="semio-diff-view-split min-h-0 w-full">
+      {rows.map((row, index) => (
+        <div key={index} className="semio-diff-view-split-row grid grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] gap-x-single">
+          <SplitDiffLine line={row.left} side="left" />
+          <div className="border-border border-l" />
+          <SplitDiffLine line={row.right} side="right" />
+        </div>
+      ))}
     </div>
   );
 }
@@ -208,11 +215,7 @@ export function DiffViewHost({ node, onAction, requestContextMenu }: ComponentSc
       onContextMenu={onContextMenu}
     >
       {scene.mode === "split" ? (
-        <div className="flex min-h-0 w-full gap-single">
-          <SplitDiffPane rows={splitRows} side="left" />
-          <div className="border-border w-px shrink-0 border-l" />
-          <SplitDiffPane rows={splitRows} side="right" />
-        </div>
+        <SplitDiff rows={splitRows} />
       ) : (
         <UnifiedDiff lines={lines} />
       )}

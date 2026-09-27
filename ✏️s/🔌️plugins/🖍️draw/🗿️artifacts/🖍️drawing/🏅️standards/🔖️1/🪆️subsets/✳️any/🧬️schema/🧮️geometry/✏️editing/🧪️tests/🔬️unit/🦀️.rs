@@ -38,3 +38,17 @@ fn arc_segment_extrema_shared_cases() {
         assert_geometry(&serde_json::to_value(bounds).unwrap(),&case["bounds"]);
     }
 }
+
+#[test]
+fn pointer_drag_uses_full_affine_ancestors_and_preserves_press_offset() {
+    let fixtures:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🖱️drag/🔣️.json")).unwrap();
+    for row in fixtures.as_array().unwrap() {
+        let segment=serde_json::from_value(row["segment"].clone()).unwrap();
+        let point=serde_json::from_value(row["point"].clone()).unwrap();
+        let result=drag_path_point(&segment,point,serde_json::from_value(row["matrix"].clone()).unwrap(),serde_json::from_value(row["start"].clone()).unwrap(),serde_json::from_value(row["end"].clone()).unwrap(),row["constrained"].as_bool().unwrap());
+        if row.get("error").is_some(){assert!(result.is_none());continue;}
+        let expected:[f64;2]=serde_json::from_value(row["to"].clone()).unwrap();
+        let actual=result.unwrap();
+        for axis in 0..2 {assert!((actual[axis]-expected[axis]).abs()<1e-10,"{}",row["name"]);}
+    }
+}

@@ -772,6 +772,12 @@ pub fn register_grid3d_inference_factory(bus: &semio_framework::ActionBus) -> Re
 
 /// 🏁️ Explicit headless adapter over the same complete parent job the public factory hands out.
 pub fn solve_with_job(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit, String> {
+    solve_with_clock(snapshot, semio_framework_job::default_now_us)
+}
+
+/// 🧮️ The same headless adapter driven by an injected clock, so correctness laws run on
+/// [`semio_framework_job::logical_now_us`] and never on a descheduled thread's wall clock.
+pub fn solve_with_clock(snapshot: &Grid3dSnapshot, now_us: fn() -> Option<u64>) -> Result<Grid3dInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
     let job = Grid3dInferenceJob::new(operation, Grid3dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
     let params = semio_framework_job::BatchJobParams {
@@ -779,7 +785,7 @@ pub fn solve_with_job(snapshot: &Grid3dSnapshot) -> Result<Grid3dInferenceCommit
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
         config: semio_framework_job::BatchDriveConfig { site: "wfc.grid3d.inference.headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US },
-        now_us: semio_framework_job::default_now_us,
+        now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
         Ok(session) => session,

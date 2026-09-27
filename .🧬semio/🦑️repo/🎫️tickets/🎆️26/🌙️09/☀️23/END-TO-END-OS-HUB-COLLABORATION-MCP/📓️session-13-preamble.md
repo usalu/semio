@@ -154,3 +154,46 @@ Session-12 rules (`📓️session-12-preamble.md`) apply unless overridden here.
     no kernel-derive-input edits, no wasm32 builds by anyone but the chain, native cargo only through
     `zsh .tmp-ticket/📜️fleet-mutex.sh native <slice> -- nice -n 15 <cmd…>` with `CARGO_BUILD_BUILD_DIR=…/cargo/build-fleet-b`.
     Chain-reported compile errors are fixed by their owner (the only guest edits allowed), then the coordinator relaunches.
+31. **7800 READY on catalog B3 (2026-09-27 13:57) — live verification wave.** Catalog `.🧬semio/🌐hub/s13-w3-catalog-b3` (9 packages:
+    stdio, gis, note, animate, block, writer, draw, puzzle, wfc), published 13:54 from the consolidated tree (verify-s 60/60 consistent,
+    so the restaged `s` guests == B3's). Hub = current-tree os-hub (`.🧬semio/🌐hub/s13-w3-bin/`), fresh root `s13-w3-hub-7800-b3`,
+    state `.🧬semio/🌐hub/s13-w3-state-7800/` (pids, admin-capability.json; fresh admin: `touch <state>/admin-request`). Users are the
+    usual local test credentials provisioned by `wp-w3/w3-restart-7800.sh` (user1/user2 @semio.dev). New channel 18 + envelope wire:
+    every other hub must run a current-tree binary on a fresh root.
+    - Guest-linked edits stay FROZEN until the coordinator announces ALL PUBLISHED: the chain's rest-warm is building the other 25
+      release components from this tree, then the coordinator launches `w3-chain.sh all`. Prepare guest fixes as patches meanwhile.
+    - Live runs: ≤ 1 headless browser per slice, stop serves/hubs when done, launch long-lived processes detached (w2-detach.py).
+      Docker is stopped (memory); start pg/neo4j with `os-hub-ts:backend-up` only if your item needs them, and `backend-down` after.
+    - stdio on the hub: only its 26 native-codec kinds are hub-openable; txt/tsv/html are codec-only (follow-up). raster's
+      `change-layer-adjustment-parameter` leaf is parked.
+32. **LANDING WINDOW 2 (2026-09-27 14:2x → ~15:30, coordinator).** G11's kernel directory fix (DirectoryClient sent `{}` to
+    socket-grants → 413) forces every guest to recompile for the all-package publish anyway, so the prepared guest fixes land NOW
+    instead of in another full cycle. The rest-warm lane and chain b3 were stopped (hub 7800 on B3 stays up for live testing).
+    Guest-linked edits are allowed again, compile-atomic: native `--lib --tests` via the `native` lane in build-fleet-b, wasm32 via
+    `zsh .tmp-ticket/📜️fleet-mutex.sh wasm <slice> -- …` (free now), landing row, `wp-w3/requests/<slice>.txt`. Sets: G11 directory
+    empty body; S17 tool-run snapshot retirement + contributions → Transient lane; LB lb-p1 (brep casing), lb-p2, lb-p4 (stdio shipped
+    guard + editor_catalog required-features); LC F1 law harness + H9-L per-kind labels; T13 F9 content ids + F4 + wfc solve-law
+    clock; R9 launch-inputs taxonomy patch; WG9 renderer sign-in patch; N1 norm test reds (test-only). When the coordinator closes the
+    window: ONE chain (rebuild-all → restage s → verify-s → preflight → `--packages all` publish → 7800 onto ALL, fresh root).
+33. **WINDOW 2 EXTENDED → closes 15:45** (every agent usage-cut 14:20–14:50). Taxonomy law: any edit to `📚️library/🔣️taxonomy.json` lands only after `bun wp-coord/taxonomy-load-probe.ts` (run from the ticket's `wp-coord/`) prints `taxonomy valid` AND one `serve s react dev` boots; R9's 14:1x patch broke every serve and was restored to HEAD at 14:53. After 15:45: no source edits until the final chain (`w3-chain.sh final`) reports READY; live agents keep verifying on 7800 (B3) and their own hubs.
+34. **Kernel collaboration exception (15:1x):** edits close at 15:45 for everyone EXCEPT two kernel fixes that may land until
+    **16:00**: WG9's lost-Ack resend fix (a tail/relay op already in outbox/pending settles it instead of a re-stamped resend;
+    rollbacks never feed a history transition's empty inverse) and LD's Rust sync twin (`🔄️sync` `on_hub_frame`, both copies:
+    an actor-bound rebuild accepts a `Welcome` None/Tail and re-seeds from the pair route; a rebuild's own close reconnects at
+    once). Both write their laws; compile proof = the final chain's hub-prewarm (native) + guest-framework gate (wasm32), laws run
+    in the native lane during the chain. The final chain launches at **16:00**. Checks of changes applied before 15:45 keep
+    running in their lanes; a red there is fixed in window 3 (or triggers a chain relaunch if it breaks the chain).
+35. **Hub-only exception (15:2x):** code only in hub crates (🌎️hub/… `semio-hub`, the os-hub bin) and os-mcp host code NOT linked
+    into any guest may land until the final chain's `final-publish.rc` appears — the chain builds os-hub and os-mcp after the
+    publication. Shared framework/kernel/plugin crates stay closed (15:45; rule 34 exceptions until 16:00). Landing row required.
+36. **FINAL CHAIN LAUNCHED 15:46** (pid 74352, log `.🧬semio/🌐hub/s13-w3-logs/chain-final.txt`): hub-prewarm ‖ wasm hold
+    (warm lane ‖ rebuild-all → preflight → `--packages all` publish → release-root refresh) → os-hub + os-mcp build → 7800 onto
+    `s13-w3-hub-7800-all` (fresh root) → readiness, hub-freshness, open-plan probe. Window 2 CLOSED: no edits to shared
+    framework/kernel/plugin/guest crates until window 3 (after READY on ALL). Rule 35 (hub/os-mcp host-only) stays open until
+    `final-publish.rc`. activate-s restages `s` mid-chain: live runs against local serves may flake during that step — re-run,
+    don't chase. 7800 stays on B3 until the move (brief outage at the restart). Rollback: `touch s13-w3-state-7800/stop;
+    zsh .tmp-ticket/wp-w3/w3-hub-resume.sh s13-w3-hub-7800-b3`.
+37. **Overlay lane (16:0x, 32 GiB machine, 17 rustc + 23 headless chromium, swap 11 GiB):** every cargo/bun build in a scratch
+    overlay (window-3 prep) runs through `zsh .tmp-ticket/📜️fleet-mutex.sh overlay <slice> -- nice -n 15 <cmd…>` — ONE overlay
+    build at a time fleet-wide, FIFO. The final chain (wasm + hub lanes) has priority; the native lane stays as it is. Browsers:
+    one headless browser per live slice, closed as soon as the run ends.

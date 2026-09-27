@@ -37,6 +37,20 @@ pub(crate) const NATIVE_PLACEMENTS: &[(&str, &str, &str)] = &[
     ("cad", "pen-tool", "s.cad.cad"),
     ("map", "map", "s.gis.gismap"),
     ("fem2d", "spline", "s.fem.fem2d"),
+    ("note", "file-text", "s.note.note"),
+    ("writer", "type", "s.writer.writer"),
+    ("forms", "file-text", "s.forms.forms"),
+    ("flow", "spline", "s.flow.flow"),
+    ("equation", "type", "s.mathematical.equation"),
+    ("puzzle2d", "square", "s.puzzle.puzzle2d"),
+    ("block2d", "square", "s.block.block2d"),
+    ("generation2d", "spline", "s.procedural.generation2d"),
+    ("terrain", "map", "s.gis.gisterrain"),
+    ("grid2d", "image", "s.wfc.grid2d"),
+    ("wfc2d", "image", "s.wfc.wfc2d"),
+    ("presentation", "file", "s.animate.presentation"),
+    ("sequence", "file", "s.sequence.sequence"),
+    ("wires", "spline", "s.reasoning.wires"),
 ];
 
 pub(crate) fn native_artifact_kind(kind: &str) -> Option<&'static str> {
@@ -44,7 +58,7 @@ pub(crate) fn native_artifact_kind(kind: &str) -> Option<&'static str> {
 }
 
 /// 🛍️ The full creation roster this catalogue windows over — the page item plus every frame kind.
-const LAYOUT_CATALOGUE_ROSTER: &[(&str, &str)] = &[("page", "file"), ("rect", "square"), ("text", "type"), ("image", "image"), ("png", "image"), ("jpg", "image"), ("gif", "image"), ("bmp", "image"), ("tiff", "image"), ("pdf", "file-text"), ("svg", "spline"), ("drawing", "pen-tool"), ("dwg", "pen-tool"), ("dxf", "pen-tool"), ("raster", "image"), ("bitmap", "image"), ("cad", "pen-tool"), ("map", "map"), ("fem2d", "spline")];
+const LAYOUT_CATALOGUE_ROSTER: &[(&str, &str)] = &[("page", "file"), ("rect", "square"), ("text", "type"), ("image", "image"), ("png", "image"), ("jpg", "image"), ("gif", "image"), ("bmp", "image"), ("tiff", "image"), ("pdf", "file-text"), ("svg", "spline"), ("drawing", "pen-tool"), ("dwg", "pen-tool"), ("dxf", "pen-tool"), ("raster", "image"), ("bitmap", "image"), ("cad", "pen-tool"), ("map", "map"), ("fem2d", "spline"), ("note", "file-text"), ("writer", "type"), ("forms", "file-text"), ("flow", "spline"), ("equation", "type"), ("puzzle2d", "square"), ("block2d", "square"), ("generation2d", "spline"), ("terrain", "map"), ("grid2d", "image"), ("wfc2d", "image"), ("presentation", "file"), ("sequence", "file"), ("wires", "spline")];
 pub(crate) const LAYOUT_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 pub(crate) const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-kind.";
 

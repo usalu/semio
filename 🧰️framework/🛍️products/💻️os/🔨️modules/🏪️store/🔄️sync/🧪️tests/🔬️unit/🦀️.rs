@@ -981,7 +981,7 @@ async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
 #[semio_framework_async_macros::async_test]
 async fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
     let envelope = sample_operation_envelope("edit-1", 5).await;
-    let rollback = rollback_envelope(&envelope).await;
+    let rollback = rollback_envelope(&envelope).await.expect("a domain operation rolls back by its inverse");
     assert_eq!(rollback.dependencies, vec![envelope.mutation_id.clone()], "the undo depends on the operation it undoes");
     assert_eq!(rollback.diff.payload, envelope.inverse.payload, "the undo's forward diff IS the original's inverse");
     assert_ne!(rollback.mutation_id, envelope.mutation_id, "the undo gets its own operation id");

@@ -222,6 +222,29 @@ export const GENERATED_COMPONENT_OWNER_FILES: readonly string[] = ["🔣️.json
  * few milliseconds and can never be turned into an unbounded repository scan by a stray symlink. */
 export const COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES = 20_000;
 
+/** 🚦️ Source files one freshness walk stats or hashes at once, and components one freshness pass walks at once: the pass
+ * runs beside a dev server, so it stays asynchronous end to end and bounded — 60 components × 54 131 files hashed
+ * synchronously kept `serve s react dev` from spawning Vite for 49 s (ticket 26/09/23 F3). */
+export const SOURCE_FRESHNESS_FILE_CONCURRENCY = 32;
+export const SOURCE_FRESHNESS_COMPONENT_CONCURRENCY = 4;
+
+/** 🚦️ Maps `items` through `map` with at most `limit` in flight, results in input order; a cancelled `signal` stops
+ * taking new items and rejects with its reason. */
+export async function mapBoundedV1<T, R>(items: readonly T[], limit: number, map: (item: T) => Promise<R>, signal?: AbortSignal): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const lane = async (): Promise<void> => {
+    while (next < items.length) {
+      signal?.throwIfAborted();
+      const index = next++;
+      results[index] = await map(items[index]!);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, lane));
+  signal?.throwIfAborted();
+  return results;
+}
+
 export type StagedModuleFacts = Readonly<{
   pluginId: string;
   role: "plugin" | "extension";
@@ -324,8 +347,8 @@ export function stagedModuleMtime(moduleDirectory: string): number | undefined {
 
 /** 🔖️ Content hash of one plugin-owner source tree — same walk bounds as {@link newestComponentSourceMtime},
  * keyed only on plugin sources (never framework). Empty trees yield the empty-input SHA-256. */
-export function componentSourceContentHash(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): string {
-  return buildComponentSourceStatIndex(sourceRoot, maximumEntries).contentSha256;
+export async function componentSourceContentHash(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, signal?: AbortSignal): Promise<string> {
+  return (await buildComponentSourceStatIndex(sourceRoot, maximumEntries, signal)).contentSha256;
 }
 
 
@@ -381,31 +404,8 @@ function fileMtimeNs(stats: { mtimeNs?: bigint; mtimeMs: number }): string {
   return String(BigInt(Math.round(stats.mtimeMs * 1_000_000)));
 }
 
-/** 🕰 Lists plugin-owner source files under one root (same bounds as content hashing). */
-export function listComponentSourceFiles(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): readonly string[] {
-  if (!existsSync(sourceRoot)) return [];
-  let visited = 0;
-  const pending = [sourceRoot];
-  const files: string[] = [];
-  while (pending.length > 0) {
-    const directory = pending.pop()!;
-    for (const entry of readableDirectoryEntries(directory)) {
-      if (++visited > maximumEntries) return files.sort();
-      if (entry.isSymbolicLink()) continue;
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) {
-        if (!UNWATCHED_COMPONENT_SOURCE_DIRECTORIES.includes(entry.name)) pending.push(path);
-        continue;
-      }
-      if (!entry.isFile()) continue;
-      if (directory === sourceRoot && GENERATED_COMPONENT_OWNER_FILES.includes(entry.name)) continue;
-      files.push(path);
-    }
-  }
-  return files.sort();
-}
-
-export async function listComponentSourceFilesAsync(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): Promise<readonly string[]> {
+/** 🕰 Lists plugin-owner source files under one root (same bounds as content hashing), sorted. */
+export async function listComponentSourceFiles(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): Promise<readonly string[]> {
   if (!existsSync(sourceRoot)) return [];
   let visited = 0;
   const pending = [sourceRoot];
@@ -450,23 +450,40 @@ function aggregateSourceContentHash(entries: readonly { readonly path: string; r
   return hash.digest("hex");
 }
 
-/** 🔖 Builds the per-file source stat index and aggregate content hash for one plugin owner tree. */
-export function buildComponentSourceStatIndex(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES): SourceStatIndex {
-  const files: SourceStatFileEntry[] = [];
-  for (const absolute of listComponentSourceFiles(sourceRoot, maximumEntries)) {
-    let stats: ReturnType<typeof statSync>;
+/** 🧮️ One owner tree's walk: every source file stated with bounded parallelism, a prior digest reused when its size and
+ * mtime match, every other file read and hashed — asynchronous end to end, so no event loop waits on a tree walk. */
+type SourceStatWalk = Readonly<{ files: readonly SourceStatFileEntry[]; newestSourceMs?: number; newestSourcePath?: string; hashedFileCount: number; reusedFileCount: number }>;
+
+async function walkSourceStats(sourceRoot: string, prior: ReadonlyMap<string, SourceStatFileEntry>, maximumEntries: number, signal?: AbortSignal): Promise<SourceStatWalk> {
+  const absolutes = await listComponentSourceFiles(sourceRoot, maximumEntries);
+  const parts = await mapBoundedV1(absolutes, SOURCE_FRESHNESS_FILE_CONCURRENCY, async (absolute) => {
+    let stats: Awaited<ReturnType<typeof statAsync>>;
+    try { stats = await statAsync(absolute); } catch { return undefined; }
+    const path = relativeSourcePath(sourceRoot, absolute);
+    const mtimeNs = fileMtimeNs(stats);
+    const previous = prior.get(path);
+    if (previous && previous.size === stats.size && previous.mtimeNs === mtimeNs) return { entry: previous, hashed: false, mtimeMs: stats.mtimeMs, absolute };
     let bytes: Buffer;
-    try {
-      stats = statSync(absolute);
-      bytes = readFileSync(absolute);
-    } catch { continue; }
-    files.push({
-      path: relativeSourcePath(sourceRoot, absolute),
-      size: stats.size,
-      mtimeNs: fileMtimeNs(stats),
-      sha256: createHash("sha256").update(bytes).digest("hex"),
-    });
+    try { bytes = await readFileAsync(absolute); } catch { return undefined; }
+    return { entry: { path, size: stats.size, mtimeNs, sha256: createHash("sha256").update(bytes).digest("hex") }, hashed: true, mtimeMs: stats.mtimeMs, absolute };
+  }, signal);
+  const files: SourceStatFileEntry[] = [];
+  let hashedFileCount = 0, reusedFileCount = 0, newestSourceMs: number | undefined, newestSourcePath: string | undefined;
+  for (const part of parts) {
+    if (!part) continue;
+    files.push(part.entry);
+    if (part.hashed) hashedFileCount += 1; else reusedFileCount += 1;
+    if (newestSourceMs === undefined || part.mtimeMs > newestSourceMs) {
+      newestSourceMs = part.mtimeMs;
+      newestSourcePath = part.absolute;
+    }
   }
+  return { files, newestSourceMs, newestSourcePath, hashedFileCount, reusedFileCount };
+}
+
+/** 🔖 Builds the per-file source stat index and aggregate content hash for one plugin owner tree. */
+export async function buildComponentSourceStatIndex(sourceRoot: string, maximumEntries: number = COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, signal?: AbortSignal): Promise<SourceStatIndex> {
+  const { files } = await walkSourceStats(sourceRoot, new Map(), maximumEntries, signal);
   return {
     schema: "semio.dev.source-stat-index/v1",
     contentSha256: aggregateSourceContentHash(files),
@@ -510,146 +527,32 @@ export function writeStagedSourceStatIndex(moduleDirectory: string, index: Sourc
 }
 
 /** 🔖 Persists both the aggregate content-hash marker and the per-file stat index for one staged module. */
-export function writeStagedSourceFreshness(moduleDirectory: string, sourceRoot: string): string {
-  const index = buildComponentSourceStatIndex(sourceRoot);
+export async function writeStagedSourceFreshness(moduleDirectory: string, sourceRoot: string, signal?: AbortSignal): Promise<string> {
+  const index = await buildComponentSourceStatIndex(sourceRoot, COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, signal);
   writeStagedSourceContentHash(moduleDirectory, index.contentSha256);
   writeStagedSourceStatIndex(moduleDirectory, index);
   return index.contentSha256;
 }
 
-/**
- * 🕰 Boot freshness: stat-walk the owner tree, reuse per-file digests when (size, mtimeNs) match
- * the staged index, and rehash only added/changed files. Missing index falls back to a full content hash.
- */
-export function resolveBootSourceContentHashes(options: {
+/** 🕰 Boot freshness: walk the owner tree asynchronously, reuse per-file digests whose (size, mtimeNs) match the staged
+ * index and hash only added or changed files; without an index every file is hashed — still asynchronously, so a dev
+ * server keeps answering while it runs. `signal` cancels the walk. */
+export async function resolveBootSourceContentHashes(options: {
   readonly sourceRoot: string;
   readonly moduleDirectory: string;
   readonly receiptSourceContentSha256?: string;
-}): BootSourceHashResolution {
-  const stagedSourceContentSha256 = readStagedSourceContentHash(options.moduleDirectory) ?? options.receiptSourceContentSha256;
-  const index = readStagedSourceStatIndex(options.moduleDirectory);
-  if (!index) {
-    const built = buildComponentSourceStatIndex(options.sourceRoot);
-    let newestSourceMs: number | undefined;
-    let newestSourcePath: string | undefined;
-    for (const absolute of listComponentSourceFiles(options.sourceRoot)) {
-      try {
-        const stats = statSync(absolute);
-        if (newestSourceMs === undefined || stats.mtimeMs > newestSourceMs) {
-          newestSourceMs = stats.mtimeMs;
-          newestSourcePath = absolute;
-        }
-      } catch { continue; }
-    }
-    return {
-      sourceContentSha256: built.contentSha256,
-      stagedSourceContentSha256,
-      newestSourceMs,
-      newestSourcePath,
-      hashedFileCount: built.files.length,
-      reusedFileCount: 0,
-    };
-  }
-  const prior = new Map(index.files.map((file) => [file.path, file]));
-  const absolutes = listComponentSourceFiles(options.sourceRoot);
-  const next: SourceStatFileEntry[] = [];
-  let hashedFileCount = 0;
-  let reusedFileCount = 0;
-  let newestSourceMs: number | undefined;
-  let newestSourcePath: string | undefined;
-  for (const absolute of absolutes) {
-    let stats: ReturnType<typeof statSync>;
-    try { stats = statSync(absolute); } catch { continue; }
-    const relativePath = relativeSourcePath(options.sourceRoot, absolute);
-    const mtimeNs = fileMtimeNs(stats);
-    if (newestSourceMs === undefined || stats.mtimeMs > newestSourceMs) {
-      newestSourceMs = stats.mtimeMs;
-      newestSourcePath = absolute;
-    }
-    const previous = prior.get(relativePath);
-    if (previous && previous.size === stats.size && previous.mtimeNs === mtimeNs) {
-      next.push(previous);
-      reusedFileCount += 1;
-      continue;
-    }
-    let bytes: Buffer;
-    try { bytes = readFileSync(absolute); } catch { continue; }
-    next.push({
-      path: relativePath,
-      size: stats.size,
-      mtimeNs,
-      sha256: createHash("sha256").update(bytes).digest("hex"),
-    });
-    hashedFileCount += 1;
-  }
-  return {
-    sourceContentSha256: aggregateSourceContentHash(next),
-    stagedSourceContentSha256,
-    newestSourceMs,
-    newestSourcePath,
-    hashedFileCount,
-    reusedFileCount,
-  };
-}
-
-/** 🕰 Async boot freshness for one plugin — scheduled so callers can `Promise.all` across plugins. */
-export async function resolveBootSourceContentHashesAsync(options: {
-  readonly sourceRoot: string;
-  readonly moduleDirectory: string;
-  readonly receiptSourceContentSha256?: string;
+  readonly signal?: AbortSignal;
 }): Promise<BootSourceHashResolution> {
   const stagedSourceContentSha256 = readStagedSourceContentHash(options.moduleDirectory) ?? options.receiptSourceContentSha256;
-  const index = readStagedSourceStatIndex(options.moduleDirectory);
-  if (!index) {
-    const built = buildComponentSourceStatIndex(options.sourceRoot);
-    return {
-      sourceContentSha256: built.contentSha256,
-      stagedSourceContentSha256,
-      hashedFileCount: built.files.length,
-      reusedFileCount: 0,
-    };
-  }
-  const prior = new Map(index.files.map((file) => [file.path, file]));
-  const absolutes = await listComponentSourceFilesAsync(options.sourceRoot);
-  const parts = await Promise.all(absolutes.map(async (absolute) => {
-    let stats: Awaited<ReturnType<typeof statAsync>>;
-    try { stats = await statAsync(absolute); } catch { return undefined; }
-    const relativePath = relativeSourcePath(options.sourceRoot, absolute);
-    const mtimeNs = fileMtimeNs(stats);
-    const previous = prior.get(relativePath);
-    if (previous && previous.size === stats.size && previous.mtimeNs === mtimeNs) {
-      return { entry: previous, hashed: false as const, mtimeMs: stats.mtimeMs, absolute };
-    }
-    let bytes: Buffer;
-    try { bytes = Buffer.from(await readFileAsync(absolute)); } catch { return undefined; }
-    return {
-      entry: { path: relativePath, size: stats.size, mtimeNs, sha256: createHash("sha256").update(bytes).digest("hex") },
-      hashed: true as const,
-      mtimeMs: stats.mtimeMs,
-      absolute,
-    };
-  }));
-  const next: SourceStatFileEntry[] = [];
-  let hashedFileCount = 0;
-  let reusedFileCount = 0;
-  let newestSourceMs: number | undefined;
-  let newestSourcePath: string | undefined;
-  for (const part of parts) {
-    if (!part) continue;
-    next.push(part.entry);
-    if (part.hashed) hashedFileCount += 1; else reusedFileCount += 1;
-    if (newestSourceMs === undefined || part.mtimeMs > newestSourceMs) {
-      newestSourceMs = part.mtimeMs;
-      newestSourcePath = part.absolute;
-    }
-  }
+  const prior = new Map((readStagedSourceStatIndex(options.moduleDirectory)?.files ?? []).map((file) => [file.path, file]));
+  const walk = await walkSourceStats(options.sourceRoot, prior, COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES, options.signal);
   return {
-    sourceContentSha256: aggregateSourceContentHash(next),
+    sourceContentSha256: aggregateSourceContentHash(walk.files),
     stagedSourceContentSha256,
-    newestSourceMs,
-    newestSourcePath,
-    hashedFileCount,
-    reusedFileCount,
+    newestSourceMs: walk.newestSourceMs,
+    newestSourcePath: walk.newestSourcePath,
+    hashedFileCount: walk.hashedFileCount,
+    reusedFileCount: walk.reusedFileCount,
   };
 }
 

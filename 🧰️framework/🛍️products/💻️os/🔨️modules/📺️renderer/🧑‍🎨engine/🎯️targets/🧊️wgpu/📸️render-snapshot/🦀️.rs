@@ -4,6 +4,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use ui_render::{CursorRequest, ImeDirective};
+use ui_wgpu::wgpu::SemioCursor;
 
 //#region 🔖️RenderSnapshot
 
@@ -13,13 +14,15 @@ pub struct RenderSnapshot {
     /// 🔢️ Publication identity assigned by the snapshot sink.
     pub revision: u64,
     pub cursor: CursorRequest,
+    pub accepted_cursor: SemioCursor,
+    pub accepted_theme_dark: bool,
     pub ime: Option<ImeDirective>,
 }
 
 impl RenderSnapshot {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn new(revision: u64, cursor: CursorRequest, ime: Option<ImeDirective>) -> Self {
-        Self { revision, cursor, ime }
+    pub fn new(revision: u64, cursor: CursorRequest, accepted_cursor: SemioCursor, accepted_theme_dark: bool, ime: Option<ImeDirective>) -> Self {
+        Self { revision, cursor, accepted_cursor, accepted_theme_dark, ime }
     }
 }
 

@@ -25,3 +25,5 @@ record replace-pixels tag=7
 field payload bytes
 record set-snapshot tag=8
 field payload bytes
+record patch-snapshot tag=9
+field payload bytes

@@ -103,14 +103,7 @@ fn finish(tracker: &PatchTracker) -> Option<ui_contract::UiPatch> {
 /// twice has to do it explicitly (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
 fn drain_released_output(tracker: &PatchTracker, surface: &str, round: u32) {
     for _ in 0..65_536 {
-        let ready = tracker
-            .state
-            .borrow()
-            .slots
-            .iter()
-            .flatten()
-            .find(|slot| slot.surface.as_ref() == surface)
-            .is_some_and(|slot| slot.output_index.is_none() && slot.job.is_none() && slot.reconciler.is_some());
+        let ready = tracker.state.borrow().slots.iter().flatten().find(|slot| slot.surface.as_ref() == surface).is_some_and(|slot| slot.output_index.is_none() && slot.job.is_none() && slot.reconciler.is_some());
         if ready {
             return;
         }
@@ -131,7 +124,14 @@ fn acknowledge_one_publication(tracker: &PatchTracker, surface: &str) -> Option<
             let (patch, authority) = publish_test(owner);
             let mut authority = Some(authority);
             let mut acknowledgement = None;
-            assert!(semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut authority, &mut acknowledgement, surface, patch.revision.0, semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()).unwrap());
+            assert!(semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(
+                &mut authority,
+                &mut acknowledgement,
+                surface,
+                patch.revision.0,
+                semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes()
+            )
+            .unwrap());
             assert!(tracker.mark_published_ack(acknowledgement.as_ref().unwrap()).unwrap());
             close_ack(acknowledgement.take().unwrap());
             return Some(patch);
@@ -530,10 +530,12 @@ fn mounted_settings_controls_publish_with_authored_fields() {
     let children = fields.iter().map(|field| {
         let id = field["id"].as_str().unwrap();
         let action = serde_json::from_value(serde_json::json!({ "scope": "fixture", "name": field["action"], "version": 1 })).unwrap();
-        let mut control =
-            ui_contract::BuiltNode::try_new(format!("{id}.control"), ui_contract::Component::NumberStepper(ui_contract::NumberStepperProps { value: field["value"].as_f64().unwrap(), step: field["step"].as_f64().unwrap(), uniform: false, min: None, max: None }))
-                .ok()
-                .unwrap();
+        let mut control = ui_contract::BuiltNode::try_new(
+            format!("{id}.control"),
+            ui_contract::Component::NumberStepper(ui_contract::NumberStepperProps { value: field["value"].as_f64().unwrap(), step: field["step"].as_f64().unwrap(), uniform: false, min: None, max: None }),
+        )
+        .ok()
+        .unwrap();
         control.bindings.try_push(ui_contract::ActionBinding { trigger: ui_contract::Trigger::Change, action, args: None, capability: None }).ok().unwrap();
         ui_contract::field(ui_contract::Label(ui_contract::UiText::try_from_str(field["label"].as_str().unwrap()).unwrap())).try_id(id).ok().unwrap().try_child(control).ok().unwrap().try_build().unwrap()
     });
@@ -1392,17 +1394,17 @@ fn two_hundred_publications_leave_the_reconcile_registries_holding_nothing() {
         close_test_patch(patch);
         drain_released_output(&tracker, "41:puzzle3d-main", round);
         let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
-        assert!(
-            census.resident_bytes <= baseline.resident_bytes + ui_contract::UI_RESIDENT_SURFACE_BYTES,
-            "round {round} left more than one live reservation's credit held: {census:?} against baseline {baseline:?} — {}",
-            tracker.debug_state()
-        );
+        assert!(census.resident_bytes <= baseline.resident_bytes + ui_contract::UI_RESIDENT_SURFACE_BYTES, "round {round} left more than one live reservation's credit held: {census:?} against baseline {baseline:?} — {}", tracker.debug_state());
     }
     close_instance_to_empty(&tracker, 41);
     let after = semio_framework_ui_runtime::surface_reconcile_registry_census();
     assert_eq!(after.resident_slots, baseline.resident_slots, "resident slots leaked across 200 publications: {after:?} against {baseline:?}");
     let after_fixed = ui_contract::UiResidentPermit::fixed_backing_bytes().expect("resident ledger");
-    assert_eq!(after.resident_bytes - after_fixed, baseline.resident_bytes - baseline_fixed, "resident credit leaked across 200 publications (the reconcile runtime backing registers once, on the first reservation, and is fixed thereafter): {after:?} against {baseline:?}");
+    assert_eq!(
+        after.resident_bytes - after_fixed,
+        baseline.resident_bytes - baseline_fixed,
+        "resident credit leaked across 200 publications (the reconcile runtime backing registers once, on the first reservation, and is fixed thereafter): {after:?} against {baseline:?}"
+    );
     assert_eq!(after.handback_free, baseline.handback_free, "handback slots leaked across 200 publications: {after:?} against {baseline:?}");
     eprintln!("[DEBUG] 200 publications returned every reservation: {after:?}");
 }
@@ -1469,7 +1471,17 @@ fn twelve_mounted_surfaces_at_their_real_sizes_all_hold_a_reconcile_reservation_
     let baseline = semio_framework_ui_runtime::surface_reconcile_registry_census();
     let tracker = PatchTracker::new();
     let panes = ["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"];
-    let panels = ["framework.panel.artifact", "framework.panel.catalogue", "framework.panel.inspection", "puzzle3d.panel.settings", "framework.panel.history", "framework.section.engagements", "framework.section.measures", "framework.section.tools", "framework.section.catalogue"];
+    let panels = [
+        "framework.panel.artifact",
+        "framework.panel.catalogue",
+        "framework.panel.inspection",
+        "puzzle3d.panel.settings",
+        "framework.panel.history",
+        "framework.section.engagements",
+        "framework.section.measures",
+        "framework.section.tools",
+        "framework.section.catalogue",
+    ];
     let mut mounted = Vec::new();
     for (index, body) in panes.iter().map(|name| (*name, 54 * 1024)).chain(panels.iter().enumerate().map(|(index, name)| (*name, 1024 + index * 768))).enumerate() {
         let (name, bytes) = body;

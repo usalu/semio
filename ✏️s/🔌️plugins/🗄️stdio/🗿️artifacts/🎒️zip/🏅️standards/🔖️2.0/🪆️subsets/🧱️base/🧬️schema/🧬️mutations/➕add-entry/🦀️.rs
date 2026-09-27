@@ -12,6 +12,8 @@ use super::*;
 pub struct AddEntry {
     #[dsl(block)]
     pub(crate) entry: ZipEntry,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) before: Option<String>,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipMutation> for AddEntry {

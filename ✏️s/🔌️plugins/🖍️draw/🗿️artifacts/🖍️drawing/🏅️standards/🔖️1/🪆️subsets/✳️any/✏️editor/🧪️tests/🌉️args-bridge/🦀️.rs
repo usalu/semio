@@ -65,3 +65,13 @@ fn fill_inputs_override_the_rendered_edit_with_their_typed_value() {
         assert_eq!(command_from_action("editFill",Some(&args)).unwrap(),DrawingCommand::EditFill(edit_fill::EditFill { layer_id:"a".into(),edit:Box::new(edit) }));
     }
 }
+
+#[test]
+fn path_position_action_round_trips_one_two_axis_edit() {
+    use crate::schema::geometry::editing::{PathEdit,PathPoint};
+    let args=dsl::json::to_dsl_value(&dsl::json::parse(r#"{"layerId":"path","edit":{"kind":"position","index":1,"point":"anchor","to":[15,5]}}"#).unwrap());
+    let command=command_from_action("editPath",Some(&args)).unwrap();
+    assert_eq!(command,DrawingCommand::EditPath(edit_path::EditPath {layer_id:"path".into(),edit:Box::new(PathEdit::Position {index:1,point:PathPoint::Anchor,to:[15.0,5.0]})}));
+    store::os_store::test_support::assert_op_line_round_trip(&command);
+    store::os_store::test_support::assert_op_text_binary_equivalence(&command);
+}

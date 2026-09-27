@@ -45,3 +45,5 @@ record remove-unknown-chunk tag=16
 field payload bytes
 record patch-pixels tag=18
 field payload bytes
+record patch-snapshot tag=19
+field payload bytes

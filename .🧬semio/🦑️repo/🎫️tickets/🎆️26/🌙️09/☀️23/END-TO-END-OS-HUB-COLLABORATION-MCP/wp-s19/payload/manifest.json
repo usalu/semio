@@ -1,0 +1,182 @@
+[
+ {
+  "id": "0000",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🖥️app-surface/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0001",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0002",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0003",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0004",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0005",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0006",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0007",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0008",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0009",
+  "set": "norm-examples",
+  "path": "✏️s/🔌️plugins/📕️norm/🧪️tests/🔬️surface/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0010",
+  "set": "flow-extensions",
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "0011",
+  "set": "flow-extensions",
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "create"
+ },
+ {
+  "id": "0012",
+  "set": "flow-extensions",
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0013",
+  "set": "flow-extensions",
+  "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0014",
+  "set": "flow-extensions",
+  "path": "✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+  "mode": "modify"
+ },
+ {
+  "id": "0015",
+  "set": "flow-extensions",
+  "path": "✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml",
+  "mode": "modify"
+ },
+ {
+  "id": "0016",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+  "mode": "modify"
+ },
+ {
+  "id": "0017",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🔬️scope-contributions/🟦️.ts",
+  "mode": "modify"
+ },
+ {
+  "id": "0018",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🔨️modules/🎠️kernel/🧫️fixtures/🔬️scope-contributions/🔣️.json",
+  "mode": "modify"
+ },
+ {
+  "id": "0019",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧩️contributions/🟦️.ts",
+  "mode": "modify"
+ },
+ {
+  "id": "0020",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧩️contributions-push/🔣️.json",
+  "mode": "modify"
+ },
+ {
+  "id": "0021",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🧩️contributions-push/🟦️.ts",
+  "mode": "modify"
+ },
+ {
+  "id": "0022",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+  "mode": "modify"
+ },
+ {
+  "id": "0023",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts",
+  "mode": "modify"
+ },
+ {
+  "id": "0024",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌉️ProgramBridge/🎯️targets/🧊️wgpu/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0025",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
+  "mode": "modify"
+ },
+ {
+  "id": "0026",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🩺️window-fault/🟦️.ts",
+  "mode": "modify"
+ },
+ {
+  "id": "0027",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts",
+  "mode": "modify"
+ },
+ {
+  "id": "0028",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json",
+  "mode": "modify"
+ },
+ {
+  "id": "0029",
+  "set": "flow-extensions",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔌️plugin-runtime/🟦️.tsx",
+  "mode": "modify"
+ }
+]

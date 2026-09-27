@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"id": "quarter-circle", "segments": [{"kind": "move", "to": [10, 0]}, {"kind": "arc", "rx": 10, "ry": 10, "rotation": 0, "largeArc": false, "sweep": true, "to": [0, 10]}], "svg": "M 10 0 A 10 10 0 0 1 0 10"},
+    {"id": "rotated-large-counterclockwise-ellipse", "segments": [{"kind": "move", "to": [5, -3]}, {"kind": "arc", "rx": 12, "ry": 6, "rotation": 35, "largeArc": true, "sweep": false, "to": [25, 7]}], "svg": "M 5 -3 A 12 6 35 1 0 25 7"},
+    {"id": "curves-and-contours", "segments": [{"kind": "move", "to": [0, 0]}, {"kind": "line", "to": [4, 0]}, {"kind": "quad", "ctrl": [6, 2], "to": [4, 4]}, {"kind": "cubic", "ctrl1": [3, 5], "ctrl2": [1, 5], "to": [0, 4]}, {"kind": "close"}, {"kind": "move", "to": [1, 1]}, {"kind": "line", "to": [2, 1]}, {"kind": "close"}], "svg": "M 0 0 L 4 0 Q 6 2 4 4 C 3 5 1 5 0 4 Z M 1 1 L 2 1 Z"}
+  ]
+}

@@ -12,7 +12,10 @@ Checklist: [📓️audit-s13-plugins.md](📓️audit-s13-plugins.md) (extension
 | 1a | (coord 20:0x) W2's exact-pin narrowing `VersionReq` → `VersionPin` (SDK, 26 ext + demonstrator, stdio, hub, `.sxt`, TS twin, laws) + brep/math version drift + 3 framework action descriptions | **LANDED**: applied 20:13:58 (`s17-version-pin.py`, 59 files); native phase A (framework, kernel, SDK, procedural, flow artifact, 26 ext; `--lib --tests`) EXIT 0 05:29; demonstrator/stdio/hub native running; wasm32 = REBUILD components step (coordinator); TS gates green |
 | 1b | (coord 20:0x) English-only extension topic strings (+ parents' static catalogues): schema-first en+de | census 1 231 rows / 1 040 distinct; de tables complete (230 + 528); design below; not landable before REBUILD START → prepared set |
 | 2 | playbook/procedural red + flow extension chain (procedural + demonstrator, flow's extensions) | IN PROGRESS — red = stale committed descriptor only; roster version drift + triplicated `describe` fixed in 1a |
-| 3 | Live in `s` after W3's restage (load with parent, apps/kinds open, edit/↶/↷, en+de); hub creation after publish | BLOCKED on W3 restage |
+| 2a | (live, 13:2x) root cause of the dead extension chain in `s`: spawned programs never received `setContributions` | **FIXED (host TS, `🏛️ShellHost`)** — live: process 4/4, sourcing 3/3, cad 4/4, playbook 1/1 extensions reach their parent, flow/procedural get exactly the extensions their document reaches; OS tsc 0 errors |
+| 2b | reds exposed by 2a: (1) gen3d `toolRunStart` guest trap "ordered-map root must be explicitly retired before drop" (en run; de run clean → race), (2) `setContributions` recorded as an undoable History row (guest, ~8 parents), (3) imperative extensions never reach imperative | (3) **FIXED (host TS, kernel scope rule)** — live: imperative receives `imperative-extension-effect`; law 12/12; (1) **LANDED window 2** (14:56; gen3d law 1/1, wasm32 kernel+SDK+procedural EXIT 0, native `--tests` check queued); (2) prepared set IN PROGRESS (transient lane, 8 artifacts) |
+| 2c | found live: flow's Catalogue "Extensions" group renders EMPTY in `s` even after the push; the operator-keyed reachability cut (`scopeContributionsJson`) means a document can never be offered operators of an extension it does not already use | ROUTED (design: page the push instead of cutting it) |
+| 3 | Live in `s` after W3's restage (load with parent, apps/kinds open, edit/↶/↷, en+de); hub creation after publish | **live rows measured** (serve 6690): 26/26 extension plugins `loaded`; contributions witness per parent en+de; parent matrix en 8/9 (gen3d trap), de 9/9, incl. the playbook-procedural extension app edit/↶/↷ `[0,1,0,1]` en+de; hub creation after the all-package publish |
 
 ### Per-extension table
 
@@ -103,6 +106,111 @@ Every row: open the parent app in `s` (local + hub document), observe the extens
 | sourcing ×3 (beams, slabs, windows) | `s.sourcing.curation` editor | curation module list shows Beams/Slabs/Windows — same F1 caveat (parent built-ins) | add a catalogue kind to the curation → ↶/↷ | kind names English |
 | cad ×4 (aec-building, -structure, -energy, spatial-shape) | `s.cad.cad` editor | `cad.computer` registration: stats/properties panels show `energy.demand`/`structure.stability`/`spatial.shape.volume` — F1 caveat: cad's TS runtime ships a default copy | import a model with the aec-building profile / run a stat → ↶/↷ | 4 labels English |
 | imperative ×5 (control, effect, logic, math, text) | `s.imperative.procedure` editor | catalogue sections Control/Actions/Logic/Math/Text — F1 caveat: the artifact `#[path]`-includes the extension sources | add an `If`/`Add`/`Text Concat` block, run → ↶/↷ | catalogue English |
+
+### Item 3 — live rows (measured 2026-09-27 13:2x–13:5x, local-only `s` serve 6690 on the consolidated restage)
+
+Harnesses: `wp-s17/s17-extension-probe.ts` (open each parent from Home via the palette like the program matrix, read
+`window.__semioOsInstalledContributions()` = the closure the host pushed through `setContributions` + each extension's status
+in `__semioOsCatalogProbe`), and V1's `verify matrix --only <parents>` (open · render · chips · verb · ↶ · ↷ · History row).
+Captures `.🧬semio/🌐hub/s13-s17-logs/live/` (`ext-{en,de}-*.json` + screenshots, `matrix/s17-ext-parents-{en,de}/`).
+
+| parent (program) | extensions status | pushed closure BEFORE fix (run en-1/en-2) | AFTER fix (en-4 / de-1) | matrix en | matrix de |
+|---|---|---|---|---|---|
+| flow (`s.flow.flow`) | 9/9 `loaded` | none | math (the one extension the example graph reaches; operator-keyed topic by design) | PASS `addWidget` [0,1,0,1] | PASS |
+| procedural 3d (`s.procedural.generation3d`) | 9/9 `loaded` | none — nodes unresolved (`!` ports), preview empty | brep + math; nodes resolve, preview "Computing 0/1" | **FAIL**: guest trap in `toolRunStart` (2b-1), 97 faults | PASS (0 faults) |
+| procedural 2d | — | — | — | PASS (Evaluate Flow Tick / Resolve Flow Evaluation rows) | PASS |
+| process (`s.process.process3d`) | 4/4 `loaded` | none | metal, robotic, concrete, wood (`process.machines`) | PASS `addStep` | PASS |
+| sourcing (`s.sourcing.curation`) | 3/3 `loaded` | none | slabs, windows, beams (`sourcing.module`) | PASS `curationSetCount` | PASS |
+| cad (`s.cad.cad`) | 4/4 `loaded` | none | aec-building, -structure, -energy, spatial-shape (`cad.computer`) | PASS `addNode` | PASS |
+| imperative (`s.imperative.procedure`) | 5/5 `loaded` | none | **none** (2b-3: host operator scope reads no kinds from the procedure document) | PASS `addStep` (built-ins, F1) | PASS |
+| playbook (`s.playbook.playbook`) | 1/1 `loaded` | none — block palette without "Building Component" | playbook-module-procedural (`playbook.blockKind`); palette shows "Building Component" | PASS `addStep` | PASS |
+| playbook-module-procedural (`s.playbook.procedural`, the extension's own app) | — | — | — | PASS `importSolidGeometry` [0,1,0,1] | PASS |
+
+de: all chrome German; extension payload texts stay English live ("Beams Windows Slabs Reuse", "Building Component",
+"Glulam GL24h …") = 1b; playbook's own block palette shows raw kind ids (`text longText number slider …`) in both locales
+(playbook parent, not an extension). "Set Contributions↶"/"Beiträge festlegen↶" appears as an undoable History row in playbook
+and process (2b-2).
+
+**2a root cause + fix (host, `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx`):** the
+contributions unit (`publishContributions`) ran only for the primary session; in host mode that is Home, so the pack was
+scoped to the host's own `consumes`/document (empty) and nothing was installed — the ONLY `setContributions` path. A spawned
+program (`panel.spawnedApps`) is now its own receiver: `refreshSpawnedUiPass` publishes before its refresh request with the
+spawned `ActiveSession` (`spawnedProgramViewStateV1`, like every other spawned dispatch), `hostMode: false` (install into
+exactly that instance), the spawned plugin's `consumes` and its own document's operator scope; a failed push is logged
+(`[os-shell] contributions push into spawned …`). Dev witness `window.__semioOsInstalledContributions()` (dev-only, beside
+`__semioOsCatalogProbe`). First try passed the refresh `fullViewState` → guest refused "target window is absent from the exact
+ViewModel window instance roster" (procedural, playbook) → switched to the standard spawned target view state → 0 faults.
+OS `tsc --noEmit -p 💻️os/tsconfig.json` **EXIT 0, 0 errors** (13:35, `s13-s17-logs/tsc-os-1.txt`).
+
+**2b-3 root cause + fix (host, `🧰️framework/🔨️modules/🎠️kernel/🟦️.ts`):** `imperative.module` payloads are operator-keyed
+(dotted step kinds), so they pass only when the receiver's document reaches a kind; the procedure document is DSL text only
+(`id="step-1" kind="state.set"`) and `collectOperatorKinds` read keyed kinds only from JSON objects (`{ "kind": … }`) and
+`neuron-kind=` DSL → 0 kinds → nothing pushed (masked by F1: the artifact compiles the same modules in). Fix: the same keyed
+rule in DSL notation (`KEYED_DSL_KIND_RE`, keys = `CONTRIBUTION_KIND_KEYS`, dotted values only). Law (kernel vitest
+`🔬️scope-contributions`) **12/12** incl. the new case (procedure DSL → `["state.set", "log.print"]`, effect pushed, math cut,
+non-kind keys `target`/`schema` ignored); red on the old rule by construction (it returned `unresolved`). Live (probe
+`ext-en-5.json`): imperative now receives `imperative-extension-effect` (the extension its steps use), all other rows unchanged.
+
+**2b-1 root cause (measured, symbolized wasm stack `live/gen3d-trap-1.txt` via `wp-s17/s17-gen3d-trap.ts`, reproduced in
+round 1):** `…panicking::panic_fmt` ← `OrderedMap<WidgetLayout>::drop` ← `FlowHostSnapshot` drop glue ← `Generation3dSnapshot`
+drop glue ← `Arc<Generation3dSnapshot>::drop_slow` ← `semio_framework_plugin::component::app::tool_run::ToolRunLedger<EditorApp<
+Generation3dPlayApp>>::…` ← `VcsArtifactApp<…>::handle_action_invocation` (`toolRunStart`). The framework tool-run ledger
+(`🔌️plugin/⏯️tool-run/🦀️.rs`) keeps `base`/`overlay`/refold snapshots as `Arc<A::Snapshot>` and lets them go by plain drop in ten
+places (a replacing start's `retire_entry`, rebase/finalize `entry.base = head`, every overlay swap, every superseded fold
+result); once the store has retired its own alias the ledger's is the last one, and gen3d's snapshot (an `OrderedMap` root)
+aborts the instance. Nondeterministic (depends on the store's retirement progress): en matrix trapped, de passed. Prepared set
+`wp-s17/s17-tool-run-snapshot-retirement.py` (dry run clean, 19 anchored hunks over store + ledger + gen3d law): store
+`retire_snapshot_alias` (the store's own `ReturnedSnapshotReadRetirement`: last alias → exact owned-value retirement, else a
+count drop), ledger `ToolRunEntry::displaced` → `retired_snapshots` → one bounded `snapshot_retirement` per `retire_step`
+(counted in `has_pending_work`/`terminal_is_empty`), law `a_replacing_preview_run_start_retires_the_previous_runs_last_snapshot_alias`
+(4 edit → re-run rounds). Lands when B3 is up (coordinator): run the law first on the unfixed tree (expect the native panic),
+then apply the fix.
+
+**2b-2 design (coordinator 14:5x: framework-level, prepared set for the next window).** Today eight artifacts (procedural
+gen2d/gen3d editor+viewer, forms, playbook, process3d, cad, imperative procedure, sourcing curation; 278 `contributions` refs)
+each carry their own `SetContributions` CONFIG mutation (leaf + descriptor + codec arms + inverse `ReplaceConfig`), so every
+host push is a ledgered, undoable config edit ("Set Contributions↶" in History, live) that also churns the 64-edit config
+ledger. Target: the framework holds the host-pushed closure per app instance — a framework-reserved `setContributions` job
+(like `noteShellCommand`/`setHistoryCommandFilter`: never a config edit, never in History, paged as today), stored in the
+instance's ephemeral local-only lane (`TransientStore`-backed framework slot, retired on close), exposed read-only as
+`contributions()` on the render and command contexts (accessor decision, read from source 15:4x: `ArtifactView` already
+carries framework-private per-call context — `operation`, `render_operation`, `tool_run` — set by builder methods after
+`ArtifactView::new`, so a private `contributions: Arc<str>` + `with_contributions` + `pub fn contributions(&self) -> &str`
+reaches every handler and render without touching the 293 `ArtifactView::new` / 337 `ConfigView` call sites; the framework
+sets it at its dispatch sites (`🔌️plugin/🦀️.rs` ~28853, ~30396), its five render sites (~33249–33381) and the retained-command
+inputs captured at admission, so retained jobs see the closure of their admission), plus one `ArtifactApp::contributions_changed(&json)` hook for the apps
+that sync a process-wide registry (flow `sync_host_flow_extension_contributions`, imperative
+`sync_imperative_module_contributions`, cad-js registrars via its TS runtime). Deleted: the eight `SetContributions` config
+leaves/descriptors/commands and their `contributions_json` config fields. Host (`🏛️ShellHost`): `appOwnsCommand(app,
+"setContributions")` becomes the framework action every app owns. Laws: framework — a `setContributions` push leaves the
+config ledger, History and undo stack unchanged and is readable from render + command contexts; per parent — its existing
+contribution laws on the new accessor.
+
+**2b-1 landing (window 2, 2026-09-27):** 14:1x the law alone applied; its red run (14:21) did not reach the test — the SDK lib
+failed on a peer's in-flight line (`drain_maintenance_pressure` used the then-private `store::ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY`;
+made `pub` by its owner by 14:56). 14:56 fix applied (18 hunks, all anchors matched). Gates (build-fleet-b): wasm32 `--target
+wasm32-wasip2` kernel + SDK + procedural EXIT 0 15:20; gen3d law **1 passed** 15:21 (its build compiled kernel + SDK libs
+natively); kernel/SDK `--lib --tests` check queued 8th in the native lane. The law was not measured red on the unfixed tree
+(the peer break); the red evidence is the live trap + symbolized stack. Live re-verification after the next restage.
+
+**2c (found live, routed):** after the push the flow editor's Catalogue shows INPUTS/OUTPUTS/CONTRACT and an EMPTY "EXTENSIONS"
+group (screenshot `live/flow-catalogue-ext.png`; math was pushed). And by design of the reachability cut (introduced 09-16 for
+the demonstrator's wire admission: an unscoped pack reached 226 310 B) a flow/procedural/imperative document is only ever
+offered the extensions it already uses — a fresh document can never gain a brep/bim/draw node from the palette. Root-fix
+direction: `setContributions` already declares page runs (`appCommandTakesPageRun`) → push every extension of a consumed
+topic in pages instead of cutting by reachability; then the palette lists all nine.
+
+### Open after window 2 (next window / after the final chain)
+
+| item | state | next step |
+|---|---|---|
+| 1 native `cargo test --lib` + `test quick` per extension | chain `s17-native-chain.sh` ready (native lane, build-fleet-b); run 2 stopped 14:10 when window 2 took the lane | run after the final chain; expect `descriptor_is_fresh` green now (26/26 descriptors regenerated with exact pins, census `generated/census-committed-2.json`) |
+| 2b-2 `setContributions` in History | framework design above (coordinator-approved 14:5x) | prepared set: SDK framework-reserved `setContributions` + per-instance host-input slot + context accessor (decide the accessor without breaking the 337 `ConfigView` literals), then the 8 artifacts, laws |
+| 2c flow palette / reachability cut | found live, root cause not isolated | measure whether the catalogue panel refreshes after the install; page the push instead of cutting it |
+| 1b i18n (1 231 strings) + F1 (16/26 duplicate extensions) | tables + design ready | one prepared set per parent family (F1 dedup + `LocalizedLabel` catalogue text together) |
+| rule 21: permanent harness | `wp-s17/s17-extension-probe.ts` (ticket-local) | promote to `🧑‍💻dev/🧪️tests/🧩️extension-contributions` + `verify extensions` + nx target + launch row (touches `📋️project.json` = a kernel-derive input → only in a window, coordinate with V1) |
+| 3 live re-verification | after the final chain's restage | gen3d toolRunStart (no trap), History without "Set Contributions" (after 2b-2), extension rows en+de |
+| 3 hub creation for extension kinds | N/A by design for the 25 topic-only extensions (no artifact kind); playbook-procedural is a block module over the host block's payload (no document type, allow-listed) → covered by the parents' hub sweep (S16) | — |
 
 ### Session 13 Log
 

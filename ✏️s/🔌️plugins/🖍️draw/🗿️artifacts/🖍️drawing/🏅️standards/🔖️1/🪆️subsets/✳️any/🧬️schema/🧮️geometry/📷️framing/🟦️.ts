@@ -1,3 +1,4 @@
+import { drawingTextFallbackExtent } from "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🟦️.ts";
 /** 📷️ Visible world bounds shared by Drawing surfaces. */
 import { segmentBounds,type Matrix,type Point } from "../🟦️.ts";
 import type { DrawingArtboard,PathSegment } from "../../🟦️.ts";
@@ -14,7 +15,7 @@ export function drawingSceneBounds(artboard: DrawingArtboard | undefined,nodes: 
   let bounds: [number,number,number,number] | undefined = artboard && artboard.width>0 && artboard.height>0 ? [0,0,artboard.width,artboard.height] : undefined;
   for (const node of nodes) {
     if (!node.visible || node.opacity<=0) continue;
-    const rectangle = node.image ? [0,0,node.image.width,node.image.height] : node.text ? [0,-node.text.size,Array.from(node.text.content).length*node.text.size*0.6,node.text.size*1.2] : null;
+    const rectangle = node.image ? [0,0,node.image.width,node.image.height] : node.text ? [0,0,...drawingTextFallbackExtent(node.text.content,node.text.size)] : null;
     const segments: PathSegment[] = rectangle ? [{ kind: "move",to: [rectangle[0]!,rectangle[1]!] },{ kind: "line",to: [rectangle[0]!+rectangle[2]!,rectangle[1]!] },{ kind: "line",to: [rectangle[0]!+rectangle[2]!,rectangle[1]!+rectangle[3]!] },{ kind: "line",to: [rectangle[0]!,rectangle[1]!+rectangle[3]!] },{ kind: "close" }] : node.segments;
     let current: Point = [0,0],start: Point = current;
     let started = false;

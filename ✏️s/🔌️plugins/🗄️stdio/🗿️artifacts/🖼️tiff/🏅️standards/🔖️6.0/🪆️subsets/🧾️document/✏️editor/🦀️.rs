@@ -125,23 +125,8 @@ fn tiffAnyEditor_direct_mutation(event: &editing::SnapshotEditEvent, snapshot: &
     Ok(None)
 }
 fn tiffAnyEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &TiffSnapshot) -> Result<TiffSnapshot, Fault> {
-    if let editing::SnapshotEditEvent::ReplaceSource { source } = event {
-        return editing::snapshot_from_edit_source(source).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string()));
-    }
-    let touches_secondary_pixels = match event {
-        editing::SnapshotEditEvent::SetValue { path, .. } | editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } | editing::SnapshotEditEvent::RenameKey { path, .. } => path.starts_with("/ifds/") && path.contains("/pixels"),
-        editing::SnapshotEditEvent::MoveValue { from, path } => from.contains("/pixels") || path.contains("/pixels"),
-        editing::SnapshotEditEvent::ReplaceSource { .. } => false,
-    };
-    if touches_secondary_pixels { return editing::apply_snapshot_edit(snapshot, event).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string())); }
-    let mut bounded = snapshot.clone();
-    let pixels = std::mem::take(&mut bounded.pixels);
-    let ifd_pixels: Vec<Vec<u8>> = bounded.ifds.iter_mut().map(|ifd| std::mem::take(&mut ifd.pixels)).collect();
-    let mut next = editing::apply_snapshot_edit(&bounded, event).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string()))?;
-    if next.ifds.len() != ifd_pixels.len() { return Err(tiffAnyEditor_edit_fault("stdio.tiff.structural-edit-requires-native-route", "IFD structure must use the bounded insert or remove route")); }
-    next.pixels = pixels;
-    for (ifd, pixels) in next.ifds.iter_mut().zip(ifd_pixels) { ifd.pixels = pixels; }
-    Ok(next)
+    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string()))?;
+    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, TIFF_ANY_DIALECT, STDIO_TIFF_DOCUMENT_SCHEMA).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string()))
 }
 fn tiffAnyEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: TiffSnapshot, base: &TiffSnapshot) -> TiffMutation {
     let path = match event { editing::SnapshotEditEvent::SetValue { path, .. } => path.as_str(), _ => return TiffMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: next }) };
@@ -271,23 +256,16 @@ impl editing::SnapshotEditingEditor for TiffAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { TiffAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        let shape_is_admitted = match event {
-            editing::SnapshotEditEvent::SetValue { path, .. } | editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } | editing::SnapshotEditEvent::RenameKey { path, .. } => path.len() <= 4_096,
-            editing::SnapshotEditEvent::MoveValue { from, path } => from.len() <= 4_096 && path.len() <= 4_096,
-            editing::SnapshotEditEvent::ReplaceSource { source } => editing::snapshot_edit_source_is_admitted(source),
-        };
-        if !shape_is_admitted { return false; }
-        let Ok(emit) = <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, snapshot) else { return false };
-        let fits = |mutation: &Self::Mutation| <Self::Mutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-        !emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| fits(mutation) && <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, snapshot).iter().all(fits))
-    }
-    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         if let Some(mutation) = tiffAnyEditor_direct_mutation(event, snapshot)? {
             return Ok(Emit { artifact_mutations: vec![mutation], description: Some("Edit TIFF structure".into()), ..Default::default() });
         }
         let next = tiffAnyEditor_bounded_edit(event, snapshot)?;
-        Ok(Emit { artifact_mutations: vec![tiffAnyEditor_compact_mutation(event, next, snapshot)], description: Some("Edit TIFF details".into()), ..Default::default() })
+        let mutation = tiffAnyEditor_compact_mutation(event, next, snapshot);
+        if !matches!(mutation, TiffMutation::SetSnapshot(_)) {
+            return Ok(Emit { artifact_mutations: vec![mutation], description: Some("Edit TIFF details".into()), ..Default::default() });
+        }
+        editing::snapshot_edit_patch(event, snapshot, |patch| TiffMutation::PatchSnapshot(crate::standards::v6_0::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot { patch }))
     }
 }
 

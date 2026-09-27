@@ -42,6 +42,7 @@ fn round_trip(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> RasterSna
 /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
 fn every_mutation() -> Vec<RasterMutation> {
     vec![
+        RasterMutation::ChangeLayerAdjustmentParameter(change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"adjust-1".into(),parameter:"brightness".into(),expected:None,value:Some(crate::RasterAdjustmentNumber::decimal(0.25))}),
         RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }),
         RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "l1".into() }),
         RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: None, index: 0 }),

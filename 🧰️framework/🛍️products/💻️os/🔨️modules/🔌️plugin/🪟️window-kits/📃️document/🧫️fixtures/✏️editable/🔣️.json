@@ -1,0 +1,21 @@
+{
+  "$schema": "./🧬️schema/🔣️.json",
+  "cases": [
+    {
+      "locale": "en",
+      "page": 1,
+      "item": 2,
+      "text": "Second page — naïve 🧪",
+      "revision": "759755877618e10c",
+      "labels": { "apply": "Apply", "discard": "Discard", "cancel": "Cancel" }
+    },
+    {
+      "locale": "de",
+      "page": 4,
+      "item": 0,
+      "text": "Zweite Seite\nAbsatz",
+      "revision": "75ecf4240fb987a6",
+      "labels": { "apply": "Anwenden", "discard": "Verwerfen", "cancel": "Abbrechen" }
+    }
+  ]
+}

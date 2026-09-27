@@ -56,8 +56,23 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
             }
             Err(_) => Ok(Emit::default()),
         },
-        "fill" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameFill(ChangeFrameFill { page_id, frame_id, new_fill: text_to_rgba(&payload.value) })])),
-        "stroke" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameStroke(ChangeFrameStroke { page_id, frame_id, new_stroke: text_to_rgba(&payload.value) })])),
+        "fill" | "stroke" => {
+            let mut color = text_to_rgba(&payload.value);
+            let hex = payload.value.trim();
+            if let (Some(parsed), Frame::Rect { fill, stroke, .. }) = (color.as_mut(), frame) {
+                if hex.starts_with('#') && hex.len() <= 7 {
+                    let previous = if payload.field == "fill" { fill } else { stroke };
+                    if let Some(previous) = previous {
+                        parsed[3] = previous[3];
+                    }
+                }
+            }
+            if payload.field == "fill" {
+                Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameFill(ChangeFrameFill { page_id, frame_id, new_fill: color })]))
+            } else {
+                Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameStroke(ChangeFrameStroke { page_id, frame_id, new_stroke: color })]))
+            }
+        }
         "wrapMode" => Ok(Emit::mutations(vec![LayoutMutation::ChangeFrameWrapMode(ChangeFrameWrapMode { page_id, frame_id, new_wrap_mode: payload.value.clone() })])),
         "rotation" => match payload.value.parse::<f64>() {
             Ok(number) => Ok(Emit::mutations(vec![LayoutMutation::RotateFrame(RotateFrame { page_id, frame_id, new_rotation: number })])),

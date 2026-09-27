@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_plugin::plugin_app_close_prelude::store as fixture_store;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -6,7 +7,9 @@ struct NativeCommand(u8);
 
 impl kernel::OpBinary for NativeCommand {
     const TOOL_JOB_IDS: &'static [&'static str] = &["native"];
-    fn encode_op(&self) -> Result<Vec<u8>, kernel::ProtocolError> { Ok(vec![self.0]) }
+    fn encode_op(&self) -> Result<Vec<u8>, kernel::ProtocolError> {
+        Ok(vec![self.0])
+    }
     fn decode_op(bytes: &[u8]) -> Result<Self, kernel::ProtocolError> {
         bytes.first().copied().map(Self).ok_or_else(|| kernel::ProtocolError::Malformed { what: "native fixture", offset: 0, detail: "empty".into() })
     }
@@ -67,6 +70,153 @@ fn event(value: &serde_json::Value) -> SnapshotEditEvent {
     pack::json::from_json_str(&value.to_string()).expect("typed fixture event")
 }
 
+struct ProbePreparationFactory {
+    accepts: fn(&u8) -> bool,
+    retained_bytes: usize,
+}
+
+impl fixture_store::ArtifactStoreOneItemPreparationFactory<u8, u8> for ProbePreparationFactory {
+    fn preflight(&self, mutation: &u8, _description: Option<&str>, _lane: fixture_store::HistoryLane) -> Result<fixture_store::ArtifactStoreOneItemFootprint, String> {
+        if (self.accepts)(mutation) {
+            Ok(fixture_store::ArtifactStoreOneItemFootprint::for_one_invertible_item(self.retained_bytes))
+        } else {
+            Err("probe-refused".into())
+        }
+    }
+
+    fn begin(&self, request: fixture_store::ArtifactStoreOneItemPreparationRequest<u8, u8>) -> Result<Box<dyn fixture_store::ArtifactStoreOneItemPreparation<u8, u8>>, fixture_store::ArtifactStoreOneItemPreparationRequest<u8, u8>> {
+        Err(request)
+    }
+}
+
+struct ProbePreparation {
+    remaining: usize,
+    checkpoint: fixture_store::ArtifactStoreOneItemCheckpoint,
+    cancelled: bool,
+    closing: bool,
+}
+
+impl fixture_store::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation {
+    fn advance(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::ArtifactStoreOneItemPreparationStep, String> {
+        if !grant.permits_one() || self.cancelled || self.closing || self.remaining == 0 {
+            return Ok(fixture_store::ArtifactStoreOneItemPreparationStep::Blocked);
+        }
+        self.remaining -= 1;
+        self.checkpoint.cursor += 1;
+        self.checkpoint.completed_items += 1;
+        self.checkpoint.completed_bytes += 1;
+        Ok(fixture_store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
+    }
+
+    fn checkpoint(&self) -> fixture_store::ArtifactStoreOneItemCheckpoint {
+        self.checkpoint
+    }
+
+    fn prepared(&self) -> Option<&fixture_store::ArtifactStoreOneItemPrepared<u8, u8>> {
+        None
+    }
+
+    fn take_prepared(&mut self) -> Option<fixture_store::ArtifactStoreOneItemPrepared<u8, u8>> {
+        None
+    }
+
+    fn cancel(&mut self) {
+        self.cancelled = true;
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::SnapshotRetirementStep, String> {
+        if !self.closing || !grant.permits_one() {
+            return Ok(fixture_store::SnapshotRetirementStep::Blocked);
+        }
+        if self.remaining == 0 {
+            return Ok(fixture_store::SnapshotRetirementStep::Complete);
+        }
+        self.remaining -= 1;
+        Ok(fixture_store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 1 })
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.remaining == 0
+    }
+}
+
+#[test]
+fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️retained-native/🔣️.json")).expect("retained native fixture");
+    let primary: ArtifactPreparationFactory<u8, u8> = std::sync::Arc::new(ProbePreparationFactory { accepts: |mutation| *mutation == 1, retained_bytes: 11 });
+    let fallback: ArtifactPreparationFactory<u8, u8> = std::sync::Arc::new(ProbePreparationFactory { accepts: |_| true, retained_bytes: 22 });
+    let factory: ArtifactPreparationFactory<u8, u8> = routed_native_edit_preparation_factory(Some(NativeEditPreparationRoute::new(|mutation| *mutation == 1 || *mutation == 2, primary)), fallback);
+    for row in fixture["routeCases"].as_array().expect("route cases") {
+        let mutation = row["mutation"].as_u64().expect("mutation") as u8;
+        let actual = factory.preflight(&mutation, None, fixture_store::HistoryLane::Document);
+        match row["expected"].as_str().expect("expected route") {
+            "primary" => assert_eq!(actual.expect("primary route").retained_bytes, 11, "{}", row["id"]),
+            "fallback" => assert_eq!(actual.expect("fallback route").retained_bytes, 22, "{}", row["id"]),
+            "refused" => assert_eq!(actual.expect_err("recognized refusal must not fall back"), "probe-refused", "{}", row["id"]),
+            other => panic!("unknown route expectation {other}"),
+        }
+    }
+
+    let lifecycle = &fixture["lifecycle"];
+    let units = lifecycle["units"].as_u64().expect("units") as usize;
+    let cancel_after = lifecycle["cancelAfter"].as_u64().expect("cancel after") as usize;
+    let mut preparation = ProbePreparation { remaining: units, checkpoint: Default::default(), cancelled: false, closing: false };
+    let grant = fixture_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 };
+    let mut progress = Vec::new();
+    for _ in 0..cancel_after {
+        let fixture_store::ArtifactStoreOneItemPreparationStep::Progress(checkpoint) = fixture_store::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("progress") else {
+            panic!("retained preparation did not progress");
+        };
+        progress.push(checkpoint.cursor as u64);
+    }
+    assert_eq!(progress, lifecycle["expectedProgress"].as_array().expect("progress").iter().map(|value| value.as_u64().expect("cursor")).collect::<Vec<_>>());
+    fixture_store::ArtifactStoreOneItemPreparation::cancel(&mut preparation);
+    assert_eq!(fixture_store::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("cancel blocks"), fixture_store::ArtifactStoreOneItemPreparationStep::Blocked);
+    fixture_store::ArtifactStoreOneItemPreparation::begin_close(&mut preparation);
+    let mut close_steps = 0usize;
+    loop {
+        close_steps += 1;
+        if fixture_store::ArtifactStoreOneItemPreparation::close_step(&mut preparation, grant).expect("bounded close") == fixture_store::SnapshotRetirementStep::Complete {
+            break;
+        }
+    }
+    assert_eq!(close_steps, lifecycle["expectedCloseSteps"].as_u64().expect("close steps") as usize);
+    assert!(fixture_store::ArtifactStoreOneItemPreparation::terminal_is_empty(&preparation));
+
+    let text_copy = &fixture["textCopy"];
+    let byte_length = text_copy["byteLength"].as_u64().expect("text byte length") as usize;
+    let page_bytes = text_copy["pageBytes"].as_u64().expect("text page bytes") as usize;
+    let source = "x".repeat(byte_length);
+    let mut copy = RetainedTextCopy::default();
+    assert_eq!(copy.advance(&source, page_bytes).expect("reserve text owner"), Some(0));
+    let mut data_steps = 0usize;
+    while !copy.is_complete() {
+        copy.advance(&source, page_bytes).expect("copy one text page");
+        data_steps += 1;
+    }
+    assert_eq!(data_steps, text_copy["expectedDataSteps"].as_u64().expect("data steps") as usize);
+    assert_eq!(copy.take().expect("completed text owner"), source);
+
+    let mut cancelled = RetainedTextCopy::default();
+    cancelled.advance(&source, page_bytes).expect("reserve cancelled owner");
+    let cancel_after = text_copy["cancelAfterBytes"].as_u64().expect("cancel bytes") as usize;
+    while cancelled.advance(&source, page_bytes).expect("copy cancelled text").is_some() && !cancelled.is_complete() {
+        if cancel_after <= page_bytes * text_copy["expectedCloseSteps"].as_u64().expect("close steps") as usize - page_bytes {
+            break;
+        }
+    }
+    let mut close_steps = 0usize;
+    while !cancelled.terminal_is_empty() {
+        close_steps += 1;
+        cancelled.close_step(1, page_bytes);
+    }
+    assert_eq!(close_steps, text_copy["expectedCloseSteps"].as_u64().expect("close steps") as usize);
+}
+
 #[test]
 fn accepted_edits_match_json_patch_oracle() {
     let fixture = fixture();
@@ -96,10 +246,7 @@ fn rejected_edits_preserve_the_typed_document() {
 fn ambiguous_and_non_finite_values_are_rejected_without_mutation() {
     let fixture = fixture();
     let base = snapshot(&fixture["base"]);
-    let duplicate = SnapshotEditEvent::SetValue {
-        path: "/labels".into(),
-        value: DslValue::Object(vec![("same".into(), DslValue::String("a".into())), ("same".into(), DslValue::String("b".into()))]),
-    };
+    let duplicate = SnapshotEditEvent::SetValue { path: "/labels".into(), value: DslValue::Object(vec![("same".into(), DslValue::String("a".into())), ("same".into(), DslValue::String("b".into()))]) };
     assert_eq!(apply_snapshot_edit(&base, &duplicate).expect_err("duplicate key").code, "snapshot-edit.ambiguous-object");
     let non_finite = SnapshotEditEvent::SetValue { path: "/ratio".into(), value: DslValue::float(f64::INFINITY) };
     assert_eq!(apply_snapshot_edit(&base, &non_finite).expect_err("non-finite number").code, "snapshot-edit.non-finite-number");
@@ -140,32 +287,18 @@ fn integral_json_numbers_edit_float_fields_without_losing_precision() {
 
 #[test]
 fn action_json_and_operation_codecs_preserve_typed_values() {
-    let args = DslValue::object([
-        ("path".to_string(), DslValue::String("/choice".into())),
-        ("value".to_string(), DslValue::String(r#"{"kind":"second","name":"chosen"}"#.into())),
-        ("valueEncoding".to_string(), DslValue::String("json".into())),
-    ]);
+    let args = DslValue::object([("path".to_string(), DslValue::String("/choice".into())), ("value".to_string(), DslValue::String(r#"{"kind":"second","name":"chosen"}"#.into())), ("valueEncoding".to_string(), DslValue::String("json".into()))]);
     let parsed = snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&args)).expect("valid action").expect("known action");
     let text = <SnapshotEditEvent as kernel::OpText>::print_op(&parsed);
     assert_eq!(<SnapshotEditEvent as kernel::OpText>::parse_op(&text).expect("text round trip"), parsed);
     let bytes = <SnapshotEditEvent as kernel::OpBinary>::encode_op(&parsed).expect("binary encode");
     assert_eq!(<SnapshotEditEvent as kernel::OpBinary>::decode_op(&bytes).expect("binary round trip"), parsed);
     let source_args = DslValue::object([("value".to_string(), DslValue::String("invalid local draft".into()))]);
-    assert_eq!(
-        snapshot_edit_event_from_action(REPLACE_SNAPSHOT_SOURCE_ACTION_ID, Some(&source_args)).expect("source input").expect("known source action"),
-        SnapshotEditEvent::ReplaceSource { source: "invalid local draft".into() }
-    );
-    let encoded_args = DslValue::object([
-        ("path".to_string(), DslValue::String("/choice".into())),
-        ("value".to_string(), DslValue::String(r#"{"kind":"first","level":7}"#.into())),
-        ("valueEncoding".to_string(), DslValue::String("json".into())),
-    ]);
+    assert_eq!(snapshot_edit_event_from_action(REPLACE_SNAPSHOT_SOURCE_ACTION_ID, Some(&source_args)).expect("source input").expect("known source action"), SnapshotEditEvent::ReplaceSource { source: "invalid local draft".into() });
+    let encoded_args = DslValue::object([("path".to_string(), DslValue::String("/choice".into())), ("value".to_string(), DslValue::String(r#"{"kind":"first","level":7}"#.into())), ("valueEncoding".to_string(), DslValue::String("json".into()))]);
     assert!(matches!(snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&encoded_args)).expect("encoded control").expect("known action"), SnapshotEditEvent::SetValue { value: DslValue::Object(_), .. }));
     let rename_args = DslValue::object([("path".to_string(), DslValue::String("/labels/z".into())), ("value".to_string(), DslValue::String("renamed".into()))]);
-    assert_eq!(
-        snapshot_edit_event_from_action(RENAME_SNAPSHOT_KEY_ACTION_ID, Some(&rename_args)).expect("rename input").expect("known rename action"),
-        SnapshotEditEvent::RenameKey { path: "/labels/z".into(), key: "renamed".into() }
-    );
+    assert_eq!(snapshot_edit_event_from_action(RENAME_SNAPSHOT_KEY_ACTION_ID, Some(&rename_args)).expect("rename input").expect("known rename action"), SnapshotEditEvent::RenameKey { path: "/labels/z".into(), key: "renamed".into() });
 }
 
 #[test]
@@ -173,22 +306,9 @@ fn chunked_rfc6901_paths_join_losslessly_and_require_one_canonical_shape() {
     let segment = "é/🚀~field".repeat(96);
     let pointer = format!("/{}", segment.replace('~', "~0").replace('/', "~1"));
     let split = pointer.char_indices().nth(240).map(|(index, _)| index).expect("UTF-8 split boundary");
-    let args = DslValue::object([
-        (
-            "pathChunks".to_string(),
-            DslValue::Array(vec![DslValue::String(pointer[..split].into()), DslValue::String(pointer[split..].into())]),
-        ),
-        ("value".to_string(), DslValue::String("updated".into())),
-    ]);
-    assert_eq!(
-        snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&args)).expect("chunked path").expect("known action"),
-        SnapshotEditEvent::SetValue { path: pointer.clone(), value: DslValue::String("updated".into()) }
-    );
-    let ambiguous = DslValue::object([
-        ("path".to_string(), DslValue::String(pointer)),
-        ("pathChunks".to_string(), DslValue::Array(vec![DslValue::String("/other".into())])),
-        ("value".to_string(), DslValue::String("updated".into())),
-    ]);
+    let args = DslValue::object([("pathChunks".to_string(), DslValue::Array(vec![DslValue::String(pointer[..split].into()), DslValue::String(pointer[split..].into())])), ("value".to_string(), DslValue::String("updated".into()))]);
+    assert_eq!(snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&args)).expect("chunked path").expect("known action"), SnapshotEditEvent::SetValue { path: pointer.clone(), value: DslValue::String("updated".into()) });
+    let ambiguous = DslValue::object([("path".to_string(), DslValue::String(pointer)), ("pathChunks".to_string(), DslValue::Array(vec![DslValue::String("/other".into())])), ("value".to_string(), DslValue::String("updated".into()))]);
     assert_eq!(snapshot_edit_event_from_action(SET_SNAPSHOT_VALUE_ACTION_ID, Some(&ambiguous)).expect_err("two pointer shapes").code.0, "snapshot-edit.path-shape");
     let definition = snapshot_edit_actions().into_iter().find(|definition| definition.id == SET_SNAPSHOT_VALUE_ACTION_ID).expect("set action");
     assert!(definition.args.iter().any(|argument| argument.id == "pathChunks" && matches!(argument.schema, semio_framework_plugin::ArgSchema::Array { .. })));
@@ -203,9 +323,7 @@ fn direct_control_action_inputs_preserve_their_typed_values() {
         let definition = definitions.iter().find(|definition| definition.id == case["action"].as_str().expect("action id")).expect("registered action");
         let effective = semio_framework_plugin::effective_action_args(&definition.args, &args, None);
         assert!(semio_framework_plugin::missing_required_args(&definition.args, &effective).is_empty(), "{}: host action argument admission", case["id"]);
-        let actual = snapshot_edit_event_from_action(case["action"].as_str().expect("action id"), Some(&effective))
-            .unwrap_or_else(|error| panic!("{}: {error:?}", case["id"]))
-            .expect("known action");
+        let actual = snapshot_edit_event_from_action(case["action"].as_str().expect("action id"), Some(&effective)).unwrap_or_else(|error| panic!("{}: {error:?}", case["id"])).expect("known action");
         assert_eq!(actual, event(&case["expectedEvent"]), "{}", case["id"]);
     }
 }

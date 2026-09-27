@@ -130,11 +130,8 @@ async fn an_over_ceiling_answer_faults_instead_of_growing_the_guest() {
 #[semio_framework_async_macros::async_test]
 async fn the_echoed_correlation_drops_a_request_body_the_shell_could_not_have_sent() {
     let body = "x".repeat(semio_framework::PUBLIC_INVOCATION_STRING_BYTES + 1);
-    let request_json = dsl::json::to_json_string(&dsl::DslValue::object([
-        ("nodeHash".to_string(), dsl::DslValue::uint(77)),
-        ("windowId".to_string(), dsl::DslValue::String("preview".to_string())),
-        ("inputJson".to_string(), dsl::DslValue::String(body)),
-    ]));
+    let request_json =
+        dsl::json::to_json_string(&dsl::DslValue::object([("nodeHash".to_string(), dsl::DslValue::uint(77)), ("windowId".to_string(), dsl::DslValue::String("preview".to_string())), ("inputJson".to_string(), dsl::DslValue::String(body))]));
     let req = queue_extension_invocation(2, &crate::app::ExtensionInvocation::new("math", "evaluate", &request_json, "flowEvalResolve")).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
     let (_, _, args) = take_extension_response(req, Ok(packed_answer(r#"{"value":1}"#))).expect("a minted continuation must answer its own completion");

@@ -106,7 +106,8 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
         <div
           key={entry.id}
           className={cn("flex items-start gap-single rounded-md p-single", activateAction && cn(interactiveHoverFillClass, "cursor-pointer"))}
-          role={activateAction ? "button" : undefined}
+          role={activateAction ? "button" : "paragraph"}
+          tabIndex={activateAction ? 0 : undefined}
           onClick={
             activateAction
               ? () =>
@@ -117,9 +118,21 @@ export function EventFeedHost({ node, onAction, requestContextMenu }: ComponentS
                   })
               : undefined
           }
+          onKeyDown={
+            activateAction
+              ? (event) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onAction({ controllerId: node.controllerId, action: activateAction, args: { surfaceId: node.surfaceId, id: entry.id } });
+                }
+              : undefined
+          }
           onContextMenu={(event) => onEntryContextMenu(entry.id, event)}
         >
-          <Icon icon={entry.iconId as IconName} size="small" />
+          <span aria-hidden>
+            <Icon icon={entry.iconId as IconName} size="small" />
+          </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-single">
               <span className={cn("truncate text-xs font-medium", entry.tone ? FEED_TONE_CLASS[entry.tone] : undefined)}>{entry.title}</span>

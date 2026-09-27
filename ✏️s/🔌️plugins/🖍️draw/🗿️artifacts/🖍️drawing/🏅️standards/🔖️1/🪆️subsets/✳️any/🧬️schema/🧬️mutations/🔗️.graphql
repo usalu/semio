@@ -4,6 +4,7 @@
 # field. Shared value types imported from the artifact's own root schema so every facet of the drawing
 # artifact agrees on the same `DrawingLayerNode`.
 # import DrawingLayerNode from "../🔗️.graphql"
+# import PathSegment from "../🔗️.graphql"
 
 type SetLayerVisible {
   layerId: String!
@@ -37,6 +38,7 @@ type DrawingTransform {
   scaleX: Float!
   scaleY: Float!
   rotation: Float!
+  shear: Float!
 }
 
 type UpdateLayerTransform {
@@ -127,6 +129,17 @@ type ReorderLayer {
   index: Int!
 }
 
+type UpdatePathGeometry {
+  layerId: String!
+  segments: [PathSegment!]!
+}
+
+type UpdateText {
+  layerId: String!
+  content: String!
+  size: Float!
+}
+
 union DrawingMutation =
     SetLayerVisible
   | SetLayerLocked
@@ -142,3 +155,5 @@ union DrawingMutation =
   | DuplicateLayer
   | DeleteLayer
   | ReorderLayer
+  | UpdatePathGeometry
+  | UpdateText

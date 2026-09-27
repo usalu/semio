@@ -1,0 +1,21 @@
+{
+  "artifact": null,
+  "schema": null,
+  "name": null,
+  "grid": {
+    "baselineGrid": 18.0,
+    "baselineOffset": 4.0,
+    "snapToBaseline": false
+  },
+  "paragraphStyles": null,
+  "characterStyles": null,
+  "stories": null,
+  "links": null,
+  "parentPages": null,
+  "spreads": null,
+  "pages": null,
+  "printTarget": null,
+  "dataFieldsJson": null,
+  "backgroundDrawing": null,
+  "referencedModel": null
+}

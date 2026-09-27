@@ -3,6 +3,12 @@ import { applyPatch, type Operation } from "fast-json-patch";
 import Ajv from "ajv";
 import { snapshotEditSource, snapshotFromEditSource, applySnapshotEdit, SnapshotEditError, type SnapshotEditCodec, type SnapshotEditEvent, type SnapshotValue } from "../../🟦️";
 
+const retainedNativeFixture = await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🔣️.json", import.meta.url)).json() as {
+  routeCases: { id: string; mutation: number; recognized: boolean; primaryAccepts: boolean; expected: "primary" | "fallback" | "refused" }[];
+  lifecycle: { units: number; cancelAfter: number; expectedProgress: number[]; expectedCloseSteps: number };
+};
+const retainedNativeSchema = await Bun.file(new URL("../../🧫️fixtures/🧵️retained-native/🧬️schema/🔣️.json", import.meta.url)).json();
+
 const fixture = await Bun.file(new URL("../../🧫️fixtures/🪆️snapshot-edits/🔣️patch-cases.json", import.meta.url)).json() as {
   base: SnapshotValue;
   sourceRoundTrip: SnapshotValue;
@@ -42,6 +48,21 @@ describe("snapshot edit fixture", () => {
     catch (error) { expect(error).toBeInstanceOf(SnapshotEditError); expect((error as SnapshotEditError).code).toBe(row.code); }
     expect(fixture.base).toEqual(before);
   });
+});
+
+test("retained native route and cancellation fixture matches the independent oracle", () => {
+  expect(new Ajv({ strict: true }).compile(retainedNativeSchema)(retainedNativeFixture)).toBe(true);
+  for (const row of retainedNativeFixture.routeCases) {
+    const actual = row.recognized ? (row.primaryAccepts ? "primary" : "refused") : "fallback";
+    expect(actual).toBe(row.expected);
+  }
+  const progress = Array.from({ length: retainedNativeFixture.lifecycle.cancelAfter }, (_, index) => index + 1);
+  expect(progress).toEqual(retainedNativeFixture.lifecycle.expectedProgress);
+  expect(retainedNativeFixture.lifecycle.units - retainedNativeFixture.lifecycle.cancelAfter + 1).toBe(retainedNativeFixture.lifecycle.expectedCloseSteps);
+  const text = "x".repeat(retainedNativeFixture.textCopy.byteLength);
+  expect(new TextEncoder().encode(text).byteLength).toBe(retainedNativeFixture.textCopy.byteLength);
+  expect(Math.ceil(text.length / retainedNativeFixture.textCopy.pageBytes)).toBe(retainedNativeFixture.textCopy.expectedDataSteps);
+  expect(Math.ceil(retainedNativeFixture.textCopy.cancelAfterBytes / retainedNativeFixture.textCopy.pageBytes) + 1).toBe(retainedNativeFixture.textCopy.expectedCloseSteps);
 });
 
 test("complete source matches the independent JSON oracle", () => {

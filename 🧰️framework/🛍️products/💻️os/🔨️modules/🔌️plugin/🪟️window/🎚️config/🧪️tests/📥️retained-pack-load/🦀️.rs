@@ -316,10 +316,7 @@ fn window_config_retained_pack_load_refuses_exhausted_turn_bounds_and_over_bound
 fn window_config_retained_pack_load_reloads_a_coordinate_valued_window_state() {
     run_retained_window_load_lane("window-config-retained-load-coordinate", || {
         let fixture = retained_load_fixture();
-        assert!(
-            fixture["requiredScenarios"].as_array().expect("required scenarios").iter().any(|scenario| scenario["id"] == "coordinate-valued-state"),
-            "the coordinate-valued reopen scenario is declared by the fixture"
-        );
+        assert!(fixture["requiredScenarios"].as_array().expect("required scenarios").iter().any(|scenario| scenario["id"] == "coordinate-valued-state"), "the coordinate-valued reopen scenario is declared by the fixture");
         let camera = saved_camera(&fixture);
         assert_ne!(camera.eye, RetainedLoadCameraConfig::default().eye, "the saved coordinate differs from Default, so a lost coordinate cannot pass unnoticed");
         block_on_retained_window_load(Box::pin(async move {
@@ -327,10 +324,7 @@ fn window_config_retained_pack_load_reloads_a_coordinate_valued_window_state() {
             register_retained_load_owners(&mut source);
             let owner = source.owners.get_mut(RetainedLoadOwnerA::WINDOW_KIND_ID).expect("registered coordinate owner");
             drop(owner.capture("left").await.expect("materialize coordinate partition"));
-            owner
-                .dispatch("coordinate-actor", WindowConfigMutation::of::<RetainedLoadOwnerA>("left", RetainedLoadCameraConfigMutation::Snapshot { config: Box::new(camera.clone()) }), None, None)
-                .await
-                .expect("save the coordinate-valued state");
+            owner.dispatch("coordinate-actor", WindowConfigMutation::of::<RetainedLoadOwnerA>("left", RetainedLoadCameraConfigMutation::Snapshot { config: Box::new(camera.clone()) }), None, None).await.expect("save the coordinate-valued state");
             let saved = source.packs().await.expect("coordinate packs");
             let saved_bytes = keyed_packs(saved.iter().map(|pack| WindowConfigPack { window_id: pack.window_id.clone(), window_kind_id: pack.window_kind_id.clone(), files: pack.files.clone() }).collect());
             close_retained_load_registry(&mut source);

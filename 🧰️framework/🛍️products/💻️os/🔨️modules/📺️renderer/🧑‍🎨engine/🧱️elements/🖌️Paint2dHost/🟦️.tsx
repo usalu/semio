@@ -243,7 +243,7 @@ function Paint2dCanvasSurface({
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
-      onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
+      return onAction({ controllerId: node.controllerId, action, args: { surfaceId: node.surfaceId, ...args } });
     },
     [node.controllerId, node.surfaceId, onAction],
   );

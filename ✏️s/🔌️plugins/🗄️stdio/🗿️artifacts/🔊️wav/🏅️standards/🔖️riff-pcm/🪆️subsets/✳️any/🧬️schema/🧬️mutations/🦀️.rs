@@ -18,6 +18,8 @@ pub mod set_fmt;
 pub mod set_other_chunks;
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -29,6 +31,7 @@ pub mod set_snapshot;
 pub enum WavMutation {
     /// 🔁️ Full-snapshot replace.
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 🎚️ Replaces the `fmt ` chunk's typed fields wholesale.
     SetFmt(set_fmt::SetFmt),
     /// 🔊️ Replaces the typed sample data wholesale (may also change `WavData`'s variant, e.g.
@@ -42,7 +45,7 @@ pub enum WavMutation {
 
 /// 🦠️ Kebab-case spelling of every `WavMutation` variant — the exhaustive vocabulary the mutation
 /// oracle catalog (`../../🔣️oracle.json`) is measured against. Order matches the enum.
-pub const KINDS: &[&str] = &["set-snapshot", "set-fmt", "set-data", "patch-data", "set-other-chunks"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-fmt", "set-data", "patch-data", "set-other-chunks"];
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff (the diff is the single
 /// semantics source — never apply-and-capture).
@@ -95,6 +98,7 @@ impl OpBinary for WavMutation {
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &WavMutation, base: &WavSnapshot) -> protocol::MutationOutcome<WavDiff> {
     match this {
+        WavMutation::PatchSnapshot(payload) => protocol::MutationKind::diff(payload, base),
         WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot)),
         WavMutation::SetFmt(set_fmt::SetFmt { fmt }) => protocol::MutationOutcome::new(diff_set_fmt(fmt.clone())),
         WavMutation::SetData(set_data::SetData { data }) => protocol::MutationOutcome::new(diff_set_data(data.clone())),
@@ -106,6 +110,7 @@ pub(crate) fn agg_diff(this: &WavMutation, base: &WavSnapshot) -> protocol::Muta
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &WavMutation, base: &WavSnapshot) -> Vec<WavMutation> {
     vec![match this {
+        WavMutation::PatchSnapshot(payload) => return protocol::MutationKind::inverse(payload, base),
         WavMutation::SetSnapshot(_) => WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         WavMutation::SetFmt(_) => WavMutation::SetFmt(set_fmt::SetFmt { fmt: base.fmt.clone() }),
         WavMutation::SetData(_) => WavMutation::SetData(set_data::SetData { data: base.data.clone() }),

@@ -1815,35 +1815,35 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn socket_session_binding(&self, session_id: &str, user_id: &str, authorization_generation: u64, space_id: Option<&str>, now_ms: i64) -> DirectoryResult<SocketSessionBindingStatus> {
-        let conn = self.lock()?;
-        let record = conn
-            .query_row(
-                "SELECT id, selector, secret_digest, user_id, identity_provider, identity_subject_digest, issued_at, expires_at, revoked_at, revoked_reason, authorization_generation, device_instance_id, session_kind FROM hub_auth_session WHERE id = ?1",
-                [session_id],
-                auth_session_row,
-            )
-            .optional()
-            .map_err(backend)?;
-        let Some(record) = record else { return Ok(SocketSessionBindingStatus::Unavailable) };
-        if record.user_id != user_id {
-            return Ok(SocketSessionBindingStatus::Unavailable);
-        }
-        if record.revoked_at.is_some() || record.authorization_generation != authorization_generation {
-            return Ok(SocketSessionBindingStatus::Revoked);
-        }
-        if record.expires_at <= now_ms {
-            return Ok(SocketSessionBindingStatus::Expired);
-        }
-        let role = match space_id {
-            Some(space_id) => {
-                conn.query_row("SELECT role FROM hub_space_membership WHERE space_id = ?1 AND user_id = ?2", rusqlite::params![space_id, user_id], |row| row.get::<_, String>(0)).optional().map_err(backend)?.and_then(|role| SpaceRole::parse(&role))
+        let (record, role) = {
+            let conn = self.lock()?;
+            let record = conn
+                .query_row(
+                    "SELECT id, selector, secret_digest, user_id, identity_provider, identity_subject_digest, issued_at, expires_at, revoked_at, revoked_reason, authorization_generation, device_instance_id, session_kind FROM hub_auth_session WHERE id = ?1",
+                    [session_id],
+                    auth_session_row,
+                )
+                .optional()
+                .map_err(backend)?;
+            let Some(record) = record else { return Ok(SocketSessionBindingStatus::Unavailable) };
+            if record.user_id != user_id {
+                return Ok(SocketSessionBindingStatus::Unavailable);
             }
-            None => None,
+            if record.revoked_at.is_some() || record.authorization_generation != authorization_generation {
+                return Ok(SocketSessionBindingStatus::Revoked);
+            }
+            if record.expires_at <= now_ms {
+                return Ok(SocketSessionBindingStatus::Expired);
+            }
+            let role = match space_id {
+                Some(space_id) => {
+                    conn.query_row("SELECT role FROM hub_space_membership WHERE space_id = ?1 AND user_id = ?2", rusqlite::params![space_id, user_id], |row| row.get::<_, String>(0)).optional().map_err(backend)?.and_then(|role| SpaceRole::parse(&role))
+                }
+                None => None,
+            };
+            (record, role)
         };
-        if space_id.is_some() && role.is_none() {
-            return Ok(SocketSessionBindingStatus::MembershipLost);
-        }
-        Ok(SocketSessionBindingStatus::Active { role, expires_at_ms: record.expires_at })
+        super::capped_socket_session_binding(self, &record, space_id, role).await
     }
 
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {
@@ -1993,6 +1993,13 @@ impl HubDirectory for SqliteDirectory {
     async fn load_agent_delegation(&self, selector: &str) -> DirectoryResult<Option<AgentDelegationRecord>> {
         let conn = self.lock()?;
         conn.query_row("SELECT id, selector, secret_digest, space_id, delegating_user_id, agent_label, audience, created_at, expires_at, revoked_at, revoked_reason FROM hub_agent_delegation WHERE selector = ?1", [selector], agent_delegation_row)
+            .optional()
+            .map_err(backend)
+    }
+
+    async fn agent_delegation(&self, delegation_id: &str) -> DirectoryResult<Option<AgentDelegationRecord>> {
+        let conn = self.lock()?;
+        conn.query_row("SELECT id, selector, secret_digest, space_id, delegating_user_id, agent_label, audience, created_at, expires_at, revoked_at, revoked_reason FROM hub_agent_delegation WHERE id = ?1", [delegation_id], agent_delegation_row)
             .optional()
             .map_err(backend)
     }

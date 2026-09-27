@@ -13,8 +13,8 @@
 //! from E1's own placeholder.
 
 use semio_framework::{
-    io, kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType, PackageDescriptor,
-    PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
+    io, kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType,
+    PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
 };
 
 /// 📚️ The largest example document body a descriptor still carries inline.

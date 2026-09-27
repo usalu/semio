@@ -18,6 +18,10 @@ pub enum HubAccessRoleV1 {
     Spectator,
     Share,
     Authenticated,
+    /// 🤖️ An agent session under a `read` delegation, in its delegation's one space.
+    AgentReader,
+    /// 🤖️ An agent session under an `edit` delegation, in its delegation's one space.
+    AgentEditor,
 }
 
 /// 🎬️ Every access decision the hub takes.

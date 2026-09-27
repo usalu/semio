@@ -50,3 +50,7 @@ path = "../../🧪️tests/🆔️newtype-transparent/🦀️.rs"
 [[test]]
 name = "variant_field_casing"
 path = "../../🧪️tests/🐫️variant-field-casing/🦀️.rs"
+
+[[test]]
+name = "typed_path"
+path = "../../🧪️tests/🧭️typed-path/🦀️.rs"

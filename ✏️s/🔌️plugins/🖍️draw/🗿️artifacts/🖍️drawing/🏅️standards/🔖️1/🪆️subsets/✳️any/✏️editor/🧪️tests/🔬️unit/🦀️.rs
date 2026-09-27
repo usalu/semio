@@ -351,7 +351,7 @@ async fn host_utility_change_clears_scratch_and_emits_no_history_entry() {
     let tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, pen_view).await.expect("render after utility change");
     artifact_laws::project_and_retire_fixture_tree(tree).expect("retire render tree");
     assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
-    let (up, _) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &pen_meta).await;
+    let (up, _) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &pen_meta).await;
     assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
 }
 
@@ -397,8 +397,8 @@ async fn shape_rect_drag_commits_with_the_per_window_utility_map_alone() {
         &utility_meta,
     )
     .await;
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, samples: Vec::new() }), &utility_meta).await;
-    let (_result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 600.0, y: 500.0, width: 1000.0, height: 800.0, samples: Vec::new() }), &utility_meta).await;
+    let (_result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
     // 🛣️ The retained gesture lane publishes its commit through the store lane (the receipt), never
     // through the invocation result's `mutations`.
     let projection = app.snapshot().unwrap();
@@ -452,8 +452,8 @@ async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
         &utility_meta,
     )
     .await;
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, samples: Vec::new() }), &utility_meta).await;
-    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 600.0, y: 500.0, width: 1000.0, height: 800.0, samples: Vec::new() }), &utility_meta).await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
     assert!(result.mutations.is_empty(), "the migrated gesture retains its operation until publication");
     assert_one_artifact_publication(&receipt);
     let projection = app.snapshot().unwrap();
@@ -616,7 +616,7 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
         let (_, down) = settled(&mut app, DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, ..Default::default() }), &meta).await;
         assert!(!down.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
         assert_eq!(app.snapshot().unwrap(), before);
-        let (_, moved) = settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 430.0, y: 320.0, width: 800.0, height: 600.0, samples: vec![[410.0,310.0],[430.0,320.0]] }), &meta).await;
+        let (_, moved) = settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 430.0, y: 320.0, width: 800.0, height: 600.0, samples: vec![[410.0,310.0],[430.0,320.0]] }), &meta).await;
         assert!(!moved.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
         assert_eq!(app.snapshot().unwrap(), before);
         let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, view).await.unwrap());
@@ -624,11 +624,23 @@ async fn direct_drag_projects_without_editing_and_publishes_only_on_release() {
         let preview = &records.iter().find(|record| record["id"] == id).unwrap()["transform"];
         assert_eq!(preview[4].as_f64().unwrap(), original[4].as_f64().unwrap() + 30.0);
         assert_eq!(preview[5].as_f64().unwrap(), original[5].as_f64().unwrap() + 20.0);
-        let (_, released) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 430.0, y: 320.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled }), &meta).await;
+        let (_, released) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 430.0, y: 320.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled }), &meta).await;
         if cancelled {
             assert!(!released.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
             assert_eq!(app.snapshot().unwrap(), before);
             assert_eq!(law["artifactAfterCancel"], "unchanged");
+            let (_, stale_move) = settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 450.0, y: 340.0, width: 800.0, height: 600.0, samples: vec![[450.0,340.0]] }), &meta).await;
+            let (_, stale_up) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 450.0, y: 340.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &meta).await;
+            assert!(!stale_move.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
+            assert!(!stale_up.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
+            assert_eq!(app.snapshot().unwrap(), before, "a stale move/up that crosses the renderer fence still cannot mutate the Draw document");
+            settled(&mut app, DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x: 400.0, y: 300.0, width: 800.0, height: 600.0, ..Default::default() }), &meta).await;
+            settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 430.0, y: 320.0, width: 800.0, height: 600.0, samples: vec![[430.0,320.0]] }), &meta).await;
+            let (_, fresh) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 430.0, y: 320.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &meta).await;
+            assert_one_artifact_publication(&fresh);
+            let after = app.snapshot().unwrap();
+            let transform = &crate::schema::layer_base(&after.layers[0]).transform;
+            assert_eq!((transform.x, transform.y), (30.0, 20.0));
         } else {
             assert_one_artifact_publication(&released);
             assert_eq!(law["freshGestureResult"], "one-artifact-publication");
@@ -695,7 +707,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     let width = 1587.0;
     let height = 907.0;
 
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 396.75, y: 317.45, width, height, samples: Vec::new() }), &first_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 396.75, y: 317.45, width, height, samples: Vec::new() }), &first_meta).await;
     settled(
         &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
@@ -714,10 +726,10 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
         &first_meta,
     )
     .await;
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 603.06, y: 453.5, width, height, samples: Vec::new() }), &first_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 603.06, y: 453.5, width, height, samples: Vec::new() }), &first_meta).await;
     let (_first_up, first_receipt) = settled(
         &mut app,
-        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 603.06, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
+        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 603.06, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
         &first_meta,
     )
     .await;
@@ -729,7 +741,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     let second_view = second_meta.view_state.as_ref().expect("fresh post-publication drawing-composite view");
     let refreshed_tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, second_view).await.expect("post-publication drawing-composite render");
     artifact_laws::project_and_retire_fixture_tree(refreshed_tree).expect("retire post-publication drawing-composite tree");
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &second_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &second_meta).await;
     settled(
         &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
@@ -748,10 +760,10 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
         &second_meta,
     )
     .await;
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1031.55, y: 453.5, width, height, samples: Vec::new() }), &second_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 1031.55, y: 453.5, width, height, samples: Vec::new() }), &second_meta).await;
     let (_second_up, second_receipt) = settled(
         &mut app,
-        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 1031.55, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
+        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 1031.55, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
         &second_meta,
     )
     .await;
@@ -763,7 +775,7 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
     let third_view = third_meta.view_state.as_ref().expect("fresh identical-geometry drawing-composite view");
     let third_tree = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, third_view).await.expect("identical-geometry drawing-composite render");
     artifact_laws::project_and_retire_fixture_tree(third_tree).expect("retire identical-geometry drawing-composite tree");
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &third_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 825.24, y: 317.45, width, height, samples: Vec::new() }), &third_meta).await;
     settled(
         &mut app,
         DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
@@ -782,10 +794,10 @@ async fn repeated_shape_rect_gestures_from_fresh_published_views_commit_distinct
         &third_meta,
     )
     .await;
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1031.55, y: 453.5, width, height, samples: Vec::new() }), &third_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 1031.55, y: 453.5, width, height, samples: Vec::new() }), &third_meta).await;
     let (_third_up, third_receipt) = settled(
         &mut app,
-        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 1031.55, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
+        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 1031.55, y: 453.5, width, height, shift: false, ctrl: false, meta: false, cancelled: false }),
         &third_meta,
     )
     .await;
@@ -865,8 +877,8 @@ async fn marquee_select_covers_contained_layer_only() {
         &utility_meta,
     )
     .await;
-    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0, samples: Vec::new() }), &utility_meta).await;
-    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
+    settled(&mut app, DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 460.0, y: 360.0, width: 800.0, height: 600.0, samples: Vec::new() }), &utility_meta).await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: false }), &utility_meta).await;
     // 🕹️ Selection is framework-owned (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
     // the marquee hit-test emits `interactionSelect` for exactly the contained rect via an
     // `Effect::ReplayShellCommand` — folded in-reactor (§2 C), so the host never sees it and the
@@ -906,9 +918,9 @@ async fn add_layer_undo_round_trip_through_wrapper() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn path_join_and_conversion_each_undo_as_one_edit() {
-    use crate::schema::geometry::editing::{edit_path,PathEdit,SegmentType};
-    for edit in [PathEdit::Join { index:1,other:2 },PathEdit::Convert { index:1,target:SegmentType::Cubic }] {
+async fn path_join_conversion_and_position_each_undo_as_one_edit() {
+    use crate::schema::geometry::editing::{edit_path,PathEdit,PathPoint,SegmentType};
+    for edit in [PathEdit::Join { index:1,other:2 },PathEdit::Convert { index:1,target:SegmentType::Cubic },PathEdit::Position {index:1,point:PathPoint::Anchor,to:[15.0,5.0]}] {
         let mut app=drawing_app().await;
         let before=vec![crate::PathSegment::Move { to:[0.0,0.0] },crate::PathSegment::Line { to:[10.0,0.0] },crate::PathSegment::Move { to:[20.0,0.0] },crate::PathSegment::Line { to:[30.0,0.0] }];
         let after=edit_path(&before,&edit).unwrap();
@@ -923,7 +935,7 @@ async fn path_join_and_conversion_each_undo_as_one_edit() {
             path.segments.clone()
         },before,after).await;
     }
-    eprintln!("[DEBUG] path joins and conversions restore exact geometry through one undo and redo");
+    eprintln!("[DEBUG] path joins, conversions and positions restore exact geometry through one undo and redo");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -955,10 +967,10 @@ async fn utility_registry_declares_all_canvas_utilities_scoped_to_the_window() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn strokes_interaction_domain_is_declared_flat_pick_rectangle_lasso_on_the_canvas_window() {
+async fn strokes_interaction_domain_enumerates_document_layers_on_the_canvas_window() {
     let definition = create_drawing_app();
     let domain = definition.interactions.iter().find(|interaction| interaction.id == DRAWING_INTERACTION_DOMAIN).expect("strokes interaction domain declared");
-    assert!(matches!(domain.hierarchy, HierarchyProvider::Flat));
+    assert!(matches!(domain.hierarchy, HierarchyProvider::Topology));
     assert_eq!(domain.selection.methods, vec![SelectionMethod::Pick, SelectionMethod::Rectangle, SelectionMethod::Lasso]);
     let canvas_window = definition.window_kinds.iter().find(|window| window.id == DRAWING_PLAY_WINDOW_CANVAS).expect("canvas window");
     assert!(canvas_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == DRAWING_INTERACTION_DOMAIN));
@@ -977,7 +989,7 @@ async fn canvas_pointer_up_direct_pick_selects_inline() {
     settled(&mut app, DrawingCommand::SetCamera(set_camera::SetCamera { camera: store::Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 } }), &meta).await;
     // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
     // viewport with the identity camera above maps to world (10,10) — inside the rect.
-    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false, cancelled: false }), &meta).await;
+    let (result, receipt) = settled(&mut app, DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false, cancelled: false }), &meta).await;
     assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
     assert!(!receipt.effects.iter().any(|effect| matches!(effect, Effect::ReplayShellCommand { .. })), "interactionSelect is folded in-reactor, never handed to the host: {:?}", receipt.effects);
     assert_eq!(selected_strokes(&app).await, vec![rect_id], "the picked rect is selected inside the carrying operation");
@@ -1100,11 +1112,11 @@ async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
         session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [0.0, 0.0], shift: false, ctrl: false, meta: false }, &document, &config);
         if batched {
             let [x, y] = path[3];
-            let emit = canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { x, y, width: 800.0, height: 600.0, samples: path.to_vec() }, &view, &cfg, &mut session).expect("batched move");
+            let emit = canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { shift: false, alt: false,  x, y, width: 800.0, height: 600.0, samples: path.to_vec() }, &view, &cfg, &mut session).expect("batched move");
             assert!(emit.artifact_mutations.is_empty() && emit.effects.is_empty(), "a mid-drag batch emits no operation");
         } else {
             for [x, y] in path {
-                canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { x, y, width: 800.0, height: 600.0, samples: Vec::new() }, &view, &cfg, &mut session).expect("move");
+                canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { shift: false, alt: false,  x, y, width: 800.0, height: 600.0, samples: Vec::new() }, &view, &cfg, &mut session).expect("move");
             }
         }
         session.gesture.context.clone()
@@ -1126,9 +1138,9 @@ async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
         let view = semio_framework_plugin::ArtifactView::new(&document, &history);
         let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
         session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility: utility.into(), world: [0.0, 0.0], shift: false, ctrl: false, meta: false }, &document, &config);
-        canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 800.0, height: 600.0, samples: Vec::new() }, &view, &cfg, &mut session).expect("move");
+        canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 600.0, y: 500.0, width: 800.0, height: 600.0, samples: Vec::new() }, &view, &cfg, &mut session).expect("move");
         assert!(!session.gesture.matches("idle"), "{utility}: the drag is live before the cancel");
-        let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");
+        let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { alt: false, x: 600.0, y: 500.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");
         assert!(emit.artifact_mutations.is_empty(), "{utility}: a cancel never commits");
         assert!(emit.effects.is_empty(), "{utility}: a cancel never selects or resets the utility");
         assert!(session.gesture.matches("idle"), "{utility}: no gesture survives a cancel");
@@ -1138,7 +1150,7 @@ async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
     let (mut session, document, config, history) = session_with("selectDirect");
     let view = semio_framework_plugin::ArtifactView::new(&document, &history);
     let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
-    let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");
+    let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { alt: false, x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");
     assert!(emit.effects.is_empty() && emit.artifact_mutations.is_empty());
     assert!(session.gesture.matches("idle"));
 }
@@ -1159,6 +1171,8 @@ async fn canvas_pointer_wire_defaults_samples_and_cancelled() {
     let moved = canvas_pointer_move::CanvasPointerMove::from_value(batched).expect("batched move decodes");
     assert_eq!(moved.samples, vec![[1.0, 1.5], [2.0, 2.5], [3.0, 4.0]]);
     assert_eq!(moved.last_sample(), [3.0, 4.0]);
+    let modified = canvas_pointer_move::CanvasPointerMove::from_value(dsl::DslValue::Object(vec![("x".into(),f(3.0)),("y".into(),f(4.0)),("width".into(),f(800.0)),("height".into(),f(600.0)),("shift".into(),dsl::DslValue::Bool(true)),("alt".into(),dsl::DslValue::Bool(true))])).expect("live modifiers decode");
+    assert!(modified.shift && modified.alt);
     let legacy_up = dsl::DslValue::Object(vec![("x".into(), f(5.0)), ("y".into(), f(6.0)), ("width".into(), f(800.0)), ("height".into(), f(600.0)), ("shift".into(), dsl::DslValue::Bool(false)), ("ctrl".into(), dsl::DslValue::Bool(false)), ("meta".into(), dsl::DslValue::Bool(false))]);
     let released = canvas_pointer_up::CanvasPointerUp::from_value(legacy_up).expect("legacy release decodes");
     assert!(!released.cancelled, "an absent `cancelled` is a real release");
@@ -1203,8 +1217,8 @@ fn every_command() -> Vec<DrawingCommand> {
             checkpoint_pending_work: None,
             ..Default::default()
         }),
-        DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: vec![[0.5, 1.5], [1.0, 2.0]] }),
-        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: false, ctrl: true, meta: false, cancelled: false }),
+        DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 1.0, y: 2.0, width: 800.0, height: 600.0, samples: vec![[0.5, 1.5], [1.0, 2.0]] }),
+        DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x: 1.0, y: 2.0, width: 800.0, height: 600.0, shift: false, ctrl: true, meta: false, cancelled: false }),
         DrawingCommand::CanvasDoubleClick(canvas_double_click::CanvasDoubleClick {}),
         DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}),
         DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}),
@@ -1389,7 +1403,7 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
         assert_eq!(selected.len(),3);
         settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { x:400.0,y:300.0,width:800.0,height:600.0,..Default::default() }),&meta).await;
         assert_eq!(selected_strokes(&app).await,selected);
-        settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x:430.0,y:320.0,width:800.0,height:600.0,samples:vec![] }),&meta).await;
+        settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x:430.0,y:320.0,width:800.0,height:600.0,samples:vec![] }),&meta).await;
         assert_eq!(app.snapshot().unwrap(),before);
         let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
         let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
@@ -1398,7 +1412,7 @@ async fn selected_group_and_layer_drag_preserves_selection_and_one_history_edit(
             assert_eq!(node["transform"][4].as_f64(),Some(x));
             assert_eq!(node["transform"][5].as_f64(),Some(20.0));
         }
-        let (_,receipt)=settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x:430.0,y:320.0,width:800.0,height:600.0,shift:false,ctrl:false,meta:false,cancelled }),&meta).await;
+        let (_,receipt)=settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt: false, x:430.0,y:320.0,width:800.0,height:600.0,shift:false,ctrl:false,meta:false,cancelled }),&meta).await;
         if cancelled { assert_eq!(app.snapshot().unwrap(),before); }
         else {
             assert_one_artifact_publication(&receipt);
@@ -1438,15 +1452,110 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     let mut document = crate::DrawingSnapshot { layers: vec![layer],artboard: None,..Default::default() };
     let mut config = canvas_window::config::DrawingCanvasWindowConfig::default();
     let preview = DrawingGesturePreview::default();
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY).unwrap()));
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,80.0,70.0]);
     document.artboard = Some(crate::schema::DrawingArtboard { width: 1024.0,height: 1024.0 });
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY).unwrap()));
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[]).unwrap()));
     assert_eq!(scene.framing.as_ref().unwrap().bounds,[-20.0,-30.0,1024.0,1024.0]);
     config.framed = true;
     config.viewport = store::Viewport2d { x: 777.0,y: -333.0,zoom: 2.0 };
-    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY).unwrap()));
+    let scene = canvas_scene(semio_framework_plugin::built_to_component_tree(canvas_window::render(&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[]).unwrap()));
     assert!(scene.framing.is_none());
     assert_eq!((scene.camera_x,scene.camera_y,scene.zoom),(777.0,-333.0,2.0));
     eprintln!("[DEBUG] initial Drawing framing follows off-origin geometry and yields to restored navigation");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn text_content_and_size_each_undo_as_one_selection_edit() {
+    for (field, value) in [("textContent", "Grüße 🌍\n123"), ("textSize", "36")] {
+        let mut app = drawing_app().await;
+        let mut first = crate::schema::create_drawing_text_layer("First");
+        let mut second = crate::schema::create_drawing_text_layer("Second");
+        crate::schema::layer_base_mut(&mut first).id = "first".into();
+        crate::schema::layer_base_mut(&mut second).id = "second".into();
+        let DrawingLayerNode::Text(text) = &mut second else { unreachable!() };
+        text.content = "Different".into();
+        text.size = 18.0;
+        let before = DrawingSnapshot { id: "text-history".into(), layers: vec![first, second], ..Default::default() };
+        let mut after = before.clone();
+        for layer in &mut after.layers {
+            let DrawingLayerNode::Text(text) = layer else { unreachable!() };
+            if field == "textContent" { text.content = value.into(); } else { text.size = 36.0; }
+        }
+        load_drawing_fixture(&mut app, &before);
+        artifact_laws::assert_undo_redo_round_trip(&mut *app, DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec!["first".into(), "second".into()], field: field.into(), value: value.into() }), |app| app.snapshot().unwrap(), before, after).await;
+    }
+    eprintln!("[DEBUG] text content and size preserve unrelated facets and undo/redo together for two selected text layers");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn select_all_discovers_unvisited_layers_and_prunes_deleted_selection() {
+    let (mut app, meta) = inline_selection_app().await;
+    let first = crate::schema::create_drawing_shape_layer_rect("First");
+    let second = crate::schema::create_drawing_text_layer("Second");
+    let ids = vec![layer_id(&first).to_string(), layer_id(&second).to_string()];
+    let snapshot = DrawingSnapshot { id: "select-all-topology".into(), layers: vec![first, second], ..Default::default() };
+    load_drawing_fixture(&mut app, &snapshot);
+    app.handle_action("selectAll", None, &meta).await.expect("Select All admission");
+    artifact_laws::settle_registered_typed_operation(&mut *app, meta.instance_id).await.expect("Select All publication");
+    assert_eq!(selected_strokes(&app).await, ids);
+    assert_eq!(app.snapshot().unwrap(), snapshot, "selection must not edit the drawing");
+    settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: ids[0].clone() }), &meta).await;
+    assert_eq!(selected_strokes(&app).await, vec![ids[1].clone()]);
+    settled(&mut app, DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: ids[1].clone() }), &meta).await;
+    assert!(selected_strokes(&app).await.is_empty());
+    app.handle_action("selectAll", None, &meta).await.expect("empty Select All admission");
+    artifact_laws::settle_registered_typed_operation(&mut *app, meta.instance_id).await.expect("empty Select All publication");
+    assert!(selected_strokes(&app).await.is_empty());
+    eprintln!("[DEBUG] Select All discovers untouched layers and document deletion retires selection");
+}
+
+
+#[semio_framework_async_macros::async_test]
+async fn transform_handles_render_and_commit_once_through_the_registered_editor() {
+    for handle in [4_usize,8_usize] {
+        for (cancelled,shift,alt) in [(false,false,false),(true,false,false),(false,true,true),(true,true,true)] {
+            let (mut app,mut meta)=inline_selection_app().await;
+            meta.view_state.as_mut().unwrap().active_utility_id=Some("selectDirect".into());
+            let mut child=crate::schema::create_drawing_shape_layer_rect("Transform target");
+            crate::schema::layer_base_mut(&mut child).id="child".into();
+            let mut parent=crate::schema::create_drawing_group_layer("Affine parent");
+            crate::schema::layer_base_mut(&mut parent).transform=crate::DrawingTransform {x:20.0,y:30.0,scale_x:2.0,scale_y:3.0,rotation:0.3,shear:0.5};
+            let DrawingLayerNode::Group(group)=&mut parent else {unreachable!()};
+            group.children.push(child);
+            let before=DrawingSnapshot {id:"handle-gesture".into(),layers:vec![parent],..Default::default()};
+            load_drawing_fixture(&mut app,&before);
+            settled(&mut app,DrawingCommand::SetCamera(set_camera::SetCamera {camera:store::Viewport2d {x:0.0,y:0.0,zoom:1.0}}),&meta).await;
+            let targets=serde_json::to_string(&[serde_json::json!({"granularity":DRAWING_INTERACTION_GRANULARITY,"id":"child"})]).unwrap();
+            let admission=app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID,Some(&dsl::json::to_dsl_value(&dsl::json!({"domainId":DRAWING_INTERACTION_DOMAIN,"targets":targets,"merge":"replace","method":"pick"}))),&meta).await.unwrap();
+            semio_framework_plugin::app::settle_framework_reserved_admission(&mut *app,admission).await.unwrap();
+            let scene=canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE,None,meta.view_state.as_ref().unwrap()).await.unwrap());
+            let records:Vec<serde_json::Value>=serde_json::from_str(&scene.layers_json).unwrap();
+            assert_eq!(records.iter().filter(|row|row["id"].as_str().is_some_and(|id|id.starts_with("overlay:transform-handle:"))).count(),9);
+            let bounds=canvas_pointer_down::selected_transform_bounds(&before,&["child".into()]).unwrap();
+            let start=crate::schema::geometry::handles::handle_points(bounds,1.0)[handle];
+            let center=[bounds[0]+bounds[2]*0.5,bounds[1]+bounds[3]*0.5];
+            let end=if handle==8 {[center[0]-(start[1]-center[1]),center[1]+start[0]-center[0]]} else {[start[0]+30.0,start[1]+20.0]};
+            let expected=crate::schema::geometry::handles::handle_matrix(handle,bounds,start,end,shift,alt).unwrap();
+            settled(&mut app,DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {x:start[0]+400.0,y:start[1]+300.0,width:800.0,height:600.0,..Default::default()}),&meta).await;
+            settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {shift:!shift,alt:!alt,x:end[0]+400.0,y:end[1]+300.0,width:800.0,height:600.0,samples:vec![]}),&meta).await;
+            let (_,moved)=settled(&mut app,DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { shift, alt, x:end[0]+400.0,y:end[1]+300.0,width:800.0,height:600.0,samples:vec![]}),&meta).await;
+            assert!(!moved.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact));
+            assert_eq!(app.snapshot().unwrap(),before);
+            let (_,released)=settled(&mut app,DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { alt, x:end[0]+400.0,y:end[1]+300.0,width:800.0,height:600.0,shift,ctrl:false,meta:false,cancelled}),&meta).await;
+            if cancelled {assert_eq!(app.snapshot().unwrap(),before);} else {
+                assert_one_artifact_publication(&released);
+                let after=app.snapshot().unwrap();
+                let original=crate::schema::flatten_drawing_document_to_scene_nodes(&before)[0].transform;
+                let actual=crate::schema::flatten_drawing_document_to_scene_nodes(&after)[0].transform;
+                let wanted=crate::schema::geometry::multiply(expected,original);
+                for index in 0..6 {assert!((actual[index]-wanted[index]).abs()<1e-9);}
+                artifact_laws::settle_history_verb(&mut *app,"undo",meta.instance_id).await;
+                assert_eq!(app.snapshot().unwrap(),before);
+                artifact_laws::settle_history_verb(&mut *app,"redo",meta.instance_id).await;
+                assert_eq!(app.snapshot().unwrap(),after);
+            }
+            eprintln!("[DEBUG] registered handle {handle} preview/release/history; cancelled={cancelled}");
+        }
+    }
 }

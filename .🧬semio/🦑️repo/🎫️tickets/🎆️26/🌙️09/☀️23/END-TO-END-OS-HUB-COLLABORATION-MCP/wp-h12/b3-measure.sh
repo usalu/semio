@@ -2,7 +2,7 @@
 # 📏️ H12 after-measurements on W3's published B3 catalog; launch detached (rule 28):
 #   python3 .tmp-ticket/wp-w2/w2-detach.py .🧬semio/🌐hub/s13-h12-logs/b3-measure.txt zsh .tmp-ticket/wp-h12/b3-measure.sh
 # 1 waits for `b3-publish.rc` → owned-probe chain (the BEFORE rows' binary) on puzzle / note / draw / wfc → after fuel
-# 2 waits for W3's 7800 open-plan probe (≤ 90 min) → hub binary = the chain's post-publish build-dev (else os-hub-1104)
+# 2 hub binary = a copy of the one 7800 runs on B3 (`s13-w3-bin/s13-w3-hub-7800-b3/os-hub`)
 # 3 boot-watch: cold + 1 warm on a copy of B3 (port 8162)
 # 4 hub 8161 on a B3 clone, 64 MiB guest residency → readiness → mint ×8 → residency-watch --rounds 3 → observability → stop
 # Hubs run at NI 0 (measurements, comparable with H10); one hub at a time (rule 22).
@@ -23,13 +23,9 @@ PROBE="$W/target/release/h12-owned-probe"
 nice -n 10 "$PROBE" chain "$P/puzzle/component.wasm" puzzle.2d.fixture puzzle.3d > "$G/probe-b3-puzzle.txt" 2>&1
 for pair in note:note.document draw:drawing.document wfc:s.wfc.wfc2d; do nice -n 10 "$PROBE" chain "$P/${pair%%:*}/component.wasm" "${pair#*:}"; done > "$G/probe-b3-others.txt" 2>&1
 log "probe done: $(/usr/bin/grep -c '^chain op' "$G/probe-b3-puzzle.txt" "$G/probe-b3-others.txt" | tr '\n' ' ')"
-started=$(date +%s)
-until /usr/bin/grep -qE 'END open-plan-probe|NOT READY|END (hub-build|mcp-build|restart) rc=[1-9]' "$L/chain-b3.txt" || [ $(( $(date +%s) - started )) -gt 5400 ]; do sleep 30; done
-log "chain: $(tail -1 "$L/chain-b3.txt")"
-BIN="$H/s13-h12-bin/os-hub-1104"
-if /usr/bin/grep -q 'END hub-build rc=0' "$L/chain-b3.txt"; then
-  rm -f "$H/s13-h12-bin/os-hub-b3"; cp "$R/🌎️hub/📦️packages/🦀️rust/dist/build-dev/os-hub" "$H/s13-h12-bin/os-hub-b3" && codesign --force -s - "$H/s13-h12-bin/os-hub-b3" && BIN="$H/s13-h12-bin/os-hub-b3"
-fi
+SRC="$H/s13-w3-bin/s13-w3-hub-7800-b3/os-hub"
+rm -f "$H/s13-h12-bin/os-hub-b3"; cp "$SRC" "$H/s13-h12-bin/os-hub-b3" && codesign --force -s - "$H/s13-h12-bin/os-hub-b3" || exit 1
+BIN="$H/s13-h12-bin/os-hub-b3"
 log "hub binary $BIN ($(stat -f '%Sm' "$BIN"))"
 (cd "$TS" && OS_HUB_BINARY="$BIN" bun ./📜️script.ts boot-watch --catalog-root "$CAT" --port 8162 --restarts 1 --interval-ms 500 > "$G/boot-watch-b3.txt" 2>&1)
 log "boot-watch rc=$? $(/usr/bin/grep -E '^\[boot-watch\] boot [0-9]' "$G/boot-watch-b3.txt" | cut -c1-400 | tr '\n' ' ')"

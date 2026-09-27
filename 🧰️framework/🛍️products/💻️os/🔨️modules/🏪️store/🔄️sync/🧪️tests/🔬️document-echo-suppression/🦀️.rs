@@ -52,3 +52,35 @@ fn neither_actor_reads_a_frame_origin_to_suppress_an_echo() {
     assert_eq!(source.matches("admit_remote_envelopes(&mut self.applied_op_ids").count(), 2, "both actors admit by operation identity");
     assert_eq!(source.matches("note_authored_envelopes(&mut self.applied_op_ids, envelopes);").count(), 2, "both actors record what they author");
 }
+
+
+fn settlement_envelope(id: &str) -> MutationEnvelope {
+    envelope(&serde_json::json!({ "mutationId": id, "actor": "hub.v1.author" }))
+}
+
+#[test]
+fn a_committed_own_operation_settles_the_outbox_and_its_pending_batch() {
+    let mut outbox = vec![settlement_envelope("edit-a#0"), settlement_envelope("transition-b")];
+    let mut pending = std::collections::HashMap::from([(7_u64, vec![settlement_envelope("edit-c#0")]), (8_u64, vec![settlement_envelope("edit-d#0"), settlement_envelope("edit-e#0")])]);
+    let tail = [settlement_envelope("edit-a#0"), settlement_envelope("edit-c#0"), settlement_envelope("edit-d#0"), settlement_envelope("edit-peer#0")];
+    let mut settled: Vec<String> = super::settle_committed_envelopes(&mut outbox, &mut pending, &tail).into_iter().map(|envelope| envelope.mutation_id.0).collect();
+    settled.sort();
+    assert_eq!(settled, ["edit-a#0", "edit-c#0", "edit-d#0"], "every own operation the hub's log holds is settled, a peer's is not ours to settle");
+    assert_eq!(outbox.iter().map(|envelope| envelope.mutation_id.0.as_str()).collect::<Vec<_>>(), ["transition-b"], "only the uncommitted work stays queued");
+    assert!(!pending.contains_key(&7), "a batch the tail fully committed leaves");
+    assert_eq!(pending[&8].iter().map(|envelope| envelope.mutation_id.0.as_str()).collect::<Vec<_>>(), ["edit-e#0"], "a partly committed batch keeps only its uncommitted rest");
+}
+
+#[test]
+fn both_actors_settle_committed_operations_before_admission() {
+    let source = include_str!("../../🦀️.rs");
+    assert_eq!(source.matches("let settled = settle_committed_envelopes(&mut self.outbox, &mut self.pending_batches, &envelopes);").count(), 2, "native and wasm32 Commands arms settle");
+    assert_eq!(source.matches("rollbacks.push(rollback_envelope(").count(), 0, "no rollback path pushes an unchecked rollback");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_history_transition_has_no_inverse_rollback() {
+    let transition = crate::os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("edit-a#0".into())] };
+    let envelope = crate::os_spr::history_transition_envelope(&transition, &ArtifactId("artifact-echo".into()), &ActorId("hub.v1.author".into()), Vec::new(), crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 });
+    assert!(super::rollback_envelope(&envelope).await.is_none(), "a transition is undone by a later transition, never by its (empty) inverse");
+}

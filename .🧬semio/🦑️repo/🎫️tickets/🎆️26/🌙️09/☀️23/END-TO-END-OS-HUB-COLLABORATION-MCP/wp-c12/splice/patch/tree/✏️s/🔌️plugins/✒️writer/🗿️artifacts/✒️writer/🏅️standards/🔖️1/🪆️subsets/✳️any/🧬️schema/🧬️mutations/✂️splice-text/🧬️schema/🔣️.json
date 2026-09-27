@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/writer/writer/mutation/splice-text/schema.json",
+  "title": "SpliceText",
+  "description": "One range-text operation (semio.ui.scene.text-splice.v1): positions and lengths in Unicode scalar values; before/after are up to 32 scalars of the author's context.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["start", "deleted", "insert", "before", "after"],
+  "properties": {
+    "start": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "deleted": { "type": "string" },
+    "insert": { "type": "string" },
+    "before": { "type": "string" },
+    "after": { "type": "string" }
+  }
+}

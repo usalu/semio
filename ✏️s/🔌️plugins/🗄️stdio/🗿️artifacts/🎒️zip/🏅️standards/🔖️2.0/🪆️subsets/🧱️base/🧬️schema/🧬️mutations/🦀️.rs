@@ -107,7 +107,12 @@ pub(crate) fn agg_diff(this: &ZipMutation, base: &ZipSnapshot) -> protocol::Muta
     protocol::MutationOutcome::new(match this {
         ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
         ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment }) => diff::diff_set_archive_comment(comment),
-        ZipMutation::AddEntry(add_entry::AddEntry { entry }) => diff::diff_add_entry(entry.clone()),
+        ZipMutation::AddEntry(add_entry::AddEntry { entry, before }) => {
+            if before.as_ref().is_some_and(|name| !base.entries.iter().any(|entry| &entry.name == name)) {
+                return protocol::MutationOutcome::error("mutation.apply.missing-target", "ZIP insertion anchor no longer exists", ["entries"]);
+            }
+            diff::diff_add_entry(base, entry.clone(), before.as_deref())
+        },
         ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name }) => diff::diff_remove_entry(name),
         ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => diff::diff_rename_entry(name, new_name),
         ZipMutation::SetEntryData(set_entry_data::SetEntryData { name, data }) => diff::diff_set_entry_data(name, data.clone()),
@@ -120,7 +125,7 @@ pub(crate) fn agg_inverse(this: &ZipMutation, base: &ZipSnapshot) -> Vec<ZipMuta
         ZipMutation::SetSnapshot(_) => vec![ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         ZipMutation::SetArchiveComment(_) => vec![ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: base.comment.clone() })],
         ZipMutation::AddEntry(add_entry::AddEntry { entry, .. }) => vec![ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
-        ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name }) => base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::AddEntry(add_entry::AddEntry { entry: entry.clone() })]).unwrap_or_default(),
+        ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name }) => base.entries.iter().position(|entry| entry.name == *name).map(|index| vec![ZipMutation::AddEntry(add_entry::AddEntry { entry: base.entries[index].clone(), before: base.entries.get(index + 1).map(|entry| entry.name.clone()) })]).unwrap_or_default(),
         ZipMutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => vec![ZipMutation::RenameEntry(rename_entry::RenameEntry { name: new_name.clone(), new_name: name.clone() })],
         ZipMutation::SetEntryData(set_entry_data::SetEntryData { name, .. }) => {
             base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
@@ -147,7 +152,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<ZipMutation> {
     vec![
         ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base_snapshot() }),
         ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "new".into() }),
-        ZipMutation::AddEntry(add_entry::AddEntry { entry: entry("x.bin", b"xxx") }),
+        ZipMutation::AddEntry(add_entry::AddEntry { entry: entry("x.bin", b"xxx"), before: None }),
         ZipMutation::RemoveEntry(remove_entry::RemoveEntry { name: "a.txt".into() }),
         ZipMutation::RenameEntry(rename_entry::RenameEntry { name: "a.txt".into(), new_name: "renamed.txt".into() }),
         ZipMutation::SetEntryData(set_entry_data::SetEntryData { name: "a.txt".into(), data: b"changed".to_vec() }),

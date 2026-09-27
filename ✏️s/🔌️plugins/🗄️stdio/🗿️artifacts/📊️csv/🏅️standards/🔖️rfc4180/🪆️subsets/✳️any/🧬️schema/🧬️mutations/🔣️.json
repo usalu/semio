@@ -93,6 +93,24 @@
           }
         }
       ]
+    },
+    {
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/csv/rfc4180/any/mutation/patch-snapshot/schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mutation"
+          ],
+          "properties": {
+            "mutation": {
+              "const": "patchSnapshot"
+            }
+          }
+        }
+      ]
     }
   ]
 }

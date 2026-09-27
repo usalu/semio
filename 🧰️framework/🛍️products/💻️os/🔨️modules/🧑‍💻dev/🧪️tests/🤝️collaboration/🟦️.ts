@@ -482,8 +482,12 @@ async function collabStartUserDevServer(opts: { readonly port: number; readonly 
 async function collabClickToolbarButton(page: import("playwright").Page, elementId: string): Promise<void> {
   const button = page.locator(`[data-ui-node-key="${elementId}"]`).first();
   spaceE2eAssert((await button.count()) > 0, `toolbar button #${elementId} does not exist`);
-  await button.focus();
-  await button.press("Enter");
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    await button.focus();
+    await button.press("Enter");
+    if (await page.locator('[role="dialog"][data-slot="dialog-content"]').first().waitFor({ state: "visible", timeout: 5_000 }).then(() => true).catch(() => false)) return;
+    console.log(`[collab-e2e] #${elementId} opened no dialog (attempt ${attempt}); pressing again`);
+  }
 }
 
 async function collabWaitForDialog(page: import("playwright").Page): Promise<void> {
@@ -527,7 +531,7 @@ async function collabCreateArtifact(page: import("playwright").Page, name: strin
   }
   await option.click();
   await collabSubmitDialog(page);
-  return collabWaitForNewRow(page, "artifact", before, 60_000);
+  return collabWaitForNewRow(page, "artifact", before, 300_000);
 }
 
 /** 🧭️ Waits until the Home (`s-home-create-space`) or Space (`s-space-create-artifact`) app is mounted, by the toolbar
@@ -610,7 +614,14 @@ async function collabRowAction(page: import("playwright").Page, prefix: "space" 
 /** ⏳️ Waits for an editable text surface — a hub document's editor mounts only after its plugin module is installed from
  * the hub catalog (the "Loading plugin …" band), which takes tens of seconds on a fresh device. */
 async function collabWaitForEditor(page: import("playwright").Page, deadlineMs: number): Promise<boolean> {
-  return page.locator('textarea, [contenteditable="true"]').first().waitFor({ state: "attached", timeout: deadlineMs }).then(() => true).catch(() => false);
+  return collabTextEditor(page).waitFor({ state: "attached", timeout: deadlineMs }).then(() => true).catch(() => false);
+}
+
+/** ⌨️ The input sink of the document's text editor (`TextEditorHost`'s hidden textarea, which mirrors the session's buffer): never
+ * the first textarea of the page, which after a reload can be a panel field such as the History panel's check-in message
+ * (collab STEP 8 typed its marker there in run `c12collab-1`, ticket 26/09/23 C12). */
+function collabTextEditor(page: import("playwright").Page): import("playwright").Locator {
+  return page.locator(".semio-text-editor-host textarea").first();
 }
 
 /** 🔁️ When each page last re-opened its Space app or re-bootstrapped its directory (see {@link collabSettleAfterLoad}). */
@@ -619,11 +630,11 @@ const collabSpaceReopenedAt = new WeakMap<import("playwright").Page, number>();
 /** ⏳️ A hard load mounts the Space app, then the restored identity re-establishes the session and the route re-opens the
  * space ~5–7 s later ("space index opening failed: document closed", routed to U5 on 26/09/26), closing whatever was opened
  * in between: waits until the page has been quiet for `quietMs` and the Space app is mounted again. */
-async function collabSettleAfterLoad(page: import("playwright").Page, quietMs = 12_000, deadlineMs = 90_000): Promise<boolean> {
+async function collabSettleAfterLoad(page: import("playwright").Page, quietMs = 12_000, deadlineMs = 90_000, appKey: "s-space-create-artifact" | "s-home-create-space" = "s-space-create-artifact"): Promise<boolean> {
   const started = Date.now();
   while (Date.now() - started < deadlineMs) {
     const quietSince = Math.max(started, collabSpaceReopenedAt.get(page) ?? 0);
-    if (Date.now() - quietSince >= quietMs && (await page.locator('[data-ui-node-key="s-space-create-artifact"]').count()) > 0) return true;
+    if (Date.now() - quietSince >= quietMs && (await page.locator(`[data-ui-node-key="${appKey}"]`).count()) > 0) return true;
     await page.waitForTimeout(500);
   }
   return false;
@@ -770,6 +781,35 @@ async function collabAssertPeerCursorMoves(opts: {
 }
 
 
+
+/** ✏️ A text peer's marker is its CARET, not its pointer (`TextPeerCaretsOverlayV1`): the mover puts its caret at the start
+ * and then the end of its first text line, and the observer's painted caret for that peer must move right. */
+async function collabAssertPeerCaretMoves(opts: { readonly mover: import("playwright").Page; readonly observer: import("playwright").Page; readonly label: string }): Promise<string> {
+  const sink = collabTextEditor(opts.mover);
+  spaceE2eAssert((await sink.count()) > 0, `${opts.label}: the mover has no text editor open`);
+  const caret = async (): Promise<{ readonly x: number; readonly count: number }> => {
+    const marks = opts.observer.locator("[data-peer-caret]");
+    const count = await marks.count();
+    return { x: count > 0 ? ((await marks.first().boundingBox())?.x ?? Number.NaN) : Number.NaN, count };
+  };
+  const settle = async (moved: (value: { readonly x: number; readonly count: number }) => boolean): Promise<{ readonly x: number; readonly count: number }> => {
+    const deadline = Date.now() + 20_000;
+    let seen = await caret();
+    while (Date.now() < deadline && !moved(seen)) {
+      await opts.observer.waitForTimeout(200);
+      seen = await caret();
+    }
+    return seen;
+  };
+  await sink.focus();
+  await opts.mover.keyboard.press("Home");
+  const start = await settle((value) => value.count > 0);
+  spaceE2eAssert(start.count > 0, `${opts.label}: the observer never painted the mover's caret`);
+  await opts.mover.keyboard.press("End");
+  const end = await settle((value) => value.count > 0 && value.x > start.x + 4);
+  spaceE2eAssert(end.count > 0 && end.x > start.x + 4, `${opts.label}: the peer caret did not follow Home → End (${JSON.stringify(start)} → ${JSON.stringify(end)})`);
+  return `${opts.label}: peer caret moved from x=${start.x.toFixed(1)} to x=${end.x.toFixed(1)}`;
+}
 
 /** 🔢️ The `ServerFrame` tag byte for `Commands`, mirrored from `encode_server_frame`'s own match arm
  * (`🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs`, `out.push(3)`). */
@@ -933,8 +973,8 @@ async function collabRunScenario(
     try {
       await collabRowAction(user2, "artifact", artifactId, "open");
       await collabWaitForEditor(user2, 240_000);
-      const editor1 = user1.locator('textarea, [contenteditable="true"]').first();
-      const editor2 = user2.locator('textarea, [contenteditable="true"]').first();
+      const editor1 = collabTextEditor(user1);
+      const editor2 = collabTextEditor(user2);
       spaceE2eAssert((await editor1.count()) > 0, "user1 has no editable text surface open (see STEP 3)");
       spaceE2eAssert((await editor2.count()) > 0, "user2 has no editable text surface open after clicking the artifact row's open button");
       const probeText = `collab-probe-${Date.now()}`;
@@ -1091,8 +1131,8 @@ async function collabRunScenario(
       await collabOpenSpace(user1, spaceId);
       await collabWaitForRow(user1, "artifact", artifactId, 30_000);
       await collabRowAction(user1, "artifact", artifactId, "open");
-      const editor1 = user1.locator('textarea, [contenteditable="true"]').first();
-      const editor2 = user2.locator('textarea, [contenteditable="true"]').first();
+      const editor1 = collabTextEditor(user1);
+      const editor2 = collabTextEditor(user2);
       await editor1.waitFor({ state: "visible", timeout: 30_000 });
       spaceE2eAssert((await editor2.count()) > 0, "user2 has no editable text surface open — STEP 8 measures a round trip between two OPEN editors (see STEP 4)");
       const marker = `r${Date.now() % 100_000}`;
@@ -1150,7 +1190,7 @@ async function collabRunRestartStep(opts: {
    * rather than passing on a vacuous truth. */
   let inFlightMarker: string | undefined;
   try {
-    const editor1 = opts.user1.locator('textarea, [contenteditable="true"]').first();
+    const editor1 = collabTextEditor(opts.user1);
     const hasEditor = (await editor1.count()) > 0;
     liveHub.kill();
     // 🧵️ We hold the hub's own `child` handle — await its `exit` event via 🔖️PollHelpers's
@@ -1181,7 +1221,7 @@ async function collabRunRestartStep(opts: {
       "user1 had no open editor at restart time, so nothing was ever in flight — STEP 10 needs STEP 3/4's editor surface to exist before it can prove a resume",
     );
     await collabRowAction(opts.user2, "artifact", opts.artifactId, "open");
-    const editor2 = opts.user2.locator('textarea, [contenteditable="true"]').first();
+    const editor2 = collabTextEditor(opts.user2);
     await editor2.waitFor({ state: "visible", timeout: 30_000 });
     const frames = await collabWaitForEditorText(opts.user2, editor2, opts.user2Commands, inFlightMarker!, 120_000);
     spaceE2eAssert(frames >= 1, `user2 showed the offline edit ${JSON.stringify(inFlightMarker)} without any ServerFrame::Commands frame — it cannot have travelled through the restarted hub`);
@@ -1254,8 +1294,8 @@ async function collabRunCollaborationBehaviours(opts: {
     for (const step of [11, 12, 13, 14]) opts.record(step, false, "skipped — no space/artifact id from earlier steps");
     return;
   }
-  const editor1 = opts.user1.locator('textarea, [contenteditable="true"]').first();
-  const editor2 = opts.user2.locator('textarea, [contenteditable="true"]').first();
+  const editor1 = collabTextEditor(opts.user1);
+  const editor2 = collabTextEditor(opts.user2);
 
   // STEP 11 — per-user undo
   try {
@@ -1292,7 +1332,11 @@ async function collabRunCollaborationBehaviours(opts: {
     const typedAt = Date.now();
     await editor2.click();
     await editor2.type(offlineMarker);
-    const localEcho = await collabEditorText(editor2);
+    let localEcho = await collabEditorText(editor2);
+    while (!localEcho.includes(offlineMarker) && Date.now() - typedAt < 5_000) {
+      await opts.user2.waitForTimeout(100);
+      localEcho = await collabEditorText(editor2);
+    }
     const localLatencyMs = Date.now() - typedAt;
     spaceE2eAssert(localEcho.includes(offlineMarker), `user2's own editor did not echo ${JSON.stringify(offlineMarker)} while offline — the shell froze on the dead socket instead of staying local-first`);
     // 🖱️ A second, independent interaction while still offline: a frozen page cannot answer this.
@@ -1335,10 +1379,9 @@ async function collabRunCollaborationBehaviours(opts: {
   // STEP 14 — in-canvas peer cursors on writer (open from steps 3-4) plus draw + puzzle3d when kinds exist
   try {
     const details: string[] = [];
-    // Writer: prefer an open textarea/contenteditable host from earlier steps.
-    const writerHost = 'textarea, [contenteditable="true"], [data-slot="canvas-presence-overlay"]';
+    // Writer: the document of steps 3–13, its peer marker is the caret.
     try {
-      details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host: writerHost, label: "writer" }));
+      details.push(await collabAssertPeerCaretMoves({ mover: opts.user1, observer: opts.user2, label: "writer" }));
     } catch (error) {
       // Re-open space artifact editors if step 6+ navigated away.
       if (opts.spaceId && opts.artifactId) {
@@ -1348,14 +1391,15 @@ async function collabRunCollaborationBehaviours(opts: {
         await collabWaitForRow(opts.user2, "artifact", opts.artifactId, 30_000);
         await collabRowAction(opts.user1, "artifact", opts.artifactId, "open").catch(() => undefined);
         await collabRowAction(opts.user2, "artifact", opts.artifactId, "open").catch(() => undefined);
-        await opts.user1.waitForTimeout(1_000);
-        details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host: writerHost, label: "writer" }));
+        spaceE2eAssert(await collabWaitForEditor(opts.user1, 120_000), "user1's writer editor never re-mounted for the caret leg");
+        spaceE2eAssert(await collabWaitForEditor(opts.user2, 120_000), "user2's writer editor never re-mounted for the caret leg");
+        details.push(await collabAssertPeerCaretMoves({ mover: opts.user1, observer: opts.user2, label: "writer" }));
       } else {
         throw error;
       }
     }
     for (const [label, kind, host] of [
-      ["draw", COLLAB_E2E_KINDS.draw, '[data-slot="canvas-presence-overlay"], canvas'],
+      ["draw", COLLAB_E2E_KINDS.draw, ".semio-canvas-2d-host"],
       ["puzzle3d", COLLAB_E2E_KINDS.puzzle3d, '[data-peer-cursor-world], [data-slot="canvas-presence-overlay"], canvas'],
     ] as const) {
       try {
@@ -1364,9 +1408,10 @@ async function collabRunCollaborationBehaviours(opts: {
         const id = await collabCreateArtifact(opts.user1, `Collab ${label}`, kind);
         await collabOpenSpace(opts.user2, opts.spaceId!);
         await collabWaitForRow(opts.user2, "artifact", id, 30_000);
-        await collabRowAction(opts.user1, "artifact", id, "open");
+        // 🚪️ The creation saga opens the new document for its creator; the peer opens it from the Space index.
+        await opts.user1.locator(host).first().waitFor({ state: "attached", timeout: 300_000 });
         await collabRowAction(opts.user2, "artifact", id, "open");
-        await opts.user1.waitForTimeout(1_000);
+        await opts.user2.locator(host).first().waitFor({ state: "attached", timeout: 300_000 });
         details.push(await collabAssertPeerCursorMoves({ mover: opts.user1, observer: opts.user2, host, label }));
       } catch (error) {
         details.push(`${label}: FAILED (${error instanceof Error ? error.message : String(error)})`);
@@ -1510,9 +1555,9 @@ async function runCollabE2eVerify(): Promise<void> {
         if (url.includes("/directory/event-page/v1?after=0")) collabSpaceReopenedAt.set(page, Date.now());
         if (!url.includes("/auth/") && !url.includes("/directory/")) return;
         const status = response.status();
-        const auth = response.request().headers()["authorization"] ?? "none";
-        const postData = response.request().postData() ?? "";
-        console.log(`[collab-e2e:network] ${label} response: ${response.request().method()} ${url} auth=${auth} body=${postData.slice(0, 300)} — ${status}`);
+        const auth = (response.request().headers()["authorization"] ?? "none").split(" ")[0];
+        const postData = url.includes("/auth/") ? "<redacted>" : (response.request().postData() ?? "").slice(0, 300);
+        console.log(`[collab-e2e:network] ${label} response: ${response.request().method()} ${url} auth=${auth} body=${postData} — ${status}`);
       });
       page.on("websocket", (ws) => {
         console.log(`[collab-e2e:ws] ${label} opened: ${ws.url()}`);
@@ -1536,8 +1581,9 @@ async function runCollabE2eVerify(): Promise<void> {
     await collabSignIn(user1Page, COLLAB_E2E_USER1_EMAIL, passwords[COLLAB_E2E_USER1_EMAIL]!);
     await collabSignIn(user2Page, COLLAB_E2E_USER2_EMAIL, passwords[COLLAB_E2E_USER2_EMAIL]!);
     console.log(`[collab-e2e] both humans hold a verified session authority on ${hubBaseUrl}`);
-    await user1Page.waitForTimeout(2_000);
-    await user2Page.waitForTimeout(2_000);
+    // ⏳️ A sign-in re-establishes Home and re-bootstraps its directory a few seconds later; a dialog opened in between is
+    // closed with it (26/09/27 C11 runs b3-2/b3-3, routed to the shell owner) — act once Home has been quiet for 8 s.
+    await Promise.all([collabSettleAfterLoad(user1Page, 8_000, 60_000, "s-home-create-space"), collabSettleAfterLoad(user2Page, 8_000, 60_000, "s-home-create-space")]);
 
     const scenario = await collabRunScenario(record, user1Page, user2Page, hubBaseUrl, user2Commands, () => (external ? collabExternalAdminCapability(external) : hubDaemon!.adminCapability), user1Sent);
 

@@ -454,6 +454,24 @@ export function shellIdentityResolutionV1(state: Readonly<{ hubConfigured: boole
   return state.offline ? "hub-unavailable" : "pending";
 }
 
+/** 🪪️ What a change of the signed-in human asks of the session the shell shows. `keep`: the same human. `refresh`: the same
+ * human under a new display name, or a first human for a session assembled signed-out — signed out is a state every
+ * surface renders (Home: an empty spaces table), so the session is re-rendered with the human and the directory owner binds
+ * it; re-establishing it instead replaced Home 5–8 s after every sign-in and closed whatever the human had opened on it
+ * meanwhile (the Create Space dialog, C11 run b3-3). `re-establish`: the session was assembled for another human (or the
+ * human signed out), and a surface built for one human never serves another. Rows: `🧫️fixtures/🧭️session-lane/🔣️.json`
+ * `humanChanges`. */
+export type ShellHumanChangeRecoveryV1 = "keep" | "refresh" | "re-establish";
+
+export type ShellHumanV1 = Readonly<{ userId: string; displayName: string }>;
+
+export function shellHumanChangeRecoveryV1(previous: ShellHumanV1 | null, current: ShellHumanV1 | null): ShellHumanChangeRecoveryV1 {
+  const before = previous?.userId ?? "";
+  const after = current?.userId ?? "";
+  if (before !== after) return before === "" ? "refresh" : "re-establish";
+  return (previous?.displayName ?? "") === (current?.displayName ?? "") ? "keep" : "refresh";
+}
+
 /** 🚪️ Whether a session route may be applied under an identity resolution. A space route addresses hub data, so it waits
  * for the human it is opened for: applied before a restored session was confirmed, the space mounted, the confirmation
  * re-established Home for the "new" human ~5–7 s later and the route mounted the space a second time — closing

@@ -386,7 +386,9 @@
         "change-frame-fill",
         "change-frame-stroke",
         "change-frame-wrap-mode",
-        "change-frame-columns"
+        "change-frame-columns",
+        "update-grid",
+        "set-frame-flags"
       ]
     }
   ],

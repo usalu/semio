@@ -134,7 +134,7 @@ where
         let mut cleared = false;
         let mut partials = Vec::new();
         let mut tried = 0usize;
-        for (remedy_index, remedy) in applicables {
+        for &(remedy_index, remedy) in &applicables {
             let has_scalar = !matches!(remedy.bound, RemedyBound::OneOf) || !remedy.options.is_empty();
             if !has_scalar {
                 continue;

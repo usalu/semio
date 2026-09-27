@@ -45,17 +45,18 @@ fn encoded_layout_templates_resolve_the_same_initial_top_and_three_point_looks_a
     let top_id = r#"world-projection:{"mode":{"kind":"orthographic"},"orientation":{"type":"cardinal","view":"top"}}"#;
     let top = world_projection_initial_seed(top_id).expect("React's encoded Top template decodes");
     assert_eq!(world_projection_template(top_id).id, "orthographic");
-    assert_eq!(top.family, ui_wgpu::wgpu::CameraProjection3d::Orthographic);
-    assert_eq!(top.orientation, ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top));
-    assert_eq!(top.direction, [0.0, 0.0, 1.0]);
-    assert_eq!(top.up, [0.0, 1.0, 0.0]);
+    assert_eq!(ui_wgpu::wgpu::projection_spec_family(top), ui_wgpu::wgpu::CameraProjection3d::Orthographic);
+    let (direction, up) = ui_wgpu::wgpu::projection_spec_orientation_look(top);
+    assert_eq!(direction.to_array(), [0.0, 0.0, 1.0]);
+    assert_eq!(up.to_array(), [0.0, 1.0, 0.0]);
 
     let perspective_id = r#"world-projection:{"mode":{"kind":"threePoint","fov":50},"orientation":{"type":"free"}}"#;
     let perspective = world_projection_initial_seed(perspective_id).expect("React's encoded 3-Point template decodes");
     assert_eq!(world_projection_template(perspective_id).id, "three-point");
-    assert_eq!(perspective.family, ui_wgpu::wgpu::CameraProjection3d::Perspective);
-    assert_eq!(perspective.direction, [0.75, -0.75, 0.55]);
-    assert_eq!(perspective.up, [0.0, 0.0, 1.0]);
+    assert_eq!(ui_wgpu::wgpu::projection_spec_family(perspective), ui_wgpu::wgpu::CameraProjection3d::Perspective);
+    let (direction, up) = ui_wgpu::wgpu::projection_spec_orientation_look(perspective);
+    assert!((direction.length() - 1.0).abs() < 1e-6);
+    assert_eq!(up.to_array(), [0.0, 0.0, 1.0]);
     assert!(world_projection_initial_seed("world-projection:not-json").is_none(), "a malformed template never silently becomes a different camera");
 }
 

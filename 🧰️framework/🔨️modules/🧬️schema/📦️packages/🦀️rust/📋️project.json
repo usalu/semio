@@ -26,6 +26,14 @@
         "command": "bun ./📜️script.ts check",
         "forwardAllArgs": true
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
     }
   },
   "tags": [
@@ -38,6 +46,9 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/📽️projection/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🏃️execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🏷️entity-kinds/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/✅️validator/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧫️fixtures/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts",

@@ -229,7 +229,12 @@ fn the_first_ready_patch_is_admitted_whatever_the_budget_says() {
 fn a_turn_patch_page_never_asks_the_guest_for_more_than_one_contiguous_ceiling() {
     assert_eq!(UI_TURN_PATCHES_MAXIMUM, semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES / UI_TURN_PATCH_OWNER_BYTES);
     assert!(UI_TURN_PATCHES_MAXIMUM > 1, "a page that carries one patch is the floor this lane removed");
-    assert!(size_of::<UiTurnPatches>() <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, "the turn page is {} B against a {} B contiguous ceiling", size_of::<UiTurnPatches>(), semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES);
+    assert!(
+        size_of::<UiTurnPatches>() <= semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES,
+        "the turn page is {} B against a {} B contiguous ceiling",
+        size_of::<UiTurnPatches>(),
+        semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES
+    );
     assert_eq!(UI_TURN_PATCH_BUDGET_BYTES, semio_framework_trace::GUEST_HOST_ANSWER_CEILING_BYTES / 4);
     let window = |declared: usize| turn_patch_budget_bytes(semio_framework::kernel::Budget { fuel: 0, deadline_ms: 0, max_effects: 0, max_patch_bytes: declared as u32, max_frames: 0 });
     for declared in budget()["laneDeclarations"].as_array().expect("declared lane budgets").iter().map(|value| value.as_u64().expect("lane budget") as usize) {
@@ -260,7 +265,8 @@ fn two_queued_patches_of_one_surface_never_travel_in_the_same_turn_page() {
     let other = format!("{instance}:surface-other");
     let push = |surface: &str, revision: u64| {
         let id = ui_contract::SurfaceId::try_from(surface.to_string()).expect("fixture surface id");
-        with_pending(|pending| pending.borrow_mut().push_external(ui_contract::UiPatch { surface: id, base_revision: ui_contract::UiRevision(revision - 1), revision: ui_contract::UiRevision(revision), ops: Default::default() })).expect("external publication");
+        with_pending(|pending| pending.borrow_mut().push_external(ui_contract::UiPatch { surface: id, base_revision: ui_contract::UiRevision(revision - 1), revision: ui_contract::UiRevision(revision), ops: Default::default() }))
+            .expect("external publication");
     };
     push(&name, 1);
     push(&other, 1);
@@ -287,7 +293,8 @@ fn queue_external(instance: u32, count: usize) -> Vec<(String, u64)> {
         let name = format!("{instance}:surface-{index}");
         let surface = ui_contract::SurfaceId::try_from(name.clone()).expect("fixture surface id");
         let revision = index as u64 + 1;
-        with_pending(|pending| pending.borrow_mut().push_external(ui_contract::UiPatch { surface, base_revision: ui_contract::UiRevision(revision - 1), revision: ui_contract::UiRevision(revision), ops: Default::default() })).expect("external publication");
+        with_pending(|pending| pending.borrow_mut().push_external(ui_contract::UiPatch { surface, base_revision: ui_contract::UiRevision(revision - 1), revision: ui_contract::UiRevision(revision), ops: Default::default() }))
+            .expect("external publication");
         expected.push((name, revision));
     }
     expected

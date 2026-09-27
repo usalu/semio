@@ -38,6 +38,7 @@ type FixtureMeasurement = {
 type Fixture = {
   readonly version: 1;
   readonly aggregateBytes: number;
+  readonly fixedBackingBytes: number;
   readonly surfaceBytes: number;
   readonly surfaceItems: number;
   readonly documentNodes: number;
@@ -127,7 +128,7 @@ function surfaceLimits(nodes: number): Limits {
 
 describe("retained resident refresh budget", () => {
   it("never needs a second full resident set", () => {
-    const ledger = new ResidentLedger(fixture.measured.fixedBackingBytes);
+    const ledger = new ResidentLedger(fixture.fixedBackingBytes);
     const live: (number | null)[] = fixture.surfaces.map(() => null);
     let peakRoots = 0;
     let peakBytes = 0;
@@ -147,7 +148,7 @@ describe("retained resident refresh budget", () => {
           live[index] = slot as number;
         }
         peakRoots = Math.max(peakRoots, ledger.roots);
-        peakBytes = Math.max(peakBytes, ledger.committedBytes - fixture.measured.fixedBackingBytes);
+        peakBytes = Math.max(peakBytes, ledger.committedBytes - fixture.fixedBackingBytes);
       });
     }
     for (const slot of live) if (slot !== null) ledger.release(slot);
@@ -157,17 +158,17 @@ describe("retained resident refresh budget", () => {
     assert.equal(peakRoots, fixture.surfaces.length);
     assert.equal(peakBytes, fixture.peakResidentBytes);
     assert.equal(ledger.roots, 0);
-    assert.equal(ledger.committedBytes, fixture.measured.fixedBackingBytes);
+    assert.equal(ledger.committedBytes, fixture.fixedBackingBytes);
   });
 
   it("shows the double-buffered order needs a second full set", () => {
-    const ledger = new ResidentLedger(fixture.measured.fixedBackingBytes);
+    const ledger = new ResidentLedger(fixture.fixedBackingBytes);
     const first = fixture.surfaces.map((surface) => ledger.reserve(surfaceLimits(surface.nodes)));
     const singleRoots = ledger.roots;
-    const singleBytes = ledger.committedBytes - fixture.measured.fixedBackingBytes;
+    const singleBytes = ledger.committedBytes - fixture.fixedBackingBytes;
     const second = fixture.surfaces.map((surface) => ledger.reserve(surfaceLimits(surface.nodes)));
     const doubledRoots = ledger.roots;
-    const doubledBytes = ledger.committedBytes - fixture.measured.fixedBackingBytes;
+    const doubledBytes = ledger.committedBytes - fixture.fixedBackingBytes;
     for (const slot of [...first, ...second]) {
       assert.equal(typeof slot, "number", "both full sets are admitted against an otherwise empty ledger");
       ledger.release(slot as number);
@@ -180,7 +181,7 @@ describe("retained resident refresh budget", () => {
   });
 
   it("admits only six ceiling-sized surfaces", () => {
-    const ledger = new ResidentLedger(fixture.measured.fixedBackingBytes);
+    const ledger = new ResidentLedger(fixture.fixedBackingBytes);
     const ceiling: Limits = { items: fixture.surfaceItems, bytes: fixture.surfaceBytes };
     const admitted: number[] = [];
     let refusal: string | null = null;
@@ -196,7 +197,7 @@ describe("retained resident refresh budget", () => {
   });
 
   it("admits sixty populated full documents and refuses the sixty-first on bytes", () => {
-    const ledger = new ResidentLedger(fixture.measured.fixedBackingBytes);
+    const ledger = new ResidentLedger(fixture.fixedBackingBytes);
     const full = surfaceLimits(fixture.documentNodes);
     const admitted: number[] = [];
     let refusalAt = 0;
@@ -213,10 +214,10 @@ describe("retained resident refresh budget", () => {
     assert.equal(admitted.length, fixture.fullDocumentAdmittedRoots);
     assert.equal(refusalAt, fixture.fullDocumentRefusedRoot);
     assert.equal(ledger.roots, fixture.fullDocumentAdmittedRoots);
-    assert(ledger.roots < RESIDENT_SLOTS, "the byte ceiling refuses while two slot positions remain");
+    assert(ledger.roots < RESIDENT_SLOTS, "the byte ceiling refuses while four slot positions remain");
     for (const slot of admitted) ledger.release(slot);
     assert.equal(ledger.roots, 0);
-    assert.equal(ledger.committedBytes, fixture.measured.fixedBackingBytes);
+    assert.equal(ledger.committedBytes, fixture.fixedBackingBytes);
   });
 
   it("carries the measured six-surface census the wgpu shell reported", () => {

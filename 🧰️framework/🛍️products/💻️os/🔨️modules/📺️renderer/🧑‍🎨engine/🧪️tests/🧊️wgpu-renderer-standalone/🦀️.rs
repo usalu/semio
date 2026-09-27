@@ -1,5 +1,5 @@
 #[cfg(test)]
-fn collect_fixture_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+fn collect_fixture_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     while let Some(action) = input.take_action_step().expect("fixture action authority remains live") {
         actions.push(action.into_descriptor().expect("bounded fixture action materializes"));

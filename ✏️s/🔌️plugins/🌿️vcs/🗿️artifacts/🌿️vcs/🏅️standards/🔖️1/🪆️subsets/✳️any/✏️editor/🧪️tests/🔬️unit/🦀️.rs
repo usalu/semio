@@ -647,6 +647,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
         next.notes = notes.clone();
         let typed = dispatch(&mut instance, VcsCommand::TextEdit(text_edit::TextEdit { text: serde_json::to_string(&next).expect("snapshot json") })).await;
         assert!(typed.edited_document(), "keystroke {index} was not saved");
+        semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *instance);
     }
     assert_eq!(instance.snapshot().expect("snapshot").notes, run.expected);
     for (verb, expected) in [("undo", &run.initial), ("redo", &run.expected)] {

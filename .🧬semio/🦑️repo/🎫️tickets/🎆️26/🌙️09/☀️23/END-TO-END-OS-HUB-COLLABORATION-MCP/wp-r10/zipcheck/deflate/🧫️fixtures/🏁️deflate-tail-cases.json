@@ -1,0 +1,11 @@
+{
+  "schema": "semio.deflate-tail-cases.v1",
+  "note": "Raw RFC 1951 vectors for terminal Huffman tails. The fixed-final-EOB vector contains only thirteen buffered bits after its three-bit header, below a fifteen-bit decoder reserve.",
+  "cases": [
+    {
+      "name": "fixed-final-eob-under-fifteen-bit-reserve",
+      "stored": [3, 0],
+      "raw": []
+    }
+  ]
+}

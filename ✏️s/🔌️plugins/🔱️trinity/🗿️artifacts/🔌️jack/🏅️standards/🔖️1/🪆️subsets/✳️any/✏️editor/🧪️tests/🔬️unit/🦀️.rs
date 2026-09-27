@@ -334,6 +334,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_keeps_saving_and_undoes_as_one
     for (index, text) in run.texts.iter().enumerate() {
         app.dispatch_typed(TrinityJackCommand::TextEdit { text: text.clone() }, &meta_of()).await.unwrap_or_else(|error| panic!("keystroke {index} was refused: {error:?}"));
         drive_query_ownership_operations(&mut app).await.unwrap_or_else(|error| panic!("keystroke {index} did not publish: {error}"));
+        artifact_app_laws::drain_maintenance_pressure(&mut app.app);
     }
     assert_eq!(jack_query(&mut app, &editor).await, run.expected);
     for (verb, expected) in [("undo", &before), ("redo", &run.expected)] {

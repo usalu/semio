@@ -7,8 +7,7 @@
 //! one base CTM, so every node keeps its own matrix verbatim.
 //!
 //! 🧾️ `IoFidelity::Lossy`: text is limited to Helvetica/WinAnsi (no font embedding), gradient-stop
-//! alpha is folded into the layer opacity, and group transforms are not composed onto children —
-//! exactly what the canvas shows today (ticket 26/09/05/DRAW-PLUGIN-END-TO-END, 2026-09-18).
+//! alpha is folded into the layer opacity. Scene nodes carry composed group and text-origin transforms.
 //!
 //! 📖️ Why draw writes its own bytes: `s.stdio.pdf`'s snapshots (1.4 and 1.7) are text-only page
 //! models — `encode_pdf` regenerates a content stream FROM `PageDoc.text` and has no path-painting
@@ -126,15 +125,24 @@ fn paint_node(writer: &mut PdfWriter, content: &mut String, doc: &DrawingSnapsho
         }
     }
     if let Some(text) = &node.text {
-        if !text.content.is_empty() && text.size > 0.0 {
+        if !text.content.is_empty() && text.size > 0.0 && (has_fill || has_stroke) {
             let font = writer.helvetica();
-            let color = match &node.fill {
-                Some(FillStyle::Solid { color }) => *color,
-                _ => [0.0, 0.0, 0.0, 1.0],
-            };
-            // 🔤️ The base CTM flips the page, so the text matrix flips back to keep glyphs upright;
-            // scene text carries no position of its own — the node matrix already placed it.
-            let _ = writeln!(content, "BT /{font} {} Tf {} {} {} rg 1 0 0 -1 0 0 Tm ({}) Tj ET", num(text.size), num(color[0]), num(color[1]), num(color[2]), pdf_string(&text.content));
+            if has_stroke { stroke_ops(content, node.stroke.as_ref().expect("stroke checked above")); }
+            let gradient = node.fill.as_ref().filter(|fill| has_fill && !matches!(fill, FillStyle::Solid { .. }));
+            let shading = gradient.map(|fill| writer.shading(fill)).transpose()?;
+            let color = match &node.fill { Some(FillStyle::Solid { color }) => *color, _ => [0.0, 0.0, 0.0, 1.0] };
+            for (index, line) in semio_s_2d::text::drawing_text_lines(&text.content).enumerate() {
+                if line.is_empty() { continue; }
+                let y = num(text.size + index as f64 * text.size * semio_s_2d::text::DRAWING_TEXT_LINE_HEIGHT);
+                let value = pdf_string(line);
+                if let Some(shading) = &shading {
+                    let _ = writeln!(content, "q BT /{font} {} Tf 7 Tr 1 0 0 -1 0 {y} Tm ({value}) Tj ET /{shading} sh Q", num(text.size));
+                }
+                if shading.is_none() || has_stroke {
+                    let mode = if has_fill && shading.is_none() { if has_stroke { 2 } else { 0 } } else { 1 };
+                    let _ = writeln!(content, "BT /{font} {} Tf {} {} {} rg {mode} Tr 1 0 0 -1 0 {y} Tm ({value}) Tj ET", num(text.size), num(color[0]), num(color[1]), num(color[2]));
+                }
+            }
         }
     }
     if let Some(image) = &node.image {

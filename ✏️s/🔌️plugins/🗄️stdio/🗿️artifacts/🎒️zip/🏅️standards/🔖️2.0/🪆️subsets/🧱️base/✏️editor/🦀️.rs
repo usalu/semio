@@ -1,14 +1,8 @@
-//! 🎒️ Zip editor (2.0/🧱️base) — the FIRST authored `ArtifactEditor` surface for `s.stdio.zip@2.0/*`
-//! (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). `ZipSnapshot` is a flat logical
-//! archive: entries (`name`+`data`) plus an archive-level `comment` — no composed-child indirection
-//! needed. One window, `🪟️main` (`TreeWindowKit`), renders the archive as a tree; its `set-node`
-//! action funnels through the one typed command this surface declares, `ZipEditorCommand::SetNode`,
-//! which renames either the archive comment or one entry's name (see the window's own doc comment
-//! for the honest scope note on what a tree control can and cannot address).
+//! 🎒️ Archive editor with guarded text drafts and complete snapshot Details.
 
 use crate::editor::zip::base::modes::edit;
 use crate::editor::zip::base::modes::edit::windows::main;
-use crate::schema::mutations::{rename_entry, set_archive_comment, set_snapshot};
+use crate::schema::mutations::set_snapshot;
 use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
@@ -30,7 +24,7 @@ pub const ZIP_ANY_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zi
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum ZipEditorCommand {
     #[dsl(key = "set-zip-node")]
-    SetNode { node_id: String, value: String },
+    SetNode { node_id: String, value: String, revision: String },
 }
 
 //#region 🔖️OpCodec
@@ -86,7 +80,7 @@ impl protocol::OpBinary for ZipEditorCommand {
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(ZipEditorCommand, []);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(ZipEditorCommand, ["set-node"]);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
@@ -114,7 +108,8 @@ impl ArtifactEditor for ZipAnyEditor {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
         controller: "s.stdio.zip@2.0/*#editor",
         artifact_schema: "stdio.zip",
-        preparation: "stdio-zip-base-snapshot-edit"
+        preparation: "stdio-zip-base-snapshot-edit",
+        bounded_native: true
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -123,10 +118,10 @@ impl ArtifactEditor for ZipAnyEditor {
 
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
-            "set-node" => Ok(ZipEditorCommand::SetNode {
-                node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId", "node_id", "id"], ""),
-                value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value", "text"], ""),
-            }),
+            "set-node" => {
+                let (node_id, value, revision) = crate::editor::editing::edit_arguments(args)?;
+                Ok(ZipEditorCommand::SetNode { node_id, value, revision })
+            },
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.zip.unhandled-action"), format!("unknown zip editor action '{other}'"))),
         })
     }
@@ -135,9 +130,7 @@ impl ArtifactEditor for ZipAnyEditor {
         ZipSnapshot::default()
     }
 
-    /// ✏️ `node_id == "comment"` renames the archive comment; `"entry:{index}"` renames that entry's
-    /// name. An unknown node id or out-of-range entry index is a documented no-op (`Emit::default()`),
-    /// never a panic.
+    /// ✏️ Renames one unambiguous entry or changes the archive comment.
     fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
@@ -147,22 +140,16 @@ impl ArtifactEditor for ZipAnyEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
-        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(ZipEditorCommand::SetNode { node_id, value }) = command else {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(ZipEditorCommand::SetNode { node_id, value, revision }) = command else {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };
             return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
         };
-        if node_id == main::COMMENT_NODE_ID {
-            return Ok(Emit { artifact_mutations: vec![ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: value.clone() })], description: Some("Set comment".into()), ..Default::default() });
-        }
-        let Some(index_text) = node_id.strip_prefix(main::ENTRY_NODE_PREFIX) else { return Ok(Emit::default()) };
-        let Ok(index) = index_text.parse::<usize>() else { return Ok(Emit::default()) };
-        let Some(entry) = doc.snapshot.entries.get(index) else { return Ok(Emit::default()) };
-        Ok(Emit { artifact_mutations: vec![ZipMutation::RenameEntry(rename_entry::RenameEntry { name: entry.name.clone(), new_name: value.clone() })], description: Some("Rename entry".into()), ..Default::default() })
+        crate::editor::editing::edit_node(doc.snapshot, node_id, value, revision)
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            main::BODY_KEY => main::render(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale).map(semio_framework_plugin::built_to_component_tree),
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,
                 view_state.locale,
@@ -175,6 +162,30 @@ impl ArtifactEditor for ZipAnyEditor {
     }
 }
 
+impl semio_s_artifact_stdio_contract::editing::BoundedNativeEditingEditor for ZipAnyEditor {
+    const NATIVE_TOOL_IDS: &'static [&'static str] = &["set-node"];
+    const NATIVE_PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "set-node", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    ];
+    const NATIVE_PAYLOAD_SCHEMA: &'static str = "s.stdio.zip.command.set-node.v1";
+
+    fn native_edit_work(_tool_id: &'static str) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> {
+        Box::new(crate::editor::editing::retained::ArchiveTextWork::<Self>::new(|command| {
+            let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(ZipEditorCommand::SetNode { node_id, value, revision }) = command else {
+                return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.zip.command-mismatch"), "archive text editing received another command"));
+            };
+            Ok((node_id.as_str(), value.as_str(), revision.as_str()))
+        }))
+    }
+
+    fn native_edit_mutations(command: &Self::Command, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(ZipEditorCommand::SetNode { node_id, value, revision }) = command else {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.zip.command-mismatch"), "archive text editing received another command"));
+        };
+        crate::editor::editing::edit_node(snapshot, node_id, value, revision)
+    }
+}
+
 impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for ZipAnyEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&semio_s_artifact_stdio_contract::editing::SnapshotEditEvent> {
         match command {
@@ -183,11 +194,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for ZipAnyE
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }

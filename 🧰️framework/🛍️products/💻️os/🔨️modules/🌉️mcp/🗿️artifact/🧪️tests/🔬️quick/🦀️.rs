@@ -5,6 +5,28 @@ use crate::protocol::ToolRegistry;
 
 const ARTIFACT_TOOL_NAMES: [&str; 5] = ["artifact_open", "artifact_create", "artifact_validate", "artifact_snapshot", "artifact_export"];
 
+/// 🪪️ A principal holding every scope the artifact tools declare.
+fn full_principal() -> crate::policy::AgentPrincipal {
+    crate::policy::AgentPrincipal::from_scope_names("agent:test", "test", &["workspace.read".to_string(), "artifact.write".to_string()], None)
+}
+
+#[test]
+fn every_artifact_tool_refuses_a_principal_without_its_scope_before_it_reads_its_arguments() {
+    let mut registry = InMemoryToolRegistry::new();
+    register_artifact_tools(&mut registry, None, crate::policy::AgentPrincipal::from_scope_names("agent:reader", "reader", &["workspace.read".to_string()], None));
+    let created = registry.call("artifact_create", serde_json::json!({})).expect("artifact_create registered");
+    assert!(created.is_error);
+    assert_eq!(created.structured_content.as_ref().expect("typed error")["code"], "PERMISSION_DENIED", "a read-only principal is refused before any argument or workspace check: {:?}", created.structured_content);
+    let mut none = InMemoryToolRegistry::new();
+    register_artifact_tools(&mut none, None, crate::policy::AgentPrincipal::from_scope_names("agent:nobody", "nobody", &[], None));
+    for tool in ARTIFACT_TOOL_NAMES {
+        let answer = none.call(tool, serde_json::json!({})).expect("tool registered");
+        assert_eq!(answer.structured_content.as_ref().expect("typed error")["code"], "PERMISSION_DENIED", "{tool} without any scope");
+    }
+    let opened = registry.call("artifact_open", serde_json::json!({})).expect("artifact_open registered");
+    assert_ne!(opened.structured_content.as_ref().expect("typed error")["code"], "PERMISSION_DENIED", "workspace.read admits artifact_open");
+}
+
 fn empty_catalog() -> Arc<Catalog> {
     Arc::new(compile(&CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
 }
@@ -46,7 +68,7 @@ fn assert_object_typed_2020_12(schema: &serde_json::Value) {
 #[test]
 fn every_artifact_tool_registers_under_its_declared_name() {
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, None);
+    register_artifact_tools(&mut registry, None, full_principal());
     let tools = registry.list();
     assert_eq!(tools.len(), 5, "tools: {:?}", tools.iter().map(|tool| &tool.name).collect::<Vec<_>>());
     for name in ARTIFACT_TOOL_NAMES {
@@ -75,7 +97,7 @@ fn every_top_level_schema_is_object_typed_2020_12() {
 #[test]
 fn no_workspace_bound_is_a_retryable_plugin_unavailable_for_every_artifact_tool() {
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, None);
+    register_artifact_tools(&mut registry, None, full_principal());
     let arguments_by_tool = [
         ("artifact_open", serde_json::json!({ "artifactId": "a" })),
         ("artifact_create", serde_json::json!({ "artifactId": "a", "kind": "k" })),
@@ -95,7 +117,7 @@ fn no_workspace_bound_is_a_retryable_plugin_unavailable_for_every_artifact_tool(
 #[test]
 fn missing_required_field_is_input_invalid_before_any_workspace_check() {
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, None);
+    register_artifact_tools(&mut registry, None, full_principal());
     let empty_arguments_by_tool = ["artifact_open", "artifact_create", "artifact_validate", "artifact_snapshot", "artifact_export"];
     for name in empty_arguments_by_tool {
         let result = registry.call(name, serde_json::json!({})).unwrap();
@@ -109,7 +131,7 @@ fn workspace_bound_with_zero_resolvable_plugins_is_still_plugin_unavailable() {
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens"));
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, Some(workspace));
+    register_artifact_tools(&mut registry, Some(workspace), full_principal());
     let result = registry.call("artifact_open", serde_json::json!({ "artifactId": "whatever" })).unwrap();
     assert!(result.is_error);
     assert_eq!(result.structured_content.unwrap()["code"], "PLUGIN_UNAVAILABLE");
@@ -120,7 +142,7 @@ fn artifact_create_then_open_round_trips_for_real_with_exactly_one_resolvable_pl
     let dir = store::test_support::tempdir().expect("tempdir");
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens"));
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, Some(workspace));
+    register_artifact_tools(&mut registry, Some(workspace), full_principal());
 
     let created = registry.call("artifact_create", serde_json::json!({ "artifactId": "doc-1", "kind": "os.agent.probe/v1", "initial": { "n": 1 } })).unwrap();
     assert!(!created.is_error, "{created:?}");
@@ -149,7 +171,7 @@ fn artifact_validate_is_a_real_typed_gap_never_a_fabricated_pass() {
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
     semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-2", serde_json::json!({}))).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, Some(Arc::new(workspace)));
+    register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
     let result = registry.call("artifact_validate", serde_json::json!({ "artifactId": "doc-2" })).unwrap();
     assert!(result.is_error, "no live validate command is wired yet — this must never silently pass");
     let structured = result.structured_content.unwrap();
@@ -163,7 +185,7 @@ fn artifact_snapshot_returns_real_bytes_for_the_current_revision_and_rejects_a_s
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
     semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-3", serde_json::json!({ "n": 7 }))).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, Some(Arc::new(workspace)));
+    register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
 
     let current = registry.call("artifact_snapshot", serde_json::json!({ "artifactId": "doc-3" })).unwrap();
     assert!(!current.is_error, "{current:?}");
@@ -181,7 +203,7 @@ fn artifact_export_never_fabricates_a_successful_export() {
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens");
     semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-4", serde_json::json!({}))).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, Some(Arc::new(workspace)));
+    register_artifact_tools(&mut registry, Some(Arc::new(workspace)), full_principal());
     let result = registry.call("artifact_export", serde_json::json!({ "artifactId": "doc-4", "format": "pdf" })).unwrap();
     assert!(result.is_error, "no live export command is wired yet — this must never silently succeed");
 }
@@ -232,7 +254,7 @@ fn document_authored_content_reaches_an_agent_only_inside_the_untrusted_envelope
     let workspace = Arc::new(HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), single_plugin_catalog("test-plugin")).expect("opens"));
     semio_framework::io::resolve_ready(workspace.ensure_probe_artifact("doc-canary", serde_json::json!({ "text": canary }))).expect("seed");
     let mut registry = InMemoryToolRegistry::new();
-    register_artifact_tools(&mut registry, Some(workspace.clone()));
+    register_artifact_tools(&mut registry, Some(workspace.clone()), full_principal());
     let (pack, spr) = workspace.read_artifact_bytes("doc-canary").expect("reads").expect("exists");
 
     let snapshot = tool_result_json(&registry.call("artifact_snapshot", serde_json::json!({ "artifactId": "doc-canary" })).expect("answers"));

@@ -46,7 +46,7 @@ fn nested_key(node_key: &str) -> String {
 #[test]
 fn oversized_document_stamps_totals_and_never_a_continuation_row() {
     let json = window_body(&oversized_document(300, 40), Vec::new());
-    assert!(json.contains("\"total\":302"), "the section stamps two add rows plus every layer: {json}");
+    assert!(json.contains("\"total\":303"), "the section stamps two add rows, flattening and every layer: {json}");
     assert!(json.contains("\"total\":40"), "the nested group stamps its own full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
@@ -58,7 +58,7 @@ fn oversized_document_stamps_totals_and_never_a_continuation_row() {
 fn closed_containers_stamp_totals_and_materialise_no_children() {
     let document = oversized_document(300, 40);
     let json = window_body(&document, vec![closed(RASTER_TREE_PREFIX)]);
-    assert!(json.contains("\"total\":302"), "a closed section still stamps its extent: {json}");
+    assert!(json.contains("\"total\":303"), "a closed section still stamps its extent: {json}");
     assert!(!json.contains("raster-play-layers.add.pixel"), "a closed section materialises no rows: {json}");
 
     let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 0, 4), closed(&nested_key("group-0"))]);
@@ -71,15 +71,15 @@ fn closed_containers_stamp_totals_and_materialise_no_children() {
 #[test]
 fn host_windows_materialise_exactly_their_slice() {
     let document = oversized_document(300, 40);
-    let json = window_body(&document, vec![open(RASTER_TREE_PREFIX, 102, 10)]);
-    assert!(json.contains("\"offset\":102"), "the section reports its offset: {json}");
+    let json = window_body(&document, vec![open(RASTER_TREE_PREFIX, 103, 10)]);
+    assert!(json.contains("\"offset\":103"), "the section reports its offset: {json}");
     for index in 100..110 {
         assert!(json.contains(&format!("pixel-{index}\"")), "row {index} is inside the window: {json}");
     }
     assert!(!json.contains("pixel-99\""), "the row before the window stays out: {json}");
     assert!(!json.contains("pixel-110\""), "the row after the window stays out: {json}");
 
-    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 2, 1), open(&nested_key("group-0"), 12, 4)]);
+    let nested = window_body(&document, vec![open(RASTER_TREE_PREFIX, 3, 1), open(&nested_key("group-0"), 12, 4)]);
     assert!(nested.contains("\"offset\":12"), "the nested group reports its offset: {nested}");
     for index in 12..16 {
         assert!(nested.contains(&format!("nested-{index}\"")), "nested child {index} is inside the window: {nested}");
@@ -100,3 +100,17 @@ fn domain_bound_rows_carry_granularity_and_one_tree_binding() {
     assert!(json.contains("addLayer"), "the add rows keep their own action: {json}");
 }
 //#endregion 🪟️WindowLaws
+
+#[test]
+fn flatten_control_uses_the_current_language_and_artifact_command() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/🥞️flatten-layers/🧫️fixtures/🔣️.json")).unwrap();
+    for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
+        let document=oversized_document(1,1);
+        let view=ViewModel::default();
+        let node=render(&document,&RasterConfig::default(),labels,&TreeWindows::for_body(&view,RASTER_PLAY_BODY_LAYERS)).unwrap();
+        let json=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).unwrap();
+        assert!(json.contains(fixture["labels"][locale]["action"].as_str().unwrap()));
+        assert!(json.contains(fixture["labels"][locale]["name"].as_str().unwrap()));
+        assert!(json.contains("flattenLayers"));
+    }
+}

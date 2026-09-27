@@ -5,8 +5,34 @@ const { readFileSync } = await import("node:fs");
 const { fileURLToPath } = await import("node:url");
 const { dirname, join } = await import("node:path");
 const suite = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🔣️.json"), "utf8")) as ContinuationSuite;
+const { fairness } = suite;
 
 describe("🪃️ continuation scheduler", () => {
+  it("allows a due host deadline to cancel a continuous yield chain", async () => {
+    const scheduler = createContinuationScheduler();
+    let observed = false;
+    const deadline = setTimeout(() => { observed = true; }, fairness.deadlineMs);
+    try {
+      for (let step = 0; step < fairness.maximumContinuations && !observed; step += 1) await scheduler.yieldContinuation();
+      expect(observed).toBe(fairness.expectedDeadlineObserved);
+    } finally {
+      clearTimeout(deadline);
+      scheduler.dispose();
+    }
+  });
+
+  it("validates deadline fairness against the platform immediate queue", async () => {
+    const { setImmediate: immediate } = await import("node:timers/promises");
+    let observed = false;
+    const deadline = setTimeout(() => { observed = true; }, fairness.deadlineMs);
+    try {
+      for (let step = 0; step < fairness.maximumContinuations && !observed; step += 1) await immediate();
+      expect(observed).toBe(fairness.expectedDeadlineObserved);
+    } finally {
+      clearTimeout(deadline);
+    }
+  });
+
   it.each(suite.cases.map((testCase) => [testCase.name, testCase] as const))("holds the law on a virtual clock: %s", (_name, testCase) => {
     expect(continuationCaseFaults(testCase, runContinuationCase(testCase))).toEqual([]);
   });

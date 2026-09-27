@@ -1,0 +1,112 @@
+[
+  {
+    "name": "identity",
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "shear",
+    "matrix": [
+      1,
+      0,
+      2,
+      1,
+      10,
+      20
+    ]
+  },
+  {
+    "name": "rotated shear",
+    "matrix": [
+      0,
+      2,
+      -3,
+      4,
+      5,
+      6
+    ]
+  },
+  {
+    "name": "reflection",
+    "matrix": [
+      -2,
+      0,
+      3,
+      4,
+      -5,
+      6
+    ]
+  },
+  {
+    "name": "collapsed first axis",
+    "matrix": [
+      0,
+      0,
+      3,
+      4,
+      5,
+      6
+    ]
+  },
+  {
+    "name": "collapsed second axis",
+    "matrix": [
+      3,
+      4,
+      0,
+      0,
+      5,
+      6
+    ]
+  },
+  {
+    "name": "rank one",
+    "matrix": [
+      3,
+      4,
+      6,
+      8,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "point",
+    "matrix": [
+      0,
+      0,
+      0,
+      0,
+      7,
+      8
+    ]
+  },
+  {
+    "name": "small coordinates",
+    "matrix": [
+      1e-150,
+      0,
+      2e-150,
+      3e-150,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "large coordinates",
+    "matrix": [
+      1e+150,
+      0,
+      2e+150,
+      3e+150,
+      0,
+      0
+    ]
+  }
+]

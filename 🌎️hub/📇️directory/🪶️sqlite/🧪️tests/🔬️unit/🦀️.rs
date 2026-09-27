@@ -324,11 +324,11 @@ async fn socket_binding_reads_are_exact_id_generation_selector_scope_and_status(
     let at_ms = issued.record.issued_at;
     assert_eq!(
         directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation, None, at_ms).await.expect("session status"),
-        SocketSessionBindingStatus::Active { role: None, expires_at_ms: issued.record.expires_at },
+        SocketSessionBindingStatus::Active { role: None, expires_at_ms: issued.record.expires_at, session_kind: issued.record.session_kind },
     );
     assert_eq!(
         directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation, Some("default"), at_ms).await.expect("membership status"),
-        SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), expires_at_ms: issued.record.expires_at },
+        SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), expires_at_ms: issued.record.expires_at, session_kind: issued.record.session_kind },
     );
     assert_eq!(directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation + 1, None, at_ms).await.expect("generation status"), SocketSessionBindingStatus::Revoked,);
     assert_eq!(directory.socket_session_binding(&issued.record.id, "other", issued.record.authorization_generation, None, at_ms).await.expect("user status"), SocketSessionBindingStatus::Unavailable);

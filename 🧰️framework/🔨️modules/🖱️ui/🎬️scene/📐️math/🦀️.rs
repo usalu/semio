@@ -11,6 +11,12 @@
 //! `fn` wholesale rather than tagging each one individually.
 
 pub use semio_framework_geometry::{Mat4, Vec3};
+use semio_framework_ui_viewport::{
+    Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant,
+    Viewport3dAxonometricVariant, Viewport3dObliqueVariant,
+    Viewport3dOrthographicView, Viewport3dProjectionMode,
+    Viewport3dProjectionOrientation, Viewport3dProjectionSpec,
+};
 
 //#region 🔖️SyncAlgebra
 // 🚫️async: E6 sync frame construction — `semio_framework_geometry::{Vec3, Mat4}`'s own inherent
@@ -230,6 +236,169 @@ impl CameraProjection3d {
 
     pub fn is_parallel(self) -> bool {
         matches!(self, Self::Orthographic)
+    }
+}
+
+/// 📐️ Resolves the camera family from the renderer-neutral projection schema.
+pub fn projection_spec_family(spec: Viewport3dProjectionSpec) -> CameraProjection3d {
+    match spec.mode {
+        Viewport3dProjectionMode::Orthographic {} | Viewport3dProjectionMode::Axonometric { .. } | Viewport3dProjectionMode::Oblique { .. } => CameraProjection3d::Orthographic,
+        _ => CameraProjection3d::Perspective,
+    }
+}
+
+/// 📐️ Resolves the effective perspective field of view used by React's projection rig.
+pub fn projection_spec_fov_degrees(spec: Viewport3dProjectionSpec) -> f32 {
+    match spec.mode {
+        Viewport3dProjectionMode::OnePoint { fov } | Viewport3dProjectionMode::TwoPoint { fov, .. } | Viewport3dProjectionMode::ThreePoint { fov } => fov as f32,
+        Viewport3dProjectionMode::Curvilinear { fov, .. } => (fov as f32).min(160.0),
+        _ => 50.0,
+    }
+}
+
+/// 🪞️ Builds React's oblique receding-axis shear in the scene matrix convention.
+pub fn projection_spec_oblique_shear(mode: Viewport3dProjectionMode) -> Mat4 {
+    let Viewport3dProjectionMode::Oblique { variant, angle, depth_scale } = mode else { return Mat4::identity() };
+    let alpha = if variant == Viewport3dObliqueVariant::Military { std::f32::consts::FRAC_PI_2 } else { (angle as f32).to_radians() };
+    let length = if variant == Viewport3dObliqueVariant::Military { 1.0 } else { depth_scale as f32 };
+    let mut shear = Mat4::identity();
+    shear.cols[2][0] = -length * alpha.cos();
+    shear.cols[2][1] = -length * alpha.sin();
+    shear
+}
+
+/// 📐️ Builds the exact Three projection matrix for a complete viewport projection spec.
+pub fn projection_spec_matrix(camera: &Camera3d, spec: Viewport3dProjectionSpec, width: f32, height: f32) -> Mat4 {
+    let mut camera = camera.clone();
+    camera.projection = projection_spec_family(spec);
+    camera.fov_y = projection_spec_fov_degrees(spec).to_radians();
+    let mut projection = camera.projection_matrix(width, height);
+    if matches!(spec.mode, Viewport3dProjectionMode::Oblique { .. }) {
+        projection = projection.mul_m(projection_spec_oblique_shear(spec.mode));
+    } else if let Viewport3dProjectionMode::TwoPoint { vertical_shift, .. } = spec.mode {
+        projection.cols[2][1] += vertical_shift as f32;
+    }
+    projection
+}
+
+/// 📐️ Composes one accepted projection spec with the live orbit view matrix.
+pub fn projection_spec_view_proj(camera: &Camera3d, spec: Viewport3dProjectionSpec, width: f32, height: f32) -> Mat4 {
+    projection_spec_matrix(camera, spec, width, height).mul_m(camera.view_matrix())
+}
+
+/// 🐟️ Maps visible curvilinear NDC back into the linear capture used by render and picking.
+pub fn projection_spec_unproject_ndc(spec: Viewport3dProjectionSpec, ndc: [f32; 2], aspect: f32) -> [f32; 2] {
+    let Viewport3dProjectionMode::Curvilinear { fov, strength, .. } = spec.mode else { return ndc };
+    let half_fov = ((fov as f32).min(160.0).to_radians()) * 0.5;
+    let scaled = [ndc[0] * aspect, ndc[1]];
+    let radius = scaled[0].hypot(scaled[1]);
+    if radius < 1e-6 {
+        return ndc;
+    }
+    let rectilinear_radius = (radius * half_fov).tan() / half_fov.tan();
+    let source_radius = radius + (rectilinear_radius - radius) * strength as f32;
+    let scale = source_radius / radius;
+    [scaled[0] * scale / aspect, scaled[1] * scale]
+}
+
+/// 🐟️ Maps one linear capture-space NDC point onto the visible curvilinear surface.
+pub fn projection_spec_project_ndc(spec: Viewport3dProjectionSpec, ndc: [f32; 2], aspect: f32) -> [f32; 2] {
+    let Viewport3dProjectionMode::Curvilinear { fov, strength, .. } = spec.mode else { return ndc };
+    let aspect = aspect.max(1e-6);
+    let scaled = [ndc[0] * aspect, ndc[1]];
+    let source_radius = scaled[0].hypot(scaled[1]);
+    let strength = strength as f32;
+    if source_radius < 1e-6 || strength < 1e-6 {
+        return ndc;
+    }
+    let half_fov = ((fov as f32).min(160.0).to_radians()) * 0.5;
+    let tangent = half_fov.tan();
+    let limit = (std::f32::consts::FRAC_PI_2 - 1e-5) / half_fov.max(1e-6);
+    let center_slope = 1.0 - strength + strength * half_fov / tangent;
+    let mut visible_radius = (source_radius / center_slope.max(1e-6)).clamp(0.0, limit);
+    for _ in 0..8 {
+        let warped = (visible_radius * half_fov).tan();
+        let capture_radius = visible_radius + (warped / tangent - visible_radius) * strength;
+        let slope = 1.0 - strength + strength * half_fov * (1.0 + warped * warped) / tangent;
+        visible_radius = (visible_radius - (capture_radius - source_radius) / slope.max(1e-6)).clamp(0.0, limit);
+    }
+    let scale = visible_radius / source_radius;
+    [scaled[0] * scale / aspect, scaled[1] * scale]
+}
+
+/// 🐟️ Projects a world point through the linear camera and the accepted curvilinear image pass.
+pub fn projection_spec_project_point(view_proj: Mat4, spec: Viewport3dProjectionSpec, point: Vec3, width: f32, height: f32) -> Option<[f32; 2]> {
+    let clip = view_proj.transform_point_m(point);
+    if clip.z < 0.0 || clip.z > 1.0 {
+        return None;
+    }
+    let visible = projection_spec_project_ndc(spec, [clip.x, clip.y], width.max(1.0) / height.max(1.0));
+    Some([(visible[0] * 0.5 + 0.5) * width, (1.0 - (visible[1] * 0.5 + 0.5)) * height])
+}
+
+/// 📐️ Returns the shared default for a newly mounted perspective World surface.
+pub fn default_projection_spec() -> Viewport3dProjectionSpec {
+    Viewport3dProjectionSpec { mode: Viewport3dProjectionMode::ThreePoint { fov: 50.0 }, orientation: Viewport3dProjectionOrientation::Free {} }
+}
+
+/// 🧭️ Resolves React's mode × orientation look basis without collapsing corner parameters.
+pub fn projection_spec_orientation_look(spec: Viewport3dProjectionSpec) -> (Vec3, Vec3) {
+    let cardinal = |view| match view {
+        Viewport3dOrthographicView::Plan | Viewport3dOrthographicView::Top => (vec3_new_m(0.0, 0.0, 1.0), vec3_new_m(0.0, 1.0, 0.0)),
+        Viewport3dOrthographicView::Bottom => (vec3_new_m(0.0, 0.0, -1.0), vec3_new_m(0.0, -1.0, 0.0)),
+        Viewport3dOrthographicView::Front => (vec3_new_m(0.0, -1.0, 0.0), vec3_new_m(0.0, 0.0, 1.0)),
+        Viewport3dOrthographicView::Back => (vec3_new_m(0.0, 1.0, 0.0), vec3_new_m(0.0, 0.0, 1.0)),
+        Viewport3dOrthographicView::Left => (vec3_new_m(-1.0, 0.0, 0.0), vec3_new_m(0.0, 0.0, 1.0)),
+        Viewport3dOrthographicView::Right => (vec3_new_m(1.0, 0.0, 0.0), vec3_new_m(0.0, 0.0, 1.0)),
+    };
+    match spec.orientation {
+        Viewport3dProjectionOrientation::Cardinal { view } => {
+            if let Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Military, angle, .. } = spec.mode {
+                if matches!(view, Viewport3dOrthographicView::Plan | Viewport3dOrthographicView::Top) {
+                    let rotation = (angle as f32).to_radians();
+                    return (vec3_new_m(0.0, 0.0, 1.0), vec3_new_m(rotation.sin(), rotation.cos(), 0.0));
+                }
+            }
+            cardinal(view)
+        }
+        Viewport3dProjectionOrientation::Corner { quadrant, hemisphere } => {
+            let (angle_a, angle_b) = match spec.mode {
+                Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Isometric, .. } => (30.0, 30.0),
+                Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Dimetric, angle_a, .. } => (angle_a as f32, angle_a as f32),
+                Viewport3dProjectionMode::Axonometric { angle_a, angle_b, .. } => (angle_a as f32, angle_b as f32),
+                _ => (30.0, 30.0),
+            };
+            let (angle_a, angle_b) = (angle_a.to_radians(), angle_b.to_radians());
+            let elevation = (angle_a.tan() * angle_b.tan()).sqrt().asin();
+            let azimuth = (angle_a.tan() / angle_b.tan()).sqrt().atan();
+            let sign_x = if matches!(quadrant, Viewport3dAxonometricQuadrant::Nw | Viewport3dAxonometricQuadrant::Sw) { -1.0 } else { 1.0 };
+            let sign_y = if matches!(quadrant, Viewport3dAxonometricQuadrant::Se | Viewport3dAxonometricQuadrant::Sw) { -1.0 } else { 1.0 };
+            let lower = hemisphere == Some(Viewport3dAxonometricHemisphere::Lower);
+            (vec3_new_m(sign_x * elevation.cos() * azimuth.sin(), sign_y * elevation.cos() * azimuth.cos(), elevation.sin() * if lower { -1.0 } else { 1.0 }), vec3_new_m(0.0, 0.0, if lower { -1.0 } else { 1.0 }))
+        }
+        Viewport3dProjectionOrientation::Free {} => match spec.mode {
+            Viewport3dProjectionMode::TwoPoint { .. } => (vec3_new_m(std::f32::consts::FRAC_1_SQRT_2, -std::f32::consts::FRAC_1_SQRT_2, 0.0), vec3_new_m(0.0, 0.0, 1.0)),
+            Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Military, angle, .. } => {
+                let rotation = (angle as f32).to_radians();
+                (vec3_new_m(0.0, 0.0, 1.0), vec3_new_m(rotation.sin(), rotation.cos(), 0.0))
+            }
+            Viewport3dProjectionMode::Oblique { .. } => (vec3_new_m(0.0, -1.0, 0.0), vec3_new_m(0.0, 0.0, 1.0)),
+            _ => (vec3_new_m(0.75, -0.75, 0.55).normalize_m(), vec3_new_m(0.0, 0.0, 1.0)),
+        },
+    }
+}
+
+/// 📡️ Builds a pick ray through the same matrix and curvilinear inverse used by presentation.
+pub fn projection_spec_ray_from_screen(camera: &Camera3d, spec: Viewport3dProjectionSpec, x: f32, y: f32, width: f32, height: f32) -> (Vec3, Vec3) {
+    let visible_ndc = [(x / width.max(1.0)) * 2.0 - 1.0, 1.0 - (y / height.max(1.0)) * 2.0];
+    let ndc = projection_spec_unproject_ndc(spec, visible_ndc, width.max(1.0) / height.max(1.0));
+    let inv = projection_spec_view_proj(camera, spec, width, height).inverse_m();
+    match projection_spec_family(spec) {
+        CameraProjection3d::Orthographic => (inv.transform_point_m(vec3_new_m(ndc[0], ndc[1], 0.0)), camera.target.sub_m(camera.position).normalize_m()),
+        CameraProjection3d::Perspective => {
+            let middle = inv.transform_point_m(vec3_new_m(ndc[0], ndc[1], 0.5));
+            (camera.position, middle.sub_m(camera.position).normalize_m())
+        }
     }
 }
 
@@ -503,6 +672,23 @@ pub fn frame_projection_orbit_to_bounds(orbit: &OrbitController, orientation: Wo
     let half_extent = [0, 1, 2].map(|axis| (maximum[axis] - minimum[axis]) * 0.5);
     let (half_width, half_height) = world_projection_view_half_extent(orientation, oblique_off_axis, half_extent);
     OrbitController { target: center, zoom: world_projection_ortho_zoom(half_width, half_height, width, height, padding.max(1.0)), ..orbit.clone() }
+}
+
+/// 📷️ Frames a parallel camera from the complete viewport projection spec.
+pub fn frame_projection_orbit_to_spec_bounds(orbit: &OrbitController, spec: Viewport3dProjectionSpec, minimum: [f32; 3], maximum: [f32; 3], width: f32, height: f32, padding: f32) -> OrbitController {
+    let center = vec3_new_m((minimum[0] + maximum[0]) * 0.5, (minimum[1] + maximum[1]) * 0.5, (minimum[2] + maximum[2]) * 0.5);
+    let [hx, hy, hz] = [0, 1, 2].map(|axis| (maximum[axis] - minimum[axis]) * 0.5);
+    let plane = match spec.orientation {
+        Viewport3dProjectionOrientation::Cardinal { view: Viewport3dOrthographicView::Front | Viewport3dOrthographicView::Back } => (hx, hz),
+        Viewport3dProjectionOrientation::Cardinal { view: Viewport3dOrthographicView::Left | Viewport3dOrthographicView::Right } => (hy, hz),
+        Viewport3dProjectionOrientation::Cardinal { .. } => (hx, hy),
+        Viewport3dProjectionOrientation::Free {} if matches!(spec.mode, Viewport3dProjectionMode::Oblique { variant, .. } if variant != Viewport3dObliqueVariant::Military) => (hx, hz),
+        _ => {
+            let span = hx.max(hy).max(hz);
+            (span, span)
+        }
+    };
+    OrbitController { target: center, zoom: world_projection_ortho_zoom(plane.0, plane.1, width, height, padding.max(1.0)), ..orbit.clone() }
 }
 
 /// 🎯️ Frames an orbit on an axis-aligned box while keeping its current look direction — the ONE
@@ -1386,6 +1572,14 @@ pub struct ScenePass3d {
     pub layer_index: usize,
     pub ui_watermark: usize,
     pub vector_watermark: usize,
+    pub curvilinear: Option<SceneCurvilinear3d>,
+}
+
+/// 🐟️ Image-space remap owned by one accepted 3D scene pass.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SceneCurvilinear3d {
+    pub fov_radians: f32,
+    pub strength: f32,
 }
 //#endregion ScenePass
 
@@ -1756,6 +1950,7 @@ pub fn screen_select_components(
     mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>,
     draws: &[SceneDraw3d],
     view_proj: Mat4,
+    projection_spec: Viewport3dProjectionSpec,
     width: f32,
     height: f32,
     polygon: &[[f32; 2]],
@@ -1782,7 +1977,7 @@ pub fn screen_select_components(
                     for vertex_index in 0..schema.vertices {
                         let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
                         let world = instance.model.transform_point_m(vec3_new_m(point[0], point[1], point[2]));
-                        let Some(screen) = project_point(view_proj, world, width, height) else {
+                        let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) else {
                             continue;
                         };
                         let point = [screen[0], screen[1]];
@@ -1798,7 +1993,7 @@ pub fn screen_select_components(
                         let Ok(edge) = mesh.edge(edge_index) else { continue };
                         let a_world = instance.model.transform_point_m(vec3_new_m(edge[0][0], edge[0][1], edge[0][2]));
                         let b_world = instance.model.transform_point_m(vec3_new_m(edge[1][0], edge[1][1], edge[1][2]));
-                        let (Some(a_screen), Some(b_screen)) = (project_point(view_proj, a_world, width, height), project_point(view_proj, b_world, width, height)) else {
+                        let (Some(a_screen), Some(b_screen)) = (projection_spec_project_point(view_proj, projection_spec, a_world, width, height), projection_spec_project_point(view_proj, projection_spec, b_world, width, height)) else {
                             continue;
                         };
                         if !marquee_segment_selected(a_screen, b_screen, &local_polygon, rectangle, rect_bounds, crossing) {
@@ -1816,7 +2011,7 @@ pub fn screen_select_components(
                         for (slot, index) in tri.iter().enumerate() {
                             let Some(point) = vertex(mesh, *index) else { continue };
                             let world = instance.model.transform_point_m(point);
-                            if let Some(screen) = project_point(view_proj, world, width, height) {
+                            if let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) {
                                 screens[slot] = screen;
                                 visible += 1;
                             }
@@ -1833,7 +2028,7 @@ pub fn screen_select_components(
                 }
                 _ => {
                     let Ok((min, max)) = mesh.aabb() else { continue };
-                    let Some(projected) = projected_aabb_bounds(view_proj, instance.model, min, max, width, height) else {
+                    let Some(projected) = projected_aabb_bounds(view_proj, projection_spec, instance.model, min, max, width, height) else {
                         continue;
                     };
                     if aabb_overlaps_marquee(projected, &local_polygon, rectangle) {
@@ -1940,7 +2135,7 @@ pub fn rect_contains(rect: [f32; 4], point: [f32; 2]) -> bool {
     point[0] >= min_x && point[0] <= max_x && point[1] >= min_y && point[1] <= max_y
 }
 
-pub fn projected_aabb_bounds(view_proj: Mat4, model: Mat4, min: [f32; 3], max: [f32; 3], width: f32, height: f32) -> Option<[f32; 4]> {
+pub fn projected_aabb_bounds(view_proj: Mat4, projection_spec: Viewport3dProjectionSpec, model: Mat4, min: [f32; 3], max: [f32; 3], width: f32, height: f32) -> Option<[f32; 4]> {
     let corners = [[min[0], min[1], min[2]], [max[0], min[1], min[2]], [min[0], max[1], min[2]], [max[0], max[1], min[2]], [min[0], min[1], max[2]], [max[0], min[1], max[2]], [min[0], max[1], max[2]], [max[0], max[1], max[2]]];
     let mut min_x = f32::INFINITY;
     let mut min_y = f32::INFINITY;
@@ -1949,7 +2144,7 @@ pub fn projected_aabb_bounds(view_proj: Mat4, model: Mat4, min: [f32; 3], max: [
     let mut visible = false;
     for corner in corners {
         let world = model.transform_point_m(vec3_from_array_m(corner));
-        if let Some(screen) = project_point(view_proj, world, width, height) {
+        if let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) {
             visible = true;
             min_x = min_x.min(screen[0]);
             min_y = min_y.min(screen[1]);
@@ -1978,7 +2173,7 @@ fn aabb_overlaps_marquee(projected: [f32; 4], polygon: &[[f32; 2]], rectangle: b
 /// 🎯️ Screen-space whole-instance picking within a marquee/lasso polygon; kept as a flat argument list rather
 /// than a params struct for the same cross-crate-scope reason as `screen_select_components`.
 #[allow(clippy::too_many_arguments, reason = "flat picking-context args match the two infinite/world/rs call sites; a params struct would be a cross-crate signature change out of this crate's scope")]
-pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>, draws: &[SceneDraw3d], view_proj: Mat4, width: f32, height: f32, polygon: &[[f32; 2]], rectangle: bool, crossing: bool) -> Vec<String> {
+pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, Mesh3dLease>, draws: &[SceneDraw3d], view_proj: Mat4, projection_spec: Viewport3dProjectionSpec, width: f32, height: f32, polygon: &[[f32; 2]], rectangle: bool, crossing: bool) -> Vec<String> {
     let rect_bounds = marquee_rect_bounds(polygon);
     let mut selected = Vec::new();
     for draw in draws {
@@ -1993,7 +2188,7 @@ pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, M
                 for vertex_index in 0..schema.vertices {
                     let Ok(point) = mesh.vec3(Mesh3dField::Positions, vertex_index) else { continue };
                     let world = instance.model.transform_point_m(vec3_new_m(point[0], point[1], point[2]));
-                    if let Some(screen) = project_point(view_proj, world, width, height) {
+                    if let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) {
                         any_visible = true;
                         if !marquee_contains_point(screen, polygon, rectangle, rect_bounds) {
                             all_inside = false;
@@ -2007,7 +2202,7 @@ pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, M
                 continue;
             }
             let Ok((min, max)) = mesh.aabb() else { continue };
-            let Some(projected) = projected_aabb_bounds(view_proj, instance.model, min, max, width, height) else {
+            let Some(projected) = projected_aabb_bounds(view_proj, projection_spec, instance.model, min, max, width, height) else {
                 continue;
             };
             if !aabb_overlaps_marquee(projected, polygon, rectangle) {
@@ -2021,7 +2216,7 @@ pub fn screen_select_instances(mesh_lookup: &std::collections::HashMap<String, M
                 for (slot, &index) in tri.iter().enumerate() {
                     let Some(point) = vertex(mesh, index) else { continue };
                     let world = instance.model.transform_point_m(point);
-                    if let Some(screen) = project_point(view_proj, world, width, height) {
+                    if let Some(screen) = projection_spec_project_point(view_proj, projection_spec, world, width, height) {
                         screens[slot] = screen;
                         visible += 1;
                     }

@@ -282,7 +282,7 @@ pub async fn replicate_document(leader: &db_storage::DbBackend, follower: &db_st
                         }
                         return Err(DbError::LimitExceeded("db_cluster fixed wal record batch"));
                     }
-                    let submitted = wal.submit(&follower_storage, &records, DurabilityClass::Fsync, now_ms).await;
+                    let submitted = wal.submit(&follower_storage, &[], &records, DurabilityClass::Fsync, now_ms).await;
                     let retired = async {
                         while records.close_step()? {
                             semio_framework_async::yield_once().await;

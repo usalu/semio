@@ -17,11 +17,11 @@ export interface Pdf17UaDocumentViewModel {
   pages: Pdf17UaDocumentPage[];
 }
 
-/** ✏️ `set-page` payload shape -- mirrors `Pdf17UaEditorCommand::SetPage`. APPENDS to the page's
- * existing text (there is no "replace" primitive in the current mutation vocabulary -- see the Rust
- * surface root's own doc comment). */
+/** ✏️ Strict optimistic-concurrency payload for one prefilled document text draft. */
 export interface Pdf17UaSetPage {
-  index: number;
+  page: number;
+  item: number;
+  revision: string;
   text: string;
 }
 

@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { act, cleanup, render } from "@semio-tech/ui-react/test";
+import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
@@ -16,6 +16,8 @@ import * as sessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/�
 import { BoardSessionFactoryContext, createBoardPeerScope, type Board2dWasmSession, type RasterWasmSession } from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import fixture from "../../🧫️fixtures/🪶️surface-idle-frames/🔣️.json";
 // #endregion 🔌️Adapters
+
+vi.mock("@semio-tech/ui-react",async original=>({...await original<typeof import("@semio-tech/ui-react")>(),useTranslation:()=>({i18n:{resolvedLanguage:"en"}})}));
 
 // #region 🧪️Harness
 type RenderBounds = { readonly min: number; readonly max: number };
@@ -149,3 +151,24 @@ describe("🪶️ every wasm canvas surface family is idle after it settles (sur
   }
 });
 // #endregion 🪶️IdleLaws
+
+it("paint host preserves the edit completion promise",async()=>{
+  const session=stubSession<RasterWasmSession>();
+  vi.spyOn(sessionLoader,"createRasterSession").mockResolvedValue(session);
+  let settle!:(value:unknown)=>void;
+  const completion=new Promise(resolve=>{settle=resolve;});
+  const onEdit=vi.fn((action:ActionDescriptor)=>action.action==="editPixels"?completion:undefined);
+  const node=paint2dNode(12);
+  const paint=node.paint2d!;
+  const edited={...node,paint2d:{...paint,documentSyncJson:'{"layers":[{"kind":"pixel","id":"p","width":2,"height":2}]}',selectionJson:'["p"]'}};
+  let view!:ReturnType<typeof render>;
+  await act(async()=>{view=render(createElement(Paint2dHost,{node:edited,onAction:onEdit}));await vi.advanceTimersByTimeAsync(30);});
+  view.container.querySelector("details")!.open=true;
+  const apply=view.getByRole("button",{name:"Apply",exact:true}) as HTMLButtonElement;
+  await act(async()=>{fireEvent.click(apply);});
+  expect(onEdit.mock.calls.filter(([action])=>action.action==="editPixels")).toHaveLength(1);
+  expect(apply.disabled).toBe(true);
+  await act(async()=>{settle({kind:"applied",inputSeq:1});await completion;});
+  expect(apply.disabled).toBe(false);
+  expect(view.getByText("Edit applied")).toBeDefined();
+});

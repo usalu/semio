@@ -1,0 +1,33 @@
+{
+  "$schema": "s.stdio.png.command.patch-pixel-region.fixture.v1",
+  "cases": [
+    {
+      "name": "middle translucent region",
+      "image": {
+        "width": 4,
+        "height": 3,
+        "pixels": [
+          1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255,
+          1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255,
+          1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255
+        ]
+      },
+      "command": { "x": 1, "y": 1, "width": 2, "height": 1, "red": 10, "green": 20, "blue": 30, "alpha": 128 },
+      "expectedPixels": [
+        1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255,
+        1, 2, 3, 255, 10, 20, 30, 128, 10, 20, 30, 128, 1, 2, 3, 255,
+        1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255, 1, 2, 3, 255
+      ]
+    },
+    {
+      "name": "right boundary opaque column",
+      "image": {
+        "width": 2,
+        "height": 2,
+        "pixels": [0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255]
+      },
+      "command": { "x": 1, "y": 0, "width": 1, "height": 2, "red": 255, "green": 64, "blue": 32, "alpha": 255 },
+      "expectedPixels": [0, 0, 0, 255, 255, 64, 32, 255, 0, 0, 0, 255, 255, 64, 32, 255]
+    }
+  ]
+}

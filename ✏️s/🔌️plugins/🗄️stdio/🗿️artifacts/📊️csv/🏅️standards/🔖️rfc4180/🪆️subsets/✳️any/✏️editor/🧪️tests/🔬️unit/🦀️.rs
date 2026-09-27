@@ -27,7 +27,7 @@ async fn grid_row_offsets_by_one_when_has_header() {
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
-    let command = CsvEditorCommand::SetCell { row: 2, column: 5, value: "a \\s value %20\nGrüße 🌍".into() };
+    let command = CsvEditorCommand::SetCell { row: 2, column: 5, revision: "révision %20".into(), value: "a \\s value %20\nGrüße 🌍".into() };
     let printed = <CsvEditorCommand as protocol::OpText>::print_op(&command);
     let parsed = <CsvEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
     assert_eq!(parsed, command);
@@ -39,6 +39,20 @@ async fn op_text_roundtrip_preserves_example_ids_without_escape_reinterpretation
     let printed = <CsvEditorCommand as protocol::OpText>::print_op(&command);
     let parsed = <CsvEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
     assert_eq!(parsed, command);
+}
+
+#[test]
+fn set_cell_requires_its_full_address_and_accepts_an_empty_value() {
+    let args = dsl::DslValue::object([
+        ("row".into(), dsl::DslValue::Number(dsl::Number::UInt(1))),
+        ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(2))),
+        ("revision".into(), dsl::DslValue::String("rev".into())),
+        ("value".into(), dsl::DslValue::String(String::new())),
+    ]);
+    assert_eq!(csv_command_from_action(CSV_KIT_ACTION_ID, Some(&args)).expect("complete cell address"), CsvEditorCommand::SetCell { row: 1, column: 2, revision: "rev".into(), value: String::new() });
+    assert!(csv_command_from_action(CSV_KIT_ACTION_ID, None).is_err());
+    let missing_value = dsl::DslValue::object([("row".into(), dsl::DslValue::Number(dsl::Number::UInt(1))), ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(2)))]);
+    assert!(csv_command_from_action(CSV_KIT_ACTION_ID, Some(&missing_value)).is_err());
 }
 
 //#region 🎬️ExampleSwitchLaws
@@ -88,10 +102,7 @@ async fn the_curated_example_carries_visible_content() {
 async fn the_shell_action_pair_resolves_into_the_typed_command() {
     for key in ["exampleId", "example_id", "id", "value"] {
         let args = dsl::DslValue::object([(key.to_string(), dsl::DslValue::String("demo".into()))]);
-        assert_eq!(
-            csv_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"),
-            CsvEditorCommand::SetActiveExample { example_id: "demo".into() }
-        );
+        assert_eq!(csv_command_from_action(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, Some(&args)).expect("declared verb"), CsvEditorCommand::SetActiveExample { example_id: "demo".into() });
     }
     assert!(csv_command_from_action("noSuchVerb", None).is_err());
 }
@@ -105,19 +116,16 @@ type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<CsvEditor>
 async fn kit_fixture_holding(document: &CsvSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<CsvEditor>, _>(async { semio_framework_plugin::App { definition: create_csv_editor(), examples: Vec::new() } }).await;
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_CSV_DOCUMENT_SCHEMA) else {
-        panic!("the example switch hands the host one whole document")
-    };
+    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_CSV_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
     app.load_document_pack(&store::ArtifactPackFiles { pack, spr, ops: String::new() }).await.expect("the host loads the example document");
     app
 }
 
-/// 🕹️ Dispatches `action` with text-staged `args`, exactly as a rail sends it, and settles it through
+/// 🕹️ Dispatches `action` with typed renderer `args`, exactly as the editable cell sends them, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, &str)]) -> Result<(), Fault> {
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: dsl::DslValue) -> Result<(), Fault> {
     use semio_framework_plugin::PluginApp;
     let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    let args = dsl::DslValue::object(args.iter().map(|(key, value)| ((*key).to_string(), dsl::DslValue::String((*value).to_string()))).collect::<Vec<_>>());
     app.handle_action(action, Some(&args), &meta).await?;
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id).await.map(|_| ())
 }
@@ -127,10 +135,27 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 /// `interactive-job.missing-factory` (S15, session 11).
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
-    let mut app = kit_fixture_holding(&csv_example_snapshot(crate::examples::demo::ID)).await;
-    dispatch_settled(&mut app, "set-cell", &[("row", "0"), ("column", "0"), ("value", "Zeta")]).await.expect("set-cell settles");
+    let source = csv_example_snapshot(crate::examples::demo::ID);
+    let mut app = kit_fixture_holding(&source).await;
+    let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
+    let args = dsl::DslValue::object([
+        ("row".into(), dsl::DslValue::Number(dsl::Number::UInt(0))),
+        ("column".into(), dsl::DslValue::Number(dsl::Number::UInt(0))),
+        ("revision".into(), dsl::DslValue::String(revision)),
+        ("value".into(), dsl::DslValue::String("Zeta".into())),
+    ]);
+    dispatch_settled(&mut app, "set-cell", args).await.expect("set-cell settles");
     let after = app.snapshot().expect("csv snapshot");
     assert_eq!(after.records[grid_row_to_record_index(after.has_header, 0)].fields[0].value, "Zeta");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+#[test]
+fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
+    let source = csv_example_snapshot(crate::examples::demo::ID);
+    assert!(csv_emit(&CsvEditorCommand::SetCell { row: 0, column: 0, revision: "stale".into(), value: "x".into() }, &source).is_err());
+    let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&source);
+    assert!(csv_emit(&CsvEditorCommand::SetCell { row: u32::MAX, column: 0, revision: revision.clone(), value: "x".into() }, &source).is_err());
+    assert!(csv_emit(&CsvEditorCommand::SetCell { row: 0, column: u32::MAX, revision, value: "x".into() }, &source).is_err());
 }
 //#endregion 🪟️KitVerbLaws

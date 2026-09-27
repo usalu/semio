@@ -466,6 +466,26 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
 /** ▶️ `bun ./📜️script.ts dev [-- stdio [flags...]]` — boots the real stdio server for local/manual
  *  smoke testing (`printf '<json-rpc line>' | bun ./📜️script.ts dev -- stdio | ...`). Defaults to
  *  `stdio` when no mode is given, matching `🏗️bootstrap/🦀️.rs`'s own default-less argv contract. */
+/** 🎛️ The acceptance flags a live os-mcp harness verb takes (preamble rule 17), each mapped onto the environment
+ * variable its harness reads: `--hub <url>` → `OS_MCP_HUB_ORIGIN`, `--serve <url>` → `S_OS_MCP_LIVE_SHELL_URL`,
+ * `--locale en|de` → `S_OS_MCP_LIVE_LOCALE`, `--hub-admin-capability <file>` → `OS_HUB_ADMIN_CAPABILITY_FILE`.
+ * Credentials never ride argv: the harness reads `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD` from the environment and
+ * records `blocked` without them. A flag the verb does not take, or a value missing, is refused by name. */
+const HARNESS_FLAGS = { "--hub": "OS_MCP_HUB_ORIGIN", "--serve": "S_OS_MCP_LIVE_SHELL_URL", "--locale": "S_OS_MCP_LIVE_LOCALE", "--hub-admin-capability": "OS_HUB_ADMIN_CAPABILITY_FILE" } as const;
+type HarnessFlag = keyof typeof HARNESS_FLAGS;
+
+function harnessEnvironment(verb: string, segments: string[], accepted: readonly HarnessFlag[]): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  for (let index = 0; index < segments.length; index += 2) {
+    const flag = segments[index] as HarnessFlag;
+    const value = segments[index + 1];
+    if (!accepted.includes(flag) || value === undefined || value.startsWith("--")) throw new Error(`${verb} takes ${accepted.map((name) => `${name} <value>`).join(" ") || "no arguments"}; refused ${accepted.includes(flag) ? `${flag} without a value` : `argument ${index + 1}`} (values are never echoed)`);
+    if (flag === "--locale" && value !== "en" && value !== "de") throw new Error(`${verb}: --locale is en or de, got ${value}`);
+    env[HARNESS_FLAGS[flag]] = value;
+  }
+  return env;
+}
+
 /** 🤖️ Runs the live agent-loop gate: a real `semio-os-mcp` stdio gateway launched from `.mcp.json`
  * against an already-running React `dev` session, driven through the whole (a)–(e) transcript in a
  * real browser. The session is a precondition rather than something this gate boots, because an
@@ -473,8 +493,8 @@ class CanonicalCheckpointResourceNativeCheckScript extends BundleScript {
  * launch row to start when none answers. */
 class OsMcpLiveAgentLoopScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("live-agent-loop-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️live-agent-loop/🟦️.ts")], this.repoRoot, "os-mcp-live-agent-loop", 900_000);
+    const env = harnessEnvironment("live-agent-loop-check", segments, ["--serve", "--locale"]);
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️live-agent-loop/🟦️.ts")], this.repoRoot, "os-mcp-live-agent-loop", 900_000, { env });
   }
 }
 
@@ -486,18 +506,19 @@ class OsMcpLiveAgentLoopScript extends BundleScript {
  * `OS_MCP_HUB_EMAIL`, `OS_MCP_HUB_PASSWORD` and `OS_MCP_HUB_SPACE` select the target. */
 class OsMcpHubAgentParticipantScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("hub-agent-participant-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️hub-agent-participant/🟦️.ts")], this.repoRoot, "os-mcp-hub-agent-participant", 900_000);
+    const env = harnessEnvironment("hub-agent-participant-check", segments, ["--hub"]);
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🤖️hub-agent-participant/🟦️.ts")], this.repoRoot, "os-mcp-hub-agent-participant", 900_000, { env });
   }
 }
 
-/** 🧩️ Runs the plugin-coverage lane-parity sweep: every installed plugin package over a fresh `--folder` semio MCP
- * gateway — capabilities, descriptions, and per kind `artifact_create` + one non-destructive mutation. Configured by
- * `S_OS_MCP_COVERAGE_PLUGINS` / `S_OS_MCP_COVERAGE_OUT`; see the sweep's own doc. */
+/** 🧩️ Runs the plugin-coverage sweep: every installed plugin package over a fresh `--folder` semio MCP gateway —
+ * capabilities, descriptions, and per kind `artifact_create` + one mutation — or, with `--hub <url>`, every kind the hub
+ * can create, opened, mutated, undone, redone and exported over one delegated `--hub` gateway. Configured by
+ * `S_OS_MCP_COVERAGE_PLUGINS` / `S_OS_MCP_COVERAGE_OUT` (+ `OS_MCP_HUB_EMAIL` / `OS_MCP_HUB_PASSWORD` for the hub lane). */
 class OsMcpPluginCoverageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("plugin-coverage-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧩️plugin-coverage/🟦️.ts")], this.repoRoot, "os-mcp-plugin-coverage", 7_200_000);
+    const env = harnessEnvironment("plugin-coverage-check", segments, ["--hub"]);
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🧩️plugin-coverage/🟦️.ts")], this.repoRoot, "os-mcp-plugin-coverage", 7_200_000, { env });
   }
 }
 
@@ -507,8 +528,8 @@ class OsMcpPluginCoverageScript extends BundleScript {
  * `S_OS_MCP_LIVE_SHELL_URL` and `S_OS_MCP_LIVE_LOCALE` select the target. */
 class OsMcpUserPathScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("user-path-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🚶️user-path/🟦️.ts")], this.repoRoot, "os-mcp-user-path", 3_600_000);
+    const env = harnessEnvironment("user-path-check", segments, ["--hub", "--serve", "--locale"]);
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🚶️user-path/🟦️.ts")], this.repoRoot, "os-mcp-user-path", 3_600_000, { env });
   }
 }
 
@@ -518,8 +539,8 @@ class OsMcpUserPathScript extends BundleScript {
  * the target. */
 class OsMcpInferenceQuartetScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("inference-quartet-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💼️inference-quartet/🟦️.ts")], this.repoRoot, "os-mcp-inference-quartet", 3_600_000);
+    const env = harnessEnvironment("inference-quartet-check", segments, ["--hub"]);
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💼️inference-quartet/🟦️.ts")], this.repoRoot, "os-mcp-inference-quartet", 3_600_000, { env });
   }
 }
 
@@ -529,8 +550,8 @@ class OsMcpInferenceQuartetScript extends BundleScript {
  * select the target. */
 class OsMcpSecurityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("security-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🛡️security/🟦️.ts")], this.repoRoot, "os-mcp-security", 3_600_000);
+    const env = harnessEnvironment("security-check", segments, ["--hub", "--hub-admin-capability"]);
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/🛡️security/🟦️.ts")], this.repoRoot, "os-mcp-security", 3_600_000, { env });
   }
 }
 
@@ -553,8 +574,8 @@ class OsMcpHubEditDurabilityScript extends BundleScript {
  * minutes and every developer already has one open. */
 class OsMcpAgentReplyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments.length) throw new Error("agent-reply-check accepts no arguments");
-    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💬️agent-reply/🟦️.ts")], this.repoRoot, "os-mcp-agent-reply", 900_000);
+    const env = harnessEnvironment("agent-reply-check", segments, ["--serve", "--locale"]);
+    await runOwnedCommand("bun", [join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧪️tests/💬️agent-reply/🟦️.ts")], this.repoRoot, "os-mcp-agent-reply", 900_000, { env });
   }
 }
 

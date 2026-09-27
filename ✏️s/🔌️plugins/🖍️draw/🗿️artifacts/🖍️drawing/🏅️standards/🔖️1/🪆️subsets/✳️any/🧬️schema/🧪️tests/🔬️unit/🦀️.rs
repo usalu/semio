@@ -172,7 +172,7 @@ async fn flatten_drawing_layers_includes_nested_group_children() {
 
 #[semio_framework_async_macros::async_test]
 async fn drawing_matrix_to_transform_round_trips_and_handles_zero_scale_x() {
-    let transform = DrawingTransform { x: 1.0, y: 2.0, scale_x: 2.0, scale_y: 3.0, rotation: std::f64::consts::FRAC_PI_6 };
+    let transform = DrawingTransform { x: 1.0, y: 2.0, scale_x: 2.0, scale_y: 3.0, rotation: std::f64::consts::FRAC_PI_6, shear: 0.0 };
     let matrix = drawing_transform_to_matrix(&transform);
     let back = drawing_matrix_to_transform(matrix);
     assert!((back.x - transform.x).abs() < 1e-9);
@@ -183,7 +183,8 @@ async fn drawing_matrix_to_transform_round_trips_and_handles_zero_scale_x() {
 
     let degenerate = drawing_matrix_to_transform([0.0, 0.0, 5.0, 5.0, 1.0, 2.0]);
     assert_eq!(degenerate.scale_x, 0.0);
-    assert_eq!(degenerate.scale_y, 0.0);
+    assert!((degenerate.scale_y - 5.0_f64.hypot(5.0)).abs() < 1e-12);
+    assert_eq!(degenerate.shear, 0.0);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -307,7 +308,7 @@ async fn transform_path_segments_transforms_every_segment_kind() {
         PathSegment::Arc { rx: 1.0, ry: 1.0, rotation: 0.0, large_arc: false, sweep: true, to: [1.0, 0.0] },
         PathSegment::Close,
     ];
-    let transform = DrawingTransform { x: 10.0, y: 20.0, scale_x: 2.0, scale_y: 2.0, rotation: 0.0 };
+    let transform = DrawingTransform { x: 10.0, y: 20.0, scale_x: 2.0, scale_y: 2.0, rotation: 0.0, shear: 0.0 };
     let transformed = transform_path_segments(&segments, &transform);
     match &transformed[0] {
         PathSegment::Move { to } => assert_eq!(*to, [12.0, 20.0]),
@@ -553,7 +554,7 @@ fn nested_group_transform_reaches_scene_and_bounds() {
     layer_base_mut(&mut child).transform.x = 4.0;
     layer_base_mut(&mut child).transform.y = 5.0;
     let mut group = create_drawing_group_layer("Group");
-    layer_base_mut(&mut group).transform = DrawingTransform { x: 10.0, y: 20.0, scale_x: 2.0, scale_y: 3.0, rotation: 0.0 };
+    layer_base_mut(&mut group).transform = DrawingTransform { x: 10.0, y: 20.0, scale_x: 2.0, scale_y: 3.0, rotation: 0.0, shear: 0.0 };
     if let DrawingLayerNode::Group(body) = &mut group { body.children.push(child); }
     assert_eq!(drawing_layer_world_bounds(&group), Some((18.0, 35.0, 20.0, 60.0)));
     let document = DrawingSnapshot { layers: vec![group], ..Default::default() };
@@ -584,4 +585,38 @@ fn duplicated_group_remaps_internal_boolean_references() {
     let DrawingLayerNode::Boolean(boolean) = &copy.children[1] else { panic!("Expected Boolean operands") };
     assert_ne!(layer_id(&copy.children[0]), original_id);
     assert_eq!(boolean.children, vec![layer_id(&copy.children[0]).to_string(), "external".into()]);
+}
+
+#[test]
+fn text_line_layout_matches_the_shared_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🧫️fixtures/🔣️.json" )).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let content = case["content"].as_str().unwrap();
+        let size = case["size"].as_f64().unwrap();
+        let actual = semio_s_2d::text::drawing_text_lines(content).collect::<Vec<_>>();
+        assert_eq!(serde_json::json!(actual), case["lines"]);
+        for (index, value) in semio_s_2d::text::drawing_text_fallback_extent(content, size).iter().enumerate() { assert!((value - case["extent"][index].as_f64().unwrap()).abs() < 1e-10); }
+    }
+}
+
+#[test]
+fn text_scene_preserves_authored_coordinates_under_layer_transform() {
+    let mut layer = create_drawing_text_layer("Positioned text");
+    let DrawingLayerNode::Text(text) = &mut layer else { unreachable!() };
+    text.x = 7.0;
+    text.y = 11.0;
+    text.base.transform.x = 100.0;
+    text.base.transform.y = 200.0;
+    text.base.transform.scale_x = 2.0;
+    text.base.transform.scale_y = 3.0;
+    let snapshot = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    let nodes = flatten_drawing_document_to_scene_nodes(&snapshot);
+    assert_eq!(nodes[0].transform, [2.0, 0.0, 0.0, 3.0, 114.0, 233.0]);
+}
+
+#[test]
+fn scene_preserves_authored_curve_segments_for_canvas_and_vector_export() {
+    let segments = vec![PathSegment::Move { to:[0.0,0.0] },PathSegment::Arc { rx:5.0,ry:3.0,rotation:25.0,large_arc:true,sweep:false,to:[30.0,10.0] },PathSegment::Quad { ctrl:[5.0,9.0],to:[10.0,0.0] }];
+    let snapshot = DrawingSnapshot { layers:vec![create_drawing_path_layer("Curves",segments.clone())],..Default::default() };
+    assert_eq!(flatten_drawing_document_to_scene_nodes(&snapshot)[0].segments,segments);
 }

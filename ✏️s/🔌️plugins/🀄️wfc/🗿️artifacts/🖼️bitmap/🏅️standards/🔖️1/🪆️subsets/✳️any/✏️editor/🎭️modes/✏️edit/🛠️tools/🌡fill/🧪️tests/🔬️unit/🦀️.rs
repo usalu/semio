@@ -131,7 +131,7 @@ fn stepping_publishes_a_partial_payload_then_a_richer_one() {
 #[test]
 fn the_final_payload_matches_solve_with_job() {
     let snapshot = stripes();
-    let oracle = crate::inferences::solve_with_job(&snapshot).expect("oracle");
+    let oracle = crate::inferences::solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("oracle");
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), Generation(0), snapshot.seed);
     let (operation_id, generation) = (operation.operation, operation.generation);
     let mut job = BitmapFillRunJob::new(identity(), ToolRunJobPort::default(), snapshot, operation);

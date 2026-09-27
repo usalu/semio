@@ -4,8 +4,9 @@
  * Per scenario of `🧑‍💻dev/🧫️fixtures/⏱️interaction-latency.json`: the program opened from Home, its target focused, then N
  * trusted inputs (Playwright keyboard/mouse through CDP) at the scenario's interval. Latency of one input = from the event's own
  * timestamp to the end of the first frame after it (a capture-phase listener arms `requestAnimationFrame` → `MessageChannel`,
- * which runs after that frame's rAF work and paint). Paints = `renderFrame` calls of every wasm canvas session class the page
- * loaded (the exported classes' prototypes are wrapped). The browser's own Event Timing entries (≥ 16 ms) are the third-party
+ * which runs after that frame's rAF work and paint). Paints = `renderFrame` calls of every canvas session class the page
+ * loaded — the wasm bindings' exported classes and the host elements' own (the 2D canvas host paints in JS) — whose prototypes
+ * are wrapped; a scenario that hooks no class fails, since an unmeasured paint count is not a pass. The browser's own Event Timing entries (≥ 16 ms) are the third-party
  * oracle for the input's processing cost.
  * Law: paints per input ≤ the scenario's bound (demand-driven painting, always judged); p95 input → frame ≤ the scenario's
  * bound, judged only while the machine's 1-minute load stays ≤ `loadCeilingPerCore` × cores (else the check is `blocked` with
@@ -60,9 +61,15 @@ export type LatencyRow = Readonly<{
   violations: readonly string[];
 }>;
 
-const installProbe = (): void => {
+/** 🗃️ Resource Timing entries the page keeps. The browser default (250) is full long before a program opens — the s boot alone
+ * loads ~500 scripts — so the paint hook, which finds the wasm canvas session modules through those entries, found none and
+ * every scenario reported 0 paints per input (ticket 26/09/23 F2). */
+const RESOURCE_TIMING_ENTRIES = 100_000;
+
+const installProbe = (resourceTimingEntries: number): void => {
   const state = { rows: [] as { t0: number; ms: number }[], events: [] as { name: string; duration: number }[], paints: [] as number[], classes: new Set<string>(), armed: false };
   Object.defineProperty(window, "__semioLatency", { value: state });
+  performance.setResourceTimingBufferSize(resourceTimingEntries);
   for (const type of ["keydown", "pointermove", "pointerdown", "pointerup"]) {
     addEventListener(
       type,
@@ -87,7 +94,12 @@ const installProbe = (): void => {
 async function hookPaints(page: Page): Promise<readonly string[]> {
   return page.evaluate(async () => {
     const state = (window as unknown as { __semioLatency: { paints: number[]; classes: Set<string>; armed: boolean } }).__semioLatency;
-    const urls = [...new Set(performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => /\.js(\?|$)/u.test(name) && /\/pkg\/|bindings\//u.test(decodeURIComponent(name))))];
+    const sessionModule = (url: string): boolean => {
+      const path = decodeURIComponent(url);
+      if (/worker/iu.test(path)) return false;
+      return (/\.js(\?|$)/u.test(path) && /\/pkg\/|bindings\//u.test(path)) || /🧱️elements\/[^?]*\.tsx?(\?|$)/u.test(path);
+    };
+    const urls = [...new Set(performance.getEntriesByType("resource").map((entry) => entry.name).filter(sessionModule))];
     const hooked: string[] = [];
     for (const url of urls) {
       let module: Record<string, unknown>;
@@ -165,7 +177,7 @@ async function measureScenario(page: Page, scenario: LatencyScenario, loadCeilin
   await page.mouse.click(x, y);
   await page.waitForTimeout(800);
   if (scenario.action === "type") await page.keyboard.press("End");
-  await hookPaints(page);
+  const hooked = await hookPaints(page);
   await page.waitForTimeout(1_500);
   await page.evaluate(() => {
     const state = (window as unknown as { __semioLatency: { rows: unknown[]; events: unknown[]; paints: unknown[]; classes: Set<string>; armed: boolean } }).__semioLatency;
@@ -202,6 +214,7 @@ async function measureScenario(page: Page, scenario: LatencyScenario, loadCeilin
   const frames = { n: state.frames.length, p50: quantileV1(state.frames, 0.5), p95: quantileV1(state.frames, 0.95), max: quantileV1(state.frames, 1) };
   const timingJudged = load <= loadCeiling;
   const violations = [
+    ...(hooked.length > 0 ? [] : ["no canvas session class was hooked, so paints went unmeasured"]),
     ...(state.frames.length >= Math.floor(inputs * 0.8) ? [] : [`only ${state.frames.length} of ${inputs} inputs reached a frame`]),
     ...(perInput <= scenario.maxPaintsPerInput ? [] : [`${perInput} paints per input (bound ${scenario.maxPaintsPerInput})`]),
     ...(timingJudged && frames.p95 !== null && frames.p95 > scenario.maxP95Ms ? [`input → frame p95 ${frames.p95} ms (bound ${scenario.maxP95Ms} ms)`] : []),
@@ -235,7 +248,7 @@ export async function runInteractionLatency(options: Readonly<{ baseUrl: string;
       if (options.signal.aborted) break;
       const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
       page.setDefaultNavigationTimeout(300_000);
-      await page.addInitScript(installProbe);
+      await page.addInitScript(installProbe, RESOURCE_TIMING_ENTRIES);
       try {
         await page.goto(options.baseUrl, { waitUntil: "commit" });
         const beacon = await awaitBeacon(page, Date.now() + 300_000);

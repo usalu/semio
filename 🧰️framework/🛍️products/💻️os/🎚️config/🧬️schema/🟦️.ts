@@ -1,5 +1,6 @@
 import type { ArtifactDialect } from "../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import type { AppRef, AppRole } from "../../../../🔨️modules/🛂️manifest/🧬️schema/🟦️.ts";
+import type { WindowLayout } from "../../../../🔨️modules/🛂️manifest/🟦️.ts";
 /** 🧬️ Canonical OS configuration schemas. */
 
 import uiPreferencesSchema from "./🎨️ui-preferences/🔣️.json" with { type: "json" };
@@ -20,6 +21,13 @@ export interface UiTheme {
   config: unknown;
 }
 
+/** 🗂️ One layout the user saved (`$defs.UserNamedLayout`): its label and the window arrangement it restores; its id is the
+ * key it is stored under. */
+export interface UserNamedLayout {
+  label: string;
+  layout: WindowLayout;
+}
+
 export interface UiPreferences {
   appearance: UiAppearance | null;
   layout: UiChromeLayout | null;
@@ -30,6 +38,7 @@ export interface UiPreferences {
   themeId: string | null;
   customThemes: Record<string, UiTheme>;
   keybindingOverrides: Record<string, string>;
+  namedLayouts: Record<string, Record<string, UserNamedLayout>>;
 }
 
 export const OS_UI_PREFERENCES_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/os/config/ui-preferences.json";
@@ -85,9 +94,32 @@ export const parseUiLocale = (value: unknown): UiLocale => parseEnum("UiLocale",
 export const parseUiDriver = (value: unknown): UiDriver => parseUiExtension("UiDriver", "driverId", value) as UiDriver;
 export const parseUiTheme = (value: unknown): UiTheme => parseUiExtension("UiTheme", "themeId", value) as UiTheme;
 
+function parseWindowLayoutNode(value: unknown, allowed: readonly string[]): void {
+  if (!isRecord(value) || typeof value.kind !== "string" || !allowed.includes(value.kind)) throw new OsConfigSchemaError("WindowLayout", [`node must be one of ${JSON.stringify(allowed)}`]);
+  if (value.size !== undefined && typeof value.size !== "number") throw new OsConfigSchemaError("WindowLayout", ["node.size must be a number"]);
+  if (value.kind === "window") {
+    const keys = new Set(["kind", "windowKindId", "title", "instanceId", "templateId", "corner"]);
+    if (Object.keys(value).some((key) => !keys.has(key)) || typeof value.windowKindId !== "string") throw new OsConfigSchemaError("WindowLayout", ["window node is invalid"]);
+    for (const key of ["title", "instanceId", "templateId"] as const) if (value[key] !== undefined && typeof value[key] !== "string") throw new OsConfigSchemaError("WindowLayout", [`window node.${key} must be a string`]);
+    if (value.corner !== undefined) parseEnum("WindowStackCorner", value.corner, ["topLeft", "topRight", "bottomLeft", "bottomRight"]);
+    return;
+  }
+  if (Object.keys(value).some((key) => !["kind", "size", "children"].includes(key)) || !Array.isArray(value.children)) throw new OsConfigSchemaError("WindowLayout", [`${value.kind} node is invalid`]);
+  for (const child of value.children) parseWindowLayoutNode(child, value.kind === "stack" ? ["window"] : ["row", "column", "stack"]);
+}
+
+/** 🗂️ One saved layout, checked against `$defs.UserNamedLayout` (label 1..=256 characters, a well-formed window tree). */
+export function parseUserNamedLayout(value: unknown): UserNamedLayout {
+  if (!isRecord(value) || Object.keys(value).some((key) => key !== "label" && key !== "layout")) throw new OsConfigSchemaError("UserNamedLayout", ["value must be { label, layout }"]);
+  if (typeof value.label !== "string" || value.label.length === 0 || value.label.length > 256) throw new OsConfigSchemaError("UserNamedLayout", ["value.label must be 1..=256 characters"]);
+  if (!isRecord(value.layout) || Object.keys(value.layout).some((key) => key !== "root")) throw new OsConfigSchemaError("UserNamedLayout", ["value.layout must be { root }"]);
+  parseWindowLayoutNode(value.layout.root, ["row", "column", "stack"]);
+  return value as unknown as UserNamedLayout;
+}
+
 export function parseUiPreferences(value: unknown): UiPreferences {
   if (!isRecord(value)) throw new OsConfigSchemaError("UiPreferences", ["value must be an object"]);
-  const required = ["appearance", "layout", "driverId", "customDrivers", "locale", "terminology", "themeId", "customThemes", "keybindingOverrides"] as const;
+  const required = ["appearance", "layout", "driverId", "customDrivers", "locale", "terminology", "themeId", "customThemes", "keybindingOverrides", "namedLayouts"] as const;
   const problems = Object.keys(value).filter((key) => !required.includes(key as (typeof required)[number])).map((key) => `value has unexpected property '${key}'`);
   for (const key of required) if (!owns(value, key)) problems.push(`value is missing required property '${key}'`);
   const nullableString = (key: "driverId" | "terminology" | "themeId") => {
@@ -105,6 +137,7 @@ export function parseUiPreferences(value: unknown): UiPreferences {
     if (typeof entry !== "string") throw new Error();
     return entry;
   }); } catch { problems.push("value.keybindingOverrides is invalid"); }
+  try { parseRecord("UiPreferences.namedLayouts", value.namedLayouts, (layouts) => parseRecord("UiPreferences.namedLayouts.app", layouts, parseUserNamedLayout)); } catch { problems.push("value.namedLayouts is invalid"); }
   if (problems.length > 0) throw new OsConfigSchemaError("UiPreferences", problems);
   return value as unknown as UiPreferences;
 }

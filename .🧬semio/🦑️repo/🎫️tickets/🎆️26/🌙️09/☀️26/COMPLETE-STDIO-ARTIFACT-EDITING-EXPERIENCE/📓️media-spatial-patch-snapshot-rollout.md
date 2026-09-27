@@ -2,9 +2,9 @@
 
 ## Persisted contract
 
-The remaining large-artifact gap should be closed by one opt-in path codec in the framework value layer and one native `PatchSnapshot` mutation leaf in every artifact aggregate. The value derive owns the correspondence between RFC 6901 names and Rust fields, including renamed fields, tagged enums, nullable fields, object keys, array indices, and byte arrays. `DslRecord` cannot provide that mapping because it only knows DSL spelling and would reproduce the current casing and tag loss.
+The remaining large-artifact gap is closed by one opt-in path codec in the framework value layer and one native `PatchSnapshot` mutation leaf in every artifact aggregate. The value derive owns the correspondence between RFC 6901 names and Rust fields, including renamed fields, tagged enums, nullable fields, object keys, array indices, and byte arrays. `DslRecord` cannot provide that mapping because it only knows DSL spelling and would reproduce the current casing and tag loss.
 
-The framework payload must contain one canonical path operation and its typed value when the operation needs one. Applying it traverses the typed snapshot directly and allocates only the containers along the edited path. It must never serialize the whole snapshot to `DslValue`. The same codec must derive an exact inverse against the base snapshot before publication:
+The landed framework carrier is `SnapshotPatch { edits: Vec<SnapshotValuePatch> }` with at most two sequential operations and at most 128 decoded path segments per operation. Each operation is typed as set, insert, or remove with a `DslValue` only where needed. Move and rename commands compile to remove-plus-insert. Applying it traverses the typed snapshot directly and allocates only the containers along the edited path. It never serializes the whole snapshot to `DslValue`. The same codec derives an exact inverse against the base snapshot before publication:
 
 - set records the previous value and inverses to set or remove as appropriate;
 - insert inverses to remove at the final canonical index;
@@ -13,13 +13,15 @@ The framework payload must contain one canonical path operation and its typed va
 - rename records the old key and refuses collisions;
 - source replacement remains a bounded whole-document operation; large documents expose all fields through path edits and do not advertise an action that transport cannot carry.
 
-Every aggregate retains its domain mutation enum. `PatchSnapshot` is a normal schema-first mutation variant with the framework patch payload, a `MutationLeaf` descriptor with exactly fourteen authority fields, aggregate JSON Schema membership, text and binary codecs, generated language declarations, a unique protocol tag, `Mutation::diff`, and `Mutation::inverse`. Existing semantic leaves remain preferred when they are smaller or carry stronger domain intent. `SetSnapshot` remains only for bounded whole-document replacement.
+Every aggregate retains its domain mutation enum. `PatchSnapshot` is a normal schema-first mutation variant with the framework patch payload, a `MutationLeaf` descriptor with exactly fourteen authority fields, aggregate JSON Schema membership, text and binary codecs, generated language declarations, a unique protocol tag, `Mutation::diff`, and `Mutation::inverse`. `SnapshotPatch` implements the framework `DslField` carrier as a structured value, so DslRecord/DslVariants aggregates such as MP4 preserve the typed tree without a JSON string adapter. Existing semantic leaves remain preferred when they are smaller or carry stronger domain intent. `SetSnapshot` remains only for bounded whole-document replacement.
 
-Admission encodes every forward mutation and every exact inverse against `ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`. An edit is admitted only when both directions fit. Large byte, sample, vertex, point, and frame arrays are edited by leaf or bounded range patches, so sibling payloads never enter the event. A multi-item retained publication must prepare all items before commit and cancellation must leave generation and root identity unchanged.
+The retained reducer prepares and schema-validates the patch against the exact editor dialect and document schema before it asks the editor for its native mutation. Validation resolves sequential operation paths against each intermediate typed snapshot and validates final context, so a move cannot accidentally validate its destination against the pre-removal shape. Admission encodes every wrapped forward mutation and every exact inverse against `ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`. An edit is admitted only when both directions fit. Large byte, sample, vertex, point, and frame arrays are edited by leaf or bounded range patches, so sibling payloads never enter the event. A multi-item retained publication must prepare all items before commit and cancellation must leave generation and root identity unchanged.
+
+The first five aggregate protocol tags reserved by their next free record are PNG 19, WAV 5, JPEG document 13, TIFF document 9, and MP4 9. Their native leaf diff applies the already validated structural typed patch, and inverse derives a fresh compact patch from the actual publication base. The editor keeps its current semantic mapping first and selects `PatchSnapshot` only for the generic fallback.
 
 ## Concrete editor roots
 
-All 54 assigned editor roots already parse the same six retained actions and therefore only need their current generic `SetSnapshot` fallback replaced by the derived path codec plus their aggregate's native `PatchSnapshot` wrapper. The exact concrete dialect remains the controller and proof authority.
+All 54 assigned editor roots already parse the same six retained actions and therefore only need their current generic `SetSnapshot` fallback replaced by the derived path codec plus their aggregate's native `PatchSnapshot` wrapper. The inventory resolves to 43 unique mutation aggregates: GIF's two roots share `GifMutation`; IFC 2x3's four roots share `Ifc2x3Mutation`; STEP base and CC1 through CC6 share `StepMutation`; and both DWG versions share `DwgMutation`. The exact concrete dialect remains the controller and proof authority even where the mutation aggregate is shared.
 
 | Schema owner / concrete roots | Count | Existing compact route to keep | `PatchSnapshot` responsibility |
 | --- | ---: | --- | --- |
@@ -46,6 +48,8 @@ All 54 assigned editor roots already parse the same six retained actions and the
 
 Total: 54 concrete roots.
 
+The schema-first implementation therefore adds 43 native leaf wrappers and wires them through 54 editors. A shared aggregate receives one protocol tag and codec surface; its derived editors retain their own controller identity and tests rather than duplicating the mutation vocabulary.
+
 ## Integration sequence
 
 1. Land the framework path codec against the neutral fixture with escaped object keys, Unicode, tagged enums, nullable fields, byte arrays, insert/remove/move/rename, and exact inverse tests.
@@ -59,3 +63,17 @@ Total: 54 concrete roots.
 ## Acceptance evidence required
 
 The rollout is complete only when each distinct aggregate proves text and binary mutation round trips, exact forward and inverse replay, retained publication, cancellation before commit, undo, redo, Pack reopen, and native format encode/decode where the format has a writer. Binary native tests must preserve opaque sibling payloads byte-for-byte unless the format specification requires canonicalization. Existing third-party format oracles remain the independent evidence for native exports; Pack reopen is separate evidence and cannot substitute for it.
+
+## Schema-first pilot leaves authored while native carrier verification is queued
+
+The five pilot roots now have authored, intentionally unmounted `patch-snapshot` leaf modules. Aggregate enums and editor fallbacks remain unchanged until the shared Rust carrier suite passes.
+
+| Pilot | Binary tag | Authored surfaces | Leaf law |
+| --- | ---: | --- | --- |
+| PNG 1.2 any | 19 | 14-field descriptor, shared-patch JSON Schema reference, Rust leaf, direct text codec, direct binary codec | 2 MiB pixels retained while gamma changes; exact inverse; forward and inverse each below the 1 MiB store item limit; text/binary round-trip |
+| WAV RIFF PCM any | 5 | 14-field descriptor, shared-patch JSON Schema reference, Rust leaf | sample past offset 1 MiB changes; all other samples retained; exact inverse; forward and inverse each below the 1 MiB store item limit; tagged text/binary round-trip |
+| JPEG JFIF document | 13 | 14-field descriptor, shared-patch JSON Schema reference, Rust leaf, direct text codec, direct binary codec | 2 MiB pixels retained while quality changes; exact inverse; forward and inverse each below the 1 MiB store item limit; text/binary round-trip |
+| TIFF 6.0 document | 9 | 14-field descriptor, shared-patch JSON Schema reference, Rust leaf, direct text codec, direct binary codec | one byte within 2 MiB pixels changes; all others retained; exact inverse; forward and inverse each below the 1 MiB store item limit; text/binary round-trip |
+| MP4 ISOBMFF any | 9 | 14-field descriptor, shared-patch JSON Schema reference, `DslRecord` Rust leaf using the first-party `SnapshotPatch: DslField` carrier | 2 MiB sample retained while movie title changes; exact inverse; forward and inverse each below the 1 MiB store item limit; derived text/binary round-trip |
+
+All ten new JSON files parse, and every mutation descriptor has exactly the required fourteen authority fields. The tests are staged within the unmounted leaf modules and become executable with the atomic aggregate/codec/editor mount.

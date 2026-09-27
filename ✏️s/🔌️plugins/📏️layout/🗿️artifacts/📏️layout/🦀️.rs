@@ -293,6 +293,12 @@ impl Frame {
             Frame::Rect { visible, .. } | Frame::Text { visible, .. } | Frame::Image { visible, .. } => visible.unwrap_or(true),
         }
     }
+
+    pub fn locked(&self) -> bool {
+        match self {
+            Frame::Rect { locked, .. } | Frame::Text { locked, .. } | Frame::Image { locked, .. } => locked.unwrap_or(false),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ToValue, FromValue)]
@@ -721,6 +727,17 @@ fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
             bounds.rotation = value;
         }
     }
+    {
+        let (locked, visible) = match frame {
+            Frame::Rect { locked, visible, .. } | Frame::Text { locked, visible, .. } | Frame::Image { locked, visible, .. } => (locked, visible),
+        };
+        if let Some(value) = patch.locked {
+            *locked = value.then_some(true);
+        }
+        if let Some(value) = patch.visible {
+            *visible = (!value).then_some(false);
+        }
+    }
     match frame {
         Frame::Rect { fill, stroke, .. } => {
             if let Some(new) = patch.fill {
@@ -896,6 +913,10 @@ pub struct FramePatch {
     pub stroke: Option<Option<[f32; 4]>>,
     pub wrap_mode: Option<String>,
     pub columns: Option<u32>,
+    #[value(default)]
+    pub locked: Option<bool>,
+    #[value(default)]
+    pub visible: Option<bool>,
 }
 //#endregion 🔖️CollectionSupport
 
@@ -990,6 +1011,24 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-fields-payload/🦀️.rs"]
                             mod tests_attaches_a_data_fields_payload;
+                        }
+                        #[path = "."]
+                        pub mod update_grid {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-grid/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-grid/🧪️tests/📐️sets-an-18-point-baseline/🦀️.rs"]
+                            mod tests_sets_an_18_point_baseline;
+                        }
+                        #[path = "."]
+                        pub mod set_frame_flags {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒set-frame-flags/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒set-frame-flags/🧪️tests/🔒️locks-frame-1/🦀️.rs"]
+                            mod tests_locks_frame_1;
                         }
                         #[path = "."]
                         pub mod create_page {
@@ -1451,6 +1490,8 @@ pub mod editor {
             pub mod patch_frame;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️patch-page/🦀️.rs"]
             pub mod patch_page;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️patch-document/🦀️.rs"]
+            pub mod patch_document;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📑️set-active-page/🦀️.rs"]
             pub mod set_active_page;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]

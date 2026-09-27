@@ -1,25 +1,42 @@
 /** 🧭️ Paint surface coordinates and compact selection transport. */
-export type PixelLayer = { id: string; name: string; visible: boolean; width: number; height: number; imageKey: string | null; matrix: readonly number[] };
-type LayerInput = { kind?: string; id?: string; name?: string; visible?: boolean; width?: number; height?: number; imageKey?: string; transform?: {x?:number;y?:number;rotation?:number;scaleX?:number;scaleY?:number}; children?: LayerInput[] };
+export type PixelLayer = { id: string; name: string; visible: boolean; width: number; height: number; imageKey: string | null; matrix: readonly number[]; target:"pixels"|"mask"; maskRevision?:string };
+type TransformInput={x?:number;y?:number;rotation?:number;scaleX?:number;scaleY?:number};
+type LayerInput = { kind?: string; id?: string; name?: string; visible?: boolean; width?: number; height?: number; imageKey?: string; transform?: TransformInput; mask?:{linked?:boolean;width?:number;height?:number;imageKey?:string;transform?:TransformInput}|null; children?: LayerInput[] };
 const identity = [1,0,0,1,0,0];
 function multiply(a: readonly number[], b: readonly number[]): number[] {
   return [a[0]!*b[0]!+a[2]!*b[1]!,a[1]!*b[0]!+a[3]!*b[1]!,a[0]!*b[2]!+a[2]!*b[3]!,a[1]!*b[2]!+a[3]!*b[3]!,a[0]!*b[4]!+a[2]!*b[5]!+a[4]!,a[1]!*b[4]!+a[3]!*b[5]!+a[5]!];
 }
 export function pixelLayers(json: string,assetExtentsJson="{}"): PixelLayer[] {
+  return editableLayers(json,assetExtentsJson,"pixels");
+}
+export function maskLayers(json:string,assetExtentsJson="{}"):PixelLayer[] {
+  return editableLayers(json,assetExtentsJson,"mask");
+}
+function transform(t:TransformInput={}):number[] {
+  const angle=(t.rotation??0)*Math.PI/180,cos=Math.cos(angle),sin=Math.sin(angle);
+  return [cos*(t.scaleX??1),sin*(t.scaleX??1),-sin*(t.scaleY??1),cos*(t.scaleY??1),t.x??0,t.y??0];
+}
+function editableLayers(json:string,assetExtentsJson:string,target:"pixels"|"mask"):PixelLayer[] {
   const root = JSON.parse(json) as {layers?:LayerInput[]};
   const assets=JSON.parse(assetExtentsJson) as Record<string,{width?:number;height?:number}>;
   const result:PixelLayer[] = [];
   const visit = (layers:LayerInput[],parent:readonly number[],visible:boolean,depth:number) => {
     if (depth > 32) throw new Error("Layer nesting exceeds the editor limit");
     for (const layer of layers) {
-      const t = layer.transform ?? {}, angle=(t.rotation ?? 0)*Math.PI/180, cos=Math.cos(angle),sin=Math.sin(angle);
-      const matrix=multiply(parent,[cos*(t.scaleX ?? 1),sin*(t.scaleX ?? 1),-sin*(t.scaleY ?? 1),cos*(t.scaleY ?? 1),t.x ?? 0,t.y ?? 0]);
+      const matrix=multiply(parent,transform(layer.transform));
       const shown=visible && layer.visible !== false;
-      if (layer.kind === "pixel" && layer.id) {
+      if (target==="pixels" && layer.kind === "pixel" && layer.id) {
         const extent=layer.imageKey?assets[layer.imageKey]:undefined;
         const displayWidth=layer.width ?? extent?.width ?? 512,displayHeight=layer.height ?? extent?.height ?? 512;
         const width=extent?.width ?? displayWidth,height=extent?.height ?? displayHeight;
-        result.push({id:layer.id,name:layer.name ?? layer.id,visible:shown,width,height,imageKey:layer.imageKey ?? null,matrix:multiply(matrix,[displayWidth/width,0,0,displayHeight/height,-displayWidth/2,-displayHeight/2])});
+        result.push({id:layer.id,name:layer.name ?? layer.id,visible:shown,width,height,imageKey:layer.imageKey ?? null,matrix:multiply(matrix,[displayWidth/width,0,0,displayHeight/height,-displayWidth/2,-displayHeight/2]),target});
+      }
+      if(target==="mask"&&layer.id&&layer.mask&&(layer.kind==="pixel"||layer.kind==="group")) {
+        const mask=layer.mask,extent=mask.imageKey?assets[mask.imageKey]:undefined;
+        const width=extent?.width??mask.width??(layer.kind==="pixel"?layer.width:undefined)??512,height=extent?.height??mask.height??(layer.kind==="pixel"?layer.height:undefined)??512;
+        const displayWidth=mask.width??width,displayHeight=mask.height??height;
+        const placement=multiply(mask.linked?matrix:parent,transform(mask.transform));
+        result.push({id:layer.id,name:layer.name??layer.id,visible:shown,width,height,imageKey:mask.imageKey??null,matrix:multiply(placement,[displayWidth/width,0,0,displayHeight/height,-displayWidth/2,-displayHeight/2]),target,maskRevision:JSON.stringify(mask)});
       }
       if (layer.kind === "group") visit(layer.children ?? [],matrix,shown,depth+1);
     }
@@ -33,6 +50,14 @@ export function layerPoint(layer:PixelLayer,x:number,y:number): readonly [number
   return [(d*(x-e)-c*(y-f))/determinant,(-b*(x-e)+a*(y-f))/determinant];
 }
 export type SelectionScanOptions = {signal?:AbortSignal;onProgress?:(progress:{completed:number;total:number;done:boolean})=>void};
+export async function editSelection(length:number,source:Uint8Array|undefined,mode:"all"|"invert",options:SelectionScanOptions={}):Promise<Uint8Array> {
+  checkSelectionScan(options);
+  if(!Number.isInteger(length)||length<1||length>16777216||(source&&source.length!==length)) throw new Error("Selection dimensions are invalid");
+  const result=new Uint8Array(length);
+  await scanSelection(result,(index)=>{result[index]=mode==="all"?255:255-(source?.[index]??0);},options);
+  checkSelectionScan(options);
+  return result;
+}
 function checkSelectionScan(options:SelectionScanOptions):void {
   if(options.signal?.aborted) throw new DOMException("Cancelled","AbortError");
 }

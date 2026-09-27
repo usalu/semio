@@ -322,13 +322,13 @@ fn preview_mark(kind: &str) -> String {
     if kind.is_empty() {
         return String::new();
     }
-    let mark = if kind.contains("pdf") {
+    let mark = if kind.contains("pdf") || kind.contains("note") || kind.contains("writer") || kind.contains("forms") || kind.contains("sequence") || kind.contains("presentation") {
         "page"
     } else if kind.contains("draw") || kind.contains("dwg") || kind.contains("dxf") || kind.contains("cad") {
         "stroke"
-    } else if kind.contains("map") || kind.contains("gis") {
+    } else if kind.contains("map") || kind.contains("gis") || kind.contains("terrain") {
         "map"
-    } else if kind.contains("svg") || kind.contains("fem") {
+    } else if kind.contains("svg") || kind.contains("fem") || kind.contains("equation") || kind.contains("flow") || kind.contains("wires") {
         "curve"
     } else {
         "grid"

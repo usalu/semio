@@ -1,6 +1,6 @@
 /** 🧩️ Semantic activation freshness owner. */
 
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, resolveBootSourceContentHashesAsync, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceContentHash, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceContentHash, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
@@ -43,57 +43,19 @@ export function stagedComponentFacts(moduleRoot: string, pluginId: string): Prep
 
 /** @emoji 🔎️ Collects one variant's staged-module freshness facts out of the ONE staging root: the
  * activation receipt names what was activated, each component's owner tree supplies the newest source
- * mtime, and the extension install root supplies the published package hash. Read-only — it never builds,
- * never writes, and never blocks a serve; its whole job is that a served module which is behind its own
+ * mtime, and the extension install root supplies the published package hash. Read-only and asynchronous — it never builds,
+ * never writes, and never blocks a serve (bounded: {@link SOURCE_FRESHNESS_COMPONENT_CONCURRENCY} components at once, `signal` cancels); its whole job is that a served module which is behind its own
  * crate says so out loud instead of looking like "the rebuild did not take". */
-export function collectStagedModuleFacts(options: {
+export async function collectStagedModuleFacts(options: {
   readonly moduleRoot: string;
   readonly installRoot: string;
   readonly receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string; readonly sourceContentSha256?: string }[] };
   readonly components: readonly PluginRegistryEntry[];
-}): readonly StagedModuleFacts[] {
-  const activated = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, row.artifactSha256]));
-  const activatedSource = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, (row as { sourceContentSha256?: string }).sourceContentSha256]));
-  return options.components.map((target): StagedModuleFacts => {
-    const directoryName = moduleDirectoryName(target.pluginId);
-    const installedMeta = join(options.installRoot, directoryName, EXTENSION_INSTALL_META);
-    let installedPackageHash: string | undefined;
-    if (existsSync(installedMeta)) {
-      try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
-    }
-    const moduleDirectory = join(options.moduleRoot, directoryName);
-    const sourceRoot = join(repoRoot, target.cratePath, "..", "..");
-    const receiptSource = activatedSource.get(target.pluginId);
-    const stagedAtMs = stagedModuleMtime(moduleDirectory);
-    const hashes = resolveBootSourceContentHashes({
-      sourceRoot,
-      moduleDirectory,
-      receiptSourceContentSha256: receiptSource,
-    });
-    return {
-      pluginId: target.pluginId,
-      role: target.role === "extension" ? "extension" : "plugin",
-      activationTracked: options.receipt !== undefined,
-      stagedAtMs,
-      newestSourceMs: hashes.newestSourceMs,
-      newestSourcePath: hashes.newestSourcePath ? relative(repoRoot, hashes.newestSourcePath).split(/[\\/]/).join("/") : undefined,
-      sourceContentSha256: hashes.sourceContentSha256,
-      stagedSourceContentSha256: hashes.stagedSourceContentSha256,
-      receiptArtifactSha256: activated.get(target.pluginId),
-      installedPackageHash,
-    };
-  });
-}
-
-export async function collectStagedModuleFactsAsync(options: {
-  readonly moduleRoot: string;
-  readonly installRoot: string;
-  readonly receipt?: { readonly plugins: readonly { readonly pluginId: string; readonly artifactSha256: string; readonly sourceContentSha256?: string }[] };
-  readonly components: readonly PluginRegistryEntry[];
+  readonly signal?: AbortSignal;
 }): Promise<readonly StagedModuleFacts[]> {
   const activated = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, row.artifactSha256]));
   const activatedSource = new Map((options.receipt?.plugins ?? []).map((row) => [row.pluginId, (row as { sourceContentSha256?: string }).sourceContentSha256]));
-  return Promise.all(options.components.map(async (target): Promise<StagedModuleFacts> => {
+  return mapBoundedV1(options.components, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, async (target): Promise<StagedModuleFacts> => {
     const directoryName = moduleDirectoryName(target.pluginId);
     const installedMeta = join(options.installRoot, directoryName, EXTENSION_INSTALL_META);
     let installedPackageHash: string | undefined;
@@ -104,10 +66,11 @@ export async function collectStagedModuleFactsAsync(options: {
     const sourceRoot = join(repoRoot, target.cratePath, "..", "..");
     const receiptSource = activatedSource.get(target.pluginId);
     const stagedAtMs = stagedModuleMtime(moduleDirectory);
-    const hashes = await resolveBootSourceContentHashesAsync({
+    const hashes = await resolveBootSourceContentHashes({
       sourceRoot,
       moduleDirectory,
       receiptSourceContentSha256: receiptSource,
+      signal: options.signal,
     });
     return {
       pluginId: target.pluginId,
@@ -121,7 +84,7 @@ export async function collectStagedModuleFactsAsync(options: {
       receiptArtifactSha256: activated.get(target.pluginId),
       installedPackageHash,
     };
-  }));
+  }, options.signal);
 }
 
 /** @emoji 📣️ Prints one `[stale]` line per component whose served bytes are behind, each naming the exact
@@ -141,7 +104,7 @@ async function reportServeStagedModuleFreshness(variant: string, renderer: "reac
   try {
     const selected = new Set(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), resolveCatalogFilterPluginId(variant)).map((entry) => entry.pluginId));
     const components = readGeneratedCatalogProjection().entries.filter((entry) => selected.has(entry.pluginId));
-    reportStagedModuleFreshness(variant, renderer, profile, await collectStagedModuleFactsAsync({
+    reportStagedModuleFreshness(variant, renderer, profile, await collectStagedModuleFacts({
       moduleRoot: pluginModulesRoot(profile),
       installRoot: join(runtime, "extensions"),
       receipt,

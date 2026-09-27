@@ -165,14 +165,14 @@
       "field": "transformScaleX",
       "value": 0
     },
-    "accepted": false
+    "accepted": true
   },
   {
     "patch": {
       "field": "transformScaleY",
       "value": -1
     },
-    "accepted": false
+    "accepted": true
   },
   {
     "patch": {
@@ -290,6 +290,20 @@
     "patch": {
       "field": "strokeDash",
       "value": "1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 "
+    },
+    "accepted": false
+  },
+  {
+    "patch": {
+      "field": "transformShear",
+      "value": 1.5
+    },
+    "accepted": true
+  },
+  {
+    "patch": {
+      "field": "transformShear",
+      "value": "tilted"
     },
     "accepted": false
   }

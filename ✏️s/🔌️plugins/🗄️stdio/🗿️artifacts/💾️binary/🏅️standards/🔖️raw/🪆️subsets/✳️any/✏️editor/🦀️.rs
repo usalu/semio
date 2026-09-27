@@ -98,7 +98,7 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(BinaryEditorCo
 /// 📐️ Parses `render()`'s hex dump back into bytes: strips `#`-prefixed comment lines and
 /// whitespace, then decodes the remaining contiguous hex — same convention
 /// `BinarySnapshot::parse_dsl` already uses. `None` on odd length or an invalid hex digit — the
-/// caller treats that as a documented no-op, never a partial apply.
+/// caller rejects the complete command, never a partial apply.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
     let hex: String = text.lines().filter(|line| !line.trim_start().starts_with('#')).collect::<Vec<_>>().join("").chars().filter(|c| !c.is_whitespace()).collect();
@@ -311,7 +311,7 @@ impl ArtifactEditor for BinaryEditor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "textEdit" => Ok(BinaryEditorCommand::ReplaceText {
-                text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text"], ""),
+                text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")?,
             }),
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.binary.unhandled-action"), format!("unknown binary editor action '{other}'"))),
         })
@@ -323,7 +323,7 @@ impl ArtifactEditor for BinaryEditor {
 
     /// ✏️ Parses the hex text and, if well-formed, replaces the WHOLE buffer via
     /// `BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: 0, remove_len: <old len>, insert: <parsed> })`. Malformed
-    /// hex (odd length or an invalid digit) is a documented no-op (`Emit::default()`), never a panic.
+    /// hex (odd length or an invalid digit) returns a fault without changing the document.
     fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
@@ -363,11 +363,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BinaryE
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }

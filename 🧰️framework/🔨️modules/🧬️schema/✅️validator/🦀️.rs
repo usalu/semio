@@ -1,6 +1,8 @@
 use crate::SchemaError;
 use pack::json::{parse as parse_json, Number, Object, Value};
+use semio_framework_os_kernel::DslValue;
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -39,6 +41,65 @@ impl ValidationControl {
 pub struct ValidationProgress {
     pub visited_nodes: usize,
 }
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum SchemaFragmentPathSegment {
+    Key(String),
+    Index(usize),
+    Append,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SchemaFragmentOperation {
+    Set,
+    Insert,
+    Remove,
+    Move,
+    Rename,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SchemaFragmentValueShape {
+    Null,
+    Bool,
+    Number,
+    String,
+    Array { len: usize },
+    Object { len: usize },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SchemaFragmentContextRefusal {
+    pub reason: String,
+}
+
+impl SchemaFragmentContextRefusal {
+    /// 🚧️ Describes why the native snapshot could not project the requested validation frontier.
+    pub fn new(reason: impl Into<String>) -> Self {
+        Self { reason: reason.into() }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SchemaFragmentError {
+    pub code: &'static str,
+    pub path: String,
+    pub message: String,
+}
+
+impl SchemaFragmentError {
+    fn new(code: &'static str, path: impl Into<String>, message: impl Into<String>) -> Self {
+        Self { code, path: path.into(), message: message.into() }
+    }
+}
+
+impl fmt::Display for SchemaFragmentError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "{}: {}", self.path, self.message)
+    }
+}
+
+impl std::error::Error for SchemaFragmentError {}
 
 struct Traversal<'a> {
     control: &'a ValidationControl,
@@ -147,6 +208,67 @@ impl OwnedJsonSchemaValidator {
     /// 🔎 Reports validity without exposing the internal JSON representation.
     pub fn is_valid_json(&self, value_json: &str) -> bool {
         self.validate_json(value_json).is_ok()
+    }
+
+    /// 🩹️ Validates one candidate patch without materializing unrelated snapshot branches.
+    pub fn validate_dsl_fragment_with_context<F, G>(
+        &self,
+        path: &[SchemaFragmentPathSegment],
+        operation: SchemaFragmentOperation,
+        candidate: Option<&DslValue>,
+        mut context: F,
+        mut shape: G,
+    ) -> Result<ValidationProgress, SchemaFragmentError>
+    where
+        F: FnMut(&[SchemaFragmentPathSegment]) -> Result<DslValue, SchemaFragmentContextRefusal>,
+        G: FnMut(&[SchemaFragmentPathSegment]) -> Result<SchemaFragmentValueShape, SchemaFragmentContextRefusal>,
+    {
+        let control = ValidationControl::default();
+        let mut traversal = Traversal::new(&control);
+        let scope = Scope { base: &self.schema, documents: &self.documents, patterns: &self.patterns };
+        let mut cursor = FragmentSchemaCursor::Node { scope, schema: &self.schema };
+        let mut prefix = Vec::new();
+        for (index, segment) in path.iter().enumerate() {
+            cursor = normalize_fragment_cursor(cursor, &prefix)?;
+            if let Some((selected, discriminator)) = select_fragment_union_branch(cursor, &prefix, &mut context)? {
+                cursor = selected;
+                if index + 1 == path.len() && matches!(segment, SchemaFragmentPathSegment::Key(key) if key == &discriminator) {
+                    validate_fragment_context(cursor, &prefix, &mut context, &mut traversal)?;
+                    return Ok(traversal.progress());
+                }
+            }
+            let is_parent = index + 1 == path.len();
+            if is_parent && operation != SchemaFragmentOperation::Set {
+                if validate_fragment_array_structure(cursor, &prefix, operation, &mut shape, &mut traversal)? {
+                    if operation == SchemaFragmentOperation::Remove {
+                        return Ok(traversal.progress());
+                    }
+                    cursor = descend_fragment_cursor(cursor, segment, &prefix)?;
+                    prefix.push(segment.clone());
+                    continue;
+                }
+            }
+            if fragment_ancestor_needs_context(cursor, segment, operation, is_parent) {
+                validate_fragment_context(cursor, &prefix, &mut context, &mut traversal)?;
+                return Ok(traversal.progress());
+            }
+            if index + 1 == path.len() && operation != SchemaFragmentOperation::Set {
+                validate_fragment_context(cursor, &prefix, &mut context, &mut traversal)?;
+                return Ok(traversal.progress());
+            }
+            cursor = descend_fragment_cursor(cursor, segment, &prefix)?;
+            prefix.push(segment.clone());
+        }
+        cursor = normalize_fragment_cursor(cursor, &prefix)?;
+        let candidate = candidate.ok_or_else(|| {
+            SchemaFragmentError::new(
+                "schema.fragment.candidate-required",
+                fragment_path(&prefix),
+                "this fragment operation requires a candidate value",
+            )
+        })?;
+        validate_fragment_candidate(cursor, candidate, &prefix, &mut traversal)?;
+        Ok(traversal.progress())
     }
 
     pub(crate) fn validate(&self, value: &Value) -> Result<(), SchemaError> {
@@ -360,6 +482,349 @@ fn resolve_reference<'a>(scope: Scope<'a>, reference: &str) -> Result<(&'a Value
         .ok_or_else(|| format!("unresolved reference `{reference}`"))?;
     }
     Ok((base, current))
+}
+
+#[derive(Clone, Copy)]
+enum FragmentSchemaCursor<'a> {
+    Any,
+    Reject,
+    Node { scope: Scope<'a>, schema: &'a Value },
+}
+
+fn fragment_path(path: &[SchemaFragmentPathSegment]) -> String {
+    let mut pointer = String::new();
+    for segment in path {
+        pointer.push('/');
+        match segment {
+            SchemaFragmentPathSegment::Key(key) => pointer.push_str(&key.replace('~', "~0").replace('/', "~1")),
+            SchemaFragmentPathSegment::Index(index) => pointer.push_str(&index.to_string()),
+            SchemaFragmentPathSegment::Append => pointer.push('-'),
+        }
+    }
+    pointer
+}
+
+fn fragment_error(error: SchemaError, path: &[SchemaFragmentPathSegment]) -> SchemaFragmentError {
+    SchemaFragmentError::new("schema.fragment.invalid", fragment_path(path), error.to_string())
+}
+
+fn schema_has_observing_siblings(schema: &Object) -> bool {
+    schema.iter().any(|(key, _)| {
+        !matches!(
+            key,
+            "$ref" | "$id" | "$schema" | "$comment" | "title" | "description" | "default" | "examples" | "readOnly" | "writeOnly" | "deprecated" | "definitions" | "$defs"
+        )
+    })
+}
+
+fn normalize_fragment_cursor<'a>(mut cursor: FragmentSchemaCursor<'a>, path: &[SchemaFragmentPathSegment]) -> Result<FragmentSchemaCursor<'a>, SchemaFragmentError> {
+    for _ in 0..64 {
+        let FragmentSchemaCursor::Node { scope, schema } = cursor else { return Ok(cursor) };
+        if let Some(allowed) = schema.as_bool() {
+            return Ok(if allowed { FragmentSchemaCursor::Any } else { FragmentSchemaCursor::Reject });
+        }
+        let object = schema_object(schema, &fragment_path(path)).map_err(|error| fragment_error(error, path))?;
+        let Some(reference) = object.get("$ref").and_then(Value::as_str) else { return Ok(cursor) };
+        if schema_has_observing_siblings(object) {
+            return Ok(cursor);
+        }
+        let (base, referenced) = resolve_reference(scope, reference)
+            .map_err(|message| SchemaFragmentError::new("schema.fragment.reference", fragment_path(path), message))?;
+        cursor = FragmentSchemaCursor::Node { scope: Scope { base, documents: scope.documents, patterns: scope.patterns }, schema: referenced };
+    }
+    Err(SchemaFragmentError::new(
+        "schema.fragment.reference-depth",
+        fragment_path(path),
+        "schema reference depth exceeds 64",
+    ))
+}
+
+fn validate_fragment_array_structure<G>(
+    cursor: FragmentSchemaCursor<'_>,
+    path: &[SchemaFragmentPathSegment],
+    operation: SchemaFragmentOperation,
+    shape: &mut G,
+    traversal: &mut Traversal<'_>,
+) -> Result<bool, SchemaFragmentError>
+where
+    G: FnMut(&[SchemaFragmentPathSegment]) -> Result<SchemaFragmentValueShape, SchemaFragmentContextRefusal>,
+{
+    if !matches!(operation, SchemaFragmentOperation::Insert | SchemaFragmentOperation::Remove) {
+        return Ok(false);
+    }
+    let FragmentSchemaCursor::Node { schema, .. } = cursor else { return Ok(matches!(cursor, FragmentSchemaCursor::Any)) };
+    let schema = schema_object(schema, &fragment_path(path)).map_err(|error| fragment_error(error, path))?;
+    let is_array = matches!(schema.get("type"), Some(Value::String(kind)) if kind == "array") || schema.contains_key("items");
+    if !is_array
+        || schema.get("items").is_some_and(|items| items.as_array().is_some())
+        || schema.get("uniqueItems").and_then(Value::as_bool) == Some(true)
+        || ["contains", "enum", "const", "allOf", "anyOf", "oneOf", "not", "if", "then", "else"].iter().any(|keyword| schema.contains_key(*keyword))
+    {
+        return Ok(false);
+    }
+    let len = match shape(path).map_err(|refusal| {
+        SchemaFragmentError::new(
+            "schema.fragment.context-required",
+            fragment_path(path),
+            format!("array structure validation requires its post-edit length: {}", refusal.reason),
+        )
+    })? {
+        SchemaFragmentValueShape::Array { len } => len,
+        _ => return Ok(false),
+    };
+    traversal.visit().map_err(|error| fragment_error(error, path))?;
+    if let Some(minimum) = schema.get("minItems") {
+        let minimum = schema_usize(minimum, &format!("{}.minItems", fragment_path(path))).map_err(|error| fragment_error(error, path))?;
+        if len < minimum {
+            return Err(SchemaFragmentError::new(
+                "schema.fragment.invalid",
+                fragment_path(path),
+                format!("array length {len} is below minItems {minimum}"),
+            ));
+        }
+    }
+    if let Some(maximum) = schema.get("maxItems") {
+        let maximum = schema_usize(maximum, &format!("{}.maxItems", fragment_path(path))).map_err(|error| fragment_error(error, path))?;
+        if len > maximum {
+            return Err(SchemaFragmentError::new(
+                "schema.fragment.invalid",
+                fragment_path(path),
+                format!("array length {len} exceeds maxItems {maximum}"),
+            ));
+        }
+    }
+    Ok(true)
+}
+
+fn fragment_ancestor_needs_context(cursor: FragmentSchemaCursor<'_>, segment: &SchemaFragmentPathSegment, operation: SchemaFragmentOperation, is_parent: bool) -> bool {
+    let FragmentSchemaCursor::Node { schema, .. } = cursor else { return false };
+    let Some(schema) = schema.as_object() else { return false };
+    if schema.get("$ref").is_some() && schema_has_observing_siblings(schema) {
+        return true;
+    }
+    if ["allOf", "anyOf", "oneOf", "not", "if", "then", "else", "dependencies", "patternProperties"]
+        .iter()
+        .any(|keyword| schema.contains_key(*keyword))
+    {
+        return true;
+    }
+    if operation != SchemaFragmentOperation::Set && is_parent {
+        return [
+            "required",
+            "minProperties",
+            "maxProperties",
+            "propertyNames",
+            "minItems",
+            "maxItems",
+            "contains",
+            "uniqueItems",
+        ]
+        .iter()
+        .any(|keyword| schema.contains_key(*keyword));
+    }
+    matches!(segment, SchemaFragmentPathSegment::Index(_) | SchemaFragmentPathSegment::Append)
+        && ["contains", "uniqueItems"].iter().any(|keyword| schema.contains_key(*keyword))
+}
+
+fn fragment_union_branches<'a>(schema: &'a Object) -> Option<&'a [Value]> {
+    let union = schema.get("oneOf").or_else(|| schema.get("anyOf"))?.as_array()?;
+    (!union.is_empty()).then_some(union)
+}
+
+fn fragment_union_is_standalone(schema: &Object) -> bool {
+    schema.iter().all(|(key, _)| {
+        matches!(
+            key,
+            "oneOf"
+                | "anyOf"
+                | "$id"
+                | "$schema"
+                | "$comment"
+                | "title"
+                | "description"
+                | "default"
+                | "examples"
+                | "readOnly"
+                | "writeOnly"
+                | "deprecated"
+                | "definitions"
+                | "$defs"
+        )
+    })
+}
+
+fn fragment_branch_object<'a>(cursor: FragmentSchemaCursor<'a>, path: &[SchemaFragmentPathSegment]) -> Result<Option<(Scope<'a>, &'a Object)>, SchemaFragmentError> {
+    let cursor = normalize_fragment_cursor(cursor, path)?;
+    let FragmentSchemaCursor::Node { scope, schema } = cursor else { return Ok(None) };
+    Ok(schema.as_object().map(|schema| (scope, schema)))
+}
+
+fn fragment_discriminator_schema<'a>(schema: &'a Object, key: &str) -> Option<&'a Value> {
+    schema.get("properties")?.as_object()?.get(key)
+}
+
+fn fragment_discriminator_matches(schema: &Value, value: &Value) -> bool {
+    let Some(schema) = schema.as_object() else { return false };
+    schema.get("const").is_some_and(|expected| values_equal(expected, value))
+        || schema.get("enum").and_then(Value::as_array).is_some_and(|expected| expected.iter().any(|expected| values_equal(expected, value)))
+}
+
+fn select_fragment_union_branch<'a, F>(
+    cursor: FragmentSchemaCursor<'a>,
+    path: &[SchemaFragmentPathSegment],
+    context: &mut F,
+) -> Result<Option<(FragmentSchemaCursor<'a>, String)>, SchemaFragmentError>
+where
+    F: FnMut(&[SchemaFragmentPathSegment]) -> Result<DslValue, SchemaFragmentContextRefusal>,
+{
+    let FragmentSchemaCursor::Node { scope, schema } = cursor else { return Ok(None) };
+    let Some(schema) = schema.as_object() else { return Ok(None) };
+    let Some(branches) = fragment_union_branches(schema) else { return Ok(None) };
+    if !fragment_union_is_standalone(schema) {
+        return Ok(None);
+    }
+    let branch_objects = branches
+        .iter()
+        .map(|branch| fragment_branch_object(FragmentSchemaCursor::Node { scope, schema: branch }, path))
+        .collect::<Result<Vec<_>, _>>()?;
+    let Some((_, first)) = branch_objects.first().and_then(Option::as_ref) else { return Ok(None) };
+    let Some(properties) = first.get("properties").and_then(Value::as_object) else { return Ok(None) };
+    for (key, _) in properties {
+        if branch_objects.iter().any(|branch| {
+            branch
+                .as_ref()
+                .and_then(|(_, branch)| fragment_discriminator_schema(branch, key))
+                .and_then(Value::as_object)
+                .map_or(true, |schema| !schema.contains_key("const") && !schema.contains_key("enum"))
+        }) {
+            continue;
+        }
+        let mut discriminator_path = path.to_vec();
+        discriminator_path.push(SchemaFragmentPathSegment::Key(key.to_owned()));
+        let discriminator = context(&discriminator_path).map_err(|refusal| {
+            SchemaFragmentError::new(
+                "schema.fragment.context-required",
+                fragment_path(&discriminator_path),
+                format!("the discriminated union requires its tag value: {}", refusal.reason),
+            )
+        })?;
+        let discriminator = pack::json::from_dsl_value(&discriminator);
+        let matching = branch_objects
+            .iter()
+            .enumerate()
+            .filter(|(_, branch)| {
+                branch
+                    .as_ref()
+                    .and_then(|(_, branch)| fragment_discriminator_schema(branch, key))
+                    .is_some_and(|schema| fragment_discriminator_matches(schema, &discriminator))
+            })
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        if let [index] = matching.as_slice() {
+            let selected = normalize_fragment_cursor(FragmentSchemaCursor::Node { scope, schema: &branches[*index] }, path)?;
+            return Ok(Some((selected, key.to_owned())));
+        }
+    }
+    Ok(None)
+}
+
+fn descend_fragment_cursor<'a>(
+    cursor: FragmentSchemaCursor<'a>,
+    segment: &SchemaFragmentPathSegment,
+    path: &[SchemaFragmentPathSegment],
+) -> Result<FragmentSchemaCursor<'a>, SchemaFragmentError> {
+    let FragmentSchemaCursor::Node { scope, schema } = cursor else { return Ok(cursor) };
+    let schema = schema_object(schema, &fragment_path(path)).map_err(|error| fragment_error(error, path))?;
+    match segment {
+        SchemaFragmentPathSegment::Key(key) => {
+            let properties = schema.get("properties").and_then(Value::as_object);
+            let exact = properties.and_then(|properties| properties.get(key));
+            let mut patterns = Vec::new();
+            if let Some(pattern_properties) = schema.get("patternProperties").and_then(Value::as_object) {
+                for (pattern, child) in pattern_properties {
+                    if pattern_matches(scope, pattern, key, &format!("{}.patternProperties", fragment_path(path))).map_err(|error| fragment_error(error, path))? {
+                        patterns.push(child);
+                    }
+                }
+            }
+            if exact.is_some() && !patterns.is_empty() || patterns.len() > 1 {
+                return Err(SchemaFragmentError::new(
+                    "schema.fragment.context-required",
+                    fragment_path(path),
+                    "overlapping property schemas require the parent object projection",
+                ));
+            }
+            let child = exact.or_else(|| patterns.first().copied()).or_else(|| schema.get("additionalProperties"));
+            Ok(match child {
+                Some(Value::Bool(true)) | None => FragmentSchemaCursor::Any,
+                Some(Value::Bool(false)) => FragmentSchemaCursor::Reject,
+                Some(child) => FragmentSchemaCursor::Node { scope, schema: child },
+            })
+        }
+        SchemaFragmentPathSegment::Index(index) => {
+            let child = match schema.get("items") {
+                Some(Value::Array(items)) => items.get(*index).or_else(|| schema.get("additionalItems")),
+                Some(items) => Some(items),
+                None => None,
+            };
+            Ok(match child {
+                Some(Value::Bool(true)) | None => FragmentSchemaCursor::Any,
+                Some(Value::Bool(false)) => FragmentSchemaCursor::Reject,
+                Some(child) => FragmentSchemaCursor::Node { scope, schema: child },
+            })
+        }
+        SchemaFragmentPathSegment::Append => {
+            let child = match schema.get("items") {
+                Some(Value::Array(_)) => schema.get("additionalItems"),
+                Some(items) => Some(items),
+                None => None,
+            };
+            Ok(match child {
+                Some(Value::Bool(true)) | None => FragmentSchemaCursor::Any,
+                Some(Value::Bool(false)) => FragmentSchemaCursor::Reject,
+                Some(child) => FragmentSchemaCursor::Node { scope, schema: child },
+            })
+        }
+    }
+}
+
+fn validate_fragment_context<F>(
+    cursor: FragmentSchemaCursor<'_>,
+    path: &[SchemaFragmentPathSegment],
+    context: &mut F,
+    traversal: &mut Traversal<'_>,
+) -> Result<(), SchemaFragmentError>
+where
+    F: FnMut(&[SchemaFragmentPathSegment]) -> Result<DslValue, SchemaFragmentContextRefusal>,
+{
+    let projected = context(path).map_err(|refusal| {
+        SchemaFragmentError::new(
+            "schema.fragment.context-required",
+            fragment_path(path),
+            format!("the validation frontier requires this post-edit container projection: {}", refusal.reason),
+        )
+    })?;
+    validate_fragment_candidate(cursor, &projected, path, traversal)
+}
+
+fn validate_fragment_candidate(
+    cursor: FragmentSchemaCursor<'_>,
+    candidate: &DslValue,
+    path: &[SchemaFragmentPathSegment],
+    traversal: &mut Traversal<'_>,
+) -> Result<(), SchemaFragmentError> {
+    match cursor {
+        FragmentSchemaCursor::Any => Ok(()),
+        FragmentSchemaCursor::Reject => Err(SchemaFragmentError::new(
+            "schema.fragment.invalid",
+            fragment_path(path),
+            "candidate is rejected by a false schema",
+        )),
+        FragmentSchemaCursor::Node { scope, schema } => {
+            let candidate = pack::json::from_dsl_value(candidate);
+            validate_value(scope, schema, &candidate, &fragment_path(path), traversal).map_err(|error| fragment_error(error, path))
+        }
+    }
 }
 
 //#endregion 🧬️Compile

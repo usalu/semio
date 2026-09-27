@@ -906,15 +906,6 @@ export function semioAssetsVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
   return uiAssetsVitePluginsForRoot(resolveSemioAssetRoot(repoRoot));
 }
 
-/** @emoji 🌐️ @deprecated Use {@link semioAssetsVitePlugin} — caller-supplied roots caused silent font 404s. */
-export function uiAssetsVitePlugin(assetsRoot: string): OwnedBuildPlugin[] {
-  const fontDir = resolve(assetsRoot, "🔤️fonts");
-  if (!existsSync(assetsRoot) || !existsSync(fontDir)) {
-    throw new Error(`uiAssetsVitePlugin: invalid asset root ${assetsRoot} (missing 🔤️fonts); use semioAssetsVitePlugin(repoRoot)`);
-  }
-  return uiAssetsVitePluginsForRoot(assetsRoot);
-}
-
 /** @emoji 🛝️ Playground app kind for Vite play harness config (validated against manifest scan). */
 export type PlaygroundRendererPuzzleKind = string;
 
@@ -968,9 +959,6 @@ export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath:
   };
 }
 
-/** @deprecated Use {@link animatePresentRendererVitestStripPlugin}. */
-export const presentationRendererVitestStripPlugin = animatePresentRendererVitestStripPlugin;
-
 export type PlaygroundPlayViteOptions = {
   readonly playDir: string;
   readonly repoRoot: string;
@@ -1008,9 +996,16 @@ export function playgroundSceneHostResolveAliases(repoRoot: string): ReadonlyArr
  * `react-use-measure`, `stats-gl`, `three-stdlib`, `maath`, …) and is served raw on purpose. */
 export const PLAYGROUND_SCENE_HOST_CJS_INCLUDE = ["scheduler", "stats.js", "use-sync-external-store/shim/index.js", "use-sync-external-store/shim/with-selector.js"] as const;
 
+/** @emoji 📦️ ESM packages the EXCLUDED R3F graph reaches through a barrel and that the optimizer must bundle anyway. Every
+ * drei control imports `three-stdlib`'s index, and an import from an excluded package is never scanned, so Vite served the
+ * whole barrel as separate raw modules on every cold boot: 282 files, 15.7 MB — a third of the shell's boot requests after
+ * drei's own barrel was cut (measured on :6580, ticket 26/09/23 F2). Prebundled, it is one module; `three` stays one instance
+ * because the optimizer bundles `three` too and shares it between both. */
+export const PLAYGROUND_SCENE_HOST_ESM_INCLUDE = ["three-stdlib"] as const;
+
 /** @emoji 🎬️ `optimizeDeps` preset for configs that use {@link playgroundSceneHostResolveAliases}: never prebundle R3F — a `.vite/deps` fiber copy and the aliased ESM entry are two Canvas stores, and drei's `PerspectiveCamera` then throws outside Canvas — but DO prebundle the CJS shims R3F's excluded graph imports ({@link PLAYGROUND_SCENE_HOST_CJS_INCLUDE}). */
 export function playgroundSceneHostOptimizeDeps(extra?: Pick<NonNullable<OwnedBuildConfig["optimizeDeps"]>, "include" | "exclude">): NonNullable<OwnedBuildConfig["optimizeDeps"]> {
-  const include = ["three", ...PLAYGROUND_SCENE_HOST_CJS_INCLUDE, ...(extra?.include ?? [])].filter((id) => !PLAYGROUND_SCENE_HOST_DEDUPE.includes(id as (typeof PLAYGROUND_SCENE_HOST_DEDUPE)[number]));
+  const include = ["three", ...PLAYGROUND_SCENE_HOST_CJS_INCLUDE, ...PLAYGROUND_SCENE_HOST_ESM_INCLUDE, ...(extra?.include ?? [])].filter((id) => !PLAYGROUND_SCENE_HOST_DEDUPE.includes(id as (typeof PLAYGROUND_SCENE_HOST_DEDUPE)[number]));
   const exclude = [...PLAYGROUND_SCENE_HOST_DEDUPE, ...(extra?.exclude ?? [])];
   return { include: [...new Set(include)], exclude: [...new Set(exclude)] };
 }

@@ -1024,9 +1024,9 @@ pub mod viewer {
 pub mod composite_bridge_girder;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs"]
 pub mod field_meta;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢composite-floor-beam/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️composite-floor-beam/🦀️.rs"]
 pub mod composite_floor_beam;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢composite-floor-beam-failing/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️composite-floor-beam-failing/🦀️.rs"]
 pub mod composite_floor_beam_failing;
 #[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌉️composite-bridge-girder/🧪️tests/🧩️example/🦀️.rs"]

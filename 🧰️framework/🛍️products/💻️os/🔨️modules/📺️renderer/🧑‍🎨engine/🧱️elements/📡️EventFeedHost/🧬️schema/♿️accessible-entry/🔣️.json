@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.renderer.event-feed-accessible-entry.v1",
+  "title": "EventFeed Accessible Entry",
+  "type": "object",
+  "required": ["schema", "hostId", "surfaceId", "controllerId", "acceptedTimeLabel", "cases"],
+  "properties": {
+    "schema": { "const": "semio.framework.renderer.event-feed-accessible-entry.v1" },
+    "hostId": { "type": "string", "minLength": 1 },
+    "surfaceId": { "type": "string", "minLength": 1 },
+    "controllerId": { "type": "string", "minLength": 1 },
+    "acceptedTimeLabel": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "activateAction", "entry", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "activateAction": { "type": ["string", "null"] },
+          "entry": {
+            "type": "object",
+            "required": ["id", "timestampMs", "iconId", "title", "detail", "tone"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "timestampMs": { "type": "integer" },
+              "iconId": { "type": "string", "minLength": 1 },
+              "title": { "type": "string", "minLength": 1 },
+              "detail": { "type": "string", "minLength": 1 },
+              "tone": { "enum": ["info", "success", "warning", "error"] }
+            },
+            "additionalProperties": false
+          },
+          "expected": {
+            "type": "object",
+            "required": ["key", "role", "accessibleName", "focusable", "tabbable", "action"],
+            "properties": {
+              "key": { "type": "string", "minLength": 1 },
+              "role": { "enum": ["button", "paragraph"] },
+              "accessibleName": { "type": "string", "minLength": 1 },
+              "focusable": { "type": "boolean" },
+              "tabbable": { "type": "boolean" },
+              "action": {
+                "anyOf": [
+                  { "type": "null" },
+                  {
+                    "type": "object",
+                    "required": ["controllerId", "action", "args"],
+                    "properties": {
+                      "controllerId": { "type": "string", "minLength": 1 },
+                      "action": { "type": "string", "minLength": 1 },
+                      "args": {
+                        "type": "object",
+                        "required": ["surfaceId", "id"],
+                        "properties": {
+                          "surfaceId": { "type": "string", "minLength": 1 },
+                          "id": { "type": "string", "minLength": 1 }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

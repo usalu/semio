@@ -3,7 +3,7 @@
  * deny-overrides-allow evaluation over the same declared document (`🔣️.json`). */
 // #endregion Header
 
-export type HubAccessRoleV1 = "admin" | "owner" | "author" | "spectator" | "share" | "authenticated";
+export type HubAccessRoleV1 = "admin" | "owner" | "author" | "spectator" | "share" | "authenticated" | "agent-reader" | "agent-editor";
 export type HubAccessActionV1 =
   | "space.create"
   | "space.rename"

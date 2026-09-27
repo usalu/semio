@@ -9,11 +9,11 @@ async fn definition_declares_a_document_window() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn render_emits_one_page_per_slide_joining_text_bearing_shapes() {
+async fn render_emits_one_draft_per_text_bearing_shape() {
     let mut document = PptxSnapshot::default();
     document.presentation.slides.push(PptxSlide {
         shapes: vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("a")], position: Default::default() }, PptxShape::Placeholder { kind: "body".into(), text_frame: vec![PptxParagraph::text("b")], position: Default::default() }],
     });
     let stack = render(&document).expect("render");
-    assert_eq!(stack.children.len(), 1);
+    assert_eq!(stack.children.len(), 2);
 }

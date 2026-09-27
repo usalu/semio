@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "hostId": "history-host",
+  "controllerId": "history-controller",
+  "surfaceId": "history-surface",
+  "bounds": [20, 30, 400, 160],
+  "columns": [
+    { "checkpointId": "checkpoint-b", "timestamp": "2026-09-27T10:00:00Z", "labels": ["Head"], "authors": [], "parentCheckpointId": "checkpoint-a", "description": "New edit", "lane": 0, "alternativeIds": [] },
+    { "checkpointId": "checkpoint-a", "timestamp": "2026-09-27T09:00:00Z", "labels": ["Base"], "authors": [], "description": "Original state", "lane": 0, "alternativeIds": [] }
+  ],
+  "cases": [
+    { "id": "labels-select", "region": "labels", "row": 1, "x": 24, "action": { "controllerId": "history-controller", "action": "checkoutCheckpoint", "args": { "checkpointId": "checkpoint-a" } } },
+    { "id": "graph-select", "region": "graph", "row": 1, "x": 156.5, "action": { "controllerId": "history-controller", "action": "checkoutCheckpoint", "args": { "checkpointId": "checkpoint-a" } } },
+    { "id": "description-boundary-inert", "region": "description", "row": 1, "x": 157, "action": null },
+    { "id": "description-text-inert", "region": "description", "row": 1, "x": 320, "action": null },
+    { "id": "before-surface-inert", "region": "outside", "row": 1, "x": 19, "action": null },
+    { "id": "after-surface-inert", "region": "outside", "row": 1, "x": 421, "action": null }
+  ],
+  "accessibility": {
+    "checkpointId": "checkpoint-a",
+    "key": "history-host.history.checkpoint-a",
+    "accessibleName": "Base",
+    "role": "button",
+    "action": { "controllerId": "history-controller", "action": "checkoutCheckpoint", "args": { "checkpointId": "checkpoint-a" } }
+  }
+}

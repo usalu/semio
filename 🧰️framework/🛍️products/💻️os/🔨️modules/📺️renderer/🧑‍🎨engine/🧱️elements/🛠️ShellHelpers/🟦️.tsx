@@ -1519,11 +1519,6 @@ function isStudioMode(catalog: PluginCatalog, pluginFilter?: string): boolean {
   return pluginFilter !== undefined && resolvePluginHostConfig(catalog, pluginFilter) !== undefined;
 }
 
-export interface SpaceShellPath {
-  readonly spaceId: string;
-  readonly instanceId?: string;
-}
-
 export type ShellRoute = { readonly kind: "landing" } | { readonly kind: "space"; readonly spaceId: string; readonly instanceId?: string } | { readonly kind: "notFound"; readonly path: string };
 
 /** @emoji 🧭️ Classifies shell history paths into landing, studio space, or unknown routes. */
@@ -1533,13 +1528,6 @@ export function parseShellRoute(path: string): ShellRoute {
   const match = /^\/spaces\/([^/]+)(?:\/instances\/([^/]+))?$/.exec(normalized);
   if (match) return { kind: "space", spaceId: match[1]!, instanceId: match[2] };
   return { kind: "notFound", path: normalized };
-}
-
-/** @deprecated Use {@link parseShellRoute} instead. */
-export function parseSpaceShellPath(path: string): SpaceShellPath | null {
-  const route = parseShellRoute(path);
-  if (route.kind !== "space") return null;
-  return { spaceId: route.spaceId, instanceId: route.instanceId };
 }
 
 /**
@@ -1715,24 +1703,24 @@ function convertFrameworkLayoutNodeToModeLayout(
   };
 }
 
-/** @emoji 🗣️ Re-resolves every window's title from the app manifest's windowKinds via resolveManifestLabel in place, preserving the tree's structure/sizes/arrangement — used to react to a locale/terminology switch without discarding the user's live layout. */
+/** 🏷️ Localizes singleton window titles while retaining authored instance names and the live layout. */
 export function retitleWindowLayoutNode(
   node: WindowLayoutNode,
   windowKinds: readonly { readonly id: string; readonly label: unknown }[],
   extraInstances: readonly ExtraWindowInstance[],
   terminology: string,
   locale: string,
+  titleOverrides: Readonly<Record<string, string>>,
 ): WindowLayoutNode {
   if (node.kind === "window") {
     const extra = extraInstances.find((entry) => entry.id === node.id);
-    const windowKindId = extra ? extra.windowKindId : node.id;
-    const kind = windowKinds.find((entry) => entry.id === windowKindId);
-    const title = kind ? wireLabel(resolveManifestLabel(kind.label, terminology, locale)) : (node.title ?? uiDataLabel(node.id));
+    const kind = windowKinds.find((entry) => entry.id === node.id);
+    const title = titleOverrides[node.id] !== undefined ? wireLabel(titleOverrides[node.id]) : extra ? wireLabel(extra.title) : kind ? wireLabel(resolveManifestLabel(kind.label, terminology, locale)) : (node.title ?? uiDataLabel(node.id));
     return { ...node, title };
   }
   return {
     ...node,
-    children: node.children.map((child) => retitleWindowLayoutNode(child, windowKinds, extraInstances, terminology, locale)),
+    children: node.children.map((child) => retitleWindowLayoutNode(child, windowKinds, extraInstances, terminology, locale, titleOverrides)),
   } as WindowLayoutNode;
 }
 
@@ -2892,6 +2880,62 @@ export const OPEN_TASK_MANAGER_COMMAND_ID = "os.openTaskManager";
  * beside the other os commands that need more context than `dispatchOsCommand` has.
  * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU3. */
 export const OPEN_HUB_COMMAND_ID = "os.openHub";
+
+//#region 📤️DocumentTransfer
+/** 📤️ The framework's Export Document: the focused program's whole document archive — root envelope, its op log and
+ * every owned member (`DocumentArchivePack`, `encodeDocumentArchiveBytes`) — as one file, for every artifact kind alike. */
+export const EXPORT_DOCUMENT_COMMAND_ID = "os.exportDocument";
+
+/** 📥️ The framework's Import Document: opens a file {@link EXPORT_DOCUMENT_COMMAND_ID} wrote as a NEW document of the same
+ * program (`createApp` → `loadDocumentArchive`, progress + cancellation in the Tasks window); the focused document is never
+ * overwritten. */
+export const IMPORT_DOCUMENT_COMMAND_ID = "os.importDocument";
+
+/** 🗃️ File extension of an exported document archive. */
+export const DOCUMENT_ARCHIVE_FILE_EXTENSION = ".semio-archive";
+
+/** 🗃️ Media type of an exported document archive. */
+export const DOCUMENT_ARCHIVE_MEDIA_TYPE = "application/vnd.semio.document-archive";
+
+/** 🏷️ `<kind>-<UTC stamp>.semio-archive`, the kind being the app id's artifact segment (`s.puzzle.puzzle2d@1/*#editor` →
+ * `puzzle2d`). */
+export function documentArchiveFileNameV1(appId: string, at: Date): string {
+  const kind = /^s\.[^.]+\.([^@]+)@/u.exec(appId)?.[1] ?? (appId.replace(/[^A-Za-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "") || "document");
+  return `${kind}-${at.toISOString().replace(/[-:]/gu, "").replace(/\.\d{3}Z$/u, "Z")}${DOCUMENT_ARCHIVE_FILE_EXTENSION}`;
+}
+
+/** 📦️ The bytes of a `readAs: "dataUrl"` pick (`data:<type>;base64,<payload>`). */
+export function bytesOfDataUrlV1(dataUrl: string): Uint8Array {
+  const comma = dataUrl.indexOf(",");
+  if (!dataUrl.startsWith("data:") || comma < 0 || !dataUrl.slice(0, comma).endsWith(";base64")) throw new Error("document-transfer.data-url-invalid");
+  return Uint8Array.from(atob(dataUrl.slice(comma + 1)), (character) => character.charCodeAt(0));
+}
+
+/** 🗣️ Every outcome of an export or import a person is told about. */
+export type DocumentTransferNoticeV1 = "exported" | "export-failed" | "no-document" | "import-unreadable" | "import-failed" | "import-cancelled" | "imported";
+
+/** 🗣️ Notice text per outcome, authored beside the code like `📣️replay-refusal`; `{file}` is the file name. */
+export const DOCUMENT_TRANSFER_NOTICE_LABELS_V1: Readonly<Record<DocumentTransferNoticeV1, { readonly en: string; readonly de: string }>> = {
+  exported: { en: "Exported “{file}”.", de: "„{file}“ exportiert." },
+  "export-failed": { en: "The document could not be exported.", de: "Das Dokument konnte nicht exportiert werden." },
+  "no-document": { en: "Focus a document window first — the Home has no document to export or import into.", de: "Bitte zuerst ein Dokumentfenster wählen — die Startseite hat kein Dokument zum Exportieren oder Importieren." },
+  "import-unreadable": { en: "“{file}” is not a document archive.", de: "„{file}“ ist kein Dokumentarchiv." },
+  "import-failed": { en: "“{file}” could not be opened as a document.", de: "„{file}“ konnte nicht als Dokument geöffnet werden." },
+  "import-cancelled": { en: "Import of “{file}” cancelled.", de: "Import von „{file}“ abgebrochen." },
+  imported: { en: "Opened “{file}” as a new document.", de: "„{file}“ als neues Dokument geöffnet." },
+};
+
+/** 🗣️ The localized notice for one outcome; only an unknown locale falls back to English. */
+export function documentTransferNoticeTextV1(notice: DocumentTransferNoticeV1, file: string, locale: string): string {
+  const label = DOCUMENT_TRANSFER_NOTICE_LABELS_V1[notice];
+  return (locale === "de" ? label.de : label.en).replace("{file}", file);
+}
+
+/** 🩺️ The notice's code, shared by the notice, the console line and every probe. */
+export function documentTransferNoticeCodeV1(notice: DocumentTransferNoticeV1): string {
+  return `shell.documentTransfer.${notice}`;
+}
+//#endregion 📤️DocumentTransfer
 
 /** 👁️✏️ `true` for a `mutation`-kind action/command — the one predicate every viewer-chrome hiding
  * rule in this lease (context menu, command palette, dispatch guard) shares, so "what counts as an
@@ -4876,6 +4920,8 @@ export function buildOsCommands(
    * gates `open-artifact-with-viewer`/`open-artifact-with-editor` (contract freeze §5) the same way
    * `hasIntroduction`/`tutorialRecorderAvailable` gate their own optional commands above. */
   hasOpenArtifactSurfaces = false,
+  /** 📤️ Whether a document program (not the Home or the space host) is focused — gates Export/Import Document. */
+  hasDocumentProgram = false,
 ): CommandDefinition[] {
   const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
   const commands: CommandDefinition[] = [
@@ -5032,6 +5078,12 @@ export function buildOsCommands(
       ? [
           { id: OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "eye" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
           { id: OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID, label: openArtifactWithText(locale), category: "artifact", iconId: "pencil" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
+        ]
+      : []),
+    ...(hasDocumentProgram
+      ? [
+          { id: EXPORT_DOCUMENT_COMMAND_ID, label: shellLabel("ui.command.exportDocument"), category: "artifact", iconId: "export" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
+          { id: IMPORT_DOCUMENT_COMMAND_ID, label: shellLabel("ui.command.importDocument"), category: "artifact", iconId: "import" as IconName, semantics: actionSemanticsForKind("shell"), kind: "shell" as const, inPalette: true, args: [], keybindings: [] },
         ]
       : []),
   ];

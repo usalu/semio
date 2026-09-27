@@ -13,6 +13,10 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "canvas-pointer-move")]
 pub struct CanvasPointerMove {
+    #[value(default)]
+    pub shift: bool,
+    #[value(default)]
+    pub alt: bool,
     pub x: f64,
     pub y: f64,
     pub width: f64,

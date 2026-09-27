@@ -166,6 +166,10 @@ function HistoryRowLabels({ column }: { readonly column: HistoryColumn }): React
   );
 }
 
+function historyCheckpointAccessibleName(column: HistoryColumn): string {
+  return column.labels.length > 0 ? column.labels.join(", ") : column.checkpointId;
+}
+
 /**
  * SVG ancestor-graph history table: swimlane guides, elbow connectors between forked checkpoints,
  * commit nodes, per-row author avatars and alternative-name label chips.
@@ -206,7 +210,20 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ id, columns, classNa
                   ref={index === 0 ? rowProbeRef : undefined}
                   className={cn(HISTORY_ROW_SHELL_CLASS, "grid items-center border-b border-[var(--border)]", onSelectCheckpoint && "cursor-pointer")}
                   style={{ gridColumn: "1 / 3", gridRow: index + 1, gridTemplateColumns: `auto ${graphColumnWidth}px` }}
+                  role={onSelectCheckpoint ? "button" : undefined}
+                  aria-label={onSelectCheckpoint ? historyCheckpointAccessibleName(column) : undefined}
+                  tabIndex={onSelectCheckpoint ? 0 : undefined}
                   onClick={onSelectCheckpoint ? () => onSelectCheckpoint(column.checkpointId) : undefined}
+                  onKeyDown={
+                    onSelectCheckpoint
+                      ? (event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return;
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onSelectCheckpoint(column.checkpointId);
+                        }
+                      : undefined
+                  }
                 >
                   <div className="flex items-center px-single">
                     <HistoryRowLabels column={column} />

@@ -1,6 +1,6 @@
 /** 🎨️ Direct TypeScript mutation leaves for persisted local OS UI preferences. */
 
-import type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme } from "../../🟦️.ts";
+import type { UiAppearance, UiChromeLayout, UiDriver, UiLocale, UiPreferences, UiTheme, UserNamedLayout } from "../../🟦️.ts";
 import type { UiPreferencesConfigMutation } from "../🟦️.ts";
 
 export interface SetAppearance { readonly appearance: UiAppearance | null }
@@ -12,6 +12,7 @@ export interface SetTerminology { readonly terminology: string | null }
 export interface SetTheme { readonly themeId: string | null }
 export interface SetCustomTheme { readonly themeId: string; readonly theme: UiTheme | null }
 export interface SetKeybindingOverride { readonly controlId: string; readonly keys: string | null }
+export interface SetNamedLayout { readonly appId: string; readonly layoutId: string; readonly layout: UserNamedLayout | null }
 
 export const setAppearance = (appearance: UiAppearance | null): UiPreferencesConfigMutation => ({ mutation: "setAppearance", appearance });
 export const setLayout = (layout: UiChromeLayout | null): UiPreferencesConfigMutation => ({ mutation: "setLayout", layout });
@@ -22,6 +23,7 @@ export const setTerminology = (terminology: string | null): UiPreferencesConfigM
 export const setTheme = (themeId: string | null): UiPreferencesConfigMutation => ({ mutation: "setTheme", themeId });
 export const setCustomTheme = (themeId: string, theme: UiTheme | null): UiPreferencesConfigMutation => ({ mutation: "setCustomTheme", themeId, theme });
 export const setKeybindingOverride = (controlId: string, keys: string | null): UiPreferencesConfigMutation => ({ mutation: "setKeybindingOverride", controlId, keys });
+export const setNamedLayout = (appId: string, layoutId: string, layout: UserNamedLayout | null): UiPreferencesConfigMutation => ({ mutation: "setNamedLayout", appId, layoutId, layout });
 
 export function diff(mutation: UiPreferencesConfigMutation, base: UiPreferences): UiPreferences {
   switch (mutation.mutation) {
@@ -49,6 +51,15 @@ export function diff(mutation: UiPreferencesConfigMutation, base: UiPreferences)
       else keybindingOverrides[mutation.controlId] = mutation.keys;
       return { ...base, keybindingOverrides };
     }
+    case "setNamedLayout": {
+      const appLayouts = { ...base.namedLayouts[mutation.appId] };
+      if (mutation.layout === null) delete appLayouts[mutation.layoutId];
+      else appLayouts[mutation.layoutId] = mutation.layout;
+      const namedLayouts = { ...base.namedLayouts };
+      if (Object.keys(appLayouts).length === 0) delete namedLayouts[mutation.appId];
+      else namedLayouts[mutation.appId] = appLayouts;
+      return { ...base, namedLayouts };
+    }
   }
 }
 
@@ -63,5 +74,6 @@ export function inverse(mutation: UiPreferencesConfigMutation, base: UiPreferenc
     case "setTheme": return [setTheme(base.themeId)];
     case "setCustomTheme": return [setCustomTheme(mutation.themeId, base.customThemes[mutation.themeId] ?? null)];
     case "setKeybindingOverride": return [setKeybindingOverride(mutation.controlId, base.keybindingOverrides[mutation.controlId] ?? null)];
+    case "setNamedLayout": return [setNamedLayout(mutation.appId, mutation.layoutId, base.namedLayouts[mutation.appId]?.[mutation.layoutId] ?? null)];
   }
 }

@@ -606,6 +606,130 @@ async fn owned_pattern_matcher_covers_the_supported_ecma_subset() {
 }
 //#endregion 🔖️Draft07OracleVectors
 
+//#region 🔖️FragmentValidation
+#[test]
+fn fragment_validation_uses_only_the_smallest_required_post_edit_frontier() {
+    use crate::{OwnedJsonSchemaValidator, SchemaFragmentContextRefusal, SchemaFragmentOperation, SchemaFragmentPathSegment, SchemaFragmentValueShape};
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🩹️fragment-validation-vectors.json")).expect("fragment fixture");
+    let validator = OwnedJsonSchemaValidator::compile(&fixture["schema"].to_string()).expect("fragment schema");
+    let payload_bytes = fixture["payloadRepeatBytes"].as_u64().expect("payload bytes") as usize;
+    let mut base = fixture["base"].clone();
+    base.as_object_mut().expect("base object").insert("payload".into(), serde_json::Value::String("x".repeat(payload_bytes)));
+    for case in fixture["cases"].as_array().expect("fragment cases") {
+        let mut after = base.clone();
+        let raw_path = case["path"].as_array().expect("path");
+        let path: Vec<SchemaFragmentPathSegment> = raw_path
+            .iter()
+            .map(|segment| match segment {
+                serde_json::Value::String(key) => SchemaFragmentPathSegment::Key(key.clone()),
+                serde_json::Value::Number(index) => SchemaFragmentPathSegment::Index(index.as_u64().expect("index") as usize),
+                _ => panic!("path segment"),
+            })
+            .collect();
+        let pointer = path.iter().fold(String::new(), |mut pointer, segment| {
+            pointer.push('/');
+            match segment {
+                SchemaFragmentPathSegment::Key(key) => pointer.push_str(&key.replace('~', "~0").replace('/', "~1")),
+                SchemaFragmentPathSegment::Index(index) => pointer.push_str(&index.to_string()),
+                SchemaFragmentPathSegment::Append => pointer.push('-'),
+            }
+            pointer
+        });
+        let operation = match case["operation"].as_str().expect("operation") {
+            "set" => SchemaFragmentOperation::Set,
+            "insert" => SchemaFragmentOperation::Insert,
+            "remove" => SchemaFragmentOperation::Remove,
+            operation => panic!("unknown operation {operation}"),
+        };
+        let array_length_before = case.get("arrayLengthBefore").and_then(serde_json::Value::as_u64).map(|value| value as usize);
+        if array_length_before.is_none() { match operation {
+            SchemaFragmentOperation::Set => {
+                *after.pointer_mut(&pointer).expect("set target") = case["candidate"].clone();
+            }
+            SchemaFragmentOperation::Insert => {
+                let (parent, key) = pointer.rsplit_once('/').expect("insert parent");
+                after.pointer_mut(parent).and_then(serde_json::Value::as_object_mut).expect("insert object").insert(key.into(), case["candidate"].clone());
+            }
+            SchemaFragmentOperation::Remove => {
+                let (parent, key) = pointer.rsplit_once('/').expect("remove parent");
+                let parent = after.pointer_mut(parent).expect("remove container");
+                match parent {
+                    serde_json::Value::Object(object) => {
+                        object.remove(key);
+                    }
+                    serde_json::Value::Array(items) => {
+                        items.remove(key.parse::<usize>().expect("array index"));
+                    }
+                    _ => panic!("remove container"),
+                }
+            }
+            SchemaFragmentOperation::Move | SchemaFragmentOperation::Rename => unreachable!(),
+        } }
+        let array_length_after = array_length_before.map(|len| match operation {
+            SchemaFragmentOperation::Insert => len + 1,
+            SchemaFragmentOperation::Remove => len - 1,
+            _ => len,
+        });
+        let candidate = case.get("candidate").map(|value| {
+            let parsed = pack::json::parse(&value.to_string()).expect("candidate JSON");
+            pack::json::to_dsl_value(&parsed)
+        });
+        let mut requested = Vec::new();
+        let mut shape_requested = Vec::new();
+        let result = validator.validate_dsl_fragment_with_context(&path, operation, candidate.as_ref(), |frontier| {
+            let pointer = frontier.iter().fold(String::new(), |mut pointer, segment| {
+                pointer.push('/');
+                match segment {
+                    SchemaFragmentPathSegment::Key(key) => pointer.push_str(&key.replace('~', "~0").replace('/', "~1")),
+                    SchemaFragmentPathSegment::Index(index) => pointer.push_str(&index.to_string()),
+                    SchemaFragmentPathSegment::Append => pointer.push('-'),
+                }
+                pointer
+            });
+            requested.push(pointer.clone());
+            let value = after.pointer(&pointer).ok_or_else(|| SchemaFragmentContextRefusal::new("post-edit value is absent"))?;
+            let parsed = pack::json::parse(&value.to_string()).map_err(|error| SchemaFragmentContextRefusal::new(error.to_string()))?;
+            Ok(pack::json::to_dsl_value(&parsed))
+        }, |frontier| {
+            let pointer = frontier.iter().fold(String::new(), |mut pointer, segment| {
+                pointer.push('/');
+                match segment {
+                    SchemaFragmentPathSegment::Key(key) => pointer.push_str(&key.replace('~', "~0").replace('/', "~1")),
+                    SchemaFragmentPathSegment::Index(index) => pointer.push_str(&index.to_string()),
+                    SchemaFragmentPathSegment::Append => pointer.push('-'),
+                }
+                pointer
+            });
+            shape_requested.push(pointer.clone());
+            if pointer == "/bytes" {
+                if let Some(len) = array_length_after {
+                    return Ok(SchemaFragmentValueShape::Array { len });
+                }
+            }
+            match after.pointer(&pointer).ok_or_else(|| SchemaFragmentContextRefusal::new("post-edit value is absent"))? {
+                serde_json::Value::Null => Ok(SchemaFragmentValueShape::Null),
+                serde_json::Value::Bool(_) => Ok(SchemaFragmentValueShape::Bool),
+                serde_json::Value::Number(_) => Ok(SchemaFragmentValueShape::Number),
+                serde_json::Value::String(_) => Ok(SchemaFragmentValueShape::String),
+                serde_json::Value::Array(values) => Ok(SchemaFragmentValueShape::Array { len: values.len() }),
+                serde_json::Value::Object(values) => Ok(SchemaFragmentValueShape::Object { len: values.len() }),
+            }
+        });
+        assert_eq!(result.is_ok(), case["accepted"].as_bool().expect("accepted"), "{}", case["id"]);
+        assert!(!requested.iter().any(String::is_empty), "{} materialized the unrelated 2 MiB payload", case["id"]);
+        if matches!(case["id"].as_str(), Some("discriminated-union-boundary" | "discriminated-union-overflow")) {
+            assert_eq!(requested, ["/variant/kind"], "{} projected more than its discriminating tag", case["id"]);
+        }
+        if case.get("arrayLengthBefore").is_some() {
+            assert!(requested.is_empty(), "{} projected the large array instead of reading its shape", case["id"]);
+            assert_eq!(shape_requested, ["/bytes"], "{} requested more than the large array length", case["id"]);
+        }
+        assert_eq!(after["payload"].as_str().map(str::len), Some(payload_bytes));
+    }
+}
+//#endregion 🔖️FragmentValidation
+
 //#region 🔖️EntityKindCatalog
 #[semio_framework_async_macros::async_test]
 async fn entity_kind_catalog_data_validates_through_the_owned_validator_and_matches_the_rust_projection() {

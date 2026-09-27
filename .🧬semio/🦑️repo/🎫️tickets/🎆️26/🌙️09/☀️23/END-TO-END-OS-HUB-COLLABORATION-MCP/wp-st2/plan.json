@@ -1,0 +1,1857 @@
+{
+  "ceiling": 40,
+  "families": [
+    {
+      "id": "stdio-image",
+      "emoji": "🖼️",
+      "slug": "image",
+      "dir": "🖼️image",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🖼️image",
+      "label": "Stdio Image",
+      "enum": "StdioImageApps",
+      "crate": "semio-s-plugin-stdio-image",
+      "lib": "semio_s_plugin_stdio_image",
+      "directoryName": "🖼️stdio-image",
+      "group": {
+        "id": "images",
+        "label": "Images"
+      },
+      "formats": [
+        "png",
+        "jpg",
+        "bmp",
+        "tiff",
+        "gif",
+        "svg"
+      ],
+      "apps": 22,
+      "subsets": [
+        {
+          "format": "png",
+          "editorType": "semio_s_artifact_stdio_png::editor::png::PngEditor",
+          "viewerType": "semio_s_artifact_stdio_png::viewer::png::PngViewer",
+          "appId": "s.stdio.png@1.2/*#editor",
+          "variant": "stdio-png",
+          "alias": "stdio png",
+          "pane": {
+            "variant": "stdio-png",
+            "label": "PNG",
+            "tagline": "Edit PNG images",
+            "description": "Open PNG 1.2 images and edit every decoded chunk and pixel field.",
+            "icon": "image",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "jpg",
+          "editorType": "semio_s_artifact_stdio_jpg::editor::jpg_any::JpgAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_jpg::viewer::jpg_any::JpgAnyViewer",
+          "appId": "s.stdio.jpg@jfif-1.01/*#editor",
+          "variant": "stdio-jpg",
+          "alias": "stdio jpeg",
+          "pane": {
+            "variant": "stdio-jpg",
+            "label": "JPEG",
+            "tagline": "Edit JPEG photos",
+            "description": "Open JFIF 1.01 JPEG photos and edit their decoded segments field by field.",
+            "icon": "camera",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "jpg",
+          "editorType": "semio_s_artifact_stdio_jpg::editor::jpg_baseline::JpgBaselineEditor",
+          "viewerType": "semio_s_artifact_stdio_jpg::viewer::jpg_baseline::JpgBaselineViewer",
+          "appId": "s.stdio.jpg@jfif-1.01/baseline#editor",
+          "variant": "stdio-jpg-baseline",
+          "alias": "stdio baseline jpeg",
+          "pane": {
+            "variant": "stdio-jpg-baseline",
+            "label": "Baseline JPEG",
+            "tagline": "Edit baseline JPEG photos",
+            "description": "Edit JPEG photos restricted to the baseline sequential process.",
+            "icon": "camera",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "bmp",
+          "editorType": "semio_s_artifact_stdio_bmp::editor::bmp::BmpEditor",
+          "viewerType": "semio_s_artifact_stdio_bmp::viewer::bmp::BmpViewer",
+          "appId": "s.stdio.bmp@v3/*#editor",
+          "variant": "stdio-bmp",
+          "alias": "stdio bitmap",
+          "pane": {
+            "variant": "stdio-bmp",
+            "label": "BMP",
+            "tagline": "Edit bitmap images",
+            "description": "Open Windows BMP v3 bitmaps and edit their header and pixel data.",
+            "icon": "file-image",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "tiff",
+          "editorType": "semio_s_artifact_stdio_tiff::editor::tiff_any::TiffAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_tiff::viewer::tiff_any::TiffAnyViewer",
+          "appId": "s.stdio.tiff@6.0/*#editor",
+          "variant": "stdio-tiff",
+          "alias": "stdio tiff",
+          "pane": {
+            "variant": "stdio-tiff",
+            "label": "TIFF",
+            "tagline": "Edit TIFF images",
+            "description": "Open TIFF 6.0 images and edit their image file directories and tags.",
+            "icon": "file-image",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "tiff",
+          "editorType": "semio_s_artifact_stdio_tiff::editor::tiff_baseline::TiffBaselineEditor",
+          "viewerType": "semio_s_artifact_stdio_tiff::viewer::tiff_baseline::TiffBaselineViewer",
+          "appId": "s.stdio.tiff@6.0/baseline#editor",
+          "variant": "stdio-tiff-baseline",
+          "alias": "stdio baseline tiff",
+          "pane": {
+            "variant": "stdio-tiff-baseline",
+            "label": "Baseline TIFF",
+            "tagline": "Edit baseline TIFF images",
+            "description": "Edit TIFF images restricted to the baseline tag set.",
+            "icon": "file-image",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "gif",
+          "editorType": "semio_s_artifact_stdio_gif::editor::gif_87a::Gif87aEditor",
+          "viewerType": "semio_s_artifact_stdio_gif::viewer::gif_87a::Gif87aViewer",
+          "appId": "s.stdio.gif@87a/*#editor",
+          "variant": "stdio-gif-87a",
+          "alias": "stdio gif 87a",
+          "pane": {
+            "variant": "stdio-gif-87a",
+            "label": "GIF 87a",
+            "tagline": "Edit GIF 87a images",
+            "description": "Open GIF 87a images and edit their frames and color tables.",
+            "icon": "image",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "gif",
+          "editorType": "semio_s_artifact_stdio_gif::editor::gif_89a::Gif89aEditor",
+          "viewerType": "semio_s_artifact_stdio_gif::viewer::gif_89a::Gif89aViewer",
+          "appId": "s.stdio.gif@89a/*#editor",
+          "variant": "stdio-gif-89a",
+          "alias": "stdio gif 89a",
+          "pane": {
+            "variant": "stdio-gif-89a",
+            "label": "GIF 89a",
+            "tagline": "Edit GIF 89a images",
+            "description": "Open GIF 89a images and edit frames, color tables and extensions.",
+            "icon": "image",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "svg",
+          "editorType": "semio_s_artifact_stdio_svg::editor::svg_any::SvgAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_svg::viewer::svg_any::SvgAnyViewer",
+          "appId": "s.stdio.svg@1.1/*#editor",
+          "variant": "stdio-svg",
+          "alias": "stdio svg",
+          "pane": {
+            "variant": "stdio-svg",
+            "label": "SVG",
+            "tagline": "Edit vector graphics",
+            "description": "Open SVG 1.1 vector graphics and edit their elements and attributes.",
+            "icon": "pen-tool",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "svg",
+          "editorType": "semio_s_artifact_stdio_svg::editor::svg_basic::SvgBasicEditor",
+          "viewerType": "semio_s_artifact_stdio_svg::viewer::svg_basic::SvgBasicViewer",
+          "appId": "s.stdio.svg@1.1/basic#editor",
+          "variant": "stdio-svg-basic",
+          "alias": "stdio svg basic",
+          "pane": {
+            "variant": "stdio-svg-basic",
+            "label": "SVG Basic",
+            "tagline": "Edit SVG Basic graphics",
+            "description": "Edit SVG 1.1 graphics restricted to the SVG Basic profile.",
+            "icon": "pen-tool",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "svg",
+          "editorType": "semio_s_artifact_stdio_svg::editor::svg_tiny::SvgTinyEditor",
+          "viewerType": "semio_s_artifact_stdio_svg::viewer::svg_tiny::SvgTinyViewer",
+          "appId": "s.stdio.svg@1.1/tiny#editor",
+          "variant": "stdio-svg-tiny",
+          "alias": "stdio svg tiny",
+          "pane": {
+            "variant": "stdio-svg-tiny",
+            "label": "SVG Tiny",
+            "tagline": "Edit SVG Tiny graphics",
+            "description": "Edit SVG 1.1 graphics restricted to the SVG Tiny profile.",
+            "icon": "pen-tool",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6219,
+          6319
+        ],
+        [
+          6220,
+          6320
+        ],
+        [
+          6221,
+          6321
+        ],
+        [
+          6223,
+          6323
+        ],
+        [
+          6224,
+          6324
+        ],
+        [
+          6225,
+          6325
+        ],
+        [
+          6226,
+          6326
+        ],
+        [
+          6227,
+          6327
+        ],
+        [
+          6228,
+          6328
+        ],
+        [
+          6229,
+          6329
+        ],
+        [
+          6230,
+          6330
+        ]
+      ]
+    },
+    {
+      "id": "stdio-media",
+      "emoji": "🎵️",
+      "slug": "media",
+      "dir": "🎵️media",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🎵️media",
+      "label": "Stdio Media",
+      "enum": "StdioMediaApps",
+      "crate": "semio-s-plugin-stdio-media",
+      "lib": "semio_s_plugin_stdio_media",
+      "directoryName": "🎵️stdio-media",
+      "group": {
+        "id": "audio-video",
+        "label": "Audio & Video"
+      },
+      "formats": [
+        "mp4",
+        "mp3",
+        "wav",
+        "avi"
+      ],
+      "apps": 8,
+      "subsets": [
+        {
+          "format": "mp4",
+          "editorType": "semio_s_artifact_stdio_mp4::editor::mp4::Mp4Editor",
+          "viewerType": "semio_s_artifact_stdio_mp4::viewer::mp4::Mp4Viewer",
+          "appId": "s.stdio.mp4@isobmff/*#editor",
+          "variant": "stdio-mp4",
+          "alias": "stdio mp4",
+          "pane": {
+            "variant": "stdio-mp4",
+            "label": "MP4",
+            "tagline": "Edit MP4 videos",
+            "description": "Open ISO base media MP4 files and edit their boxes and tracks.",
+            "icon": "file-video",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "mp3",
+          "editorType": "semio_s_artifact_stdio_mp3::editor::mp3::Mp3Editor",
+          "viewerType": "semio_s_artifact_stdio_mp3::viewer::mp3::Mp3Viewer",
+          "appId": "s.stdio.mp3@mpeg1-layer3/*#editor",
+          "variant": "stdio-mp3",
+          "alias": "stdio mp3",
+          "pane": {
+            "variant": "stdio-mp3",
+            "label": "MP3",
+            "tagline": "Edit MP3 audio",
+            "description": "Open MPEG-1 Layer III audio and edit its frames and tags.",
+            "icon": "play",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "wav",
+          "editorType": "semio_s_artifact_stdio_wav::editor::wav::WavEditor",
+          "viewerType": "semio_s_artifact_stdio_wav::viewer::wav::WavViewer",
+          "appId": "s.stdio.wav@riff-pcm/*#editor",
+          "variant": "stdio-wav",
+          "alias": "stdio wave",
+          "pane": {
+            "variant": "stdio-wav",
+            "label": "WAV",
+            "tagline": "Edit WAV audio",
+            "description": "Open RIFF PCM wave audio and edit its format and sample chunks.",
+            "icon": "play",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "avi",
+          "editorType": "semio_s_artifact_stdio_avi::editor::avi::AviEditor",
+          "viewerType": "semio_s_artifact_stdio_avi::viewer::avi::AviViewer",
+          "appId": "s.stdio.avi@1.0/*#editor",
+          "variant": "stdio-avi",
+          "alias": "stdio avi",
+          "pane": {
+            "variant": "stdio-avi",
+            "label": "AVI",
+            "tagline": "Edit AVI videos",
+            "description": "Open AVI 1.0 videos and edit their RIFF chunks and stream headers.",
+            "icon": "file-video",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6231,
+          6331
+        ],
+        [
+          6232,
+          6332
+        ],
+        [
+          6233,
+          6333
+        ],
+        [
+          6234,
+          6334
+        ]
+      ]
+    },
+    {
+      "id": "stdio-cad",
+      "emoji": "🛠️",
+      "slug": "cad",
+      "dir": "🛠️cad",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🛠️cad",
+      "label": "Stdio CAD",
+      "enum": "StdioCadApps",
+      "crate": "semio-s-plugin-stdio-cad",
+      "lib": "semio_s_plugin_stdio_cad",
+      "directoryName": "🛠️stdio-cad",
+      "group": {
+        "id": "cad-exchange",
+        "label": "CAD Exchange"
+      },
+      "formats": [
+        "step",
+        "dxf",
+        "dwg"
+      ],
+      "apps": 20,
+      "subsets": [
+        {
+          "format": "step",
+          "editorType": "semio_s_artifact_stdio_step::editor::step_any::StepAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_step::viewer::step_any::StepAnyViewer",
+          "appId": "s.stdio.step@ap214/*#editor",
+          "variant": "stdio-step",
+          "alias": "stdio step",
+          "pane": {
+            "variant": "stdio-step",
+            "label": "STEP",
+            "tagline": "Edit STEP models",
+            "description": "Open ISO 10303 AP214 STEP exchange files and edit their entities.",
+            "icon": "cad-shape",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "step",
+          "editorType": "semio_s_artifact_stdio_step::editor::step_cc1::StepCc1Editor",
+          "viewerType": "semio_s_artifact_stdio_step::viewer::step_cc1::StepCc1Viewer",
+          "appId": "s.stdio.step@ap214/cc1#editor",
+          "variant": "stdio-step-cc1",
+          "alias": "stdio step cc1",
+          "pane": {
+            "variant": "stdio-step-cc1",
+            "label": "STEP CC1",
+            "tagline": "Edit STEP CC1 models",
+            "description": "Edit STEP AP214 files restricted to conformance class 1.",
+            "icon": "cad-shape",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "step",
+          "editorType": "semio_s_artifact_stdio_step::editor::step_cc2::StepCc2Editor",
+          "viewerType": "semio_s_artifact_stdio_step::viewer::step_cc2::StepCc2Viewer",
+          "appId": "s.stdio.step@ap214/cc2#editor",
+          "variant": "stdio-step-cc2",
+          "alias": "stdio step cc2",
+          "pane": {
+            "variant": "stdio-step-cc2",
+            "label": "STEP CC2",
+            "tagline": "Edit STEP CC2 models",
+            "description": "Edit STEP AP214 files restricted to conformance class 2.",
+            "icon": "cad-shape",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "step",
+          "editorType": "semio_s_artifact_stdio_step::editor::step_cc3::StepCc3Editor",
+          "viewerType": "semio_s_artifact_stdio_step::viewer::step_cc3::StepCc3Viewer",
+          "appId": "s.stdio.step@ap214/cc3#editor",
+          "variant": "stdio-step-cc3",
+          "alias": "stdio step cc3",
+          "pane": {
+            "variant": "stdio-step-cc3",
+            "label": "STEP CC3",
+            "tagline": "Edit STEP CC3 models",
+            "description": "Edit STEP AP214 files restricted to conformance class 3.",
+            "icon": "cad-shape",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "step",
+          "editorType": "semio_s_artifact_stdio_step::editor::step_cc4::StepCc4Editor",
+          "viewerType": "semio_s_artifact_stdio_step::viewer::step_cc4::StepCc4Viewer",
+          "appId": "s.stdio.step@ap214/cc4#editor",
+          "variant": "stdio-step-cc4",
+          "alias": "stdio step cc4",
+          "pane": {
+            "variant": "stdio-step-cc4",
+            "label": "STEP CC4",
+            "tagline": "Edit STEP CC4 models",
+            "description": "Edit STEP AP214 files restricted to conformance class 4.",
+            "icon": "cad-shape",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "step",
+          "editorType": "semio_s_artifact_stdio_step::editor::step_cc5::StepCc5Editor",
+          "viewerType": "semio_s_artifact_stdio_step::viewer::step_cc5::StepCc5Viewer",
+          "appId": "s.stdio.step@ap214/cc5#editor",
+          "variant": "stdio-step-cc5",
+          "alias": "stdio step cc5",
+          "pane": {
+            "variant": "stdio-step-cc5",
+            "label": "STEP CC5",
+            "tagline": "Edit STEP CC5 models",
+            "description": "Edit STEP AP214 files restricted to conformance class 5.",
+            "icon": "cad-shape",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "step",
+          "editorType": "semio_s_artifact_stdio_step::editor::step_cc6::StepCc6Editor",
+          "viewerType": "semio_s_artifact_stdio_step::viewer::step_cc6::StepCc6Viewer",
+          "appId": "s.stdio.step@ap214/cc6#editor",
+          "variant": "stdio-step-cc6",
+          "alias": "stdio step cc6",
+          "pane": {
+            "variant": "stdio-step-cc6",
+            "label": "STEP CC6",
+            "tagline": "Edit STEP CC6 models",
+            "description": "Edit STEP AP214 files restricted to conformance class 6.",
+            "icon": "cad-shape",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "dxf",
+          "editorType": "semio_s_artifact_stdio_dxf::editor::dxf::DxfAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_dxf::viewer::dxf::DxfAnyViewer",
+          "appId": "s.stdio.dxf@r12/*#editor",
+          "variant": "stdio-dxf",
+          "alias": "stdio dxf",
+          "pane": {
+            "variant": "stdio-dxf",
+            "label": "DXF",
+            "tagline": "Edit DXF drawings",
+            "description": "Open R12 DXF drawings and edit their sections, tables and entities.",
+            "icon": "draw",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "dwg",
+          "editorType": "semio_s_artifact_stdio_dwg::editor::dwg_ac1018::DwgAc1018Editor",
+          "viewerType": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1018::DwgAc1018Viewer",
+          "appId": "s.stdio.dwg@ac1018/*#editor",
+          "variant": "stdio-dwg-ac1018",
+          "alias": "stdio dwg ac1018",
+          "pane": {
+            "variant": "stdio-dwg-ac1018",
+            "label": "DWG AC1018",
+            "tagline": "Edit DWG AC1018 drawings",
+            "description": "Open DWG drawings of format version AC1018 and edit their objects.",
+            "icon": "draw",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "dwg",
+          "editorType": "semio_s_artifact_stdio_dwg::editor::dwg_ac1024::DwgAc1024Editor",
+          "viewerType": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1024::DwgAc1024Viewer",
+          "appId": "s.stdio.dwg@ac1024/*#editor",
+          "variant": "stdio-dwg-ac1024",
+          "alias": "stdio dwg ac1024",
+          "pane": {
+            "variant": "stdio-dwg-ac1024",
+            "label": "DWG AC1024",
+            "tagline": "Edit DWG AC1024 drawings",
+            "description": "Open DWG drawings of format version AC1024 and edit their objects.",
+            "icon": "draw",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6235,
+          6335
+        ],
+        [
+          6236,
+          6336
+        ],
+        [
+          6237,
+          6337
+        ],
+        [
+          6238,
+          6338
+        ],
+        [
+          6239,
+          6339
+        ],
+        [
+          6240,
+          6340
+        ],
+        [
+          6241,
+          6341
+        ],
+        [
+          6242,
+          6342
+        ],
+        [
+          6243,
+          6343
+        ],
+        [
+          6244,
+          6344
+        ]
+      ]
+    },
+    {
+      "id": "stdio-bim",
+      "emoji": "🏠️",
+      "slug": "bim",
+      "dir": "🏠️bim",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🏠️bim",
+      "label": "Stdio BIM",
+      "enum": "StdioBimApps",
+      "crate": "semio-s-plugin-stdio-bim",
+      "lib": "semio_s_plugin_stdio_bim",
+      "directoryName": "🏠️stdio-bim",
+      "group": {
+        "id": "bim",
+        "label": "BIM"
+      },
+      "formats": [
+        "ifc",
+        "bcf"
+      ],
+      "apps": 12,
+      "subsets": [
+        {
+          "format": "ifc",
+          "editorType": "semio_s_artifact_stdio_ifc::editor::ifc2x3_any::Ifc2x3AnyEditor",
+          "viewerType": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_any::Ifc2x3AnyViewer",
+          "appId": "s.stdio.ifc@2x3/*#editor",
+          "variant": "stdio-ifc-2x3",
+          "alias": "stdio ifc 2x3",
+          "pane": {
+            "variant": "stdio-ifc-2x3",
+            "label": "IFC 2x3",
+            "tagline": "Edit IFC 2x3 models",
+            "description": "Open IFC 2x3 building models and edit their entities.",
+            "icon": "building",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "ifc",
+          "editorType": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cobie::Ifc2x3CobieEditor",
+          "viewerType": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cobie::Ifc2x3CobieViewer",
+          "appId": "s.stdio.ifc@2x3/cobie#editor",
+          "variant": "stdio-ifc-2x3-cobie",
+          "alias": "stdio ifc cobie",
+          "pane": {
+            "variant": "stdio-ifc-2x3-cobie",
+            "label": "IFC COBie",
+            "tagline": "Edit COBie handover models",
+            "description": "Edit IFC 2x3 models restricted to the COBie handover view.",
+            "icon": "building",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "ifc",
+          "editorType": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cv20::Ifc2x3Cv20Editor",
+          "viewerType": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cv20::Ifc2x3Cv20Viewer",
+          "appId": "s.stdio.ifc@2x3/cv20#editor",
+          "variant": "stdio-ifc-2x3-cv20",
+          "alias": "stdio ifc coordination view",
+          "pane": {
+            "variant": "stdio-ifc-2x3-cv20",
+            "label": "IFC Coordination View",
+            "tagline": "Edit coordination models",
+            "description": "Edit IFC 2x3 models restricted to Coordination View 2.0.",
+            "icon": "building",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "ifc",
+          "editorType": "semio_s_artifact_stdio_ifc::editor::ifc2x3_sav::Ifc2x3SavEditor",
+          "viewerType": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_sav::Ifc2x3SavViewer",
+          "appId": "s.stdio.ifc@2x3/sav#editor",
+          "variant": "stdio-ifc-2x3-sav",
+          "alias": "stdio ifc structural analysis view",
+          "pane": {
+            "variant": "stdio-ifc-2x3-sav",
+            "label": "IFC Structural Analysis View",
+            "tagline": "Edit structural analysis models",
+            "description": "Edit IFC 2x3 models restricted to the Structural Analysis View.",
+            "icon": "building",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "ifc",
+          "editorType": "semio_s_artifact_stdio_ifc::editor::ifc4_any::Ifc4AnyEditor",
+          "viewerType": "semio_s_artifact_stdio_ifc::viewer::ifc4_any::Ifc4AnyViewer",
+          "appId": "s.stdio.ifc@4/*#editor",
+          "variant": "stdio-ifc-4",
+          "alias": "stdio ifc 4",
+          "pane": {
+            "variant": "stdio-ifc-4",
+            "label": "IFC 4",
+            "tagline": "Edit IFC 4 models",
+            "description": "Open IFC 4 building models and edit their entities.",
+            "icon": "building",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "bcf",
+          "editorType": "semio_s_artifact_stdio_bcf::editor::bcf::BcfAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_bcf::viewer::bcf::BcfAnyViewer",
+          "appId": "s.stdio.bcf@2.1/*#editor",
+          "variant": "stdio-bcf",
+          "alias": "stdio bcf",
+          "pane": {
+            "variant": "stdio-bcf",
+            "label": "BCF",
+            "tagline": "Edit BIM issues",
+            "description": "Open BIM Collaboration Format 2.1 archives and edit topics, comments and viewpoints.",
+            "icon": "message-square",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6245,
+          6345
+        ],
+        [
+          6246,
+          6346
+        ],
+        [
+          6247,
+          6347
+        ],
+        [
+          6248,
+          6348
+        ],
+        [
+          6249,
+          6349
+        ],
+        [
+          6250,
+          6350
+        ]
+      ]
+    },
+    {
+      "id": "stdio-mesh",
+      "emoji": "🔺️",
+      "slug": "mesh",
+      "dir": "🔺️mesh",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔺️mesh",
+      "label": "Stdio Mesh",
+      "enum": "StdioMeshApps",
+      "crate": "semio-s-plugin-stdio-mesh",
+      "lib": "semio_s_plugin_stdio_mesh",
+      "directoryName": "🔺️stdio-mesh",
+      "group": {
+        "id": "meshes",
+        "label": "Meshes & Point Clouds"
+      },
+      "formats": [
+        "gltf",
+        "obj",
+        "stl",
+        "ply",
+        "las"
+      ],
+      "apps": 10,
+      "subsets": [
+        {
+          "format": "gltf",
+          "editorType": "semio_s_artifact_stdio_gltf::editor::gltf::GltfAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_gltf::viewer::gltf::GltfAnyViewer",
+          "appId": "s.stdio.gltf@2.0/*#editor",
+          "variant": "stdio-gltf",
+          "alias": "stdio gltf",
+          "pane": {
+            "variant": "stdio-gltf",
+            "label": "glTF",
+            "tagline": "Edit glTF scenes",
+            "description": "Open glTF 2.0 scenes and edit nodes, meshes, materials and animations.",
+            "icon": "scene-3d",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "obj",
+          "editorType": "semio_s_artifact_stdio_obj::editor::obj::ObjAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_obj::viewer::obj::ObjAnyViewer",
+          "appId": "s.stdio.obj@3.0/*#editor",
+          "variant": "stdio-obj",
+          "alias": "stdio obj",
+          "pane": {
+            "variant": "stdio-obj",
+            "label": "OBJ",
+            "tagline": "Edit OBJ meshes",
+            "description": "Open Wavefront OBJ meshes and edit their vertices, faces and groups.",
+            "icon": "box",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "stl",
+          "editorType": "semio_s_artifact_stdio_stl::editor::stl::StlAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_stl::viewer::stl::StlAnyViewer",
+          "appId": "s.stdio.stl@ascii/*#editor",
+          "variant": "stdio-stl",
+          "alias": "stdio stl",
+          "pane": {
+            "variant": "stdio-stl",
+            "label": "STL",
+            "tagline": "Edit STL meshes",
+            "description": "Open ASCII STL meshes and edit their facets.",
+            "icon": "triangle",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "ply",
+          "editorType": "semio_s_artifact_stdio_ply::editor::ply::PlyAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_ply::viewer::ply::PlyAnyViewer",
+          "appId": "s.stdio.ply@1.0/*#editor",
+          "variant": "stdio-ply",
+          "alias": "stdio ply",
+          "pane": {
+            "variant": "stdio-ply",
+            "label": "PLY",
+            "tagline": "Edit PLY meshes",
+            "description": "Open PLY 1.0 polygon files and edit their elements and properties.",
+            "icon": "hexagon",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "las",
+          "editorType": "semio_s_artifact_stdio_las::editor::las::LasAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_las::viewer::las::LasAnyViewer",
+          "appId": "s.stdio.las@1.0/*#editor",
+          "variant": "stdio-las",
+          "alias": "stdio las",
+          "pane": {
+            "variant": "stdio-las",
+            "label": "LAS",
+            "tagline": "Edit point clouds",
+            "description": "Open LAS 1.0 point clouds and edit their header, records and points.",
+            "icon": "terrain-3d",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6251,
+          6351
+        ],
+        [
+          6252,
+          6352
+        ],
+        [
+          6253,
+          6353
+        ],
+        [
+          6254,
+          6354
+        ],
+        [
+          6255,
+          6355
+        ]
+      ]
+    },
+    {
+      "id": "stdio-pdf",
+      "emoji": "📘️",
+      "slug": "pdf",
+      "dir": "📘️pdf",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/📘️pdf",
+      "label": "Stdio PDF",
+      "enum": "StdioPdfApps",
+      "crate": "semio-s-plugin-stdio-pdf",
+      "lib": "semio_s_plugin_stdio_pdf",
+      "directoryName": "📘️stdio-pdf",
+      "group": {
+        "id": "pdf",
+        "label": "PDF"
+      },
+      "formats": [
+        "pdf"
+      ],
+      "apps": 20,
+      "subsets": [
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf14a::Pdf14AEditor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf14a::Pdf14AViewer",
+          "appId": "s.stdio.pdf@1.4/a#editor",
+          "variant": "stdio-pdf-1-4-a",
+          "alias": "stdio pdf 1.4 archival",
+          "pane": {
+            "variant": "stdio-pdf-1-4-a",
+            "label": "PDF/A (1.4)",
+            "tagline": "Edit archival PDFs",
+            "description": "Edit PDF 1.4 documents restricted to the PDF/A archival profile.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf14::Pdf14Editor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf14::Pdf14Viewer",
+          "appId": "s.stdio.pdf@1.4/*#editor",
+          "variant": "stdio-pdf-1-4",
+          "alias": "stdio pdf 1.4",
+          "pane": {
+            "variant": "stdio-pdf-1-4",
+            "label": "PDF 1.4",
+            "tagline": "Edit PDF 1.4 documents",
+            "description": "Open PDF 1.4 documents and edit their objects and pages.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf14x::Pdf14XEditor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf14x::Pdf14XViewer",
+          "appId": "s.stdio.pdf@1.4/x#editor",
+          "variant": "stdio-pdf-1-4-x",
+          "alias": "stdio pdf 1.4 print",
+          "pane": {
+            "variant": "stdio-pdf-1-4-x",
+            "label": "PDF/X (1.4)",
+            "tagline": "Edit print-exchange PDFs",
+            "description": "Edit PDF 1.4 documents restricted to the PDF/X print exchange profile.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf17a::Pdf17AEditor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf17a::Pdf17AViewer",
+          "appId": "s.stdio.pdf@1.7/a#editor",
+          "variant": "stdio-pdf-1-7-a",
+          "alias": "stdio pdf 1.7 archival",
+          "pane": {
+            "variant": "stdio-pdf-1-7-a",
+            "label": "PDF/A (1.7)",
+            "tagline": "Edit archival PDFs",
+            "description": "Edit PDF 1.7 documents restricted to the PDF/A archival profile.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf17::Pdf17Editor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf17::Pdf17Viewer",
+          "appId": "s.stdio.pdf@1.7/*#editor",
+          "variant": "stdio-pdf-1-7",
+          "alias": "stdio pdf 1.7",
+          "pane": {
+            "variant": "stdio-pdf-1-7",
+            "label": "PDF 1.7",
+            "tagline": "Edit PDF 1.7 documents",
+            "description": "Open PDF 1.7 documents and edit their objects and pages.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf17e::Pdf17EEditor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf17e::Pdf17EViewer",
+          "appId": "s.stdio.pdf@1.7/e#editor",
+          "variant": "stdio-pdf-1-7-e",
+          "alias": "stdio pdf engineering",
+          "pane": {
+            "variant": "stdio-pdf-1-7-e",
+            "label": "PDF/E",
+            "tagline": "Edit engineering PDFs",
+            "description": "Edit PDF 1.7 documents restricted to the PDF/E engineering profile.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf17h::Pdf17HEditor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf17h::Pdf17HViewer",
+          "appId": "s.stdio.pdf@1.7/h#editor",
+          "variant": "stdio-pdf-1-7-h",
+          "alias": "stdio pdf healthcare",
+          "pane": {
+            "variant": "stdio-pdf-1-7-h",
+            "label": "PDF/H",
+            "tagline": "Edit healthcare PDFs",
+            "description": "Edit PDF 1.7 documents restricted to the PDF/H healthcare profile.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf17ua::Pdf17UaEditor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf17ua::Pdf17UaViewer",
+          "appId": "s.stdio.pdf@1.7/ua#editor",
+          "variant": "stdio-pdf-1-7-ua",
+          "alias": "stdio pdf accessible",
+          "pane": {
+            "variant": "stdio-pdf-1-7-ua",
+            "label": "PDF/UA",
+            "tagline": "Edit accessible PDFs",
+            "description": "Edit PDF 1.7 documents restricted to the PDF/UA accessibility profile.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf17vt::Pdf17VtEditor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf17vt::Pdf17VtViewer",
+          "appId": "s.stdio.pdf@1.7/vt#editor",
+          "variant": "stdio-pdf-1-7-vt",
+          "alias": "stdio pdf variable print",
+          "pane": {
+            "variant": "stdio-pdf-1-7-vt",
+            "label": "PDF/VT",
+            "tagline": "Edit variable-print PDFs",
+            "description": "Edit PDF 1.7 documents restricted to the PDF/VT variable printing profile.",
+            "icon": "document-report"
+          }
+        },
+        {
+          "format": "pdf",
+          "editorType": "semio_s_artifact_stdio_pdf::editor::pdf17x::Pdf17XEditor",
+          "viewerType": "semio_s_artifact_stdio_pdf::viewer::pdf17x::Pdf17XViewer",
+          "appId": "s.stdio.pdf@1.7/x#editor",
+          "variant": "stdio-pdf-1-7-x",
+          "alias": "stdio pdf 1.7 print",
+          "pane": {
+            "variant": "stdio-pdf-1-7-x",
+            "label": "PDF/X (1.7)",
+            "tagline": "Edit print-exchange PDFs",
+            "description": "Edit PDF 1.7 documents restricted to the PDF/X print exchange profile.",
+            "icon": "document-report"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6256,
+          6356
+        ],
+        [
+          6257,
+          6357
+        ],
+        [
+          6258,
+          6358
+        ],
+        [
+          6259,
+          6359
+        ],
+        [
+          6260,
+          6360
+        ],
+        [
+          6261,
+          6361
+        ],
+        [
+          6262,
+          6362
+        ],
+        [
+          6263,
+          6363
+        ],
+        [
+          6264,
+          6364
+        ],
+        [
+          6265,
+          6365
+        ]
+      ]
+    },
+    {
+      "id": "stdio-office",
+      "emoji": "💼️",
+      "slug": "office",
+      "dir": "💼️office",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/💼️office",
+      "label": "Stdio Office",
+      "enum": "StdioOfficeApps",
+      "crate": "semio-s-plugin-stdio-office",
+      "lib": "semio_s_plugin_stdio_office",
+      "directoryName": "💼️stdio-office",
+      "group": {
+        "id": "office",
+        "label": "Office"
+      },
+      "formats": [
+        "docx",
+        "pptx",
+        "xlsx"
+      ],
+      "apps": 18,
+      "subsets": [
+        {
+          "format": "docx",
+          "editorType": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::base::DocxEditor",
+          "viewerType": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::base::DocxViewer",
+          "appId": "s.stdio.docx@ecma-376/*#editor",
+          "variant": "stdio-docx",
+          "alias": "stdio docx",
+          "pane": {
+            "variant": "stdio-docx",
+            "label": "Word Document",
+            "tagline": "Edit word-processing documents",
+            "description": "Open ECMA-376 docx documents and edit their parts and paragraphs.",
+            "icon": "file-text"
+          }
+        },
+        {
+          "format": "docx",
+          "editorType": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::strict::DocxStrictEditor",
+          "viewerType": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::strict::DocxStrictViewer",
+          "appId": "s.stdio.docx@ecma-376/strict#editor",
+          "variant": "stdio-docx-strict",
+          "alias": "stdio docx strict",
+          "pane": {
+            "variant": "stdio-docx-strict",
+            "label": "Word Document (Strict)",
+            "tagline": "Edit strict docx documents",
+            "description": "Edit docx documents restricted to the ECMA-376 strict conformance class.",
+            "icon": "file-text"
+          }
+        },
+        {
+          "format": "docx",
+          "editorType": "semio_s_artifact_stdio_docx::editor::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalEditor",
+          "viewerType": "semio_s_artifact_stdio_docx::viewer::docx::standards::v_ecma_376::subsets::transitional::DocxTransitionalViewer",
+          "appId": "s.stdio.docx@ecma-376/transitional#editor",
+          "variant": "stdio-docx-transitional",
+          "alias": "stdio docx transitional",
+          "pane": {
+            "variant": "stdio-docx-transitional",
+            "label": "Word Document (Transitional)",
+            "tagline": "Edit transitional docx documents",
+            "description": "Edit docx documents under the ECMA-376 transitional conformance class.",
+            "icon": "file-text"
+          }
+        },
+        {
+          "format": "pptx",
+          "editorType": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::base::PptxEditor",
+          "viewerType": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::base::PptxViewer",
+          "appId": "s.stdio.pptx@ecma-376/*#editor",
+          "variant": "stdio-pptx",
+          "alias": "stdio pptx",
+          "pane": {
+            "variant": "stdio-pptx",
+            "label": "Presentation",
+            "tagline": "Edit presentations",
+            "description": "Open ECMA-376 pptx presentations and edit their parts and slides.",
+            "icon": "monitor"
+          }
+        },
+        {
+          "format": "pptx",
+          "editorType": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::strict::PptxStrictEditor",
+          "viewerType": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::strict::PptxStrictViewer",
+          "appId": "s.stdio.pptx@ecma-376/strict#editor",
+          "variant": "stdio-pptx-strict",
+          "alias": "stdio pptx strict",
+          "pane": {
+            "variant": "stdio-pptx-strict",
+            "label": "Presentation (Strict)",
+            "tagline": "Edit strict pptx presentations",
+            "description": "Edit pptx presentations restricted to the ECMA-376 strict conformance class.",
+            "icon": "monitor"
+          }
+        },
+        {
+          "format": "pptx",
+          "editorType": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalEditor",
+          "viewerType": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalViewer",
+          "appId": "s.stdio.pptx@ecma-376/transitional#editor",
+          "variant": "stdio-pptx-transitional",
+          "alias": "stdio pptx transitional",
+          "pane": {
+            "variant": "stdio-pptx-transitional",
+            "label": "Presentation (Transitional)",
+            "tagline": "Edit transitional pptx presentations",
+            "description": "Edit pptx presentations under the ECMA-376 transitional conformance class.",
+            "icon": "monitor"
+          }
+        },
+        {
+          "format": "xlsx",
+          "editorType": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::base::XlsxEditor",
+          "viewerType": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::base::XlsxViewer",
+          "appId": "s.stdio.xlsx@ecma-376/*#editor",
+          "variant": "stdio-xlsx",
+          "alias": "stdio xlsx",
+          "pane": {
+            "variant": "stdio-xlsx",
+            "label": "Spreadsheet",
+            "tagline": "Edit spreadsheets",
+            "description": "Open ECMA-376 xlsx workbooks and edit their parts and cells.",
+            "icon": "file-spreadsheet"
+          }
+        },
+        {
+          "format": "xlsx",
+          "editorType": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictEditor",
+          "viewerType": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::strict::XlsxStrictViewer",
+          "appId": "s.stdio.xlsx@ecma-376/strict#editor",
+          "variant": "stdio-xlsx-strict",
+          "alias": "stdio xlsx strict",
+          "pane": {
+            "variant": "stdio-xlsx-strict",
+            "label": "Spreadsheet (Strict)",
+            "tagline": "Edit strict xlsx workbooks",
+            "description": "Edit xlsx workbooks restricted to the ECMA-376 strict conformance class.",
+            "icon": "file-spreadsheet"
+          }
+        },
+        {
+          "format": "xlsx",
+          "editorType": "semio_s_artifact_stdio_xlsx::editor::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalEditor",
+          "viewerType": "semio_s_artifact_stdio_xlsx::viewer::xlsx::standards::v_ecma_376::subsets::transitional::XlsxTransitionalViewer",
+          "appId": "s.stdio.xlsx@ecma-376/transitional#editor",
+          "variant": "stdio-xlsx-transitional",
+          "alias": "stdio xlsx transitional",
+          "pane": {
+            "variant": "stdio-xlsx-transitional",
+            "label": "Spreadsheet (Transitional)",
+            "tagline": "Edit transitional xlsx workbooks",
+            "description": "Edit xlsx workbooks under the ECMA-376 transitional conformance class.",
+            "icon": "file-spreadsheet"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6266,
+          6366
+        ],
+        [
+          6267,
+          6367
+        ],
+        [
+          6268,
+          6368
+        ],
+        [
+          6269,
+          6369
+        ],
+        [
+          6270,
+          6370
+        ],
+        [
+          6271,
+          6371
+        ],
+        [
+          6272,
+          6372
+        ],
+        [
+          6273,
+          6373
+        ],
+        [
+          6275,
+          6375
+        ]
+      ]
+    },
+    {
+      "id": "stdio-semio",
+      "emoji": "🧿️",
+      "slug": "semio",
+      "dir": "🧿️semio",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🧿️semio",
+      "label": "Stdio Semio",
+      "enum": "StdioSemioApps",
+      "crate": "semio-s-plugin-stdio-semio",
+      "lib": "semio_s_plugin_stdio_semio",
+      "directoryName": "🧿️stdio-semio",
+      "group": {
+        "id": "semio-files",
+        "label": "Semio Files"
+      },
+      "formats": [
+        "semio"
+      ],
+      "apps": 38,
+      "subsets": [
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_brep::SemioBrepEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_brep::SemioBrepViewer",
+          "appId": "s.stdio.semio@v1/brep#editor",
+          "variant": "stdio-semio-brep",
+          "alias": "stdio semio brep",
+          "pane": {
+            "variant": "stdio-semio-brep",
+            "label": "Semio B-Rep",
+            "tagline": "Edit semio solids",
+            "description": "Edit semio v1 files that carry a boundary-representation solid.",
+            "icon": "cad-shape"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_drawing::SemioDrawingEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_drawing::SemioDrawingViewer",
+          "appId": "s.stdio.semio@v1/drawing#editor",
+          "variant": "stdio-semio-drawing",
+          "alias": "stdio semio drawing",
+          "pane": {
+            "variant": "stdio-semio-drawing",
+            "label": "Semio Drawing",
+            "tagline": "Edit semio drawings",
+            "description": "Edit semio v1 files that carry a drawing.",
+            "icon": "draw",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_graph::SemioGraphEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_graph::SemioGraphViewer",
+          "appId": "s.stdio.semio@v1/graph#editor",
+          "variant": "stdio-semio-graph",
+          "alias": "stdio semio graph",
+          "pane": {
+            "variant": "stdio-semio-graph",
+            "label": "Semio Graph",
+            "tagline": "Edit semio graphs",
+            "description": "Edit semio v1 files that carry a graph.",
+            "icon": "network",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_kit::SemioKitEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_kit::SemioKitViewer",
+          "appId": "s.stdio.semio@v1/kit#editor",
+          "variant": "stdio-semio-kit",
+          "alias": "stdio semio kit",
+          "pane": {
+            "variant": "stdio-semio-kit",
+            "label": "Semio Kit",
+            "tagline": "Edit semio kits",
+            "description": "Edit semio v1 files that carry a kit of types and designs.",
+            "icon": "component",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_mesh::SemioMeshEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_mesh::SemioMeshViewer",
+          "appId": "s.stdio.semio@v1/mesh#editor",
+          "variant": "stdio-semio-mesh",
+          "alias": "stdio semio mesh",
+          "pane": {
+            "variant": "stdio-semio-mesh",
+            "label": "Semio Mesh",
+            "tagline": "Edit semio meshes",
+            "description": "Edit semio v1 files that carry a mesh.",
+            "icon": "triangle"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_object::SemioObjectEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_object::SemioObjectViewer",
+          "appId": "s.stdio.semio@v1/object#editor",
+          "variant": "stdio-semio-object",
+          "alias": "stdio semio object",
+          "pane": {
+            "variant": "stdio-semio-object",
+            "label": "Semio Object",
+            "tagline": "Edit semio objects",
+            "description": "Edit semio v1 files that carry an object.",
+            "icon": "box",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_table::SemioTableEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_table::SemioTableViewer",
+          "appId": "s.stdio.semio@v1/table#editor",
+          "variant": "stdio-semio-table",
+          "alias": "stdio semio table",
+          "pane": {
+            "variant": "stdio-semio-table",
+            "label": "Semio Table",
+            "tagline": "Edit semio tables",
+            "description": "Edit semio v1 files that carry a table.",
+            "icon": "table-2",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_text::SemioTextEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_text::SemioTextViewer",
+          "appId": "s.stdio.semio@v1/text#editor",
+          "variant": "stdio-semio-text",
+          "alias": "stdio semio text",
+          "pane": {
+            "variant": "stdio-semio-text",
+            "label": "Semio Text",
+            "tagline": "Edit semio text",
+            "description": "Edit semio v1 files that carry plain text.",
+            "icon": "type",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_animation::SemioAnimationEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_animation::SemioAnimationViewer",
+          "appId": "s.stdio.semio@v1/animation#editor",
+          "variant": "stdio-semio-animation",
+          "alias": "stdio semio animation",
+          "pane": {
+            "variant": "stdio-semio-animation",
+            "label": "Semio Animation",
+            "tagline": "Edit semio animations",
+            "description": "Edit semio v1 files that carry an animation document.",
+            "icon": "animate",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_base::SemioAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_base::SemioAnyViewer",
+          "appId": "s.stdio.semio@v1/*#editor",
+          "variant": "stdio-semio",
+          "alias": "stdio semio",
+          "pane": {
+            "variant": "stdio-semio",
+            "label": "Semio File",
+            "tagline": "Edit semio files",
+            "description": "Open semio v1 files of any content and edit their documents.",
+            "icon": "box",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_audio::SemioAudioEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_audio::SemioAudioViewer",
+          "appId": "s.stdio.semio@v1/audio#editor",
+          "variant": "stdio-semio-audio",
+          "alias": "stdio semio audio",
+          "pane": {
+            "variant": "stdio-semio-audio",
+            "label": "Semio Audio",
+            "tagline": "Edit semio audio",
+            "description": "Edit semio v1 files that carry an audio document.",
+            "icon": "play",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_cad::SemioCadEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_cad::SemioCadViewer",
+          "appId": "s.stdio.semio@v1/cad#editor",
+          "variant": "stdio-semio-cad",
+          "alias": "stdio semio cad",
+          "pane": {
+            "variant": "stdio-semio-cad",
+            "label": "Semio CAD",
+            "tagline": "Edit semio CAD models",
+            "description": "Edit semio v1 files that carry a CAD model.",
+            "icon": "cad-shape",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_document::SemioDocumentEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_document::SemioDocumentViewer",
+          "appId": "s.stdio.semio@v1/document#editor",
+          "variant": "stdio-semio-document",
+          "alias": "stdio semio document",
+          "pane": {
+            "variant": "stdio-semio-document",
+            "label": "Semio Document",
+            "tagline": "Edit semio documents",
+            "description": "Edit semio v1 files that carry a text document.",
+            "icon": "file-text",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_flow::SemioFlowEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_flow::SemioFlowViewer",
+          "appId": "s.stdio.semio@v1/flow#editor",
+          "variant": "stdio-semio-flow",
+          "alias": "stdio semio flow",
+          "pane": {
+            "variant": "stdio-semio-flow",
+            "label": "Semio Flow",
+            "tagline": "Edit semio flows",
+            "description": "Edit semio v1 files that carry a flow graph.",
+            "icon": "flow",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_image::SemioImageEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_image::SemioImageViewer",
+          "appId": "s.stdio.semio@v1/image#editor",
+          "variant": "stdio-semio-image",
+          "alias": "stdio semio image",
+          "pane": {
+            "variant": "stdio-semio-image",
+            "label": "Semio Image",
+            "tagline": "Edit semio images",
+            "description": "Edit semio v1 files that carry an image.",
+            "icon": "image",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_model::SemioModelEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_model::SemioModelViewer",
+          "appId": "s.stdio.semio@v1/model#editor",
+          "variant": "stdio-semio-model",
+          "alias": "stdio semio model",
+          "pane": {
+            "variant": "stdio-semio-model",
+            "label": "Semio Model",
+            "tagline": "Edit semio models",
+            "description": "Edit semio v1 files that carry a model.",
+            "icon": "building",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_presentation::SemioPresentationEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_presentation::SemioPresentationViewer",
+          "appId": "s.stdio.semio@v1/presentation#editor",
+          "variant": "stdio-semio-presentation",
+          "alias": "stdio semio presentation",
+          "pane": {
+            "variant": "stdio-semio-presentation",
+            "label": "Semio Presentation",
+            "tagline": "Edit semio presentations",
+            "description": "Edit semio v1 files that carry a presentation.",
+            "icon": "monitor",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_value::SemioValueEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_value::SemioValueViewer",
+          "appId": "s.stdio.semio@v1/value#editor",
+          "variant": "stdio-semio-value",
+          "alias": "stdio semio value",
+          "pane": {
+            "variant": "stdio-semio-value",
+            "label": "Semio Value",
+            "tagline": "Edit semio values",
+            "description": "Edit semio v1 files that carry a structured value.",
+            "icon": "hash",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        },
+        {
+          "format": "semio",
+          "editorType": "semio_s_artifact_stdio_semio::editor::semio_video::SemioVideoEditor",
+          "viewerType": "semio_s_artifact_stdio_semio::viewer::semio_video::SemioVideoViewer",
+          "appId": "s.stdio.semio@v1/video#editor",
+          "variant": "stdio-semio-video",
+          "alias": "stdio semio video",
+          "pane": {
+            "variant": "stdio-semio-video",
+            "label": "Semio Video",
+            "tagline": "Edit semio videos",
+            "description": "Edit semio v1 files that carry a video.",
+            "icon": "file-video",
+            "example": "demo",
+            "exampleLabel": "Demo"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6276,
+          6376
+        ],
+        [
+          6278,
+          6378
+        ],
+        [
+          6279,
+          6379
+        ],
+        [
+          6280,
+          6380
+        ],
+        [
+          6281,
+          6381
+        ],
+        [
+          6282,
+          6382
+        ],
+        [
+          6283,
+          6383
+        ],
+        [
+          6284,
+          6384
+        ],
+        [
+          6285,
+          6385
+        ],
+        [
+          6286,
+          6386
+        ],
+        [
+          6287,
+          6387
+        ],
+        [
+          6288,
+          6388
+        ],
+        [
+          6289,
+          6389
+        ],
+        [
+          6290,
+          6390
+        ],
+        [
+          6291,
+          6391
+        ],
+        [
+          6292,
+          6392
+        ],
+        [
+          6293,
+          6393
+        ],
+        [
+          6294,
+          6394
+        ],
+        [
+          6295,
+          6395
+        ]
+      ]
+    },
+    {
+      "id": "stdio-binary",
+      "emoji": "🔢️",
+      "slug": "binary",
+      "dir": "🔢️binary",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🧩️extensions/🔢️binary",
+      "label": "Stdio Binary",
+      "enum": "StdioBinaryApps",
+      "crate": "semio-s-plugin-stdio-binary",
+      "lib": "semio_s_plugin_stdio_binary",
+      "directoryName": "🔢️stdio-binary",
+      "group": {
+        "id": "binary",
+        "label": "Binary & Archives"
+      },
+      "formats": [
+        "binary",
+        "deflate",
+        "zip",
+        "epw"
+      ],
+      "apps": 10,
+      "subsets": [
+        {
+          "format": "binary",
+          "editorType": "semio_s_artifact_stdio_binary::editor::binary::BinaryEditor",
+          "viewerType": "semio_s_artifact_stdio_binary::viewer::binary::BinaryViewer",
+          "appId": "s.stdio.binary@raw/*#editor",
+          "variant": "stdio-binary",
+          "alias": "stdio binary",
+          "pane": {
+            "variant": "stdio-binary",
+            "label": "Binary",
+            "tagline": "Edit raw bytes",
+            "description": "Open any file as raw bytes and edit them.",
+            "icon": "hard-drive"
+          }
+        },
+        {
+          "format": "deflate",
+          "editorType": "semio_s_artifact_stdio_deflate::editor::deflate::DeflateEditor",
+          "viewerType": "semio_s_artifact_stdio_deflate::viewer::deflate::DeflateViewer",
+          "appId": "s.stdio.deflate@rfc1950/*#editor",
+          "variant": "stdio-deflate",
+          "alias": "stdio deflate",
+          "pane": {
+            "variant": "stdio-deflate",
+            "label": "zlib",
+            "tagline": "Edit zlib streams",
+            "description": "Open RFC 1950 zlib streams and edit their decompressed payload.",
+            "icon": "file-archive"
+          }
+        },
+        {
+          "format": "zip",
+          "editorType": "semio_s_artifact_stdio_zip::editor::zip::base::ZipAnyEditor",
+          "viewerType": "semio_s_artifact_stdio_zip::viewer::zip::base::ZipAnyViewer",
+          "appId": "s.stdio.zip@2.0/*#editor",
+          "variant": "stdio-zip",
+          "alias": "stdio zip",
+          "pane": {
+            "variant": "stdio-zip",
+            "label": "ZIP",
+            "tagline": "Edit ZIP archives",
+            "description": "Open ZIP 2.0 archives and edit their entries.",
+            "icon": "file-archive"
+          }
+        },
+        {
+          "format": "zip",
+          "editorType": "semio_s_artifact_stdio_zip::editor::zip::iso21320::ZipIso21320Editor",
+          "viewerType": "semio_s_artifact_stdio_zip::viewer::zip::iso21320::ZipIso21320Viewer",
+          "appId": "s.stdio.zip@2.0/iso21320#editor",
+          "variant": "stdio-zip-iso21320",
+          "alias": "stdio iso zip",
+          "pane": {
+            "variant": "stdio-zip-iso21320",
+            "label": "ZIP (ISO/IEC 21320-1)",
+            "tagline": "Edit document container archives",
+            "description": "Edit ZIP archives restricted to the ISO/IEC 21320-1 document container profile.",
+            "icon": "file-archive"
+          }
+        },
+        {
+          "format": "epw",
+          "editorType": "semio_s_artifact_stdio_epw::editor::epw::EpwEditor",
+          "viewerType": "semio_s_artifact_stdio_epw::viewer::epw::EpwViewer",
+          "appId": "s.stdio.epw@energyplus/*#editor",
+          "variant": "stdio-epw",
+          "alias": "stdio weather",
+          "pane": {
+            "variant": "stdio-epw",
+            "label": "EPW Weather",
+            "tagline": "Edit weather files",
+            "description": "Open EnergyPlus EPW weather files and edit their header and hourly records.",
+            "icon": "sun"
+          }
+        }
+      ],
+      "ports": [
+        [
+          6296,
+          6396
+        ],
+        [
+          6297,
+          6397
+        ],
+        [
+          6298,
+          6398
+        ],
+        [
+          6299,
+          6399
+        ],
+        [
+          6300,
+          6400
+        ]
+      ]
+    }
+  ],
+  "baseFormats": [
+    "html",
+    "md",
+    "csv",
+    "tsv",
+    "txt",
+    "json",
+    "xml"
+  ]
+}

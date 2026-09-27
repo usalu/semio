@@ -31,7 +31,7 @@ async fn wal_bytes(source: &[u8]) -> db_wal::WalBytes {
 async fn submit_record(storage: &MemoryStorage, wal: &mut db_wal::ArtifactWal, record: WalRecord, now_ms: u64) {
     let mut records = db_wal::WalRecordBatch::new();
     assert!(records.push(record).is_ok());
-    wal.submit(storage, &records, DurabilityClass::Fsync, now_ms).await.unwrap();
+    wal.submit(storage, &[], &records, DurabilityClass::Fsync, now_ms).await.unwrap();
     while records.close_step().unwrap() {}
 }
 

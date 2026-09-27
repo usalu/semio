@@ -534,11 +534,11 @@ pub fn build_tool_registry(
     let a = actions.clone();
     registry.register(history_redo, move |arguments| history_redo_handler(&a, arguments)).expect("history_redo is a valid tool name");
 
-    register_artifact_tools(&mut registry, workspace.clone());
+    register_artifact_tools(&mut registry, workspace.clone(), principal.clone());
     register_inference_tools(&mut registry, workspace.clone());
     register_inference_job_tools(&mut registry, catalog.clone(), workspace.clone(), actions.clone(), principal.clone(), default_session());
     register_conversation_tools(&mut registry, bridge.clone(), conversation_actions, conversation_principal);
-    register_ui_tools(&mut registry, bridge, workspace);
+    register_ui_tools(&mut registry, bridge, workspace, principal);
 
     registry
 }

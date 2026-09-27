@@ -108,6 +108,8 @@
         "booleanOperation": { "type": ["string", "null"] },
         "traceParamsJson": { "type": ["string", "null"] },
         "layerJson": { "type": ["string", "null"] },
+        "textContent": { "type": ["string", "null"] },
+        "textSize": { "type": ["number", "null"], "exclusiveMinimum": 0 },
         "pathSegments": { "type": ["array", "null"], "items": { "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json#/$defs/PathSegment" } }
       }
     }

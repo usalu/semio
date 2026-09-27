@@ -24,3 +24,5 @@ field record_index varint
 field field_index varint
 field quoted u8
 field value bytes
+record patch-snapshot tag=6
+field patch bytes

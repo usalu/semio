@@ -257,7 +257,7 @@ impl RasterStackAssets<'_> {
         let count=validate_extent(image.width,image.height).map_err(|error|error.to_string())?;
         let frame=image.frames.first().ok_or("a layer's image asset carries no decoded frame")?;
         if frame.rgba8.len()!=count*4{return Err("a layer's image asset frame length does not match width*height*4".into());}
-        self.images.insert(key.to_owned(),Arc::new(RasterImage {width:image.width,height:image.height,pixels:frame.rgba8.clone()}));Ok(())
+        self.images.insert(key.to_owned(),Arc::new(RasterImage {width:image.width,height:image.height,pixels:Vec::with_capacity(count*4)}));Ok(())
     }
     fn mask(&mut self,value:&Option<crate::RasterLayerMask>)->Result<Option<RasterStackMask>,String>{
         let Some(mask)=value else{return Ok(None);};
@@ -288,11 +288,50 @@ impl RasterStackAssets<'_> {
     }
 }
 
-/// 🧱️ Prepares exports with the same bounded mask and layer compositor used by interactive surfaces.
+/// 🧵️ Copies each unique source image in bounded grants from one captured immutable document.
+pub struct RasterStackPreparation {
+    layers:Vec<RasterStackLayer>,
+    images:BTreeMap<String,Arc<RasterImage>>,
+    keys:Vec<String>,
+    index:usize,
+    cancelled:bool,
+}
+impl RasterStackPreparation {
+    pub fn new(document:&RasterSnapshot)->Result<Self,String> {Self::from_layers(document,&document.layers)}
+    pub fn from_layers(document:&RasterSnapshot,source:&[RasterLayerNode])->Result<Self,String> {
+        let mut assets=RasterStackAssets {assets:&document.assets,images:BTreeMap::new(),nodes:0};
+        let layers=assets.layers(source,0)?;
+        let keys=assets.images.keys().cloned().collect();
+        Ok(Self {layers,images:assets.images,keys,index:0,cancelled:false})
+    }
+    pub fn advance(&mut self,document:&RasterSnapshot,maximum:usize)->Result<bool,String> {
+        if self.cancelled {return Err("Composite preparation cancelled".into());}
+        let mut remaining=maximum.min(32768);
+        while remaining>0&&self.index<self.keys.len() {
+            let key=&self.keys[self.index];
+            let source=document.assets.get(key).and_then(|asset|asset.local_owner::<SemioImageSnapshot>()).ok_or("Composite source image is unavailable")?;
+            let image=Arc::get_mut(self.images.get_mut(key).unwrap()).ok_or("Composite preparation was shared before completion")?;
+            let frame=source.frames.first().ok_or("Composite source image has no frame")?;
+            let total=image.width as usize*image.height as usize;
+            if source.width!=image.width||source.height!=image.height||frame.rgba8.len()!=total*4 {return Err("Composite source extent changed".into());}
+            let start=image.pixels.len()/4;let end=total.min(start+remaining);
+            image.pixels.extend_from_slice(&frame.rgba8[start*4..end*4]);remaining-=end-start;
+            if end==total {self.index+=1;}
+        }
+        Ok(self.index==self.keys.len())
+    }
+    pub fn into_job(self)->Result<RasterStackJob,String> {
+        if self.cancelled||self.index!=self.keys.len() {return Err("Composite preparation is incomplete or cancelled".into());}
+        RasterStackJob::new(RasterStackInput {layers:self.layers,images:self.images}).map_err(|error|error.to_string())
+    }
+    pub fn cancel(&mut self) {self.cancelled=true;self.layers.clear();self.images.clear();self.keys.clear();}
+}
+
+/// 🧱️ Prepares exports with the same mask and layer compositor used by interactive surfaces.
 pub fn raster_composite_job(document:&RasterSnapshot)->Result<RasterStackJob,String>{
-    let mut assets=RasterStackAssets {assets:&document.assets,images:BTreeMap::new(),nodes:0};
-    let layers=assets.layers(&document.layers,0)?;
-    RasterStackJob::new(RasterStackInput {layers,images:assets.images}).map_err(|error|error.to_string())
+    let mut preparation=RasterStackPreparation::new(document)?;
+    while !preparation.advance(document,32768)? {}
+    preparation.into_job()
 }
 
 /// 🖼️ Flattens visible layers through the shared compositor into the image export hub.

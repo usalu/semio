@@ -1,0 +1,20 @@
+{
+  "routeCases": [
+    { "id": "recognized-accepted", "mutation": 1, "recognized": true, "primaryAccepts": true, "expected": "primary" },
+    { "id": "recognized-refused-never-falls-back", "mutation": 2, "recognized": true, "primaryAccepts": false, "expected": "refused" },
+    { "id": "unrecognized-uses-fallback", "mutation": 3, "recognized": false, "primaryAccepts": false, "expected": "fallback" }
+  ],
+  "lifecycle": {
+    "units": 5,
+    "cancelAfter": 3,
+    "expectedProgress": [1, 2, 3],
+    "expectedCloseSteps": 3
+  },
+  "textCopy": {
+    "byteLength": 65537,
+    "pageBytes": 4096,
+    "expectedDataSteps": 17,
+    "cancelAfterBytes": 8192,
+    "expectedCloseSteps": 3
+  }
+}

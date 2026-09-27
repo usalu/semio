@@ -1431,6 +1431,56 @@ impl PluginArtifactChannel {
         Ok(())
     }
 
+    /// 🔁️ Throws this guest's session document away so the next [`Self::load_session_document`] seeds
+    /// it from a new baseline — a guest can only be reseeded fresh, never while its backbone is bound.
+    pub fn reseed_session_document(&mut self, instance: u32) {
+        self.discard_instance(instance);
+    }
+
+    /// 📥️ Hands one mutation batch the hub document's actor delivered to this guest's bound document
+    /// backbone — the same `Event::Message { source: Backbone }` turn the wgpu and React shells drive
+    /// (`ProgramBridge::receive_document_backbone`) — and drives the guest until it is idle. Whatever it
+    /// publishes back onto the backbone is kept for the relay, and an `AppFrame::Error` it answers on
+    /// its shell lane is the refusal it is.
+    pub fn receive_document_backbone(&mut self, instance: u32, message: Vec<u8>) -> Result<(), Fault> {
+        store::decode_hot_backbone_message_exact(&message).map_err(|error| Self::not_wired("document-backbone ingress", error))?;
+        self.ensure_instance(instance)?;
+        let mut owed = vec![semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Backbone { uri: self.actor_label.clone() }, payload: message }];
+        let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
+        loop {
+            let events = std::mem::take(&mut owed);
+            let runtime = Arc::clone(&self.runtime);
+            let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("document-backbone ingress", format!("no open instance {instance}")))?;
+            let turn = match semio_framework_async::block_on(runtime.execute_turn(guest, &events, headless_command_budget())) {
+                Ok(turn) => turn,
+                Err(error) => {
+                    self.discard_instance(instance);
+                    return Err(Self::not_wired("document-backbone ingress", format!("{error}; the instance was discarded")));
+                }
+            };
+            for effect in &turn.effects {
+                if let Some(egress) = document_backbone_payload(&self.actor_label, effect) {
+                    self.backbone_egress.push(egress.to_vec());
+                }
+                if let Some(fault) = shell_lane_fault(instance, effect) {
+                    return Err(fault);
+                }
+            }
+            if let Some(receipt) = turn.lifecycle_receipt {
+                owed.push(semio_framework::kernel::Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt }));
+            }
+            match turn.status {
+                semio_framework::kernel::TurnStatus::Idle if owed.is_empty() => return Ok(()),
+                semio_framework::kernel::TurnStatus::Faulted(detail) => return Err(decode_guest_fault(&detail)),
+                _ if owed.is_empty() => owed.push(semio_framework::kernel::Event::Wake),
+                _ => {}
+            }
+            if std::time::Instant::now() >= deadline {
+                return Err(Self::budget_fault("document-backbone ingress"));
+            }
+        }
+    }
+
     /// 🗿️ What a `RevisionStamp` from this channel names. A channel with no bound artifact answers
     /// the plugin-scoped session pseudo-id `plugin:<id>` — which is what the document IS in that
     /// case, a plugin's genesis session no client can address — never the bare plugin id, which a
@@ -2162,6 +2212,22 @@ fn document_backbone_payload<'a>(actor_label: &str, effect: &'a semio_framework:
     (uri == actor_label).then(|| payload.as_slice())
 }
 
+/// 🧯️ The refusal a guest answered on `instance`'s shell lane, if `effect` is one: an `AppFrame::Error`
+/// that is neither a typed-operation page nor an acknowledgement.
+#[cfg(not(target_arch = "wasm32"))]
+fn shell_lane_fault(instance: u32, effect: &semio_framework::kernel::Effect) -> Option<Fault> {
+    let semio_framework::kernel::Effect::SendMessage { target: semio_framework::kernel::MessageEndpoint::Shell { instance: addressed }, payload } = effect else {
+        return None;
+    };
+    if addressed.0 != instance.to_string() || payload.starts_with(TYPED_OPERATION_PAGE_MAGIC) || payload.starts_with(TYPED_OPERATION_ACK_MAGIC) {
+        return None;
+    }
+    match semio_framework::io::resolve_ready(store::decode_app_frame(payload)) {
+        Ok(store::AppFrame::Error { fault, .. }) => Some(decode_guest_fault(&fault)),
+        _ => None,
+    }
+}
+
 /// 🧾️ One effect named by SHAPE, never by payload — what a fault says the guest published instead
 /// of the answer it owed. A shell message is named with the instance it addresses, because
 /// "addressed at another instance" and "addressed at this one but unreadable" are different defects
@@ -2870,7 +2936,7 @@ fn guest_replay_envelopes<'a>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]
         let mut refusals: Vec<String> = Vec::new();
         for route in &routes {
             let budget = headless_codec_budget();
-            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}).await {
+            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}, &semio_framework_plugin_host::GuestCallCancellation::default()).await {
                 Ok(replayed) => replayed,
                 Err(error) => {
                     refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema));
@@ -3079,6 +3145,69 @@ impl RoutingArtifactChannel {
         Some((artifact_id, document))
     }
 
+    /// 🚫️ The refusal a NEW edit on `route`'s bound hub document gets once its link is terminal — the hub
+    /// withdrew this session's access or the link expired, so nothing it authors could ever reach the hub. A
+    /// commit or rollback of a transaction already in flight and an undo still run: they only settle or revert
+    /// local state the hub never saw.
+    fn terminal_link_refusal(&self, route: &AppRoute, commands: &[AppCommand]) -> Option<Fault> {
+        if !commands.iter().any(|command| matches!(command, AppCommand::PureCommand { .. } | AppCommand::TransactionPrepare { .. } | AppCommand::TransactionRedo { .. })) {
+            return None;
+        }
+        let artifact_id = self.session_artifact_for(route)?;
+        let relay = Arc::clone(&self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&artifact_id)?.relay);
+        let code = relay.terminal()?;
+        Some(Fault { code: code.clone(), message: format!("`{artifact_id}`'s hub link is {code}: the hub takes no further edit from this session") })
+    }
+
+    /// 📥️ Takes what `route`'s bound hub document actor delivered since the last take and plans it against
+    /// the pair the guest was seeded from ([`plan_hub_inbound`]); a new baseline replaces the binding's pair
+    /// here, before the guest is (re)loaded from it. `None` for a route with no bound hub document.
+    fn take_hub_inbound(&self, route: &AppRoute) -> Result<Option<HubInboundDelivery>, Fault> {
+        let Some(artifact_id) = self.session_artifact_for(route) else { return Ok(None) };
+        let mut bound = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(binding) = bound.get_mut(&artifact_id) else { return Ok(None) };
+        let Some(seeded) = binding.document.clone() else { return Ok(None) };
+        let relay = Arc::clone(&binding.relay);
+        let items = relay.take_inbound();
+        if items.is_empty() {
+            return Ok(None);
+        }
+        let plan = plan_hub_inbound(items, &seeded)?;
+        let reseeded = match plan.reseed {
+            Some(pair) => {
+                binding.document = Some(Arc::new(pair));
+                true
+            }
+            None => false,
+        };
+        Ok(Some(HubInboundDelivery { relay, reseeded, backbone: plan.backbone }))
+    }
+
+    /// 📥️ Seeds `channel`'s guest for `instance` with the bound hub document and brings it up to what the
+    /// document's actor delivered: reseeded first from a new baseline when there is one, loaded, backbone
+    /// bound, then every mutation batch after the baseline, oldest first. A batch the guest refuses is the
+    /// typed fault it is; the batches it did not reach go back to the relay for the next command.
+    fn seed_session_guest(channel: &mut PluginArtifactChannel, instance: u32, artifact_id: &str, document: &SessionDocumentPair, inbound: Option<HubInboundDelivery>) -> Result<(), Fault> {
+        if inbound.as_ref().is_some_and(|delivery| delivery.reseeded) {
+            channel.reseed_session_document(instance);
+        }
+        if let Err(fault) = channel.load_session_document(instance, artifact_id, &document.pack, &document.spr).and_then(|()| channel.ensure_document_backbone(instance)) {
+            if let Some(delivery) = inbound {
+                delivery.restore();
+            }
+            return Err(fault);
+        }
+        let Some(delivery) = inbound else { return Ok(()) };
+        let mut batches = delivery.backbone.into_iter();
+        while let Some(message) = batches.next() {
+            if let Err(fault) = channel.receive_document_backbone(instance, message) {
+                delivery.relay.restore_inbound(batches.map(HubInbound::Backbone).collect());
+                return Err(Fault { code: fault.code, message: format!("the guest refused a batch its hub document delivered: {}", fault.message) });
+            }
+        }
+        Ok(())
+    }
+
     /// 🧵️ Hands `plugin_id`'s bound document actor every backbone message its guest just published.
     /// `ArtifactActorMsg::DocumentBackbone` is the actor's own verified ingress — it decodes the
     /// envelopes, refuses any that name another document, retains them and relays them to the hub as
@@ -3116,6 +3245,14 @@ impl RoutingArtifactChannel {
         };
         let since = relay.version();
         for message in egress {
+            match store::decode_hot_backbone_message_exact(&message) {
+                Ok(store::BackboneMessage::Mutations { .. }) => {}
+                Ok(store::BackboneMessage::Ack { .. }) => continue,
+                Ok(store::BackboneMessage::Genesis { .. } | store::BackboneMessage::Member { .. }) => {
+                    return Err(Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s guest published a genesis or member message on its hot document backbone") });
+                }
+                Err(error) => return Err(Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s guest published an undecodable document-backbone message: {error}") }),
+            }
             backbone
                 .send(store::sync::ArtifactActorMsg::DocumentBackbone { message })
                 .map_err(|_| Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s document actor mailbox refused a committed document-backbone message") })?;
@@ -3174,6 +3311,10 @@ impl ArtifactChannel for RoutingArtifactChannel {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let route = self.resolved_route(self.route_for(instance, &commands)?, &ActivationScope::detached())?;
         let session_artifact_id = self.session_artifact_for(&route);
+        if let Some(refusal) = self.terminal_link_refusal(&route, &commands) {
+            return Err(refusal);
+        }
+        let inbound = if carries_hub_inbound(&commands) { self.take_hub_inbound(&route)? } else { None };
         let session_document = self.session_document_for(&route);
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&route) {
@@ -3182,11 +3323,11 @@ impl ArtifactChannel for RoutingArtifactChannel {
         }
         let channel = channels.get_mut(&route).expect("just inserted above");
         channel.bind_session_artifact(session_artifact_id);
-        if let Some((artifact_id, document)) = session_document.filter(|_| !matches!(commands.first(), Some(AppCommand::Infer(_)))) {
-            channel.load_session_document(instance, &artifact_id, &document.pack, &document.spr)?;
-            channel.ensure_document_backbone(instance)?;
-        }
-        let frames = channel.exchange(instance, commands);
+        let seeded = match session_document.filter(|_| !matches!(commands.first(), Some(AppCommand::Infer(_)))) {
+            Some((artifact_id, document)) => Self::seed_session_guest(channel, instance, &artifact_id, &document, inbound),
+            None => Ok(()),
+        };
+        let frames = seeded.and_then(|()| channel.exchange(instance, commands));
         let egress = channel.drain_backbone_egress();
         drop(channels);
         if egress.is_empty() {
@@ -3213,6 +3354,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
     fn activate(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault> {
         let route = self.resolved_route(self.route_for(instance, &[])?, scope)?;
         let session_artifact_id = self.session_artifact_for(&route);
+        let inbound = self.take_hub_inbound(&route)?;
         let session_document = self.session_document_for(&route);
         let mut channels = self.channels.lock().expect("routing channel cache lock poisoned");
         if !channels.contains_key(&route) {
@@ -3221,10 +3363,15 @@ impl ArtifactChannel for RoutingArtifactChannel {
         }
         let channel = channels.get_mut(&route).expect("just inserted above");
         channel.bind_session_artifact(session_artifact_id);
-        let activated = channel.activate(instance, scope).and_then(|()| match session_document {
-            Some((artifact_id, document)) => channel.load_session_document(instance, &artifact_id, &document.pack, &document.spr).and_then(|()| channel.ensure_document_backbone(instance)),
-            None => Ok(()),
-        });
+        let activated = match (channel.activate(instance, scope), session_document) {
+            (Ok(()), Some((artifact_id, document))) => Self::seed_session_guest(channel, instance, &artifact_id, &document, inbound),
+            (activated, _) => {
+                if let Some(delivery) = inbound {
+                    delivery.restore();
+                }
+                activated
+            }
+        };
         let egress = channel.drain_backbone_egress();
         drop(channels);
         if !egress.is_empty() {
@@ -3390,7 +3537,7 @@ pub struct InstalledArtifactKind {
 /// writes and the hub's `active-checkpoint/pair` route serves. Held behind an `Arc` on a
 /// [`PluginArtifactBinding`] so the ~80 KB of a real document is read from the hub ONCE per open and
 /// then only ever cloned into the single `AppCommand::LoadDocument` that seeds a guest with it.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct SessionDocumentPair {
     pub pack: Vec<u8>,
     pub spr: Vec<u8>,
@@ -3412,6 +3559,81 @@ pub struct SessionDocumentPair {
 pub struct HubRelay {
     state: Mutex<HubRelayState>,
     changed: std::sync::Condvar,
+    inbound: Mutex<std::collections::VecDeque<HubInbound>>,
+}
+
+/// 📥️ What a hub document's actor delivered FOR the guest, in the order it delivered it: the hub's
+/// canonical baseline it installed (`ArtifactEvent::DocumentArchiveReplaced`) and every mutation batch
+/// it received after it — the bootstrap tail and every other writer's live edits
+/// (`ArtifactEvent::DocumentBackbone`). The guest is the only reader; see [`plan_hub_inbound`].
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum HubInbound {
+    Archive(Vec<u8>),
+    Backbone(Vec<u8>),
+}
+
+/// 📥️ One take of a bound hub document's deliveries: the relay they came from (batches a guest refuses go
+/// back to it), whether the binding's pair was just replaced by a new baseline, and the batches after it.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Debug)]
+struct HubInboundDelivery {
+    relay: Arc<HubRelay>,
+    reseeded: bool,
+    backbone: Vec<Vec<u8>>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl HubInboundDelivery {
+    /// ↩️ Hands every batch of this take back to its relay, untouched, for the next command.
+    fn restore(self) {
+        self.relay.restore_inbound(self.backbone.into_iter().map(HubInbound::Backbone).collect());
+    }
+}
+
+/// 🧭️ What the guest still needs before its next command: a new baseline to reseed from, and the
+/// actor's mutation batches after it, oldest first.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct HubInboundPlan {
+    pub reseed: Option<SessionDocumentPair>,
+    pub backbone: Vec<Vec<u8>>,
+}
+
+/// 🧭️ Folds what the actor delivered against the pair the guest was seeded from. The NEWEST archive
+/// supersedes everything delivered before it and reseeds the guest unless it is byte-identical to that
+/// seed (the usual first bootstrap: the actor installs the same checkpoint `artifact_open` read); the
+/// actor never re-delivers an operation this replica authored or already applied, so the batches after
+/// it are exactly what the guest lacks, delivered in order.
+///
+/// 🐛️ Without this a hub-bound agent acted on the hub's last CHECKPOINT forever: the guest was seeded
+/// once from the canonical pair and nothing the actor received ever reached it, so a fresh agent session
+/// re-derived the same state — and the same ids (`note`'s `text-<scope>-<block count>`) — as every
+/// session before it, and the hub accepted each as a distinct op (WG9 15:4x, G12 ids probe 18:4x).
+pub fn plan_hub_inbound(items: Vec<HubInbound>, seeded: &SessionDocumentPair) -> Result<HubInboundPlan, Fault> {
+    let newest_archive = items.iter().rposition(|item| matches!(item, HubInbound::Archive(_)));
+    let mut plan = HubInboundPlan::default();
+    for (index, item) in items.into_iter().enumerate() {
+        match item {
+            HubInbound::Archive(bytes) if Some(index) == newest_archive => {
+                let archive = semio_framework::io::resolve_ready(store::decode_document_archive_bytes(&bytes)).map_err(|error| Fault { code: "channel.not-wired".to_string(), message: format!("the hub document actor delivered an undecodable baseline: {error}") })?;
+                if !archive.members.is_empty() {
+                    return Err(Fault { code: "channel.not-wired".to_string(), message: format!("the hub document actor delivered a baseline with {} owned member(s); a headless session document holds one root pair", archive.members.len()) });
+                }
+                let unchanged = archive.parent_pack == seeded.pack && archive.parent_spr == seeded.spr;
+                plan.reseed = (!unchanged).then_some(SessionDocumentPair { pack: archive.parent_pack, spr: archive.parent_spr });
+            }
+            HubInbound::Archive(_) => {}
+            HubInbound::Backbone(message) if newest_archive.is_none_or(|archive| index > archive) => plan.backbone.push(message),
+            HubInbound::Backbone(_) => {}
+        }
+    }
+    Ok(plan)
+}
+
+/// 🧵️ Whether a guest may take the actor's inbound batches before `commands`: never while it finishes a
+/// transaction (a commit or rollback runs against exactly the state its prepare saw), never on the
+/// inference lane (its own guest never holds this document).
+pub fn carries_hub_inbound(commands: &[AppCommand]) -> bool {
+    !commands.iter().any(|command| matches!(command, AppCommand::TransactionCommit { .. } | AppCommand::TransactionRollback { .. } | AppCommand::Infer(_)))
 }
 
 #[derive(Default, Clone, Debug)]
@@ -3419,6 +3641,14 @@ struct HubRelayState {
     version: u64,
     status: Option<store::sync::ArtifactSyncStatus>,
     fault: Option<String>,
+    terminal: Option<String>,
+}
+
+/// 🚫️ Whether a coded message the document actor raised ends its link for good — the hub withdrew access
+/// (`access-revoked`) or a shortage outlived its bound (`link-expired`). A terminal link admits no local
+/// edit and never relinks ([`store::sync::DocumentLink`]).
+pub fn document_link_terminal_code(code: &str) -> bool {
+    code == store::sync::DocumentLinkStatus::AccessRevoked.code() || code == store::sync::DocumentLinkStatus::LinkExpired.code()
 }
 
 /// ⏱️ How long a commit waits for the hub to acknowledge the envelopes it relayed before it answers
@@ -3438,23 +3668,78 @@ impl HubRelay {
         self.changed.notify_all();
     }
 
+    /// 🚫️ Records that the actor's link turned terminal (`code`, `message`): no later edit of this session
+    /// reaches the hub, and a commit waiting for its acknowledgement learns so at once.
+    fn record_terminal(&self, code: &str, message: &str) {
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.version += 1;
+        state.fault = Some(format!("{code}: {message}"));
+        state.terminal = Some(code.to_string());
+        self.changed.notify_all();
+    }
+
+    /// 🚫️ The terminal link code, once the actor reported one.
+    pub fn terminal(&self) -> Option<String> {
+        self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).terminal.clone()
+    }
+
     /// 🔢️ The status version a relay starts from.
     pub fn version(&self) -> u64 {
         self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).version
     }
 
+    /// 📥️ Queues one delivery of the document actor for the guest, in arrival order.
+    fn deliver(&self, item: HubInbound) {
+        self.inbound.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push_back(item);
+    }
+
+    /// 📥️ Takes everything the actor delivered since the last take, oldest first.
+    pub fn take_inbound(&self) -> Vec<HubInbound> {
+        self.inbound.lock().unwrap_or_else(std::sync::PoisonError::into_inner).drain(..).collect()
+    }
+
+    /// ↩️ Puts batches a guest could not take back in front of anything delivered meanwhile.
+    pub fn restore_inbound(&self, items: Vec<HubInbound>) {
+        let mut inbound = self.inbound.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        for item in items.into_iter().rev() {
+            inbound.push_front(item);
+        }
+    }
+
+    /// 🟢️ Waits, at most `wait_ms`, until the actor reports a live link — it reports `Live` only once its
+    /// bootstrap and catch-up tail are installed, so every batch the hub owed this session at open is
+    /// queued by then. Answers whether it got there.
+    pub fn await_live(&self, wait_ms: u64) -> bool {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(wait_ms);
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        loop {
+            if state.status.as_ref().is_some_and(|status| matches!(status.remote, store::sync::RemoteState::Live { .. })) {
+                return true;
+            }
+            let now = std::time::Instant::now();
+            if now >= deadline {
+                return false;
+            }
+            state = self.changed.wait_timeout(state, deadline - now).unwrap_or_else(std::sync::PoisonError::into_inner).0;
+        }
+    }
+
     /// ✅️ Waits, at most `wait_ms`, for a status reported after `since` that says the hub holds every
-    /// local mutation (live link, nothing pending, an acknowledged head). Answers the outcome either way.
+    /// local mutation (live link, nothing pending, an acknowledged head). Answers the outcome either way,
+    /// and at once with the refusal when the link is or turns terminal: the hub will never take the edit.
     pub fn await_acknowledged(&self, since: u64, wait_ms: u64) -> crate::actions::HubRelayOutcome {
         let deadline = std::time::Instant::now() + std::time::Duration::from_millis(wait_ms);
         let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         loop {
+            if let Some(code) = state.terminal.clone() {
+                return crate::actions::HubRelayOutcome { acknowledged: false, detail: hub_relay_detail(&state), refused: Some(code) };
+            }
             if state.version > since && state.status.as_ref().is_some_and(|status| status.pending_mutations == 0 && matches!(status.remote, store::sync::RemoteState::Live { .. }) && status.acknowledged_head.is_some()) {
-                return crate::actions::HubRelayOutcome { acknowledged: true, detail: "the hub acknowledged every relayed envelope".to_string() };
+                return crate::actions::HubRelayOutcome { acknowledged: true, detail: "the hub acknowledged every relayed envelope".to_string(), refused: None };
             }
             let now = std::time::Instant::now();
             if now >= deadline {
-                return crate::actions::HubRelayOutcome { acknowledged: false, detail: hub_relay_detail(&state) };
+                return crate::actions::HubRelayOutcome { acknowledged: false, detail: hub_relay_detail(&state), refused: None };
             }
             state = self.changed.wait_timeout(state, deadline - now).unwrap_or_else(std::sync::PoisonError::into_inner).0;
         }
@@ -4164,6 +4449,15 @@ impl HeadlessWorkspace {
         Ok(true)
     }
 
+    /// 🟢️ Waits, at most [`HUB_RELAY_ACK_WAIT_MS`], until `artifact_id`'s document actor is live — its
+    /// baseline and catch-up tail queued for the guest — so the agent's first command after `artifact_open`
+    /// runs against the hub's head rather than its last checkpoint. Answers whether the link went live; a
+    /// document with no actor answers `false` at once.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn await_hub_session_document_live(&self, artifact_id: &str) -> bool {
+        self.plugin_artifact_binding(artifact_id).is_some_and(|binding| binding.backbone.is_some() && binding.relay.await_live(HUB_RELAY_ACK_WAIT_MS))
+    }
+
     /// 🧵️ Opens the hub document's own `store::sync` actor — the one that holds the document socket
     /// (`…/socket-grants` → `semio.socket.v1`), sends `ClientFrame::Commands` for every local
     /// envelope, and beats presence for this session. Returns its mailbox, or the reason there is
@@ -4258,6 +4552,10 @@ impl HeadlessWorkspace {
     ///
     /// 🚦️ The same task records every sync status and coded fault the actor reports into `relay`, which
     /// is how a commit learns whether the hub acknowledged it and `artifact_open` reports the link.
+    ///
+    /// 📥️ …and queues, in order, every baseline and mutation batch the actor delivers for the guest — the
+    /// bootstrap tail past the checkpoint and every other writer's edit — which the guest takes before its
+    /// next command ([`RoutingArtifactChannel::exchange`], [`plan_hub_inbound`]).
     #[cfg(not(target_arch = "wasm32"))]
     fn watch_hub_document(&self, reactor: &'static tokio::runtime::Runtime, document_key: store::sync::ArtifactDocumentKey, relay: Arc<HubRelay>) {
         let host = self.artifact_host.clone();
@@ -4271,7 +4569,10 @@ impl HeadlessWorkspace {
                             host.presence_heartbeat_key(&document_key, now_ms(), agent_presence_peer(&actor));
                         }
                         match event {
+                            store::sync::ArtifactEvent::DocumentArchiveReplaced { archive } => relay.deliver(HubInbound::Archive(archive)),
+                            store::sync::ArtifactEvent::DocumentBackbone { message } => relay.deliver(HubInbound::Backbone(message)),
                             store::sync::ArtifactEvent::Status(status) => relay.record(Some(status), None),
+                            store::sync::ArtifactEvent::Conflict(message) if document_link_terminal_code(&message.code.0) => relay.record_terminal(&message.code.0, &message.message),
                             store::sync::ArtifactEvent::Conflict(message) => relay.record(None, Some(format!("{}: {}", message.code.0, message.message))),
                             _ => {}
                         }
@@ -4727,8 +5028,13 @@ impl HeadlessWorkspace {
             }
             match suffix {
                 None => {
-                    let scope = snapshot.documents.keys().find(|scope| scope.document_id == artifact_id).cloned().ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
-                    let (pack, spr) = self.read_hub_canonical_pair(&scope)?;
+                    let (pack, spr) = match self.plugin_artifact_binding(artifact_id).filter(|binding| binding.document.is_some()) {
+                        Some(_) => self.read_artifact_bytes(artifact_id)?.ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?,
+                        None => {
+                            let scope = snapshot.documents.keys().find(|scope| scope.document_id == artifact_id).cloned().ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
+                            self.read_hub_canonical_pair(&scope)?
+                        }
+                    };
                     let body = self.artifact_body(artifact_id, &pack, &spr)?;
                     return Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(body.to_string()), blob: None }]);
                 }

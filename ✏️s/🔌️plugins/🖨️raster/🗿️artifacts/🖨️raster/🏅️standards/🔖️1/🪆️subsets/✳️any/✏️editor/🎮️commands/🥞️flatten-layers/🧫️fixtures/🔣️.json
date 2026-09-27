@@ -1,0 +1,167 @@
+{
+  "labels": {
+    "en": {
+      "action": "Flatten Image",
+      "name": "Flattened Image"
+    },
+    "de": {
+      "action": "Bild reduzieren",
+      "name": "Reduziertes Bild"
+    }
+  },
+  "layers": [
+    {
+      "kind": "pixel",
+      "id": "base",
+      "name": "base",
+      "visible": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": -3,
+        "y": 4.5,
+        "rotation": 0,
+        "scaleX": 1,
+        "scaleY": 1
+      },
+      "mask": null,
+      "width": 2,
+      "height": 1,
+      "imageKey": "blue"
+    },
+    {
+      "kind": "group",
+      "id": "group",
+      "name": "Group",
+      "visible": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "rotation": 0,
+        "scaleX": 1,
+        "scaleY": 1
+      },
+      "mask": null,
+      "children": [
+        {
+          "kind": "pixel",
+          "id": "top",
+          "name": "top",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": -3.5,
+            "y": 4.5,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": null,
+          "width": 1,
+          "height": 1,
+          "imageKey": "red"
+        }
+      ]
+    },
+    {
+      "kind": "pixel",
+      "id": "hidden",
+      "name": "hidden",
+      "visible": false,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 50,
+        "y": 4.5,
+        "rotation": 0,
+        "scaleX": 1,
+        "scaleY": 1
+      },
+      "mask": null,
+      "width": 1,
+      "height": 1,
+      "imageKey": "green"
+    },
+    {
+      "kind": "adjustment",
+      "id": "bright",
+      "name": "Bright",
+      "visible": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "rotation": 0,
+        "scaleX": 1,
+        "scaleY": 1
+      },
+      "adjustmentKind": "brightnessContrast",
+      "params": {
+        "brightness": 0.2,
+        "contrast": 0
+      }
+    }
+  ],
+  "images": {
+    "blue": {
+      "width": 2,
+      "height": 1,
+      "pixels": [
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255
+      ]
+    },
+    "red": {
+      "width": 1,
+      "height": 1,
+      "pixels": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    "green": {
+      "width": 1,
+      "height": 1,
+      "pixels": [
+        0,
+        255,
+        0,
+        255
+      ]
+    }
+  },
+  "expected": {
+    "width": 2,
+    "height": 1,
+    "origin": [
+      -4,
+      4
+    ],
+    "center": [
+      -3,
+      4.5
+    ],
+    "pixels": [
+      255,
+      51,
+      51,
+      255,
+      51,
+      51,
+      255,
+      255
+    ]
+  }
+}

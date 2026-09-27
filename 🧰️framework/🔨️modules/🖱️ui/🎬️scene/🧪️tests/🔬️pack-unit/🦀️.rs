@@ -123,6 +123,54 @@ fn viewport_projection_pack_rejects_nonfinite_active_values() {
     eprintln!("[DEBUG] Shared viewport projection Pack decode rejected a nonfinite active lens");
 }
 
+#[test]
+fn viewport_projection_render_math_matches_the_shared_three_oracle() {
+    use crate::math::{projection_spec_matrix, projection_spec_orientation_look, projection_spec_project_ndc, projection_spec_unproject_ndc, Camera3d, Mat4Math, Vec3Math};
+    use semio_framework_ui_viewport::Viewport3dProjectionSpec;
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🪟️viewport/🧫️fixtures/📐️projection/🔣️.json")).unwrap();
+    let parity = &fixture["renderParity"];
+    let viewport = &parity["viewport"];
+    let mut camera = Camera3d::default();
+    camera.zoom = viewport["zoom"].as_f64().unwrap() as f32;
+    camera.near = viewport["near"].as_f64().unwrap() as f32;
+    camera.far = viewport["far"].as_f64().unwrap() as f32;
+    let width = viewport["width"].as_f64().unwrap() as f32;
+    let height = viewport["height"].as_f64().unwrap() as f32;
+    for row in parity["matrixCases"].as_array().unwrap() {
+        let spec: Viewport3dProjectionSpec = serde_json::from_value(row["spec"].clone()).unwrap();
+        let elements = projection_spec_matrix(&camera, spec, width, height).to_cols_array_m();
+        for (index, expected) in row["expectedElements"].as_object().unwrap() {
+            let index = index.parse::<usize>().unwrap();
+            let expected = expected.as_f64().unwrap() as f32;
+            assert!((elements[index] - expected).abs() <= 2e-6, "{}[{index}] {} != {expected}", row["name"], elements[index]);
+        }
+    }
+    for row in parity["orientationCases"].as_array().unwrap() {
+        let spec: Viewport3dProjectionSpec = serde_json::from_value(row["spec"].clone()).unwrap();
+        let (direction, up) = projection_spec_orientation_look(spec);
+        for (actual, expected) in direction.to_array_m().into_iter().zip(row["expectedDirection"].as_array().unwrap()) {
+            assert!((actual - expected.as_f64().unwrap() as f32).abs() <= 2e-6, "{} direction", row["name"]);
+        }
+        for (actual, expected) in up.to_array_m().into_iter().zip(row["expectedUp"].as_array().unwrap()) {
+            assert!((actual - expected.as_f64().unwrap() as f32).abs() <= 2e-6, "{} up", row["name"]);
+        }
+    }
+    for row in parity["curvilinearCases"].as_array().unwrap() {
+        let spec: Viewport3dProjectionSpec = serde_json::from_value(row["spec"].clone()).unwrap();
+        let visible = [row["visibleNdc"][0].as_f64().unwrap() as f32, row["visibleNdc"][1].as_f64().unwrap() as f32];
+        let capture = projection_spec_unproject_ndc(spec, visible, row["aspect"].as_f64().unwrap() as f32);
+        for (actual, expected) in capture.into_iter().zip(row["expectedCaptureNdc"].as_array().unwrap()) {
+            assert!((actual - expected.as_f64().unwrap() as f32).abs() <= 2e-6, "{} capture", row["name"]);
+        }
+        let projected = projection_spec_project_ndc(spec, capture, row["aspect"].as_f64().unwrap() as f32);
+        for (actual, expected) in projected.into_iter().zip(visible) {
+            assert!((actual - expected).abs() <= 2e-6, "{} visible", row["name"]);
+        }
+    }
+    eprintln!("[DEBUG] Shared projection matrix, orientation, and curvilinear inverse matched Three.js fixture output");
+}
+
 //#region 🎬️RetainedSceneOracle
 #[test]
 fn owned_scene_neutral_vectors_match_native_serde_packet() {

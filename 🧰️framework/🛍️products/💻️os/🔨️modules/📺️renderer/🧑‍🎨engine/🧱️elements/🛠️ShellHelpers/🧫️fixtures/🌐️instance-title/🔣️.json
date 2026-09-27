@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "windowKind": "puzzle3d-main",
+  "explicitBaseTitle": "Orthographic",
+  "retainedOrientations": [{ "type": "cardinal", "view": "front" }, { "type": "free" }],
+  "projectionBranches": [
+    { "pressed": "parallel", "effective": "orthographic", "title": "Orthographic", "icon": "projection-orthographic", "family": "orthographic" },
+    { "pressed": "axonometric", "effective": "axonometric-isometric", "title": "Isometric", "icon": "projection-isometric", "family": "orthographic" },
+    { "pressed": "oblique", "effective": "oblique-cavalier", "title": "Cavalier", "icon": "projection-oblique-cavalier", "family": "orthographic" },
+    { "pressed": "perspective", "effective": "three-point", "title": "3-Point", "icon": "projection-three-point", "family": "perspective" }
+  ],
+  "owners": [
+    { "pluginId": "puzzle", "appId": "puzzle3d", "instanceId": 1 },
+    { "pluginId": "puzzle", "appId": "puzzle3d", "instanceId": 2 },
+    { "pluginId": "puzzle", "appId": "puzzle2d", "instanceId": 2 },
+    { "pluginId": "another", "appId": "puzzle2d", "instanceId": 2 }
+  ],
+  "instances": [
+    { "id": "puzzle3d-main-top", "title": "Top", "projectionTitle": "Orthographic", "projectionIcon": "projection-orthographic", "initialProjection": { "mode": { "kind": "orthographic" }, "orientation": { "type": "cardinal", "view": "top" } } },
+    { "id": "puzzle3d-main-perspective", "title": "Perspective", "projectionTitle": "3-Point", "projectionIcon": "projection-three-point", "initialProjection": { "mode": { "kind": "threePoint", "fov": 50 }, "orientation": { "type": "free" } } }
+  ],
+  "retainedViewport": {
+    "windowId": "puzzle3d-main-top",
+    "owner": "puzzle:puzzle3d:1",
+    "authoredTitle": "Top",
+    "selectedTitle": "Isometric",
+    "selectedIcon": "projection-isometric",
+    "initialProjection": { "mode": { "kind": "orthographic" }, "orientation": { "type": "cardinal", "view": "top" } },
+    "selectedCamera": {
+      "position": [7, -7, 7],
+      "target": [1, 2, 3],
+      "zoom": 1.5,
+      "projection": "orthographic",
+      "fov": 45,
+      "projectionSpec": { "mode": { "kind": "axonometric", "variant": "isometric" }, "orientation": { "type": "cardinal", "view": "top" } }
+    }
+  },
+  "singleton": { "id": "inspector", "en": "Inspector", "de": "Inspektor" },
+  "renames": [
+    { "windowId": "puzzle3d-main-top", "title": "Front" },
+    { "windowId": "inspector", "title": "Selection" }
+  ],
+  "transitions": [
+    { "locale": "en", "titles": ["Top", "Perspective", "Inspector"] },
+    { "locale": "de", "titles": ["Top", "Perspective", "Inspektor"] },
+    { "locale": "en", "titles": ["Top", "Perspective", "Inspector"] }
+  ]
+}

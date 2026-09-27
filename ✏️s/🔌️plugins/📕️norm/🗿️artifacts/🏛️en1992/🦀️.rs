@@ -1042,10 +1042,10 @@ pub mod viewer {
 //#region 🪢️TaxonomyMounts
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏷️field-meta/🦀️.rs"]
 pub mod field_meta;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢compliant-office-frame/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️compliant-office-frame/🦀️.rs"]
 pub mod compliant_office_frame;
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢compliant-office-frame/🧪️tests/🧩️example/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️compliant-office-frame/🧪️tests/🧩️example/🦀️.rs"]
 mod compliant_office_frame_example_tests;
 
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️failing-under-reinforced/🦀️.rs"]
@@ -1060,15 +1060,15 @@ pub mod liquid_retaining_fem_anchor;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛢️liquid-retaining-fem-anchor/🧪️tests/🧩️example/🦀️.rs"]
 mod example;
 
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧵compliant-prestressed-beam/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧵️compliant-prestressed-beam/🦀️.rs"]
 mod compliant_prestressed_beam;
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧵compliant-prestressed-beam/🧪️tests/🧩️example/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧵️compliant-prestressed-beam/🧪️tests/🧩️example/🦀️.rs"]
 mod compliant_prestressed_beam_example_tests;
 
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/💥failing-prestressed-beam/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/💥️failing-prestressed-beam/🦀️.rs"]
 mod failing_prestressed_beam;
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/💥failing-prestressed-beam/🧪️tests/🧩️example/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/💥️failing-prestressed-beam/🧪️tests/🧩️example/🦀️.rs"]
 mod failing_prestressed_beam_example_tests;
 //#endregion 🪢️TaxonomyMounts

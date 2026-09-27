@@ -12,6 +12,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const { default: canvas2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️canvas2d-scene-lanes/🔣️.json");
   const { default: board2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️board2d-scene-lanes/🔣️.json");
   const { default: paint2dContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️paint2d-scene-lanes/🔣️.json");
+  const { default: tableContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️table-lanes/🔣️.json");
+  const { default: textEditorContract } = await import("../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️text-editor-lanes/🔣️.json");
 
   type AnyRecord = Record<string, any>;
 
@@ -380,7 +382,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(surfaceKindSceneLanes("board-2d")).toEqual(BOARD2D_SCENE_LANES);
       expect(surfaceKindSceneLanes("paint-2d")).toEqual(PAINT2D_SCENE_LANES);
       expect(surfaceKindSceneLanes("tiled-map")?.length).toBeGreaterThan(0);
-      for (const kind of ["node-graph", "text-editor", "table", "icon-render", "ink-canvas", "diff-view", "event-feed"]) {
+      expect(surfaceKindSceneLanes("table")).toEqual(tableContract.lanes);
+      expect(surfaceKindSceneLanes("text-editor")).toEqual([{ lane: "buffer", field: textEditorContract.field, bodyKey: textEditorContract.laneKey, optional: false }]);
+      for (const kind of ["node-graph", "icon-render", "ink-canvas", "diff-view", "event-feed"]) {
         expect(surfaceKindSceneLanes(kind)).toBeUndefined();
       }
     });

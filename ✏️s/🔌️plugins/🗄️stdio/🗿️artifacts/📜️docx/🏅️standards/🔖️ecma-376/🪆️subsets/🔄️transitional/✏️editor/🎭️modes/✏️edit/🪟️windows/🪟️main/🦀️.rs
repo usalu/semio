@@ -1,15 +1,11 @@
-//! 📄️ Docx transitional editor — `main` window: a real, directly editable page view of
-//! `DocxDocument.body`, built from the framework `DocumentWindowKit` (contract §2.6). One page per
-//! top-level block — `Paragraph` blocks render as their joined run text; `Table` blocks render as
-//! a flattened row/cell text summary (rows joined by newlines, cells within a row joined by
-//! ` | `), a read overview only (see the surface root's `DocxTransitionalEditorCommand::SetPage`
-//! for the write-side scope: `set-page` only ever replaces `Paragraph` blocks, never `Table`
-//! blocks).
+//! 📄️ Docx editor — `main` window: a real, directly editable page view of `DocxDocument.body`,
+//! built from the framework `DocumentWindowKit` (contract §2.6). Every paragraph run is an
+//! independently revision-guarded text target, preserving formatting and sibling run text.
 
 use crate::schema::snapshot::DocxBlock;
 use crate::DocxSnapshot;
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{BuiltNode, LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
+use semio_framework_plugin::{BuiltNode, Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = DocumentWindowKit::KIND_ID;
@@ -17,8 +13,7 @@ pub const BODY_KEY: &str = DocumentWindowKit::KIND_ID;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the editor manifest by `create_docx_transitional_editor` (this subset's
-/// surface root).
+/// 🧱️ Stitched into the editor manifest by `create_docx_editor` (this subset's surface root).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Document", "Dokument"), icon_id: "file-text".into(), ..DocumentWindowKit::editable_window_kind() }
@@ -26,26 +21,28 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// ✏️ Recursively flattens a block into display text — `Paragraph` joins its runs; `Table` joins
-/// rows/cells (see this module's own doc comment for the exact separators).
+/// ✏️ Builds one faithfully editable draft for every existing paragraph run.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn block_text(block: &DocxBlock) -> String {
-    match block {
-        DocxBlock::Paragraph(paragraph) => paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join(""),
-        DocxBlock::Table(table) => table.rows.iter().map(|row| row.cells.iter().map(|cell| cell.blocks.iter().map(block_text).collect::<Vec<_>>().join(" ")).collect::<Vec<_>>().join(" | ")).collect::<Vec<_>>().join("\n"),
-    }
+fn editable_pages(document: &DocxSnapshot) -> Vec<EditableDocumentPage> {
+    document
+        .document
+        .body
+        .iter()
+        .enumerate()
+        .flat_map(|(page_index, block)| match block {
+            DocxBlock::Paragraph(paragraph) => paragraph.runs.iter().enumerate().map(|(item_index, run)| EditableDocumentPage { page_index: page_index as u32, item_index: item_index as u32, text: run.text.clone() }).collect::<Vec<_>>(),
+            DocxBlock::Table(_) => Vec::new(),
+        })
+        .collect()
 }
 
-/// ✏️ Real `DocxSnapshot -> BuiltNode`: one `DocumentPage` per top-level `document.body` block.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let pages = document.document.body.iter().map(|block| DocumentPage { text: block_text(block) }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document) }, &TreeWindows::unhosted(), Locale::En)
 }
 
-pub fn render_windowed(document: &DocxSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let pages = document.document.body.iter().map(|block| DocumentPage { text: block_text(block) }).collect();
-    DocumentWindowKit::render_windowed(&DocumentView { pages }, windows)
+pub fn render_windowed(document: &DocxSnapshot, windows: &TreeWindows<'_>, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document) }, windows, locale)
 }
 //#endregion 🔖️Render
 

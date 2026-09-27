@@ -61,6 +61,42 @@ fn published_snapshot() -> (u64, Arc<NativeAccessibilityPublication>) {
     (published.version, published.publication.clone())
 }
 
+/// 📋️ What the latest presented frame published — the tree an assistive technology is handed next.
+pub(crate) fn published_native_accessibility() -> Arc<NativeAccessibilityPublication> {
+    published_snapshot().1
+}
+
+/// 🧮️ The sanity census of one platform tree: how many nodes the windows announce, how many an assistive technology can
+/// focus, and — the two gaps a reader cannot recover from — every actionable node that has no name and every node whose
+/// role the platform does not know, by author id.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct NativeAccessibilityCensus {
+    pub nodes: usize,
+    pub focusable: usize,
+    pub unnamed_actionable: Vec<String>,
+    pub unknown_roles: Vec<String>,
+}
+
+/// 🧮️ Counts [`NativeAccessibilityCensus`] over the platform tree one publication projects to.
+pub(crate) fn native_accessibility_census(publication: &NativeAccessibilityPublication) -> NativeAccessibilityCensus {
+    let tree = native_accessibility_tree(publication);
+    let mut census = NativeAccessibilityCensus::default();
+    for (_, node) in &tree.update.nodes {
+        let Some(author) = node.author_id().filter(|author| author.contains('/')) else { continue };
+        census.nodes += 1;
+        if node.supports_action(accesskit::Action::Focus) {
+            census.focusable += 1;
+        }
+        if (node.supports_action(accesskit::Action::Click) || node.supports_action(accesskit::Action::Focus)) && node.label().is_none_or(str::is_empty) {
+            census.unnamed_actionable.push(author.to_string());
+        }
+        if node.role() == accesskit::Role::Unknown {
+            census.unknown_roles.push(author.to_string());
+        }
+    }
+    census
+}
+
 /// 🌳️ One publication as a platform tree, with the shell address behind every node an assistive technology can act on.
 #[derive(Clone, Debug)]
 pub(crate) struct NativeAccessibilityTree {

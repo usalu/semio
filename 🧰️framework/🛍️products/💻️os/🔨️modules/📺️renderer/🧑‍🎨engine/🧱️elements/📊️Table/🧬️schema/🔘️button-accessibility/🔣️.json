@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.framework.renderer.table-button-accessibility.v1",
+  "title": "Table Button Accessibility",
+  "type": "object",
+  "required": ["schema", "hostId", "surfaceId", "controllerId", "columns", "row", "expected", "geometryCases"],
+  "properties": {
+    "schema": { "const": "semio.framework.renderer.table-button-accessibility.v1" },
+    "hostId": { "type": "string", "minLength": 1 },
+    "surfaceId": { "type": "string", "minLength": 1 },
+    "controllerId": { "type": "string", "minLength": 1 },
+    "columns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": { "id": { "type": "string", "minLength": 1 }, "label": { "type": "string" } },
+        "additionalProperties": false
+      }
+    },
+    "row": {
+      "type": "object",
+      "required": ["id", "name", "actions"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/textCell" },
+        "actions": {
+          "type": "object",
+          "required": ["kind", "buttons"],
+          "properties": {
+            "kind": { "const": "buttons" },
+            "buttons": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/button" } }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "expected": {
+      "type": "object",
+      "required": ["key", "role", "label", "excludedMenuLabel", "focusable", "tabbable", "action"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "role": { "const": "button" },
+        "label": { "type": "string", "minLength": 1 },
+        "excludedMenuLabel": { "type": "string", "minLength": 1 },
+        "focusable": { "const": true },
+        "tabbable": { "const": true },
+        "action": { "$ref": "#/$defs/action" }
+      },
+      "additionalProperties": false
+    },
+    "geometryCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "cellRect", "bodyRect", "buttons", "expectedVisibleRects", "probes"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "cellRect": { "$ref": "#/$defs/rect" },
+          "bodyRect": { "$ref": "#/$defs/rect" },
+          "buttons": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/button" } },
+          "expectedVisibleRects": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "$ref": "#/$defs/rect" }
+          },
+          "probes": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": ["x", "y", "buttonIndex", "action"],
+              "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" },
+                "buttonIndex": { "type": "integer", "minimum": 0, "maximum": 1 },
+                "action": { "type": "string", "minLength": 1 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "rect": {
+      "type": "object",
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "textCell": {
+      "type": "object",
+      "required": ["kind", "value"],
+      "properties": { "kind": { "const": "text" }, "value": { "type": "string", "minLength": 1 } },
+      "additionalProperties": false
+    },
+    "button": {
+      "type": "object",
+      "required": ["iconId", "label", "placement", "action"],
+      "properties": {
+        "iconId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "placement": { "enum": ["row", "menu"] },
+        "action": { "$ref": "#/$defs/action" }
+      },
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "required": ["controllerId", "action", "args"],
+      "properties": {
+        "controllerId": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 },
+        "args": {
+          "type": "object",
+          "required": ["spaceId"],
+          "properties": { "spaceId": { "type": "string", "minLength": 1 } },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

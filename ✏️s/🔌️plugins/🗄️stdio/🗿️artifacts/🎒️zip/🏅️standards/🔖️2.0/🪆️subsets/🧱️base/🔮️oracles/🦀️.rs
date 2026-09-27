@@ -117,7 +117,10 @@ mod live {
                 if archive.entries.iter().any(|entry| entry.name == name) {
                     return Err(format!("add-entry: an entry named {name:?} already exists"));
                 }
-                archive.entries.push(MutationEntry { name, data: params.str("content").into_bytes() });
+                let index = if params.get("before").is_some() {
+                    archive.entries.iter().position(|entry| entry.name == params.str("before")).ok_or_else(|| "add-entry: insertion anchor does not exist".to_string())?
+                } else { archive.entries.len() };
+                archive.entries.insert(index, MutationEntry { name, data: params.str("content").into_bytes() });
                 Ok(archive)
             }
             "remove-entry" => {
@@ -183,7 +186,8 @@ mod live {
                 let name = params.str("name");
                 let removed = original.entries.iter().find(|entry| entry.name == name).cloned().ok_or_else(|| format!("inverse remove-entry: original archive has no entry named {name:?}"))?;
                 let mut restored = mutated;
-                restored.entries.push(removed);
+                let index = original.entries.iter().position(|entry| entry.name == name).unwrap();
+                restored.entries.insert(index, removed);
                 Ok(restored)
             }
             "rename-entry" => {

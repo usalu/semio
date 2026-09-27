@@ -200,6 +200,7 @@ mod subject {
     fn restore_mutation(applied: &Mp4Mutation, original: &Mp4Snapshot) -> Option<Mp4Mutation> {
         Some(match applied {
             Mp4Mutation::SetSnapshot(_) => Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
+            Mp4Mutation::PatchSnapshot(_) => Mp4Mutation::SetSnapshot(mutations::set_snapshot::SetSnapshot { snapshot: original.clone() }),
             Mp4Mutation::SetFtyp(_) => Mp4Mutation::SetFtyp(mutations::set_ftyp::SetFtyp { ftyp: original.ftyp.clone() }),
             Mp4Mutation::InsertTrack(mutations::insert_track::InsertTrack { index, .. }) => Mp4Mutation::RemoveTrack(mutations::remove_track::RemoveTrack { index: *index }),
             Mp4Mutation::RemoveTrack(mutations::remove_track::RemoveTrack { index }) => match original.tracks.get(*index) {

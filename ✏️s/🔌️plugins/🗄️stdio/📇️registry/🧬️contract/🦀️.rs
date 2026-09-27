@@ -1072,6 +1072,187 @@ pub fn window_kit_index_argument(args: Option<&kernel::DslValue>, keys: &[&str],
     raw.trim().parse::<f64>().ok().filter(|reading| reading.is_finite() && *reading >= 0.0).map_or(fallback, |reading| reading as u32)
 }
 
+fn required_window_kit_argument<'a>(args: Option<&'a kernel::DslValue>, key: &str) -> Result<&'a kernel::DslValue, semio_framework_plugin::Fault> {
+    let entries = match args {
+        Some(kernel::DslValue::Object(entries)) => entries,
+        _ => {
+            return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.arguments-required"), "the action requires an argument object"));
+        }
+    };
+    let mut values = entries.iter().filter(|(name, _)| name == key).map(|(_, value)| value);
+    let Some(value) = values.next() else {
+        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-required"), format!("the action requires argument '{key}'")));
+    };
+    if values.next().is_some() {
+        return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-duplicate"), format!("the action argument '{key}' must occur exactly once")));
+    }
+    Ok(value)
+}
+
+/// 📝️ Reads one required canonical text argument without aliases, coercion, or fallback.
+pub fn window_kit_required_text_argument(args: Option<&kernel::DslValue>, key: &str) -> Result<String, semio_framework_plugin::Fault> {
+    match required_window_kit_argument(args, key)? {
+        kernel::DslValue::String(value) => Ok(value.clone()),
+        _ => Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-type"), format!("the action argument '{key}' must be text"))),
+    }
+}
+
+/// 🔢️ Reads one required canonical non-negative `u32` index without truncation or fallback.
+pub fn window_kit_required_index_argument(args: Option<&kernel::DslValue>, key: &str) -> Result<u32, semio_framework_plugin::Fault> {
+    let value = required_window_kit_argument(args, key)?;
+    let integer = match value {
+        kernel::DslValue::Number(number) => number.as_u64().or_else(|| number.as_i64().and_then(|value| u64::try_from(value).ok())).or_else(|| {
+            let value = number.as_f64();
+            (value.is_finite() && value >= 0.0 && value.fract() == 0.0 && value <= u32::MAX as f64).then_some(value as u64)
+        }),
+        _ => None,
+    };
+    integer.and_then(|value| u32::try_from(value).ok()).ok_or_else(|| {
+        semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.window-kit.argument-range"), format!("the action argument '{key}' must be a non-negative 32-bit integer"))
+    })
+}
+
+/// 📊️ Declares the addressed editable-table contract used by stdio record formats.
+pub fn addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
+    use semio_framework_plugin::app::{TableWindowKit, WindowKit};
+    let mut definition = TableWindowKit::editable_window_kind();
+    let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("TableWindowKit declares set-cell");
+    let column = action.args.iter_mut().find(|argument| argument.id == "column").expect("set-cell declares column");
+    column.required = true;
+    definition
+}
+
+/// 🔐️ Declares a table cell address guarded by the rendered document revision.
+pub fn revision_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
+    use semio_framework_plugin::app::{TableWindowKit, WindowKit};
+    use semio_framework_plugin::{ActionArgDef, LocalizedLabel};
+    let mut definition = TableWindowKit::editable_window_kind();
+    let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("TableWindowKit declares set-cell");
+    action.args = vec![
+        ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(),
+        ActionArgDef::number("column", LocalizedLabel::native("Column", "Spalte")).required(),
+        ActionArgDef::text("revision", LocalizedLabel::native("Document revision", "Dokumentrevision")).required(),
+        ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).min_length(0).required(),
+    ];
+    definition
+}
+
+/// 🎯️ The complete ordinal address published by one revision-guarded table cell.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WindowKitRevisionedCellEdit {
+    pub row: u32,
+    pub column: u32,
+    pub revision: String,
+    pub value: String,
+}
+
+/// 🎯️ Parses a revision-guarded table cell edit without destructive defaults.
+pub fn window_kit_revisioned_cell_edit(args: Option<&kernel::DslValue>) -> Result<WindowKitRevisionedCellEdit, semio_framework_plugin::Fault> {
+    Ok(WindowKitRevisionedCellEdit {
+        row: window_kit_required_index_argument(args, "row")?,
+        column: window_kit_required_index_argument(args, "column")?,
+        revision: window_kit_required_text_argument(args, "revision")?,
+        value: window_kit_required_text_argument(args, "value")?,
+    })
+}
+
+/// 🔐️ Computes the optimistic revision for one table projection from the typed snapshot.
+pub fn window_kit_snapshot_revision<S: kernel::ToValue>(snapshot: &S) -> String {
+    semio_framework_plugin::app::DocumentWindowKit::text_revision(&editing::snapshot_edit_source(snapshot))
+}
+
+/// 🪪️ Encodes the store-owned revision already captured for a render or command operation.
+pub fn window_kit_canonical_revision(revision: [u8; 32]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut encoded = String::with_capacity(64);
+    for byte in revision {
+        encoded.push(HEX[usize::from(byte >> 4)] as char);
+        encoded.push(HEX[usize::from(byte & 0x0f)] as char);
+    }
+    encoded
+}
+
+/// 📊️ Binds every present table cell to its row, column, and shared snapshot revision.
+pub fn window_kit_revisioned_editable_cells(rows: &[Vec<String>], action_id: &str, revision: &str) -> semio_framework_plugin::UiAssemblyResult<Vec<semio_framework_plugin::app::EditableTableCell>> {
+    use semio_framework_plugin::{PluginAssemblyError, UiMapBuilder, UiText, UiValue};
+    let revision = UiText::try_from_str(revision).ok_or_else(|| PluginAssemblyError::new("stdio.table.revision", "table revision exceeds the UI text bound"))?;
+    rows.iter()
+        .enumerate()
+        .flat_map(|(row, cells)| cells.iter().enumerate().map(move |(column, _)| (row, column)))
+        .map(|(row, column)| {
+            let mut arguments = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("stdio.table.cell-arguments", "cell argument map capacity"))?;
+            arguments.try_insert("row".into(), UiValue::Number(row as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "row argument capacity"))?;
+            arguments.try_insert("column".into(), UiValue::Number(column as f64)).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "column argument capacity"))?;
+            arguments.try_insert("revision".into(), UiValue::Text(revision.clone())).map_err(|_| PluginAssemblyError::new("stdio.table.cell-arguments", "revision argument capacity"))?;
+            Ok(semio_framework_plugin::app::EditableTableCell::new(row, column, action_id, UiValue::Map(arguments.finish())))
+        })
+        .collect()
+}
+
+/// 🎯️ Declares a stable, revision-guarded spreadsheet cell address.
+pub fn stable_addressed_table_window_kind() -> semio_framework_plugin::WindowKindDefinition {
+    use semio_framework_plugin::app::{TableWindowKit, WindowKit};
+    use semio_framework_plugin::{ActionArgDef, LocalizedLabel};
+    let mut definition = TableWindowKit::editable_window_kind();
+    let action = definition.actions.iter_mut().find(|action| action.id == "set-cell").expect("TableWindowKit declares set-cell");
+    action.args = vec![
+        ActionArgDef::text("sheetName", LocalizedLabel::native("Worksheet", "Arbeitsblatt")).required(),
+        ActionArgDef::number("row", LocalizedLabel::native("Row", "Zeile")).required(),
+        ActionArgDef::number("column", LocalizedLabel::native("Column", "Spalte")).required(),
+        ActionArgDef::text("revision", LocalizedLabel::native("Cell revision", "Zellrevision")).required(),
+        ActionArgDef::text("value", LocalizedLabel::native("Value", "Wert")).min_length(0).required(),
+    ];
+    definition
+}
+
+/// 🎯️ The complete stable address published by one editable spreadsheet cell.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WindowKitStableCellEdit {
+    pub sheet_name: String,
+    pub row: u32,
+    pub column: u32,
+    pub revision: String,
+    pub value: String,
+}
+
+/// 🎯️ Parses a spreadsheet cell edit without ordinal aliases or destructive defaults.
+pub fn window_kit_stable_cell_edit(args: Option<&kernel::DslValue>) -> Result<WindowKitStableCellEdit, semio_framework_plugin::Fault> {
+    Ok(WindowKitStableCellEdit {
+        sheet_name: window_kit_required_text_argument(args, "sheetName")?,
+        row: window_kit_required_index_argument(args, "row")?,
+        column: window_kit_required_index_argument(args, "column")?,
+        revision: window_kit_required_text_argument(args, "revision")?,
+        value: window_kit_required_text_argument(args, "value")?,
+    })
+}
+
+/// 📄️ The complete canonical payload published by an editable document draft.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WindowKitDocumentTextEdit {
+    pub page: u32,
+    pub item: u32,
+    pub revision: String,
+    pub text: String,
+}
+
+/// 📄️ Parses a document draft payload without aliases, coercion, or destructive defaults.
+pub fn window_kit_document_text_edit(args: Option<&kernel::DslValue>) -> Result<WindowKitDocumentTextEdit, semio_framework_plugin::Fault> {
+    Ok(WindowKitDocumentTextEdit {
+        page: window_kit_required_index_argument(args, "page")?,
+        item: window_kit_required_index_argument(args, "item")?,
+        revision: window_kit_required_text_argument(args, "revision")?,
+        text: window_kit_required_text_argument(args, "text")?,
+    })
+}
+
+/// 🔐️ Rejects a stale document text target before a mutation can be published.
+pub fn require_window_kit_document_revision(text: &str, revision: &str, code: &'static str) -> Result<(), semio_framework_plugin::Fault> {
+    if semio_framework_plugin::app::DocumentWindowKit::text_revision(text) == revision {
+        return Ok(());
+    }
+    Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), "the saved document text changed while the local draft was open"))
+}
+
 /// 🧬️ The whole-document load an example switch hands the host. Whole-document replacement is not an
 /// in-history mutation (no stdio subset mints a whole-snapshot edit for it), so the switch emits an
 /// `Effect::LoadDocument` carrying the example's own pack plus an edit-free `.spr` log — the shape
@@ -1087,12 +1268,7 @@ pub fn load_example_effect<P: kernel::ArtifactPack>(document: &P, schema: &'stat
 /// and `.action_interactive_job(.., Migrated)`: only `Migrated` survives UI dispatch, and only a
 /// destructive row makes the MCP gateway ask before replacing a document.
 pub fn set_active_example_action() -> semio_framework_plugin::ActionDefinition {
-    semio_framework_plugin::ActionDefinition::new(
-        SET_ACTIVE_EXAMPLE_ACTION_ID,
-        semio_framework_plugin::LocalizedLabel::native("Load Example", "Beispiel laden"),
-        semio_framework_plugin::ActionKind::Mutation,
-        "file",
-    )
+    semio_framework_plugin::ActionDefinition::new(SET_ACTIVE_EXAMPLE_ACTION_ID, semio_framework_plugin::LocalizedLabel::native("Load Example", "Beispiel laden"), semio_framework_plugin::ActionKind::Mutation, "file")
 }
 
 /// 💬️ The agent-facing description of every stdio editor's `setActiveExample` — one sentence for all formats,
@@ -1107,12 +1283,8 @@ pub fn set_active_example_description() -> semio_framework_plugin::LocalizedLabe
 /// 📝️ The picker's typed argument: one option per example this editor's subset publishes, defaulting
 /// to the one the pane boots.
 pub fn set_active_example_args(options: &[(&str, semio_framework_plugin::LocalizedLabel)], default_example_id: &str) -> Vec<semio_framework_plugin::ActionArgDef> {
-    vec![semio_framework_plugin::ActionArgDef::select(
-        "exampleId",
-        semio_framework_plugin::LocalizedLabel::native("Example", "Beispiel"),
-        options.iter().map(|(id, label)| semio_framework_plugin::ActionArgOption::new(*id, label.clone())).collect(),
-    )
-    .default_value(&default_example_id.to_string())]
+    vec![semio_framework_plugin::ActionArgDef::select("exampleId", semio_framework_plugin::LocalizedLabel::native("Example", "Beispiel"), options.iter().map(|(id, label)| semio_framework_plugin::ActionArgOption::new(*id, label.clone())).collect())
+        .default_value(&default_example_id.to_string())]
 }
 //#endregion 🎬️ExampleSwitch
 

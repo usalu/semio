@@ -25,7 +25,8 @@
         "scaleX": 1.0,
         "scaleY": 1.0,
         "x": 0,
-        "y": 0
+        "y": 0,
+        "shear": 0
       },
       "visible": true
     },
@@ -49,7 +50,8 @@
         "scaleX": 1.0,
         "scaleY": 1.0,
         "x": 160.0,
-        "y": 0
+        "y": 0,
+        "shear": 0
       },
       "visible": true
     }

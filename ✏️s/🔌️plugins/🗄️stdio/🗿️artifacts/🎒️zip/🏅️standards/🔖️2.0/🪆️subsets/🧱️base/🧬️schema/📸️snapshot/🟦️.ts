@@ -4,7 +4,7 @@ export interface ZipEntry {
   data: number[];
 }
 
-/** 📸️ Logical `stdio.zip` snapshot. Entries are keyed and normalized by name. */
+/** 📸️ Logical `stdio.zip` snapshot with ordered entries and their original names. */
 export interface ZipSnapshot {
   /** @state artifact */ schema: string;
   /** @state artifact */ entries: ZipEntry[];
@@ -62,8 +62,8 @@ export function parseZipSnapshot(value: unknown, at = "$"): ZipSnapshot {
   const row = stdioZip20BaseSnapshotGuardObject(value, at);
   return {
     schema: stdioZip20BaseSnapshotGuardString(row["schema"], `${at}.schema`),
-    entries: row["entries"] === undefined ? undefined : stdioZip20BaseSnapshotGuardArray(row["entries"], `${at}.entries`).map((item, index) => parseZipEntry(item, `${at}.entries[${index}]`)),
-    comment: row["comment"] === undefined ? undefined : stdioZip20BaseSnapshotGuardString(row["comment"], `${at}.comment`),
+    entries: row["entries"] === undefined ? [] : stdioZip20BaseSnapshotGuardArray(row["entries"], `${at}.entries`).map((item, index) => parseZipEntry(item, `${at}.entries[${index}]`)),
+    comment: row["comment"] === undefined ? "" : stdioZip20BaseSnapshotGuardString(row["comment"], `${at}.comment`),
   };
 }
 
@@ -71,6 +71,6 @@ export function parseZipEntry(value: unknown, at = "$"): ZipEntry {
   const row = stdioZip20BaseSnapshotGuardObject(value, at);
   return {
     name: stdioZip20BaseSnapshotGuardString(row["name"], `${at}.name`),
-    data: stdioZip20BaseSnapshotGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.data[${index}]`)),
+    data: row["data"] === undefined ? [] : stdioZip20BaseSnapshotGuardArray(row["data"], `${at}.data`).map((item, index) => stdioZip20BaseSnapshotGuardInteger(item, `${at}.data[${index}]`)),
   };
 }

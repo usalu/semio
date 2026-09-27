@@ -11,11 +11,24 @@
       "locked": false,
       "opacity": 1.0,
       "blendMode": "normal",
-      "transform": { "x": 0.0, "y": 0.0, "scaleX": 1.0, "scaleY": 1.0, "rotation": 0.0 },
+      "transform": {
+        "x": 0.0,
+        "y": 0.0,
+        "scaleX": 1.0,
+        "scaleY": 1.0,
+        "rotation": 0.0,
+        "shear": 0
+      },
       "attributes": {},
       "sourceKey": "scan",
-      "params": { "threshold": 0.8, "simplifyEpsilon": 0.25 }
+      "params": {
+        "threshold": 0.8,
+        "simplifyEpsilon": 0.25
+      }
     }
   ],
-  "artboard": { "width": 640.0, "height": 480.0 }
+  "artboard": {
+    "width": 640.0,
+    "height": 480.0
+  }
 }

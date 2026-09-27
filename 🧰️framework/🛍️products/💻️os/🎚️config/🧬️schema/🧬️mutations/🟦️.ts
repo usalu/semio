@@ -13,8 +13,8 @@ import type { SignOut } from "./🚪️sign-out/🟦️.ts";
 import { diff as signOutDiff, inverse as signOutInverse, signOut } from "./🚪️sign-out/🟦️.ts";
 import { UI_PREFERENCE_DATA_CLASSES, type UiPreferenceDataClass, type UiPreferenceKey, type UiPreferences } from "../🟦️.ts";
 import uiPreferencesMutationSchema from "./🎨️ui-preferences/🧬️schema/🔣️.json" with { type: "json" };
-import type { SetAppearance, SetCustomDriver, SetCustomTheme, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetTerminology, SetTheme } from "./🎨️ui-preferences/🟦️.ts";
-import { diff as uiPreferencesDiff, inverse as uiPreferencesInverse, setAppearance, setCustomDriver, setCustomTheme, setDriver, setKeybindingOverride, setLayout, setLocale, setTerminology, setTheme } from "./🎨️ui-preferences/🟦️.ts";
+import type { SetAppearance, SetCustomDriver, SetCustomTheme, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetNamedLayout, SetTerminology, SetTheme } from "./🎨️ui-preferences/🟦️.ts";
+import { diff as uiPreferencesDiff, inverse as uiPreferencesInverse, setAppearance, setCustomDriver, setCustomTheme, setDriver, setKeybindingOverride, setLayout, setLocale, setNamedLayout, setTerminology, setTheme } from "./🎨️ui-preferences/🟦️.ts";
 
 //#region 🔖️Opening
 /** 🎚️ Typed, invertible opening-preferences mutation vocabulary. */
@@ -42,7 +42,8 @@ export type UiPreferencesConfigMutation =
   | ({ readonly mutation: "setTerminology" } & SetTerminology)
   | ({ readonly mutation: "setTheme" } & SetTheme)
   | ({ readonly mutation: "setCustomTheme" } & SetCustomTheme)
-  | ({ readonly mutation: "setKeybindingOverride" } & SetKeybindingOverride);
+  | ({ readonly mutation: "setKeybindingOverride" } & SetKeybindingOverride)
+  | ({ readonly mutation: "setNamedLayout" } & SetNamedLayout);
 
 /** 🗂️ The one key each UiPreferences mutation writes, read from the mutation schema (`🎨️ui-preferences/🧬️schema/🔣️.json`
  * `$defs.PreferenceKeys`). */
@@ -96,6 +97,6 @@ export function applyIdentityConfigMutation(base: Identity | null, mutation: Ide
   return diffIdentityConfigMutation(mutation, base);
 }
 
-export { changeMergePolicy, clearDefaultApp, setAppearance, setCustomDriver, setCustomTheme, setDefaultApp, setDriver, setKeybindingOverride, setLayout, setLocale, setTerminology, setTheme, signIn, signOut };
-export type { ChangeMergePolicy, ClearDefaultApp, Identity, MergePolicySetting, SetAppearance, SetCustomDriver, SetCustomTheme, SetDefaultApp, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetTerminology, SetTheme, SignIn, SignOut };
+export { changeMergePolicy, clearDefaultApp, setAppearance, setCustomDriver, setCustomTheme, setDefaultApp, setDriver, setKeybindingOverride, setLayout, setLocale, setNamedLayout, setTerminology, setTheme, signIn, signOut };
+export type { ChangeMergePolicy, ClearDefaultApp, Identity, MergePolicySetting, SetAppearance, SetCustomDriver, SetCustomTheme, SetDefaultApp, SetDriver, SetKeybindingOverride, SetLayout, SetLocale, SetNamedLayout, SetTerminology, SetTheme, SignIn, SignOut };
 //#endregion 🔖️Identity

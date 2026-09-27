@@ -51,6 +51,7 @@
       ],
       "kinds": [
         "set-snapshot",
+        "patch-snapshot",
         "set-ftyp",
         "insert-track",
         "remove-track",

@@ -21,6 +21,7 @@ fn text(value: &str) -> UiAssemblyResult<UiText> { UiText::try_from_str(value).o
 fn value(layer: &RasterLayerNode, field: &str, document: &RasterDocument) -> String {
     match field {
         "name" => layer_name(layer).into(),
+        "brightness" | "contrast" => if let RasterLayerNode::Adjustment {params,..}=layer {params.get(field).and_then(dsl::DslValue::as_f64).unwrap_or(0.0).to_string()} else {String::new()},
         "visible" => layer_visible(layer).to_string(),
         "opacity" => layer_opacity(layer).to_string(),
         "blendMode" => layer_blend_mode(layer).into(),
@@ -72,6 +73,7 @@ fn field_row(field: &str, label: LabelText, selected: &[&RasterLayerNode], label
         let kind = if field == "name" { InputKind::Text } else { InputKind::Number };
         let mut input = ui::input(kind).value(text(if mixed { "" } else { &initial })?).try_id(&id).map_err(|_| capacity())?.try_label(label.as_str()).map_err(|_| capacity())?.commit(text("blur")?);
         if mixed { input = input.placeholder(ui_label(labels.mixed.as_str())?); }
+        if matches!(field,"brightness"|"contrast") {input=input.min(-1.0).max(1.0).step(0.01);}
         if field == "opacity" { input = input.min(0.0).max(1.0).step(0.01); }
         if matches!(field, "width" | "height" | "maskWidth" | "maskHeight") { input = input.min(1.0).max(16384.0).step(1.0); }
         if matches!(field, "maskScaleX" | "maskScaleY") { input = input.step(0.01); }
@@ -84,10 +86,12 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
     let selected: Vec<_> = selected_ids.iter().filter_map(|id| find_layer(&document.layers, id)).collect();
     let mut rows = Vec::new();
     if !selected.is_empty() {
-        for (field, label) in [("name", labels.name), ("visible", labels.visible), ("opacity", labels.opacity), ("blendMode", labels.blend_mode), ("transformX", labels.position_x), ("transformY", labels.position_y)] {
+        for (field, label) in [("name", labels.name), ("visible", labels.visible), ("opacity", labels.opacity), ("blendMode", labels.blend_mode)] {
             rows.push(field_row(field, label, &selected, labels, document)?);
         }
         if selected.iter().all(|layer| matches!(layer, RasterLayerNode::Pixel { .. } | RasterLayerNode::Group { .. })) {
+            rows.push(field_row("transformX",labels.position_x,&selected,labels,document)?);
+            rows.push(field_row("transformY",labels.position_y,&selected,labels,document)?);
             rows.push(field_row("maskPresent", labels.mask_present, &selected, labels, document)?);
             if selected.iter().all(|layer| value(layer, "maskPresent", document) == "true") {
                 rows.push(field_row("maskEnabled", labels.mask_enabled, &selected, labels, document)?);
@@ -97,10 +101,21 @@ pub fn render(document: &RasterDocument, runtime: &RasterConfig, selected_ids: &
                 }
             }
         }
+        if selected.iter().all(|layer|matches!(layer,RasterLayerNode::Adjustment {adjustment_kind,..} if adjustment_kind=="brightnessContrast")) {
+            rows.push(field_row("brightness",labels.brightness,&selected,labels,document)?);
+            rows.push(field_row("contrast",labels.contrast,&selected,labels,document)?);
+        }
         if selected.iter().all(|layer| matches!(layer, RasterLayerNode::Pixel { .. })) {
             rows.push(field_row("width", labels.width, &selected, labels, document)?);
             rows.push(field_row("height", labels.height, &selected, labels, document)?);
         }
+    }
+    if selected.len()==1 {
+        let id=layer_node_id(selected[0]);
+        let supported=crate::editor::raster::commands::merge_down::plan(document,id).is_ok();
+        let (action,args)=raster_action("mergeDown",Some(ui_value_map([("layerId",ui_value_text(id)?)])?))?;
+        rows.push(ui::tree_item(ui_label(labels.merge_down.as_str())?).try_id(format!("{ROOT}.merge-down")).map_err(|_|capacity())?.description(text(labels.merge_down_hint.as_str())?).disabled(!supported)
+            .try_on_with(Trigger::Activate,action,args.ok_or_else(capacity)?).map_err(|_|capacity())?.try_build().map_err(|_|capacity())?);
     }
     let (action, args) = raster_action("setBrushColor", Some(ui_value_map([])?))?;
     let input = ui::input(InputKind::Color).value(text(&runtime.brush_color)?).try_id(format!("{ROOT}.foreground.input")).map_err(|_| capacity())?.try_label(labels.foreground.as_str()).map_err(|_| capacity())?

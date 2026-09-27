@@ -1,7 +1,7 @@
 /** 🧪️ Pixel tools respect nested layer transforms and lossless selection transport. */
 import { expect, test } from "bun:test";
 import sharp from "sharp";
-import { pixelLayers, layerPoint, selectionSpans, selectionBounds, type SelectionScanOptions } from "../🟦️.ts";
+import { editSelection, maskLayers, pixelLayers, layerPoint, selectionSpans, selectionBounds, type SelectionScanOptions } from "../🟦️.ts";
 import fixtures from "../🧫️fixtures/🔣️.json";
 
 for(const fixture of fixtures.cases) test(fixture.name,()=>{
@@ -96,4 +96,42 @@ test("selection transport cancellation at the final grant cannot publish",async(
     const controller=new AbortController();
     await expect(operation(Uint8Array.of(0,255),{signal:controller.signal,onProgress:p=>{if(p.done)controller.abort();}})).rejects.toMatchObject({name:"AbortError"});
   }
+});
+
+for(const fixture of fixtures.maskCases)test(fixture.name,async()=>{
+  const [layer]=maskLayers(JSON.stringify(fixture.document),JSON.stringify(fixture.assets));
+  expect(layer?.imageKey).toBe("m");expect(layer?.visible).toBe(true);
+  const point=layerPoint(layer!,fixture.worldPoint[0]!,fixture.worldPoint[1]!);
+  for(let i=0;i<2;i++)expect(point[i]!).toBeCloseTo(fixture.pixelPoint[i]!,10);
+  const svg=`<svg width="100" height="100"><g transform="${fixture.svgTransform}"><rect x="1" y="0" width="1" height="1" fill="red"/></g></svg>`;
+  const data=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer();
+  expect(data[(fixture.worldPoint[1]!*100+fixture.worldPoint[0]!)*4+3]).toBe(255);
+});
+
+for(const fixture of fixtures.selectionEditing.cases)test(fixture.name,async()=>{
+  const source=fixture.mask?Uint8Array.from(fixture.mask):undefined;
+  const result=await editSelection(fixture.expected.length,source,fixture.mode as "all"|"invert");
+  expect([...result]).toEqual(fixture.expected);
+  const oracle=sharp(Buffer.from(source??new Uint8Array(result.length)),{raw:{width:result.length,height:1,channels:1}});
+  const expected=await (fixture.mode==="invert"?oracle.negate():oracle.linear(0,255)).greyscale().raw().toBuffer();
+  expect([...result]).toEqual([...expected]);
+  if(source)expect([...source]).toEqual(fixture.mask!);
+});
+test("selection editing yields and cancels without publishing partial coverage",async()=>{
+  const fixture=fixtures.selectionEditing;
+  for(const mode of ["all","invert"] as const){
+    const progress:number[]=[];let yielded=false;setTimeout(()=>{yielded=true;},0);
+    const result=await editSelection(fixture.length,undefined,mode,{onProgress:p=>progress.push(p.completed)});
+    expect(progress).toEqual(fixture.progress);expect(yielded).toBe(true);expect(result.every(v=>v===255)).toBe(true);
+    for(const cancelAt of [32768,fixture.length]){
+      const controller=new AbortController();
+      await expect(editSelection(fixture.length,undefined,mode,{signal:controller.signal,onProgress:p=>{if(p.completed===cancelAt)controller.abort();}})).rejects.toMatchObject({name:"AbortError"});
+    }
+  }
+});
+test("selection editing rejects invalid extents before allocating",async()=>{
+  for(const length of [-1,0,1.5,16777217,NaN])await expect(editSelection(length,undefined,"all")).rejects.toThrow();
+  await expect(editSelection(3,new Uint8Array(2),"invert")).rejects.toThrow();
+  const controller=new AbortController();controller.abort();
+  await expect(editSelection(3,undefined,"all",{signal:controller.signal})).rejects.toMatchObject({name:"AbortError"});
 });

@@ -19,6 +19,7 @@ message RasterLayerMove { string id = 1; optional string parent_id = 2; uint64 i
 message RasterLayerPatchEntry { string id = 1; RasterLayerPatch patch = 2; }
 message RasterPixelContent { optional string image_key = 1; optional uint32 width = 2; optional uint32 height = 3; }
 message RasterMaskContent { optional semio.s.raster.raster.artifact.RasterLayerMask mask = 1; }
+message RasterAdjustmentParameter { string parameter = 1; optional double value = 2; }
 message RasterLayerPatch {
   optional string name = 1;
   optional bool visible = 2;
@@ -32,6 +33,7 @@ message RasterLayerPatch {
   optional RasterPixelContent pixel_content = 10;
   optional semio.s.raster.raster.artifact.RasterTransform pixel_transform = 11;
   optional RasterMaskContent mask_content = 12;
+  repeated RasterAdjustmentParameter adjustment_parameters = 13;
 }
 message RasterDiff {
   optional semio.s.raster.raster.artifact.RasterArtifact artifact = 1;

@@ -443,24 +443,7 @@ pub fn flatten_drawing_layers(layers: &[DrawingLayerNode]) -> Vec<&DrawingLayerN
     out
 }
 
-pub fn drawing_transform_to_matrix(transform: &DrawingTransform) -> [f64; 6] {
-    let cos = transform.rotation.cos();
-    let sin = transform.rotation.sin();
-    let a = transform.scale_x * cos;
-    let b = transform.scale_x * sin;
-    let c = -transform.scale_y * sin;
-    let d = transform.scale_y * cos;
-    [a, b, c, d, transform.x, transform.y]
-}
-
-pub fn drawing_matrix_to_transform(matrix: [f64; 6]) -> DrawingTransform {
-    let [a, b, c, d, e, f] = matrix;
-    let scale_x = (a * a + b * b).sqrt();
-    let rotation = b.atan2(a);
-    let det = a * d - b * c;
-    let scale_y = if scale_x != 0.0 { det / scale_x } else { 0.0 };
-    DrawingTransform { x: e, y: f, scale_x, scale_y, rotation }
-}
+pub use geometry::affine::{drawing_transform_to_matrix,drawing_matrix_to_transform};
 
 pub fn drawing_play_layers_tree_row_id(layer: &DrawingLayerNode) -> String {
     let segment = match layer {
@@ -553,7 +536,10 @@ pub fn drawing_layer_world_bounds(layer: &DrawingLayerNode) -> Option<(f64, f64,
             });
         }
         let rectangle = match layer {
-            DrawingLayerNode::Text(text) => Some((text.x, text.y, (text.content.chars().count() as f64 * text.size * 0.6).max(8.0), (text.size * 1.2).max(8.0))),
+            DrawingLayerNode::Text(text) => {
+                let [width, height] = semio_s_2d::text::drawing_text_fallback_extent(&text.content, text.size);
+                Some((text.x, text.y, width.max(8.0), height.max(8.0)))
+            },
             DrawingLayerNode::Image(image) => Some((0.0, 0.0, image.width, image.height)),
             _ => None,
         };
@@ -573,7 +559,7 @@ fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
 }
 
 fn transform_world_point(transform: &DrawingTransform, x: f64, y: f64) -> (f64, f64) {
-    let sx = x * transform.scale_x;
+    let sx = x * transform.scale_x + y * transform.shear;
     let sy = y * transform.scale_y;
     let cos = transform.rotation.cos();
     let sin = transform.rotation.sin();
@@ -597,26 +583,26 @@ fn scene_node_for_path(base: &DrawingLayerBase, segments: Vec<PathSegment>) -> D
 }
 
 pub fn flatten_drawing_document_to_scene_nodes(doc: &DrawingSnapshot) -> Vec<DrawingSceneNode> {
-    flatten_drawing_document_with_translation(doc,None)
+    flatten_drawing_document_with_transformation(doc,None)
 }
 
-/// ↔️ Preview world-space movement through the same group traversal as the committed scene.
-pub fn flatten_drawing_document_with_translation(doc: &DrawingSnapshot, translation: Option<&(Vec<String>,[f64;2])>) -> Vec<DrawingSceneNode> {
+/// ↔️ Preview world-space transforms through the same group traversal as the committed scene.
+pub fn flatten_drawing_document_with_transformation(doc: &DrawingSnapshot, transformation: Option<&(Vec<String>,[f64;6])>) -> Vec<DrawingSceneNode> {
     let mut out = Vec::new();
-    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], parent: [f64; 6], translation: Option<&(Vec<String>,[f64;2])>, out: &mut Vec<DrawingSceneNode>) {
+    fn walk(doc: &DrawingSnapshot, layers: &[DrawingLayerNode], parent: [f64; 6], transformation: Option<&(Vec<String>,[f64;6])>, out: &mut Vec<DrawingSceneNode>) {
         for layer in layers {
             let base = layer_base(layer);
             if !base.visible {
                 continue;
             }
             let mut parent=parent;
-            if let Some((ids,delta))=translation {
-                if ids.contains(&base.id) { parent[4]+=delta[0]; parent[5]+=delta[1]; }
+            if let Some((ids,matrix))=transformation {
+                if ids.contains(&base.id) { parent=geometry::multiply(*matrix,parent); }
             }
             let first = out.len();
             match layer {
                 DrawingLayerNode::Group(group) => {
-                    walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), translation, out);
+                    walk(doc, &group.children, geometry::multiply(parent, drawing_transform_to_matrix(&base.transform)), transformation, out);
                     continue;
                 }
                 DrawingLayerNode::Boolean(boolean) => {
@@ -641,7 +627,7 @@ pub fn flatten_drawing_document_with_translation(doc: &DrawingSnapshot, translat
                 }
                 DrawingLayerNode::Text(text) => out.push(DrawingSceneNode {
                     id: text.base.id.clone(),
-                    transform: drawing_transform_to_matrix(&text.base.transform),
+                    transform: geometry::multiply(drawing_transform_to_matrix(&text.base.transform), [1.0, 0.0, 0.0, 1.0, text.x, text.y]),
                     segments: Vec::new(),
                     fill: text.base.attributes.fill.clone(),
                     stroke: text.base.attributes.stroke.clone(),
@@ -669,7 +655,7 @@ pub fn flatten_drawing_document_with_translation(doc: &DrawingSnapshot, translat
                     });
                 }
                 _ => {
-                    let segments = flatten_curve_segments(&layer_to_path_segments(layer));
+                    let segments = layer_to_path_segments(layer);
                     if segments.is_empty() {
                         continue;
                     }
@@ -679,7 +665,7 @@ pub fn flatten_drawing_document_with_translation(doc: &DrawingSnapshot, translat
             for node in &mut out[first..] { node.transform = geometry::multiply(parent, node.transform); }
         }
     }
-    walk(doc, &doc.layers, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], translation, &mut out);
+    walk(doc, &doc.layers, [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], transformation, &mut out);
     out
 }
 
@@ -911,7 +897,7 @@ pub fn scale_path_segments(segments: &[PathSegment], scale_x: f64, scale_y: f64)
     if scale_x == 1.0 && scale_y == 1.0 {
         return segments.to_vec();
     }
-    transform_path_segments(segments, &DrawingTransform { x: 0.0, y: 0.0, scale_x, scale_y, rotation: 0.0 })
+    transform_path_segments(segments, &DrawingTransform { x: 0.0, y: 0.0, scale_x, scale_y, rotation: 0.0, shear: 0.0 })
 }
 
 pub fn split_path_segments_by_contour(segments: &[PathSegment]) -> Vec<Vec<PathSegment>> {

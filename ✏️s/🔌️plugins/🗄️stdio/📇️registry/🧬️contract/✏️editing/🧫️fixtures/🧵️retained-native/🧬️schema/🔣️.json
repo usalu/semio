@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/stdio/retained-native-route.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["routeCases", "lifecycle", "textCopy"],
+  "properties": {
+    "routeCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "mutation", "recognized", "primaryAccepts", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "mutation": { "type": "integer", "minimum": 0, "maximum": 255 },
+          "recognized": { "type": "boolean" },
+          "primaryAccepts": { "type": "boolean" },
+          "expected": { "enum": ["primary", "fallback", "refused"] }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["units", "cancelAfter", "expectedProgress", "expectedCloseSteps"],
+      "properties": {
+        "units": { "type": "integer", "minimum": 2, "maximum": 64 },
+        "cancelAfter": { "type": "integer", "minimum": 1, "maximum": 63 },
+        "expectedProgress": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1, "maximum": 64 }
+        },
+        "expectedCloseSteps": { "type": "integer", "minimum": 1, "maximum": 64 }
+      }
+    },
+    "textCopy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["byteLength", "pageBytes", "expectedDataSteps", "cancelAfterBytes", "expectedCloseSteps"],
+      "properties": {
+        "byteLength": { "type": "integer", "minimum": 65536, "maximum": 16777216 },
+        "pageBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "expectedDataSteps": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "cancelAfterBytes": { "type": "integer", "minimum": 1, "maximum": 16777216 },
+        "expectedCloseSteps": { "type": "integer", "minimum": 2, "maximum": 16385 }
+      }
+    }
+  }
+}

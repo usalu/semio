@@ -372,6 +372,7 @@ semio_framework_plugin::app_commands! {
         "translateSelection" as "translate-selection" => gumball::TranslateSelection,
         "rotateSelection" as "rotate-selection" => rotate_selection::RotateSelection,
         "scaleSelection" as "scale-selection" => scale_selection::ScaleSelection,
+        "patchDocument" as "patch-document" => patch_document::PatchDocument,
     }
 }
 
@@ -379,7 +380,7 @@ semio_framework_plugin::app_commands! {
 // payload module is imported here under its own flat name.
 use crate::editor::layout::commands::{
     add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, delete_selection, engagement_input, engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue,
-    patch_frame, patch_page, rotate_selection, scale_selection, set_active_page, set_camera, gumball,
+    patch_document, patch_frame, patch_page, rotate_selection, scale_selection, set_active_page, set_camera, gumball,
 };
 //#endregion 🔖️Commands
 
@@ -564,6 +565,7 @@ mod args_bridge {
             "translateSelection" => LayoutCommand::TranslateSelection(decode(action, plain())?),
             "rotateSelection" => LayoutCommand::RotateSelection(decode(action, plain())?),
             "scaleSelection" => LayoutCommand::ScaleSelection(decode(action, plain())?),
+            "patchDocument" => LayoutCommand::PatchDocument(decode(action, with_text_value(fold(args, &[], &[("value", text(""))])))?),
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the layout editor has no command for action '{action}'"))),
         })
     }
@@ -576,7 +578,7 @@ mod args_bridge {
 /// that stayed `BatchOnlyPendingRewrite` (`addFrame`/`addPage`/`patchPage`/`patchFrame` and the pointer
 /// down/move gestures) were dead in the running app. Exports keep their own resumable factory.
 const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &[
-    "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection",
+    "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection", "patchDocument",
 ];
 const LAYOUT_RETAINED_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
 const LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 16_384;
@@ -683,7 +685,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
                     }
                 }
             }
-            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::DeleteSelection(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) | LayoutCommand::TranslateSelection(_) | LayoutCommand::RotateSelection(_) | LayoutCommand::ScaleSelection(_) => {}
+            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::PatchDocument(_) | LayoutCommand::DeleteSelection(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) | LayoutCommand::TranslateSelection(_) | LayoutCommand::RotateSelection(_) | LayoutCommand::ScaleSelection(_) => {}
             _ => return Err(Fault::from("layout-window-work-route-rejected")),
         }
         if let Some(mutation) = window_config { emit.window_config_mutations.push(mutation); }
@@ -770,6 +772,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedComma
         ArtifactToolPublicationContract { tool_id: "translateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "rotateSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "scaleSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "patchDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ];
 }
 //#region 🧾️ProofCatalogs
@@ -783,7 +786,7 @@ impl LayoutRetainedProofs {
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection"]
+        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection", "patchDocument"]
     }
 }
 
@@ -1440,6 +1443,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             // 🔧️ Internal document operations — inspector/DnD-bound, not palette commands.
             .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Mutation))
             .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Mutation))
+            .action_with(layout_internal_action("patchDocument", LocalizedLabel::native("Patch Document", "Dokument aktualisieren"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection") })
             .action_destructive("deleteSelection")
             .action_destructive("exportPng")
@@ -1470,6 +1474,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_use_when("patchPage", vec!["make the page A4".into(), "change the page margins".into()])
             .action_describe("patchFrame", LocalizedLabel::native("Sets one named property of one frame — its position, size, content binding or style.", "Setzt eine benannte Eigenschaft eines Rahmens — Position, Größe, Inhaltsbindung oder Stil."))
             .action_use_when("patchFrame", vec!["move a frame".into(), "resize this frame".into()])
+            .action_describe("patchDocument", LocalizedLabel::native("Sets one named property of the layout document — its name, print target, or data fields.", "Setzt eine benannte Eigenschaft des Layoutdokuments — Name, Druckziel oder Datenfelder."))
+            .action_use_when("patchDocument", vec!["rename the layout".into(), "set the print target".into()])
             .action_describe("deleteSelection", LocalizedLabel::native("Removes the selected pages or frames from the layout.", "Entfernt die ausgewählten Seiten oder Rahmen aus dem Layout."))
             .action_describe("exportPdf", LocalizedLabel::native("Renders the whole layout to a downloadable PDF.", "Rendert das gesamte Layout in eine herunterladbare PDF-Datei."))
             .action_use_when("exportPdf", vec!["export the document as pdf".into(), "print this layout to pdf".into()])
@@ -1503,6 +1509,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("addPage", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchPage", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchFrame", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchDocument", InteractiveJobClassification::Migrated)
             .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasDrop", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
@@ -1523,7 +1530,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             // surface-discriminated (via `surfaceId`) or global, so they stay unscoped orphans and
             // appear on both windows.
             .window_kind_action_refs(LAYOUT_PLAY_WINDOW_BLUEPRINT, vec![
-                "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(), "translateSelection".into(), "rotateSelection".into(), "scaleSelection".into(),
+                "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(), "patchDocument".into(), "translateSelection".into(), "rotateSelection".into(), "scaleSelection".into(),
             ])
             // 🕹️ Domain "elements": frames on the Blueprint canvas (pages are never targets — canvas
             // hit-testing only ever resolves frame ids). Flat: layout has no real parent/child

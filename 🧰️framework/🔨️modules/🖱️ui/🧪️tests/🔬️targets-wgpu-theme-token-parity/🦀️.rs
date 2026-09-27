@@ -197,7 +197,13 @@ fn hex_of(color: Rgba) -> String {
 #[test]
 fn outcome_paints_decode_to_the_same_hex_react_paints() {
     for (appearance, theme) in [("light", Theme::light()), ("dark", Theme::dark())] {
-        for (field, value, token) in [("error", theme.error, "danger"), ("success", theme.success, "success"), ("warning", theme.warning, "warning"), ("progress", theme.progress, "secondary")] {
+        for (field, value, token) in [
+            ("error", theme.error, "danger"),
+            ("diff_added", theme.diff_added, "diff-added"),
+            ("success", theme.success, "success"),
+            ("warning", theme.warning, "warning"),
+            ("progress", theme.progress, "secondary"),
+        ] {
             assert_eq!(hex_of(value), generated_palette_hex(token), "{appearance} theme.{field} must decode to --color-{token}");
         }
     }

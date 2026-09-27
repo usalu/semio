@@ -402,6 +402,64 @@
                 }
               },
               {
+                "id": "patchDocument",
+                "label": {
+                  "native": {
+                    "en": "Patch Document",
+                    "de": "Dokument aktualisieren"
+                  },
+                  "reuse": {
+                    "en": "Patch Document",
+                    "de": "Dokument aktualisieren"
+                  }
+                },
+                "kind": "mutation",
+                "iconId": "sparkles",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "writes": [
+                      "artifact:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": true
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.write"
+                    ],
+                    "approval": "whenDestructive"
+                  },
+                  "execution": {
+                    "preview": "diff",
+                    "undo": {
+                      "kind": "inverse"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": true,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "description": {
+                    "native": {
+                      "en": "Sets one named property of the layout document — its name, print target, or data fields.",
+                      "de": "Setzt eine benannte Eigenschaft des Layoutdokuments — Name, Druckziel oder Datenfelder."
+                    },
+                    "reuse": {
+                      "en": "Sets one named property of the layout document — its name, print target, or data fields.",
+                      "de": "Setzt eine benannte Eigenschaft des Layoutdokuments — Name, Druckziel oder Datenfelder."
+                    }
+                  },
+                  "useWhen": [
+                    "rename the layout",
+                    "set the print target"
+                  ]
+                }
+              },
+              {
                 "id": "translateSelection",
                 "label": {
                   "native": {
@@ -5392,8 +5450,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "dfb4fde46dadc6f3426ee62e7d56dd2ff51149fb72d2a52f2bf2093952c89530",
-    "coreWasmSha256": "d01d5daefb9d4e8050e64a9d78df4f472f7e9a0004bc21e84201824611171ed4",
-    "descriptorSha256": "cf8f359ea152e998ecaafd62152b6599820d78911993972b462a612d07e386fb"
+    "wasmSha256": "16b424a4bf44e87abf02031f880ae48996762f3786d70bab67bc1ad5057a6df6",
+    "coreWasmSha256": "0ca63eeea8cfdab74800550d47508b94906dd815dfd57274997faa05eeed3eb0",
+    "descriptorSha256": "c86607d3069ada3c07594d565a21707dff789aa427540e8b7bd9b8e1bf37cf40"
   }
 }

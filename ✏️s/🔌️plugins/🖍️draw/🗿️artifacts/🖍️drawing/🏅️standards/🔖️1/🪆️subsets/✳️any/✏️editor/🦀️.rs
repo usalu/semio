@@ -37,6 +37,9 @@ pub use catalogue_panel::DRAWING_PLAY_BODY_CATALOGUE;
 pub use layers_panel::{DRAWING_LAYER_KIND_DRAG_MIME, DRAWING_PLAY_BODY_LAYERS};
 pub use properties_panel::DRAWING_PLAY_BODY_PROPERTIES;
 
+#[path = "🕹️interaction/🦀️.rs"]
+mod interaction;
+
 //#region 🔖️Constants
 pub const DRAWING_PLAY_CONTROLLER_ID: &str = "drawing-play";
 /// 🧰️ The utility the canvas returns to after committing a shape/draft/trace (first UtilityRef default).
@@ -59,7 +62,7 @@ fn drawing_active_utility(view: &semio_framework_plugin::ViewModel) -> &str {
         .unwrap_or(DRAWING_DEFAULT_UTILITY)
 }
 /// 🕹️ The single FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM interaction domain this app declares
-/// (granularity `stroke`, `HierarchyProvider::Flat`, methods Pick/Rectangle/Lasso).
+/// (granularity `stroke`, document-derived topology, methods Pick/Rectangle/Lasso).
 pub const DRAWING_INTERACTION_DOMAIN: &str = "strokes";
 pub const DRAWING_INTERACTION_GRANULARITY: &str = "stroke";
 
@@ -174,6 +177,8 @@ fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
         LocalizedLabel::native("Field", "Feld"),
         vec![
             semio_framework_plugin::ActionArgOption::new("name", LocalizedLabel::native("Name", "Name")),
+            semio_framework_plugin::ActionArgOption::new("textContent", LocalizedLabel::native("Text Content", "Textinhalt")),
+            semio_framework_plugin::ActionArgOption::new("textSize", LocalizedLabel::native("Text Size", "Schriftgröße")),
             semio_framework_plugin::ActionArgOption::new("opacity", LocalizedLabel::native("Opacity", "Deckkraft")),
             semio_framework_plugin::ActionArgOption::new("visible", LocalizedLabel::native("Visible", "Sichtbar")),
             semio_framework_plugin::ActionArgOption::new("locked", LocalizedLabel::native("Locked", "Gesperrt")),
@@ -192,6 +197,7 @@ fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
             semio_framework_plugin::ActionArgOption::new("transformScaleX", LocalizedLabel::native("Scale X", "Skalierung X")),
             semio_framework_plugin::ActionArgOption::new("transformScaleY", LocalizedLabel::native("Scale Y", "Skalierung Y")),
             semio_framework_plugin::ActionArgOption::new("transformRotation", LocalizedLabel::native("Rotation", "Drehung")),
+            semio_framework_plugin::ActionArgOption::new("transformShear", LocalizedLabel::native("Shear", "Scherung")),
             semio_framework_plugin::ActionArgOption::new("rotationDegrees", LocalizedLabel::native("Rotation (°)", "Drehung (°)")),
             semio_framework_plugin::ActionArgOption::new("traceThreshold", LocalizedLabel::native("Trace Threshold", "Schwellenwert")),
             semio_framework_plugin::ActionArgOption::new("traceSimplify", LocalizedLabel::native("Trace Simplify", "Vereinfachung")),
@@ -602,6 +608,9 @@ impl DrawingInstanceOperationOwner {
                 Err(fault)=>{ self.operations.cancel(live_key); self.active=None; return Err(fault); },
                 Ok(true)=>{},
             }
+            if session.point_query.as_ref().is_some_and(|query|query.constrained) && session.layer_move.is_none() {
+                session.step_gesture(canvas_pointer_down::drawing_gesture::Event::Escape,snapshot,config);
+            }
             let query=session.point_query.as_mut().expect("retained point query");
             let targets = match query.publication_step() {
                 canvas_pointer_down::DrawingQueryPublication::Pending => return Ok(None),
@@ -625,12 +634,15 @@ impl DrawingInstanceOperationOwner {
             return Ok(Some((emit, window_transient)));
         }
         if let DrawingCommand::CanvasPointerDown(pointer) = command {
-            if active_utility_id == "selectDirect" && !pointer.shift && !pointer.ctrl && !pointer.meta && pointer.generation.is_none() {
+            if active_utility_id == "selectDirect" && !pointer.ctrl && !pointer.meta && pointer.generation.is_none() {
                 let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
                 let world = [x,y];
                 session.step_gesture(canvas_pointer_down::drawing_gesture::Event::PointerDown { utility:active_utility_id.into(),world,shift:false,ctrl:false,meta:false },snapshot,config);
                 let tolerance = canvas_pointer_down::DRAWING_PICK_TOLERANCE_PX/session.window_config.viewport.zoom.max(1e-6);
                 let mut query = canvas_pointer_down::DrawingPointQuery::new(command.command_id(),canvas_pointer_down::TracePointerJob::new_query(snapshot,world,tolerance,false),false,"replace".into(),false);
+                query.constrained=pointer.shift;
+                query.centered=pointer.alt;
+                query.cursor.retain_selection_bounds(payload.interaction_state.selection.get(DRAWING_INTERACTION_DOMAIN).map(|selection|selection.ids.as_slice()).unwrap_or(&[]))?;
                 query.drag_start = Some(world);
                 session.point_query = Some(query);
                 return Ok(None);
@@ -656,6 +668,7 @@ impl DrawingInstanceOperationOwner {
             DrawingCommand::CanvasPointerMove(pointer) if session.gesture.matches("moving_layer") => {
                 let [x,y] = pointer.last_sample();
                 let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,x,y,pointer.width,pointer.height);
+                session.set_transform_modifiers(pointer.shift,pointer.alt);
                 session.move_layer_preview([x,y]);
                 Some(Some(Emit::default()))
             }
@@ -664,6 +677,7 @@ impl DrawingInstanceOperationOwner {
             DrawingCommand::CanvasPointerUp(payload) if payload.cancelled => Some(Some(canvas_pointer_up::cancel_gesture(session, snapshot, config))),
             DrawingCommand::CanvasPointerUp(pointer) if session.layer_move.is_some() => {
                 let (x,y) = canvas_pointer_down::canvas_point_to_world(&session.window_config.viewport,pointer.x,pointer.y,pointer.width,pointer.height);
+                session.set_transform_modifiers(pointer.shift,pointer.alt);
                 Some(Some(session.finish_layer_move([x,y],snapshot,config)?))
             }
             DrawingCommand::CanvasPointerUp(payload) => {
@@ -1486,6 +1500,7 @@ fn render_drawing_body(
     document: &DrawingSnapshot,
     config: &DrawingCanvasWindowConfig,
     preview: &DrawingGesturePreview,
+    selection: &[String],
     view_state: &semio_framework_plugin::ViewModel,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
@@ -1494,7 +1509,7 @@ fn render_drawing_body(
     // that body owns, plus the shared first-paint budget the panel spends in document order.
     let windows = semio_framework_plugin::TreeWindows::for_body(view_state, body_key);
     let root = match body_key {
-        DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility),
+        DRAWING_PLAY_BODY_COMPOSITE => canvas_window::render(document, config, preview, active_utility, selection),
         DRAWING_PLAY_BODY_LAYERS => layers_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_CATALOGUE => catalogue_panel::render(document, labels, &windows),
         DRAWING_PLAY_BODY_PROPERTIES => properties_panel::render(document, &[], labels, &windows),
@@ -1529,6 +1544,11 @@ impl ArtifactEditor for DrawingPlayApp {
 
     const DIALECT: semio_framework::Dialect = crate::DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
+
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> protocol::InteractionTopology {
+        protocol::InteractionTopology { domains: [(DRAWING_INTERACTION_DOMAIN.into(), interaction::drawing_interaction_topology(doc.snapshot))].into() }
+    }
+
 
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;
     /// without it every live envelope load faults `editor did not declare a loaded-parent child
@@ -1726,7 +1746,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &DrawingSession::default().preview(), view_state)
+        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &DrawingSession::default().preview(), &[], view_state)
     }
 
     fn render_with_instance_operation_owner(
@@ -1743,7 +1763,7 @@ impl ArtifactEditor for DrawingPlayApp {
                 .unwrap_or_default(),
             None => DrawingGesturePreview::default(),
         };
-        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &preview, view_state)
+        render_drawing_body(body_key, doc.snapshot, &canvas_window::config::current(cfg), &preview, &[], view_state)
     }
 
     fn render_with_request_context(
@@ -1758,7 +1778,12 @@ impl ArtifactEditor for DrawingPlayApp {
         if body_key == DRAWING_PLAY_BODY_PROPERTIES {
             return properties_panel::render(doc.snapshot, &interaction.selection(DRAWING_INTERACTION_DOMAIN).ids, semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, body_key)).map(semio_framework_plugin::built_to_component_tree);
         }
-        Self::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
+        let preview=match doc.render_operation() {
+            Some(operation)=>owner.with_mut::<DrawingInstanceOperationOwner,_>(|owner|Ok(owner.preview_projection(operation.canonical_base_revision,drawing_active_utility(view_state))))
+                .map_err(|error|semio_framework_plugin::PluginAssemblyError::new("drawing.gesture.preview-owner",error.message))?.unwrap_or_default(),
+            None=>DrawingGesturePreview::default(),
+        };
+        render_drawing_body(body_key,doc.snapshot,&canvas_window::config::current(cfg),&preview,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids,view_state)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, DrawingSnapshot>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
@@ -2124,7 +2149,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
                 id: DRAWING_INTERACTION_DOMAIN.into(),
                 label: LocalizedLabel::native("Strokes", "Striche"),
                 granularities: vec![GranularityDefinition { id: DRAWING_INTERACTION_GRANULARITY.into(), label: LocalizedLabel::native("Stroke", "Strich"), icon_id: "pen-tool".into() }],
-                hierarchy: HierarchyProvider::Flat,
+                hierarchy: HierarchyProvider::Topology,
                 hover: HoverSpec::default(),
                 selection: SelectionSpec {
                     modes: vec![SelectionMode::Multiple, SelectionMode::Single],

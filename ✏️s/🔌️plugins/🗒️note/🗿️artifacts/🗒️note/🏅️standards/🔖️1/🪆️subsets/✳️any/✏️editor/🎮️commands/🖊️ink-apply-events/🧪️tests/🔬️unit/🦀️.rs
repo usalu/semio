@@ -98,6 +98,27 @@ async fn cancellation_retains_accepted_begin_live_without_a_terminal_app_operati
     let NoteBlockNode::Text { x, y, .. } = &snapshot.blocks[0] else { panic!("accepted Ink block remains text") };
     assert_eq!((*x, *y), (48.0, 52.0));
     assert_eq!(law["artifactAfterCancel"], "retain-accepted-begin-live");
+    assert_eq!(law["blockedAfterCancel"], json!(["inkApplyEvents:live", "inkApplyEvents:commit"]));
+
+    let mut fresh_ids = crate::schema::NoteIdOwner::new("ink-fresh-test", 0);
+    let fresh_block = create_block_by_kind(&mut fresh_ids, "text", 72.0, 80.0);
+    let fresh_id = block_id(&fresh_block).to_string();
+    let fresh_begin = json!([{ "operation": "addBlock", "block": ink_wire_block(&fresh_block), "parentId": null, "index": null }]).to_string();
+    dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: fresh_begin, phase: "begin".into(), select_ids: Some(vec![fresh_id.clone()]) })).await;
+    let mut fresh_moved = fresh_block.clone();
+    if let NoteBlockNode::Text { x, y, .. } = &mut fresh_moved {
+        *x = 88.0;
+        *y = 96.0;
+    }
+    let fresh_live = json!([{ "operation": "updateBlock", "blockId": fresh_id, "block": ink_wire_block(&fresh_moved) }]).to_string();
+    dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: fresh_live, phase: "live".into(), select_ids: None })).await;
+    dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None })).await;
+    let after_fresh = app.snapshot().expect("fresh gesture snapshot");
+    assert_eq!(after_fresh.blocks.len(), 2);
+    let NoteBlockNode::Text { x, y, .. } = &after_fresh.blocks[1] else { panic!("fresh Ink block remains text") };
+    assert_eq!((*x, *y), (88.0, 96.0));
+    assert_eq!(law["freshGestureResult"], "begin-live-commit");
+    eprintln!("[DEBUG] Note cancellation retained accepted begin/live content and admitted a fresh committed gesture");
 }
 
 #[semio_framework_async_macros::async_test]

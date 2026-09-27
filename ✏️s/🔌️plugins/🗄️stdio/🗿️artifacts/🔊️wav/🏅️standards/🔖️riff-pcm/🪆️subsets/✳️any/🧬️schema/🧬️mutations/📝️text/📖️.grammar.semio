@@ -1,5 +1,13 @@
-dialect grammar stdio.wav.mutations
-; 🚧 scaffolded by W1b — full production rules land in W2/W3
-root = document
-document = marker
-marker = "stdio.wav.mutations"
+dialect grammar
+grammar stdio.wav.mutations
+start operation
+comment none
+string double backslash
+
+operation = object
+value = object | array | json-string | number | "true" | "false" | "null"
+object = "{" "}" | "{" member {"," member}* "}"
+member = json-string ":" value
+array = "[" "]" | "[" value {"," value}* "]"
+json-string = TEXT
+number = INT | FLOAT

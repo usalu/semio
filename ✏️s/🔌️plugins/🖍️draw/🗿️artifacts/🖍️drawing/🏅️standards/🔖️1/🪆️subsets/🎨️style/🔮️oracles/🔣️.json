@@ -2,7 +2,38 @@
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
   "_comment": "s.draw.drawing@1/🎨️style -- Paint appearance -- stroke, fill, blend mode, opacity. Split out of ✳️any's single wildcard-owned manifest (2026-09-02) so every mutation has a real, non-wildcard subset owner; see ../../✳️any/🔮️oracles/🔣️.json for the shared oracles/no-oracle-decisions/probes/comparison-profiles/tolerance-profiles this subset's requirements resolve against (the registry merges every 🔮️oracles contribution repo-wide, so none of that needs restating here). The `mutate-drawing-1` cross-language differential test still exhaustively claims the original `drawing-1-any` catalog id (relocating it is a later wave, out of scope here) -- this subset's own catalog fragment reuses that SAME id so `mutation-catalog-unclaimed` resolves against the still-claimed name, while `subsetDirectoryName` correctly ties its vectors to this subset's own physical 🧬️mutations tree.",
-  "oracles": [],
+  "oracles": [
+    {
+      "id": "json-patch-drawing-text-edit",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "source": {
+        "repository": "https://github.com/Starcounter-Jack/JSON-Patch",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "fast-json-patch",
+        "implementation": "RFC 6902 JSON Patch",
+        "version": "3.1.1"
+      },
+      "capabilities": [
+        "drawing-text-edit"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "win32-x64"
+      ],
+      "notes": "The unit twin applies independent replace operations to content and size, compares the complete nested document, and restores the original fields. This verifies text facet editing, not font metrics or rasterization."
+    }
+  ],
   "noOracleDecisions": [],
   "mutationCatalogs": [
     {
@@ -14,7 +45,8 @@
         "replace-layer-fill",
         "replace-layer-stroke",
         "set-layer-blend-mode",
-        "set-layer-opacity"
+        "set-layer-opacity",
+        "update-text"
       ],
       "vectors": [
         {
@@ -58,6 +90,17 @@
             {
               "id": "dims-shape-a-to-half",
               "directoryName": "🌫️dims-shape-a-to-half"
+            }
+          ]
+        },
+        {
+          "mutationId": "update-text",
+          "sourceMutationDirectoryName": "📝️update-text",
+          "mutationDirectoryName": "📝️update-text",
+          "scenarios": [
+            {
+              "id": "edit-caption",
+              "directoryName": "📝️edit-caption"
             }
           ]
         }
@@ -208,6 +251,39 @@
             ]
           },
           "notes": "Witnessed on Path/Text layers, where the leaf references the interned style; an Image layer's stroke is computed but never referenced by the Image leaf, so this kind is not witnessable when the target is an Image layer."
+        },
+        {
+          "id": "update-text",
+          "capability": "drawing-1-style-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "update-text",
+            "bridgeVersion": 1,
+            "variant": "UpdateText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-text-edit",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-patch-drawing-text-edit"
+            }
+          ],
+          "carriers": [
+            "json"
+          ],
+          "invariants": {
+            "local": [
+              "text-content-and-size-preserved"
+            ],
+            "enclosing": [
+              "layer-identity-and-appearance-preserved"
+            ]
+          }
         }
       ]
     }

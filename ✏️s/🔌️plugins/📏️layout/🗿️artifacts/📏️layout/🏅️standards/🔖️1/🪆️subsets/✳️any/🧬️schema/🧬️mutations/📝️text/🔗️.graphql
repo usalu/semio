@@ -1,4 +1,4 @@
-# layout.layout mutations — one input type per semantic mutation slug (tags 1..25 match protocol.semio order).
+# layout.layout mutations — one input type per semantic mutation slug (`📡️.protocol.semio` owns the wire tags 0..27).
 scalar Bytes
 
 input RenameLayout { newName: String! }
@@ -22,9 +22,12 @@ input CreateFrame { pageId: String! frame: Bytes! index: Float layerId: String }
 input DeleteFrame { pageId: String! frameId: String! }
 input MoveFrame { pageId: String! frameId: String! newX: Float! newY: Float! }
 input ResizeFrame { pageId: String! frameId: String! newWidth: Float! newHeight: Float! }
+input RotateFrame { pageId: String! frameId: String! newRotation: Float! }
 input ChangeFrameFill { pageId: String! frameId: String! newFill: Bytes }
 input ChangeFrameStroke { pageId: String! frameId: String! newStroke: Bytes }
 input ChangeFrameWrapMode { pageId: String! frameId: String! newWrapMode: String! }
 input ChangeFrameColumns { pageId: String! frameId: String! newColumns: Float! }
+input UpdateGrid { baselineGrid: Float! baselineOffset: Float! snapToBaseline: Boolean! }
+input SetFrameFlags { pageId: String! frameId: String! locked: Boolean visible: Boolean }
 
-union LayoutMutation = RenameLayout | ChangePrintTarget | ChangeDataFields | CreatePage | DeletePage | RenamePage | ChangePageWidth | ChangePageHeight | UpdatePageMargins | UpdatePageColumns | ReorderPages | CreateStory | DeleteStory | EditStory | CreateLink | DeleteLink | ChangeLinkPath | CreateFrame | DeleteFrame | MoveFrame | ResizeFrame | ChangeFrameFill | ChangeFrameStroke | ChangeFrameWrapMode | ChangeFrameColumns
+union LayoutMutation = RenameLayout | ChangePrintTarget | ChangeDataFields | CreatePage | DeletePage | RenamePage | ChangePageWidth | ChangePageHeight | UpdatePageMargins | UpdatePageColumns | ReorderPages | CreateStory | DeleteStory | EditStory | CreateLink | DeleteLink | ChangeLinkPath | CreateFrame | DeleteFrame | MoveFrame | ResizeFrame | RotateFrame | ChangeFrameFill | ChangeFrameStroke | ChangeFrameWrapMode | ChangeFrameColumns | UpdateGrid | SetFrameFlags

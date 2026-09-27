@@ -9,25 +9,27 @@
   "row": {
     "lineHeight": 19.2,
     "padding": 3.2,
+    "borderWidth": 1,
+    "scrollBandHeight": 22.4,
     "itemCount": 3,
-    "menuHeight": 83.2
+    "menuHeight": 130
   },
   "cases": [
     {
       "id": "room-below",
       "triggerLocal": [20, 30, 180, 22.4],
       "side": "bottom",
-      "menuLocal": [20, 56.4, 180, 83.2],
-      "menuGlobal": [980, 226.4, 180, 83.2],
-      "firstOptionGlobal": [983.2, 229.6, 173.6, 25.6]
+      "menuLocal": [20, 56.4, 180, 130],
+      "menuGlobal": [980, 226.4, 180, 130],
+      "firstOptionGlobal": [984.2, 253, 171.6, 25.6]
     },
     {
       "id": "flip-above",
       "triggerLocal": [20, 210, 180, 22.4],
       "side": "top",
-      "menuLocal": [20, 122.8, 180, 83.2],
-      "menuGlobal": [980, 292.8, 180, 83.2],
-      "firstOptionGlobal": [983.2, 296, 173.6, 25.6]
+      "menuLocal": [20, 76, 180, 130],
+      "menuGlobal": [980, 246, 180, 130],
+      "firstOptionGlobal": [984.2, 272.6, 171.6, 25.6]
     }
   ]
 }

@@ -1,0 +1,362 @@
+{
+  "schema": "semio.text.concurrent-splices/v1",
+  "contextScalars": 32,
+  "vectors": [
+    {
+      "id": "one-author-types-a-word",
+      "note": "a typing run is one splice per keystroke; the fold is the typed text",
+      "base": "",
+      "splices": [
+        {
+          "author": "a",
+          "hlc": 1,
+          "splice": {
+            "start": 0,
+            "deleted": "",
+            "insert": "h",
+            "before": "",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 2,
+          "splice": {
+            "start": 1,
+            "deleted": "",
+            "insert": "e",
+            "before": "h",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 3,
+          "splice": {
+            "start": 2,
+            "deleted": "",
+            "insert": "l",
+            "before": "he",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 4,
+          "splice": {
+            "start": 3,
+            "deleted": "",
+            "insert": "l",
+            "before": "hel",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 5,
+          "splice": {
+            "start": 4,
+            "deleted": "",
+            "insert": "o",
+            "before": "hell",
+            "after": ""
+          }
+        }
+      ],
+      "expected": {
+        "text": "hello",
+        "clamped": []
+      }
+    },
+    {
+      "id": "two-authors-type-at-the-end-at-once",
+      "note": "both runs anchor after what their author saw (\"Doc: \"); each run stays contiguous; the later-ordered run lands first after the shared context",
+      "base": "Doc: ",
+      "splices": [
+        {
+          "author": "a",
+          "hlc": 1,
+          "splice": {
+            "start": 5,
+            "deleted": "",
+            "insert": "a",
+            "before": "Doc: ",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "hlc": 2,
+          "splice": {
+            "start": 5,
+            "deleted": "",
+            "insert": "b",
+            "before": "Doc: ",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 3,
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "l",
+            "before": "Doc: a",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "hlc": 4,
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "e",
+            "before": "Doc: b",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 5,
+          "splice": {
+            "start": 7,
+            "deleted": "",
+            "insert": "p",
+            "before": "Doc: al",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "hlc": 6,
+          "splice": {
+            "start": 7,
+            "deleted": "",
+            "insert": "t",
+            "before": "Doc: be",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 7,
+          "splice": {
+            "start": 8,
+            "deleted": "",
+            "insert": "h",
+            "before": "Doc: alp",
+            "after": ""
+          }
+        },
+        {
+          "author": "b",
+          "hlc": 8,
+          "splice": {
+            "start": 8,
+            "deleted": "",
+            "insert": "a",
+            "before": "Doc: bet",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 9,
+          "splice": {
+            "start": 9,
+            "deleted": "",
+            "insert": "a",
+            "before": "Doc: alph",
+            "after": ""
+          }
+        }
+      ],
+      "expected": {
+        "text": "Doc: betaalpha",
+        "clamped": []
+      }
+    },
+    {
+      "id": "two-authors-type-in-different-places",
+      "note": "an insert anchored by its context lands where its author put it whatever the other did",
+      "base": "hello world",
+      "splices": [
+        {
+          "author": "b",
+          "hlc": 1,
+          "splice": {
+            "start": 11,
+            "deleted": "",
+            "insert": "!",
+            "before": "hello world",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 2,
+          "splice": {
+            "start": 6,
+            "deleted": "",
+            "insert": "b",
+            "before": "hello ",
+            "after": "world"
+          }
+        },
+        {
+          "author": "b",
+          "hlc": 3,
+          "splice": {
+            "start": 12,
+            "deleted": "",
+            "insert": "!",
+            "before": "hello world!",
+            "after": ""
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 4,
+          "splice": {
+            "start": 7,
+            "deleted": "",
+            "insert": "i",
+            "before": "hello b",
+            "after": "world"
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 6,
+          "splice": {
+            "start": 8,
+            "deleted": "",
+            "insert": "g",
+            "before": "hello bi",
+            "after": "world"
+          }
+        },
+        {
+          "author": "a",
+          "hlc": 8,
+          "splice": {
+            "start": 9,
+            "deleted": "",
+            "insert": " ",
+            "before": "hello big",
+            "after": "world"
+          }
+        }
+      ],
+      "expected": {
+        "text": "hello big world!!",
+        "clamped": []
+      }
+    },
+    {
+      "id": "both-delete-the-same-word",
+      "note": "the second deletion of an already deleted run deletes nothing and is clamped",
+      "base": "keep drop keep",
+      "splices": [
+        {
+          "author": "a",
+          "hlc": 1,
+          "splice": {
+            "start": 5,
+            "deleted": "drop ",
+            "insert": "",
+            "before": "keep ",
+            "after": "keep"
+          }
+        },
+        {
+          "author": "b",
+          "hlc": 2,
+          "splice": {
+            "start": 5,
+            "deleted": "drop ",
+            "insert": "",
+            "before": "keep ",
+            "after": "keep"
+          }
+        }
+      ],
+      "expected": {
+        "text": "keep keep",
+        "clamped": [
+          1
+        ]
+      }
+    },
+    {
+      "id": "delete-around-a-concurrent-insert",
+      "note": "a deletion whose run another author split keeps the inserted text (nothing is deleted, clamped)",
+      "base": "abcdef",
+      "splices": [
+        {
+          "author": "a",
+          "hlc": 1,
+          "splice": {
+            "start": 3,
+            "deleted": "",
+            "insert": "X",
+            "before": "abc",
+            "after": "def"
+          }
+        },
+        {
+          "author": "b",
+          "hlc": 2,
+          "splice": {
+            "start": 2,
+            "deleted": "cde",
+            "insert": "",
+            "before": "ab",
+            "after": "f"
+          }
+        }
+      ],
+      "expected": {
+        "text": "abcXdef",
+        "clamped": [
+          1
+        ]
+      }
+    },
+    {
+      "id": "astral-scalars-count-once",
+      "note": "positions are Unicode scalars: the emoji is one position in every language",
+      "base": "a😀b",
+      "splices": [
+        {
+          "author": "a",
+          "hlc": 1,
+          "splice": {
+            "start": 2,
+            "deleted": "",
+            "insert": "Z",
+            "before": "a😀",
+            "after": "b"
+          }
+        },
+        {
+          "author": "b",
+          "hlc": 2,
+          "splice": {
+            "start": 1,
+            "deleted": "",
+            "insert": "Y",
+            "before": "a",
+            "after": "😀b"
+          }
+        }
+      ],
+      "expected": {
+        "text": "aY😀Zb",
+        "clamped": []
+      }
+    }
+  ]
+}

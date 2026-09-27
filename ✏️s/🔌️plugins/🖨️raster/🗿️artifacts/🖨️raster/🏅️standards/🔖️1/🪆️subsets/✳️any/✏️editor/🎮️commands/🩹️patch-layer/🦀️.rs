@@ -53,6 +53,10 @@ fn raster_mutation_for_field(layer_id: &str, field: &str, value: &Value, prior: 
             }
             Some(RasterMutation::ChangeLayerMask(crate::mutations::change_layer_mask::ChangeLayerMask { layer_id: layer_id.into(), expected: expected.clone(), mask }))
         }
+        "brightness" | "contrast" => {
+            let RasterLayerNode::Adjustment {params,..}=prior else {return None;};
+            Some(RasterMutation::ChangeLayerAdjustmentParameter(crate::mutations::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:layer_id.into(),parameter:field.into(),expected:params.get(field).and_then(crate::RasterAdjustmentNumber::from_parameter),value:if value.is_null(){None}else{Some(crate::RasterAdjustmentNumber::decimal(value.as_f64()?))}}))
+        }
         "adjustmentKind" => Some(RasterMutation::ChangeLayerAdjustmentKind(change_layer_adjustment_kind::mutation::ChangeLayerAdjustmentKind { layer_id: layer_id.into(), new_adjustment_kind: value.as_str().unwrap_or("brightnessContrast").into() })),
         _ => None,
     }
@@ -73,6 +77,7 @@ pub(super) fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids
     let valid = match field {
         "name" | "blendMode" | "adjustmentKind" => value.as_str().is_some(),
         "visible" | "maskPresent" | "maskEnabled" | "maskInvert" => value.as_bool().is_some(),
+        "brightness" | "contrast" => value.is_null() || value.as_f64().is_some_and(|v|v.is_finite()&&(-1.0..=1.0).contains(&v)),
         "opacity" => value.as_f64().is_some_and(|v| v.is_finite() && (0.0..=1.0).contains(&v)),
         "transformX" | "transformY" | "maskX" | "maskY" | "maskRotation" => value.as_f64().is_some_and(f64::is_finite),
         "maskScaleX" | "maskScaleY" => value.as_f64().is_some_and(|v| v.is_finite() && v != 0.0),
@@ -84,6 +89,7 @@ pub(super) fn raster_patch_layer_operations(document: &RasterSnapshot, layer_ids
         let layer = find_layer(&document.layers, id).ok_or_else(|| Fault::from("raster-layer-not-found"))?;
         if matches!(field, "width" | "height") && !matches!(layer, RasterLayerNode::Pixel { .. }) { return Err(Fault::from("raster-layer-dimensions-require-pixels")); }
         let mutation = raster_mutation_for_field(id, field, value, layer).ok_or_else(|| Fault::from("raster-layer-property-unsupported"))?;
+        if let RasterMutation::ChangeLayerAdjustmentParameter(payload)=&mutation {crate::mutations::change_layer_adjustment_parameter::validate(payload,document).map_err(Fault::from)?;}
         if let RasterMutation::ChangeLayerMask(payload) = &mutation {
             crate::mutations::change_layer_mask::validate(payload, document).map_err(Fault::from)?;
         }

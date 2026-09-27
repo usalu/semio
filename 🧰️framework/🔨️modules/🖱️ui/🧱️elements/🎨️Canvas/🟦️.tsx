@@ -1348,6 +1348,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
+  const layoutGeometryKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null, (key, value) => key === "title" ? undefined : value), [layout]);
   const initialLayout = reactHostPort.useMemo(() => resolveModeLayout(windows, layout), [layout, windows]);
   const [layoutState, setLayoutState] = reactHostPort.useState<WindowLayoutNode>(() => initialLayout);
   const [maximizedStackPath, setMaximizedStackPath] = reactHostPort.useState<ModeLayoutPath | null>(null);
@@ -1363,6 +1364,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const layoutStateRef = reactHostPort.useRef(layoutState);
   const dragLayoutSnapshotRef = reactHostPort.useRef<WindowLayoutNode | null>(null);
   const layoutKeyRef = reactHostPort.useRef(layoutKey);
+  const layoutGeometryKeyRef = reactHostPort.useRef(layoutGeometryKey);
   const windowsKeyRef = reactHostPort.useRef(windowsKey);
   layoutStateRef.current = layoutState;
 
@@ -1379,15 +1381,17 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   reactHostPort.useEffect(() => {
     const layoutChanged = layoutKeyRef.current !== layoutKey;
+    const geometryChanged = layoutGeometryKeyRef.current !== layoutGeometryKey;
     const windowsChanged = windowsKeyRef.current !== windowsKey;
     if (!layoutChanged && !windowsChanged) return;
     layoutKeyRef.current = layoutKey;
+    layoutGeometryKeyRef.current = layoutGeometryKey;
     windowsKeyRef.current = windowsKey;
     const resolved = resolveModeLayout(windows, layout);
     propDerivedLayoutJsonRef.current = JSON.stringify(resolved);
     setLayoutState(resolved);
-    setMaximizedStackPath(null);
-  }, [layout, layoutKey, windows, windowsKey]);
+    if (geometryChanged || windowsChanged) setMaximizedStackPath(null);
+  }, [layout, layoutKey, layoutGeometryKey, windows, windowsKey]);
 
   reactHostPort.useEffect(() => {
     if (!activeWindowId) return;

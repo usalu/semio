@@ -218,6 +218,30 @@ fn an_output_to_input_drag_publishes_connect() {
 }
 
 #[test]
+fn connection_cursor_reads_the_live_handle_and_draw_edge_owner() {
+    let _serialized = engine_surface_law_guard();
+    let connect_case = law_case("a-port-drag-publishes-connect");
+    let surface_id = "node-graph-gesture-connection-cursor";
+    let bounds = Rect { x: 0.0, y: 0.0, w: 966.0, h: 836.0 };
+    let scene = attach(surface_id, bounds);
+    let source = handle_point(surface_id, connect_case["gesture"]["from"].as_str().expect("source handle"), bounds);
+    let body = draggable_body_point(surface_id, connect_case["gesture"]["over"].as_str().unwrap_or("radius"), bounds);
+    let local = |point: (f32, f32)| ((point.0 - bounds.x) as f64, (point.1 - bounds.y) as f64);
+    let (source_x, source_y) = local(source);
+    let (body_x, body_y) = local(body);
+
+    assert!(node_graph_connection_cursor_active(surface_id, source_x, source_y), "a live port handle owns the centered connection cursor");
+    assert!(!node_graph_connection_cursor_active(surface_id, body_x, body_y), "a node body does not borrow the handle cursor while idle");
+
+    let mut input = InputState::<ActionDescriptor>::default();
+    node_graph_pointer_down_into(surface_id, &scene.controller_id, bounds, source.0, source.1, 0, false, false, false, false, &mut input).expect("wire press");
+    assert!(node_graph_connection_cursor_active(surface_id, body_x, body_y), "the accepted live DrawEdge owner keeps the centered cursor away from its source");
+    node_graph_pointer_up_into(surface_id, &scene.controller_id, bounds, body.0, body.1, false, false, false, &mut input).expect("wire release");
+    assert!(!node_graph_connection_cursor_active(surface_id, body_x, body_y), "the cursor retires with DrawEdge");
+    drop_engine_surface(surface_id);
+}
+
+#[test]
 fn detaching_a_wired_input_from_its_port_publishes_disconnect() {
     let _serialized = engine_surface_law_guard();
     let cut_case = law_case("a-detached-wire-publishes-disconnect");

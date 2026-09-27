@@ -1,0 +1,6 @@
+{
+  "segments": [{"kind": "move", "to": [0, 0]}, {"kind": "line", "to": [10, 0]}],
+  "stroke": {"color": [0, 0, 0, 1], "width": 3, "cap": "butt", "join": "miter", "dash": [2, 4]},
+  "zoomCases": [{"zoom": 0.5, "screenWidth": 1.5}, {"zoom": 1, "screenWidth": 3}, {"zoom": 4, "screenWidth": 12}],
+  "unpainted": [{"id": "fill-and-stroke-disabled"}, {"id": "zero-width-stroke", "stroke": {"color": [0, 0, 0, 1], "width": 0, "cap": "butt", "join": "miter"}}]
+}

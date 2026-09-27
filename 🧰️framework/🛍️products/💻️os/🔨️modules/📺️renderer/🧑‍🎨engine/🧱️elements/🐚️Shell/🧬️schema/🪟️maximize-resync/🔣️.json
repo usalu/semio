@@ -106,6 +106,8 @@
         "extraId",
         "kindId",
         "bakedTitle",
+        "retainedTitle",
+        "maximized",
         "resolvedTitle",
         "locale"
       ],
@@ -122,6 +124,8 @@
           "type": "string",
           "minLength": 1
         },
+        "retainedTitle": { "type": "string" },
+        "maximized": { "type": "integer", "minimum": 0 },
         "resolvedTitle": {
           "type": "string",
           "minLength": 1

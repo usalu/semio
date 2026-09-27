@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { ActionId, ActorId, ActorSystem, BitSet, DockLayoutStore, DockUiStateStore, EventId, GuardId, InvokeId, Model, NamedLayoutStore, NodeId, NullInspector, OsShellConfig, OsTransient, TestHost, TimerId, TraceInspector, WindowPaneStateStore, checkInvariants, createDevPluginSource, createExtensionSource, createLeasePool, createMemoryStoragePort, effectiveActionArgs, PluginModuleUnavailableError, ephemeralBox, explore, extensionSourceEventToPluginSourceEvent, fetchWithTimeout, init, latestWins, macrostep, missingRequiredArgs, multiplexPluginSources, organizeContextMenu, persist, resolvePlaygroundBoot, resolvePluginHostConfig, resolvePluginRegistryId, restore, retryWithJitteredBackoff, runConformance, start, step, timerElapsed, waitForEvent } = dependencies;
+  const { ActionId, ActorId, ActorSystem, BitSet, DockLayoutStore, DockUiStateStore, EventId, GuardId, InvokeId, Model, NodeId, NullInspector, OsShellConfig, OsTransient, TestHost, TimerId, TraceInspector, WindowPaneStateStore, checkInvariants, createDevPluginSource, createExtensionSource, createLeasePool, createMemoryStoragePort, effectiveActionArgs, PluginModuleUnavailableError, ephemeralBox, explore, extensionSourceEventToPluginSourceEvent, fetchWithTimeout, init, latestWins, macrostep, missingRequiredArgs, multiplexPluginSources, organizeContextMenu, persist, resolvePlaygroundBoot, resolvePluginHostConfig, resolvePluginRegistryId, restore, retryWithJitteredBackoff, runConformance, start, step, timerElapsed, waitForEvent } = dependencies;
   type ActionArgDef = any;
   type ArgSchema = any;
   type Command = any;
@@ -242,7 +242,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("OsShellConfig", () => {
-    it("consolidates all four persisted shell projections into one config document", () => {
+    it("consolidates all three persisted device-local shell projections into one config document", () => {
       const values = new Map<string, string>();
       const storage = {
         get: (key: string) => values.get(key) ?? null,
@@ -253,7 +253,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         version: 3,
         anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
       };
-      new NamedLayoutStore("draw", storage).save({ id: "wide", label: "Wide", origin: "user", layout: { root: { kind: "stack", children: [] } } });
       new DockLayoutStore(storage, "draw").save(skeleton);
       new DockUiStateStore(storage, "draw").save({ version: 3, anchors: { "left-middle": { visible: true } } });
       new WindowPaneStateStore(storage, "draw").save({ version: 1, windows: {} });
@@ -261,7 +260,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
       expect([...values.keys()]).toEqual(["semio.os.config"]);
       const snapshot = new OsShellConfig(storage).getSnapshot();
-      expect(snapshot.namedLayouts.draw?.[0]?.id).toBe("wide");
       expect(snapshot.dockLayouts.apps.draw).toEqual(skeleton);
       expect(snapshot.dockUi.apps.draw?.anchors["left-middle"]?.visible).toBe(true);
       expect(snapshot.windowPanes.apps.draw).toEqual({ version: 1, windows: {} });

@@ -8,9 +8,10 @@
 
 use super::*;
 use semio_framework_tool_run::{
-    tool_run_format, tool_run_pointer_value, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunRejection, ToolRunSettingsReads, ToolRunSlot, ToolRunState,
-    ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict, TOOL_RUN_ACTION_IDS, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID,
-    TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_ARG_WINDOW_ID, TOOL_RUN_PROVISIONAL_OPS_MAX, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_PROVISIONAL_CAP, TOOL_RUN_REASON_REBASING, TOOL_RUN_REASON_TRACE_TRUNCATED, TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS, TOOL_RUN_TICK_BYTES_MAX,
+    tool_run_format, tool_run_pointer_value, ToolRunAction, ToolRunCounter, ToolRunDefinition, ToolRunEffect, ToolRunEvent, ToolRunId, ToolRunIdentity, ToolRunLabel, ToolRunLane, ToolRunMachine, ToolRunRebasePolicy, ToolRunReconfigurePolicy,
+    ToolRunRejection, ToolRunSettingsReads, ToolRunSlot, ToolRunState, ToolRunStep, ToolRunStepArg, ToolRunStepKind, ToolRunStepRing, ToolRunTick, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceOp, ToolRunTraceStore, ToolRunVerdict,
+    TOOL_RUN_ACTION_IDS, TOOL_RUN_ARG_GENERATION, TOOL_RUN_ARG_RUN_ID, TOOL_RUN_ARG_TOOL_ID, TOOL_RUN_ARG_WINDOW_ID, TOOL_RUN_PROVISIONAL_OPS_MAX, TOOL_RUN_REASON_CONFLICT, TOOL_RUN_REASON_PROVISIONAL_CAP, TOOL_RUN_REASON_REBASING,
+    TOOL_RUN_REASON_TRACE_TRUNCATED, TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS, TOOL_RUN_TICK_BYTES_MAX,
 };
 use semio_framework_ui_scene::{scene_lane_hash, Board2dScene, Board2dSceneLane, Canvas2dScene, Canvas2dSceneLane, SceneDoc, SceneLaneRef, World3dScene, World3dSceneLane};
 use std::collections::BTreeMap;
@@ -432,6 +433,9 @@ struct ToolRunEntry<A: ArtifactApp> {
     finalize: Option<ToolRunFinalize<A>>,
     announced: Option<(ToolRunState, u64, String)>,
     port: ToolRunJobPort,
+    /// ♻️ Snapshot aliases this run let go (a replaced base or overlay, a superseded fold result), owed to the store's
+    /// alias retirement ([`ToolRunLedger::retire_step`]); never dropped plainly.
+    displaced: Vec<Arc<A::Snapshot>>,
 }
 
 impl<A: ArtifactApp> ToolRunEntry<A> {
@@ -464,6 +468,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
         let stepping = self.job.is_none() || !self.port.is_waiting();
         self.port.has_effects()
             || self.refold_is_work()
+            || !self.displaced.is_empty()
             || match self.slot.state {
                 ToolRunState::Running => stepping,
                 ToolRunState::Starting | ToolRunState::Finalizing | ToolRunState::Aborting => true,
@@ -479,7 +484,21 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 
     fn begin_refold(&mut self, boundary: bool) {
-        self.refold = Some(ToolRunRefold { running: None, cursor: 0, boundary });
+        if let Some(running) = self.refold.replace(ToolRunRefold { running: None, cursor: 0, boundary }).and_then(|refold| refold.running) {
+            self.displaced.push(Arc::new(running));
+        }
+    }
+
+    /// ♻️ Replaces the overlay, owing the previous one to the store's alias retirement.
+    fn replace_overlay(&mut self, overlay: Arc<A::Snapshot>) {
+        let previous = std::mem::replace(&mut self.overlay, overlay);
+        self.displaced.push(previous);
+    }
+
+    /// ♻️ Replaces the base, owing the previous one to the store's alias retirement.
+    fn replace_base(&mut self, base: Arc<A::Snapshot>) {
+        let previous = std::mem::replace(&mut self.base, base);
+        self.displaced.push(previous);
     }
 
     /// 🏁️ The job reached a point where the refolded overlay is whole.
@@ -519,7 +538,11 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
         while refold.cursor < self.provisional.len() {
             let source = refold.running.as_ref().unwrap_or(&self.base);
             match Self::fold_one(source, &self.provisional[refold.cursor]) {
-                Some(next) => refold.running = Some(next),
+                Some(next) => {
+                    if let Some(previous) = refold.running.replace(next) {
+                        self.displaced.push(Arc::new(previous));
+                    }
+                }
                 None => self.conflicts = self.conflicts.saturating_add(1),
             }
             refold.cursor += 1;
@@ -532,7 +555,8 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             self.refold = Some(refold);
             return ToolRunRefoldTurn::AwaitingBoundary;
         }
-        self.overlay = refold.running.map_or_else(|| Arc::clone(&self.base), Arc::new);
+        let overlay = refold.running.map_or_else(|| Arc::clone(&self.base), Arc::new);
+        self.replace_overlay(overlay);
         ToolRunRefoldTurn::Swapped
     }
 
@@ -565,12 +589,16 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             let mut running: Option<A::Snapshot> = None;
             for op in &appended {
                 match Self::fold_one(running.as_ref().unwrap_or(&self.overlay), op) {
-                    Some(next) => running = Some(next),
+                    Some(next) => {
+                        if let Some(previous) = running.replace(next) {
+                            self.displaced.push(Arc::new(previous));
+                        }
+                    }
                     None => self.conflicts = self.conflicts.saturating_add(1),
                 }
             }
             if let Some(running) = running {
-                self.overlay = Arc::new(running);
+                self.replace_overlay(Arc::new(running));
             }
         }
         receipt.appended = appended.len() as u32;
@@ -666,6 +694,9 @@ pub struct ToolRunLedger<A: ArtifactApp> {
     driver: ToolRunDriver,
     retired_jobs: Vec<ToolRunJobSlot<A::Config>>,
     retired_publications: Vec<store::ArtifactStoreBatchPublication<A::Snapshot, A::Mutation>>,
+    /// ♻️ Snapshot aliases owed to the store's alias retirement, and the one being retired now.
+    retired_snapshots: Vec<Arc<A::Snapshot>>,
+    snapshot_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     discarded: Vec<A::Mutation>,
     closing: bool,
     trace_windows: BTreeMap<String, ToolRunTraceWindow>,
@@ -683,7 +714,21 @@ struct ToolRunTraceWindow {
 
 impl<A: ArtifactApp> Default for ToolRunLedger<A> {
     fn default() -> Self {
-        Self { next_run: 1, entries: Vec::new(), selected: None, driver: ToolRunDriver::default(), retired_jobs: Vec::new(), retired_publications: Vec::new(), discarded: Vec::new(), closing: false, trace_windows: BTreeMap::new(), ui_dirty: false, document_dirty: false }
+        Self {
+            next_run: 1,
+            entries: Vec::new(),
+            selected: None,
+            driver: ToolRunDriver::default(),
+            retired_jobs: Vec::new(),
+            retired_publications: Vec::new(),
+            retired_snapshots: Vec::new(),
+            snapshot_retirement: None,
+            discarded: Vec::new(),
+            closing: false,
+            trace_windows: BTreeMap::new(),
+            ui_dirty: false,
+            document_dirty: false,
+        }
     }
 }
 
@@ -810,7 +855,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// 🏃️ Whether a driver turn has work: any run's stepping job, refold, close, finalize or port effects, or cold
     /// retirement. A job waiting on its port is not work.
     pub fn has_pending_work(&self) -> bool {
-        !self.retired_jobs.is_empty() || !self.retired_publications.is_empty() || !self.discarded.is_empty() || self.entries.iter().any(|entry| entry.has_pending_work())
+        !self.retired_jobs.is_empty() || !self.retired_publications.is_empty() || !self.retired_snapshots.is_empty() || self.snapshot_retirement.is_some() || !self.discarded.is_empty() || self.entries.iter().any(|entry| entry.has_pending_work())
     }
 
     /// 🧬️ Applies one decoded tick to the current run (the driver's per-tick O(k) overlay append);
@@ -920,7 +965,13 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     fn retire_entry(&mut self, entry: ToolRunEntry<A>) {
-        let ToolRunEntry { job, provisional, finalize, .. } = entry;
+        let ToolRunEntry { job, provisional, finalize, base, overlay, refold, mut displaced, .. } = entry;
+        self.retired_snapshots.push(base);
+        self.retired_snapshots.push(overlay);
+        if let Some(running) = refold.and_then(|refold| refold.running) {
+            self.retired_snapshots.push(Arc::new(running));
+        }
+        self.retired_snapshots.append(&mut displaced);
         self.retire_owners(job, provisional, finalize);
     }
 
@@ -975,8 +1026,11 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         self.discarded.append(&mut entry.provisional);
         entry.entity_marks.clear();
         entry.entities = Arc::new(BTreeSet::new());
-        entry.refold = None;
-        entry.overlay = Arc::clone(&entry.base);
+        if let Some(running) = entry.refold.take().and_then(|refold| refold.running) {
+            entry.displaced.push(Arc::new(running));
+        }
+        let overlay = Arc::clone(&entry.base);
+        entry.replace_overlay(overlay);
         entry.checkpoint = None;
         if !keep_payload {
             entry.payload = None;
@@ -1006,6 +1060,24 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(Some(PluginCloseStep::Pending { released_items, released_bytes })),
                 store::SnapshotRetirementStep::Blocked => Ok(Some(PluginCloseStep::Blocked { reason: "tool run publication close is blocked" })),
             };
+        }
+        if let Some(retirement) = self.snapshot_retirement.as_mut() {
+            return match retirement.close_step(maximum_items.max(1), maximum_bytes).map_err(plugin_sdk_fault)? {
+                store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                    self.snapshot_retirement = None;
+                    Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }))
+                }
+                store::SnapshotRetirementStep::Complete => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.snapshot-close"), "tool run snapshot retirement closed without its terminal-empty witness")),
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(Some(PluginCloseStep::Pending { released_items, released_bytes })),
+                store::SnapshotRetirementStep::Blocked => Ok(Some(PluginCloseStep::Blocked { reason: "tool run snapshot retirement is blocked" })),
+            };
+        }
+        for entry in &mut self.entries {
+            self.retired_snapshots.append(&mut entry.displaced);
+        }
+        if let Some(alias) = self.retired_snapshots.pop() {
+            self.snapshot_retirement = Some(store.retire_snapshot_alias(alias).map_err(|error| error.into_fault())?);
+            return Ok(Some(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }));
         }
         if !self.discarded.is_empty() {
             let count = self.discarded.len().min(maximum_items.max(1)).min(TOOL_RUN_DISCARD_OPS_PER_TURN);
@@ -1037,7 +1109,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.entries.is_empty() && self.retired_jobs.is_empty() && self.retired_publications.is_empty() && self.discarded.is_empty()
+        self.entries.is_empty() && self.retired_jobs.is_empty() && self.retired_publications.is_empty() && self.retired_snapshots.is_empty() && self.snapshot_retirement.is_none() && self.discarded.is_empty()
     }
 }
 //#endregion 🔖️Ledger
@@ -1075,7 +1147,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         self.tool_runs.has_pending_work()
             || self.tool_runs.is_ui_dirty()
             || self.tool_runs.entries.iter().any(|entry| {
-                matches!(entry.slot.state, ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete | ToolRunState::Finalizing) && (entry.base_generation != self.store.generation() || entry.settings_generation != self.tool_run_settings_generation())
+                matches!(entry.slot.state, ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete | ToolRunState::Finalizing)
+                    && (entry.base_generation != self.store.generation() || entry.settings_generation != self.tool_run_settings_generation())
             })
     }
 
@@ -1147,7 +1220,12 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 // the button's captured generation made Abort unreachable after any settings change — the
                 // one control whose whole job is to get out of a run it cannot otherwise leave.
                 let generation = self.tool_runs.slot().filter(|slot| slot.run == run).map_or(generation, |slot| slot.generation);
-                let publishing =selected_entry!(self.tool_runs).and_then(|entry| entry.finalize.as_ref()).is_some_and(|finalize| finalize.published || finalize.publication.as_ref().is_some_and(|publication| !matches!(publication.phase(), store::ArtifactStoreOneItemPublicationPhase::Preparing | store::ArtifactStoreOneItemPublicationPhase::PreparingCursor | store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit)));
+                let publishing = selected_entry!(self.tool_runs).and_then(|entry| entry.finalize.as_ref()).is_some_and(|finalize| {
+                    finalize.published
+                        || finalize.publication.as_ref().is_some_and(|publication| {
+                            !matches!(publication.phase(), store::ArtifactStoreOneItemPublicationPhase::Preparing | store::ArtifactStoreOneItemPublicationPhase::PreparingCursor | store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit)
+                        })
+                });
                 ToolRunEvent::Abort { run, generation, publishing }
             }
             (ToolRunAction::Start, _) => unreachable!("start handled above"),
@@ -1183,7 +1261,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             .map(str::to_string)
             .or_else(|| view_state.and_then(|view| view.active_utility_id.clone().filter(|id| self.registry.tool_run(id).is_some()).or_else(|| view.active_tool_id.clone())))
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tool-id"), "toolRunStart needs a toolId argument or an active tool"))?;
-        let definition = self.registry.tool_run(&tool_id).map(|(_, definition)| definition.clone()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.unknown-tool"), format!("tool '{tool_id}' declares no ToolRunDefinition")))?;
+        let definition =
+            self.registry.tool_run(&tool_id).map(|(_, definition)| definition.clone()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.unknown-tool"), format!("tool '{tool_id}' declares no ToolRunDefinition")))?;
         let window_id = args.and_then(|args| args.get(TOOL_RUN_ARG_WINDOW_ID)).and_then(DslValue::as_str).map(str::to_string).or_else(|| view_state.and_then(|view| view.window_id.clone().or_else(|| view.focused_window_id.clone())));
         let lane = ToolRunLane { mutating: definition.mutating, tool_id: tool_id.clone(), window_id: if definition.mutating { None } else { window_id.clone() } };
         let live: Vec<(ToolRunLane, ToolRunState)> = self.tool_runs.entries.iter().map(|entry| (entry.lane(), entry.slot.state)).collect();
@@ -1246,6 +1325,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             finalize: None,
             announced: None,
             port: ToolRunJobPort::default(),
+            displaced: Vec::new(),
         }));
         Ok(ToolRunActionOutcome::Applied(transition.effect))
     }
@@ -1383,12 +1463,13 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 self.tool_runs.discard_provisional();
             }
             let entry = selected_entry_mut!(self.tool_runs).expect("refold keeps the slot");
-            entry.base = head;
+            entry.replace_base(head);
             entry.base_generation = store_generation;
             entry.identity.base_revision = self.store.content_revision();
             entry.trace.rebind(entry.identity);
             if restart {
-                entry.overlay = Arc::clone(&entry.base);
+                let overlay = Arc::clone(&entry.base);
+                entry.replace_overlay(overlay);
             } else {
                 entry.begin_refold(true);
             }
@@ -1558,7 +1639,18 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 ToolRunJobHandle::Plain(job) => job.as_mut(),
                 ToolRunJobHandle::Retargetable(job) => job.as_mut(),
             };
-            let mut outcome = semio_framework_job::drive_step(interactive, TOOL_RUN_JOB_SITE, job.operation, job.generation, semio_framework_job::InteractiveStage::InteractiveStep, budget, job.cancel.clone(), semio_framework_job::default_now_us, &mut job.preview_sequence, &mut verdict);
+            let mut outcome = semio_framework_job::drive_step(
+                interactive,
+                TOOL_RUN_JOB_SITE,
+                job.operation,
+                job.generation,
+                semio_framework_job::InteractiveStage::InteractiveStep,
+                budget,
+                job.cancel.clone(),
+                semio_framework_job::default_now_us,
+                &mut job.preview_sequence,
+                &mut verdict,
+            );
             if single && !matches!(outcome, semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::CheckpointReady(_)) {
                 entry.pending_step = false;
             }
@@ -1568,7 +1660,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 semio_framework_job::StepOutcome::PreviewReady(payload) => {
                     let bytes = job_payload_bytes(payload, TOOL_RUN_TICK_BYTES_MAX);
                     close_job_payload(payload);
-                    let tick = bytes.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tick-bytes"), "tool run tick exceeds its byte cap")).and_then(|bytes| ToolRunTick::decode(&bytes).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tick-decode"), format!("{error:?}"))));
+                    let tick = bytes
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tick-bytes"), "tool run tick exceeds its byte cap"))
+                        .and_then(|bytes| ToolRunTick::decode(&bytes).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.tick-decode"), format!("{error:?}"))));
                     let receipt = match tick {
                         Ok(tick) => entry.apply_tick(tick, &mut self.tool_runs.discarded),
                         Err(fault) => Err(fault),
@@ -1680,7 +1774,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let phase = entry.finalize.as_ref().map_or(ToolRunFinalizePhase::Pending, |finalize| finalize.phase);
         if entry.base_generation != store_generation && matches!(phase, ToolRunFinalizePhase::Pending | ToolRunFinalizePhase::Revalidating) {
-            entry.base = self.store.snapshot_owner();
+            entry.replace_base(self.store.snapshot_owner());
             entry.base_generation = store_generation;
             entry.begin_refold(true);
             entry.framework_step(ToolRunStepKind::Warning, TOOL_RUN_REASON_REBASING, &[]);
@@ -1745,7 +1839,15 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         if entry.finalize.as_ref().is_some_and(|finalize| finalize.publication.is_none()) {
             let description = self.registry.tool_run(&entry.tool_id).map(|(label, _)| label.resolve(Terminology::Native, Locale::En).to_string()).unwrap_or_else(|| entry.tool_id.clone());
             self.store.set_local_actor_id(Some(entry.actor.clone())).map_err(|error| error.into_fault())?;
-            match self.store.begin_outbound_apply_batch(semio_framework_job::allocate_operation_id(), entry.base_generation, self.store.content_revision(), entry.actor.clone(), entry.provisional.clone(), Some(description), self.artifact_one_item_factory.as_ref()) {
+            match self.store.begin_outbound_apply_batch(
+                semio_framework_job::allocate_operation_id(),
+                entry.base_generation,
+                self.store.content_revision(),
+                entry.actor.clone(),
+                entry.provisional.clone(),
+                Some(description),
+                self.artifact_one_item_factory.as_ref(),
+            ) {
                 Ok(publication) => entry.finalize.as_mut().expect("finalize owner").publication = Some(publication),
                 Err(_) => return self.reject_tool_run_publication(run, generation),
             }
@@ -1811,8 +1913,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             // is `Finalized`. See `ToolRunLedger::release_provisional`.
             self.tool_runs.release_provisional(true);
             let entry = selected_entry_mut!(self.tool_runs).expect("finalized slot");
-            entry.base = head;
-            entry.overlay = Arc::clone(&entry.base);
+            entry.replace_base(head);
+            let overlay = Arc::clone(&entry.base);
+            entry.replace_overlay(overlay);
             entry.base_generation = store_generation;
         }
         self.mark_tool_run_document_dirty();
@@ -1873,7 +1976,15 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let label = tool_label(&entry.tool_id).unwrap_or_else(|| entry.tool_id.clone());
             groups.try_push(tool_run_panel_group(entry, controller_id, locale, &label)?).map_err(|_| error("tool-run-panel.groups"))?;
         }
-        column().try_label(if locale == Locale::De { "Werkzeugläufe" } else { "Tool runs" }).map_err(|_| error("tool-run-panel.label"))?.try_id(semio_framework_tool_run::TOOL_RUN_PANEL_ID).map_err(|_| error("tool-run-panel.id"))?.try_children(groups).map_err(|_| error("tool-run-panel.groups"))?.try_build().map_err(|_| error("tool-run-panel.build"))
+        column()
+            .try_label(if locale == Locale::De { "Werkzeugläufe" } else { "Tool runs" })
+            .map_err(|_| error("tool-run-panel.label"))?
+            .try_id(semio_framework_tool_run::TOOL_RUN_PANEL_ID)
+            .map_err(|_| error("tool-run-panel.id"))?
+            .try_children(groups)
+            .map_err(|_| error("tool-run-panel.groups"))?
+            .try_build()
+            .map_err(|_| error("tool-run-panel.build"))
     }
 }
 
@@ -1881,7 +1992,12 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 fn tool_run_panel_ready_group(tool_id: &str, controller_id: &str, locale: Locale, label: &str) -> UiAssemblyResult<BuiltNode> {
     let error = ui_assembly_error;
     let scope = format!("{}.ready", semio_framework_tool_run::TOOL_RUN_PANEL_ID);
-    let status = text(Label(UiText::clipped(ToolRunLabel::ReadyToStart.text(locale)))).live(Liveness::Polite).try_id(format!("{scope}.status")).map_err(|_| error("tool-run-panel.ready-status-id"))?.try_build().map_err(|_| error("tool-run-panel.ready-status"))?;
+    let status = text(Label(UiText::clipped(ToolRunLabel::ReadyToStart.text(locale))))
+        .live(Liveness::Polite)
+        .try_id(format!("{scope}.status"))
+        .map_err(|_| error("tool-run-panel.ready-status-id"))?
+        .try_build()
+        .map_err(|_| error("tool-run-panel.ready-status"))?;
     let mut arguments = UiMapBuilder::try_new().ok_or_else(|| error("tool-run-panel.ready-args"))?;
     arguments.push(TOOL_RUN_ARG_TOOL_ID.to_string(), UiValue::Text(UiText::clipped(tool_id))).map_err(|_| error("tool-run-panel.ready-args"))?;
     let action = ToolRunAction::Start;
@@ -1902,114 +2018,148 @@ fn tool_run_panel_ready_group(tool_id: &str, controller_id: &str, locale: Locale
     for child in [status, toolbar] {
         children.try_push(child).map_err(|_| error("tool-run-panel.children"))?;
     }
-    column().try_label(label).map_err(|_| error("tool-run-panel.label"))?.try_id(scope).map_err(|_| error("tool-run-panel.id"))?.try_children(children).map_err(|_| error("tool-run-panel.children"))?.try_build().map_err(|_| error("tool-run-panel.build"))
+    column()
+        .try_label(label)
+        .map_err(|_| error("tool-run-panel.label"))?
+        .try_id(scope)
+        .map_err(|_| error("tool-run-panel.id"))?
+        .try_children(children)
+        .map_err(|_| error("tool-run-panel.children"))?
+        .try_build()
+        .map_err(|_| error("tool-run-panel.build"))
 }
 
 /// 🪧️ One run's panel group (§2.6): polite status, progressbar, real buttons with `aria-keyshortcuts` addressing the
 /// run by id, step log (live off) and a keyboard-navigable trace list; every id is scoped `framework.toolRun.<run>.`.
 fn tool_run_panel_group<A: ArtifactApp>(entry: &mut ToolRunEntry<A>, controller_id: &str, locale: Locale, label: &str) -> UiAssemblyResult<BuiltNode> {
-        let error = ui_assembly_error;
-        let scope = semio_framework_tool_run::tool_run_panel_group_id(entry.slot.run);
-        let state = entry.slot.state;
-        let stage_count = entry.definition.stages.len();
-        let stage_label = entry.definition.stage(entry.stage).map_or_else(String::new, |stage| stage.label.resolve(Terminology::Native, locale).to_string());
-        let status = format!("{} · {stage_label} ({}/{stage_count})", tool_run_state_label(state).text(locale), usize::from(entry.stage) + 1);
-        let now_ms = semio_framework_job::default_now_ms().unwrap_or(0);
-        // 👁️ The throttle belongs to the ANNOUNCEMENT, never to the text. Publishing the last ANNOUNCED
-        // string froze the visible pill at whatever stage the run was in when it was first announced:
-        // a `Finalized` run still read `Evaluating nodes (1/2)` on 6021 at 18:28 while its own progress
-        // bar had moved on (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A sighted reader is watching the
-        // same string a reader hears, so the string is always current and only `live` is rationed.
-        let announce = match entry.announced.as_ref() {
-            Some((announced_state, at, announced)) => *announced_state != state || (*announced != status && now_ms.saturating_sub(*at) >= TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS),
-            None => true,
+    let error = ui_assembly_error;
+    let scope = semio_framework_tool_run::tool_run_panel_group_id(entry.slot.run);
+    let state = entry.slot.state;
+    let stage_count = entry.definition.stages.len();
+    let stage_label = entry.definition.stage(entry.stage).map_or_else(String::new, |stage| stage.label.resolve(Terminology::Native, locale).to_string());
+    let status = format!("{} · {stage_label} ({}/{stage_count})", tool_run_state_label(state).text(locale), usize::from(entry.stage) + 1);
+    let now_ms = semio_framework_job::default_now_ms().unwrap_or(0);
+    // 👁️ The throttle belongs to the ANNOUNCEMENT, never to the text. Publishing the last ANNOUNCED
+    // string froze the visible pill at whatever stage the run was in when it was first announced:
+    // a `Finalized` run still read `Evaluating nodes (1/2)` on 6021 at 18:28 while its own progress
+    // bar had moved on (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A sighted reader is watching the
+    // same string a reader hears, so the string is always current and only `live` is rationed.
+    let announce = match entry.announced.as_ref() {
+        Some((announced_state, at, announced)) => *announced_state != state || (*announced != status && now_ms.saturating_sub(*at) >= TOOL_RUN_STATUS_ANNOUNCE_INTERVAL_MS),
+        None => true,
+    };
+    if announce {
+        entry.announced = Some((state, now_ms, status.clone()));
+    }
+    let live = if !announce {
+        Liveness::Off
+    } else if state == ToolRunState::Faulted || entry.conflicts > 0 {
+        Liveness::Assertive
+    } else {
+        Liveness::Polite
+    };
+    let status_node = text(Label(UiText::clipped(&status))).live(live).try_id(format!("{scope}.status")).map_err(|_| error("tool-run-panel.status-id"))?.try_build().map_err(|_| error("tool-run-panel.status"))?;
+    let unit = entry.definition.unit.resolve(Terminology::Native, locale).to_string();
+    let value_text = match entry.total {
+        Some(total) => {
+            let percent = if total == 0 { 100 } else { entry.completed.saturating_mul(100) / total };
+            tool_run_format(ToolRunLabel::ProgressValueText.text(locale), |name| match name {
+                "stage" => Some(stage_label.clone()),
+                "i" => Some((usize::from(entry.stage) + 1).to_string()),
+                "n" => Some(stage_count.to_string()),
+                "completed" => Some(entry.completed.to_string()),
+                "total" => Some(total.to_string()),
+                "unit" => Some(unit.clone()),
+                "pct" => Some(percent.to_string()),
+                _ => None,
+            })
+        }
+        None => format!("{stage_label} ({}/{stage_count}): {} {unit}", usize::from(entry.stage) + 1, entry.completed),
+    };
+    let mut bar = progress(entry.completed as f64, Label(UiText::clipped(&value_text)));
+    if let Some(total) = entry.total {
+        bar = bar.total(total as f64);
+    }
+    let bar = bar.try_id(format!("{scope}.progress")).map_err(|_| error("tool-run-panel.progress-id"))?.try_build().map_err(|_| error("tool-run-panel.progress"))?;
+    let (run, generation) = (entry.slot.run, entry.slot.generation);
+    let mut buttons = BuiltChildren::default();
+    let toggle = if state == ToolRunState::Paused { ToolRunAction::Resume } else { ToolRunAction::Pause };
+    let actions = if state.is_terminal() { vec![ToolRunAction::Start, ToolRunAction::Dismiss] } else { vec![toggle, ToolRunAction::Step, ToolRunAction::Abort, ToolRunAction::Finalize] };
+    for action in actions {
+        let mut arguments = UiMapBuilder::try_new().ok_or_else(|| error("tool-run-panel.args"))?;
+        let pushed = match action {
+            ToolRunAction::Start => arguments.push(TOOL_RUN_ARG_TOOL_ID.to_string(), UiValue::Text(UiText::clipped(&entry.tool_id))).is_ok(),
+            _ => arguments.push(TOOL_RUN_ARG_RUN_ID.to_string(), UiValue::Text(UiText::clipped(&run.to_string()))).is_ok() && arguments.push(TOOL_RUN_ARG_GENERATION.to_string(), UiValue::Number(f64::from(generation))).is_ok(),
         };
-        if announce {
-            entry.announced = Some((state, now_ms, status.clone()));
+        if !pushed {
+            return Err(error("tool-run-panel.args"));
         }
-        let live = if !announce {
-            Liveness::Off
-        } else if state == ToolRunState::Faulted || entry.conflicts > 0 {
-            Liveness::Assertive
-        } else {
-            Liveness::Polite
-        };
-        let status_node = text(Label(UiText::clipped(&status))).live(live).try_id(format!("{scope}.status")).map_err(|_| error("tool-run-panel.status-id"))?.try_build().map_err(|_| error("tool-run-panel.status"))?;
-        let unit = entry.definition.unit.resolve(Terminology::Native, locale).to_string();
-        let value_text = match entry.total {
-            Some(total) => {
-                let percent = if total == 0 { 100 } else { entry.completed.saturating_mul(100) / total };
-                tool_run_format(ToolRunLabel::ProgressValueText.text(locale), |name| match name {
-                    "stage" => Some(stage_label.clone()),
-                    "i" => Some((usize::from(entry.stage) + 1).to_string()),
-                    "n" => Some(stage_count.to_string()),
-                    "completed" => Some(entry.completed.to_string()),
-                    "total" => Some(total.to_string()),
-                    "unit" => Some(unit.clone()),
-                    "pct" => Some(percent.to_string()),
-                    _ => None,
-                })
-            }
-            None => format!("{stage_label} ({}/{stage_count}): {} {unit}", usize::from(entry.stage) + 1, entry.completed),
-        };
-        let mut bar = progress(entry.completed as f64, Label(UiText::clipped(&value_text)));
-        if let Some(total) = entry.total {
-            bar = bar.total(total as f64);
+        let action_id = ActionId::try_v1(controller_id, action.id()).ok_or_else(|| error("tool-run-panel.action-id"))?;
+        let legal = action.is_legal_in(Some(state));
+        let mut builder = button(Label(UiText::clipped(action.label().text(locale)))).disabled(!legal);
+        builder = builder.try_id(format!("{scope}.{}", action.id())).map_err(|_| error("tool-run-panel.button-id"))?;
+        builder = builder.try_shortcut(action.chord()).map_err(|_| error("tool-run-panel.button-shortcut"))?;
+        if action == ToolRunAction::Finalize && !legal {
+            builder = builder.try_describe(ToolRunLabel::FinalizeDisabled.text(locale)).map_err(|_| error("tool-run-panel.finalize-description"))?;
         }
-        let bar = bar.try_id(format!("{scope}.progress")).map_err(|_| error("tool-run-panel.progress-id"))?.try_build().map_err(|_| error("tool-run-panel.progress"))?;
-        let (run, generation) = (entry.slot.run, entry.slot.generation);
-        let mut buttons = BuiltChildren::default();
-        let toggle = if state == ToolRunState::Paused { ToolRunAction::Resume } else { ToolRunAction::Pause };
-        let actions = if state.is_terminal() { vec![ToolRunAction::Start, ToolRunAction::Dismiss] } else { vec![toggle, ToolRunAction::Step, ToolRunAction::Abort, ToolRunAction::Finalize] };
-        for action in actions {
-            let mut arguments = UiMapBuilder::try_new().ok_or_else(|| error("tool-run-panel.args"))?;
-            let pushed = match action {
-                ToolRunAction::Start => arguments.push(TOOL_RUN_ARG_TOOL_ID.to_string(), UiValue::Text(UiText::clipped(&entry.tool_id))).is_ok(),
-                _ => arguments.push(TOOL_RUN_ARG_RUN_ID.to_string(), UiValue::Text(UiText::clipped(&run.to_string()))).is_ok() && arguments.push(TOOL_RUN_ARG_GENERATION.to_string(), UiValue::Number(f64::from(generation))).is_ok(),
-            };
-            if !pushed {
-                return Err(error("tool-run-panel.args"));
-            }
-            let action_id = ActionId::try_v1(controller_id, action.id()).ok_or_else(|| error("tool-run-panel.action-id"))?;
-            let legal = action.is_legal_in(Some(state));
-            let mut builder = button(Label(UiText::clipped(action.label().text(locale)))).disabled(!legal);
-            builder = builder.try_id(format!("{scope}.{}", action.id())).map_err(|_| error("tool-run-panel.button-id"))?;
-            builder = builder.try_shortcut(action.chord()).map_err(|_| error("tool-run-panel.button-shortcut"))?;
-            if action == ToolRunAction::Finalize && !legal {
-                builder = builder.try_describe(ToolRunLabel::FinalizeDisabled.text(locale)).map_err(|_| error("tool-run-panel.finalize-description"))?;
-            }
-            let node = builder.try_on_with(Trigger::Activate, action_id, UiValue::Map(arguments.finish())).map_err(|_| error("tool-run-panel.button-binding"))?.try_build().map_err(|_| error("tool-run-panel.button"))?;
-            buttons.try_push(node).map_err(|_| error("tool-run-panel.buttons"))?;
-        }
-        let toolbar = row().try_id(format!("{scope}.actions")).map_err(|_| error("tool-run-panel.actions-id"))?.try_children(buttons).map_err(|_| error("tool-run-panel.actions"))?.try_build().map_err(|_| error("tool-run-panel.actions-build"))?;
-        let mut step_rows = BuiltChildren::default();
-        let newest_steps: Vec<&ToolRunStep> = entry.steps.iter().collect();
-        for step in newest_steps.into_iter().rev().take(TOOL_RUN_PANEL_STEP_ROWS) {
-            let row = text(Label(UiText::clipped(&tool_run_step_text(&entry.definition, step, locale)))).tone(tool_run_step_tone(step.kind)).try_id(format!("{scope}.step.{}", step.sequence)).map_err(|_| error("tool-run-panel.step-id"))?.try_build().map_err(|_| error("tool-run-panel.step"))?;
-            step_rows.try_push(row).map_err(|_| error("tool-run-panel.steps"))?;
-        }
-        let steps = column()
-            .live(Liveness::Off)
-            .try_label(if locale == Locale::De { "Schritte" } else { "Steps" })
-            .map_err(|_| error("tool-run-panel.steps-label"))?
-            .try_id(format!("{scope}.steps"))
-            .map_err(|_| error("tool-run-panel.steps-id"))?
-            .try_children(step_rows)
-            .map_err(|_| error("tool-run-panel.steps-children"))?
+        let node = builder.try_on_with(Trigger::Activate, action_id, UiValue::Map(arguments.finish())).map_err(|_| error("tool-run-panel.button-binding"))?.try_build().map_err(|_| error("tool-run-panel.button"))?;
+        buttons.try_push(node).map_err(|_| error("tool-run-panel.buttons"))?;
+    }
+    let toolbar = row().try_id(format!("{scope}.actions")).map_err(|_| error("tool-run-panel.actions-id"))?.try_children(buttons).map_err(|_| error("tool-run-panel.actions"))?.try_build().map_err(|_| error("tool-run-panel.actions-build"))?;
+    let mut step_rows = BuiltChildren::default();
+    let newest_steps: Vec<&ToolRunStep> = entry.steps.iter().collect();
+    for step in newest_steps.into_iter().rev().take(TOOL_RUN_PANEL_STEP_ROWS) {
+        let row = text(Label(UiText::clipped(&tool_run_step_text(&entry.definition, step, locale))))
+            .tone(tool_run_step_tone(step.kind))
+            .try_id(format!("{scope}.step.{}", step.sequence))
+            .map_err(|_| error("tool-run-panel.step-id"))?
             .try_build()
-            .map_err(|_| error("tool-run-panel.steps-build"))?;
-        let mut trace_rows = BuiltChildren::default();
-        for key in entry.recent_trace.iter().rev() {
-            let Some(record) = entry.trace.record(*key) else { continue };
-            let reason = ToolRunStep { sequence: 0, kind: ToolRunStepKind::Info, stage: entry.stage, reason: record.reason, subject: Some(*key), repeat: 1, args: Vec::new() };
-            let item = ui::tree_item(Label(UiText::clipped(&tool_run_step_text(&entry.definition, &reason, locale)))).tone(tool_run_verdict_tone(record.verdict)).try_id(format!("{scope}.trace.{key}")).map_err(|_| error("tool-run-panel.trace-id"))?.try_build().map_err(|_| error("tool-run-panel.trace-item"))?;
-            trace_rows.try_push(item).map_err(|_| error("tool-run-panel.trace-rows"))?;
-        }
-        let trace = tree().try_label(if locale == Locale::De { "Versuche" } else { "Attempts" }).map_err(|_| error("tool-run-panel.trace-label"))?.try_id(format!("{scope}.trace")).map_err(|_| error("tool-run-panel.trace-id"))?.try_children(trace_rows).map_err(|_| error("tool-run-panel.trace"))?.try_build().map_err(|_| error("tool-run-panel.trace-build"))?;
-        let mut children = BuiltChildren::default();
-        for child in [status_node, bar, toolbar, steps, trace] {
-            children.try_push(child).map_err(|_| error("tool-run-panel.children"))?;
-        }
-        column().try_label(label).map_err(|_| error("tool-run-panel.label"))?.try_id(scope).map_err(|_| error("tool-run-panel.id"))?.try_children(children).map_err(|_| error("tool-run-panel.children"))?.try_build().map_err(|_| error("tool-run-panel.build"))
+            .map_err(|_| error("tool-run-panel.step"))?;
+        step_rows.try_push(row).map_err(|_| error("tool-run-panel.steps"))?;
+    }
+    let steps = column()
+        .live(Liveness::Off)
+        .try_label(if locale == Locale::De { "Schritte" } else { "Steps" })
+        .map_err(|_| error("tool-run-panel.steps-label"))?
+        .try_id(format!("{scope}.steps"))
+        .map_err(|_| error("tool-run-panel.steps-id"))?
+        .try_children(step_rows)
+        .map_err(|_| error("tool-run-panel.steps-children"))?
+        .try_build()
+        .map_err(|_| error("tool-run-panel.steps-build"))?;
+    let mut trace_rows = BuiltChildren::default();
+    for key in entry.recent_trace.iter().rev() {
+        let Some(record) = entry.trace.record(*key) else { continue };
+        let reason = ToolRunStep { sequence: 0, kind: ToolRunStepKind::Info, stage: entry.stage, reason: record.reason, subject: Some(*key), repeat: 1, args: Vec::new() };
+        let item = ui::tree_item(Label(UiText::clipped(&tool_run_step_text(&entry.definition, &reason, locale))))
+            .tone(tool_run_verdict_tone(record.verdict))
+            .try_id(format!("{scope}.trace.{key}"))
+            .map_err(|_| error("tool-run-panel.trace-id"))?
+            .try_build()
+            .map_err(|_| error("tool-run-panel.trace-item"))?;
+        trace_rows.try_push(item).map_err(|_| error("tool-run-panel.trace-rows"))?;
+    }
+    let trace = tree()
+        .try_label(if locale == Locale::De { "Versuche" } else { "Attempts" })
+        .map_err(|_| error("tool-run-panel.trace-label"))?
+        .try_id(format!("{scope}.trace"))
+        .map_err(|_| error("tool-run-panel.trace-id"))?
+        .try_children(trace_rows)
+        .map_err(|_| error("tool-run-panel.trace"))?
+        .try_build()
+        .map_err(|_| error("tool-run-panel.trace-build"))?;
+    let mut children = BuiltChildren::default();
+    for child in [status_node, bar, toolbar, steps, trace] {
+        children.try_push(child).map_err(|_| error("tool-run-panel.children"))?;
+    }
+    column()
+        .try_label(label)
+        .map_err(|_| error("tool-run-panel.label"))?
+        .try_id(scope)
+        .map_err(|_| error("tool-run-panel.id"))?
+        .try_children(children)
+        .map_err(|_| error("tool-run-panel.children"))?
+        .try_build()
+        .map_err(|_| error("tool-run-panel.build"))
 }
 //#endregion 🔖️Panel

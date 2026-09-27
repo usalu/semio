@@ -3,7 +3,7 @@
   "liveId": "@liveId",
   "excludedKinds": ["space/home", "space/studio"],
   "pluginVerbs": {
-    "animate": "addTile", "architect": "setAdjacencyKind", "block": "addHandleKind", "cad": "addNode", "dag": "addNode",
+    "animate": "addTile", "architect": "addElement", "block": "addHandleKind", "cad": "addNode", "dag": "addNode",
     "demonstrator": "changeSchema", "draw": "addLayer", "energy": "create-zone", "fem": "addNode", "flow": "addWidget",
     "forms": "addStep", "gis": "addFeature", "imperative": "addStep", "layout": "addPage", "lowpoly": "addPrimitive",
     "mathematical": "nodeGraphEdit", "norm": "setSnapshot", "note": "addBlock", "playbook": "addStep",
@@ -21,6 +21,7 @@
     "sourcing.curationSetCount": { "objectId": "@liveId", "delta": "1" },
     "writer.setText": { "text": "Matrix writer buffer" },
     "stdio.set-cell": { "row": "0", "column": "0", "value": "Matrix Cell" },
+    "architect.addElement": { "name": "Matrix Element" },
     "space.createArtifact": { "name": "Matrix Probe Artifact", "kindChoice": "@liveId" },
     "space.renameArtifact": { "name": "Matrix Renamed Artifact" }
   },
@@ -33,9 +34,9 @@
     "gis/gisterrain": "setExaggeration",
     "puzzle/puzzle3d": "duplicateSelection",
     "demonstrator/puzzle3d": "duplicateSelection",
-    "stdio/txt": "replace-text",
-    "stdio/md": "replace-text",
-    "stdio/html": "replace-text",
+    "stdio/txt": "textEdit",
+    "stdio/md": "textEdit",
+    "stdio/html": "textEdit",
     "stdio/json": "set-node",
     "stdio/xml": "set-node"
   },
@@ -54,12 +55,12 @@
   "kindArgs": {
     "gis/gisterrain.setExaggeration": { "exaggeration": "2.5" },
     "trinity/rewriting.addRuleClause": { "kind": "create" },
-    "stdio/txt.replace-text": { "text": "Matrix text" },
-    "stdio/md.replace-text": { "text": "# Matrix" },
-    "stdio/html.replace-text": { "text": "<p>Matrix</p>" },
-    "stdio/json.set-node": { "nodeId": "$␟k=name", "value": "Matrix" },
+    "stdio/txt.textEdit": { "text": "Matrix text" },
+    "stdio/md.textEdit": { "text": "# Matrix" },
+    "stdio/html.textEdit": { "text": "<p>Matrix</p>" },
+    "stdio/json.set-node": { "nodeId": "$␟k=name", "value": "\"Matrix\"" },
     "stdio/xml.set-node": { "nodeId": "$␟2␟0", "value": "Matrix" },
-    "stdio/json/i-json.set-node": { "nodeId": "$␟k=id", "value": "Matrix" },
+    "stdio/json/i-json.set-node": { "nodeId": "$␟k=id", "value": "\"Matrix\"" },
     "stdio/xml/valid.set-node": { "nodeId": "$␟0␟0␟0", "value": "Matrix" }
   },
   "kindOrigin": {

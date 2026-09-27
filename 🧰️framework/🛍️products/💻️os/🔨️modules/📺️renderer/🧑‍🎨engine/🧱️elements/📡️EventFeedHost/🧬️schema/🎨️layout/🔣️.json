@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Event Feed Visual Layout",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "viewport", "surfaceId", "controllerId", "activateAction", "entries", "expected"],
+  "properties": {
+    "version": { "const": 1 },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "surfaceId": { "type": "string", "minLength": 1 },
+    "controllerId": { "type": "string", "minLength": 1 },
+    "activateAction": { "type": "string", "minLength": 1 },
+    "entries": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "timestampMs", "iconId", "title", "tone"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "timestampMs": { "type": "integer" },
+          "iconId": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 },
+          "detail": { "type": "string", "minLength": 1 },
+          "tone": { "enum": ["info", "success", "warning", "error", "fatal"] }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostPaddingPx", "cardGapPx", "cardPaddingPx", "cardRadiusPx", "plainCardHeightPx", "detailCardHeightPx", "iconSizePx", "contentGapPx", "titleFontSizePx", "titleLineHeightPx", "titleWeight", "fatalTitleWeight", "timeFontSizePx", "detailFontSizePx", "descriptionTruncated", "toneSemantics"],
+      "properties": {
+        "hostPaddingPx": { "type": "number", "minimum": 0 },
+        "cardGapPx": { "type": "number", "minimum": 0 },
+        "cardPaddingPx": { "type": "number", "minimum": 0 },
+        "cardRadiusPx": { "type": "number", "minimum": 0 },
+        "plainCardHeightPx": { "type": "number", "exclusiveMinimum": 0 },
+        "detailCardHeightPx": { "type": "number", "exclusiveMinimum": 0 },
+        "iconSizePx": { "type": "number", "exclusiveMinimum": 0 },
+        "contentGapPx": { "type": "number", "minimum": 0 },
+        "titleFontSizePx": { "type": "number", "exclusiveMinimum": 0 },
+        "titleLineHeightPx": { "type": "number", "exclusiveMinimum": 0 },
+        "titleWeight": { "const": 500 },
+        "fatalTitleWeight": { "const": 600 },
+        "timeFontSizePx": { "type": "number", "exclusiveMinimum": 0 },
+        "detailFontSizePx": { "type": "number", "exclusiveMinimum": 0 },
+        "descriptionTruncated": { "const": true },
+        "toneSemantics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["info", "success", "warning", "error", "fatal"],
+          "properties": {
+            "info": { "const": "foreground" },
+            "success": { "const": "success" },
+            "warning": { "const": "warning" },
+            "error": { "const": "error" },
+            "fatal": { "const": "error-strong" }
+          }
+        }
+      }
+    }
+  }
+}

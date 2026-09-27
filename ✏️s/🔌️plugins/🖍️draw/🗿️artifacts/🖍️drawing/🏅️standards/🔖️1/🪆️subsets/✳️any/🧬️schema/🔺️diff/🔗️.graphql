@@ -73,4 +73,6 @@ type DrawingLayerPatch {
   traceParamsJson: String
   layerJson: String
   pathSegments: [PathSegment!]
+  textContent: String
+  textSize: Float
 }

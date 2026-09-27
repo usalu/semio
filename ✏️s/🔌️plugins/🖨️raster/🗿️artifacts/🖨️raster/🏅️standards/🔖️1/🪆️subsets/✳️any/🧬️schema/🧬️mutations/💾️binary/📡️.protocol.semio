@@ -39,3 +39,5 @@ record change-layer-pixels tag=12
 field payload bytes
 record change-layer-mask tag=13
 field payload bytes
+record change-layer-adjustment-parameter tag=14
+field payload bytes

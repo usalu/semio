@@ -105,7 +105,7 @@ export function parseViewport3dProjectionPreferences(value: unknown): Viewport3d
     "curvilinearStrength",
     "curvilinearMapping",
   ]);
-  return {
+  const preferences: Viewport3dProjectionPreferences = {
     kind: projectionEnum(record.kind, projectionKinds),
     orthographicView: projectionEnum(record.orthographicView, orthographicViews),
     axonometricVariant: projectionEnum(record.axonometricVariant, axonometricVariants),
@@ -122,6 +122,10 @@ export function parseViewport3dProjectionPreferences(value: unknown): Viewport3d
     curvilinearStrength: projectionNumber(record.curvilinearStrength, 0, 1),
     curvilinearMapping: projectionEnum(record.curvilinearMapping, curvilinearMappings),
   };
+  const angleA = preferences.axonometricVariant === "isometric" ? 30 : preferences.axonometricAngleA;
+  const angleB = preferences.axonometricVariant === "isometric" ? 30 : preferences.axonometricVariant === "dimetric" ? angleA : preferences.axonometricAngleB;
+  validateAxonometricCorner(angleA, angleB);
+  return preferences;
 }
 
 function parseViewport3dProjectionMode(value: unknown): Viewport3dProjectionMode {
@@ -182,7 +186,18 @@ function parseViewport3dProjectionOrientation(value: unknown): Viewport3dProject
 /** 📡️ Admits an exact active projection mode and any declared orientation alternative. */
 export function parseViewport3dProjectionSpec(value: unknown): Viewport3dProjectionSpec {
   const record = viewportRecord(value, ["mode", "orientation"]);
-  return { mode: parseViewport3dProjectionMode(record.mode), orientation: parseViewport3dProjectionOrientation(record.orientation) };
+  const spec = { mode: parseViewport3dProjectionMode(record.mode), orientation: parseViewport3dProjectionOrientation(record.orientation) } as Viewport3dProjectionSpec;
+  if (spec.orientation.type === "corner" && spec.mode.kind === "axonometric") {
+    const angleA = spec.mode.variant === "isometric" ? 30 : spec.mode.angleA;
+    const angleB = spec.mode.variant === "isometric" ? 30 : spec.mode.variant === "dimetric" ? angleA : spec.mode.angleB;
+    validateAxonometricCorner(angleA, angleB);
+  }
+  return spec;
+}
+
+function validateAxonometricCorner(angleA: number, angleB: number): void {
+  const product = Math.tan(angleA * Math.PI / 180) * Math.tan(angleB * Math.PI / 180);
+  if (!Number.isFinite(product) || product > 1) throw new TypeError("Axonometric corner angles do not define a real camera elevation");
 }
 
 /** 🎯️ Creates the full editable bank without sharing mutable state between windows. */

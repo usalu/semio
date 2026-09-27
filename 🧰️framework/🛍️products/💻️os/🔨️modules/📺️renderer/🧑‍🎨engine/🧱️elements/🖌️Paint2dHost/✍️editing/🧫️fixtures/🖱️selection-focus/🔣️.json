@@ -21,5 +21,71 @@
   "actions": [
     "Apply",
     "Mask from selection"
-  ]
+  ],
+  "completionCases": [
+    {
+      "outcome": {
+        "kind": "applied",
+        "inputSeq": 1
+      },
+      "message": "Edit applied",
+      "error": false
+    },
+    {
+      "outcome": {
+        "kind": "refused",
+        "inputSeq": 1,
+        "reason": "mutation-rejected",
+        "retryable": false
+      },
+      "message": "The edit could not be applied. Try again on the current image.",
+      "error": true
+    },
+    {
+      "outcome": {
+        "kind": "superseded",
+        "inputSeq": 1,
+        "by": 2
+      },
+      "message": "A newer action replaced this edit.",
+      "error": true
+    }
+  ],
+  "completionActions": [
+    {
+      "label": "Apply",
+      "command": "editPixels",
+      "target": "pixels",
+      "selection": false
+    },
+    {
+      "label": "Mask from selection",
+      "command": "maskFromSelection",
+      "target": "pixels",
+      "selection": true
+    },
+    {
+      "label": "Fill mask",
+      "command": "editMask",
+      "target": "mask",
+      "selection": false
+    }
+  ],
+  "selectionControls": {
+    "width": 256,
+    "height": 256,
+    "firstProgress": 0.5,
+    "actions": [
+      "Select all pixels",
+      "Invert selection"
+    ],
+    "cancelActions": [
+      "Cancel",
+      "Deselect"
+    ],
+    "keyboardModifiers": [
+      "ctrlKey",
+      "metaKey"
+    ]
+  }
 }

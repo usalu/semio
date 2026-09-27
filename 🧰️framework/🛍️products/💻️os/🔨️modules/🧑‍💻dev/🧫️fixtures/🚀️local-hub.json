@@ -1,5 +1,5 @@
 {
-  "note": "Development hub path (ticket 26/09/23 U5, coordinator rule 23): an explicitly named hub is JOIN-ONLY (a serve waits with a localized status and gives up after a declared bound, never starts a hub); only the default hub is started, behind an owner lease per port and data root; the owner republishes a catalog the current hub cannot load. `roles`: explicit hub url → role. `locales`: POSIX locale variables → terminal language. `statuses`: every status and its exact en/de line. `leases`: records the lease reader accepts (`valid`) or refuses (`invalid`), which the schema `DevHubLeaseV1` must classify the same way. `catalogs`: a data root's trusted catalog (pointer + generation header) → freshness (`absent` / `current` / `stale` with the reason's leading words). `joins`: a fake hub that binds after `bindsAfterMs` (null: never) and the join bound → outcome. `owns`: the default-hub path under a lease state and port state → whether an owner is spawned, the status kinds reported, and the outcome.",
+  "note": "Development hub path (ticket 26/09/23 U5, coordinator rule 23): an explicitly named hub is JOIN-ONLY (a serve waits with a localized status and gives up after a declared bound, never starts a hub); only the default hub is started, behind an owner lease per port and data root; the owner republishes a catalog the current hub cannot load. `roles`: explicit hub url → role. `locales`: POSIX locale variables → terminal language. `statuses`: every status and its exact en/de line. `leases`: records the lease reader accepts (`valid`) or refuses (`invalid`), which the schema `DevHubLeaseV1` must classify the same way. `catalogs`: a data root's trusted catalog (pointer + generation header) → freshness (`absent` / `current` / `stale` with the reason's leading words). `joins`: a fake hub that binds after `bindsAfterMs` (null: never) and the join bound → outcome. `owns`: the default-hub path under a lease state and port state → whether an owner is spawned, the status kinds reported, and the outcome. `serves`: the ONE shared serve fixture `ensureDevServe` (ticket 26/09/23 S18, R10 contract): `plans` port → plan; `spawns` a `DevServeSpawnRequestV1` (react or wgpu shell, dev or release) → the exact process it becomes; `invalidRequests` requests the schema refuses; `urls` a `--serve` url → its loopback port or a refusal; `statuses` every progress line en/de; `scenarios` real processes on a detect-port port: what was there before (`none` | `http` serve | `tcp` non-serve), how the started serve behaves (`bootsAfterMs`, null = never answers; `exits` = dies at once), an optional cancel and boot bound → reused, the status kinds reported, the error class, and whether the port is free after `stop()` (detect-port oracle).",
   "roles": [
     {
       "explicit": "http://127.0.0.1:7800",
@@ -548,5 +548,367 @@
         "up": true
       }
     }
-  ]
+  ],
+  "serves": {
+    "plans": [
+      {
+        "port": 6540,
+        "answers": true,
+        "occupied": true,
+        "plan": "reuse"
+      },
+      {
+        "port": 6540,
+        "answers": false,
+        "occupied": false,
+        "plan": "spawn"
+      },
+      {
+        "port": 6540,
+        "answers": false,
+        "occupied": true,
+        "plan": "refuse-occupied"
+      },
+      {
+        "port": 7800,
+        "answers": true,
+        "occupied": true,
+        "plan": "refuse-hub-port"
+      },
+      {
+        "port": 7800,
+        "answers": false,
+        "occupied": false,
+        "plan": "refuse-hub-port"
+      }
+    ],
+    "urls": [
+      {
+        "url": "http://127.0.0.1:6540/",
+        "port": 6540
+      },
+      {
+        "url": "http://localhost:6541",
+        "port": 6541
+      },
+      {
+        "url": "http://[::1]:6542/",
+        "port": 6542
+      },
+      {
+        "url": "http://192.168.1.4:6540/",
+        "port": null
+      },
+      {
+        "url": "https://127.0.0.1:6540/",
+        "port": null
+      }
+    ],
+    "statuses": [
+      {
+        "status": {
+          "kind": "reusing",
+          "url": "http://127.0.0.1:6540/"
+        },
+        "en": "[dev-serve] http://127.0.0.1:6540/ already answers — reusing it, never stopping it",
+        "de": "[dev-serve] http://127.0.0.1:6540/ antwortet bereits — wird mitbenutzt und nicht beendet"
+      },
+      {
+        "status": {
+          "kind": "spawning",
+          "url": "http://127.0.0.1:6540/",
+          "pid": 42,
+          "logPath": "/tmp/serve-6540.log"
+        },
+        "en": "[dev-serve] starting the shell at http://127.0.0.1:6540/ (process 42, log /tmp/serve-6540.log)",
+        "de": "[dev-serve] starte die Shell unter http://127.0.0.1:6540/ (Prozess 42, Protokoll /tmp/serve-6540.log)"
+      },
+      {
+        "status": {
+          "kind": "booting",
+          "url": "http://127.0.0.1:6540/",
+          "waitedMs": 10400,
+          "boundMs": 300000
+        },
+        "en": "[dev-serve] waiting for http://127.0.0.1:6540/ (10 of 300 s)",
+        "de": "[dev-serve] warte auf http://127.0.0.1:6540/ (10 von 300 s)"
+      },
+      {
+        "status": {
+          "kind": "ready",
+          "url": "http://127.0.0.1:6540/",
+          "waitedMs": 55200
+        },
+        "en": "[dev-serve] http://127.0.0.1:6540/ ready after 55 s",
+        "de": "[dev-serve] http://127.0.0.1:6540/ bereit nach 55 s"
+      },
+      {
+        "status": {
+          "kind": "stopped",
+          "url": "http://127.0.0.1:6540/"
+        },
+        "en": "[dev-serve] stopped http://127.0.0.1:6540/",
+        "de": "[dev-serve] http://127.0.0.1:6540/ beendet"
+      }
+    ],
+    "scenarios": [
+      {
+        "name": "a serve already answers: reused, and stop() leaves it running",
+        "before": "http",
+        "bootsAfterMs": null,
+        "exits": false,
+        "cancelAfterMs": null,
+        "bootBoundMs": 5000,
+        "expected": {
+          "reused": true,
+          "statuses": [
+            "reusing"
+          ],
+          "error": null,
+          "portFreeAfterStop": false
+        }
+      },
+      {
+        "name": "a free port: the serve is started, reported ready, and stop() frees the port",
+        "before": "none",
+        "bootsAfterMs": 400,
+        "exits": false,
+        "cancelAfterMs": null,
+        "bootBoundMs": 20000,
+        "expected": {
+          "reused": false,
+          "statuses": [
+            "spawning",
+            "ready",
+            "stopped"
+          ],
+          "error": null,
+          "portFreeAfterStop": true
+        }
+      },
+      {
+        "name": "a cancelled boot stops what it started",
+        "before": "none",
+        "bootsAfterMs": null,
+        "exits": false,
+        "cancelAfterMs": 700,
+        "bootBoundMs": 20000,
+        "expected": {
+          "reused": null,
+          "statuses": [
+            "spawning",
+            "stopped"
+          ],
+          "error": "cancelled",
+          "portFreeAfterStop": true
+        }
+      },
+      {
+        "name": "a serve that never answers ends at the boot bound, stopped",
+        "before": "none",
+        "bootsAfterMs": null,
+        "exits": false,
+        "cancelAfterMs": null,
+        "bootBoundMs": 1500,
+        "expected": {
+          "reused": null,
+          "statuses": [
+            "spawning",
+            "booting",
+            "stopped"
+          ],
+          "error": "bound",
+          "portFreeAfterStop": true
+        }
+      },
+      {
+        "name": "a serve that exits before answering fails and names its log",
+        "before": "none",
+        "bootsAfterMs": null,
+        "exits": true,
+        "cancelAfterMs": null,
+        "bootBoundMs": 20000,
+        "expected": {
+          "reused": null,
+          "statuses": [
+            "spawning",
+            "stopped"
+          ],
+          "error": "exited",
+          "portFreeAfterStop": true
+        }
+      },
+      {
+        "name": "a port held by a process that is not a serve is refused, nothing started",
+        "before": "tcp",
+        "bootsAfterMs": null,
+        "exits": false,
+        "cancelAfterMs": null,
+        "bootBoundMs": 5000,
+        "expected": {
+          "reused": null,
+          "statuses": [],
+          "error": "occupied",
+          "portFreeAfterStop": false
+        }
+      }
+    ],
+    "spawns": [
+      {
+        "request": {
+          "port": 6540,
+          "variant": "s",
+          "renderer": "react",
+          "profile": "dev",
+          "hubUrl": null,
+          "logPath": "/tmp/serve-6540.log"
+        },
+        "command": {
+          "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+          "args": [
+            "serve",
+            "s",
+            "react",
+            "dev"
+          ],
+          "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+          "env": {
+            "SEMIO_PLUGIN": "s",
+            "SEMIO_RENDERER": "react",
+            "SEMIO_VITE_HMR": "0",
+            "S_OS_PORT": "6540",
+            "S_LOCAL_ONLY": "1",
+            "S_HUB_URL": null
+          }
+        }
+      },
+      {
+        "request": {
+          "port": 6541,
+          "variant": "s",
+          "renderer": "react",
+          "profile": "release",
+          "hubUrl": "http://127.0.0.1:8040",
+          "logPath": "/tmp/serve-6541.log"
+        },
+        "command": {
+          "script": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts",
+          "args": [
+            "serve",
+            "s",
+            "react",
+            "release"
+          ],
+          "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+          "env": {
+            "SEMIO_PLUGIN": "s",
+            "SEMIO_RENDERER": "react",
+            "SEMIO_VITE_HMR": "0",
+            "S_OS_PORT": "6541",
+            "S_LOCAL_ONLY": null,
+            "S_HUB_URL": "http://127.0.0.1:8040"
+          }
+        }
+      },
+      {
+        "request": {
+          "port": 6550,
+          "variant": "note",
+          "renderer": "wgpu",
+          "profile": "dev",
+          "hubUrl": "http://127.0.0.1:7800",
+          "logPath": "/tmp/serve-6550.log"
+        },
+        "command": {
+          "script": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
+          "args": [
+            "serve",
+            "note",
+            "dev",
+            "--port",
+            "6550"
+          ],
+          "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server",
+          "env": {
+            "SEMIO_PLUGIN": "note",
+            "SEMIO_RENDERER": "wgpu",
+            "SEMIO_VITE_HMR": "0",
+            "S_OS_PORT": "6550",
+            "S_LOCAL_ONLY": null,
+            "S_HUB_URL": "http://127.0.0.1:7800"
+          }
+        }
+      },
+      {
+        "request": {
+          "port": 6551,
+          "variant": "s",
+          "renderer": "wgpu",
+          "profile": "release",
+          "hubUrl": null,
+          "logPath": "/tmp/serve-6551.log"
+        },
+        "command": {
+          "script": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts",
+          "args": [
+            "serve",
+            "s",
+            "release",
+            "--port",
+            "6551"
+          ],
+          "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server",
+          "env": {
+            "SEMIO_PLUGIN": "s",
+            "SEMIO_RENDERER": "wgpu",
+            "SEMIO_VITE_HMR": "0",
+            "S_OS_PORT": "6551",
+            "S_LOCAL_ONLY": "1",
+            "S_HUB_URL": null
+          }
+        }
+      }
+    ],
+    "invalidRequests": [
+      {
+        "port": 7800,
+        "variant": "s",
+        "renderer": "react",
+        "profile": "dev",
+        "hubUrl": null,
+        "logPath": "/tmp/x.log"
+      },
+      {
+        "port": 6540,
+        "variant": "s",
+        "renderer": "vue",
+        "profile": "dev",
+        "hubUrl": null,
+        "logPath": "/tmp/x.log"
+      },
+      {
+        "port": 6540,
+        "variant": "s",
+        "renderer": "react",
+        "profile": "ship",
+        "hubUrl": null,
+        "logPath": "/tmp/x.log"
+      },
+      {
+        "port": 6540,
+        "variant": "s",
+        "renderer": "react",
+        "profile": "dev",
+        "hubUrl": "http://127.0.0.1:8040/",
+        "logPath": "/tmp/x.log"
+      },
+      {
+        "port": 6540,
+        "variant": "s",
+        "renderer": "react",
+        "profile": "dev",
+        "logPath": "/tmp/x.log"
+      }
+    ]
+  }
 }

@@ -41,7 +41,7 @@ fn the_example_source_prints_the_document_it_states() {
 #[test]
 fn the_example_solves_and_respects_its_pins() {
     let document = document();
-    let commit = crate::schema::inferences::solve_with_job(&document).expect("the bundled example solves");
+    let commit = crate::schema::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("the bundled example solves");
     assert!(!commit.contradiction);
     assert_eq!(commit.assignments.len(), 64);
     for pin in &document.pinned {

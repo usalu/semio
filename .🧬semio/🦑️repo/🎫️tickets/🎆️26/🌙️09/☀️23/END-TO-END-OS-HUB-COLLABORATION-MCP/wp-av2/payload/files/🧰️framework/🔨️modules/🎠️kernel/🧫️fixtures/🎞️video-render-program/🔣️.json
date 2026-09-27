@@ -1,0 +1,44 @@
+{
+ "schema": "semio.video-render.program.v1",
+ "valid": [
+  {
+   "id": "still-deck",
+   "program": { "schema": "semio.video-render.program.v1", "width": 64, "height": 48, "fps": 30, "background": [0.04, 0.05, 0.07, 1], "paths": [], "scenes": [ { "ops": [] } ], "timeline": [ { "scene": 0, "frames": 7 } ] },
+   "frameCount": 7,
+   "durationMs": 233
+  },
+  {
+   "id": "square-then-stroke",
+   "program": {
+    "schema": "semio.video-render.program.v1", "width": 32, "height": 16, "fps": 24, "background": [0, 0, 0, 1],
+    "paths": [ { "verbs": "MLLLZ", "points": [4, 4, 12, 4, 12, 12, 4, 12] }, { "verbs": "MQC", "points": [0, 0, 8, 8, 16, 0, 20, 4, 24, 4, 28, 0] } ],
+    "scenes": [
+     { "ops": [ { "path": 0, "paint": "fill", "transform": [1, 0, 0, 1, 0, 0], "color": [1, 0, 0, 1], "width": 0 } ] },
+     { "ops": [ { "path": 0, "paint": "fill", "transform": [1, 0, 0, 1, 16, 0], "color": [1, 0, 0, 1], "width": 0 }, { "path": 1, "paint": "stroke", "transform": [1, 0, 0, 1, 0, 2], "color": [0, 1, 0, 0.5], "width": 2 } ] }
+    ],
+    "timeline": [ { "scene": 0, "frames": 12 }, { "scene": 1, "frames": 12 }, { "scene": 0, "frames": 1 } ]
+   },
+   "frameCount": 25,
+   "durationMs": 1042
+  }
+ ],
+ "invalid": [
+  { "id": "wrong-schema", "error": "schema", "patch": { "schema": "semio.video-render.program.v0" } },
+  { "id": "odd-width", "error": "dimensions", "patch": { "width": 63 } },
+  { "id": "too-tall", "error": "dimensions", "patch": { "height": 4098 } },
+  { "id": "zero-fps", "error": "frameRate", "patch": { "fps": 0 } },
+  { "id": "too-fast", "error": "frameRate", "patch": { "fps": 121 } },
+  { "id": "no-frames", "error": "empty", "patch": { "timeline": [] } },
+  { "id": "too-long", "error": "tooLong", "patch": { "timeline": [ { "scene": 0, "frames": 36001 } ] } },
+  { "id": "unknown-scene", "error": "timeline", "patch": { "timeline": [ { "scene": 2, "frames": 1 } ] } },
+  { "id": "zero-frame-run", "error": "timeline", "patch": { "timeline": [ { "scene": 0, "frames": 1 }, { "scene": 1, "frames": 0 } ] } },
+  { "id": "points-short", "error": "pathVerbs", "patch": { "paths": [ { "verbs": "ML", "points": [0, 0, 1] } ] } },
+  { "id": "unknown-verb", "error": "pathVerbs", "patch": { "paths": [ { "verbs": "MX", "points": [0, 0, 1, 1] } ] } },
+  { "id": "starts-without-move", "error": "pathVerbs", "patch": { "paths": [ { "verbs": "LZ", "points": [0, 0] } ] } },
+  { "id": "unknown-path", "error": "pathIndex", "patch": { "scenes": [ { "ops": [ { "path": 9, "paint": "fill", "transform": [1, 0, 0, 1, 0, 0], "color": [1, 1, 1, 1], "width": 0 } ] }, { "ops": [] } ] } },
+  { "id": "colour-over-one", "error": "paint", "patch": { "scenes": [ { "ops": [ { "path": 0, "paint": "fill", "transform": [1, 0, 0, 1, 0, 0], "color": [1.5, 1, 1, 1], "width": 0 } ] }, { "ops": [] } ] } },
+  { "id": "negative-stroke", "error": "paint", "patch": { "scenes": [ { "ops": [ { "path": 0, "paint": "stroke", "transform": [1, 0, 0, 1, 0, 0], "color": [1, 1, 1, 1], "width": -1 } ] }, { "ops": [] } ] } },
+  { "id": "background-over-one", "error": "paint", "patch": { "background": [0, 0, 2, 1] } }
+ ],
+ "invalidBase": "square-then-stroke"
+}

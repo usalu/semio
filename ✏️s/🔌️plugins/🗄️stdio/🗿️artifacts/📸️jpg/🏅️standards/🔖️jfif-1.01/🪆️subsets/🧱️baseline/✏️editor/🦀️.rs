@@ -76,14 +76,8 @@ fn jpgBaselineEditor_edit_fault(code: &'static str, message: impl Into<String>) 
     Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
 }
 fn jpgBaselineEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &JpgSnapshot) -> Result<JpgSnapshot, Fault> {
-    if let editing::SnapshotEditEvent::ReplaceSource { source } = event {
-        return editing::snapshot_from_edit_source(source).map_err(|error| jpgBaselineEditor_edit_fault(error.code, error.to_string()));
-    }
-    let mut bounded = snapshot.clone();
-    let pixels = std::mem::take(&mut bounded.pixels);
-    let mut next = editing::apply_snapshot_edit(&bounded, event).map_err(|error| jpgBaselineEditor_edit_fault(error.code, error.to_string()))?;
-    next.pixels = pixels;
-    Ok(next)
+    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| jpgBaselineEditor_edit_fault(error.code, error.to_string()))?;
+    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, JPG_BASELINE_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA).map_err(|error| jpgBaselineEditor_edit_fault(error.code, error.to_string()))
 }
 fn jpgBaselineEditor_index(path: &str, prefix: &str, len: usize) -> Option<usize> {
     let segment = path.strip_prefix(prefix)?.split('/').next()?;
@@ -226,18 +220,7 @@ impl editing::SnapshotEditingEditor for JpgBaselineEditor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { JpgBaselineEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        let shape_is_admitted = match event {
-            editing::SnapshotEditEvent::SetValue { path, .. } | editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } | editing::SnapshotEditEvent::RenameKey { path, .. } => path.len() <= 4_096,
-            editing::SnapshotEditEvent::MoveValue { from, path } => from.len() <= 4_096 && path.len() <= 4_096,
-            editing::SnapshotEditEvent::ReplaceSource { source } => editing::snapshot_edit_source_is_admitted(source),
-        };
-        if !shape_is_admitted { return false; }
-        let Ok(emit) = <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, snapshot) else { return false };
-        let fits = |mutation: &Self::Mutation| <Self::Mutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-        !emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| fits(mutation) && <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, snapshot).iter().all(fits))
-    }
-    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         let next = jpgBaselineEditor_bounded_edit(event, snapshot)?;
         Ok(Emit { artifact_mutations: vec![jpgBaselineEditor_compact_mutation(event, next)], description: Some("Edit baseline JPEG details".into()), ..Default::default() })
     }

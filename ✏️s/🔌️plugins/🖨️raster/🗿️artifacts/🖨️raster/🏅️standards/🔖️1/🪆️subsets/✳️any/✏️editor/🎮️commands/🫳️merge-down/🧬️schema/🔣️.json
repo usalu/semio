@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Merge Raster Layer Down",
+  "description": "Merges a visible layer and the preceding visible normal-blend sibling into one pixel layer at their original parent position. Other layers and shared assets remain editable. Backdrop-dependent blend modes and adjustment siblings are refused. Undo restores both source layers.",
+  "type": "object",
+  "required": [
+    "layerId"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "\\S"
+    }
+  },
+  "additionalProperties": false
+}

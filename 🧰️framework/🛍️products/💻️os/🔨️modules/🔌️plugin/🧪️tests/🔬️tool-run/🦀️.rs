@@ -7,11 +7,11 @@
 
 use super::*;
 use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, SetCount, SetLabel, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
-use semio_framework_tool_run::{
-    JobKindId, ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepRing, ToolRunTick, ToolRunTickWriter,
-    ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict,
-};
 use crate::{RequestId, ViewWindowInstance};
+use semio_framework_tool_run::{
+    JobKindId, ToolRunCounter, ToolRunDefinition, ToolRunIdentity, ToolRunProgress, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunState, ToolRunStepRing, ToolRunTick,
+    ToolRunTickWriter, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict,
+};
 use semio_framework_ui_scene::{Board2dScene, World3dScene};
 use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -264,7 +264,11 @@ impl semio_framework_job::InteractiveJob for ToyCompactJob {
     }
 
     fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
+        if self.closing {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Blocked
+        }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -315,7 +319,11 @@ impl semio_framework_job::InteractiveJob for ToyWaitJob {
     }
 
     fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
-        if self.closing { semio_framework_job::InteractiveJobCloseStep::Complete } else { semio_framework_job::InteractiveJobCloseStep::Blocked }
+        if self.closing {
+            semio_framework_job::InteractiveJobCloseStep::Complete
+        } else {
+            semio_framework_job::InteractiveJobCloseStep::Blocked
+        }
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -432,17 +440,33 @@ impl ArtifactApp for ToyRunApp {
         if body_key == text(&fixture()["boardLane"]["bodyKey"]) {
             let scene = Board2dScene::base(format!("{{\"count\":{}}}", doc.snapshot.count), "{}".into(), true);
             let surface = scene_surface(text(&fixture()["boardLane"]["surfaceId"]), SurfaceKind::Board2d, &scene)?;
-            return column().try_id("board").map_err(|_| PluginAssemblyError::new("toy", "board id"))?.try_child(surface).map_err(|_| PluginAssemblyError::new("toy", "board child"))?.try_build().map(built_to_component_tree).map_err(|_| PluginAssemblyError::new("toy", "board build"));
+            return column()
+                .try_id("board")
+                .map_err(|_| PluginAssemblyError::new("toy", "board id"))?
+                .try_child(surface)
+                .map_err(|_| PluginAssemblyError::new("toy", "board child"))?
+                .try_build()
+                .map(built_to_component_tree)
+                .map_err(|_| PluginAssemblyError::new("toy", "board build"));
         }
         if body_key != text(&fixture()["traceLane"]["bodyKey"]) {
-            let run = doc.tool_run().map_or_else(String::new, |run| format!(" completed={} steps={} payload={}", run.progress.completed, run.progress.steps.len(), run.payload.as_deref().and_then(|payload| payload.try_into().ok()).map_or(0, u32::from_le_bytes)));
+            let run = doc
+                .tool_run()
+                .map_or_else(String::new, |run| format!(" completed={} steps={} payload={}", run.progress.completed, run.progress.steps.len(), run.payload.as_deref().and_then(|payload| payload.try_into().ok()).map_or(0, u32::from_le_bytes)));
             return built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}{run}", doc.snapshot.count)));
         }
         let provisional = |unit: i32| doc.tool_run().is_some_and(|run| run.provisional_entities.contains(&(unit as u64)));
         let instances: Vec<Value> = (1..=doc.snapshot.count).map(|unit| serde_json::json!({ "id": format!("unit-{unit}"), "meshId": "unit", "provisional": provisional(unit) })).collect();
         let scene = World3dScene::base("{}".into(), "[]".into(), Value::Array(instances).to_string(), semio_framework_ui_scene::world3d_default_selection_json());
         let surface = scene_surface(text(&fixture()["traceLane"]["surfaceId"]), SurfaceKind::World3d, &scene)?;
-        column().try_id("world").map_err(|_| PluginAssemblyError::new("toy", "world id"))?.try_child(surface).map_err(|_| PluginAssemblyError::new("toy", "world child"))?.try_build().map(built_to_component_tree).map_err(|_| PluginAssemblyError::new("toy", "world build"))
+        column()
+            .try_id("world")
+            .map_err(|_| PluginAssemblyError::new("toy", "world id"))?
+            .try_child(surface)
+            .map_err(|_| PluginAssemblyError::new("toy", "world child"))?
+            .try_build()
+            .map(built_to_component_tree)
+            .map_err(|_| PluginAssemblyError::new("toy", "world build"))
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -536,7 +560,10 @@ async fn toy_manifest() -> App {
     tools.push(ToolRef::new(text(&window_settings["toolId"])).await);
     let read_only_wait = text(&fixture["concurrentReadOnly"]["readOnlyToolId"]);
     builder = builder
-        .tool(ToolDefinition { run: Some(ToolRunDefinition { mutating: false, ..toy_definition(ToolRunRebasePolicy::Revalidate) }), ..ToolDefinition::new(read_only_wait, LocalizedLabel::native("Toy read-only hops", "Schreibgeschützte Spielsprünge"), IconName::PaintBucket).await })
+        .tool(ToolDefinition {
+            run: Some(ToolRunDefinition { mutating: false, ..toy_definition(ToolRunRebasePolicy::Revalidate) }),
+            ..ToolDefinition::new(read_only_wait, LocalizedLabel::native("Toy read-only hops", "Schreibgeschützte Spielsprünge"), IconName::PaintBucket).await
+        })
         .await;
     tools.push(ToolRef::new(read_only_wait).await);
     let reader = &fixture["readerWindows"];
@@ -1102,7 +1129,11 @@ async fn tool_run_tick_dirty_scope_is_the_panel_plus_the_scene_windows_and_exclu
     pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before).await;
     let scope = app.take_typed_operation_ui_scope().expect("a tick owes a dirty scope");
     let strings = |value: &Value| value.as_array().expect("strings").iter().map(|item| text(item).to_string()).collect::<Vec<_>>();
-    assert_eq!(scope, UiDirtyScope::Partial { window_bodies: strings(&expected["windowBodies"]), panel_bodies: strings(&expected["panelBodies"]), utilities: false, tools: false, engagements: false, measures: false, labels: false }, "never the whole UI per tick");
+    assert_eq!(
+        scope,
+        UiDirtyScope::Partial { window_bodies: strings(&expected["windowBodies"]), panel_bodies: strings(&expected["panelBodies"]), utilities: false, tools: false, engagements: false, measures: false, labels: false },
+        "never the whole UI per tick"
+    );
     let UiDirtyScope::Partial { window_bodies, .. } = &scope else { unreachable!() };
     assert!(!window_bodies.iter().any(|body| body == text(&expected["excludedWindowBody"])), "a window without a scene surface is not dirtied by a tick");
     let pause = run_action(&mut app, "toolRunPause").await;
@@ -1164,7 +1195,10 @@ async fn tool_run_job_port_hands_effects_to_the_host_and_a_waiting_job_keeps_not
     let mut app = toy_app(1).await;
     start(&mut app, text(&expected["toolId"])).await;
     for hop in 1..=number(&expected["hops"]) {
-        pump_until(&mut app, "the hop is handed to the host", |app| app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting) && !app.tool_runs.port().is_some_and(ToolRunJobPort::has_effects) && app.tool_runs.trace().is_some_and(|trace| trace.len() as u64 == hop - 1)).await;
+        pump_until(&mut app, "the hop is handed to the host", |app| {
+            app.tool_runs.port().is_some_and(ToolRunJobPort::is_waiting) && !app.tool_runs.port().is_some_and(ToolRunJobPort::has_effects) && app.tool_runs.trace().is_some_and(|trace| trace.len() as u64 == hop - 1)
+        })
+        .await;
         let mut effects = Vec::new();
         while let Some(effect) = app.take_typed_operation_effect() {
             effects.push(effect);
@@ -1304,7 +1338,10 @@ async fn tool_run_base_change_rebinds_the_running_job_so_ticks_never_carry_a_sta
         let mut app = toy_app(number(&expected["target"])).await;
         let mut probe = attach_probe(&mut app, &format!("tool-run-rebind-{tool_id}")).await;
         start(&mut app, tool_id).await;
-        pump_until(&mut app, "first checkpointed unit", |app| app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeRebase"]) * number(&fixture["opsPerUnit"]) && app.tool_runs.checkpoint().is_some() && app.tool_runs.state() == Some(ToolRunState::Running)).await;
+        pump_until(&mut app, "first checkpointed unit", |app| {
+            app.tool_runs.provisional().len() as u64 >= number(&expected["unitsBeforeRebase"]) * number(&fixture["opsPerUnit"]) && app.tool_runs.checkpoint().is_some() && app.tool_runs.state() == Some(ToolRunState::Running)
+        })
+        .await;
         ingest_remote_count(&mut app, &mut probe, &format!("tool-run-rebind-remote-{tool_id}"), number(&expected["remoteCount"])).await;
         pump_until(&mut app, "rebase observed", |app| app.tool_runs.slot().is_some_and(|slot| u64::from(slot.generation) == number(&expected["generationAfterRebase"]))).await;
         let identity = app.tool_runs.identity().expect("identity");
@@ -1495,7 +1532,9 @@ async fn publish_window_selection(app: &mut ToyApp, window_id: &str, selected: u
     let mut meta = toy_meta();
     meta.view_state = Some(view);
     let mutation = WindowConfigMutation::of::<ToyWorldWindowConfig>(window_id, ChangeTestConfigSelection { selected: Some(selected.to_string()) }.into());
-    app.dispatch_emit("setWorldSelection", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { window_config_mutations: vec![mutation], ..Default::default() }, &meta).await.unwrap_or_else(|fault| panic!("window config publication: {fault:?}"));
+    app.dispatch_emit("setWorldSelection", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { window_config_mutations: vec![mutation], ..Default::default() }, &meta)
+        .await
+        .unwrap_or_else(|fault| panic!("window config publication: {fault:?}"));
 }
 
 /// ⚖️ LAW: a run started from a window reads the window-config fields it declares for that window's kind from the
@@ -1548,7 +1587,11 @@ async fn tool_run_reader_windows_refresh_every_tick_and_read_progress_steps_and_
     pump_until(&mut app, "a tick lands", |app| app.tool_runs.provisional().len() > before).await;
     let scope = app.take_typed_operation_ui_scope().expect("a tick owes a dirty scope");
     let strings = |value: &Value| value.as_array().expect("strings").iter().map(|item| text(item).to_string()).collect::<Vec<_>>();
-    assert_eq!(scope, UiDirtyScope::Partial { window_bodies: strings(&expected["windowBodies"]), panel_bodies: strings(&expected["panelBodies"]), utilities: false, tools: false, engagements: false, measures: false, labels: false }, "the reader window refreshes with every tick, nothing unrelated does");
+    assert_eq!(
+        scope,
+        UiDirtyScope::Partial { window_bodies: strings(&expected["windowBodies"]), panel_bodies: strings(&expected["panelBodies"]), utilities: false, tools: false, engagements: false, measures: false, labels: false },
+        "the reader window refreshes with every tick, nothing unrelated does"
+    );
     run_action(&mut app, "toolRunPause").await;
     pump_until(&mut app, "paused and settled", |app| app.tool_runs.state() == Some(ToolRunState::Paused) && !app.tool_runs.has_pending_work()).await;
     let view = app.tool_runs.view().expect("run view");
@@ -1598,7 +1641,10 @@ async fn read_only_runs_in_two_windows_run_concurrently_and_a_second_mutating_st
     let panel: Value = serde_json::from_str(&render_text(&mut app, FRAMEWORK_TOOL_RUN_BODY_KEY).await).expect("panel parses");
     for view in app.tool_runs.views() {
         assert!(find_node(&panel, &panel_id(&fixture["panel"]["groupId"], view.identity.id.run)).is_some(), "run {} has its own panel group", view.identity.id.run);
-        let delta = app.tool_runs.trace_delta(Some(ToolRunTraceCursor { run: view.identity.id.run, generation: view.identity.generation + 1, page: 0 }), usize::MAX).map(|lane| ToolRunTraceDelta::decode(&base64_codec::base64_url_decode(&lane).expect("base64url")).expect("delta"));
+        let delta = app
+            .tool_runs
+            .trace_delta(Some(ToolRunTraceCursor { run: view.identity.id.run, generation: view.identity.generation + 1, page: 0 }), usize::MAX)
+            .map(|lane| ToolRunTraceDelta::decode(&base64_codec::base64_url_decode(&lane).expect("base64url")).expect("delta"));
         assert_eq!(delta.map(|delta| delta.identity.id.run), Some(view.identity.id.run), "run {} has its own trace", view.identity.id.run);
     }
     let first = views[0].clone();
@@ -1789,10 +1835,7 @@ fn expected_flag(value: &Value) -> bool {
 async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
     for (bytes, rendered) in [(2_909usize, true), (3_706, true), (4_360, true), (16_384, true), (65_536, true), (3_820, false)] {
         let mut app = toy_app(1).await;
-        app.config_store
-            .dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], description: None })
-            .await
-            .expect("a retained config past one envelope page applies");
+        app.config_store.dispatch(ArtifactCommand::Apply { mutations: vec![ChangeTestConfigSelection { selected: Some("c".repeat(bytes)) }.into()], description: None }).await.expect("a retained config past one envelope page applies");
         if rendered {
             let _ = render_text(&mut app, "main").await;
         }

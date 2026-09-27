@@ -35,10 +35,11 @@ fn epoch_zero_is_a_valid_event_feed_time_source() {
 #[test]
 fn row_height_grows_when_detail_is_present() {
     let theme = Theme::dark();
+    let layout = event_feed_layout(Rect::new(0.0, 0.0, 400.0, 200.0), &theme);
     let without_detail = EventFeedEntryJson { id: "a".into(), timestamp_ms: 0, icon_id: String::new(), title: "a".into(), detail: None, tone: None };
     let with_detail = EventFeedEntryJson { id: "b".into(), timestamp_ms: 0, icon_id: String::new(), title: "b".into(), detail: Some("more".into()), tone: None };
-    let row_h = theme.control_height;
-    assert!(event_feed_row_height(&with_detail, row_h, &theme) > event_feed_row_height(&without_detail, row_h, &theme));
+    assert_eq!(event_feed_row_height(&without_detail, &layout), theme.padding_standard * 2.0 + theme.root_rem_pixels);
+    assert_eq!(event_feed_row_height(&with_detail, &layout), theme.padding_standard * 2.0 + theme.root_rem_pixels * 2.0);
 }
 
 fn temporal_reply(revision: u64, request: &ui_contract::HostTemporalFormatRequestV1, prefix: &str) -> ui_contract::HostTemporalFormatReplyV1 {
@@ -150,9 +151,111 @@ fn temporal_completion_is_fenced_by_the_admitted_surface_token() {
 fn known_tones_resolve_to_distinct_theme_tokens() {
     let theme = Theme::dark();
     assert_eq!(event_feed_tone_color(Some("error"), &theme), theme.error);
-    assert_eq!(event_feed_tone_color(Some("success"), &theme), theme.accent);
-    assert_eq!(event_feed_tone_color(None, &theme), theme.text_muted);
-    assert_eq!(event_feed_tone_color(Some("unknown-tone"), &theme), theme.text_muted);
+    assert_eq!(event_feed_tone_color(Some("fatal"), &theme), theme.error);
+    assert_eq!(event_feed_tone_color(Some("success"), &theme), theme.success);
+    assert_eq!(event_feed_tone_color(Some("warning"), &theme), theme.warning);
+    assert_eq!(event_feed_tone_color(None, &theme), theme.text);
+    assert_eq!(event_feed_tone_color(Some("unknown-tone"), &theme), theme.text);
+}
+
+#[test]
+fn neutral_visual_contract_drives_card_paint_hit_ax_and_semantic_tones() {
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📡️EventFeedHost/🧫️fixtures/🎨️layout/🔣️.json"))).expect("EventFeed visual layout fixture");
+    let entries: Vec<EventFeedEntryJson> = serde_json::from_value(fixture["entries"].clone()).expect("visual entries");
+    let expected = &fixture["expected"];
+    let viewport = &fixture["viewport"];
+    let bounds = Rect::new(0.0, 0.0, viewport["width"].as_f64().unwrap() as f32, viewport["height"].as_f64().unwrap() as f32);
+    let theme = Theme::default();
+    let layout = event_feed_layout(bounds, &theme);
+    let close = |actual: f32, key: &str| (actual - expected[key].as_f64().unwrap() as f32).abs() < 0.001;
+    assert!(close(layout.inner.x, "hostPaddingPx"));
+    assert!(close(layout.card_gap, "cardGapPx"));
+    assert!(close(layout.card_padding, "cardPaddingPx"));
+    assert!(close(theme.border_radius, "cardRadiusPx"));
+    assert!(close(layout.icon_size, "iconSizePx"));
+    assert!(close(layout.time_font_size, "timeFontSizePx"));
+    assert!(close(event_feed_row_height(&entries[0], &layout), "detailCardHeightPx"));
+    assert!(close(event_feed_row_height(&entries[1], &layout), "plainCardHeightPx"));
+    assert_eq!(event_feed_tone_color(Some("info"), &theme), theme.text);
+    assert_eq!(event_feed_tone_color(Some("success"), &theme), theme.success);
+    assert_eq!(event_feed_tone_color(Some("warning"), &theme), theme.warning);
+    assert_eq!(event_feed_tone_color(Some("error"), &theme), theme.error);
+    assert_eq!(event_feed_tone_color(Some("fatal"), &theme), theme.error);
+    let medium = ui_wgpu::wgpu::TextWeight::Medium.synthetic_offset(theme.font_size_small).unwrap();
+    let semibold = ui_wgpu::wgpu::TextWeight::Semibold.synthetic_offset(theme.font_size_small).unwrap();
+    assert!(medium > 0.0 && medium < semibold, "font-medium stays lighter than fatal font-semibold");
+
+    let scene = UiComponentSceneNode {
+        host_id: "feed-visual-layout".into(),
+        surface_id: fixture["surfaceId"].as_str().unwrap().into(),
+        controller_id: fixture["controllerId"].as_str().unwrap().into(),
+        component_kind: SurfaceKind::EventFeed,
+        pane_id: None,
+        binding_id: None,
+        presence: UiPresence::default(),
+        canvas_2d: None,
+        world_3d: None,
+        node_graph: None,
+        text_editor: None,
+        table: None,
+        paint_2d: None,
+        virtual_file_system: None,
+        tiled_map: None,
+        board2d: None,
+        icon_render: None,
+        ink_canvas: None,
+        graph_timeline: None,
+        diff_view: None,
+        event_feed: Some(ui_wgpu::wgpu::EventFeedScene {
+            entries_json: fixture["entries"].to_string(),
+            follow: None,
+            activate_action: fixture["activateAction"].as_str().map(str::to_owned),
+            domain_id: None,
+        }),
+        block_list: None,
+        menu: None,
+    };
+    let heights: Vec<f32> = entries.iter().map(|entry| event_feed_row_height(entry, &layout)).collect();
+    let controls = event_feed_accessibility_controls(&scene, &layout, &entries, &heights, 0.0, None);
+    assert_eq!(controls[0].rect, Rect::new(layout.inner.x, layout.inner.y, layout.inner.w, heights[0]));
+    assert_eq!(controls[1].rect.y, layout.inner.y + heights[0] + layout.card_gap);
+    let gap_y = layout.inner.y + heights[0] + layout.card_gap * 0.5;
+    assert!(event_feed_hit(&scene, bounds, layout.inner.x + 1.0, gap_y, &theme).is_none(), "the card gap is not actionable");
+    assert!(event_feed_hit(&scene, bounds, layout.inner.x - 1.0, layout.inner.y + 1.0, &theme).is_none(), "host padding is not a card");
+    let second_y = controls[1].rect.y + 1.0;
+    assert_eq!(event_feed_hit(&scene, bounds, layout.inner.x + 1.0, second_y, &theme).expect("second card").control_id, "feed-visual-layout.feed.success");
+
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut scroll = HashMap::new();
+    let mut collapsed = HashMap::new();
+    let mut selects = HashMap::new();
+    {
+        let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        render_event_feed(&scene, bounds, &mut ctx);
+    }
+    let painted_cards: Vec<Rect> = input.staged_hits().iter().filter(|target| target.event.is_some()).map(|target| target.rect).collect();
+    assert_eq!(painted_cards, controls.iter().map(|control| control.rect).collect::<Vec<_>>(), "paint, pointer and AX retain the same visible card rectangles");
+    let colors = instance_colors(&draw);
+    assert!(colors.contains(&theme.success));
+    assert!(colors.contains(&theme.warning));
+    assert!(colors.contains(&theme.error));
+
+    let partial_scroll = heights[0] * 0.5;
+    set_scroll_offset(&scene.host_id, "feed", partial_scroll);
+    let clipped_controls = event_feed_accessibility_controls(&scene, &layout, &entries, &heights, partial_scroll, None);
+    let mut clipped_draw = ui_wgpu::wgpu::DrawList::default();
+    let mut clipped_atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut clipped_input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    {
+        let mut ctx = crate::interpreter::framework_widget_context(&mut clipped_draw, None, &mut clipped_atlas, None, &mut clipped_input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
+        render_event_feed(&scene, bounds, &mut ctx);
+    }
+    let clipped_hits: Vec<Rect> = clipped_input.staged_hits().iter().filter(|target| target.event.is_some()).map(|target| target.rect).collect();
+    assert_eq!(clipped_hits, clipped_controls.iter().map(|control| control.rect).collect::<Vec<_>>(), "partially visible cards share clipped pointer and AX rectangles");
+    assert_eq!(clipped_hits[0], Rect::new(layout.inner.x, layout.inner.y, layout.inner.w, heights[0] - partial_scroll));
+    set_scroll_offset(&scene.host_id, "feed", 0.0);
 }
 
 //#region EventFeedPaintTests
@@ -252,7 +355,9 @@ fn row_activation_sends_surface_id_and_id_like_react() {
     };
     let theme = Theme::default();
     let bounds = Rect::new(0.0, 0.0, 400.0, 200.0);
-    let hit = event_feed_hit(&scene, bounds, theme.control_height * 1.5, &theme).expect("second entry hit");
+    let layout = event_feed_layout(bounds, &theme);
+    let first_height = event_feed_row_height(&serde_json::from_value(json!({ "id": "e1", "title": "Built" })).unwrap(), &layout);
+    let hit = event_feed_hit(&scene, bounds, layout.inner.x + 1.0, layout.inner.y + first_height + layout.card_gap + 1.0, &theme).expect("second entry hit");
     assert_eq!(hit.control_id, "feed-press-test.feed.e2");
     let action = hit.action.expect("activate action");
     assert_eq!(action.action, "openEntry");
@@ -294,8 +399,78 @@ fn rows_without_an_activate_action_resolve_hover_only() {
     };
     scene.event_feed = Some(ui_wgpu::wgpu::EventFeedScene { entries_json: entries, follow: None, activate_action: None, domain_id: None });
     let theme = Theme::default();
-    let hit = event_feed_hit(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), theme.control_height * 0.5, &theme).expect("entry hit");
+    let bounds = Rect::new(0.0, 0.0, 400.0, 200.0);
+    let layout = event_feed_layout(bounds, &theme);
+    let hit = event_feed_hit(&scene, bounds, layout.inner.x + 1.0, layout.inner.y + 1.0, &theme).expect("entry hit");
     assert_eq!(hit.control_id, "feed-press-inert.feed.e1");
     assert!(hit.action.is_none());
+}
+
+#[test]
+fn neutral_accessible_entries_stage_clipped_labels_and_exact_actions() {
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📡️EventFeedHost/🧫️fixtures/♿️accessible-entry/🔣️.json"))).expect("EventFeed accessible entry fixture");
+    let theme = Theme::default();
+    for (index, row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let entries_json = json!([row["entry"].clone()]).to_string();
+        let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&entries_json).unwrap();
+        let scene = UiComponentSceneNode {
+            host_id: fixture["hostId"].as_str().unwrap().into(),
+            surface_id: fixture["surfaceId"].as_str().unwrap().into(),
+            controller_id: fixture["controllerId"].as_str().unwrap().into(),
+            component_kind: SurfaceKind::EventFeed,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            diff_view: None,
+            event_feed: Some(ui_wgpu::wgpu::EventFeedScene { entries_json, follow: None, activate_action: row["activateAction"].as_str().map(str::to_owned), domain_id: None }),
+            block_list: None,
+            menu: None,
+        };
+        let time_request = event_feed_time_request(&entries);
+        let time_reply = ui_contract::HostTemporalFormatReplyV1 {
+            profile: ui_contract::HostTemporalProfileV1 { locale: "de-DE".into(), time_zone: "Europe/Berlin".into(), hour_cycle: ui_contract::HostHourCycleV1::H23, profile_revision: 9 },
+            labels: vec![ui_contract::HostTemporalLabelV1 { id: time_request.values[0].id.clone(), text: fixture["acceptedTimeLabel"].as_str().unwrap().into() }],
+        };
+        let bounds = Rect::new(4.0, 10.0, 300.0, theme.control_height);
+        let layout = event_feed_layout(bounds, &theme);
+        let controls = event_feed_accessibility_controls(&scene, &layout, &entries, &[event_feed_row_height(&entries[0], &layout)], 0.0, Some(&time_reply));
+        let expected_label = event_feed_accessibility_label(&entries[0], Some(fixture["acceptedTimeLabel"].as_str().unwrap()));
+        assert_eq!(controls.len(), 1);
+        assert_eq!(controls[0].key, row["expected"]["key"].as_str().unwrap());
+        assert_eq!(controls[0].label, row["expected"]["accessibleName"].as_str().unwrap_or(&expected_label));
+        assert_eq!(controls[0].rect, layout.inner, "a partially visible detail card publishes only its clipped accepted rect");
+        assert_eq!(controls[0].action.is_some(), row["expected"]["action"].is_object());
+        stage_event_feed_accessibility_controls(&scene.host_id, controls);
+        let epoch = 910 + index as u64;
+        seal_event_feed_accessibility_candidates(epoch);
+        acknowledge_event_feed_accessibility_candidates(epoch);
+        if let Some(expected) = row["expected"]["action"].as_object() {
+            let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+            event_feed_accessibility_activate(&scene, row["expected"]["key"].as_str().unwrap(), &mut input).expect("accepted control").expect("bounded action");
+            let actions = crate::collect_fixture_actions(&mut input);
+            assert_eq!(actions.len(), 1);
+            assert_eq!(actions[0].controller_id, expected["controllerId"].as_str().unwrap());
+            assert_eq!(actions[0].action, expected["action"].as_str().unwrap());
+            let args = actions[0].args.as_ref().unwrap();
+            assert_eq!(args.get("surfaceId").and_then(semio_framework::DslValue::as_str), expected["args"]["surfaceId"].as_str());
+            assert_eq!(args.get("id").and_then(semio_framework::DslValue::as_str), expected["args"]["id"].as_str());
+        } else {
+            let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+            assert!(event_feed_accessibility_activate(&scene, row["expected"]["key"].as_str().unwrap(), &mut input).is_none());
+            assert!(crate::collect_fixture_actions(&mut input).is_empty());
+        }
+    }
 }
 //#endregion EventFeedPointerTests

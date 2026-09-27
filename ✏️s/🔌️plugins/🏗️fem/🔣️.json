@@ -1398,6 +1398,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a node at x, y to the 2D structural model; elements, supports and loads attach to nodes.",
+                  "de": "Fügt dem 2D-Tragwerksmodell einen Knoten an x, y hinzu; Elemente, Lager und Lasten hängen an Knoten."
+                },
+                "reuse": {
+                  "en": "Adds a node at x, y to the 2D structural model; elements, supports and loads attach to nodes.",
+                  "de": "Fügt dem 2D-Tragwerksmodell einen Knoten an x, y hinzu; Elemente, Lager und Lasten hängen an Knoten."
+                }
               }
             }
           },
@@ -1511,6 +1521,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a bar (an axial-only truss member) between two existing nodes of the 2D model, with a material and a section.",
+                  "de": "Fügt zwischen zwei vorhandenen Knoten des 2D-Modells einen Stab (ein nur normalkraftbeanspruchtes Fachwerkglied) mit Material und Querschnitt hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a bar (an axial-only truss member) between two existing nodes of the 2D model, with a material and a section.",
+                  "de": "Fügt zwischen zwei vorhandenen Knoten des 2D-Modells einen Stab (ein nur normalkraftbeanspruchtes Fachwerkglied) mit Material und Querschnitt hinzu."
+                }
               }
             }
           },
@@ -1624,6 +1644,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a beam (a bending member) between two existing nodes of the 2D model, with a material and a section.",
+                  "de": "Fügt zwischen zwei vorhandenen Knoten des 2D-Modells einen Balken (ein biegebeanspruchtes Glied) mit Material und Querschnitt hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a beam (a bending member) between two existing nodes of the 2D model, with a material and a section.",
+                  "de": "Fügt zwischen zwei vorhandenen Knoten des 2D-Modells einen Balken (ein biegebeanspruchtes Glied) mit Material und Querschnitt hinzu."
+                }
               }
             }
           },
@@ -1705,6 +1735,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a named material with its Young's modulus (and, in 3D, its shear modulus) for elements to use.",
+                  "de": "Fügt ein benanntes Material mit seinem Elastizitätsmodul (in 3D auch Schubmodul) hinzu, das Elemente verwenden können."
+                },
+                "reuse": {
+                  "en": "Adds a named material with its Young's modulus (and, in 3D, its shear modulus) for elements to use.",
+                  "de": "Fügt ein benanntes Material mit seinem Elastizitätsmodul (in 3D auch Schubmodul) hinzu, das Elemente verwenden können."
+                }
               }
             }
           },
@@ -1803,6 +1843,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a named cross-section with its area and second moment of area for bars and beams to use.",
+                  "de": "Fügt einen benannten Querschnitt mit Fläche und Flächenträgheitsmoment hinzu, den Stäbe und Balken verwenden können."
+                },
+                "reuse": {
+                  "en": "Adds a named cross-section with its area and second moment of area for bars and beams to use.",
+                  "de": "Fügt einen benannten Querschnitt mit Fläche und Flächenträgheitsmoment hinzu, den Stäbe und Balken verwenden können."
+                }
               }
             }
           },
@@ -1883,6 +1933,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a support to one node, fixing the given degrees of freedom (translations and rotations) against movement.",
+                  "de": "Fügt einem Knoten ein Lager hinzu, das die angegebenen Freiheitsgrade (Verschiebungen und Verdrehungen) festhält."
+                },
+                "reuse": {
+                  "en": "Adds a support to one node, fixing the given degrees of freedom (translations and rotations) against movement.",
+                  "de": "Fügt einem Knoten ein Lager hinzu, das die angegebenen Freiheitsgrade (Verschiebungen und Verdrehungen) festhält."
+                }
               }
             }
           },
@@ -2039,6 +2099,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a point load of the given value on one degree of freedom of a node, in a load case.",
+                  "de": "Fügt eine Einzellast mit dem angegebenen Wert auf einen Freiheitsgrad eines Knotens in einem Lastfall hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a point load of the given value on one degree of freedom of a node, in a load case.",
+                  "de": "Fügt eine Einzellast mit dem angegebenen Wert auf einen Freiheitsgrad eines Knotens in einem Lastfall hinzu."
+                }
               }
             }
           },
@@ -2155,6 +2225,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a uniformly distributed load (wx along, wy across) on one bar or beam element, in a load case.",
+                  "de": "Fügt eine gleichmäßig verteilte Streckenlast (wx längs, wy quer) auf ein Stab- oder Balkenelement in einem Lastfall hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a uniformly distributed load (wx along, wy across) on one bar or beam element, in a load case.",
+                  "de": "Fügt eine gleichmäßig verteilte Streckenlast (wx längs, wy quer) auf ein Stab- oder Balkenelement in einem Lastfall hinzu."
+                }
               }
             }
           },
@@ -2252,6 +2332,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a uniform pressure load on one plate region, in a load case.",
+                  "de": "Fügt eine gleichmäßige Flächenlast (Druck) auf einen Scheibenbereich in einem Lastfall hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a uniform pressure load on one plate region, in a load case.",
+                  "de": "Fügt eine gleichmäßige Flächenlast (Druck) auf einen Scheibenbereich in einem Lastfall hinzu."
+                }
               }
             }
           },
@@ -2424,6 +2514,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a rectangular plate region at x, y with a width and height, material, thickness and mesh size, meshed into finite elements.",
+                  "de": "Fügt einen rechteckigen Scheibenbereich an x, y mit Breite, Höhe, Material, Dicke und Netzweite hinzu, der in finite Elemente vernetzt wird."
+                },
+                "reuse": {
+                  "en": "Adds a rectangular plate region at x, y with a width and height, material, thickness and mesh size, meshed into finite elements.",
+                  "de": "Fügt einen rechteckigen Scheibenbereich an x, y mit Breite, Höhe, Material, Dicke und Netzweite hinzu, der in finite Elemente vernetzt wird."
+                }
               }
             }
           },
@@ -2504,6 +2604,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a named load case that loads are assigned to, optionally including the structure's self weight.",
+                  "de": "Fügt einen benannten Lastfall hinzu, dem Lasten zugeordnet werden, optional mit dem Eigengewicht des Tragwerks."
+                },
+                "reuse": {
+                  "en": "Adds a named load case that loads are assigned to, optionally including the structure's self weight.",
+                  "de": "Fügt einen benannten Lastfall hinzu, dem Lasten zugeordnet werden, optional mit dem Eigengewicht des Tragwerks."
+                }
               }
             }
           },
@@ -2566,6 +2676,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a named load combination that sums weighted load cases for the analysis.",
+                  "de": "Fügt eine benannte Lastfallkombination hinzu, die gewichtete Lastfälle für die Analyse überlagert."
+                },
+                "reuse": {
+                  "en": "Adds a named load combination that sums weighted load cases for the analysis.",
+                  "de": "Fügt eine benannte Lastfallkombination hinzu, die gewichtete Lastfälle für die Analyse überlagert."
+                }
               }
             }
           },
@@ -2645,6 +2765,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns the structure's self weight on or off in one load case.",
+                  "de": "Schaltet das Eigengewicht des Tragwerks in einem Lastfall ein oder aus."
+                },
+                "reuse": {
+                  "en": "Turns the structure's self weight on or off in one load case.",
+                  "de": "Schaltet das Eigengewicht des Tragwerks in einem Lastfall ein oder aus."
+                }
               }
             }
           },
@@ -2744,6 +2874,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how many vibration modes and buckling modes the analysis computes and the scale deformations are drawn with.",
+                  "de": "Legt fest, wie viele Eigenschwingungs- und Knickformen die Analyse berechnet und mit welchem Maßstab Verformungen gezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Sets how many vibration modes and buckling modes the analysis computes and the scale deformations are drawn with.",
+                  "de": "Legt fest, wie viele Eigenschwingungs- und Knickformen die Analyse berechnet und mit welchem Maßstab Verformungen gezeichnet werden."
+                }
               }
             }
           },
@@ -2788,6 +2928,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every selected node, element, support or load from the model, together with what depends on it.",
+                  "de": "Löscht alle ausgewählten Knoten, Elemente, Lager oder Lasten samt allem, was davon abhängt, aus dem Modell."
+                },
+                "reuse": {
+                  "en": "Deletes every selected node, element, support or load from the model, together with what depends on it.",
+                  "de": "Löscht alle ausgewählten Knoten, Elemente, Lager oder Lasten samt allem, was davon abhängt, aus dem Modell."
+                }
               }
             }
           },
@@ -2806,7 +2956,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -2833,7 +2983,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -2911,6 +3062,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 2D structural model with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 2D-Tragwerksmodell durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 2D structural model with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 2D-Tragwerksmodell durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -3050,6 +3211,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
+                  "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
+                  "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
+                }
               }
             }
           },
@@ -3281,6 +3452,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one node by id, such as a coordinate.",
+                  "de": "Setzt ein Feld eines Knotens anhand seiner Id, etwa eine Koordinate."
+                },
+                "reuse": {
+                  "en": "Sets one field of one node by id, such as a coordinate.",
+                  "de": "Setzt ein Feld eines Knotens anhand seiner Id, etwa eine Koordinate."
+                }
               }
             }
           },
@@ -3377,6 +3558,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one bar or beam element by id, such as its material, section or end nodes.",
+                  "de": "Setzt ein Feld eines Stab- oder Balkenelements anhand seiner Id, etwa Material, Querschnitt oder Endknoten."
+                },
+                "reuse": {
+                  "en": "Sets one field of one bar or beam element by id, such as its material, section or end nodes.",
+                  "de": "Setzt ein Feld eines Stab- oder Balkenelements anhand seiner Id, etwa Material, Querschnitt oder Endknoten."
+                }
               }
             }
           },
@@ -3473,6 +3664,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one material by id, such as its name or Young's modulus.",
+                  "de": "Setzt ein Feld eines Materials anhand seiner Id, etwa Name oder Elastizitätsmodul."
+                },
+                "reuse": {
+                  "en": "Sets one field of one material by id, such as its name or Young's modulus.",
+                  "de": "Setzt ein Feld eines Materials anhand seiner Id, etwa Name oder Elastizitätsmodul."
+                }
               }
             }
           },
@@ -3569,6 +3770,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one cross-section by id, such as its area or second moment of area.",
+                  "de": "Setzt ein Feld eines Querschnitts anhand seiner Id, etwa Fläche oder Flächenträgheitsmoment."
+                },
+                "reuse": {
+                  "en": "Sets one field of one cross-section by id, such as its area or second moment of area.",
+                  "de": "Setzt ein Feld eines Querschnitts anhand seiner Id, etwa Fläche oder Flächenträgheitsmoment."
+                }
               }
             }
           },
@@ -3665,6 +3876,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one support by id, such as which degrees of freedom it fixes.",
+                  "de": "Setzt ein Feld eines Lagers anhand seiner Id, etwa welche Freiheitsgrade es festhält."
+                },
+                "reuse": {
+                  "en": "Sets one field of one support by id, such as which degrees of freedom it fixes.",
+                  "de": "Setzt ein Feld eines Lagers anhand seiner Id, etwa welche Freiheitsgrade es festhält."
+                }
               }
             }
           },
@@ -3761,6 +3982,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one plate region by id, such as its size, thickness or mesh size.",
+                  "de": "Setzt ein Feld eines Scheibenbereichs anhand seiner Id, etwa Größe, Dicke oder Netzweite."
+                },
+                "reuse": {
+                  "en": "Sets one field of one plate region by id, such as its size, thickness or mesh size.",
+                  "de": "Setzt ein Feld eines Scheibenbereichs anhand seiner Id, etwa Größe, Dicke oder Netzweite."
+                }
               }
             }
           },
@@ -3857,6 +4088,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one load by id, such as its value, direction or load case.",
+                  "de": "Setzt ein Feld einer Last anhand ihrer Id, etwa Wert, Richtung oder Lastfall."
+                },
+                "reuse": {
+                  "en": "Sets one field of one load by id, such as its value, direction or load case.",
+                  "de": "Setzt ein Feld einer Last anhand ihrer Id, etwa Wert, Richtung oder Lastfall."
+                }
               }
             }
           },
@@ -3953,6 +4194,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one load case by id, such as its name or whether it includes self weight.",
+                  "de": "Setzt ein Feld eines Lastfalls anhand seiner Id, etwa Name oder ob er das Eigengewicht enthält."
+                },
+                "reuse": {
+                  "en": "Sets one field of one load case by id, such as its name or whether it includes self weight.",
+                  "de": "Setzt ein Feld eines Lastfalls anhand seiner Id, etwa Name oder ob er das Eigengewicht enthält."
+                }
               }
             }
           },
@@ -4049,6 +4300,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one load combination by id, such as its name or the factors of its load cases.",
+                  "de": "Setzt ein Feld einer Lastfallkombination anhand ihrer Id, etwa Name oder die Faktoren ihrer Lastfälle."
+                },
+                "reuse": {
+                  "en": "Sets one field of one load combination by id, such as its name or the factors of its load cases.",
+                  "de": "Setzt ein Feld einer Lastfallkombination anhand ihrer Id, etwa Name oder die Faktoren ihrer Lastfälle."
+                }
               }
             }
           },
@@ -4445,6 +4706,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the selected nodes by dx and dy, dragging the attached elements along.",
+                  "de": "Verschiebt die ausgewählten Knoten um dx und dy und zieht die angeschlossenen Elemente mit."
+                },
+                "reuse": {
+                  "en": "Moves the selected nodes by dx and dy, dragging the attached elements along.",
+                  "de": "Verschiebt die ausgewählten Knoten um dx und dy und zieht die angeschlossenen Elemente mit."
+                }
               }
             }
           },
@@ -4508,6 +4779,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Rotates the selected nodes by the given angle around their common centre.",
+                  "de": "Dreht die ausgewählten Knoten um den angegebenen Winkel um ihren gemeinsamen Mittelpunkt."
+                },
+                "reuse": {
+                  "en": "Rotates the selected nodes by the given angle around their common centre.",
+                  "de": "Dreht die ausgewählten Knoten um den angegebenen Winkel um ihren gemeinsamen Mittelpunkt."
+                }
               }
             }
           },
@@ -4589,6 +4870,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Scales the positions of the selected nodes by sx and sy about their common centre.",
+                  "de": "Skaliert die Positionen der ausgewählten Knoten um sx und sy um ihren gemeinsamen Mittelpunkt."
+                },
+                "reuse": {
+                  "en": "Scales the positions of the selected nodes by sx and sy about their common centre.",
+                  "de": "Skaliert die Positionen der ausgewählten Knoten um sx und sy um ihren gemeinsamen Mittelpunkt."
+                }
               }
             }
           },
@@ -5480,6 +5771,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -5585,6 +5886,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -5678,6 +5989,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -7006,6 +7327,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -7111,6 +7442,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -7204,6 +7545,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -8718,6 +9069,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a node at x, y, z to the 3D structural model; elements, supports and loads attach to nodes.",
+                  "de": "Fügt dem 3D-Tragwerksmodell einen Knoten an x, y, z hinzu; Elemente, Lager und Lasten hängen an Knoten."
+                },
+                "reuse": {
+                  "en": "Adds a node at x, y, z to the 3D structural model; elements, supports and loads attach to nodes.",
+                  "de": "Fügt dem 3D-Tragwerksmodell einen Knoten an x, y, z hinzu; Elemente, Lager und Lasten hängen an Knoten."
+                }
               }
             }
           },
@@ -8762,6 +9123,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a bar (an axial-only truss member) between two existing nodes of the 3D model, with a material and a section.",
+                  "de": "Fügt zwischen zwei vorhandenen Knoten des 3D-Modells einen Stab (ein nur normalkraftbeanspruchtes Fachwerkglied) mit Material und Querschnitt hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a bar (an axial-only truss member) between two existing nodes of the 3D model, with a material and a section.",
+                  "de": "Fügt zwischen zwei vorhandenen Knoten des 3D-Modells einen Stab (ein nur normalkraftbeanspruchtes Fachwerkglied) mit Material und Querschnitt hinzu."
+                }
               }
             }
           },
@@ -8806,6 +9177,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a frame member (a 3D beam carrying bending and torsion) between two existing nodes, with a material, a section and a roll angle.",
+                  "de": "Fügt zwischen zwei vorhandenen Knoten ein Rahmenglied (einen 3D-Balken für Biegung und Torsion) mit Material, Querschnitt und Rollwinkel hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a frame member (a 3D beam carrying bending and torsion) between two existing nodes, with a material, a section and a roll angle.",
+                  "de": "Fügt zwischen zwei vorhandenen Knoten ein Rahmenglied (einen 3D-Balken für Biegung und Torsion) mit Material, Querschnitt und Rollwinkel hinzu."
+                }
               }
             }
           },
@@ -8850,6 +9231,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a named material with its Young's modulus (and, in 3D, its shear modulus) for elements to use.",
+                  "de": "Fügt ein benanntes Material mit seinem Elastizitätsmodul (in 3D auch Schubmodul) hinzu, das Elemente verwenden können."
+                },
+                "reuse": {
+                  "en": "Adds a named material with its Young's modulus (and, in 3D, its shear modulus) for elements to use.",
+                  "de": "Fügt ein benanntes Material mit seinem Elastizitätsmodul (in 3D auch Schubmodul) hinzu, das Elemente verwenden können."
+                }
               }
             }
           },
@@ -8894,6 +9285,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a named cross-section with its area and second moment of area for bars and beams to use.",
+                  "de": "Fügt einen benannten Querschnitt mit Fläche und Flächenträgheitsmoment hinzu, den Stäbe und Balken verwenden können."
+                },
+                "reuse": {
+                  "en": "Adds a named cross-section with its area and second moment of area for bars and beams to use.",
+                  "de": "Fügt einen benannten Querschnitt mit Fläche und Flächenträgheitsmoment hinzu, den Stäbe und Balken verwenden können."
+                }
               }
             }
           },
@@ -8938,6 +9339,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a support to one node, fixing the given degrees of freedom (translations and rotations) against movement.",
+                  "de": "Fügt einem Knoten ein Lager hinzu, das die angegebenen Freiheitsgrade (Verschiebungen und Verdrehungen) festhält."
+                },
+                "reuse": {
+                  "en": "Adds a support to one node, fixing the given degrees of freedom (translations and rotations) against movement.",
+                  "de": "Fügt einem Knoten ein Lager hinzu, das die angegebenen Freiheitsgrade (Verschiebungen und Verdrehungen) festhält."
+                }
               }
             }
           },
@@ -9000,6 +9411,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a point load of the given value on one degree of freedom of a node, in a load case.",
+                  "de": "Fügt eine Einzellast mit dem angegebenen Wert auf einen Freiheitsgrad eines Knotens in einem Lastfall hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a point load of the given value on one degree of freedom of a node, in a load case.",
+                  "de": "Fügt eine Einzellast mit dem angegebenen Wert auf einen Freiheitsgrad eines Knotens in einem Lastfall hinzu."
+                }
               }
             }
           },
@@ -9062,6 +9483,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a uniformly distributed load (wx along, wy across) on one bar or beam element, in a load case.",
+                  "de": "Fügt eine gleichmäßig verteilte Streckenlast (wx längs, wy quer) auf ein Stab- oder Balkenelement in einem Lastfall hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a uniformly distributed load (wx along, wy across) on one bar or beam element, in a load case.",
+                  "de": "Fügt eine gleichmäßig verteilte Streckenlast (wx längs, wy quer) auf ein Stab- oder Balkenelement in einem Lastfall hinzu."
+                }
               }
             }
           },
@@ -9159,6 +9590,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a uniform pressure load on one solid, in a load case.",
+                  "de": "Fügt eine gleichmäßige Flächenlast (Druck) auf einen Volumenkörper in einem Lastfall hinzu."
+                },
+                "reuse": {
+                  "en": "Adds a uniform pressure load on one solid, in a load case.",
+                  "de": "Fügt eine gleichmäßige Flächenlast (Druck) auf einen Volumenkörper in einem Lastfall hinzu."
+                }
               }
             }
           },
@@ -9427,6 +9868,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a box-shaped solid at x, y with a width, depth and height, a material, base elevation, layer count, mesh size and axis, meshed into finite elements.",
+                  "de": "Fügt einen quaderförmigen Volumenkörper an x, y mit Breite, Tiefe, Höhe, Material, Basishöhe, Schichtanzahl, Netzweite und Achse hinzu, der in finite Elemente vernetzt wird."
+                },
+                "reuse": {
+                  "en": "Adds a box-shaped solid at x, y with a width, depth and height, a material, base elevation, layer count, mesh size and axis, meshed into finite elements.",
+                  "de": "Fügt einen quaderförmigen Volumenkörper an x, y mit Breite, Tiefe, Höhe, Material, Basishöhe, Schichtanzahl, Netzweite und Achse hinzu, der in finite Elemente vernetzt wird."
+                }
               }
             }
           },
@@ -9507,6 +9958,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a named load case that loads are assigned to, optionally including the structure's self weight.",
+                  "de": "Fügt einen benannten Lastfall hinzu, dem Lasten zugeordnet werden, optional mit dem Eigengewicht des Tragwerks."
+                },
+                "reuse": {
+                  "en": "Adds a named load case that loads are assigned to, optionally including the structure's self weight.",
+                  "de": "Fügt einen benannten Lastfall hinzu, dem Lasten zugeordnet werden, optional mit dem Eigengewicht des Tragwerks."
+                }
               }
             }
           },
@@ -9586,6 +10047,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Adds a named load combination that sums weighted load cases for the analysis.",
+                  "de": "Fügt eine benannte Lastfallkombination hinzu, die gewichtete Lastfälle für die Analyse überlagert."
+                },
+                "reuse": {
+                  "en": "Adds a named load combination that sums weighted load cases for the analysis.",
+                  "de": "Fügt eine benannte Lastfallkombination hinzu, die gewichtete Lastfälle für die Analyse überlagert."
+                }
               }
             }
           },
@@ -9665,6 +10136,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Turns the structure's self weight on or off in one load case.",
+                  "de": "Schaltet das Eigengewicht des Tragwerks in einem Lastfall ein oder aus."
+                },
+                "reuse": {
+                  "en": "Turns the structure's self weight on or off in one load case.",
+                  "de": "Schaltet das Eigengewicht des Tragwerks in einem Lastfall ein oder aus."
+                }
               }
             }
           },
@@ -9764,6 +10245,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets how many vibration modes and buckling modes the analysis computes and the scale deformations are drawn with.",
+                  "de": "Legt fest, wie viele Eigenschwingungs- und Knickformen die Analyse berechnet und mit welchem Maßstab Verformungen gezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Sets how many vibration modes and buckling modes the analysis computes and the scale deformations are drawn with.",
+                  "de": "Legt fest, wie viele Eigenschwingungs- und Knickformen die Analyse berechnet und mit welchem Maßstab Verformungen gezeichnet werden."
+                }
               }
             }
           },
@@ -9808,6 +10299,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Deletes every selected node, element, support or load from the model, together with what depends on it.",
+                  "de": "Löscht alle ausgewählten Knoten, Elemente, Lager oder Lasten samt allem, was davon abhängt, aus dem Modell."
+                },
+                "reuse": {
+                  "en": "Deletes every selected node, element, support or load from the model, together with what depends on it.",
+                  "de": "Löscht alle ausgewählten Knoten, Elemente, Lager oder Lasten samt allem, was davon abhängt, aus dem Modell."
+                }
               }
             }
           },
@@ -9826,7 +10327,7 @@
             "kind": "view",
             "iconId": "camera",
             "args": [],
-            "inPalette": true,
+            "inPalette": false,
             "semantics": {
               "effects": {
                 "reads": [
@@ -9853,7 +10354,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "chrome"
             }
           },
           {
@@ -9957,6 +10459,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole 3D structural model with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 3D-Tragwerksmodell durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                },
+                "reuse": {
+                  "en": "Replaces the whole 3D structural model with one of the plugin's bundled examples, by example id.",
+                  "de": "Ersetzt das gesamte 3D-Tragwerksmodell durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."
+                }
               }
             }
           },
@@ -10096,6 +10608,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
+                  "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Chooses which analysis result the view shows: the static result of a load case or combination, or a numbered vibration or buckling mode; the model is not changed.",
+                  "de": "Wählt, welches Analyseergebnis die Ansicht zeigt: das statische Ergebnis eines Lastfalls oder einer Kombination oder eine nummerierte Eigen- oder Knickform; das Modell ändert sich nicht."
+                }
               }
             }
           },
@@ -10192,6 +10714,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one node by id, such as a coordinate.",
+                  "de": "Setzt ein Feld eines Knotens anhand seiner Id, etwa eine Koordinate."
+                },
+                "reuse": {
+                  "en": "Sets one field of one node by id, such as a coordinate.",
+                  "de": "Setzt ein Feld eines Knotens anhand seiner Id, etwa eine Koordinate."
+                }
               }
             }
           },
@@ -10288,6 +10820,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one bar or beam element by id, such as its material, section or end nodes.",
+                  "de": "Setzt ein Feld eines Stab- oder Balkenelements anhand seiner Id, etwa Material, Querschnitt oder Endknoten."
+                },
+                "reuse": {
+                  "en": "Sets one field of one bar or beam element by id, such as its material, section or end nodes.",
+                  "de": "Setzt ein Feld eines Stab- oder Balkenelements anhand seiner Id, etwa Material, Querschnitt oder Endknoten."
+                }
               }
             }
           },
@@ -10384,6 +10926,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one material by id, such as its name or Young's modulus.",
+                  "de": "Setzt ein Feld eines Materials anhand seiner Id, etwa Name oder Elastizitätsmodul."
+                },
+                "reuse": {
+                  "en": "Sets one field of one material by id, such as its name or Young's modulus.",
+                  "de": "Setzt ein Feld eines Materials anhand seiner Id, etwa Name oder Elastizitätsmodul."
+                }
               }
             }
           },
@@ -10480,6 +11032,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one cross-section by id, such as its area or second moment of area.",
+                  "de": "Setzt ein Feld eines Querschnitts anhand seiner Id, etwa Fläche oder Flächenträgheitsmoment."
+                },
+                "reuse": {
+                  "en": "Sets one field of one cross-section by id, such as its area or second moment of area.",
+                  "de": "Setzt ein Feld eines Querschnitts anhand seiner Id, etwa Fläche oder Flächenträgheitsmoment."
+                }
               }
             }
           },
@@ -10576,6 +11138,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one support by id, such as which degrees of freedom it fixes.",
+                  "de": "Setzt ein Feld eines Lagers anhand seiner Id, etwa welche Freiheitsgrade es festhält."
+                },
+                "reuse": {
+                  "en": "Sets one field of one support by id, such as which degrees of freedom it fixes.",
+                  "de": "Setzt ein Feld eines Lagers anhand seiner Id, etwa welche Freiheitsgrade es festhält."
+                }
               }
             }
           },
@@ -10672,6 +11244,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one solid by id, such as its size, material or mesh size.",
+                  "de": "Setzt ein Feld eines Volumenkörpers anhand seiner Id, etwa Größe, Material oder Netzweite."
+                },
+                "reuse": {
+                  "en": "Sets one field of one solid by id, such as its size, material or mesh size.",
+                  "de": "Setzt ein Feld eines Volumenkörpers anhand seiner Id, etwa Größe, Material oder Netzweite."
+                }
               }
             }
           },
@@ -10768,6 +11350,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one load by id, such as its value, direction or load case.",
+                  "de": "Setzt ein Feld einer Last anhand ihrer Id, etwa Wert, Richtung oder Lastfall."
+                },
+                "reuse": {
+                  "en": "Sets one field of one load by id, such as its value, direction or load case.",
+                  "de": "Setzt ein Feld einer Last anhand ihrer Id, etwa Wert, Richtung oder Lastfall."
+                }
               }
             }
           },
@@ -10864,6 +11456,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one load case by id, such as its name or whether it includes self weight.",
+                  "de": "Setzt ein Feld eines Lastfalls anhand seiner Id, etwa Name oder ob er das Eigengewicht enthält."
+                },
+                "reuse": {
+                  "en": "Sets one field of one load case by id, such as its name or whether it includes self weight.",
+                  "de": "Setzt ein Feld eines Lastfalls anhand seiner Id, etwa Name oder ob er das Eigengewicht enthält."
+                }
               }
             }
           },
@@ -10960,6 +11562,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Sets one field of one load combination by id, such as its name or the factors of its load cases.",
+                  "de": "Setzt ein Feld einer Lastfallkombination anhand ihrer Id, etwa Name oder die Faktoren ihrer Lastfälle."
+                },
+                "reuse": {
+                  "en": "Sets one field of one load combination by id, such as its name or the factors of its load cases.",
+                  "de": "Setzt ein Feld einer Lastfallkombination anhand ihrer Id, etwa Name oder die Faktoren ihrer Lastfälle."
+                }
               }
             }
           },
@@ -11374,6 +11986,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Moves the given or selected nodes by dx, dy and dz, dragging the attached elements along.",
+                  "de": "Verschiebt die angegebenen oder ausgewählten Knoten um dx, dy und dz und zieht die angeschlossenen Elemente mit."
+                },
+                "reuse": {
+                  "en": "Moves the given or selected nodes by dx, dy and dz, dragging the attached elements along.",
+                  "de": "Verschiebt die angegebenen oder ausgewählten Knoten um dx, dy und dz und zieht die angeschlossenen Elemente mit."
+                }
               }
             }
           },
@@ -11494,6 +12116,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Rotates the given or selected nodes by an angle around the axis ax, ay, az through their common centre.",
+                  "de": "Dreht die angegebenen oder ausgewählten Knoten um einen Winkel um die Achse ax, ay, az durch ihren gemeinsamen Mittelpunkt."
+                },
+                "reuse": {
+                  "en": "Rotates the given or selected nodes by an angle around the axis ax, ay, az through their common centre.",
+                  "de": "Dreht die angegebenen oder ausgewählten Knoten um einen Winkel um die Achse ax, ay, az durch ihren gemeinsamen Mittelpunkt."
+                }
               }
             }
           },
@@ -11593,6 +12225,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Scales the positions of the given or selected nodes by sx, sy and sz about their common centre.",
+                  "de": "Skaliert die Positionen der angegebenen oder ausgewählten Knoten um sx, sy und sz um ihren gemeinsamen Mittelpunkt."
+                },
+                "reuse": {
+                  "en": "Scales the positions of the given or selected nodes by sx, sy and sz about their common centre.",
+                  "de": "Skaliert die Positionen der angegebenen oder ausgewählten Knoten um sx, sy und sz um ihren gemeinsamen Mittelpunkt."
+                }
               }
             }
           },
@@ -11718,7 +12360,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -11763,7 +12406,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -12574,6 +13218,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -12679,6 +13333,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -12772,6 +13436,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -14038,6 +14712,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -14143,6 +14827,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -14236,6 +14930,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -14472,7 +15176,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -14670,8 +15374,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "37eb5d88500b9e8380f1c49f0c2aaa112c5e6f60fdbb11722c68bcd1848af088",
-    "coreWasmSha256": "4892690b075cbe4c85d66e5708b6f8a94c71ebf65c3dbb42a8dbc95a822758d2",
-    "descriptorSha256": "d751a3ae57f6b4c2bffd91b60de286e8b60ed60955a560c1c98680cd4a91bedb"
+    "wasmSha256": "a8c40594e1d5a7cfac722f0f13d8904eb2e08b084692f90cbc174598d921d176",
+    "coreWasmSha256": "4aab43ef9291d2ee0824b7b4a6f545c4e74709c37a290d18dd7c695361bffd6c",
+    "descriptorSha256": "79eb5cda48bc3e4be8c6a3498e761ee7bacda4fbffcaa869f3dd8a0318457b61"
   }
 }

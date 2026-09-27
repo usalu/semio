@@ -79,4 +79,4 @@ type ImageLinkPatch { path: String }
 type PagePatch { name: String width: Float height: Float margin_top: Float margin_right: Float margin_bottom: Float margin_left: Float columns_count: Int columns_gutter: Float frame_added: PageFrameAdded frame_removed: String frame_patched: PageFramePatched }
 type PageFrameAdded { frame: Frame! index: Int layer_id: String }
 type PageFramePatched { frame_id: String! patch: FramePatch! }
-type FramePatch { x: Float y: Float width: Float height: Float fill: [Float!] stroke: [Float!] wrap_mode: String columns: Int }
+type FramePatch { x: Float y: Float width: Float height: Float rotation: Float fill: [Float!] stroke: [Float!] wrap_mode: String columns: Int locked: Boolean visible: Boolean }

@@ -15,13 +15,15 @@
  * `WorldCanvas`/`WorldOrbitGated` become DOM stand-ins that expose the two callbacks a real canvas would
  * call (`onPointerMissed`, `onCamera`). Every handler under test is the host's own.
  */
-import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
+import { act, cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fixture from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🖱️pointer-gestures.json" with { type: "json" };
 import mergeModes from "../../../../../../../🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json" with { type: "json" };
 import type { MergeMode } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import identity from "../../🧱️elements/🌐️World3dHost/🧫️fixtures/🪪️world-surface-identity.json" with { type: "json" };
+import instanceTitles from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json" with { type: "json" };
+import { worldProjectionDefaults, type WorldProjectionSpec } from "@semio-tech/infinite-world-r3f";
 
 type Vector3Tuple = readonly [number, number, number];
 type CameraPose = { readonly position: Vector3Tuple; readonly target: Vector3Tuple; readonly zoom: number };
@@ -30,7 +32,7 @@ type Gesture = (typeof fixture)["gestures"][number];
 
 /** 🎛️ The two canvas-owned callbacks a real `WorldCanvas`/`WorldOrbitGated` would invoke — captured on
  * render so a test can play a background click or a completed orbit without a WebGL context. */
-const seams: { onPointerMissed: ((event: MouseEvent) => void) | null; onCamera: ((camera: CameraPose) => void) | null } = { onPointerMissed: null, onCamera: null };
+const seams: { resetCamera: (() => void) | null; onPointerMissed: ((event: MouseEvent) => void) | null; onCamera: ((camera: CameraPose) => void) | null; onGizmo: ((camera: CameraPose & { projectionSpec: WorldProjectionSpec }) => void) | null; onPendingProjectionClear: (() => void) | null; externalPendingProjection: WorldProjectionSpec | null; projectionSpec: WorldProjectionSpec | null; rigState: (CameraPose & { readonly fov: number; readonly projection: string; readonly projectionSpec?: WorldProjectionSpec }) | null } = { resetCamera: null, onPointerMissed: null, onCamera: null, onGizmo: null, onPendingProjectionClear: null, externalPendingProjection: null, projectionSpec: null, rigState: null };
 
 vi.mock("@react-three/fiber", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
@@ -42,8 +44,9 @@ vi.mock("@react-three/fiber", async (importOriginal) => {
   camera.lookAt(pose.target[0]!, pose.target[1]!, pose.target[2]!);
   camera.updateMatrixWorld(true);
   camera.updateProjectionMatrix();
-  const state = { camera, gl: { domElement: { clientWidth: fixture.viewport.width, clientHeight: fixture.viewport.height } }, scene: new three.Scene(), size: { width: fixture.viewport.width, height: fixture.viewport.height }, raycaster: new three.Raycaster(), invalidate: () => {} };
-  return { ...actual, useFrame: () => {}, useThree: (selector?: (value: typeof state) => unknown) => (selector ? selector(state) : state), useLoader: () => null };
+  const initialCamera = camera.clone();
+  const state = { camera, gl: { domElement: { clientWidth: fixture.viewport.width, clientHeight: fixture.viewport.height } }, scene: new three.Scene(), size: { width: fixture.viewport.width, height: fixture.viewport.height }, raycaster: new three.Raycaster(), invalidate: () => {}, get: (): { camera: typeof camera; controls: null } => ({ camera, controls: null }) };
+  return { ...actual, useFrame: () => {}, useThree: (selector?: (value: typeof state) => unknown) => { seams.resetCamera = () => camera.copy(initialCamera); return selector ? selector(state) : state; }, useLoader: () => null };
 });
 
 vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
@@ -58,8 +61,18 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
       seams.onCamera = onCamera ?? null;
       return null;
     },
-    WorldOrbitViewControls: () => null,
-    WorldProjectionRig: () => null,
+    WorldOrbitViewControls: ({ projectionSpec, externalPendingSpec, onExternalPendingSpecClear, onCameraChange }: { projectionSpec: WorldProjectionSpec; externalPendingSpec?: WorldProjectionSpec | null; onExternalPendingSpecClear?: () => void; onCameraChange?: typeof seams.onGizmo }) => {
+      seams.projectionSpec = projectionSpec;
+      seams.externalPendingProjection = externalPendingSpec ?? null;
+      seams.onPendingProjectionClear = onExternalPendingSpecClear ?? null;
+      seams.onGizmo = onCameraChange ?? null;
+      return null;
+    },
+    WorldProjectionRig: ({ spec, state }: { spec: WorldProjectionSpec; state: NonNullable<typeof seams.rigState> }) => {
+      seams.projectionSpec = spec;
+      seams.rigState = state;
+      return null;
+    },
     WorldOrbitViewSnapGateProvider: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
     WorldLodBridge: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
     WorldVolumeLayer: () => null,
@@ -67,7 +80,8 @@ vi.mock("@semio-tech/infinite-world-r3f", async (importOriginal) => {
   };
 });
 
-import { componentPickMergeMode, leftoverBrushRetainGuestHoverV1, WindowInstanceIdContext, World3dHost, world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { clearPendingWorldProjection, clearPendingWorldProjections, componentPickMergeMode, leftoverBrushRetainGuestHoverV1, registerPendingWorldProjection, WindowInstanceIdContext, World3dHost, World3dWindowViewRegistryV1, World3dWindowViewStoreContext, World3dWindowViewStoreV1, world3dSelectionActionArgs } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import { SetWindowIconContext, SetWindowTitleContext } from "../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 
 describe("leftover brush guest hover retain", () => {
   it("keeps the leftover vortex id on an armed brush window", () => {
@@ -84,10 +98,10 @@ const gesture = (id: string): Gesture => {
   return found;
 };
 
-function mountHost(pane?: { readonly surfaceId: string; readonly windowInstanceId: string }): { readonly dispatched: readonly Dispatched[]; readonly host: HTMLElement; readonly meshes: readonly HTMLElement[] } {
+function mountHost(pane?: { readonly surfaceId: string; readonly windowInstanceId: string; readonly onTitle?: (windowId: string, title: string) => void; readonly onIcon?: (windowId: string, iconId: string) => void; readonly viewStore?: World3dWindowViewStoreV1 }): { readonly dispatched: readonly Dispatched[]; readonly host: HTMLElement; readonly meshes: readonly HTMLElement[]; readonly unmount: () => void } {
   const dispatched: Dispatched[] = [];
   const scene = fixture.scene;
-  const view = render(
+  const view = render(createElement(SetWindowTitleContext.Provider, { value: pane?.onTitle ?? null }, createElement(SetWindowIconContext.Provider, { value: pane?.onIcon ?? null }, createElement(World3dWindowViewStoreContext.Provider, { value: pane?.viewStore ?? null },
     createElement(
       WindowInstanceIdContext.Provider,
       { value: pane?.windowInstanceId ?? scene.windowInstanceId },
@@ -115,11 +129,11 @@ function mountHost(pane?: { readonly surfaceId: string; readonly windowInstanceI
         },
       }),
     ),
-  );
+  ))));
   const host = view.container.querySelector(".semio-world-3d-host") as HTMLElement;
   const { left, top, width, height } = fixture.viewport;
   host.getBoundingClientRect = () => ({ x: left, y: top, left, top, width, height, right: left + width, bottom: top + height, toJSON: () => ({}) }) as DOMRect;
-  return { dispatched, host, meshes: [...host.querySelectorAll("mesh")] as HTMLElement[] };
+  return { dispatched, host, meshes: [...host.querySelectorAll("mesh")] as HTMLElement[], unmount: view.unmount };
 }
 
 const only = (dispatched: readonly Dispatched[], action: string): readonly Dispatched[] => dispatched.filter((entry) => entry.action === action);
@@ -140,11 +154,105 @@ function expectSelection(entry: Dispatched | undefined, expected: Gesture["expec
 
 export function testWorld3dInteraction(): void {
   describe("🖱️ world 3d host gestures on a domain-bound scene", () => {
+    beforeEach(() => seams.resetCamera?.());
     afterEach(() => cleanup());
 
     it("renders exactly one pickable mesh per scene instance", () => {
       const { meshes } = mountHost();
       expect(meshes.length).toBe(fixture.scene.instances.length);
+    });
+
+    it.each(instanceTitles.instances)("preserves the authored $title title while applying its initial projection", (pane) => {
+      const onTitle = vi.fn();
+      const onIcon = vi.fn();
+      registerPendingWorldProjection(pane.id, pane.initialProjection as WorldProjectionSpec);
+      try {
+        mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: pane.id, onTitle, onIcon });
+        expect(onTitle.mock.calls).toEqual([]);
+        expect(onIcon.mock.calls).toEqual([[pane.id, pane.projectionIcon]]);
+        expect(seams.onGizmo).not.toBeNull();
+        act(() => seams.onGizmo?.({ ...fixture.scene.camera, projectionSpec: pane.initialProjection as WorldProjectionSpec }));
+        expect(onTitle.mock.calls).toEqual([[pane.id, pane.projectionTitle]]);
+      } finally {
+        clearPendingWorldProjection(pane.id);
+      }
+    });
+
+    it("retains the selected projection and camera across a live window remount, then retires them with the window", () => {
+      const retained = instanceTitles.retainedViewport;
+      const store = new World3dWindowViewStoreV1();
+      store.admitOwner(retained.owner);
+      registerPendingWorldProjection(retained.windowId, retained.initialProjection as WorldProjectionSpec);
+      try {
+        const first = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
+        expect(seams.projectionSpec).toEqual(retained.initialProjection);
+        act(() => seams.onGizmo?.(retained.selectedCamera as CameraPose & { projectionSpec: WorldProjectionSpec }));
+        expect(seams.projectionSpec).toEqual(retained.selectedCamera.projectionSpec);
+        expect(seams.rigState).toMatchObject(retained.selectedCamera);
+        first.unmount();
+
+        const remounted = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
+        expect(seams.projectionSpec).toEqual(retained.selectedCamera.projectionSpec);
+        expect(seams.rigState).toMatchObject(retained.selectedCamera);
+        remounted.unmount();
+
+        store.retire(retained.windowId);
+        mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
+        expect(seams.projectionSpec).toEqual(retained.initialProjection);
+      } finally {
+        clearPendingWorldProjection(retained.windowId);
+      }
+    });
+
+    it("retains a projection transition through snap start until its final camera is accepted", () => {
+      const retained = instanceTitles.retainedViewport;
+      const store = new World3dWindowViewStoreV1();
+      store.admitOwner(retained.owner);
+      registerPendingWorldProjection(retained.windowId, retained.initialProjection as WorldProjectionSpec);
+      try {
+        const seeded = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
+        seeded.unmount();
+        store.write(retained.windowId, { ...store.read(retained.windowId)!, pendingProjectionSpec: retained.selectedCamera.projectionSpec as WorldProjectionSpec });
+
+        const started = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
+        expect(seams.externalPendingProjection).toEqual(retained.selectedCamera.projectionSpec);
+        act(() => seams.onPendingProjectionClear?.());
+        started.unmount();
+
+        const remounted = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
+        expect(seams.externalPendingProjection).toEqual(retained.selectedCamera.projectionSpec);
+        act(() => seams.onGizmo?.(retained.selectedCamera as CameraPose & { projectionSpec: WorldProjectionSpec }));
+        expect(store.read(retained.windowId)?.pendingProjectionSpec).toBeNull();
+        remounted.unmount();
+
+        mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: store });
+        expect(seams.externalPendingProjection).toBeNull();
+        expect(seams.rigState).toMatchObject(retained.selectedCamera);
+      } finally {
+        clearPendingWorldProjection(retained.windowId);
+      }
+    });
+
+    it("keeps a spawned viewport when the primary owner retires and drops the retired owner's boot seed", () => {
+      const retained = instanceTitles.retainedViewport;
+      const registry = new World3dWindowViewRegistryV1();
+      const primaryOwner = `${retained.owner}:primary`;
+      const spawnedOwner = `${retained.owner}:spawned`;
+      const spawned = registry.scope(spawnedOwner);
+      const first = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: spawned });
+      act(() => seams.onGizmo?.(retained.selectedCamera as CameraPose & { projectionSpec: WorldProjectionSpec }));
+      first.unmount();
+
+      registry.scope(primaryOwner);
+      registry.retireOwner(primaryOwner);
+      const surviving = mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: registry.scope(spawnedOwner) });
+      expect(seams.rigState).toMatchObject(retained.selectedCamera);
+      surviving.unmount();
+
+      registerPendingWorldProjection(retained.windowId, retained.initialProjection as WorldProjectionSpec);
+      clearPendingWorldProjections([retained.windowId]);
+      mountHost({ surfaceId: fixture.scene.surfaceId, windowInstanceId: retained.windowId, viewStore: registry.scope(`${retained.owner}:replacement`) });
+      expect(seams.projectionSpec).toEqual(worldProjectionDefaults("threePoint"));
     });
 
     // 🪪️ `🪪️world-surface-identity.json` (peer ticket 26/09/02 wave B20): two panes of ONE document each

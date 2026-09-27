@@ -291,6 +291,7 @@ impl DrawingOwnedRetirement {
                     SetLayerOpacity(payload) => DrawingMutationFields::String(payload.layer_id),
                     SetLayerBlendMode(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.blend_mode) },
                     RenameLayer(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_name) },
+                    UpdateText(payload) => DrawingMutationFields::Strings { first: payload.layer_id, second: Some(payload.content) },
                     UpdateLayerTransform(payload) => DrawingMutationFields::String(payload.layer_id),
                     UpdatePathGeometry(payload) => DrawingMutationFields::Segments { id: payload.layer_id, value: Some(payload.segments) },
                     ReplaceLayerFill(payload) => DrawingMutationFields::Fill { id: payload.layer_id, value: payload.fill },
@@ -1754,7 +1755,7 @@ impl DrawingLayerCloneAuthority {
             locked: source.locked,
             opacity: source.opacity,
             blend_mode: String::new(),
-            transform: crate::DrawingTransform { x: source.transform.x, y: source.transform.y, scale_x: source.transform.scale_x, scale_y: source.transform.scale_y, rotation: source.transform.rotation },
+            transform: crate::DrawingTransform { x: source.transform.x, y: source.transform.y, scale_x: source.transform.scale_x, scale_y: source.transform.scale_y, rotation: source.transform.rotation, shear: source.transform.shear },
             attributes: DrawingAttributes::default(),
         }
     }
@@ -1763,7 +1764,7 @@ impl DrawingLayerCloneAuthority {
         crate::DrawingRect { x: source.x, y: source.y, width: source.width, height: source.height }
     }
 
-    fn skeleton(source: &DrawingLayerNode) -> DrawingLayerNode {
+    fn skeleton(source: &DrawingLayerNode, mutation_ready: bool) -> DrawingLayerNode {
         match source {
             DrawingLayerNode::Shape(value) => DrawingLayerNode::Shape(crate::DrawingShapeBody {
                 base: Self::base_skeleton(&value.base),
@@ -1777,7 +1778,7 @@ impl DrawingLayerCloneAuthority {
             DrawingLayerNode::Path(value) => DrawingLayerNode::Path(crate::DrawingPathBody { base: Self::base_skeleton(&value.base), segments: Vec::with_capacity(value.segments.len()) }),
             DrawingLayerNode::Text(value) => DrawingLayerNode::Text(crate::DrawingTextBody { base: Self::base_skeleton(&value.base), x: value.x, y: value.y, content: String::new(), size: value.size }),
             DrawingLayerNode::Image(value) => DrawingLayerNode::Image(crate::DrawingImageBody { base: Self::base_skeleton(&value.base), image_key: String::new(), width: value.width, height: value.height }),
-            DrawingLayerNode::Group(value) => DrawingLayerNode::Group(crate::DrawingGroupBody { base: Self::base_skeleton(&value.base), children: Vec::with_capacity(value.children.len()) }),
+            DrawingLayerNode::Group(value) => DrawingLayerNode::Group(crate::DrawingGroupBody { base: Self::base_skeleton(&value.base), children: Vec::with_capacity(if mutation_ready { value.children.len().max(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY) } else { value.children.len() }) }),
             DrawingLayerNode::Boolean(value) => DrawingLayerNode::Boolean(crate::DrawingBooleanBody { base: Self::base_skeleton(&value.base), operation: String::new(), children: Vec::with_capacity(value.children.len()) }),
             DrawingLayerNode::Trace(value) => DrawingLayerNode::Trace(crate::DrawingTraceBody {
                 base: Self::base_skeleton(&value.base),
@@ -1789,7 +1790,7 @@ impl DrawingLayerCloneAuthority {
 
     fn new_with_mutation_destinations(source: &DrawingLayerNode, mutation_ready: bool) -> Self {
         Self {
-            value: std::mem::ManuallyDrop::new(Some(Self::skeleton(source))),
+            value: std::mem::ManuallyDrop::new(Some(Self::skeleton(source, mutation_ready))),
             retirement: std::mem::ManuallyDrop::new(None),
             depth: 0,
             path: [0; DRAWING_MAXIMUM_LAYER_DEPTH],
@@ -1985,7 +1986,7 @@ impl DrawingLayerCloneAuthority {
                         if self.depth + 1 >= DRAWING_MAXIMUM_LAYER_DEPTH {
                             return Err("drawing-store.initializer-depth-capacity");
                         }
-                        target.children.push(Self::skeleton(child));
+                        target.children.push(Self::skeleton(child, self.mutation_ready));
                         self.path[self.depth] = frame.child;
                         self.frames[self.depth].child += 1;
                         self.depth += 1;
@@ -2779,6 +2780,58 @@ impl Drop for DrawingStrokeCloneAuthority {
     }
 }
 
+struct DrawingTextCloneAuthority {
+    value: std::mem::ManuallyDrop<Option<String>>,
+    retirement: std::mem::ManuallyDrop<Option<Box<DrawingOwnedRetirement>>>,
+    index: usize,
+    terminal: bool,
+}
+
+impl DrawingTextCloneAuthority {
+    fn new(source: &str) -> Result<Self, &'static str> {
+        if source.len() > DRAWING_OWNED_FIELD_BYTES { return Err("drawing-store.text-capacity"); }
+        let mut value = String::new();
+        value.try_reserve_exact(source.len()).map_err(|_| "drawing-store.text-admission")?;
+        Ok(Self { value: std::mem::ManuallyDrop::new(Some(value)), retirement: std::mem::ManuallyDrop::new(None), index: 0, terminal: false })
+    }
+
+    fn step(&mut self, source: &str, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+        if self.terminal { return Ok(true); }
+        if let Some(character) = source.get(self.index..).and_then(|tail| tail.chars().next()) {
+            self.value.as_mut().ok_or("drawing-store.text-target")?.push(character);
+            self.index += character.len_utf8();
+            cx.consume_fuel(1);
+        } else { self.terminal = true; }
+        Ok(self.terminal)
+    }
+
+    fn take(&mut self) -> Option<String> { self.terminal.then(|| self.value.take()).flatten() }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if let Some(retirement) = self.retirement.as_mut() {
+            return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
+                    drop(self.retirement.take()); self.terminal = true; Ok(store::SnapshotRetirementStep::Complete)
+                }
+                store::SnapshotRetirementStep::Complete => Err("Text clone reported false terminal".into()),
+                step => Ok(step),
+            };
+        }
+        if let Some(value) = self.value.take() {
+            *self.retirement = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::String(value))));
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        self.terminal = true;
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool { self.terminal && self.value.is_none() && self.retirement.is_none() }
+}
+
+impl Drop for DrawingTextCloneAuthority {
+    fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "Text clone reached Drop before retirement"); }
+}
+
 struct DrawingSegmentsCloneAuthority {
     value: std::mem::ManuallyDrop<Option<Vec<PathSegment>>>,
     retirement: std::mem::ManuallyDrop<Option<Box<DrawingOwnedRetirement>>>,
@@ -3446,33 +3499,33 @@ impl DrawingLayerDigestAuthority {
                 credit.observe_owned_string(digest, 106, &base.blend_mode, true, cx)?;
                 self.frames[self.depth].phase = 7;
             }
-            7..=11 => {
-                let fields = [base.transform.x, base.transform.y, base.transform.scale_x, base.transform.scale_y, base.transform.rotation];
+            7..=12 => {
+                let fields = [base.transform.x, base.transform.y, base.transform.scale_x, base.transform.scale_y, base.transform.rotation, base.transform.shear];
                 credit.scalar_f64(digest, 107 + u16::from(phase - 7), fields[(phase - 7) as usize], cx)?;
                 self.frames[self.depth].phase += 1;
             }
-            12 => {
+            13 => {
                 let fill = self.fill.get_or_insert_with(DrawingFillDigestAuthority::new);
                 if fill.step(base.attributes.fill.as_ref(), digest, credit, cx)? {
                     self.fill = None;
-                    self.frames[self.depth].phase = 13;
-                }
-            }
-            13 => {
-                let stroke = self.stroke.get_or_insert_with(DrawingStrokeDigestAuthority::new);
-                if stroke.step(base.attributes.stroke.as_ref(), digest, credit, cx)? {
-                    self.stroke = None;
                     self.frames[self.depth].phase = 14;
                 }
             }
             14 => {
-                let variant = self.variant.get_or_insert_with(DrawingLayerVariantDigestAuthority::new);
-                if variant.step(node, digest, credit, cx)? {
-                    self.variant = None;
+                let stroke = self.stroke.get_or_insert_with(DrawingStrokeDigestAuthority::new);
+                if stroke.step(base.attributes.stroke.as_ref(), digest, credit, cx)? {
+                    self.stroke = None;
                     self.frames[self.depth].phase = 15;
                 }
             }
             15 => {
+                let variant = self.variant.get_or_insert_with(DrawingLayerVariantDigestAuthority::new);
+                if variant.step(node, digest, credit, cx)? {
+                    self.variant = None;
+                    self.frames[self.depth].phase = 16;
+                }
+            }
+            16 => {
                 if let DrawingLayerNode::Group(group) = node {
                     let child = self.frames[self.depth].child;
                     if child < group.children.len() {
@@ -3487,7 +3540,7 @@ impl DrawingLayerDigestAuthority {
                         return Ok(false);
                     }
                 }
-                self.frames[self.depth].phase = 16;
+                self.frames[self.depth].phase = 17;
                 return Ok(false);
             }
             _ => {
@@ -3543,6 +3596,7 @@ impl DrawingMutationDigestAuthority {
             DrawingMutation::DeleteLayer(_) => 13,
             DrawingMutation::ReorderLayer(_) => 14,
             DrawingMutation::UpdatePathGeometry(_) => 15,
+            DrawingMutation::UpdateText(_) => 16,
         }
     }
 
@@ -3629,6 +3683,11 @@ impl DrawingMutationDigestAuthority {
                     self.finish(digest, cx)
                 }
             }
+            DrawingMutation::UpdateText(value) => match self.phase {
+                2 => { self.credit.observe_owned_string(digest, 3, &value.content, true, cx)?; self.phase = 3; Ok(false) }
+                3 => { self.credit.scalar_f64(digest, 4, value.size, cx)?; self.phase = 4; Ok(false) }
+                _ => self.finish(digest, cx),
+            },
             DrawingMutation::RenameLayer(value) => {
                 if self.phase == 2 {
                     self.credit.observe_owned_string(digest, 3, &value.new_name, true, cx)?;
@@ -3639,8 +3698,8 @@ impl DrawingMutationDigestAuthority {
                 }
             }
             DrawingMutation::UpdateLayerTransform(value) => {
-                if self.phase <= 6 {
-                    let fields = [value.transform.x, value.transform.y, value.transform.scale_x, value.transform.scale_y, value.transform.rotation];
+                if self.phase <= 7 {
+                    let fields = [value.transform.x, value.transform.y, value.transform.scale_x, value.transform.scale_y, value.transform.rotation, value.transform.shear];
                     self.credit.scalar_f64(digest, 3 + u16::from(self.phase - 2), fields[(self.phase - 2) as usize], cx)?;
                     self.phase += 1;
                     Ok(false)
@@ -4173,6 +4232,7 @@ struct DrawingMutationCandidateAuthority {
     fill_clone: std::mem::ManuallyDrop<Option<DrawingFillCloneAuthority>>,
     stroke_clone: std::mem::ManuallyDrop<Option<DrawingStrokeCloneAuthority>>,
     segments_clone: std::mem::ManuallyDrop<Option<DrawingSegmentsCloneAuthority>>,
+    text_clone: std::mem::ManuallyDrop<Option<DrawingTextCloneAuthority>>,
     duplicate_rewrite: Option<DrawingDuplicateRewriteAuthority>,
     duplicate_id_owner: std::mem::ManuallyDrop<Option<String>>,
     rebuild: std::mem::ManuallyDrop<Option<DrawingContainerRebuildAuthority>>,
@@ -4226,6 +4286,7 @@ impl DrawingMutationCandidateAuthority {
             fill_clone: std::mem::ManuallyDrop::new(None),
             stroke_clone: std::mem::ManuallyDrop::new(None),
             segments_clone: std::mem::ManuallyDrop::new(None),
+            text_clone: std::mem::ManuallyDrop::new(None),
             duplicate_rewrite: None,
             duplicate_id_owner: std::mem::ManuallyDrop::new(Some(owner.duplicate_id)),
             rebuild: std::mem::ManuallyDrop::new(None),
@@ -4261,6 +4322,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::DeleteLayer(value) => &value.layer_id,
             DrawingMutation::ReorderLayer(value) => &value.layer_id,
             DrawingMutation::UpdatePathGeometry(value) => &value.layer_id,
+            DrawingMutation::UpdateText(value) => &value.layer_id,
         }
     }
 
@@ -4281,6 +4343,7 @@ impl DrawingMutationCandidateAuthority {
             DrawingMutation::DeleteLayer(value) => Some(&value.layer_id),
             DrawingMutation::ReorderLayer(value) => Some(&value.layer_id),
             DrawingMutation::UpdatePathGeometry(value) => Some(&value.layer_id),
+            DrawingMutation::UpdateText(value) => Some(&value.layer_id),
         }
     }
 
@@ -4476,7 +4539,7 @@ impl DrawingMutationCandidateAuthority {
                 if matches!(mutation, DrawingMutation::DuplicateLayer(_)) {
                     self.locator = Some(DrawingLayerLocator::new());
                     self.phase = DrawingMutationCandidatePhase::LocateCloneSource;
-                } else if matches!(mutation, DrawingMutation::CreateLayer(_) | DrawingMutation::ReplaceLayerFill(_) | DrawingMutation::ReplaceLayerStroke(_) | DrawingMutation::UpdatePathGeometry(_)) {
+                } else if matches!(mutation, DrawingMutation::CreateLayer(_) | DrawingMutation::ReplaceLayerFill(_) | DrawingMutation::ReplaceLayerStroke(_) | DrawingMutation::UpdatePathGeometry(_) | DrawingMutation::UpdateText(_)) {
                     self.phase = DrawingMutationCandidatePhase::PrepareOwnedValue;
                 } else {
                     self.phase = DrawingMutationCandidatePhase::BindOverlay;
@@ -4551,7 +4614,7 @@ impl DrawingMutationCandidateAuthority {
                 match mutation {
                     DrawingMutation::CreateLayer(value) => {
                         if self.layer_clone.is_none() {
-                            *self.layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new(&value.layer)));
+                            *self.layer_clone = Some(Box::new(DrawingLayerCloneAuthority::new_mutation_ready(&value.layer)));
                             cx.consume_fuel(1);
                             return Ok(false);
                         }
@@ -4593,6 +4656,18 @@ impl DrawingMutationCandidateAuthority {
                         pages.push(name_owner);
                         drop(self.duplicate_rewrite.take());
                         self.clone_work = Some(DrawingLayerCloneWorkAuthority::new());
+                    }
+                    DrawingMutation::UpdateText(value) => {
+                        if !value.size.is_finite() || value.size <= 0.0 { return Err("drawing-store.text-size-invalid"); }
+                        if self.text_clone.is_none() {
+                            *self.text_clone = Some(DrawingTextCloneAuthority::new(&value.content)?);
+                            cx.consume_fuel(1);
+                            return Ok(false);
+                        }
+                        let clone = self.text_clone.as_mut().ok_or("drawing-store.text-clone-missing")?;
+                        if !clone.step(&value.content, cx)? { return Ok(false); }
+                        let (items, bytes) = DrawingLayerCloneWorkAuthority::string(clone.value.as_ref().ok_or("drawing-store.text-clone-value")?);
+                        self.workset.as_mut().ok_or("drawing-store.mutation-workset-missing")?.admit_clone(items, bytes)?;
                     }
                     DrawingMutation::UpdatePathGeometry(value) => {
                         if self.segments_clone.is_none() {
@@ -4697,6 +4772,15 @@ impl DrawingMutationCandidateAuthority {
                             &value.blend_mode,
                         )?;
                     }
+                    DrawingMutation::UpdateText(value) => {
+                        if !value.size.is_finite() || value.size <= 0.0 { return Err("drawing-store.text-size-invalid"); }
+                        let DrawingLayerNode::Text(text) = DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")? else { return Err("drawing-store.text-target-kind"); };
+                        let replacement = self.text_clone.as_mut().ok_or("drawing-store.text-clone-missing")?.take().ok_or("drawing-store.text-false-terminal")?;
+                        let old = std::mem::replace(&mut text.content, replacement);
+                        text.size = value.size;
+                        *self.retirement = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::String(old))));
+                        drop(self.text_clone.take());
+                    }
                     DrawingMutation::RenameLayer(value) => {
                         self.write_overlay_string(
                             &mut crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).name,
@@ -4704,10 +4788,10 @@ impl DrawingMutationCandidateAuthority {
                         )?;
                     }
                     DrawingMutation::UpdateLayerTransform(value)
-                        if [value.transform.x, value.transform.y, value.transform.scale_x, value.transform.scale_y, value.transform.rotation].iter().all(|field| field.is_finite()) && value.transform.scale_x > 0.0 && value.transform.scale_y > 0.0 =>
+                        if [value.transform.x, value.transform.y, value.transform.scale_x, value.transform.scale_y, value.transform.rotation, value.transform.shear].iter().all(|field| field.is_finite()) =>
                     {
                         crate::schema::layer_base_mut(DrawingLayerLocator::node_at_mut(source, address.ok_or("drawing-store.mutation-primary-missing")?).ok_or("drawing-store.mutation-target-lost")?).transform =
-                            crate::DrawingTransform { x: value.transform.x, y: value.transform.y, scale_x: value.transform.scale_x, scale_y: value.transform.scale_y, rotation: value.transform.rotation };
+                            crate::DrawingTransform { x: value.transform.x, y: value.transform.y, scale_x: value.transform.scale_x, scale_y: value.transform.scale_y, rotation: value.transform.rotation, shear: value.transform.shear };
                     }
                     DrawingMutation::UpdateLayerTransform(_) => return Err("drawing-store.mutation-transform-invalid"),
                     DrawingMutation::UpdatePathGeometry(_) => {
@@ -5013,6 +5097,16 @@ impl DrawingMutationCandidateAuthority {
                 step => Ok(step),
             };
         }
+        if let Some(text) = self.text_clone.as_mut() {
+            return match text.close_step(maximum_bytes)? {
+                store::SnapshotRetirementStep::Complete if text.terminal_is_empty() => {
+                    drop(self.text_clone.take());
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                store::SnapshotRetirementStep::Complete => Err("Text clone reported false terminal".into()),
+                step => Ok(step),
+            };
+        }
         if let Some(segments) = self.segments_clone.as_mut() {
             return match segments.close_step(maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if segments.terminal_is_empty() => {
@@ -5066,6 +5160,7 @@ impl DrawingMutationCandidateAuthority {
             && self.fill_clone.is_none()
             && self.stroke_clone.is_none()
             && self.segments_clone.is_none()
+            && self.text_clone.is_none()
             && self.duplicate_rewrite.is_none()
             && self.duplicate_id_owner.is_none()
             && self.rebuild.is_none()
@@ -5428,7 +5523,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 let source = &self.envelope.as_ref().expect("Drawing envelope remains retained during initial clone").vcs.initial_snapshot;
                 let header = (|| -> Result<DrawingSnapshot, &'static str> {
                     let mut layers = Vec::new();
-                    layers.try_reserve_exact(source.layers.len()).map_err(|_| "drawing-store.initializer-layer-admission")?;
+                    layers.try_reserve_exact(source.layers.len().max(DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY)).map_err(|_| "drawing-store.initializer-layer-admission")?;
                     Ok(DrawingSnapshot {
                         schema: clone_drawing_string(&source.schema)?,
                         id: clone_drawing_string(&source.id)?,

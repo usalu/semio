@@ -198,11 +198,16 @@ semio_framework_plugin::derive_artifact_facets!(
 /// use super::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
 use crate::{RasterSnapshot, RasterTransform};
 pub fn create_raster_id(prefix: &str) -> String {
-    let next = {
-        let hex = framework_hash::hash_bytes(concat!(file!(), line!()).as_bytes());
-        u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
-    };
-    format!("{prefix}-{next}")
+    use std::hash::BuildHasher;
+    use std::sync::{OnceLock,atomic::{AtomicU64,Ordering}};
+    static NAMESPACE:OnceLock<[u64;2]>=OnceLock::new();
+    static NEXT:AtomicU64=AtomicU64::new(0);
+    let namespace=NAMESPACE.get_or_init(||{
+        let state=std::collections::hash_map::RandomState::new();
+        [state.hash_one(0_u8),state.hash_one(1_u8)]
+    });
+    let next=NEXT.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect("Raster identity sequence exhausted");
+    format!("{prefix}-{:016x}{:016x}{next:016x}",namespace[0],namespace[1])
 }
 
 pub fn empty_raster_snapshot() -> RasterSnapshot {

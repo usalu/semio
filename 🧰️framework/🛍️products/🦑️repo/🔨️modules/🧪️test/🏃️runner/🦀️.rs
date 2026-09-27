@@ -55,14 +55,15 @@ impl<'a> Context<'a> {
         std::fs::read(self.fixture(uri)?).map_err(|error| error.to_string())
     }
 
-    /// 📥️ Bytes a subject host produced for an oracle that declares `@oracle-input-subject-raw`.
+    /// 📥️ Bytes THIS scenario's subject host produced in `implementation`, for an oracle that declares
+    /// `@oracle-input-subject-raw`.
     pub fn subject_raw_bytes(&self, implementation: &str) -> Result<Vec<u8>, String> {
         let path = self
             .plan
             .subject_raw_inputs
             .iter()
-            .find(|(id, _)| id == implementation)
-            .map(|(_, path)| path)
+            .find(|input| input.scenario == self.scenario.id && input.implementation == implementation)
+            .map(|input| &input.path)
             .ok_or_else(|| format!("scenario {} has no raw subject output from {implementation}; run its subject phase before this byte-decoding oracle", self.scenario.id))?;
         std::fs::read(path).map_err(|error| format!("cannot read raw subject output {path}: {error}"))
     }

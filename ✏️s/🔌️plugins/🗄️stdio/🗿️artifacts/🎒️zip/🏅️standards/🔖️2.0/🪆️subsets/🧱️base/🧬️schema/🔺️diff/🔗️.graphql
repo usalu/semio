@@ -1,5 +1,5 @@
 type ZipEntry { name: String!, data: [Int!]! }
 type ZipEntryDiff { name: String, data: [Int!] }
 type ZipEntryModified { name: String!, diff: ZipEntryDiff! }
-type ZipEntriesDiff { removed: [String!]!, modified: [ZipEntryModified!]!, added: [ZipEntry!]! }
+type ZipEntriesDiff { removed: [String!]!, modified: [ZipEntryModified!]!, added: [ZipEntry!]!, order: [String!] }
 type ZipDiff { comment: String @state(class: ARTIFACT), entries: ZipEntriesDiff @state(class: ARTIFACT) }

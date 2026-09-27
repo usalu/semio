@@ -130,9 +130,9 @@ async fn dispatch_registers_semantic_descriptors() {
     register_drawing_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in DrawingMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
-        assert_eq!(kind.entity, if kind.kind == "update-path-geometry" { "path" } else { "layer" });
+        assert_eq!(kind.entity, match kind.kind { "update-path-geometry" => "path", "update-text" => "text", _ => "layer" });
     }
-    assert_eq!(DrawingMutation::kinds().len(), 15);
+    assert_eq!(DrawingMutation::kinds().len(), 16);
 }
 
 #[test]
@@ -175,4 +175,26 @@ fn stroke_fields_preserve_appearance_and_undo() {
     assert_eq!(scene.iter().find_map(|node| node.stroke.as_ref()), Some(stroke));
     assert_eq!(parse_layer_field_input("name", "123"), dsl::DslValue::String("123".into()));
     eprintln!("[DEBUG] stroke edits preserve sibling attributes and undo atomically");
+}
+
+#[test]
+fn text_field_edits_preserve_numeric_strings_and_other_facets() {
+    use protocol::Mutation;
+    let layer = crate::schema::create_drawing_text_layer("Text");
+    let id = crate::schema::layer_id(&layer).to_string();
+    let mut document = DrawingSnapshot { layers: vec![layer], ..Default::default() };
+    for (field, input) in [("textContent", "123"), ("textContent", "Grüße 🌍\nHello"), ("textSize", "36")] {
+        let before = document.clone();
+        let mutation = drawing_op_for_layer_field(&document, &id, field, &parse_layer_field_input(field, input)).unwrap();
+        let inverse = mutation.inverse(&document);
+        apply_drawing_mutation(&mut document, &mutation).unwrap();
+        let DrawingLayerNode::Text(text) = &document.layers[0] else { panic!("Expected text") };
+        if field == "textContent" { assert_eq!(text.content, input); assert_eq!(text.size, 24.0); }
+        else { assert_eq!(text.size, 36.0); assert_eq!(text.content, "Text"); }
+        for undo in inverse { apply_drawing_mutation(&mut document, &undo).unwrap(); }
+        assert_eq!(document, before);
+    }
+    assert!(drawing_op_for_layer_field(&document, &id, "textSize", &parse_layer_field_input("textSize", "0")).is_none());
+    let shape = base_document();
+    assert!(drawing_op_for_layer_field(&shape, crate::schema::layer_id(&shape.layers[0]), "textContent", &parse_layer_field_input("textContent", "123")).is_none());
 }

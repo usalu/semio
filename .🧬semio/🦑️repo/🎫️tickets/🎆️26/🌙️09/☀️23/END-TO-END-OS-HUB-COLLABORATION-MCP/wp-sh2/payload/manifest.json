@@ -1,0 +1,192 @@
+[
+ {
+  "id": "000",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "001",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "002",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "003",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "004",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "005",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "006",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "007",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔗️.graphql",
+  "mode": "whole"
+ },
+ {
+  "id": "008",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "009",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🛰️.proto",
+  "mode": "whole"
+ },
+ {
+  "id": "010",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📎️bind-space-file/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "011",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-space/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "012",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️delete-virtual-file-system-node/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "013",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌌️open-space/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "014",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️navigate-virtual-file-system-node/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "015",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "016",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "017",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "018",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️structural-correspondence/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "019",
+  "path": "✏️s/🔌️plugins/🪐️space/🫀️core/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "020",
+  "path": "✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/📜️script.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "021",
+  "path": "📜️script.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "022",
+  "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio",
+  "mode": "whole"
+ },
+ {
+  "id": "023",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "024",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏠️main/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "025",
+  "path": "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "026",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "027",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🔎️explore/🪟️windows/🏠️main/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "028",
+  "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+  "mode": "whole"
+ },
+ {
+  "id": "029",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "030",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "031",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🟦️.ts",
+  "mode": "whole"
+ },
+ {
+  "id": "032",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🔗️.graphql",
+  "mode": "whole"
+ },
+ {
+  "id": "033",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🛰️.proto",
+  "mode": "whole"
+ },
+ {
+  "id": "034",
+  "path": "✏️s/🔌️plugins/🪐️space/🧬️schema/🔣️.json",
+  "mode": "whole"
+ },
+ {
+  "id": "035",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💾️persist-locally/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "036",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/💾️persist-locally/🧪️tests/🔬️unit/🦀️.rs",
+  "mode": "whole"
+ },
+ {
+  "id": "037",
+  "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-studio/🦀️.rs",
+  "mode": "whole"
+ }
+]

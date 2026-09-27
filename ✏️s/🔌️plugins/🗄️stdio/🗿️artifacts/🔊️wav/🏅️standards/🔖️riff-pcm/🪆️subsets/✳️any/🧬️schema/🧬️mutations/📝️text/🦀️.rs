@@ -1,3 +1,3 @@
-//! 🚧 scaffolded by W1b — text representation marker for `stdio.wav.mutations`. Full grammar-backed
-//! parse/print lands in W2/W3.
-pub const TEXT_MARKER: &str = "stdio.wav.mutations";
+//! 📝️ Canonical JSON operation grammar for `WavMutation::print_op` and `parse_op`.
+pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
+pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");

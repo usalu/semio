@@ -61,3 +61,38 @@ fn the_focus_ring_surrounds_the_focused_controls_hit_rect() {
     register_fixture_hits(&fixture, &mut input);
     assert_eq!(shell.keyboard_focus_ring_rect(&input), Some(Rect::new(40.0, 4.0, 24.0, 24.0)), "the ring is drawn around this frame's hit rect of the focused control");
 }
+
+/// ♿️ The platform tree sanity of a REAL painted chrome: the navbar walks to completion, the frame is presented, and the
+/// native accessibility publication that frame hands the platform adapter announces every navbar control with a name and a
+/// role the platform knows — the gaps a screen reader cannot recover from (ticket 26/09/23 slice WG10).
+#[test]
+fn a_painted_navbar_hands_the_platform_a_named_tree() {
+    let theme = Theme::light();
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.screen_w = 1440.0;
+    shell.sync_dock_tabs();
+    for (id, label) in [("fixture.leading.first", "First"), ("fixture.leading.second", "Second"), ("fixture.leading.third", "Third")] {
+        shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft).push(DockTabNode::leaf(id, label, "box", 0));
+    }
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut cursor = ShellChromeChildCursor::default();
+    let walked = (0..16_384).take_while(|_| !shell.render_navbar_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, 1440.0)).count();
+    assert!(walked < 16_384 && shell.error.is_none(), "the navbar walk completes: {:?}", shell.error);
+    let painted = input.staged_hits().iter().filter(|hit| hit.control_id.is_some()).count();
+    shell.publish_retained_hit_registry(&mut input);
+    let publication = crate::native_accessibility::published_native_accessibility();
+    let chrome = publication.windows.iter().find(|window| window.window_id == crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID).expect("the chrome is announced to the platform");
+    let census = crate::native_accessibility::native_accessibility_census(&publication);
+    eprintln!("native accessibility census: painted controls {painted}, chrome nodes {}, {census:?}", chrome.nodes.len());
+    let announced: Vec<&str> = chrome.nodes.iter().map(|node| node.key.as_str()).collect();
+    for tab in ["fixture.leading.first", "fixture.leading.second", "fixture.leading.third"] {
+        assert!(announced.contains(&tab), "the painted panel tab {tab} reaches the platform tree: {announced:?}");
+    }
+    assert!(census.nodes >= chrome.nodes.len() && census.focusable >= 3, "the platform can focus every painted panel tab: {census:?}");
+    assert_eq!(census.unnamed_actionable, Vec::<String>::new(), "every control a reader can act on has a name");
+    assert_eq!(census.unknown_roles, Vec::<String>::new(), "every node has a role the platform knows");
+}
+

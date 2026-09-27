@@ -10,7 +10,12 @@ fn fixture_catalog() -> std::sync::Arc<Catalog> {
 
 /// 🧫️ [`build_server`] over [`fixture_catalog`] — a deterministic capability census.
 fn fixture_server() -> McpServer {
-    let principal = AgentPrincipal::from_scope_names("agent:local", "local agent", &[], None);
+    fixture_server_granting(&[])
+}
+
+/// 🧫️ [`fixture_server`] for a principal holding `scopes`.
+fn fixture_server_granting(scopes: &[&str]) -> McpServer {
+    let principal = AgentPrincipal::from_scope_names("agent:local", "local agent", &scopes.iter().map(|scope| scope.to_string()).collect::<Vec<_>>(), None);
     build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), GatewayRuntime::default())
 }
 
@@ -65,11 +70,11 @@ fn tools_list_is_the_full_real_gateway_surface() {
 }
 
 /// 🪜️ Progressive enhancement, tier 1: with no workspace bound, a workspace-backed tool is
-/// present in `tools/list` and answers with a structured, RETRYABLE `PLUGIN_UNAVAILABLE` naming
-/// the binding it needs — never a protocol-level failure, never fabricated data.
+/// present in `tools/list` and answers a principal holding its scopes with a structured, RETRYABLE
+/// `PLUGIN_UNAVAILABLE` naming the binding it needs — never a protocol-level failure, never fabricated data.
 #[test]
 fn workspace_backed_tools_degrade_to_a_retryable_plugin_unavailable_without_a_binding() {
-    let server = fixture_server();
+    let server = fixture_server_granting(&["workspace.read", "artifact.write", "ui.control"]);
     for name in ["artifact_create", "artifact_open", "artifact_validate", "artifact_snapshot", "artifact_export", "inference_list", "inference_get", "ui_focus", "ui_reveal"] {
         let result = server.tools.call(name, serde_json::json!({})).unwrap_or_else(|error| panic!("{name} resolves: {error:?}"));
         assert!(result.is_error, "{name} must not fabricate a success");

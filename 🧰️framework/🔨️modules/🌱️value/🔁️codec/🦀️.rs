@@ -24,6 +24,17 @@ pub trait ToValue {
     fn value_at_path(&self, path: &[&str]) -> Result<DslValue, ValueError> {
         self.to_value().value_at_path(path)
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        Ok(ValueShape::of(&self.value_at_path(path)?))
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        match self.value_at_path(path)? {
+            DslValue::Object(entries) => entries.get(index).map(|(key, _)| key.clone()).ok_or_else(|| ValueError::new(format!("object key index {index} is out of range for length {}", entries.len()))),
+            other => Err(ValueError::new(format!("expected an object, found {other:?}"))),
+        }
+    }
 }
 
 /// @emoji 🔁️ Hydrates `Self` from a [`DslValue`] tree. First-party analog of
@@ -37,13 +48,14 @@ pub trait FromValue: Sized {
         }
         match edit {
             ValueEdit::Set(value) => {
-                *self = Self::from_value(value)?;
+                *self = <Self as FromValue>::from_value(value)?;
                 Ok(())
             }
             ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the value root")),
             ValueEdit::Remove => Err(ValueError::new("cannot remove the value root")),
         }
     }
+
 }
 
 /// @emoji ✏️ One structural edit over already-decoded value path segments.
@@ -52,6 +64,30 @@ pub enum ValueEdit {
     Set(DslValue),
     Insert(DslValue),
     Remove,
+}
+
+/// @emoji 📐 Describes a value at a typed path without materializing its children.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ValueShape {
+    Null,
+    Bool,
+    Number,
+    String,
+    Array { len: usize },
+    Object { len: usize },
+}
+
+impl ValueShape {
+    pub fn of(value: &DslValue) -> Self {
+        match value {
+            DslValue::Null => Self::Null,
+            DslValue::Bool(_) => Self::Bool,
+            DslValue::Number(_) => Self::Number,
+            DslValue::String(_) => Self::String,
+            DslValue::Array(items) => Self::Array { len: items.len() },
+            DslValue::Object(entries) => Self::Object { len: entries.len() },
+        }
+    }
 }
 
 /// @emoji 🚨️ A decode failure, with a dotted field/index/variant path prefixed as the caller
@@ -275,6 +311,19 @@ impl<T: ToValue> ToValue for Option<T> {
             (false, None) => Err(ValueError::new(format!("null has no child `{}`", path[0]))),
         }
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        match (path.is_empty(), self) {
+            (true, None) => Ok(ValueShape::Null),
+            (true, Some(value)) => value.value_shape_at_path(path),
+            (false, Some(value)) => value.value_shape_at_path(path),
+            (false, None) => Err(ValueError::new(format!("null has no child `{}`", path[0]))),
+        }
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        self.as_ref().ok_or_else(|| ValueError::new("expected an object, found null"))?.value_key_at_path(path, index)
+    }
 }
 impl<T: FromValue> FromValue for Option<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
@@ -289,7 +338,7 @@ impl<T: FromValue> FromValue for Option<T> {
         if path.is_empty() {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(value) if self.is_none() => {
@@ -319,6 +368,18 @@ impl<T: ToValue> ToValue for [T] {
         let index = path_index(segment, self.len(), false)?;
         self[index].value_at_path(rest).map_err(|error| error.under(segment))
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        let Some((segment, rest)) = path.split_first() else { return Ok(ValueShape::Array { len: self.len() }) };
+        let index = path_index(segment, self.len(), false)?;
+        self[index].value_shape_at_path(rest).map_err(|error| error.under(segment))
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        let (segment, rest) = path.split_first().ok_or_else(|| ValueError::new("expected an object, found an array"))?;
+        let item_index = path_index(segment, self.len(), false)?;
+        self[item_index].value_key_at_path(rest, index).map_err(|error| error.under(segment))
+    }
 }
 impl<T: ToValue> ToValue for Vec<T> {
     fn to_value(&self) -> DslValue {
@@ -328,6 +389,14 @@ impl<T: ToValue> ToValue for Vec<T> {
 
     fn value_at_path(&self, path: &[&str]) -> Result<DslValue, ValueError> {
         self.as_slice().value_at_path(path)
+    }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        self.as_slice().value_shape_at_path(path)
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        self.as_slice().value_key_at_path(path, index)
     }
 }
 impl<T: FromValue> FromValue for Vec<T> {
@@ -343,7 +412,7 @@ impl<T: FromValue> FromValue for Vec<T> {
         let Some((segment, rest)) = path.split_first() else {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the array root")),
@@ -388,6 +457,18 @@ impl<T: ToValue> ToValue for std::collections::VecDeque<T> {
         let index = path_index(segment, self.len(), false)?;
         self[index].value_at_path(rest).map_err(|error| error.under(segment))
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        let Some((segment, rest)) = path.split_first() else { return Ok(ValueShape::Array { len: self.len() }) };
+        let index = path_index(segment, self.len(), false)?;
+        self[index].value_shape_at_path(rest).map_err(|error| error.under(segment))
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        let (segment, rest) = path.split_first().ok_or_else(|| ValueError::new("expected an object, found an array"))?;
+        let item_index = path_index(segment, self.len(), false)?;
+        self[item_index].value_key_at_path(rest, index).map_err(|error| error.under(segment))
+    }
 }
 impl<T: FromValue> FromValue for std::collections::VecDeque<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
@@ -402,7 +483,7 @@ impl<T: FromValue> FromValue for std::collections::VecDeque<T> {
         let Some((segment, rest)) = path.split_first() else {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the array root")),
@@ -444,6 +525,14 @@ impl<T: ToValue, const N: usize> ToValue for [T; N] {
     fn value_at_path(&self, path: &[&str]) -> Result<DslValue, ValueError> {
         self.as_slice().value_at_path(path)
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        self.as_slice().value_shape_at_path(path)
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        self.as_slice().value_key_at_path(path, index)
+    }
 }
 impl<T: FromValue, const N: usize> FromValue for [T; N] {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
@@ -462,7 +551,7 @@ impl<T: FromValue, const N: usize> FromValue for [T; N] {
         let Some((segment, rest)) = path.split_first() else {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(_) => Err(ValueError::new("cannot insert into a fixed array")),
@@ -490,6 +579,14 @@ impl<T: ToValue> ToValue for Box<T> {
 
     fn value_at_path(&self, path: &[&str]) -> Result<DslValue, ValueError> {
         (**self).value_at_path(path)
+    }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        (**self).value_shape_at_path(path)
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        (**self).value_key_at_path(path, index)
     }
 }
 impl<T: FromValue> FromValue for Box<T> {
@@ -526,6 +623,18 @@ impl<T: ToValue + Ord> ToValue for std::collections::BTreeSet<T> {
         let index = path_index(segment, self.len(), false)?;
         self.iter().nth(index).expect("validated set index").value_at_path(rest).map_err(|error| error.under(segment))
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        let Some((segment, rest)) = path.split_first() else { return Ok(ValueShape::Array { len: self.len() }) };
+        let index = path_index(segment, self.len(), false)?;
+        self.iter().nth(index).expect("validated set index").value_shape_at_path(rest).map_err(|error| error.under(segment))
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        let (segment, rest) = path.split_first().ok_or_else(|| ValueError::new("expected an object, found an array"))?;
+        let item_index = path_index(segment, self.len(), false)?;
+        self.iter().nth(item_index).expect("validated set index").value_key_at_path(rest, index).map_err(|error| error.under(segment))
+    }
 }
 impl<T: FromValue + Ord> FromValue for std::collections::BTreeSet<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
@@ -540,7 +649,7 @@ impl<T: FromValue + Ord> FromValue for std::collections::BTreeSet<T> {
         let Some((segment, rest)) = path.split_first() else {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the set root")),
@@ -595,6 +704,19 @@ impl<T: ToValue> ToValue for std::collections::BTreeMap<String, T> {
         let Some((key, rest)) = path.split_first() else { return Ok(self.to_value()) };
         self.get(*key).ok_or_else(|| ValueError::new(format!("missing object key `{key}`")))?.value_at_path(rest).map_err(|error| error.under(key))
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        let Some((key, rest)) = path.split_first() else { return Ok(ValueShape::Object { len: self.len() }) };
+        self.get(*key).ok_or_else(|| ValueError::new(format!("missing object key `{key}`")))?.value_shape_at_path(rest).map_err(|error| error.under(key))
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        if path.is_empty() {
+            return self.keys().nth(index).cloned().ok_or_else(|| ValueError::new(format!("object key index {index} is out of range for length {}", self.len())));
+        }
+        let (key, rest) = path.split_first().expect("non-empty path checked above");
+        self.get(*key).ok_or_else(|| ValueError::new(format!("missing object key `{key}`")))?.value_key_at_path(rest, index).map_err(|error| error.under(key))
+    }
 }
 impl<T: FromValue> FromValue for std::collections::BTreeMap<String, T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
@@ -609,7 +731,7 @@ impl<T: FromValue> FromValue for std::collections::BTreeMap<String, T> {
         let Some((key, rest)) = path.split_first() else {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the map root")),
@@ -655,6 +777,40 @@ impl ToValue for DslValue {
             DslValue::Object(entries) => {
                 let index = object_entry_index(entries, segment)?.ok_or_else(|| ValueError::new(format!("missing object key `{segment}`")))?;
                 entries[index].1.value_at_path(rest).map_err(|error| error.under(segment))
+            }
+            _ => Err(ValueError::new(format!("value has no child `{segment}`"))),
+        }
+    }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        let Some((segment, rest)) = path.split_first() else { return Ok(ValueShape::of(self)) };
+        match self {
+            DslValue::Array(items) => {
+                let index = path_index(segment, items.len(), false)?;
+                items[index].value_shape_at_path(rest).map_err(|error| error.under(segment))
+            }
+            DslValue::Object(entries) => {
+                let index = object_entry_index(entries, segment)?.ok_or_else(|| ValueError::new(format!("missing object key `{segment}`")))?;
+                entries[index].1.value_shape_at_path(rest).map_err(|error| error.under(segment))
+            }
+            _ => Err(ValueError::new(format!("value has no child `{segment}`"))),
+        }
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        if path.is_empty() {
+            let DslValue::Object(entries) = self else { return Err(ValueError::new(format!("expected an object, found {self:?}"))) };
+            return entries.get(index).map(|(key, _)| key.clone()).ok_or_else(|| ValueError::new(format!("object key index {index} is out of range for length {}", entries.len())));
+        }
+        let (segment, rest) = path.split_first().expect("non-empty path checked above");
+        match self {
+            DslValue::Array(items) => {
+                let item_index = path_index(segment, items.len(), false)?;
+                items[item_index].value_key_at_path(rest, index).map_err(|error| error.under(segment))
+            }
+            DslValue::Object(entries) => {
+                let entry_index = object_entry_index(entries, segment)?.ok_or_else(|| ValueError::new(format!("missing object key `{segment}`")))?;
+                entries[entry_index].1.value_key_at_path(rest, index).map_err(|error| error.under(segment))
             }
             _ => Err(ValueError::new(format!("value has no child `{segment}`"))),
         }
@@ -757,6 +913,26 @@ impl<A: ToValue, B: ToValue> ToValue for (A, B) {
         }
         .map_err(|error| error.under(segment))
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        let Some((segment, rest)) = path.split_first() else { return Ok(ValueShape::Array { len: 2 }) };
+        match path_index(segment, 2, false)? {
+            0 => self.0.value_shape_at_path(rest),
+            1 => self.1.value_shape_at_path(rest),
+            _ => unreachable!("validated tuple index"),
+        }
+        .map_err(|error| error.under(segment))
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        let (segment, rest) = path.split_first().ok_or_else(|| ValueError::new("expected an object, found an array"))?;
+        match path_index(segment, 2, false)? {
+            0 => self.0.value_key_at_path(rest, index),
+            1 => self.1.value_key_at_path(rest, index),
+            _ => unreachable!("validated tuple index"),
+        }
+        .map_err(|error| error.under(segment))
+    }
 }
 impl<A: FromValue, B: FromValue> FromValue for (A, B) {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
@@ -776,7 +952,7 @@ impl<A: FromValue, B: FromValue> FromValue for (A, B) {
         let Some((segment, rest)) = path.split_first() else {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(_) => Err(ValueError::new("cannot insert into a fixed tuple")),
@@ -812,6 +988,28 @@ impl<A: ToValue, B: ToValue, C: ToValue> ToValue for (A, B, C) {
         }
         .map_err(|error| error.under(segment))
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        let Some((segment, rest)) = path.split_first() else { return Ok(ValueShape::Array { len: 3 }) };
+        match path_index(segment, 3, false)? {
+            0 => self.0.value_shape_at_path(rest),
+            1 => self.1.value_shape_at_path(rest),
+            2 => self.2.value_shape_at_path(rest),
+            _ => unreachable!("validated tuple index"),
+        }
+        .map_err(|error| error.under(segment))
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        let (segment, rest) = path.split_first().ok_or_else(|| ValueError::new("expected an object, found an array"))?;
+        match path_index(segment, 3, false)? {
+            0 => self.0.value_key_at_path(rest, index),
+            1 => self.1.value_key_at_path(rest, index),
+            2 => self.2.value_key_at_path(rest, index),
+            _ => unreachable!("validated tuple index"),
+        }
+        .map_err(|error| error.under(segment))
+    }
 }
 impl<A: FromValue, B: FromValue, C: FromValue> FromValue for (A, B, C) {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
@@ -832,7 +1030,7 @@ impl<A: FromValue, B: FromValue, C: FromValue> FromValue for (A, B, C) {
         let Some((segment, rest)) = path.split_first() else {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(_) => Err(ValueError::new("cannot insert into a fixed tuple")),
@@ -871,6 +1069,33 @@ impl<K: ToString, V: ToValue> ToValue for std::collections::HashMap<K, V> {
         }
         value.value_at_path(rest).map_err(|error| error.under(segment))
     }
+
+    fn value_shape_at_path(&self, path: &[&str]) -> Result<ValueShape, ValueError> {
+        let Some((segment, rest)) = path.split_first() else { return Ok(ValueShape::Object { len: self.len() }) };
+        let mut matches = self.iter().filter(|(key, _)| key.to_string() == *segment);
+        let (_, value) = matches.next().ok_or_else(|| ValueError::new(format!("missing object key `{segment}`")))?;
+        if matches.next().is_some() {
+            return Err(ValueError::new(format!("multiple map keys encode as `{segment}`")));
+        }
+        value.value_shape_at_path(rest).map_err(|error| error.under(segment))
+    }
+
+    fn value_key_at_path(&self, path: &[&str], index: usize) -> Result<String, ValueError> {
+        if path.is_empty() {
+            let key = self.keys().nth(index).ok_or_else(|| ValueError::new(format!("object key index {index} is out of range for length {}", self.len())))?.to_string();
+            if self.keys().filter(|candidate| candidate.to_string() == key).count() != 1 {
+                return Err(ValueError::new(format!("multiple map keys encode as `{key}`")));
+            }
+            return Ok(key);
+        }
+        let (segment, rest) = path.split_first().expect("non-empty path checked above");
+        let mut matches = self.iter().filter(|(key, _)| key.to_string() == *segment);
+        let (_, value) = matches.next().ok_or_else(|| ValueError::new(format!("missing object key `{segment}`")))?;
+        if matches.next().is_some() {
+            return Err(ValueError::new(format!("multiple map keys encode as `{segment}`")));
+        }
+        value.value_key_at_path(rest, index).map_err(|error| error.under(segment))
+    }
 }
 impl<K: std::str::FromStr + std::hash::Hash + Eq, V: FromValue> FromValue for std::collections::HashMap<K, V>
 where
@@ -894,7 +1119,7 @@ where
         let Some((segment, rest)) = path.split_first() else {
             return match edit {
                 ValueEdit::Set(value) => {
-                    *self = Self::from_value(value)?;
+                    *self = <Self as FromValue>::from_value(value)?;
                     Ok(())
                 }
                 ValueEdit::Insert(_) => Err(ValueError::new("cannot insert at the map root")),

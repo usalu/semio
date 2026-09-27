@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/📝️update-text",
+  "semanticKind": "update-text",
+  "displayName": "Update Text",
+  "emoji": "📝️",
+  "aggregateVariant": "UpdateText",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "update-text",
+  "binaryTag": 15,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

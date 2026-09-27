@@ -5,16 +5,19 @@
 #        catalog preflight; B3 bootstrap ‖ lane: renderer wasm-release, B releases from the end; then rest-warm of the other 25) →
 #        once B3 is published: os-hub build-dev + os-mcp build → 7800 onto B3 on a fresh root → readiness, /readyz, hub-freshness,
 #        footprint, open-plan probe over every creatable kind, footprint → waits for the wasm hold (renderer, rest-warm) to end.
-#   all  stops the rest-warm lane → ONE wasm hold (preflight, `--packages all` bootstrap ‖ reverse lane) → os-hub build-dev → 7800 onto it
-#        on a fresh root → the same verification.
+#   final os-hub build-dev prewarm ‖ ONE wasm hold (w3-wasm-hold.sh final: every release warming ‖ rebuild-all; catalog preflight;
+#        `--packages all` bootstrap ‖ lane: renderer wasm-release, releases from the end) → once published: os-hub build-dev + os-mcp
+#        build → 7800 onto the all catalog on a fresh root (the B3 root and binary stay for rollback: stop the hold, then
+#        `zsh w3-hub-resume.sh s13-w3-hub-7800-b3`) → readiness, /readyz, hub-freshness, footprint, open-plan probe over every kind;
+#        meanwhile the hold re-materializes the release plugin-module root and checks it (w3-wasm-hold.sh final).
 # Logs, catalogs, data roots and binaries live under .🧬semio/🌐hub/s13-w3-*; the chain uses the DEFAULT build-dir (warm wasm units).
 setopt no_bg_nice
 set -u
-PHASE="${1:?usage: w3-chain.sh b3|all}"
+PHASE="${1:?usage: w3-chain.sh b3|final}"
 cd /Users/ueli/Documents/semio || exit 1
 H="${W3_HUB_ROOT:-/Users/ueli/Documents/semio/.🧬semio/🌐hub}"
 OUT="$H/s13-w3-logs"
-W=/Users/ueli/Documents/semio/.tmp-ticket/wp-w3
+W="${W3_DIR:-/Users/ueli/Documents/semio/.tmp-ticket/wp-w3}"
 MUTEX=(${W3_MUTEX:-/Users/ueli/Documents/semio/.tmp-ticket/📜️fleet-mutex.sh})
 HUB_DEV=(/Users/ueli/Documents/semio/🌎️hub/📦️packages/🦀️rust/dist/build-dev)
 unset CARGO_TARGET_DIR CARGO_BUILD_TARGET_DIR CARGO_BUILD_BUILD_DIR
@@ -66,16 +69,19 @@ case "$PHASE" in
     log "B3 SERVED on 7800; waiting for the wasm hold (renderer, rest-warm)"
     wait
     ;;
-  all)
+  final)
     test -e "$H/s13-w3-hub-7800-all" && { log "REFUSED: $H/s13-w3-hub-7800-all exists"; exit 1; }
+    test -e "$H/s13-w3-catalog-all/trusted-catalog/current.json" && { log "REFUSED: $H/s13-w3-catalog-all already carries a publication"; exit 1; }
     touch "$OUT/rest-warm.stop"
-    pid=$(cat "$OUT/rest-warm.stop.pid" 2>/dev/null)
-    [ -n "$pid" ] && ps -o command= -p "$pid" 2>/dev/null | /usr/bin/grep -q 'component-release' && kill -TERM "$pid" && log "cut rest-warm item pid $pid"
-    rm -f "$OUT/all-publish.rc"
+    rm -f "$OUT/final-hub-prewarm.done" "$OUT/final-publish.rc"
+    ( step hub-prewarm hub_build; touch "$OUT/final-hub-prewarm.done" ) &
     wasm_hold || { wait; exit 1; }
-    wait
     step hub-build hub_build || exit 1
+    step mcp-build bun nx run @semio-tech/framework-os-mcp-rs:build --skip-nx-cache --outputStyle=stream
     move_7800 "$H/s13-w3-catalog-all" s13-w3-hub-7800-all "$H/s13-w3-state-7800" || exit 1
+    log "ALL SERVED on 7800; waiting for the wasm hold (renderer, release plugin-module root)"
+    wait
+    /usr/bin/grep -E 'release-(support|modules|root-check)|release root' "$OUT/final-wasm-hold.txt" | /usr/bin/grep -v '^  |'
     ;;
   *) log "unknown phase"; exit 1 ;;
 esac

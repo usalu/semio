@@ -1,0 +1,9 @@
+{
+  "schema": "semio.store.document-rebuild-welcome/v1",
+  "rows": [
+    { "name": "an actor-bound rebuild accepts the hub's tail and seeds its child from the pair route", "lane": "browser-actor", "welcome": "Tail", "accepted": true },
+    { "name": "an actor-bound rebuild of a document with no command since genesis accepts an empty welcome", "lane": "browser-actor", "welcome": "None", "accepted": true },
+    { "name": "a document without a browser actor still refuses a bare tail as a rebuild", "lane": "local", "welcome": "Tail", "accepted": false },
+    { "name": "a document without a browser actor still refuses an empty welcome as a rebuild", "lane": "local", "welcome": "None", "accepted": false }
+  ]
+}

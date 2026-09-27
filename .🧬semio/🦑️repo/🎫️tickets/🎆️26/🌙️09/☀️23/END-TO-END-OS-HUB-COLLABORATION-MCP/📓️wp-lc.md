@@ -92,3 +92,23 @@ Status legend: **measured** = ran here, capture named; **written, not run** = ho
   oracle RED (the hub auth schema's `HubAccessActionV1` enum lacked U5's two actions) → added `preference.record`,
   `preference.read` to `🌎️hub/🔐️auth/🧬️schema/🔣️.json` (hub-native JSON, read only by TS) → access-policy 2/2 +
   creation-progress oracle 1/1 (`generated/hub-ts-oracles-2.txt`).
+
+### Landing window 2 (rule 32/33, 2026-09-27 14:1x → 15:45)
+
+- 14:10 `wp-lc/patches/f1-law-maintenance.py` dry-run clean → applied (SDK helper `drain_maintenance_pressure`,
+  `plugin_runtime::RUNTIME_CLOSE_BYTES_PER_STEP` → `pub(crate)`, writer/jack/vcs laws call it). Native-lane check 14:21:
+  **red — my error**: the helper bounded its loop by `store::ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY`, which is private →
+  every `artifact-app-testing` build failed 14:10–14:56 (LB made the const `pub` at 14:56 to unblock; left in place).
+  14:56 root fix in the helper: loop while `maintenance_under_pressure()`, each one-item step must release items or bytes,
+  else the law panics "made no maintenance progress" — no capacity constant needed (patch file kept in sync).
+- 14:56 H9-L applied (all 118 target files backed up to `.🧬semio/🌐hub/s13-lc-h9l-backup/`), then **restored byte-exactly at
+  14:57** (no peer edit in between, by mtime): its native proof is one 105-crate check (57 with `component-app-assembly`) +
+  wasm32, and the native lane was 5 deep (~10 min per hold) → cannot be green by 15:40. Stays PREPARED (dry run clean again).
+- 14:57 F1 re-check + the three laws queued as ONE native-lane hold (`wp-lc/f1-window2.sh`, log `s13-lc-laws/run-7.txt`);
+  15:08 wasm32 fast gate `semio-s-plugin-trinity` + `semio-s-plugin-vcs` `--target wasm32-wasip2` queued in the wasm mutex
+  (`wp-lc/f1-wasm.sh`, `run-8.txt`).
+- 15:21 wasm32 fast gate **green** (trinity + vcs plugins, `f1-wasm-1.txt`); 15:32 native check **green**
+  (`f1-check-2.txt`, 5 m 59 s); 15:37 laws: writer, jack and vcs each panicked in the helper ("made no maintenance
+  progress") — a single maintenance step visits one of 26 rotation stages and often releases nothing, which the runtime
+  tolerates. 15:38 helper fixed: it tolerates up to one full rotation (`MAINTENANCE_STAGES`) of idle steps before failing;
+  patch file kept in sync; re-check + laws re-queued (`run-9.txt`, 8th in the native lane). Coordinator asked: keep or revert.

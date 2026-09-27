@@ -518,13 +518,14 @@ impl TracePath {
     }
 }
 
-#[derive(Clone, Debug, dsl::ToValue, dsl::FromValue)]
+#[derive(Clone, Debug)]
 enum TracePointerWork {
     Roots { next: usize },
     Enter(TracePath),
     GroupChildren { path: TracePath, next: usize },
     Visit(TracePath),
     PathBounds { path: TracePath, next: usize, matrix: [f64;6], current: [f64;2], start: [f64;2], min: [f64; 2], max: [f64; 2], control_hit: bool },
+    PathPaint {path:TracePath,bounds:(f64,f64,f64,f64),control_hit:bool,cursor:crate::schema::geometry::picking::PathHitCursor},
     PolygonBounds { path: TracePath, next: usize, matrix: [f64;6], min: [f64; 2], max: [f64; 2] },
 }
 
@@ -553,6 +554,9 @@ pub(crate) struct TracePointerJob {
     work: UiFixedList<TracePointerWork, TRACE_POINTER_WORK_CAPACITY>,
     pub(crate) best: Option<TracePickCandidate>,
     pub(crate) hits: UiFixedList<String, DRAWING_QUERY_HIT_CAPACITY>,
+    selected_ids: Vec<String>,
+    selected_paths: Vec<TracePath>,
+    selection_bounds: Option<[f64;4]>,
     completed_work: usize,
     pub(crate) overflowed: bool,
 }
@@ -579,6 +583,9 @@ impl TracePointerJob {
             work,
             best: None,
             hits: UiFixedList::default(),
+            selected_ids: Vec::new(),
+            selected_paths: Vec::new(),
+            selection_bounds: None,
             completed_work: 0,
             overflowed: false,
         }
@@ -597,6 +604,12 @@ impl TracePointerJob {
         job.tolerance = tolerance.max(0.0);
         job.include_control_points = include_control_points;
         job
+    }
+
+    pub(crate) fn retain_selection_bounds(&mut self,ids: &[String]) -> Result<(),Fault> {
+        if ids.len()>DRAWING_QUERY_HIT_CAPACITY || ids.iter().map(String::len).sum::<usize>()>DRAWING_QUERY_TARGET_BYTES {return Err(Fault::from("Selection exceeds gesture capacity"));}
+        self.selected_ids=ids.to_vec();
+        Ok(())
     }
 
     pub(crate) fn new_marquee(document: &DrawingSnapshot, start: [f64; 2], end: [f64; 2], crossing: bool) -> Self {
@@ -636,7 +649,11 @@ impl TracePointerJob {
                 }
                 TracePointerWork::Enter(path) => {
                     let Some(layer) = drawing_layer_at_path(&document.layers, &path) else { continue };
-                    if !trace_layer_base(layer).visible || trace_layer_base(layer).locked { continue; }
+                    let base=trace_layer_base(layer);
+                    let selected_ancestor=self.selected_paths.iter().any(|parent|crate::schema::geometry::translation::path_contains(&parent.indices[..usize::from(parent.len)],&path.indices[..usize::from(path.len)]));
+                    if !base.visible || (base.locked && !selected_ancestor) { continue; }
+                    if !selected_ancestor && self.selected_ids.contains(&base.id) {self.selected_paths.push(path);}
+
                     if let DrawingLayerNode::Group(group) = layer {
                         self.push_work(TracePointerWork::GroupChildren { path, next: group.children.len() });
                     } else {
@@ -660,7 +677,7 @@ impl TracePointerJob {
                         DrawingLayerNode::Shape(shape) if shape.shape_kind == "polygon" && shape.polygon.as_ref().is_some_and(|polygon| !polygon.points.is_empty()) => {
                             self.push_work(TracePointerWork::PolygonBounds { path, next: 0, matrix, min: [f64::INFINITY; 2], max: [f64::NEG_INFINITY; 2] });
                         }
-                        _ => consider_trace_candidate(self, layer, path, trace_layer_bounds_with_matrix(layer,matrix), false),
+                        _ => consider_trace_candidate(self, layer, path, trace_layer_bounds_with_matrix(layer,matrix), false, None),
                     }
                 }
                 TracePointerWork::PathBounds { path, next, matrix, mut current, mut start, mut min, mut max, mut control_hit } => {
@@ -679,7 +696,25 @@ impl TracePointerJob {
                         }
                         self.push_work(TracePointerWork::PathBounds { path, next: next + 1, matrix, current, start, min, max, control_hit });
                     } else if min[0].is_finite() {
-                        consider_trace_candidate(self, drawing_layer_at_path(&document.layers, &path).expect("path work retains its layer"), path, (min[0],min[1],max[0]-min[0],max[1]-min[1]), control_hit);
+                        let bounds=(min[0],min[1],max[0]-min[0],max[1]-min[1]);
+                        if self.marquee.is_none()&&self.lasso.is_none()&&self.world.iter().all(|value|value.is_finite()) {
+                            let [a,b,c,d,_,_]=matrix;
+                            let scale=((a+d).hypot(b-c)+(a-d).hypot(b+c))*0.5;
+                            let radius=self.tolerance+path_layer.base.attributes.stroke.as_ref().map_or(0.0,|stroke|stroke.width.max(0.0)*scale*0.5);
+                            let cursor=crate::schema::geometry::picking::PathHitCursor::new(self.world,matrix,radius,(self.tolerance/80.0).max(1e-5));
+                            self.push_work(TracePointerWork::PathPaint {path,bounds,control_hit,cursor});
+                        } else {consider_trace_candidate(self,drawing_layer_at_path(&document.layers,&path).expect("path work retains its layer"),path,bounds,control_hit,None);}
+
+                    }
+                }
+                TracePointerWork::PathPaint {path,bounds,control_hit,mut cursor}=>{
+                    let Some(layer@DrawingLayerNode::Path(body))=drawing_layer_at_path(&document.layers,&path) else {continue;};
+                    if !cursor.step(&body.segments) {self.push_work(TracePointerWork::PathPaint {path,bounds,control_hit,cursor});}
+                    else {
+                        if cursor.failed(){self.overflowed=true;}
+                        let fill=body.base.attributes.fill.is_some();
+                        let stroke=body.base.attributes.stroke.is_some()||!fill;
+                        consider_trace_candidate(self,layer,path,bounds,control_hit,Some(cursor.contains(fill,stroke,false)));
                     }
                 }
                 TracePointerWork::PolygonBounds { path, next, matrix, mut min, mut max } => {
@@ -689,7 +724,7 @@ impl TracePointerJob {
                         extend_trace_bounds(&mut min, &mut max, *point);
                         self.push_work(TracePointerWork::PolygonBounds { path, next: next + 1, matrix, min, max });
                     } else if min[0].is_finite() {
-                        consider_trace_candidate(self, drawing_layer_at_path(&document.layers, &path).expect("polygon work retains its layer"), path, trace_world_bounds(matrix, min, max), false);
+                        consider_trace_candidate(self, drawing_layer_at_path(&document.layers, &path).expect("polygon work retains its layer"), path, trace_world_bounds(matrix, min, max), false, None);
                     }
                 }
             }
@@ -698,8 +733,15 @@ impl TracePointerJob {
     }
 }
 
-fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode, path: TracePath, bounds: (f64, f64, f64, f64), control_hit: bool) {
+fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode, path: TracePath, bounds: (f64, f64, f64, f64), control_hit: bool,paint_hit:Option<bool>) {
     let base = trace_layer_base(layer);
+    if job.selected_paths.iter().any(|parent|crate::schema::geometry::translation::path_contains(&parent.indices[..usize::from(parent.len)],&path.indices[..usize::from(path.len)])) {
+        let next=[bounds.0,bounds.1,bounds.2,bounds.3];
+        if next.iter().all(|value|value.is_finite()) { job.selection_bounds=Some(job.selection_bounds.map_or(next,|old| {
+            let (x,y)=(old[0].min(next[0]),old[1].min(next[1]));
+            [x,y,(old[0]+old[2]).max(next[0]+next[2])-x,(old[1]+old[3]).max(next[1]+next[3])-y]
+        })); }
+    }
     if !base.visible || base.locked {
         return;
     }
@@ -722,7 +764,7 @@ fn consider_trace_candidate(job: &mut TracePointerJob, layer: &DrawingLayerNode,
         }
         return;
     }
-    if !control_hit && !trace_point_in_bounds(job.world, bounds, job.tolerance) {
+    if !control_hit && (paint_hit==Some(false)||(paint_hit.is_none()&&!trace_point_in_bounds(job.world, bounds, job.tolerance))) {
         return;
     }
     let candidate = TracePickCandidate {
@@ -830,8 +872,11 @@ fn trace_layer_world_bounds(layer: &DrawingLayerNode) -> (f64, f64, f64, f64) {
 }
 
 fn trace_layer_bounds_with_matrix(layer: &DrawingLayerNode, matrix: [f64;6]) -> (f64, f64, f64, f64) {
+    if matches!(layer,DrawingLayerNode::Shape(_)) {
+        if let Some(bounds)=crate::schema::path_segments_bounds_with_matrix(&crate::schema::layer_to_path_segments(layer),matrix) {return bounds;}
+    }
     let local = match layer {
-        DrawingLayerNode::Text(value) => (value.x, value.y, (value.content.len() as f64 * value.size * 0.6).max(8.0), (value.size * 1.2).max(8.0)),
+        DrawingLayerNode::Text(value) => {let [w,h]=semio_s_2d::text::drawing_text_fallback_extent(&value.content,value.size);(value.x,value.y,w.max(8.0),h.max(8.0))},
         DrawingLayerNode::Image(value) => (0.0, 0.0, value.width, value.height),
         DrawingLayerNode::Shape(value) => match value.shape_kind.as_str() {
             "rect" => value.rect.as_ref().map_or((-64.0, -64.0, 128.0, 128.0), |rect| (rect.x, rect.y, rect.width, rect.height)),
@@ -844,6 +889,16 @@ fn trace_layer_bounds_with_matrix(layer: &DrawingLayerNode, matrix: [f64;6]) -> 
         DrawingLayerNode::Group(_) | DrawingLayerNode::Boolean(_) | DrawingLayerNode::Trace(_) => (-64.0, -64.0, 128.0, 128.0),
     };
     trace_world_bounds(matrix, [local.0, local.1], [local.0 + local.2, local.1 + local.3])
+}
+
+
+/// 🎯️ Uses the same bounded geometry traversal for handle presentation and gesture hit testing.
+pub(crate) fn selected_transform_bounds(document: &DrawingSnapshot,ids: &[String]) -> Option<[f64;4]> {
+    if ids.is_empty() {return None;}
+    let mut query=TracePointerJob::new_query(document,[f64::NAN;2],0.0,false);
+    query.retain_selection_bounds(ids).ok()?;
+    while !query.advance(document) {}
+    if query.overflowed {None} else {query.selection_bounds}
 }
 
 fn trace_point_in_bounds(point: [f64; 2], bounds: (f64, f64, f64, f64), tolerance: f64) -> bool {
@@ -895,7 +950,7 @@ pub struct DrawingGesturePreview {
     pub sequence: u64,
     pub phase: DrawingGesturePreviewPhase,
     pub context: GestureContext,
-    pub translation: Option<(Vec<String>,[f64;2])>,
+    pub transformation: Option<(Vec<String>,[f64;6])>,
 }
 
 struct LayerMoveTarget {
@@ -910,6 +965,16 @@ pub(crate) struct LayerMove {
     start: [f64;2],
     cursor: [f64;2],
     active: bool,
+    handle: Option<(usize,[f64;4],bool,bool)>,
+}
+
+impl LayerMove {
+    fn matrix(&self) -> Option<[f64;6]> {
+        match self.handle {
+            Some((handle,bounds,constrained,centered))=>crate::schema::geometry::handles::handle_matrix(handle,bounds,self.start,self.cursor,constrained,centered),
+            None=>Some([1.0,0.0,0.0,1.0,self.cursor[0]-self.start[0],self.cursor[1]-self.start[1]]),
+        }
+    }
 }
 
 struct LayerMovePreparation {
@@ -971,6 +1036,8 @@ pub(crate) struct DrawingPointQuery {
     pub(crate) marquee: bool,
     pub(crate) traversal_complete: bool,
     pub(crate) drag_start: Option<[f64;2]>,
+    pub(crate) constrained: bool,
+    pub(crate) centered: bool,
     move_preparation: Option<LayerMovePreparation>,
     move_prepared: bool,
     pub(crate) preserve_selection: bool,
@@ -986,7 +1053,7 @@ pub(crate) enum DrawingQueryPublication {
 
 impl DrawingPointQuery {
     pub(crate) fn new(command_id: &'static str, cursor: TracePointerJob, hover: bool, merge: String, marquee: bool) -> Self {
-        Self { command_id, cursor, hover, merge, marquee, traversal_complete: false, drag_start: None, move_preparation: None, move_prepared: false, preserve_selection: false, target_cursor: 0, targets: String::with_capacity(DRAWING_QUERY_TARGET_BYTES) }
+        Self { command_id, cursor, hover, merge, marquee, traversal_complete: false, drag_start: None, constrained:false, centered:false, move_preparation: None, move_prepared: false, preserve_selection: false, target_cursor: 0, targets: String::with_capacity(DRAWING_QUERY_TARGET_BYTES) }
     }
 
     pub(crate) fn publication_step(&mut self) -> DrawingQueryPublication {
@@ -1090,17 +1157,24 @@ impl DrawingSession {
         let Some(query)=self.point_query.as_mut() else { return Ok(true); };
         if query.move_prepared || query.drag_start.is_none() { return Ok(true); }
         if query.move_preparation.is_none() {
-            let Some(candidate)=query.cursor.best.as_ref() else { query.move_prepared=true; return Ok(true); };
-            if ids.len()>DRAWING_QUERY_HIT_CAPACITY || ids.iter().map(String::len).sum::<usize>()>DRAWING_QUERY_TARGET_BYTES { return Err(Fault::from("Selection exceeds gesture capacity")); }
-            let mut prefix=candidate.path;
-            while prefix.len>0 {
-                if drawing_layer_at_path(&document.layers,&prefix).is_some_and(|layer|ids.contains(&trace_layer_base(layer).id)) { query.preserve_selection=true; break; }
-                prefix.len-=1;
-            }
-            let mut ids=if query.preserve_selection { ids.to_vec() } else { vec![candidate.layer_id.clone()] };
-            ids.sort(); ids.dedup();
+            if ids.len()>DRAWING_QUERY_HIT_CAPACITY || ids.iter().map(String::len).sum::<usize>()>DRAWING_QUERY_TARGET_BYTES {return Err(Fault::from("Selection exceeds gesture capacity"));}
             let start=query.drag_start.unwrap();
-            query.move_preparation=Some(LayerMovePreparation { ids,next:(!document.layers.is_empty()).then(||TracePath::root(0)).flatten(),found:0,movement:LayerMove { targets:Vec::new(),start,cursor:start,active:false } });
+            let handle=query.cursor.selection_bounds.and_then(|bounds|crate::schema::geometry::handles::hit_handle(bounds,start,self.window_config.viewport.zoom).map(|handle|(handle,bounds,query.constrained,query.centered)));
+            let mut selected=if handle.is_some() {
+                query.preserve_selection=true;
+                ids.to_vec()
+            } else {
+                if query.constrained {query.move_prepared=true;query.preserve_selection=true;return Ok(true);}
+                let Some(candidate)=query.cursor.best.as_ref() else {query.move_prepared=true;return Ok(true);};
+                let mut prefix=candidate.path;
+                while prefix.len>0 {
+                    if drawing_layer_at_path(&document.layers,&prefix).is_some_and(|layer|ids.contains(&trace_layer_base(layer).id)) {query.preserve_selection=true;break;}
+                    prefix.len-=1;
+                }
+                if query.preserve_selection {ids.to_vec()} else {vec![candidate.layer_id.clone()]}
+            };
+            selected.sort();selected.dedup();
+            query.move_preparation=Some(LayerMovePreparation {ids:selected,next:(!document.layers.is_empty()).then(||TracePath::root(0)).flatten(),found:0,movement:LayerMove {targets:Vec::new(),start,cursor:start,active:false,handle}});
             return Ok(false);
         }
         let preparation=query.move_preparation.as_mut().unwrap();
@@ -1108,6 +1182,13 @@ impl DrawingSession {
         self.layer_move=Some(query.move_preparation.take().unwrap().movement);
         query.move_prepared=true;
         Ok(true)
+    }
+
+    pub(crate) fn set_transform_modifiers(&mut self, constrained: bool,centered: bool) {
+        if let Some((_,_,shift,alt))=self.layer_move.as_mut().and_then(|drag|drag.handle.as_mut()) {
+            *shift=constrained;
+            *alt=centered;
+        }
     }
 
     pub(crate) fn move_layer_preview(&mut self, world: [f64;2]) {
@@ -1124,13 +1205,22 @@ impl DrawingSession {
         let drag = self.layer_move.take();
         self.step_gesture(drawing_gesture::Event::PointerUp { utility:self.active_utility_id.clone(),world,shift:false,ctrl:false,meta:false },document,config);
         let Some(drag) = drag.filter(|drag| drag.active && drag.cursor != drag.start) else { return Ok(Emit::default()); };
+        let matrix=drag.matrix().ok_or_else(||Fault::from("Transform produced nonfinite coordinates"))?;
+        if matrix==[1.0,0.0,0.0,1.0,0.0,0.0] {return Ok(Emit::default());}
+        let description=match drag.handle {Some((8,..))=>"Rotate selection",Some(_)=>"Resize selection",None=>"Move selection"};
         let delta = [drag.cursor[0]-drag.start[0],drag.cursor[1]-drag.start[1]];
         let mutations=drag.targets.into_iter().map(|target| {
             let source=&target.original;
+            if drag.handle.is_some() {
+                let inverse=crate::schema::geometry::inverse(target.parent).ok_or_else(||Fault::from("Cannot transform through a singular parent"))?;
+                let local=crate::schema::geometry::multiply(inverse,crate::schema::geometry::multiply(matrix,crate::schema::geometry::multiply(target.parent,crate::schema::drawing_transform_to_matrix(source))));
+                if !local.iter().all(|value|value.is_finite()) {return Err(Fault::from("Transform produced nonfinite coordinates"));}
+                return Ok(crate::mutations::update_layer_transform(target.layer_id,crate::schema::drawing_matrix_to_transform(local)));
+            }
             let [x,y,scale_x,scale_y,rotation]=crate::schema::geometry::translation::translate([source.x,source.y,source.scale_x,source.scale_y,source.rotation],target.parent,delta).ok_or_else(||Fault::from("Cannot move through a singular transform"))?;
-            Ok(crate::mutations::update_layer_transform(target.layer_id,crate::DrawingTransform { x,y,scale_x,scale_y,rotation }))
+            Ok(crate::mutations::update_layer_transform(target.layer_id,crate::DrawingTransform { x,y,scale_x,scale_y,rotation, shear: source.shear }))
         }).collect::<Result<Vec<_>,Fault>>()?;
-        Ok(Emit::commit(mutations,"Move selection"))
+        Ok(Emit::commit(mutations,description))
     }
 
     pub(crate) fn advance_lasso_move(&mut self, payload: &crate::editor::drawing::commands::canvas_pointer_move::CanvasPointerMove, document: &DrawingSnapshot, config: &NoConfig) -> Option<Emit<DrawingMutation,NoConfigMutation>> {
@@ -1184,7 +1274,7 @@ impl DrawingSession {
         } else {
             DrawingGesturePreviewPhase::Idle
         };
-        DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone(), translation: self.layer_move.as_ref().filter(|drag| drag.active).map(|drag| (drag.targets.iter().map(|target|target.layer_id.clone()).collect(),[drag.cursor[0]-drag.start[0],drag.cursor[1]-drag.start[1]])) }
+        DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone(), transformation: self.layer_move.as_ref().filter(|drag|drag.active).and_then(|drag|drag.matrix().map(|matrix|(drag.targets.iter().map(|target|target.layer_id.clone()).collect(),matrix))) }
     }
 
     pub(crate) fn step_gesture_retained(
@@ -1319,6 +1409,8 @@ pub struct CanvasPointerDown {
     pub width: f64,
     pub height: f64,
     pub shift: bool,
+    #[value(default)]
+    pub alt: bool,
     pub ctrl: bool,
     pub meta: bool,
     #[value(default, skip_serializing_if = "Option::is_none")]

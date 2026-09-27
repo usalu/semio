@@ -277,7 +277,7 @@ fn projected_aabb_skips_far_instance() {
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
     let view_proj = camera.view_proj(800.0, 800.0);
-    let ids = screen_select_instances(&lookup, &draws, view_proj, 200.0, 200.0, &[[0.0, 0.0], [200.0, 0.0], [200.0, 200.0], [0.0, 200.0]], true, true);
+    let ids = screen_select_instances(&lookup, &draws, view_proj, default_projection_spec(), 200.0, 200.0, &[[0.0, 0.0], [200.0, 0.0], [200.0, 200.0], [0.0, 200.0]], true, true);
     assert!(ids.is_empty());
 }
 
@@ -319,8 +319,8 @@ fn screen_select_instances_window_requires_full_vertex_enclosure() {
     let center_x = (min_x + max_x) * 0.5;
     let center_y = (min_y + max_y) * 0.5;
     let partial = [[min_x, min_y], [center_x, center_y]];
-    let window_ids = screen_select_instances(&lookup, &draws, view_proj, width, height, &partial, true, false);
-    let crossing_ids = screen_select_instances(&lookup, &draws, view_proj, width, height, &partial, true, true);
+    let window_ids = screen_select_instances(&lookup, &draws, view_proj, default_projection_spec(), width, height, &partial, true, false);
+    let crossing_ids = screen_select_instances(&lookup, &draws, view_proj, default_projection_spec(), width, height, &partial, true, true);
     assert!(window_ids.is_empty());
     assert_eq!(crossing_ids, vec!["partial".to_string()]);
 }
@@ -818,7 +818,7 @@ fn screen_select_components_face_granularity_selects_visible_triangle() {
     let camera = Camera3d::default();
     let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
-    let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "face", None, false);
+    let selected = screen_select_components(&lookup, &draws, view_proj, default_projection_spec(), 800.0, 600.0, &full_screen, true, "face", None, false);
     assert_eq!(selected, vec!["42".to_string()]);
 }
 
@@ -833,7 +833,7 @@ fn screen_select_components_vertex_granularity_selects_ids() {
     let camera = Camera3d::default();
     let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
-    let mut selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "vertex", None, false);
+    let mut selected = screen_select_components(&lookup, &draws, view_proj, default_projection_spec(), 800.0, 600.0, &full_screen, true, "vertex", None, false);
     selected.sort();
     assert_eq!(selected, vec!["10".to_string(), "11".to_string(), "12".to_string()]);
 }
@@ -850,7 +850,7 @@ fn screen_select_components_edge_granularity_selects_ids() {
     let camera = Camera3d::default();
     let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
-    let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "edge", None, false);
+    let selected = screen_select_components(&lookup, &draws, view_proj, default_projection_spec(), 800.0, 600.0, &full_screen, true, "edge", None, false);
     assert_eq!(selected, vec!["99".to_string()]);
 }
 
@@ -863,7 +863,7 @@ fn screen_select_components_default_granularity_selects_whole_instance() {
     let camera = Camera3d::default();
     let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
-    let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "unknown", None, false);
+    let selected = screen_select_components(&lookup, &draws, view_proj, default_projection_spec(), 800.0, 600.0, &full_screen, true, "unknown", None, false);
     assert_eq!(selected, vec!["whole".to_string()]);
 }
 
@@ -884,7 +884,7 @@ fn screen_select_components_filters_by_active_instance_id() {
     let camera = Camera3d::default();
     let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
-    let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "unknown", Some("keep"), false);
+    let selected = screen_select_components(&lookup, &draws, view_proj, default_projection_spec(), 800.0, 600.0, &full_screen, true, "unknown", Some("keep"), false);
     assert_eq!(selected, vec!["keep".to_string()]);
 }
 
@@ -895,7 +895,7 @@ fn screen_select_components_skips_missing_mesh_lookup() {
     let camera = Camera3d::default();
     let view_proj = camera.view_proj(800.0, 800.0);
     let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
-    let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "face", None, false);
+    let selected = screen_select_components(&lookup, &draws, view_proj, default_projection_spec(), 800.0, 600.0, &full_screen, true, "face", None, false);
     assert!(selected.is_empty());
 }
 

@@ -23,10 +23,7 @@ struct RetainedCommandIngress {
 /// silent. Without it the host's drain cannot tell "still mine, working" from "gone", and the only
 /// bound left is a crossing count — which is how `command ingress did not complete within 1024
 /// continuations (observed statuses: idle)` came to be the whole diagnosis.
-pub(super) fn command_ingress_while_owned(
-    status: semio_framework::kernel::CommandIngressStatus,
-    owner: Option<semio_framework::kernel::CommandPageCursor>,
-) -> semio_framework::kernel::CommandIngressStatus {
+pub(super) fn command_ingress_while_owned(status: semio_framework::kernel::CommandIngressStatus, owner: Option<semio_framework::kernel::CommandPageCursor>) -> semio_framework::kernel::CommandIngressStatus {
     match (status, owner) {
         (semio_framework::kernel::CommandIngressStatus::Idle, Some(cursor)) => semio_framework::kernel::CommandIngressStatus::CommandPending(cursor),
         (status, _) => status,
@@ -177,7 +174,8 @@ pub struct TurnMoreWorkSources {
 
 impl TurnMoreWorkSources {
     /// 😴️ The reading of a turn that answered `Idle`.
-    pub const SETTLED: Self = Self { executor_deadline: false, process_pool: false, close_cleanup: false, typed_operation: false, typed_operation_contended: false, reconcile: false, resumes: false, executor_pending: false, command_ingress: false, lifecycle: false };
+    pub const SETTLED: Self =
+        Self { executor_deadline: false, process_pool: false, close_cleanup: false, typed_operation: false, typed_operation_contended: false, reconcile: false, resumes: false, executor_pending: false, command_ingress: false, lifecycle: false };
 
     /// 🔦️ Whether any source is armed — equal to the turn's `MoreWork` verdict.
     pub fn any(self) -> bool {
@@ -325,11 +323,8 @@ struct DirtyPollOwners {
 /// panes never received the update this dirty exists to deliver.
 async fn dirty_background_surfaces<PA: crate::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32, dirty: &mut DirtyPollOwners) -> Result<(), semio_framework::Fault> {
     for surface in crate::plugin_runtime::plugin_instance_background_surfaces(runtime, instance).await {
-        let surface = ui_contract::SurfaceId::try_from(surface)
-            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
-        dirty
-            .try_surface(instance, surface)
-            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
+        let surface = ui_contract::SurfaceId::try_from(surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
+        dirty.try_surface(instance, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
     }
     Ok(())
 }
@@ -337,11 +332,8 @@ async fn dirty_background_surfaces<PA: crate::PluginApp>(runtime: &crate::plugin
 /// 📡️ Dirties every surface of `instance` after remote edits were merged into its document.
 async fn dirty_document_surfaces<PA: crate::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32, dirty: &mut DirtyPollOwners) -> Result<(), semio_framework::Fault> {
     for surface in crate::plugin_runtime::plugin_instance_document_surfaces(runtime, instance).await {
-        let surface = ui_contract::SurfaceId::try_from(surface)
-            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
-        dirty
-            .try_surface(instance, surface)
-            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
+        let surface = ui_contract::SurfaceId::try_from(surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-capacity"), "surface id exceeds fixed text capacity"))?;
+        dirty.try_surface(instance, surface).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.dirty-surface-capacity"), "fixed dirty surface authority is saturated"))?;
     }
     Ok(())
 }
@@ -597,10 +589,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     retire_until_complete(retirement_deadline, ui_contract::close_built_node_page_one);
     retire_while_progress(retirement_deadline, || semio_framework::kernel::close_ui_turn_patch_owner_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT));
     retire_while_progress(retirement_deadline, || {
-        matches!(
-            semio_framework::kernel::close_ui_turn_patch_transport_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT),
-            Ok(semio_framework::kernel::UiTurnPatchTransportProgress::Pending { .. })
-        )
+        matches!(semio_framework::kernel::close_ui_turn_patch_transport_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT), Ok(semio_framework::kernel::UiTurnPatchTransportProgress::Pending { .. }))
     });
     with_pending_patches(|pending| pending.borrow_mut().advance_rejection(|surface, generation| PATCHES.with(|patches| patches.mark_rejected(surface, generation))));
     for unit in 0..PATCH_CLOSE_UNITS_PER_TURN {
@@ -838,7 +827,9 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             Event::Request { req, capability, payload, .. } => {
                 let result = match crate::plugin_runtime::extension_invoke(&capability, &payload).await {
                     Ok(answer) => semio_framework::kernel::RequestOutcome::Ok(answer),
-                    Err(fault) => semio_framework::kernel::RequestOutcome::Err(store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&fault).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.request-fault-encode"), error.to_string()))?)),
+                    Err(fault) => semio_framework::kernel::RequestOutcome::Err(store::pack_rt::encode_wire_value(
+                        &dsl::to_dsl_value(&fault).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.request-fault-encode"), error.to_string()))?,
+                    )),
                 };
                 inbound_request_effects.push(Effect::Respond { req, result });
             }
@@ -1522,10 +1513,7 @@ pub(crate) fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framewor
 /// to, which is single by construction (the pending authority only adds to a batch that already
 /// names an instance).
 #[expect(clippy::result_large_err, reason = "A refused publication returns its exact patch owner to the reserved pending slot without allocating an error wrapper.")]
-fn fill_turn_patch_page<PA: crate::app::PluginApp>(
-    runtime: &crate::plugin_runtime::PluginRuntime<PA>,
-    budget_bytes: usize,
-) -> Result<(semio_framework::kernel::UiTurnPatches, Option<ActorUiPatchReceipt>), semio_framework::Fault> {
+fn fill_turn_patch_page<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, budget_bytes: usize) -> Result<(semio_framework::kernel::UiTurnPatches, Option<ActorUiPatchReceipt>), semio_framework::Fault> {
     let page = take_turn_patch_page(budget_bytes)?;
     let instance = page.iter().next().and_then(|patch| parse_surface_instance(&patch.surface.0));
     let receipt = instance.and_then(|instance| runtime.guest_lifetimes.borrow_mut().next_patch_receipt(instance));
@@ -1974,9 +1962,7 @@ fn decode_wire_replay_shell_command(value: &dsl::DslValue) -> Option<Effect> {
 /// camelCase effect objects, and a silent `Err(())` drops the host picker (`effects:0`).
 fn decode_wire_request_file_open(value: &dsl::DslValue) -> Option<Effect> {
     let file = value.get("requestFileOpen").or_else(|| value.get("RequestFileOpen"))?;
-    let req = file
-        .get("req")
-        .and_then(|req| req.as_u64().or_else(|| req.get("id").and_then(dsl::DslValue::as_u64)))?;
+    let req = file.get("req").and_then(|req| req.as_u64().or_else(|| req.get("id").and_then(dsl::DslValue::as_u64)))?;
     let accept = file.get("accept").and_then(dsl::DslValue::as_str)?.to_string();
     let import_action = file.get("importAction").or_else(|| file.get("import_action")).and_then(dsl::DslValue::as_str)?.to_string();
     let read_as = file.get("readAs").or_else(|| file.get("read_as")).and_then(dsl::DslValue::as_str).map(str::to_string);
@@ -2006,7 +1992,6 @@ fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEve
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
     dsl::from_dsl_value(value).map_err(|_| ())
 }
-
 
 #[cfg(test)]
 #[path = "🧪️tests/📡️wire-effect-round-trip/🦀️.rs"]

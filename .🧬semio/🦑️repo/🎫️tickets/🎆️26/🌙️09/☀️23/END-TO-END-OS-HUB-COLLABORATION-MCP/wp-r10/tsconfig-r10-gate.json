@@ -1,0 +1,7 @@
+{
+ "extends": "/Users/ueli/Documents/semio/.tmp-ticket/wp-r10/tsconfig-r10.json",
+ "files": [
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts",
+  "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/🧪️tests/🎯️goal-gate/🟦️.ts"
+ ]
+}

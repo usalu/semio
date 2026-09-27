@@ -868,6 +868,8 @@
   --color-hover-panel: var(--hover-panel);
   --color-active-base: var(--active-base);
   --color-active-foreground: var(--active-foreground);
+  --color-destructive: var(--destructive-border);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-changed-base: var(--color-warning);
   --color-selected-changed: color-mix(in oklch, var(--active-base) 50%, var(--color-warning) 50%);
   --color-selected-added: color-mix(in oklch, var(--active-base) 50%, var(--color-success) 50%);

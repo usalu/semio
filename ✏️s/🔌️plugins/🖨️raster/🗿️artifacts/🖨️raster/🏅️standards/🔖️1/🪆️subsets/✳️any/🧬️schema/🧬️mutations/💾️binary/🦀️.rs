@@ -360,6 +360,7 @@ impl RasterOwnedRetirement {
             ChangeLayerAdjustmentKind(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.new_adjustment_kind), third: None },
             AddLayerAsset(payload) => RasterMutationFields::Asset { id: payload.asset_id, asset: Some(payload.asset) },
             RemoveLayerAsset(payload) => RasterMutationFields::String(payload.asset_id),
+            ChangeLayerAdjustmentParameter(payload) => RasterMutationFields::Strings {first:payload.layer_id,second:Some(payload.parameter),third:None},
             ChangeLayerMask(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected.and_then(|mask| mask.image_key), third: payload.mask.and_then(|mask| mask.image_key) },
             ChangeLayerPixels(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected_image_key, third: payload.content.image_key },
         }
@@ -2479,6 +2480,7 @@ impl RasterMutationDigestAuthority {
             RasterMutation::RemoveLayerAsset(_) => 12,
             RasterMutation::ChangeLayerPixels(_) => 13,
             RasterMutation::ChangeLayerMask(_) => 14,
+            RasterMutation::ChangeLayerAdjustmentParameter(_) => 15,
         }
     }
 
@@ -2658,6 +2660,16 @@ impl RasterMutationDigestAuthority {
                     Ok(false)
                 }
                 _ => Ok(self.finish(digest, cx)),
+            },
+            RasterMutation::ChangeLayerAdjustmentParameter(value) => match self.phase {
+                1 => string_phase!(&value.layer_id, 2),
+                2 => string_phase!(&value.parameter, 3),
+                3 | 4 => {
+                    let value=if self.phase==3 {value.expected} else {value.value};
+                    let fields=value.map_or([0;9],crate::RasterAdjustmentNumber::digest);
+                    scalar_phase!(&fields,self.phase+1)
+                }
+                _ => Ok(self.finish(digest,cx)),
             },
             RasterMutation::ChangeLayerMask(value) => match self.phase {
                 1 => string_phase!(&value.layer_id, 2),
@@ -2964,6 +2976,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::ResizeLayer(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerPixels(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerMask(value) => Some(&value.layer_id),
+            RasterMutation::ChangeLayerAdjustmentParameter(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerAdjustmentKind(value) => Some(&value.layer_id),
             RasterMutation::AddLayerAsset(_) | RasterMutation::RemoveLayerAsset(_) => None,
         }
@@ -3211,6 +3224,21 @@ impl RasterMutationCandidateAuthority {
                         };
                         *width = Some(value.new_width);
                         *height = Some(value.new_height);
+                    }
+                    RasterMutation::ChangeLayerAdjustmentParameter(value) => {
+                        crate::mutations::change_layer_adjustment_parameter::validate(value,snapshot)?;
+                        let RasterLayerNode::Adjustment {params,..}=RasterLayerLocator::node_at_mut(snapshot,self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {return Err("raster-store.mutation-adjustment-target");};
+                        if value.value.is_some() && params.page_required_for_insert(&value.parameter) {
+                            if !raster_reserve_unit(cx) {return Ok(false);}
+                            params.admit_one_page()?;return Ok(false);
+                        }
+                        if !raster_reserve_unit(cx) {return Ok(false);}
+                        let replacement=value.value.map(|v|Ok::<_,&'static str>((raster_clone_owned_string(&value.parameter)?,v.literal()))).transpose()?;
+                        if let Some(mut entry)=params.remove_entry(&value.parameter) {
+                            let (key,old)=entry.take();
+                            *self.retirement=Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry {key,value:Some(old)})));
+                        }
+                        if let Some((key,number))=replacement {params.insert_pre_admitted(key,number).map_err(|error|error.reason)?;}
                     }
                     RasterMutation::ChangeLayerMask(value) => {
                         if !raster_reserve_unit(cx) { return Ok(false); }

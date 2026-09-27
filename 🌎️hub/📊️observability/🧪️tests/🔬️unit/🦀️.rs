@@ -112,6 +112,7 @@ fn the_observability_body_is_the_declared_schema() {
             registered_guests: field("registeredGuests"),
             resident_guests: field("residentGuests"),
             resident_bytes: field("residentBytes"),
+            footprint_bytes: field("footprintBytes"),
             hits: field("hits"),
             compiles: field("compiles"),
             admitted: field("admitted"),

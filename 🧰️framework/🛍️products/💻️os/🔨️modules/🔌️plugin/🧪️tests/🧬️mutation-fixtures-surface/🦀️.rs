@@ -3,19 +3,19 @@ pub mod mutations;
 pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 
 // 🧪️ Proves the viewer helpers against a minimal editor/viewer pair sharing one dialect.
-use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, close_registered_fixture_app, meta, new_app, new_viewer};
 use crate::app::artifact_app_laws::new_registered_app;
+use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, close_registered_fixture_app, meta, new_app, new_viewer};
 use crate::app::{
     built_text_to_component_tree, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
-    ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, PluginCloseStep,
-    UiAssemblyResult, ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
+    ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, PluginCloseStep, UiAssemblyResult,
+    ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
 };
 use protocol::MutationDiff;
 use semio_framework::{action_bus, ActionKind, Dialect, Fault, FaultOrigin, IconName, StandardId, SubsetId, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
-use ui_wgpu::wgpu::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
+use ui_wgpu::wgpu::LocalizedLabel;
 
 const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
 
@@ -590,6 +590,24 @@ async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
 /// through the full `VcsArtifactApp<ViewerApp<V>>` runtime path (`handle_action` for the
 /// seven string actions, `import_media` for the eighth) and asserts every one comes back
 /// `Fault { origin: FaultOrigin::Framework, code: FaultCode::new("viewer.read-only"), .. }`.
+/// 📌️ A hub Check In validates the pair it folded through the guest codec's `print-mirror`, and a zero-op `apply-ops`
+/// batch passes a pair through: both read a POPULATED pair, whose unadopted envelope must be retired entry by entry —
+/// dropping its owners aborted the guest on the history ledger's terminal-empty witness, so every writer and note Check In
+/// was refused `codec-refused` (ticket 26/09/23, session 14).
+#[semio_framework_async_macros::async_test]
+async fn the_codec_table_mirrors_and_passes_through_a_populated_pair_without_aborting() {
+    let table = crate::app::artifact_codec_table::<EditorApp<SurfaceEditorFixture>>();
+    let genesis = (table.genesis)("artifact-5c0dec0de5c0dec0de5c0dec0de5c0de").await.expect("genesis pair of a server-minted artifact id");
+    let op = protocol::OpBinary::encode_op(&SurfaceMutation::from(SetSurfaceCount { value: 7 })).expect("encode set-surface-count");
+    let populated = (table.apply_ops)(&genesis.pack, &genesis.spr, &store::os_spr::encode_ops_vec(&[op])).await.expect("one op lands one edit");
+    let history = store::os_spr::decode_history(&populated.spr, &store::os_spr::DecodeOptions::default()).await.expect("populated history");
+    assert_eq!(history.edits.len(), 1, "the pair carries one edit, so its history ledger is populated");
+    let mirror = (table.print_mirror)(&populated.pack, &populated.spr).await.expect("a populated pair mirrors");
+    assert!(mirror.ops.contains("set-surface-count"), "the mirror prints the pair's edit: {}", mirror.ops);
+    let passed = (table.apply_ops)(&populated.pack, &populated.spr, &store::os_spr::encode_ops_vec(&[])).await.expect("an empty batch passes a populated pair through");
+    assert!(!passed.pack.is_empty() && !passed.spr.is_empty(), "an empty batch over a populated pair returns that pair");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn viewer_rejects_every_contract_mutating_verb() {
     let mut app = new_viewer::<SurfaceViewerFixture>().await;

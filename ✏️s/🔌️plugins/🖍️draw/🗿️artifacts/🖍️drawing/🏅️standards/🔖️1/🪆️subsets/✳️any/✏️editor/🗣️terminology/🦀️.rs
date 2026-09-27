@@ -96,6 +96,8 @@ semio_framework_plugin::app_labels! {
         stroke_color: native_en "Stroke Color", native_de "Konturfarbe", reuse_en "Stroke Color", reuse_de "Konturfarbe";
         stroke_cap: native_en "Line Caps", native_de "Linienenden", reuse_en "Line Caps", reuse_de "Linienenden";
         stroke_join: native_en "Line Joins", native_de "Linienverbindungen", reuse_en "Line Joins", reuse_de "Linienverbindungen";
+        text_content: native_en "Text Content", native_de "Textinhalt", reuse_en "Text Content", reuse_de "Textinhalt";
+        text_size: native_en "Text Size", native_de "Schriftgröße", reuse_en "Text Size", reuse_de "Schriftgröße";
         stroke_dash: native_en "Dash Pattern (e.g. 8 4)", native_de "Strichmuster (z. B. 8 4)", reuse_en "Dash Pattern (e.g. 8 4)", reuse_de "Strichmuster (z. B. 8 4)";
         cap_butt: native_en "Flat", native_de "Flach", reuse_en "Flat", reuse_de "Flach";
         cap_square: native_en "Square", native_de "Quadratisch", reuse_en "Square", reuse_de "Quadratisch";
@@ -110,6 +112,7 @@ semio_framework_plugin::app_labels! {
         visible: native_en "Visible", native_de "Sichtbar", reuse_en "Visible", reuse_de "Sichtbar";
         locked: native_en "Locked", native_de "Gesperrt", reuse_en "Locked", reuse_de "Gesperrt";
         orientation: native_en "Orientation", native_de "Ausrichtung", reuse_en "Orientation", reuse_de "Ausrichtung";
+        shear: native_en "Shear", native_de "Scherung", reuse_en "Shear", reuse_de "Scherung";
         position_x: native_en "Position X", native_de "Position X", reuse_en "Position X", reuse_de "Position X";
         position_y: native_en "Position Y", native_de "Position Y", reuse_en "Position Y", reuse_de "Position Y";
         scale_x: native_en "Scale X", native_de "Skalierung X", reuse_en "Scale X", reuse_de "Skalierung X";

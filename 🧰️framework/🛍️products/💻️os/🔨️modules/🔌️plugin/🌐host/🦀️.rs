@@ -44,9 +44,7 @@ pub(crate) fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
 /// 📦️ Inverse of [`encode_fault_pack`] — the guest decode of a host-written fault pack.
 pub(crate) fn decode_fault_pack(bytes: &[u8]) -> Fault {
     match store::pack_rt::decode_wire_value(bytes) {
-        Ok(value) => dsl::FromValue::from_value(value).unwrap_or_else(|_| {
-            Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned())
-        }),
+        Ok(value) => dsl::FromValue::from_value(value).unwrap_or_else(|_| Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned())),
         Err(_) => Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned()),
     }
 }

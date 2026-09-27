@@ -7,7 +7,7 @@ grammar Layout_layout_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'layout.layout.mutations' ;
 
-line: renameLayout | changePrintTarget | changeDataFields | createPage | deletePage | renamePage | changePageWidth | changePageHeight | updatePageMargins | updatePageColumns | reorderPages | createStory | deleteStory | editStory | createLink | deleteLink | changeLinkPath | createFrame | deleteFrame | moveFrame | resizeFrame | changeFrameFill | changeFrameStroke | changeFrameWrapMode | changeFrameColumns ;
+line: renameLayout | changePrintTarget | changeDataFields | createPage | deletePage | renamePage | changePageWidth | changePageHeight | updatePageMargins | updatePageColumns | reorderPages | createStory | deleteStory | editStory | createLink | deleteLink | changeLinkPath | createFrame | deleteFrame | moveFrame | resizeFrame | rotateFrame | changeFrameFill | changeFrameStroke | changeFrameWrapMode | changeFrameColumns | updateGrid | setFrameFlags ;
 renameLayout: 'rename-layout' SP text ;
 changePrintTarget: 'change-print-target' SP text? ;
 changeDataFields: 'change-data-fields' SP text? ;
@@ -29,10 +29,13 @@ createFrame: 'create-frame' SP id SP block SP number? SP id? ;
 deleteFrame: 'delete-frame' SP id SP id ;
 moveFrame: 'move-frame' SP id SP id SP number SP number ;
 resizeFrame: 'resize-frame' SP id SP id SP number SP number ;
+rotateFrame: 'rotate-frame' SP id SP id SP number ;
 changeFrameFill: 'change-frame-fill' SP id SP id SP block? ;
 changeFrameStroke: 'change-frame-stroke' SP id SP id SP block? ;
 changeFrameWrapMode: 'change-frame-wrap-mode' SP id SP id SP text ;
 changeFrameColumns: 'change-frame-columns' SP id SP id SP number ;
+updateGrid: 'update-grid' SP number SP number SP boolean ;
+setFrameFlags: 'set-frame-flags' SP id SP id SP boolean? SP boolean? ;
 id: OCTET+ ;
 number: OCTET+ ;
 text: OCTET+ ;

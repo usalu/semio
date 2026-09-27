@@ -8,6 +8,7 @@
     "warning": "#fccf05",
     "info": "#dbbea1",
     "success": "#7eb77f",
+    "diff-added": "#00d492",
     "dark": "#001117",
     "gray-100": "#06171c",
     "dark-8-9": "#07181d",

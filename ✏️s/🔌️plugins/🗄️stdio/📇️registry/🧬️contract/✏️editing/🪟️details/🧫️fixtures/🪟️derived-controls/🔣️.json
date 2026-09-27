@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "total": 1000,
+    "offset": 100,
+    "rows": 3
+  },
+  "missingProperties": {
+    "total": 1000,
+    "offset": 200,
+    "rows": 2
+  }
+}

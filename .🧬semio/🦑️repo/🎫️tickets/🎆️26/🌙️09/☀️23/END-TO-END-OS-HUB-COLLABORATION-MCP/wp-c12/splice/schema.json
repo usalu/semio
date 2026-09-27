@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.ui.scene.text-splice.v1",
+  "title": "Range-text operations (text splices) and their language-neutral vectors",
+  "type": "object",
+  "required": ["schema", "contextScalars", "minTwoSidedScalars", "edits", "applications", "concurrent", "rebases", "offsets"],
+  "additionalProperties": false,
+  "definitions": {
+    "splice": {
+      "type": "object",
+      "required": ["start", "deleted", "insert", "before", "after"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "deleted": { "type": "string" },
+        "insert": { "type": "string" },
+        "before": { "type": "string" },
+        "after": { "type": "string" }
+      }
+    },
+    "located": {
+      "type": "object",
+      "required": ["start", "deleteLength", "clamped"],
+      "additionalProperties": false,
+      "properties": { "start": { "type": "integer", "minimum": 0 }, "deleteLength": { "type": "integer", "minimum": 0 }, "clamped": { "type": "boolean" } }
+    }
+  },
+  "properties": {
+    "schema": { "const": "semio.ui.scene.text-splice.v1" },
+    "contextScalars": { "const": 32 },
+    "minTwoSidedScalars": { "const": 4 },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "previous", "next", "splice"],
+        "additionalProperties": false,
+        "properties": { "id": { "type": "string" }, "previous": { "type": "string" }, "next": { "type": "string" }, "splice": { "oneOf": [{ "$ref": "#/definitions/splice" }, { "type": "null" }] } }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "note", "text", "splice", "located", "result", "inverse"],
+        "additionalProperties": false,
+        "properties": { "id": { "type": "string" }, "note": { "type": "string" }, "text": { "type": "string" }, "splice": { "$ref": "#/definitions/splice" }, "located": { "$ref": "#/definitions/located" }, "result": { "type": "string" }, "inverse": { "$ref": "#/definitions/splice" } }
+      }
+    },
+    "concurrent": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "note", "base", "order", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "note": { "type": "string" },
+          "base": { "type": "string" },
+          "order": {
+            "type": "array",
+            "items": { "type": "object", "required": ["author", "splice"], "additionalProperties": false, "properties": { "author": { "type": "string" }, "splice": { "$ref": "#/definitions/splice" } } }
+          },
+          "expected": {
+            "type": "object",
+            "required": ["text", "clamped", "runs"],
+            "additionalProperties": false,
+            "properties": { "text": { "type": "string" }, "clamped": { "type": "array", "items": { "type": "integer", "minimum": 0 } }, "runs": { "type": "object", "additionalProperties": { "type": "string" } } }
+          }
+        }
+      }
+    },
+    "rebases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "note", "remote", "unapplied", "local", "selection", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "note": { "type": "string" },
+          "remote": { "type": "string" },
+          "unapplied": { "type": "array", "items": { "$ref": "#/definitions/splice" } },
+          "local": { "type": "string" },
+          "selection": { "type": "object", "required": ["anchor", "caret"], "additionalProperties": false, "properties": { "anchor": { "type": "integer", "minimum": 0 }, "caret": { "type": "integer", "minimum": 0 } } },
+          "expected": { "type": "object", "required": ["text", "anchor", "caret"], "additionalProperties": false, "properties": { "text": { "type": "string" }, "anchor": { "type": "integer", "minimum": 0 }, "caret": { "type": "integer", "minimum": 0 } } }
+        }
+      }
+    },
+    "offsets": {
+      "type": "array",
+      "items": { "type": "object", "required": ["text", "utf8", "scalar"], "additionalProperties": false, "properties": { "text": { "type": "string" }, "utf8": { "type": "integer", "minimum": 0 }, "scalar": { "type": "integer", "minimum": 0 } } }
+    }
+  }
+}

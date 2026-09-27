@@ -43,6 +43,7 @@ async fn a_typing_run_longer_than_the_edit_ledger_saves_and_undoes_as_one_step()
     dispatch(&mut app, WriterCommand::SetText(set_text::SetText { text: run.initial.clone() })).await;
     for text in &run.texts {
         dispatch(&mut app, WriterCommand::TextEdit(super::TextEdit { text: text.clone() })).await;
+        semio_framework_plugin::artifact_app_laws::drain_maintenance_pressure(&mut *app);
     }
     assert_eq!(writer_text(&app.snapshot().expect("projection")), run.expected);
     crate::editor::writer::unit_tests::context::history_verb(&mut app, "undo").await;

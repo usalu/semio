@@ -1340,10 +1340,10 @@ pub mod field_meta;
 //#region 🚢️TaxonomyMounts
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧬️subjects/🦀️.rs"]
 pub mod example_subjects;
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢de-office-compliant/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️de-office-compliant/🦀️.rs"]
 pub mod de_office_compliant;
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢de-office-compliant/🧪️tests/📚️example/🦀️.rs"]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏢️de-office-compliant/🧪️tests/📚️example/🦀️.rs"]
 mod example_de_office_compliant;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/⚠️multi-fail-noncompliant/🦀️.rs"]
 pub mod multi_fail_noncompliant;

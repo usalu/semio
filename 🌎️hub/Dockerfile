@@ -33,12 +33,13 @@
 # ─── what has actually been verified about this file ──────────────────────────────────────────────
 #
 # `docker build --check` (buildx 0.34, Docker 29.5) passes with no warnings, and
-# `docker compose -f 🌎️hub/compose.yaml config` resolves. The image itself has **not** been built:
-# the builder stage compiles the hub's full release dependency graph, which on the machine this was
-# written on takes longer than the session that wrote it. The binary it would produce, however, has
-# been built and run outside a container in exactly this posture — release profile, plain process,
-# network bind, allowlist + proxy trust, credential sign-in, SIGTERM drain (ticket 26/09/18,
-# `📓️rb1-release-builds-and-production-posture.md`).
+# `docker compose -f 🌎️hub/compose.yaml config` resolves. The permanent proof is two `os-hub-ts` verbs
+# (`🌎️hub/🧪️tests/🐳️docker-image`): `docker-image-build` is this cold build, timed; `docker-image-check`
+# runs the image exactly as below on a fresh volume (catalog via `docker cp`, credential via stdin, no
+# bind mount), behind a loopback stand-in for the TLS-terminating proxy, and requires `/readyz`,
+# `/healthz`, a cleartext refusal, a two-client document relay and a clean `docker stop` drain. The
+# same posture has been driven on a native binary; the context is a *prepared* checkout
+# (`workspace:prepare` publishes the generated sources the crates include).
 #
 # ─────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -48,14 +49,16 @@ ARG RUNTIME_IMAGE=debian:bookworm-slim
 FROM ${RUST_IMAGE} AS builder
 
 # 🧵️ Optional cap on the builder's parallel compiler jobs (`docker build --build-arg CARGO_BUILD_JOBS=2`),
-# for a builder VM that shares its cores or memory with other work. Unset, cargo uses every core.
+# for a builder VM that shares its cores or memory with other work. Unset, cargo uses every core. The
+# release profile (one codegen unit, thin LTO) needs ~2.5 GiB per job for the hub's codec crates: three
+# jobs exhausted an 8 GiB Docker VM.
 ARG CARGO_BUILD_JOBS
 
 # 🧰️ The toolchain is pinned by `rust-toolchain.toml` (a dated nightly, with the wasm targets the
 # plugin crates need); `rustup` in the base image honours it on the first `cargo` invocation.
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
- && apt-get install --yes --no-install-recommends ca-certificates curl unzip pkg-config libssl-dev cmake python3 git mold \
+ && apt-get install --yes --no-install-recommends ca-certificates curl unzip pkg-config libssl-dev cmake python3 git \
  && rm --recursive --force /var/lib/apt/lists/*
 RUN curl --fail --silent --show-error --location https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"

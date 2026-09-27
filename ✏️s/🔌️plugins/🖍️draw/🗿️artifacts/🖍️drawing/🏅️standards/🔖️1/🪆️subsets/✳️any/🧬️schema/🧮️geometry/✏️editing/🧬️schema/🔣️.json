@@ -5,21 +5,81 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "index", "other"],
+      "required": [
+        "kind",
+        "index",
+        "point",
+        "to"
+      ],
       "properties": {
-        "kind": { "const": "join" },
-        "index": { "type": "integer", "minimum": 0 },
-        "other": { "type": "integer", "minimum": 0 }
+        "kind": {
+          "const": "position"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "point": {
+          "enum": [
+            "anchor",
+            "control1",
+            "control2"
+          ]
+        },
+        "to": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "index", "target"],
+      "required": [
+        "kind",
+        "index",
+        "other"
+      ],
       "properties": {
-        "kind": { "const": "convert" },
-        "index": { "type": "integer", "minimum": 0 },
-        "target": { "enum": ["line", "cubic"] }
+        "kind": {
+          "const": "join"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "other": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "index",
+        "target"
+      ],
+      "properties": {
+        "kind": {
+          "const": "convert"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target": {
+          "enum": [
+            "line",
+            "cubic"
+          ]
+        }
       }
     },
     {

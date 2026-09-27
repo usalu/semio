@@ -1,6 +1,7 @@
 {
   "version": 1,
   "aggregateBytes": 52559872,
+  "fixedBackingBytes": 2077760,
   "surfaceBytes": 8388608,
   "documentBytes": 821248,
   "residentSlots": 64,
@@ -53,7 +54,7 @@
     "surfaces": 6,
     "residentRoots": 6,
     "residentBytes": 1311424,
-    "fixedBackingBytes": 2077760,
+    "fixedBackingBytes": 566352,
     "capacityFaults": 0
   },
   "laws": [

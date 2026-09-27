@@ -67,7 +67,7 @@ fn run_ids(values: &[u64]) -> db_storage::DbIoU64List {
 async fn submit_one(storage: &impl WalStorage, wal: &mut ArtifactWal, record: WalRecord, durability: DurabilityClass, now_ms: u64) -> WalAppendReceipt {
     let mut records = WalRecordBatch::new();
     assert!(records.push(record).is_ok());
-    let receipt = wal.submit(storage, &records, durability, now_ms).await.unwrap();
+    let receipt = wal.submit(storage, &[], &records, durability, now_ms).await.unwrap();
     while records.close_step().unwrap() {}
     receipt
 }
@@ -917,7 +917,7 @@ async fn wal_committed_cursor_unfinished_borrow_poison_and_cancelled_close() {
 async fn capacity_submission(storage: &impl WalStorage, wal: &mut ArtifactWal, length: usize, durability: DurabilityClass) -> Result<WalAppendReceipt, DbError> {
     let mut batch = WalRecordBatch::new();
     assert!(batch.push(WalRecord::Command(retained(&vec![b'a'; length]).await)).is_ok());
-    let result = wal.submit(storage, &batch, durability, 0).await;
+    let result = wal.submit(storage, &[], &batch, durability, 0).await;
     while batch.close_step().unwrap() {
         semio_framework_async::yield_once().await;
     }

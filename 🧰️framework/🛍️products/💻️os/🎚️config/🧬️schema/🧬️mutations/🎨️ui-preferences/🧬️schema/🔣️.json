@@ -11,10 +11,11 @@
     { "$ref": "#/$defs/SetTerminology" },
     { "$ref": "#/$defs/SetTheme" },
     { "$ref": "#/$defs/SetCustomTheme" },
-    { "$ref": "#/$defs/SetKeybindingOverride" }
+    { "$ref": "#/$defs/SetKeybindingOverride" },
+    { "$ref": "#/$defs/SetNamedLayout" }
   ],
   "$defs": {
-    "PreferenceKeys": { "$comment": "The one UiPreferences key each mutation writes; its data class is that key's (`../../../🎨️ui-preferences/🔣️.json` DataClasses).", "const": { "setAppearance": "appearance", "setLayout": "layout", "setDriver": "driverId", "setCustomDriver": "customDrivers", "setLocale": "locale", "setTerminology": "terminology", "setTheme": "themeId", "setCustomTheme": "customThemes", "setKeybindingOverride": "keybindingOverrides" } },
+    "PreferenceKeys": { "$comment": "The one UiPreferences key each mutation writes; its data class is that key's (`../../../🎨️ui-preferences/🔣️.json` DataClasses).", "const": { "setAppearance": "appearance", "setLayout": "layout", "setDriver": "driverId", "setCustomDriver": "customDrivers", "setLocale": "locale", "setTerminology": "terminology", "setTheme": "themeId", "setCustomTheme": "customThemes", "setKeybindingOverride": "keybindingOverrides", "setNamedLayout": "namedLayouts" } },
     "SetAppearance": { "type": "object", "additionalProperties": false, "required": ["mutation", "appearance"], "properties": { "mutation": { "type": "string", "const": "setAppearance" }, "appearance": { "anyOf": [{ "type": "string", "enum": ["system", "light", "dark"] }, { "type": "null" }] } } },
     "SetLayout": { "type": "object", "additionalProperties": false, "required": ["mutation", "layout"], "properties": { "mutation": { "type": "string", "const": "setLayout" }, "layout": { "anyOf": [{ "type": "string", "enum": ["desktop", "tablet"] }, { "type": "null" }] } } },
     "SetDriver": { "type": "object", "additionalProperties": false, "required": ["mutation", "driverId"], "properties": { "mutation": { "const": "setDriver" }, "driverId": { "anyOf": [{ "type": "string" }, { "type": "null" }] } } },
@@ -25,6 +26,13 @@
     "SetCustomTheme": { "type": "object", "additionalProperties": false, "required": ["mutation", "themeId", "theme"], "properties": { "mutation": { "const": "setCustomTheme" }, "themeId": { "type": "string" }, "theme": { "anyOf": [{ "$ref": "#/$defs/UiTheme" }, { "type": "null" }] } } },
     "SetKeybindingOverride": { "type": "object", "additionalProperties": false, "required": ["mutation", "controlId", "keys"], "properties": { "mutation": { "const": "setKeybindingOverride" }, "controlId": { "type": "string" }, "keys": { "anyOf": [{ "type": "string" }, { "type": "null" }] } } },
     "UiDriver": { "type": "object", "additionalProperties": false, "required": ["driverId", "label", "config"], "properties": { "driverId": { "type": "string" }, "label": { "type": "string" }, "config": {} } },
-    "UiTheme": { "type": "object", "additionalProperties": false, "required": ["themeId", "label", "config"], "properties": { "themeId": { "type": "string" }, "label": { "type": "string" }, "config": {} } }
+    "SetNamedLayout": { "type": "object", "additionalProperties": false, "required": ["mutation", "appId", "layoutId", "layout"], "properties": { "mutation": { "const": "setNamedLayout" }, "appId": { "type": "string", "minLength": 1 }, "layoutId": { "type": "string", "minLength": 1 }, "layout": { "anyOf": [{ "$ref": "#/$defs/UserNamedLayout" }, { "type": "null" }] } } },
+    "UiDriver": { "type": "object", "additionalProperties": false, "required": ["driverId", "label", "config"], "properties": { "driverId": { "type": "string" }, "label": { "type": "string" }, "config": {} } },
+    "UiTheme": { "type": "object", "additionalProperties": false, "required": ["themeId", "label", "config"], "properties": { "themeId": { "type": "string" }, "label": { "type": "string" }, "config": {} } },
+    "UserNamedLayout": { "$comment": "Same shape as `../../../🎨️ui-preferences/🔣️.json` $defs.UserNamedLayout.", "type": "object", "additionalProperties": false, "required": ["label", "layout"], "properties": { "label": { "type": "string", "minLength": 1, "maxLength": 256 }, "layout": { "$ref": "#/$defs/WindowLayout" } } },
+    "WindowLayout": { "type": "object", "additionalProperties": false, "required": ["root"], "properties": { "root": { "oneOf": [{ "$ref": "#/$defs/WindowLayoutAxisNode" }, { "$ref": "#/$defs/WindowLayoutStackNode" }] } } },
+    "WindowLayoutAxisNode": { "type": "object", "additionalProperties": false, "required": ["kind", "children"], "properties": { "kind": { "enum": ["row", "column"] }, "size": { "type": "number" }, "children": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/WindowLayoutAxisNode" }, { "$ref": "#/$defs/WindowLayoutStackNode" }] } } } },
+    "WindowLayoutStackNode": { "type": "object", "additionalProperties": false, "required": ["kind", "children"], "properties": { "kind": { "const": "stack" }, "size": { "type": "number" }, "children": { "type": "array", "items": { "$ref": "#/$defs/WindowLayoutWindowNode" } } } },
+    "WindowLayoutWindowNode": { "type": "object", "additionalProperties": false, "required": ["kind", "windowKindId"], "properties": { "kind": { "const": "window" }, "windowKindId": { "type": "string" }, "title": { "type": "string" }, "instanceId": { "type": "string" }, "templateId": { "type": "string" }, "corner": { "enum": ["topLeft", "topRight", "bottomLeft", "bottomRight"] } } }
   }
 }

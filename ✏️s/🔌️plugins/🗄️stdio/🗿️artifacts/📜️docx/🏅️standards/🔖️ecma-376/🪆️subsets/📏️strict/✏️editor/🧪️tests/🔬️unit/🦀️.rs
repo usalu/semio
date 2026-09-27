@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_plugin::app::DocumentWindowKit;
 
 #[semio_framework_async_macros::async_test]
 async fn create_docx_strict_editor_builds_a_definition_for_the_editor_role() {
@@ -19,28 +20,39 @@ async fn editor_declares_the_document_window() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_page_replaces_a_paragraph_blocks_runs_with_a_single_plain_run() {
+async fn set_page_replaces_paragraph_text_through_an_addressed_revision() {
     let mut snapshot = DocxSnapshot::default();
     snapshot.document.body.push(DocxBlock::paragraph("hello"));
-    let mutation = build_set_page_mutation(&snapshot, 0, "goodbye").expect("mutation");
-    let DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }) = &mutation else { panic!("expected SetBlockContent") };
+    let mutation = build_set_page_mutation(&snapshot, 0, 0, &DocumentWindowKit::text_revision("hello"), "goodbye").expect("valid edit").expect("changed edit");
+    let DocxMutation::SetRunText(set_run_text::SetRunText { path, run_index, text }) = &mutation else { panic!("expected SetRunText") };
     assert_eq!(path.index, 0);
-    let DocxBlock::Paragraph(paragraph) = block else { panic!("expected Paragraph") };
-    assert_eq!(paragraph.runs.len(), 1);
-    assert_eq!(paragraph.runs[0].text, "goodbye");
+    assert_eq!(*run_index, 0);
+    assert_eq!(text, "goodbye");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_page_on_a_table_block_is_a_documented_no_op() {
+async fn set_page_rejects_a_non_text_target() {
     let mut snapshot = DocxSnapshot::default();
     snapshot.document.body.push(DocxBlock::Table(crate::schema::snapshot::DocxTable::default()));
-    assert!(build_set_page_mutation(&snapshot, 0, "text").is_none());
+    assert!(build_set_page_mutation(&snapshot, 0, 0, "", "text").is_err());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_roundtrip() {
-    let command = DocxStrictEditorCommand::SetPage { index: 2, text: "a\nmulti line value".into() };
+    let command = DocxStrictEditorCommand::SetPage { page: 2, item: 0, revision: "0123456789abcdef".into(), text: "a\nmulti line value".into() };
     let printed = <DocxStrictEditorCommand as protocol::OpText>::print_op(&command);
     let parsed = <DocxStrictEditorCommand as protocol::OpText>::parse_op(&printed).expect("parse ok");
     assert_eq!(parsed, command);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn missing_set_page_payload_is_rejected() {
+    assert!(<DocxStrictEditor as ArtifactEditor>::command_from_action("set-page", None).is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn stale_set_page_revision_is_rejected() {
+    let mut snapshot = DocxSnapshot::default();
+    snapshot.document.body.push(DocxBlock::paragraph("current"));
+    assert!(build_set_page_mutation(&snapshot, 0, 0, "0000000000000000", "draft").is_err());
 }

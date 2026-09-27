@@ -10,6 +10,7 @@ enum JsonMutationKind {
   INSERT_ARRAY_ELEMENT
   REMOVE_ARRAY_ELEMENT
   SET_SCALAR
+  PATCH_SNAPSHOT
 }
 scalar MutationPayload
 input JsonMutationInput { kind: JsonMutationKind!, payload: MutationPayload! }

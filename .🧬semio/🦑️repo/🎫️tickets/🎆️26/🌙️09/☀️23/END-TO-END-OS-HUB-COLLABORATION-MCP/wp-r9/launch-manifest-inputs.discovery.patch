@@ -1,0 +1,54 @@
+diff --git a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts
+index 95be48c077d..3f23942f98d 100644
+--- a/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts
++++ b/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts
+@@ -10133,16 +10133,17 @@ export function registryCompilerInputDependencies(source: string, sourcePath: st
+ }
+ //#endregion 🔗️RegistryCompilerImports
+ 
+-/** 📇️ Exact content inputs plus positive membership witnesses; ignored files are not excluded. */
++/**
++ * 📇️ Exact content inputs plus positive membership witnesses; ignored files are not excluded. Every Nx `📋️project.json`
++ * the scan meets is a content input, because the registry's launch projection renders each declared target.
++ * @see ../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🚀️launch/🟦️.ts
++ */
+ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy = loadTaxonomy(), view: RegistryCatalogInputView = registryCatalogInputView(repoRoot, taxonomy)): readonly string[] {
+   const authority = taxonomy.generatorContracts["plugin-registry"]?.inputDiscovery;
+   if (!authority || authority.kind !== "registry-catalog") throw new Error("Registry catalog input discovery is not declared.");
+   const inputs = new Set<string>();
+   const packages = scanRepo(repoRoot, taxonomy, { view, inputs }).packages;
+   for (const pkg of packages) if (pkg.lang === "🦀️rust" && (pkg.role === "plugin" || pkg.role === "extension")) {
+-    const project = `${pkg.packageRel}/📋️project.json`, projectKind = view.kind(project);
+-    if (projectKind === "symlink") throw new Error(`Registry Nx project is a symlink: ${project}`);
+-    if (projectKind) inputs.add(project);
+     const descriptor = relative(repoRoot, resolve(repoRoot, pkg.packageRel, authority.descriptorRelativePath)).replaceAll("\\", "/");
+     const kind = view.kind(descriptor);
+     if (kind === "symlink") throw new Error(`Registry descriptor is a symlink: ${descriptor}`);
+@@ -11576,6 +11577,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
+       }
+       const manifestFilename = exactContractFilename(ecosystem.manifestContractId, taxonomy);
+       const langAbs = join(packagesAbs, langEntry.name);
++      if (catalog) catalogExists(join(langAbs, "📋️project.json"));
+       if (!manifestFilename) {
+         collectPackageRoles(langAbs, lang, owner, ecosystem.entryContractIds);
+         continue;
+@@ -11585,7 +11587,10 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
+       const hasDirect = catalogExists(directManifestAbs);
+       const hasTargets = catalogExists(targetsAbs);
+       const target = ownerTarget(owner.ownerRel);
+-      if (hasTargets) addPackageProblem(owner, targetsAbs, "target-inside-package-boundary", "places a target subtree inside a package boundary.");
++      if (hasTargets) {
++        addPackageProblem(owner, targetsAbs, "target-inside-package-boundary", "places a target subtree inside a package boundary.");
++        if (catalog) for (const entry of catalogEntries(targetsAbs)) if (entry.isDirectory()) catalogExists(join(targetsAbs, entry.name, "📋️project.json"));
++      }
+       collectPackageRoles(langAbs, lang, owner, target ? taxonomy.targets[target]!.entryContractIds : ecosystem.entryContractIds);
+       if (hasDirect) {
+         resolveOne(directManifestAbs, lang, owner, target);
+@@ -11603,6 +11608,7 @@ function scanRepo(repoRoot: string, taxonomy: Taxonomy, catalog?: { readonly vie
+   const walk = (absDir: string, ownerStack: readonly OwnerAccumulator[]): void => {
+     if (pathIsExcluded(repoRoot, absDir, taxonomy)) return;
+     const entries = catalogEntries(absDir);
++    if (catalog && entries.some((entry) => entry.isFile() && entry.name === "📋️project.json")) catalogExists(join(absDir, "📋️project.json"));
+     let stack = ownerStack;
+     if (entries.some((entry) => entry.isDirectory() && entry.name === packagesDirName)) {
+       const ownerRel = rel(absDir);

@@ -3897,6 +3897,20 @@ fn graph_hovered_handle(engine: &NodeGraphEngine, sx: f64, sy: f64) -> Option<St
     rows.iter().find(|row| row.get("domain").and_then(Value::as_str) == Some("handle")).and_then(|row| row.get("id").and_then(Value::as_str)).map(str::to_owned)
 }
 
+/// 🔌️ Reads the accepted live graph owner for React Flow's connection-handle cursor semantic.
+/// A wire keeps the centered cursor after leaving its source handle until the live `DrawEdge` owner
+/// retires; candidate scene data never participates in this query.
+pub fn node_graph_connection_cursor_active(surface_id: &str, sx: f64, sy: f64) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        match map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) {
+            Some(NodeGraphEngine::Flow(host)) => host.dag.connection_cursor_active_at_screen(sx, sy),
+            Some(NodeGraphEngine::Dag(host)) => host.dag.connection_cursor_active_at_screen(sx, sy),
+            None => false,
+        }
+    })
+}
+
 //#region 🔗️NodeGraphScreenPointer
 // 🖱️ The SECOND pointer path a node-graph surface needs, and the one wgpu did not have.
 //

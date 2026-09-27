@@ -1,0 +1,9 @@
+{
+  "action": "set-cell",
+  "required": ["row", "column", "value"],
+  "valid": {
+    "row": 1,
+    "column": 2,
+    "value": ""
+  }
+}

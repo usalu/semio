@@ -73,6 +73,15 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/resize-frame/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/rotate-frame/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-frame-flags/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-grid/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/update-page-columns/schema.json"
     },
     {

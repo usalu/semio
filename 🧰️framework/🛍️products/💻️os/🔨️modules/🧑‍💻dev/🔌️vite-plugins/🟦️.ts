@@ -13,7 +13,7 @@ import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DEV_STREAM_ROUTES, DOCUMENT
 import { AGENT_BRIDGE_OFFER_ENDPOINT, agentBridgeOfferAnswerV1 } from "../../📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🛰️offer/🟦️.ts";
 import type { PluginSourceEvent } from "@semio-tech/framework";
 import { MODULE_BRIDGE_FILE } from "../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceFreshness, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, nextActivationReceipt, observeActivationReceipts, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, resolveBootSourceContentHashes, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, mapBoundedV1, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, writeStagedSourceFreshness, type ActivationReceipt, type StagedModuleFacts } from "../♻️activation/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import { STREAM_MUX_BOUNDS_V1, StreamMuxServerV1, type StreamMuxJobV1, type StreamMuxJsonV1 } from "../../../../../🔨️modules/🚪️io/🔀️stream-mux/🟦️.ts";
 import { requestLocalBrokerSession } from "../../../../../../🌎️hub/🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
@@ -642,12 +642,13 @@ export function semioBackboneVitePlugin() {
 export type ActivationComponentSpec = Readonly<{ pluginId: string; directoryName: string; role: "plugin" | "extension"; sourceRoot: string; installDirectory?: string; cratePath?: string }>;
 
 /** @emoji 🔎️ Re-runs the staged-module freshness rule against the receipt the dev server just observed and
- * prints one `[stale]` line per component whose served bytes are behind — the live half of the serve-start
+ * resolves to one `[stale]` line per component whose served bytes are behind — the live half of the serve-start
  * pass in `📜️script.ts`. A restage that lands while the server runs therefore retires its own warning
- * without a restart, and one that never lands keeps saying so. */
-export function reportActivationFreshness(receipt: ActivationReceipt, options: { readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[] }): readonly string[] {
+ * without a restart, and one that never lands keeps saying so. Asynchronous and bounded (the server keeps answering
+ * while it walks); `signal` cancels a pass a newer receipt superseded. */
+export async function reportActivationFreshness(receipt: ActivationReceipt, options: { readonly moduleRoot: string; readonly installRoot: string; readonly components: readonly ActivationComponentSpec[]; readonly signal?: AbortSignal }): Promise<readonly string[]> {
   const activatedRows = new Map(receipt.plugins.map((row) => [row.pluginId, row]));
-  const facts = options.components.map((component): StagedModuleFacts => {
+  const facts = await mapBoundedV1(options.components, SOURCE_FRESHNESS_COMPONENT_CONCURRENCY, async (component): Promise<StagedModuleFacts> => {
     const moduleDirectory = join(options.moduleRoot, component.directoryName);
     const receiptRow = activatedRows.get(component.pluginId);
     const installedMeta = join(component.installDirectory ?? join(options.installRoot, component.directoryName), EXTENSION_INSTALL_META);
@@ -655,10 +656,11 @@ export function reportActivationFreshness(receipt: ActivationReceipt, options: {
     if (existsSync(installedMeta)) {
       try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
     }
-    const hashes = resolveBootSourceContentHashes({
+    const hashes = await resolveBootSourceContentHashes({
       sourceRoot: component.sourceRoot,
       moduleDirectory,
       receiptSourceContentSha256: (receiptRow as { sourceContentSha256?: string } | undefined)?.sourceContentSha256,
+      signal: options.signal,
     });
     return {
       pluginId: component.pluginId,
@@ -671,7 +673,7 @@ export function reportActivationFreshness(receipt: ActivationReceipt, options: {
       receiptArtifactSha256: receiptRow?.artifactSha256,
       installedPackageHash,
     }
-  });
+  }, options.signal);
   return stagedModuleReportLines(facts.map(stagedModuleVerdict), `bun nx run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
 }
 
@@ -704,10 +706,18 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
       const mux = devStreamMuxServer(server.httpServer);
       let previous: ActivationReceipt | undefined;
       const send = (event: PluginSourceEvent): void => mux.publish(DEV_STREAM_ROUTES.pluginModules, "", event as unknown as StreamMuxJsonV1);
+      let freshness: AbortController | null = null;
       const observer = observeActivationReceipts(options.receiptDirectory, (receipt) => {
         const apply = (): void => {
-          staleness = reportActivationFreshness(receipt, options);
-          for (const line of staleness) console.warn(line);
+          freshness?.abort();
+          const pass = (freshness = new AbortController());
+          void reportActivationFreshness(receipt, { ...options, signal: pass.signal }).then((lines) => {
+            if (pass.signal.aborted) return;
+            staleness = lines;
+            for (const line of lines) console.warn(line);
+          }, (error: unknown) => {
+            if (!pass.signal.aborted) console.warn(`[stale] freshness check unavailable: ${String(error)}`);
+          });
           if (previous) {
             if (previous.plugins.map((row) => row.pluginId).join() !== receipt.plugins.map((row) => row.pluginId).join()) server.ws?.send({ type: "full-reload" });
             const prior = new Map(previous.plugins.map((row) => [row.pluginId, row.artifactSha256]));
@@ -732,6 +742,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         coalesce: (event) => String((event as { readonly pluginId?: StreamMuxJsonV1 }).pluginId ?? "snapshot"),
       });
       dispose = (): void => {
+        freshness?.abort();
         observer.close();
         unrouteWatch();
       };
@@ -773,7 +784,7 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
         if (!component) throw new Error(`Unknown plugin ${pluginId}`);
         const moduleDirectory = join(options.moduleRoot, component.directoryName);
         if (!existsSync(join(moduleDirectory, MODULE_BRIDGE_FILE))) throw new Error(`Module still missing after materialize: ${pluginId}`);
-        const sourceContentSha256 = writeStagedSourceFreshness(moduleDirectory, component.sourceRoot);
+        const sourceContentSha256 = await writeStagedSourceFreshness(moduleDirectory, component.sourceRoot);
         const previous = existsSync(join(options.receiptDirectory, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(options.receiptDirectory) : undefined;
         const artifactSha256 = createHash("sha256").update(readFileSync(join(moduleDirectory, MODULE_BRIDGE_FILE))).digest("hex");
         const completed = [

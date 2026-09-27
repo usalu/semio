@@ -9,7 +9,9 @@ const _: () = assert!(!std::mem::needs_drop::<State>() && !std::mem::needs_drop:
 const _: () = assert!(std::mem::size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
 
 impl store::retirement::RetireOwned for State {
-    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> { store::retirement::leaf(self.revision) }
+    fn retirement(self) -> Box<dyn store::retirement::RetirementCursor> {
+        store::retirement::leaf(self.revision)
+    }
 }
 
 impl store::retirement::RetireOwned for Mutation {

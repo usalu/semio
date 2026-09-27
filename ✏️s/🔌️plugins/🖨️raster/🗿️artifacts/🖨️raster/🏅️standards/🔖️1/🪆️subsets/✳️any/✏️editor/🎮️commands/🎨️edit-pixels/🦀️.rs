@@ -4,7 +4,7 @@ use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id, locate_layer};
 use crate::{RasterImageAsset, RasterLayerNode, RasterMutation, RasterSnapshot};
 use dsl::os_pack::json::Value;
-use semio_framework_pixels::{editing::{validate_extent, PixelBrush, PixelEditJob, PixelOperation}, RasterImage};
+use semio_framework_pixels::{editing::{validate_extent, PixelAlphaBrush, PixelBrush, PixelEditJob, PixelOperation}, RasterImage};
 use semio_framework_pixels::png_encoding::{EncodedPngImage, PngEncodeJob};
 use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
@@ -52,13 +52,21 @@ pub fn parse_operation(json: &str) -> Result<PixelOperation, Fault> {
         Some("sharpen") => PixelOperation::Sharpen(amount()?),
         Some("crop") => PixelOperation::Crop { x: integer(&value, "x")?, y: integer(&value, "y")?, width: integer(&value, "width")?, height: integer(&value, "height")? },
         Some("resize") => PixelOperation::Resize { width: integer(&value, "width")?, height: integer(&value, "height")?, bilinear: match value["sampling"].as_str() { Some("nearest") => false, Some("bilinear") => true, _ => return Err(fault("Invalid resize sampling")) } },
-        Some("stroke") => {
+        Some("stroke" | "alphaStroke") => {
             let points = value["points"].as_array().ok_or_else(|| fault("Missing stroke points"))?;
             if !(1..=2048).contains(&points.len()) { return Err(fault("Stroke requires 1–2048 points")); }
             let points = points.iter().map(|point| {
                 let point = point.as_array().filter(|point| point.len() == 2).ok_or_else(|| fault("Invalid stroke point"))?;
                 Ok([point[0].as_f64().ok_or_else(|| fault("Invalid stroke point"))?, point[1].as_f64().ok_or_else(|| fault("Invalid stroke point"))?])
             }).collect::<Result<Vec<_>, Fault>>()?;
+            if value["kind"].as_str()==Some("alphaStroke") {
+                return Ok(PixelOperation::AlphaStroke(PixelAlphaBrush {points,
+                    size:value["size"].as_f64().ok_or_else(||fault("Missing brush size"))?,
+                    opacity:value["opacity"].as_f64().ok_or_else(||fault("Missing brush opacity"))?,
+                    hardness:value["hardness"].as_f64().ok_or_else(||fault("Missing brush hardness"))?,
+                    alpha:u8::try_from(integer(&value,"alpha")?).map_err(|_|fault("Invalid brush alpha"))?,
+                }));
+            }
             let color_value = format!("{{\"kind\":\"fill\",\"color\":{}}}", value["color"]);
             let PixelOperation::Fill(color) = parse_operation(&color_value)? else { return Err(fault("Invalid brush color")); };
             PixelOperation::Stroke(PixelBrush {
@@ -69,6 +77,7 @@ pub fn parse_operation(json: &str) -> Result<PixelOperation, Fault> {
                 erase: value["erase"].as_bool().ok_or_else(|| fault("Missing eraser flag"))?,
             })
         }
+        Some("alphaFill") => PixelOperation::AlphaFill {alpha:u8::try_from(integer(&value,"alpha")?).map_err(|_|fault("Invalid fill alpha"))?,opacity:value["opacity"].as_f64().filter(|value|value.is_finite()&&(0.0..=1.0).contains(value)).ok_or_else(||fault("Invalid fill opacity"))?},
         Some("fill") => {
             let values = value["color"].as_array().ok_or_else(|| fault("Missing fill color"))?;
             if values.len() != 4 { return Err(fault("Color requires four byte channels")); }
@@ -84,11 +93,19 @@ pub fn parse_operation(json: &str) -> Result<PixelOperation, Fault> {
     })
 }
 
+#[cfg(test)]
 fn parse_selection(json: Option<&str>, count: usize) -> Result<Option<Vec<u8>>, Fault> {
     let Some(json) = json else { return Ok(None) };
+    let mut mask=vec![0;count];
+    for (start,end,coverage) in selection_spans(json,count)? {mask[start..end].fill(coverage);}
+    Ok(Some(mask))
+}
+
+pub(super) fn selection_spans(json:&str,count:usize)->Result<Vec<(usize,usize,u8)>,Fault> {
+    if json.len()>40000 {return Err(fault("Selection exceeds transport budget"));}
     let value = dsl::os_pack::json::parse(json).map_err(|_| fault("Invalid selection JSON"))?;
     let spans = value.as_array().ok_or_else(|| fault("Selection must contain spans"))?;
-    let mut mask = vec![0; count];
+    let mut result=Vec::with_capacity(spans.len());
     let mut previous = 0;
     for span in spans {
         let values = span.as_array().ok_or_else(|| fault("Invalid selection span"))?;
@@ -102,10 +119,10 @@ fn parse_selection(json: Option<&str>, count: usize) -> Result<Option<Vec<u8>>, 
         let [start, length, coverage] = triple;
         let end = start.checked_add(length).ok_or_else(|| fault("Selection overflow"))?;
         if start < previous || length == 0 || end > count || coverage > 255 { return Err(fault("Selection spans overlap or exceed image")); }
-        mask[start..end].fill(coverage as u8);
+        result.push((start,end,coverage as u8));
         previous = end;
     }
-    Ok(Some(mask))
+    Ok(result)
 }
 
 fn visible_path(layers: &[RasterLayerNode], id: &str, ancestors_visible: bool) -> Option<bool> {
@@ -119,23 +136,57 @@ fn visible_path(layers: &[RasterLayerNode], id: &str, ancestors_visible: bool) -
     None
 }
 
-fn prepare(command: &EditPixels, document: &RasterSnapshot) -> Result<(PixelEditJob, RasterLayerNode, Option<String>, usize), Fault> {
+struct PreparingEdit {
+    image:RasterImage,
+    operation:PixelOperation,
+    selection:Option<Vec<u8>>,
+    spans:Vec<(usize,usize,u8)>,
+    span:usize,
+    layer:RasterLayerNode,
+    parent:Option<String>,
+    index:usize,
+}
+impl PreparingEdit {
+    fn advance(&mut self,document:&RasterSnapshot,maximum:usize)->Result<bool,Fault> {
+        let start=self.image.pixels.len()/4;
+        let total=self.image.width as usize*self.image.height as usize;
+        let end=start.saturating_add(maximum.min(32768)).min(total);
+        let RasterLayerNode::Pixel {image_key,..}=&self.layer else {return Err(fault("This layer has no editable pixels"));};
+        if let Some(key)=image_key {
+            let image=document.assets.get(key).and_then(|asset|asset.local_owner::<crate::SemioImageSnapshot>()).ok_or_else(||fault("Layer image is unavailable"))?;
+            let frame=image.frames.first().ok_or_else(||fault("Layer image has no frame"))?;
+            if frame.rgba8.len()!=total*4 {return Err(fault("RGBA8 length does not match image extent"));}
+            self.image.pixels.extend_from_slice(&frame.rgba8[start*4..end*4]);
+        } else {self.image.pixels.resize(end*4,0);}
+        if let Some(selection)=self.selection.as_mut() {
+            for index in start..end {
+                while self.span<self.spans.len()&&index>=self.spans[self.span].1 {self.span+=1;}
+                selection.push(self.spans.get(self.span).filter(|span|index>=span.0).map_or(0,|span|span.2));
+            }
+        }
+        Ok(end==total)
+    }
+    fn into_job(self)->Result<(PixelEditJob,RasterLayerNode,Option<String>,usize),Fault> {
+        let job=PixelEditJob::new(self.image,self.operation,self.selection).map_err(|error|fault(error.to_string()))?;
+        Ok((job,self.layer,self.parent,self.index))
+    }
+}
+
+fn prepare(command: &EditPixels, document: &RasterSnapshot) -> Result<PreparingEdit, Fault> {
     let layer = find_layer(&document.layers, &command.layer_id).ok_or_else(|| fault("Select a pixel layer"))?;
     let RasterLayerNode::Pixel { width, height, image_key, visible, .. } = layer else { return Err(fault("This layer has no editable pixels")); };
     if !visible || visible_path(&document.layers, &command.layer_id, true) != Some(true) { return Err(fault("Show the layer and its groups before editing its pixels")); }
     if image_key != &command.expected_image_key { return Err(fault("The image changed while this edit was being prepared; retry on the current image")); }
-    let image = if let Some(key) = image_key {
-        let asset = document.assets.get(key).ok_or_else(|| fault("Layer image is missing"))?;
-        let image = asset.local_owner::<crate::SemioImageSnapshot>().ok_or_else(|| fault("Layer image is not available locally"))?;
-        let frame = image.frames.first().ok_or_else(|| fault("Layer image has no frame"))?;
-        RasterImage { width: image.width, height: image.height, pixels: frame.rgba8.clone() }
-    } else {
-        let (width, height) = (width.unwrap_or(512), height.unwrap_or(512));
-        validate_extent(width, height).map_err(|error| fault(error.to_string()))?;
-        RasterImage::new(width, height)
-    };
-    let operation = parse_operation(&command.operation)?;
-    let selection = parse_selection(command.selection.as_deref(), image.pixels.len() / 4)?;
+    if command.operation.len()>100000 {return Err(fault("Pixel operation exceeds transport budget"));}
+    let (image_width,image_height)=if let Some(key)=image_key {
+        let image=document.assets.get(key).and_then(|asset|asset.local_owner::<crate::SemioImageSnapshot>()).ok_or_else(||fault("Layer image is unavailable"))?;
+        (image.width,image.height)
+    } else {(width.unwrap_or(512),height.unwrap_or(512))};
+    let count=validate_extent(image_width,image_height).map_err(|error|fault(error.to_string()))?;
+    let image=RasterImage {width:image_width,height:image_height,pixels:Vec::with_capacity(count*4)};
+    let operation=parse_operation(&command.operation)?;
+    let spans=command.selection.as_deref().map(|json|selection_spans(json,count)).transpose()?.unwrap_or_default();
+    let selection=command.selection.as_ref().map(|_|Vec::with_capacity(count));
     let mut layer = layer.clone();
     if let RasterLayerNode::Pixel { width, height, transform, .. } = &mut layer {
         transform.scale_x *= f64::from(width.unwrap_or(image.width)) / f64::from(image.width);
@@ -148,9 +199,8 @@ fn prepare(command: &EditPixels, document: &RasterSnapshot) -> Result<(PixelEdit
             transform.y += sin * dx + cos * dy;
         }
     }
-    let job = PixelEditJob::new(image, operation, selection).map_err(|error| fault(error.to_string()))?;
     let (parent, index) = locate_layer(&document.layers, &command.layer_id).ok_or_else(|| fault("Layer tree address is missing"))?;
-    Ok((job, layer, parent, index))
+    Ok(PreparingEdit {image,operation,selection,spans,span:0,layer,parent,index})
 }
 
 fn publish(image: EncodedPngImage, layer: RasterLayerNode, _parent_id: Option<String>, _index: usize, document: &RasterSnapshot) -> Result<Emit<RasterMutation, RasterConfigMutation>, Fault> {
@@ -193,6 +243,7 @@ pub fn handle(_payload: &EditPixels, _doc: &ArtifactView<'_, RasterSnapshot>, _c
 
 #[derive(Default)]
 pub struct PixelEditWork {
+    preparing: Option<PreparingEdit>,
     prepared: Option<(PixelEditJob, RasterLayerNode, Option<String>, usize)>,
     encoding: Option<(PngEncodeJob, RasterLayerNode, Option<String>, usize)>,
     complete: bool,
@@ -217,7 +268,10 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for PixelEditWork {
             return publish(encoder.into_result().map_err(|error| fault(error.to_string()))?, layer, parent, index, input.snapshot).map(ArtifactCommandWorkStep::Complete);
         }
         if self.prepared.is_none() {
-            self.prepared = Some(prepare(command, input.snapshot)?);
+            if self.preparing.is_none() {self.preparing=Some(prepare(command,input.snapshot)?);}
+            if self.preparing.as_mut().unwrap().advance(input.snapshot,32768)? {
+                self.prepared=Some(self.preparing.take().unwrap().into_job()?);
+            }
             return Ok(ArtifactCommandWorkStep::Progress { stage: "pixel-edit-prepare", preview: br#"{"en":"Preparing image","de":"Bild wird vorbereitet"}"# });
         }
         let prepared = self.prepared.as_mut().ok_or_else(|| fault("Pixel edit lost its candidate"))?;
@@ -238,12 +292,13 @@ impl ArtifactCommandWork<EditorApp<RasterPlayApp>> for PixelEditWork {
 
     fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if maximum_items == 0 { return semio_framework_job::InteractiveJobCloseStep::Blocked; }
+        self.preparing = None;
         self.prepared = None;
         self.encoding = None;
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
-    fn terminal_is_empty(&self) -> bool { self.prepared.is_none() && self.encoding.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.preparing.is_none() && self.prepared.is_none() && self.encoding.is_none() }
 }
 
 #[cfg(test)]

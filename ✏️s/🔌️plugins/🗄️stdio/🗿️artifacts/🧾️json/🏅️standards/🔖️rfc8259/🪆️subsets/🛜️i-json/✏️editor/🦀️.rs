@@ -177,7 +177,10 @@ fn json_i_json_command_from_action(action: &str, args: Option<&dsl::DslValue>) -
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(JsonIJsonIJsonEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        JSON_I_JSON_KIT_ACTION_ID => Ok(JsonIJsonIJsonEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
+        JSON_I_JSON_KIT_ACTION_ID => Ok(JsonIJsonIJsonEditorCommand::SetNode {
+            node_id: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "nodeId")?,
+            value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")?,
+        }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.json.i-json.unhandled-action"),
@@ -472,6 +475,9 @@ impl ArtifactEditor for JsonIJsonEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
+        if let Some(event) = <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_event(command) {
+            return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
+        }
         json_i_json_emit(command, doc.snapshot)
     }
 
@@ -498,11 +504,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for JsonIJs
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         json_i_json_emit(&JsonIJsonIJsonEditorCommand::EditSnapshot { event: event.clone() }, snapshot)
     }
 }

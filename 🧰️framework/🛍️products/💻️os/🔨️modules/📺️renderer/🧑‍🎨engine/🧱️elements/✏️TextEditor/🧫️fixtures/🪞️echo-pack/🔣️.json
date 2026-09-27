@@ -1,0 +1,38 @@
+{
+ "schema": "semio.renderer.text-editor.echo-pack/v1",
+ "description": "What the text editor host syncs into its session when a scene arrives. An echo of the editor's own edit (external = false) carries back its text, its selection and the paged-carrier lane ref of the buffer (bytes + FNV-1a/64 hash of the text); none of them may reach the session again, every other field must. `echo` is the scene that arrives after `previous`; `synced` is the scene the session receives for it; `samePack` says whether the host may skip the sync (byte-identical pack, so no repaint). The lane refs are the ones a writer echo carried live (ticket 26/09/23 F3): FNV-1a/64 of \"\" = cbf29ce484222325, of \"a\" = af63dc4c8601ec8c; the `outline` lane is a lane the text editor does not declare, standing in for any future non-echoed lane.",
+ "cases": [
+  {
+   "id": "own-keystroke-echo-skips",
+   "external": false,
+   "previous": { "buffer": "a", "lanes": [{ "lane": "buffer", "bytes": 1, "hash": "af63dc4c8601ec8c" }], "language": "plain", "selectionJson": "{\"anchor\":1,\"caret\":1}", "tokensJson": "[]" },
+   "echo": { "buffer": "", "lanes": [{ "lane": "buffer", "bytes": 0, "hash": "cbf29ce484222325" }], "language": "plain", "selectionJson": "{\"anchor\":0,\"caret\":0}", "tokensJson": "[]" },
+   "synced": { "language": "plain", "tokensJson": "[]" },
+   "samePack": true
+  },
+  {
+   "id": "own-echo-with-new-highlighting-syncs",
+   "external": false,
+   "previous": { "buffer": "let", "lanes": [{ "lane": "buffer", "bytes": 3, "hash": "127284191dcc577a" }], "language": "jack", "tokensJson": "[]" },
+   "echo": { "buffer": "let ", "lanes": [{ "lane": "buffer", "bytes": 4, "hash": "24edd0ada2386dee" }], "language": "jack", "tokensJson": "[{\"start\":0,\"end\":3,\"kind\":\"keyword\"}]" },
+   "synced": { "language": "jack", "tokensJson": "[{\"start\":0,\"end\":3,\"kind\":\"keyword\"}]" },
+   "samePack": false
+  },
+  {
+   "id": "undeclared-lane-ref-stays",
+   "external": false,
+   "previous": { "buffer": "a", "lanes": [{ "lane": "buffer", "bytes": 1, "hash": "af63dc4c8601ec8c" }, { "lane": "outline", "bytes": 2, "hash": "08ba8707b55f07d2" }] },
+   "echo": { "buffer": "ab", "lanes": [{ "lane": "buffer", "bytes": 2, "hash": "089c4407b545986a" }, { "lane": "outline", "bytes": 5, "hash": "557700fa642d9418" }] },
+   "synced": { "lanes": [{ "lane": "outline", "bytes": 5, "hash": "557700fa642d9418" }] },
+   "samePack": false
+  },
+  {
+   "id": "external-text-syncs-whole-scene",
+   "external": true,
+   "previous": { "buffer": "a", "lanes": [{ "lane": "buffer", "bytes": 1, "hash": "af63dc4c8601ec8c" }], "language": "plain" },
+   "echo": { "buffer": "", "lanes": [{ "lane": "buffer", "bytes": 0, "hash": "cbf29ce484222325" }], "language": "plain" },
+   "synced": { "buffer": "", "lanes": [{ "lane": "buffer", "bytes": 0, "hash": "cbf29ce484222325" }], "language": "plain" },
+   "samePack": false
+  }
+ ]
+}

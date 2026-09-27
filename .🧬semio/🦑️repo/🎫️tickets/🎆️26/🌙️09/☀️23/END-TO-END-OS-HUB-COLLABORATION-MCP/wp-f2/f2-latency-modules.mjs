@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🔬️ F2 — which served script URLs carry the wasm canvas session classes (exported classes with `renderFrame`) after the
- * latency gate's scenarios opened their programs; answers why the gate's paint hook found none. usage: bun f2-latency-modules.mjs <baseUrl> */
+ * latency gate's scenarios opened their programs; answers why the gate's paint hook found none. usage: bun f2-latency-modules.mjs <baseUrl> [full-buffer] */
 import { chromium } from "playwright";
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ const sweep = await import("/Users/ueli/Documents/semio/.tmp-ticket-0918/🐍️
 const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal"] });
 const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
 page.setDefaultNavigationTimeout(300_000);
+if (process.argv[3] === "full-buffer") await page.addInitScript(() => performance.setResourceTimingBufferSize(100_000));
 await page.goto(baseUrl, { waitUntil: "commit" });
 await sweep.awaitBeacon(page, Date.now() + 300_000);
 await sweep.dismissIntroduction(page);
@@ -26,6 +27,7 @@ for (const [pluginId, appId] of [["writer", "s.writer.writer@1/*#editor"], ["dra
     if ((await item.count()) > 0) { await item.click({ force: true }); break; }
   }
   await page.waitForTimeout(12_000);
+  console.log(pluginId, JSON.stringify(await page.evaluate(() => [...document.querySelectorAll("[data-window-id]")].map((element) => element.getAttribute("data-window-id")))));
 }
 const report = await page.evaluate(async () => {
   const urls = [...new Set(performance.getEntriesByType("resource").map((entry) => entry.name).filter((name) => /\.js(\?|$)/u.test(name)))];
@@ -39,7 +41,8 @@ const report = await page.evaluate(async () => {
     if (classes.length > 0) rows.push({ url: decoded.slice(0, 200), classes });
   }
   const wasm = performance.getEntriesByType("resource").map((entry) => decodeURIComponent(entry.name)).filter((name) => /\.wasm(\?|$)/u.test(name)).map((name) => name.slice(0, 200));
-  return { rows, wasm, canvases: document.querySelectorAll("canvas").length, workers: performance.getEntriesByType("resource").filter((entry) => entry.initiatorType === "other" && /worker/iu.test(entry.name)).map((entry) => decodeURIComponent(entry.name).slice(0, 160)) };
+  const scripts = urls.map((url) => decodeURIComponent(url)).filter((name) => /editor|surface|writer|draw/iu.test(name)).map((name) => name.slice(0, 160));
+  return { rows, wasm, scripts: scripts.slice(0, 40), scriptCount: urls.length, canvases: document.querySelectorAll("canvas").length, workers: performance.getEntriesByType("resource").filter((entry) => entry.initiatorType === "other" && /worker/iu.test(entry.name)).map((entry) => decodeURIComponent(entry.name).slice(0, 160)) };
 });
 writeFileSync(`${generated}f2-latency-modules.json`, JSON.stringify(report, null, 1));
 console.log(JSON.stringify(report, null, 1).slice(0, 4000));

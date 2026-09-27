@@ -42,7 +42,7 @@ fn every_example_has_a_real_pattern_universe() {
 #[test]
 fn every_example_solve_terminates_with_a_verdict() {
     for (id, snapshot) in committed() {
-        let commit = crate::inferences::solve_with_job(&snapshot).unwrap_or_else(|error| panic!("{id}: the job completes: {error}"));
+        let commit = crate::inferences::solve_with_clock(&snapshot, semio_framework_job::logical_now_us).unwrap_or_else(|error| panic!("{id}: the job completes: {error}"));
         let cells = (snapshot.output.width as usize) * (snapshot.output.height as usize);
         assert_eq!(commit.entropy.len(), cells, "{id}: one entropy value per output cell");
         if commit.contradiction {

@@ -12,11 +12,33 @@ export type TableView = {
   readonly rows: readonly (readonly string[])[];
 };
 
+/** 🎯️ One editable cell with its complete artifact-stable action address. */
+export type EditableTableCell = {
+  readonly rowIndex: number;
+  readonly columnIndex: number;
+  readonly action: ActionDescriptor;
+};
+
 /** 📊️ Twin of Rust `TableWindowKit::render` — builds a `table` component scene from `view`. */
 export function renderTable(view: TableView): UiComponentSceneNode {
   const scene: TableScene = { columnsJson: JSON.stringify(view.columns), rowsJson: JSON.stringify(view.rows) };
   const node: UiComponentSceneNode = { type: "componentScene", surfaceId: TABLE_WINDOW_KIND_ID, controllerId: TABLE_WINDOW_KIND_ID, componentKind: "table", table: scene };
   return node;
+}
+
+/** 🎯️ Emits editable text cells with row-specific static action arguments. */
+export function renderEditableTable(view: TableView, editableCells: readonly EditableTableCell[]): UiComponentSceneNode {
+  const columns = view.columns.map((label, index) => ({ id: index.toString(), label }));
+  const rows = view.rows.map((cells, rowIndex) => {
+    const record: Record<string, unknown> = { id: rowIndex.toString() };
+    cells.forEach((value, columnIndex) => {
+      const editable = editableCells.find((candidate) => candidate.rowIndex === rowIndex && candidate.columnIndex === columnIndex);
+      record[columnIndex.toString()] = editable === undefined ? value : { kind: "editableText", value, action: editable.action };
+    });
+    return record;
+  });
+  const scene: TableScene = { columnsJson: JSON.stringify(columns), rowsJson: JSON.stringify(rows) };
+  return { type: "componentScene", surfaceId: TABLE_WINDOW_KIND_ID, controllerId: TABLE_WINDOW_KIND_ID, componentKind: "table", table: scene };
 }
 
 /** 🆔️ One row-scoped action button for `renderTableRows` — twin of Rust `TableRowAction`. Dispatches
@@ -60,7 +82,7 @@ export function renderTableRows(view: TableRowsView): UiComponentSceneNode {
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️rendertable/🟦️.ts");
-  await registerTests1(import.meta.vitest, { renderTable, renderTableRows }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { renderEditableTable, renderTable, renderTableRows }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 // #endregion 📊️TableWindowKit

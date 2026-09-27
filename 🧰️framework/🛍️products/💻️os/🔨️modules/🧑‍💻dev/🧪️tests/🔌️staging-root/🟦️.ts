@@ -17,6 +17,7 @@ import {
   GENERATED_COMPONENT_OWNER_FILES,
   UNWATCHED_COMPONENT_SOURCE_DIRECTORIES,
   healthyPreparedComponents,
+  buildComponentSourceStatIndex,
   componentSourceContentHash,
   newestComponentSourceMtime,
   preparedComponentReportLines,
@@ -26,6 +27,9 @@ import {
   readStagedSourceContentHash,
   readStagedSourceStatIndex,
   resolveBootSourceContentHashes,
+  SOURCE_FRESHNESS_COMPONENT_CONCURRENCY,
+  SOURCE_FRESHNESS_FILE_CONCURRENCY,
+  mapBoundedV1,
   stagedModuleMtime,
   writeStagedSourceContentHash,
   writeStagedSourceFreshness,
@@ -51,7 +55,12 @@ const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️
   readonly freshness: {
     readonly command: string;
     readonly cases: readonly { readonly name: string; readonly facts: StagedModuleFacts; readonly verdict: StagedModuleVerdict; readonly line: string | null }[];
-    readonly walk: { readonly outputDirectories: readonly string[]; readonly generatedOwnerFiles: readonly string[] };
+    readonly walk: {
+      readonly outputDirectories: readonly string[];
+      readonly generatedOwnerFiles: readonly string[];
+      readonly concurrency: { readonly files: number; readonly components: number };
+      readonly yielding: { readonly files: number; readonly maxSynchronousShare: number };
+    };
   };
 };
 
@@ -178,7 +187,7 @@ describe("staged module freshness", () => {
     expect(stagedModuleReportLines(verdicts, fixture.freshness.command)).toEqual(expected);
   });
 
-  it("reads staged and source mtimes off a real tree and skips every declared output directory", () => {
+  it("reads staged and source mtimes off a real tree and skips every declared output directory", async () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-staging-root-"));
     try {
       const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
@@ -209,12 +218,12 @@ describe("staged module freshness", () => {
       writeFileSync(join(sourceRoot, "🦀️rust", "later.rs"), "fn later() {}");
       utimesSync(join(sourceRoot, "🦀️rust", "later.rs"), new Date(3_000_000), new Date(3_000_000));
       expect(newestComponentSourceMtime(sourceRoot)?.mtimeMs).toBe(3_000_000);
-      const before = componentSourceContentHash(sourceRoot);
+      const before = await componentSourceContentHash(sourceRoot);
       writeStagedSourceContentHash(stagedDirectory, before);
       expect(readStagedSourceContentHash(stagedDirectory)).toBe(before);
-      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: stagedModuleMtime(stagedDirectory), newestSourceMs: newestComponentSourceMtime(sourceRoot)?.mtimeMs, sourceContentSha256: componentSourceContentHash(sourceRoot), stagedSourceContentSha256: before }).kind).toBe("fresh");
+      expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: stagedModuleMtime(stagedDirectory), newestSourceMs: newestComponentSourceMtime(sourceRoot)?.mtimeMs, sourceContentSha256: await componentSourceContentHash(sourceRoot), stagedSourceContentSha256: before }).kind).toBe("fresh");
       writeFileSync(join(sourceRoot, "changed.rs"), "changed");
-      const after = componentSourceContentHash(sourceRoot);
+      const after = await componentSourceContentHash(sourceRoot);
       expect(after).not.toBe(before);
       expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: stagedModuleMtime(stagedDirectory), newestSourceMs: newestComponentSourceMtime(sourceRoot)?.mtimeMs, sourceContentSha256: after, stagedSourceContentSha256: before }).kind).toBe("source-changed");
     } finally {
@@ -222,15 +231,15 @@ describe("staged module freshness", () => {
     }
   });
 
-  it("boot freshness: unchanged tree reuses every file digest and stays fresh", () => {
+  it("boot freshness: unchanged tree reuses every file digest and stays fresh", async () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-unchanged-"));
     try {
       const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
       mkdirSync(join(sourceRoot, "src"), { recursive: true });
       writeFileSync(join(sourceRoot, "src", "a.rs"), "fn a() {}");
       utimesSync(join(sourceRoot, "src", "a.rs"), new Date(1_000_000), new Date(1_000_000));
-      const content = writeStagedSourceFreshness(stagedDirectory, sourceRoot);
-      const first = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
+      const content = await writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      const first = await resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
       expect(first.hashedFileCount).toBe(0);
       expect(first.reusedFileCount).toBe(1);
       expect(first.sourceContentSha256).toBe(content);
@@ -240,7 +249,7 @@ describe("staged module freshness", () => {
     }
   });
 
-  it("boot freshness: touched-but-identical file rehashes one entry and stays fresh", () => {
+  it("boot freshness: touched-but-identical file rehashes one entry and stays fresh", async () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-touch-"));
     try {
       const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
@@ -248,9 +257,9 @@ describe("staged module freshness", () => {
       const file = join(sourceRoot, "src", "a.rs");
       writeFileSync(file, "fn a() {}");
       utimesSync(file, new Date(1_000_000), new Date(1_000_000));
-      const content = writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      const content = await writeStagedSourceFreshness(stagedDirectory, sourceRoot);
       utimesSync(file, new Date(2_000_000), new Date(2_000_000));
-      const second = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
+      const second = await resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
       expect(second.hashedFileCount).toBe(1);
       expect(second.reusedFileCount).toBe(0);
       expect(second.sourceContentSha256).toBe(content);
@@ -260,7 +269,7 @@ describe("staged module freshness", () => {
     }
   });
 
-  it("boot freshness: edited file is detected as source-changed", () => {
+  it("boot freshness: edited file is detected as source-changed", async () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-edit-"));
     try {
       const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
@@ -268,10 +277,10 @@ describe("staged module freshness", () => {
       const file = join(sourceRoot, "src", "a.rs");
       writeFileSync(file, "fn a() {}");
       utimesSync(file, new Date(1_000_000), new Date(1_000_000));
-      const content = writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      const content = await writeStagedSourceFreshness(stagedDirectory, sourceRoot);
       writeFileSync(file, "fn a() { /* edited */ }");
       utimesSync(file, new Date(2_000_000), new Date(2_000_000));
-      const second = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
+      const second = await resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
       expect(second.hashedFileCount).toBe(1);
       expect(second.sourceContentSha256).not.toBe(content);
       expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: 1, sourceContentSha256: second.sourceContentSha256, stagedSourceContentSha256: content }).kind).toBe("source-changed");
@@ -280,31 +289,103 @@ describe("staged module freshness", () => {
     }
   });
 
-  it("boot freshness: added or removed file is detected as source-changed", () => {
+  it("boot freshness: added or removed file is detected as source-changed", async () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-add-remove-"));
     try {
       const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
       mkdirSync(join(sourceRoot, "src"), { recursive: true });
       writeFileSync(join(sourceRoot, "src", "a.rs"), "fn a() {}");
       utimesSync(join(sourceRoot, "src", "a.rs"), new Date(1_000_000), new Date(1_000_000));
-      const content = writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      const content = await writeStagedSourceFreshness(stagedDirectory, sourceRoot);
       expect(readStagedSourceStatIndex(stagedDirectory)?.files).toHaveLength(1);
       writeFileSync(join(sourceRoot, "src", "b.rs"), "fn b() {}");
       utimesSync(join(sourceRoot, "src", "b.rs"), new Date(2_000_000), new Date(2_000_000));
-      const added = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
+      const added = await resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: content });
       expect(added.sourceContentSha256).not.toBe(content);
       expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: 1, sourceContentSha256: added.sourceContentSha256, stagedSourceContentSha256: content }).kind).toBe("source-changed");
       rmSync(join(sourceRoot, "src", "b.rs"));
-      writeStagedSourceFreshness(stagedDirectory, sourceRoot);
+      await writeStagedSourceFreshness(stagedDirectory, sourceRoot);
       const afterAddPersisted = readStagedSourceContentHash(stagedDirectory)!;
       rmSync(join(sourceRoot, "src", "a.rs"));
       writeFileSync(join(sourceRoot, "src", "only.rs"), "fn only() {}");
-      const removed = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: afterAddPersisted });
+      const removed = await resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory, receiptSourceContentSha256: afterAddPersisted });
       expect(removed.sourceContentSha256).not.toBe(afterAddPersisted);
       expect(stagedModuleVerdict({ pluginId: "procedural", role: "plugin", activationTracked: false, stagedAtMs: 1, sourceContentSha256: removed.sourceContentSha256, stagedSourceContentSha256: afterAddPersisted }).kind).toBe("source-changed");
     } finally {
       rmSync(sandbox, { recursive: true, force: true });
     }
+  });
+
+  /** @emoji 🚦️ The freshness walk runs beside a dev server: bounded as the fixture declares, and asynchronous — over a tree
+   * without a staged index (every file hashed) nearly all of its work happens after its first `await`, timers keep firing
+   * while it walks, and every per-file digest agrees with WebCrypto's SHA-256 (independent oracle). */
+  it("boot freshness: walks asynchronously within the declared bounds and agrees with WebCrypto", async () => {
+    expect({ files: SOURCE_FRESHNESS_FILE_CONCURRENCY, components: SOURCE_FRESHNESS_COMPONENT_CONCURRENCY }).toEqual(fixture.freshness.walk.concurrency);
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-yield-"));
+    try {
+      const stagedDirectory = join(sandbox, "staged"), sourceRoot = join(sandbox, "source");
+      for (let index = 0; index < fixture.freshness.walk.yielding.files; index += 1) {
+        const directory = join(sourceRoot, `m${index % 25}`);
+        mkdirSync(directory, { recursive: true });
+        writeFileSync(join(directory, `f${index}.rs`), `fn f${index}() { ${"x".repeat(index % 97)} }`);
+      }
+      let ticks = 0;
+      const ticker = setInterval(() => { ticks += 1; }, 0);
+      const started = performance.now();
+      const pending = resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: stagedDirectory });
+      const synchronousMs = performance.now() - started;
+      const walked = await pending;
+      const totalMs = performance.now() - started;
+      clearInterval(ticker);
+      expect(walked.hashedFileCount).toBe(fixture.freshness.walk.yielding.files);
+      expect(synchronousMs / totalMs, `synchronous ${synchronousMs.toFixed(1)} of ${totalMs.toFixed(1)} ms`).toBeLessThanOrEqual(fixture.freshness.walk.yielding.maxSynchronousShare);
+      expect(ticks).toBeGreaterThan(0);
+      const index = await buildComponentSourceStatIndex(sourceRoot);
+      for (const file of index.files.slice(0, 64)) {
+        const digest = Buffer.from(await crypto.subtle.digest("SHA-256", readFileSync(join(sourceRoot, file.path)))).toString("hex");
+        expect(file.sha256, file.path).toBe(digest);
+      }
+      expect(walked.sourceContentSha256).toBe(index.contentSha256);
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  it("boot freshness: a cancelled walk rejects and stops taking files", async () => {
+    const sandbox = mkdtempSync(join(tmpdir(), "semio-stat-index-cancel-"));
+    try {
+      const sourceRoot = join(sandbox, "source");
+      mkdirSync(sourceRoot, { recursive: true });
+      for (let index = 0; index < 200; index += 1) writeFileSync(join(sourceRoot, `f${index}.rs`), "fn f() {}");
+      const controller = new AbortController();
+      controller.abort(new Error("superseded by a newer receipt"));
+      await expect(resolveBootSourceContentHashes({ sourceRoot, moduleDirectory: join(sandbox, "staged"), signal: controller.signal })).rejects.toThrow("superseded by a newer receipt");
+      let started = 0;
+      const live = new AbortController();
+      const run = mapBoundedV1(Array.from({ length: 100 }, (_, index) => index), 4, async (index) => {
+        started += 1;
+        if (index === 9) live.abort(new Error("cancelled"));
+        await new Promise((resolveTick) => setTimeout(resolveTick, 1));
+        return index;
+      }, live.signal);
+      await expect(run).rejects.toThrow("cancelled");
+      expect(started).toBeLessThanOrEqual(10 + 4);
+    } finally {
+      rmSync(sandbox, { recursive: true, force: true });
+    }
+  });
+
+  it("bounded map keeps at most its limit in flight and preserves input order", async () => {
+    let inFlight = 0, peak = 0;
+    const out = await mapBoundedV1(Array.from({ length: 50 }, (_, index) => index), 3, async (index) => {
+      inFlight += 1;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolveTick) => setTimeout(resolveTick, index % 3));
+      inFlight -= 1;
+      return index * 2;
+    });
+    expect(peak).toBe(3);
+    expect(out).toEqual(Array.from({ length: 50 }, (_, index) => index * 2));
   });
 
   /** @emoji 🔮️ Independent oracle: `picomatch` is the glob engine chokidar filters with, so the declared
@@ -360,7 +441,7 @@ describe("staged module freshness", () => {
     expect(declared.sort()).toEqual([...GENERATED_COMPONENT_OWNER_FILES].sort());
   });
 
-  it("hashes plugin-owner sources stably and ignores declared output directories", () => {
+  it("hashes plugin-owner sources stably and ignores declared output directories", async () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-staging-hash-"));
     try {
       const sourceRoot = join(sandbox, "source");
@@ -370,12 +451,12 @@ describe("staged module freshness", () => {
         mkdirSync(join(sourceRoot, directory), { recursive: true });
         writeFileSync(join(sourceRoot, directory, "noise.bin"), "noise");
       }
-      const first = componentSourceContentHash(sourceRoot);
+      const first = await componentSourceContentHash(sourceRoot);
       expect(first).toMatch(/^[a-f0-9]{64}$/);
       writeFileSync(join(sourceRoot, "dist", "more.bin"), "more");
-      expect(componentSourceContentHash(sourceRoot)).toBe(first);
+      expect(await componentSourceContentHash(sourceRoot)).toBe(first);
       writeFileSync(join(sourceRoot, "src", "extra.rs"), "fn extra() {}");
-      expect(componentSourceContentHash(sourceRoot)).not.toBe(first);
+      expect(await componentSourceContentHash(sourceRoot)).not.toBe(first);
     } finally {
       rmSync(sandbox, { recursive: true, force: true });
     }

@@ -24,6 +24,7 @@
         "transformScaleX",
         "transformScaleY",
         "transformRotation",
+        "transformShear",
         "strokeCap",
         "strokeJoin",
         "strokeDash"

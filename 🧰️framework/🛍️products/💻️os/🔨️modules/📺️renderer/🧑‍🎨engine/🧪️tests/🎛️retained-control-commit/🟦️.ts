@@ -56,6 +56,7 @@ type FixtureCase = {
 };
 
 const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎛️retained-control-commit/🔣️.json"), "utf8")) as { readonly cases: readonly FixtureCase[] };
+const sliderPresentation = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🎚️slider-presentation/🔣️.json"), "utf8")) as { readonly tokens: { readonly readoutWidth: number } };
 
 /** 🏷️ `uiInputField`: a scalar payload is named by its trigger, never by the control that fired it. */
 const inputField = (trigger: string): string => (trigger === "delta" ? "delta" : "value");
@@ -72,11 +73,12 @@ const typedBuffer = (node: FixtureNode, gesture: Gesture): string => `${node.val
 /** ⏎️ React's `InputView`: `commit === "blur"` commits through `Trigger::Commit` (Enter / blur), everything else through `Trigger::Change` (every keystroke). */
 const inputCommitsOnBlur = (node: FixtureNode): boolean => node.kind === "input" && node.commit === "blur";
 
-/** 🎚️ The slider value a press at `x` reports: the full-width track, snapped onto `step`, clamped into min..=max. */
+/** 🎚️ The slider value a press at `x` reports from the painted track cell, excluding the fixed readout. */
 const sliderValueAt = (bounds: readonly [number, number, number, number], x: number, min: number, max: number, step: number): number => {
   const span = max - min;
   if (!(span > 0)) return min;
-  const ratio = bounds[2] > 0 ? Math.min(1, Math.max(0, (x - bounds[0]) / bounds[2])) : 0;
+  const trackWidth = Math.max(0, bounds[2] - sliderPresentation.tokens.readoutWidth);
+  const ratio = trackWidth > 0 ? Math.min(1, Math.max(0, (x - bounds[0]) / trackWidth)) : 0;
   const raw = min + ratio * span;
   const snapped = step > 0 ? min + Math.round((raw - min) / step) * step : raw;
   return Math.min(max, Math.max(min, snapped));

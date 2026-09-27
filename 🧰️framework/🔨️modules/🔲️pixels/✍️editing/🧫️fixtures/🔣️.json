@@ -24,38 +24,229 @@
   "cases": [
     {
       "name": "Box blur clamps edges and averages opaque neighbors",
-      "image": {"width":3,"height":1,"pixels":[0,0,0,255,90,90,90,255,180,180,180,255]},
-      "operation": {"kind":"blur","value":1},
-      "expected": [30,30,30,255,90,90,90,255,150,150,150,255]
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          0,
+          0,
+          0,
+          255,
+          90,
+          90,
+          90,
+          255,
+          180,
+          180,
+          180,
+          255
+        ]
+      },
+      "operation": {
+        "kind": "blur",
+        "value": 1
+      },
+      "expected": [
+        30,
+        30,
+        30,
+        255,
+        90,
+        90,
+        90,
+        255,
+        150,
+        150,
+        150,
+        255
+      ]
     },
     {
       "name": "Sharpen preserves alpha and clamps channel values",
-      "image": {"width":3,"height":1,"pixels":[0,0,0,255,90,90,90,255,180,180,180,255]},
-      "operation": {"kind":"sharpen","value":1},
-      "expected": [0,0,0,255,90,90,90,255,210,210,210,255]
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          0,
+          0,
+          0,
+          255,
+          90,
+          90,
+          90,
+          255,
+          180,
+          180,
+          180,
+          255
+        ]
+      },
+      "operation": {
+        "kind": "sharpen",
+        "value": 1
+      },
+      "expected": [
+        0,
+        0,
+        0,
+        255,
+        90,
+        90,
+        90,
+        255,
+        210,
+        210,
+        210,
+        255
+      ]
     },
     {
       "name": "Grayscale uses sRGB luminance coefficients",
-      "operation": {"kind":"grayscale"},
-      "expected": [54,54,54,255,182,182,182,255,18,18,18,128,19,19,19,0]
+      "operation": {
+        "kind": "grayscale"
+      },
+      "expected": [
+        54,
+        54,
+        54,
+        255,
+        182,
+        182,
+        182,
+        255,
+        18,
+        18,
+        18,
+        128,
+        19,
+        19,
+        19,
+        0
+      ]
     },
     {
       "name": "Asymmetric rotation exchanges width and height",
-      "image": {"width":3,"height":1,"pixels":[0,0,0,255,90,90,90,255,180,180,180,255]},
-      "operation": {"kind":"rotateClockwise"},
-      "width":1,"height":3,
-      "expected": [0,0,0,255,90,90,90,255,180,180,180,255]
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          0,
+          0,
+          0,
+          255,
+          90,
+          90,
+          90,
+          255,
+          180,
+          180,
+          180,
+          255
+        ]
+      },
+      "operation": {
+        "kind": "rotateClockwise"
+      },
+      "width": 1,
+      "height": 3,
+      "expected": [
+        0,
+        0,
+        0,
+        255,
+        90,
+        90,
+        90,
+        255,
+        180,
+        180,
+        180,
+        255
+      ]
     },
     {
       "name": "Brush paints an interpolated segment with one opacity application",
-      "operation": {"kind":"stroke","points":[[0.5,0.5],[1.5,0.5],[0.5,0.5]],"size":1,"opacity":0.5,"hardness":1,"color":[255,0,0,255],"erase":false},
-      "expected": [255,0,0,255,128,128,0,255,0,0,255,128,10,20,30,0]
+      "operation": {
+        "kind": "stroke",
+        "points": [
+          [
+            0.5,
+            0.5
+          ],
+          [
+            1.5,
+            0.5
+          ],
+          [
+            0.5,
+            0.5
+          ]
+        ],
+        "size": 1,
+        "opacity": 0.5,
+        "hardness": 1,
+        "color": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "erase": false
+      },
+      "expected": [
+        255,
+        0,
+        0,
+        255,
+        128,
+        128,
+        0,
+        255,
+        0,
+        0,
+        255,
+        128,
+        10,
+        20,
+        30,
+        0
+      ]
     },
     {
       "name": "Partial selection fill keeps straight alpha color",
-      "operation": {"kind":"fill","color":[255,0,0,255]},
-      "selection": [0,0,0,128],
-      "expected": [255,0,0,255,0,255,0,255,0,0,255,128,255,0,0,128]
+      "operation": {
+        "kind": "fill",
+        "color": [
+          255,
+          0,
+          0,
+          255
+        ]
+      },
+      "selection": [
+        0,
+        0,
+        0,
+        128
+      ],
+      "expected": [
+        255,
+        0,
+        0,
+        255,
+        0,
+        255,
+        0,
+        255,
+        0,
+        0,
+        255,
+        128,
+        255,
+        0,
+        0,
+        128
+      ]
     },
     {
       "name": "Invert RGB while preserving alpha",
@@ -362,6 +553,330 @@
         0,
         0
       ]
+    },
+    {
+      "name": "alpha brush hides without changing color",
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          10,
+          20,
+          30,
+          255,
+          40,
+          50,
+          60,
+          128,
+          70,
+          80,
+          90,
+          0
+        ]
+      },
+      "operation": {
+        "kind": "alphaStroke",
+        "points": [
+          [
+            0.5,
+            0.5
+          ],
+          [
+            2.5,
+            0.5
+          ]
+        ],
+        "size": 1,
+        "opacity": 0.5,
+        "hardness": 1,
+        "alpha": 0
+      },
+      "expected": [
+        10,
+        20,
+        30,
+        128,
+        40,
+        50,
+        60,
+        64,
+        70,
+        80,
+        90,
+        0
+      ],
+      "brushCoverage": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "alpha brush reveals hidden pixels",
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          10,
+          20,
+          30,
+          255,
+          40,
+          50,
+          60,
+          128,
+          70,
+          80,
+          90,
+          0
+        ]
+      },
+      "operation": {
+        "kind": "alphaStroke",
+        "points": [
+          [
+            0.5,
+            0.5
+          ],
+          [
+            2.5,
+            0.5
+          ]
+        ],
+        "size": 1,
+        "opacity": 0.5,
+        "hardness": 1,
+        "alpha": 255
+      },
+      "expected": [
+        10,
+        20,
+        30,
+        255,
+        40,
+        50,
+        60,
+        192,
+        70,
+        80,
+        90,
+        128
+      ],
+      "brushCoverage": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "alpha brush applies fractional selection exactly once",
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          10,
+          20,
+          30,
+          255,
+          40,
+          50,
+          60,
+          128,
+          70,
+          80,
+          90,
+          0
+        ]
+      },
+      "operation": {
+        "kind": "alphaStroke",
+        "points": [
+          [
+            0.5,
+            0.5
+          ],
+          [
+            2.5,
+            0.5
+          ]
+        ],
+        "size": 1,
+        "opacity": 1,
+        "hardness": 1,
+        "alpha": 64
+      },
+      "selection": [
+        255,
+        128,
+        0
+      ],
+      "expected": [
+        10,
+        20,
+        30,
+        64,
+        40,
+        50,
+        60,
+        96,
+        70,
+        80,
+        90,
+        0
+      ],
+      "brushCoverage": [
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "alpha brush soft edges preserve hidden color",
+      "image": {
+        "width": 5,
+        "height": 1,
+        "pixels": [
+          10,
+          20,
+          30,
+          0,
+          10,
+          20,
+          30,
+          0,
+          10,
+          20,
+          30,
+          0,
+          10,
+          20,
+          30,
+          0,
+          10,
+          20,
+          30,
+          0
+        ]
+      },
+      "operation": {
+        "kind": "alphaStroke",
+        "points": [
+          [
+            2.5,
+            0.5
+          ]
+        ],
+        "size": 4,
+        "opacity": 1,
+        "hardness": 0,
+        "alpha": 255
+      },
+      "expected": [
+        10,
+        20,
+        30,
+        0,
+        10,
+        20,
+        30,
+        128,
+        10,
+        20,
+        30,
+        255,
+        10,
+        20,
+        30,
+        128,
+        10,
+        20,
+        30,
+        0
+      ],
+      "brushCoverage": [
+        0,
+        128,
+        255,
+        128,
+        0
+      ]
+    },
+    {
+      "name": "alpha fill replaces selected coverage once",
+      "image": {
+        "width": 3,
+        "height": 1,
+        "pixels": [
+          12,
+          34,
+          56,
+          0,
+          78,
+          90,
+          12,
+          64,
+          34,
+          56,
+          78,
+          255
+        ]
+      },
+      "operation": {
+        "kind": "alphaFill",
+        "alpha": 255,
+        "opacity": 0.5
+      },
+      "selection": [
+        255,
+        128,
+        0
+      ],
+      "expected": [
+        12,
+        34,
+        56,
+        128,
+        78,
+        90,
+        12,
+        112,
+        34,
+        56,
+        78,
+        255
+      ]
+    },
+    {
+      "name": "alpha fill hides without changing RGB",
+      "image": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          12,
+          34,
+          56,
+          255,
+          78,
+          90,
+          12,
+          64
+        ]
+      },
+      "operation": {
+        "kind": "alphaFill",
+        "alpha": 0,
+        "opacity": 1
+      },
+      "expected": [
+        12,
+        34,
+        56,
+        0,
+        78,
+        90,
+        12,
+        0
+      ]
     }
   ],
   "selections": [
@@ -450,5 +965,34 @@
         255
       ]
     }
-  ]
+  ],
+  "outputGrants": {
+    "width": 65,
+    "height": 65,
+    "sourcePixel": [
+      10,
+      20,
+      30,
+      255
+    ],
+    "operation": {
+      "kind": "invert"
+    },
+    "grants": [
+      1,
+      4096,
+      128
+    ],
+    "completed": [
+      1,
+      4097,
+      4225
+    ],
+    "expectedPixel": [
+      245,
+      235,
+      225,
+      255
+    ]
+  }
 }

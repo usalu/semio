@@ -1,0 +1,61 @@
+{
+  "schema": "semio.hub.transient-apply-refusal-fixture/v1",
+  "description": "What a hub answers on a document socket when it refuses a Commands batch for a TRANSIENT reason: `ApplyOutcome::Rejected` whose `messages` hold exactly `answer` (a `HubTransientApplyRefusalMessageV1`, `🚧️refusal/🧬️schema`), so the client keeps the batch and resends it. `causes` are the transient refusals the hub has (the db engine could not admit the batch now; the sender's agent command rate is paced out), each with the reason the hub reports. `permanentCauses` are refusals that carry NO transient message (resending cannot help). `invalidMessages` are near misses a client must not treat as the transient refusal (Ajv oracle).",
+  "causes": [
+    {
+      "cause": "db-unavailable",
+      "reason": "DB I/O aggregate admission exhausted"
+    },
+    {
+      "cause": "db-unavailable",
+      "reason": "DB I/O process credit exhausted"
+    },
+    {
+      "cause": "agent-rate-limited",
+      "reason": "rate-limited: retry after 250 ms"
+    }
+  ],
+  "permanentCauses": [
+    {
+      "cause": "db-rejected-invalid",
+      "reason": "invalid argument: dependency names an unknown edit"
+    },
+    {
+      "cause": "unauthorized",
+      "reason": "unauthorized: no grant allows Write"
+    }
+  ],
+  "answer": {
+    "level": "warning",
+    "code": "hub.unavailable"
+  },
+  "invalidMessages": [
+    {
+      "level": "error",
+      "code": "hub.unavailable",
+      "message": "DB I/O aggregate admission exhausted"
+    },
+    {
+      "level": "warning",
+      "code": "hub.unavailable.retry",
+      "message": "DB I/O aggregate admission exhausted"
+    },
+    {
+      "level": "warning",
+      "code": "hub.unavailable",
+      "message": ""
+    },
+    {
+      "level": "warning",
+      "code": "hub.unavailable",
+      "message": "DB I/O aggregate admission exhausted",
+      "target": [
+        "document"
+      ]
+    },
+    {
+      "level": "warning",
+      "code": "hub.unavailable"
+    }
+  ]
+}

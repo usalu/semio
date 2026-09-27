@@ -50,10 +50,7 @@ fn a_turn_that_still_owns_an_ingress_never_answers_idle() {
     assert_eq!(contract["reactorStatuses"]["ownedTurnNeverIdle"], serde_json::Value::Bool(true));
 
     let owned = crate::reactor::turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, Some(cursor(2, 5)));
-    assert!(
-        matches!(&owned, semio_framework::kernel::CommandIngressStatus::CommandPending(pending) if pending.page_index == 2 && pending.seq == 17),
-        "an owner that advanced nothing this turn is still an owner: {owned:?}"
-    );
+    assert!(matches!(&owned, semio_framework::kernel::CommandIngressStatus::CommandPending(pending) if pending.page_index == 2 && pending.seq == 17), "an owner that advanced nothing this turn is still an owner: {owned:?}");
 
     let unowned = crate::reactor::turn::command_ingress_while_owned(semio_framework::kernel::CommandIngressStatus::Idle, None);
     assert!(matches!(unowned, semio_framework::kernel::CommandIngressStatus::Idle), "and with no owner, idle stays the honest answer");
@@ -80,13 +77,7 @@ fn every_admitted_command_page_leaves_the_turn_with_a_named_status() {
     let chain = &source[start..end];
 
     assert!(chain.contains(&named), "the chain names the drop it used to perform silently");
-    assert!(
-        chain.contains("} else {\n            // 📥️ The terminal arm this chain never had"),
-        "the admission chain has a terminal else, so no page can fall out of it unremarked"
-    );
-    assert!(
-        !chain.contains("} else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = retained.take() {"),
-        "the assembly arm no longer takes-and-drops every other owner shape"
-    );
+    assert!(chain.contains("} else {\n            // 📥️ The terminal arm this chain never had"), "the admission chain has a terminal else, so no page can fall out of it unremarked");
+    assert!(!chain.contains("} else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = retained.take() {"), "the assembly arm no longer takes-and-drops every other owner shape");
     eprintln!("[DEBUG] command page admission: terminal else present, fault named {named}, assembly take is shape-guarded");
 }

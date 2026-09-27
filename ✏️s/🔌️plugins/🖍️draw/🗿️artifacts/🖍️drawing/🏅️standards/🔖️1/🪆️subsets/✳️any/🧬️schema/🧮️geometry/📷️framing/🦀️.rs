@@ -5,7 +5,7 @@ use crate::PathSegment;
 pub fn drawing_scene_bounds(artboard: Option<&crate::DrawingArtboard>, nodes: &[crate::schema::DrawingSceneNode]) -> [f64;4] {
     let mut bounds = artboard.filter(|board| board.width > 0.0 && board.height > 0.0).map(|board| [0.0,0.0,board.width,board.height]);
     for node in nodes.iter().filter(|node| node.visible && node.opacity > 0.0) {
-        let rectangle = node.image.as_ref().map(|image| (0.0,0.0,image.width,image.height)).or_else(|| node.text.as_ref().map(|text| (0.0,-text.size,text.content.chars().count() as f64*text.size*0.6,text.size*1.2)));
+        let rectangle = node.image.as_ref().map(|image| (0.0,0.0,image.width,image.height)).or_else(|| node.text.as_ref().map(|text| { let [width,height] = semio_s_2d::text::drawing_text_fallback_extent(&text.content,text.size); (0.0,0.0,width,height) }));
         let shape;
         let segments = if let Some((x,y,w,h)) = rectangle {
             shape = vec![PathSegment::Move { to: [x,y] },PathSegment::Line { to: [x+w,y] },PathSegment::Line { to: [x+w,y+h] },PathSegment::Line { to: [x,y+h] },PathSegment::Close];

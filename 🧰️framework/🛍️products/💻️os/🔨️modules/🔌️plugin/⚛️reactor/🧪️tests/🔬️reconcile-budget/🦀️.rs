@@ -1,5 +1,5 @@
-use super::*;
 use super::turn::{PATCH_CLOSE_UNITS_PER_TURN, PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
+use super::*;
 
 #[test]
 fn patch_frame_limit_does_not_limit_internal_reconciliation_steps() {
@@ -30,10 +30,7 @@ fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_st
     // sweep has nothing left to visit, so a cursor-bound condition looped forever and no native
     // close ever reached `Retired` (26/09/09/PROCEDURAL-3D-END-TO-END). Production coverage lives
     // in `✏️s/🔌️plugins/🌀️procedural/🧪️tests/🚪️close-ladder/🦀️.rs`, which links a non-test framework.
-    assert!(
-        REACTOR_CLOSES.with(|closes| closes.borrow().slots.get(ReactorCloseRegistry::index(instance)).is_some_and(|state| state.tasks_complete)),
-        "the terminal reactor close must carry the task sweep's own completion witness"
-    );
+    assert!(REACTOR_CLOSES.with(|closes| closes.borrow().slots.get(ReactorCloseRegistry::index(instance)).is_some_and(|state| state.tasks_complete)), "the terminal reactor close must carry the task sweep's own completion witness");
     assert!(reserve_reactor_close(instance_lifetime::NativeCloseKey::fixture(instance, 2)).is_err(), "terminal receipt holds its exact slot until ACK");
     release_reactor_close(key).expect("final exact receipt release");
     assert!(reactor_close_complete(key).is_err(), "absence is not a terminal receipt");

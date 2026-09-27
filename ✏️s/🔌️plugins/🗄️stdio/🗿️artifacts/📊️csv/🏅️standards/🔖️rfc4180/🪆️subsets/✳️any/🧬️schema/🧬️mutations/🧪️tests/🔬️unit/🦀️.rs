@@ -40,6 +40,7 @@ async fn mutation_diff_law() {
     let base = base_snapshot();
     let variants = vec![
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        patch_snapshot::test_case(),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("new", true)]) }),
         CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
@@ -64,6 +65,7 @@ async fn inverse_law() {
     let base = base_snapshot();
     let variants = vec![
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        patch_snapshot::test_case(),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("new", true)]) }),
         CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
@@ -210,6 +212,7 @@ async fn field_sweep_every_mutable_field_changes() {
 async fn op_text_binary_roundtrip_law() {
     let mutations = vec![
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        patch_snapshot::test_case(),
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("a, tricky [value]", true), ("plain", false)])] } }),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: true }),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
@@ -247,6 +250,7 @@ async fn ops_grammar_conformance_law() {
         CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
         CsvMutation::SetField(set_field::SetField { record_index: 1, field_index: 0, value: "changed".into(), quoted: true }),
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
+        patch_snapshot::test_case(),
     ];
     for m in mutations {
         let printed = m.print_op();
@@ -267,6 +271,7 @@ async fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &CsvMutation) -> &'static str {
         match mutation {
             CsvMutation::SetSnapshot(_) => "set-snapshot",
+            CsvMutation::PatchSnapshot(_) => "patch-snapshot",
             CsvMutation::SetHasHeader(_) => "set-has-header",
             CsvMutation::InsertRecord(_) => "insert-record",
             CsvMutation::RemoveRecord(_) => "remove-record",
@@ -275,6 +280,7 @@ async fn kinds_match_enum_and_catalog() {
     }
     let samples = [
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: CsvSnapshot::default() }),
+        patch_snapshot::test_case(),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: CsvRecord::default() }),
         CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),

@@ -51,3 +51,45 @@ async fn inspector_mask_dimensions_resolve_the_attached_image() {
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
     assert_eq!(resolved,[width.to_string(),height.to_string()]);
 }
+
+#[test]
+fn inspector_adjustment_parameters_are_localized_bounded_commit_controls() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎛️change-layer-adjustment-parameter/🧪️tests/🔣️.json")).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
+    let layer=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
+    let id=layer_node_id(&layer).to_owned();document.layers.push(layer);
+    for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
+        let tree=render(&document,&RasterConfig::default(),&[id.clone()],labels).unwrap();
+        let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+        let projection:serde_json::Value=serde_json::from_str(&text).unwrap();let mut pending=vec![&projection];let mut controls=0;
+        while let Some(node)=pending.pop() {
+            if ["raster-inspector.brightness.input","raster-inspector.contrast.input"].contains(&node["key"].as_str().unwrap_or("")) {
+                assert_eq!(node["component"]["min"],-1.0);assert_eq!(node["component"]["max"],1.0);assert_eq!(node["component"]["step"],0.01);assert_eq!(node["component"]["value"],"0");assert_eq!(node["bindings"][0]["trigger"],"commit");controls+=1;
+            }
+            pending.extend(node["children"].as_array().unwrap());
+        }
+        assert_eq!(controls,2);assert!(!text.contains("raster-inspector.transformX.input"));
+        for key in ["brightness","contrast"] {assert!(text.contains(fixture["labels"][locale][key].as_str().unwrap()));}
+    }
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+}
+
+#[test]
+fn inspector_offers_localized_merge_only_for_supported_sibling_selection() {
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🎮️commands/🫳️merge-down/🧫️fixtures/🔣️.json")).unwrap();
+    let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();document.layers=dsl::json::from_json_str(&fixture["cases"][0]["layers"].to_string()).unwrap();
+    for (locale,labels) in [("en",&RasterPlayLabels::NATIVE_EN),("de",&RasterPlayLabels::NATIVE_DE)] {
+        for ids in [vec!["upper".to_owned()],vec!["outside".to_owned()],vec!["lower".to_owned(),"upper".to_owned()],vec![]] {
+            let tree=render(&document,&RasterConfig::default(),&ids,labels).unwrap();
+            let mut pending=vec![&tree];let mut disabled=None;
+            while let Some(node)=pending.pop() {if node.key.as_str()=="raster-inspector.merge-down" {disabled=Some(node.disabled);}pending.extend(node.children.iter());}
+            let text=semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(tree)).unwrap();
+            assert_eq!(text.contains("mergeDown"),ids.len()==1);
+            if ids.len()==1 {
+                assert!(text.contains(fixture["labels"][locale].as_str().unwrap()));assert!(text.contains(fixture["hints"][locale].as_str().unwrap()));
+                assert_eq!(disabled,Some(ids!=["upper"]));
+            }
+        }
+    }
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
+}

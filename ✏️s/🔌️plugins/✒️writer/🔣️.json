@@ -722,6 +722,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Reformats the whole text with the formatter of the document's language; text that is already formatted writes nothing.",
+                  "de": "Formatiert den gesamten Text mit dem Formatierer der Dokumentsprache neu; bereits formatierter Text schreibt nichts."
+                },
+                "reuse": {
+                  "en": "Reformats the whole text with the formatter of the document's language; text that is already formatted writes nothing.",
+                  "de": "Formatiert den gesamten Text mit dem Formatierer der Dokumentsprache neu; bereits formatierter Text schreibt nichts."
+                }
               }
             }
           },
@@ -768,6 +778,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Checks the text with the linter of the document's language and shows the diagnostics in the editor window; the text is not changed.",
+                  "de": "Prüft den Text mit dem Linter der Dokumentsprache und zeigt die Befunde im Editorfenster an; der Text ändert sich nicht."
+                },
+                "reuse": {
+                  "en": "Checks the text with the linter of the document's language and shows the diagnostics in the editor window; the text is not changed.",
+                  "de": "Prüft den Text mit dem Linter der Dokumentsprache und zeigt die Befunde im Editorfenster an; der Text ändert sich nicht."
+                }
               }
             }
           },
@@ -859,6 +879,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole document with a bundled example (the Jack demo or the DAG Jack example), or with an empty document for any other id.",
+                  "de": "Ersetzt das gesamte Dokument durch ein mitgeliefertes Beispiel (die Jack-Demo oder das DAG-Jack-Beispiel), bei jeder anderen Id durch ein leeres Dokument."
+                },
+                "reuse": {
+                  "en": "Replaces the whole document with a bundled example (the Jack demo or the DAG Jack example), or with an empty document for any other id.",
+                  "de": "Ersetzt das gesamte Dokument durch ein mitgeliefertes Beispiel (die Jack-Demo oder das DAG-Jack-Beispiel), bei jeder anderen Id durch ein leeres Dokument."
+                }
               }
             }
           },
@@ -903,7 +933,8 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
-              }
+              },
+              "audience": "input"
             }
           },
           {
@@ -947,7 +978,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -966,6 +997,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the document's entire text with the given text; the previous text is gone unless the edit is undone.",
+                  "de": "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird."
+                },
+                "reuse": {
+                  "en": "Replaces the document's entire text with the given text; the previous text is gone unless the edit is undone.",
+                  "de": "Ersetzt den gesamten Text des Dokuments durch den angegebenen Text; der bisherige Text ist fort, sofern die Änderung nicht rückgängig gemacht wird."
+                }
               }
             }
           },
@@ -1056,6 +1097,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "With the caret on a Jack variable, renames every occurrence of it to the given text; otherwise replaces the editor's selected range with that text.",
+                  "de": "Steht die Einfügemarke auf einer Jack-Variablen, werden alle ihre Vorkommen in den angegebenen Text umbenannt; sonst ersetzt der Text den ausgewählten Bereich des Editors."
+                },
+                "reuse": {
+                  "en": "With the caret on a Jack variable, renames every occurrence of it to the given text; otherwise replaces the editor's selected range with that text.",
+                  "de": "Steht die Einfügemarke auf einer Jack-Variablen, werden alle ihre Vorkommen in den angegebenen Text umbenannt; sonst ersetzt der Text den ausgewählten Bereich des Editors."
+                }
               }
             }
           },
@@ -1145,6 +1196,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole writer document, its text, language and metadata, with the supplied document; nothing of the previous one is kept.",
+                  "de": "Ersetzt das gesamte Writer-Dokument mit Text, Sprache und Metadaten durch das übergebene; vom bisherigen Dokument bleibt nichts erhalten."
+                },
+                "reuse": {
+                  "en": "Replaces the whole writer document, its text, language and metadata, with the supplied document; nothing of the previous one is kept.",
+                  "de": "Ersetzt das gesamte Writer-Dokument mit Text, Sprache und Metadaten durch das übergebene; vom bisherigen Dokument bleibt nichts erhalten."
+                }
               }
             }
           },
@@ -1170,7 +1231,7 @@
                   "artifact:{self}"
                 ],
                 "external": false,
-                "destructive": false,
+                "destructive": true,
                 "reversible": true
               },
               "policy": {
@@ -1189,6 +1250,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the given text under a URI as the writer document, detecting its language from the content or extension; the current document is replaced.",
+                  "de": "Öffnet den angegebenen Text unter einer URI als Writer-Dokument und erkennt die Sprache aus Inhalt oder Dateiendung; das aktuelle Dokument wird ersetzt."
+                },
+                "reuse": {
+                  "en": "Opens the given text under a URI as the writer document, detecting its language from the content or extension; the current document is replaced.",
+                  "de": "Öffnet den angegebenen Text unter einer URI als Writer-Dokument und erkennt die Sprache aus Inhalt oder Dateiendung; das aktuelle Dokument wird ersetzt."
+                }
               }
             }
           },
@@ -1251,6 +1322,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Replaces the whole writer document with one parsed from the given document JSON; invalid JSON changes nothing.",
+                  "de": "Ersetzt das gesamte Writer-Dokument durch eines, das aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."
+                },
+                "reuse": {
+                  "en": "Replaces the whole writer document with one parsed from the given document JSON; invalid JSON changes nothing.",
+                  "de": "Ersetzt das gesamte Writer-Dokument durch eines, das aus dem angegebenen Dokument-JSON gelesen wird; ungültiges JSON ändert nichts."
+                }
               }
             }
           },
@@ -1313,6 +1394,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Loads a test fixture given as JSON as the whole writer document, replacing the current one; invalid JSON changes nothing.",
+                  "de": "Lädt eine als JSON übergebene Test-Fixture als gesamtes Writer-Dokument und ersetzt das aktuelle; ungültiges JSON ändert nichts."
+                },
+                "reuse": {
+                  "en": "Loads a test fixture given as JSON as the whole writer document, replacing the current one; invalid JSON changes nothing.",
+                  "de": "Lädt eine als JSON übergebene Test-Fixture als gesamtes Writer-Dokument und ersetzt das aktuelle; ungültiges JSON ändert nichts."
+                }
               }
             }
           },
@@ -2270,6 +2361,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -2375,6 +2476,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -2468,6 +2579,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -3578,6 +3699,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                },
+                "reuse": {
+                  "en": "Opens the tutorial recorder on the open document so the next interactions are recorded as a tutorial.",
+                  "de": "Öffnet den Tutorial-Rekorder für das geöffnete Dokument, damit die nächsten Interaktionen als Tutorial aufgezeichnet werden."
+                }
               }
             }
           },
@@ -3683,6 +3814,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Filters the history panel to all entries, only document operations, or everything except document operations; the document is not changed.",
+                  "de": "Filtert den Verlaufsbereich auf alle Einträge, nur Dokumentoperationen oder alles außer Dokumentoperationen; das Dokument wird nicht verändert."
+                }
               }
             }
           },
@@ -3776,6 +3917,16 @@
                 "cancellable": false,
                 "class": "interactive",
                 "interactiveJob": "migrated"
+              },
+              "description": {
+                "native": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                },
+                "reuse": {
+                  "en": "Records a shell effect that already happened (navigation, export, spawn) in the session command log; the document is not changed.",
+                  "de": "Vermerkt eine bereits erfolgte Shell-Wirkung (Navigation, Export, Start) im Sitzungsprotokoll; das Dokument wird nicht verändert."
+                }
               },
               "audience": "chrome"
             }
@@ -3948,7 +4099,7 @@
   ],
   "execution": "isolated",
   "executionProtocol": {
-    "appChannelVersion": 17
+    "appChannelVersion": 18
   },
   "quotas": {},
   "contributions": {
@@ -4089,8 +4240,8 @@
     ]
   },
   "hashes": {
-    "wasmSha256": "1d89ed66d796a0e992b82186b7cc1dd2b3d7f6869db71e24c7ca70ffde0d90e0",
-    "coreWasmSha256": "9a597e4d0c7a511d09c9d059809996dba2fb7d139ee400cca900fc72eca91a6d",
-    "descriptorSha256": "45ac23ad2d2b73bd37ec7880b3766c2ae55986cc43c93ab8c7c4dc75f830bdac"
+    "wasmSha256": "221c8e708f52405a66464db73286cccc00f6aa4b0f32884913bf71198ce6009d",
+    "coreWasmSha256": "a8d1123ce0794a62a35964a1d78a7c1343dde3dcc62c8fe4f2c53ce2fb867603",
+    "descriptorSha256": "5a6d42e124ff483e8145f86fb8be6951986b46927da64080fc18bd4c42b824c2"
   }
 }

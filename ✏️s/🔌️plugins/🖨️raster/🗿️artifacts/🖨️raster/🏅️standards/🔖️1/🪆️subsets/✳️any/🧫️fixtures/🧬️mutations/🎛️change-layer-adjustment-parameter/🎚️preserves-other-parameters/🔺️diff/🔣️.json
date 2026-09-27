@@ -1,0 +1,20 @@
+{
+  "layers": {
+    "added": [],
+    "removed": [],
+    "moved": [],
+    "patched": [
+      {
+        "id": "tone",
+        "patch": {
+          "adjustmentParameters": [
+            {
+              "parameter": "brightness",
+              "value": 0.4
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

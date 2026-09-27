@@ -54,7 +54,7 @@ fn a_malformed_bitmap_refuses_rather_than_panicking() {
 /// ⬡️ The raster ring still solves — the media kind is orthogonal to the propagation.
 #[test]
 fn the_terrain_ring_solves() {
-    let commit = crate::schema::inferences::solve_with_job(&crate::examples::terrain_ring::document()).expect("the terrain ring solves");
+    let commit = crate::schema::inferences::solve_with_clock(&crate::examples::terrain_ring::document(), semio_framework_job::logical_now_us).expect("the terrain ring solves");
     assert!(!commit.contradiction);
     assert_eq!(commit.assignments.len(), 6);
 }

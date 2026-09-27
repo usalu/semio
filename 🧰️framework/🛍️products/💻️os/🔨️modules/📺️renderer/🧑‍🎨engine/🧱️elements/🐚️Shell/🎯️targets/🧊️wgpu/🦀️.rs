@@ -40,6 +40,11 @@ use infinite_world::world::{
 use semio_framework::kernel::{UiDirtyScope, UiDirtySection};
 use semio_framework::IconName;
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel, ViewSessionIdentity};
+use semio_framework_ui_viewport::{
+    Viewport3dAxonometricHemisphere, Viewport3dAxonometricQuadrant, Viewport3dAxonometricVariant,
+    Viewport3dCurvilinearMapping, Viewport3dObliqueVariant, Viewport3dOrthographicView,
+    Viewport3dProjectionMode, Viewport3dProjectionOrientation, Viewport3dProjectionSpec,
+};
 use semio_framework_os_config::opening_config::{
     apply_ui_preferences_config_mutation, decode_ui_preferences_config_mutation_json,
     mutations::{set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme, UiPreferencesConfigMutation},
@@ -2969,6 +2974,71 @@ const DIRECTORY_COMMAND_DEADLINE_MS: u64 = 5_000;
 /// hub 7800 under load ~40, so every native sign-in answered `Unreachable` while React's (no request
 /// deadline, cancellable) signed in (ticket 26/09/23 slice WG8, session 12). Still finite.
 const HUB_SIGN_IN_DEADLINE_MS: u64 = 30_000;
+
+/// 🔐️ What one spawned sign-in answers: the mint's refusal, a mint the hub's own `me` read would not confirm, or the
+/// verified session.
+enum ShellHubSignInAnswer {
+    Failed { code: HubSignInErrorCode, retry_after_seconds: Option<u64> },
+    Unverified,
+    Verified { origin: String, user_id: String, credential: std::sync::Arc<LocalHubCredential>, client: std::sync::Arc<ShellDirectoryClient>, authority: DirectorySessionAuthorityV1 },
+}
+
+/// 🏘️ What one spawned spaces read answers: the rows, or `Err` when the list could not be read (the rows on screen stay).
+type ShellHubSpacesAnswer = Result<Vec<crate::space_browser::SpaceRow>, ()>;
+
+/// 🔐️ One hub workspace request whose network legs run on a spawned task and never on the frame's interaction state:
+/// the frame keeps taking input while the hub answers, the chrome shows the phase, and `cancel` ends the request. A
+/// slow hub froze every input of the browser shell for 60–106 s while these legs were awaited inside the action
+/// (ticket 26/09/23 session 12, runs s12g/s12h on hub 7800).
+struct ShellHubTask<T> {
+    receiver: std::sync::mpsc::Receiver<T>,
+    cancel: CancelToken,
+    #[cfg(not(target_arch = "wasm32"))]
+    task: Option<std::sync::Arc<ShellPoolFuture>>,
+}
+
+impl<T: 'static> ShellHubTask<T> {
+    /// 🚀️ Runs `leg` on the shared pool's I/O lane; the pump reads its answer.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + Send + 'static) -> Self
+    where
+        T: Send,
+    {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let task = ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, async move {
+            let _ = sender.send(leg.await);
+        });
+        Self { receiver, cancel, task: Some(task) }
+    }
+
+    /// 🚀️ Runs `leg` on the page's own microtask queue; the pump reads its answer.
+    #[cfg(target_arch = "wasm32")]
+    fn spawn(cancel: CancelToken, leg: impl std::future::Future<Output = T> + 'static) -> Self {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        crate::spawn_app_task(async move {
+            let _ = sender.send(leg.await);
+        });
+        Self { receiver, cancel }
+    }
+
+    /// 📬️ `Some(Ok)` once answered, `Some(Err)` when the task ended without an answer, `None` while it runs.
+    fn answer(&self) -> Option<Result<T, ()>> {
+        match self.receiver.try_recv() {
+            Ok(answer) => Some(Ok(answer)),
+            Err(std::sync::mpsc::TryRecvError::Empty) => None,
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => Some(Err(())),
+        }
+    }
+
+    /// 🛑️ Ends the request: its transport sees the cancellation, and no answer is read any more.
+    fn cancel(self) {
+        self.cancel.cancel_now();
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(task) = self.task {
+            task.cancel();
+        }
+    }
+}
 /// ⏳️ Browser identity retry floor: a hub that refuses `/auth/sessions/me` must not be re-asked on
 /// every 100 ms frame pump. Native needs no twin — its bootstrap is a one-shot pool future.
 #[cfg(target_arch = "wasm32")]
@@ -3493,8 +3563,17 @@ pub struct ShellExtensionProjection {
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct WindowIconOverride {
     plugin_id: String,
+    app_id: String,
     app_instance_id: u32,
     icon_id: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct WindowTitleOverride {
+    plugin_id: String,
+    app_id: String,
+    app_instance_id: u32,
+    title: String,
 }
 
 /// 🪟️ Separates framework layout application from the effective React Mode prop identity.
@@ -3502,39 +3581,31 @@ struct DockInputIdentity {
     source: Option<WindowLayout>,
     mode_layout: Option<WindowLayout>,
     roster: Vec<String>,
-    locale: String,
-    terminology: String,
-    retitled: bool,
 }
 
-/// 🧭️ Projects the fields observed by React's `resolveFrameworkLayoutSeed` and locale retitling.
-fn dock_mode_layout_identity(layout: &WindowLayout, app: &AppDefinition, terminology: Terminology, locale: Locale, retitled: bool) -> WindowLayout {
+/// 🧭️ Projects the structural fields observed by React Mode without presentation-only titles.
+fn dock_mode_layout_identity(layout: &WindowLayout) -> WindowLayout {
     use ui_wgpu::wgpu::{WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
-    fn stack(node: &mut WindowLayoutStackNode, app: &AppDefinition, terminology: Terminology, locale: Locale, retitled: bool) {
+    fn stack(node: &mut WindowLayoutStackNode) {
         node.active_window_kind_id = None;
         for leaf in &mut node.children {
-            let kind = app.window_kinds.iter().find(|kind| kind.id == leaf.window_kind_id);
-            leaf.title = Some(if retitled || leaf.instance_id.as_deref().is_none_or(str::is_empty) {
-                kind.map(|kind| kind.label.resolve(terminology, locale).to_string()).or_else(|| leaf.title.clone()).unwrap_or_else(|| leaf.window_kind_id.clone())
-            } else {
-                leaf.title.clone().unwrap_or_else(|| leaf.window_kind_id.clone())
-            });
+            leaf.title = None;
             leaf.window_kind_id = leaf.instance_id.take().unwrap_or_else(|| leaf.window_kind_id.clone());
             leaf.template_id = None;
         }
     }
-    fn axis(node: &mut WindowLayoutAxisNode, app: &AppDefinition, terminology: Terminology, locale: Locale, retitled: bool) {
+    fn axis(node: &mut WindowLayoutAxisNode) {
         for child in &mut node.children {
             match child {
-                WindowLayoutChild::Axis(child) => axis(child, app, terminology, locale, retitled),
-                WindowLayoutChild::Stack(child) => stack(child, app, terminology, locale, retitled),
+                WindowLayoutChild::Axis(child) => axis(child),
+                WindowLayoutChild::Stack(child) => stack(child),
             }
         }
     }
     let mut projected = layout.clone();
     match &mut projected.root {
-        WindowLayoutRoot::Axis(node) => axis(node, app, terminology, locale, retitled),
-        WindowLayoutRoot::Stack(node) => stack(node, app, terminology, locale, retitled),
+        WindowLayoutRoot::Axis(node) => axis(node),
+        WindowLayoutRoot::Stack(node) => stack(node),
     }
     projected
 }
@@ -3683,7 +3754,7 @@ pub struct ShellState {
     pub dock_view: DockState,
     /// 🪪️ App instance whose layout was last reconciled into `dock`; commands are refused while a
     /// successor session is mounted but its dock has not crossed `sync_dock` yet.
-    dock_instance_owner: Option<(String, u32)>,
+    dock_instance_owner: Option<(String, u32, String)>,
     /// 🪟️ Effective incoming layout and ordered window IDs last accepted by the dock.
     dock_input_identity: Option<DockInputIdentity>,
     pub dock_canvas_bounds: Rect,
@@ -3774,6 +3845,7 @@ pub struct ShellState {
     /// 🖼️ Renderer-local `SetWindowIconContext` state, owned by the exact mounted app instance and
     /// bounded by the same 64-window view-context contract as the dock roster.
     window_icon_overrides: HashMap<String, WindowIconOverride>,
+    window_title_overrides: HashMap<String, WindowTitleOverride>,
     /// @emoji 📇️ Per-window expanded action id (the accordion-open staged arg form).
     pub action_panel_expanded: HashMap<String, String>,
     /// @emoji 📝️ Staged action argument values keyed `"{window_id}:{action_id}"` — edits buffer here
@@ -3931,6 +4003,10 @@ pub struct ShellState {
     /// roster and drafts. Target-neutral: the surface is the same retained tree on both arms, and
     /// only the transport underneath it is split.
     pub hub_workspace: crate::hub_connection::HubWorkspaceState,
+    /// 🔐️ The sign-in whose network legs are in flight off the interaction state ([`ShellHubTask`]).
+    hub_sign_in_task: Option<ShellHubTask<ShellHubSignInAnswer>>,
+    /// 🏘️ The spaces read in flight, on the same kind of task.
+    hub_spaces_task: Option<ShellHubTask<ShellHubSpacesAnswer>>,
     pub hub_workspace_open: bool,
     /// 🏛️ The one retained native space-administration operation (fixed capacity: exactly one).
     /// Its page, receipt, and one-shot invite capability are erased by every terminal transition, so
@@ -6704,6 +6780,7 @@ impl ShellState {
             projection_pane_folded: HashMap::new(),
             world_projection_template: HashMap::new(),
             window_icon_overrides: HashMap::new(),
+            window_title_overrides: HashMap::new(),
             action_panel_expanded: HashMap::new(),
             staged_action_args: HashMap::new(),
             expanded_command_id: None,
@@ -6757,6 +6834,8 @@ impl ShellState {
             directory_cancel,
             directory_commands: ShellDirectoryCommandQueueV1::default(),
             hub_workspace: crate::hub_connection::HubWorkspaceState::new(crate::hub_sign_in::parse_hub_connection_book(prefs_get(HUB_CONNECTION_BOOK_STORAGE_KEY_V1).as_deref(), &shell_hub_bootstrap_origin(), ui_wgpu::wgpu::Locale::En)),
+            hub_sign_in_task: None,
+            hub_spaces_task: None,
             hub_workspace_open: false,
             space_administration: None,
             space_administration_epoch: 0,
@@ -7470,10 +7549,9 @@ impl ShellState {
         if let Some(session) = &self.session {
             let incoming_layout = self.layout_override.as_ref().or(session.app.default_layout.as_ref());
             let roster = Self::session_window_instances(session, &self.dock).into_iter().map(|instance| instance.id).collect::<Vec<_>>();
-            let owner_changed = self.dock_instance_owner.as_ref().is_none_or(|(plugin_id, instance_id)| plugin_id != &session.plugin_id || *instance_id != session.instance_id);
+            let owner_changed = self.dock_instance_owner.as_ref().is_none_or(|(plugin_id, instance_id, app_id)| plugin_id != &session.plugin_id || *instance_id != session.instance_id || app_id != &session.app.id);
             let source_changed = owner_changed || self.dock_input_identity.as_ref().is_none_or(|input| input.source.as_ref() != incoming_layout);
-            let retitled = !source_changed && self.dock_input_identity.as_ref().is_some_and(|input| input.retitled || input.locale != self.locale_id || input.terminology != self.terminology_id);
-            let mode_layout = incoming_layout.map(|layout| dock_mode_layout_identity(layout, &session.app, self.active_terminology(), self.active_locale(), retitled));
+            let mode_layout = incoming_layout.map(dock_mode_layout_identity);
             let input_changed = owner_changed || self.dock_input_identity.as_ref().is_none_or(|input| input.mode_layout != mode_layout || input.roster != roster);
             if source_changed || (incoming_layout.is_none() && input_changed) {
                 let maximized = self.dock.maximized_stack.clone();
@@ -7498,7 +7576,7 @@ impl ShellState {
                 self.dock.maximized_stack = None;
             }
             let roster = Self::session_window_instances(session, &self.dock).into_iter().map(|instance| instance.id).collect();
-            self.dock_input_identity = Some(DockInputIdentity { source: incoming_layout.cloned(), mode_layout, roster, locale: self.locale_id.clone(), terminology: self.terminology_id.clone(), retitled });
+            self.dock_input_identity = Some(DockInputIdentity { source: incoming_layout.cloned(), mode_layout, roster });
             if let Some(seed) = dock_seed_active_window_id_v1(&mode_layout_stacks_v1(&self.dock.root), self.active_window_id.as_deref()) {
                 self.active_window_id = Some(seed);
             }
@@ -7506,16 +7584,22 @@ impl ShellState {
                 self.dock.sync_active_window(id);
             }
             let live = self.dock.collect_window_ids();
+            if owner_changed {
+                self.world_projection_template.clear();
+            }
             self.world_projection_template.retain(|window_id, _| live.contains(window_id));
-            self.window_icon_overrides.retain(|window_id, icon| icon.plugin_id == session.plugin_id && icon.app_instance_id == session.instance_id && live.contains(window_id));
+            self.window_icon_overrides.retain(|window_id, icon| icon.plugin_id == session.plugin_id && icon.app_id == session.app.id && icon.app_instance_id == session.instance_id && live.contains(window_id));
+            self.window_title_overrides.retain(|window_id, title| title.plugin_id == session.plugin_id && title.app_id == session.app.id && title.app_instance_id == session.instance_id && live.contains(window_id));
             for window_id in live {
                 if let Some(template_id) = self.dock.window_template_id(&window_id) {
-                    self.world_projection_template.insert(window_id, template_id.to_string());
+                    self.world_projection_template.entry(window_id).or_insert_with(|| template_id.to_string());
                 }
             }
-            self.dock_instance_owner = Some((session.plugin_id.clone(), session.instance_id));
+            self.dock_instance_owner = Some((session.plugin_id.clone(), session.instance_id, session.app.id.clone()));
         } else {
+            self.world_projection_template.clear();
             self.window_icon_overrides.clear();
+            self.window_title_overrides.clear();
             self.dock_instance_owner = None;
             self.dock_input_identity = None;
         }
@@ -7526,7 +7610,7 @@ impl ShellState {
     /// while the shared view-context capacity bounds both entry count and identifier size.
     pub(crate) fn apply_window_icon_host_command(&mut self, window_id: &str, icon_id: &str) -> bool {
         let Some(session) = self.session.as_ref() else { return false };
-        if self.dock_instance_owner.as_ref().is_none_or(|(plugin_id, instance_id)| plugin_id != &session.plugin_id || *instance_id != session.instance_id)
+        if self.dock_instance_owner.as_ref().is_none_or(|(plugin_id, instance_id, app_id)| plugin_id != &session.plugin_id || *instance_id != session.instance_id || app_id != &session.app.id)
             || self.dock.window_kind_id(window_id).is_none()
             || icon_id.is_empty()
             || icon_id.chars().count() > semio_framework::VIEW_CONTEXT_IDENTIFIER_CHARS
@@ -7534,13 +7618,31 @@ impl ShellState {
         {
             return false;
         }
-        self.window_icon_overrides.insert(window_id.to_string(), WindowIconOverride { plugin_id: session.plugin_id.clone(), app_instance_id: session.instance_id, icon_id: icon_id.to_string() });
+        self.window_icon_overrides.insert(window_id.to_string(), WindowIconOverride { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), app_instance_id: session.instance_id, icon_id: icon_id.to_string() });
         true
     }
 
     fn window_icon_override(&self, window_id: &str) -> Option<&str> {
         let session = self.session.as_ref()?;
-        self.window_icon_overrides.get(window_id).filter(|icon| icon.plugin_id == session.plugin_id && icon.app_instance_id == session.instance_id).map(|icon| icon.icon_id.as_str())
+        self.window_icon_overrides.get(window_id).filter(|icon| icon.plugin_id == session.plugin_id && icon.app_id == session.app.id && icon.app_instance_id == session.instance_id).map(|icon| icon.icon_id.as_str())
+    }
+
+    /// 🏷️ Applies an explicit title to one live pane within its current session owner.
+    fn apply_window_title_host_command(&mut self, window_id: &str, title: &str) -> bool {
+        let Some(session) = self.session.as_ref() else { return false };
+        if self.dock_instance_owner.as_ref().is_none_or(|(plugin_id, instance_id, app_id)| plugin_id != &session.plugin_id || *instance_id != session.instance_id || app_id != &session.app.id)
+            || self.dock.window_kind_id(window_id).is_none()
+            || (!self.window_title_overrides.contains_key(window_id) && self.window_title_overrides.len() >= semio_framework::VIEW_CONTEXT_WINDOW_INSTANCES)
+        {
+            return false;
+        }
+        self.window_title_overrides.insert(window_id.to_string(), WindowTitleOverride { plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone(), app_instance_id: session.instance_id, title: title.to_string() });
+        true
+    }
+
+    fn window_title_override(&self, window_id: &str) -> Option<&str> {
+        let session = self.session.as_ref()?;
+        self.window_title_overrides.get(window_id).filter(|title| title.plugin_id == session.plugin_id && title.app_id == session.app.id && title.app_instance_id == session.instance_id).map(|title| title.title.as_str())
     }
 
     /// 🪟️ The window roster a `ViewModel` carries — the Rust twin of React's `sessionWindowInstances`
@@ -8134,6 +8236,7 @@ impl ShellState {
             self.projection_pane_folded.remove(&window_id);
             self.world_projection_template.remove(&window_id);
             self.window_icon_overrides.remove(&window_id);
+            self.window_title_overrides.remove(&window_id);
             self.action_panel_expanded.remove(&window_id);
             self.search_possibles_open.remove(&window_id);
             self.measures_folded.remove(&window_id);
@@ -12008,10 +12111,11 @@ impl ShellState {
         let administration_changed = self.pump_space_administration().await;
         self.flush_pending_directory_commands().await;
         let creation_changed = self.pump_hub_artifact_creation().await;
+        let hub_changed = self.poll_hub_workspace_tasks();
         // 🌉️ Packet W15e: the agent bridge's socket rides the SAME 100 ms slot rather than a timer of
         // its own — one pump cadence for every out-of-process conversation this shell holds.
         let bridge_changed = self.pump_agent_bridge();
-        identity_changed || administration_changed || creation_changed || bridge_changed
+        identity_changed || administration_changed || creation_changed || hub_changed || bridge_changed
     }
 
     //#endregion 📇️DirectoryLane
@@ -12077,11 +12181,14 @@ impl ShellState {
                 self.persist_hub_connection_book();
             }
             hub_action::CANCEL_SIGN_IN => {
+                if let Some(task) = self.hub_sign_in_task.take() {
+                    task.cancel();
+                }
                 self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Failed { code: HubSignInErrorCode::Cancelled, retry_after_seconds: None });
             }
-            hub_action::SIGN_IN => self.run_hub_sign_in_turn().await,
+            hub_action::SIGN_IN => self.start_hub_sign_in(),
             hub_action::SIGN_OUT => self.run_hub_sign_out_turn().await,
-            hub_action::REFRESH_SPACES => self.reload_hub_spaces().await,
+            hub_action::REFRESH_SPACES => self.start_hub_spaces_reload(),
             hub_action::OPEN_SPACE => {
                 self.hub_workspace.open_space_id = (!space_id.is_empty()).then(|| space_id.clone());
                 self.reload_hub_members(&space_id).await;
@@ -12098,7 +12205,7 @@ impl ShellState {
                     self.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Submitting;
                     self.dispatch_directory_command(command).await;
                     self.hub_workspace.space_name_draft.clear();
-                    self.reload_hub_spaces().await;
+                    self.start_hub_spaces_reload();
                 }
             }
             hub_action::CREATE_INVITE => self.run_hub_create_invite_turn(&space_id).await,
@@ -12265,6 +12372,12 @@ impl ShellState {
     }
 
     fn clear_hub_session_owner(&mut self) {
+        if let Some(task) = self.hub_sign_in_task.take() {
+            task.cancel();
+        }
+        if let Some(task) = self.hub_spaces_task.take() {
+            task.cancel();
+        }
         self.directory_client = None;
         self.identity = None;
         self.verified_session_authority = None;
@@ -12281,58 +12394,70 @@ impl ShellState {
         self.hub_workspace.display_name = Some(authority.display_name.clone());
     }
 
-    /// 🔐️ One credential sign-in against the SELECTED hub's own origin, followed immediately by the
-    /// `me` read that carries the deadline the mint answer deliberately omits (AU1 §1.1, AU3 §4.2).
+    /// 🔐️ Arms one credential sign-in against the SELECTED hub's own origin: the mint, then the `me` read that carries
+    /// the deadline the mint answer deliberately omits (AU1 §1.1, AU3 §4.2), run as a [`ShellHubTask`] so the frame keeps
+    /// taking input while the hub hashes the password. A second submit while one runs is ignored (the form disables it).
     ///
-    /// 🔑️ The password draft is cleared the moment the attempt ends, whatever the outcome: a
-    /// password that stays in shell state outlives the one request that needed it.
-    async fn run_hub_sign_in_turn(&mut self) {
+    /// 🔑️ The password draft is cleared the moment the attempt takes it: the one request that needs it owns it.
+    fn start_hub_sign_in(&mut self) {
+        if self.hub_sign_in_task.is_some() {
+            return;
+        }
         let origin = self.hub_workspace.origin().to_string();
         let credential = HubSignInCredential {
             email: self.hub_workspace.email_draft.clone(),
-            password: self.hub_workspace.password_draft.clone(),
+            password: std::mem::take(&mut self.hub_workspace.password_draft),
             device_instance_id: shell_hub_device_instance_id(&self.shell_session_id),
             client_class: if cfg!(target_arch = "wasm32") { HubSignInClientClass::Browser } else { HubSignInClientClass::Native },
         };
         self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Submit);
         let mut ctx = self.directory_ctx();
         ctx.deadline_ms = Some(Self::directory_now_ms().saturating_add(HUB_SIGN_IN_DEADLINE_MS));
-        let outcome = crate::hub_connection::run_hub_sign_in(&self.directory_transport, &ctx, &origin, &credential).await;
-        self.hub_workspace.password_draft.clear();
-        match outcome {
-            crate::hub_connection::HubSignInOutcome::Failed { code, retry_after_seconds } => {
+        let cancel = ctx.cancel.clone();
+        let transport = self.directory_transport.clone();
+        self.hub_sign_in_task = Some(ShellHubTask::spawn(cancel, async move {
+            let result = match crate::hub_connection::run_hub_sign_in(&transport, &ctx, &origin, &credential).await {
+                crate::hub_connection::HubSignInOutcome::Failed { code, retry_after_seconds } => return ShellHubSignInAnswer::Failed { code, retry_after_seconds },
+                crate::hub_connection::HubSignInOutcome::Minted(result) => result,
+            };
+            let Ok(credential) = LocalHubCredential::from_minted_session(&origin, &result.token) else {
+                return ShellHubSignInAnswer::Failed { code: HubSignInErrorCode::InvalidResponse, retry_after_seconds: None };
+            };
+            let credential = std::sync::Arc::new(credential);
+            let client = std::sync::Arc::new(DirectoryClient::authenticated(transport, credential.clone()));
+            match client.me(&ctx).await {
+                Ok(authority) if authority.user_id == result.user_id => ShellHubSignInAnswer::Verified { origin, user_id: result.user_id, credential, client, authority },
+                Ok(_) | Err(_) => ShellHubSignInAnswer::Unverified,
+            }
+        }));
+    }
+
+    /// 🔐️ Applies one sign-in answer: a verified session owns the directory client, the socket grants and the book's
+    /// last user, then the spaces read starts on its own task; a session verified for a hub no longer selected is
+    /// dropped; anything else is the session's localized error.
+    fn apply_hub_sign_in(&mut self, answer: ShellHubSignInAnswer) {
+        match answer {
+            ShellHubSignInAnswer::Failed { code, retry_after_seconds } => {
                 self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Failed { code, retry_after_seconds });
             }
-            crate::hub_connection::HubSignInOutcome::Minted(result) => {
-                let credential = match LocalHubCredential::from_minted_session(&origin, &result.token) {
-                    Ok(credential) => std::sync::Arc::new(credential),
-                    Err(_) => {
-                        self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Failed { code: HubSignInErrorCode::InvalidResponse, retry_after_seconds: None });
-                        return;
-                    }
-                };
-                let client = std::sync::Arc::new(DirectoryClient::authenticated(self.directory_transport.clone(), credential.clone()));
-                match client.me(&ctx).await {
-                    Ok(authority) if authority.user_id == result.user_id => {
-                        self.identity = Some(Identity { user_id: authority.user_id.clone(), email: authority.email.clone(), display_name: authority.display_name.clone(), hub_base_url: origin.clone(), issued_at_ms: chrome_now_ms() as i64 });
-                        self.verified_session_authority = Some(authority);
-                        self.directory_client = Some(client.clone());
-                        self.document_host.set_local_hub_credential(credential);
-                        self.document_host.set_hub_socket_grant_source(client);
-                        let selected_id = self.hub_workspace.book.selected_id.clone();
-                        if let Some(connection) = self.hub_workspace.book.connections.iter_mut().find(|connection| connection.id == selected_id) {
-                            connection.last_user_id = Some(result.user_id);
-                        }
-                        self.persist_hub_connection_book();
-                        self.project_verified_hub_authority();
-                    }
-                    Ok(_) | Err(_) => {
-                        self.clear_hub_session_owner();
-                        self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Failed { code: HubSignInErrorCode::InvalidResponse, retry_after_seconds: None });
-                        return;
-                    }
+            ShellHubSignInAnswer::Verified { origin, user_id, credential, client, authority } if origin == self.hub_workspace.origin() => {
+                self.identity = Some(Identity { user_id: authority.user_id.clone(), email: authority.email.clone(), display_name: authority.display_name.clone(), hub_base_url: origin, issued_at_ms: chrome_now_ms() as i64 });
+                self.verified_session_authority = Some(authority);
+                self.directory_client = Some(client.clone());
+                self.document_host.set_local_hub_credential(credential);
+                self.document_host.set_hub_socket_grant_source(client);
+                let selected_id = self.hub_workspace.book.selected_id.clone();
+                if let Some(connection) = self.hub_workspace.book.connections.iter_mut().find(|connection| connection.id == selected_id) {
+                    connection.last_user_id = Some(user_id);
                 }
-                self.reload_hub_spaces().await;
+                self.persist_hub_connection_book();
+                self.project_verified_hub_authority();
+                self.start_hub_spaces_reload();
+            }
+            ShellHubSignInAnswer::Verified { .. } => {}
+            ShellHubSignInAnswer::Unverified => {
+                self.clear_hub_session_owner();
+                self.hub_workspace.session = reduce_hub_session(&self.hub_workspace.session, &HubSessionEvent::Failed { code: HubSignInErrorCode::InvalidResponse, retry_after_seconds: None });
             }
         }
     }
@@ -12390,7 +12515,7 @@ impl ShellState {
             Ok(()) => {
                 self.hub_workspace.redemption_error = None;
                 self.hub_workspace.invite_draft.clear();
-                self.reload_hub_spaces().await;
+                self.start_hub_spaces_reload();
             }
             Err(DirectoryClientError::Unauthorized) => self.hub_workspace.redemption_error = Some(crate::space_browser::InviteRedemptionErrorCode::Unauthorized),
             Err(DirectoryClientError::Http { status, .. }) => self.hub_workspace.redemption_error = Some(crate::space_browser::invite_redemption_error_from_status(status)),
@@ -12405,18 +12530,47 @@ impl ShellState {
     /// 🏘️ Reloads the space list through the shell's own directory client. A hub that stops
     /// answering leaves the rows on screen and moves the phase to `Stale` rather than emptying a
     /// list the human was reading.
-    async fn reload_hub_spaces(&mut self) {
+    /// 🏘️ Arms one spaces read on a [`ShellHubTask`] (a replaced read is cancelled); the list shows `Loading` and keeps
+    /// the rows it had, which is the local-first rule the `Stale` phase already defends.
+    fn start_hub_spaces_reload(&mut self) {
+        if let Some(task) = self.hub_spaces_task.take() {
+            task.cancel();
+        }
         let Some(client) = self.directory_client.clone() else {
             self.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Stale;
             return;
         };
-        match client.spaces(&self.directory_ctx()).await {
-            Ok(entries) => {
-                self.hub_workspace.rows = crate::space_browser::space_rows(&entries);
-                self.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Ready;
-            }
-            Err(_) => self.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Stale,
+        self.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Loading;
+        let ctx = self.directory_ctx();
+        let cancel = ctx.cancel.clone();
+        self.hub_spaces_task = Some(ShellHubTask::spawn(cancel, async move { client.spaces(&ctx).await.map(|entries| crate::space_browser::space_rows(&entries)).map_err(|_| ()) }));
+    }
+
+    /// 📬️ Reads the answers of the hub workspace's spawned requests, once each; answers whether the workspace changed.
+    fn poll_hub_workspace_tasks(&mut self) -> bool {
+        let mut changed = false;
+        if let Some(answer) = self.hub_sign_in_task.as_ref().and_then(ShellHubTask::answer) {
+            self.hub_sign_in_task = None;
+            self.apply_hub_sign_in(answer.unwrap_or(ShellHubSignInAnswer::Failed { code: HubSignInErrorCode::Unreachable, retry_after_seconds: None }));
+            changed = true;
         }
+        if let Some(answer) = self.hub_spaces_task.as_ref().and_then(ShellHubTask::answer) {
+            self.hub_spaces_task = None;
+            match answer.and_then(|rows| rows) {
+                Ok(rows) => {
+                    self.hub_workspace.rows = rows;
+                    self.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Ready;
+                }
+                Err(()) => self.hub_workspace.phase = crate::space_browser::SpaceBrowserPhase::Stale,
+            }
+            changed = true;
+        }
+        changed
+    }
+
+    /// 🔐️ Whether no hub workspace request is in flight.
+    pub(crate) fn hub_workspace_settled(&self) -> bool {
+        self.hub_sign_in_task.is_none() && self.hub_spaces_task.is_none()
     }
 
     /// 👥️ The open space's roster, joined with the hub identities this shell's presence lane sees.
@@ -13076,6 +13230,7 @@ impl ShellState {
         let mut changed = self.pump_space_administration().await || inference_changed || bridge_changed;
         changed |= self.pump_hub_artifact_creation().await;
         changed |= self.pump_hub_check_in().await;
+        changed |= self.poll_hub_workspace_tasks();
         let runner = self.directory_home.as_ref().and_then(|home| home.stream.clone());
         if let Some(runner) = runner {
             if runner.take_terminal() {
@@ -13820,7 +13975,7 @@ impl ShellState {
             self.hub_workspace_open = true;
             self.project_verified_hub_authority();
             if self.hub_workspace.session.phase == HubSessionPhase::SignedIn {
-                self.reload_hub_spaces().await;
+                self.start_hub_spaces_reload();
             }
             return self.refresh_ui(UiDirtyScope::Full).await;
         }
@@ -14746,8 +14901,11 @@ impl ShellState {
         crate::scenes::seal_host_temporal_candidates(witness.0);
         crate::scenes::seal_table_stepper_accessibility_candidates(witness.0);
         crate::scenes::seal_table_editable_text_accessibility_candidates(witness.0);
+        crate::scenes::seal_table_button_accessibility_candidates(witness.0);
         crate::scenes::seal_vfs_accessibility_candidates(witness.0);
         crate::scenes::seal_block_list_accessibility_candidates(witness.0);
+        crate::scenes::seal_event_feed_accessibility_candidates(witness.0);
+        crate::scenes::seal_graph_timeline_accessibility_candidates(witness.0);
         Ok(witness)
     }
 
@@ -14775,8 +14933,11 @@ impl ShellState {
         crate::scenes::acknowledge_host_temporal_candidates(witness.0);
         crate::scenes::acknowledge_table_stepper_accessibility_candidates(witness.0);
         crate::scenes::acknowledge_table_editable_text_accessibility_candidates(witness.0);
+        crate::scenes::acknowledge_table_button_accessibility_candidates(witness.0);
         crate::scenes::acknowledge_vfs_accessibility_candidates(witness.0);
         crate::scenes::acknowledge_block_list_accessibility_candidates(witness.0);
+        crate::scenes::acknowledge_event_feed_accessibility_candidates(witness.0);
+        crate::scenes::acknowledge_graph_timeline_accessibility_candidates(witness.0);
         std::mem::swap(&mut self.retained_hit_windows, &mut self.retained_hit_windows_staging);
         std::mem::swap(&mut self.retained_scene_hits, &mut self.retained_scene_hits_staging);
         std::mem::swap(&mut self.widget_maps, &mut self.widget_maps_staging);
@@ -14819,8 +14980,11 @@ impl ShellState {
         crate::scenes::discard_host_temporal_candidates(witness.0);
         crate::scenes::discard_table_stepper_accessibility_candidates(witness.0);
         crate::scenes::discard_table_editable_text_accessibility_candidates(witness.0);
+        crate::scenes::discard_table_button_accessibility_candidates(witness.0);
         crate::scenes::discard_vfs_accessibility_candidates(witness.0);
         crate::scenes::discard_block_list_accessibility_candidates(witness.0);
+        crate::scenes::discard_event_feed_accessibility_candidates(witness.0);
+        crate::scenes::discard_graph_timeline_accessibility_candidates(witness.0);
         self.presented_input_candidate = None;
         true
     }
@@ -15557,8 +15721,18 @@ impl ShellState {
             // `folded` state and nothing else.
             id if id.starts_with("shell.projection.template.") => {
                 if let Some((window_id, template_id)) = id.trim_start_matches("shell.projection.template.").split_once("::") {
-                    let (window_id, template) = (window_id.to_string(), world_projection_template(template_id));
-                    let (id, family, orientation, oblique) = (template.id.to_string(), template.family, template.orientation, template.oblique_off_axis);
+                    let effective_id = match template_id {
+                        "parallel" => "orthographic",
+                        "axonometric" => "axonometric-isometric",
+                        "oblique" => "oblique-cavalier",
+                        "perspective" => "three-point",
+                        other => other,
+                    };
+                    let (window_id, template) = (window_id.to_string(), world_projection_template(effective_id));
+                    if !self.apply_window_title_host_command(&window_id, template.label) {
+                        return Ok(true);
+                    }
+                    let (id, mode) = (template.id.to_string(), template.mode);
                     self.world_projection_template.insert(window_id.clone(), id);
                     let _ = self.apply_window_icon_host_command(&window_id, template.icon_id);
                     // 🔀️ React's switch is view state ONLY on the plugin's side — no `setProjection`
@@ -15569,7 +15743,7 @@ impl ShellState {
                     // through the bounded interaction lane. Both halves, or the chip changes an icon
                     // and nothing else.
                     if let Some(world) = self.world3d_state_for_window_mut(&window_id) {
-                        if infinite_world::world::apply_world3d_projection_spec(world, family, orientation, oblique) {
+                        if infinite_world::world::apply_world3d_projection_mode(world, mode) {
                             let settle = WorldInteractionIntent::wheel(0.0, 0.0, 0.0, &ui_wgpu::wgpu::PointerModifiers::default());
                             let _ = enqueue_world3d_events(world, [settle]);
                         }
@@ -17795,6 +17969,7 @@ impl ShellState {
             return false;
         }
         self.window_icon_overrides.remove(window_id);
+        self.window_title_overrides.remove(window_id);
         self.active_window_id = self.dock.active_window_id.clone();
         crate::scenes::request_canvas_pointer_gesture_cancel_for_window(window_id);
         crate::scenes::cancel_scene_list_transfer_for_window(window_id);
@@ -19853,160 +20028,40 @@ pub(crate) struct WorldProjectionTemplate {
     pub icon_id: &'static str,
     /// 🌲️ Depth in React's template tree — a branch is 0, its leaves are 1.
     pub depth: u8,
-    /// 📐️ The camera class this row mounts — React's `worldProjectionFamily`: the whole `Parallel`
-    /// subtree is orthographic, the whole `Perspective` subtree is not.
-    pub family: ui_wgpu::wgpu::CameraProjection3d,
-    /// 📐️ The plane this row's framing measures the content box in — React's
-    /// `worldProjectionDefaults(kind).orientation` (`🎨️r3f/🟦️.tsx`): only `Orthographic` locks to a
-    /// cardinal view (`plan`); every axonometric, oblique and perspective row is free.
-    pub orientation: ui_wgpu::wgpu::WorldProjectionOrientation,
-    /// 📐️ React's `mode.kind === "oblique" && mode.variant !== "military"` — the `Oblique` subtree
-    /// minus `Military`, the one free orientation that still frames in a real plane.
-    pub oblique_off_axis: bool,
+    pub mode: Viewport3dProjectionMode,
 }
 
 impl WorldProjectionTemplate {
-    /// 📐️ React's `worldProjectionOrientationLook` for the selectable template taxonomy.
-    fn initial_look(self) -> ([f32; 3], [f32; 3]) {
-        match self.id {
-            "orthographic" => ([0.0, 0.0, 1.0], [0.0, 1.0, 0.0]),
-            "two-point" => ([std::f32::consts::FRAC_1_SQRT_2, -std::f32::consts::FRAC_1_SQRT_2, 0.0], [0.0, 0.0, 1.0]),
-            "oblique" | "oblique-cabinet" | "oblique-cavalier" => ([0.0, -1.0, 0.0], [0.0, 0.0, 1.0]),
-            "oblique-military" => ([0.0, 0.0, 1.0], [std::f32::consts::FRAC_1_SQRT_2, std::f32::consts::FRAC_1_SQRT_2, 0.0]),
-            _ => ([0.75, -0.75, 0.55], [0.0, 0.0, 1.0]),
-        }
+    /// 📐️ React's complete template spec for a newly opened pane.
+    fn spec(self) -> Viewport3dProjectionSpec {
+        let orientation = match self.mode {
+            Viewport3dProjectionMode::Orthographic {} => Viewport3dProjectionOrientation::Cardinal { view: Viewport3dOrthographicView::Plan },
+            Viewport3dProjectionMode::Axonometric { .. } => Viewport3dProjectionOrientation::Corner { quadrant: Viewport3dAxonometricQuadrant::Ne, hemisphere: Some(Viewport3dAxonometricHemisphere::Upper) },
+            Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Military, .. } => Viewport3dProjectionOrientation::Cardinal { view: Viewport3dOrthographicView::Plan },
+            Viewport3dProjectionMode::Oblique { .. } | Viewport3dProjectionMode::OnePoint { .. } => Viewport3dProjectionOrientation::Cardinal { view: Viewport3dOrthographicView::Front },
+            _ => Viewport3dProjectionOrientation::Free {},
+        };
+        Viewport3dProjectionSpec { mode: self.mode, orientation }
     }
 }
 
 /// 🔀️ React's projection taxonomy, depth-first, branch before its own leaves.
 pub(crate) const WORLD_PROJECTION_TEMPLATES: &[WorldProjectionTemplate] = &[
-    WorldProjectionTemplate {
-        id: "parallel",
-        label: "Parallel",
-        icon_id: "projection-parallel",
-        depth: 0,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "orthographic",
-        label: "Orthographic",
-        icon_id: "projection-orthographic",
-        depth: 1,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal(ui_wgpu::wgpu::WorldCardinalView::Top),
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "axonometric",
-        label: "Axonometric",
-        icon_id: "projection-axonometric",
-        depth: 1,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "axonometric-isometric",
-        label: "Isometric",
-        icon_id: "projection-isometric",
-        depth: 2,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "axonometric-dimetric",
-        label: "Dimetric",
-        icon_id: "projection-dimetric",
-        depth: 2,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "axonometric-trimetric",
-        label: "Trimetric",
-        icon_id: "projection-trimetric",
-        depth: 2,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate { id: "oblique", label: "Oblique", icon_id: "projection-oblique", depth: 1, family: ui_wgpu::wgpu::CameraProjection3d::Orthographic, orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free, oblique_off_axis: true },
-    WorldProjectionTemplate {
-        id: "oblique-cabinet",
-        label: "Cabinet",
-        icon_id: "projection-oblique-cabinet",
-        depth: 2,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: true,
-    },
-    WorldProjectionTemplate {
-        id: "oblique-cavalier",
-        label: "Cavalier",
-        icon_id: "projection-oblique-cavalier",
-        depth: 2,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: true,
-    },
-    WorldProjectionTemplate {
-        id: "oblique-military",
-        label: "Military",
-        icon_id: "projection-oblique-military",
-        depth: 2,
-        family: ui_wgpu::wgpu::CameraProjection3d::Orthographic,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "perspective",
-        label: "Perspective",
-        icon_id: "projection-perspective",
-        depth: 0,
-        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "one-point",
-        label: "1-Point",
-        icon_id: "projection-one-point",
-        depth: 1,
-        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "two-point",
-        label: "2-Point",
-        icon_id: "projection-two-point",
-        depth: 1,
-        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "three-point",
-        label: "3-Point",
-        icon_id: "projection-three-point",
-        depth: 1,
-        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
-    WorldProjectionTemplate {
-        id: "curvilinear",
-        label: "Curvilinear",
-        icon_id: "projection-curvilinear",
-        depth: 1,
-        family: ui_wgpu::wgpu::CameraProjection3d::Perspective,
-        orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
-        oblique_off_axis: false,
-    },
+    WorldProjectionTemplate { id: "parallel", label: "Parallel", icon_id: "projection-parallel", depth: 0, mode: Viewport3dProjectionMode::Orthographic {} },
+    WorldProjectionTemplate { id: "orthographic", label: "Orthographic", icon_id: "projection-orthographic", depth: 1, mode: Viewport3dProjectionMode::Orthographic {} },
+    WorldProjectionTemplate { id: "axonometric", label: "Axonometric", icon_id: "projection-axonometric", depth: 1, mode: Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Isometric, angle_a: 30.0, angle_b: 30.0 } },
+    WorldProjectionTemplate { id: "axonometric-isometric", label: "Isometric", icon_id: "projection-isometric", depth: 2, mode: Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Isometric, angle_a: 15.0, angle_b: 30.0 } },
+    WorldProjectionTemplate { id: "axonometric-dimetric", label: "Dimetric", icon_id: "projection-dimetric", depth: 2, mode: Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Dimetric, angle_a: 15.0, angle_b: 15.0 } },
+    WorldProjectionTemplate { id: "axonometric-trimetric", label: "Trimetric", icon_id: "projection-trimetric", depth: 2, mode: Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Trimetric, angle_a: 12.0, angle_b: 42.0 } },
+    WorldProjectionTemplate { id: "oblique", label: "Oblique", icon_id: "projection-oblique", depth: 1, mode: Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Cavalier, angle: 45.0, depth_scale: 1.0 } },
+    WorldProjectionTemplate { id: "oblique-cabinet", label: "Cabinet", icon_id: "projection-oblique-cabinet", depth: 2, mode: Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Cabinet, angle: 45.0, depth_scale: 0.5 } },
+    WorldProjectionTemplate { id: "oblique-cavalier", label: "Cavalier", icon_id: "projection-oblique-cavalier", depth: 2, mode: Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Cavalier, angle: 45.0, depth_scale: 1.0 } },
+    WorldProjectionTemplate { id: "oblique-military", label: "Military", icon_id: "projection-oblique-military", depth: 2, mode: Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Military, angle: 45.0, depth_scale: 1.0 } },
+    WorldProjectionTemplate { id: "perspective", label: "Perspective", icon_id: "projection-perspective", depth: 0, mode: Viewport3dProjectionMode::ThreePoint { fov: 50.0 } },
+    WorldProjectionTemplate { id: "one-point", label: "1-Point", icon_id: "projection-one-point", depth: 1, mode: Viewport3dProjectionMode::OnePoint { fov: 50.0 } },
+    WorldProjectionTemplate { id: "two-point", label: "2-Point", icon_id: "projection-two-point", depth: 1, mode: Viewport3dProjectionMode::TwoPoint { fov: 50.0, vertical_shift: 0.0 } },
+    WorldProjectionTemplate { id: "three-point", label: "3-Point", icon_id: "projection-three-point", depth: 1, mode: Viewport3dProjectionMode::ThreePoint { fov: 50.0 } },
+    WorldProjectionTemplate { id: "curvilinear", label: "Curvilinear", icon_id: "projection-curvilinear", depth: 1, mode: Viewport3dProjectionMode::Curvilinear { fov: 120.0, strength: 1.0, mapping: Viewport3dCurvilinearMapping::Fisheye } },
 ];
 
 /// 🔀️ The template a pane with no explicit selection reads. React resolves
@@ -20024,16 +20079,7 @@ pub(crate) const WORLD_PROJECTION_PANE_PAINT_OPPORTUNITIES: usize = 1024;
 
 const WORLD_PROJECTION_TEMPLATE_PREFIX: &str = "world-projection:";
 
-#[derive(Clone, Copy)]
-struct WorldProjectionInitialSeed {
-    family: ui_wgpu::wgpu::CameraProjection3d,
-    orientation: ui_wgpu::wgpu::WorldProjectionOrientation,
-    oblique_off_axis: bool,
-    direction: [f32; 3],
-    up: [f32; 3],
-}
-
-fn decoded_world_projection_template(template_id: &str) -> Option<Value> {
+fn decoded_world_projection_template(template_id: &str) -> Option<Viewport3dProjectionSpec> {
     serde_json::from_str(template_id.strip_prefix(WORLD_PROJECTION_TEMPLATE_PREFIX)?).ok()
 }
 
@@ -20041,28 +20087,19 @@ fn world_projection_template_selection_id(template_id: &str) -> Option<&'static 
     if let Some(template) = WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == template_id) {
         return Some(template.id);
     }
-    let projection = decoded_world_projection_template(template_id)?;
-    let mode = projection.get("mode")?;
-    match mode.get("kind")?.as_str()? {
-        "orthographic" => Some("orthographic"),
-        "axonometric" => match mode.get("variant").and_then(Value::as_str) {
-            Some("isometric") => Some("axonometric-isometric"),
-            Some("dimetric") => Some("axonometric-dimetric"),
-            Some("trimetric") => Some("axonometric-trimetric"),
-            _ => Some("axonometric"),
-        },
-        "oblique" => match mode.get("variant").and_then(Value::as_str) {
-            Some("cabinet") => Some("oblique-cabinet"),
-            Some("cavalier") => Some("oblique-cavalier"),
-            Some("military") => Some("oblique-military"),
-            _ => Some("oblique"),
-        },
-        "onePoint" => Some("one-point"),
-        "twoPoint" => Some("two-point"),
-        "threePoint" => Some("three-point"),
-        "curvilinear" => Some("curvilinear"),
-        _ => None,
-    }
+    Some(match decoded_world_projection_template(template_id)?.mode {
+        Viewport3dProjectionMode::Orthographic {} => "orthographic",
+        Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Isometric, .. } => "axonometric-isometric",
+        Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Dimetric, .. } => "axonometric-dimetric",
+        Viewport3dProjectionMode::Axonometric { variant: Viewport3dAxonometricVariant::Trimetric, .. } => "axonometric-trimetric",
+        Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Cabinet, .. } => "oblique-cabinet",
+        Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Cavalier, .. } => "oblique-cavalier",
+        Viewport3dProjectionMode::Oblique { variant: Viewport3dObliqueVariant::Military, .. } => "oblique-military",
+        Viewport3dProjectionMode::OnePoint { .. } => "one-point",
+        Viewport3dProjectionMode::TwoPoint { .. } => "two-point",
+        Viewport3dProjectionMode::ThreePoint { .. } => "three-point",
+        Viewport3dProjectionMode::Curvilinear { .. } => "curvilinear",
+    })
 }
 
 fn world_projection_icon_id_v1(template_id: &str) -> Option<&'static str> {
@@ -20076,73 +20113,8 @@ pub(crate) fn dock_tab_icon_id_v1(kind_icon_id: &str, override_icon_id: Option<&
     override_icon_id.filter(|icon_id| !icon_id.is_empty()).or_else(|| template_id.and_then(world_projection_icon_id_v1)).unwrap_or(kind_icon_id).to_string()
 }
 
-fn world_projection_cardinal_look(view: ui_wgpu::wgpu::WorldCardinalView) -> ([f32; 3], [f32; 3]) {
-    match view {
-        ui_wgpu::wgpu::WorldCardinalView::Top => ([0.0, 0.0, 1.0], [0.0, 1.0, 0.0]),
-        ui_wgpu::wgpu::WorldCardinalView::Bottom => ([0.0, 0.0, -1.0], [0.0, -1.0, 0.0]),
-        ui_wgpu::wgpu::WorldCardinalView::Front => ([0.0, -1.0, 0.0], [0.0, 0.0, 1.0]),
-        ui_wgpu::wgpu::WorldCardinalView::Back => ([0.0, 1.0, 0.0], [0.0, 0.0, 1.0]),
-        ui_wgpu::wgpu::WorldCardinalView::Left => ([-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]),
-        ui_wgpu::wgpu::WorldCardinalView::Right => ([1.0, 0.0, 0.0], [0.0, 0.0, 1.0]),
-    }
-}
-
-/// 📐️ React's `decodeWorldProjectionTemplateId` and `worldProjectionOrientationLook`,
-/// reduced to the camera family, framing plane and initial eye basis the WGPU surface owns.
-fn world_projection_initial_seed(template_id: &str) -> Option<WorldProjectionInitialSeed> {
-    if let Some(template) = WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == template_id) {
-        let (direction, up) = template.initial_look();
-        return Some(WorldProjectionInitialSeed { family: template.family, orientation: template.orientation, oblique_off_axis: template.oblique_off_axis, direction, up });
-    }
-    let projection = decoded_world_projection_template(template_id)?;
-    let mode = projection.get("mode")?;
-    let kind = mode.get("kind")?.as_str()?;
-    let variant = mode.get("variant").and_then(Value::as_str);
-    let orientation_record = projection.get("orientation")?;
-    let orientation_kind = orientation_record.get("type")?.as_str()?;
-    let family = ui_wgpu::wgpu::CameraProjection3d::from_mode_kind(kind);
-    let oblique_off_axis = kind == "oblique" && variant != Some("military");
-    let cardinal = (orientation_kind == "cardinal").then(|| orientation_record.get("view")?.as_str().and_then(ui_wgpu::wgpu::WorldCardinalView::from_wire)).flatten();
-    let orientation = cardinal.map_or(ui_wgpu::wgpu::WorldProjectionOrientation::Free, ui_wgpu::wgpu::WorldProjectionOrientation::Cardinal);
-    let (direction, up) = if let Some(view) = cardinal {
-        if kind == "oblique" && variant == Some("military") && view == ui_wgpu::wgpu::WorldCardinalView::Top {
-            let rotation = mode.get("angle").and_then(Value::as_f64).unwrap_or(45.0).to_radians() as f32;
-            ([0.0, 0.0, 1.0], [rotation.sin(), rotation.cos(), 0.0])
-        } else {
-            world_projection_cardinal_look(view)
-        }
-    } else if orientation_kind == "corner" {
-        let quadrant = orientation_record.get("quadrant")?.as_str()?;
-        let lower = orientation_record.get("hemisphere").and_then(Value::as_str) == Some("lower");
-        let angle_a = if kind == "axonometric" && variant == Some("isometric") { 30.0 } else { mode.get("angleA").and_then(Value::as_f64).unwrap_or(30.0) };
-        let angle_b = if kind == "axonometric" && variant == Some("isometric") {
-            30.0
-        } else if kind == "axonometric" && variant == Some("dimetric") {
-            angle_a
-        } else {
-            mode.get("angleB").and_then(Value::as_f64).unwrap_or(30.0)
-        };
-        let angle_a = (angle_a as f32).to_radians();
-        let angle_b = (angle_b as f32).to_radians();
-        let elevation = (angle_a.tan() * angle_b.tan()).sqrt().asin();
-        let azimuth = (angle_a.tan() / angle_b.tan()).sqrt().atan();
-        let sign_x = if matches!(quadrant, "nw" | "sw") { -1.0 } else { 1.0 };
-        let sign_y = if matches!(quadrant, "se" | "sw") { -1.0 } else { 1.0 };
-        ([sign_x * elevation.cos() * azimuth.sin(), sign_y * elevation.cos() * azimuth.cos(), elevation.sin() * if lower { -1.0 } else { 1.0 }], [0.0, 0.0, if lower { -1.0 } else { 1.0 }])
-    } else if orientation_kind == "free" {
-        match (kind, variant) {
-            ("twoPoint", _) => ([std::f32::consts::FRAC_1_SQRT_2, -std::f32::consts::FRAC_1_SQRT_2, 0.0], [0.0, 0.0, 1.0]),
-            ("oblique", Some("military")) => {
-                let rotation = mode.get("angle").and_then(Value::as_f64).unwrap_or(45.0).to_radians() as f32;
-                ([0.0, 0.0, 1.0], [rotation.sin(), rotation.cos(), 0.0])
-            }
-            ("oblique", _) => ([0.0, -1.0, 0.0], [0.0, 0.0, 1.0]),
-            _ => ([0.75, -0.75, 0.55], [0.0, 0.0, 1.0]),
-        }
-    } else {
-        return None;
-    };
-    Some(WorldProjectionInitialSeed { family, orientation, oblique_off_axis, direction, up })
+fn world_projection_initial_seed(template_id: &str) -> Option<Viewport3dProjectionSpec> {
+    WORLD_PROJECTION_TEMPLATES.iter().find(|template| template.id == template_id).copied().map(WorldProjectionTemplate::spec).or_else(|| decoded_world_projection_template(template_id))
 }
 
 /// 📐️ The width of the whole projection column — the widest indented row, so every level reads
@@ -20210,7 +20182,7 @@ impl ShellState {
         let Some(template_id) = self.world_projection_template.get(window_id) else { return };
         let Some(seed) = world_projection_initial_seed(template_id) else { return };
         let Some(world) = self.world3d_state_for_window_mut(window_id) else { return };
-        let _ = infinite_world::world::apply_world3d_initial_projection_seed(world, seed.family, seed.orientation, seed.oblique_off_axis, seed.direction, seed.up);
+        let _ = infinite_world::world::apply_world3d_initial_projection_seed(world, seed);
     }
 
     /// 🎛️ React's `Window` `utilityBarFolded` — `useState(true)`, so a pane's Utilities rail starts
@@ -25732,8 +25704,7 @@ impl ShellState {
             let Some(kind) = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id) else {
                 continue;
             };
-            let retitled = self.dock_input_identity.as_ref().is_some_and(|input| input.retitled);
-            labels.insert(window_id.clone(), if retitled { kind.label.resolve(terminology, locale).to_string() } else { instance_titles.get(&window_id).cloned().unwrap_or_else(|| kind.label.resolve(terminology, locale).to_string()) });
+            labels.insert(window_id.clone(), self.window_title_override(&window_id).map(str::to_string).or_else(|| instance_titles.get(&window_id).cloned()).unwrap_or_else(|| kind.label.resolve(terminology, locale).to_string()));
             let icon_id = dock_tab_icon_id_v1(kind.icon_id.as_str(), self.window_icon_override(&window_id), self.world_projection_template.get(&window_id).map(String::as_str));
             if !icon_id.is_empty() {
                 icon_ids.insert(window_id, icon_id);
@@ -31358,6 +31329,9 @@ fn theme_paint_rgba(colors: &BTreeMap<String, String>, group: &BTreeMap<String, 
 pub(crate) fn theme_from_document(document: &ThemeDocument, dark: bool) -> Theme {
     let mut theme = if dark { Theme::dark() } else { Theme::light() };
     let colors = &document.colors;
+    if let Some([r, g, b]) = colors.get("diff-added").map(|hex| theme_parse_hex6(hex)) {
+        theme.diff_added = Rgba::from_srgb8(r, g, b, 255);
+    }
     let appearance = document.appearances.get(if dark { "dark" } else { "light" });
     if let Some(chrome) = appearance.and_then(|groups| groups.get("chrome")) {
         let paint = |key: &str, fallback: Rgba| theme_paint_rgba(colors, chrome, key, fallback);

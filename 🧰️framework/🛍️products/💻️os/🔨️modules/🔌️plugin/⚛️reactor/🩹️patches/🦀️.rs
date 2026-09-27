@@ -654,9 +654,35 @@ impl PatchTracker {
                 )
             })
             .collect();
-        let ready: Vec<String> = state.ready.iter().flatten().map(|ready| format!("g{}:{}{}{}{}", ready.generation, if ready.published { "p" } else { "-" }, if ready.closing { "c" } else { "-" }, if ready.reservation.is_some() { "r" } else { "-" }, if ready.outputs.terminal_is_empty() { "e" } else { "-" })).collect();
-        let terminals: Vec<String> = state.terminals.iter().flatten().map(|terminal| format!("g{}:{}{}{}", terminal.authority.generation(), if terminal.close { "c" } else { "-" }, if terminal.authority.fault().is_some() { "F" } else { "-" }, if terminal.authority.terminal_is_empty() { "e" } else { "-" })).collect();
-        let producer_terminals: Vec<String> = state.producer_terminals.iter().flatten().map(|terminal| format!("{}:{}{}{}{}", terminal.surface.as_ref(), if terminal.close { "c" } else { "-" }, if terminal.authority.is_some() { "A" } else { "-" }, if terminal.reconciler.is_some() { "R" } else { "-" }, if terminal.reservation.is_some() { "V" } else { "-" })).collect();
+        let ready: Vec<String> = state
+            .ready
+            .iter()
+            .flatten()
+            .map(|ready| {
+                format!("g{}:{}{}{}{}", ready.generation, if ready.published { "p" } else { "-" }, if ready.closing { "c" } else { "-" }, if ready.reservation.is_some() { "r" } else { "-" }, if ready.outputs.terminal_is_empty() { "e" } else { "-" })
+            })
+            .collect();
+        let terminals: Vec<String> = state
+            .terminals
+            .iter()
+            .flatten()
+            .map(|terminal| format!("g{}:{}{}{}", terminal.authority.generation(), if terminal.close { "c" } else { "-" }, if terminal.authority.fault().is_some() { "F" } else { "-" }, if terminal.authority.terminal_is_empty() { "e" } else { "-" }))
+            .collect();
+        let producer_terminals: Vec<String> = state
+            .producer_terminals
+            .iter()
+            .flatten()
+            .map(|terminal| {
+                format!(
+                    "{}:{}{}{}{}",
+                    terminal.surface.as_ref(),
+                    if terminal.close { "c" } else { "-" },
+                    if terminal.authority.is_some() { "A" } else { "-" },
+                    if terminal.reconciler.is_some() { "R" } else { "-" },
+                    if terminal.reservation.is_some() { "V" } else { "-" }
+                )
+            })
+            .collect();
         let deferred: Vec<String> = state.deferred.iter().flatten().map(|surface| surface.as_ref().to_owned()).collect();
         format!(
             "slots=[{}] ready=[{}] terminals=[{}] producer_terminals=[{}] deferred=[{}] rejected={} unadmitted={} closing={} output_fault={} reserve_refusal={} registry={} generation_exhausted={} close_cursor={}",
@@ -669,10 +695,7 @@ impl PatchTracker {
             state.unadmitted.iter().flatten().count(),
             state.closing_instances.iter().flatten().count(),
             state.output_fault.as_ref().map_or("none", |fault| fault.1),
-            state.reserve_refusal.as_ref().map_or_else(
-                || "none".to_string(),
-                |(index, reason, _)| format!("{}:{reason}", state.slots.get(usize::from(*index)).and_then(Option::as_ref).map_or("unmounted", |slot| slot.surface.as_ref())),
-            ),
+            state.reserve_refusal.as_ref().map_or_else(|| "none".to_string(), |(index, reason, _)| format!("{}:{reason}", state.slots.get(usize::from(*index)).and_then(Option::as_ref).map_or("unmounted", |slot| slot.surface.as_ref())),),
             registry_census_line(),
             state.generation_exhausted,
             state.close_cursor
@@ -1061,9 +1084,10 @@ impl PatchTracker {
             state.closing_instances[closing_index].as_mut().expect("exact retained close receipt").complete = true;
             return false;
         }
-        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS).map(|offset| (state.close_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS).find(|index| {
-            state.producer_terminals[*index].as_ref().is_some_and(|slot| slot.close) || state.terminals[*index].as_ref().is_some_and(|slot| slot.close)
-        }) else {
+        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .map(|offset| (state.close_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .find(|index| state.producer_terminals[*index].as_ref().is_some_and(|slot| slot.close) || state.terminals[*index].as_ref().is_some_and(|slot| slot.close))
+        else {
             return true;
         };
         state.close_cursor = (index + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
@@ -1262,12 +1286,7 @@ fn drive_job_one(state: &mut PatchTrackerState, index: usize) {
 /// producer/job and the host has acknowledged the slot's current revision (the predicate
 /// `take_deferred_ready` releases on).
 fn deferred_surface_ready(state: &PatchTrackerState, surface: &ui_contract::SurfaceId) -> bool {
-    state
-        .slots
-        .iter()
-        .flatten()
-        .find(|slot| slot.surface == *surface)
-        .is_none_or(|slot| slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0))
+    state.slots.iter().flatten().find(|slot| slot.surface == *surface).is_none_or(|slot| slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0))
 }
 
 fn has_work(state: &PatchTrackerState) -> bool {
@@ -1299,10 +1318,7 @@ fn commit_generation(state: &mut PatchTrackerState, generation: u64) {
 /// `resident=4s/33550336B of 33554432B` is a credit accounting fact, not a guess.
 fn registry_census_line() -> String {
     let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
-    format!(
-        "resident={}s/{}i/{}B of {}B handback={}/{}",
-        census.resident_slots, census.resident_items, census.resident_bytes, census.resident_aggregate_bytes, census.handback_free, census.handback_slots
-    )
+    format!("resident={}s/{}i/{}B of {}B handback={}/{}", census.resident_slots, census.resident_items, census.resident_bytes, census.resident_aggregate_bytes, census.handback_free, census.handback_slots)
 }
 
 fn surface_instance(surface: &str) -> Option<u32> {

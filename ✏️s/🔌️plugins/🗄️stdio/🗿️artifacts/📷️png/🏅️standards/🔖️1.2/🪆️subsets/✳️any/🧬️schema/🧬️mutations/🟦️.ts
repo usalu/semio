@@ -16,8 +16,10 @@ import type { PatchPixelsMutation } from './🩹️patch-pixels/🟦️.ts';
 import type { InsertUnknownChunkMutation } from './📦️insert-unknown-chunk/🟦️.ts';
 import type { RemoveUnknownChunkMutation } from './📤️remove-unknown-chunk/🟦️.ts';
 import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
+import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type PngMutation =
   | { readonly mutation: 'set-snapshot'; readonly payload: SetSnapshot }
+  | { readonly mutation: 'patch-snapshot'; readonly payload: { readonly patch: SnapshotPatch } }
   | { readonly mutation: 'change-header'; readonly payload: ChangeHeaderMutation }
   | { readonly mutation: 'replace-palette'; readonly payload: ReplacePaletteMutation }
   | { readonly mutation: 'change-transparency'; readonly payload: ChangeTransparencyMutation }

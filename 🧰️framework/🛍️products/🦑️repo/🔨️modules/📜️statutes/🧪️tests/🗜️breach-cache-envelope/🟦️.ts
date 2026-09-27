@@ -8,7 +8,6 @@
 
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { defineTestAdapter } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
@@ -60,9 +59,7 @@ export default defineTestAdapter({
     "a-member-inflates-anywhere": {
       oracle: (ctx) => {
         const file = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes("shared://🗜️breach-cache-envelope/🔣️vectors.json"))) as { payloads: string[] };
-        const rawPath = (ctx.plan as unknown as { subjectRawInputs?: Record<string, string> }).subjectRawInputs?.rust;
-        if (rawPath === undefined) throw new Error("no raw subject output from rust; run the subject phase before this byte-decoding oracle");
-        const members = unframe(new Uint8Array(readFileSync(rawPath)));
+        const members = unframe(new Uint8Array(ctx.subjectRawBytes("rust")));
         return {
           projection: {
             recovered: members.map((member) => digestHex(new Uint8Array(gunzipSync(member)))),

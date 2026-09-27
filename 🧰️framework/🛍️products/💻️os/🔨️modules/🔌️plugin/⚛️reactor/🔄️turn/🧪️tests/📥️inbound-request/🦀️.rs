@@ -95,10 +95,7 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
             }
             let req = (index as u64) + 1;
             let effects = drive_inbound_request(&runtime, req, &row.capability, &row.request_text).await;
-            let answers: Vec<&semio_framework::kernel::RequestOutcome> = effects
-                .iter()
-                .filter_map(|effect| if let Effect::Respond { req: answered, result } = effect { (answered.0 == req).then_some(result) } else { None })
-                .collect();
+            let answers: Vec<&semio_framework::kernel::RequestOutcome> = effects.iter().filter_map(|effect| if let Effect::Respond { req: answered, result } = effect { (answered.0 == req).then_some(result) } else { None }).collect();
             assert_eq!(answers.len(), 1, "{} must be answered exactly once", row.name);
             match (&row.outcome[..], answers[0]) {
                 ("ok", semio_framework::kernel::RequestOutcome::Ok(bytes)) => {

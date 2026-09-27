@@ -444,6 +444,43 @@ fn window_caps_read_the_authored_instance_title() {
     assert_eq!(bare.get("main").map(String::as_str), Some("Main"), "🏷️ a bare window KIND still wears its manifest label");
 }
 
+#[test]
+fn locale_roundtrip_preserves_instance_titles_and_localizes_singletons() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🌐️instance-title/🔣️.json")).expect("instance title fixture");
+    let mut app = split_pane_app();
+    let kind_id = fixture["windowKind"].as_str().unwrap();
+    app.window_kinds[0].id = kind_id.into();
+    app.window_kinds[0].label = LocalizedLabel::native("Puzzle 3D", "Puzzle 3D");
+    let mut singleton = app.window_kinds[0].clone();
+    singleton.id = fixture["singleton"]["id"].as_str().unwrap().into();
+    singleton.label = LocalizedLabel::native(fixture["singleton"]["en"].as_str().unwrap(), fixture["singleton"]["de"].as_str().unwrap());
+    app.window_kinds.push(singleton);
+    let mut children: Vec<_> = fixture["instances"].as_array().unwrap().iter().map(|instance| WindowLayoutChild::Stack(WindowLayoutStackNode {
+        kind: "stack".into(), size: Some(30.0), active_window_kind_id: None,
+        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: kind_id.into(), title: Some(instance["title"].as_str().unwrap().into()), instance_id: Some(instance["id"].as_str().unwrap().into()), template_id: None, corner: None }],
+    })).collect();
+    children.push(WindowLayoutChild::Stack(WindowLayoutStackNode {
+        kind: "stack".into(), size: Some(40.0), active_window_kind_id: None,
+        children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: fixture["singleton"]["id"].as_str().unwrap().into(), title: None, instance_id: None, template_id: None, corner: None }],
+    }));
+    app.default_layout = Some(WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children }) });
+    let ids: Vec<&str> = fixture["instances"].as_array().unwrap().iter().map(|instance| instance["id"].as_str().unwrap()).chain(std::iter::once(fixture["singleton"]["id"].as_str().unwrap())).collect();
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.session = Some(ActiveSession { plugin_id: "instance-title-fixture".into(), instance_id: 1, app, view_state: ViewModel::default() });
+    for transition in fixture["transitions"].as_array().unwrap() {
+        shell.locale_id = transition["locale"].as_str().unwrap().into();
+        shell.sync_dock();
+        let (labels, _) = shell.dock_chrome_maps();
+        let expected: Vec<_> = transition["titles"].as_array().unwrap().iter().map(|title| title.as_str().unwrap()).collect();
+        assert_eq!(ids.iter().map(|id| labels.get(*id).unwrap().as_str()).collect::<Vec<_>>(), expected);
+        let identity = shell.dock_input_identity.as_ref().unwrap().mode_layout.as_ref().unwrap();
+        let WindowLayoutRoot::Axis(axis) = &identity.root else { panic!("row identity") };
+        let titles: Vec<_> = axis.children.iter().flat_map(|child| match child { WindowLayoutChild::Stack(stack) => stack.children.iter().map(|leaf| leaf.title.as_deref().unwrap()).collect::<Vec<_>>(), _ => panic!("stack identity") }).collect();
+        assert_eq!(titles, expected);
+        assert_eq!(axis.children.iter().map(|child| match child { WindowLayoutChild::Stack(stack) => stack.size, _ => None }).collect::<Vec<_>>(), [Some(30.0), Some(30.0), Some(40.0)]);
+    }
+}
+
 /// 🧰️ **The rail-paint pin.** Unfolding a pane's Utilities chip paints the app's own utility chips on
 /// that pane's bottom row, to the RIGHT of the chip and inside the pane — the place React's
 /// `bottom-left` `Pane` body grows into. Folded, the rail paints nothing at all.

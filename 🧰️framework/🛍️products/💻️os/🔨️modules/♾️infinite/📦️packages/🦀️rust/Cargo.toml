@@ -43,6 +43,7 @@ math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/�
 geometry = { path = "../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+semio-framework-ui-viewport = { path = "../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 semio_framework_3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 compiler = { path = "../../../../../../🔨️modules/📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
 serde = { version = "1.0.219", features = ["derive"] }

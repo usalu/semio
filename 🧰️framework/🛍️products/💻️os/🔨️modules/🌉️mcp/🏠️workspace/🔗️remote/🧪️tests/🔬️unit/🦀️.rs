@@ -208,6 +208,22 @@ async fn authenticated_hub_workspace_rejects_public_nonmember_and_cross_space_at
 }
 
 #[tokio::test]
+async fn an_agent_binds_at_its_capped_role_below_its_account_but_no_principal_differs_upward_or_as_a_human() {
+    let contract = fixture();
+    let (client, _) = client_for(&contract["cases"]["agentBelowMembership"]);
+    let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
+    let snapshot = binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap();
+    assert_eq!((snapshot.space.role, snapshot.membership.role), (DirectorySpaceRole::Spectator, DirectorySpaceRole::Author));
+    assert!(snapshot.documents.contains_key(&DocumentScope::new("space-a", "shared-doc")));
+    for case_name in ["humanBelowMembership", "principalAboveMembership"] {
+        let (client, _) = client_for(&contract["cases"][case_name]);
+        let binding = HubRemoteBinding::new("http://hub.invalid", "space-a").unwrap();
+        assert_eq!(binding.refresh(&client, &context(Some(20_000)), 1_000, 10_000).await.unwrap_err(), HubBindingError::MembershipRequired, "{case_name}");
+        assert!(matches!(binding.state(), HubRemoteBindingState::Revoked), "{case_name}");
+    }
+}
+
+#[tokio::test]
 async fn authenticated_hub_workspace_unauthorized_cancelled_and_deadline_never_publish() {
     let contract = fixture();
     let (client, _) = client_for(&contract["cases"]["expiredToken"]);
@@ -354,4 +370,13 @@ fn authenticated_hub_workspace_fixed_caps_and_scoped_uri_laws() {
     assert!(bounded_diagnostic(&"é".repeat(HUB_BINDING_DIAGNOSTIC_MAX_BYTES)).len() <= HUB_BINDING_DIAGNOSTIC_MAX_BYTES);
     assert_eq!(validate_document_count(HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS, HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS as u32), Ok(()));
     assert_eq!(validate_document_count(HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS + 1, (HUB_DESCRIPTOR_INDEX_MAX_DOCUMENTS + 1) as u32), Err(HubBindingError::CapacityExceeded));
+}
+
+#[test]
+fn a_directory_dial_refusal_names_its_cause_and_stays_retryable() {
+    let refusal = directory_dial_refusal(&"http 413: Failed to buffer the request body: length limit exceeded");
+    assert_eq!(refusal.code, GatewayErrorCode::PluginUnavailable);
+    assert!(refusal.retryable, "a failed dial is retried by the stream's reconnect ladder");
+    assert!(refusal.message.contains("http 413: Failed to buffer the request body"), "the dial's own cause is named: {}", refusal.message);
+    assert!(refusal.message.contains("authenticated snapshot was not activated"));
 }

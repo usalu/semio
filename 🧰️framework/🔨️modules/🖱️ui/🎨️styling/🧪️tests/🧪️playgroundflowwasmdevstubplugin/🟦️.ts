@@ -60,6 +60,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(deps.include).toEqual(expect.arrayContaining(["scheduler", "stats.js", "use-sync-external-store/shim/index.js", "use-sync-external-store/shim/with-selector.js"]));
       expect(deps.exclude).not.toEqual(expect.arrayContaining(["use-sync-external-store/shim/with-selector.js"]));
     });
+    it("prebundles three-stdlib, the barrel every drei control imports, so a cold boot fetches one module instead of 282", () => {
+      const deps = playgroundSceneHostOptimizeDeps();
+      expect(deps.include).toEqual(expect.arrayContaining(["three", "three-stdlib"]));
+      expect(deps.exclude).not.toContain("three-stdlib");
+    });
   });
 
   describe("resolveGisMapTileServeMode", () => {

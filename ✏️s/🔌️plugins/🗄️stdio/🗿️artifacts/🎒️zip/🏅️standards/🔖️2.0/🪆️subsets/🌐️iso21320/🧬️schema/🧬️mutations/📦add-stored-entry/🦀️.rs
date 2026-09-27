@@ -10,6 +10,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 pub struct AddStoredEntry {
     pub(crate) entry: ZipEntry,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) before: Option<String>,
 }
 
 impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for AddStoredEntry {

@@ -123,6 +123,17 @@ impl AgentPrincipal {
 }
 //#endregion 🔖️AgentPrincipal
 
+/// 🔐️ Whether `principal` holds every scope `capability` declares — the one scope rule every tool applies BEFORE it reads its
+/// arguments or reaches a shell, a workspace or a hub, so an unauthorized caller learns nothing but the refusal.
+pub fn authorize_capability_scopes(principal: &AgentPrincipal, capability: &CapabilityDefinition) -> Result<(), GatewayError> {
+    for scope in &capability.policy.scopes {
+        if !principal.grants(scope) {
+            return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, format!("principal {} lacks required scope {}", principal.id, scope.0)));
+        }
+    }
+    Ok(())
+}
+
 //#region 🔖️AutoApprovePolicy
 /// 🚦️ `--auto-approve never|readonly|all` — the headless fallback when no `elicitation`-capable
 /// client is attached to resolve an `ApprovalRecord` interactively. `Never` (the `Default`) is the
@@ -212,12 +223,7 @@ impl PolicyEngine {
     /// missing scope is reported (not the full missing set; one denial is enough to deny the whole
     /// call, and reporting the first keeps the message short).
     pub fn authorize_scopes(&self, principal: &AgentPrincipal, capability: &CapabilityDefinition) -> Result<(), GatewayError> {
-        for scope in &capability.policy.scopes {
-            if !principal.grants(scope) {
-                return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, format!("principal {} lacks required scope {}", principal.id, scope.0)));
-            }
-        }
-        Ok(())
+        authorize_capability_scopes(principal, capability)
     }
 
     /// 🚦️ `Never` → never; `WhenDestructive` → iff `effects.destructive`; `Always` → always — then

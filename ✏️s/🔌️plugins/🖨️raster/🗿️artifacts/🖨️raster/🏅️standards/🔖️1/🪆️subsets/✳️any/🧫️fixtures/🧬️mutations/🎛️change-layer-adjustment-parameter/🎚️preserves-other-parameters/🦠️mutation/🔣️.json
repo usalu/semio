@@ -1,0 +1,7 @@
+{
+  "mutation": "changeLayerAdjustmentParameter",
+  "layerId": "tone",
+  "parameter": "brightness",
+  "expected": 0.1,
+  "value": 0.4
+}

@@ -1,5 +1,12 @@
 use super::*;
 
+#[test]
+fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
+    assert!(txt_command_from_action(TXT_KIT_ACTION_ID, None).is_err());
+    let args = dsl::DslValue::object([("text".into(), dsl::DslValue::String(String::new()))]);
+    assert_eq!(txt_command_from_action(TXT_KIT_ACTION_ID, Some(&args)).expect("explicit empty text"), TxtEditorCommand::ReplaceText { text: String::new() });
+}
+
 #[semio_framework_async_macros::async_test]
 async fn create_txt_editor_builds_a_definition_for_the_editor_role() {
     let def = create_txt_editor();

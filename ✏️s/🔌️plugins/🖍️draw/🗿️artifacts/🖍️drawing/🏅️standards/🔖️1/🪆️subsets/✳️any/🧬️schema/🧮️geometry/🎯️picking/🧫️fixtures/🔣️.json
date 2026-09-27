@@ -1,0 +1,727 @@
+[
+  {
+    "name": "concave-empty-bounds",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          20
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "point": [
+      20,
+      50
+    ],
+    "fill": true,
+    "stroke": true,
+    "radius": 2,
+    "expected": false,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "concave-painted-arm",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          20
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "point": [
+      90,
+      50
+    ],
+    "fill": true,
+    "stroke": true,
+    "radius": 2,
+    "expected": true,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "hollow-stroke-interior",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          100
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "point": [
+      50,
+      50
+    ],
+    "fill": false,
+    "stroke": true,
+    "radius": 2,
+    "expected": false,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "stroke-near-edge",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          100
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "point": [
+      -1,
+      50
+    ],
+    "fill": false,
+    "stroke": true,
+    "radius": 2,
+    "expected": true,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "implicit-fill-closure",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          100
+        ]
+      }
+    ],
+    "point": [
+      50,
+      50
+    ],
+    "fill": true,
+    "stroke": false,
+    "radius": 0,
+    "expected": true,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "implicit-closure-is-not-stroked",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          100
+        ]
+      }
+    ],
+    "point": [
+      0,
+      50
+    ],
+    "fill": false,
+    "stroke": true,
+    "radius": 2,
+    "expected": false,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "cubic-outside-bulge",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          0,
+          100
+        ],
+        "ctrl2": [
+          100,
+          100
+        ],
+        "to": [
+          100,
+          0
+        ]
+      }
+    ],
+    "point": [
+      5,
+      70
+    ],
+    "fill": true,
+    "stroke": true,
+    "radius": 1,
+    "expected": false,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "cubic-filled-bulge",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          0,
+          100
+        ],
+        "ctrl2": [
+          100,
+          100
+        ],
+        "to": [
+          100,
+          0
+        ]
+      }
+    ],
+    "point": [
+      50,
+      50
+    ],
+    "fill": true,
+    "stroke": false,
+    "radius": 0,
+    "expected": true,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "ellipse-empty-corner",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          100,
+          50
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 50,
+        "ry": 30,
+        "rotation": 0,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          0,
+          50
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 50,
+        "ry": 30,
+        "rotation": 0,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          100,
+          50
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "point": [
+      5,
+      25
+    ],
+    "fill": true,
+    "stroke": true,
+    "radius": 1,
+    "expected": false,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "opposite-contour-hole",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          100
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          20,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          20,
+          80
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          80
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          20
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "point": [
+      50,
+      50
+    ],
+    "fill": true,
+    "stroke": false,
+    "radius": 0,
+    "expected": false,
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ]
+  },
+  {
+    "name": "zero-tolerance-diagonal",
+    "point": [
+      5,
+      5
+    ],
+    "matrix": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    "radius": 0,
+    "fill": false,
+    "stroke": true,
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          10
+        ]
+      }
+    ],
+    "expected": true
+  },
+  {
+    "name": "concave-empty-bounds-reflected-shear",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          20
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "point": [
+      25.0,
+      150
+    ],
+    "fill": true,
+    "stroke": true,
+    "radius": 2,
+    "expected": false,
+    "matrix": [
+      -2,
+      1,
+      0.5,
+      3,
+      40,
+      -20
+    ]
+  },
+  {
+    "name": "concave-painted-arm-reflected-shear",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          100,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          100
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          80,
+          20
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          0,
+          20
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "point": [
+      -115.0,
+      220
+    ],
+    "fill": true,
+    "stroke": true,
+    "radius": 2,
+    "expected": true,
+    "matrix": [
+      -2,
+      1,
+      0.5,
+      3,
+      40,
+      -20
+    ]
+  }
+]

@@ -1,0 +1,28 @@
+{
+  "schema": "raster.document",
+  "id": "tone-fixture",
+  "title": null,
+  "assets": {},
+  "layers": [
+    {
+      "kind": "adjustment",
+      "id": "tone",
+      "name": "Tone",
+      "visible": true,
+      "opacity": 1,
+      "blendMode": "normal",
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0
+      },
+      "adjustmentKind": "brightnessContrast",
+      "params": {
+        "brightness": 0.1,
+        "contrast": 0.2
+      }
+    }
+  ]
+}

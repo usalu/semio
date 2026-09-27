@@ -33,3 +33,5 @@ record change-re-encode-quality tag=11
 field payload bytes
 record set-snapshot tag=12
 field payload bytes
+record patch-snapshot tag=13
+field payload bytes

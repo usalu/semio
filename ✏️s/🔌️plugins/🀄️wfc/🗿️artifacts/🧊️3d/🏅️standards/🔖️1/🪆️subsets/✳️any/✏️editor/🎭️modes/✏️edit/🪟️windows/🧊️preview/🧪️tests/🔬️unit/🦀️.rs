@@ -161,11 +161,11 @@ fn vertex_normals_follow_the_triangle_winding_and_never_answer_zero() {
 #[test]
 fn a_partial_fill_preview_differs_from_empty_and_finished() {
     use crate::editor::wfc3d::modes::edit::tools::fill::Wfc3dFillTickPayload;
-    use crate::inferences::solve_with_job;
+    use crate::inferences::solve_with_clock;
     use std::collections::BTreeMap;
 
     let document = crate::examples::tower_stack::snapshot();
-    let oracle = solve_with_job(&document).expect("tower-stack solves");
+    let oracle = solve_with_clock(&document, semio_framework_job::logical_now_us).expect("tower-stack solves");
     let empty = instances_json(&document, &Wfc3dTransient::default());
     let finished_transient = Wfc3dTransient {
         assignments: oracle

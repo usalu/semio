@@ -7,7 +7,7 @@ Durable captures: `.🧬semio/🌐hub/s13-r9-captures/`. Expendable captures: `.
 
 | # | Item | State | Evidence |
 |---|---|---|---|
-| 1 | launch.json registration: executable-command rule, generator + law | **DONE** (taxonomy input pattern = prepared patch): 2 417 declared targets / 439 projects → 0 unregistered; launch.json 1 397 configs, 29 family pickers, VS Code-loadable; laws 14/14 | §Item 1 |
+| 1 | launch.json registration: executable-command rule, generator + law | **DONE** (manifest-input freshness = prepared discovery patch, not landed in window 2 — see §Item 1): 2 417 declared targets / 439 projects → 0 unregistered; launch.json 1 397 configs, 29 family pickers, VS Code-loadable; laws 14/14 | §Item 1 |
 | 2 | `[DEBUG]`-tagged permanent status lines (hub `📜️script.ts`) | **DONE** — hub `📜️script.ts` 26 → 0 tags (status lines kept, tag dropped; parsed payload channel renamed on both ends); 56 temporary test prints deleted in 15 hub files; hub+MCP native check 0 errors | §log 21:0x, `native-check-7.txt` |
 | 3 | CRUD `DELETE` hub auth routes → commands (hub + all clients) | **DONE** — `POST /auth/sessions/me/sign-out` + `POST /auth/agent-delegations/{id}/revoke`; native GREEN: kernel client (10:07), hub + os-mcp incl. H9's fence laws (10:2x, 0 errors); TS laws 98/98 + relay 4/4; hub bin-unit laws not run by me (rule 25 — H11 re-runs) | §Item 3, `native-check-6/7.txt` |
 | 4 | `🔌️plugin/🦀️.rs` fallback / weak-linkage shim | **LANDED** — forbidden implicit 2nd init path removed; native GREEN 10:07 (plugin + kernel lib+tests); wasm32 = REBUILD gate | §Item 4, landing row |
@@ -256,9 +256,37 @@ pipeline steps: they run only as `dependsOn` of declared targets or through the 
 - Laws (`🧪️tests/🚀️launch/🟦️.ts`, new block "declared project targets"): every declared target is launchable (row or picker);
   every picker lists exactly the declaring projects; the render parses with TypeScript's independent JSONC reader, equals Bun's
   parse, and is byte-identical to the committed file (and `check`/`check-generated` keep failing on a stale launch.json).
-- Prepared (kernel-derive input, apply after W3 announces 7800 on B3): `wp-r9/launch-inputs-taxonomy.py` adds `**/📋️project.json`
-  to the plugin-registry generator contract's `inputPatterns` so the nx cache re-runs `generate` when a manifest changes (dry run
-  clean).
+- **Manifest inputs — window-2 incident and re-derivation (prepared, NOT landed).**
+  - *Incident.* 14:1x I applied `wp-r9/launch-inputs-taxonomy.py` (`**/📋️project.json` in the plugin-registry `inputPatterns`).
+    `validateTaxonomy` (`🔍️discovery/🟦️.ts` 4812–4921) rejects any wildcard within the first N segments of a depth-N opaque root
+    (`compose`, `temp/compose`, `♻️mit-bestand/🔎️recherche`); `**` at index 0 → "inputPatterns[0] can cross an opaque boundary"
+    → every `serve s react dev` refused to start. I replaced it with 12 literal-prefix patterns (`wp-r9/launch-input-prefixes.ts`,
+    `launch-inputs-taxonomy.ts`), which my `loadCatalogTaxonomy` probe accepted, but the serves had already failed; main
+    restored `🔣️taxonomy.json` to HEAD at 14:53. Both taxonomy scripts are superseded — do not re-apply them.
+  - *Why no taxonomy edit is needed.* The plugin-registry contract already has a discovery-declared input:
+    `registryCatalogInputPaths` feeds `repo:generator-inputs`, whose receipt `plugin-registry:generate` consumes via
+    `dependentTasksOutputFiles`, and that target's nx inputs already list `{workspaceRoot}/**/📋️project.json` (nx globs are outside
+    the taxonomy validator). The missing piece is only that the receipt must hash every manifest's *content*: at HEAD it holds
+    80 of the 439 launch-projected manifests, 51 more only as directory witnesses and 308 not at all (`launch-manifest-coverage.ts`).
+    The 12-prefix `inputPatterns` would also make normalization's `generatorInputInventory` walk the whole `✏️s/🔌️plugins` and
+    `🧰️framework/🛍️products` trees on every registry transaction.
+  - *Re-derived change* (`wp-r9/launch-manifest-inputs.discovery.patch`, 4 hunks, `git apply --check` clean): `scanRepo`'s
+    catalog walk records every `📋️project.json` it meets (owner directories, package language directories and the
+    `target-inside-package-boundary` subtree used by `🎤️presentation`), and the rust-plugin-only special case goes. Law
+    (`wp-r9/launch-manifest-inputs.law.patch`): every launch-projected manifest is a registry catalog content input. It uses a
+    view pruned to the manifests' ancestry and runs in 11 s instead of 47–109 s.
+  - *Evidence while applied (15:08–15:31).* The probe printed `taxonomy valid` 3×. Full unpruned walk: 438/439, and the 439th
+    (presentation's targets subtree) was fixed by the 4th hunk. Pruned walk: 439/439 (`launch-manifest-pruned.ts`). The "declared
+    project targets" law block passed 4/4, including the new law (`launch-laws-8`). launch.json stayed byte-identical (1 244
+    configurations).
+  - *Not landed.* No serve boot was possible before the 15:45 freeze (load 40–48, three peer serves running since 14:05/14:56). Rule 33 requires
+    a serve boot, so both hunks were reverted at 15:31: discovery and taxonomy are back to HEAD, and the probe prints `taxonomy valid`.
+    To land next window: `git apply` the two patches → probe → one `serve s react dev` boot → launch law block → landing row.
+- **Launch fixture (applied, test-only).** Law 1 ("distinguishes standards and subsets…") failed because the playgrounds
+  `stdio-dwg-*`, `stdio-pdf*-a` and `stdio-gif*` no longer exist: the staged stdio `🔣️.json` now ships only the text families,
+  and launch.json has 0 `ac1018` rows vs 8 at HEAD. Its `prefixes` now use the surviving variants (`stdio`, `stdio-json`,
+  `stdio-json-i`, `stdio-xml`, `stdio-xml-valid`), matching `playground-prefixes.ts` exactly. The keycap-folder slugs stay covered
+  by `slugs`. The vitest re-run was killed by the 300 s budget under load, so this is unverified by vitest.
 
 - 11:0x item 10: the 09-26 15:13 commit deleted the Neo4j Cypher graph export (root `📜️script.ts`: exporter, `purge`, `mcp neo4j`)
   but not its law → the `Neo4j graph database registry` describe block (4 tests) and its import removed from the workspace-contract

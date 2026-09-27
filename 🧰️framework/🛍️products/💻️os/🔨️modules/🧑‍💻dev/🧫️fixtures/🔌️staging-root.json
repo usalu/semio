@@ -316,7 +316,16 @@
       "generatedOwnerFiles": [
         "🔣️.json",
         "🛂️.descriptor.semio"
-      ]
+      ],
+      "concurrency": {
+        "files": 32,
+        "components": 4
+      },
+      "yielding": {
+        "files": 1500,
+        "maxSynchronousShare": 0.1,
+        "description": "A freshness walk over a tree without a staged index hashes every file, and still does all but a small share of that work after its first await (the synchronous prefix is only the index read), so a dev server keeps answering while it runs; ticket 26/09/23 F3 measured 48.9 s synchronous over 54 131 files before the fix."
+      }
     }
   }
 }

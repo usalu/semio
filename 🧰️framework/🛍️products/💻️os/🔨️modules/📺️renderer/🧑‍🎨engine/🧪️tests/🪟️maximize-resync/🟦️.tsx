@@ -13,7 +13,7 @@ beforeEach(() => {
   vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
 });
 
-it("React locale retitling clears maximize once for an extra window", () => {
+it("React locale retitling preserves authored extra-window titles and maximize", () => {
   const row = fixture.localeRetitle;
   const kinds = fixture.windows.map(id => ({ id, label: id === "a" ? "A" : row.resolvedTitle }));
   const extra = [{ id: row.extraId, windowKindId: row.kindId, title: row.bakedTitle }];
@@ -26,11 +26,11 @@ it("React locale retitling clears maximize once for an extra window", () => {
   const maximize = () => fireEvent.click(container.querySelector("[data-stack-path='1'] [data-slot='mode-dock-tab-focus']")!);
   maximize();
   expect(container.querySelector('[data-slot="mode"]')?.getAttribute("data-maximized-path")).toBe("1");
-  const retitled = retitleWindowLayoutNode(initial, kinds, extra, "native", row.locale);
+  const retitled = retitleWindowLayoutNode(initial, kinds, extra, "native", row.locale, {});
   rerender(mode(retitled));
-  expect(container.querySelector('[data-slot="mode"]')?.getAttribute("data-maximized-path")).toBeNull();
-  maximize();
-  rerender(mode(retitleWindowLayoutNode(retitled, kinds, extra, "native", row.locale)));
+  expect(container.querySelector('[data-slot="mode"]')?.getAttribute("data-maximized-path")).toBe(String(row.maximized));
+  expect(retitled.kind !== "window" && retitled.children[1]?.kind === "stack" && retitled.children[1].children[1]?.title).toBe(row.retainedTitle);
+  rerender(mode(retitleWindowLayoutNode(retitled, kinds, extra, "native", row.locale, {})));
   expect(container.querySelector('[data-slot="mode"]')?.getAttribute("data-maximized-path")).toBe("1");
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });

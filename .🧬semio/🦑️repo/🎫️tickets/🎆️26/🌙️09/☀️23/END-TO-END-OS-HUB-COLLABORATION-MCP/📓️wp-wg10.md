@@ -9,12 +9,13 @@ Private cargo target: `.tmp-ticket/wp-wg10/target`. Captures: `wp-wg10/generated
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | S12-6 genesis-on-open parity native ↔ React ↔ wasm32 (one kernel primitive, fixture law, live) | **LANDED: native + wasm32 green, laws green**: the hub's canonical checkpoint pair is the one seed of a hub open on every shell. Kernel laws **11/11**, TS pair law **26/26**, wasm32 kernel wasip2 + sync-unknown + renderer-unknown **green** (06:34). **Live: pending** — item 2's cross-shell run on 7800 B3 is its live proof |
+| 1 | S12-6 genesis-on-open parity native ↔ React ↔ wasm32 (one kernel primitive, fixture law, live) | **LANDED + LIVE (14:20, 7800 B3)**: both native shells of the gate opened a fresh door artifact (`artifact-e66fe6df…`) through the canonical-pair seed (the only seed left: a failed pair fetch fails the open, and an unseeded guest authors under its app id, which the hub refuses) — Live in 15 ms, A's/B's edits accepted, per-actor undo. Kernel laws 11/11, TS 26/26, wasm32 green |
 | 1b | Landing: WG8's `kernel-patch-transport-deadline.py` (coordinator, WG10-1) | **LANDED**: native + wasm32 green, laws **2/2** |
-| 2 | Full cross-shell journey native ↔ React `s` on one hub document on 7800, en + de, measured — incl. the live CURSOR leg on a board-canvas kind (audit s13 P1-5) | **waits for 7800 on B3** (coordinator resumes WG10 then). On B2 + current tree the edit legs cannot pass (LD's `observed` envelope field: the current host refuses B2 guests' batches, C11 20:17). Runner ready: `wp-wg10/run-cross-shell.sh` (WG8's, WG10 paths) |
-| 3 | `hub-live-collaboration-check` 12/12 on 7800 after the all-package catalog + more kinds (board canvases, text) | waits on W3 (all-package catalog) |
+| 2 | Full cross-shell journey native ↔ React `s` on one hub document on 7800, en + de, measured — incl. the live CURSOR leg on a board-canvas kind (audit s13 P1-5) | **edits leg 8/8 PASS on 7800 B3 (15:09, en)**; **cursor leg RED (15:26, puzzle2d)**: door `ready` after 649 s, both shells opened the board but neither socket reached Live (native `Detached`, React `live:false`, sockets cycling every ~30 s, no hub error event) → cursors not published (A saw no React cursor). Hypothesis (not measured): hub fan-out lag → `RebootstrapRequired` + close 1013 → the actor's dead "pair inside the Welcome" rule (LD 15:2x) — the item-6 patch. de run: pending |
+| 3 | `hub-live-collaboration-check` 12/12 on 7800 after the all-package catalog + more kinds (board canvases, text) | **12/12 EXIT 0 on 7800 B3 (14:20, block)** (`s13-wg10-captures/collab-live-b3-2.txt`); run 1 aborted with a test-thread stack overflow in step 8 (2 MiB default thread, debug) → run 2 with `RUST_MIN_STACK=8388608` (macOS main-thread size). ALL catalog + other kinds: after the final publish |
 | 4 | Native accessibility (AccessKit tree for chrome + keyboard traversal), measured, root fixes | **LANDED: native + wasm32 green, laws green**: AccessKit bridge behind `♿️native-accessibility` (chrome + every visible document window; AT actions → shell accessibility events), keyboard ring (Tab/Shift+Tab over the chrome's focusable publication then windows, Enter/Space activate, painted focus ring), Cargo.lock +20 packages. Renderer laws **29/29**, TS **3/3**. Measured gap (source): natively Tab only cycled dock windows, no chrome control was keyboard-reachable, nothing painted keyboard focus, no platform accessibility tree existed. Live macOS VoiceOver/AX measurement: pending (needs a native app run) |
 | 5 | Presence/ephemeral wire as ONE kernel primitive + TS twin + fixture law (audit s13 P2-2); re-verify a native late-join shows full history after WG9's echo-suppression set | pending (after 1–4) |
+| 6 | Coordinator (15:3x): native/wgpu shell rebootstrap from the pair route (LD item 3 Rust twin) — prepared patch for window 3, law red→green, live repro plan, wasm32 half with WG9 | **PREPARED, dry run clean (15:34, not applied)**: `wp-wg10/patch-rebootstrap-reseed.py` (11 files). Compiles: unverified until window 3 (tree frozen). WG9 told (wasm32 live check) |
 
 ### Log (session 13)
 
@@ -133,4 +134,62 @@ Private cargo target: `.tmp-ticket/wp-wg10/target`. Captures: `wp-wg10/generated
 - 09:55 resumed (rule 30: REBUILD START 09:53, build-wg10 deleted). Landing rows updated with wasm32 + law evidence; requests file
   `wp-w3/requests/wg10.txt` stands. Rule 22: stopped hub 8091 (hold 51503 → hub exited) and serve 6590 (59118 + vite 59161) —
   idle until 7800 is on B3. Waiting for the coordinator; on call for chain errors in kernel/renderer.
+- 13:58 resumed (rule 31: 7800 READY on B3). Renderer test binary rebuilt twice on build-fleet-b (the 2nd picks up G11's 14:03 kernel
+  socket-grant empty-body fix), durable copy `.🧬semio/🌐hub/s13-wg10-bin/renderer-tests`; cargo-free runner `wp-wg10/run-live-law.sh`.
+  React serve 6590 → 7800 started (`s13-wg10-logs/serve-6590-b3.txt`, w2-detach).
+- 14:13 gate run 1 on 7800 B3 (`collab-live-b3-1.txt`): 1–7 PASS (door `accepted → ready` in 160 s, both opens 9.0–9.7 s, Live 8 ms,
+  presence both ways) then **`has overflowed its stack` → SIGABRT in step 8** (A's `addHandleKind` dispatch → render). The law thread
+  is libtest's 2 MiB default; debug async frames of the dispatch/render path now exceed it (WG8's runs passed on the same law). The app's
+  shell runs on the 8 MiB main thread. Finding, not root-caused (which frame grew is unmeasured) — watch item.
+- 14:16–14:20 **gate run 2 (`RUST_MIN_STACK=8388608`): 12/12 PASS, EXIT 0** (`collab-live-b3-2.txt`, 231 s): 4a door `accepted →
+  preparing → ready`, both native opens seeded by the canonical pair, 6 Live 15 ms, 7 presence both, 8 A authors 1.9 s, 9 B ingests,
+  10 B authors 2.0 s + A ingests, 11 per-actor undo (A's own `addHandleKind` false, B's `apply` untouched), 12 offline edit 1.9 s
+  (≤ 2× online), pump 3.0 s, stale → ready, relive 4.2 s, A ingests the offline edit. = item 1 live + item 3 (block) on B3.
+- 14:18 renderer laws 29/30: the new `a_painted_navbar_hands_the_platform_a_named_tree` measured census {3 nodes, 1 focusable, 0
+  unnamed, 0 unknown roles} but its `nodes ≤ painted controls` bound was wrong (the chrome also announces status nodes) → law now
+  paints 3 panel tabs and asserts each reaches the platform tree, focusable, named, known role (rerun `laws-renderer-6.txt`).
+- 14:20–14:50 usage cut (whole fleet). 14:56 resumed.
+- 14:57 React serve 6590 restarted (the 13:59 one predated the 14:1x taxonomy break/restore), `serve-6590-b3-2.txt`.
+- 14:57–15:09 **CROSS-SHELL (edits, block2d) on 7800 B3: 8/8 PASS, law exit 0** (`s13-wg10-captures/cross-shell-b3e1/`, 684 s; runner
+  `wp-wg10/run-cross-shell.sh`, durable binary, ONE headless browser): 1 A (native) signs in; 2 A creates a space + a block2d artifact
+  through its door and opens it (seeded by the canonical pair), Live at once; 3 B (React `s`) opens it, Live 4.2 s, `hub=live`;
+  4 presence both ways (A sees `User Two` 3.3 s, B sees A 3 ms after the handshake, one wire `peer:hub.v1.…`); 5 A edits 4.3 s → React
+  6→7 Handle Kinds 2 ms after; 6 React edits → A's ledger ingests; 7 each undoes own (A's undo reached React, React's own undo 34 ms,
+  A sees B's undo 337 ms); 8 React reload → Live 4.9 s, converged, A's next edit reached it 10 ms after.
+- 15:00 renderer laws run 6: blocked by a peer's in-flight plugin-host edit (`codec_replay_envelopes_observed` missing its new
+  `&GuestCallCancellation` argument, E0061, landing window 2) — not mine; rerun once it compiles.
+- 15:09 cross-shell CURSORS (puzzle2d board) run `b3c1` launched.
+- 15:09–15:26 **cross-shell CURSORS (puzzle2d, `b3c1`): 3 of 5 red.** 1 A signs in ✓; 2 A's door followed the puzzle creation to `ready`
+  (649 s) and the open settled `Opened` (49 s, frames ≤ 0.92 s), but the document socket never reached Live (`remote=Detached`);
+  3 React opened the board, `hub=live`, socket received 18 frames, never Live (console: `The current app has no registered board
+  session factory` ×3 — React side, routed); 4 presence both ways ✓ (the roster is the space-wide stream); 5 A published views for
+  `2d-detail`/`2d-overview`/`2d-selection` with a pointer but saw no React cursor. Hub log for the document: 11 socket upgrades, each
+  `cancelled … closed` after ~30 s, presence join/leave, no error. Hub source: a socket whose fan-out receiver lags gets
+  `RebootstrapRequired` + close 1013 (`🌎️hub/🏗️bootstrap` `RecvError::Lagged` arm) — with a busy board this matches LD's 15:2x finding
+  (the native actor then waits for a pair inside a Welcome the hub never sends). Not measured yet: whether this run's sockets saw
+  `RebootstrapRequired` (the native law does not log actor status) — the item-6 law + repro plan measure it.
+- 15:2x LD + coordinator: item 6 assigned (prepared patch; tree frozen after 15:45).
+- 15:3x **item 6 prepared** — `wp-wg10/patch-rebootstrap-reseed.py` (dry run: every anchor exactly once on the 15:34 tree, incl. WG9's
+  15:18 lost-Ack edits in `🔄️sync`; `--apply` writes + regenerates the fixture). Design (one mechanism with item 1's open seed; the
+  actor cannot fetch the pair — its grant source is a sync/`!Send` seam — the shell's concrete client can):
+  - kernel `🪢️canonical-checkpoint-pair-v1`: `CanonicalCheckpointPairV1::admit_rebootstrap(&RebootstrapRequired)` (scope, checkpoint id,
+    descriptor digest, baseline; the control carries no aggregate — the decoder proved the digests); client
+    `rebootstrap_canonical_checkpoint_pair(ctx, control)` over one shared `fetch_canonical_checkpoint_pair` (the open's
+    `document_canonical_checkpoint_pair` now uses it too);
+  - kernel `🔄️sync`, both actors: `RebootstrapRequired` → drop projection + socket, keep unacked work, emit
+    `ArtifactEvent::RebootstrapRequired { control }`, no dial while waiting (`start_connect_hub`/`connect` gated), no outage backoff;
+    the dead "pair inside the Welcome" refusals in the None/Tail arms deleted; `ArtifactActorMsg::Reseed { pack, spr, baseline }`
+    (+ mailbox byte bound) → native: `install_hub_seed` (shared with the open's `seed_hub_document`), unacked ops the pair lacks go back
+    to the guest as `RemoteMutations`, dial at once (Hello at the baseline); wasm: Hello frontier = baseline, ops back, dial next turn;
+  - Shell (both targets): `ShellSyncReseed` + `advance_sync_reseed` in the frame pump — detached pair fetch, verify, `load_app_document_pack`,
+    `Reseed` to the actor; transient refusal asked again after 1 s; closing the document drops it;
+  - laws: fixture `rebootstrapAdmissions` (6 rows, generator extended; schema updated) → Rust schema law + TS twin
+    `admitCanonicalCheckpointPairForRebootstrapV1` in the TS runner; kernel client law `a_rebootstrap_pair_is_admitted_only_as_the_controls_checkpoint`;
+    native actor law `a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline` (red on today's tree: no event is
+    emitted and a later None Welcome is refused); backbone-parity event kind `rebootstrapRequired`.
+  - **Live repro plan** (after window 3 + rebuild): (1) cross-shell CURSORS on puzzle2d (`CROSS_MODE=cursors run-cross-shell.sh`) —
+    today's `b3c1` never reached Live on either shell; expect Live + cursors both ways; (2) forced rebootstrap: two native shells on one
+    block2d document, flood B's socket (ephemeral cursor stream at high rate) until the hub's fan-out lags → `RebootstrapRequired` + close
+    1013; expect B back Live ≤ 2 s without backoff, its unacked edit kept, both ledgers converged (gate step 12's severable relay can host
+    the flood); (3) GIS approval checkpoint (the other producer) via the semio MCP `inference_approve` on a gismap with a native viewer open.
 

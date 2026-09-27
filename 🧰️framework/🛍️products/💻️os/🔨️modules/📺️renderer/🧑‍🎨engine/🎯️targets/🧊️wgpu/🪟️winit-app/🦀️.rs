@@ -43,6 +43,26 @@ fn advance_frame_generation(generation: &mut u64) -> bool {
     true
 }
 
+fn collect_scheduler_redraw(scheduler: &mut ui_render::FrameScheduler, pending_reason: &mut Option<InvalidationReason>, now: f64) -> Option<InvalidationReason> {
+    let reason = ui_host::should_request_redraw(scheduler, now)?;
+    if let Some(pending) = pending_reason.as_mut() {
+        pending.insert(reason);
+    } else {
+        *pending_reason = Some(reason);
+    }
+    Some(reason)
+}
+
+fn invalidate_scheduler_redraw(
+    scheduler: &mut ui_render::FrameScheduler,
+    pending_reason: &mut Option<InvalidationReason>,
+    now: f64,
+    reason: InvalidationReason,
+) -> Option<InvalidationReason> {
+    scheduler.invalidate(reason);
+    collect_scheduler_redraw(scheduler, pending_reason, now)
+}
+
 /// 🔢️ Whether THIS enqueue may renumber the frame generation.
 ///
 /// The generation names the INPUT STATE a build is answering, and a build, its presentation witness
@@ -179,10 +199,12 @@ impl OsHost {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn redraw_offscreen_worker(&mut self) -> RedrawOutcome {
+    pub(crate) fn redraw_offscreen_worker(&mut self) -> crate::os_host::BrowserRedrawOutcome {
         let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_offscreen_worker", render_frame_operation_id(), semio_framework_trace::Generation(self.frame_generation), semio_framework_trace::InteractiveStage::InteractiveStep);
         let _ = self.scheduler.should_render(self.clock.now_seconds());
-        self.redraw_core()
+        let _ = self.redraw_core();
+        let snapshot = self.snapshot_sink.acquire();
+        crate::os_host::BrowserRedrawOutcome { cursor_css: ui_wgpu::wgpu::cursor::semio_cursor_css(snapshot.accepted_cursor, snapshot.accepted_theme_dark) }
     }
 
     fn redraw_core(&mut self) -> RedrawOutcome {
@@ -230,12 +252,9 @@ impl OsHost {
     /// revision. Product traversal, layout, tessellation, and prepared packet construction execute in
     /// the worker closure; only `AppPresenter::present` realizes GPU/platform directives here.
     ///
-    /// **Known fidelity loss — `ui_render::CursorRequest` (5 variants) vs `SemioCursor` (13
-    /// variants).** `AppRuntime::frame()` already applies its own richer cursor internally via
-    /// `ui_wgpu::wgpu::apply_window_cursor` before this method returns; the published snapshot's cursor
-    /// is a best-effort narrowing of that SAME already-applied cursor (`semio_cursor_to_request`
-    /// below), not an independent decision — see `present_snapshot`'s own doc for the idempotency
-    /// argument this fidelity loss never actually exercises on this file's own hand-rolled loop.
+    /// 🖱️ The snapshot keeps the generic five-value host cursor beside the accepted 14-value product
+    /// cursor and its accepted theme. Native already applies the product pair during presentation;
+    /// the browser projects the same pair through `semio_cursor_css` after this publication.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn build_and_publish_snapshot(&mut self) {
         if !self.presenter.holds_presented_input_publication() {
@@ -289,7 +308,7 @@ impl OsHost {
         let present_deadline_us = semio_framework_job::default_now_us().map(|now| now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));
         loop {
             match self.presenter.present_step() {
-                Ok(crate::AppPresentStep::Complete { generation, cursor, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives }) => {
+                Ok(crate::AppPresentStep::Complete { generation, cursor, theme_dark, fullscreen, cursor_wake, retained_control_deadline, shell_clock_deadline, has_animated_primitives }) => {
                     self.animation_clock.accept(has_animated_primitives);
                     self.animation_clock.sync(&mut self.scheduler, self.clock.now_seconds());
                     self.runtime.publish_retained_control_deadline(retained_control_deadline);
@@ -311,7 +330,7 @@ impl OsHost {
                         return;
                     };
                     let _latency = crate::frame_latency::FrameLatencyTimer::start(crate::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0), crate::frame_latency::FrameLatencyStage::SnapshotPublish, 1);
-                    self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), None));
+                    self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), cursor, theme_dark, None));
                 }
                 Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
                 Ok(crate::AppPresentStep::RetryRuntime) => {
@@ -346,9 +365,9 @@ impl OsHost {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
         let snapshot = self.snapshot_sink.acquire();
-        self.animation_clock.sync(&mut self.scheduler, now);
-        self.scheduler.replace_deadline(crate::deadlines::RETAINED_CONTROL_CLOCK, self.runtime.retained_control_deadline(self.clock.now_seconds()));
+        crate::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
 
+        #[cfg(not(target_arch = "wasm32"))]
         if self.hot_swap.is_due(now) {
             self.scheduler.request_deadline(now + crate::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
         }
@@ -357,13 +376,13 @@ impl OsHost {
     }
 }
 
-/// 🖱️ Narrows `AppRuntime`'s 13-variant `SemioCursor` to `ui_render::CursorRequest`'s 5 — see
-/// `redraw`'s own doc comment for why this narrowing's fidelity loss never actually surfaces today.
+/// 🖱️ Narrows `AppRuntime`'s cursor for the generic host outcome. The accepted product
+/// cursor and theme remain intact in `RenderSnapshot` for browser presentation.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest {
     use ui_wgpu::wgpu::SemioCursor as S;
     match cursor {
-        S::Default | S::EwResize | S::NsResize | S::NwseResize | S::NeswResize | S::Crosshair | S::NotAllowed => CursorRequest::Default,
+        S::Default | S::EwResize | S::NsResize | S::NwseResize | S::NeswResize | S::Crosshair | S::CrosshairCentered | S::NotAllowed => CursorRequest::Default,
         S::Pointer | S::Selectable | S::Foldable => CursorRequest::Pointer,
         S::Grab => CursorRequest::Grab,
         S::Grabbing | S::Move => CursorRequest::Grabbing,
@@ -575,11 +594,10 @@ fn ime_event_from_winit(ime: &winit::event::Ime) -> ImeEvent {
 
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
-    use super::{advance_frame_generation, ime_event_from_winit, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
+    use super::{advance_frame_generation, collect_scheduler_redraw, ime_event_from_winit, invalidate_scheduler_redraw, DispatchEvent, EventModifiers, InvalidationReason, OsHost, PointerButton, WindowDelegate, WindowMetrics};
     use crate::os_host::OsHostRetirement;
     use crate::RuntimeMailbox;
     use std::sync::Arc;
-    use ui_host::should_request_redraw;
     use ui_render::{PhysicalSize, PointerInfo};
     #[cfg(target_arch = "wasm32")]
     use ui_render::{PointerId, PointerKind};
@@ -1041,7 +1059,12 @@ mod native {
                 }
                 WindowEvent::ThemeChanged(theme) => {
                     publish_system_appearance(Some(*theme));
-                    window.request_redraw();
+                    if let Some(host) = self.host.as_mut() {
+                        let now = host.now_seconds();
+                        if invalidate_scheduler_redraw(&mut host.scheduler, &mut self.pending_reason, now, InvalidationReason::THEME).is_some() {
+                            window.request_redraw();
+                        }
+                    }
                 }
                 WindowEvent::RedrawRequested => {
                     if let Some(reason) = self.pending_reason.take() {
@@ -1096,8 +1119,7 @@ mod native {
                 }
             }
             let now = host.now_seconds();
-            if let Some(reason) = should_request_redraw(&mut host.scheduler, now) {
-                self.pending_reason = Some(reason);
+            if let Some(reason) = collect_scheduler_redraw(&mut host.scheduler, &mut self.pending_reason, now) {
                 if let Some(window) = self.window.as_ref() {
                     window.request_redraw();
                     if reason.contains(InvalidationReason::RESOURCE_READY) {

@@ -8,7 +8,7 @@ message ParentPagePatch { optional string name = 1; }
 message SpreadPatch { optional string name = 1; }
 message TextStoryPatch { optional string content = 1; }
 message ImageLinkPatch { optional string path = 1; }
-message FramePatch { optional double x = 1; optional double y = 2; optional double width = 3; optional double height = 4; optional semio.s.layout.layout.artifact.Rgba fill = 5; optional semio.s.layout.layout.artifact.Rgba stroke = 6; optional string wrap_mode = 7; optional uint32 columns = 8; }
+message FramePatch { optional double x = 1; optional double y = 2; optional double width = 3; optional double height = 4; optional semio.s.layout.layout.artifact.Rgba fill = 5; optional semio.s.layout.layout.artifact.Rgba stroke = 6; optional string wrap_mode = 7; optional uint32 columns = 8; optional double rotation = 9; optional bool locked = 10; optional bool visible = 11; }
 message PageFrameAdded { semio.s.layout.layout.artifact.Frame frame = 1; optional uint64 index = 2; optional string layer_id = 3; }
 message PageFramePatched { string frame_id = 1; FramePatch patch = 2; }
 message PagePatch { optional string name = 1; optional double width = 2; optional double height = 3; optional double margin_top = 4; optional double margin_right = 5; optional double margin_bottom = 6; optional double margin_left = 7; optional uint32 columns_count = 8; optional double columns_gutter = 9; optional PageFrameAdded frame_added = 10; optional string frame_removed = 11; optional PageFramePatched frame_patched = 12; }

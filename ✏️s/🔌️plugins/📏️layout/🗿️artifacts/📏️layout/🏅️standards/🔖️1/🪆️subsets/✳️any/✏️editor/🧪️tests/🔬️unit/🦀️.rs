@@ -212,6 +212,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "translateSelection" => "translate-selection",
             "rotateSelection" => "rotate-selection",
             "scaleSelection" => "scale-selection",
+            "patchDocument" => "patch-document",
             other => panic!("every_command() row {other} missing from this test's expected-keyword table"),
         }
     };
@@ -268,6 +269,7 @@ pub(super) fn every_command() -> Vec<LayoutCommand> {
         LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into()], dx: 3.0, dy: 4.0 }),
         LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: vec!["frame-1".into()], angle: 0.25 }),
         LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: vec!["frame-1".into()], sx: 1.5, sy: 1.25 }),
+        LayoutCommand::PatchDocument(patch_document::PatchDocument { field: "name".into(), value: "Press sheet".into() }),
     ]
 }
 
@@ -622,7 +624,7 @@ async fn window_kind_actions_scope_authoring_to_blueprint_only() {
     };
     let blueprint_actions = resolve(LAYOUT_PLAY_WINDOW_BLUEPRINT);
     let preview_actions = resolve(LAYOUT_PLAY_WINDOW_PREVIEW);
-    for authoring in ["addFrame", "addPage", "patchPage", "patchFrame"] {
+    for authoring in ["addFrame", "addPage", "patchPage", "patchFrame", "patchDocument"] {
         assert!(blueprint_actions.contains(&authoring.to_string()), "Blueprint must expose {authoring}");
         assert!(!preview_actions.contains(&authoring.to_string()), "Preview must NOT expose {authoring}");
     }

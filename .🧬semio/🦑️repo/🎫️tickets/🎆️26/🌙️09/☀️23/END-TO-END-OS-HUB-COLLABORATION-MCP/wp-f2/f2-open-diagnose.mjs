@@ -15,6 +15,8 @@ page.setDefaultNavigationTimeout(300_000);
 const lines = [];
 const stamp = () => new Date().toISOString().slice(11, 23);
 page.on("console", (message) => lines.push(`${stamp()} ${message.type()}: ${message.text()}`.slice(0, 600)));
+const threeInstances = [];
+page.on("console", (message) => { if (/multiple instances of three/iu.test(message.text())) threeInstances.push(message.text().slice(0, 200)); });
 page.on("pageerror", (error) => lines.push(`${stamp()} pageerror: ${String(error?.stack ?? error)}`.slice(0, 900)));
 page.on("requestfailed", (request) => lines.push(`${stamp()} requestfailed: ${request.failure()?.errorText} ${decodeURIComponent(request.url()).slice(0, 160)}`));
 page.on("response", (response) => { if (response.status() >= 400) lines.push(`${stamp()} http ${response.status()} ${decodeURIComponent(response.url()).slice(0, 160)}`); });
@@ -70,5 +72,7 @@ for (const spec of specs) {
   for (const id of opened) await page.evaluate((windowId) => { const tab = [...document.querySelectorAll('[data-slot="mode-dock-tab"]')].find((element) => element.getAttribute("data-window-id") === windowId); tab?.querySelector('[data-slot="mode-dock-tab-close"]')?.click(); }, id);
   await page.waitForTimeout(2_000);
 }
+report.threeInstances = threeInstances;
+console.log(JSON.stringify({ threeInstances }));
 writeFileSync(`${generated}f2-open-${tag}.json`, JSON.stringify(report, null, 1));
 await browser.close();

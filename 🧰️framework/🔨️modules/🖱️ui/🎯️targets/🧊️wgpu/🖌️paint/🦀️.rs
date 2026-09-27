@@ -233,8 +233,8 @@ fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: 
     draw.push_glyph([x, y, logical_w.max(1.0), logical_h.max(1.0)], color, uv);
     // 🅰️ The synthetic semibold's second strike — same glyph, same baseline, offset along x only, so
     // the advance (and with it the line box and every wrap point priced above) is untouched.
-    if strikes > 1 {
-        draw.push_glyph([x + crate::wgpu::text::faux_bold_offset(size), y, logical_w.max(1.0), logical_h.max(1.0)], color, uv);
+    if let Some(offset) = weight.synthetic_offset(size) {
+        draw.push_glyph([x + offset, y, logical_w.max(1.0), logical_h.max(1.0)], color, uv);
     }
     if draw.finish_retained_output().is_err() {
         return RetainedGlyphStep::Fault;

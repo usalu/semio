@@ -2431,6 +2431,7 @@ pub(crate) enum DrawMeasureCursor {
     PassMaterialTextureKey { pass: usize, draw: usize, byte: usize, translucent: bool },
     PassMaterialInstance { pass: usize, draw: usize, instance: usize, translucent: bool },
     PassMaterialInstanceKey { pass: usize, draw: usize, instance: usize, byte: usize, translucent: bool },
+    PassCurvilinear { pass: usize },
     Glass(usize),
     Complete,
 }
@@ -2784,6 +2785,10 @@ impl PreparedRenderJob {
                 let next = if byte + 1 < key.len() { DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: byte + 1, translucent } } else { Self::next_material_instance(draw, pass, draw_index, instance, translucent) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
+            DrawMeasureCursor::PassCurvilinear { pass } => {
+                let next = Self::next_after_scene_pass_content(draw, pass);
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::SceneCurvilinear3d>(), ..PreparedRenderUsage::default() }, next)
+            }
             DrawMeasureCursor::Glass(index) => {
                 let region = draw.glass_regions.get(index)?;
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::GlassRegion>(), ..PreparedRenderUsage::default() }, Self::layer_channel_cursor(draw, region.layer_index, 0))
@@ -2849,6 +2854,13 @@ impl PreparedRenderJob {
     }
 
     fn next_after_scene_pass(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        if draw.scene_passes.get(pass).is_some_and(|value| value.curvilinear.is_some()) {
+            return DrawMeasureCursor::PassCurvilinear { pass };
+        }
+        Self::next_after_scene_pass_content(draw, pass)
+    }
+
+    fn next_after_scene_pass_content(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
         let Some(value) = draw.scene_passes.get(pass) else { return DrawMeasureCursor::Complete };
         if draw.scene_passes.get(pass + 1).is_some_and(|next| next.layer_index == value.layer_index) {
             DrawMeasureCursor::PassHeader(pass + 1)

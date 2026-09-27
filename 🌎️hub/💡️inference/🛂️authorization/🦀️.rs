@@ -41,7 +41,7 @@ pub(crate) async fn check_live_inference_session_author(
         return Err(InferenceErrorV1::Denied);
     }
     match binding {
-        SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), expires_at_ms } if expires_at_ms > returned_at_ms => Ok(()),
+        SocketSessionBindingStatus::Active { role: Some(SpaceRole::Author), expires_at_ms, .. } if expires_at_ms > returned_at_ms => Ok(()),
         SocketSessionBindingStatus::Unavailable => Err(InferenceErrorV1::Storage),
         _ => Err(InferenceErrorV1::Denied),
     }

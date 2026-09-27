@@ -7,7 +7,18 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as THREE from "three";
-import { Clone, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
+import { Clone } from "@react-three/drei/core/Clone.js";
+import { GizmoHelper } from "@react-three/drei/core/GizmoHelper.js";
+import { GizmoViewport } from "@react-three/drei/core/GizmoViewport.js";
+import { Grid } from "@react-three/drei/core/Grid.js";
+import { Line as DreiLine } from "@react-three/drei/core/Line.js";
+import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
+import { OrthographicCamera } from "@react-three/drei/core/OrthographicCamera.js";
+import { Outlines } from "@react-three/drei/core/Outlines.js";
+import { PerspectiveCamera } from "@react-three/drei/core/PerspectiveCamera.js";
+import { Text as DreiText } from "@react-three/drei/core/Text.js";
+import { TransformControls } from "@react-three/drei/core/TransformControls.js";
+import { useGLTF } from "@react-three/drei/core/Gltf.js";
 import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, useFrame, useLoader, useStore, useThree } from "@react-three/fiber";
 import { ReactFlow, ReactFlowProvider } from "@xyflow/react";
 // #endregion 🔌️Adapters

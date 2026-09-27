@@ -22,7 +22,11 @@ fn segmented_download_constants_mirror_the_schema_owned_contract() {
     assert_eq!(contract["maximumTotalBytes"].as_u64(), Some(ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES as u64), "the producer's total cap must be the contract's maximumTotalBytes");
     assert_eq!(contract["maximumTotalBytes"].as_u64(), Some(ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES as u64), "the exported total cap an app refuses against must be the same constant");
     let outstanding = contract["maximumOutstandingChunks"].as_u64().expect("maximumOutstandingChunks");
-    assert_eq!(outstanding * contract["chunkBytes"].as_u64().expect("chunkBytes"), contract["maximumTotalBytes"].as_u64().expect("maximumTotalBytes"), "the outstanding-chunk bound must be the total cap divided by the chunk cap, or the drain's loop bound refuses a legal payload");
+    assert_eq!(
+        outstanding * contract["chunkBytes"].as_u64().expect("chunkBytes"),
+        contract["maximumTotalBytes"].as_u64().expect("maximumTotalBytes"),
+        "the outstanding-chunk bound must be the total cap divided by the chunk cap, or the drain's loop bound refuses a legal payload"
+    );
 }
 
 #[test]

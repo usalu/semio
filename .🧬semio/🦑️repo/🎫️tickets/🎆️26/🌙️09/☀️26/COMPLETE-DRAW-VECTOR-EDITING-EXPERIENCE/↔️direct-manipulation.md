@@ -55,3 +55,13 @@ Browser delivery is still pending. A fresh Draw-only `describe materialize-dev` 
 The shared Canvas2dGumballOverlay exists but is not connected to Draw. It only becomes visible for activeUtility === "transform"; Draw declares "transformMove" and supplies no gumball metadata. Its move handler immediately dispatches incremental artifact actions and its pointer-up handler only clears local refs. It does not supply a start/preview/commit/cancel transaction to Draw's retained DrawingSession. Simply emitting a gumball meta row would therefore fail the single-history-edit and cancellation requirements, and would not display under the current utility identifier.
 
 The existing retained Draw gesture owner lives at artifacts/drawing/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down, despite neighboring commands living under standards/1/subsets/any/editor. Its preview projection supports translation only. A complete handle implementation needs declared handle geometry plus an exact gesture owner and absolute transform preview, one atomic release commit, Escape/pointer-cancel rollback, keyboard-accessible handle actions, and native/React twins. It must reuse the existing selected-root/parent-inverse preparation without applying repeated deltas to already-updated state. The framework overlay's current FEM coordinate default must not enter Draw world-coordinate transforms.
+
+
+### Exact Transform Representation
+
+The later [affine transform checkpoint](↗️affine-transforms.md) removes the five-scalar representation blocker by retaining shear, signed scales and collapsed axes across schema, mutation, clone/digest and scene projection. The registered TS suite now passes 66 tests / 1,307 assertions. Native/build and handle interaction remain unverified. This is the foundation for the transactional resize/rotate work described above, not completion of that interaction.
+
+
+### Shared Canvas Handles
+
+[Transform handles](🎛️transform-handles.md) corrects the earlier selection-hook assumption: the current request-context hook supplies InteractionView. Nine painted handles now connect to retained pointer preparation, absolute matrix preview and release-only commits. The TS suite passes 75 tests / 1,373 assertions. Native registered-editor and browser checks are still unverified; large render work, Boolean/trace bounds and remaining handle accessibility/snapping are open.

@@ -1,68 +1,572 @@
 [
   {
     "name": "join-separated-contours",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"line","to":[5,0]},{"kind":"move","to":[10,0]},{"kind":"quad","ctrl":[15,5],"to":[20,0]}],
-    "operation": {"kind":"join","index":1,"other":2},
-    "after": [{"kind":"move","to":[0,0]},{"kind":"line","to":[5,0]},{"kind":"line","to":[10,0]},{"kind":"quad","ctrl":[15,5],"to":[20,0]}]
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "move",
+        "to": [
+          10,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          15,
+          5
+        ],
+        "to": [
+          20,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "join",
+      "index": 1,
+      "other": 2
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          15,
+          5
+        ],
+        "to": [
+          20,
+          0
+        ]
+      }
+    ]
   },
   {
     "name": "join-reversed-contours",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"cubic","ctrl1":[1,2],"ctrl2":[4,2],"to":[5,0]},{"kind":"move","to":[10,0]},{"kind":"line","to":[20,0]}],
-    "operation": {"kind":"join","index":0,"other":3},
-    "after": [{"kind":"move","to":[5,0]},{"kind":"cubic","ctrl1":[4,2],"ctrl2":[1,2],"to":[0,0]},{"kind":"line","to":[20,0]},{"kind":"line","to":[10,0]}]
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          1,
+          2
+        ],
+        "ctrl2": [
+          4,
+          2
+        ],
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "move",
+        "to": [
+          10,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          20,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "join",
+      "index": 0,
+      "other": 3
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          4,
+          2
+        ],
+        "ctrl2": [
+          1,
+          2
+        ],
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          20,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          0
+        ]
+      }
+    ]
   },
   {
     "name": "join-coincident-endpoints",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"line","to":[5,0]},{"kind":"move","to":[5,0]},{"kind":"line","to":[20,0]}],
-    "operation": {"kind":"join","index":1,"other":2},
-    "after": [{"kind":"move","to":[0,0]},{"kind":"line","to":[5,0]},{"kind":"line","to":[20,0]}]
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "move",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          20,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "join",
+      "index": 1,
+      "other": 2
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          20,
+          0
+        ]
+      }
+    ]
   },
   {
     "name": "join-same-contour",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"line","to":[5,0]}],
-    "operation": {"kind":"join","index":1,"other":0},
-    "after": [{"kind":"move","to":[0,0]},{"kind":"line","to":[5,0]},{"kind":"close"}]
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          5,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "join",
+      "index": 1,
+      "other": 0
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ]
   },
   {
     "name": "reject-join-closed-contour",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"line","to":[5,0]},{"kind":"close"},{"kind":"move","to":[10,0]}],
-    "operation": {"kind":"join","index":0,"other":3},
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "close"
+      },
+      {
+        "kind": "move",
+        "to": [
+          10,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "join",
+      "index": 0,
+      "other": 3
+    },
     "error": true
   },
   {
     "name": "reject-join-interior-anchor",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"line","to":[5,0]},{"kind":"line","to":[10,0]},{"kind":"move","to":[20,0]}],
-    "operation": {"kind":"join","index":1,"other":3},
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          5,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          10,
+          0
+        ]
+      },
+      {
+        "kind": "move",
+        "to": [
+          20,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "join",
+      "index": 1,
+      "other": 3
+    },
     "error": true
   },
   {
     "name": "convert-line",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"line","to":[12,6]}],
-    "operation": {"kind":"convert","index":1,"target":"cubic"},
-    "after": [{"kind":"move","to":[0,0]},{"kind":"cubic","ctrl1":[4,2],"ctrl2":[8,4],"to":[12,6]}]
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          12,
+          6
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "convert",
+      "index": 1,
+      "target": "cubic"
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          4,
+          2
+        ],
+        "ctrl2": [
+          8,
+          4
+        ],
+        "to": [
+          12,
+          6
+        ]
+      }
+    ]
   },
   {
     "name": "convert-quadratic",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"quad","ctrl":[6,12],"to":[12,0]}],
-    "operation": {"kind":"convert","index":1,"target":"cubic"},
-    "after": [{"kind":"move","to":[0,0]},{"kind":"cubic","ctrl1":[4,8],"ctrl2":[8,8],"to":[12,0]}]
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          6,
+          12
+        ],
+        "to": [
+          12,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "convert",
+      "index": 1,
+      "target": "cubic"
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          4,
+          8
+        ],
+        "ctrl2": [
+          8,
+          8
+        ],
+        "to": [
+          12,
+          0
+        ]
+      }
+    ]
   },
   {
     "name": "convert-arc",
-    "before": [{"kind":"move","to":[10,0]},{"kind":"arc","rx":10,"ry":10,"rotation":0,"largeArc":false,"sweep":true,"to":[0,10]}],
-    "operation": {"kind":"convert","index":1,"target":"cubic"},
-    "after": [{"kind":"move","to":[10,0]},{"kind":"cubic","ctrl1":[10,5.522847498307933],"ctrl2":[5.522847498307934,10],"to":[0,10]}]
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          0
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 10,
+        "ry": 10,
+        "rotation": 0,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          0,
+          10
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "convert",
+      "index": 1,
+      "target": "cubic"
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          10,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          10,
+          5.522847498307933
+        ],
+        "ctrl2": [
+          5.522847498307934,
+          10
+        ],
+        "to": [
+          0,
+          10
+        ]
+      }
+    ]
   },
   {
     "name": "straighten-cubic",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"cubic","ctrl1":[4,8],"ctrl2":[8,8],"to":[12,0]},{"kind":"close"}],
-    "operation": {"kind":"convert","index":1,"target":"line"},
-    "after": [{"kind":"move","to":[0,0]},{"kind":"line","to":[12,0]},{"kind":"close"}]
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          4,
+          8
+        ],
+        "ctrl2": [
+          8,
+          8
+        ],
+        "to": [
+          12,
+          0
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "operation": {
+      "kind": "convert",
+      "index": 1,
+      "target": "line"
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          12,
+          0
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ]
   },
   {
     "name": "reject-convert-contour-start",
-    "before": [{"kind":"move","to":[0,0]},{"kind":"line","to":[12,6]}],
-    "operation": {"kind":"convert","index":0,"target":"cubic"},
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "to": [
+          12,
+          6
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "convert",
+      "index": 0,
+      "target": "cubic"
+    },
     "error": true
   },
   {
@@ -900,5 +1404,217 @@
         ]
       }
     ]
+  },
+  {
+    "name": "position-anchor",
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          0,
+          12
+        ],
+        "ctrl2": [
+          12,
+          12
+        ],
+        "to": [
+          12,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          20,
+          0
+        ],
+        "to": [
+          24,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "position",
+      "index": 1,
+      "point": "anchor",
+      "to": [
+        15,
+        5
+      ]
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          0,
+          12
+        ],
+        "ctrl2": [
+          15,
+          17
+        ],
+        "to": [
+          15,
+          5
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          23,
+          5
+        ],
+        "to": [
+          24,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "position-control",
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          0,
+          12
+        ],
+        "ctrl2": [
+          12,
+          12
+        ],
+        "to": [
+          12,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          20,
+          0
+        ],
+        "to": [
+          24,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "position",
+      "index": 1,
+      "point": "control1",
+      "to": [
+        -4,
+        18
+      ]
+    },
+    "after": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          -4,
+          18
+        ],
+        "ctrl2": [
+          12,
+          12
+        ],
+        "to": [
+          12,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          20,
+          0
+        ],
+        "to": [
+          24,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "name": "position-missing-control",
+    "before": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "cubic",
+        "ctrl1": [
+          0,
+          12
+        ],
+        "ctrl2": [
+          12,
+          12
+        ],
+        "to": [
+          12,
+          0
+        ]
+      },
+      {
+        "kind": "quad",
+        "ctrl": [
+          20,
+          0
+        ],
+        "to": [
+          24,
+          0
+        ]
+      }
+    ],
+    "operation": {
+      "kind": "position",
+      "index": 0,
+      "point": "control2",
+      "to": [
+        1,
+        2
+      ]
+    },
+    "error": true
   }
 ]

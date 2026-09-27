@@ -1,0 +1,408 @@
+{
+  "labels": {
+    "en": "Merge Down",
+    "de": "Nach unten vereinen"
+  },
+  "images": {
+    "red": {
+      "width": 1,
+      "height": 1,
+      "pixels": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    "blue": {
+      "width": 2,
+      "height": 1,
+      "pixels": [
+        0,
+        0,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255
+      ]
+    },
+    "spare": {
+      "width": 1,
+      "height": 1,
+      "pixels": [
+        0,
+        255,
+        0,
+        255
+      ]
+    },
+    "mask": {
+      "width": 1,
+      "height": 1,
+      "pixels": [
+        255,
+        255,
+        255,
+        128
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "Root siblings retain shared image assets",
+      "layers": [
+        {
+          "kind": "pixel",
+          "id": "outside",
+          "name": "Outside",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": -2,
+            "y": 0.5,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": null,
+          "width": 2,
+          "height": 1,
+          "imageKey": "blue"
+        },
+        {
+          "kind": "pixel",
+          "id": "lower",
+          "name": "Lower",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 1,
+            "y": 0.5,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": null,
+          "width": 2,
+          "height": 1,
+          "imageKey": "blue"
+        },
+        {
+          "kind": "pixel",
+          "id": "upper",
+          "name": "Upper",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0.5,
+            "y": 0.5,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": null,
+          "width": 1,
+          "height": 1,
+          "imageKey": "red"
+        }
+      ],
+      "layerId": "upper",
+      "parentId": null,
+      "index": 1,
+      "assetCapacity": 64
+    },
+    {
+      "name": "Nested siblings preserve the parent transform and opacity",
+      "layers": [
+        {
+          "kind": "pixel",
+          "id": "outside",
+          "name": "Outside",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": -2,
+            "y": 0.5,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": null,
+          "width": 2,
+          "height": 1,
+          "imageKey": "blue"
+        },
+        {
+          "kind": "group",
+          "id": "group",
+          "name": "Group",
+          "visible": true,
+          "opacity": 0.75,
+          "blendMode": "normal",
+          "transform": {
+            "x": 4,
+            "y": 2,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": null,
+          "children": [
+            {
+              "kind": "pixel",
+              "id": "lower",
+              "name": "Lower",
+              "visible": true,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 1,
+                "y": 0.5,
+                "rotation": 0,
+                "scaleX": 1,
+                "scaleY": 1
+              },
+              "mask": null,
+              "width": 2,
+              "height": 1,
+              "imageKey": "blue"
+            },
+            {
+              "kind": "pixel",
+              "id": "upper",
+              "name": "Upper",
+              "visible": true,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 0.5,
+                "y": 0.5,
+                "rotation": 0,
+                "scaleX": 1,
+                "scaleY": 1
+              },
+              "mask": null,
+              "width": 1,
+              "height": 1,
+              "imageKey": "red"
+            }
+          ]
+        }
+      ],
+      "layerId": "upper",
+      "parentId": "group",
+      "index": 0
+    },
+    {
+      "name": "Masked translucent group merges without losing coverage",
+      "layers": [
+        {
+          "kind": "pixel",
+          "id": "outside",
+          "name": "Outside",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": -2,
+            "y": 0.5,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": null,
+          "width": 2,
+          "height": 1,
+          "imageKey": "blue"
+        },
+        {
+          "kind": "pixel",
+          "id": "lower",
+          "name": "Lower",
+          "visible": true,
+          "opacity": 1,
+          "blendMode": "normal",
+          "transform": {
+            "x": 1,
+            "y": 0.5,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": null,
+          "width": 2,
+          "height": 1,
+          "imageKey": "blue"
+        },
+        {
+          "kind": "group",
+          "id": "upper",
+          "name": "Upper",
+          "visible": true,
+          "opacity": 0.5,
+          "blendMode": "normal",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1
+          },
+          "mask": {
+            "enabled": true,
+            "linked": true,
+            "invert": false,
+            "width": 1,
+            "height": 1,
+            "imageKey": "mask",
+            "transform": {
+              "x": 0.5,
+              "y": 0.5,
+              "rotation": 0,
+              "scaleX": 1,
+              "scaleY": 1
+            }
+          },
+          "children": [
+            {
+              "kind": "pixel",
+              "id": "inside",
+              "name": "Upper",
+              "visible": true,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 0.5,
+                "y": 0.5,
+                "rotation": 0,
+                "scaleX": 1,
+                "scaleY": 1
+              },
+              "mask": null,
+              "width": 1,
+              "height": 1,
+              "imageKey": "red"
+            }
+          ]
+        }
+      ],
+      "layerId": "upper",
+      "parentId": null,
+      "index": 1,
+      "expectedPixels": [
+        64,
+        0,
+        191,
+        255,
+        0,
+        0,
+        255,
+        255
+      ],
+      "removedAssets": [
+        "red",
+        "mask"
+      ],
+      "retainedAssets": [
+        "blue",
+        "spare"
+      ],
+      "oracleAlpha": 64
+    }
+  ],
+  "expected": {
+    "origin": [
+      0,
+      0
+    ],
+    "width": 2,
+    "height": 1,
+    "pixels": [
+      255,
+      0,
+      0,
+      255,
+      0,
+      0,
+      255,
+      255
+    ],
+    "removedAssets": [
+      "red"
+    ],
+    "retainedAssets": [
+      "blue",
+      "spare",
+      "mask"
+    ]
+  },
+  "invalid": [
+    {
+      "name": "Missing selection",
+      "id": "missing"
+    },
+    {
+      "name": "Bottom layer",
+      "id": "outside"
+    },
+    {
+      "name": "Hidden upper",
+      "id": "upper",
+      "patch": {
+        "visible": false
+      }
+    },
+    {
+      "name": "Backdrop blend",
+      "id": "upper",
+      "patch": {
+        "blendMode": "multiply"
+      }
+    },
+    {
+      "name": "Adjustment sibling",
+      "id": "upper",
+      "patch": {
+        "kind": "adjustment",
+        "adjustmentKind": "brightnessContrast",
+        "params": {}
+      }
+    },
+    {
+      "name": "Hidden lower sibling",
+      "id": "upper",
+      "target": "lower",
+      "patch": {
+        "visible": false
+      }
+    },
+    {
+      "name": "Lower sibling backdrop blend",
+      "id": "upper",
+      "target": "lower",
+      "patch": {
+        "blendMode": "screen"
+      }
+    },
+    {
+      "name": "Lower adjustment sibling",
+      "id": "upper",
+      "target": "lower",
+      "patch": {
+        "kind": "adjustment",
+        "adjustmentKind": "brightnessContrast",
+        "params": {}
+      }
+    }
+  ],
+  "hints": {
+    "en": "Combine this layer with the layer below. Both must be visible pixels or groups using Normal blend.",
+    "de": "Diese Ebene mit der darunterliegenden vereinen. Beide müssen sichtbare Pixel- oder Gruppenebenen im normalen Mischmodus sein."
+  }
+}

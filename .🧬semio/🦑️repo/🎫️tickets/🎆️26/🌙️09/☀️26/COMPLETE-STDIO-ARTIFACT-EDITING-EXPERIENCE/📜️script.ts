@@ -103,6 +103,22 @@ async function verifyCompactMediaSchemas(): Promise<number> {
   return 2;
 }
 
+async function verifyCompactMediaRoutes(): Promise<number> {
+  const routes: Array<[string, string[]]> = [
+    ["📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🦀️.rs", ["PngMutation::PatchPixels", "one_field!(gama, ChangeGamma"]],
+    ["🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🦀️.rs", ["WavMutation::PatchData", "WavMutation::SetFmt"]],
+    ["📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/✏️editor/🦀️.rs", ["JpgMutation::ChangeReEncodeQuality", "JpgMutation::ReplacePixels"]],
+    ["🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🦀️.rs", ["TiffMutation::ChangeByteOrder", "TiffMutation::ReplaceTag"]],
+    ["🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🦀️.rs", ["Mp4Mutation::SetFtyp", "Mp4Mutation::SetSampleSync"]],
+  ];
+  for (const [file, tokens] of routes) {
+    const source = await readFile(join(artifacts, file), "utf8");
+    for (const token of tokens) if (!source.includes(token)) throw new Error(`missing compact media route ${token}: ${file}`);
+    if (!source.includes("ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES") || !source.includes("inverse(mutation, snapshot)")) throw new Error(`missing exact forward/inverse retained admission: ${file}`);
+  }
+  return routes.length;
+}
+
 const command = process.argv[2] ?? "verify";
 const result: Record<string, number> = {};
 if (command === "verify" || command === "controllers") result.controllers = await verifyControllers();
@@ -110,5 +126,6 @@ if (command === "verify" || command === "rollout") result.rollout = await verify
 if (command === "verify" || command === "truthful-windows") result.truthfulWindows = await verifyTruthfulWindows();
 if (command === "verify" || command === "dead-commands") result.deadCommands = await verifyDeadCommands();
 if (command === "verify" || command === "compact-media-schemas") result.compactMediaSchemas = await verifyCompactMediaSchemas();
-if (!Object.keys(result).length) throw new Error("usage: bun 📜️script.ts <verify|controllers|rollout|truthful-windows|dead-commands|compact-media-schemas>");
+if (command === "verify" || command === "compact-media-routes") result.compactMediaRoutes = await verifyCompactMediaRoutes();
+if (!Object.keys(result).length) throw new Error("usage: bun 📜️script.ts <verify|controllers|rollout|truthful-windows|dead-commands|compact-media-schemas|compact-media-routes>");
 console.log(JSON.stringify(result, null, 2));

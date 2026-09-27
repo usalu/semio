@@ -2598,6 +2598,109 @@ class DirectoryLiveLanesScript extends BundleScript {
   }
 }
 
+/** 🏳️ The value following `flag` in a verb's segments, or `undefined` when absent or followed by another flag. */
+function flagValue(segments: readonly string[], flag: string): string | undefined {
+  const index = segments.indexOf(flag);
+  const value = index >= 0 ? segments[index + 1] : undefined;
+  return value === undefined || value.startsWith("--") ? undefined : value;
+}
+
+/** 🎲️ The hostile-input laws the check runs: the language-neutral draw vectors, the fixture's coverage of every registered
+ * route, the enumerated typed refusals, and the generative law (drawn mutations of every route's own request and drawn
+ * frame sequences on both sockets, shrunk findings) — the last once per seed. */
+const HOSTILE_INPUT_LAWS = {
+  draws: "hostile_generative::long::hostile_draws_reproduce_the_language_neutral_vectors",
+  coverage: "the_hostile_input_fixture_covers_every_registered_route",
+  refusals: "every_route_answers_hostile_input_with_a_typed_signed_refusal",
+  generative: "hostile_generative::long::every_route_and_socket_survives_generated_hostile_input",
+} as const;
+
+/** 🎲️ `hostile-input-check [--seeds <n,…> | --seed-range <from>..<to>] [--locale en|de]` — the hub's hostile-input
+ * gate as one record: the fixture's language-neutral oracle (`os-hub-ts` `🚧️hostile-input`, Ajv), the enumerated laws, and
+ * the generative law once per seed (`SEMIO_HUB_HOSTILE_SEED`; default the fixture's own seeds, a range turns it into a
+ * longer fuzz run). Each seed's requests, socket sequences and findings are measured; any finding fails the record with
+ * its seed. Ctrl-C stops the running law. */
+class HostileInputCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const locale = flagValue(segments, "--locale") === "de" ? "de" : "en";
+    const fixture = JSON.parse(readFileSync(join(this.repoRoot, "🌎️hub/🧫️fixtures/🚧️hostile-input-v1/🔣️.json"), "utf8"));
+    const range = flagValue(segments, "--seed-range")?.match(/^(\d+)\.\.(\d+)$/u);
+    const seeds: number[] = range ? Array.from({ length: Math.max(0, Number(range[2]) - Number(range[1]) + 1) }, (_, index) => Number(range[1]) + index) : (flagValue(segments, "--seeds")?.split(",").map(Number) ?? (fixture.generative.seeds as number[]));
+    if (seeds.length === 0 || seeds.some((seed) => !Number.isSafeInteger(seed) || seed < 0)) throw new Error("hostile-input-check needs non-negative integer seeds: --seeds <n,…> | --seed-range <from>..<to>");
+    const { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } = await import("../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts");
+    const startedAt = new Date();
+    let cancelled = false;
+    const interrupt = (): void => {
+      cancelled = true;
+    };
+    process.once("SIGINT", interrupt);
+    await withAcceptanceRecord(this.repoRoot, "hub-hostile-input", async () => {
+      const typescriptRoot = join(this.repoRoot, "🌎️hub/📦️packages/🟦️typescript");
+      const oracle = spawnSync("bunx", ["vitest", "run", "--config", join(this.repoRoot, "🌎️hub/🧪️tests/🎚️config/🟦️.ts"), join(this.repoRoot, "🌎️hub/🧪️tests/🚧️hostile-input/🟦️.ts")], { cwd: typescriptRoot, stdio: "inherit" });
+      const law = (name: string, seed?: number): Promise<{ status: number; lines: string[] }> =>
+        new Promise((resolveExit) => {
+          const lines: string[] = [];
+          const child = spawn("cargo", ["test", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "--no-fail-fast", "--", "--exact", `tests::${name}`, "--nocapture", "--test-threads=1"], { cwd: this.root, env: { ...process.env, RUST_MIN_STACK: "268435456", ...(seed === undefined ? {} : { SEMIO_HUB_HOSTILE_SEED: String(seed) }) }, stdio: ["ignore", "pipe", "pipe"] });
+          const stop = (): void => {
+            child.kill("SIGINT");
+          };
+          process.once("SIGINT", stop);
+          const collect = (chunk: Buffer): void => {
+            process.stdout.write(chunk);
+            lines.push(...chunk.toString("utf8").split("\n"));
+          };
+          child.stdout.on("data", collect);
+          child.stderr.on("data", collect);
+          child.once("close", (code) => {
+            process.removeListener("SIGINT", stop);
+            resolveExit({ status: code ?? -1, lines });
+          });
+        });
+      const passes = (run: { status: number; lines: string[] }): boolean => run.status === 0 && run.lines.some((line) => line.includes("test result: ok. 1 passed"));
+      const enumerated: Record<string, boolean> = {};
+      for (const name of ["draws", "coverage", "refusals"] as const) {
+        if (cancelled) break;
+        enumerated[name] = passes(await law(HOSTILE_INPUT_LAWS[name]));
+      }
+      let requests = 0;
+      let sequences = 0;
+      const findings: string[] = [];
+      const failedSeeds: number[] = [];
+      for (const seed of seeds) {
+        if (cancelled) break;
+        const run = await law(HOSTILE_INPUT_LAWS.generative, seed);
+        const counted = run.lines.map((line) => /hostile-generative: (\d+) requests, (\d+) socket sequences, (\d+) findings/u.exec(line)).find((match) => match !== null);
+        requests += Number(counted?.[1] ?? 0);
+        sequences += Number(counted?.[2] ?? 0);
+        if (!passes(run)) {
+          failedSeeds.push(seed);
+          findings.push(...run.lines.filter((line) => line.startsWith("seed ")).slice(0, 8));
+        }
+      }
+      const enumeratedPassed = Object.values(enumerated).filter(Boolean).length;
+      const status = cancelled ? "skipped" : oracle.status === 0 && enumeratedPassed === 3 && failedSeeds.length === 0 ? "pass" : "fail";
+      const summary = {
+        en: `oracle ${oracle.status === 0 ? "passes" : "fails"}; enumerated laws ${enumeratedPassed}/3; generative ${seeds.length - failedSeeds.length}/${seeds.length} seeds clean over ${requests} requests and ${sequences} socket sequences${failedSeeds.length ? `; findings at seeds ${failedSeeds.join(", ")}` : ""}`,
+        de: `Orakel ${oracle.status === 0 ? "bestanden" : "fehlgeschlagen"}; aufgezählte Gesetze ${enumeratedPassed}/3; generativ ${seeds.length - failedSeeds.length}/${seeds.length} Startwerte ohne Befund über ${requests} Anfragen und ${sequences} Socket-Folgen${failedSeeds.length ? `; Befunde bei Startwerten ${failedSeeds.join(", ")}` : ""}`,
+      };
+      console.log(`[hostile-input] ${summary[locale]}`);
+      for (const finding of findings) console.log(`[hostile-input] ${finding}`);
+      publishAcceptanceCheckResult(
+        this.repoRoot,
+        acceptanceCheckResult({
+          check: "hub-hostile-input",
+          status,
+          startedAt,
+          measured: { seeds: seeds.join(","), oracle: oracle.status === 0, draws: enumerated.draws ?? false, coverage: enumerated.coverage ?? false, refusals: enumerated.refusals ?? false, requests, socketSequences: sequences, failedSeeds: failedSeeds.join(",") },
+          summary,
+        }),
+      );
+      if (status !== "pass") process.exitCode = 1;
+    });
+    process.removeListener("SIGINT", interrupt);
+  }
+}
+
 class ArtifactCasCheckScript extends BundleScript {
   run(segments: string[]): void {
     runCargo(["test", "--manifest-path", "Cargo.toml", "--all-features", "--lib", "artifact_chunk_cas", ...segments], this.root, { ...process.env, RUST_MIN_STACK: "16777216" });
@@ -9859,6 +9962,22 @@ function trustedBootstrapComponentCodecRowsV1(repoRoot: string, emitter: string,
   return Object.freeze({ rows: Object.freeze(rows.sort(trustedBootstrapCodecOrder)), unowned });
 }
 
+/** ⛓️ The declared kinds a LINKED package does not own. The hub executes a linked package's documents only through
+ * the native codecs it links (`linkedCodecRegistry`), and every document-open target must bind one of them
+ * (`validate_bundle`: "trusted document-open target is bound to no native codec of its own package"), so a kind the
+ * descriptor declares without a linked row (Stdio's definition-only `s.stdio.txt`/`tsv`/`html`, whose editors declare
+ * the kind they edit) is unowned: declared, never a hub open target. A declared kind whose linked row carries another
+ * schema is an identity conflict, not an unowned kind. Law + fixture: `🌎️hub/🧪️tests/⛓️linked-codec-ownership`. */
+export function trustedBootstrapLinkedUnownedKindsV1(pairs: readonly (readonly [string, string])[], linked: readonly TrustedBootstrapCodec[]): ReadonlySet<string> {
+  const unowned = new Set<string>();
+  for (const [kind, schema] of pairs) {
+    const row = linked.find((codec) => codec.artifactKind === kind);
+    if (!row) unowned.add(kind);
+    else if (row.artifactSchema !== schema) throw new Error(`linked codec ${kind} carries schema ${row.artifactSchema}, its descriptor declares ${schema}`);
+  }
+  return Object.freeze(unowned);
+}
+
 /** 🗂️ Every `ArtifactKindSpec` one verified descriptor declares, deduplicated by kind id and in
  * declaration order. This is `validate_descriptor_open_target`'s own discoverability union: a spec
  * declared at PLUGIN level (`PluginBuilder::artifact_kind`, the channel GIS and Stdio still use) or
@@ -10040,6 +10159,7 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
           const linked = linkedCodecs[request.pluginId as "gis" | "stdio"];
           if (!linked || linked.length === 0) throw new Error(`trusted codec capture carries no linked closure for ${request.pluginId}`);
           codecs[request.pluginId] = linked;
+          unownedKinds.set(request.pluginId, trustedBootstrapLinkedUnownedKindsV1(manifestKinds, linked));
         } else {
           const emitter = join(target, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
           const answered = trustedBootstrapComponentCodecRowsV1(repoRoot, emitter, join(stage, "component.wasm"), join(target, "component-codecs.json"), manifestKinds);
@@ -17377,6 +17497,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("socket-grant-command-source-check", HubSocketGrantCommandSourceScript)
   .register("test", TestScript)
   .register("directory-live-lanes", DirectoryLiveLanesScript)
+  .register("hostile-input-check", HostileInputCheckScript)
   .register("artifact-cas-check", ArtifactCasCheckScript)
   .register("socket-grant-check", SocketGrantCheckScript)
   .register("admin-directory-authority-check", AdminDirectoryAuthorityCheckScript)

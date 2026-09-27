@@ -314,6 +314,8 @@ pub mod standards {
                         pub mod replace_pixels;
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-pixels/🦀️.rs"]
                         pub mod patch_pixels;
+                        #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
+                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
                         pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️replace-text-chunk/🦀️.rs"]

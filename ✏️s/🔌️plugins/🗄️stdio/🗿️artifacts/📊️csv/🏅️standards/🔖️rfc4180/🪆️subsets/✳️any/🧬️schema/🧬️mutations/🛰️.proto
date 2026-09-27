@@ -14,13 +14,15 @@ message SetField {
   bool quoted = 4;
 }
 
+message PatchSnapshot { bytes patch = 1; }
+
 message CsvMutation {
   oneof mutation {
-    bool no_mutation = 1;
-    SetSnapshot set_snapshot = 2;
-    SetHasHeader set_has_header = 3;
-    InsertRecord insert_record = 4;
-    RemoveRecord remove_record = 5;
-    SetField set_field = 6;
+    SetSnapshot set_snapshot = 1;
+    SetHasHeader set_has_header = 2;
+    InsertRecord insert_record = 3;
+    RemoveRecord remove_record = 4;
+    SetField set_field = 5;
+    PatchSnapshot patch_snapshot = 6;
   }
 }

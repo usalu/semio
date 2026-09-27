@@ -4,7 +4,7 @@
   "title": "UiPreferences",
   "type": "object",
   "additionalProperties": false,
-  "required": ["appearance", "layout", "driverId", "customDrivers", "locale", "terminology", "themeId", "customThemes", "keybindingOverrides"],
+  "required": ["appearance", "layout", "driverId", "customDrivers", "locale", "terminology", "themeId", "customThemes", "keybindingOverrides", "namedLayouts"],
   "properties": {
     "appearance": { "anyOf": [{ "type": "string", "enum": ["system", "light", "dark"] }, { "type": "null" }] },
     "layout": { "anyOf": [{ "type": "string", "enum": ["desktop", "tablet"] }, { "type": "null" }] },
@@ -14,7 +14,8 @@
     "terminology": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
     "themeId": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
     "customThemes": { "type": "object", "additionalProperties": { "$ref": "#/$defs/UiTheme" } },
-    "keybindingOverrides": { "type": "object", "additionalProperties": { "type": "string" } }
+    "keybindingOverrides": { "type": "object", "additionalProperties": { "type": "string" } },
+    "namedLayouts": { "$comment": "The user's own saved window layouts, per app id, per layout id.", "type": "object", "additionalProperties": { "type": "object", "additionalProperties": { "$ref": "#/$defs/UserNamedLayout" } } }
   },
   "$defs": {
     "DataClasses": {
@@ -28,7 +29,8 @@
         "terminology": "persistedShared",
         "themeId": "persistedShared",
         "customThemes": "persistedShared",
-        "keybindingOverrides": "persistedShared"
+        "keybindingOverrides": "persistedShared",
+        "namedLayouts": "persistedShared"
       }
     },
     "UiDriver": {
@@ -46,6 +48,17 @@
         "label": { "type": "string" },
         "config": {}
       }
-    }
+    },
+    "UserNamedLayout": {
+      "$comment": "One saved layout: its label and the window arrangement it restores (the id is its key).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "layout"],
+      "properties": { "label": { "type": "string", "minLength": 1, "maxLength": 256 }, "layout": { "$ref": "#/$defs/WindowLayout" } }
+    },
+    "WindowLayout": { "type": "object", "additionalProperties": false, "required": ["root"], "properties": { "root": { "oneOf": [{ "$ref": "#/$defs/WindowLayoutAxisNode" }, { "$ref": "#/$defs/WindowLayoutStackNode" }] } } },
+    "WindowLayoutAxisNode": { "type": "object", "additionalProperties": false, "required": ["kind", "children"], "properties": { "kind": { "enum": ["row", "column"] }, "size": { "type": "number" }, "children": { "type": "array", "items": { "oneOf": [{ "$ref": "#/$defs/WindowLayoutAxisNode" }, { "$ref": "#/$defs/WindowLayoutStackNode" }] } } } },
+    "WindowLayoutStackNode": { "type": "object", "additionalProperties": false, "required": ["kind", "children"], "properties": { "kind": { "const": "stack" }, "size": { "type": "number" }, "children": { "type": "array", "items": { "$ref": "#/$defs/WindowLayoutWindowNode" } } } },
+    "WindowLayoutWindowNode": { "type": "object", "additionalProperties": false, "required": ["kind", "windowKindId"], "properties": { "kind": { "const": "window" }, "windowKindId": { "type": "string" }, "title": { "type": "string" }, "instanceId": { "type": "string" }, "templateId": { "type": "string" }, "corner": { "enum": ["topLeft", "topRight", "bottomLeft", "bottomRight"] } } }
   }
 }

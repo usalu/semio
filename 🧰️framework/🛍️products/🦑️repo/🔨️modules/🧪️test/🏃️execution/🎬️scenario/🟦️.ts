@@ -1,12 +1,12 @@
 import { materializeHost } from "../../🖥️host/🏗️materialization/🟦️.ts";
-import { type DiscoveredCase, type Implementation, type TestResult, type TestRole, markRunComplete, planExecution, readResults } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type DiscoveredCase, type Implementation, type SubjectRawInputs, type TestResult, type TestRole, markRunComplete, planExecution, readResults } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { type TestLevel, buildBudgetMs, runProbe, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { rmSync, writeFileSync } from "node:fs";
 
 export type PhaseOutcome = Readonly<{ results: TestResult[]; problems: string[] }>;
 
 /** 🏃️ Executes one `(case, level, role, implementation)` triple and reads back its owned result stream. */
-export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, role: TestRole, implementation: Implementation, subjectRawInputs?: Readonly<Partial<Record<Implementation, string>>>): PhaseOutcome {
+export function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, role: TestRole, implementation: Implementation, subjectRawInputs?: SubjectRawInputs): PhaseOutcome {
   const planned = planExecution(repoRoot, discovered, level, role, implementation);
   const plan = subjectRawInputs === undefined ? planned.plan : { ...planned.plan, subjectRawInputs };
   const { missingFixtures, planPath } = planned;

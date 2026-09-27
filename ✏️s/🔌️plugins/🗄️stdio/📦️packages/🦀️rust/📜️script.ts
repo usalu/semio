@@ -10,6 +10,7 @@ import { decodePackValue, encodePackValue } from "../../../../../🧰️framewor
 import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 
 const PACKAGE_NAME = "semio-s-plugin-stdio";
 const PLUGIN_ID = "stdio";
@@ -56,9 +57,7 @@ async function runControlled(command: string, args: string[], cwd: string, env: 
   while (!settled) {
     await new Promise((wake) => setTimeout(wake, Math.min(100, Math.max(1, control.remainingMs()))));
     if (control.cancelled() || control.remainingMs() <= 0) {
-      child.kill("SIGTERM");
-      await new Promise((wake) => setTimeout(wake, 100));
-      if (!settled) child.kill("SIGKILL");
+      terminateOwnedChildTree(child);
       throw new Error(control.cancelled() ? "stdio catalog-root cancelled" : `stdio catalog-root exceeded ${CATALOG_DEADLINE_MS}ms deadline`);
     }
   }
@@ -833,7 +832,7 @@ class HomeIoSurfaceScript extends BundleScript {
 }
 
 /** 🧪️ Checks the neutral editor acceptance fixture with an independent JSON Schema validator. */
-async function testEditorCatalogContract(packageRoot: string): Promise<void> {
+async function testEditorCatalogContract(packageRoot: string, shipping = false): Promise<void> {
   const root = resolve(packageRoot, "../..");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/✏️editor-catalog/🔣️.json"), "utf8")) as { editorCount: number; formatCount: number; editorApps: string[]; actions: { id: string }[] };
   const schema = JSON.parse(readFileSync(join(root, "🧬️schema/✏️editor-catalog/🔣️.json"), "utf8"));
@@ -846,7 +845,7 @@ async function testEditorCatalogContract(packageRoot: string): Promise<void> {
   if (roots !== fixture.editorCount) throw new Error(`editor catalogue expects ${fixture.editorCount} editors; native acceptance covers ${roots}`);
   const manifest = Bun.TOML.parse(readFileSync(join(packageRoot, "Cargo.toml"), "utf8")) as { features: Record<string, string[]>; package: { metadata: { semio: { playground: { app: string }[] } } } };
   const selected = new Set<string>();
-  const pending = ["default"];
+  const pending = [shipping ? "default" : "full-app-catalog"];
   while (pending.length) {
     const feature = pending.pop()!;
     if (selected.has(feature)) continue;
@@ -854,17 +853,17 @@ async function testEditorCatalogContract(packageRoot: string): Promise<void> {
     pending.push(...(manifest.features[feature] ?? []));
   }
   const editorFormats = [...selected].filter((feature) => feature.startsWith("semio-s-artifact-stdio-") && feature.endsWith("/component-app-assembly"));
-  if (editorFormats.length !== fixture.formatCount) throw new Error(`shipped component exposes editors for ${editorFormats.length}/${fixture.formatCount} formats`);
+  if (editorFormats.length !== fixture.formatCount) throw new Error(`${shipping ? "shipped component" : "native catalog"} exposes editors for ${editorFormats.length}/${fixture.formatCount} formats`);
   if (fixture.editorApps.length !== fixture.editorCount) throw new Error("editor fixture count differs from its app identities");
-  if (!isDeepStrictEqual(manifest.package.metadata.semio.playground.map((row) => row.app).sort(), [...fixture.editorApps].sort())) throw new Error("each editor needs its own launchable playground");
-  console.log(`[DEBUG] editor catalogue fixture validated: ${roots} editors, ${fixture.actions.length} edit operations`);
+  if (shipping && !isDeepStrictEqual(manifest.package.metadata.semio.playground.map((row) => row.app).sort(), [...fixture.editorApps].sort())) throw new Error("each editor needs its own launchable playground");
+  console.log(`[DEBUG] ${shipping ? "shipped" : "native"} editor catalogue fixture validated: ${roots} editors, ${fixture.actions.length} edit operations`);
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await testEditorCatalogContract(this.root);
-    if (rest[0] === "editor-catalog-contract") return;
+    await testEditorCatalogContract(this.root, rest[0] === "editor-shipping-contract");
+    if (rest[0] === "editor-catalog-contract" || rest[0] === "editor-shipping-contract") return;
     await runCatalogRootContractTests(this.root);
     if (rest[0] === "catalog-root-contract") return;
     await runCargoTestBudgeted([PACKAGE_NAME], this.repoRoot, rest);
@@ -874,8 +873,11 @@ class TestScript extends BundleScript {
 /** 🧩️ Verifies the complete editor component against the native WebAssembly parser. */
 class EditorComponentCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const outputRoot = segments[0] ?? join(cargoTargetDirectory(this.repoRoot), "stdio-editor-component");
-    if (segments.length > 1 || !isAbsolute(outputRoot)) throw new Error("editor-component-check accepts one absolute output directory");
+    const fullCatalog = segments[0] === "--full-catalog";
+    const args = fullCatalog ? segments.slice(1) : segments;
+    await testEditorCatalogContract(this.root, !fullCatalog);
+    const outputRoot = args[0] ?? join(cargoTargetDirectory(this.repoRoot), fullCatalog ? "stdio-editor-full-catalog" : "stdio-editor-component");
+    if (args.length > 1 || !isAbsolute(outputRoot)) throw new Error("editor-component-check accepts [--full-catalog] and one absolute output directory");
     mkdirSync(outputRoot, { recursive: true });
     const started = Date.now();
     let interrupted = false;
@@ -883,10 +885,11 @@ class EditorComponentCheckScript extends BundleScript {
     process.on("SIGINT", interrupt);
     process.on("SIGTERM", interrupt);
     const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
-    const env = devToolingEnv();
+    const env = devToolingEnv(fullCatalog ? { CARGO_TARGET_DIR: join(outputRoot, "target"), CARGO_BUILD_BUILD_DIR: join(outputRoot, "build"), CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", RUSTC_WORKSPACE_WRAPPER: "" } : {});
     try {
-      await runControlled("cargo", ["rustc", "-p", PACKAGE_NAME, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"], this.repoRoot, env, control);
-      const raw = join(cargoTargetDirectory(this.repoRoot), "wasm32-wasip2", COMPONENT_PROFILE, WASM_OUT);
+      const features = fullCatalog ? ["--features", "full-app-catalog"] : [];
+      await runControlled("cargo", ["rustc", "-p", PACKAGE_NAME, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", ...features], this.repoRoot, env, control);
+      const raw = join(cargoTargetDirectory(this.repoRoot, env), "wasm32-wasip2", COMPONENT_PROFILE, WASM_OUT);
       const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
       if (!jco) throw new Error("missing workspace component tooling");
       console.log("[DEBUG] complete editor component linked; validating the extracted module");

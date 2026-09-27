@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Flatten Raster Layers",
+  "description": "Replaces all original layers with one pixel layer containing the visible composite at the same world position. Hidden layers are removed; undo restores the complete original layer tree and assets.",
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "pattern": "\\S"
+    }
+  },
+  "additionalProperties": false
+}

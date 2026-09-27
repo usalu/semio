@@ -143,6 +143,70 @@
         "resourceUris": [],
         "noTokenLeak": true
       }
+    },
+    "agentBelowMembership": {
+      "tokenPresent": true,
+      "responses": [
+        {
+          "status": 200,
+          "canonicalBody": "{\"schema\":\"semio.directory.session-authority.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"expiresAt\":900000,\"sessionKind\":\"agent\"}"
+        },
+        {
+          "status": 200,
+          "canonicalBody": "{\"access\":\"member\",\"schema\":\"semio.directory.space-administration-page.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"spaceId\":\"space-a\",\"space\":{\"id\":\"space-a\",\"name\":\"Authorized\",\"kind\":\"studio\",\"visibility\":\"private\",\"ownerUserId\":\"user-a\",\"role\":\"spectator\",\"memberCount\":1,\"documentCount\":1,\"activeConnections\":0,\"createdAtMs\":1,\"updatedAtMs\":2},\"members\":{\"rows\":[{\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"role\":\"author\",\"owner\":true}]},\"documents\":{\"rows\":[{\"descriptor\":{\"spaceId\":\"space-a\",\"documentId\":\"shared-doc\",\"artifactKind\":\"note.document\",\"artifactSchema\":\"note.document@1\",\"owner\":{\"pluginId\":\"note-plugin\",\"packageId\":\"note-package\",\"version\":\"1.0.0\",\"packageHash\":\"1111111111111111111111111111111111111111111111111111111111111111\"},\"packSchemaHash\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"bootstrapVersion\":1,\"bootstrapFrontier\":{\"headSeq\":3,\"commitSeq\":2,\"epoch\":1},\"bootstrapSnapshotHash\":\"3333333333333333333333333333333333333333333333333333333333333333\"},\"headSeq\":8,\"commitSeq\":7,\"epoch\":1}]},\"receiptSha256\":\"1dd4630ba8b588081c2a812675274e06838f1d32bdf7fb99115dd1990dccc78c\"}"
+        }
+      ],
+      "expected": {
+        "state": "ready",
+        "errorCode": null,
+        "cacheAction": "publish",
+        "resourceUris": [
+          "semio://workspace",
+          "semio://workspace/artifacts",
+          "semio://workspace/scopes/space-a/shared-doc/descriptor"
+        ],
+        "noTokenLeak": true
+      }
+    },
+    "humanBelowMembership": {
+      "tokenPresent": true,
+      "responses": [
+        {
+          "status": 200,
+          "canonicalBody": "{\"schema\":\"semio.directory.session-authority.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"expiresAt\":900000,\"sessionKind\":\"external\"}"
+        },
+        {
+          "status": 200,
+          "canonicalBody": "{\"access\":\"member\",\"schema\":\"semio.directory.space-administration-page.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"spaceId\":\"space-a\",\"space\":{\"id\":\"space-a\",\"name\":\"Authorized\",\"kind\":\"studio\",\"visibility\":\"private\",\"ownerUserId\":\"user-a\",\"role\":\"spectator\",\"memberCount\":1,\"documentCount\":1,\"activeConnections\":0,\"createdAtMs\":1,\"updatedAtMs\":2},\"members\":{\"rows\":[{\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"role\":\"author\",\"owner\":true}]},\"documents\":{\"rows\":[{\"descriptor\":{\"spaceId\":\"space-a\",\"documentId\":\"shared-doc\",\"artifactKind\":\"note.document\",\"artifactSchema\":\"note.document@1\",\"owner\":{\"pluginId\":\"note-plugin\",\"packageId\":\"note-package\",\"version\":\"1.0.0\",\"packageHash\":\"1111111111111111111111111111111111111111111111111111111111111111\"},\"packSchemaHash\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"bootstrapVersion\":1,\"bootstrapFrontier\":{\"headSeq\":3,\"commitSeq\":2,\"epoch\":1},\"bootstrapSnapshotHash\":\"3333333333333333333333333333333333333333333333333333333333333333\"},\"headSeq\":8,\"commitSeq\":7,\"epoch\":1}]},\"receiptSha256\":\"1dd4630ba8b588081c2a812675274e06838f1d32bdf7fb99115dd1990dccc78c\"}"
+        }
+      ],
+      "expected": {
+        "state": "revoked",
+        "errorCode": "PERMISSION_DENIED",
+        "cacheAction": "invalidate",
+        "resourceUris": [],
+        "noTokenLeak": true
+      }
+    },
+    "principalAboveMembership": {
+      "tokenPresent": true,
+      "responses": [
+        {
+          "status": 200,
+          "canonicalBody": "{\"schema\":\"semio.directory.session-authority.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"expiresAt\":900000,\"sessionKind\":\"agent\"}"
+        },
+        {
+          "status": 200,
+          "canonicalBody": "{\"access\":\"author\",\"schema\":\"semio.directory.space-administration-page.v1\",\"sessionBindingSha256\":\"4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b4b\",\"authorizationGeneration\":7,\"spaceId\":\"space-a\",\"space\":{\"id\":\"space-a\",\"name\":\"Authorized\",\"kind\":\"studio\",\"visibility\":\"private\",\"ownerUserId\":\"user-a\",\"role\":\"author\",\"memberCount\":1,\"documentCount\":1,\"activeConnections\":0,\"createdAtMs\":1,\"updatedAtMs\":2},\"members\":{\"rows\":[{\"userId\":\"user-a\",\"email\":\"a@example.invalid\",\"displayName\":\"A\",\"role\":\"spectator\",\"owner\":true}]},\"documents\":{\"rows\":[{\"descriptor\":{\"spaceId\":\"space-a\",\"documentId\":\"shared-doc\",\"artifactKind\":\"note.document\",\"artifactSchema\":\"note.document@1\",\"owner\":{\"pluginId\":\"note-plugin\",\"packageId\":\"note-package\",\"version\":\"1.0.0\",\"packageHash\":\"1111111111111111111111111111111111111111111111111111111111111111\"},\"packSchemaHash\":\"2222222222222222222222222222222222222222222222222222222222222222\",\"bootstrapVersion\":1,\"bootstrapFrontier\":{\"headSeq\":3,\"commitSeq\":2,\"epoch\":1},\"bootstrapSnapshotHash\":\"3333333333333333333333333333333333333333333333333333333333333333\"},\"headSeq\":8,\"commitSeq\":7,\"epoch\":1}]},\"invites\":{\"rows\":[]},\"capabilities\":{\"renameSpace\":true,\"setVisibility\":true,\"deleteSpace\":true,\"upsertMember\":true,\"removeMember\":true,\"createInvite\":true,\"revokeInvite\":true},\"receiptSha256\":\"1ce7979497b6e649fd4e4e1516eb45b5a5099fd7ce06597c50789b52f1a1a977\"}"
+        }
+      ],
+      "expected": {
+        "state": "revoked",
+        "errorCode": "PERMISSION_DENIED",
+        "cacheAction": "invalidate",
+        "resourceUris": [],
+        "noTokenLeak": true
+      }
     }
   }
 }

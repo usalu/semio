@@ -59,7 +59,7 @@ fn artifact_capability(id: &str, tool_name: &str, kind: CapabilityKind, icon_id:
             CapabilityKind::Mutation => semio_framework::manifest::CapabilityEffects { writes: vec![semio_framework::manifest::ResourceSelector::new("artifact:{self}")], ..Default::default() },
             _ => Default::default(),
         },
-        policy: Default::default(),
+        policy: semio_framework::manifest::CapabilityPolicy { scopes: vec![semio_framework::manifest::kernel::CapabilityId(if kind == CapabilityKind::Mutation { "artifacts.write" } else { "artifacts.read" }.to_string())], ..Default::default() },
         execution: Default::default(),
         exposure: ToolExposure::Direct { tool_name: tool_name.to_string() },
         presentation: CapabilityPresentation { icon_id: Some(icon_id.to_string()), category: Some("gateway".to_string()), keys: None, in_palette: false, args: Vec::new() },
@@ -268,6 +268,10 @@ fn session_document_report(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str
 /// document rather than against the plugin's genesis (ticket 26/09/18 slice M10, step 1 of
 /// M8 §5.3's write path). A workspace that is not hub-bound, or a document the hub
 /// authorizes no execution target for, binds nothing and still opens.
+///
+/// 🟢️ The open answers once the document's actor is live (bounded), so the hub's tail past that pair —
+/// every writer's edit since the last checkpoint — is already queued for the guest when the agent's first
+/// command runs; `sessionDocument.sync` reports the link either way.
 fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: serde_json::Value) -> CallToolResult {
     let artifact_id = match require_field(&arguments, "artifactId") {
         Ok(value) => value.to_string(),
@@ -297,6 +301,9 @@ fn artifact_open_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments: 
                 Ok(bound) => bound,
                 Err(error) => return CallToolResult::tool_error(&error),
             };
+            if bound {
+                workspace.await_hub_session_document_live(&artifact_id);
+            }
             let structured = serde_json::json!({
                 "artifactId": artifact_id,
                 "kind": resolve_artifact_schema_id(workspace, &artifact_id),
@@ -561,28 +568,27 @@ fn base64_encode(bytes: &[u8]) -> String {
 //#region 🔖️Registration
 /// 🗿️ Registers the five real artifact tools against `registry` — every tool is present regardless
 /// of `workspace`; only a call's RESULT depends on the 3-tier contract (this file's own module doc).
-pub fn register_artifact_tools(registry: &mut InMemoryToolRegistry, workspace: Option<Arc<HeadlessWorkspace>>) {
+pub fn register_artifact_tools(registry: &mut InMemoryToolRegistry, workspace: Option<Arc<HeadlessWorkspace>>, principal: crate::policy::AgentPrincipal) {
     let capabilities = artifact_capabilities();
     let capability = |id: &str| capabilities.iter().find(|capability| capability.id.as_str() == id).cloned().expect("artifact_capabilities defines this id");
-
-    let open_tool = tool_from_capability(&capability("artifact.open"), "artifact_open");
-    let open_workspace = workspace.clone();
-    registry.register(open_tool, move |arguments| artifact_open_handler(&open_workspace, arguments)).expect("artifact_open is a valid tool name");
-
-    let create_tool = tool_from_capability(&capability("artifact.create"), "artifact_create");
-    let create_workspace = workspace.clone();
-    registry.register(create_tool, move |arguments| artifact_create_handler(&create_workspace, arguments)).expect("artifact_create is a valid tool name");
-
-    let validate_tool = tool_from_capability(&capability("artifact.validate"), "artifact_validate");
-    let validate_workspace = workspace.clone();
-    registry.register(validate_tool, move |arguments| artifact_validate_handler(&validate_workspace, arguments)).expect("artifact_validate is a valid tool name");
-
-    let snapshot_tool = tool_from_capability(&capability("artifact.snapshot"), "artifact_snapshot");
-    let snapshot_workspace = workspace.clone();
-    registry.register(snapshot_tool, move |arguments| artifact_snapshot_handler(&snapshot_workspace, arguments)).expect("artifact_snapshot is a valid tool name");
-
-    let export_tool = tool_from_capability(&capability("artifact.export"), "artifact_export");
-    registry.register(export_tool, move |arguments| artifact_export_handler(&workspace, arguments)).expect("artifact_export is a valid tool name");
+    let handlers: [(&str, &str, fn(&Option<Arc<HeadlessWorkspace>>, serde_json::Value) -> CallToolResult); 5] = [
+        ("artifact.open", "artifact_open", artifact_open_handler),
+        ("artifact.create", "artifact_create", artifact_create_handler),
+        ("artifact.validate", "artifact_validate", artifact_validate_handler),
+        ("artifact.snapshot", "artifact_snapshot", artifact_snapshot_handler),
+        ("artifact.export", "artifact_export", artifact_export_handler),
+    ];
+    for (id, tool_name, handler) in handlers {
+        let definition = capability(id);
+        let tool = tool_from_capability(&definition, tool_name);
+        let (workspace, principal) = (workspace.clone(), principal.clone());
+        registry
+            .register(tool, move |arguments| match crate::policy::authorize_capability_scopes(&principal, &definition) {
+                Ok(()) => handler(&workspace, arguments),
+                Err(error) => CallToolResult::tool_error(&error),
+            })
+            .expect("artifact tool names are valid");
+    }
 }
 //#endregion 🔖️Registration
 

@@ -1,0 +1,14 @@
+{
+  "extends": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay",
+    "types": ["node", "bun"]
+  },
+  "include": [
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/⚖️parity/📋️orchestration/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏃️execution/🎬️scenario/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧪️tests/🧪️test-platform/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🌐hub/s14-en2-overlay/🧰️framework/🛍️products/🦑️repo/🔨️modules/📜️statutes/🧪️tests/🗜️breach-cache-envelope/🟦️.ts"
+  ]
+}

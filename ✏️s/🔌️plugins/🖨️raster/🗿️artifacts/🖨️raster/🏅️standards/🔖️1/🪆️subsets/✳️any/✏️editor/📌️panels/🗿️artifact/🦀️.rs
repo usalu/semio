@@ -46,10 +46,12 @@ fn row_text(value: &str, stage: &'static str) -> UiAssemblyResult<UiText> {
 enum LayersRow<'a> {
     Add(&'static str, LabelText, &'static str),
     Layer(&'a RasterLayerNode),
+    Flatten(LabelText,LabelText),
 }
 
 fn layers_rows<'a>(document: &'a RasterDocument, labels: &RasterPlayLabels) -> Vec<LayersRow<'a>> {
     let mut rows = vec![LayersRow::Add("pixel", labels.add_pixel, "image"), LayersRow::Add("group", labels.add_group, "folder-plus")];
+    if !document.layers.is_empty() {rows.push(LayersRow::Flatten(labels.flatten_image,labels.flattened_image));}
     rows.extend(document.layers.iter().map(LayersRow::Layer));
     rows
 }
@@ -101,6 +103,7 @@ pub fn render(document: &RasterDocument, _runtime: &RasterConfig, labels: &Raste
     PanelTreeBuilder::new(RASTER_TREE_PREFIX)?
         .window_section(windows, RASTER_TREE_PREFIX, Some(ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, &rows, |row| match row {
             LayersRow::Add(kind, label, icon) => add_row(kind, *label, icon),
+            LayersRow::Flatten(label,name) => tree_item_with_action(format!("{RASTER_TREE_PREFIX}.flatten"),ui_label(label.as_str())?,None,raster_action("flattenLayers",Some(ui_value_map([("name",ui_value_text(name.as_str())?)])?))?),
             LayersRow::Layer(layer) => layer_tree_item(windows, layer, labels),
         })?
         .interaction_domain(RASTER_PLAY_CONTROLLER_ID, RASTER_INTERACTION_DOMAIN)?

@@ -253,6 +253,9 @@ mod args_bridge {
         let layer = || fold(args, LAYER);
         Ok(match action {
             "addLayer" => RasterCommand::AddLayer(decode(action, plain())?),
+            "flattenLayers" => RasterCommand::FlattenLayers(decode(action, plain())?),
+            "mergeDown" => RasterCommand::MergeDown(decode(action, plain())?),
+            "editMask" => RasterCommand::EditMask(decode(action, layer())?),
             "editPixels" => RasterCommand::EditPixels(decode(action, layer())?),
             "maskFromSelection" => RasterCommand::MaskFromSelection(decode(action, layer())?),
             "dropLayerKind" => RasterCommand::DropLayerKind(decode(action, plain())?),
@@ -302,6 +305,9 @@ semio_framework_plugin::app_commands! {
         "setCamera" as "camera" => set_camera::SetCamera,
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
+        "flattenLayers" as "flatten-layers" => flatten_layers::FlattenLayers,
+        "mergeDown" as "merge-down" => merge_down::MergeDown,
+        "editMask" as "edit-mask" => edit_mask::EditMask,
         "editPixels" as "edit-pixels" => edit_pixels::EditPixels,
         "maskFromSelection" as "mask-from-selection" => mask_from_selection::MaskFromSelection,
         "setBrushColor" as "brush-color" => set_brush_color::SetBrushColor,
@@ -312,7 +318,7 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::raster::commands::set_active_example;
-use crate::editor::raster::commands::{edit_pixels,mask_from_selection};
+use crate::editor::raster::commands::{edit_pixels,edit_mask,mask_from_selection,flatten_layers,merge_down};
 use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::editor::raster::commands::{set_brush_opacity, set_brush_size, set_brush_color, set_brush_hardness};
 use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
@@ -339,6 +345,9 @@ const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setCamera",
     "setCameraZoom",
     "setActiveExample",
+    "flattenLayers",
+    "mergeDown",
+    "editMask",
     "editPixels",
     "maskFromSelection",
     "setBrushColor",
@@ -362,6 +371,9 @@ const RASTER_RETAINED_WORK_ITEMS: usize = 4_096;
 /// document field, and there is no `RasterOperation::SetCamera`); `Config` is precisely the lane that
 /// says "this route publishes into the config store, not into artifact history".
 const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "flattenLayers", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "mergeDown", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "editMask", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "editPixels", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "maskFromSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "addLayer", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -1045,7 +1057,7 @@ impl ArtifactEditor for RasterPlayApp {
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
-            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "editPixels", "maskFromSelection", "setBrushColor", "setBrushHardness"
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample", "flattenLayers", "mergeDown", "editMask", "editPixels", "maskFromSelection", "setBrushColor", "setBrushHardness"
         ]
     }
 
@@ -1064,6 +1076,12 @@ impl ArtifactEditor for RasterPlayApp {
         let tool_id = request.command.command_id();
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = if tool_id == "editPixels" {
             Box::new(edit_pixels::PixelEditWork::default())
+        } else if tool_id == "flattenLayers" {
+            Box::new(flatten_layers::LayerBakeWork::<false>::default())
+        } else if tool_id == "mergeDown" {
+            Box::new(flatten_layers::LayerBakeWork::<true>::default())
+        } else if tool_id == "editMask" {
+            Box::new(edit_mask::EditMaskWork::default())
         } else if tool_id == "maskFromSelection" {
             Box::new(mask_from_selection::MaskFromSelectionWork::default())
         } else {
@@ -1405,6 +1423,15 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("editPixels", LocalizedLabel::native("Edit Pixels", "Pixel bearbeiten"), ActionKind::Mutation))
             .action_describe("editPixels", LocalizedLabel::native("Applies a cancellable pixel operation to the selected layer and records the result in shared history.", "Wendet eine abbrechbare Pixeloperation auf die gewählte Ebene an und speichert das Ergebnis im gemeinsamen Verlauf."))
             .action_interactive_job("editPixels", InteractiveJobClassification::Migrated)
+            .action_with(raster_internal_action("flattenLayers", LocalizedLabel::native("Flatten Image", "Bild reduzieren"), ActionKind::Mutation))
+            .action_describe("flattenLayers", LocalizedLabel::native("Replaces all layers with the visible image. Undo restores the original layers.", "Ersetzt alle Ebenen durch das sichtbare Bild. Rückgängig stellt die ursprünglichen Ebenen wieder her."))
+            .action_interactive_job("flattenLayers", InteractiveJobClassification::Migrated)
+            .action_with(raster_internal_action("mergeDown", LocalizedLabel::native("Merge Down", "Nach unten vereinen"), ActionKind::Mutation))
+            .action_describe("mergeDown", LocalizedLabel::native("Merges the selected visible layer with its lower normal-blend sibling. Undo restores both layers.", "Vereint die ausgewählte sichtbare Ebene mit der darunterliegenden Ebene im normalen Mischmodus. Rückgängig stellt beide Ebenen wieder her."))
+            .action_interactive_job("mergeDown", InteractiveJobClassification::Migrated)
+            .action_with(raster_internal_action("editMask", LocalizedLabel::native("Paint Mask", "Maske malen"), ActionKind::Mutation))
+            .action_describe("editMask", LocalizedLabel::native("Paints mask coverage without changing source pixels.", "Malt Maskendeckung ohne die Quellpixel zu ändern."))
+            .action_interactive_job("editMask", InteractiveJobClassification::Migrated)
             .action_with(raster_internal_action("maskFromSelection", LocalizedLabel::native("Mask From Selection", "Maske aus Auswahl"), ActionKind::Mutation))
             .action_describe("maskFromSelection", LocalizedLabel::native("Creates an undoable layer mask from the current pixel selection.", "Erstellt eine rückgängig machbare Ebenenmaske aus der aktuellen Pixelauswahl."))
             .action_interactive_job("maskFromSelection", InteractiveJobClassification::Migrated)

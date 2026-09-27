@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/editor/set-node/schema.json",
+  "title": "Edit Archive Text",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "nodeId",
+    "value",
+    "revision"
+  ],
+  "properties": {
+    "nodeId": {
+      "type": "string",
+      "pattern": "^(comment|entry:[0-9a-f]{64})$"
+    },
+    "value": {
+      "type": "string",
+      "maxLength": 65535,
+      "x-semio-maxUtf8Bytes": 65535,
+      "description": "Names and archive comments are limited to 65,535 encoded UTF-8 bytes."
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

@@ -22,6 +22,7 @@ import type { Browser, Page } from "playwright";
 import { PLAYWRIGHT_MODULE_SPECIFIER } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 import { ensureParityPlaywrightBrowsersPath } from "../../⚖️parity/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../../../🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
+import { devServePortV1, ensureDevServe } from "../../🚀️local-hub/🏃️execution/🟦️.ts";
 
 //#region 🔖️Pins
 /** 📌️ `semio.os-dev.program-matrix-pins/v1` — the verb each kind is driven with and what it needs staged. */
@@ -839,13 +840,39 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
   return value === undefined || value.startsWith("--") ? undefined : value;
 }
 
-/** 🚪️ `verify matrix <baseUrl> [--tag <t>] [--locale en|de] [--roles editor,viewer] [--only <plugin|plugin/kind>,…]
- * [--skip …] [--resume] [--reload-every <n>] [--install-budget-ms <n>] [--out <dir>] [--headed]` — runs the matrix, writes `matrix.json`,
+/** 🛎️ Runs one harness against the serve its `--serve <url>` names through the shared fixture `ensureDevServe` (reused
+ * when it answers, started — local-only, or joined to `hubUrl` — when the loopback port is free, stopped afterwards only
+ * if the fixture started it). A serve that cannot be had is the harness's missing precondition: its acceptance record
+ * reads `blocked` in both languages and the process exits non-zero.
+ * @see ../../🚀️local-hub/🏃️execution/🟦️.ts */
+export async function withDevServe(
+  repoRoot: string,
+  check: string,
+  options: Readonly<{ serveUrl: string; hubUrl?: string; locale: string; signal: AbortSignal; startedAt: Date }>,
+  run: (url: string) => Promise<void>,
+): Promise<void> {
+  const serve = await ensureDevServe({ repoRoot, port: devServePortV1(options.serveUrl), hubUrl: options.hubUrl, locale: options.locale === "de" ? "de" : "en", signal: options.signal, onProgress: (_status, line) => console.log(line) }).catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))));
+  if (serve instanceof Error) {
+    const reason = serve.message.split("\n")[0]!.slice(0, 200);
+    publishAcceptanceCheckResult(repoRoot, acceptanceCheckResult({ check, status: "blocked", startedAt: options.startedAt, measured: { serve: options.serveUrl, cancelled: options.signal.aborted }, summary: { en: `no serve at ${options.serveUrl}: ${reason}`, de: `keine Shell unter ${options.serveUrl}: ${reason}` } }));
+    process.exitCode = 1;
+    return;
+  }
+  try {
+    await run(serve.url);
+  } finally {
+    await serve.stop();
+  }
+}
+
+/** 🚪️ `verify matrix --serve <url> [--tag <t>] [--locale en|de] [--roles editor,viewer] [--only <plugin|plugin/kind>,…]
+ * [--skip …] [--resume] [--reload-every <n>] [--install-budget-ms <n>] [--out <dir>] [--headed]` — runs the matrix against
+ * the local-only serve `--serve` names (reused, or started and stopped by {@link withDevServe}), writes `matrix.json`,
  * `table.md` and one screenshot per row under `<out>/<tag>/`, publishes the acceptance record and exits non-zero unless
  * every selected row passes. */
 export async function runProgramMatrixCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
-  const baseUrl = segments[0];
-  if (!baseUrl || baseUrl.startsWith("--")) throw new Error("usage: verify matrix <baseUrl> [--tag <t>] [--locale en|de] [--roles editor,viewer] [--only …] [--skip …] [--resume] [--reload-every <n>] [--out <dir>] [--headed]");
+  const serveUrl = flagValue(segments, "--serve");
+  if (!serveUrl) throw new Error("usage: verify matrix --serve <url> [--tag <t>] [--locale en|de] [--roles editor,viewer] [--only …] [--skip …] [--resume] [--reload-every <n>] [--out <dir>] [--headed]");
   const locale = flagValue(segments, "--locale") ?? "en";
   const roles = (flagValue(segments, "--roles") ?? "editor").split(",").filter(Boolean);
   const tag = flagValue(segments, "--tag") ?? `${locale}-${roles.join("-")}`;
@@ -854,7 +881,7 @@ export async function runProgramMatrixCli(repoRoot: string, defaultOutDir: strin
   process.once("SIGINT", cancel);
   process.once("SIGTERM", cancel);
   const startedAt = new Date();
-  await withAcceptanceRecord(repoRoot, "program-matrix", async () => {
+  await withAcceptanceRecord(repoRoot, "program-matrix", () => withDevServe(repoRoot, "program-matrix", { serveUrl, locale, signal: controller.signal, startedAt }, async (baseUrl) => {
     const outDir = resolve(flagValue(segments, "--out") ?? defaultOutDir);
     const report = await runProgramMatrix(repoRoot, {
       baseUrl,
@@ -893,7 +920,7 @@ export async function runProgramMatrixCli(repoRoot: string, defaultOutDir: strin
     );
     console.log(`[matrix] === ${tag}: PASS ${passed}/${total} → ${join(outDir, tag)} ===`);
     if (status !== "pass") process.exitCode = 1;
-  });
+  }));
   process.removeListener("SIGINT", cancel);
   process.removeListener("SIGTERM", cancel);
 }

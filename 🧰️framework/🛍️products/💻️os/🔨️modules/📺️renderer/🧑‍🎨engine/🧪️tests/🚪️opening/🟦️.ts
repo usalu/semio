@@ -4,9 +4,10 @@ import { type ValidateFunction } from "ajv";
 import { applyPatch } from "fast-json-patch";
 import openingScopeFixture from "../../🧱️elements/🏛️ShellHost/🧭️opening/🧫️fixtures/📍️scope/🔣️.json";
 import { AppRouter, type AppRouterManifest, type OpeningPreferences } from "@semio-tech/framework";
-import { resolveArtifactOpeningRelay } from "@semio-tech/framework-os";
+import { resolveArtifactOpeningRelay, type DirectoryEvent } from "@semio-tech/framework-os";
 import { describe, expect, it } from "vitest";
-import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget } from "../../🧱️elements/🏛️ShellHost/🧭️opening/🟦️.ts";
+import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, sharedDocumentOpeningRoleV1 } from "../../🧱️elements/🏛️ShellHost/🧭️opening/🟦️.ts";
+import openPlanFixture from "../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import artifactOpeningFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact/🔣️.json";
 import { semioSchemaAjvV1 } from "../../../../../🧪️tests/🧬️schema-oracle/🟦️.ts";
@@ -58,6 +59,32 @@ describe("document opening scope", () => {
         expect(actual, row.id).toEqual(reference);
         expect(actual, row.id).toEqual(row.expected);
       }
+    }
+  });
+});
+
+describe("shared document opening access", () => {
+  it("requests the surface the hub issues for the caller's space role, folded from the space's own events", () => {
+    const validate = rendererExport("SharedDocumentOpeningAccessV1");
+    for (const row of openingScopeFixture.accessCases) {
+      expect(validate(row), `${row.id}: ${JSON.stringify(validate.errors)}`).toBe(true);
+      expect(sharedDocumentOpeningRoleV1(row.events as unknown as readonly DirectoryEvent[], row.spaceId, row.userId), row.id).toBe(row.role);
+    }
+  });
+
+  it("agrees with the hub's open-plan contract for every session role it names (the hub's own laws run the same cases)", () => {
+    const editorIntents = openPlanFixture.issueCases.filter((row) => row.subjectKind === "session" && typeof row.role === "string" && !("removePath" in row) && !("replacePath" in row));
+    const roles = [...new Set(editorIntents.map((row) => row.role as string))];
+    expect(roles.sort()).toEqual(["author", "spectator"]);
+    for (const role of roles) {
+      const hubIssuesEditor = editorIntents.some((row) => row.role === role && row.expected === "accepted" && "expectedWrite" in row && row.expectedWrite === true);
+      const hubRefusesEditor = editorIntents.some((row) => row.role === role && row.expected === "component-unavailable");
+      expect(hubIssuesEditor !== hubRefusesEditor, role).toBe(true);
+      const events = [
+        { seq: 1, spaceId: "space-o", recordedAtMs: 1, body: { kind: "space.created", spaceId: "space-o", name: "Oracle", spaceKind: "studio", visibility: "private", ownerUserId: "u-owner" } },
+        { seq: 2, spaceId: "space-o", recordedAtMs: 2, body: { kind: "member.upserted", spaceId: "space-o", userId: "u-caller", role } },
+      ] as unknown as readonly DirectoryEvent[];
+      expect(sharedDocumentOpeningRoleV1(events, "space-o", "u-caller"), role).toBe(hubIssuesEditor ? "editor" : "viewer");
     }
   });
 });

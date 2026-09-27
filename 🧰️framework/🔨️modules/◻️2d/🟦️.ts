@@ -3,6 +3,9 @@
 /// <reference types="vitest/importMeta" />
 /** @emoji 🖊️ `@semio-tech/s-2d-js` — 2D drawing scene contracts, canvas raster, and export ports. */
 // #endregion 🧲️Header
+import { drawingTextLines, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
+export { drawingTextLines, drawingTextFallbackExtent, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
+
 
 // #region 📐️Contracts
 export type Vec2 = readonly [number, number];
@@ -118,15 +121,6 @@ function applyTransform(ctx: CanvasRenderingContext2D, transform: readonly [numb
   ctx.transform(a, b, c, d, e, f);
 }
 
-function tracePath(ctx: CanvasRenderingContext2D, segments: readonly PathSegment[]): void {
-  for (const segment of segments) {
-    if (segment.kind === "move") ctx.moveTo(segment.to[0], segment.to[1]);
-    else if (segment.kind === "line") ctx.lineTo(segment.to[0], segment.to[1]);
-    else if (segment.kind === "quad") ctx.quadraticCurveTo(segment.ctrl[0], segment.ctrl[1], segment.to[0], segment.to[1]);
-    else if (segment.kind === "cubic") ctx.bezierCurveTo(segment.ctrl1[0], segment.ctrl1[1], segment.ctrl2[0], segment.ctrl2[1], segment.to[0], segment.to[1]);
-    else if (segment.kind === "close") ctx.closePath();
-  }
-}
 
 function nodePath(node: DrawingNode): PathSegment[] {
   if (node.kind === "rect") {
@@ -216,27 +210,34 @@ export function paintDrawingScene(ctx: CanvasRenderingContext2D, scene: DrawingS
     applyTransform(ctx, entry.transform);
     ctx.globalAlpha = entry.opacity ?? 1;
     if (entry.clip?.length) {
-      ctx.beginPath();
-      tracePath(ctx, entry.clip);
-      ctx.clip();
+      ctx.clip(new Path2D(pathSegmentsToSvgD(entry.clip)));
     }
     const segments = nodePath(entry.node);
     if (segments.length > 0) {
-      ctx.beginPath();
-      tracePath(ctx, segments);
+      const path = new Path2D(pathSegmentsToSvgD(segments));
       if (entry.fill) {
         paintFill(ctx, entry.fill);
-        ctx.fill();
+        ctx.fill(path);
       }
-      if (entry.stroke) {
+      if (entry.stroke && Number.isFinite(entry.stroke.width) && entry.stroke.width > 0) {
         paintStroke(ctx, entry.stroke);
-        ctx.stroke();
+        ctx.stroke(path);
       }
     }
     if (entry.node.kind === "text") {
       ctx.font = `${entry.node.size}px sans-serif`;
-      ctx.fillStyle = entry.fill?.kind === "solid" ? rgbaCss(entry.fill.color) : "#000";
-      ctx.fillText(entry.node.content, entry.node.x, entry.node.y);
+      ctx.textBaseline = "alphabetic";
+      ctx.textAlign = "left";
+      if (entry.fill) paintFill(ctx, entry.fill);
+      const hasStroke = entry.stroke && Number.isFinite(entry.stroke.width) && entry.stroke.width > 0;
+      if (hasStroke) paintStroke(ctx, entry.stroke!);
+      let index = 0;
+      for (const line of drawingTextLines(entry.node.content)) {
+        const baseline = entry.node.y + index++ * entry.node.size * DRAWING_TEXT_LINE_HEIGHT;
+        if (!line) continue;
+        if (entry.fill) ctx.fillText(line, entry.node.x, baseline);
+        if (hasStroke) ctx.strokeText(line, entry.node.x, baseline);
+      }
     }
     ctx.restore();
   }

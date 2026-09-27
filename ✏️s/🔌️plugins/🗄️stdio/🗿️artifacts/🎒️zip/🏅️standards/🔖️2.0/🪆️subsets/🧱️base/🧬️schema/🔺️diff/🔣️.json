@@ -53,6 +53,14 @@
           "items": {
             "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/snapshot.json#/$defs/ZipEntry"
           }
+        },
+        "order": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "description": "Exact member order after removals, modifications and additions."
         }
       }
     }

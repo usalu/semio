@@ -2,6 +2,11 @@
 import {validateExtent,validateImage,type PixelImage,type PixelProgress} from "../../✍️editing/🟦️.ts";
 import {CompositeJob,inverse,multiply,type CompositeAffine,type CompositeBlend,type CompositeLayer,type CompositeMask} from "../🟦️.ts";
 
+/** 🎭️ Effective coverage of imported RGBA masks, shared by compositing and mask authoring. */
+export function maskCoverage(red:number,green:number,blue:number,alpha:number):number {
+  return Math.round((0.2126*red+0.7152*green+0.0722*blue)*alpha/255);
+}
+
 export type RasterStackTransform={x:number;y:number;scaleX:number;scaleY:number;rotation:number};
 export type RasterStackMask={enabled:boolean;linked:boolean;invert:boolean;transform:RasterStackTransform;width?:number|null;height?:number|null;imageKey?:string|null};
 type Properties={id:string;visible:boolean;opacity:number;blendMode:CompositeBlend;transform:RasterStackTransform};
@@ -107,7 +112,7 @@ export class RasterStackJob {
       budget-=end-prep.offset;this.prepared+=end-prep.offset;
       for(;prep.offset<end;prep.offset++){
         const at=prep.offset*4;
-        prep.coverage[prep.offset]=Math.round((0.2126*bytes[at]!+0.7152*bytes[at+1]!+0.0722*bytes[at+2]!)*bytes[at+3]!/255);
+        prep.coverage[prep.offset]=maskCoverage(bytes[at]!,bytes[at+1]!,bytes[at+2]!,bytes[at+3]!);
       }
       if(end===prep.coverage.length)this.preparation++;
     }

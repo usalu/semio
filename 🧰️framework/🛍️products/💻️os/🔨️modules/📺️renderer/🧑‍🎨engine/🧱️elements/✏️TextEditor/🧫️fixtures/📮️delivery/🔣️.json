@@ -67,6 +67,35 @@
         ]
       ],
       "readOnly": true
+    },
+    {
+      "id": "a-new-action-owner-mid-flight-keeps-one-delivery-order",
+      "initial": "a",
+      "typed": [
+        "b",
+        "c"
+      ],
+      "typedAfterNewOwner": [
+        "d"
+      ],
+      "outcome": "accepted",
+      "expected": [
+        [
+          "textEdit:ab"
+        ],
+        [
+          "textEdit:ab",
+          "textSelect:2:2",
+          "textEdit:abcd"
+        ],
+        [
+          "textEdit:ab",
+          "textSelect:2:2",
+          "textEdit:abcd",
+          "textSelect:4:4"
+        ]
+      ],
+      "readOnly": false
     }
   ]
 }

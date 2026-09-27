@@ -2,9 +2,24 @@
 use super::*;
 use crate::protocol::ToolRegistry;
 
+fn ui_principal(scopes: &[&str]) -> crate::policy::AgentPrincipal {
+    crate::policy::AgentPrincipal::from_scope_names("agent:test", "test", &scopes.iter().map(|scope| scope.to_string()).collect::<Vec<_>>(), None)
+}
+
+#[test]
+fn ui_focus_and_ui_reveal_refuse_a_principal_without_ui_control_before_any_argument_or_bridge_check() {
+    let mut registry = InMemoryToolRegistry::new();
+    register_ui_tools(&mut registry, Some(filled_slot()), None, ui_principal(&["workspace.read"]));
+    for (tool, arguments) in [("ui_focus", serde_json::json!({ "windowId": 7 })), ("ui_reveal", serde_json::json!({}))] {
+        let answer = registry.call(tool, arguments).expect("tool registered");
+        assert!(answer.is_error);
+        assert_eq!(answer.structured_content.as_ref().expect("typed error")["code"], "PERMISSION_DENIED", "{tool}: {:?}", answer.structured_content);
+    }
+}
+
 fn full_registry() -> InMemoryToolRegistry {
     let mut registry = InMemoryToolRegistry::new();
-    register_ui_tools(&mut registry, None, None);
+    register_ui_tools(&mut registry, None, None, ui_principal(&["ui.control"]));
     registry
 }
 
@@ -74,7 +89,7 @@ fn ui_reveal_with_no_bridge_is_a_retryable_plugin_unavailable() {
 #[test]
 fn ui_focus_with_a_bridge_but_no_shell_attached_is_a_normal_retryable_state() {
     let mut registry = InMemoryToolRegistry::new();
-    register_ui_tools(&mut registry, Some(filled_slot()), None);
+    register_ui_tools(&mut registry, Some(filled_slot()), None, ui_principal(&["ui.control"]));
     let result = registry.call("ui_focus", serde_json::json!({ "windowId": "w1" })).expect("known tool name resolves");
     assert!(result.is_error);
     let structured = result.structured_content.expect("structured content");

@@ -155,6 +155,15 @@
           "en": "P",
           "de": "P"
         },
+        "outcomes": [
+          {
+            "id": "1",
+            "title": {
+              "en": "Frontend",
+              "de": "Oberfläche"
+            }
+          }
+        ],
         "steps": [
           {
             "id": "s",
@@ -171,6 +180,58 @@
     },
     {
       "name": "plan check with unknown requirement",
+      "definition": "goalPlan",
+      "valid": false,
+      "value": {
+        "schema": "semio.acceptance.goal-plan/v1",
+        "id": "p",
+        "title": {
+          "en": "P",
+          "de": "P"
+        },
+        "outcomes": [
+          {
+            "id": "1",
+            "title": {
+              "en": "Frontend",
+              "de": "Oberfläche"
+            }
+          }
+        ],
+        "steps": [
+          {
+            "id": "s",
+            "title": {
+              "en": "S",
+              "de": "S"
+            },
+            "mode": "serial",
+            "gatesRest": false,
+            "checks": [
+              {
+                "id": "c",
+                "title": {
+                  "en": "C",
+                  "de": "C"
+                },
+                "criteria": [
+                  "1.1"
+                ],
+                "project": "workspace",
+                "target": "verify",
+                "args": [],
+                "requires": [
+                  "database"
+                ],
+                "browsers": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "plan without outcomes",
       "definition": "goalPlan",
       "valid": false,
       "value": {
@@ -203,13 +264,283 @@
                 "target": "verify",
                 "args": [],
                 "requires": [
-                  "database"
+                  "localServe"
                 ],
-                "browsers": 0
+                "browsers": 1
               }
             ]
           }
         ]
+      }
+    },
+    {
+      "name": "plan with a local serve provider",
+      "definition": "goalPlan",
+      "valid": true,
+      "value": {
+        "schema": "semio.acceptance.goal-plan/v1",
+        "id": "p",
+        "title": {
+          "en": "P",
+          "de": "P"
+        },
+        "outcomes": [
+          {
+            "id": "1",
+            "title": {
+              "en": "Frontend",
+              "de": "Oberfläche"
+            }
+          }
+        ],
+        "providers": {
+          "localServe": {
+            "url": "http://127.0.0.1:6070/",
+            "readyPath": "/",
+            "readyBoundMs": 600000,
+            "project": "@semio-tech/framework-os-dev",
+            "target": "serve-hold",
+            "args": [
+              "--serve",
+              "http://127.0.0.1:6070/"
+            ],
+            "requires": []
+          }
+        },
+        "steps": [
+          {
+            "id": "s",
+            "title": {
+              "en": "S",
+              "de": "S"
+            },
+            "mode": "serial",
+            "gatesRest": false,
+            "checks": [
+              {
+                "id": "c",
+                "title": {
+                  "en": "C",
+                  "de": "C"
+                },
+                "criteria": [
+                  "1.1"
+                ],
+                "project": "workspace",
+                "target": "verify",
+                "args": [],
+                "requires": [
+                  "localServe"
+                ],
+                "browsers": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "provider on a remote host",
+      "definition": "goalPlan",
+      "valid": false,
+      "value": {
+        "schema": "semio.acceptance.goal-plan/v1",
+        "id": "p",
+        "title": {
+          "en": "P",
+          "de": "P"
+        },
+        "outcomes": [
+          {
+            "id": "1",
+            "title": {
+              "en": "Frontend",
+              "de": "Oberfläche"
+            }
+          }
+        ],
+        "providers": {
+          "localServe": {
+            "url": "http://example.org:6070/",
+            "readyPath": "/",
+            "readyBoundMs": 600000,
+            "project": "@semio-tech/framework-os-dev",
+            "target": "serve-hold",
+            "args": [
+              "--serve",
+              "http://127.0.0.1:6070/"
+            ],
+            "requires": []
+          }
+        },
+        "steps": [
+          {
+            "id": "s",
+            "title": {
+              "en": "S",
+              "de": "S"
+            },
+            "mode": "serial",
+            "gatesRest": false,
+            "checks": [
+              {
+                "id": "c",
+                "title": {
+                  "en": "C",
+                  "de": "C"
+                },
+                "criteria": [
+                  "1.1"
+                ],
+                "project": "workspace",
+                "target": "verify",
+                "args": [],
+                "requires": [
+                  "localServe"
+                ],
+                "browsers": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "provider for backends",
+      "definition": "goalPlan",
+      "valid": false,
+      "value": {
+        "schema": "semio.acceptance.goal-plan/v1",
+        "id": "p",
+        "title": {
+          "en": "P",
+          "de": "P"
+        },
+        "outcomes": [
+          {
+            "id": "1",
+            "title": {
+              "en": "Frontend",
+              "de": "Oberfläche"
+            }
+          }
+        ],
+        "providers": {
+          "backends": {
+            "url": "http://127.0.0.1:6070/",
+            "readyPath": "/",
+            "readyBoundMs": 600000,
+            "project": "@semio-tech/framework-os-dev",
+            "target": "serve-hold",
+            "args": [
+              "--serve",
+              "http://127.0.0.1:6070/"
+            ],
+            "requires": []
+          }
+        },
+        "steps": [
+          {
+            "id": "s",
+            "title": {
+              "en": "S",
+              "de": "S"
+            },
+            "mode": "serial",
+            "gatesRest": false,
+            "checks": [
+              {
+                "id": "c",
+                "title": {
+                  "en": "C",
+                  "de": "C"
+                },
+                "criteria": [
+                  "1.1"
+                ],
+                "project": "workspace",
+                "target": "verify",
+                "args": [],
+                "requires": [
+                  "localServe"
+                ],
+                "browsers": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "summary with outcome verdicts",
+      "definition": "goalSummary",
+      "valid": true,
+      "value": {
+        "schema": "semio.acceptance.goal-summary/v1",
+        "plan": "p",
+        "hub": null,
+        "serve": null,
+        "localServe": "http://127.0.0.1:6070/",
+        "startedAt": "2026-09-27T19:00:00.000Z",
+        "finishedAt": "2026-09-27T19:10:00.000Z",
+        "verdict": "pass",
+        "totals": {
+          "pass": 1,
+          "fail": 0,
+          "blocked": 0,
+          "skipped": 0
+        },
+        "outcomes": [
+          {
+            "id": "1",
+            "status": "pass",
+            "totals": {
+              "pass": 1,
+              "fail": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "checks": [
+              "c"
+            ]
+          }
+        ],
+        "steps": []
+      }
+    },
+    {
+      "name": "summary outcome outside the goal",
+      "definition": "goalSummary",
+      "valid": false,
+      "value": {
+        "schema": "semio.acceptance.goal-summary/v1",
+        "plan": "p",
+        "hub": null,
+        "serve": null,
+        "localServe": null,
+        "startedAt": "2026-09-27T19:00:00.000Z",
+        "finishedAt": "2026-09-27T19:10:00.000Z",
+        "verdict": "pass",
+        "totals": {
+          "pass": 0,
+          "fail": 0,
+          "blocked": 0,
+          "skipped": 0
+        },
+        "outcomes": [
+          {
+            "id": "6",
+            "status": "skipped",
+            "totals": {
+              "pass": 0,
+              "fail": 0,
+              "blocked": 0,
+              "skipped": 0
+            },
+            "checks": []
+          }
+        ],
+        "steps": []
       }
     }
   ],
@@ -487,6 +818,237 @@
           "backends-up",
           "plain"
         ]
+      }
+    },
+    {
+      "name": "outcome verdicts follow the checks that serve them",
+      "options": {
+        "hub": "http://127.0.0.1:8120",
+        "serve": null
+      },
+      "steps": [
+        {
+          "id": "one",
+          "mode": "serial",
+          "gatesRest": false,
+          "checks": [
+            {
+              "id": "front",
+              "criteria": [
+                "1.1"
+              ],
+              "requires": [],
+              "browsers": 0
+            },
+            {
+              "id": "hub-laws",
+              "criteria": [
+                "2.1"
+              ],
+              "requires": [
+                "hub"
+              ],
+              "browsers": 0
+            },
+            {
+              "id": "collab-ai",
+              "criteria": [
+                "3.1",
+                "4.1"
+              ],
+              "requires": [
+                "serve"
+              ],
+              "browsers": 1
+            }
+          ]
+        }
+      ],
+      "exits": {
+        "front": 0,
+        "hub-laws": 1
+      },
+      "records": {},
+      "expected": {
+        "verdict": "fail",
+        "statuses": {
+          "front": "pass",
+          "hub-laws": "fail",
+          "collab-ai": "blocked"
+        },
+        "executed": [
+          "front",
+          "hub-laws"
+        ],
+        "outcomes": {
+          "1": "pass",
+          "2": "fail",
+          "3": "blocked",
+          "4": "blocked",
+          "5": "skipped"
+        }
+      }
+    },
+    {
+      "name": "a provider stands up a missing local serve and stops it after the run",
+      "options": {
+        "hub": null,
+        "serve": null
+      },
+      "providers": {
+        "localServe": "ready"
+      },
+      "steps": [
+        {
+          "id": "one",
+          "mode": "serial",
+          "gatesRest": false,
+          "checks": [
+            {
+              "id": "matrix",
+              "criteria": [
+                "1.6"
+              ],
+              "requires": [
+                "localServe"
+              ],
+              "browsers": 1
+            }
+          ]
+        }
+      ],
+      "exits": {
+        "matrix": 0
+      },
+      "records": {},
+      "expected": {
+        "verdict": "pass",
+        "statuses": {
+          "matrix": "pass"
+        },
+        "executed": [
+          "matrix"
+        ],
+        "provisioned": [
+          "localServe"
+        ],
+        "stopped": [
+          "localServe"
+        ],
+        "outcomes": {
+          "1": "pass",
+          "2": "skipped",
+          "3": "skipped",
+          "4": "skipped",
+          "5": "skipped"
+        }
+      }
+    },
+    {
+      "name": "a failed provider blocks only the checks that need it",
+      "options": {
+        "hub": null,
+        "serve": null
+      },
+      "providers": {
+        "localServe": "fail"
+      },
+      "steps": [
+        {
+          "id": "one",
+          "mode": "serial",
+          "gatesRest": false,
+          "checks": [
+            {
+              "id": "matrix",
+              "criteria": [
+                "1.6"
+              ],
+              "requires": [
+                "localServe"
+              ],
+              "browsers": 1
+            },
+            {
+              "id": "census",
+              "criteria": [
+                "5.9"
+              ],
+              "requires": [],
+              "browsers": 0
+            }
+          ]
+        }
+      ],
+      "exits": {
+        "census": 0
+      },
+      "records": {},
+      "expected": {
+        "verdict": "blocked",
+        "statuses": {
+          "matrix": "blocked",
+          "census": "pass"
+        },
+        "executed": [
+          "census"
+        ],
+        "provisioned": [],
+        "stopped": [],
+        "outcomes": {
+          "1": "blocked",
+          "2": "skipped",
+          "3": "skipped",
+          "4": "skipped",
+          "5": "pass"
+        }
+      }
+    },
+    {
+      "name": "a serve provider that needs an absent hub is not started",
+      "options": {
+        "hub": null,
+        "serve": null
+      },
+      "providers": {
+        "serve": "ready"
+      },
+      "steps": [
+        {
+          "id": "one",
+          "mode": "serial",
+          "gatesRest": false,
+          "checks": [
+            {
+              "id": "sweep",
+              "criteria": [
+                "1.4"
+              ],
+              "requires": [
+                "serve"
+              ],
+              "browsers": 1
+            }
+          ]
+        }
+      ],
+      "exits": {},
+      "records": {},
+      "expected": {
+        "verdict": "blocked",
+        "statuses": {
+          "sweep": "blocked"
+        },
+        "executed": [],
+        "provisioned": [],
+        "stopped": [],
+        "outcomes": {
+          "1": "blocked",
+          "2": "skipped",
+          "3": "skipped",
+          "4": "skipped",
+          "5": "skipped"
+        }
       }
     }
   ]

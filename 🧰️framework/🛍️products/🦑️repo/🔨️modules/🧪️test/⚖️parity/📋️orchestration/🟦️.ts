@@ -24,6 +24,7 @@ import {
   profileTable,
   renderDiff,
   renderJUnit,
+  subjectRawInputsByScenario,
   summarizeRun,
   testCacheDir,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -104,15 +105,13 @@ export function runPhases(repoRoot: string, segments: readonly string[], phases:
         problems.push(...outcome.problems);
       }
     };
-    const subjectRawInputs = (): Readonly<Partial<Record<Implementation, string>>> =>
-      Object.fromEntries(caseResults.filter((result) => result.role === "subject" && result.status === "passed" && result.output.rawPath !== undefined).map((result) => [result.implementation, result.output.rawPath!] as const));
     if (rawInputOracle) runSubjects();
     if (phases.includes("oracle") && decision.unavailable !== null) {
       oracleUnavailable.push({ caseDir: discovered.caseDir, ...decision.unavailable });
       console.error(`[test] oracle-unavailable ${discovered.caseDir} (${decision.unavailable.oracle} needs ${decision.unavailable.missing.join(", ")} on PATH)`);
     }
     if (phases.includes("oracle") && decision.implementation !== null && decision.unavailable === null) {
-      const outcome = executeOne(repoRoot, discovered, level, "oracle", decision.implementation, rawInputOracle ? subjectRawInputs() : undefined);
+      const outcome = executeOne(repoRoot, discovered, level, "oracle", decision.implementation, rawInputOracle ? subjectRawInputsByScenario(caseResults) : undefined);
       caseResults.push(...outcome.results);
       problems.push(...outcome.problems);
     }

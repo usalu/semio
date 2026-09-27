@@ -13,7 +13,8 @@ for (const item of fixture.cases) test(item.name,() => {
   const box = new Box2();
   if (artboard) box.set(new Vector2(0,0),new Vector2(artboard.width,artboard.height));
   for (const node of nodes.filter(node => node.visible && node.opacity > 0)) {
-    const rectangle = node.image ? [0,0,node.image.width,node.image.height] : node.text ? [0,-node.text.size,Array.from(node.text.content).length*node.text.size*0.6,node.text.size*1.2] : null;
+    const lines = node.text?.content.split(/\r\n|[\r\n]/);
+    const rectangle = node.image ? [0,0,node.image.width,node.image.height] : node.text ? [0,0,Math.max(...lines!.map(line => Array.from(line).length))*node.text.size*0.6,lines!.length*node.text.size*1.2] : null;
     const points: number[][] = [];
     if (rectangle) {
       const [x,y,w,h] = rectangle as [number,number,number,number];

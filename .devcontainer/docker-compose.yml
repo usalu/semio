@@ -1,11 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖️Compose
-# Dev stack: a single workspace app container.
-name: compose
+# Dev stack: a single workspace app container. No fixed project, image or container name: the devcontainer CLI names the
+# project after the checkout folder, so two checkouts (or a fresh clone beside the daily one) run side by side.
 services:
-  compose:
-    image: compose
-    container_name: compose
+  semio:
     build:
       context: .
       dockerfile: Dockerfile

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 // #region 🔖️Devcontainer
 {
-  "name": "compose",
+  "name": "semio",
   "dockerComposeFile": "docker-compose.yml",
-  "service": "compose",
+  "service": "semio",
   "features": {
     "ghcr.io/devcontainers/features/go:1": {
       "version": "1.26"
@@ -39,25 +39,42 @@
   "postCreateCommand": ["bun", "nx", "run", "workspace:setup"],
   "postStartCommand": "bash .devcontainer/post-start.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
-  "forwardPorts": [2507, 3000, 4000, 4321, 6006, 6274, 6277],
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "forwardPorts": [8787, 6070, 6072, 6073, 6066, 6067, 6068, 6010, 6274, 6277],
   "portsAttributes": {
-    "2507": {
-      "label": "Engine API",
+    "8787": {
+      "label": "os-hub",
       "onAutoForward": "notify"
     },
-    "3000": {
-      "label": "Sketchpad Dev",
+    "6070": {
+      "label": "s React",
       "onAutoForward": "notify"
     },
-    "4000": {
-      "label": "Play Dev",
+    "6072": {
+      "label": "s React user 1",
+      "onAutoForward": "silent"
+    },
+    "6073": {
+      "label": "s React user 2",
+      "onAutoForward": "silent"
+    },
+    "6066": {
+      "label": "s wgpu",
       "onAutoForward": "notify"
     },
-    "4321": {
-      "label": "Docs Dev",
-      "onAutoForward": "notify"
+    "6067": {
+      "label": "s wgpu user 1",
+      "onAutoForward": "silent"
     },
-    "6006": {
+    "6068": {
+      "label": "s wgpu user 2",
+      "onAutoForward": "silent"
+    },
+    "6010": {
       "label": "Storybook",
       "onAutoForward": "notify"
     },
@@ -67,7 +84,7 @@
     },
     "6277": {
       "label": "MCP Inspector Proxy",
-      "onAutoForward": "notify"
+      "onAutoForward": "silent"
     }
   },
   "mounts": [

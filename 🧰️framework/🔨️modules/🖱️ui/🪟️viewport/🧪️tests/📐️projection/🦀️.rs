@@ -69,6 +69,15 @@ fn viewport_projection_rejects_closed_schema_and_range_violations() {
         assert!(serde_json::from_value::<Viewport3dProjectionSpec>(invalid.clone()).is_err(), "{invalid}");
         assert!(Viewport3dProjectionSpec::from_value(DslValue::from(invalid.clone())).is_err(), "{invalid}");
     }
+    for row in fixture["semanticPreferenceRejections"].as_array().unwrap() {
+        let invalid = patched(defaults, &row["patch"]);
+        assert!(serde_json::from_value::<Viewport3dProjectionPreferences>(invalid.clone()).is_err(), "{} serde", row["name"]);
+        assert!(Viewport3dProjectionPreferences::from_value(DslValue::from(invalid)).is_err(), "{} value", row["name"]);
+    }
+    for invalid in fixture["semanticSpecRejections"].as_array().unwrap() {
+        assert!(serde_json::from_value::<Viewport3dProjectionSpec>(invalid.clone()).is_err(), "{invalid}");
+        assert!(Viewport3dProjectionSpec::from_value(DslValue::from(invalid.clone())).is_err(), "{invalid}");
+    }
 
     for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
         let mut preferences = Viewport3dProjectionPreferences::default();

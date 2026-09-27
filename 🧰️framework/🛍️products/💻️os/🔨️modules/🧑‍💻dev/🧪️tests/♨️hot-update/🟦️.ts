@@ -25,6 +25,9 @@ import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import Ajv2020 from "ajv/dist/2020.js";
+import workerFreshness from "../../🧫️fixtures/👷️worker-freshness/🔣️.json" with { type: "json" };
+import workerFreshnessSchema from "../../🧬️schema/👷️worker-freshness/🔣️.json" with { type: "json" };
 import { createServer, type ViteDevServer } from "vite";
 import { semioServeCloseVitePlugin } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
@@ -136,6 +139,51 @@ async function bounded<T>(work: Promise<T>, ms: number): Promise<T | "timeout"> 
 }
 
 describe("dev serve hot update delivery", () => {
+  it.runIf(longLevel)("reloads the current module-worker export graph after an atomic replacement with HMR disabled", async () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(workerFreshnessSchema);
+    expect(validate(workerFreshness), JSON.stringify(validate.errors)).toBe(true);
+    const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "semio-worker-freshness-"));
+    mkdirSync(join(root, "🧰️framework"));
+    const leaf = join(root, "🧰️framework/🍃️leaf.ts");
+    const worker = join(root, "🧰️framework/👷️worker.ts");
+    const write = (sample: typeof workerFreshness.before, atomic: boolean) => {
+      const save = atomic ? WRITES["atomic-rename"] : WRITES["in-place"];
+      save(leaf, `export const ${sample.name}: string = ${JSON.stringify(sample.value)};\n`);
+      save(worker, `import { ${sample.name} } from "./🍃️leaf.ts";\npostMessage(${sample.name});\n`);
+    };
+    write(workerFreshness.before, false);
+    writeFileSync(join(root, "🧰️framework/🟦️.ts"), 'const worker = new Worker(new URL("./👷️worker.ts", import.meta.url), { type: "module" });\nworker.onmessage = event => document.querySelector("output")!.textContent = event.data;\nworker.onerror = event => document.querySelector("output")!.textContent = `ERROR: ${event.message} at ${event.filename}:${event.lineno}`;\n');
+    writeFileSync(join(root, "index.html"), '<!doctype html><html><head><meta charset="utf-8"></head><body><output>waiting</output><script type="module" src="/🧰️framework/🟦️.ts"></script></body></html>');
+    const { chromium } = await import("playwright");
+    const browser = await chromium.launch({ headless: true });
+    const port = await loopbackPort();
+    const server = await createServer({ configFile: false, root, logLevel: "silent", cacheDir: join(root, ".vite"), optimizeDeps: { noDiscovery: true, include: [] }, server: { host: "127.0.0.1", port, strictPort: true, hmr: false, watch: null }, plugins: [semioServeCloseVitePlugin(), ...semioSourceFreshnessVitePlugins({ repoRoot: root })] });
+    try {
+      await server.listen();
+      const page = await browser.newPage();
+      const errors: string[] = [];
+      page.on("pageerror", error => errors.push(error.message));
+      page.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
+      page.on("requestfailed", request => errors.push(`${request.url()}: ${request.failure()?.errorText}`));
+      page.on("response", response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
+      const expectReceipt = async (value: string) => {
+        await page.waitForFunction(() => document.querySelector("output")?.textContent !== "waiting", undefined, { timeout: 30_000 }).catch(() => undefined);
+        expect({ receipt: await page.locator("output").textContent(), errors }).toEqual({ receipt: value, errors: [] });
+      };
+      await page.goto(`http://127.0.0.1:${port}/`);
+      await expectReceipt(workerFreshness.before.value);
+      write(workerFreshness.after, true);
+      await page.reload();
+      await expectReceipt(workerFreshness.after.value);
+      expect(await page.locator("output").textContent()).toBe(workerFreshness.after.value);
+      expect(errors).toEqual([]);
+    } finally {
+      await browser.close();
+      await server.close();
+      rmSync(root, { recursive: true, force: true });
+    }
+  }, 90_000);
+
   it.runIf(longLevel)("re-executes an edited module in the live page once per write style, and only through the source watcher", async () => {
     const { chromium } = await import("playwright");
     const browser = await chromium.launch({ headless: true });

@@ -845,6 +845,12 @@ pub fn register_wfc3d_inference_factory(bus: &semio_framework::ActionBus) -> Res
 
 /// 🏁 Explicit headless adapter over the same complete parent job used by the public factory.
 pub(crate) fn solve_with_job(snapshot: &Wfc3dSnapshot) -> Result<Wfc3dInferenceCommit, String> {
+    solve_with_clock(snapshot, semio_framework_job::default_now_us)
+}
+
+/// 🧮️ The same headless adapter driven by an injected clock, so correctness laws run on
+/// [`semio_framework_job::logical_now_us`] and never on a descheduled thread's wall clock.
+pub(crate) fn solve_with_clock(snapshot: &Wfc3dSnapshot, now_us: fn() -> Option<u64>) -> Result<Wfc3dInferenceCommit, String> {
     let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), snapshot.seed);
     let job = Wfc3dInferenceJob::new(operation, Wfc3dInferenceRequest { snapshot: Some(snapshot.clone()), document: None, checkpoint: None })?;
     let params = semio_framework_job::BatchJobParams {
@@ -852,7 +858,7 @@ pub(crate) fn solve_with_job(snapshot: &Wfc3dSnapshot) -> Result<Wfc3dInferenceC
         generation: operation.generation,
         cancel: semio_framework_job::root_cancel_token(),
         config: semio_framework_job::BatchDriveConfig { site: "wfc3d.inference.headless", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: HEADLESS_FUEL_PER_STEP, step_budget_us: HEADLESS_STEP_BUDGET_US },
-        now_us: semio_framework_job::default_now_us,
+        now_us,
     };
     let mut session = match semio_framework_job::BatchJobSession::try_new(job, params) {
         Ok(session) => session,

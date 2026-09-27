@@ -1,5 +1,17 @@
 use super::*;
 
+#[test]
+fn set_node_requires_a_complete_address_and_value_without_forbidding_empty_text() {
+    assert!(json_any_command_from_action(JSON_ANY_KIT_ACTION_ID, None).is_err());
+    let missing_value = dsl::DslValue::object([("nodeId".into(), dsl::DslValue::String(main::JSON_ROOT_NODE_ID.into()))]);
+    assert!(json_any_command_from_action(JSON_ANY_KIT_ACTION_ID, Some(&missing_value)).is_err());
+    let args = dsl::DslValue::object([
+        ("nodeId".into(), dsl::DslValue::String(main::JSON_ROOT_NODE_ID.into())),
+        ("value".into(), dsl::DslValue::String(String::new())),
+    ]);
+    assert!(matches!(json_any_command_from_action(JSON_ANY_KIT_ACTION_ID, Some(&args)), Ok(JsonAnyEditorCommand::SetNode { value, .. }) if value.is_empty()));
+}
+
 #[semio_framework_async_macros::async_test]
 async fn create_json_editor_builds_a_definition_for_the_editor_role() {
     let def = create_json_editor();
@@ -165,7 +177,7 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
 async fn source_edit_reaches_the_document_through_the_retained_event_route() {
     let mut app = kit_fixture_holding(&json_any_example_snapshot(crate::examples::demo::ID)).await;
     let source = "{\"kind\":\"typed\",\"count\":3,\"enabled\":true}";
-    dispatch_settled(&mut app, semio_s_artifact_stdio_contract::editing::REPLACE_SNAPSHOT_SOURCE_ACTION_ID, &[("source", source)]).await.expect("source edit settles");
+    dispatch_settled(&mut app, "set-node", &[("nodeId", main::JSON_ROOT_NODE_ID), ("value", source)]).await.expect("source edit settles");
     let after = app.snapshot().expect("json snapshot");
     assert_eq!(after, <JsonSnapshot as store::ArtifactDsl>::parse_dsl(source).expect("expected source"));
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);

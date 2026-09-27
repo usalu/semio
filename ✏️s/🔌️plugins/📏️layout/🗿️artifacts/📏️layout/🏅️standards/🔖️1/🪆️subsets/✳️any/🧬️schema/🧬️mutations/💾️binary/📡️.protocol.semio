@@ -63,3 +63,7 @@ record change-frame-wrap-mode tag=24
 field payload bytes
 record change-frame-columns tag=25
 field payload bytes
+record update-grid tag=26
+field payload bytes
+record set-frame-flags tag=27
+field payload bytes

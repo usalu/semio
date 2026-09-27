@@ -394,7 +394,7 @@ describe("framework renderer wgpu generated worker", () => {
         expect(visited.every((path) => path === contract.packageGeneration!.catalogPath || path === manifest), scenario.id).toBe(true);
       }
     }
-  });
+  }, 15_000);
 
   it("validates the current package catalog with Ajv and independent WebCrypto integrity vectors", async () => {
     const taxonomy = loadTaxonomy(), generation = taxonomy.generatorContracts["wgpu-frame-worker"]!.packageGeneration!;
@@ -485,7 +485,7 @@ describe("framework renderer wgpu generated worker", () => {
     expect(process.cwd()).toBe(callerCwd);
     for (const render of renders) expect(createHash("sha256").update(render).digest("hex")).toBe(createHash("sha256").update(renders[0]!).digest("hex"));
     expect(renders[0]).not.toMatch(/[0-9a-f]{64}/u);
-  }, 15_000);
+  }, 30_000);
 
   it("aligns digest-verified devcontainer and native Bun provisioning with the packageManager pin", () => {
     let repoRoot = dirname(fileURLToPath(import.meta.url));

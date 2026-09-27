@@ -82,11 +82,37 @@
       ]
     },
     {
+      "effect": "allow",
+      "roles": [
+        "agent-reader"
+      ],
+      "actions": [
+        "document.read",
+        "blob.read"
+      ]
+    },
+    {
+      "effect": "allow",
+      "roles": [
+        "agent-editor"
+      ],
+      "actions": [
+        "document.announce",
+        "document.read",
+        "document.write",
+        "document.check-in",
+        "artifact.create",
+        "blob.read",
+        "blob.write"
+      ]
+    },
+    {
       "effect": "deny",
       "roles": [
         "admin",
         "owner",
-        "author"
+        "author",
+        "agent-editor"
       ],
       "actions": [
         "document.write",

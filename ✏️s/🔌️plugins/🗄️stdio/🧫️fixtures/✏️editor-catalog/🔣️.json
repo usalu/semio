@@ -586,5 +586,20 @@
     "s.stdio.xml@1.0/valid#editor",
     "s.stdio.zip@2.0/*#editor",
     "s.stdio.zip@2.0/iso21320#editor"
+  ],
+  "rejectedActions": [
+    {
+      "id": "setSnapshotValue",
+      "arguments": {
+        "path": "/schema",
+        "value": "invalid.schema.identity"
+      }
+    },
+    {
+      "id": "removeSnapshotValue",
+      "arguments": {
+        "path": "/schema"
+      }
+    }
   ]
 }

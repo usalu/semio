@@ -116,3 +116,15 @@ fn a_worker_step_reads_the_clock_once_on_entry_and_once_on_exit() {
         }
     }
 }
+
+/// 🧮️ The logical clock advances exactly one microsecond per read and belongs to its thread: a law driven by it measures
+/// clock reads, never the wall time a descheduled thread loses.
+#[test]
+fn the_logical_clock_advances_one_microsecond_per_read_per_thread() {
+    let first = logical_now_us().expect("logical clock reads");
+    assert_eq!(logical_now_us(), Some(first + 1));
+    assert_eq!(logical_now_us(), Some(first + 2));
+    let other = std::thread::spawn(|| (logical_now_us(), logical_now_us())).join().expect("logical clock thread");
+    assert_eq!(other, (Some(1), Some(2)));
+    assert_eq!(logical_now_us(), Some(first + 3));
+}

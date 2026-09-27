@@ -36,10 +36,7 @@ fn encoded_bytes(manifest: &PluginManifest) -> usize {
 
 #[semio_framework_async_macros::async_test]
 async fn the_descriptor_bound_this_law_measures_against_is_the_declared_one() {
-    assert!(
-        DIRECTORY_SCHEMA_SOURCE.contains("pub const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;"),
-        "DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES moved off 4 MiB — this law measures against a stale bound"
-    );
+    assert!(DIRECTORY_SCHEMA_SOURCE.contains("pub const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;"), "DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES moved off 4 MiB — this law measures against a stale bound");
 }
 
 /// 🛡️ A descriptor holding a multi-megabyte example stays under the 4 MiB bound, because the body

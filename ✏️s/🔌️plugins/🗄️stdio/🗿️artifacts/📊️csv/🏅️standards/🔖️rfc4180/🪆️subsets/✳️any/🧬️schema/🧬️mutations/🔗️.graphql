@@ -8,9 +8,13 @@ enum CsvMutationTag {
   INSERT_RECORD
   REMOVE_RECORD
   SET_FIELD
+  PATCH_SNAPSHOT
 }
 
+scalar SnapshotPatch
+
 input CsvMutationInput {
+  patch: SnapshotPatch
   mutation: CsvMutationTag!
   snapshot: CsvSnapshotInput
   hasHeader: Boolean

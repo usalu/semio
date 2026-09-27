@@ -434,6 +434,30 @@
     },
     {
       "type": "object",
+      "title": "RotateFrame",
+      "properties": {
+        "kind": {
+          "const": "rotate-frame"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "newRotation": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId",
+        "newRotation"
+      ]
+    },
+    {
+      "type": "object",
       "title": "ChangeFrameFill",
       "properties": {
         "kind": {
@@ -524,6 +548,56 @@
         "pageId",
         "frameId",
         "newColumns"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "UpdateGrid",
+      "properties": {
+        "kind": {
+          "const": "update-grid"
+        },
+        "baselineGrid": {
+          "type": "number"
+        },
+        "baselineOffset": {
+          "type": "number"
+        },
+        "snapToBaseline": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "baselineGrid",
+        "baselineOffset",
+        "snapToBaseline"
+      ]
+    },
+    {
+      "type": "object",
+      "title": "SetFrameFlags",
+      "properties": {
+        "kind": {
+          "const": "set-frame-flags"
+        },
+        "pageId": {
+          "type": "string"
+        },
+        "frameId": {
+          "type": "string"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "pageId",
+        "frameId"
       ]
     }
   ],

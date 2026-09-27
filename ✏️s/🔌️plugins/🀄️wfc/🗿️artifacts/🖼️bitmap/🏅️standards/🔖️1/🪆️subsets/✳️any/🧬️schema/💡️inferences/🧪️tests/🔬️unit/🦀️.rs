@@ -54,8 +54,8 @@ fn the_symmetry_count_selects_a_prefix_of_d4() {
 #[test]
 fn the_solve_is_deterministic_for_a_seed() {
     let snapshot = stripes();
-    let first = solve_with_job(&snapshot).expect("the stripe sample solves");
-    let second = solve_with_job(&snapshot).expect("the stripe sample solves again");
+    let first = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("the stripe sample solves");
+    let second = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("the stripe sample solves again");
     assert_eq!(first, second, "the same seed and the same spec give the same bitmap");
     assert!(!first.contradiction);
     let pixels = decode_base64(&first.pixels).expect("the committed output decodes");
@@ -68,7 +68,7 @@ fn the_solve_is_deterministic_for_a_seed() {
 fn a_different_seed_is_free_to_answer_differently_but_stays_valid() {
     let mut other = stripes();
     other.seed = 4_242;
-    let solved = solve_with_job(&other).expect("the stripe sample solves under another seed");
+    let solved = solve_with_clock(&other, semio_framework_job::logical_now_us).expect("the stripe sample solves under another seed");
     assert!(!solved.contradiction);
     assert_eq!(decode_base64(&solved.pixels).expect("output decodes").len(), 24);
 }
@@ -89,7 +89,7 @@ fn a_sample_that_cannot_tile_the_output_reports_a_contradiction() {
         pinned: vec![BitmapPinnedPixel { x: 0, y: 0, color: 1 }, BitmapPinnedPixel { x: 1, y: 0, color: 1 }],
         ..BitmapSnapshot::default()
     };
-    let solved = solve_with_job(&snapshot).expect("the job completes even when the spec is unsatisfiable");
+    let solved = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("the job completes even when the spec is unsatisfiable");
     assert!(solved.contradiction, "a spec with no consistent assignment is a verdict, never a wrong bitmap");
     assert!(solved.pixels.is_empty(), "a contradiction carries no output pixels");
     assert_eq!(solved.entropy.len(), 3, "the entropy map still describes the output it could not fill");
@@ -115,14 +115,14 @@ fn a_pin_on_a_colour_no_pattern_anchors_is_refused_rather_than_dropped() {
         pinned: vec![BitmapPinnedPixel { x: 0, y: 0, color: 2 }],
         ..BitmapSnapshot::default()
     };
-    assert_eq!(solve_with_job(&snapshot).unwrap_err(), "bitmap-inference-unreachable-pin");
+    assert_eq!(solve_with_clock(&snapshot, semio_framework_job::logical_now_us).unwrap_err(), "bitmap-inference-unreachable-pin");
 }
 
 #[test]
 fn an_oversized_output_is_refused_at_admission() {
     let mut snapshot = stripes();
     snapshot.output = BitmapOutputSpec { width: 512, height: 512, periodic: false };
-    assert!(solve_with_job(&snapshot).is_err(), "an output past the admission ceiling is refused rather than attempted");
+    assert!(solve_with_clock(&snapshot, semio_framework_job::logical_now_us).is_err(), "an output past the admission ceiling is refused rather than attempted");
 }
 
 #[test]
@@ -212,7 +212,7 @@ fn output_windows(snapshot: &BitmapSnapshot, pixels: &[u8]) -> Vec<((usize, usiz
 fn every_output_window_of_a_solved_example_occurs_in_the_symmetry_expanded_input() {
     for (label, snapshot) in [("rooms-16", crate::examples::rooms_16::snapshot()), ("flowers-24", crate::examples::flowers_24::snapshot())] {
         assert!(snapshot.model.symmetry > 1, "{label}: this law is only worth asserting with a real symmetry expansion");
-        let commit = solve_with_job(&snapshot).unwrap_or_else(|error| panic!("{label}: the job completes: {error}"));
+        let commit = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).unwrap_or_else(|error| panic!("{label}: the job completes: {error}"));
         assert!(!commit.contradiction, "{label}: a bundled example must tile its own declared output");
         let pixels = decode_base64(&commit.pixels).unwrap_or_else(|| panic!("{label}: the output decodes"));
         assert_eq!(pixels.len(), (snapshot.output.width as usize) * (snapshot.output.height as usize), "{label}");
@@ -232,9 +232,9 @@ fn every_output_window_of_a_solved_example_occurs_in_the_symmetry_expanded_input
 fn local_similarity_holds_under_a_different_seed_and_a_non_periodic_output() {
     let mut snapshot = crate::examples::flowers_24::snapshot();
     assert!(!snapshot.output.periodic, "this case exists to cover the non-periodic boundary");
-    let first = solve_with_job(&snapshot).expect("the flowers sample solves");
+    let first = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("the flowers sample solves");
     snapshot.seed = 20_260_918;
-    let second = solve_with_job(&snapshot).expect("the flowers sample solves under another seed");
+    let second = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("the flowers sample solves under another seed");
     assert!(!second.contradiction);
     let allowed = expanded_input_windows(&snapshot);
     let pixels = decode_base64(&second.pixels).expect("the output decodes");
@@ -324,7 +324,7 @@ fn the_artifact_bound_genesis_document_resolves_and_solves() {
     assert_eq!((snapshot.input.width, snapshot.input.height, snapshot.input.palette.len()), (16, 16, 3));
     assert_eq!((snapshot.output.width, snapshot.output.height, snapshot.output.periodic), (24, 24, true));
     assert_eq!((snapshot.model.pattern_size, snapshot.model.symmetry), (3, 8));
-    let commit = solve_with_job(&snapshot).expect("the genesis snapshot solves");
+    let commit = solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("the genesis snapshot solves");
     assert!(!commit.contradiction);
     assert_eq!(decode_base64(&commit.pixels).expect("pixels decode").len(), 24 * 24);
 }
@@ -408,7 +408,7 @@ fn a_whole_solve_grant_settles_the_genesis_inference_in_a_bounded_state_walk() {
     let grant = &law["wholeSolveGrant"];
     let snapshot = BitmapInferenceRequest { snapshot: None, document: Some(semio_framework_plugin::ArtifactDocumentPayload { pack: GENESIS_PACK_BASE64.to_string(), spr: GENESIS_SPR_BASE64.to_string() }), checkpoint: None }.resolve_snapshot().expect("the genesis pair decodes");
     let native_started = std::time::Instant::now();
-    solve_with_job(&snapshot).expect("the genesis snapshot solves natively");
+    solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("the genesis snapshot solves natively");
     let native = native_started.elapsed();
     let (crossings, relayed) = run_genesis_crossings(&law, 9_101, grant);
     let ceiling = grant["maxCrossings"].as_u64().expect("law crossing ceiling") as usize;

@@ -6,7 +6,7 @@
 
 // 🎯️ Goal-gate laws: the acceptance schema interpreter agrees with Ajv (the third-party JSON Schema 2020-12 oracle) on
 // every fixture record, the repository goal plan validates under both, and scripted runs reproduce the fixture's gating,
-// requirement, record-precedence and browser-budget outcomes.
+// requirement, record-precedence, browser-budget, per-outcome verdict and zero-touch provider outcomes.
 
 //#endregion 🧲️Header
 
@@ -25,7 +25,9 @@ import {
   runGoalGate,
   type AcceptanceStatus,
   type GoalGateExecutor,
+  type GoalGateProvisioner,
   type GoalPlan,
+  type ProvidedRequirement,
 } from "../../📋️orchestration/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -35,10 +37,11 @@ const fixture = JSON.parse(readFileSync(join(import.meta.dir, "..", "..", "🧫�
   runs: {
     name: string;
     options: { hub: string | null; serve: string | null };
-    steps: { id: string; mode: "serial" | "parallel"; gatesRest: boolean; checks: { id: string; requires: ("hub" | "serve" | "backends")[]; browsers: number }[] }[];
+    providers?: Partial<Record<ProvidedRequirement, "ready" | "fail">>;
+    steps: { id: string; mode: "serial" | "parallel"; gatesRest: boolean; checks: { id: string; criteria?: string[]; requires: ("hub" | "serve" | "localServe" | "backends")[]; browsers: number }[] }[];
     exits: Record<string, number>;
     records: Record<string, AcceptanceStatus>;
-    expected: { verdict: AcceptanceStatus; statuses: Record<string, AcceptanceStatus>; executed: string[] };
+    expected: { verdict: AcceptanceStatus; statuses: Record<string, AcceptanceStatus>; executed: string[]; outcomes?: Record<string, AcceptanceStatus>; provisioned?: string[]; stopped?: string[] };
   }[];
 };
 const schema = JSON.parse(readFileSync(join(repoRoot, ACCEPTANCE_SCHEMA_REL_PATH), "utf8"));
@@ -73,16 +76,19 @@ describe("goal gate runs", () => {
     test(run.name, async () => {
       const dir = mkdtempSync(join(tmpdir(), "semio-goal-gate-law-"));
       try {
+        const providers = Object.fromEntries(Object.keys(run.providers ?? {}).map((requirement) => [requirement, { url: `http://127.0.0.1:${requirement === "hub" ? 8129 : requirement === "serve" ? 6629 : 6628}/`, readyPath: "/", readyBoundMs: 1000, project: "@semio-tech/framework-os-dev", target: "serve-hold", args: ["--serve", "http://127.0.0.1:6628/"], requires: requirement === "serve" ? ["hub" as const] : [] }]));
         const plan: GoalPlan = {
           schema: "semio.acceptance.goal-plan/v1",
           id: "law-plan",
           title: { en: "Law plan", de: "Gesetzesplan" },
+          outcomes: (["1", "2", "3", "4", "5"] as const).map((id) => ({ id, title: { en: `Outcome ${id}`, de: `Ergebnisziel ${id}` } })),
+          ...(run.providers ? { providers } : {}),
           steps: run.steps.map((step) => ({
             id: step.id,
             title: { en: step.id, de: step.id },
             mode: step.mode,
             gatesRest: step.gatesRest,
-            checks: step.checks.map((check) => ({ id: check.id, title: { en: check.id, de: check.id }, criteria: ["1.1"], project: "workspace", target: "verify", args: [], requires: check.requires, browsers: check.browsers })),
+            checks: step.checks.map((check) => ({ id: check.id, title: { en: check.id, de: check.id }, criteria: check.criteria ?? ["1.1"], project: "workspace", target: "verify", args: [], requires: check.requires, browsers: check.browsers })),
           })),
         };
         const planPath = join(dir, "plan.json");
@@ -100,10 +106,21 @@ describe("goal gate runs", () => {
           browsers -= check.browsers;
           return run.exits[check.id] ?? 0;
         };
-        const summary = await runGoalGate(repoRoot, { localServe: null, ...run.options, hubBinary: null, hubAdminCapability: null, users: [], planPath, outDir: join(dir, "out"), only: [], includeOptional: false, maxBrowsers: 1, maxParallel: 4, signal: new AbortController().signal, execute });
+        const provisioned: string[] = [];
+        const stopped: string[] = [];
+        const provide: GoalGateProvisioner = async (_repoRoot, requirement) => {
+          if (run.providers?.[requirement] !== "ready") throw new Error(`scripted ${requirement} provider failure`);
+          provisioned.push(requirement);
+          return { stop: async () => void stopped.push(requirement) };
+        };
+        const summary = await runGoalGate(repoRoot, { localServe: null, ...run.options, hubBinary: null, hubAdminCapability: null, users: [], planPath, outDir: join(dir, "out"), only: [], includeOptional: false, maxBrowsers: 1, maxParallel: 4, signal: new AbortController().signal, execute, provide });
         expect(summary.verdict).toBe(run.expected.verdict);
         expect(Object.fromEntries(summary.steps.flatMap((step) => step.checks.map((check) => [check.check, check.status])))).toEqual(run.expected.statuses);
         expect([...executed].sort()).toEqual([...run.expected.executed].sort());
+        if (run.expected.outcomes) expect(Object.fromEntries(summary.outcomes.map((outcome) => [outcome.id, outcome.status]))).toEqual(run.expected.outcomes);
+        if (run.expected.provisioned) expect(provisioned).toEqual(run.expected.provisioned);
+        if (run.expected.stopped) expect(stopped).toEqual(run.expected.stopped);
+        if (run.providers && Object.values(run.providers).includes("fail")) expect(summary.steps.flatMap((step) => step.checks).find((check) => check.status === "blocked")?.summary.en).toContain("scripted");
         expect(peakBrowsers).toBeLessThanOrEqual(Math.max(1, ...run.steps.flatMap((step) => step.checks.map((check) => check.browsers))));
         expect(oracle("goalSummary")(JSON.parse(readFileSync(join(dir, "out", "summary.json"), "utf8")))).toBe(true);
         expect(readFileSync(join(dir, "out", "summary.de.md"), "utf8")).toContain("Ergebnis");

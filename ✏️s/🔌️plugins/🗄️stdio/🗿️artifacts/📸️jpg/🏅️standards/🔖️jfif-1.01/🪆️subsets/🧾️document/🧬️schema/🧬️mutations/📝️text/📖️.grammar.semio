@@ -5,7 +5,9 @@ extension jpg
 start document
 comment none
 
-document = change-jfif-header | replace-quant-table | remove-quant-table | replace-huffman-table | remove-huffman-table | change-restart-interval | insert-other-segment | remove-other-segment | replace-pixels | change-re-encode-quality
+document = set-snapshot-op | patch-snapshot-op | change-jfif-header | replace-quant-table | remove-quant-table | replace-huffman-table | remove-huffman-table | change-restart-interval | insert-other-segment | remove-other-segment | replace-pixels | change-re-encode-quality
+
+patch-snapshot-op = "patch-snapshot" "patch" "=" hex
 
 change-jfif-header = "change-jfif-header" "version" "=" version-lit "density-units" "=" INT "x-density" "=" INT "y-density" "=" INT "thumbnail" "=" opt-thumbnail
 replace-quant-table = "replace-quant-table" "table" "=" quant-table-lit

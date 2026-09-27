@@ -115,6 +115,33 @@
         "en": "Your sign-in is no longer valid. Sign in again.",
         "de": "Ihre Anmeldung ist nicht mehr gültig. Bitte melden Sie sich erneut an."
       }
+    },
+    "HubTransientApplyRefusalCodeV1": {
+      "description": "The `code` of the one `MutationMessage` a hub puts in a document batch's `ApplyOutcome::Rejected.messages` when it refused the batch for a TRANSIENT reason — the database could not admit it now (DB I/O admission or capacity exhausted) or the sender's command rate is paced out. Nothing was applied and nothing is lost on the hub: the client keeps the batch and resends it (bounded) instead of rolling it back. Every other rejection carries no such message.",
+      "const": "hub.unavailable"
+    },
+    "HubTransientApplyRefusalMessageV1": {
+      "description": "The transient-refusal `MutationMessage` (its `ToValue` wire object): level `warning`, the declared code, and the hub's own reason; never a target or an operation index, since the whole batch was refused before any operation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "level": {
+          "const": "warning"
+        },
+        "code": {
+          "$ref": "#/$defs/HubTransientApplyRefusalCodeV1"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      }
     }
   }
 }

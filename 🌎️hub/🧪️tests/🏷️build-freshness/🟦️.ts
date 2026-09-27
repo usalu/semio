@@ -41,7 +41,7 @@ export function processExecutable(pid: number): { executable: string; startedAtM
     return { executable, startedAtMs: started ? Date.parse(started) : null };
   }
   if (process.platform === "win32") {
-    const answer = spawnSync("powershell", ["-NoProfile", "-Command", `$p = Get-Process -Id ${pid}; "$($p.Path)|$($p.StartTime.ToUniversalTime().ToString('o'))"`], { encoding: "utf8" });
+    const answer = spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $p = Get-Process -Id ${pid}; "$($p.Path)|$($p.StartTime.ToUniversalTime().ToString('o'))"`], { encoding: "utf8" });
     const [executable = "", started = ""] = answer.stdout.trim().split("|");
     return { executable, startedAtMs: started ? Date.parse(started) : null };
   }

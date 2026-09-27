@@ -149,14 +149,8 @@ pub(crate) async fn patches_diff(surface: &str, tree: semio_framework_ui_runtime
                 let revision = patch.as_ref().map_or(0, |patch| patch.revision.0);
                 let mut acknowledgement = None;
                 if published.is_some()
-                    && semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(
-                        &mut published,
-                        &mut acknowledgement,
-                        surface,
-                        revision,
-                        semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes(),
-                    )
-                    .expect("test-owned acknowledgement grant")
+                    && semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::acknowledge_into(&mut published, &mut acknowledgement, surface, revision, semio_framework_ui_runtime::SurfaceReconcilePublishedPatch::required_acknowledge_bytes())
+                        .expect("test-owned acknowledgement grant")
                 {
                     let mut acknowledgement = acknowledgement.take().expect("acknowledged publication owner");
                     patches.mark_published_ack(&acknowledgement).expect("the tracker admits its own acknowledgement");

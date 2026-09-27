@@ -5,15 +5,11 @@
 //! `PdfPage` itself (populated by ToUnicode-aware content-stream extraction on decode, or authored
 //! directly on a fresh page), never a placeholder invented by this window.
 //!
-//! Honest scope limit: `PdfMutation` has no "replace this page's whole text" primitive -- only
-//! `AppendPageContent` (newline-append) exists. The surface root's `set-page` command therefore
-//! APPENDS to the page's existing text rather than replacing it; a true in-place edit would need a
-//! new mutation variant, out of scope for this ticket (UI-surface-only, no schema changes).
-
-use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
+//! Text drafts replace the page content through the reversible `SetPageContent` mutation while
+//! preserving page geometry, resources, annotations, and every non-text operation.
 use crate::PdfSnapshot;
-use semio_framework_plugin::app::{DocumentPage, DocumentView, DocumentWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, TreeWindows, WindowKindDefinition};
+use semio_framework_plugin::app::{DocumentWindowKit, EditableDocumentPage, EditableDocumentView, WindowKit};
+use semio_framework_plugin::{Locale, LocalizedLabel, TreeWindows, WindowKindDefinition};
 use semio_framework_ui_contract::BuiltNode;
 
 //#region 🔖️Constants
@@ -30,24 +26,19 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 📄️ Real `PdfSnapshot -> BuiltNode`: one summary line per page (see module doc comment for what `page.text` honestly is and is not).
+/// 📄️ Builds one prefilled text-content draft per page; geometry and every non-text operation remain in Details.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn page_summary(index: usize, page: &PdfPage) -> String {
-    let media = page.media_box;
-    let crop = page.crop_box.map(|c| format!(", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]", c[0], c[1], c[2], c[3])).unwrap_or_default();
-    let text = if page.text().is_empty() { "(no extracted or authored text)".to_string() } else { page.text() };
-    format!("Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\n{}", index + 1, media[0], media[1], media[2], media[3], crop, text)
+fn editable_pages(document: &PdfSnapshot) -> Vec<EditableDocumentPage> {
+    document.pages.iter().enumerate().map(|(page_index, page)| EditableDocumentPage { page_index: page_index as u32, item_index: 0, text: page.text() }).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn render(document: &PdfSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
-    DocumentWindowKit::render(&DocumentView { pages })
+    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document) }, &TreeWindows::unhosted(), Locale::En)
 }
 
-pub fn render_windowed(document: &PdfSnapshot, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let pages = document.pages.iter().enumerate().map(|(index, page)| DocumentPage { text: page_summary(index, page) }).collect();
-    DocumentWindowKit::render_windowed(&DocumentView { pages }, windows)
+pub fn render_windowed(document: &PdfSnapshot, windows: &TreeWindows<'_>, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    DocumentWindowKit::render_editable_windowed(&EditableDocumentView { pages: editable_pages(document) }, windows, locale)
 }
 //#endregion 🔖️Render
 

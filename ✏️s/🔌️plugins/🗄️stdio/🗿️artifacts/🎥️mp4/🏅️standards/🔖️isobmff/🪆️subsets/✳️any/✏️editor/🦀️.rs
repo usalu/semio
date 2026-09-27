@@ -123,19 +123,8 @@ fn mp4Editor_direct_structural_mutation(event: &editing::SnapshotEditEvent, snap
     Ok(None)
 }
 fn mp4Editor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &Mp4Snapshot) -> Result<Mp4Snapshot, Fault> {
-    if let editing::SnapshotEditEvent::ReplaceSource { source } = event {
-        return editing::snapshot_from_edit_source(source).map_err(|error| mp4Editor_edit_fault(error.code, error.to_string()));
-    }
-    let mut bounded = snapshot.clone();
-    let payloads: Vec<Vec<Vec<u8>>> = bounded.tracks.iter_mut().map(|track| track.samples.iter_mut().map(|sample| std::mem::take(&mut sample.data)).collect()).collect();
-    let mut next = editing::apply_snapshot_edit(&bounded, event).map_err(|error| mp4Editor_edit_fault(error.code, error.to_string()))?;
-    if next.tracks.len() != payloads.len() || next.tracks.iter().zip(&payloads).any(|(track, samples)| track.samples.len() != samples.len()) {
-        return Err(mp4Editor_edit_fault("stdio.mp4.structural-edit-requires-native-route", "track and sample structure must use the bounded insert or remove route"));
-    }
-    for (track, samples) in next.tracks.iter_mut().zip(payloads) {
-        for (sample, data) in track.samples.iter_mut().zip(samples) { sample.data = data; }
-    }
-    Ok(next)
+    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| mp4Editor_edit_fault(error.code, error.to_string()))?;
+    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA).map_err(|error| mp4Editor_edit_fault(error.code, error.to_string()))
 }
 fn mp4Editor_compact_mutation(event: &editing::SnapshotEditEvent, next: Mp4Snapshot, base: &Mp4Snapshot) -> Mp4Mutation {
     if matches!(event, editing::SnapshotEditEvent::SetValue { path, .. } if path == "/ftyp" || path.starts_with("/ftyp/")) {
@@ -279,23 +268,16 @@ impl editing::SnapshotEditingEditor for Mp4Editor {
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { Mp4EditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
-    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        let shape_is_admitted = match event {
-            editing::SnapshotEditEvent::SetValue { path, .. } | editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } | editing::SnapshotEditEvent::RenameKey { path, .. } => path.len() <= 4_096,
-            editing::SnapshotEditEvent::MoveValue { from, path } => from.len() <= 4_096 && path.len() <= 4_096,
-            editing::SnapshotEditEvent::ReplaceSource { source } => editing::snapshot_edit_source_is_admitted(source),
-        };
-        if !shape_is_admitted { return false; }
-        let Ok(emit) = <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, snapshot) else { return false };
-        let fits = |mutation: &Self::Mutation| <Self::Mutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-        !emit.artifact_mutations.is_empty() && emit.artifact_mutations.iter().all(|mutation| fits(mutation) && <Self::Mutation as protocol::Mutation<Self::Snapshot>>::inverse(mutation, snapshot).iter().all(fits))
-    }
-    fn snapshot_edit_emit(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         if let Some(mutation) = mp4Editor_direct_structural_mutation(event, snapshot)? {
             return Ok(Emit { artifact_mutations: vec![mutation], description: Some("Edit MP4 structure".into()), ..Default::default() });
         }
         let next = mp4Editor_bounded_edit(event, snapshot)?;
-        Ok(Emit { artifact_mutations: vec![mp4Editor_compact_mutation(event, next, snapshot)], description: Some("Edit MP4 details".into()), ..Default::default() })
+        let mutation = mp4Editor_compact_mutation(event, next, snapshot);
+        if !matches!(mutation, Mp4Mutation::SetSnapshot(_)) {
+            return Ok(Emit { artifact_mutations: vec![mutation], description: Some("Edit MP4 details".into()), ..Default::default() });
+        }
+        editing::snapshot_edit_patch(event, snapshot, |patch| Mp4Mutation::PatchSnapshot(crate::standards::isobmff::subsets::any::schema::mutations::patch_snapshot::PatchSnapshot { patch }))
     }
 }
 

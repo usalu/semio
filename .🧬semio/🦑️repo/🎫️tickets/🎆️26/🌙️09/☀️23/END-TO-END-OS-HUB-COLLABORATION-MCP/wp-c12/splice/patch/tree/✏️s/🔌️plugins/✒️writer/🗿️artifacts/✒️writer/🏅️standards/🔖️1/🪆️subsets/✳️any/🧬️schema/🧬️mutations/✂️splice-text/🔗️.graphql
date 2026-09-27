@@ -1,0 +1,8 @@
+"""✂️ Direct splice-text payload — one range-text operation (SpliceText)."""
+input SpliceTextInput {
+  start: Int!
+  deleted: String!
+  insert: String!
+  before: String!
+  after: String!
+}

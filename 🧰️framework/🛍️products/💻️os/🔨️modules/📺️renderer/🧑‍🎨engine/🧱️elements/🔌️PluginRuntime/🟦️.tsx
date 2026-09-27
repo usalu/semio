@@ -57,7 +57,7 @@ import {
   windowViewContext,
 } from "@semio-tech/framework";
 import { packedTextLeaf } from "./🧳️packed-text/🟦️.ts";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type DocumentArchiveLoadStatus, type DocumentArchivePack, type WindowConfigPackEntry, decodeAppCommand, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodeAppFrame, encodePackValue, faultDisplayMessage, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import {
   DOCUMENT_BACKBONE_RETENTION_LIMITS,
   decodeLocalInteractionCaptureJson,
@@ -194,8 +194,9 @@ export type PluginWasmHandle = {
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🗃️ Complete root plus recursive owned-member closure for durable document persistence. */
   readonly readAppDocumentArchive?: (instanceId: number) => Promise<DocumentArchivePack>;
-  /** 🗃️ Atomically restores a complete recursive document archive. */
-  readonly loadAppDocumentArchive?: (instanceId: number, archive: DocumentArchivePack) => Promise<void>;
+  /** 🗃️ Atomically restores a complete recursive document archive; `signal` cancels the load, `progress` hears every
+   * polled status (`completed` of `total`). */
+  readonly loadAppDocumentArchive?: (instanceId: number, archive: DocumentArchivePack, signal?: AbortSignal, progress?: (status: DocumentArchiveLoadStatus) => void) => Promise<void>;
   /** 🪟️ Reads every concrete window's persisted-local config envelope. */
   readonly readWindowConfigPacks: (instanceId: number) => Promise<readonly WindowConfigPackEntry[]>;
   /** 🪟️ Restores one concrete window config envelope before its first render. */
@@ -3943,7 +3944,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (errorFrame) throw new Error(`[DEBUG] loadAppDocumentPack failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
     },
     readAppDocumentArchive: (instanceId) => requireChannel(instanceId).readDocumentArchive(),
-    loadAppDocumentArchive: (instanceId, archive) => requireChannel(instanceId).loadDocumentArchive(archive),
+    loadAppDocumentArchive: (instanceId, archive, signal, progress) => requireChannel(instanceId).loadDocumentArchive(archive, signal, progress),
     readWindowConfigPacks: (instanceId) => requireChannel(instanceId).readWindowConfigs(),
     loadWindowConfigPack: (instanceId, entry) => requireChannel(instanceId).loadWindowConfig(entry),
     ephemeralSnapshot: async (instanceId) => requireChannel(instanceId).ephemeral(),

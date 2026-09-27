@@ -15,6 +15,8 @@ pub struct CanvasPointerUp {
     pub width: f64,
     pub height: f64,
     pub shift: bool,
+    #[value(default)]
+    pub alt: bool,
     pub ctrl: bool,
     pub meta: bool,
     /// 🚫️ `true` when the host closed the gesture without a release (pointer left the canvas,

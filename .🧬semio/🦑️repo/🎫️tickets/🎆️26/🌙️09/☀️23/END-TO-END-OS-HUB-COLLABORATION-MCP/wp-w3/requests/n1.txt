@@ -7,3 +7,4 @@ semio-s-artifact-norm-en1997 — N1: restored decode/apply/inverse_en1997_mutati
 semio-s-artifact-norm-en1998 — N1: restored decode/apply/inverse_en1998_mutation (additive)
 semio-s-plugin-norm — N1: links the seven crates above (no own code change)
 semio-s-artifact-norm-en1990, -en1991, -en1992, -en1993, -en1994, -en1997, -en1998, -en1999, -din4108, -din16798, -din18599, -iso16757, -vdi3805 — N1 06:0x: mutation leaf label() strings, proper en + de (374 leaves; glossary codemod wp-n1/n1-labels*.py)
+semio-s-plugin-norm — N1 window 2: test-only fixes (surface set_active_example en1991 example, compliance-gate borrow); no guest code change

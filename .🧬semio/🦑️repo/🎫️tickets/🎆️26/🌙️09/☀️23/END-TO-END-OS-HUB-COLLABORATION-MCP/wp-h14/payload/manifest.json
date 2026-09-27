@@ -1,0 +1,20 @@
+{
+  "captured": "2026-09-27 20:07:46",
+  "entries": [
+    {
+      "id": "plugin-host",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+      "source": "overlay"
+    },
+    {
+      "id": "owned-instance-open-laws",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️owned-instance-open/🦀️.rs",
+      "source": "overlay"
+    },
+    {
+      "id": "hub-residency-footprint",
+      "path": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs",
+      "source": "hunk"
+    }
+  ]
+}

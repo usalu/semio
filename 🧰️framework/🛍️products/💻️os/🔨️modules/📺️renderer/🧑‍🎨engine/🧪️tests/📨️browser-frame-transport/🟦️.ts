@@ -140,6 +140,37 @@ describe("retained browser clock deadlines", () => {
     }
   });
 
+  it("revokes animation and expired control timers while a presenter checkout waits for handback", () => {
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json"), "utf8"));
+    vi.useFakeTimers();
+    vi.setSystemTime(0);
+    const context = harness();
+    try {
+      const batches = () => context.worker.messages.filter(message => message.kind === "batch").length;
+      context.reply(fixture.presenterWait.deadlineTurns[0].nextMs);
+      context.reply(null);
+      const before = batches();
+      vi.advanceTimersByTime(3000);
+      context.flushRaf();
+      expect(batches()).toBe(before);
+      expect(context.raf.size).toBe(0);
+      context.worker.reply({ kind: "wake", lifecycle: 1 });
+      context.flushRaf();
+      expect(batches()).toBe(before + 1);
+      context.reply(0);
+      vi.advanceTimersByTime(0);
+      expect(context.raf.size).toBe(1);
+      const source = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"), "utf8");
+      const snapshot = source.slice(source.indexOf("fn present_snapshot("), source.indexOf("fn semio_cursor_to_request("));
+      expect(snapshot).toContain("sync_presented_deadlines(");
+      expect(snapshot).toContain("self.presenter.awaiting_runtime()");
+      expect(snapshot).toMatch(/#\[cfg\(not\(target_arch = "wasm32"\)\)\]\s*if self.hot_swap.is_due/);
+    } finally {
+      context.subject.close();
+      vi.useRealTimers();
+    }
+  });
+
   it("cancels a pending wake for input and ignores a stale frame's deadline", () => {
     vi.useFakeTimers();
     vi.setSystemTime(0);

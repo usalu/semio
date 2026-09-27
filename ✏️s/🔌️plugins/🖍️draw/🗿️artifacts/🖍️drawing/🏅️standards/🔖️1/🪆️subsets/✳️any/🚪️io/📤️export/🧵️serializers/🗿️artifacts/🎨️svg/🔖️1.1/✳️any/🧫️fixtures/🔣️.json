@@ -1,0 +1,244 @@
+{
+  "viewBox": [
+    -20,
+    -10,
+    200,
+    100
+  ],
+  "nodes": [
+    {
+      "id": "path<&>",
+      "transform": [
+        1,
+        0.5,
+        -0.25,
+        1,
+        7,
+        11
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "quad",
+          "ctrl": [
+            5,
+            9
+          ],
+          "to": [
+            10,
+            0
+          ]
+        },
+        {
+          "kind": "cubic",
+          "ctrl1": [
+            12,
+            4
+          ],
+          "ctrl2": [
+            18,
+            4
+          ],
+          "to": [
+            20,
+            0
+          ]
+        },
+        {
+          "kind": "arc",
+          "rx": 5,
+          "ry": 3,
+          "rotation": 25,
+          "largeArc": true,
+          "sweep": false,
+          "to": [
+            30,
+            10
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ],
+      "fill": {
+        "kind": "linearGradient",
+        "x1": 0,
+        "y1": 0,
+        "x2": 30,
+        "y2": 10,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              0,
+              0,
+              0.25
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              1,
+              1
+            ]
+          }
+        ]
+      },
+      "stroke": {
+        "color": [
+          0,
+          0,
+          0,
+          0.4
+        ],
+        "width": 2,
+        "cap": "round",
+        "join": "bevel",
+        "dash": [
+          3,
+          2
+        ]
+      },
+      "opacity": 0.7,
+      "blendMode": "multiply",
+      "visible": true,
+      "fillRule": "evenodd"
+    },
+    {
+      "id": "text",
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        20,
+        30
+      ],
+      "segments": [],
+      "fill": {
+        "kind": "radialGradient",
+        "cx": 5,
+        "cy": 6,
+        "r": 12,
+        "stops": [
+          {
+            "offset": 0,
+            "color": [
+              1,
+              1,
+              1,
+              1
+            ]
+          },
+          {
+            "offset": 1,
+            "color": [
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "text": {
+        "content": "A<&>\r\nÜ 🌍",
+        "size": 20
+      },
+      "opacity": 1,
+      "blendMode": "normal",
+      "visible": true
+    },
+    {
+      "id": "image",
+      "transform": [
+        0,
+        2,
+        -3,
+        0,
+        80,
+        10
+      ],
+      "segments": [],
+      "image": {
+        "src": "data:image/png;base64,aGVsbG8=",
+        "width": 40,
+        "height": 30
+      },
+      "opacity": 0.5,
+      "blendMode": "screen",
+      "visible": true
+    },
+    {
+      "id": "unpainted",
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "segments": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            1,
+            1
+          ]
+        }
+      ],
+      "opacity": 1,
+      "blendMode": "normal",
+      "visible": true
+    }
+  ],
+  "invalidNumbers": [
+    {
+      "node": 0,
+      "field": "opacity",
+      "value": "NaN"
+    },
+    {
+      "node": 0,
+      "field": "curve",
+      "value": "Infinity"
+    },
+    {
+      "node": 0,
+      "field": "gradient",
+      "value": "NaN"
+    },
+    {
+      "node": 0,
+      "field": "stroke",
+      "value": "Infinity"
+    },
+    {
+      "node": 1,
+      "field": "text",
+      "value": "Infinity"
+    },
+    {
+      "node": 2,
+      "field": "image",
+      "value": "NaN"
+    }
+  ]
+}

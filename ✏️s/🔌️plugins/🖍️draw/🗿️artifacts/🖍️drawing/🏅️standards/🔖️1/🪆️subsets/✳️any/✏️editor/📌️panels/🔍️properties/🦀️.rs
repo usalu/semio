@@ -62,8 +62,13 @@ fn fields(layer: &DrawingLayerNode, labels: &DrawingPlayLabels) -> Vec<Field> {
         ("transformScaleX", labels.scale_x, base.transform.scale_x.to_string(), InputKind::Number, false, None, None),
         ("transformScaleY", labels.scale_y, base.transform.scale_y.to_string(), InputKind::Number, false, None, None),
         ("transformRotation", labels.rotation, base.transform.rotation.to_degrees().to_string(), InputKind::Number, false, None, None),
+        ("transformShear", labels.shear, base.transform.shear.to_string(), InputKind::Number, false, None, None),
     ] {
         rows.push(Field { key, label, value, kind, toggle, min, max });
+    }
+    if let DrawingLayerNode::Text(text) = layer {
+        rows.push(Field { key: "textContent", label: labels.text_content, value: text.content.clone(), kind: InputKind::LongText, toggle: false, min: None, max: None });
+        rows.push(Field { key: "textSize", label: labels.text_size, value: text.size.to_string(), kind: InputKind::Number, toggle: false, min: Some(0.1), max: None });
     }
     if let DrawingLayerNode::Trace(trace) = layer {
         rows.push(Field { key: "traceThreshold", label: labels.trace_threshold, value: trace.params.threshold.to_string(), kind: InputKind::Number, toggle: false, min: Some(0.0), max: Some(1.0) });

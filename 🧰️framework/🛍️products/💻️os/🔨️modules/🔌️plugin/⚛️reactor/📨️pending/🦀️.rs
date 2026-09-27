@@ -267,7 +267,10 @@ impl PendingPatchAuthority {
             .slots
             .iter()
             .enumerate()
-            .filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !slot.emitted && carried.is_none_or(|instance| slot.instance == Some(instance)) && !self.instance_is_closing(slot.instance) && Self::slot_surface(slot).is_none_or(|surface| !self.turn_page_carries(surface))))
+            .filter(|(_, slot)| {
+                slot.as_ref()
+                    .is_some_and(|slot| !slot.emitted && carried.is_none_or(|instance| slot.instance == Some(instance)) && !self.instance_is_closing(slot.instance) && Self::slot_surface(slot).is_none_or(|surface| !self.turn_page_carries(surface)))
+            })
             .min_by_key(|(_, slot)| slot.as_ref().map(|slot| slot.sequence))
             .map(|(index, _)| index)
         else {
@@ -315,7 +318,9 @@ impl PendingPatchAuthority {
         if self.turn_handback_instance != parse_surface_instance(&patch.surface.0) {
             return Err(patch);
         }
-        let Some(cell) = self.turn_handbacks.iter().position(|cell| cell.sequence.is_some() && cell.patch.terminal_is_empty() && cell.published.as_ref().is_some_and(|(surface, revision)| surface.0 == patch.surface.0 && *revision == patch.revision.0)) else {
+        let Some(cell) =
+            self.turn_handbacks.iter().position(|cell| cell.sequence.is_some() && cell.patch.terminal_is_empty() && cell.published.as_ref().is_some_and(|(surface, revision)| surface.0 == patch.surface.0 && *revision == patch.revision.0))
+        else {
             return Err(patch);
         };
         let sequence = self.turn_handbacks[cell].sequence;
@@ -573,7 +578,22 @@ impl PendingPatchAuthority {
             .slots
             .iter()
             .flatten()
-            .map(|slot| format!("{}:{:?}:{}{}{}{}{}", slot.sequence, slot.phase(), if slot.emitted { "e" } else { "-" }, if slot.acknowledged { "a" } else { "-" }, match &slot.issued { Some(issued) if issued.committed => "c", Some(_) => "i", None => "-" }, if slot.rejection_requested { "r" } else { "-" }, if slot.published.is_some() { "p" } else { "-" }))
+            .map(|slot| {
+                format!(
+                    "{}:{:?}:{}{}{}{}{}",
+                    slot.sequence,
+                    slot.phase(),
+                    if slot.emitted { "e" } else { "-" },
+                    if slot.acknowledged { "a" } else { "-" },
+                    match &slot.issued {
+                        Some(issued) if issued.committed => "c",
+                        Some(_) => "i",
+                        None => "-",
+                    },
+                    if slot.rejection_requested { "r" } else { "-" },
+                    if slot.published.is_some() { "p" } else { "-" }
+                )
+            })
             .collect();
         format!(
             "slots=[{}] handback_empty={} handback_sequences={:?} exhausted={} closing={}",

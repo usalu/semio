@@ -55,7 +55,10 @@ type RasterMaskContent {
   mask: RasterLayerMask
 }
 
+type RasterAdjustmentParameter {parameter: String! value: Float}
+
 type RasterLayerPatch {
+  adjustmentParameters: [RasterAdjustmentParameter!]
   maskContent: RasterMaskContent
   pixelContent: RasterPixelContent
   pixelTransform: RasterTransform

@@ -38,7 +38,9 @@
               "fill": null,
               "stroke": null,
               "wrap_mode": null,
-              "columns": null
+              "columns": null,
+              "locked": null,
+              "visible": null
             }
           }
         }

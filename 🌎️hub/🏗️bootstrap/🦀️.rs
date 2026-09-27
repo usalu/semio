@@ -84,7 +84,7 @@ use semio_hub::auth::{
 };
 use semio_hub::directory::error::DirectoryError;
 use semio_hub::directory::model::{
-    AdminEffectCommitV1, AdminOperationAuditRecord, AgentDelegationRow, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, CredentialAuditFactV1, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
+    AdminEffectCommitV1, AdminOperationAuditRecord, AgentDelegationRow, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, DirectoryPrincipalCeilingV1, DirectoryPrincipalV1, CredentialAuditFactV1, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
     SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
 };
 #[cfg(feature = "sqlite")]
@@ -1173,10 +1173,18 @@ impl SocketSubjectV1 {
         }
     }
 
+    /// 🎚️ Who a session subject asks every space-role question as; a share asks none.
+    fn principal(&self) -> Option<DirectoryPrincipalV1<'_>> {
+        match self {
+            Self::Session { user_id, session_kind, device_instance_id, .. } => Some(DirectoryPrincipalV1 { user_id, session_kind: *session_kind, device_instance_id }),
+            Self::Share { .. } => None,
+        }
+    }
+
     /// 🎭️ The roles this socket subject holds under the declared access policy.
     fn access_roles(&self) -> Vec<HubAccessRoleV1> {
         match self {
-            Self::Session { role, .. } => [HubAccessRoleV1::Authenticated].into_iter().chain(role.map(space_role_access)).collect(),
+            Self::Session { role, session_kind, .. } => session_access_roles(*session_kind, *role),
             Self::Share { .. } => vec![HubAccessRoleV1::Share],
         }
     }
@@ -1208,7 +1216,7 @@ impl SocketSubjectV1 {
         match (self, audience) {
             (Self::Session { session_id, user_id, authorization_generation, role, expires_at_ms, .. }, SocketAudienceV1::Document(scope)) => {
                 match directory.socket_session_binding(session_id, user_id, *authorization_generation, Some(&scope.space_id), at_ms).await {
-                    Ok(SocketSessionBindingStatus::Active { role: current, expires_at_ms: current_expiry }) if current == *role && current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
+                    Ok(SocketSessionBindingStatus::Active { role: current, expires_at_ms: current_expiry, .. }) if current == *role && current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
                     Ok(SocketSessionBindingStatus::Unavailable) | Err(_) => SocketBindingValidityV1::Unavailable,
                     _ => SocketBindingValidityV1::Unauthorized,
                 }
@@ -1217,14 +1225,14 @@ impl SocketSubjectV1 {
                 if session_id == auth_session_id && authorization_generation == audience_generation =>
             {
                 match directory.socket_session_binding(session_id, user_id, *authorization_generation, None, at_ms).await {
-                    Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms: current_expiry }) if current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
+                    Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms: current_expiry, .. }) if current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
                     Ok(SocketSessionBindingStatus::Unavailable) | Err(_) => SocketBindingValidityV1::Unavailable,
                     _ => SocketBindingValidityV1::Unauthorized,
                 }
             }
             (Self::Session { session_id, user_id, authorization_generation, expires_at_ms, .. }, SocketAudienceV1::DirectoryScoped(scope)) => {
                 match directory.socket_session_binding(session_id, user_id, *authorization_generation, Some(&scope.space_id), at_ms).await {
-                    Ok(SocketSessionBindingStatus::Active { role: Some(_), expires_at_ms: current_expiry }) if current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
+                    Ok(SocketSessionBindingStatus::Active { role: Some(_), expires_at_ms: current_expiry, .. }) if current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
                     Ok(SocketSessionBindingStatus::Unavailable) | Err(_) => SocketBindingValidityV1::Unavailable,
                     _ => SocketBindingValidityV1::Unauthorized,
                 }
@@ -2610,7 +2618,7 @@ async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token
     let capability = token.and_then(|value| HubCapability::parse(value).ok());
     if let Some(HubCapability::Session(capability)) = &capability {
         if let Ok(Some(session)) = state.directory.authenticate_session(capability).await {
-            if let Ok(Some(role)) = state.directory.get_role(space_id, &session.user_id).await {
+            if let Ok(Some(role)) = state.directory.principal_role(space_id, session.principal()).await {
                 return AuthOutcome::Session { user_id: session.user_id, role, session_id: session.id, authorization_generation: session.authorization_generation, session_kind: session.session_kind };
             }
         }
@@ -2624,20 +2632,35 @@ async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token
     AuthOutcome::Denied
 }
 
-/// 🎭️ The declared-policy role of one space membership.
-fn space_role_access(role: SpaceRole) -> HubAccessRoleV1 {
-    match role {
-        SpaceRole::Author => HubAccessRoleV1::Author,
-        SpaceRole::Spectator => HubAccessRoleV1::Spectator,
+/// 🎭️ THE declared-policy roles of one authenticated session holding `role` in a space (its ceiling-capped role,
+/// [`HubDirectory::principal_role`]): a human session is signed in plus its membership role; an agent session holds
+/// only its agent role — `agent-editor` under an author ceiling, `agent-reader` under a spectator one — so no grant the
+/// policy writes for humans (space creation, administration, delegation, preferences) ever reaches an agent.
+fn session_access_roles(session_kind: AuthSessionKind, role: Option<SpaceRole>) -> Vec<HubAccessRoleV1> {
+    if session_kind.is_agent() {
+        return role
+            .map(|role| match role {
+                SpaceRole::Author => HubAccessRoleV1::AgentEditor,
+                SpaceRole::Spectator => HubAccessRoleV1::AgentReader,
+            })
+            .into_iter()
+            .collect();
     }
+    [HubAccessRoleV1::Authenticated]
+        .into_iter()
+        .chain(role.map(|role| match role {
+            SpaceRole::Author => HubAccessRoleV1::Author,
+            SpaceRole::Spectator => HubAccessRoleV1::Spectator,
+        }))
+        .collect()
 }
 
 impl AuthOutcome {
-    /// 🎭️ The roles this bearer holds for its document: a member is authenticated plus its
-    /// membership role, a share token is a share, and a refused bearer holds nothing.
+    /// 🎭️ The roles this bearer holds for its document: a session holds [`session_access_roles`], a share token is a
+    /// share, and a refused bearer holds nothing.
     fn access_roles(&self) -> Vec<HubAccessRoleV1> {
         match self {
-            Self::Session { role, .. } => vec![HubAccessRoleV1::Authenticated, space_role_access(*role)],
+            Self::Session { role, session_kind, .. } => session_access_roles(*session_kind, Some(*role)),
             Self::ShareToken => vec![HubAccessRoleV1::Share],
             Self::Denied => Vec::new(),
         }
@@ -2690,9 +2713,16 @@ struct AdminPrincipalV1 {
     expires_at_ms: i64,
     correlation_id: String,
     peer_class: &'static str,
+    session_kind: AuthSessionKind,
+    device_instance_id: String,
 }
 
 impl AdminPrincipalV1 {
+    /// @emoji 🎚️ Who this administrator asks a space-role question as.
+    fn principal(&self) -> DirectoryPrincipalV1<'_> {
+        DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
+    }
+
     fn event_actor(&self) -> DirectoryActor {
         DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#admin-session:{}", self.user_id, self.auth_session_id) }
     }
@@ -3212,6 +3242,7 @@ async fn authenticate_admin_principal(state: &HubState, headers: &HeaderMap, _pe
     let provider_digest = admin_provider_digest(&session.identity_provider);
     if session.authorization_generation == 0
         || session.expires_at <= now_ms()
+        || session.session_kind.is_agent()
         || !state
             .admin_subjects
             .iter()
@@ -3228,6 +3259,8 @@ async fn authenticate_admin_principal(state: &HubState, headers: &HeaderMap, _pe
         expires_at_ms: session.expires_at,
         correlation_id: directory::os_identity::time_ordered_id(),
         peer_class: "admin-rest",
+        session_kind: session.session_kind,
+        device_instance_id: session.device_instance_id,
     })
 }
 
@@ -3371,7 +3404,7 @@ async fn authenticate_document_credential(state: &HubState, scope: &DocumentScop
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
                 .ok_or(DocumentOpenPlanErrorCodeV1::Denied)?;
-            let role = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_role(&scope.space_id, &session.user_id))
+            let role = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.principal_role(&scope.space_id, session.principal()))
                 .await
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
@@ -3850,7 +3883,7 @@ async fn issue_scoped_directory_socket_grant(Path((space_id, document_id)): Path
         tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.ok_or(StatusCode::UNAUTHORIZED)?;
     let scope = DocumentScope::new(space_id, document_id);
     let role = match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.socket_session_binding(&session.id, &session.user_id, session.authorization_generation, Some(&scope.space_id), now_ms())).await {
-        Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), expires_at_ms })) if expires_at_ms == session.expires_at => role,
+        Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), expires_at_ms, .. })) if expires_at_ms == session.expires_at => role,
         Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => return Err(StatusCode::SERVICE_UNAVAILABLE),
         _ => return Err(StatusCode::UNAUTHORIZED),
     };
@@ -4531,6 +4564,7 @@ async fn run_document_check_in(state: HubState, subject: SocketSubjectV1, scope:
     });
     let span = state.span("server.document.check-in").principal(subject.trace_principal()).space(scope.space_id.clone()).artifact(scope.document_id.clone());
     let outcome = materialize_and_publish_check_in(&state, &subject, &audience, &scope, &request, &job, &claim).await;
+    let mut end_cause = None;
     match outcome {
         Ok((checkpoint_id, parent_checkpoint_id, baseline)) => {
             claim.complete = checkpoint_id != parent_checkpoint_id;
@@ -4539,13 +4573,15 @@ async fn run_document_check_in(state: HubState, subject: SocketSubjectV1, scope:
             }
             job.finish_ready(checkpoint_id, parent_checkpoint_id, baseline);
         }
-        Err(Some(refusal)) => {
+        Err(CheckInEndV1 { refusal: Some(refusal), cause }) => {
             claim.release().await;
             job.finish_refused(refusal);
+            end_cause = cause;
         }
-        Err(None) => {
+        Err(CheckInEndV1 { refusal: None, cause }) => {
             claim.release().await;
             job.finish_cancelled();
+            end_cause = cause;
         }
     }
     monitor.abort();
@@ -4553,15 +4589,32 @@ async fn run_document_check_in(state: HubState, subject: SocketSubjectV1, scope:
     match (status.phase, status.refusal) {
         (DocumentCheckInPhaseV1::Ready, _) => span.ok(),
         (DocumentCheckInPhaseV1::Cancelled, _) => span.cancelled("cancelled"),
-        (_, refusal) => span.refused(match refusal {
-            Some(DocumentCheckInRefusalV1::UnknownHead) => "unknown-head",
-            Some(DocumentCheckInRefusalV1::StaleHead) => "stale-head",
-            Some(DocumentCheckInRefusalV1::ActiveCheckpointChanged) => "active-checkpoint-changed",
-            Some(DocumentCheckInRefusalV1::LedgerNotReplayable) => "ledger-not-replayable",
-            Some(DocumentCheckInRefusalV1::CodecRefused) => "codec-refused",
-            Some(DocumentCheckInRefusalV1::AuthorityChanged) => "authority-changed",
-            Some(DocumentCheckInRefusalV1::Unavailable) | None => "unavailable",
-        }),
+        (_, refusal) => {
+            let code = match refusal {
+                Some(DocumentCheckInRefusalV1::UnknownHead) => "unknown-head",
+                Some(DocumentCheckInRefusalV1::StaleHead) => "stale-head",
+                Some(DocumentCheckInRefusalV1::ActiveCheckpointChanged) => "active-checkpoint-changed",
+                Some(DocumentCheckInRefusalV1::LedgerNotReplayable) => "ledger-not-replayable",
+                Some(DocumentCheckInRefusalV1::CodecRefused) => "codec-refused",
+                Some(DocumentCheckInRefusalV1::AuthorityChanged) => "authority-changed",
+                Some(DocumentCheckInRefusalV1::Unavailable) | None => "unavailable",
+            };
+            span.refused(&end_cause.map_or_else(|| code.to_string(), |cause| format!("{code}: {cause}")));
+        }
+    }
+}
+
+/// @emoji ⛔️ Why one Check In ended without a checkpoint: its typed refusal (`None`: cancelled) and, when an authority or
+/// ledger failure caused it, that failure in its own words — the span's detail after the refusal code, so a
+/// `codec-refused` names the codec fault, the pair limit or the operation order that refused it.
+struct CheckInEndV1 {
+    refusal: Option<DocumentCheckInRefusalV1>,
+    cause: Option<String>,
+}
+
+impl From<Option<DocumentCheckInRefusalV1>> for CheckInEndV1 {
+    fn from(refusal: Option<DocumentCheckInRefusalV1>) -> Self {
+        Self { refusal, cause: None }
     }
 }
 
@@ -4573,20 +4626,20 @@ async fn materialize_and_publish_check_in(
     request: &DocumentCheckInV1,
     job: &Arc<DocumentCheckInJob>,
     claim: &CheckInClaimGuardV1,
-) -> Result<(ArtifactHash, ArtifactHash, EditedArtifactFrontierV1), Option<DocumentCheckInRefusalV1>> {
-    let refuse = |error: AuthorityError| check_in_refusal_of_authority_error(&error);
+) -> Result<(ArtifactHash, ArtifactHash, EditedArtifactFrontierV1), CheckInEndV1> {
+    let refuse = |error: AuthorityError| CheckInEndV1 { refusal: check_in_refusal_of_authority_error(&error), cause: Some(error.to_string()) };
     let context = OperationContext::stall_bounded(DOCUMENT_CHECK_IN_STALL_BOUND_MS, AuthorityLimits::maximum(), job.as_ref()).map_err(refuse)?;
     job.advance(DocumentCheckInPhaseV1::Materializing, 0);
-    let Some(authority) = state.artifact_authority.as_ref() else { return Err(Some(DocumentCheckInRefusalV1::Unavailable)) };
+    let Some(authority) = state.artifact_authority.as_ref() else { return Err(Some(DocumentCheckInRefusalV1::Unavailable).into()) };
     let head = request.head.artifact_frontier().ok_or(Some(DocumentCheckInRefusalV1::UnknownHead))?;
     let descriptor = match state.directory.get_document_descriptor(scope).await {
         Ok(Some(descriptor)) => descriptor,
-        Ok(None) => return Err(Some(DocumentCheckInRefusalV1::AuthorityChanged)),
-        Err(_) => return Err(Some(DocumentCheckInRefusalV1::Unavailable)),
+        Ok(None) => return Err(Some(DocumentCheckInRefusalV1::AuthorityChanged).into()),
+        Err(_) => return Err(Some(DocumentCheckInRefusalV1::Unavailable).into()),
     };
     let current = match state.directory.get_active_artifact_checkpoint(scope).await {
         Ok(Some(current)) => current,
-        Ok(None) | Err(_) => return Err(Some(DocumentCheckInRefusalV1::Unavailable)),
+        Ok(None) | Err(_) => return Err(Some(DocumentCheckInRefusalV1::Unavailable).into()),
     };
     let baseline = &current.baseline_frontier;
     if head == *baseline {
@@ -4594,29 +4647,29 @@ async fn materialize_and_publish_check_in(
         return Ok((current.checkpoint_id, parent, request.head.clone()));
     }
     if head.head_edit_ordinal < baseline.head_edit_ordinal || head.last_commit_seq < baseline.last_commit_seq {
-        return Err(Some(DocumentCheckInRefusalV1::StaleHead));
+        return Err(Some(DocumentCheckInRefusalV1::StaleHead).into());
     }
     if head.head_edit_ordinal == baseline.head_edit_ordinal || head.last_commit_seq == baseline.last_commit_seq {
-        return Err(Some(DocumentCheckInRefusalV1::UnknownHead));
+        return Err(Some(DocumentCheckInRefusalV1::UnknownHead).into());
     }
     context.checkpoint().map_err(refuse)?;
     let pair_control = CheckInPairControlV1(job.as_ref());
     let pair_context = RebootstrapContext::new(context.now_ms().saturating_add(REBOOTSTRAP_DEADLINE_MS), &pair_control);
     let active = match state.rebootstrap.active_pair(scope, &pair_context).await {
         Ok(active) => active,
-        Err(RebootstrapError::Cancelled) => return Err(None),
-        Err(_) => return Err(Some(DocumentCheckInRefusalV1::Unavailable)),
+        Err(RebootstrapError::Cancelled) => return Err(None.into()),
+        Err(_) => return Err(Some(DocumentCheckInRefusalV1::Unavailable).into()),
     };
     if active.selection.active_checkpoint_id != current.checkpoint_id {
-        return Err(Some(DocumentCheckInRefusalV1::ActiveCheckpointChanged));
+        return Err(Some(DocumentCheckInRefusalV1::ActiveCheckpointChanged).into());
     }
     job.advance(DocumentCheckInPhaseV1::Materializing, 1);
     let storage = state.db.storage().await;
     let wal = storage.wal().await;
     let commits = match db::document::artifact_ledger_tail(&wal, &db_core_document_id(&db_artifact_id(scope)), &check_in_ledger_point(baseline), &check_in_ledger_point(&head), job.cancellation()).await {
         Ok(commits) => commits,
-        Err(_) if AuthorityOperationControl::is_cancelled(job.as_ref()) => return Err(None),
-        Err(error) => return Err(check_in_refusal_of_ledger_error(&error)),
+        Err(_) if AuthorityOperationControl::is_cancelled(job.as_ref()) => return Err(None.into()),
+        Err(error) => return Err(CheckInEndV1 { refusal: check_in_refusal_of_ledger_error(&error), cause: Some(error.to_string()) }),
     };
     drop(wal);
     drop(storage);
@@ -4646,7 +4699,7 @@ async fn materialize_and_publish_check_in(
     };
     let published = match CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(state.artifact_cas.clone()), publisher).publish_candidate(candidate, &context).await {
         Ok(published) => published,
-        Err(_) if subject.revalidate(state.directory.as_ref(), audience, now_ms()).await != SocketBindingValidityV1::Active => return Err(Some(DocumentCheckInRefusalV1::AuthorityChanged)),
+        Err(_) if subject.revalidate(state.directory.as_ref(), audience, now_ms()).await != SocketBindingValidityV1::Active => return Err(Some(DocumentCheckInRefusalV1::AuthorityChanged).into()),
         Err(error) => return Err(refuse(error)),
     };
     Ok((published.checkpoint.checkpoint_id, current.checkpoint_id, request.head.clone()))
@@ -5556,7 +5609,9 @@ async fn serve_document_socket(sender: &mut SplitSink<WebSocket, Message>, recei
                             let paced = state.rate_limits.admit_paced(RateLimitClassV1::AgentCommand, &[subject], AGENT_COMMAND_PATIENCE_MS, |ms| tokio::time::sleep(std::time::Duration::from_millis(ms))).await;
                             if let RateLimitDecisionV1::Refused { retry_after_ms } = paced {
                                 let frontier = best_effort_frontier(&handle).await;
-                                let ack = ServerFrame::Ack { batch_id: *batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: format!("rate-limited: retry after {retry_after_ms} ms"), messages: Vec::new() }) }], frontier };
+                                let reason = format!("rate-limited: retry after {retry_after_ms} ms");
+                                let messages = transient_apply_refusal_messages(&reason);
+                                let ack = ServerFrame::Ack { batch_id: *batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason, messages }) }], frontier };
                                 if sender.send(encode(&ack, &document_id).await).await.is_err() {
                                     break;
                                 }
@@ -5717,6 +5772,15 @@ struct AuthedUser {
     expires_at: i64,
     authorization_generation: u64,
     capability: SessionCapability,
+    session_kind: AuthSessionKind,
+    device_instance_id: String,
+}
+
+impl AuthedUser {
+    /// @emoji 🎚️ Who this caller asks every space-role question as.
+    fn principal(&self) -> DirectoryPrincipalV1<'_> {
+        DirectoryPrincipalV1 { user_id: &self.user_id, session_kind: self.session_kind, device_instance_id: &self.device_instance_id }
+    }
 }
 
 
@@ -5850,14 +5914,22 @@ fn encode_messages(messages: &[protocol::MutationMessage]) -> Vec<u8> {
 
 
 
-/// @emoji 🧾️ Every `protocol::MutationMessage` `error` carries, if any — non-empty only for
-/// `db::DbError::Rejected` (the outcome-step gate `db_artifact::ArtifactEngine::submit` returns per
-/// contract §C9); every other `DbError` variant has nothing to add here.
+/// @emoji 🧾️ Every `protocol::MutationMessage` `error` carries, if any: `db::DbError::Rejected`'s own (the outcome-step
+/// gate `db_artifact::ArtifactEngine::submit` returns per contract §C9), and for `db::DbError::Unavailable` — the engine
+/// could not admit the batch NOW (DB I/O admission or capacity exhausted) — the declared transient refusal, so the client
+/// resends the batch instead of discarding it; every other `DbError` variant has nothing to add here.
 fn messages_for_error(error: &db::DbError) -> Vec<u8> {
     match error {
         db::DbError::Rejected { messages, .. } => encode_messages(messages),
+        db::DbError::Unavailable(reason) => transient_apply_refusal_messages(reason),
         _ => Vec::new(),
     }
+}
+
+/// @emoji ⏳️ `ApplyOutcome::Rejected.messages` of a batch refused for a transient reason: the one
+/// `HubTransientApplyRefusalMessageV1` (`🚧️refusal`), level warning, code `hub.unavailable`, the reason bounded.
+fn transient_apply_refusal_messages(reason: &str) -> Vec<u8> {
+    encode_messages(&[protocol::MutationMessage::warn(semio_hub::refusal::HUB_TRANSIENT_APPLY_REFUSAL_CODE, semio_hub::refusal::hub_transient_apply_refusal_message(reason))])
 }
 
 
@@ -5936,7 +6008,7 @@ fn wire_frontier_to_db(frontier: &mut RuntimeFrontierSummary, document_id: &str,
 async fn resolve_bearer_user(state: &HubState, token: Option<&str>) -> Option<AuthedUser> {
     let capability = SessionCapability::parse(token?).ok()?;
     let session = state.directory.authenticate_session(&capability).await.ok().flatten()?;
-    Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability })
+    Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability, session_kind: session.session_kind, device_instance_id: session.device_instance_id })
 }
 
 /// 🪪️ The caller of a route that also answers anonymously: no `Authorization` header is the anonymous
@@ -5949,7 +6021,7 @@ async fn resolve_optional_bearer_user(state: &HubState, headers: &HeaderMap) -> 
     }
     let capability = bearer(headers).and_then(|token| SessionCapability::parse(&token).ok()).ok_or(StatusCode::UNAUTHORIZED)?;
     let session = state.directory.authenticate_session(&capability).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    Ok(Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability }))
+    Ok(Some(AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability, session_kind: session.session_kind, device_instance_id: session.device_instance_id }))
 }
 
 /// @emoji 🚪️ The refusal of a route that also answers anonymously ([`resolve_optional_bearer_user`]): its `401` means a
@@ -6017,7 +6089,7 @@ impl ArtifactCreationCommitAuthorityV1 for HubArtifactCreationCommitAuthorityV1 
             .map_err(|_| DirectoryError::Backend("artifact creation final authority unavailable".into()))?;
             let space_kind = self.directory.get_space(space_id).await.ok().flatten().map(|space| space.kind);
             match tokio::time::timeout(std::time::Duration::from_secs(2), self.directory.socket_session_binding(&actor.session_id, &actor.user_id, actor.authorization_generation, Some(space_id), now_ms())).await {
-                Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), .. })) if space_kind.as_deref().is_some_and(|kind| hub_access_permits(&[HubAccessRoleV1::Authenticated, space_role_access(role)], HubAccessActionV1::ArtifactCreate, Some(kind))) => {
+                Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), session_kind, .. })) if space_kind.as_deref().is_some_and(|kind| hub_access_permits(&session_access_roles(session_kind, Some(role)), HubAccessActionV1::ArtifactCreate, Some(kind))) => {
                     Ok(Box::new(HubArtifactCreationCommitLeaseV1 { _guards: guards }) as Box<dyn ArtifactCreationCommitLeaseV1>)
                 }
                 Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => Err(DirectoryError::Backend("artifact creation final authority unavailable".into())),
@@ -6052,7 +6124,7 @@ async fn acquire_artifact_creation_actor(state: &HubState, space_id: &str, token
     let binding = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.socket_session_binding(&caller.session_id, &caller.user_id, caller.authorization_generation, Some(space_id), now_ms())).await;
     let space_kind = state.directory.get_space(space_id).await.ok().flatten().map(|space| space.kind);
     match binding {
-        Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), .. })) if space_kind.as_deref().is_some_and(|kind| hub_access_permits(&[HubAccessRoleV1::Authenticated, space_role_access(role)], HubAccessActionV1::ArtifactCreate, Some(kind))) => {
+        Ok(Ok(SocketSessionBindingStatus::Active { role: Some(role), session_kind, .. })) if space_kind.as_deref().is_some_and(|kind| hub_access_permits(&session_access_roles(session_kind, Some(role)), HubAccessActionV1::ArtifactCreate, Some(kind))) => {
             Ok((ArtifactCreationActorV1 { user_id: caller.user_id, session_id: caller.session_id, authorization_generation: caller.authorization_generation }, guards))
         }
         Ok(Ok(SocketSessionBindingStatus::Active { .. } | SocketSessionBindingStatus::MembershipLost)) => Err(StatusCode::FORBIDDEN),
@@ -6794,23 +6866,23 @@ fn directory_command_access_action(command: &DirectoryCommand) -> HubAccessActio
 }
 
 /// 🛡️ A directory command is admitted exactly when the declared access policy permits its action to
-/// the actor's roles in the command's space: operator subject, space owner, membership role, and
-/// being signed in at all. A space-scoped command naming a space that does not exist is `404`.
-async fn authorize_directory_command(state: &HubState, actor_user_id: &str, admin: bool, command: &DirectoryCommand) -> Result<(), StatusCode> {
-    let mut roles = vec![HubAccessRoleV1::Authenticated];
-    if admin {
-        roles.push(HubAccessRoleV1::Admin);
-    }
+/// the actor's roles in the command's space: operator subject, space owner (a human session only — a
+/// delegation never carries administration authority) and the session's own roles
+/// ([`session_access_roles`] of its [`HubDirectory::principal_role`]). A space-scoped command naming a
+/// space that does not exist is `404`.
+async fn authorize_directory_command(state: &HubState, principal: DirectoryPrincipalV1<'_>, admin: bool, command: &DirectoryCommand) -> Result<(), StatusCode> {
+    let mut roles = if admin { vec![HubAccessRoleV1::Admin] } else { Vec::new() };
     let space_kind = match directory_command_space(command) {
-        None => None,
+        None => {
+            roles.extend(session_access_roles(principal.session_kind, None));
+            None
+        }
         Some(space_id) => {
             let space = state.directory.get_space(space_id).await.map_err(directory_error_status)?.ok_or(StatusCode::NOT_FOUND)?;
-            if space.owner_user_id == actor_user_id {
+            if space.owner_user_id == principal.user_id && !principal.session_kind.is_agent() {
                 roles.push(HubAccessRoleV1::Owner);
             }
-            if let Some(role) = state.directory.get_role(space_id, actor_user_id).await.map_err(directory_error_status)? {
-                roles.push(space_role_access(role));
-            }
+            roles.extend(session_access_roles(principal.session_kind, state.directory.principal_role(space_id, principal).await.map_err(directory_error_status)?));
             Some(space.kind)
         }
     };
@@ -6915,7 +6987,7 @@ async fn execute_directory_command_receipt_fenced(
     let _authority = acquire_directory_command_fence(state, bindings, &command).await?;
     revalidate_directory_caller(state, user).await.map_err(FencedDirectoryCommandErrorV1::Denied)?;
     let admin = is_admin(state, headers, Some(peer)).await;
-    authorize_directory_command(state, &user.user_id, admin, &command).await.map_err(FencedDirectoryCommandErrorV1::Denied)?;
+    authorize_directory_command(state, user.principal(), admin, &command).await.map_err(FencedDirectoryCommandErrorV1::Denied)?;
     pause_directory_command_authority(state, &user.user_id, true).await;
     if matches!(&command, DirectoryCommand::RemoveMember { .. }) {
         pause_directory_command_membership_fence(state).await;
@@ -6990,7 +7062,7 @@ async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(
     };
     let span = span.principal(format!("user:{}", user.user_id));
     let admin = is_admin(&state, &headers, Some(peer)).await;
-    if let Err(status) = authorize_directory_command(&state, &user.user_id, admin, &request.command).await {
+    if let Err(status) = authorize_directory_command(&state, user.principal(), admin, &request.command).await {
         span.refused(&format!("forbidden-{}", status.as_u16()));
         return Err(status);
     }
@@ -7042,10 +7114,14 @@ async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(
 async fn get_directory_spaces(headers: HeaderMap, State(state): State<HubState>) -> Result<DirectoryJson<Vec<DirectorySpaceListEntryV1>>, CredentialOptionalRefusalV1> {
     let caller = resolve_optional_bearer_user(&state, &headers).await?;
     let summaries = state.directory.list_visible_space_summaries(caller.as_ref().map(|caller| caller.user_id.as_str())).await.map_err(directory_error_status)?;
+    let ceiling = match &caller {
+        Some(caller) => state.directory.principal_ceiling(caller.principal()).await.map_err(directory_error_status)?,
+        None => DirectoryPrincipalCeilingV1::Account,
+    };
     let mut views = Vec::with_capacity(summaries.len());
     for (summary, role) in summaries {
         let space = admin_space_summary_view(summary)?;
-        match directory_space_access_decision(space.visibility == DirectorySpaceVisibility::Public, role.map(role_wire)) {
+        match directory_space_access_decision(space.visibility == DirectorySpaceVisibility::Public, ceiling.cap(&space.id, role).map(role_wire)) {
             DirectorySpaceAccessDecisionV1::Hidden => {}
             DirectorySpaceAccessDecisionV1::Public => views.push(DirectorySpaceListEntryV1::Public { space: public_space_view(space) }),
             DirectorySpaceAccessDecisionV1::Member => views.push(DirectorySpaceListEntryV1::Member { space: member_space_view(space, DirectorySpaceRole::Spectator) }),
@@ -7316,7 +7392,7 @@ async fn build_directory_space_administration_page_v1(state: &HubState, space_id
     let summary = state.directory.list_admin_space_summaries_page(Some(space_id), 0, 1).await.map_err(|error| state.directory_fault("directory.space-administration", error))?.into_iter().next().ok_or(StatusCode::NOT_FOUND)?;
     let space = admin_space_summary_view(summary)?;
     let role = match caller.as_ref() {
-        Some(caller) => state.directory.get_role(space_id, &caller.user_id).await.map_err(|error| state.directory_fault("directory.space-administration", error))?.map(role_wire),
+        Some(caller) => state.directory.principal_role(space_id, caller.principal()).await.map_err(|error| state.directory_fault("directory.space-administration", error))?.map(role_wire),
         None => None,
     };
     let access = directory_space_access_decision(space.visibility == DirectorySpaceVisibility::Public, role);
@@ -7398,11 +7474,11 @@ async fn build_directory_space_administration_page_v1(state: &HubState, space_id
 async fn revalidate_space_administration_caller(state: &HubState, caller: Option<&AuthedUser>, space_id: &str, binding: [u8; 32], space: &SpaceView, observed: DirectorySpaceAccessDecisionV1) -> Result<DirectorySpaceAccessDecisionV1, StatusCode> {
     let Some(caller) = caller else { return Ok(observed) };
     let session = state.directory.authenticate_session(&caller.capability).await.map_err(|_| StatusCode::UNAUTHORIZED)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    let current = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability: caller.capability.clone() };
+    let current = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability: caller.capability.clone(), session_kind: session.session_kind, device_instance_id: session.device_instance_id };
     if current.session_id != caller.session_id || current.user_id != caller.user_id || current.authorization_generation != caller.authorization_generation || space_administration_session_binding_v1(Some(&current), space_id)? != binding {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let role = state.directory.get_role(space_id, &current.user_id).await.map_err(directory_error_status)?.map(role_wire);
+    let role = state.directory.principal_role(space_id, current.principal()).await.map_err(directory_error_status)?.map(role_wire);
     let access = directory_space_access_decision(space.visibility == DirectorySpaceVisibility::Public, role);
     match (observed, access) {
         (DirectorySpaceAccessDecisionV1::Hidden, _) | (_, DirectorySpaceAccessDecisionV1::Hidden) => Err(StatusCode::NOT_FOUND),
@@ -7530,18 +7606,20 @@ impl Drop for DirectoryEventPageHttpRequest {
 
 async fn revalidate_directory_event_page_caller(state: &HubState, caller: &AuthedUser, binding: [u8; 32]) -> Result<AuthedUser, StatusCode> {
     let session = state.directory.authenticate_session(&caller.capability).await.map_err(|_| StatusCode::UNAUTHORIZED)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    let current = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability: caller.capability.clone() };
+    let current = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability: caller.capability.clone(), session_kind: session.session_kind, device_instance_id: session.device_instance_id };
     if current.session_id != caller.session_id || current.user_id != caller.user_id || current.authorization_generation != caller.authorization_generation || directory_event_page_session_binding_v1(&current)? != binding {
         return Err(StatusCode::UNAUTHORIZED);
     }
     Ok(current)
 }
 
-/// @emoji 🧑‍🤝‍🧑 The spaces `user_id` is a member of, read ONCE per event page: raw directory events are member-only
-/// ([`event_visible`]), so this set decides every row of the page. The page used to read the space and the caller's
-/// role per event — two directory round trips per row, 256 for a full page (ticket 26/09/23 WG8).
-async fn directory_member_space_ids(state: &HubState, user_id: &str) -> Result<BTreeSet<String>, StatusCode> {
-    Ok(state.directory.list_spaces_for_user(user_id).await.map_err(directory_error_status)?.into_iter().map(|(space, _)| space.id).collect())
+/// @emoji 🧑‍🤝‍🧑 The spaces `principal` holds a role in ([`HubDirectory::principal_ceiling`]), read ONCE per event page:
+/// raw directory events are member-only ([`event_visible`]), so this set decides every row of the page. The page used to
+/// read the space and the caller's role per event — two directory round trips per row, 256 for a full page (ticket
+/// 26/09/23 WG8).
+async fn directory_member_space_ids(state: &HubState, principal: DirectoryPrincipalV1<'_>) -> Result<BTreeSet<String>, StatusCode> {
+    let ceiling = state.directory.principal_ceiling(principal).await.map_err(directory_error_status)?;
+    Ok(state.directory.list_spaces_for_user(principal.user_id).await.map_err(directory_error_status)?.into_iter().filter(|(space, role)| ceiling.cap(&space.id, Some(*role)).is_some()).map(|(space, _)| space.id).collect())
 }
 
 /// 🌐️ Which lane a directory event page serves: the directory (every event the caller may see, never a preference) or the
@@ -7610,7 +7688,7 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
     control.checkpoint()?;
     let caller = revalidate_directory_event_page_caller(state, caller, binding).await?;
     control.checkpoint()?;
-    let member_spaces = directory_member_space_ids(state, &caller.user_id).await?;
+    let member_spaces = directory_member_space_ids(state, caller.principal()).await?;
     control.checkpoint()?;
     let envelope = DirectoryEventPageV1 {
         schema: "semio.directory.event-page.v1".into(),
@@ -7688,7 +7766,7 @@ async fn serve_directory_event_page_v1(uri: axum::http::Uri, headers: HeaderMap,
     }
     let operation = async {
         let caller = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
-        if lane == DirectoryEventLaneV1::Preferences && !hub_access_permits(&[HubAccessRoleV1::Authenticated], HubAccessActionV1::PreferenceRead, None) {
+        if lane == DirectoryEventLaneV1::Preferences && !hub_access_permits(&session_access_roles(caller.session_kind, None), HubAccessActionV1::PreferenceRead, None) {
             return Err(StatusCode::FORBIDDEN);
         }
         build_directory_event_page_v1(&state, &caller, after, control.as_ref(), lane).await.map(DirectoryJson)
@@ -7717,10 +7795,10 @@ async fn caller_active(state: &HubState, caller: &AuthedUser) -> bool {
     )
 }
 
-async fn directory_space_access_for_user(state: &HubState, space_id: &str, user_id: Option<&str>) -> DirectorySpaceAccessDecisionV1 {
+async fn directory_space_access_for_user(state: &HubState, space_id: &str, principal: Option<DirectoryPrincipalV1<'_>>) -> DirectorySpaceAccessDecisionV1 {
     let Ok(Some(space)) = state.directory.get_space(space_id).await else { return DirectorySpaceAccessDecisionV1::Hidden };
-    let role = match user_id {
-        Some(user_id) => state.directory.get_role(space_id, user_id).await.ok().flatten().map(role_wire),
+    let role = match principal {
+        Some(principal) => state.directory.principal_role(space_id, principal).await.ok().flatten().map(role_wire),
         None => None,
     };
     directory_space_access_decision(space.visibility == "public", role)
@@ -7735,7 +7813,7 @@ async fn event_visible(state: &HubState, event: &DirectoryEvent, caller: Option<
             _ => false,
         };
     };
-    directory_space_access_for_user(state, space_id, caller.map(|caller| caller.user_id.as_str())).await.is_member()
+    directory_space_access_for_user(state, space_id, caller.map(AuthedUser::principal)).await.is_member()
 }
 
 /// @emoji 🛡️ The single privacy boundary for every directory WebSocket frame. Realtime connection
@@ -7748,10 +7826,10 @@ async fn directory_message_visible(state: &HubState, message: &DirectoryStreamMe
     }
     match message {
         DirectoryStreamMessage::Event { event } => event_visible(state, event, Some(caller)).await,
-        DirectoryStreamMessage::Connection { connection, .. } => directory_space_access_for_user(state, &connection.space_id, Some(&caller.user_id)).await.is_member(),
-        DirectoryStreamMessage::Presence { space_id, .. } => directory_space_access_for_user(state, space_id, Some(&caller.user_id)).await.is_member(),
+        DirectoryStreamMessage::Connection { connection, .. } => directory_space_access_for_user(state, &connection.space_id, Some(caller.principal())).await.is_member(),
+        DirectoryStreamMessage::Presence { space_id, .. } => directory_space_access_for_user(state, space_id, Some(caller.principal())).await.is_member(),
         DirectoryStreamMessage::Heartbeat { .. } | DirectoryStreamMessage::AccessChanged { .. } => false,
-        DirectoryStreamMessage::RebootstrapRequired { control } => directory_space_access_for_user(state, &control.scope.space_id, Some(&caller.user_id)).await.is_member(),
+        DirectoryStreamMessage::RebootstrapRequired { control } => directory_space_access_for_user(state, &control.scope.space_id, Some(caller.principal())).await.is_member(),
     }
 }
 
@@ -7759,7 +7837,7 @@ async fn directory_message_visible(state: &HubState, message: &DirectoryStreamMe
 /// to — deciding the whole page from ONE membership read (it used to read the space and the role per distinct space).
 async fn visibility_filter_events(state: &HubState, events: Vec<DirectoryEvent>, caller: Option<&AuthedUser>) -> Result<Vec<DirectoryEvent>, StatusCode> {
     let Some(caller) = caller else { return Ok(Vec::new()) };
-    let member_spaces = directory_member_space_ids(state, &caller.user_id).await?;
+    let member_spaces = directory_member_space_ids(state, caller.principal()).await?;
     Ok(events.into_iter().filter(|event| directory_event_page_event_visible(&member_spaces, event, caller)).collect())
 }
 
@@ -7826,16 +7904,16 @@ fn directory_message_bindings(record: &SocketGrantRecordV1, message: &DirectoryS
 }
 
 async fn socket_directory_membership_visibility(state: &HubState, record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> SocketBindingValidityV1 {
-    let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return SocketBindingValidityV1::Unauthorized };
+    let Some(principal) = record.subject.principal() else { return SocketBindingValidityV1::Unauthorized };
     let Some(space_id) = directory_stream_message_space(message) else {
-        return if matches!(message, DirectoryStreamMessage::AccessChanged { .. }) || matches!(message, DirectoryStreamMessage::Event { event } if event.user_id.as_deref() == Some(user_id.as_str())) { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized };
+        return if matches!(message, DirectoryStreamMessage::AccessChanged { .. }) || matches!(message, DirectoryStreamMessage::Event { event } if event.user_id.as_deref() == Some(principal.user_id)) { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized };
     };
     match state.directory.get_space(space_id).await {
         Ok(Some(_)) => {}
         Ok(None) => return SocketBindingValidityV1::Unauthorized,
         Err(_) => return SocketBindingValidityV1::Unavailable,
     }
-    match state.directory.get_role(space_id, user_id).await {
+    match state.directory.principal_role(space_id, principal).await {
         Ok(Some(_)) => SocketBindingValidityV1::Active,
         Ok(None) => SocketBindingValidityV1::Unauthorized,
         Err(_) => SocketBindingValidityV1::Unavailable,
@@ -8034,8 +8112,8 @@ async fn send_socket_directory_rebootstrap(
     if !matches!(&record.audience, SocketAudienceV1::DirectoryScoped(audience_scope) if audience_scope == scope) && !matches!(&record.audience, SocketAudienceV1::Directory { .. }) {
         return SocketBindingValidityV1::Unauthorized;
     }
-    let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return SocketBindingValidityV1::Unauthorized };
-    match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_role(&scope.space_id, user_id)).await {
+    let Some(principal) = record.subject.principal() else { return SocketBindingValidityV1::Unauthorized };
+    match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.principal_role(&scope.space_id, principal)).await {
         Ok(Ok(Some(_))) => {}
         Ok(Ok(None)) => return SocketBindingValidityV1::Unauthorized,
         Ok(Err(_)) | Err(_) => return SocketBindingValidityV1::Unavailable,
@@ -8297,7 +8375,7 @@ async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Re
             return Err(StatusCode::INTERNAL_SERVER_ERROR);
         }
     };
-    let caller = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability };
+    let caller = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
     let response = DirectorySessionAuthorityV1 {
         schema: "semio.directory.session-authority.v1".into(),
         session_binding_sha256: os_directory::hex_lower(&directory_event_page_session_binding_v1(&caller)?),
@@ -8703,8 +8781,8 @@ async fn post_agent_delegation(headers: HeaderMap, State(state): State<HubState>
         span.refused("rate-limited");
         return agent_error_response(AgentErrorCodeV1::RateLimited, Some(retry_after_ms));
     }
-    match state.directory.get_role(verified.space_id(), &session.user_id).await {
-        Ok(role) if access_permits_in_space(&state, &[HubAccessRoleV1::Authenticated].into_iter().chain(role.map(space_role_access)).collect::<Vec<_>>(), HubAccessActionV1::AgentDelegate, verified.space_id()).await => {}
+    match state.directory.principal_role(verified.space_id(), session.principal()).await {
+        Ok(role) if access_permits_in_space(&state, &session_access_roles(session.session_kind, role), HubAccessActionV1::AgentDelegate, verified.space_id()).await => {}
         Ok(_) => {
             span.refused("forbidden");
             return agent_error_response(AgentErrorCodeV1::Forbidden, None);
@@ -9794,7 +9872,7 @@ async fn acquire_admin_intent_authority(state: &HubState, principal: &AdminPrinc
     }
     let binding = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.socket_session_binding(&principal.auth_session_id, &principal.user_id, principal.authorization_generation, None, now_ms())).await;
     match binding {
-        Ok(Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms })) if expires_at_ms == principal.expires_at_ms => {}
+        Ok(Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms, .. })) if expires_at_ms == principal.expires_at_ms => {}
         Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => return Err(FencedDirectoryCommandErrorV1::Unavailable),
         _ => return Err(FencedDirectoryCommandErrorV1::Denied(StatusCode::UNAUTHORIZED)),
     }
@@ -9872,7 +9950,7 @@ async fn execute_admin_intent(
         };
     }
     if let Some(command) = admin_directory_command(&intent) {
-        if authorize_directory_command(state, &principal.user_id, true, &command).await.is_err() {
+        if authorize_directory_command(state, principal.principal(), true, &command).await.is_err() {
             return AdminIntentExecution { phase: "failed", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "directory-command-denied".into(), durable: false, kick_attempted: None, kick_signalled: None } };
         }
         if matches!(&command, DirectoryCommand::RemoveMember { .. }) {
@@ -10537,11 +10615,11 @@ async fn get_admin_asset(Path(rest): Path<String>, State(state): State<HubState>
     admin_page(&state, &rest).await
 }
 
-/// 🫀️ Process liveness, deliberately independent of every subsystem `/readyz` reports: an
-/// orchestrator restarts a process that stops answering here, and must NOT restart one that is
-/// merely still warming up (a not-ready hub is a healthy hub that has not finished booting).
-/// This handler therefore reads nothing but the run identity and the process clock, and answers
-/// `200` for as long as the axum task is scheduled at all.
+/// 🫀️ Process liveness (`LocalBootstrapLivenessV1`, `🚀️local-bootstrap/🧬️schema`), deliberately independent of every
+/// subsystem `/readyz` reports: an orchestrator restarts a process that stops answering here, and must NOT restart one that
+/// is merely still warming up (a not-ready hub is a healthy hub that has not finished booting). The body therefore reads
+/// nothing but the run identity and the process clock, and is answered `200` for as long as the axum task is scheduled at
+/// all — by the boot server and by the full router alike.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct HubLivenessV1 {
@@ -10549,6 +10627,11 @@ struct HubLivenessV1 {
     status: &'static str,
     run_id: String,
     uptime_ms: u64,
+}
+
+/// 💓️ The liveness body of the run `run_id` now.
+fn hub_liveness(run_id: &str) -> HubLivenessV1 {
+    HubLivenessV1 { schema: "semio.hub.liveness/v1", status: "live", run_id: run_id.to_string(), uptime_ms: HUB_PROCESS_START.elapsed().as_millis().min(u128::from(u64::MAX)) as u64 }
 }
 
 static HUB_PROCESS_START: std::sync::LazyLock<std::time::Instant> = std::sync::LazyLock::new(std::time::Instant::now);
@@ -10614,7 +10697,7 @@ impl Drop for BootReadinessServerV1 {
 }
 
 async fn boot_healthz(State(state): State<BootReadinessStateV1>) -> impl IntoResponse {
-    Json(HubLivenessV1 { schema: "semio.hub.liveness/v1", status: "live", run_id: state.readiness.run_id.clone(), uptime_ms: HUB_PROCESS_START.elapsed().as_millis().min(u128::from(u64::MAX)) as u64 })
+    Json(hub_liveness(&state.readiness.run_id))
 }
 
 async fn boot_readyz(State(state): State<BootReadinessStateV1>) -> impl IntoResponse {
@@ -10627,12 +10710,7 @@ async fn boot_unavailable() -> impl IntoResponse {
 }
 
 async fn get_healthz(State(state): State<HubState>) -> impl IntoResponse {
-    Json(HubLivenessV1 {
-        schema: "semio.hub.liveness/v1",
-        status: "live",
-        run_id: state.readiness.run_id.clone(),
-        uptime_ms: HUB_PROCESS_START.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
-    })
+    Json(hub_liveness(&state.readiness.run_id))
 }
 
 async fn get_readyz(State(state): State<HubState>) -> impl IntoResponse {
@@ -10695,8 +10773,8 @@ impl GisMapApprovalIngressAuthorityV1 for HubGisMapApprovalIngressAuthorityV1 {
 async fn revalidate_gis_map_approval_authority(state: &HubState, authority: &HubGisMapApprovalIngressAuthorityV1) -> Result<(), InferenceRouteErrorV1> {
     revalidate_directory_caller(state, &authority.caller).await.map_err(|status| if status == StatusCode::SERVICE_UNAVAILABLE { InferenceRouteErrorV1::Unavailable } else { InferenceRouteErrorV1::Denied })?;
     let role =
-        tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_role(&authority.scope.space_id, &authority.caller.user_id)).await.map_err(|_| InferenceRouteErrorV1::Unavailable)?.map_err(|_| InferenceRouteErrorV1::Unavailable)?;
-    let roles: Vec<HubAccessRoleV1> = [HubAccessRoleV1::Authenticated].into_iter().chain(role.map(space_role_access)).collect();
+        tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.principal_role(&authority.scope.space_id, authority.caller.principal())).await.map_err(|_| InferenceRouteErrorV1::Unavailable)?.map_err(|_| InferenceRouteErrorV1::Unavailable)?;
+    let roles = session_access_roles(authority.caller.session_kind, role);
     if !access_permits_in_space(state, &roles, HubAccessActionV1::DocumentWrite, &authority.scope.space_id).await {
         return Err(InferenceRouteErrorV1::Denied);
     }

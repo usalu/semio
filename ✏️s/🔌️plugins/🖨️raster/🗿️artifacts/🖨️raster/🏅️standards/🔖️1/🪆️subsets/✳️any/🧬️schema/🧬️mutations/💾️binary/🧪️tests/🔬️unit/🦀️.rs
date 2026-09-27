@@ -1226,6 +1226,7 @@ fn raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant() {
             expected: Some(crate::RasterLayerMask { enabled: true, linked: true, invert: false, width: None, height: None, image_key: Some("previous".into()), transform: RasterTransform::default() }),
             mask: Some(crate::RasterLayerMask { enabled: true, linked: false, invert: true, width: Some(2), height: Some(3), image_key: Some("next".into()), transform: RasterTransform::default() }),
         }),
+        RasterMutation::ChangeLayerAdjustmentParameter(crate::mutations::change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter {layer_id:"tone".into(),parameter:"brightness".into(),expected:None,value:Some(crate::RasterAdjustmentNumber::decimal(0.25))}),
     ];
     assert_eq!(mutations.len(), <RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len());
     for mutation in mutations {
@@ -1327,5 +1328,23 @@ fn retained_mask_mutations_match_cold_apply_and_undo() {
         for document in [base, cold, candidate, restored] { retirement::retire_raster_snapshot(document); }
         protocol::Mutation::retire_cold(operation);
         protocol::Mutation::retire_cold(inverse);
+    }
+}
+
+#[test]
+fn retained_adjustment_parameters_match_cold_apply_and_undo() {
+    use protocol::{Mutation,MutationDiff};
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎛️change-layer-adjustment-parameter/🧪️tests/🔣️.json")).unwrap();
+    for (index,row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
+        let parameter=row["parameter"].as_str().unwrap();
+        let mut source=serde_json::json!({"schema":"raster.document","id":"retained-tone","layers":[{"kind":"adjustment","id":"tone","name":"Tone","adjustmentKind":"brightnessContrast","params":{"metadata":"preserve"}}]});
+        if !row["before"].is_null() {source["layers"][0]["params"][parameter]=row["before"].clone();}
+        let before:RasterSnapshot=dsl::json::from_json_str(&source.to_string()).unwrap();
+        let operation:RasterMutation=dsl::json::from_json_str(&serde_json::json!({"mutation":"changeLayerAdjustmentParameter","layerId":"tone","parameter":parameter,"expected":row["before"],"value":row["after"]}).to_string()).unwrap();
+        let inverse=operation.inverse(&before).remove(0);let (diff,_)=operation.diff(&before).into_parts();let cold=diff.apply(&before).unwrap();
+        let candidate=drive_raster_candidate(&before,&operation,960+index as u64);assert_eq!(candidate,cold);
+        let restored=drive_raster_candidate(&candidate,&inverse,970+index as u64);assert_eq!(restored,before);
+        diff.retire_cold();for document in [before,cold,candidate,restored] {retirement::retire_raster_snapshot(document);}
+        operation.retire_cold();inverse.retire_cold();
     }
 }

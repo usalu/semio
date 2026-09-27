@@ -1,3 +1,4 @@
+import type { SnapshotPatch } from "../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts";
 /** 🧬 Transparent JsonMutation TypeScript aggregate. `JsonMutation` carries
  * `#[serde(tag = "mutation", content = "payload", rename_all = "camelCase")]`, so the tag values
  * are the camelCase form of the Rust variant names, NOT the kebab-case `semanticKind` slugs this
@@ -12,4 +13,5 @@ export type JsonMutation =
   | { readonly mutation: 'removeMember'; readonly payload: { readonly phase: 'apply'; readonly value: RemoveMemberPayload } }
   | { readonly mutation: 'insertArrayElement'; readonly payload: { readonly phase: 'apply'; readonly value: InsertArrayElementPayload } }
   | { readonly mutation: 'removeArrayElement'; readonly payload: { readonly phase: 'apply'; readonly value: RemoveArrayElementPayload } }
-  | { readonly mutation: 'setScalar'; readonly payload: { readonly phase: 'apply'; readonly value: SetScalarPayload } };
+  | { readonly mutation: 'setScalar'; readonly payload: { readonly phase: 'apply'; readonly value: SetScalarPayload } }
+  | { readonly mutation: 'patchSnapshot'; readonly payload: { readonly patch: SnapshotPatch } };

@@ -20,6 +20,8 @@ Landing rows: `📓️landing.md` § Session 13 Landing Window. Guest rebuild re
 | 3 | D1 `d1-frozen.py --apply` + audit + census + `search::long` | **landed** 26 19:25; native green; landed-source projection (11:1x, `wp-lb/d1-project.py` → `s13-lb-d1-projected`): audit **0** findings, **3** description findings = a peer's 3 NEW draw verbs (`editFill`, `editPath`, `editSelection`, draw descriptor 01:52) — every gis/vcs/stdio verb described; Rust = AJV (3 = 3); real audit + `search::long` after the chain describes stdio/gis/vcs | `d1-frozen-apply-1.txt`, `audit-projected-2.txt`, `oracle-audit-projected-2.txt` |
 | F1 | LB-F1: 52 stdio editors' tool-job items in the wrong impl | **landed** 26 20:12; native green; now part of the SHIPPED 88-app stdio component | `lb-f1-write-1.txt`, landing row |
 | R | Codex stdio rollout's 3 test-only reds (+ deflate test) | **fixed** 06:1x; `--lib --tests` of stdio plugin/json/semio/deflate **EXIT 0** (native lane, 10:01) | `check-stdio-tests-2.txt` |
+| P3 | stdio 85 GB / 1M-function root cause: shipped fleet 18 → 176 apps (Codex rollout) | **fixed**: `lb-p3-stdio-shipped-fleet.py` applied by the coordinator 12:1x (native lib green 35 s), chain b3 run 3 relaunched; guard law + test manifest = prepared `lb-p4-stdio-shipped-fleet-law.py` (after B3); long-term plan below | landing row (coordinator), `lb-p4-…` dry run |
+| B5 | publish-b3 blocker: stdio html/tsv/txt open targets without a linked codec | **fixed** 13:2x (publisher `trustedBootstrapLinkedUnownedKindsV1`, TS only); law 4/4, tsc clean (pre-existing TS7016 only); main told to relaunch | landing row, `vitest-linked-ownership-3.txt` |
 | 4 | cross-plugin verb-arg census → framework law + plugin fixes | **not started**: needs guest edits (SDK + ~27 plugins) → after W3 announces 7800 on B3 (rule 30) | |
 
 ### Log
@@ -178,3 +180,100 @@ Landing rows: `📓️landing.md` § Session 13 Landing Window. Guest rebuild re
   `semio-os-mcp audit` (this tree's binary, built 10:34) **0 audit findings, 3 description findings** — the draw
   editor's new `editFill`/`editPath`/`editSelection` (peer, no description; guest edit → after B3, draw owner);
   Rust = AJV **3 = 3** (`oracle-audit-projected-2.txt`). First projection run showed 12 (9 = the regex artefact above).
+- 12:0x **coordinator investigation: stdio wasm-dev rustc 85 GB (vs ~1.8 GB in session 12).** Culprit = the Codex
+  stdio rollout (`🔌️plugin/🦀️.rs` 01:15 + `📦️packages/🦀️rust/Cargo.toml` 01:19, auto-committed 11:30 as
+  `6b8089dcb21`) deleted the `full-app-catalog` split: the SHIPPED component now closes `StdioApps` over **176** apps
+  (was 18), `register_apps` 192 registrations (was 18), `component-app-assembly` 36 artifact crates (was 7), playground
+  rows 88 (was 9). Every app monomorphises its own `VcsArtifactApp<EditorApp<E>/ViewerApp<V>, Members>` runtime and
+  retained tool-job factories, and the same rollout adds one generic `SnapshotEditToolJobFactory<E>` per editor (93
+  files use `editing::`) → ~10× the code of session 12 in one CGU; the deleted 09-21 comment had measured the full
+  fleet at ≈600 000 wasm functions against `wasm-component-ld`'s 1 000 000 ceiling. LB-F1/T12/D1 add no generics.
+  Prepared fix **`wp-lb/lb-p3-stdio-shipped-fleet.py`** (dry run 2 files / 0 problems; NOT applied, rule 30): shipped
+  `component-app-assembly` = 7 text/data crates (18 apps), `full-app-catalog` = the 88-subset library fleet (the cfg
+  split is derived from the CURRENT enum + `register_apps`, so the rollout's API changes stay), the 79 playground rows of
+  unshipped subsets dropped. Reported to main (≤ 10 lines); long-term = several stdio components or a type-erased app
+  runtime (owner decision).
+- 12:1x coordinator: stdio build failed "functions count exceeds limit of 1000000" after the 85 GB compile; the
+  coordinator applied `lb-p3-stdio-shipped-fleet.py --write` (native `cargo check -p semio-s-plugin-stdio --lib`
+  green 35 s, landing row written) and relaunched chain b3 run 3 at 12:09:58. Verified read-only 12:2x: cfg split
+  present (lines 11/197/300/553), 9 playground rows, `component-app-assembly` = 7 crates, `full-app-catalog` = 36.
+- 12:2x prepared **`wp-lb/lb-p4-stdio-shipped-fleet-law.py`** (dry run 3 files / 0 problems; lands after 7800 on B3,
+  it edits stdio's Cargo.toml): guard law `🧪️tests/🚢️shipped-fleet` `the_shipped_component_assembles_exactly_the_declared_bounded_fleet`
+  (default assembly = the playground-declared editors + one viewer per shipped dialect, ≤ `SHIPPED_APP_CEILING` 24,
+  rationale in the docstring), `editor_catalog` `required-features = ["full-app-catalog"]`, the SDK's
+  `artifact-app-testing` dev-dependency (supersedes LB-P2), and the rollout test's `println!("[DEBUG] …")` removed.
+
+### Long-term plan: every stdio subset openable without a monolithic component (slice after the publish)
+
+**Problem.** stdio owns 36 artifact families / 88 subsets = 176 editor+viewer apps. Each app monomorphises the whole
+app runtime (`VcsArtifactApp<EditorApp<E>|ViewerApp<V>, Members>`: stores, history, retained tool-job factories,
+snapshot-edit factory, projection/close paths) and is live code in its component. 18 apps ≈ 1.8 GB rustc and links;
+176 apps = 85 GB rustc (single CGU) and exceed wasmparser's 1 000 000-function ceiling. So today only the nine
+text/data subsets are openable in `s`; the other 79 are codec-only (import/export, hub-native codecs).
+
+**Option A — per-family components (recommended first; no SDK change).** Split the one stdio package into
+family packages, each ≤ ~20 apps (the guard law's ceiling): `stdio` (text/data: csv, tsv, txt, json×2, xml×2, md,
+html — today's 18), `stdio-image` (png, jpg×2, bmp, tiff×2, gif×2, svg×3), `stdio-media` (mp3, mp4, wav, avi),
+`stdio-cad` (step×7, dxf, dwg×2, ifc×5, stl, obj, ply, las, gltf), `stdio-office` (docx, pptx, xlsx, pdf …, bcf),
+`stdio-semio` (the 17 `🧿️semio` subsets), `stdio-binary` (binary, deflate, zip, epw). Mechanics: one plugin crate
+per family (`✏️s/🔌️plugins/🗄️stdio/🧩️<family>/` extension-like packages, each with `plugin_exports!`, its own
+`StdioApps`-style closed enum and playground rows); the artifact crates, codecs and the hub-native codec closure stay
+where they are (the hub fence `local-stdio-gis-open-v1` and `native-codec-factories.json` keep the 26 codecs in
+`semio:stdio`; family packages open kinds whose codecs the base package owns — `depends-on semio:stdio` exact pin).
+Cost per family: one more component (~2 GB compile, ≤ 25 min wasm32), catalog entries, describe/materialize rows.
+Laws: the shipped-fleet guard per package; a census that every stdio editor is shipped by exactly one package.
+
+**Option B — type-erased app runtime (SDK, the real scalability fix).** Move the per-app generic machinery behind
+object-safe traits: `VcsArtifactApp` holds `Box<dyn ArtifactRuntime>` over a codec table (the codec-app resolution
+of H10 already introduced `AppFactory.codec = artifact_codec_table::<A>()` — extend it so snapshot/mutation
+encode/decode/apply/inverse go through that table), keep only the small typed surface (`command_from_action`,
+`handle`, `render`) per app. Target: an app costs its own handlers + a codec table, not a copy of the runtime; measure
+functions/app before and after (`wasm-objdump`/`twiggy` over the component, fixed fleet) and set the ceiling law
+from the measurement. Larger blast radius (every plugin, guest ABI unchanged); do it after Option A so the fleet ships
+now and B shrinks every plugin later (puzzle, space and procedural are the next largest).
+
+**Order.** A first (unblocks the 79 subsets in `s` within one slice), then B (framework slice) with the per-app
+function count as its acceptance metric.
+- 13:2x **chain b3 run 5 publish-b3 blocker** (`trusted bootstrap open target s.stdio.html has no verified codec row`,
+  `script.ts:9888`): for linked packages the publisher took `codecs` from the linked registry but passed an EMPTY
+  `unowned` set, so every descriptor kind without a hub-native codec became an open target it could not bind. T12's
+  part B made the txt/tsv/html editors declare their (definition-only) kinds. Fix (TS only, the fence's intent: a linked
+  package's hub documents run only through its linked native codecs): `trustedBootstrapLinkedUnownedKindsV1` classifies
+  those kinds as unowned; a schema conflict with a linked row is refused. Law `🌎️hub/🧪️tests/⛓️linked-codec-ownership`
+  (lifts the function from the script's source with the TypeScript API — importing the script under Vitest loads
+  Bun-only modules) 4/4; tsc clean but the pre-existing TS7016; replay on the regenerated stdio descriptor: unowned =
+  html, tsv, txt, 0 conflicts. Told main 13:2x. **Follow-up:** txt/tsv/html become hub-openable once they own native
+  codec factories (stdio registry + fence count 26 → 29); T12's census law (descriptor-level) still counts their editors
+  as opening a kind — its "openable over the hub" wording holds only for linked codecs.
+- 14:10 **landing window 2** (rule 32). Fresh dry runs clean: `lb-p1` 1 file / 3 hunks, `lb-p4` 3 files; both applied
+  14:10:43 (`lb-p1-write-1.txt`, `lb-p4-write-1.txt`). `lb-p2` is superseded by `lb-p4` (its dev-dependency is in p4;
+  p2's dry run now reports the feature present). No committed JSON carries the snake_case brep member names (grep).
+  Native checks queued in the native lane (pid 12224): default features and `full-app-catalog`, stdio plugin +
+  `semio-s-artifact-stdio-semio`, `--lib --tests` (`lw2-check-default-1.txt`, `lw2-check-full-1.txt`).
+- 14:22 both checks EXIT 101 on a PEER break, not LB code: `semio-framework-plugin`'s `artifact_app_laws::drain_maintenance_pressure`
+  (LC's F1 typing-run harness, 14:11) reads `store::ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY`, which the store kept
+  private; it surfaces wherever `artifact-app-testing` is on (lb-p4's stdio dev-dependency turns it on). Fleet cut
+  14:20–14:50. 14:56 one-line fix (rule 14, blocks me): the store constant is `pub` with an emoji docstring
+  (`🏪️store/🦀️.rs:1757`). Checks re-queued (`lw2-check-default-2.txt`, `lw2-check-full-2.txt`).
+- 15:0x coordinator: LC removed its use at 14:56 → store constant back to private (no widened API without a user); `git diff` of the store shows no change to it.
+- 15:1x window-2 landing: `lw2-check-default-2.txt` **EXIT 0** (15:06) — stdio plugin + semio artifact crate
+  `--lib --tests`, default features (incl. the new `shipped_fleet` test target, the brep casing). The `full-app-catalog`
+  check (library fleet only) was dropped for time (native lane 5 deep). Landing rows written; `wp-w3/requests/lb.txt`
+  appended. wasm32 gate queued 15:17 behind s17 (holding since 15:12) + lc; guard-law run queued in the native lane
+  (`lw2-test-laws-1.txt`).
+- **stdio csv redo refusal (`ui.snapshot-details.arguments: snapshot details UI admission failed`, S16 matrix) —
+  analysis from source, NOT reproduced yet (window 3):** the code is `UiMapBuilder::try_new()` returning `None` in the
+  Codex rollout's `🧬️contract/✏️editing/🪟️details` panel, i.e. the process-wide `UiValue` arena had no free collection.
+  The arena prices `UI_VALUE_ROW_COLLECTIONS` = 5 collections per interactive row over one page of
+  `UI_BUILT_CHILDREN_MAX` rows, and its contract says an author reads `ui_value_headroom()` and shortens the window
+  instead of faulting. The details panel never reads it, and one row spends more than 5: `item_controls` (rename, set,
+  move-up, move-down, remove: up to 5 argument maps) plus, for every collection row (each CSV row is one),
+  `collection_controls` (add text/number/true/false/object/list/null, create: ~8 maps). A CSV window of full rows
+  therefore needs ~2× the arena page; a redo that re-renders beside the still-retained previous tree (two pages live)
+  plausibly tips it. Plan (window 3): (1) reproduce natively — csv editor, load example, edit → undo → redo → render the
+  details window, capture the refusal; (2) root fix in the framework's tree window: `tree_window_indexed_rows` asks
+  `ui_value_headroom()` for the row's declared collection cost before materialising it and stops the run there (still
+  stamping the full `TreeWindow`), with the details panel declaring its per-row cost; and/or cut the per-row maps
+  (one "add" chooser instead of 7 add buttons); (3) law: a CSV large enough to exceed one arena page renders a shorter
+  window, never a refusal, across undo/redo.
+- 15:28 wasm32-wasip2 gate `-p semio-s-plugin-stdio --lib` **EXIT 0** (`lw2-wasm-1.txt`; the semio artifact crate and the plugin were recompiled, 7 warnings). Guard-law run still queued in the native lane (4 ahead).

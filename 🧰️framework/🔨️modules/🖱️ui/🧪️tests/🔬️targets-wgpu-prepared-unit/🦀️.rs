@@ -407,7 +407,7 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
 #[test]
 fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
     let _guard = prepared_process_guard();
-    use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, SceneDraw3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d};
+    use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, SceneCurvilinear3d, SceneDraw3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d};
     let mut draw = DrawList::default();
     let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     draw.push_scene_pass(ScenePass3d {
@@ -422,6 +422,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
         ],
         line_draws: vec![LineDraw3d { vertices: vec![LineVertex3d { position: [0.0, 0.0, 0.0], color: [1.0, 1.0, 1.0, 1.0] }] }],
         textured_draws: vec![TexturedDraw3d { instances: vec![TexturedInstance3d { texture_key: String::new(), model: instance.model, background: [0.0; 4], appearance: [0.85, 0.0, 0.0, 0.0] }] }],
+        curvilinear: Some(SceneCurvilinear3d { fov_radians: 2.0, strength: 0.75 }),
         ..Default::default()
     });
 
@@ -450,6 +451,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
                 }
             }
             DrawMeasureCursor::PassLine { .. } | DrawMeasureCursor::PassLineVertex { .. } => "lines",
+            DrawMeasureCursor::PassCurvilinear { .. } => "curvilinear",
             _ => "other",
         };
         if order.last() != Some(&label) && label != "other" {
@@ -459,7 +461,7 @@ fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
             break;
         }
     }
-    assert_eq!(order, vec!["shadow", "textured", "material-opaque", "opaque", "lines", "translucent", "material-translucent"], "casters complete before the underlay and every color receiver");
+    assert_eq!(order, vec!["shadow", "textured", "material-opaque", "opaque", "lines", "translucent", "material-translucent", "curvilinear"], "the image-space remap runs after every world color receiver");
 }
 
 /// 🌐️ LAW: the prepared scalar ladder owns exactly one grid item after textured references

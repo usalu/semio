@@ -73,6 +73,31 @@ fn oversized_inputs_use_the_positional_fallback_without_panicking() {
     assert!(operations.iter().all(|line| line.operation == DiffLineOperation::Equal));
 }
 
+#[test]
+fn neutral_presentation_fixture_drives_mono_geometry_color_and_pre_wrap() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🆚️diff-view-presentation/🔣️.json")).expect("DiffView presentation fixture");
+    let theme = Theme::default();
+    let metrics = diff_view_metrics(Rect::new(0.0, 0.0, fixture["host"]["width"].as_f64().unwrap() as f32, fixture["host"]["height"].as_f64().unwrap() as f32), &theme);
+    let close = |actual: f32, expected: f64| assert!((actual - expected as f32).abs() <= 0.1, "{actual} != {expected}");
+    close(metrics.inner.w, fixture["unified"]["contentWidth"].as_f64().unwrap());
+    close(metrics.row_height, fixture["unified"]["rowHeight"].as_f64().unwrap());
+    close(metrics.unified_text_x, fixture["unified"]["textX"].as_f64().unwrap());
+    close(metrics.split_pane_width, fixture["split"]["paneWidth"].as_f64().unwrap());
+    close(metrics.split_right_x, fixture["split"]["rightX"].as_f64().unwrap());
+    close(metrics.inner.x + theme.padding_standard + DIFF_GUTTER_COLUMN_W + theme.gap_standard, fixture["split"]["leftTextX"].as_f64().unwrap());
+    close(metrics.split_right_x + theme.padding_standard + DIFF_GUTTER_COLUMN_W + theme.gap_standard, fixture["split"]["rightTextX"].as_f64().unwrap());
+    let added = fixture["colors"]["added"].as_array().unwrap();
+    assert_eq!(theme.diff_added, Rgba::from_srgb8(added[0].as_u64().unwrap() as u8, added[1].as_u64().unwrap() as u8, added[2].as_u64().unwrap() as u8, 255));
+
+    let text = fixture["preWrap"]["text"].as_str().unwrap();
+    let narrow = diff_view_metrics(Rect::new(0.0, 0.0, fixture["preWrap"]["hostWidth"].as_f64().unwrap() as f32, 160.0), &theme);
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::shaped_default();
+    let lines = atlas.pre_wrap_lines(TextFace::Mono, text, narrow.unified_text_width, theme.font_size_small).into_iter().map(|range| &text[range]).collect::<Vec<_>>();
+    let expected = fixture["preWrap"]["expectedLines"].as_array().unwrap().iter().map(|line| line.as_str().unwrap()).collect::<Vec<_>>();
+    assert_eq!(lines, expected);
+    assert_ne!(atlas.measure_text_face(TextFace::Sans, "iiii", theme.font_size_small).0, atlas.measure_text_face(TextFace::Mono, "iiii", theme.font_size_small).0);
+}
+
 //#region DiffViewPaintTests
 /// 🧰️ Renders a `render_diff_view` scene in `mode` and returns the `DrawList` so paint-level
 /// assertions (glyph tint, absence of row-background fills) can inspect it directly, same
@@ -104,7 +129,7 @@ fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (ui_wgpu::wgpu:
         menu: None,
     };
     let mut draw = ui_wgpu::wgpu::DrawList::default();
-    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::shaped_default();
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
     let theme = Theme::default();
     let mut scroll = HashMap::new();
@@ -139,16 +164,16 @@ fn glyph_colors_split_at_gutter(draw: &ui_wgpu::wgpu::DrawList, gutter_right_x: 
     (gutter, text)
 }
 
-/// 📏️ Where the unified gutter band ends — `render_diff_view`'s own derivation (`pad` + two columns + `pad`), restated here so the law moves with the paint instead of hardcoding a pixel.
+/// 📏️ Where the unified gutter band ends according to the shared presentation metrics.
 fn unified_gutter_right_x(theme: &Theme) -> f32 {
-    theme.padding_standard + DIFF_GUTTER_COLUMN_W * 2.0 + theme.padding_standard
+    diff_view_metrics(Rect::new(0.0, 0.0, 400.0, 300.0), theme).unified_after_right_x
 }
 
 #[test]
-fn unified_added_line_text_is_tinted_accent_not_a_row_background() {
+fn unified_added_line_text_uses_the_diff_added_token_without_a_row_background() {
     let (draw, theme) = render_diff("a\n", "a\nnew\n", Some("unified"));
     let colors = glyph_colors(&draw);
-    assert!(colors.contains(&theme.accent), "added line's glyph text should be tinted theme.accent, got {colors:?}");
+    assert!(colors.contains(&theme.diff_added), "added line glyphs should use the dedicated diff-added token, got {colors:?}");
     // 🚫️ No translucent full-row wash left over — the old background-fill mechanism pushed a
     // `push_solid` at `theme.accent.with_alpha(0.16)` for every added row.
     assert!(!colors.contains(&theme.accent.with_alpha(0.16)), "added rows must no longer paint a translucent background wash");
@@ -201,10 +226,10 @@ fn removed_lines_carry_only_a_before_number_and_added_lines_only_an_after_number
 }
 
 #[test]
-fn split_mode_added_and_removed_columns_use_accent_and_error_text() {
+fn split_mode_added_and_removed_columns_use_diff_added_and_error_text() {
     let (draw, theme) = render_diff("old\n", "new\n", Some("split"));
     let colors = glyph_colors(&draw);
-    assert!(colors.contains(&theme.accent), "split-mode added column text should be theme.accent");
+    assert!(colors.contains(&theme.diff_added), "split-mode added column text should use theme.diff_added");
     assert!(colors.contains(&theme.error), "split-mode removed column text should be theme.error");
 }
 //#endregion DiffViewPaintTests

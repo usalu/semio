@@ -1,5 +1,5 @@
 #!/bin/zsh
-# 🌎️ H11 hub lifecycle on a copy of catalog B2 (production mode, loopback, credential sign-in).
+# 🌎️ H11 hub lifecycle on a copy of catalog B3 (H11_CATALOG_SRC overrides) (production mode, loopback, credential sign-in).
 #   h11-hub.sh prepare <root-name>                 fresh data root under .🧬semio/🌐hub/<root-name> (APFS clone of B2 + 2 users)
 #   h11-hub.sh start <root-name> <port> <binary>   detached hub (NI 0), pid → <root>.pid, log → s13-h11-logs/<root-name>-<port>-<n>.log
 #   h11-hub.sh stop <root-name>                    SIGTERM the recorded pid, wait for exit (≤ 60 s), print exit timing
@@ -7,7 +7,7 @@
 set -u
 H="/Users/ueli/Documents/semio/.🧬semio/🌐hub"
 LOGS="$H/s13-h11-logs"
-SRC="$H/w2-catalog-b2"
+SRC="${H11_CATALOG_SRC:-$H/s13-w3-catalog-b3}"
 cmd=$1; shift
 case $cmd in
   prepare)
@@ -17,7 +17,7 @@ case $cmd in
     mkdir -p "$ROOT/trusted-catalog/generations"; chmod 700 "$ROOT" "$ROOT/trusted-catalog" "$ROOT/trusted-catalog/generations"
     cp -Rc "$SRC/trusted-catalog/generations/$GEN" "$ROOT/trusted-catalog/generations/"
     cp -p "$SRC/trusted-catalog/current.json" "$ROOT/trusted-catalog/current.json"
-    BIN=${2:-"$H/s13-h11-bin/os-hub-c11-1907"}
+    BIN=${2:-"$H/s13-h11-bin/os-hub-b3"}
     for u in "user1@semio.dev|User One|gm1-local-dev-pass-1" "user2@semio.dev|User Two|gm1-local-dev-pass-2"; do
       E=${u%%|*}; R=${u#*|}; N=${R%%|*}; P=${R#*|}
       printf '%s' "$P" | OS_HUB_DATA="$ROOT" "$BIN" credential set --email "$E" --display-name "$N" || exit 1
@@ -28,11 +28,9 @@ case $cmd in
     lsof -nP -iTCP:$PORT -sTCP:LISTEN >/dev/null && { echo "port $PORT busy"; exit 1; }
     n=1; while [ -e "$LOGS/$NAME-$PORT-$n.log" ]; do n=$((n+1)); done
     LOG="$LOGS/$NAME-$PORT-$n.log"
-    setopt no_bg_nice
-    OS_HUB_DATA="$ROOT" OS_HUB_MODE=production OS_HUB_BIND=127.0.0.1 OS_HUB_PORT=$PORT OS_HUB_CREDENTIAL_SIGN_IN=true \
+    pid=$(OS_HUB_DATA="$ROOT" OS_HUB_MODE=production OS_HUB_BIND=127.0.0.1 OS_HUB_PORT=$PORT OS_HUB_CREDENTIAL_SIGN_IN=true \
       OS_HUB_ADMIN_SUBJECTS=credential.password.v1:user1@semio.dev SEMIO_TRACE_LEVEL=info SEMIO_TRACE_SINK=stderr \
-      nohup "$BIN" > "$LOG" 2>&1 & disown
-    pid=$!
+      python3 /Users/ueli/Documents/semio/.tmp-ticket/wp-w2/w2-detach.py "$LOG" "$BIN")
     echo "$pid" > "$ROOT.pid"
     echo "started pid=$pid port=$PORT log=$LOG at $(python3 -c 'import time;print(int(time.time()*1000))')";;
   stop)

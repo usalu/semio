@@ -421,6 +421,25 @@ fn a_verb_whose_lane_an_agent_cannot_carry_is_refused_by_name_with_an_en_and_de_
         assert!(!remedy.trim().is_empty(), "remedy.{locale} is non-empty");
     }
     assert_ne!(AGENT_LANE_UNCARRIED_REMEDY.0, AGENT_LANE_UNCARRIED_REMEDY.1, "de is a translation, not a copy");
+    let unsupported = map_fault(&Fault { code: AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE.into(), message: "action 'formatDocument' runs a 'writer.writer.tool-command.v1' job the agent lane cannot preview; it runs only from the shell".into() });
+    assert_eq!(unsupported.code, GatewayErrorCode::PluginUnavailable, "a job without an agent preview is a shell-only verb, not a gateway defect");
+    assert!(!unsupported.retryable);
+    assert_eq!(unsupported.details["faultCode"], AGENT_LANE_PREVIEW_UNSUPPORTED_FAULT_CODE);
+    assert_eq!(unsupported.details["remedy"]["de"], AGENT_LANE_UNCARRIED_REMEDY.1);
+    let budget = map_fault(&Fault { code: AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE.into(), message: "the preview of 'solve' was still running after its budget".into() });
+    assert_eq!((budget.code, budget.retryable, budget.details["faultCode"].as_str()), (GatewayErrorCode::PluginUnavailable, false, Some(AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE)));
+    let targets = map_fault(&Fault { code: COMMAND_TARGETS_REQUIRED_FAULT_CODE.into(), message: "patchNodes needs node ids or a node selection".into() });
+    assert_eq!(targets.code, GatewayErrorCode::InputInvalid, "the agent passes the ids the verb declares");
+}
+
+/// 🚫️ A hub link the hub ended refuses the agent by name: withdrawn access is `PERMISSION_DENIED`, an expired link
+/// `PLUGIN_UNAVAILABLE` — never an internal defect, never a success.
+#[test]
+fn a_terminal_hub_link_refuses_the_agent_by_name() {
+    let revoked = map_fault(&Fault { code: store::sync::DocumentLinkStatus::AccessRevoked.code().into(), message: "revoked".into() });
+    assert_eq!(revoked.code, GatewayErrorCode::PermissionDenied);
+    let expired = map_fault(&Fault { code: store::sync::DocumentLinkStatus::LinkExpired.code().into(), message: "expired".into() });
+    assert_eq!(expired.code, GatewayErrorCode::PluginUnavailable);
 }
 //#endregion 🔖️FaultMapping
 

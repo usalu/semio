@@ -636,6 +636,22 @@ async fn scoped_stream_issues_and_dials_the_same_encoded_scope() {
     assert_eq!(transport.ws_urls.lock().unwrap().as_slice(), ["ws://hub.local/directory/spaces/space%20%2Fa/documents/document%23b/socket/v1?since=7"]);
 }
 
+/// 🚪️ The hub admits `POST /directory/socket-grants` only with an empty body (`DefaultBodyLimit::max(0)`, hostile-input row
+/// `"body": {"kind": "empty"}`); a `{}` body is refused `413` before the grant is minted, which took down every native directory
+/// stream dial (measured on the 2026-09-27 B3 hub).
+#[semio_framework_async_macros::async_test]
+async fn the_space_wide_directory_grant_carries_the_empty_body_the_hub_route_declares() {
+    let transport = FakeTransport::default();
+    push_grant(&transport).await;
+    transport.push_ws(Ok(std::collections::VecDeque::new())).await;
+    let client = authenticated_client(transport.clone(), "tok");
+    let _connection = client.open_stream_ws(&root_ctx(), 0, 100).expect("space-wide socket opens");
+    let requests = transport.requests.lock().unwrap();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].url, "http://hub.local/directory/socket-grants");
+    assert!(requests[0].body.is_empty(), "the grant body must be empty, got {:?}", String::from_utf8_lossy(&requests[0].body));
+}
+
 #[semio_framework_async_macros::async_test]
 async fn backoff_doubles_and_caps() {
     assert_eq!(next_backoff_ms(500), 1000);

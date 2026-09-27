@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
-/** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|residency-watch|hub-freshness|typecheck>`.
+/** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|shutdown-drill|residency-watch|hub-freshness|agent-ceiling-check|docker-image-build|docker-image-check|typecheck>`.
  * Bun integration-test harness that boots the REAL `os-hub` binary and drives it with two
  * independent clients to prove the hub's collaboration contract end-to-end (ticket
  * 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS, lane 3-E). Gated behind
  * `HUB_E2E=1` (see `🤝️index.test.ts`'s own doc) — the default `test` run never touches cargo and
  * reports the whole e2e suite as skipped in well under a second. */
+import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBunxStatus, runBundleScriptMain, runCargo, runVitest, type TestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, hubDevPostgresBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
@@ -242,6 +243,55 @@ class BackupRestoreDrillScript extends BundleScript {
   }
 }
 
+/** 🛑️ `shutdown-drill [--catalog-root <data root>] [--kind <kindId|schema prefix>] [--heavy-kinds <kindId,…>] [--edits <n>]
+ * [--rounds <n>] [--keep]` — the graceful-shutdown drill on a fresh root seeded with a copy of a published trusted catalog
+ * (default: the development hub's `.🧬semio/🌐hub/hub-dev`), the hub being `OS_HUB_BINARY` or the Nx-staged `build-dev`
+ * executable: SIGTERM while the catalog verifies, a document socket holds an edit in flight and a heavy kind is being
+ * created; passes when the hub exits 0 within the database's shutdown deadline, records its shutdown, closes the socket
+ * with a frame, and restarts on the same root with every acknowledged edit and a typed answer for the interrupted
+ * creation. */
+class ShutdownDrillScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const startedAt = new Date();
+    const interrupt = interruptSignal();
+    const { runShutdownDrill, SHUTDOWN_EXIT_BOUND_MS } = await import("../../🧪️tests/💾️backup-restore/🟦️.ts");
+    await withAcceptanceRecord(this.repoRoot, "hub-graceful-shutdown", async () => {
+      const rounds = await runShutdownDrill({
+        repoRoot: this.repoRoot,
+        binaryPath: process.env.OS_HUB_BINARY ?? hubDevBinaryPath(join(this.repoRoot, HUB_RUST_DIR)),
+        catalogRoot: flagValue(segments, "--catalog-root") ?? join(this.repoRoot, ".🧬semio", "🌐hub", "hub-dev"),
+        kind: flagValue(segments, "--kind") ?? "note",
+        heavyKinds: (flagValue(segments, "--heavy-kinds") ?? "2d.puzzle,3d.puzzle,5d.puzzle,s.gis.gismap").split(",").filter(Boolean),
+        edits: Number(flagValue(segments, "--edits") ?? 20),
+        rounds: Number(flagValue(segments, "--rounds") ?? 1),
+        keepRoots: segments.includes("--keep"),
+        signal: interrupt.signal,
+        onProgress: (line) => console.log(`[shutdown-drill] ${line}`),
+      });
+      for (const round of rounds) console.log(`[shutdown-drill] round ${round.round} ${JSON.stringify(round)}`);
+      const passed = rounds.filter((round) => round.pass).length;
+      const first = rounds[0];
+      const failed = Object.entries(first?.checks ?? {}).filter(([, ok]) => !ok).map(([name]) => name).join(", ");
+      publishAcceptanceCheckResult(
+        this.repoRoot,
+        acceptanceCheckResult({
+          check: "hub-graceful-shutdown",
+          status: rounds.length > 0 && passed === rounds.length ? "pass" : "fail",
+          startedAt,
+          measured: { rounds: rounds.length, passed, sigtermToExitMs: first?.sigtermToExitMs ?? -1, exitBoundMs: SHUTDOWN_EXIT_BOUND_MS, exitCode: first?.exitCode ?? -1, packagesVerifyingAtSigterm: first?.packagesVerifyingAtSigterm ?? -1, socketCloseCode: first?.socketClose?.code ?? -1, restartReadyMs: first?.restartReadyMs ?? -1, headEditOrdinal: first?.headEditOrdinal ?? -1, inFlightCreationStatus: first?.inFlightCreationStatus ?? -1 },
+          summary: {
+            en: `${passed}/${rounds.length} graceful-shutdown rounds pass${first?.sigtermToExitMs === undefined ? "" : `; SIGTERM → exit ${first.sigtermToExitMs} ms (bound ${SHUTDOWN_EXIT_BOUND_MS} ms), code ${first.exitCode}`}${failed ? `; failed: ${failed}` : ""}${first?.error ? `; ${first.error.slice(0, 200)}` : ""}`,
+            de: `${passed}/${rounds.length} Runden geordnetes Herunterfahren bestanden${first?.sigtermToExitMs === undefined ? "" : `; SIGTERM → Ende ${first.sigtermToExitMs} ms (Grenze ${SHUTDOWN_EXIT_BOUND_MS} ms), Code ${first.exitCode}`}${failed ? `; nicht erfüllt: ${failed}` : ""}${first?.error ? `; ${first.error.slice(0, 200)}` : ""}`,
+          },
+          evidence: rounds.flatMap((round) => (round.roots ? [round.roots] : [])),
+        }),
+      );
+      if (passed !== rounds.length || rounds.length === 0) process.exitCode = 1;
+    }, missingHubPrecondition);
+    interrupt.done();
+  }
+}
+
 /** 🧠️ `residency-watch --hub <url> [--pid <pid>] [--kinds <kindId,…>] [--rounds <n>] [--interval-ms <n>] [--settle-ms <n>]
  * [--budget-mib <n>]` — opens every creatable kind on a running hub (round-robin, `--rounds` times) while sampling its
  * resident set and the hub's compiled-guest residency, then watches it settle. Credentials: `OS_HUB_PROBE_EMAIL` /
@@ -379,6 +429,150 @@ class HubFreshnessScript extends BundleScript {
   }
 }
 
+/** 🤖️ `agent-ceiling-check --hub <url> [--kind <kindId|schema prefix>] [--locale en|de]` — the hub's agent-audience ceiling
+ * on a running hub, driven directly (no gateway): a `read` agent's edit is refused, an `edit` agent's accepted, neither
+ * sees another space, administers the space or reads the admin console. Credentials only from the environment:
+ * `OS_HUB_PROBE_EMAIL` (default `user1@semio.dev`), `OS_HUB_PROBE_PASSWORD`, `OS_HUB_PROBE_MEMBER_EMAIL` (an existing
+ * account the agents try to add, default `user2@semio.dev`). */
+class AgentCeilingCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const hub = flagValue(segments, "--hub");
+    if (!hub) throw new Error("usage: agent-ceiling-check --hub <url> [--kind <kindId|schema prefix>] [--locale en|de]");
+    const locale = flagValue(segments, "--locale") === "de" ? "de" : "en";
+    const startedAt = new Date();
+    const interrupt = interruptSignal();
+    const { runAgentCeilingCheck } = await import("../../🧪️tests/🤖️agent-ceiling/🟦️.ts");
+    await withAcceptanceRecord(this.repoRoot, "hub-agent-ceiling", async () => {
+      const password = process.env.OS_HUB_PROBE_PASSWORD;
+      if (!password) throw new Error("OS_HUB_PROBE_PASSWORD does not exist in the environment");
+      const report = await runAgentCeilingCheck({
+        hub: hub.replace(/\/$/u, ""),
+        email: process.env.OS_HUB_PROBE_EMAIL ?? "user1@semio.dev",
+        password,
+        memberEmail: process.env.OS_HUB_PROBE_MEMBER_EMAIL ?? "user2@semio.dev",
+        kind: flagValue(segments, "--kind") ?? "note",
+        signal: interrupt.signal,
+        onProgress: (line) => console.log(`[agent-ceiling] ${line}`),
+      });
+      const passed = report.rows.filter((row) => row.pass).length;
+      const failed = report.rows.filter((row) => !row.pass).map((row) => row.check);
+      const status = !report.cancelled && report.rows.length > 0 && failed.length === 0 ? "pass" : "fail";
+      const summary = {
+        en: `${passed}/${report.rows.length} agent-ceiling boundaries hold on ${report.kindId}${failed.length ? `; broken: ${failed.join(", ")}` : ""}${report.cancelled ? "; cancelled" : ""}`,
+        de: `${passed}/${report.rows.length} Grenzen der Agenten-Obergrenze halten auf ${report.kindId}${failed.length ? `; verletzt: ${failed.join(", ")}` : ""}${report.cancelled ? "; abgebrochen" : ""}`,
+      };
+      console.log(`[agent-ceiling] ${summary[locale]}`);
+      publishAcceptanceCheckResult(
+        this.repoRoot,
+        acceptanceCheckResult({
+          check: "hub-agent-ceiling",
+          status,
+          startedAt,
+          measured: { boundaries: report.rows.length, held: passed, broken: failed.join(","), kind: report.kindId, spaceId: report.spaceId, documentId: report.documentId },
+          summary,
+        }),
+      );
+      if (status !== "pass") process.exitCode = 1;
+    }, missingHubPrecondition);
+    interrupt.done();
+  }
+}
+
+/** 🐳️ Errors that mean the image drill cannot start here (no Docker client or daemon, no image yet, nothing published to
+ * seed from, the kind absent from the seeded catalog): recorded as `blocked`, never as `fail`. */
+function missingDockerPrecondition(error: unknown): boolean {
+  return /docker client does not exist|Docker daemon does not answer|does not exist; build it first|no published trusted catalog|does not exist in the seeded catalog/iu.test(String(error instanceof Error ? error.message : error));
+}
+
+/** 🐳️ `docker-image-build [--tag <tag>] [--jobs <n>] [--log <path>]` — a cold `docker build` of `🌎️hub/Dockerfile` with the
+ * repository root as context (a prepared checkout: `workspace:prepare` has published the generated sources), timed, the
+ * builder capped at `--jobs` compiler jobs when given; the whole client output goes to `--log` (default this package's
+ * `🗑️generated/docker-image-build.log`). Passes when the build exits 0 and the image exists. */
+class DockerImageBuildScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const startedAt = new Date();
+    const interrupt = interruptSignal();
+    const { buildHubImage } = await import("../../🧪️tests/🐳️docker-image/🟦️.ts");
+    await withAcceptanceRecord(this.repoRoot, "hub-docker-image-build", async () => {
+      const jobs = flagValue(segments, "--jobs");
+      const report = await buildHubImage({
+        repoRoot: this.repoRoot,
+        tag: flagValue(segments, "--tag") ?? "local",
+        jobs: jobs ? Number(jobs) : null,
+        logPath: flagValue(segments, "--log") ?? join(this.root, "🗑️generated", "docker-image-build.log"),
+        signal: interrupt.signal,
+        onProgress: (line) => console.log(`[docker-image] ${line}`),
+      });
+      if (report.exitCode !== 0) console.log(`[docker-image] build tail:\n${report.tail}`);
+      const status = report.exitCode === 0 && report.imageId !== "" ? "pass" : "fail";
+      const size = report.imageBytes > 0 ? `${(report.imageBytes / 1_048_576).toFixed(0)} MiB` : "-";
+      publishAcceptanceCheckResult(
+        this.repoRoot,
+        acceptanceCheckResult({
+          check: "hub-docker-image-build",
+          status,
+          startedAt,
+          measured: { exitCode: report.exitCode, seconds: report.seconds, steps: report.steps, imageBytes: report.imageBytes, imageId: report.imageId },
+          summary: {
+            en: `docker build ${report.image} exited ${report.exitCode} after ${report.seconds} s; image ${size}`,
+            de: `docker build ${report.image} endete mit ${report.exitCode} nach ${report.seconds} s; Abbild ${size}`,
+          },
+          evidence: [report.logPath],
+        }),
+      );
+      if (status !== "pass") process.exitCode = 1;
+    }, missingDockerPrecondition);
+    interrupt.done();
+  }
+}
+
+/** 🐳️ `docker-image-check [--tag <tag>] [--port <n>] [--catalog-root <data root>] [--kind <kindId>] [--ready-timeout-ms <n>]
+ * [--keep]` — runs the built image in its production posture on a fresh volume seeded with a copy of a published trusted
+ * catalog (default the development hub's `.🧬semio/🌐hub/hub-dev`) and one credential (`OS_HUB_PROBE_EMAIL` /
+ * `OS_HUB_PROBE_PASSWORD`, else a fresh random one that is never printed), reached through the loopback forwarding proxy:
+ * `/readyz` until ready, `/healthz` 200 through the proxy and refused without it, a two-client relay over one new `--kind`
+ * document (default `s.note.note`), then `docker stop` must drain to exit code 0. Container and volume are removed unless `--keep`. */
+class DockerImageCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const startedAt = new Date();
+    const interrupt = interruptSignal();
+    const { checkHubImage } = await import("../../🧪️tests/🐳️docker-image/🟦️.ts");
+    await withAcceptanceRecord(this.repoRoot, "hub-docker-image", async () => {
+      const port = flagValue(segments, "--port");
+      const report = await checkHubImage({
+        tag: flagValue(segments, "--tag") ?? "local",
+        port: port ? Number(port) : await freeLoopbackPort(),
+        catalogRoot: flagValue(segments, "--catalog-root") ?? join(this.repoRoot, ".🧬semio", "🌐hub", "hub-dev"),
+        kind: flagValue(segments, "--kind") ?? "s.note.note",
+        email: process.env.OS_HUB_PROBE_EMAIL ?? "docker-smoke@semio.dev",
+        password: process.env.OS_HUB_PROBE_PASSWORD ?? randomBytes(18).toString("hex"),
+        allowedOrigin: "https://s.example.com",
+        readyTimeoutMs: Number(flagValue(segments, "--ready-timeout-ms") ?? 900_000),
+        keep: segments.includes("--keep"),
+        signal: interrupt.signal,
+        onProgress: (line) => console.log(`[docker-image] ${line}`),
+      });
+      const smoke = report.smoke;
+      const status = report.readyMs >= 0 && report.healthzStatus === 200 && report.directHealthzStatus === 403 && report.directRefusal === "insecure-transport" && smoke !== undefined && smoke.undecodable === 0 && report.exitCode === 0 ? "pass" : "fail";
+      publishAcceptanceCheckResult(
+        this.repoRoot,
+        acceptanceCheckResult({
+          check: "hub-docker-image",
+          status,
+          startedAt,
+          measured: { imageBytes: report.imageBytes, generation: report.generation, readyMs: report.readyMs, healthz: report.healthzStatus, cleartextHealthz: report.directHealthzStatus, cleartextRefusal: report.directRefusal, kind: smoke?.kindId ?? "", creationMs: smoke?.creationMs ?? -1, aToBMs: smoke?.aToBMs ?? -1, bToAMs: smoke?.bToAMs ?? -1, undecodableFrames: smoke?.undecodable ?? -1, stopMs: report.stopMs, exitCode: report.exitCode },
+          summary: {
+            en: `${report.image} ready after ${report.readyMs} ms; /healthz ${report.healthzStatus} behind the proxy, ${report.directHealthzStatus} ${report.directRefusal} without it; two clients relayed A → B ${smoke?.aToBMs ?? "-"} ms, B → A ${smoke?.bToAMs ?? "-"} ms; docker stop ${report.stopMs} ms, exit ${report.exitCode}`,
+            de: `${report.image} bereit nach ${report.readyMs} ms; /healthz ${report.healthzStatus} hinter dem Proxy, ${report.directHealthzStatus} ${report.directRefusal} ohne ihn; zwei Clients übertrugen A → B ${smoke?.aToBMs ?? "-"} ms, B → A ${smoke?.bToAMs ?? "-"} ms; docker stop ${report.stopMs} ms, Exitcode ${report.exitCode}`,
+          },
+        }),
+      );
+      if (status !== "pass") process.exitCode = 1;
+    }, missingDockerPrecondition);
+    interrupt.done();
+  }
+}
+
 /** 🪁️ Type-checks every `🌎️hub/**` TypeScript source against the hub-scoped `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
   run(segments: string[]): void {
@@ -387,6 +581,6 @@ class TypecheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("two-client-e2e", TwoClientE2eScript).register("document-growth-e2e", DocumentGrowthE2eScript).register("backend", BackendScript).register("backup-restore-drill", BackupRestoreDrillScript).register("residency-watch", ResidencyWatchScript).register("boot-watch", BootWatchScript).register("hub-freshness", HubFreshnessScript).register("typecheck", TypecheckScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("two-client-e2e", TwoClientE2eScript).register("document-growth-e2e", DocumentGrowthE2eScript).register("backend", BackendScript).register("backup-restore-drill", BackupRestoreDrillScript).register("shutdown-drill", ShutdownDrillScript).register("residency-watch", ResidencyWatchScript).register("boot-watch", BootWatchScript).register("hub-freshness", HubFreshnessScript).register("agent-ceiling-check", AgentCeilingCheckScript).register("docker-image-build", DockerImageBuildScript).register("docker-image-check", DockerImageCheckScript).register("typecheck", TypecheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

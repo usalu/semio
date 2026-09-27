@@ -148,11 +148,14 @@ pub(crate) fn agg_diff(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> protoc
     match this {
         ZipIso21320Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => protocol::MutationOutcome::new(diff::diff_set_snapshot(base, snapshot)),
         ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment }) => protocol::MutationOutcome::new(diff::diff_set_archive_comment(comment)),
-        ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry }) | ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry }) => {
+        ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry, before }) | ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry, before }) => {
             if base.entries.iter().any(|existing| existing.name == entry.name) {
                 return protocol::MutationOutcome::error(CODE_REJECTED, format!("a member named {:?} already exists -- ISO/IEC 21320-1 containers address members by name", entry.name), [entry.name.clone()]);
             }
-            protocol::MutationOutcome::new(diff::diff_add_entry(entry.clone()))
+            if before.as_ref().is_some_and(|name| !base.entries.iter().any(|entry| &entry.name == name)) {
+                return protocol::MutationOutcome::error(CODE_REJECTED, "ZIP insertion anchor no longer exists", ["entries"]);
+            }
+            protocol::MutationOutcome::new(diff::diff_add_entry(base, entry.clone(), before.as_deref()))
         }
         ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name }) => protocol::MutationOutcome::new(diff::diff_remove_entry(name)),
         ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => {
@@ -172,10 +175,10 @@ pub(crate) fn agg_inverse(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> Vec
     match this {
         ZipIso21320Mutation::SetSnapshot(_) => vec![ZipIso21320Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
         ZipIso21320Mutation::SetArchiveComment(_) => vec![ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: base.comment.clone() })],
-        ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry }) => vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
-        ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry }) => vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
+        ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry, .. }) => vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
+        ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry, .. }) => vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
         ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name }) => {
-            base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: entry.clone() })]).unwrap_or_default()
+            base.entries.iter().position(|entry| entry.name == *name).map(|index| vec![ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: base.entries[index].clone(), before: base.entries.get(index + 1).map(|entry| entry.name.clone()) })]).unwrap_or_default()
         }
         ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => vec![ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name: new_name.clone(), new_name: name.clone() })],
         ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name, .. }) => {

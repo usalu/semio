@@ -123,6 +123,7 @@ export function ObservabilityPage(): React.ReactElement {
               <div className="grid grid-cols-2 gap-single md:grid-cols-4">
                 <Figure label={t("admin.observability.residencyResident")} value={`${reading.residency.residentGuests} / ${reading.residency.registeredGuests} · ${formatBytes(reading.residency.residentBytes)}`} />
                 <Figure label={t("admin.observability.residencyBudget")} value={formatBytes(reading.residency.budgetBytes)} />
+                <Figure label={t("admin.observability.residencyFootprint")} value={formatBytes(reading.residency.footprintBytes)} />
                 <Figure label={t("admin.observability.residencyHits")} value={reading.residency.hits} />
                 <Figure label={t("admin.observability.residencyCompiles")} value={reading.residency.compiles} />
                 <Figure label={t("admin.observability.residencyAdmitted")} value={reading.residency.admitted} />

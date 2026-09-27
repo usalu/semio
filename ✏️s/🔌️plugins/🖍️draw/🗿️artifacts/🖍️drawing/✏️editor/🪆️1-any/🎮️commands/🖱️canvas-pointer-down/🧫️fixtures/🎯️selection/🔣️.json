@@ -131,6 +131,21 @@
       ],
       "includeControls": true,
       "selected": true
+    },
+    {
+      "name": "unpainted-curve-box",
+      "parent": [
+        0,
+        0,
+        1,
+        1,
+        0
+      ],
+      "point": [
+        0.5,
+        7
+      ],
+      "selected": false
     }
   ]
 }

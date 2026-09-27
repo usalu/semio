@@ -20,7 +20,7 @@ import protocolSchema from "../../🧬️schema/🔣️.json";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, executePipeline, pipelineRoleArtifacts, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { CORE_COMPARISON_PROFILES, dependencyEcosystemOf, externalOracleHostPackages, importProbe, oracleHostModule, oracleHostPackagesFor, oracleLinkedPackages, mutationCatalogProblems, mutationCoverageBreaches, mutationVectorRegistryBreaches, mutationVocabularyRequiresCatalog, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadOracleRegistry, markOutputDir, parseFeature, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, stubSerializerBreaches, subjectFeaturesFor, executePipeline, pipelineRoleArtifacts, testCacheDir, testFilenameForKind, testLocationPath, testProjectName, testTaxonomy, caseContractBreaches, repositoryContractBreaches, validateResult, subjectRawInputsByScenario, makeAdapterContext, type TestCasePlan, type FeatureScenario, isSemioNativeArtifact, isQualifyingOracleKind, nativeSecondImplementationBreaches, oracleRequirementBreaches, QUALIFYING_ORACLE_KINDS, caseAboveSubsetBreaches, mutationFixtureBreaches, noOracleMisuseBreaches, reimplementationOracleBreaches, binaryProtocolDriftBreaches } from "../../📦️packages/🟦️typescript/🟦️.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -399,6 +399,38 @@ describe("🔒️ dependency ratchet", () => {
           expect(oracle.productionDebt.plan.length, `${oracle.id} records productionDebt with no retirement plan`).toBeGreaterThan(0);
         }
       }
+    }
+  });
+});
+
+describe("📥️ subject raw routing", () => {
+  const subject = (scenario: string, implementation: "rust" | "typescript", status: "passed" | "failed", rawPath?: string) =>
+    ({ testId: `o::c::${scenario}::${implementation}::subject`, owner: "o", case: "c", scenario, implementation, role: "subject" as const, level: "quick" as const, status, durationMs: 1, output: { rawHash: "", projectionHash: "", rawPath }, diagnostics: [] });
+
+  test("every passed subject raw output is routed to its own scenario, never folded into one map per case", () => {
+    const routed = subjectRawInputsByScenario([
+      subject("s1", "rust", "passed", "/r/s1.rust"),
+      subject("s1", "typescript", "passed", "/r/s1.ts"),
+      subject("s2", "rust", "passed", "/r/s2.rust"),
+      subject("s3", "rust", "failed", "/r/s3.rust"),
+      subject("s4", "rust", "passed"),
+      { ...subject("s5", "rust", "passed", "/r/s5.oracle"), role: "oracle" as const },
+    ]);
+    expect(routed).toEqual({ s1: { rust: "/r/s1.rust", typescript: "/r/s1.ts" }, s2: { rust: "/r/s2.rust" } });
+  });
+
+  test("an oracle scenario reads exactly its own subject scenario's bytes and refuses a scenario without any", () => {
+    const dir = mkdtempSync(join(tmpdir(), "semio-raw-routing-"));
+    try {
+      writeFileSync(join(dir, "s1.raw"), "first");
+      writeFileSync(join(dir, "s2.raw"), "second");
+      const plan = { workDir: join(dir, "work"), artifactDir: join(dir, "artifacts"), fixtures: [], subjectRawInputs: { s1: { rust: join(dir, "s1.raw") }, s2: { rust: join(dir, "s2.raw") } } } as unknown as TestCasePlan;
+      const context = (id: string) => makeAdapterContext(dir, plan, { id, name: id, steps: [] } as unknown as FeatureScenario, "oracle");
+      expect(new TextDecoder().decode(context("s1").subjectRawBytes("rust"))).toBe("first");
+      expect(new TextDecoder().decode(context("s2").subjectRawBytes("rust"))).toBe("second");
+      expect(() => context("s3").subjectRawBytes("rust")).toThrow("scenario s3 has no raw subject output from rust");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

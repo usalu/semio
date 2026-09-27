@@ -83,6 +83,22 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/set-scalar/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "patchSnapshot"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/mutation/patch-snapshot/schema.json"
+        }
+      }
     }
   ]
 }

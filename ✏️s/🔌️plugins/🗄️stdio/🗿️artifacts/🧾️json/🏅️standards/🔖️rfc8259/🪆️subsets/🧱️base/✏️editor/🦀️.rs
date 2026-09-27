@@ -176,7 +176,10 @@ fn json_any_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> R
     }
     match action {
         semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID => Ok(JsonAnyEditorCommand::SetActiveExample { example_id: semio_s_artifact_stdio_contract::example_id_argument(args, "") }),
-        JSON_ANY_KIT_ACTION_ID => Ok(JsonAnyEditorCommand::SetNode { node_id: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["nodeId"], ""), value: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["value"], "") }),
+        JSON_ANY_KIT_ACTION_ID => Ok(JsonAnyEditorCommand::SetNode {
+            node_id: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "nodeId")?,
+            value: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "value")?,
+        }),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("stdio.json.unhandled-action"),
@@ -205,21 +208,7 @@ fn json_any_retained_extent(_command: &JsonAnyEditorCommand, _snapshot: &JsonSna
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn json_any_emit(command: &JsonAnyEditorCommand, _snapshot: &JsonSnapshot) -> Result<Emit<JsonMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     if let JsonAnyEditorCommand::EditSnapshot { event } = command {
-        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(_snapshot, event).map_err(|error| {
-            Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(error.code), error.to_string())
-        })?;
-        if next.schema != _snapshot.schema {
-            return Err(Fault::new(
-                semio_framework_plugin::FaultOrigin::App,
-                semio_framework_plugin::FaultCode::new("stdio.json.schema-identity-read-only"),
-                "the document schema identity is fixed by the selected JSON dialect",
-            ));
-        }
-        return Ok(Emit {
-            artifact_mutations: vec![JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: next.value }))],
-            description: Some("Edit JSON details".into()),
-            ..Default::default()
-        });
+        return <JsonAnyEditor as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _snapshot);
     }
     let (node_id, value) = match command {
         JsonAnyEditorCommand::SetActiveExample { example_id } => {
@@ -481,6 +470,9 @@ impl ArtifactEditor for JsonAnyEditor {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &store::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
+        if let Some(event) = <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_event(command) {
+            return <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot);
+        }
         json_any_emit(command, doc.snapshot)
     }
 
@@ -507,12 +499,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for JsonAny
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
-
-    fn snapshot_edit_emit(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        json_any_emit(&JsonAnyEditorCommand::EditSnapshot { event: event.clone() }, snapshot)
+    fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| JsonMutation::PatchSnapshot(crate::schema::mutations::patch_snapshot::PatchSnapshot { patch }))
     }
 }
 //#endregion 🔖️Editor

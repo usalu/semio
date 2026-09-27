@@ -16,6 +16,7 @@ export interface CsvMainViewModel {
 export interface CsvSetCell {
   row: number;
   column: number;
+  revision: string;
   value: string;
 }
 

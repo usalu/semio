@@ -15,7 +15,7 @@ async fn render_splits_header_from_data_rows() {
         has_header: true,
         records: vec![crate::CsvRecord { fields: vec![crate::CsvField { value: "name".into(), quoted: false }] }, crate::CsvRecord { fields: vec![crate::CsvField { value: "ada".into(), quoted: false }] }],
     };
-    let node = render(&document).expect("render");
+    let node = render_revisioned(&document, "store-revision").expect("render");
     let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };
     let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode table scene");
     // 📊️ `TableWindowKit` contract: `columnsJson` is `{id, label}` records, `rowsJson` is
@@ -23,5 +23,9 @@ async fn render_splits_header_from_data_rows() {
     let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
     assert_eq!(columns, vec![serde_json::json!({ "id": "0", "label": "name" })]);
     let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
-    assert_eq!(rows, vec![serde_json::json!({ "id": "0", "0": "ada" })]);
+    assert_eq!(rows[0]["0"]["kind"], "editableText");
+    assert_eq!(rows[0]["0"]["value"], "ada");
+    assert_eq!(rows[0]["0"]["action"]["args"]["row"], 0);
+    assert_eq!(rows[0]["0"]["action"]["args"]["column"], 0);
+    assert_eq!(rows[0]["0"]["action"]["args"]["revision"], "store-revision");
 }

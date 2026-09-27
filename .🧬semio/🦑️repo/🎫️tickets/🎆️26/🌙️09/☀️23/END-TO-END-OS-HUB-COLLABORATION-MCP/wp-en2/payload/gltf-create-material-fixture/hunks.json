@@ -1,0 +1,22 @@
+[
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🏭️generator/📜️script.ts",
+  "old": "//#endregion 🧬️Morph targets\n\n//#region 💎️Material\nrecipe(\"create-material\", \"create-material\", \"structural\", \"Inserts a minimal default material at position 1 — create-material{position}.\", (base) => {\n  const before = clone(base);\n  const after = clone(before);\n  create(after, [\"materials\"], 1, { name: \"createdMaterial\" });\n  return { before, after };\n});\nrecipe(\"delete-material\", \"delete-material\", \"structural\", \"Removes material 1 (matB), reindexing every primitive.material reference — delete-material{index}.\", (base) => {\n",
+  "new": "//#endregion 🧬️Morph targets\n\n//#region 💎️Material\nrecipe(\"create-material\", \"create-material\", \"structural\", \"Inserts a default material at position 1, reindexing every primitive.material reference at or past it — create-material{position}.\", (base) => {\n  const before = clone(base);\n  const after = clone(before);\n  createReindexed(after, [\"materials\"], 1, {}, (fn) => remapMaterialRefs(after, fn));\n  return { before, after };\n});\nrecipe(\"delete-material\", \"delete-material\", \"structural\", \"Removes material 1 (matB), reindexing every primitive.material reference — delete-material{index}.\", (base) => {\n"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material/🧫️fixtures/create-material-applied/after.gltf",
+  "old": "      },\n      \"name\": \"matA\"\n    },\n    {\n      \"name\": \"createdMaterial\"\n    },\n    {\n      \"pbrMetallicRoughness\": {\n        \"baseColorFactor\": [\n",
+  "new": "      },\n      \"name\": \"matA\"\n    },\n    {},\n    {\n      \"pbrMetallicRoughness\": {\n        \"baseColorFactor\": [\n"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material/🧫️fixtures/create-material-applied/after.gltf",
+  "old": "            \"TEXCOORD_0\": 7\n          },\n          \"indices\": 8,\n          \"material\": 1\n        }\n      ],\n      \"extras\": {\n",
+  "new": "            \"TEXCOORD_0\": 7\n          },\n          \"indices\": 8,\n          \"material\": 2\n        }\n      ],\n      \"extras\": {\n"
+ },
+ {
+  "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/💎️material/🧫️fixtures/create-material-applied/after.gltf",
+  "old": "            \"WEIGHTS_0\": 13\n          },\n          \"indices\": 14,\n          \"material\": 1\n        }\n      ],\n      \"extras\": {\n",
+  "new": "            \"WEIGHTS_0\": 13\n          },\n          \"indices\": 14,\n          \"material\": 2\n        }\n      ],\n      \"extras\": {\n"
+ }
+]

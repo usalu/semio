@@ -726,6 +726,60 @@
           "$ref": "#/$defs/Sha256Digest"
         }
       }
+    },
+    "DevServeSpawnRequestV1": {
+      "description": "What the shared serve fixture `ensureDevServe` asks its world to start: one shell serve (`react` = the 🧑‍💻dev `serve <variant> react <profile>`, `wgpu` = the wgpu browser server `serve <variant> <profile> --port <port>`) on a loopback port that is never the canonical hub's, local-only when `hubUrl` is null, otherwise joined to that hub; output goes to `logPath`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port",
+        "variant",
+        "renderer",
+        "profile",
+        "hubUrl",
+        "logPath"
+      ],
+      "properties": {
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "not": {
+            "const": 7800
+          }
+        },
+        "variant": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "renderer": {
+          "enum": [
+            "react",
+            "wgpu"
+          ]
+        },
+        "profile": {
+          "enum": [
+            "dev",
+            "release"
+          ]
+        },
+        "hubUrl": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^https?://[^/]+$"
+            }
+          ]
+        },
+        "logPath": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   }
 }

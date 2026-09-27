@@ -21,8 +21,13 @@ use std::rc::Rc;
 use std::task::{Context, Poll, Waker};
 
 enum Slot {
-    Pending { waker: Option<Waker>, partial: Vec<u8> },
-    Ready { result: Result<Vec<u8>, Fault> },
+    Pending {
+        waker: Option<Waker>,
+        partial: Vec<u8>,
+    },
+    Ready {
+        result: Result<Vec<u8>, Fault>,
+    },
     /// 🔁️ A REDISPATCH slot instead of a parked future: no `Waker`, no `RequestFuture`, no task.
     /// `Event::Completed { req, .. }` for this id is answered by dispatching `response_action` back
     /// into the owning app instance with the outcome, not by waking anything — see
@@ -35,7 +40,11 @@ enum Slot {
     /// `Err` is a POISONED accumulator — the pages already overran
     /// `GUEST_HOST_ANSWER_CEILING_BYTES`, and that fault is what the completion delivers instead of
     /// the assembled bytes.
-    Continuation { response_action: String, request_json: String, partial: Result<Vec<u8>, Fault> },
+    Continuation {
+        response_action: String,
+        request_json: String,
+        partial: Result<Vec<u8>, Fault>,
+    },
 }
 
 const REQUEST_SLOTS: usize = 1_024;

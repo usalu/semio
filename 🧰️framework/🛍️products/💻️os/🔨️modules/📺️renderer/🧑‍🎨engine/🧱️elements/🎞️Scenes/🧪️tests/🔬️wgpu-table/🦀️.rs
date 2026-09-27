@@ -289,6 +289,64 @@ fn row_buttons_dispatch_their_own_action_and_menu_placement_buttons_are_not_row_
     assert_eq!(far.action, "removeRow", "the single row-placement button spans the whole cell; the menu button must not claim a segment");
 }
 
+#[test]
+fn table_button_accessibility_uses_visible_row_placement_geometry_and_exact_action() {
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button accessibility fixture");
+    let host_id = fixture["hostId"].as_str().unwrap();
+    let table = TableScene::base(fixture["columns"].to_string(), Value::Array(vec![fixture["row"].clone()]).to_string());
+    let node = table_scene(host_id, table);
+    remember_scene_theme(&Theme::default());
+    let controls = table_button_accessibility_cells(&node, Rect::new(0.0, 0.0, 400.0, 300.0), UiDriverDrag::Handle);
+    assert_eq!(controls.len(), 1, "the menu-placement action is absent from the accepted row controls");
+    let control = &controls[0];
+    assert_eq!(control.key, fixture["expected"]["key"].as_str().unwrap());
+    assert_eq!(control.label, fixture["expected"]["label"].as_str().unwrap());
+    assert!(control.rect.contains(300.0, row_center_y(0)), "the row action owns its exact segmented cell geometry");
+    assert_eq!(serde_json::to_value(&control.action).expect("action json"), fixture["expected"]["action"]);
+
+    stage_table_button_accessibility_cells(host_id, controls);
+    seal_table_button_accessibility_candidates(901);
+    acknowledge_table_button_accessibility_candidates(901);
+    let mut input = InputState::<ActionDescriptor>::default();
+    table_button_accessibility_activate(&node, fixture["expected"]["key"].as_str().unwrap(), &mut input).expect("accepted row button").expect("bounded action");
+    let actions = drain_actions(&mut input);
+    assert_eq!(actions.len(), 1);
+    assert_eq!(serde_json::to_value(&actions[0]).expect("dispatched action json"), fixture["expected"]["action"]);
+
+    let menu_only_row = json!({
+        "id": fixture["row"]["id"],
+        "name": fixture["row"]["name"],
+        "actions": { "kind": "buttons", "buttons": [fixture["row"]["actions"]["buttons"][1].clone()] }
+    });
+    let changed = table_scene(host_id, TableScene::base(fixture["columns"].to_string(), Value::Array(vec![menu_only_row]).to_string()));
+    assert!(table_button_accessibility_activate(&changed, fixture["expected"]["key"].as_str().unwrap(), &mut input).is_none(), "the accepted address cannot activate a button removed from the current Table");
+    assert!(drain_actions(&mut input).is_empty());
+}
+
+#[test]
+fn segmented_table_controls_share_fractional_paint_pointer_and_clipped_accessibility_geometry() {
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button geometry fixture");
+    let rect = |value: &Value| Rect::new(value["x"].as_f64().unwrap() as f32, value["y"].as_f64().unwrap() as f32, value["width"].as_f64().unwrap() as f32, value["height"].as_f64().unwrap() as f32);
+    for case in fixture["geometryCases"].as_array().expect("geometry cases") {
+        let cell_rect = rect(&case["cellRect"]);
+        let body_rect = rect(&case["bodyRect"]);
+        let cell = json!({ "kind": "buttons", "buttons": case["buttons"] });
+        let expected = case["expectedVisibleRects"].as_array().expect("visible rects");
+        for (index, expected) in expected.iter().enumerate() {
+            let segment = table_segment_rect(cell_rect, index, expected.len()).expect("logical segment");
+            assert_eq!(table_visible_rect(segment, body_rect), Some(rect(expected)), "{} segment {index}", case["id"].as_str().unwrap());
+        }
+        for probe in case["probes"].as_array().expect("pointer probes") {
+            let action = table_cell_hit(&cell, cell_rect, probe["x"].as_f64().unwrap() as f32).expect("button cell owns probe").expect("row button action");
+            assert_eq!(action.action, probe["action"].as_str().unwrap(), "{} probe routes to its fractional segment", case["id"].as_str().unwrap());
+        }
+    }
+
+    let stepper = json!({ "kind": "stepper", "value": 3.0, "min": 0.0, "max": 10.0, "step": 2.0, "action": { "controllerId": "controller", "action": "setCount" } });
+    let plus = table_cell_hit(&stepper, Rect::new(20.0, 0.0, 1.0, 4.0), 20.9).expect("stepper owns probe").expect("increment action");
+    assert_eq!(plus.args.as_ref().and_then(|args| args.get("delta")).and_then(semio_framework::DslValue::as_f64), Some(2.0), "the table stepper uses the same unclamped thirds");
+}
+
 /// 🪪️ `TableHost`'s `rowIds` falls back to the row's ordinal when it carries neither `id` nor
 /// `pluginId` — without it every such row collapsed onto the empty id.
 #[test]
@@ -309,7 +367,7 @@ fn editable_text_cell_matches_the_shared_fixture_and_preserves_conflicting_draft
     assert!(press(&node, 200.0, row_center_y(0)).expect("editable cell hit").action.is_none(), "the editor swallows the row action");
 
     let mut input = InputState::<ActionDescriptor>::default();
-    let outcome = table_editable_text_commit_owned(&node, "r1", "value", target.value.as_str(), fixture["replacement"].as_str().unwrap().into(), &mut input).expect("live cell").expect("admitted action");
+    let outcome = table_editable_text_commit_owned(&node, "r1", "value", target.value.as_str(), fixture["replacement"].as_str().unwrap().into(), None, &mut input).expect("live cell").expect("admitted action");
     assert_eq!(outcome, TableEditableTextCommitOutcome::Publishing);
     let action = loop {
         if let Some(action) = input.drive_retained_action_step().expect("retained cell page") {
@@ -317,6 +375,20 @@ fn editable_text_cell_matches_the_shared_fixture_and_preserves_conflicting_draft
         }
     };
     assert_eq!(serde_json::to_value(&action).expect("action json"), fixture["expectedAction"]);
+    let replacement = fixture["replacement"].as_str().unwrap();
+    let awaiting = table_editable_text_commit_owned(&node, "r1", "value", target.value.as_str(), replacement.into(), Some(replacement), &mut input).expect("live pending cell").expect("pending result");
+    assert_eq!(awaiting, TableEditableTextCommitOutcome::AwaitingEcho);
+    assert!(drain_actions(&mut input).is_empty(), "blur while awaiting the scene echo cannot republish the accepted value");
+
+    let echoed_rows = json!([{ "id": "r1", "value": {
+        "kind": "editableText",
+        "value": replacement,
+        "action": fixture["cell"]["action"]
+    } }])
+    .to_string();
+    let echoed = table_scene("editable-table", TableScene::base(columns_json(&[("value", "Value", false)]), echoed_rows));
+    let echoed_outcome = table_editable_text_commit_owned(&echoed, "r1", "value", target.value.as_str(), replacement.into(), Some(replacement), &mut input).expect("live echoed cell").expect("echo result");
+    assert_eq!(echoed_outcome, TableEditableTextCommitOutcome::Unchanged);
 
     let changed_rows = json!([{ "id": "r1", "value": {
         "kind": "editableText",
@@ -349,6 +421,7 @@ fn editable_text_cell_matches_the_shared_fixture_and_preserves_conflicting_draft
             "value",
             acceptance["base"].as_str().unwrap(),
             acceptance["draft"].as_str().unwrap().into(),
+            None,
             &mut input,
         )
         .expect("live acceptance fixture cell")

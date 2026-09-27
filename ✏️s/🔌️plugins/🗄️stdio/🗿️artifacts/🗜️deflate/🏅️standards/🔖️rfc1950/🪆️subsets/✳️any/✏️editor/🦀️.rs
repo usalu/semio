@@ -98,8 +98,7 @@ semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(DeflateEditorC
 //#region 🔖️TextParse
 /// 📐️ Parses `render()`'s `key=value` summary back into `(method, window_bits, level_hint, dict_id)`.
 /// `#`-prefixed and blank lines are ignored (the payload byte-count comment). `None` on any missing
-/// or malformed required key — the caller treats that as a whole-command no-op, never a partial
-/// apply.
+/// or malformed required key or out-of-schema header nibble — the caller rejects the whole command.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::schema::snapshot::DeflateLevelHint, Option<u32>)> {
     let mut fields = std::collections::BTreeMap::new();
@@ -109,10 +108,16 @@ fn parse_header_summary(text: &str) -> Option<(u8, u8, crate::schema::snapshot::
             continue;
         }
         let (key, value) = line.split_once('=')?;
-        fields.insert(key.trim(), value.trim());
+        let key = key.trim();
+        if !matches!(key, "method" | "windowBits" | "levelHint" | "presetDictionary") || fields.insert(key, value.trim()).is_some() {
+            return None;
+        }
     }
     let method = fields.get("method")?.parse::<u8>().ok()?;
     let window_bits = fields.get("windowBits")?.parse::<u8>().ok()?;
+    if method > 15 || window_bits > 15 {
+        return None;
+    }
     let level_hint = main::parse_level_hint(fields.get("levelHint")?)?;
     let dict_id = match fields.get("presetDictionary").copied() {
         None | Some("none") => None,
@@ -314,7 +319,7 @@ impl ArtifactEditor for DeflateEditor {
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
             "textEdit" => Ok(DeflateEditorCommand::ReplaceText {
-                text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text"], ""),
+                text: semio_s_artifact_stdio_contract::window_kit_required_text_argument(args, "text")?,
             }),
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.deflate.unhandled-action"), format!("unknown deflate editor action '{other}'"))),
         })
@@ -326,8 +331,8 @@ impl ArtifactEditor for DeflateEditor {
 
     /// ✏️ Parses the whole `key=value` summary and, if every required field is present and valid,
     /// emits BOTH `SetCompressionParams` and `SetPresetDictionary` as one gesture. A malformed
-    /// summary (missing/unparsable required field) is a documented no-op (`Emit::default()`), never
-    /// a partial apply.
+    /// summary (missing, out-of-schema, or unparsable required field) returns a fault without a
+    /// partial apply.
     fn handle(
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
@@ -367,11 +372,8 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Deflate
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
 
-    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| DeflateMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }

@@ -1,6 +1,27 @@
 use super::*;
 
 #[test]
+fn presenter_checkouts_park_accepted_animation_and_expired_control_clocks_until_handback() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json")).unwrap();
+    let mut animation = AcceptedAnimationClock::default();
+    let mut scheduler = ui_render::FrameScheduler::new();
+    animation.accept(true);
+    for row in fixture["presenterWait"]["deadlineTurns"].as_array().unwrap() {
+        let now = row["atMs"].as_f64().unwrap() / 1000.0;
+        let _ = scheduler.should_render(now);
+        let control = Some(ui_render::Deadline { due: now + row["controlDueMs"].as_f64().unwrap() / 1000.0, reason: InvalidationReason::INPUT_STATE });
+        sync_presented_deadlines(&mut scheduler, &mut animation, control, now, row["waiting"].as_bool().unwrap());
+        match row["nextMs"].as_f64() {
+            Some(expected) => assert!((scheduler.next_deadline().unwrap().due * 1000.0 - expected).abs() < 0.000001, "{row}"),
+            None => assert!(scheduler.next_deadline().is_none(), "{row}"),
+        }
+    }
+    scheduler.request_deadline(5.0, InvalidationReason::RESOURCE_READY);
+    sync_presented_deadlines(&mut scheduler, &mut animation, None, 4.0, true);
+    assert_eq!(scheduler.next_deadline().unwrap().due, 5.0);
+}
+
+#[test]
 fn accepted_animation_clock_survives_discard_and_stops_after_static_presentation() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🖌️render/⏱️schedule/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
     let mut clock = AcceptedAnimationClock::default();

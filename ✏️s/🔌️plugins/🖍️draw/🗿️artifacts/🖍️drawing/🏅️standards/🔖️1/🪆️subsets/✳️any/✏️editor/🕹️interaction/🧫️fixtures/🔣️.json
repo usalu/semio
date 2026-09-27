@@ -1,0 +1,110 @@
+[
+  {
+    "name": "Empty Drawing",
+    "layers": [],
+    "ordered": []
+  },
+  {
+    "name": "Nested Layers and Boolean References",
+    "layers": [
+      {
+        "kind": "group",
+        "base": {
+          "id": "group"
+        },
+        "children": [
+          {
+            "kind": "shape",
+            "base": {
+              "id": "shape"
+            }
+          },
+          {
+            "kind": "group",
+            "base": {
+              "id": "nested"
+            },
+            "children": [
+              {
+                "kind": "path",
+                "base": {
+                  "id": "path"
+                }
+              },
+              {
+                "kind": "text",
+                "base": {
+                  "id": "text"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "image",
+        "base": {
+          "id": "image",
+          "visible": false
+        }
+      },
+      {
+        "kind": "trace",
+        "base": {
+          "id": "trace",
+          "locked": true
+        }
+      },
+      {
+        "kind": "boolean",
+        "base": {
+          "id": "boolean"
+        },
+        "children": [
+          "shape",
+          "path",
+          "missing",
+          "boolean"
+        ]
+      }
+    ],
+    "ordered": [
+      {
+        "id": "group",
+        "granularity": "stroke"
+      },
+      {
+        "id": "shape",
+        "granularity": "stroke",
+        "parent": "group"
+      },
+      {
+        "id": "nested",
+        "granularity": "stroke",
+        "parent": "group"
+      },
+      {
+        "id": "path",
+        "granularity": "stroke",
+        "parent": "nested"
+      },
+      {
+        "id": "text",
+        "granularity": "stroke",
+        "parent": "nested"
+      },
+      {
+        "id": "image",
+        "granularity": "stroke"
+      },
+      {
+        "id": "trace",
+        "granularity": "stroke"
+      },
+      {
+        "id": "boolean",
+        "granularity": "stroke"
+      }
+    ]
+  }
+]

@@ -29,3 +29,5 @@ record remove-sample tag=7
 field payload bytes
 record set-sample-sync tag=8
 field payload bytes
+record patch-snapshot tag=9
+field payload bytes

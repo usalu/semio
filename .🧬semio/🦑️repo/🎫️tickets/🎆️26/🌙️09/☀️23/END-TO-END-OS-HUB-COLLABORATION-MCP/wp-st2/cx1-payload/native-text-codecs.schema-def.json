@@ -1,0 +1,67 @@
+    "NativeTextCodecs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "cases"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.stdio.native-text-codecs/v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "artifactKind",
+              "factoryId",
+              "source",
+              "snapshot"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifactKind": {
+                "enum": [
+                  "s.stdio.txt",
+                  "s.stdio.tsv",
+                  "s.stdio.html"
+                ]
+              },
+              "factoryId": {
+                "enum": [
+                  "stdio.native.txt.v1",
+                  "stdio.native.tsv.v1",
+                  "stdio.native.html.v1"
+                ]
+              },
+              "source": {
+                "type": "string"
+              },
+              "snapshot": {
+                "type": "object",
+                "required": [
+                  "schema"
+                ],
+                "properties": {
+                  "schema": {
+                    "enum": [
+                      "stdio.txt",
+                      "stdio.tsv",
+                      "stdio.html"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "title": "NativeTextCodecs"
+    }

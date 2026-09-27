@@ -1,9 +1,11 @@
 /** ✏️ Pure node editing in path-local coordinates. */
 import { parsePathSegment, type PathSegment } from "../../🟦️.ts";
-import { splitCubic, arcGeometry, arcPoint } from "../🟦️.ts";
+import { splitCubic, arcGeometry, arcPoint, inverse, type Point, type Matrix } from "../🟦️.ts";
 
+export type PathPoint = "anchor" | "control1" | "control2";
 export type PathEdit =
-  | { kind: "coordinate"; index: number; point: "anchor" | "control1" | "control2"; axis: "x" | "y"; value: number }
+  | { kind: "position"; index: number; point: PathPoint; to: [number,number] }
+  | { kind: "coordinate"; index: number; point: PathPoint; axis: "x" | "y"; value: number }
   | { kind: "split"; index: number; t: number }
   | { kind: "convert"; index: number; target: "line" | "cubic" }
   | { kind: "join"; index: number; other: number }
@@ -122,24 +124,30 @@ export function editPath(source: readonly PathSegment[], operation: PathEdit): P
       if (!next || next.kind === "move" || next.kind === "close") segments.splice(start, end - start);
       else { segments[index + 1] = { kind: "move", to: [...next.to] }; segments.splice(index, 1); }
     } else segments.splice(index, 1);
-  } else if (operation.kind === "coordinate") {
-    if (!Number.isFinite(operation.value) || !["x", "y"].includes(operation.axis)) throw new Error("Invalid coordinate");
+  } else if (operation.kind === "coordinate" || operation.kind === "position") {
+    if(operation.kind==="coordinate" && !["x","y"].includes(operation.axis))throw new Error("Invalid coordinate");
+    if(operation.kind==="position" && (operation.to.length!==2 || !operation.to.every(Number.isFinite)))throw new Error("Invalid coordinate");
+    const coordinates=operation.kind==="position"?operation.to:operation.axis==="x"?[operation.value,undefined]:[undefined,operation.value];
+    if(coordinates.length!==2 || coordinates.some(value=>value!==undefined && !Number.isFinite(value)))throw new Error("Invalid coordinate");
     if (item.kind === "close") throw new Error("Select an anchor");
-    const axis = operation.axis === "x" ? 0 : 1;
-    if (operation.point === "anchor") {
-      const delta = operation.value - item.to[axis];
-      item.to[axis] = operation.value;
-      if (item.kind === "cubic") item.ctrl2[axis] += delta;
-      if (item.kind === "quad") item.ctrl[axis] += delta;
-      const next = segments[index + 1];
-      if (next?.kind === "cubic") next.ctrl1[axis] += delta;
-      if (next?.kind === "quad") next.ctrl[axis] += delta;
-    } else if (item.kind === "cubic") {
-      if (operation.point === "control1") item.ctrl1[axis] = operation.value;
-      else if (operation.point === "control2") item.ctrl2[axis] = operation.value;
-      else throw new Error("Invalid handle");
-    } else if (item.kind === "quad" && operation.point === "control1") item.ctrl[axis] = operation.value;
-    else throw new Error("This node has no selected handle");
+    for(const axis of [0,1] as const) {
+      const value=coordinates[axis];
+      if(value===undefined)continue;
+      if (operation.point === "anchor") {
+        const delta = value - item.to[axis];
+        item.to[axis] = value;
+        if (item.kind === "cubic") item.ctrl2[axis] += delta;
+        if (item.kind === "quad") item.ctrl[axis] += delta;
+        const next = segments[index + 1];
+        if (next?.kind === "cubic") next.ctrl1[axis] += delta;
+        if (next?.kind === "quad") next.ctrl[axis] += delta;
+      } else if (item.kind === "cubic") {
+        if (operation.point === "control1") item.ctrl1[axis] = value;
+        else if (operation.point === "control2") item.ctrl2[axis] = value;
+        else throw new Error("Invalid handle");
+      } else if (item.kind === "quad" && operation.point === "control1") item.ctrl[axis] = value;
+      else throw new Error("This node has no selected handle");
+    }
   } else if (operation.kind === "split") {
     if (!(operation.t > 0 && operation.t < 1)) throw new Error("Split position must be between zero and one");
     const previous = segments[index - 1];
@@ -166,4 +174,16 @@ export function editPath(source: readonly PathSegment[], operation: PathEdit): P
     }
   } else throw new Error("Unknown path operation");
   return segments.map(item => parsePathSegment(item));
+}
+
+/** 🖱️ Resolves a world-space drag to an absolute path-local point without changing press offset. */
+export function dragPathPoint(segment: PathSegment,point: PathPoint,matrix: Matrix,start: Point,end: Point,constrained: boolean): Point|null {
+  const local=point==="anchor"?segment.kind!=="close"?segment.to:null:point==="control1"?segment.kind==="cubic"?segment.ctrl1:segment.kind==="quad"?segment.ctrl:null:point==="control2" && segment.kind==="cubic"?segment.ctrl2:null;
+  if(!local || ![...matrix,...start,...end,...local].every(Number.isFinite))return null;
+  const inverted=inverse([matrix[0],matrix[1],matrix[2],matrix[3],0,0]);
+  if(!inverted)return null;
+  let dx=end[0]-start[0],dy=end[1]-start[1];
+  if(constrained){if(Math.abs(dx)>=Math.abs(dy))dy=0;else dx=0;}
+  const result:Point=[local[0]+inverted[0]*dx+inverted[2]*dy,local[1]+inverted[1]*dx+inverted[3]*dy];
+  return result.every(Number.isFinite)?result:null;
 }

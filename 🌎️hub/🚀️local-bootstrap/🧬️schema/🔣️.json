@@ -522,6 +522,33 @@
         }
       }
     },
+    "LocalBootstrapLivenessV1": {
+      "description": "💓️ The hub's liveness body (`GET /healthz`): 200 for as long as the process serves, from the moment its socket is bound. It says nothing about readiness.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "status",
+        "runId",
+        "uptimeMs"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.hub.liveness/v1"
+        },
+        "status": {
+          "const": "live"
+        },
+        "runId": {
+          "type": "string",
+          "maxLength": 32,
+          "pattern": "^(?:[0-9a-f]{32}|production)$"
+        },
+        "uptimeMs": {
+          "$ref": "#/$defs/safeInteger"
+        }
+      }
+    },
     "LocalBootstrapReadinessV1": {
       "type": "object",
       "additionalProperties": false,

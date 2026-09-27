@@ -19,13 +19,14 @@ HELPER = '''        /// 🌡️ Spends the maintenance the plugin runtime spends
         /// commits faster than the fair rotation retires (a typing run: every keystroke amends one edit and displaces its
         /// envelope, snapshot and dag) calls this after each settled command, as the live host does.
         pub fn drain_maintenance_pressure<P: PluginApp>(app: &mut P) {
-            for _ in 0..store::ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY {
-                if !app.maintenance_under_pressure() {
-                    return;
+            let mut idle_stages = 0;
+            while app.maintenance_under_pressure() {
+                match PluginApp::maintenance_step(app, 1, crate::plugin_runtime::RUNTIME_CLOSE_BYTES_PER_STEP).expect("bounded maintenance") {
+                    crate::app::PluginCloseStep::Pending { released_items, released_bytes } if released_items > 0 || released_bytes > 0 => idle_stages = 0,
+                    _ => idle_stages += 1,
                 }
-                drop(PluginApp::maintenance_step(app, 1, crate::plugin_runtime::RUNTIME_CLOSE_BYTES_PER_STEP).expect("bounded maintenance"));
+                assert!(idle_stages <= usize::from(super::MAINTENANCE_STAGES), "a pressured displaced-owner queue made no maintenance progress over a whole stage rotation");
             }
-            assert!(!app.maintenance_under_pressure(), "the displaced-owner queue stayed pressured after a full drain");
         }
 
 '''

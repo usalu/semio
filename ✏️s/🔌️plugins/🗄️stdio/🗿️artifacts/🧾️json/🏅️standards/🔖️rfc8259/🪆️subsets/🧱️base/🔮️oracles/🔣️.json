@@ -41,7 +41,8 @@
         "remove-member",
         "insert-array-element",
         "remove-array-element",
-        "set-scalar"
+        "set-scalar",
+        "patch-snapshot"
       ]
     }
   ],

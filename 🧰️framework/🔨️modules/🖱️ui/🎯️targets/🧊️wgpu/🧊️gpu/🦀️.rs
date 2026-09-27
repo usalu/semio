@@ -100,7 +100,7 @@ static PREPARED_GPU_ABANDONMENT_STATE: [AtomicU8; PREPARED_GPU_ABANDONMENT_SLOTS
 static PREPARED_GPU_ABANDONMENT_OWNER: [AtomicPtr<PreparedGpuPresentCursor>; PREPARED_GPU_ABANDONMENT_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_GPU_ABANDONMENT_SLOTS];
 
 fn prepared_draw_scalar_uses_world_encoded_attachment(cursor: DrawMeasureCursor) -> bool {
-    matches!(cursor, DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassGrid { .. } | DrawMeasureCursor::PassLineVertex { .. })
+    matches!(cursor, DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassGrid { .. } | DrawMeasureCursor::PassLineVertex { .. } | DrawMeasureCursor::PassCurvilinear { .. })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -115,7 +115,7 @@ fn prepared_command_color_layer(draw: &crate::wgpu::draw_types::DrawList, cursor
     let layer = match cursor {
         DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => Some((layer, None)),
         DrawMeasureCursor::LayerVector { layer, item, .. } if item % 3 == 2 => Some((layer, None)),
-        DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassMaterialInstance { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } | DrawMeasureCursor::PassGrid { pass } => {
+        DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassMaterialInstance { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } | DrawMeasureCursor::PassGrid { pass } | DrawMeasureCursor::PassCurvilinear { pass } => {
             let pass = draw.scene_passes.get(pass).ok_or_else(|| "prepared scene pass clip owner was stale".to_string())?;
             Some((pass.layer_index, Some(pass.viewport)))
         }
@@ -892,6 +892,14 @@ impl GpuContext {
                 let segment = line_owner.vertices.get(start..=vertex).ok_or_else(|| "prepared line segment cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_line") });
                 self.pipelines.encode_prepared_world_line(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, pass_owner, segment, scissor).map_err(str::to_owned)?;
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::PassCurvilinear { pass } => {
+                let scissor = scissor.ok_or_else(|| "prepared curvilinear clip piece was missing".to_string())?;
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared curvilinear pass cursor was stale".to_string())?;
+                let composite = self.composite_color.as_ref().ok_or_else(|| "prepared curvilinear composite target was missing".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_curvilinear") });
+                self.pipelines.encode_prepared_world_curvilinear(&self.device, &self.queue, &mut encoder, composite, pass_owner, scissor).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             _ => {}

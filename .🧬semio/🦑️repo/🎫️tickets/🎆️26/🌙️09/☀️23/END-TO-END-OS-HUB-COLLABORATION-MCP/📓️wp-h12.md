@@ -10,11 +10,11 @@ Z3 (Docker/devcontainer/cross-platform), DB1 (db throughput), W3 (all-package ca
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | Residency at scale (audit P1-2): law + live on B2 (many kinds/documents, RSS bounded by capacity, evicted guest reloads with same results, no thrash under round-robin > capacity); again on the all-package catalog | LAWS PASS, live waits for B3: operator budget `OS_HUB_GUEST_RESIDENCY_BYTES` (schema default/min/max), per-operation use counting + frequency admission (anti-thrash), an unadmitted guest lives exactly as long as its operation, counters in observability; 6 residency laws incl. the round-robin-over-capacity law + `no_codec_call_is_served_from_a_row_its_component_has_not_answered` **PASS** (`laws-hub-2`, 10:30). Live `residency-watch --rounds 3` with a 64 MiB budget on B3 pending (W3 chain) |
-| 2 | Boot + readiness: `/readyz` per-package phases/bytes/steps schema-first; cold/warm boot on B2; compiled-guest pipeline cached; lazy codec interpretation | LAWS PASS, live waits for B3: `TrustedCatalogLoadProgressV1` (per-package phase/bytes/rows) in `/readyz` `startup.catalog` + observability; **lazy row verification** (load reads + digests only; unpinned rows verified in the background after hand-over, or by the package's first codec call; never served unverified; a mismatch refuses that package only). Progress law, trust-failure law, readiness laws **PASS** (10:30 / 10:42 / 11:15). `boot-watch` cold/warm on a B3 clone pending |
-| 3 | Session mint + first-creation latency per package after LA's Q1 + codec-app; next bottleneck; laws with bounds | IN PROGRESS: **mint live p50 28 ms** (max 62, 8 sequential, current-tree os-hub 11:04 with LA's Q1/Q2, load ~20; was 261 ms H10 / 8.5 s old 7800). Creation: one guest validation per creation instead of two (genesis validated the identical pair as `Input` then `Output`), law pins one validation + the stage sequence **PASS** (10:30); with item 6 a B2 creation cost ≈ 3 × 830 M fuel, of which ≈ 2 × 1–2 M was the operations. Per-kind creation latency AFTER = B3 (W3 chain) |
+| 1 | Residency at scale (audit P1-2): law + live on B2 (many kinds/documents, RSS bounded by capacity, evicted guest reloads with same results, no thrash under round-robin > capacity); again on the all-package catalog | **LIVE on B3 (15:43)**: 64 MiB budget → 3 resident guests / 57.2 MB every round, compiles per round 16/10/10, admitted 2/0/0, released 1/0/0 (stable set, no thrash), 57/57 creations + open plans, RSS 335.7 → peak 634.9 → settled 53.3 MiB. The watch's `pairsAgree` FAIL is a harness defect (pairs carry two id-derived digest fields: 40 bytes differ between two same-name creations, `pair-diff-*.txt`); guest determinism shown by the probe instead (15/15 identical answers B2 → B3). 6 residency laws PASS. All-package catalog: not published yet |
+| 2 | Boot + readiness: `/readyz` per-package phases/bytes/steps schema-first; cold/warm boot on B2; compiled-guest pipeline cached; lazy codec interpretation | **LIVE on B3 (15:0x)**: cold `/readyz` 200 in **13.7 s** (H10 before 363.9 s, H10 after2 153.9 s on B2), every package pinned in the background at 98.0 s, 0 refused; warm **12.3 s** (13.5–14.5 s); SIGTERM → exit 0.53 / 0.11 s; `hub-boot` acceptance PASS (load 40–50). Laws PASS |
+| 3 | Session mint + first-creation latency per package after LA's Q1 + codec-app; next bottleneck; laws with bounds | **LIVE on B3**: mint p50 **49 ms** (p95 297, load 45 + background verification; 28 ms on 8160 at load 16) vs 261–264 ms before; creation per kind measured over 3 rounds: puzzle 2d **98–256 s**, 3d **40–217 s**, 5d 49–108 s (H11 before: 749 / 579 s); others 1–47 s. **Next bottleneck, measured:** 99.4 % of a B3 puzzle codec call is the guest's one-time bundle assembly (521.5 M of 524.7 M fuel; the op ≈ 3.2 M), paid per call because the hub instantiates a fresh instance per call → fix = one post-assembly checkpoint per compiled guest, restored per call (proposal in the log; not made, source freeze) |
 | 4 | Generative/fuzz hostile-input law over every hub HTTP/WS route + frame (deterministic seeds, bounded time, shrinking); fix findings | **DONE**: law PASS (3 seeds, 1 188 requests + 24 socket sequences, 4.1 s, 0 findings) after fixing its 2 real findings (extension-asset `%00` → 500; document socket dropped without close frame → TCP reset); bin laws 11/11 PASS 10:42. Was: `🌎️hub/🧪️tests/🎲️hostile-generative/🦀️.rs` (SHA-256 counter draws, 7 mutation kinds, schema-driven bodies, shrinking, directory + document socket frame sequences); fixture `generative` section; node:crypto oracle for the draw vectors **PASS** (TS 4/4) |
-| 6 | Coordinator top item (09-27 05:1x): puzzle creation 749 s / 579 s (H11) → root-cause genesis, fix at the root, law with a bound, before/after | LANDED (native + wasm32 green, landing row): (a) puzzle 2d/3d `initial_snapshot()` do only their document (2d warmed two example documents, 3d synced a precompute session into a throwaway app); (b) `semio-framework-plugin`: codec calls construct NO app (per-app `ArtifactCodecTableV1`, LA handed over). Laws **4/4 PASS** (10:12): 2d + 3d `the_initial_snapshot_costs_only_its_document`, `codec_calls_construct_no_app`, puzzle `guest_codec_tables_answer_like_the_declared_native_codecs`; hub gis/vcs parity law runs with the hub laws. After-measurement = W3's rebuilt catalog (creation time + fuel) |
+| 6 | Coordinator top item (09-27 05:1x): puzzle creation 749 s / 579 s (H11) → root-cause genesis, fix at the root, law with a bound, before/after | **LANDED + measured on B3**: codec calls fuel −37 % puzzle (832 → 524.7 M), −77 % note, −75 % draw, −82 % wfc; **all 15 answers byte-identical B2 → B3** (4 plugins, 5 kinds); puzzle creation 749 / 579 s → 98–256 s / 40–217 s at load 40–55. Laws 4/4 PASS. The remaining 521 M is puzzle's bundle assembly per fresh instance (item 3) |
 | 5 | Observability: structured logs + metrics (per-route latency, admission waits, residency hits/evictions, db I/O census) on an admin route, en + de | **DONE (live)**: `HubObservabilityV1` schema + Rust projection, per-route table (templates only), residency + catalog + DB I/O census incl. DB1's admission waits on `/admin/api/observability`; admin tab **Observability** (en + de). Laws: Rust lib + 5 bin laws **PASS** (11:15), Ajv oracle 3/3, admin vitest 21/21. Live on 8160 (11:05): body **Ajv-valid**. The live run exposed a blind spot — the address-bucket limiter ran outside routing, so its 429s never reached the route table — fixed (limiter now a `route_layer` inside the metrics) + law `the_observability_route_counts_a_limiter_refusal_under_its_route` **PASS** |
 
 ### Session 13 log
@@ -245,3 +245,71 @@ Z3 (Docker/devcontainer/cross-platform), DB1 (db throughput), W3 (all-package ca
   limiter fix) → `boot-watch` cold + 1 warm on a B3 copy (8162) → hub 8161 on a B3 clone with `OS_HUB_GUEST_RESIDENCY_BYTES`
   64 MiB → mint ×8 → `residency-watch --rounds 3` (per-kind creation ms, compiles/hits/evictions per round, pair digests)
   → observability (`wp-h12/obs-read.ts`, Ajv) → stop. Hubs at NI 0, one at a time.
+- 12:1x README: the `GET /admin/api/observability` row now documents the full `HubObservabilityV1` body (routes by template,
+  limiter 429s counted, `null` residency/catalog without a catalog, `dbIo`).
+- 12:1x tried a B2 cold/warm ready measurement at load ~5 with the 11:04 current-tree hub (8163, B2 clone like H10's):
+  **the hub refuses B2 at boot** (exit, both boots): `decoded package descriptor identity does not exactly match its trust
+  record` — B2 predates CHANNEL_VERSION 18, so B2 cannot serve any current-tree hub (B3 is the only after-catalog). The
+  diagnostic named neither the package nor the field → fixed: `validate_descriptor` names the package and every differing
+  field, and a catalog of another app channel is refused as such ("package X was published for app channel 17 but this hub
+  speaks app channel 18: publish the trusted catalog again…"); law `descriptor_projection_rejects_…` extended (package +
+  field; stale channel names both channels); README boot section says so. My poller was stuck on the dead hub (a 600 s
+  tool timeout moved it to the background) → killed its python + loop shell (mine); no hub left running.
+  12:20 `cargo check -p semio-hub --bins --tests` **green** (warnings shown), bin laws 17/17 PASS (`check-hub-3.txt`);
+  12:22 lib laws **59/60** — the red is still T12's `every_committed_editor_…_one_rule` (awaits the describe), both
+  descriptor laws + `all_trust_failures…` PASS (`laws-hub-4.txt`).
+- 12:32 the coordinator paused the slice ("only the coordinator running now"): no further edits, nothing new started.
+  `b3-measure.sh` (pid 38195) stays armed; it is waiting on `b3-publish.rc`. Observed at 12:32: W3's `b3-rebuild-all.txt`
+  ends in `rebuild-all 6/11 check (registry)` → `error: script "nx" exited with code 1` (no `b3-publish.rc` yet). No hub
+  of mine is running.
+- 14:5x RESUME: B3 published 13:54 (generation `e3c0c98e…`, the same 9 packages as B2, components 233.1 MiB); 7800 READY on
+  B3 13:57. My armed chain had stopped 13:18 on the first failed publication (rc=1). Adapted `b3-measure.sh`: no chain
+  wait; hub binary = a copy (cp + ad-hoc re-sign) of the one 7800 runs, `s13-w3-bin/s13-w3-hub-7800-b3/os-hub` (it has
+  the 11:14 limiter fix + the 12:20 channel refusal); relaunched detached 14:57 (pid 24676). Load 40–50 throughout.
+- 15:0x **AFTER, owned-probe fuel, same probe binary as the BEFORE rows (10:31 build of this tree's interpreter), B3 vs B2:**
+  | package / schema | op | BEFORE B2 fuel | AFTER B3 fuel | Δ |
+  |---|---|---|---|---|
+  | puzzle.2d.fixture | genesis / print-mirror / pack-schema-hash | 832.6 / 831.6 / 830.3 M | 524.7 / 523.8 / 522.4 M | −37 % |
+  | puzzle.3d | genesis / print-mirror / pack-schema-hash | 832.4 / 831.5 / 830.2 M | 524.6 / 523.8 / 522.3 M | −37 % |
+  | note.document | genesis / print-mirror / pack-schema-hash | 37.4 / 36.6 / 35.3 M | 8.75 / 7.88 / 6.61 M | −77 % |
+  | drawing.document | genesis / print-mirror / pack-schema-hash | 35.7 / 34.9 / 33.3 M | 9.10 / 8.36 / 6.77 M | −75 % |
+  | s.wfc.wfc2d | genesis / print-mirror / pack-schema-hash | 178.1 / 178.2 / 175.1 M | 31.7 / 31.9 / 28.7 M | −82 % |
+  **Every one of the 15 outputs is byte-identical B2 ↔ B3** (FNV-1a of each answer equal: e.g. puzzle 2d genesis
+  `027e9858…`, 3d `25320c5a…`, note `1069f648…`, draw `a3b28e7c…`, wfc `91a08f42…`) — the codec-table change answers exactly
+  as the app-constructing path did, now live over 4 plugins (5 kinds).
+  **Next bottleneck, measured (warm probe, one instance, `probe-b3-puzzle-warm.txt`):** the first call on a fresh puzzle
+  instance costs 521.5 M fuel, every later call on the same instance 0.08 M (a refused genesis) — i.e. **99.4 % of a B3
+  puzzle codec call is the guest's one-time bundle assembly** (`__semio_ensure_plugin_runtime` → `puzzle::plugin()`:
+  3 `declare_artifact` + 6 mutation rosters + `try_build`; `install_plugin_bundle` itself only stores it), the operation
+  itself ≈ 3.2 M. The hub instantiates a fresh instance per codec call (`OwnedRuntime::codec_call`), so every call pays it.
+  Root fix proposal (not made — measurements-only window, and H11 is inside `codec_call` for cancellation now): keep ONE
+  post-assembly checkpoint per compiled guest (instantiate → a cheap export that runs the ensure, e.g. `pack-schema-hash`
+  → `checkpoint()`), and restore from it for each codec call; it lives and is released with the compiled guest in the
+  residency ledger (its bytes counted). Expected per-call cost ≈ the operation (1–3 M fuel), i.e. a puzzle creation from
+  minutes to about a second; results stay identical because every call starts from the same state. Also worth a guest-side
+  look at why puzzle's assembly alone is 521 M while note/draw assemble in ≈ 6 M.
+- 15:0x **AFTER, boot on B3** (`boot-watch-b3.txt`, fresh temp root, the 7800 binary, load ~40–50): cold `/readyz` 200 in
+  **13.7 s**, every package pinned in the background at 98.0 s, 0 refused, SIGTERM → exit 0.53 s; warm restart ready in
+  **12.3 s** (all rows from verification memory at 12.3 s), SIGTERM → exit 0.11 s. BEFORE (H10, B2, load 28–60): cold
+  363.9 s → 153.9 s (H10 after2), warm 13.5–14.5 s. `hub-boot` acceptance PASS.
+- 15:09 **AFTER, mint on B3** (hub 8161, B3 clone, 64 MiB residency, ready 9 s after start): 8 sequential sign-ins p50
+  **49 ms**, min 26, p95/max 297 ms — measured under load ~45 while the hub's background verification interpreted puzzle
+  rows; on the idle-catalog hub 8160 (load 16) p50 was 28 ms. BEFORE (H10): p50 261–264 ms.
+- 15:43 **AFTER, residency round-robin on B3** (`residency-8161-b3.txt`; hub 8161, `OS_HUB_GUEST_RESIDENCY_BYTES` 64 MiB vs
+  the 233 MiB of components, 19 creatable kinds × 3 rounds, load 40–55): **57/57 creations ready + open plan 200**; the
+  budget holds **3 resident guests / 57.2 MB** every round; per round compiles **16 / 10 / 10**, hits 23 / 24 / 24,
+  admitted 2 / 0 / 0, released 1 / 0 / 0 — a stable resident set, no thrash (a thrashing LRU would recompile on every
+  creation that follows a different package). RSS 335.7 MiB baseline → peak 634.9 → **settled 53.3 MiB** (581.6 MiB
+  released). Creation per kind (rounds 1/2/3, ms): 2d.puzzle 219 737 / 256 155 / 98 292; 3d.puzzle 217 471 / 122 280 /
+  39 690; 5d.puzzle 108 195 / 48 879 / 49 750; s.stdio.md 159 350 / 30 727 / 47 359; wfc kinds 4–32 s; gis 11–38 s;
+  block/drawing/note/text/animate 1–10 s. BEFORE (H11, B2): 749 s / 579 s per puzzle creation.
+  The watch's acceptance says FAIL only on **"pairs differ" for every kind — a harness defect, not a residency one:**
+  15:5x `wp-h12/pair-diff.ts` (hub restarted on the same root) created 2d.drawing and s.note.note three times each in one
+  space (names A, A, B): two creations with the SAME name differ in exactly 40 bytes (a 4-byte field right after the
+  schema string and a 36-byte field at the end of the pair) and nowhere else, with the document id already replaced
+  (`pair-diff-{drawing,note}.txt`). Those are digests over id-bearing content (all bytes differ at random — a hash, not
+  a clock), so two documents' pairs can never be byte-equal and `pairsAgree` cannot pass by construction. The
+  guest-determinism evidence is the probe instead: the same document id yields byte-identical genesis/print-mirror/hash
+  answers even across two different components (B2 → B3, 15/15). Harness fix (not made, source freeze 15:45):
+  compare per kind the guest's `print-mirror` DSL of each created pair, or strip those two digest fields, or re-validate
+  the round-1 pair through the recompiled guest each round. Hub 8161 stopped 15:5x (686 ms); no hub of mine running.

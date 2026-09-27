@@ -565,11 +565,7 @@ impl InstanceMetadataRegistry {
 /// `Err(fault)` gets its own variant (never silently dropped).
 enum TaskResumeOutcome {
     Command(Vec<u8>),
-    Emit {
-        artifact_ops: Vec<u8>,
-        config_ops: Vec<u8>,
-        draft_ops: Vec<u8>,
-    },
+    Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
     Fault(semio_framework::Fault),
 }
 
@@ -777,10 +773,7 @@ pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, sem
 /// testable without a live `PluginRuntime`: takes the id's continuation (if any) and builds the
 /// exact `(instance, action, args)` triple the follow-up dispatch uses. `None` means the id is an
 /// ordinary parked-future request and must go to `RequestRegistry::resolve` instead.
-pub(crate) fn take_extension_response(
-    req: semio_framework::kernel::RequestId,
-    terminal: Result<Vec<u8>, semio_framework::Fault>,
-) -> Result<(u32, String, dsl::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
+pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, dsl::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
     let Some(continuation) = REGISTRY.with(|registry| registry.take_continuation(req)) else { return Err(terminal) };
     let (instance, response_action, request_json, outcome) = continuation.into_response(terminal);
     Ok((instance, response_action, extension_response_args(&request_json, &outcome)))
@@ -1216,10 +1209,7 @@ mod wit_bridge {
 
     /// 📥️ `reactor::stage-command-page` body — see the WIT for why the page is staged instead of
     /// riding `poll`'s parameter list.
-    pub async fn stage_command_page(
-        cursor: crate::component::wasip2::exports::semio::framework::reactor::CommandPageCursor,
-        bytes: Vec<u8>,
-    ) -> Result<(), semio_framework::Fault> {
+    pub async fn stage_command_page(cursor: crate::component::wasip2::exports::semio::framework::reactor::CommandPageCursor, bytes: Vec<u8>) -> Result<(), semio_framework::Fault> {
         let staged = wit_command_page_to_kernel(cursor, bytes)?;
         let staged = (staged.0, Box::new(staged.1));
         STAGED_PAGES.with(|pages| {

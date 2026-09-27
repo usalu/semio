@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/editor/retained/checkpoint/schema.json",
+  "title": "Archive Text Cursor Checkpoint",
+  "description": "Fixed 96-byte little-endian cursor; restore requires the same immutable host context and command. No entry payload is copied.",
+  "type": "array",
+  "minItems": 96,
+  "maxItems": 96,
+  "items": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 255
+  },
+  "x-semio-layout": [
+    {
+      "offset": 0,
+      "bytes": 4,
+      "value": "ZAT1"
+    },
+    {
+      "offset": 4,
+      "bytes": 1,
+      "value": 1
+    },
+    {
+      "offset": 5,
+      "bytes": 1,
+      "flags": [
+        "matched",
+        "collision",
+        "complete",
+        "bound"
+      ]
+    },
+    {
+      "offset": 6,
+      "bytes": 2,
+      "value": 0
+    },
+    {
+      "offset": 8,
+      "bytes": 8,
+      "field": "cursor"
+    },
+    {
+      "offset": 16,
+      "bytes": 8,
+      "field": "matched",
+      "absent": 0
+    },
+    {
+      "offset": 24,
+      "bytes": 8,
+      "field": "entryCount"
+    },
+    {
+      "offset": 32,
+      "bytes": 64,
+      "field": "commandDigest",
+      "encoding": "lowercase ASCII BLAKE3 hexadecimal",
+      "input": "nodeId + NUL + revision + NUL + value"
+    }
+  ]
+}

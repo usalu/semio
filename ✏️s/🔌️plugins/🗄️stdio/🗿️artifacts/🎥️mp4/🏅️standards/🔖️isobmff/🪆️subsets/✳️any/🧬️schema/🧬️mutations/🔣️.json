@@ -6,6 +6,12 @@
   "oneOf": [
     {
       "allOf": [
+        { "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp4/isobmff/any/mutation/patch-snapshot/schema.json" },
+        { "type": "object", "required": ["mutation"], "properties": { "mutation": { "const": "patchSnapshot" } } }
+      ]
+    },
+    {
+      "allOf": [
         {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/mp4/isobmff/any/mutation/insert-sample/schema.json"
         },

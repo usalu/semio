@@ -16,6 +16,7 @@ import {
   Button,
   bootstrapElementsSurfaceChromeDocument,
   builtinUiThemes,
+  uiDataLabel,
   uiI18n,
   type Anchor,
   type ElementsSurfaceAppearance,
@@ -67,7 +68,7 @@ import { EMPTY_INTERACTION_STATE, type InteractionState } from "../../../../../.
 // module-top-level circular-import initialization-order bug documented in ui-react's
 // 🧱️elements/🫀️core/Ports/🟦️.tsx header comment (see 📋️w0-status.md's "W3 follow-up" section).
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
-import { DEFAULT_PANEL_WIDTH_PX } from "../🛠️ShellHelpers/🟦️.tsx";
+import { DEFAULT_PANEL_WIDTH_PX, mergeRecordPreservingIdentity } from "../🛠️ShellHelpers/🟦️.tsx";
 import { FrameworkOsShell } from "../🏛️ShellHost/🟦️.tsx";
 import type { WindowFault } from "../🏛️ShellHost/🩺️fault/🟦️.ts";
 import { type PluginWasmHandle } from "../🔌️PluginRuntime/🟦️.tsx";
@@ -859,8 +860,11 @@ function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiSta
 
 function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): SpawnedWindowState {
   switch (action.type) {
-    case "SET_SPAWNED_WINDOW_UI":
-      return { ...state, spawnedWindowUiByWindowId: resolveUpdatable(action.value, state.spawnedWindowUiByWindowId), spawnedWindowFault: action.fault ?? null };
+    case "SET_SPAWNED_WINDOW_UI": {
+      const spawnedWindowUiByWindowId = resolveUpdatable(action.value, state.spawnedWindowUiByWindowId);
+      const spawnedWindowFault = action.fault ?? null;
+      return Object.is(spawnedWindowUiByWindowId, state.spawnedWindowUiByWindowId) && Object.is(spawnedWindowFault, state.spawnedWindowFault) ? state : { ...state, spawnedWindowUiByWindowId, spawnedWindowFault };
+    }
     case "SET_SPAWNED_WINDOW_ENGAGEMENTS":
       return withField(state, "spawnedWindowEngagements", resolveUpdatable(action.value, state.spawnedWindowEngagements));
     case "SET_SPAWNED_WINDOW_MEASURES":
@@ -931,6 +935,13 @@ function commandPanelReducer(state: CommandPanelState, action: ShellAction): Com
   }
 }
 
+/** 🏷️ Updates the named leaf while retaining every unaffected branch and its layout geometry. */
+function withWindowLayoutTitle(node: WindowLayoutNode, windowId: string, title: string): WindowLayoutNode {
+  if (node.kind === "window") return node.id === windowId && node.title !== title ? { ...node, title: uiDataLabel(title) } : node;
+  const children = node.children.map(child => withWindowLayoutTitle(child, windowId, title));
+  return children.some((child, index) => child !== node.children[index]) ? { ...node, children } as WindowLayoutNode : node;
+}
+
 function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): ShellLayoutState {
   switch (action.type) {
     case "SET_PANEL_VISIBLE":
@@ -979,7 +990,8 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
     case "SET_WINDOW_TITLE": {
       const windowTitlesById = { ...state.windowTitlesById, [action.windowId]: action.title };
       const extraWindowInstances = state.extraWindowInstances.map((entry) => (entry.id === action.windowId ? { ...entry, title: action.title } : entry));
-      return { ...state, windowTitlesById, extraWindowInstances };
+      const shellLayout = state.shellLayout ? withWindowLayoutTitle(state.shellLayout, action.windowId, action.title) : null;
+      return { ...state, windowTitlesById, extraWindowInstances, shellLayout };
     }
     case "SET_WINDOW_ICON": {
       const windowIconsById = { ...state.windowIconsById, [action.windowId]: action.iconId };
@@ -1152,11 +1164,14 @@ function tutorialReducer(state: TutorialState, action: ShellAction): TutorialSta
   }
 }
 
-/** 🕹️ Own local interaction state used by renderer surfaces and typed tutorial capture/replay. */
+/** 🕹️ Own local interaction state used by renderer surfaces and typed tutorial capture/replay. An observation is a
+ * freshly decoded guest read, so it is structurally shared with the current state: an unchanged observation keeps the
+ * slice (and the shell) identical, a hover-only change keeps every other field's identity (ticket 26/09/23 F3: every
+ * world-3d hover re-rendered the whole shell twice). */
 function interactionReducer(state: InteractionState, action: ShellAction): InteractionState {
   switch (action.type) {
     case "INTERACTION_STATE_OBSERVED":
-      return action.state;
+      return mergeRecordPreservingIdentity(state, Object.entries(action.state)) as InteractionState;
     default:
       return state;
   }
@@ -1165,13 +1180,18 @@ function interactionReducer(state: InteractionState, action: ShellAction): Inter
 
 /** 🧵️ Root reducer for `FrameworkOsShell` — fans every action out to its owning slice reducer; slices that ignore an action's type return their input unchanged, so unrelated slices keep referential identity. */
 export function shellReducer(state: ShellState, action: ShellAction): ShellState {
+  const pluginRuntime = pluginRuntimeReducer(state.pluginRuntime, action);
+  const previousSession = state.pluginRuntime.session;
+  const nextSession = pluginRuntime.session;
+  const ownerChanged = previousSession?.pluginId !== nextSession?.pluginId || previousSession?.instanceId !== nextSession?.instanceId || previousSession?.app.id !== nextSession?.app.id;
+  const layout = shellLayoutReducer(state.layout, action);
   const next: ShellState = {
-    pluginRuntime: pluginRuntimeReducer(state.pluginRuntime, action),
+    pluginRuntime,
     windowUi: windowUiReducer(state.windowUi, action),
     spawnedWindow: spawnedWindowReducer(state.spawnedWindow, action),
     actionPane: actionPaneReducer(state.actionPane, action),
     commandPanel: commandPanelReducer(state.commandPanel, action),
-    layout: shellLayoutReducer(state.layout, action),
+    layout: ownerChanged ? { ...layout, windowTitlesById: {}, windowIconsById: {} } : layout,
     overlays: overlayReducer(state.overlays, action),
     tutorial: tutorialReducer(state.tutorial, action),
     interaction: interactionReducer(state.interaction, action),

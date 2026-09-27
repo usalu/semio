@@ -19,7 +19,7 @@ pub mod bounded_clone;
 //#region 🔁️Codec
 #[path = "🔁️codec/🦀️.rs"]
 mod codec;
-pub use codec::{FromValue, ToValue, ValueError};
+pub use codec::{FromValue, ToValue, ValueEdit, ValueError, ValueShape};
 //#endregion 🔁️Codec
 
 //#region 🔖️Number

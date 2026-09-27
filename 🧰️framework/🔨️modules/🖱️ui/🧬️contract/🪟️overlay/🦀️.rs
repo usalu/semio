@@ -238,7 +238,7 @@ pub fn resolve_select_inline_left(trigger: OverlayRect, content_width: f32, alig
 
 /// ⏱️ Dwell before a hover tooltip opens — React's `CHROME_CONTROL_TOOLTIP_DELAY_MS` (400 ms,
 /// `🧱️elements/💡️ChromeControlHint/🟦️.tsx:21`).
-pub const TOOLTIP_DWELL_SECONDS: f32 = 0.4;
+pub const TOOLTIP_DWELL_SECONDS: f64 = 0.4;
 
 /// ⏱️ How long a tooltip lingers after the pointer leaves both its anchor and its own bounds.
 pub const TOOLTIP_HOVER_OUT_SECONDS: f32 = 0.4;

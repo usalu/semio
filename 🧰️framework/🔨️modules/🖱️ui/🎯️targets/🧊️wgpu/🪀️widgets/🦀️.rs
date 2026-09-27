@@ -6,7 +6,7 @@ use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{HitKind, HitTarget, InputState};
 use crate::wgpu::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
-use crate::wgpu::text::FontAtlas;
+use crate::wgpu::text::{FontAtlas, TextFace};
 use crate::wgpu::theme::{Rgba, Theme};
 use crate::wgpu::IconName;
 use crate::wgpu::UiTreeActionPlacement;
@@ -845,17 +845,22 @@ pub fn wrap_text(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -
 /// is why this is a weight swap and not the SIZE swap the `Text` node used to make.
 pub fn draw_text_weighted(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba, weight: crate::wgpu::text::TextWeight) {
     draw_text_on(draw, atlas, text, x, y, size, color);
-    if matches!(weight, crate::wgpu::text::TextWeight::Semibold) {
-        draw_text_on(draw, atlas, text, x + crate::wgpu::text::faux_bold_offset(size), y, size, color);
+    if let Some(offset) = weight.synthetic_offset(size) {
+        draw_text_on(draw, atlas, text, x + offset, y, size, color);
     }
 }
 
 pub fn draw_text_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
+    draw_text_face_on(draw, atlas, TextFace::Sans, text, x, y, size, color);
+}
+
+/// 🔤️ Paints one run with a selected authored face into an explicit draw list.
+pub fn draw_text_face_on(draw: &mut DrawList, atlas: &mut FontAtlas, face: TextFace, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let atlas_w = atlas.width as f32;
     let atlas_h = atlas.height as f32;
     let mut cursor_x = x;
     for ch in text.chars() {
-        let glyph = atlas.ensure_glyph(ch, size);
+        let glyph = atlas.ensure_glyph_for(face, ch, size);
         let gw = glyph.logical_width();
         let gh = glyph.logical_height();
         let gx = cursor_x + glyph.bearing_x;
@@ -883,11 +888,16 @@ pub fn draw_text_overlay_on(draw: &mut DrawList, atlas: &mut FontAtlas, text: &s
 }
 
 pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
+    draw_text_face(ctx, TextFace::Sans, text, x, y, size, color);
+}
+
+/// 🔤️ Paints one run with a selected authored face through a widget context.
+pub fn draw_text_face<E>(ctx: &mut WidgetContext<'_, E>, face: TextFace, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let atlas_w = ctx.atlas.width as f32;
     let atlas_h = ctx.atlas.height as f32;
     let mut cursor_x = x;
     for ch in text.chars() {
-        let glyph = ctx.atlas.ensure_glyph(ch, size);
+        let glyph = ctx.atlas.ensure_glyph_for(face, ch, size);
         let gw = glyph.logical_width();
         let gh = glyph.logical_height();
         let gx = cursor_x + glyph.bearing_x;

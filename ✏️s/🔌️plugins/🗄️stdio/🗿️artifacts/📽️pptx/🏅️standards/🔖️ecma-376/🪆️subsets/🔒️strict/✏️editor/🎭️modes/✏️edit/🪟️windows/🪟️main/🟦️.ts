@@ -15,10 +15,11 @@ export interface PptxStrictMainViewModel {
   pages: PptxStrictMainPage[];
 }
 
-/** ✏️ `set-page` payload shape — mirrors `PptxStrictEditorCommand::SetPage`. Only writes the
- * FIRST text-bearing shape on the addressed slide (see the Rust window's own doc comment). */
+/** ✏️ Strict optimistic-concurrency payload for one prefilled document text draft. */
 export interface PptxStrictSetPage {
-  index: number;
+  page: number;
+  item: number;
+  revision: string;
   text: string;
 }
 

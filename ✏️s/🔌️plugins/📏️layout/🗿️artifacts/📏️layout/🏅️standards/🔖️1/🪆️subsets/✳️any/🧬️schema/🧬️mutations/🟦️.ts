@@ -1,13 +1,13 @@
 /** 🧬️ LayoutMutation — closed semantic mutation vocabulary for the layout document, mirrors
- *  `🧬️mutations/🦀️.rs`'s `LayoutMutation` enum and its 25 per-verb leaf structs
+ *  `🧬️mutations/🦀️.rs`'s `LayoutMutation` enum and its 28 per-verb leaf structs
  *  field-for-field (`.../🧬️mutations/<verb-folder>/🦀️.rs`, one flat leaf file per verb, no nested
  *  `🦠️mutation` subfolder). `LayoutMutation` carries NO `#[serde(tag = ...)]` — confirmed absent on
- *  the enum itself and on every one of its 25 leaf structs — so it serializes with serde's default
+ *  the enum itself and on every one of its 28 leaf structs — so it serializes with serde's default
  *  EXTERNALLY TAGGED shape: `{ "<PascalCaseVariantName>": { ...leaf-struct-fields } }`, proven by
  *  every committed `🧪️tests/*​/🦠️mutation/🔣️.json` fixture (e.g. `{"ChangePageWidth":
  *  {"id":"page-1","new_width":240.0}}`). This is NOT raster/jack's internally-tagged `{ mutation:
  *  'camelCase', ...fields }` shape — those enums carry an explicit `#[serde(tag = "mutation",
- *  rename_all = "camelCase")]` that layout's `LayoutMutation` lacks. None of the 25 leaf structs
+ *  rename_all = "camelCase")]` that layout's `LayoutMutation` lacks. None of the 28 leaf structs
  *  carry `#[serde(rename_all = ...)]` either, so every leaf's own field names are the literal Rust
  *  snake_case names verbatim (also confirmed field-by-field against the committed fixtures). */
 
@@ -241,6 +241,12 @@ export interface ResizeFrame {
   new_height: number;
 }
 
+export interface RotateFrame {
+  page_id: string;
+  frame_id: string;
+  new_rotation: number;
+}
+
 export interface ChangeFrameFill {
   page_id: string;
   frame_id: string;
@@ -263,6 +269,19 @@ export interface ChangeFrameColumns {
   page_id: string;
   frame_id: string;
   new_columns: number;
+}
+
+export interface UpdateGrid {
+  baseline_grid: number;
+  baseline_offset: number;
+  snap_to_baseline: boolean;
+}
+
+export interface SetFrameFlags {
+  page_id: string;
+  frame_id: string;
+  locked?: boolean;
+  visible?: boolean;
 }
 //#endregion 🔖️Leaves
 
@@ -289,8 +308,11 @@ export type LayoutMutation =
   | { DeleteFrame: DeleteFrame }
   | { MoveFrame: MoveFrame }
   | { ResizeFrame: ResizeFrame }
+  | { RotateFrame: RotateFrame }
   | { ChangeFrameFill: ChangeFrameFill }
   | { ChangeFrameStroke: ChangeFrameStroke }
   | { ChangeFrameWrapMode: ChangeFrameWrapMode }
-  | { ChangeFrameColumns: ChangeFrameColumns };
+  | { ChangeFrameColumns: ChangeFrameColumns }
+  | { UpdateGrid: UpdateGrid }
+  | { SetFrameFlags: SetFrameFlags };
 //#endregion 🔖️Mutations

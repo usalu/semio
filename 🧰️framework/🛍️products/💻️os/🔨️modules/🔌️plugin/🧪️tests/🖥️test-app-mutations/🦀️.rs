@@ -4,5 +4,5 @@ pub mod config;
 pub(crate) use config::{ChangeTestConfigSelection, TestConfig, TestConfigMutation};
 #[path = "../🖥️test-app-mutations-document/🦀️.rs"]
 pub mod document;
-pub(crate) use document::{SetSlotChildren, SetCount, SetLabel, TestMutation, TestSnapshot};
+pub(crate) use document::{SetCount, SetLabel, SetSlotChildren, TestMutation, TestSnapshot};
 //#endregion 🧪️TestAppMutationFixtures

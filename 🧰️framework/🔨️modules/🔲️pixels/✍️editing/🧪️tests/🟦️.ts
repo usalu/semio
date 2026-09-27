@@ -105,3 +105,60 @@ describe("pixel editing contract", () => {
     expect(progress).toEqual([1,2,3,4]);
   });
 });
+
+for (const fixture of fixtures.cases.filter(row=>row.operation.kind==="alphaStroke")) test(`${fixture.name}: retained job and libvips oracle`,async()=>{
+  const source=fixture.image!;
+  const selection="selection" in fixture?Uint8Array.from(fixture.selection!):undefined;
+  const job=new PixelEditJob({...source,pixels:Uint8Array.from(source.pixels)},fixture.operation as PixelOperation,selection);
+  while(!job.advance(1).done)expect(()=>job.result()).toThrow();
+  expect([...job.result().pixels]).toEqual(fixture.expected);
+  const operation=fixture.operation as {alpha:number;opacity:number};
+  const coverage=(fixture as {brushCoverage:number[]}).brushCoverage;
+  for(let index=0;index<coverage.length;index++) {
+    const amount=coverage[index]!/255*(selection?.[index]??255)/255*operation.opacity;
+    const alpha=source.pixels[index*4+3]!;
+    const oracle=await sharp(Uint8Array.of(alpha,alpha,alpha),{raw:{width:1,height:1,channels:3}}).linear(1-amount,operation.alpha*amount+0.5).extractChannel(0).raw().toBuffer();
+    expect(fixture.expected[index*4+3]).toBe(oracle[0]);
+  }
+});
+
+test("alpha strokes validate input and cancel without publishing",async()=>{
+  const operation={kind:"alphaStroke",points:[[0.5,0.5]],size:2,opacity:1,hardness:1,alpha:255} as const;
+  for(const alpha of [-1,256,0.5,NaN])await expect(editImage(image(),{...operation,alpha} as PixelOperation)).rejects.toThrow();
+  const controller=new AbortController();
+  await expect(editImage(image(),operation as PixelOperation,{signal:controller.signal,onProgress:()=>controller.abort()})).rejects.toThrow();
+  const job=new PixelEditJob(image(),operation as PixelOperation);
+  job.advance(1);job.cancel();
+  expect(()=>job.result()).toThrow();expect(()=>job.advance(1)).toThrow();
+});
+
+test("output progress grants preserve the independent image result",async()=>{
+  const f=fixtures.outputGrants,total=f.width*f.height;
+  const pixels=Uint8Array.from({length:total*4},(_,i)=>f.sourcePixel[i%4]!);
+  const job=new PixelEditJob({width:f.width,height:f.height,pixels},f.operation as PixelOperation);
+  expect(()=>job.result()).toThrow();
+  for(let i=0;i<f.grants.length;i++){
+    const completed=f.completed[i]!;
+    expect(job.advance(f.grants[i])).toEqual({completed,total,done:completed===total});
+    if(completed<total)expect(()=>job.result()).toThrow();
+  }
+  const oracle=await sharp(pixels,{raw:{width:f.width,height:f.height,channels:4}}).negate({alpha:false}).raw().toBuffer();
+  expect(job.result().pixels).toEqual(Uint8Array.from(oracle));
+  expect(job.result().pixels).toEqual(Uint8Array.from({length:total*4},(_,i)=>f.expectedPixel[i%4]!));
+});
+
+ test("alpha fill agrees with libvips interpolation and cancels privately",async()=>{
+  for(const fixture of fixtures.cases.filter(value=>value.operation.kind==="alphaFill")) {
+    const source=fixture.image!,operation=fixture.operation as unknown as {kind:"alphaFill";alpha:number;opacity:number};
+    const result=await editImage({...source,pixels:Uint8Array.from(source.pixels)},operation,{selection:"selection" in fixture?Uint8Array.from(fixture.selection!):undefined});
+    for(let i=0;i<source.width*source.height;i++) {
+      const coverage=("selection" in fixture?fixture.selection![i]!:255)/255*operation.opacity,alpha=source.pixels[i*4+3]!;
+      const oracle=await sharp(Uint8Array.of(alpha,alpha,alpha),{raw:{width:1,height:1,channels:3}}).linear(1-coverage,operation.alpha*coverage+0.5).extractChannel(0).raw().toBuffer();
+      expect(result.pixels[i*4+3]).toBe(oracle[0]);
+    }
+  }
+  for(const alpha of [-1,256,1.5,NaN]) await expect(editImage(image(),{kind:"alphaFill",alpha,opacity:1})).rejects.toThrow();
+  for(const opacity of [-1,2,NaN]) await expect(editImage(image(),{kind:"alphaFill",alpha:128,opacity})).rejects.toThrow();
+  const controller=new AbortController();
+  await expect(editImage(image(),{kind:"alphaFill",alpha:0,opacity:1},{signal:controller.signal,chunkPixels:1,onProgress:()=>controller.abort()})).rejects.toThrow();
+});

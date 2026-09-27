@@ -13,10 +13,8 @@
 
 use crate::editor::pdf14x::modes::edit;
 use crate::editor::pdf14x::modes::edit::windows::main;
-use crate::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfTextString};
-use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;
+use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     built_to_component_tree, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
     StandardId, SubsetId,
@@ -31,13 +29,12 @@ pub const PDF14X_DIALECT: Dialect = Dialect { artifact_kind: PDF_ARTIFACT_SCHEMA
 //#endregion 🔖️Dialect
 
 //#region 🔖️Command
-/// ✏️ The editor's typed command channel -- the ONE edit `main`'s `editable_window_kind()` action
-/// (`set-page`, contract §2.6) can trigger. See `main`'s own module doc comment for why this appends
-/// to the page's existing text rather than replacing it (`PdfMutation` has no "replace" primitive).
+/// ✏️ The editor's typed command channel replaces one explicitly addressed page's faithful
+/// Unicode text projection after its optimistic revision matches.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum Pdf14XEditorCommand {
     #[dsl(key = "set-page")]
-    SetPage { index: usize, text: String },
+    SetPage { page: u32, item: u32, revision: String, text: String },
 }
 
 //#region 🔖️OpCodec
@@ -93,7 +90,7 @@ impl protocol::OpBinary for Pdf14XEditorCommand {
         <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
-semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf14XEditorCommand, []);
+semio_s_artifact_stdio_contract::snapshot_editing_command_roster!(Pdf14XEditorCommand, ["set-page"]);
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
@@ -121,7 +118,8 @@ impl ArtifactEditor for Pdf14XEditor {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x/✏️editor/🦀️.rs",
         controller: "s.stdio.pdf@1.4/x#editor",
         artifact_schema: "stdio.pdf",
-        preparation: "stdio-pdf-1-4-x-snapshot-edit"
+        preparation: "stdio-pdf-1-4-x-snapshot-edit",
+        bounded_native: true
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -130,10 +128,10 @@ impl ArtifactEditor for Pdf14XEditor {
 
     fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {
-            "set-page" => Ok(Pdf14XEditorCommand::SetPage {
-                index: semio_s_artifact_stdio_contract::window_kit_index_argument(args, &["index", "page", "row"], 0) as usize,
-                text: semio_s_artifact_stdio_contract::window_kit_text_argument(args, &["text", "value"], ""),
-            }),
+            "set-page" => {
+                let edit = semio_s_artifact_stdio_contract::window_kit_document_text_edit(args)?;
+                Ok(Pdf14XEditorCommand::SetPage { page: edit.page, item: edit.item, revision: edit.revision, text: edit.text })
+            }
             other => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pdf.unhandled-action"), format!("unknown pdf editor action '{other}'"))),
         })
     }
@@ -142,10 +140,8 @@ impl ArtifactEditor for Pdf14XEditor {
         PdfSnapshot::default()
     }
 
-    /// ✏️ `set-page` -> `PdfMutation::AppendPageContent` -- the closest real primitive `PdfMutation`
-    /// exposes (see `main`'s own doc comment for why this appends rather than replaces). An
-    /// out-of-range `index` is a documented no-op (`Emit::default()`), never a panic, matching
-    /// `apply_pdf_mutation`'s own out-of-range-is-noop contract.
+    /// ✏️ Replaces the addressed page's Unicode text projection while retaining encoded text,
+    /// graphics, geometry, metadata, and every non-text content operator.
     fn handle(
         command: &Self::Command,
         doc: &ArtifactView<'_, Self::Snapshot>,
@@ -156,11 +152,9 @@ impl ArtifactEditor for Pdf14XEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
-            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf14XEditorCommand::SetPage { index, text }) => {
-                if doc.snapshot.pages.get(*index).is_none() {
-                    return Ok(Emit::default());
-                }
-                Ok(Emit { artifact_mutations: vec![PdfMutation::AppendPageContent(AppendPageContent { index: *index, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text(text.clone()) }] })], description: Some(format!("Set page {index}")), ..Default::default() })
+            semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf14XEditorCommand::SetPage { page, item, revision, text }) => {
+                let Some(mutation) = page_text_edit_mutation(doc.snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
+                Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
             }
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
         }
@@ -168,7 +162,7 @@ impl ArtifactEditor for Pdf14XEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY)).map(built_to_component_tree),
+            main::BODY_KEY => main::render_windowed(doc.snapshot, &semio_framework_plugin::TreeWindows::for_body(view_state, main::BODY_KEY), view_state.locale).map(built_to_component_tree),
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc.snapshot,
                 view_state.locale,
@@ -189,14 +183,24 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf14XE
         }
     }
 
-    fn snapshot_edit_is_admitted(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_value_is_admitted(event, snapshot)
-    }
-
-    fn snapshot_edit_emit(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
+    fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_edit_set_snapshot(event, snapshot, |snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
     }
 }
+
+semio_s_artifact_stdio_contract::bounded_native_editing_editor! {
+    editor: Pdf14XEditor,
+    tools: ["set-page"],
+    payload_schema: "semio.stdio.document-text-edit-command.v1",
+    reduce: |command, snapshot| {
+        let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(Pdf14XEditorCommand::SetPage { page, item, revision, text }) = command else {
+            return Err(Fault::from("stdio-pdf-native-edit-command-mismatch"));
+        };
+        let Some(mutation) = page_text_edit_mutation(snapshot, *page, *item, revision, text)? else { return Ok(Emit::default()) };
+        Ok(Emit { artifact_mutations: vec![mutation], description: Some(format!("Set page {page}")), ..Default::default() })
+    },
+}
+
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest

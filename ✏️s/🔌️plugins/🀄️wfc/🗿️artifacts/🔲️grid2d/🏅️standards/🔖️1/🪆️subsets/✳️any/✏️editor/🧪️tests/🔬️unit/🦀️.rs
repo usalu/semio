@@ -258,7 +258,7 @@ fn the_solve_command_starts_the_fill_run() {
 #[test]
 fn the_commit_fill_command_writes_solve_json() {
     let document = crate::examples::grid2d::pipes::document();
-    let commit = crate::schema::inferences::solve_with_job(&document).expect("pipes solves");
+    let commit = crate::schema::inferences::solve_with_clock(&document, semio_framework_job::logical_now_us).expect("pipes solves");
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);
     let no_config = NoConfig::default();

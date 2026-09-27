@@ -2,7 +2,7 @@
 use crate::schema::mutations::JsonMutation;
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
-pub const BINARY_TAGS: &[(&str, u32)] = &[("set-member", 1), ("remove-member", 2), ("insert-array-element", 3), ("remove-array-element", 4), ("set-scalar", 5)];
+pub const BINARY_TAGS: &[(&str, u32)] = &[("set-member", 1), ("remove-member", 2), ("insert-array-element", 3), ("remove-array-element", 4), ("set-scalar", 5), ("patch-snapshot", 6)];
 //#region 🏷️WireTags
 /// 🏷️ `JsonMutation`'s wire protocol: its `record <kind> tag=<n>` lines are the only source of the op tags.
 const WIRE_PROTOCOL: &str = COMPONENT_PROTOCOL_SEMIO;

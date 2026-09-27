@@ -307,6 +307,27 @@ requests: `wp-w3/requests/t13.txt`.
   the subsets' own generators (`🏭️generator/📜️script.ts generate --only <kind>-applied`, the glTF one already writes
   three-exported pairs) and re-point the rows exactly as done for obj/gltf (`wp-t13/f10b/gltf-reader-cases.py` pattern).
 
+- 14:1x LANDING WINDOW 2 (coordinator 14:2x, extended to 15:45 after the 14:20–14:50 usage cut). F9 and F4 applied
+  (`f9/content-id.py --write` 22 files / 0 problems; `f4-viewer-refusal.py --write`); wfc solve-law clock written as
+  `wp-t13/wfc-solve-clock.py` (dry run 24 files / 0 problems, applied): job `logical_now_us()` (thread-local, +1 µs per
+  read), the five wfc inference modules split `solve_with_job(s)` → `solve_with_clock(s, default_now_us)` + the new
+  `solve_with_clock(s, now_us)`, and every `solve_with_job(` call under `🧪️tests` (19 test files) drives
+  `solve_with_clock(…, semio_framework_job::logical_now_us)` — except the one timing law (bitmap
+  `a_whole_solve_grant_settles_the_genesis_inference_in_a_bounded_state_walk`, real clock kept). New job law
+  `the_logical_clock_advances_one_microsecond_per_read_per_thread` (clock-stride tests). Why the logical clock cannot
+  quarantine: `ClockStride` calibrates to 4 096 calls per real read when one read costs 1 µs, so a step's measured span
+  is its read count, far below the 8 ms ceiling; steps stay fuel-bounded and deterministic.
+- 14:5x **F9 un-landed, stays prepared** (measured reason): the committed carriers pin today's `DefaultHasher` ids —
+  e.g. block3d `🧪️recolors-door-vortex-kind/🦀️.rs:40` asserts `"catalog-a602bbe51a39cd44"`; 1 045 of the 1 095
+  carriers live under `🧪️tests`/`🧫️fixtures` (architect 539, remodel 300, note 83, block 82, process 44, …). Landing the
+  ids without regenerating them would turn those laws red → carrier regeneration (owner generators) is the precondition.
+  Reverted hunk-precisely by `wp-t13/f9/content-id-revert.py` (only hunks touching the id minting; peer hunks in layout
+  (35 lines) and store (16 lines) untouched); `content-id.py` dry run afterwards: **22 files, 0 problems** (re-runnable).
+  My first combined check (14:55, with F9) was stopped by me before the revert (own pids 22401/22403/22413/22414).
+- 15:01 gate relaunched, reduced to F4 + clock (`wp-t13/check-lw2.sh` → `generated/lw2-check-2.log`): native lane
+  (job, plugin, wfc ×5 `--lib --tests`; wfc ×5 `component-app-assembly`; job clock law; wfc ×5 `--lib inferences`),
+  then the wasm32 fast gate. Queue position 7 on the native lane at launch.
+
 ### Processes
 
 None of mine is running (11:1x). All builds/parity runs were detached via `wp-w2/w2-detach.py` and ended on their own;

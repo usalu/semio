@@ -145,8 +145,8 @@ class Context:
             return handle.read()
 
     def subject_raw_bytes(self, implementation: str) -> bytes:
-        """📥️ Bytes a subject host produced for an oracle that declares ``@oracle-input-subject-raw``."""
-        path = self.plan.get("subjectRawInputs", {}).get(implementation)
+        """📥️ Bytes THIS scenario's subject host produced in ``implementation``, for an ``@oracle-input-subject-raw`` oracle."""
+        path = self.plan.get("subjectRawInputs", {}).get(self.scenario["id"], {}).get(implementation)
         if not path:
             raise AssertionError("scenario %s has no raw subject output from %s; run its subject phase before this byte-decoding oracle" % (self.scenario["id"], implementation))
         with open(path, "rb") as handle:

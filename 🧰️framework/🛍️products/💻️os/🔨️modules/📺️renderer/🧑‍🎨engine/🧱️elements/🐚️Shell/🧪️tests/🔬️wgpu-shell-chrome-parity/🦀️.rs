@@ -1173,9 +1173,8 @@ fn incoming_layout_identity_resets_maximize_and_identical_sync_preserves_it() {
     assert!(shell.focus_active_window());
     shell.locale_id = retitle["locale"].as_str().unwrap().into();
     shell.sync_dock();
-    assert_eq!(shell.dock.maximized_stack, None);
-    assert_eq!(shell.dock_chrome_maps().0[retitle["extraId"].as_str().unwrap()], retitle["resolvedTitle"].as_str().unwrap());
-    assert!(shell.focus_active_window());
+    assert_eq!(shell.dock.maximized_stack, Some(vec![retitle["maximized"].as_u64().unwrap() as usize]));
+    assert_eq!(shell.dock_chrome_maps().0[retitle["extraId"].as_str().unwrap()], retitle["retainedTitle"].as_str().unwrap());
     shell.sync_dock();
     assert_eq!(shell.dock.maximized_stack, Some(vec![1]));
 }

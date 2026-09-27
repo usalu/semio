@@ -1,0 +1,54 @@
+{
+  "contractVersion": 1,
+  "mediaQuery": "(prefers-color-scheme: dark)",
+  "transitions": [
+    {
+      "from": "light",
+      "to": "dark",
+      "pendingReason": "inputState",
+      "schedulerReason": null,
+      "expectedReasons": ["inputState", "theme"],
+      "reactDark": true
+    },
+    {
+      "from": "dark",
+      "to": "light",
+      "pendingReason": "paint",
+      "schedulerReason": null,
+      "expectedReasons": ["paint", "theme"],
+      "reactDark": false
+    },
+    {
+      "from": "light",
+      "to": "dark",
+      "pendingReason": null,
+      "schedulerReason": null,
+      "expectedReasons": ["theme"],
+      "reactDark": true
+    },
+    {
+      "from": "dark",
+      "to": "light",
+      "pendingReason": null,
+      "schedulerReason": "inputState",
+      "expectedReasons": ["inputState", "theme"],
+      "reactDark": false
+    },
+    {
+      "from": "light",
+      "to": "dark",
+      "pendingReason": null,
+      "schedulerReason": "paint",
+      "expectedReasons": ["paint", "theme"],
+      "reactDark": true
+    },
+    {
+      "from": "dark",
+      "to": "light",
+      "pendingReason": "inputState",
+      "schedulerReason": "paint",
+      "expectedReasons": ["inputState", "paint", "theme"],
+      "reactDark": false
+    }
+  ]
+}

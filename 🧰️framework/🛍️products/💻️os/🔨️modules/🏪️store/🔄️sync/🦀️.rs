@@ -1294,6 +1294,25 @@ pub fn admit_remote_envelopes(applied: &mut std::collections::HashSet<String>, e
 pub fn note_authored_envelopes(applied: &mut std::collections::HashSet<String>, envelopes: &[MutationEnvelope]) {
     applied.extend(envelopes.iter().map(|envelope| envelope.mutation_id.0.clone()));
 }
+/// @emoji ✅️ Settles this replica's own operations the hub's log already holds: a `Commands` frame (a catch-up tail or a relay)
+/// that carries an operation still in `outbox` or a `pending` batch proves the hub committed it although its `Ack` was lost with the
+/// socket, so it leaves both (a batch left empty leaves too) and is never resent — a resend is re-stamped and the hub refuses it as a
+/// replayed operation (ticket 26/09/23 session 13, run s13b). Answers the settled envelopes, whose backbone retention the caller
+/// releases.
+pub fn settle_committed_envelopes(outbox: &mut Vec<MutationEnvelope>, pending: &mut std::collections::HashMap<u64, Vec<MutationEnvelope>>, committed: &[MutationEnvelope]) -> Vec<MutationEnvelope> {
+    let committed: std::collections::HashSet<&str> = committed.iter().map(|envelope| envelope.mutation_id.0.as_str()).collect();
+    let mut settled = Vec::new();
+    let mut keep = |envelope: &MutationEnvelope| !committed.contains(envelope.mutation_id.0.as_str()) || {
+        settled.push(envelope.clone());
+        false
+    };
+    outbox.retain(&mut keep);
+    pending.retain(|_, batch| {
+        batch.retain(&mut keep);
+        !batch.is_empty()
+    });
+    settled
+}
 //#endregion 🔁️DocumentEchoSuppression
 
 //#region 🔖️DocumentSocketDoor
@@ -1350,9 +1369,12 @@ pub trait DocumentSocketDialer {
 /// original forward diff (inverse-of-inverse) — `crate::os_spr::causal::InverseMutation` carries no
 /// `target_mutation`/`base_version`/`dependencies`/`undo_policy` (a deliberately simpler shape
 /// than the old kernel-local one), so those are gone, not defaulted.
-async fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
+async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelope> {
+    if crate::os_spr::is_history_transition(envelope) {
+        return None;
+    }
     let undo_id = MutationId(format!("{}~undo", envelope.mutation_id.0));
-    MutationEnvelope {
+    Some(MutationEnvelope {
         mutation_id: undo_id,
         document_id: envelope.document_id.clone(),
         actor: envelope.actor.clone(),
@@ -1362,7 +1384,7 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
         diff: crate::os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
         inverse: crate::os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
-    }
+    })
 }
 
 /// @emoji 📡️ `PresencePeer` -> the binary blob `crate::os_spr::wire::ClientFrame::Presence` carries
@@ -3268,6 +3290,9 @@ mod native_actor {
                         self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion").await;
                         return;
                     }
+                    let settled = settle_committed_envelopes(&mut self.outbox, &mut self.pending_batches, &envelopes);
+                    self.document_backbone_retention.release(&settled);
+                    note_authored_envelopes(&mut self.applied_op_ids, &settled);
                     let persisted = &self.known_op_ids;
                     let fresh = admit_remote_envelopes(&mut self.applied_op_ids, envelopes.into_iter().filter(|envelope| !persisted.contains(&envelope.mutation_id.0)));
                     if !fresh.is_empty() {
@@ -3343,7 +3368,7 @@ mod native_actor {
                     ApplyOutcome::Transformed { envelope } => {
                         let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
                         for envelope in sent.iter().rev() {
-                            rollbacks.push(rollback_envelope(envelope).await);
+                            rollbacks.extend(rollback_envelope(envelope).await);
                         }
                         self.persist_operations(&rollbacks).await;
                         let _ = self.deliver_remote_operations(rollbacks).await;
@@ -3355,7 +3380,7 @@ mod native_actor {
                     ApplyOutcome::Rejected { reason, messages } => {
                         let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
                         for envelope in sent.iter().rev() {
-                            rollbacks.push(rollback_envelope(envelope).await);
+                            rollbacks.extend(rollback_envelope(envelope).await);
                         }
                         self.persist_operations(&rollbacks).await;
                         let _ = self.deliver_remote_operations(rollbacks).await;
@@ -4512,7 +4537,7 @@ mod wasm_actor {
             self.document_backbone_retention.release(&local);
             let mut rollbacks: Vec<MutationEnvelope> = Vec::with_capacity(local.len());
             for envelope in local.iter().rev() {
-                rollbacks.push(rollback_envelope(envelope).await);
+                rollbacks.extend(rollback_envelope(envelope).await);
             }
             let _ = self.deliver_remote_operations(rollbacks).await;
             self.reject_document_backbone("document socket frame exceeds the socket's ceiling", vec![local.len().min(u8::MAX as usize) as u8]);
@@ -4814,6 +4839,9 @@ mod wasm_actor {
                         self.fail_artifact_bootstrap("tail arrived before artifact bootstrap completion");
                         return;
                     }
+                    let settled = settle_committed_envelopes(&mut self.outbox, &mut self.pending_batches, &envelopes);
+                    self.document_backbone_retention.release(&settled);
+                    note_authored_envelopes(&mut self.applied_op_ids, &settled);
                     let fresh = admit_remote_envelopes(&mut self.applied_op_ids, envelopes);
                     if !self.deliver_remote_operations(fresh).await {
                         self.fail_artifact_bootstrap("artifact tail could not be installed");
@@ -4883,7 +4911,7 @@ mod wasm_actor {
                     ApplyOutcome::Transformed { envelope } => {
                         let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
                         for envelope in sent.iter().rev() {
-                            rollbacks.push(rollback_envelope(envelope).await);
+                            rollbacks.extend(rollback_envelope(envelope).await);
                         }
                         let _ = self.deliver_remote_operations(rollbacks).await;
                         let _ = self.deliver_remote_operations(vec![*envelope]).await;
@@ -4892,7 +4920,7 @@ mod wasm_actor {
                     ApplyOutcome::Rejected { reason, messages } => {
                         let mut rollbacks: Vec<MutationEnvelope> = Vec::new();
                         for envelope in sent.iter().rev() {
-                            rollbacks.push(rollback_envelope(envelope).await);
+                            rollbacks.extend(rollback_envelope(envelope).await);
                         }
                         let _ = self.deliver_remote_operations(rollbacks).await;
                         let _ = self.events.send(ArtifactEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason, messages } });

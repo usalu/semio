@@ -332,9 +332,14 @@ export async function hubProbeOpenPlan(origin: string, token: string, spaceId: s
   return hubProbeCall(origin, "POST", `/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/open-plan`, token, JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId }, clientInstanceId: client }));
 }
 
-/** 📡️ One open document socket: its Welcome frame, chained opaque edits, how many server frames this tree's wire codec
- * could not decode (a hub built from another tree), and close. */
-export type HubProbeDocument = Readonly<{ welcome: any; edit: (index: number, previous: string) => Promise<string>; undecodableFrames: () => number; close: () => void }>;
+/** 📡️ One open document socket: the plan it was opened under, its Welcome frame, one opaque command batch answered by its
+ * `Ack` (`submit`, accepted or not — a crafted write of a read-only subject is refused here), chained opaque edits that must
+ * be accepted, when another client's mutation reached this socket in a relayed `Commands` frame (`relayed`, epoch ms), how
+ * many server frames this tree's wire codec could not decode (a hub built from another tree), how the socket ended when the
+ * hub ended it (`ended`: its close code and whether the closing handshake completed, `null` while open past the budget), the
+ * relayed envelopes themselves (`relayedEnvelopes`), any batch of envelopes sent as this socket's own actor and answered by
+ * its `Ack` (`submitEnvelopes` — how a crafted history transition is tried), and close. */
+export type HubProbeDocument = Readonly<{ plan: any; actorId: string; welcome: any; submit: (index: number, previous: string) => Promise<{ mutationId: string; accepted: boolean; ack: any }>; submitEnvelopes: (batchId: number, envelopes: readonly any[]) => Promise<{ accepted: boolean; ack: any }>; relayedEnvelopes: () => readonly any[]; edit: (index: number, previous: string) => Promise<string>; relayed: (mutationId: string, budgetMs?: number) => Promise<number>; undecodableFrames: () => number; ended: (budgetMs?: number) => Promise<{ code: number; clean: boolean } | null>; close: () => void }>;
 
 /** 📡️ Opens one document over the plan → socket grant → socket hello path and answers once it is welcomed. */
 export async function hubProbeOpenDocument(origin: string, token: string, spaceId: string, documentId: string, client: string): Promise<HubProbeDocument> {
@@ -346,8 +351,12 @@ export async function hubProbeOpenDocument(origin: string, token: string, spaceI
   const granted = parseDocumentSocketGrantReceiptV1(grant.json);
   const socket = new WebSocket(`${origin.replace(/^http/u, "ws")}/scopes/${encodeURIComponent(`${spaceId}/${documentId}`)}/document/ws?surface=${encodeURIComponent(plan.json.surface.surfaceId)}`, ["semio.session.v1", token]);
   socket.binaryType = "arraybuffer";
+  const closing = new Promise<{ code: number; clean: boolean }>((resolveClose) => socket.addEventListener("close", (event) => resolveClose({ code: event.code, clean: event.wasClean })));
   const frames: any[] = [];
   const waiters: ((frame: any) => void)[] = [];
+  const relayedAt = new Map<string, number>();
+  const relayedEnvelopes: any[] = [];
+  const relayWaiters = new Set<() => void>();
   let undecodable = 0;
   socket.addEventListener("message", (event) => {
     if (!(event.data instanceof ArrayBuffer)) return;
@@ -358,7 +367,15 @@ export async function hubProbeOpenDocument(origin: string, token: string, spaceI
       undecodable += 1;
       return;
     }
-    if ("Commands" in frame || "Presence" in frame) return;
+    if ("Commands" in frame) {
+      for (const envelope of frame.Commands.envelopes ?? []) {
+        if (!relayedAt.has(String(envelope.mutation_id))) relayedAt.set(String(envelope.mutation_id), Date.now());
+        relayedEnvelopes.push(envelope);
+      }
+      for (const wake of [...relayWaiters]) wake();
+      return;
+    }
+    if ("Presence" in frame) return;
     frames.push(frame);
     for (const waiter of [...waiters]) waiter(frame);
   });
@@ -381,14 +398,114 @@ export async function hubProbeOpenDocument(origin: string, token: string, spaceI
   socket.send(encodeClientFrame({ SocketHelloV1: { wire_version: 1, protocol_version: 1, schema: plan.json.artifact.schema, pack_schema_hash: packSchemaHash, resume_token: null, frontier: null } }, "command"));
   const welcome = await waitFrame((frame) => "Welcome" in frame || "Error" in frame, "Welcome");
   if ("Error" in welcome) throw new Error(`refused: ${JSON.stringify(welcome.Error)}`);
-  const edit = async (index: number, previous: string): Promise<string> => {
+  const submitEnvelopes = async (batchId: number, envelopes: readonly any[]): Promise<{ accepted: boolean; ack: any }> => {
+    socket.send(encodeClientFrame({ Commands: { batch_id: batchId, envelopes: envelopes.map((envelope) => ({ ...envelope, actor: granted.actorId })) } }, "command"));
+    const acked = await waitFrame((frame) => "Ack" in frame && frame.Ack.batch_id === batchId, `Ack ${batchId}`);
+    return { accepted: JSON.stringify(acked.Ack.stages).includes("Accepted"), ack: acked.Ack };
+  };
+  const submit = async (index: number, previous: string): Promise<{ mutationId: string; accepted: boolean; ack: any }> => {
     const mutationId = `probe-${documentId}-${index}`;
     socket.send(encodeClientFrame({ Commands: { batch_id: index + 1, envelopes: [{ mutation_id: mutationId, document_id: documentId, actor: granted.actorId, dependencies: previous ? [previous] : [], observed: null, target: [], diff: { schema: plan.json.artifact.schema, payload: Array.from(new TextEncoder().encode(`probe:${index}:${"b".repeat(512)}`)) }, inverse: { schema: plan.json.artifact.schema, payload: [] }, timestamp: { actor: 1, physical_ms: Date.now(), logical: 0 } }] } }, "command"));
     const acked = await waitFrame((frame) => "Ack" in frame && frame.Ack.batch_id === index + 1, `Ack ${index}`);
-    if (!JSON.stringify(acked.Ack.stages).includes("Accepted")) throw new Error(`edit ${index} not accepted: ${JSON.stringify(acked.Ack)}`);
-    return mutationId;
+    return { mutationId, accepted: JSON.stringify(acked.Ack.stages).includes("Accepted"), ack: acked.Ack };
   };
-  return { welcome: welcome.Welcome, edit, undecodableFrames: () => undecodable, close: () => socket.close(1000, "probe") };
+  const edit = async (index: number, previous: string): Promise<string> => {
+    const answered = await submit(index, previous);
+    if (!answered.accepted) throw new Error(`edit ${index} not accepted: ${JSON.stringify(answered.ack)}`);
+    return answered.mutationId;
+  };
+  const relayed = (mutationId: string, budgetMs = 60_000): Promise<number> =>
+    new Promise((resolveRelay, rejectRelay) => {
+      const settle = (): void => {
+        const at = relayedAt.get(mutationId);
+        if (at === undefined) return;
+        clearTimeout(timer);
+        relayWaiters.delete(settle);
+        resolveRelay(at);
+      };
+      const timer = setTimeout(() => {
+        relayWaiters.delete(settle);
+        rejectRelay(new Error(`${mutationId} was never relayed to this socket; relayed ${JSON.stringify([...relayedAt.keys()].slice(-3))}`));
+      }, budgetMs);
+      relayWaiters.add(settle);
+      settle();
+    });
+  const ended = (budgetMs = 30_000): Promise<{ code: number; clean: boolean } | null> => Promise.race([closing, new Promise<null>((resolveOpen) => setTimeout(() => resolveOpen(null), budgetMs))]);
+  return { plan: plan.json, actorId: granted.actorId, welcome: welcome.Welcome, submit, submitEnvelopes, relayedEnvelopes: () => [...relayedEnvelopes], edit, relayed, undecodableFrames: () => undecodable, ended, close: () => socket.close(1000, "probe") };
 }
 //#endregion 🔖️ProbeClient
+
+//#region 🔖️ForwardingProxy
+/** 🔀️ A loopback stand-in for the TLS-terminating reverse proxy a production hub on a network interface sits behind
+ * (`OS_HUB_TRUSTED_FORWARDING=proxy`): every HTTP request and document/directory WebSocket reaches `upstream` stamped
+ * `X-Forwarded-Proto: https` + `X-Forwarded-Host`, exactly the statement the hub's transport layer requires, so probe
+ * clients drive a production-posture hub (a container, a network bind) unchanged. Hop-by-hop headers are dropped both
+ * ways; WebSocket subprotocols are negotiated with the upstream first and its choice is handed to the client.
+ * https://developer.mozilla.org/docs/Web/HTTP/Headers/X-Forwarded-Proto */
+export type HubForwardingProxy = Readonly<{ origin: string; requests: () => number; stop: () => void }>;
+
+const HUB_PROXY_HOP_HEADERS = ["connection", "keep-alive", "upgrade", "proxy-connection", "transfer-encoding", "te", "trailer", "host", "content-length", "accept-encoding", "sec-websocket-key", "sec-websocket-version", "sec-websocket-extensions", "sec-websocket-protocol", "sec-websocket-accept"];
+
+/** 🔀️ The request headers the proxy forwards: the client's own minus hop-by-hop, plus the TLS-termination statement. */
+export function hubForwardedHeaders(incoming: Headers, forwardedHost: string): Headers {
+  const headers = new Headers(incoming);
+  for (const name of HUB_PROXY_HOP_HEADERS) headers.delete(name);
+  headers.set("x-forwarded-proto", "https");
+  headers.set("x-forwarded-host", forwardedHost);
+  return headers;
+}
+
+/** 🔀️ Starts the forwarding proxy on a free loopback port in front of `upstream` (`http://127.0.0.1:<port>`). */
+export function hubForwardingProxy(upstream: string, forwardedHost?: string): HubForwardingProxy {
+  const target = new URL(upstream);
+  const upstreamSocketOrigin = `${target.protocol === "https:" ? "wss" : "ws"}://${target.host}`;
+  let requests = 0;
+  type Relay = { upstream: WebSocket; backlog: (string | ArrayBuffer)[]; client?: BunServerWebSocket<Relay> };
+  const closeCode = (code: number): number => (code === 1000 || code === 1001 || (code >= 1007 && code <= 1014 && code !== 1010) || (code >= 3000 && code <= 4999) ? code : 1011);
+  const server = Bun.serve<Relay>({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request, proxy) {
+      requests += 1;
+      const url = new URL(request.url);
+      const headers = hubForwardedHeaders(request.headers, forwardedHost ?? url.host);
+      if (request.headers.get("upgrade")?.toLowerCase() === "websocket") {
+        const protocols = (request.headers.get("sec-websocket-protocol") ?? "").split(",").map((value) => value.trim()).filter(Boolean);
+        const socket = new WebSocket(`${upstreamSocketOrigin}${url.pathname}${url.search}`, { headers: Object.fromEntries(headers), protocols } as unknown as string[]);
+        socket.binaryType = "arraybuffer";
+        const relay: Relay = { upstream: socket, backlog: [] };
+        socket.addEventListener("message", (event) => (relay.client ? relay.client.send(event.data as string | ArrayBuffer) : relay.backlog.push(event.data as string | ArrayBuffer)));
+        socket.addEventListener("close", (event) => relay.client?.close(closeCode(event.code), event.reason));
+        const opened = await new Promise<boolean>((resolveOpen) => {
+          socket.addEventListener("open", () => resolveOpen(true), { once: true });
+          socket.addEventListener("error", () => resolveOpen(false), { once: true });
+          socket.addEventListener("close", () => resolveOpen(false), { once: true });
+        });
+        if (!opened) return new Response(null, { status: 502 });
+        if (proxy.upgrade(request, { data: relay, headers: socket.protocol ? { "Sec-WebSocket-Protocol": socket.protocol } : {} })) return undefined;
+        socket.close(1000, "client upgrade refused");
+        return new Response(null, { status: 400 });
+      }
+      const answer = await fetch(`${target.origin}${url.pathname}${url.search}`, { method: request.method, headers, body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer(), redirect: "manual" });
+      const answered = new Headers(answer.headers);
+      for (const name of [...HUB_PROXY_HOP_HEADERS, "content-encoding"]) answered.delete(name);
+      return new Response(request.method === "HEAD" ? null : await answer.arrayBuffer(), { status: answer.status, statusText: answer.statusText, headers: answered });
+    },
+    websocket: {
+      open(client) {
+        client.data.client = client;
+        for (const message of client.data.backlog.splice(0)) client.send(message);
+        if (client.data.upstream.readyState >= WebSocket.CLOSING) client.close(1011, "upstream closed");
+      },
+      message(client, message) {
+        client.data.upstream.send(message);
+      },
+      close(client, code, reason) {
+        if (client.data.upstream.readyState < WebSocket.CLOSING) client.data.upstream.close(closeCode(code), reason);
+      },
+    },
+  });
+  return { origin: `http://127.0.0.1:${server.port}`, requests: () => requests, stop: () => void server.stop(true) };
+}
+//#endregion 🔖️ForwardingProxy
 

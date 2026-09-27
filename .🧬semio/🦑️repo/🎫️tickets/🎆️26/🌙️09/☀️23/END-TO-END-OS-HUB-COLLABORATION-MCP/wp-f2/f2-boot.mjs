@@ -4,7 +4,7 @@
  * Per load: navigation timing (TTFB, DOMContentLoaded, load), first paint / first contentful paint / largest contentful
  * paint, the moment the shell's `data-semio-os-ready` beacon appears (MutationObserver, page clock), the moment every plugin
  * of the catalog probe reports `loaded`, long tasks, a sampled CPU profile of the whole boot (top self + inclusive frames),
- * and the resource timing reduced to counts/bytes per kind + the 12 biggest and 12 slowest requests.
+ * and the resource timing reduced to counts/bytes per kind + per node_modules package + the 12 biggest and 12 slowest requests.
  *
  * usage: bun f2-boot.mjs <baseUrl> <tag> [--warm-runs 1] [--no-profile] */
 import { chromium } from "playwright";
@@ -145,6 +145,15 @@ async function measureLoad(page, cdp, label, navigate) {
       resources: { count: resources.length, lastResponseEnd: Math.round(lastResponseEnd), byKind },
       biggest: [...resources].sort((a, b) => b.decodedBodySize - a.decodedBodySize).slice(0, 12).map((entry) => `${(entry.decodedBodySize / 2 ** 20).toFixed(1)}MB (xfer ${(entry.transferSize / 2 ** 20).toFixed(1)}) ${Math.round(entry.duration)}ms ${name(entry)}`),
       slowest: [...resources].sort((a, b) => b.duration - a.duration).slice(0, 12).map((entry) => `${Math.round(entry.duration)}ms @${Math.round(entry.startTime)} wait ${Math.round(entry.requestStart - entry.startTime)} ${name(entry)}`),
+      packages: Object.entries(resources.reduce((sum, entry) => {
+        const path = decodeURIComponent(new URL(entry.name).pathname);
+        const match = /\/node_modules\/((?:@[^/]+\/)?[^/.][^/]*)\//u.exec(path);
+        if (!match) return sum;
+        const row = (sum[match[1]] ??= { count: 0, decodedMB: 0 });
+        row.count += 1;
+        row.decodedMB += entry.decodedBodySize / 2 ** 20;
+        return sum;
+      }, {})).sort((a, b) => b[1].decodedMB - a[1].decodedMB).slice(0, 16).map(([name, row]) => `${name}: ${row.count} files ${row.decodedMB.toFixed(2)} MB`),
       modulesDone: Math.round(Math.max(0, ...resources.filter((entry) => kindOf(entry) === "module" || kindOf(entry) === "dep").map((entry) => entry.responseEnd))),
     };
   });

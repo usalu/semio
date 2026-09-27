@@ -34,6 +34,8 @@ pub mod set_has_header;
 //#region 🔖️Leaves
 #[path = "📸️set-snapshot/🦀️.rs"]
 pub mod set_snapshot;
+#[path = "🩹️patch-snapshot/🦀️.rs"]
+pub mod patch_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed content mutation for `stdio.csv`. `NoMutation` was dropped: the derive requires every
@@ -43,6 +45,7 @@ pub mod set_snapshot;
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum CsvMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
+    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetHasHeader(set_has_header::SetHasHeader),
     InsertRecord(insert_record::InsertRecord),
     RemoveRecord(remove_record::RemoveRecord),
@@ -52,7 +55,7 @@ pub enum CsvMutation {
 /// 🧾️ Kebab-case spelling of every `CsvMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `csv-rfc4180-any` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["set-snapshot", "set-has-header", "insert-record", "remove-record", "set-field"];
+pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-has-header", "insert-record", "remove-record", "set-field"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -75,6 +78,7 @@ pub fn apply_csv_mutation(snapshot: &mut CsvSnapshot, mutation: &CsvMutation) ->
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_diff(this: &CsvMutation, base: &CsvSnapshot) -> protocol::MutationOutcome<CsvDiff> {
     protocol::MutationOutcome::new(match this {
+        CsvMutation::PatchSnapshot(payload) => return protocol::MutationKind::diff(payload, base),
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header }) => CsvDiff { has_header: Some(*has_header), records: None },
         CsvMutation::InsertRecord(insert_record::InsertRecord { index, record }) => {
@@ -92,6 +96,7 @@ pub(crate) fn agg_diff(this: &CsvMutation, base: &CsvSnapshot) -> protocol::Muta
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 pub(crate) fn agg_inverse(this: &CsvMutation, base: &CsvSnapshot) -> Vec<CsvMutation> {
     match this {
+        CsvMutation::PatchSnapshot(payload) => protocol::MutationKind::inverse(payload, base),
         CsvMutation::SetSnapshot(_) => {
             vec![CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })]
         }
@@ -137,6 +142,7 @@ fn dec_csv_snapshot(s: &str) -> Result<CsvSnapshot, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_csv_mutation(m: &CsvMutation) -> String {
     match m {
+        CsvMutation::PatchSnapshot(_) => patch_snapshot::text::print(m).expect("patch snapshot variant"),
         CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_csv_snapshot(snapshot)),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header }) => format!("set-has-header has-header={}", if *has_header { 1 } else { 0 }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index, record }) => format!("insert-record index={index} record={}", enc_record(record)),
@@ -146,6 +152,9 @@ fn print_csv_mutation(m: &CsvMutation) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_csv_mutation(line: &str) -> Result<CsvMutation, String> {
+    if line.split_once(' ').map_or(line, |(kind, _)| kind) == patch_snapshot::text::TEXT_OPCODE {
+        return patch_snapshot::text::parse(line);
+    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("csv mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("csv mutation: missing arg '{k}' for '{keyword}'"));
@@ -258,6 +267,10 @@ impl OpBinary for CsvMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
         match self {
+            CsvMutation::PatchSnapshot(payload) => {
+                w.write_u8(patch_snapshot::binary::BINARY_TAG);
+                w.write_bytes(&payload.patch.encode_op()?);
+            }
             CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
                 w.write_u8(TAG_SET_SNAPSHOT);
                 write_bin_snapshot(&mut w, snapshot);
@@ -289,6 +302,7 @@ impl OpBinary for CsvMutation {
         let mut r = dsl::ByteReader::new(bytes);
         let ordinal = r.read_u8().map_err(|error| op_pack_err(&error))?;
         let mutation = match ordinal {
+            patch_snapshot::binary::BINARY_TAG => return patch_snapshot::binary::decode(&bytes[1..]),
             TAG_SET_SNAPSHOT => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? }),
             TAG_SET_HAS_HEADER => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(|error| op_pack_err(&error))? != 0 }),
             TAG_INSERT_RECORD => {

@@ -21,7 +21,8 @@
         "scaleX",
         "scaleY",
         "x",
-        "y"
+        "y",
+        "shear"
       ],
       "properties": {
         "x": {
@@ -38,6 +39,10 @@
         },
         "rotation": {
           "type": "number"
+        },
+        "shear": {
+          "type": "number",
+          "description": "Upper-right coefficient before rotation, in R(rotation) × [[scaleX, shear], [0, scaleY]]."
         }
       }
     }

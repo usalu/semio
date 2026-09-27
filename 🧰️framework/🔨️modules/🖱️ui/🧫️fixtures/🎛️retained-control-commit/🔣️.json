@@ -16,7 +16,7 @@
     "inputTriggerByCommitPolicy": "An Input whose commit policy is 'blur' commits through Trigger::Commit, on Enter and on blur only. Every other Input commits through Trigger::Change, on every keystroke — React's InputView makes exactly this choice (commitOnBlur ? 'commit' : 'change').",
     "inputNumberIsNumeric": "An Input of kind 'number' commits a NUMBER, every other kind commits the raw string (InputView: kind === 'number' ? Number(raw) : raw).",
     "toggleCommitsTheFlip": "A Toggle commits the value it is moving TO, not the one it is leaving — the pressed state after the press.",
-    "sliderReadsItsOwnTrack": "A Slider's press/drag value is read off the same full-width track paint draws (x = bounds.x + bounds.w * t), snapped onto step and clamped into min..=max.",
+    "sliderReadsItsOwnTrack": "A Slider's press/drag value is read off the same track cell paint draws, excluding its fixed readout cell, snapped onto step and clamped into min..=max.",
     "ringReadsItsOwnCircle": "A Ring's press/drag t is the turn fraction of the angle from the centre of its own bounds, normalised into [0, 1).",
     "stepperThirds": "A NumberStepper's box is three equal segments — decrement, value, increment. The outer two step by 'step'; a press on the value segment commits nothing.",
     "dragReportsEveryValue": "A Slider and a Ring report every intermediate value while the pointer is down, not only the release. Every other kind commits on release inside its own bounds."
@@ -96,11 +96,11 @@
     },
     {
       "name": "slider-reads-its-own-track",
-      "why": "Three quarters along a 0..10 track with step 1 is 8 (7.5 snapped) — read off the very rect paint drew the track at.",
+      "why": "A press 55 pixels into the 71.2-pixel track is inside the interval that snaps to 8, excluding the fixed readout and avoiding a half-step precision tie.",
       "node": { "kind": "slider", "id": "generate.form.radius.slider", "value": 0.0, "min": 0.0, "max": 10.0, "step": 1.0 },
       "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
       "bounds": [20.0, 0.0, 100.0, 24.0],
-      "gesture": { "kind": "press", "at": [0.75, 0.5] },
+      "gesture": { "kind": "press", "at": [0.55, 0.5] },
       "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 8.0 } }
     },
     {
@@ -109,7 +109,7 @@
       "node": { "kind": "slider", "id": "generate.form.radius.slider", "value": 0.0, "min": 2.0, "max": 6.0, "step": 2.0 },
       "binding": { "trigger": "change", "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius" } },
       "bounds": [20.0, 0.0, 100.0, 24.0],
-      "gesture": { "kind": "drag", "at": [0.9, 0.5], "to": [1.4, 0.5] },
+      "gesture": { "kind": "drag", "at": [0.6408, 0.5], "to": [1.4, 0.5] },
       "expected": { "action": "updateGenerationValues", "args": { "generationId": "g1", "questionId": "radius", "value": 6.0 } }
     },
     {

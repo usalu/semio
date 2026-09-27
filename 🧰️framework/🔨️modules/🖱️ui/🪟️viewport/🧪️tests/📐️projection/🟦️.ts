@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import Ajv2020 from "ajv/dist/2020";
 import jsonPatch from "fast-json-patch";
-import { Matrix4, PerspectiveCamera } from "three";
+import { Matrix4, OrthographicCamera, PerspectiveCamera } from "three";
 import schema from "../../🧊️3d/🧬️schema/🔣️.json";
 import fixture from "../../🧫️fixtures/📐️projection/🔣️.json";
 import {
@@ -79,6 +79,44 @@ export function testViewport3dProjectionValues(): void {
   for (const invalid of fixture.specRejections) {
     assert.equal(specSchema(invalid), false, JSON.stringify(invalid));
     assert.throws(() => parseViewport3dProjectionSpec(invalid), TypeError, JSON.stringify(invalid));
+  }
+  for (const row of fixture.semanticPreferenceRejections) {
+    const invalid = jsonPatch.applyPatch(structuredClone(fixture.defaultPreferences), row.patch as Patch, true).newDocument;
+    assert.equal(preferencesSchema(invalid), true, row.name);
+    assert.throws(() => parseViewport3dProjectionPreferences(invalid), TypeError, row.name);
+  }
+  for (const invalid of fixture.semanticSpecRejections) {
+    assert.equal(specSchema(invalid), true, JSON.stringify(invalid));
+    assert.throws(() => parseViewport3dProjectionSpec(invalid), TypeError, JSON.stringify(invalid));
+  }
+
+  const close = (actual: number, expected: number, name: string) => assert.ok(Math.abs(actual - expected) <= 1e-12, `${name}: ${actual} != ${expected}`);
+  const { width, height, near, far, zoom } = fixture.renderParity.viewport;
+  for (const row of fixture.renderParity.matrixCases) {
+    const spec = parseViewport3dProjectionSpec(row.spec);
+    const camera = spec.mode.kind === "oblique" ? new OrthographicCamera(width / -2, width / 2, height / 2, height / -2, near, far) : new PerspectiveCamera(spec.mode.kind === "twoPoint" ? spec.mode.fov : 50, width / height, near, far);
+    camera.zoom = zoom;
+    camera.updateProjectionMatrix();
+    if (spec.mode.kind === "oblique") {
+      const alpha = spec.mode.variant === "military" ? Math.PI / 2 : spec.mode.angle * Math.PI / 180;
+      const length = spec.mode.variant === "military" ? 1 : spec.mode.depthScale;
+      const shear = new Matrix4().identity();
+      shear.elements[8] = -length * Math.cos(alpha);
+      shear.elements[9] = -length * Math.sin(alpha);
+      camera.projectionMatrix.multiply(shear);
+    } else if (spec.mode.kind === "twoPoint") camera.projectionMatrix.elements[9] += spec.mode.verticalShift;
+    for (const [index, expected] of Object.entries(row.expectedElements)) close(camera.projectionMatrix.elements[Number(index)]!, expected, `${row.name}[${index}]`);
+  }
+  for (const row of fixture.renderParity.curvilinearCases) {
+    const spec = parseViewport3dProjectionSpec(row.spec);
+    if (spec.mode.kind !== "curvilinear") throw new TypeError(row.name);
+    const halfFov = Math.min(spec.mode.fov, 160) * Math.PI / 360;
+    const scaled = [row.visibleNdc[0] * row.aspect, row.visibleNdc[1]] as const;
+    const radius = Math.hypot(...scaled);
+    const sourceRadius = radius + (Math.tan(radius * halfFov) / Math.tan(halfFov) - radius) * spec.mode.strength;
+    const scale = sourceRadius / radius;
+    const actual = [scaled[0] * scale / row.aspect, scaled[1] * scale];
+    actual.forEach((value, index) => close(value, row.expectedCaptureNdc[index]!, `${row.name}[${index}]`));
   }
 
   for (const nonfinite of [NaN, Infinity, -Infinity]) {

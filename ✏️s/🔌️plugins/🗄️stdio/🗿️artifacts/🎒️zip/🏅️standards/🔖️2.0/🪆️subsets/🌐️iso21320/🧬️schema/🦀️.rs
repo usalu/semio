@@ -40,14 +40,14 @@ pub mod derived_construction {
         /// ➕️ Adds a member this profile declares uncompressed (ISO/IEC 21320-1 §4.4 method 0).
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_stored_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            apply_zip_iso21320_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: ZipEntry { name: name.into(), data } }));
+            apply_zip_iso21320_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: ZipEntry { name: name.into(), data }, before: None }));
             self
         }
 
         /// ➕️ Adds a member this profile declares Deflate-compressed (ISO/IEC 21320-1 §4.4 method 8).
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn with_deflate_entry(mut self, name: impl Into<String>, data: Vec<u8>) -> Self {
-            apply_zip_iso21320_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: ZipEntry { name: name.into(), data } }));
+            apply_zip_iso21320_mutation(&mut self.snapshot, &ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: ZipEntry { name: name.into(), data }, before: None }));
             self
         }
 

@@ -6,6 +6,8 @@ semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the raster app; one field per label makes every locale combination
     /// compile-checked.
     pub struct RasterPlayLabels {
+        brightness: native_en "Brightness", native_de "Helligkeit", reuse_en "Brightness", reuse_de "Helligkeit";
+        contrast: native_en "Contrast", native_de "Kontrast", reuse_en "Contrast", reuse_de "Kontrast";
         mask_present: native_en "Layer mask", native_de "Ebenenmaske", reuse_en "Layer mask", reuse_de "Ebenenmaske";
         mask_enabled: native_en "Enable mask", native_de "Maske aktivieren", reuse_en "Enable mask", reuse_de "Maske aktivieren";
         mask_invert: native_en "Invert mask", native_de "Maske umkehren", reuse_en "Invert mask", reuse_de "Maske umkehren";
@@ -19,6 +21,10 @@ semio_framework_plugin::app_labels! {
         masks: native_en "Masks", native_de "Masken", reuse_en "Masks", reuse_de "Masken";
         no_masks: native_en "No masks", native_de "Keine Masken", reuse_en "No masks", reuse_de "Keine Masken";
         mask_suffix: native_en "mask", native_de "Maske", reuse_en "mask", reuse_de "Maske";
+        merge_down_hint: native_en "Combine this layer with the layer below. Both must be visible pixels or groups using Normal blend.", native_de "Diese Ebene mit der darunterliegenden vereinen. Beide müssen sichtbare Pixel- oder Gruppenebenen im normalen Mischmodus sein.", reuse_en "Combine this layer with the layer below. Both must be visible pixels or groups using Normal blend.", reuse_de "Diese Ebene mit der darunterliegenden vereinen. Beide müssen sichtbare Pixel- oder Gruppenebenen im normalen Mischmodus sein.";
+        merge_down: native_en "Merge Down", native_de "Nach unten vereinen", reuse_en "Merge Down", reuse_de "Nach unten vereinen";
+        flatten_image: native_en "Flatten Image", native_de "Bild reduzieren", reuse_en "Flatten Image", reuse_de "Bild reduzieren";
+        flattened_image: native_en "Flattened Image", native_de "Reduziertes Bild", reuse_en "Flattened Image", reuse_de "Reduziertes Bild";
         add_pixel: native_en "Add Pixel", native_de "Pixel hinzufügen", reuse_en "Add Pixel", reuse_de "Pixel hinzufügen";
         add_group: native_en "Add Group", native_de "Gruppe hinzufügen", reuse_en "Add Group", reuse_de "Gruppe hinzufügen";
         layer_kinds: native_en "Layer kinds", native_de "Ebenenarten", reuse_en "Layer kinds", reuse_de "Ebenenarten";

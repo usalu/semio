@@ -2354,121 +2354,121 @@ pub mod examples {
     }
     #[path = "."]
     pub mod blatt_3 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-3/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-3/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_3_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-3-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-3-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_4 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-4/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-4/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_4_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-4-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-4-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_5 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-5/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-5/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_5_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-5-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-5-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_6 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-6/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-6/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_6_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-6-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-6-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_7 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-7/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-7/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_7_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-7-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-7-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_8 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-8/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-8/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_8_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-8-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-8-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_16 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-16/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-16/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_16_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-16-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-16-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_19 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-19/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-19/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_19_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-19-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-19-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_53 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-53/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-53/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_53_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-53-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-53-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_60 {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-60/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📄️blatt-60/🦀️.rs"]
         mod component;
         pub use component::*;
     }
     #[path = "."]
     pub mod blatt_60_fail {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/blatt-60-fail/🦀️.rs"]
+        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️blatt-60-fail/🦀️.rs"]
         mod component;
         pub use component::*;
     }

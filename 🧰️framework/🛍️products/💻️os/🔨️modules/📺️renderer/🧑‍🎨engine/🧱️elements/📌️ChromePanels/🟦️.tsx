@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useMemo, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
+import { useMemo, useState, type ReactElement, type ReactNode } from "react";
 import {
   App,
   Button,
@@ -47,7 +47,7 @@ import {
   windowTemplatePaletteTreeDragController,
 } from "@semio-tech/ui-react";
 import { WCAG_AA_CONTRAST, themePaintContrastPairs, type Rgba8, type WcagContrastGrade } from "@semio-tech/ui-styling";
-import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type Conflict, type ConflictResolution, type MergePolicy, type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
+import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type Conflict, type ConflictResolution, type MergePolicy, type NamedLayout, type WindowLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../🐚️Shell/🟦️.tsx";
 import { ConflictDiffPreview, conflictDiffText } from "../🔺️DiffViewHost/🟦️.tsx";
@@ -1220,39 +1220,38 @@ export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi |
   };
 }
 
+/** 🗂️ The Display host's layouts: the app's built-in ones and the user's own, which are a projection of the user's
+ * `setNamedLayout` preference events — saving and deleting commit one such event (`onSaveUserLayout` /
+ * `onDeleteUserLayout`), so a saved layout follows the user to every device like any other shared preference. */
 export function useNamedLayoutHost(options: {
   readonly appId: string;
   readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly iconId: IconName; readonly surfaceKind?: string }[];
   readonly builtinLayouts: readonly NamedLayout[];
+  readonly userLayouts: readonly NamedLayout[];
   readonly currentLayout: WindowLayout | undefined;
   readonly onApplyLayout: (layout: WindowLayout) => void;
-  readonly namedLayoutStore: { getSnapshot: () => readonly NamedLayout[]; save: (layout: NamedLayout) => void; remove: (layoutId: string) => void; subscribe: (listener: () => void) => () => void };
+  readonly onSaveUserLayout: (layoutId: string, label: string, layout: WindowLayout) => void;
+  readonly onDeleteUserLayout: (layoutId: string) => void;
 }): DisplayHostApi {
-  const userLayouts = useSyncExternalStore(
-    (listener) => options.namedLayoutStore.subscribe(listener),
-    () => options.namedLayoutStore.getSnapshot(),
-    () => options.namedLayoutStore.getSnapshot(),
-  );
   const [layoutSaveLabel, setLayoutSaveLabel] = useState("");
   return useMemo(
     (): DisplayHostApi => ({
       windowKinds: options.windowKinds,
       namedLayouts: options.builtinLayouts,
-      userLayouts,
+      userLayouts: options.userLayouts,
       saveCurrentLayout: (label) => {
         if (!options.currentLayout) return;
-        const id = `user-${Date.now()}`;
-        options.namedLayoutStore.save(createNamedLayout(id, label, options.currentLayout, "user"));
+        options.onSaveUserLayout(`user-${Date.now()}`, label, options.currentLayout);
       },
       applyNamedLayout: (layoutId) => {
-        const layout = [...options.builtinLayouts, ...userLayouts].find((entry) => entry.id === layoutId);
+        const layout = [...options.builtinLayouts, ...options.userLayouts].find((entry) => entry.id === layoutId);
         if (layout) options.onApplyLayout(layout.layout);
       },
-      deleteUserLayout: (layoutId) => options.namedLayoutStore.remove(layoutId),
+      deleteUserLayout: (layoutId) => options.onDeleteUserLayout(layoutId),
       layoutSaveLabel,
       setLayoutSaveLabel,
     }),
-    [options, userLayouts, layoutSaveLabel],
+    [options, layoutSaveLabel],
   );
 }
 //#endregion SettingsPanel

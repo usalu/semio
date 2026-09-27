@@ -171,6 +171,7 @@ export const taskManagerUiLabel = registerUiTranslationBundles({
               activation: { label: { normal: "Plugin installation", beginner: "Installing" } },
               toolCall: { label: { normal: "Agent tool call", beginner: "Assistant action" } },
               toolRun: { label: { normal: "Tool run", beginner: "Tool at work" } },
+              documentTransfer: { label: { normal: "Document import", beginner: "Opening a file" } },
             },
             running: { label: { normal: "Running", beginner: "Working" } },
             suspended: { label: { normal: "Suspended", beginner: "Paused" } },
@@ -239,6 +240,7 @@ export const taskManagerUiLabel = registerUiTranslationBundles({
               activation: { label: { normal: "Plugin-Installation", beginner: "Wird installiert" } },
               toolCall: { label: { normal: "Werkzeugaufruf des Agenten", beginner: "Aktion des Assistenten" } },
               toolRun: { label: { normal: "Werkzeuglauf", beginner: "Werkzeug arbeitet" } },
+              documentTransfer: { label: { normal: "Dokumentimport", beginner: "Datei wird geöffnet" } },
             },
             running: { label: { normal: "Läuft", beginner: "In Arbeit" } },
             suspended: { label: { normal: "Angehalten", beginner: "Pausiert" } },
@@ -514,8 +516,8 @@ export function useRuntimeMetricsRows(registry: ActivationRegistry | null | unde
 
 //#region 🔖️RunningTasks
 /** 🛣️ Where a running task comes from: a guest's spawned job, a plugin installation, a tool call the connected agent
- * is executing, or a program's tool run (Fill, Generate, Reconstruct…). */
-export type TaskManagerTaskLaneV1 = "job" | "activation" | "toolCall" | "toolRun";
+ * is executing, a program's tool run (Fill, Generate, Reconstruct…), or a document archive the shell is importing. */
+export type TaskManagerTaskLaneV1 = "job" | "activation" | "toolCall" | "toolRun" | "documentTransfer";
 
 /** 📈️ Progress a task states itself: `completed` of `total` (`null` = open-ended) in its own words. */
 export interface TaskManagerTaskProgressV1 {
@@ -567,6 +569,22 @@ export function toolCallTasksV1(conversation: readonly AgentConversationEntry[])
   );
 }
 
+/** 📥️ One document archive import in flight: the file, the program it opens in, when it began and the load's own
+ * state (`running` until the guest answers, `cancelling` once the person asked to stop). */
+export interface TaskManagerDocumentTransferV1 {
+  readonly id: string;
+  readonly file: string;
+  readonly pluginId: string;
+  readonly startedAtMs: number;
+  readonly progress: TaskManagerTaskProgressV1 | null;
+  readonly cancelling: boolean;
+}
+
+/** 📥️ Every document import in flight as a cancellable task. */
+export function documentTransferTasksV1(transfers: readonly TaskManagerDocumentTransferV1[]): readonly TaskManagerTaskV1[] {
+  return transfers.map((transfer) => ({ id: `documentTransfer:${transfer.id}`, lane: "documentTransfer", title: transfer.file, owner: transfer.pluginId, startedAtMs: transfer.startedAtMs, steps: null, progress: transfer.progress, suspendable: false, state: transfer.cancelling ? "cancelling" : "running" }));
+}
+
 /** ⏯️ One live tool run of a program, as its ToolRun panel states it (`toolRunPanelTasksV1` in `🛠️ShellHelpers`). */
 export interface TaskManagerToolRunV1 {
   readonly run: bigint;
@@ -609,6 +627,7 @@ function TaskManagerTaskRow({ task, nowMs, controls }: { readonly task: TaskMana
     activation: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.activation")),
     toolCall: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.toolCall")),
     toolRun: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.toolRun")),
+    documentTransfer: useLabel(taskManagerUiLabel("os.taskManager.tasks.lanes.documentTransfer")),
   };
   const seconds = String(taskManagerElapsedSecondsV1(task.startedAtMs, nowMs));
   const withSteps = useLabel(taskManagerUiLabel("os.taskManager.tasks.progressSteps"), { steps: String(task.steps ?? 0), seconds });

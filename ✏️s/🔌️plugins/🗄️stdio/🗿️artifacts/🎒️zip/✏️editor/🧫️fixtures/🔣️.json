@@ -1,0 +1,138 @@
+{
+  "snapshot": {
+    "schema": "stdio.zip",
+    "entries": [
+      {
+        "name": "alpha.txt",
+        "data": [
+          97,
+          98
+        ]
+      },
+      {
+        "name": "folder/β.txt",
+        "data": [
+          99
+        ]
+      }
+    ],
+    "comment": "Original comment"
+  },
+  "rename": {
+    "name": "alpha.txt",
+    "value": "renamed.txt"
+  },
+  "rejectedArguments": [
+    null,
+    {},
+    {
+      "nodeId": "comment"
+    },
+    {
+      "value": "Replacement"
+    },
+    {
+      "nodeId": 0,
+      "value": "Replacement"
+    },
+    {
+      "nodeId": "comment",
+      "value": false
+    },
+    {
+      "id": "comment",
+      "text": "Replacement"
+    },
+    {
+      "nodeId": "comment",
+      "value": "Replacement",
+      "revision": "0000000000000000000000000000000000000000000000000000000000000000",
+      "unexpected": true
+    }
+  ],
+  "rejectedTargets": [
+    "",
+    "entry:0",
+    "entry:999999",
+    "missing"
+  ],
+  "duplicateName": "alpha.txt",
+  "emptyComment": "",
+  "omittedDefaults": {
+    "schema": "stdio.zip"
+  },
+  "defaultSnapshot": {
+    "schema": "stdio.zip",
+    "entries": [],
+    "comment": ""
+  },
+  "textByteBoundaries": [
+    {
+      "text": "a",
+      "repeat": 65535,
+      "valid": true
+    },
+    {
+      "text": "a",
+      "repeat": 65536,
+      "valid": false
+    },
+    {
+      "text": "ä",
+      "repeat": 32767,
+      "valid": true
+    },
+    {
+      "text": "ä",
+      "repeat": 32768,
+      "valid": false
+    },
+    {
+      "text": "🎒",
+      "repeat": 16383,
+      "valid": true
+    },
+    {
+      "text": "🎒",
+      "repeat": 16384,
+      "valid": false
+    }
+  ],
+  "entryOrdering": {
+    "reversedNames": [
+      "folder/β.txt",
+      "alpha.txt"
+    ],
+    "invalidOrders": [
+      [
+        "alpha.txt"
+      ],
+      [
+        "alpha.txt",
+        "alpha.txt"
+      ],
+      [
+        "alpha.txt",
+        "missing.txt"
+      ]
+    ]
+  },
+  "insertion": {
+    "entry": {
+      "name": "middle.txt",
+      "data": [
+        42
+      ]
+    },
+    "before": "folder/β.txt",
+    "index": 1
+  },
+  "retainedResolution": {
+    "maximumEntriesPerStep": 1,
+    "preservedPayloadBytes": 2097152,
+    "checkpointBytes": 96,
+    "resumeAfterEntries": 1,
+    "checkpointMagic": "ZAT1",
+    "checkpointVersion": 1
+  }
+}

@@ -6,6 +6,7 @@ use crate::PathSegment;
 #[value(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
 pub enum PathEdit {
+    Position { index: usize, point: PathPoint, to: [f64;2] },
     Coordinate { index: usize, point: PathPoint, axis: PathAxis, value: f64 },
     Split { index: usize, t: f64 },
     Delete { index: usize },
@@ -98,7 +99,7 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
         }
         return Ok(output);
     }
-    let index = match operation { PathEdit::Coordinate { index, .. } | PathEdit::Split { index, .. } | PathEdit::Delete { index } | PathEdit::Close { index } | PathEdit::Open { index } | PathEdit::Convert { index, .. } => *index, PathEdit::Reverse | PathEdit::Join { .. } => unreachable!() };
+    let index = match operation { PathEdit::Coordinate { index, .. } | PathEdit::Position { index, .. } | PathEdit::Split { index, .. } | PathEdit::Delete { index } | PathEdit::Close { index } | PathEdit::Open { index } | PathEdit::Convert { index, .. } => *index, PathEdit::Reverse | PathEdit::Join { .. } => unreachable!() };
     let item = source.get(index).ok_or("Missing path node")?;
     let (start, end) = ranges.into_iter().find(|(start, end)| index >= *start && index < *end).ok_or("Missing contour")?;
     let mut output = source.to_vec();
@@ -143,28 +144,36 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
             }
             _ => { output.remove(index); }
         },
-        PathEdit::Coordinate { point, axis, value, .. } => {
-            if !value.is_finite() { return Err("Invalid coordinate"); }
-            let axis = if axis == PathAxis::X { 0 } else { 1 };
-            if point == PathPoint::Anchor {
-                let delta = value - endpoint(item).ok_or("Select an anchor")?[axis];
-                match &mut output[index] {
-                    PathSegment::Move { to } | PathSegment::Line { to } | PathSegment::Arc { to, .. } => to[axis] = value,
-                    PathSegment::Quad { to, ctrl } => { to[axis] = value; ctrl[axis] += delta; }
-                    PathSegment::Cubic { to, ctrl2, .. } => { to[axis] = value; ctrl2[axis] += delta; }
-                    PathSegment::Close => return Err("Select an anchor"),
-                }
-                match output.get_mut(index + 1) {
-                    Some(PathSegment::Quad { ctrl, .. }) => ctrl[axis] += delta,
-                    Some(PathSegment::Cubic { ctrl1, .. }) => ctrl1[axis] += delta,
-                    _ => {}
-                }
-            } else {
-                match (&mut output[index], point) {
-                    (PathSegment::Cubic { ctrl1, .. }, PathPoint::Control1) => ctrl1[axis] = value,
-                    (PathSegment::Cubic { ctrl2, .. }, PathPoint::Control2) => ctrl2[axis] = value,
-                    (PathSegment::Quad { ctrl, .. }, PathPoint::Control1) => ctrl[axis] = value,
-                    _ => return Err("This node has no selected handle"),
+        PathEdit::Coordinate { point, .. } | PathEdit::Position { point, .. } => {
+            let coordinates=match *operation {
+                PathEdit::Position {to,..}=>[Some(to[0]),Some(to[1])],
+                PathEdit::Coordinate {axis:PathAxis::X,value,..}=>[Some(value),None],
+                PathEdit::Coordinate {value,..}=>[None,Some(value)],
+                _=>unreachable!(),
+            };
+            if !coordinates.iter().flatten().all(|value|value.is_finite()) {return Err("Invalid coordinate");}
+            for (axis,value) in coordinates.into_iter().enumerate() {
+                let Some(value)=value else {continue;};
+                if point == PathPoint::Anchor {
+                    let delta = value - endpoint(item).ok_or("Select an anchor")?[axis];
+                    match &mut output[index] {
+                        PathSegment::Move { to } | PathSegment::Line { to } | PathSegment::Arc { to, .. } => to[axis] = value,
+                        PathSegment::Quad { to, ctrl } => { to[axis] = value; ctrl[axis] += delta; }
+                        PathSegment::Cubic { to, ctrl2, .. } => { to[axis] = value; ctrl2[axis] += delta; }
+                        PathSegment::Close => return Err("Select an anchor"),
+                    }
+                    match output.get_mut(index + 1) {
+                        Some(PathSegment::Quad { ctrl, .. }) => ctrl[axis] += delta,
+                        Some(PathSegment::Cubic { ctrl1, .. }) => ctrl1[axis] += delta,
+                        _ => {}
+                    }
+                } else {
+                    match (&mut output[index], point) {
+                        (PathSegment::Cubic { ctrl1, .. }, PathPoint::Control1) => ctrl1[axis] = value,
+                        (PathSegment::Cubic { ctrl2, .. }, PathPoint::Control2) => ctrl2[axis] = value,
+                        (PathSegment::Quad { ctrl, .. }, PathPoint::Control1) => ctrl[axis] = value,
+                        _ => return Err("This node has no selected handle"),
+                    }
                 }
             }
         }
@@ -200,3 +209,20 @@ pub fn edit_path(source: &[PathSegment], operation: &PathEdit) -> Result<Vec<Pat
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+/// 🖱️ Resolves a world-space drag to an absolute path-local point without changing press offset.
+pub fn drag_path_point(segment: &PathSegment,point: PathPoint,matrix: [f64;6],start: [f64;2],end: [f64;2],constrained: bool) -> Option<[f64;2]> {
+    let local=match (segment,point) {
+        (_,PathPoint::Anchor)=>endpoint(segment),
+        (PathSegment::Cubic {ctrl1,..},PathPoint::Control1)=>Some(*ctrl1),
+        (PathSegment::Cubic {ctrl2,..},PathPoint::Control2)=>Some(*ctrl2),
+        (PathSegment::Quad {ctrl,..},PathPoint::Control1)=>Some(*ctrl),
+        _=>None,
+    }?;
+    if !matrix.iter().chain(start.iter()).chain(end.iter()).chain(local.iter()).all(|value|value.is_finite()) {return None;}
+    let inverted=super::inverse([matrix[0],matrix[1],matrix[2],matrix[3],0.0,0.0])?;
+    let (mut dx,mut dy)=(end[0]-start[0],end[1]-start[1]);
+    if constrained {if dx.abs()>=dy.abs(){dy=0.0;}else{dx=0.0;}}
+    let result=[local[0]+inverted[0]*dx+inverted[2]*dy,local[1]+inverted[1]*dx+inverted[3]*dy];
+    result.iter().all(|value|value.is_finite()).then_some(result)
+}

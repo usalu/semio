@@ -42,6 +42,7 @@ export interface TrustedCatalogGuestResidencyStateV1 {
   readonly registeredGuests: number;
   readonly residentGuests: number;
   readonly residentBytes: number;
+  readonly footprintBytes: number;
   readonly hits: number;
   readonly compiles: number;
   readonly admitted: number;
